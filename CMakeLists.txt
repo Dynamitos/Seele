@@ -1,9 +1,25 @@
 cmake_minimum_required(VERSION 3.15)
 
+set(CMAKE_CXX_STANDARD_REQUIRED 17)
+
 # Handle superbuild first
 option (USE_SUPERBUILD "Whether or not a superbuild should be invoked" ON)
 
-set (GLOBAL_OUTPUT_PATH ${CMAKE_BINARY_DIR})
+set(ENGINE_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/src/Engine)
+set(EXTERNAL_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/external)
+set(SLANG_ROOT ${EXTERNAL_ROOT}/slang)
+set(BOOST_ROOT ${EXTERNAL_ROOT}/boost)
+set(GLM_ROOT ${EXTERNAL_ROOT}/glm)
+set(GLFW_ROOT ${EXTERNAL_ROOT}/glfw)
+set(CMAKE_BINARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE})
+set(RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR})
+
+# Configuration types
+SET(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Configs" FORCE)
+IF(DEFINED CMAKE_BUILD_TYPE AND CMAKE_VERSION VERSION_GREATER "2.8")
+  SET_PROPERTY(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS  ${CMAKE_CONFIGURATION_TYPES})
+ENDIF()
 
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_LIB_PREFIX lib)
@@ -26,12 +42,19 @@ include_directories(${GLFW_INCLUDE_DIRS})
 include_directories(${GLM_INCLUDE_DIRS})
 include_directories(${Vulkan_INCLUDE_DIR})
 include_directories(${Boost_INCLUDE_DIRS})
+include_directories(${SLANG_INCLUDE_DIRS})
+include_directories(src/Engine)
 add_definitions(${GLM_DEFINITIONS})
-add_definitions(${VULKAN_DEFINITIONS})
-add_definitions(${BOOST_DEFINITIONS})
-add_executable(SeeleEngine src/Engine/main.cpp src/Engine/Graphics/Graphics.cpp)
+add_definitions(${Vulkan_DEFINITIONS})
+add_definitions(${Boost_DEFINITIONS})
+add_executable(SeeleEngine "")
+add_subdirectory(src/)
 target_link_libraries(SeeleEngine ${Boost_LIBRARIES})
 target_link_libraries(SeeleEngine ${Vulkan_LIBRARY})
 target_link_libraries(SeeleEngine ${GLFW_LIBRARY})
+target_link_libraries(SeeleEngine ${SLANG_LIBRARY})
 
-message(STATUS "TEST")
+add_subdirectory(test/)
+
+add_custom_command(TARGET SeeleEngine POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different ${DEPENDENT_BINARIES} $<TARGET_FILE_DIR:SeeleEngine>)
+

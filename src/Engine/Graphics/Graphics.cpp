@@ -1,11 +1,20 @@
 #include "Graphics.h"
+#include <iostream>
+#include <map>
 
-Graphics::Graphics()
+Seele::Graphics::Graphics()
 {
-
+	Array<uint8> arr;
+	arr.add('2');
+	arr.add('4');
+	std::cout << "Test" << std::endl;
+	for (auto a : arr)
+	{
+		std::cout << "Element: " << a << std::endl;
+	}
 }
 
-Graphics::~Graphics()
+Seele::Graphics::~Graphics()
 {
 
 }

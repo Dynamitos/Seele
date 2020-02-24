@@ -7,6 +7,7 @@
 #include <vulkan/vulkan.h>
 #include <glm/vec4.hpp>
 #include <GLFW/glfw3.h>
+#include "Graphics/Graphics.h"
 
 /////////////////////////////////////////////////////////////
 // gps coordinate
@@ -44,7 +45,7 @@ int main() {
     // create class instance
     const gps_position g(35, 59, 24.567f);
 
-    // save data to archive
+    // save _data to archive
     {
         boost::archive::text_oarchive oa(ofs);
         // write class instance to archive
@@ -65,7 +66,9 @@ int main() {
     std::cout << "Hello World! " << std::endl;
     VkInstance instance;
     glm::vec4 vector(0, 1, 0, 1);
+    Seele::Graphics& graphics = Seele::Graphics::getInstance();
     std::cout << vector.y << std::endl;
     std::cout << glfwInit() << std::endl;
+
     return 0;
 }
