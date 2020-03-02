@@ -11,6 +11,6 @@ namespace Seele
 		WindowManager(GraphicsInitializer initializer);
 		~WindowManager();
 	private:
-		Array<RefPtr<Window>> windows;
+		Array<PWindow> windows;
 	};
 }

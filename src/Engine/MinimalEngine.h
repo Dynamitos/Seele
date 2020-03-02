@@ -4,6 +4,10 @@
 #include <memory>
 #include <atomic>
 
+#define DECLARE_REF(x) class x; \
+		typedef RefPtr<x> P##x; \
+		typedef UniquePtr<x> UP##x;
+
 namespace Seele
 {
 	typedef uint64_t uint64;
@@ -15,7 +19,6 @@ namespace Seele
 	typedef int32_t int32;
 	typedef int16_t int16;
 	typedef int8_t int8;
-
 
 	template<typename T>
 	class RefPtr
@@ -35,7 +38,7 @@ namespace Seele
 			if (this != &other)
 			{
 				object->removeRef();
-				object = other->object;
+				object = other.object;
 				object->addRef();
 			}
 			return *this;

@@ -1,10 +1,18 @@
 #pragma once
 #include "Window.h"
-
-// A view is a part of the window, which can be anything from a viewport to an editor
-class View
+#include "RenderPath.h"
+namespace Seele
 {
-public:
-private:
-	Window::Section* owner;
-};
+	// A view is a part of the window, which can be anything from a viewport to an editor
+	class View
+	{
+	public:
+		View(PSection owner);
+		~View();
+	private:
+		PRenderPath renderer;
+		PSection owner;
+	};
+
+	DECLARE_REF(View)
+}
