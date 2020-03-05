@@ -1,5 +1,5 @@
 #pragma once
-
+#include "MinimalEngine.h"
 namespace Seele
 {
 	struct GraphicsInitializer

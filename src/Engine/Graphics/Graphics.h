@@ -9,12 +9,10 @@ namespace Seele {
 	{
 	public:
 		virtual void init(GraphicsInitializer initializer) = 0;
-		virtual void beginFrame() = 0;
-		virtual void endFrame() = 0;
+		virtual void beginFrame(void* windowHandle) = 0;
+		virtual void endFrame(void* windowHandle) = 0;
 		virtual void* createWindow(const WindowCreateInfo& createInfo) = 0;
-	
-	//Singleton
-	private:
+	protected:
 		Graphics();
 		~Graphics();
 		friend class Window;

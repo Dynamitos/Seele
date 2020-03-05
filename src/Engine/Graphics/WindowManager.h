@@ -8,9 +8,13 @@ namespace Seele
 	class WindowManager
 	{
 	public:
-		WindowManager(GraphicsInitializer initializer);
+		WindowManager();
 		~WindowManager();
+		void addWindow(const WindowCreateInfo& createInfo);
+		void beginFrame();
+		void endFrame();
 	private:
 		Array<PWindow> windows;
 	};
+	DECLARE_REF(WindowManager);
 }

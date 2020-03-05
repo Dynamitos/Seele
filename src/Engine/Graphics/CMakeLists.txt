@@ -2,10 +2,16 @@ target_sources(SeeleEngine
     PRIVATE
         Graphics.h
         Graphics.cpp
+        RenderCore.h
+        RenderCore.cpp
         RenderPath.h
         RenderPath.cpp
+        SceneRenderPath.h
+        SceneRenderPath.cpp
         View.h
         View.cpp
+        SceneView.h
+        SceneView.cpp
         WindowManager.h
         WindowManager.cpp
         Window.h

@@ -1,5 +1,4 @@
 #pragma once
-#include "Window.h"
 #include "RenderPath.h"
 namespace Seele
 {
@@ -7,11 +6,14 @@ namespace Seele
 	class View
 	{
 	public:
-		View(PSection owner);
-		~View();
-	private:
+		View();
+		virtual ~View();
+		virtual void initRenderer() = 0;
+		void beginFrame();
+		void endFrame();
+		void applyArea(Rect area);
+	protected:
 		PRenderPath renderer;
-		PSection owner;
 	};
 
 	DECLARE_REF(View)

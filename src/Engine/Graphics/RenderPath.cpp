@@ -4,3 +4,7 @@ Seele::RenderPath::RenderPath(Graphics* graphics)
 	: graphics(graphics)
 {
 }
+
+Seele::RenderPath::~RenderPath()
+{
+}

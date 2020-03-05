@@ -17,6 +17,7 @@ namespace Seele
 			, arraySize(0)
 		{
 			_data = (T*)malloc(DEFAULT_ALLOC_SIZE * sizeof(T));
+			memset(_data, 0, sizeof(T) * DEFAULT_ALLOC_SIZE);
 			refreshIterators();
 		}
 		Array(size_t size, T value = T())
@@ -112,6 +113,7 @@ namespace Seele
 				allocated += DEFAULT_ALLOC_SIZE;
 				void* tempArray = malloc(sizeof(T) * allocated);
 				std::memcpy(tempArray, _data, arraySize * sizeof(T));
+				memset(tempArray, 0, sizeof(T) * allocated);
 				delete _data;
 				_data = (T*)tempArray;
 			}

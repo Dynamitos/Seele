@@ -1,16 +1,31 @@
 #include "WindowManager.h"
 
-Seele::WindowManager::WindowManager(GraphicsInitializer initializer)
+Seele::WindowManager::WindowManager()
 {
-	//TODO Parse layout file
-	WindowCreateInfo mainWindowInfo;
-	mainWindowInfo.title = "SeeleEngine";
-	mainWindowInfo.width = 1280;
-	mainWindowInfo.height = 720;
-	Window* mainWindow = new Window(mainWindowInfo);
-	windows.add(mainWindow);
 }
 
 Seele::WindowManager::~WindowManager()
 {
+}
+
+void Seele::WindowManager::addWindow(const WindowCreateInfo& createInfo)
+{
+	PWindow window = new Window(createInfo);
+	windows.add(window);
+}
+
+void Seele::WindowManager::beginFrame()
+{
+	for (auto window : windows)
+	{
+		window->beginFrame();
+	}
+}
+
+void Seele::WindowManager::endFrame()
+{
+	for (auto window : windows)
+	{
+		window->endFrame();
+	}
 }
