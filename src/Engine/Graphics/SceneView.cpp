@@ -1,15 +1,12 @@
 #include "SceneView.h"
 #include "SceneRenderPath.h"
 
-Seele::SceneView::SceneView()
+Seele::SceneView::SceneView(Graphics* graphics)
+	: View(graphics)
 {
+	renderer = new SceneRenderPath(graphics);
 }
 
 Seele::SceneView::~SceneView()
 {
-}
-
-void Seele::SceneView::initRenderer()
-{
-	renderer = new SceneRenderPath();
 }

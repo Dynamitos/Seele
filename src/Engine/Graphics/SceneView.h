@@ -5,8 +5,7 @@ namespace Seele
 	class SceneView : public View
 	{
 	public:
-		SceneView();
+		SceneView(Graphics* graphics);
 		~SceneView();
-		virtual void initRenderer() override;
 	};
 }
