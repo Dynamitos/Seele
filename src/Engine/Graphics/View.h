@@ -17,5 +17,5 @@ namespace Seele
 		PRenderPath renderer;
 	};
 
-	DECLARE_REF(View)
+	DEFINE_REF(View)
 }

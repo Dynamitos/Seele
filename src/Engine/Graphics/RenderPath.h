@@ -17,5 +17,5 @@ namespace Seele
 		Graphics* graphics;
 		Rect area;
 	};
-	DECLARE_REF(RenderPath);
+	DEFINE_REF(RenderPath);
 }

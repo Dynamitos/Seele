@@ -16,6 +16,8 @@ target_sources(SeeleEngine
         WindowManager.cpp
         Window.h
         Window.cpp
-        GraphicsResources.h)
+        GraphicsResources.h
+        GraphicsResources.cpp
+        GraphicsEnums.h)
 
 add_subdirectory(Vulkan/)

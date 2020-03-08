@@ -17,6 +17,7 @@ namespace Seele
 			, arraySize(0)
 		{
 			_data = (T*)malloc(DEFAULT_ALLOC_SIZE * sizeof(T));
+			assert(_data != nullptr);
 			memset(_data, 0, sizeof(T) * DEFAULT_ALLOC_SIZE);
 			refreshIterators();
 		}

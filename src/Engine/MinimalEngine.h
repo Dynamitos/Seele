@@ -5,6 +5,10 @@
 #include <atomic>
 #include "Math/Math.h"
 
+#define DEFINE_REF(x) typedef RefPtr<x> P##x; \
+		typedef UniquePtr<x> UP##x; \
+		typedef WeakPtr<x> W##x;
+
 #define DECLARE_REF(x) class x; \
 		typedef RefPtr<x> P##x; \
 		typedef UniquePtr<x> UP##x; \
@@ -60,7 +64,16 @@ namespace Seele
 		{
 			return object == other.object;
 		}
+		bool operator!=(const RefPtr& other) const
+		{
+			return object != other.object;
+		}
 		T* operator->()
+		{
+			assert(object != nullptr);
+			return object->getHandle();
+		}
+		const T* operator->() const
 		{
 			assert(object != nullptr);
 			return object->getHandle();

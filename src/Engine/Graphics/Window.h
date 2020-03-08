@@ -48,7 +48,7 @@ namespace Seele {
 		Rect area;
 		Array<PView> views;
 	};
-	DECLARE_REF(Section)
+	DEFINE_REF(Section)
 	class Graphics;
 	class Window
 	{
@@ -64,5 +64,5 @@ namespace Seele {
 		uint32 height;
 		Graphics* graphics;
 	};
-	DECLARE_REF(Window)
+	DEFINE_REF(Window)
 }
