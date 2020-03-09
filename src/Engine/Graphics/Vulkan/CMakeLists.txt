@@ -1,4 +1,9 @@
 target_sources(SeeleEngine
 	PRIVATE
 		VulkanGraphics.h
-		VulkanGraphics.cpp)
+		VulkanGraphics.cpp
+		VulkanGraphicsResources.h
+		VulkanDescriptorSets.cpp
+		VulkanGraphicsEnums.h
+		VulkanInitializer.h
+		VulkanInitializer.cpp)

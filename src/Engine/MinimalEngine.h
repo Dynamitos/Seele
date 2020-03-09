@@ -27,6 +27,51 @@ namespace Seele
 	typedef int8_t int8;
 
 	template<typename T>
+	class RefObject
+	{
+	public:
+		RefObject(T* ptr)
+			: handle(ptr)
+			, refCount(1)
+		{
+		}
+		RefObject(const RefObject& rhs)
+			: handle(rhs.handle)
+			, refCount(rhs.refCount)
+		{
+
+		}
+
+		~RefObject()
+		{}
+		bool operator==(const RefObject& other) const
+		{
+			return handle == other.handle && refCount == other.refCount;
+		}
+		void addRef()
+		{
+			refCount++;
+		}
+		void removeRef()
+		{
+			refCount--;
+			if (refCount.load() <= 0)
+			{
+				delete handle;
+				handle = nullptr;
+				delete this;
+			}
+		}
+		inline T* getHandle() const
+		{
+			return handle;
+		}
+	private:
+		T* handle;
+		std::atomic_uint64_t refCount;
+	};
+
+	template<typename T>
 	class RefPtr
 	{
 	public:
@@ -36,13 +81,41 @@ namespace Seele
 		}
 		RefPtr(T* ptr)
 		{
-			object = new RefObject(ptr);
+			object = new RefObject<T>(ptr);
+		}
+		explicit RefPtr(RefObject<T>* other)
+			: object(other)
+		{
+			object->addRef();
 		}
 		RefPtr(const RefPtr& other)
 			: object(other.object)
 		{
 			object->addRef();
 		}
+		template<typename F>
+		RefPtr(const RefPtr<F>& other)
+		{
+			F* f = other.getObject()->getHandle();
+			T* t = static_cast<T*>(f);
+			object = (RefObject<T>*)other.getObject();
+			object->addRef();
+		}
+
+		template<typename F>
+		RefPtr<F>& cast()
+		{
+			T* t = object->getHandle();
+			F* f = dynamic_cast<F*>(t);
+			if (f == nullptr)
+			{
+				return RefPtr<F>();
+			}
+			RefObject<F>* newObject = static_cast<RefObject<F>*>(object);
+			RefPtr<F> result(newObject);
+			return result;
+		}
+
 		RefPtr& operator=(const RefPtr& other)
 		{
 			if (this != &other)
@@ -78,53 +151,12 @@ namespace Seele
 			assert(object != nullptr);
 			return object->getHandle();
 		}
-	private:
-
-		class RefObject
+		RefObject<T>* getObject() const
 		{
-		public:
-			RefObject(T* ptr)
-				: handle(ptr)
-				, refCount(1)
-			{
-			}
-			RefObject(const RefObject& rhs)
-				: handle(rhs.handle)
-				, refCount(rhs.refCount)
-			{
-
-			}
-			~RefObject()
-			{}
-			bool operator==(const RefObject& other) const
-			{
-				return handle == other.handle && refCount == other.refCount;
-			}
-			void addRef()
-			{
-				refCount++;
-			}
-			void removeRef()
-			{
-				refCount--;
-				if (refCount.load() <= 0)
-				{
-					delete handle;
-					handle = nullptr;
-					delete this;
-				}
-			}
-			inline T* getHandle() const
-			{
-				return handle;
-			}
-		private:
-			T* handle;
-			std::atomic_uint64_t refCount;
-		};
-		RefObject* object;
-		template<typename T>
-		friend class WeakPtr;
+			return object;
+		}
+	private:
+		RefObject<T>* object;
 	};
 	template<typename T>
 	class WeakPtr
@@ -152,7 +184,7 @@ namespace Seele
 			return temp;
 		}
 	private:
-		RefPtr::RefObject* pointer;
+		RefObject<T>* pointer;
 	};
 	template<typename T>
 	class UniquePtr

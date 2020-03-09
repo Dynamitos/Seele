@@ -1,0 +1,2 @@
+(?<enum>[A-Z_]*) = [0-9]*,
+case SE_${enum}:\nreturn VK_${enum};

@@ -31,6 +31,23 @@ BOOST_AUTO_TEST_CASE(basic_refcount)
 	}
 }
 
+struct DerivedStruct : public TestStruct
+{
+
+};
+
+BOOST_AUTO_TEST_CASE(inheritance_cast)
+{
+	Seele::RefPtr<DerivedStruct> backCast;
+	{
+		Seele::RefPtr<DerivedStruct> derived = new DerivedStruct();
+		Seele::RefPtr<TestStruct> base = derived;
+		BOOST_REQUIRE_EQUAL(base->data, 10);
+		backCast = base.cast<DerivedStruct>();
+	}
+	BOOST_REQUIRE_EQUAL(backCast->data, 10);
+}
+
 BOOST_AUTO_TEST_CASE(unique_ptr)
 {
 	UniquePtr<TestStruct> uptr = new TestStruct();

@@ -5,6 +5,8 @@ namespace Seele
 	class VulkanGraphics : public Graphics
 	{
 	public:
+		VkDevice getDevice() const;
+
 		// Inherited via Graphics
 		virtual void init(GraphicsInitializer initializer) override;
 		virtual void beginFrame(void* windowHandle) override;
