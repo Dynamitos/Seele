@@ -12,8 +12,9 @@ struct TestStruct
 		: data(10)
 	{
 	}
-	~TestStruct()
+	virtual ~TestStruct()
 	{
+		data = 15;
 	}
 	uint32 data;
 };
@@ -33,7 +34,16 @@ BOOST_AUTO_TEST_CASE(basic_refcount)
 
 struct DerivedStruct : public TestStruct
 {
+	DerivedStruct()
+		:data2(20)
+	{
 
+	}
+	~DerivedStruct()
+	{
+		data2 = 30;
+	}
+	uint32 data2;
 };
 
 BOOST_AUTO_TEST_CASE(inheritance_cast)
@@ -46,6 +56,7 @@ BOOST_AUTO_TEST_CASE(inheritance_cast)
 		backCast = base.cast<DerivedStruct>();
 	}
 	BOOST_REQUIRE_EQUAL(backCast->data, 10);
+	BOOST_REQUIRE_EQUAL(backCast->data2, 20);
 }
 
 BOOST_AUTO_TEST_CASE(unique_ptr)

@@ -111,7 +111,7 @@ namespace Seele
 			{
 				return RefPtr<F>();
 			}
-			RefObject<F>* newObject = static_cast<RefObject<F>*>(object);
+			RefObject<F>* newObject = (RefObject<F>*)object;
 			RefPtr<F> result(newObject);
 			return result;
 		}

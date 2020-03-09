@@ -42,5 +42,18 @@ void Seele::VulkanPipelineLayout::create()
 	for (size_t i = 0; i < descriptorSetLayouts.size(); ++i)
 	{
 		PVulkanDescriptorLayout layout = descriptorSetLayouts[i].cast<VulkanDescriptorLayout>();
+		layout->create();
+		vulkanDescriptorLayouts[i] = layout->getHandle();
 	}
+	VkPipelineLayoutCreateInfo createInfo =
+		init::PipelineLayoutCreateInfo(vulkanDescriptorLayouts.data(), vulkanDescriptorLayouts.size());
+	Array<VkPushConstantRange> vkPushConstants(pushConstants.size());
+	for (size_t i = 0; i < pushConstants.size(); i++)
+	{
+		vkPushConstants[i].offset = pushConstants[i].offset;
+		vkPushConstants[i].size = pushConstants[i].size;
+		vkPushConstants[i].stageFlags = pushConstants[i].stageFlags;
+	}
+	createInfo.pushConstantRangeCount = vkPushConstants.size();
+	createInfo.pPushConstantRanges = vkPushConstants.data();
 }
