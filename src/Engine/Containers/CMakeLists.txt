@@ -1,3 +1,5 @@
 target_sources(SeeleEngine
 	PRIVATE
-		Array.h)
+		Array.h
+		Map.h
+		List.h)

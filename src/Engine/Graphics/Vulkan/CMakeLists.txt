@@ -1,9 +1,12 @@
 target_sources(SeeleEngine
 	PRIVATE
+		VulkanAllocator.h
+		VulkanAllocator.cpp
 		VulkanGraphics.h
 		VulkanGraphics.cpp
 		VulkanGraphicsResources.h
 		VulkanDescriptorSets.cpp
 		VulkanGraphicsEnums.h
+		VulkanGraphicsEnums.cpp
 		VulkanInitializer.h
 		VulkanInitializer.cpp)

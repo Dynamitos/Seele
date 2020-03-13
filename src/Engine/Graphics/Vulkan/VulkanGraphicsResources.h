@@ -1,5 +1,6 @@
 #pragma once
 #include "Graphics/GraphicsResources.h"
+#include <vulkan/vulkan.h>
 
 namespace Seele
 {
@@ -30,19 +31,16 @@ namespace Seele
 		VulkanPipelineLayout(PVulkanGraphics graphics)
 			: graphics(graphics)
 		{}
-		virtual ~VulkanPipelineLayout()
-		{
-			if (layoutHandle != VK_NULL_HANDLE)
-			{
-				vkDestroyPipelineLayout(graphics->getDevice(), layoutHandle, nullptr);
-			}
-		}
+		virtual ~VulkanPipelineLayout();
 		virtual void create();
 		inline VkPipelineLayout getHandle() const
 		{
 			return layoutHandle;
 		}
-		virtual uint32 getHash() const;
+		virtual uint32 getHash() const
+		{
+			return layoutHash;
+		}
 	private:
 		Array<VkDescriptorSetLayout> vulkanDescriptorLayouts;
 		uint32 layoutHash;
@@ -55,7 +53,7 @@ namespace Seele
 	class VulkanDescriptorSet : public DescriptorSet
 	{
 	public:
-		VulkanDescriptorSet(PVulkanGraphics device, PVulkanDescriptorAllocator owner) : device(device), owner(owner) {}
+		VulkanDescriptorSet(PVulkanGraphics graphics, PVulkanDescriptorAllocator owner) : graphics(graphics), owner(owner) {}
 		virtual ~VulkanDescriptorSet();
 		virtual void updateBuffer(uint32_t binding, PUniformBuffer uniformBuffer);
 		virtual void updateBuffer(uint32_t binding, PStructuredBuffer uniformBuffer);
@@ -73,7 +71,7 @@ namespace Seele
 		Array<VkWriteDescriptorSet> writeDescriptors;
 		VkDescriptorSet setHandle;
 		PVulkanDescriptorAllocator owner;
-		PVulkanGraphics device;
+		PVulkanGraphics graphics;
 		friend class VulkanDescriptorAllocator;
 	};
 	DEFINE_REF(VulkanDescriptorSet);
@@ -81,7 +79,7 @@ namespace Seele
 	class VulkanDescriptorAllocator : public DescriptorAllocator
 	{
 	public:
-		VulkanDescriptorAllocator(PVulkanGraphics device, VulkanDescriptorLayout& layout);
+		VulkanDescriptorAllocator(PVulkanGraphics graphics, VulkanDescriptorLayout& layout);
 		~VulkanDescriptorAllocator();
 		virtual void allocateDescriptorSet(PDescriptorSet& descriptorSet);
 
@@ -90,10 +88,48 @@ namespace Seele
 			return poolHandle;
 		}
 	private:
-		PVulkanGraphics device;
+		PVulkanGraphics graphics;
 		int maxSets = 512;
 		VkDescriptorPool poolHandle;
 		VulkanDescriptorLayout& layout;
 	};
 	DEFINE_REF(VulkanDescriptorAllocator);
+
+	class VulkanUniformBuffer : public UniformBuffer
+	{
+
+	};
+	DEFINE_REF(VulkanUniformBuffer);
+
+	class VulkanStructuredBuffer : public StructuredBuffer
+	{
+
+	};
+	DEFINE_REF(VulkanStructuredBuffer);
+
+	class VulkanTextureBase
+	{
+	private:
+		uint32 sizeX;
+		uint32 sizeY;
+		uint32 sizeZ;
+		uint32 arrayCount;
+		uint32 layerCount;
+	};
+	DEFINE_REF(VulkanTextureBase);
+
+	class VulkanTexture2D : public Texture2D
+	{
+	public:
+	private:
+		PVulkanTextureBase textureHandle;
+	};
+	DEFINE_REF(VulkanTexture2D);
+
+	class VulkanSamplerState
+	{
+	public:
+		VkSampler sampler;
+	};
+	DEFINE_REF(VulkanSamplerState);
 }

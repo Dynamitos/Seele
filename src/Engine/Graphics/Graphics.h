@@ -17,4 +17,5 @@ namespace Seele {
 		~Graphics();
 		friend class Window;
 	};
+	DEFINE_REF(Graphics);
 }

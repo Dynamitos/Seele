@@ -11,6 +11,7 @@ Seele::Window::Window(const WindowCreateInfo& createInfo)
 	center->resizeArea(Rect(1, 1, 0, 0));
 	center->addView(new SceneView(graphics));
 	windowHandle = graphics->createWindow(createInfo);
+	graphics->init(GraphicsInitializer());
 }
 
 Seele::Window::~Window()

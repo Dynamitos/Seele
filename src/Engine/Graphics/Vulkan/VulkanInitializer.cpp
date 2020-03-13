@@ -1,5 +1,4 @@
 #include "VulkanInitializer.h"
-#include <iostream>
 
 VkApplicationInfo Seele::init::ApplicationInfo(const char* appName, uint32_t appVersion, const char* engineName, uint32_t engineVersion, uint32_t apiVersion)
 {

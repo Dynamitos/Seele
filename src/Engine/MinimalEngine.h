@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <memory>
 #include <atomic>
+#include <iostream>
 #include "Math/Math.h"
 
 #define DEFINE_REF(x) typedef RefPtr<x> P##x; \

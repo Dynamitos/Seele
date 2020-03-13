@@ -1,7 +1,12 @@
 #pragma once
 #include "GraphicsEnums.h"
 #include "Containers/Array.h"
-#include <vulkan/vulkan.h>
+#include "Math/MemCRC.h"
+
+#ifdef _DEBUG
+#define ENABLE_VALIDATION
+#endif
+
 namespace Seele
 {
 	struct SePushConstantRange {
@@ -13,6 +18,31 @@ namespace Seele
 	struct GraphicsInitializer
 	{
 		const char* windowLayoutFile;
+		const char* applicationName;
+		const char* engineName;
+		/**
+		 * layers defines the enabled Vulkan layers used in the instance,
+		 * if ENABLE_VALIDATION is defined, standard validation is already enabled
+		 * not yet implemented
+		 */
+		Array<const char*> layers;
+		Array<const char*> instanceExtensions;
+		Array<const char*> deviceExtensions;
+		GraphicsInitializer()
+			: applicationName("SeeleEngine")
+			, engineName("SeeleEngine")
+			, layers{ "VK_LAYER_LUNARG_standard_validation" }
+			, instanceExtensions{}
+			, deviceExtensions{ "VK_KHR_swapchain" }
+		{}
+		GraphicsInitializer(const GraphicsInitializer& other)
+			: applicationName(other.applicationName)
+			, engineName(other.engineName)
+			, layers(other.layers)
+			, instanceExtensions(other.instanceExtensions)
+			, deviceExtensions(other.deviceExtensions)
+		{
+		}
 	};
 	struct WindowCreateInfo
 	{
@@ -29,7 +59,11 @@ namespace Seele
 	DEFINE_REF(RenderCommandBase);
 	class SamplerState
 	{
+	public:
+		virtual ~SamplerState()
+		{
 
+		}
 	};
 	DEFINE_REF(SamplerState);
 	class DescriptorBinding
@@ -128,12 +162,20 @@ namespace Seele
 	DEFINE_REF(VertexDeclaration);
 	class GraphicsPipeline
 	{
+	public:
+		virtual ~GraphicsPipeline()
+		{
 
+		}
 	};
 	DEFINE_REF(GraphicsPipeline);
 	class UniformBuffer
 	{
+	public:
+		virtual ~UniformBuffer()
+		{
 
+		}
 	};
 	DEFINE_REF(UniformBuffer);
 	class Viewport
@@ -153,7 +195,11 @@ namespace Seele
 	DEFINE_REF(IndexBuffer);
 	class StructuredBuffer
 	{
+	public:
+		virtual ~StructuredBuffer()
+		{
 
+		}
 	};
 	DEFINE_REF(StructuredBuffer);
 	class Texture

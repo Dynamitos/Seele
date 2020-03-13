@@ -25,16 +25,77 @@ namespace Seele
 			: allocated(size)
 			, arraySize(size)
 		{
-			_data = new T[size];
+			_data = (T*)malloc(size * sizeof(T));
 			for (int i = 0; i < size; ++i)
 			{
 				_data[i] = value;
 			}
 			refreshIterators();
 		}
+		Array(std::initializer_list<T> init)
+			: allocated(init.size())
+			, arraySize(init.size())
+		{
+			_data = (T*)malloc(init.size() * sizeof(T));
+			auto it = init.begin();
+			for (size_t i = 0; i < init.size(); i++)
+			{
+				_data[i] = *it;
+				it++;
+			}
+			refreshIterators();
+		}
+		Array(const Array& other)
+			: allocated(other.allocated)
+			, arraySize(other.arraySize)
+		{
+			_data = (T*)malloc(other.allocated * sizeof(T));
+			std::memcpy(_data, other._data, sizeof(T) * allocated);
+			refreshIterators();
+		}
+		Array(Array&& other) noexcept
+			: allocated(std::move(other.allocated))
+			, arraySize(std::move(other.arraySize))
+		{
+			_data = other._data;
+			other._data = nullptr;
+			other.allocated = 0;
+			other.arraySize = 0;
+			refreshIterators();
+		}
+		Array& operator=(const Array& other) noexcept
+		{
+			if(*this != other)
+			{
+				if (_data != nullptr)
+				{
+					free(_data);
+				}
+				allocated = other.allocated;
+				arraySize = other.arraySize;
+				_data = (T*)malloc(other.allocated * sizeof(T));
+				std::memcpy(_data, other._data, sizeof(T) * allocated);
+				refreshIterators();
+			}
+			return *this;
+		}
+		Array& operator=(Array&& other) noexcept
+		{
+			if(*this != other)
+			{ 
+				if (_data != nullptr)
+				{
+					free(_data);
+				}
+				allocated = std::move(other.allocated);
+				arraySize = std::move(other.arraySize);
+				_data = other._data;
+				other._data = nullptr;
+			}
+		}
 		~Array()
 		{
-			delete _data;
+			free(_data);
 			_data = nullptr;
 		}
 		template<typename X>
