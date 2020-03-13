@@ -16,9 +16,8 @@ namespace Seele
 		List()
 		{
 			root = nullptr;
-			tail = new Node();
-			tail->prev = nullptr;
-			tail->next = nullptr;
+			tail = nullptr;
+			beginIt = Iterator(root);
 			endIt = Iterator(tail);
 			size = 0;
 		}
@@ -88,7 +87,7 @@ namespace Seele
 		}
 		T& back()
 		{
-			return tail->data;
+			return tail->prev->data;
 		}
 		void clear()
 		{
@@ -96,40 +95,66 @@ namespace Seele
 			{
 				return;
 			}
-			Node* tmp = root;
-			while (tmp->next != nullptr)
+			for (Node* tmp = root; tmp != tail;)
 			{
 				tmp = tmp->next;
 				delete tmp->prev;
 			}
+			delete tail;
+			tail = nullptr;
+			root = nullptr;
 		}
 		//Insert at the end
 		Iterator add(const T& value)
 		{
+			if (root == nullptr)
+			{
+				root = new Node();
+				tail = root;
+			}
 			tail->data = value;
 			Node* newTail = new Node();
 			newTail->prev = tail;
 			newTail->next = nullptr;
+			tail->next = newTail;
 			Iterator insertedElement(tail);
 			tail = newTail;
+			refreshIterators();
+			size++;
 			return insertedElement;
+		}
+		Iterator remove(Iterator pos)
+		{
+			size--;
+			Node* prev = pos.node->prev;
+			Node* next = pos.node->next;
+			if (prev == nullptr)
+			{
+				root = next;
+			}
+			else
+			{
+				prev->next = next;
+			}
+			next->prev = prev;
+			delete pos.node;
+			refreshIterators();
+			return Iterator(next);
 		}
 		Iterator insert(Iterator pos, const T& value)
 		{
 			size++;
-			if (empty())
+			if (root == nullptr)
 			{
 				root = new Node();
 				root->data = value;
-				root->prev = nullptr;
+				tail = new Node();
 				root->next = tail;
+				root->prev = nullptr;
 				tail->prev = root;
+				tail->next = nullptr;
 				refreshIterators();
-				return Iterator(root);
-			}
-			if (pos == endIt)
-			{
-				return add(value);
+				return beginIt;
 			}
 			Node* tmp = pos.node->prev;
 			Node* newNode = new Node();
@@ -142,7 +167,7 @@ namespace Seele
 		}
 		Iterator find(const T& value)
 		{
-			for (Node* i = root; root != tail; root = root->next)
+			for (Node* i = root; i != tail; i = i->next)
 			{
 				if (!(i->data < value) && !(value < i->data))
 				{
