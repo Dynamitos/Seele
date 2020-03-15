@@ -35,6 +35,7 @@ VkDescriptorType Seele::cast(const SeDescriptorType& descriptorType)
 	default:
 		break;
 	}
+	return VK_DESCRIPTOR_TYPE_MAX_ENUM;
 }
 
 SeDescriptorType Seele::cast(const VkDescriptorType& descriptorType)
@@ -71,6 +72,7 @@ SeDescriptorType Seele::cast(const VkDescriptorType& descriptorType)
 	default:
 		break;
 	}
+	return SE_DESCRIPTOR_TYPE_MAX_ENUM;
 }
 
 VkShaderStageFlagBits Seele::cast(const SeShaderStageFlagBits& stage)
@@ -113,6 +115,7 @@ VkShaderStageFlagBits Seele::cast(const SeShaderStageFlagBits& stage)
 	default:
 		break;
 	}
+	return VK_SHADER_STAGE_ALL;
 }
 
 SeShaderStageFlagBits Seele::cast(const VkShaderStageFlagBits& stage)
@@ -154,4 +157,5 @@ SeShaderStageFlagBits Seele::cast(const VkShaderStageFlagBits& stage)
 	default:
 		break;
 	}
+	return SE_SHADER_STAGE_ALL;
 }

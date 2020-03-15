@@ -8,13 +8,13 @@ namespace Seele {
 	class Graphics
 	{
 	public:
+		Graphics();
+		~Graphics();
 		virtual void init(GraphicsInitializer initializer) = 0;
 		virtual void beginFrame(void* windowHandle) = 0;
 		virtual void endFrame(void* windowHandle) = 0;
 		virtual void* createWindow(const WindowCreateInfo& createInfo) = 0;
 	protected:
-		Graphics();
-		~Graphics();
 		friend class Window;
 	};
 	DEFINE_REF(Graphics);

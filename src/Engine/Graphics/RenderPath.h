@@ -6,7 +6,7 @@ namespace Seele
 	class RenderPath
 	{
 	public:
-		RenderPath(Graphics* graphics);
+		RenderPath(PGraphics graphics);
 		virtual ~RenderPath();
 		virtual void applyArea(Rect area) = 0;
 		virtual void init() = 0;
@@ -14,7 +14,7 @@ namespace Seele
 		virtual void render() = 0;
 		virtual void endFrame() = 0;
 	protected:
-		Graphics* graphics;
+		PGraphics graphics;
 		Rect area;
 	};
 	DEFINE_REF(RenderPath);

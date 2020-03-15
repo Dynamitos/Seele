@@ -1,6 +1,6 @@
 #include "View.h"
 
-Seele::View::View(Graphics* graphics)
+Seele::View::View(PGraphics graphics)
 	: graphics(graphics)
 {
 }

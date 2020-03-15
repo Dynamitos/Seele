@@ -19,12 +19,15 @@ namespace Seele
 		virtual void* createWindow(const WindowCreateInfo& createInfo) override;
 	protected:
 		Array<const char*> getRequiredExtensions();
+		void initInstance(GraphicsInitializer initInfo);
 		void setupDebugCallback();
+		void pickPhysicalDevice();
 
 		VkDevice handle;
 		VkPhysicalDevice physicalDevice;
 		VkInstance instance;
 		VkDebugReportCallbackEXT callback;
+		Array<PVulkanViewport> viewports;
 		PVulkanAllocator allocator;
 		friend class Window;
 	};

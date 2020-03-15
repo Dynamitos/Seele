@@ -26,6 +26,7 @@ namespace Seele
 			, arraySize(size)
 		{
 			_data = (T*)malloc(size * sizeof(T));
+			assert(_data != nullptr);
 			for (int i = 0; i < size; ++i)
 			{
 				_data[i] = value;
@@ -38,10 +39,10 @@ namespace Seele
 		{
 			_data = (T*)malloc(init.size() * sizeof(T));
 			auto it = init.begin();
-			for (size_t i = 0; i < init.size(); i++)
+			for (size_t i = 0; it != init.end(); i++, it++)
 			{
+				assert(i < init.size());
 				_data[i] = *it;
-				it++;
 			}
 			refreshIterators();
 		}
@@ -50,6 +51,7 @@ namespace Seele
 			, arraySize(other.arraySize)
 		{
 			_data = (T*)malloc(other.allocated * sizeof(T));
+			assert(_data != nullptr);
 			std::memcpy(_data, other._data, sizeof(T) * allocated);
 			refreshIterators();
 		}
@@ -174,6 +176,7 @@ namespace Seele
 			{
 				allocated += DEFAULT_ALLOC_SIZE;
 				void* tempArray = malloc(sizeof(T) * allocated);
+				assert(tempArray != nullptr);
 				std::memcpy(tempArray, _data, arraySize * sizeof(T));
 				memset(tempArray, 0, sizeof(T) * allocated);
 				delete _data;

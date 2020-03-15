@@ -2,18 +2,18 @@
 #include "RenderPath.h"
 namespace Seele
 {
-	class Graphics;
+	DECLARE_REF(Graphics);
 	// A view is a part of the window, which can be anything from a viewport to an editor
 	class View
 	{
 	public:
-		View(Graphics* graphics);
+		View(PGraphics graphics);
 		virtual ~View();
 		void beginFrame();
 		void endFrame();
 		void applyArea(Rect area);
 	protected:
-		Graphics* graphics;
+		PGraphics graphics;
 		PRenderPath renderer;
 	};
 

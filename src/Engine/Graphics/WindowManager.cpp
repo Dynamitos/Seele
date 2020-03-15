@@ -1,7 +1,11 @@
 #include "WindowManager.h"
+#include "Vulkan/VulkanGraphics.h"
 
 Seele::WindowManager::WindowManager()
 {
+	graphics = new VulkanGraphics();
+	GraphicsInitializer initializer;
+	graphics->init(initializer);
 }
 
 Seele::WindowManager::~WindowManager()

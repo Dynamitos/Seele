@@ -62,7 +62,7 @@ namespace Seele {
 		PSection center;
 		uint32 width;
 		uint32 height;
-		Graphics* graphics;
+		PGraphics graphics;
 	};
 	DEFINE_REF(Window)
 }

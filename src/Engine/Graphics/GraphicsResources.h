@@ -20,6 +20,7 @@ namespace Seele
 		const char* windowLayoutFile;
 		const char* applicationName;
 		const char* engineName;
+		void* windowHandle;
 		/**
 		 * layers defines the enabled Vulkan layers used in the instance,
 		 * if ENABLE_VALIDATION is defined, standard validation is already enabled
@@ -34,6 +35,7 @@ namespace Seele
 			, layers{ "VK_LAYER_LUNARG_standard_validation" }
 			, instanceExtensions{}
 			, deviceExtensions{ "VK_KHR_swapchain" }
+			, windowHandle(nullptr)
 		{}
 		GraphicsInitializer(const GraphicsInitializer& other)
 			: applicationName(other.applicationName)
@@ -44,12 +46,14 @@ namespace Seele
 		{
 		}
 	};
+	DECLARE_REF(Graphics);
 	struct WindowCreateInfo
 	{
 		int32 width;
 		int32 height;
 		const char* title;
 		bool bFullscreen;
+		PGraphics graphics;
 	};
 	
 	class RenderCommandBase

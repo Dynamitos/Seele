@@ -11,6 +11,7 @@ namespace Seele
 	public:
 		VulkanDescriptorLayout(PVulkanGraphics graphics)
 			: graphics(graphics)
+			, layoutHandle(VK_NULL_HANDLE)
 		{}
 		virtual ~VulkanDescriptorLayout();
 		virtual void create();
@@ -30,6 +31,8 @@ namespace Seele
 	public:
 		VulkanPipelineLayout(PVulkanGraphics graphics)
 			: graphics(graphics)
+			, layoutHash(0)
+			, layoutHandle(VK_NULL_HANDLE)
 		{}
 		virtual ~VulkanPipelineLayout();
 		virtual void create();
@@ -53,7 +56,11 @@ namespace Seele
 	class VulkanDescriptorSet : public DescriptorSet
 	{
 	public:
-		VulkanDescriptorSet(PVulkanGraphics graphics, PVulkanDescriptorAllocator owner) : graphics(graphics), owner(owner) {}
+		VulkanDescriptorSet(PVulkanGraphics graphics, PVulkanDescriptorAllocator owner)
+			: graphics(graphics)
+			, owner(owner)
+			, setHandle(VK_NULL_HANDLE) 
+		{}
 		virtual ~VulkanDescriptorSet();
 		virtual void updateBuffer(uint32_t binding, PUniformBuffer uniformBuffer);
 		virtual void updateBuffer(uint32_t binding, PStructuredBuffer uniformBuffer);
@@ -132,4 +139,17 @@ namespace Seele
 		VkSampler sampler;
 	};
 	DEFINE_REF(VulkanSamplerState);
+
+	class VulkanViewport : public Viewport
+	{
+	public:
+	private:
+		uint32 sizeX;
+		uint32 sizeY;
+		uint32 offsetX;
+		uint32 offsetY;
+		VkSwapchainKHR swapchain;
+		void* windowHandle;
+	};
+	DECLARE_REF(VulkanViewport);
 }

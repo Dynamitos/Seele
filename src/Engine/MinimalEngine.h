@@ -104,13 +104,13 @@ namespace Seele
 		}
 
 		template<typename F>
-		RefPtr<F>& cast()
+		RefPtr<F> cast()
 		{
 			T* t = object->getHandle();
 			F* f = dynamic_cast<F*>(t);
 			if (f == nullptr)
 			{
-				return RefPtr<F>();
+				return nullptr;
 			}
 			RefObject<F>* newObject = (RefObject<F>*)object;
 			RefPtr<F> result(newObject);

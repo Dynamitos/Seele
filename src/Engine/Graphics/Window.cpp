@@ -1,17 +1,15 @@
 #include "Window.h"
-#include "Vulkan/VulkanGraphics.h"
 #include "SceneView.h"
 
 Seele::Window::Window(const WindowCreateInfo& createInfo)
 	: width(createInfo.width)
 	, height(createInfo.height)
 {
-	graphics = new VulkanGraphics();
+	graphics = createInfo.graphics;
 	center = new Section();
 	center->resizeArea(Rect(1, 1, 0, 0));
 	center->addView(new SceneView(graphics));
 	windowHandle = graphics->createWindow(createInfo);
-	graphics->init(GraphicsInitializer());
 }
 
 Seele::Window::~Window()
