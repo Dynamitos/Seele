@@ -53,7 +53,7 @@ namespace Seele {
 	class Window
 	{
 	public:
-		Window(const WindowCreateInfo& createInfo);
+		Window(const WindowCreateInfo& createInfo, PGraphics graphics);
 		~Window();
 		void beginFrame();
 		void endFrame();

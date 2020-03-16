@@ -14,7 +14,7 @@ Seele::WindowManager::~WindowManager()
 
 void Seele::WindowManager::addWindow(const WindowCreateInfo& createInfo)
 {
-	PWindow window = new Window(createInfo);
+	PWindow window = new Window(createInfo, graphics);
 	windows.add(window);
 }
 

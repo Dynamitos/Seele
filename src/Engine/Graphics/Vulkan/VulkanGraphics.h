@@ -22,6 +22,7 @@ namespace Seele
 		void initInstance(GraphicsInitializer initInfo);
 		void setupDebugCallback();
 		void pickPhysicalDevice();
+		void createDevice();
 
 		VkDevice handle;
 		VkPhysicalDevice physicalDevice;

@@ -53,7 +53,6 @@ namespace Seele
 		int32 height;
 		const char* title;
 		bool bFullscreen;
-		PGraphics graphics;
 	};
 	
 	class RenderCommandBase

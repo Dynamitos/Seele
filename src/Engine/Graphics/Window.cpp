@@ -1,11 +1,11 @@
 #include "Window.h"
 #include "SceneView.h"
 
-Seele::Window::Window(const WindowCreateInfo& createInfo)
+Seele::Window::Window(const WindowCreateInfo& createInfo, PGraphics graphics)
 	: width(createInfo.width)
 	, height(createInfo.height)
+	, graphics(graphics)
 {
-	graphics = createInfo.graphics;
 	center = new Section();
 	center->resizeArea(Rect(1, 1, 0, 0));
 	center->addView(new SceneView(graphics));

@@ -117,7 +117,27 @@ void Seele::VulkanGraphics::pickPhysicalDevice()
 	uint32 deviceRating = 0;
 	for (auto physicalDevice : physicalDevices)
 	{
+		uint32 currentRating = 0;
 		VkPhysicalDeviceProperties props;
 		vkGetPhysicalDeviceProperties(physicalDevice, &props);
+		if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+		{
+			currentRating += 100;
+		}
+		else if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)
+		{
+			currentRating += 10;
+		}
+		if (currentRating > deviceRating)
+		{
+			deviceRating = currentRating;
+			bestDevice = physicalDevice;
+		}
 	}
+	this->physicalDevice = bestDevice;
+}
+
+void Seele::VulkanGraphics::createDevice()
+{
+
 }

@@ -29,6 +29,7 @@ namespace Seele
 			assert(_data != nullptr);
 			for (int i = 0; i < size; ++i)
 			{
+				assert(i < size);
 				_data[i] = value;
 			}
 			refreshIterators();
@@ -174,7 +175,8 @@ namespace Seele
 		{
 			if (arraySize == allocated)
 			{
-				allocated += DEFAULT_ALLOC_SIZE;
+				uint32 newSize = arraySize + 1;
+				allocated = calculateGrowth(newSize);
 				void* tempArray = malloc(sizeof(T) * allocated);
 				assert(tempArray != nullptr);
 				std::memcpy(tempArray, _data, arraySize * sizeof(T));
@@ -247,6 +249,22 @@ namespace Seele
 			return _data[index];
 		}
 	private:
+		uint32 calculateGrowth(uint32 newSize) const
+		{
+			const uint32 oldCapacity = capacity();
+
+			if (oldCapacity > UINT32_MAX - oldCapacity / 2) {
+				return newSize; // geometric growth would overflow
+			}
+
+			const uint32 geometric = oldCapacity + oldCapacity / 2;
+
+			if (geometric < newSize) {
+				return newSize; // geometric growth would be insufficient
+			}
+
+			return geometric; // geometric growth is sufficient
+		}
 		void refreshIterators()
 		{
 			beginIt = Iterator(_data);

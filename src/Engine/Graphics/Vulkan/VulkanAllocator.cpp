@@ -7,12 +7,15 @@ Seele::VulkanAllocator::VulkanAllocator(PVulkanGraphics graphics)
 	heaps.resize(memProperties.memoryHeapCount);
 	for (size_t i = 0; i < memProperties.memoryHeapCount; i++)
 	{
-		std::cout << "Heap: Flags: " << memProperties.memoryHeaps[i].flags << " Size: " << memProperties.memoryHeaps[i].size << std::endl;
+		VkMemoryHeap memoryHeap = memProperties.memoryHeaps[i];
+		HeapInfo& heapInfo = heaps[i];
+		heapInfo.maxSize = memoryHeap.size;
 	}
 	for (size_t i = 0; i < memProperties.memoryTypeCount; i++)
 	{
 		VkMemoryType& type = memProperties.memoryTypes[i];
-		std::cout << "Memory Type: Properties" << type.propertyFlags << " on Index: " << type.heapIndex << std::endl;
+		HeapInfo& heapInfo = heaps[type.heapIndex];
+		heapInfo.types.add(type);
 	}
 }
 
