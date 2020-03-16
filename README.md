@@ -8,3 +8,7 @@ The project is built using standard CMake 3.15, so that and a modern C++17 compi
 Clone the repository and initialize the dependencies with `git submodule update --init --recursive`
 
 *SLang library hasn't been included in the automatic build yet, so you have to manually compile that project, found in external/slang*
+
+
+## Linux notes:
+All dependencies from glfw are required: `libx11-dev, libxrandr-dev, libxinerama-dev, libxcursor-dev, libxi-dev`
