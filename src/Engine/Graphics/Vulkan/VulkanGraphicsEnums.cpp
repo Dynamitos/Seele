@@ -28,10 +28,12 @@ VkDescriptorType Seele::cast(const SeDescriptorType& descriptorType)
 		return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC;
 	case SE_DESCRIPTOR_TYPE_INPUT_ATTACHMENT:
 		return VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
+#ifdef USE_EXTENSIONS
 	case SE_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK_EXT:
 		return VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK_EXT;
 	case SE_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_NV:
 		return VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_NV;
+#endif
 	default:
 		break;
 	}
@@ -65,10 +67,12 @@ SeDescriptorType Seele::cast(const VkDescriptorType& descriptorType)
 		return SE_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC;
 	case VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT:
 		return SE_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
+#ifdef USE_EXTENSIONS
 	case VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK_EXT:
 		return SE_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK_EXT;
 	case VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_NV:
 		return SE_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_NV;
+#endif
 	default:
 		break;
 	}
@@ -96,6 +100,7 @@ VkShaderStageFlagBits Seele::cast(const SeShaderStageFlagBits& stage)
 		return VK_SHADER_STAGE_ALL_GRAPHICS;
 	case SE_SHADER_STAGE_ALL:
 		return VK_SHADER_STAGE_ALL;
+#ifdef USE_EXTENSIONS
 	case SE_SHADER_STAGE_RAYGEN_BIT_NV:
 		return VK_SHADER_STAGE_RAYGEN_BIT_NV;
 	case SE_SHADER_STAGE_ANY_HIT_BIT_NV:
@@ -112,6 +117,7 @@ VkShaderStageFlagBits Seele::cast(const SeShaderStageFlagBits& stage)
 		return VK_SHADER_STAGE_TASK_BIT_NV;
 	case SE_SHADER_STAGE_MESH_BIT_NV:
 		return VK_SHADER_STAGE_MESH_BIT_NV;
+#endif
 	default:
 		break;
 	}
@@ -138,6 +144,7 @@ SeShaderStageFlagBits Seele::cast(const VkShaderStageFlagBits& stage)
 		return SE_SHADER_STAGE_ALL_GRAPHICS;
 	case VK_SHADER_STAGE_ALL:
 		return SE_SHADER_STAGE_ALL;
+#ifdef USE_EXTENSIONS
 	case VK_SHADER_STAGE_RAYGEN_BIT_NV:
 		return SE_SHADER_STAGE_RAYGEN_BIT_NV;
 	case VK_SHADER_STAGE_ANY_HIT_BIT_NV:
@@ -154,6 +161,7 @@ SeShaderStageFlagBits Seele::cast(const VkShaderStageFlagBits& stage)
 		return SE_SHADER_STAGE_TASK_BIT_NV;
 	case VK_SHADER_STAGE_MESH_BIT_NV:
 		return SE_SHADER_STAGE_MESH_BIT_NV;
+#endif	
 	default:
 		break;
 	}

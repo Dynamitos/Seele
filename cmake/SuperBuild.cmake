@@ -38,21 +38,21 @@ list(APPEND EXTRA_CMAKE_ARGS
 
 
 #--------------GLFW------------------------------
-list(APPEND DEPENDENCIES glfw)
-set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-
-ExternalProject_Add(glfw
-	SOURCE_DIR ${GLFW_ROOT}
-	BINARY_DIR ${CMAKE_BINARY_DIR}/lib
-	INSTALL_COMMAND "")
-
-list(APPEND EXTRA_CMAKE_ARGS
-	-DGLFW_INCLUDE_DIRS=${GLFW_ROOT}/include
-	-DGLFW_LIBRARY=${CMAKE_BINARY_DIR}/lib/src/glfw3.lib
-	)
-
+#list(APPEND DEPENDENCIES glfw)
+#set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+#set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+#set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+#
+#ExternalProject_Add(glfw
+#	SOURCE_DIR ${GLFW_ROOT}
+#	BINARY_DIR ${CMAKE_BINARY_DIR}/lib
+#	INSTALL_COMMAND "")
+#
+#list(APPEND EXTRA_CMAKE_ARGS
+#	-DGLFW_INCLUDE_DIRS=${GLFW_ROOT}/include
+#	-DGLFW_LIBRARY=${CMAKE_BINARY_DIR}/lib/src/glfw3.lib
+#	)
+#
 #--------------SLang------------------------------
 list(APPEND DEPENDENCIES slang)
 ExternalProject_Add(slang
@@ -64,13 +64,20 @@ ExternalProject_Add(slang
 	# 	COMMAND msbuild -m /p:WindowsTargetPlatformVersion=10.0 ${SLANG_ROOT}/source/slang/slang.vcxproj
 	INSTALL_COMMAND "")
 
+if(WIN32)
+	string(TOLOWER bin/windows-x64/${CMAKE_BUILD_TYPE}/slang.dll SLANG_BINARY)
+	string(TOLOWER bin/windows-x64/${CMAKE_BUILD_TYPE}/slang.lib SLANG_LIB_PATH)
+	set(SLANG_LIB_PATH ${SLANG_ROOT}/${SLANG_LIB_PATH})
+elseif(UNIX)
+	string(TOLOWER bin/linux-x86/${CMAKE_BUILD_TYPE}/libslang.so SLANG_BINARY)
+	set(SLANG_LIB_PATH)
+endif()
+
 list(APPEND EXTRA_CMAKE_ARGS
 	-DSLANG_INCLUDE_DIRS=${EXTERNAL_ROOT}
-	-DSLANG_LIBRARY=${SLANG_ROOT}/bin/windows-x64/${CMAKE_BUILD_TYPE}/slang.lib)
+	-DSLANG_LIBRARY=${SLANG_LIB_PATH})
 	
-set(SLANG_DLL)
-string(TOLOWER bin/windows-x64/${CMAKE_BUILD_TYPE}/slang.dll SLANG_DLL)
-list(APPEND DEPENDENT_BINARIES ${SLANG_ROOT}/${SLANG_DLL})
+list(APPEND DEPENDENT_BINARIES ${SLANG_ROOT}/${SLANG_BINARY})
 
 list(APPEND EXTRA_CMAKE_ARGS
 	-DDEPENDENT_BINARIES=${DEPENDENT_BINARIES})

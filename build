@@ -1,6 +1,6 @@
 #!/bin/sh
-rm -rf bin/
-mkdir bin/
-cd bin/
-cmake .. -DCMAKE_BUILD_TYPE=Debug
+rm -rf bin/Debug
+mkdir bin/Debug
+cd bin/Debug
+cmake ../.. -DCMAKE_BUILD_TYPE=Debug
 make

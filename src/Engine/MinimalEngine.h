@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <memory>
 #include <atomic>
+#include <cstring>
 #include <iostream>
 #include "Math/Math.h"
 

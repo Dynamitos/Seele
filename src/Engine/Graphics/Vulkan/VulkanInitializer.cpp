@@ -741,7 +741,7 @@ VkPipelineShaderStageCreateInfo Seele::init::PipelineShaderStageCreateInfo(VkSha
 }
 
 
-VkBool32 __stdcall Seele::debugCallback(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objType, uint64_t obj, size_t location, int32_t code, const char* layerPrefix, const char* msg, void* userDataManager) {
+VkBool32 Seele::debugCallback(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objType, uint64_t obj, size_t location, int32_t code, const char* layerPrefix, const char* msg, void* userDataManager) {
 	std::cerr << layerPrefix << ": " << msg << std::endl;
 	return VK_FALSE;
 }
