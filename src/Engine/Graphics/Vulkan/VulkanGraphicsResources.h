@@ -4,152 +4,189 @@
 
 namespace Seele
 {
-	DECLARE_REF(VulkanDescriptorAllocator);
-	DECLARE_REF(VulkanGraphics);
-	class VulkanDescriptorLayout : public DescriptorLayout
+	namespace Vulkan
 	{
-	public:
-		VulkanDescriptorLayout(PVulkanGraphics graphics)
-			: graphics(graphics)
-			, layoutHandle(VK_NULL_HANDLE)
-		{}
-		virtual ~VulkanDescriptorLayout();
-		virtual void create();
-		inline VkDescriptorSetLayout getHandle() const
+		DECLARE_REF(DescriptorAllocator);
+		DECLARE_REF(Graphics);
+		class DescriptorLayout : public Gfx::DescriptorLayout
 		{
-			return layoutHandle;
-		}
-	private:
-		PVulkanGraphics graphics;
-		Array<VkDescriptorSetLayoutBinding> bindings;
-		VkDescriptorSetLayout layoutHandle;
-		friend class VulkanPipelineStateCacheManager;
-	};
-	DEFINE_REF(VulkanDescriptorLayout);
-	class VulkanPipelineLayout : public PipelineLayout
-	{
-	public:
-		VulkanPipelineLayout(PVulkanGraphics graphics)
-			: graphics(graphics)
-			, layoutHash(0)
-			, layoutHandle(VK_NULL_HANDLE)
-		{}
-		virtual ~VulkanPipelineLayout();
-		virtual void create();
-		inline VkPipelineLayout getHandle() const
+		public:
+			DescriptorLayout(PGraphics graphics)
+				: graphics(graphics)
+				, layoutHandle(VK_NULL_HANDLE)
+			{}
+			virtual ~DescriptorLayout();
+			virtual void create();
+			inline VkDescriptorSetLayout getHandle() const
+			{
+				return layoutHandle;
+			}
+		private:
+			PGraphics graphics;
+			Array<VkDescriptorSetLayoutBinding> bindings;
+			VkDescriptorSetLayout layoutHandle;
+			friend class PipelineStateCacheManager;
+		};
+		DEFINE_REF(DescriptorLayout);
+		class PipelineLayout : public Gfx::PipelineLayout
 		{
-			return layoutHandle;
-		}
-		virtual uint32 getHash() const
+		public:
+			PipelineLayout(PGraphics graphics)
+				: graphics(graphics)
+				, layoutHash(0)
+				, layoutHandle(VK_NULL_HANDLE)
+			{}
+			virtual ~PipelineLayout();
+			virtual void create();
+			inline VkPipelineLayout getHandle() const
+			{
+				return layoutHandle;
+			}
+			virtual uint32 getHash() const
+			{
+				return layoutHash;
+			}
+		private:
+			Array<VkDescriptorSetLayout> vulkanDescriptorLayouts;
+			uint32 layoutHash;
+			VkPipelineLayout layoutHandle;
+			PGraphics graphics;
+			friend class PipelineStateCacheManager;
+		};
+		DEFINE_REF(PipelineLayout);
+
+		class DescriptorSet : public Gfx::DescriptorSet
 		{
-			return layoutHash;
-		}
-	private:
-		Array<VkDescriptorSetLayout> vulkanDescriptorLayouts;
-		uint32 layoutHash;
-		VkPipelineLayout layoutHandle;
-		PVulkanGraphics graphics;
-		friend class VulkanPipelineStateCacheManager;
-	};
-	DEFINE_REF(VulkanPipelineLayout);
+		public:
+			DescriptorSet(PGraphics graphics, PDescriptorAllocator owner)
+				: graphics(graphics)
+				, owner(owner)
+				, setHandle(VK_NULL_HANDLE)
+			{}
+			virtual ~DescriptorSet();
+			virtual void updateBuffer(uint32_t binding, Gfx::PUniformBuffer uniformBuffer);
+			virtual void updateBuffer(uint32_t binding, Gfx::PStructuredBuffer uniformBuffer);
+			virtual void updateSampler(uint32_t binding, Gfx::PSamplerState samplerState);
+			virtual void updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::PSamplerState sampler = nullptr);
+			virtual bool operator<(Gfx::PDescriptorSet other);
+			inline VkDescriptorSet getHandle() const
+			{
+				return setHandle;
+			}
+		private:
+			virtual void writeChanges();
+			Array<VkDescriptorImageInfo> imageInfos;
+			Array<VkDescriptorBufferInfo> bufferInfos;
+			Array<VkWriteDescriptorSet> writeDescriptors;
+			VkDescriptorSet setHandle;
+			PDescriptorAllocator owner;
+			PGraphics graphics;
+			friend class DescriptorAllocator;
+		};
+		DEFINE_REF(DescriptorSet);
 
-	class VulkanDescriptorSet : public DescriptorSet
-	{
-	public:
-		VulkanDescriptorSet(PVulkanGraphics graphics, PVulkanDescriptorAllocator owner)
-			: graphics(graphics)
-			, owner(owner)
-			, setHandle(VK_NULL_HANDLE) 
-		{}
-		virtual ~VulkanDescriptorSet();
-		virtual void updateBuffer(uint32_t binding, PUniformBuffer uniformBuffer);
-		virtual void updateBuffer(uint32_t binding, PStructuredBuffer uniformBuffer);
-		virtual void updateSampler(uint32_t binding, PSamplerState samplerState);
-		virtual void updateTexture(uint32_t binding, PTexture texture, PSamplerState sampler = nullptr);
-		virtual bool operator<(PDescriptorSet other);
-		inline VkDescriptorSet getHandle() const
+		class DescriptorAllocator : public Gfx::DescriptorAllocator
 		{
-			return setHandle;
-		}
-	private:
-		virtual void writeChanges();
-		Array<VkDescriptorImageInfo> imageInfos;
-		Array<VkDescriptorBufferInfo> bufferInfos;
-		Array<VkWriteDescriptorSet> writeDescriptors;
-		VkDescriptorSet setHandle;
-		PVulkanDescriptorAllocator owner;
-		PVulkanGraphics graphics;
-		friend class VulkanDescriptorAllocator;
-	};
-	DEFINE_REF(VulkanDescriptorSet);
+		public:
+			DescriptorAllocator(PGraphics graphics, DescriptorLayout& layout);
+			~DescriptorAllocator();
+			virtual void allocateDescriptorSet(Gfx::PDescriptorSet& descriptorSet);
 
-	class VulkanDescriptorAllocator : public DescriptorAllocator
-	{
-	public:
-		VulkanDescriptorAllocator(PVulkanGraphics graphics, VulkanDescriptorLayout& layout);
-		~VulkanDescriptorAllocator();
-		virtual void allocateDescriptorSet(PDescriptorSet& descriptorSet);
-
-		inline VkDescriptorPool getHandle()
+			inline VkDescriptorPool getHandle()
+			{
+				return poolHandle;
+			}
+		private:
+			PGraphics graphics;
+			int maxSets = 512;
+			VkDescriptorPool poolHandle;
+			DescriptorLayout& layout;
+		};
+		DEFINE_REF(DescriptorAllocator);
+		enum class QueueType
 		{
-			return poolHandle;
-		}
-	private:
-		PVulkanGraphics graphics;
-		int maxSets = 512;
-		VkDescriptorPool poolHandle;
-		VulkanDescriptorLayout& layout;
-	};
-	DEFINE_REF(VulkanDescriptorAllocator);
+			GRAPHICS = 1,
+			COMPUTE = 2,
+			TRANSFER = 3
+		};
+		class QueueOwnedResource
+		{
+		public:
+			QueueOwnedResource(PGraphics graphics, QueueType startQueueType);
+			~QueueOwnedResource();
+			CommandBufferManager* getCommands();
+			//Preliminary checks to see if the barrier should be executed at all
+			void transferOwnership(QueueType newOwner);
+		protected:
+			virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
+			QueueType currentOwner;
+			PGraphics graphics;
+			CommandBufferManager* cachedCmdBufferManager;
+		};
+		DEFINE_REF(QueueOwnedResource);
 
-	class VulkanUniformBuffer : public UniformBuffer
-	{
+		class Buffer : public QueueOwnedResource
+		{
+		public:
+			Buffer(PGraphics graphics, uint32 size, VkBufferUsageFlags usage);
+			virtual ~Buffer();
+		private:
+			virtual VkAccessFlags getSourceAccessMask() = 0;
+			virtual VkAccessFlags getDestAccessMask() = 0;
+			// Inherited via QueueOwnedResource
+			virtual void executeOwnershipBarrier(QueueType newOwner);
+		};
+		DEFINE_REF(Buffer);
 
-	};
-	DEFINE_REF(VulkanUniformBuffer);
+		class UniformBuffer : public Gfx::UniformBuffer
+		{
 
-	class VulkanStructuredBuffer : public StructuredBuffer
-	{
+		};
+		DEFINE_REF(UniformBuffer);
 
-	};
-	DEFINE_REF(VulkanStructuredBuffer);
+		class StructuredBuffer : public Gfx::StructuredBuffer
+		{
 
-	class VulkanTextureBase
-	{
-	private:
-		uint32 sizeX;
-		uint32 sizeY;
-		uint32 sizeZ;
-		uint32 arrayCount;
-		uint32 layerCount;
-	};
-	DEFINE_REF(VulkanTextureBase);
+		};
+		DEFINE_REF(StructuredBuffer);
 
-	class VulkanTexture2D : public Texture2D
-	{
-	public:
-	private:
-		PVulkanTextureBase textureHandle;
-	};
-	DEFINE_REF(VulkanTexture2D);
+		class TextureBase
+		{
+		private:
+			uint32 sizeX;
+			uint32 sizeY;
+			uint32 sizeZ;
+			uint32 arrayCount;
+			uint32 layerCount;
+		};
+		DEFINE_REF(TextureBase);
 
-	class VulkanSamplerState
-	{
-	public:
-		VkSampler sampler;
-	};
-	DEFINE_REF(VulkanSamplerState);
+		class Texture2D : public Gfx::Texture2D
+		{
+		public:
+		private:
+			PTextureBase textureHandle;
+		};
+		DEFINE_REF(Texture2D);
 
-	class VulkanViewport : public Viewport
-	{
-	public:
-	private:
-		uint32 sizeX;
-		uint32 sizeY;
-		uint32 offsetX;
-		uint32 offsetY;
-		VkSwapchainKHR swapchain;
-		void* windowHandle;
-	};
-	DECLARE_REF(VulkanViewport);
+		class SamplerState
+		{
+		public:
+			VkSampler sampler;
+		};
+		DEFINE_REF(SamplerState);
+
+		class Viewport : public Gfx::Viewport
+		{
+		public:
+		private:
+			uint32 sizeX;
+			uint32 sizeY;
+			uint32 offsetX;
+			uint32 offsetY;
+			VkSwapchainKHR swapchain;
+			void* windowHandle;
+		};
+		DECLARE_REF(Viewport);
+	}
 }

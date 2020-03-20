@@ -6,7 +6,7 @@ namespace Seele
 	class SceneRenderPath : public RenderPath
 	{
 	public:
-		SceneRenderPath(PGraphics graphics);
+		SceneRenderPath(Gfx::PGraphics graphics);
 		virtual ~SceneRenderPath();
 		virtual void applyArea(Rect area) override;
 		virtual void init() override;

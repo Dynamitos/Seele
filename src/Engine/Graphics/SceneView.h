@@ -5,7 +5,7 @@ namespace Seele
 	class SceneView : public View
 	{
 	public:
-		SceneView(PGraphics graphics);
+		SceneView(Gfx::PGraphics graphics);
 		~SceneView();
 	};
 }

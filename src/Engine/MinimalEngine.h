@@ -224,3 +224,5 @@ namespace Seele
 		T* handle;
 	};
 }
+
+using namespace Seele;

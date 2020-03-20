@@ -2,6 +2,7 @@ target_sources(SeeleEngine
 	PRIVATE
 		VulkanAllocator.h
 		VulkanAllocator.cpp
+		VulkanBuffer.cpp
 		VulkanGraphics.h
 		VulkanGraphics.cpp
 		VulkanGraphicsResources.h

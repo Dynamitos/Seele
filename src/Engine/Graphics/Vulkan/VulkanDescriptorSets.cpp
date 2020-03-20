@@ -3,7 +3,10 @@
 #include "VulkanGraphics.h"
 #include "VulkanInitializer.h"
 
-Seele::VulkanDescriptorLayout::~VulkanDescriptorLayout()
+using namespace Seele;
+using namespace Seele::Vulkan;
+
+DescriptorLayout::~DescriptorLayout()
 {
 	if (layoutHandle != VK_NULL_HANDLE)
 	{
@@ -11,7 +14,7 @@ Seele::VulkanDescriptorLayout::~VulkanDescriptorLayout()
 	}
 }
 
-void Seele::VulkanDescriptorLayout::create()
+void DescriptorLayout::create()
 {
 	if (layoutHandle != VK_NULL_HANDLE)
 	{
@@ -21,7 +24,7 @@ void Seele::VulkanDescriptorLayout::create()
 	for (size_t i = 0; i < descriptorBindings.size(); ++i)
 	{
 		VkDescriptorSetLayoutBinding& binding = bindings[i];
-		const DescriptorBinding& rhiBinding = descriptorBindings[i];
+		const Gfx::DescriptorBinding& rhiBinding = descriptorBindings[i];
 		binding.binding = rhiBinding.binding;
 		binding.descriptorCount = rhiBinding.descriptorCount;
 		binding.descriptorType = cast(rhiBinding.descriptorType);
@@ -32,10 +35,10 @@ void Seele::VulkanDescriptorLayout::create()
 		init::DescriptorSetLayoutCreateInfo(bindings.data(), bindings.size());
 	VK_CHECK(vkCreateDescriptorSetLayout(graphics->getDevice(), &createInfo, nullptr, &layoutHandle));
 
-	allocator = new VulkanDescriptorAllocator(graphics, *this);
+	allocator = new DescriptorAllocator(graphics, *this);
 }
 
-Seele::VulkanPipelineLayout::~VulkanPipelineLayout()
+PipelineLayout::~PipelineLayout()
 {
 	if (layoutHandle != VK_NULL_HANDLE)
 	{
@@ -43,12 +46,12 @@ Seele::VulkanPipelineLayout::~VulkanPipelineLayout()
 	}
 }
 
-void Seele::VulkanPipelineLayout::create()
+void PipelineLayout::create()
 {
 	vulkanDescriptorLayouts.resize(descriptorSetLayouts.size());
 	for (size_t i = 0; i < descriptorSetLayouts.size(); ++i)
 	{
-		PVulkanDescriptorLayout layout = descriptorSetLayouts[i].cast<VulkanDescriptorLayout>();
+		PDescriptorLayout layout = descriptorSetLayouts[i].cast<DescriptorLayout>();
 		layout->create();
 		vulkanDescriptorLayouts[i] = layout->getHandle();
 	}
@@ -68,13 +71,13 @@ void Seele::VulkanPipelineLayout::create()
 	layoutHash = memCrc32(&createInfo, sizeof(VkPipelineLayoutCreateInfo), 0);
 }
 
-Seele::VulkanDescriptorSet::~VulkanDescriptorSet()
+DescriptorSet::~DescriptorSet()
 {
 }
 
-void Seele::VulkanDescriptorSet::updateBuffer(uint32_t binding, PUniformBuffer uniformBuffer)
+void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PUniformBuffer uniformBuffer)
 {
-	PVulkanUniformBuffer vulkanBuffer = uniformBuffer.cast<VulkanUniformBuffer>();
+	PUniformBuffer vulkanBuffer = uniformBuffer.cast<UniformBuffer>();
 //	VkDescriptorBufferInfo bufferInfo = init::DescriptorBufferInfo(vulkanBuffer->getHandle(), vulkanBuffer->getOffset(), vulkanBuffer->getSize());
 //	bufferInfos.add(bufferInfo);
 
@@ -82,9 +85,9 @@ void Seele::VulkanDescriptorSet::updateBuffer(uint32_t binding, PUniformBuffer u
 	writeDescriptors.add(writeDescriptor);
 }
 
-void Seele::VulkanDescriptorSet::updateBuffer(uint32_t binding, PStructuredBuffer uniformBuffer)
+void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PStructuredBuffer uniformBuffer)
 {
-	PVulkanStructuredBuffer vulkanBuffer = uniformBuffer.cast<VulkanStructuredBuffer>();
+	PStructuredBuffer vulkanBuffer = uniformBuffer.cast<StructuredBuffer>();
 //	VkDescriptorBufferInfo bufferInfo = init::DescriptorBufferInfo(vulkanBuffer->getHandle(), vulkanBuffer->getOffset(), vulkanBuffer->getSize());
 //	bufferInfos.add(bufferInfo);
 
@@ -92,9 +95,9 @@ void Seele::VulkanDescriptorSet::updateBuffer(uint32_t binding, PStructuredBuffe
 	writeDescriptors.add(writeDescriptor);
 }
 
-void Seele::VulkanDescriptorSet::updateSampler(uint32_t binding, PSamplerState samplerState)
+void DescriptorSet::updateSampler(uint32_t binding, Gfx::PSamplerState samplerState)
 {
-	PVulkanSamplerState vulkanSampler = samplerState.cast<VulkanSamplerState>();
+	PSamplerState vulkanSampler = samplerState.cast<SamplerState>();
 	VkDescriptorImageInfo imageInfo =
 		init::DescriptorImageInfo(
 			vulkanSampler->sampler,
@@ -106,7 +109,7 @@ void Seele::VulkanDescriptorSet::updateSampler(uint32_t binding, PSamplerState s
 	writeDescriptors.add(writeDescriptor);
 }
 
-void Seele::VulkanDescriptorSet::updateTexture(uint32_t binding, PTexture texture, PSamplerState samplerState)
+void DescriptorSet::updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::PSamplerState samplerState)
 {
 //	VulkanTextureBase* vulkanTexture = VulkanTextureBase::cast(texture);
 	//It is assumed that the image is in the correct layout
@@ -129,13 +132,13 @@ void Seele::VulkanDescriptorSet::updateTexture(uint32_t binding, PTexture textur
 	writeDescriptors.add(writeDescriptor);
 }
 
-bool Seele::VulkanDescriptorSet::operator<(PDescriptorSet other)
+bool DescriptorSet::operator<(Gfx::PDescriptorSet other)
 {
-	PVulkanDescriptorSet otherSet = other.cast<VulkanDescriptorSet>();
+	PDescriptorSet otherSet = other.cast<DescriptorSet>();
 	return setHandle < otherSet->setHandle;
 }
 
-void Seele::VulkanDescriptorSet::writeChanges()
+void DescriptorSet::writeChanges()
 {
 	if (writeDescriptors.size() > 0)
 	{
@@ -146,7 +149,7 @@ void Seele::VulkanDescriptorSet::writeChanges()
 	}
 }
 
-Seele::VulkanDescriptorAllocator::VulkanDescriptorAllocator(PVulkanGraphics graphics, VulkanDescriptorLayout& layout)
+DescriptorAllocator::DescriptorAllocator(PGraphics graphics, DescriptorLayout& layout)
 	: layout(layout)
 	, graphics(graphics)
 {
@@ -173,15 +176,15 @@ Seele::VulkanDescriptorAllocator::VulkanDescriptorAllocator(PVulkanGraphics grap
 	VK_CHECK(vkCreateDescriptorPool(graphics->getDevice(), &createInfo, nullptr, &poolHandle));
 }
 
-Seele::VulkanDescriptorAllocator::~VulkanDescriptorAllocator()
+DescriptorAllocator::~DescriptorAllocator()
 {
 	vkDestroyDescriptorPool(graphics->getDevice(), poolHandle, nullptr);
 }
 
-void Seele::VulkanDescriptorAllocator::allocateDescriptorSet(PDescriptorSet& descriptorSet)
+void DescriptorAllocator::allocateDescriptorSet(Gfx::PDescriptorSet& descriptorSet)
 {
-	descriptorSet = new VulkanDescriptorSet(graphics, this);
-	PVulkanDescriptorSet vulkanSet = descriptorSet.cast<VulkanDescriptorSet>();
+	descriptorSet = new DescriptorSet(graphics, this);
+	PDescriptorSet vulkanSet = descriptorSet.cast<DescriptorSet>();
 	VkDescriptorSetLayout layoutHandle = layout.getHandle();
 	VkDescriptorSetAllocateInfo allocInfo =
 		init::DescriptorSetAllocateInfo(poolHandle, &layoutHandle, 1);

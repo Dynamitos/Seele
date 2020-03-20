@@ -14,8 +14,11 @@
 
 namespace Seele
 {
-	VkDescriptorType cast(const SeDescriptorType& descriptorType);
-	SeDescriptorType cast(const VkDescriptorType& descriptorType);
-	VkShaderStageFlagBits cast(const SeShaderStageFlagBits& stage);
-	SeShaderStageFlagBits cast(const VkShaderStageFlagBits& stage);
+	namespace Vulkan
+	{
+		VkDescriptorType cast(const Gfx::SeDescriptorType& descriptorType);
+		Gfx::SeDescriptorType cast(const VkDescriptorType& descriptorType);
+		VkShaderStageFlagBits cast(const Gfx::SeShaderStageFlagBits& stage);
+		Gfx::SeShaderStageFlagBits cast(const VkShaderStageFlagBits& stage);
+	}
 }

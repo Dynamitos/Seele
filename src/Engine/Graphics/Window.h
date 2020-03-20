@@ -49,11 +49,11 @@ namespace Seele {
 		Array<PView> views;
 	};
 	DEFINE_REF(Section)
-	class Graphics;
+	class Gfx::Graphics;
 	class Window
 	{
 	public:
-		Window(const WindowCreateInfo& createInfo, PGraphics graphics);
+		Window(const WindowCreateInfo& createInfo, Gfx::PGraphics graphics);
 		~Window();
 		void beginFrame();
 		void endFrame();
@@ -62,7 +62,7 @@ namespace Seele {
 		PSection center;
 		uint32 width;
 		uint32 height;
-		PGraphics graphics;
+		Gfx::PGraphics graphics;
 	};
 	DEFINE_REF(Window)
 }

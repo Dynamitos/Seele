@@ -4,8 +4,9 @@
 #include "VulkanInitializer.h"
 #include <GLFW/glfw3.h>
 
+using namespace Seele::Vulkan;
 
-Seele::VulkanGraphics::VulkanGraphics()
+Graphics::Graphics()
 	: callback(VK_NULL_HANDLE)
 	, handle(VK_NULL_HANDLE)
 	, instance(VK_NULL_HANDLE)
@@ -15,12 +16,12 @@ Seele::VulkanGraphics::VulkanGraphics()
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 }
 
-Seele::VulkanGraphics::~VulkanGraphics()
+Graphics::~Graphics()
 {
 	glfwTerminate();
 }
 
-void Seele::VulkanGraphics::init(GraphicsInitializer initInfo)
+void Graphics::init(GraphicsInitializer initInfo)
 {
 	initInstance(initInfo);
 	setupDebugCallback();
@@ -28,34 +29,34 @@ void Seele::VulkanGraphics::init(GraphicsInitializer initInfo)
 	allocator = new VulkanAllocator(this);
 }
 
-void Seele::VulkanGraphics::beginFrame(void* windowHandle)
+void Graphics::beginFrame(void* windowHandle)
 {
 	GLFWwindow* window = static_cast<GLFWwindow*>(windowHandle);
 	glfwPollEvents();
 }
 
-void Seele::VulkanGraphics::endFrame(void* windowHandle)
+void Graphics::endFrame(void* windowHandle)
 {
 	GLFWwindow* window = static_cast<GLFWwindow*>(windowHandle);
 }
 
-void* Seele::VulkanGraphics::createWindow(const WindowCreateInfo& createInfo)
+void* Graphics::createWindow(const WindowCreateInfo& createInfo)
 {
 	GLFWwindow* window = glfwCreateWindow(createInfo.width, createInfo.height, createInfo.title, createInfo.bFullscreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
 	return window;
 }
 
-VkDevice Seele::VulkanGraphics::getDevice() const
+VkDevice Graphics::getDevice() const
 {
 	return handle;
 }
 
-VkPhysicalDevice Seele::VulkanGraphics::getPhysicalDevice() const
+VkPhysicalDevice Graphics::getPhysicalDevice() const
 {
 	return physicalDevice;
 }
 
-Seele::Array<const char*> Seele::VulkanGraphics::getRequiredExtensions()
+Array<const char*> Graphics::getRequiredExtensions()
 {
 	Array<const char*> extensions;
 
@@ -70,7 +71,7 @@ Seele::Array<const char*> Seele::VulkanGraphics::getRequiredExtensions()
 #endif // ENABLE_VALIDATION
 	return extensions;
 }
-void Seele::VulkanGraphics::initInstance(GraphicsInitializer initInfo)
+void Graphics::initInstance(GraphicsInitializer initInfo)
 {
 	VkApplicationInfo appInfo = {};
 	appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -98,7 +99,7 @@ void Seele::VulkanGraphics::initInstance(GraphicsInitializer initInfo)
 #endif
 	VK_CHECK(vkCreateInstance(&info, nullptr, &instance));
 }
-void Seele::VulkanGraphics::setupDebugCallback()
+void Graphics::setupDebugCallback()
 {
 	VkDebugReportCallbackCreateInfoEXT createInfo =
 		init::DebugReportCallbackCreateInfo(
@@ -107,7 +108,7 @@ void Seele::VulkanGraphics::setupDebugCallback()
 	VK_CHECK(CreateDebugReportCallbackEXT(instance, &createInfo, nullptr, &callback));
 }
 
-void Seele::VulkanGraphics::pickPhysicalDevice()
+void Graphics::pickPhysicalDevice()
 {
 	uint32 physicalDeviceCount;
 	vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, nullptr);
@@ -137,7 +138,7 @@ void Seele::VulkanGraphics::pickPhysicalDevice()
 	this->physicalDevice = bestDevice;
 }
 
-void Seele::VulkanGraphics::createDevice()
+void Graphics::createDevice()
 {
 
 }

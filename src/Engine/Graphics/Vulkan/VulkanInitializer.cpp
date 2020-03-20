@@ -1,6 +1,8 @@
 #include "VulkanInitializer.h"
 
-VkApplicationInfo Seele::init::ApplicationInfo(const char* appName, uint32_t appVersion, const char* engineName, uint32_t engineVersion, uint32_t apiVersion)
+using namespace Seele::Vulkan;
+
+VkApplicationInfo init::ApplicationInfo(const char* appName, uint32_t appVersion, const char* engineName, uint32_t engineVersion, uint32_t apiVersion)
 {
 	VkApplicationInfo info = {};
 	info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -11,7 +13,7 @@ VkApplicationInfo Seele::init::ApplicationInfo(const char* appName, uint32_t app
 	return info;
 }
 
-VkInstanceCreateInfo Seele::init::InstanceCreateInfo(VkApplicationInfo* appInfo, const Array<const char*>& extensions, const Array<const char*>& layers)
+VkInstanceCreateInfo init::InstanceCreateInfo(VkApplicationInfo* appInfo, const Array<const char*>& extensions, const Array<const char*>& layers)
 {
 	VkInstanceCreateInfo info = {};
 	info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -23,7 +25,7 @@ VkInstanceCreateInfo Seele::init::InstanceCreateInfo(VkApplicationInfo* appInfo,
 	return info;
 }
 
-VkDebugReportCallbackCreateInfoEXT Seele::init::DebugReportCallbackCreateInfo(VkDebugReportFlagsEXT flags)
+VkDebugReportCallbackCreateInfoEXT init::DebugReportCallbackCreateInfo(VkDebugReportFlagsEXT flags)
 {
 	VkDebugReportCallbackCreateInfoEXT createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
@@ -32,13 +34,13 @@ VkDebugReportCallbackCreateInfoEXT Seele::init::DebugReportCallbackCreateInfo(Vk
 	return createInfo;
 }
 
-VkDeviceQueueCreateInfo Seele::init::DeviceQueueCreateInfo(int queueFamilyIndex, int queueCount)
+VkDeviceQueueCreateInfo init::DeviceQueueCreateInfo(int queueFamilyIndex, int queueCount)
 {
 	float priority = 1.0f;
 	return DeviceQueueCreateInfo(queueFamilyIndex, queueCount, &priority);
 }
 
-VkDeviceQueueCreateInfo Seele::init::DeviceQueueCreateInfo(int queueFamilyIndex, int queueCount, float* queuePriority)
+VkDeviceQueueCreateInfo init::DeviceQueueCreateInfo(int queueFamilyIndex, int queueCount, float* queuePriority)
 {
 	VkDeviceQueueCreateInfo createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -48,12 +50,12 @@ VkDeviceQueueCreateInfo Seele::init::DeviceQueueCreateInfo(int queueFamilyIndex,
 	return createInfo;
 }
 
-VkDeviceCreateInfo Seele::init::DeviceCreateInfo(VkDeviceQueueCreateInfo* queueInfos, uint32_t queueCount, VkPhysicalDeviceFeatures* features)
+VkDeviceCreateInfo init::DeviceCreateInfo(VkDeviceQueueCreateInfo* queueInfos, uint32_t queueCount, VkPhysicalDeviceFeatures* features)
 {
 	return DeviceCreateInfo(queueInfos, queueCount, features, nullptr, 0, nullptr, 0);
 }
 
-VkSwapchainCreateInfoKHR Seele::init::SwapchainCreateInfo(VkSurfaceKHR surface, uint32_t minImageCount, VkFormat imageFormat, VkColorSpaceKHR colorSpace, VkExtent2D extent, uint32_t arrayLayers, VkImageUsageFlags usage, VkSurfaceTransformFlagBitsKHR Transform, VkCompositeAlphaFlagBitsKHR alpha, VkPresentModeKHR presentMode, VkBool32 clipped)
+VkSwapchainCreateInfoKHR init::SwapchainCreateInfo(VkSurfaceKHR surface, uint32_t minImageCount, VkFormat imageFormat, VkColorSpaceKHR colorSpace, VkExtent2D extent, uint32_t arrayLayers, VkImageUsageFlags usage, VkSurfaceTransformFlagBitsKHR Transform, VkCompositeAlphaFlagBitsKHR alpha, VkPresentModeKHR presentMode, VkBool32 clipped)
 {
 	VkSwapchainCreateInfoKHR createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -71,7 +73,7 @@ VkSwapchainCreateInfoKHR Seele::init::SwapchainCreateInfo(VkSurfaceKHR surface, 
 	return createInfo;
 }
 
-VkSwapchainCreateInfoKHR Seele::init::SwapchainCreateInfo(VkSurfaceKHR surface, uint32_t minImageCount, VkFormat imageFormat, VkColorSpaceKHR colorSpace, uint32_t width, uint32_t height, uint32_t arrayLayers, VkImageUsageFlags usage, VkSurfaceTransformFlagBitsKHR Transform, VkCompositeAlphaFlagBitsKHR alpha, VkPresentModeKHR presentMode, VkBool32 clipped)
+VkSwapchainCreateInfoKHR init::SwapchainCreateInfo(VkSurfaceKHR surface, uint32_t minImageCount, VkFormat imageFormat, VkColorSpaceKHR colorSpace, uint32_t width, uint32_t height, uint32_t arrayLayers, VkImageUsageFlags usage, VkSurfaceTransformFlagBitsKHR Transform, VkCompositeAlphaFlagBitsKHR alpha, VkPresentModeKHR presentMode, VkBool32 clipped)
 {
 	VkSwapchainCreateInfoKHR createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -90,7 +92,7 @@ VkSwapchainCreateInfoKHR Seele::init::SwapchainCreateInfo(VkSurfaceKHR surface, 
 	return createInfo;
 }
 
-VkFramebufferCreateInfo Seele::init::FramebufferCreateInfo(VkRenderPass renderPass, uint32_t attachmentCount, VkImageView* attachments, uint32_t width, uint32_t height, uint32_t layers)
+VkFramebufferCreateInfo init::FramebufferCreateInfo(VkRenderPass renderPass, uint32_t attachmentCount, VkImageView* attachments, uint32_t width, uint32_t height, uint32_t layers)
 {
 	VkFramebufferCreateInfo frameBufferCreateInfo = {};
 	frameBufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -104,7 +106,7 @@ VkFramebufferCreateInfo Seele::init::FramebufferCreateInfo(VkRenderPass renderPa
 	return frameBufferCreateInfo;
 }
 
-VkAttachmentDescription Seele::init::AttachmentDescription(VkFormat format, VkSampleCountFlagBits sample, VkAttachmentLoadOp loadOp, VkAttachmentStoreOp storeOp, VkAttachmentLoadOp stencilLoadOp, VkAttachmentStoreOp stencilStoreOp, VkImageLayout imageLayout, VkImageLayout finalLayout)
+VkAttachmentDescription init::AttachmentDescription(VkFormat format, VkSampleCountFlagBits sample, VkAttachmentLoadOp loadOp, VkAttachmentStoreOp storeOp, VkAttachmentLoadOp stencilLoadOp, VkAttachmentStoreOp stencilStoreOp, VkImageLayout imageLayout, VkImageLayout finalLayout)
 {
 	VkAttachmentDescription desc = {};
 	desc.format = format;
@@ -118,7 +120,7 @@ VkAttachmentDescription Seele::init::AttachmentDescription(VkFormat format, VkSa
 	return desc;
 }
 
-VkSubpassDescription Seele::init::SubpassDescription(VkPipelineBindPoint bindPoint, uint32_t colorAttachmentCount, VkAttachmentReference* colorReference, uint32_t depthAttachmentCount, VkAttachmentReference* depthReference, uint32_t inputAttachmentCount, VkAttachmentReference* inputReference, uint32_t resolveAttachmentCount, VkAttachmentReference* resolveReference, uint32_t preserveAttachmentCount, VkAttachmentReference* preserveReference)
+VkSubpassDescription init::SubpassDescription(VkPipelineBindPoint bindPoint, uint32_t colorAttachmentCount, VkAttachmentReference* colorReference, uint32_t depthAttachmentCount, VkAttachmentReference* depthReference, uint32_t inputAttachmentCount, VkAttachmentReference* inputReference, uint32_t resolveAttachmentCount, VkAttachmentReference* resolveReference, uint32_t preserveAttachmentCount, VkAttachmentReference* preserveReference)
 {
 	VkSubpassDescription desc = {};
 	desc.pipelineBindPoint = bindPoint;
@@ -127,7 +129,7 @@ VkSubpassDescription Seele::init::SubpassDescription(VkPipelineBindPoint bindPoi
 	return desc;
 }
 
-VkRenderPassCreateInfo Seele::init::RenderPassCreateInfo(uint32_t attachmentCount, const VkAttachmentDescription* attachments, uint32_t subpassCount, const VkSubpassDescription* subpasses, uint32_t dependencyCount, const VkSubpassDependency* subpassDependencies)
+VkRenderPassCreateInfo init::RenderPassCreateInfo(uint32_t attachmentCount, const VkAttachmentDescription* attachments, uint32_t subpassCount, const VkSubpassDescription* subpasses, uint32_t dependencyCount, const VkSubpassDependency* subpassDependencies)
 {
 	VkRenderPassCreateInfo info = {};
 	info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
@@ -140,7 +142,7 @@ VkRenderPassCreateInfo Seele::init::RenderPassCreateInfo(uint32_t attachmentCoun
 
 	return info;
 }
-VkDeviceCreateInfo Seele::init::DeviceCreateInfo(VkDeviceQueueCreateInfo* queueInfos, uint32_t queueCount, VkPhysicalDeviceFeatures* features, const char* const* deviceExtensions, uint32_t deviceExtensionCount, const char* const* layers, uint32_t layerCount)
+VkDeviceCreateInfo init::DeviceCreateInfo(VkDeviceQueueCreateInfo* queueInfos, uint32_t queueCount, VkPhysicalDeviceFeatures* features, const char* const* deviceExtensions, uint32_t deviceExtensionCount, const char* const* layers, uint32_t layerCount)
 {
 	VkDeviceCreateInfo createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -162,7 +164,7 @@ VkDeviceCreateInfo Seele::init::DeviceCreateInfo(VkDeviceQueueCreateInfo* queueI
 	return createInfo;
 }
 
-VkMemoryAllocateInfo Seele::init::MemoryAllocateInfo()
+VkMemoryAllocateInfo init::MemoryAllocateInfo()
 {
 	VkMemoryAllocateInfo memAllocInfo = {};
 	memAllocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -170,7 +172,7 @@ VkMemoryAllocateInfo Seele::init::MemoryAllocateInfo()
 	return memAllocInfo;
 }
 
-VkCommandBufferAllocateInfo Seele::init::CommandBufferAllocateInfo(VkCommandPool commandPool, VkCommandBufferLevel level, uint32_t bufferCount)
+VkCommandBufferAllocateInfo init::CommandBufferAllocateInfo(VkCommandPool commandPool, VkCommandBufferLevel level, uint32_t bufferCount)
 {
 	VkCommandBufferAllocateInfo commandBufferAllocateInfo = {};
 	commandBufferAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -180,14 +182,14 @@ VkCommandBufferAllocateInfo Seele::init::CommandBufferAllocateInfo(VkCommandPool
 	return commandBufferAllocateInfo;
 }
 
-VkCommandPoolCreateInfo Seele::init::CommandPoolCreateInfo()
+VkCommandPoolCreateInfo init::CommandPoolCreateInfo()
 {
 	VkCommandPoolCreateInfo cmdPoolCreateInfo = {};
 	cmdPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	return cmdPoolCreateInfo;
 }
 
-VkCommandBufferBeginInfo Seele::init::CommandBufferBeginInfo()
+VkCommandBufferBeginInfo init::CommandBufferBeginInfo()
 {
 	VkCommandBufferBeginInfo cmdBufferBeginInfo = {};
 	cmdBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -195,14 +197,14 @@ VkCommandBufferBeginInfo Seele::init::CommandBufferBeginInfo()
 	return cmdBufferBeginInfo;
 }
 
-VkCommandBufferInheritanceInfo Seele::init::CommandBufferInheritanceInfo()
+VkCommandBufferInheritanceInfo init::CommandBufferInheritanceInfo()
 {
 	VkCommandBufferInheritanceInfo cmdBufferInheritanceInfo = {};
 	cmdBufferInheritanceInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
 	return cmdBufferInheritanceInfo;
 }
 
-VkRenderPassBeginInfo Seele::init::RenderPassBeginInfo()
+VkRenderPassBeginInfo init::RenderPassBeginInfo()
 {
 	VkRenderPassBeginInfo renderPassBeginInfo = {};
 	renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -210,7 +212,7 @@ VkRenderPassBeginInfo Seele::init::RenderPassBeginInfo()
 	return renderPassBeginInfo;
 }
 
-VkRenderPassCreateInfo Seele::init::RenderPassCreateInfo()
+VkRenderPassCreateInfo init::RenderPassCreateInfo()
 {
 	VkRenderPassCreateInfo renderPassCreateInfo = {};
 	renderPassCreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
@@ -218,7 +220,7 @@ VkRenderPassCreateInfo Seele::init::RenderPassCreateInfo()
 	return renderPassCreateInfo;
 }
 
-VkImageMemoryBarrier Seele::init::ImageMemoryBarrier(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t srcQueue, uint32_t dstQueue)
+VkImageMemoryBarrier init::ImageMemoryBarrier(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t srcQueue, uint32_t dstQueue)
 {
 	VkImageMemoryBarrier barrier = {};
 	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -260,7 +262,7 @@ VkImageMemoryBarrier Seele::init::ImageMemoryBarrier(VkImage image, VkImageLayou
 	return barrier;
 }
 
-VkImageMemoryBarrier Seele::init::ImageMemoryBarrier()
+VkImageMemoryBarrier init::ImageMemoryBarrier()
 {
 	VkImageMemoryBarrier barrier = {};
 	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -268,7 +270,7 @@ VkImageMemoryBarrier Seele::init::ImageMemoryBarrier()
 	return barrier;
 }
 
-VkBufferMemoryBarrier Seele::init::BufferMemoryBarrier()
+VkBufferMemoryBarrier init::BufferMemoryBarrier()
 {
 	VkBufferMemoryBarrier bufferMemoryBarrier = {};
 	bufferMemoryBarrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
@@ -276,7 +278,7 @@ VkBufferMemoryBarrier Seele::init::BufferMemoryBarrier()
 	return bufferMemoryBarrier;
 }
 
-VkMemoryBarrier Seele::init::MemoryBarrier()
+VkMemoryBarrier init::MemoryBarrier()
 {
 	VkMemoryBarrier memoryBarrier = {};
 	memoryBarrier.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
@@ -284,7 +286,7 @@ VkMemoryBarrier Seele::init::MemoryBarrier()
 	return memoryBarrier;
 }
 
-VkImageCreateInfo Seele::init::ImageCreateInfo()
+VkImageCreateInfo init::ImageCreateInfo()
 {
 	VkImageCreateInfo imageCreateInfo = {};
 	imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -292,7 +294,7 @@ VkImageCreateInfo Seele::init::ImageCreateInfo()
 	return imageCreateInfo;
 }
 
-VkSamplerCreateInfo Seele::init::SamplerCreateInfo()
+VkSamplerCreateInfo init::SamplerCreateInfo()
 {
 	VkSamplerCreateInfo samplerCreateInfo = {};
 	samplerCreateInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -317,7 +319,7 @@ VkSamplerCreateInfo Seele::init::SamplerCreateInfo()
 	return samplerCreateInfo;
 }
 
-VkImageViewCreateInfo Seele::init::ImageViewCreateInfo()
+VkImageViewCreateInfo init::ImageViewCreateInfo()
 {
 	VkImageViewCreateInfo imageViewCreateInfo = {};
 	imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -325,7 +327,7 @@ VkImageViewCreateInfo Seele::init::ImageViewCreateInfo()
 	return imageViewCreateInfo;
 }
 
-VkSemaphoreCreateInfo Seele::init::SemaphoreCreateInfo()
+VkSemaphoreCreateInfo init::SemaphoreCreateInfo()
 {
 	VkSemaphoreCreateInfo semaphoreCreateInfo = {};
 	semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -334,7 +336,7 @@ VkSemaphoreCreateInfo Seele::init::SemaphoreCreateInfo()
 	return semaphoreCreateInfo;
 }
 
-VkFenceCreateInfo Seele::init::FenceCreateInfo(VkFenceCreateFlags flags)
+VkFenceCreateInfo init::FenceCreateInfo(VkFenceCreateFlags flags)
 {
 	VkFenceCreateInfo fenceCreateInfo = {};
 	fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
@@ -342,14 +344,14 @@ VkFenceCreateInfo Seele::init::FenceCreateInfo(VkFenceCreateFlags flags)
 	return fenceCreateInfo;
 }
 
-VkEventCreateInfo Seele::init::EventCreateInfo()
+VkEventCreateInfo init::EventCreateInfo()
 {
 	VkEventCreateInfo eventCreateInfo = {};
 	eventCreateInfo.sType = VK_STRUCTURE_TYPE_EVENT_CREATE_INFO;
 	return eventCreateInfo;
 }
 
-VkSubmitInfo Seele::init::SubmitInfo()
+VkSubmitInfo init::SubmitInfo()
 {
 	VkSubmitInfo submitInfo = {};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -357,7 +359,7 @@ VkSubmitInfo Seele::init::SubmitInfo()
 	return submitInfo;
 }
 
-VkImageSubresourceRange Seele::init::ImageSubresourceRange(VkImageAspectFlags aspect, uint32_t startMip)
+VkImageSubresourceRange init::ImageSubresourceRange(VkImageAspectFlags aspect, uint32_t startMip)
 {
 	VkImageSubresourceRange range;
 	std::memset(&range, 0, sizeof(VkImageSubresourceRange));
@@ -369,7 +371,7 @@ VkImageSubresourceRange Seele::init::ImageSubresourceRange(VkImageAspectFlags as
 	return range;
 }
 
-VkViewport Seele::init::Viewport(
+VkViewport init::Viewport(
 	float width,
 	float height,
 	float minDepth,
@@ -383,7 +385,7 @@ VkViewport Seele::init::Viewport(
 	return viewport;
 }
 
-VkRect2D Seele::init::Rect2D(
+VkRect2D init::Rect2D(
 	int32_t width,
 	int32_t height,
 	int32_t offsetX,
@@ -397,14 +399,14 @@ VkRect2D Seele::init::Rect2D(
 	return rect2D;
 }
 
-VkBufferCreateInfo Seele::init::BufferCreateInfo()
+VkBufferCreateInfo init::BufferCreateInfo()
 {
 	VkBufferCreateInfo bufCreateInfo = {};
 	bufCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 	return bufCreateInfo;
 }
 
-VkBufferCreateInfo Seele::init::BufferCreateInfo(
+VkBufferCreateInfo init::BufferCreateInfo(
 	VkBufferUsageFlags usage,
 	VkDeviceSize size)
 {
@@ -417,7 +419,7 @@ VkBufferCreateInfo Seele::init::BufferCreateInfo(
 	return bufCreateInfo;
 }
 
-VkDescriptorPoolCreateInfo Seele::init::DescriptorPoolCreateInfo(
+VkDescriptorPoolCreateInfo init::DescriptorPoolCreateInfo(
 	uint32_t poolSizeCount,
 	VkDescriptorPoolSize* pPoolSizes,
 	uint32_t maxSets)
@@ -431,7 +433,7 @@ VkDescriptorPoolCreateInfo Seele::init::DescriptorPoolCreateInfo(
 	return descriptorPoolInfo;
 }
 
-VkDescriptorPoolSize Seele::init::DescriptorPoolSize(
+VkDescriptorPoolSize init::DescriptorPoolSize(
 	VkDescriptorType type,
 	uint32_t descriptorCount)
 {
@@ -441,7 +443,7 @@ VkDescriptorPoolSize Seele::init::DescriptorPoolSize(
 	return descriptorPoolSize;
 }
 
-VkDescriptorSetLayoutBinding Seele::init::DescriptorSetLayoutBinding(
+VkDescriptorSetLayoutBinding init::DescriptorSetLayoutBinding(
 	VkDescriptorType type,
 	VkShaderStageFlags stageFlags,
 	uint32_t binding,
@@ -455,7 +457,7 @@ VkDescriptorSetLayoutBinding Seele::init::DescriptorSetLayoutBinding(
 	return setLayoutBinding;
 }
 
-VkDescriptorSetLayoutCreateInfo Seele::init::DescriptorSetLayoutCreateInfo(
+VkDescriptorSetLayoutCreateInfo init::DescriptorSetLayoutCreateInfo(
 	const VkDescriptorSetLayoutBinding* pBindings,
 	uint32_t bindingCount)
 {
@@ -467,7 +469,7 @@ VkDescriptorSetLayoutCreateInfo Seele::init::DescriptorSetLayoutCreateInfo(
 	return descriptorSetLayoutCreateInfo;
 }
 
-VkPipelineLayoutCreateInfo Seele::init::PipelineLayoutCreateInfo(
+VkPipelineLayoutCreateInfo init::PipelineLayoutCreateInfo(
 	const VkDescriptorSetLayout* pSetLayouts,
 	uint32_t setLayoutCount)
 {
@@ -479,7 +481,7 @@ VkPipelineLayoutCreateInfo Seele::init::PipelineLayoutCreateInfo(
 	return pipelineLayoutCreateInfo;
 }
 
-VkDescriptorSetAllocateInfo Seele::init::DescriptorSetAllocateInfo(
+VkDescriptorSetAllocateInfo init::DescriptorSetAllocateInfo(
 	VkDescriptorPool descriptorPool,
 	const VkDescriptorSetLayout* pSetLayouts,
 	uint32_t descriptorSetCount)
@@ -493,7 +495,7 @@ VkDescriptorSetAllocateInfo Seele::init::DescriptorSetAllocateInfo(
 	return descriptorSetAllocateInfo;
 }
 
-VkDescriptorBufferInfo Seele::init::DescriptorBufferInfo(VkBuffer buffer, VkDeviceSize offset, VkDeviceSize range)
+VkDescriptorBufferInfo init::DescriptorBufferInfo(VkBuffer buffer, VkDeviceSize offset, VkDeviceSize range)
 {
 	VkDescriptorBufferInfo bufferInfo = {};
 	bufferInfo.buffer = buffer;
@@ -503,7 +505,7 @@ VkDescriptorBufferInfo Seele::init::DescriptorBufferInfo(VkBuffer buffer, VkDevi
 	return bufferInfo;
 }
 
-VkDescriptorImageInfo Seele::init::DescriptorImageInfo(
+VkDescriptorImageInfo init::DescriptorImageInfo(
 	VkSampler sampler,
 	VkImageView imageView,
 	VkImageLayout imageLayout)
@@ -515,7 +517,7 @@ VkDescriptorImageInfo Seele::init::DescriptorImageInfo(
 	return descriptorImageInfo;
 }
 
-VkWriteDescriptorSet Seele::init::WriteDescriptorSet(
+VkWriteDescriptorSet init::WriteDescriptorSet(
 	VkDescriptorSet dstSet,
 	VkDescriptorType type,
 	uint32_t binding,
@@ -533,7 +535,7 @@ VkWriteDescriptorSet Seele::init::WriteDescriptorSet(
 	return writeDescriptorSet;
 }
 
-VkWriteDescriptorSet Seele::init::WriteDescriptorSet(
+VkWriteDescriptorSet init::WriteDescriptorSet(
 	VkDescriptorSet dstSet,
 	VkDescriptorType type,
 	uint32_t binding,
@@ -551,7 +553,7 @@ VkWriteDescriptorSet Seele::init::WriteDescriptorSet(
 	return writeDescriptorSet;
 }
 
-VkVertexInputBindingDescription Seele::init::VertexInputBindingDescription(
+VkVertexInputBindingDescription init::VertexInputBindingDescription(
 	uint32_t binding,
 	uint32_t stride,
 	VkVertexInputRate inputRate)
@@ -563,7 +565,7 @@ VkVertexInputBindingDescription Seele::init::VertexInputBindingDescription(
 	return vInputBindDescription;
 }
 
-VkVertexInputAttributeDescription Seele::init::VertexInputAttributeDescription(
+VkVertexInputAttributeDescription init::VertexInputAttributeDescription(
 	uint32_t binding,
 	uint32_t location,
 	VkFormat format,
@@ -577,7 +579,7 @@ VkVertexInputAttributeDescription Seele::init::VertexInputAttributeDescription(
 	return vInputAttribDescription;
 }
 
-VkPipelineVertexInputStateCreateInfo Seele::init::PipelineVertexInputStateCreateInfo()
+VkPipelineVertexInputStateCreateInfo init::PipelineVertexInputStateCreateInfo()
 {
 	VkPipelineVertexInputStateCreateInfo pipelineVertexInputStateCreateInfo = {};
 	pipelineVertexInputStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -585,7 +587,7 @@ VkPipelineVertexInputStateCreateInfo Seele::init::PipelineVertexInputStateCreate
 	return pipelineVertexInputStateCreateInfo;
 }
 
-VkPipelineInputAssemblyStateCreateInfo Seele::init::PipelineInputAssemblyStateCreateInfo(
+VkPipelineInputAssemblyStateCreateInfo init::PipelineInputAssemblyStateCreateInfo(
 	VkPrimitiveTopology topology,
 	VkPipelineInputAssemblyStateCreateFlags flags,
 	VkBool32 primitiveRestartEnable)
@@ -598,7 +600,7 @@ VkPipelineInputAssemblyStateCreateInfo Seele::init::PipelineInputAssemblyStateCr
 	return pipelineInputAssemblyStateCreateInfo;
 }
 
-VkPipelineRasterizationStateCreateInfo Seele::init::PipelineRasterizationStateCreateInfo(
+VkPipelineRasterizationStateCreateInfo init::PipelineRasterizationStateCreateInfo(
 	VkPolygonMode polygonMode,
 	VkCullModeFlags cullMode,
 	VkFrontFace frontFace,
@@ -615,7 +617,7 @@ VkPipelineRasterizationStateCreateInfo Seele::init::PipelineRasterizationStateCr
 	return pipelineRasterizationStateCreateInfo;
 }
 
-VkPipelineColorBlendAttachmentState Seele::init::PipelineColorBlendAttachmentState(
+VkPipelineColorBlendAttachmentState init::PipelineColorBlendAttachmentState(
 	VkColorComponentFlags colorWriteMask,
 	VkBool32 blendEnable)
 {
@@ -625,7 +627,7 @@ VkPipelineColorBlendAttachmentState Seele::init::PipelineColorBlendAttachmentSta
 	return pipelineColorBlendAttachmentState;
 }
 
-VkPipelineColorBlendStateCreateInfo Seele::init::PipelineColorBlendStateCreateInfo(
+VkPipelineColorBlendStateCreateInfo init::PipelineColorBlendStateCreateInfo(
 	uint32_t attachmentCount,
 	const VkPipelineColorBlendAttachmentState* pAttachments)
 {
@@ -637,7 +639,7 @@ VkPipelineColorBlendStateCreateInfo Seele::init::PipelineColorBlendStateCreateIn
 	return pipelineColorBlendStateCreateInfo;
 }
 
-VkPipelineDepthStencilStateCreateInfo Seele::init::PipelineDepthStencilStateCreateInfo(
+VkPipelineDepthStencilStateCreateInfo init::PipelineDepthStencilStateCreateInfo(
 	VkBool32 depthTestEnable,
 	VkBool32 depthWriteEnable,
 	VkCompareOp depthCompareOp)
@@ -652,7 +654,7 @@ VkPipelineDepthStencilStateCreateInfo Seele::init::PipelineDepthStencilStateCrea
 	return pipelineDepthStencilStateCreateInfo;
 }
 
-VkPipelineViewportStateCreateInfo Seele::init::PipelineViewportStateCreateInfo(
+VkPipelineViewportStateCreateInfo init::PipelineViewportStateCreateInfo(
 	uint32_t viewportCount,
 	uint32_t scissorCount,
 	VkPipelineViewportStateCreateFlags flags)
@@ -665,7 +667,7 @@ VkPipelineViewportStateCreateInfo Seele::init::PipelineViewportStateCreateInfo(
 	return pipelineViewportStateCreateInfo;
 }
 
-VkPipelineMultisampleStateCreateInfo Seele::init::PipelineMultisampleStateCreateInfo(
+VkPipelineMultisampleStateCreateInfo init::PipelineMultisampleStateCreateInfo(
 	VkSampleCountFlagBits rasterizationSamples,
 	VkPipelineMultisampleStateCreateFlags flags)
 {
@@ -675,7 +677,7 @@ VkPipelineMultisampleStateCreateInfo Seele::init::PipelineMultisampleStateCreate
 	return pipelineMultisampleStateCreateInfo;
 }
 
-VkPipelineDynamicStateCreateInfo Seele::init::PipelineDynamicStateCreateInfo(
+VkPipelineDynamicStateCreateInfo init::PipelineDynamicStateCreateInfo(
 	const VkDynamicState* pDynamicStates,
 	uint32_t dynamicStateCount,
 	VkPipelineDynamicStateCreateFlags flags)
@@ -687,7 +689,7 @@ VkPipelineDynamicStateCreateInfo Seele::init::PipelineDynamicStateCreateInfo(
 	return pipelineDynamicStateCreateInfo;
 }
 
-VkPipelineTessellationStateCreateInfo Seele::init::PipelineTessellationStateCreateInfo(uint32_t patchControlPoints)
+VkPipelineTessellationStateCreateInfo init::PipelineTessellationStateCreateInfo(uint32_t patchControlPoints)
 {
 	VkPipelineTessellationStateCreateInfo pipelineTessellationStateCreateInfo = {};
 	pipelineTessellationStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO;
@@ -695,7 +697,7 @@ VkPipelineTessellationStateCreateInfo Seele::init::PipelineTessellationStateCrea
 	return pipelineTessellationStateCreateInfo;
 }
 
-VkGraphicsPipelineCreateInfo Seele::init::PipelineCreateInfo(
+VkGraphicsPipelineCreateInfo init::PipelineCreateInfo(
 	VkPipelineLayout layout,
 	VkRenderPass renderPass,
 	VkPipelineCreateFlags flags)
@@ -709,7 +711,7 @@ VkGraphicsPipelineCreateInfo Seele::init::PipelineCreateInfo(
 	return pipelineCreateInfo;
 }
 
-VkComputePipelineCreateInfo Seele::init::ComputePipelineCreateInfo(VkPipelineLayout layout, VkPipelineCreateFlags flags)
+VkComputePipelineCreateInfo init::ComputePipelineCreateInfo(VkPipelineLayout layout, VkPipelineCreateFlags flags)
 {
 	VkComputePipelineCreateInfo computePipelineCreateInfo = {};
 	computePipelineCreateInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
@@ -718,7 +720,7 @@ VkComputePipelineCreateInfo Seele::init::ComputePipelineCreateInfo(VkPipelineLay
 	return computePipelineCreateInfo;
 }
 
-VkPushConstantRange Seele::init::PushConstantRange(
+VkPushConstantRange init::PushConstantRange(
 	VkShaderStageFlags stageFlags,
 	uint32_t size,
 	uint32_t offset)
@@ -730,7 +732,7 @@ VkPushConstantRange Seele::init::PushConstantRange(
 	return pushConstantRange;
 }
 
-VkPipelineShaderStageCreateInfo Seele::init::PipelineShaderStageCreateInfo(VkShaderStageFlagBits stage, VkShaderModule module, const char* entryName)
+VkPipelineShaderStageCreateInfo init::PipelineShaderStageCreateInfo(VkShaderStageFlagBits stage, VkShaderModule module, const char* entryName)
 {
 	VkPipelineShaderStageCreateInfo info = {};
 	info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -741,11 +743,11 @@ VkPipelineShaderStageCreateInfo Seele::init::PipelineShaderStageCreateInfo(VkSha
 }
 
 
-VkBool32 Seele::debugCallback(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objType, uint64_t obj, size_t location, int32_t code, const char* layerPrefix, const char* msg, void* userDataManager) {
+VkBool32 debugCallback(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objType, uint64_t obj, size_t location, int32_t code, const char* layerPrefix, const char* msg, void* userDataManager) {
 	std::cerr << layerPrefix << ": " << msg << std::endl;
 	return VK_FALSE;
 }
-VkResult Seele::CreateDebugReportCallbackEXT(VkInstance instance, const VkDebugReportCallbackCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugReportCallbackEXT* pCallback) {
+VkResult CreateDebugReportCallbackEXT(VkInstance instance, const VkDebugReportCallbackCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugReportCallbackEXT* pCallback) {
 	auto func = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugReportCallbackEXT");
 	if (func != nullptr) {
 		return func(instance, pCreateInfo, pAllocator, pCallback);
@@ -755,7 +757,7 @@ VkResult Seele::CreateDebugReportCallbackEXT(VkInstance instance, const VkDebugR
 	}
 }
 
-void Seele::DestroyDebugReportCallbackEXT(VkInstance instance, const VkAllocationCallbacks* pAllocator, VkDebugReportCallbackEXT pCallback)
+void DestroyDebugReportCallbackEXT(VkInstance instance, const VkAllocationCallbacks* pAllocator, VkDebugReportCallbackEXT pCallback)
 {
 	auto func = (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugReportCallbackEXT");
 	if (func != nullptr) {

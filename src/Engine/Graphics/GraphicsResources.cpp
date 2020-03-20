@@ -1,8 +1,8 @@
 #include "GraphicsResources.h"
 
-using namespace Seele;
+using namespace Seele::Gfx;
 
-void Seele::DescriptorLayout::addDescriptorBinding(uint32 bindingIndex, SeDescriptorType type, uint32 arrayCount)
+void DescriptorLayout::addDescriptorBinding(uint32 bindingIndex, SeDescriptorType type, uint32 arrayCount)
 {
 	if (descriptorBindings.size() <= bindingIndex)
 	{
@@ -15,14 +15,14 @@ void Seele::DescriptorLayout::addDescriptorBinding(uint32 bindingIndex, SeDescri
 	descriptorBindings[bindingIndex] = binding;
 }
 
-PDescriptorSet Seele::DescriptorLayout::allocatedDescriptorSet()
+PDescriptorSet DescriptorLayout::allocatedDescriptorSet()
 {
 	PDescriptorSet result;
 	allocator->allocateDescriptorSet(result);
 	return result;
 }
 
-void Seele::PipelineLayout::addDescriptorLayout(uint32 setIndex, PDescriptorLayout layout)
+void PipelineLayout::addDescriptorLayout(uint32 setIndex, PDescriptorLayout layout)
 {
 	if (descriptorSetLayouts.size() <= setIndex)
 	{
@@ -48,7 +48,7 @@ void Seele::PipelineLayout::addDescriptorLayout(uint32 setIndex, PDescriptorLayo
 	}
 }
 
-void Seele::PipelineLayout::addPushConstants(const SePushConstantRange& pushConstant)
+void PipelineLayout::addPushConstants(const SePushConstantRange& pushConstant)
 {
 	pushConstants.add(pushConstant);
 }

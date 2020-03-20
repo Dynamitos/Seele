@@ -1,8 +1,9 @@
 #include "VulkanGraphicsEnums.h"
 
-using namespace Seele;
+using namespace Seele::Vulkan;
+using namespace Seele::Gfx;
 
-VkDescriptorType Seele::cast(const SeDescriptorType& descriptorType)
+VkDescriptorType cast(const Seele::Gfx::SeDescriptorType& descriptorType)
 {
 	switch (descriptorType)
 	{
@@ -40,7 +41,7 @@ VkDescriptorType Seele::cast(const SeDescriptorType& descriptorType)
 	return VK_DESCRIPTOR_TYPE_MAX_ENUM;
 }
 
-SeDescriptorType Seele::cast(const VkDescriptorType& descriptorType)
+Seele::Gfx::SeDescriptorType cast(const VkDescriptorType& descriptorType)
 {
 	switch (descriptorType)
 	{
@@ -79,7 +80,7 @@ SeDescriptorType Seele::cast(const VkDescriptorType& descriptorType)
 	return SE_DESCRIPTOR_TYPE_MAX_ENUM;
 }
 
-VkShaderStageFlagBits Seele::cast(const SeShaderStageFlagBits& stage)
+VkShaderStageFlagBits cast(const Seele::Gfx::SeShaderStageFlagBits& stage)
 {
 	switch (stage)
 	{
@@ -124,7 +125,7 @@ VkShaderStageFlagBits Seele::cast(const SeShaderStageFlagBits& stage)
 	return VK_SHADER_STAGE_ALL;
 }
 
-SeShaderStageFlagBits Seele::cast(const VkShaderStageFlagBits& stage)
+Seele::Gfx::SeShaderStageFlagBits cast(const VkShaderStageFlagBits& stage)
 {
 	switch (stage)
 	{

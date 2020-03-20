@@ -6,38 +6,69 @@
 
 namespace Seele
 {
-	DECLARE_REF(VulkanGraphics);
-	class VulkanSubAllocation
+	namespace Vulkan
 	{
-
-	};
-	DEFINE_REF(VulkanSubAllocation);
-	class VulkanAllocation
-	{
-	private:
-		VkDeviceMemory allocatedMemory;
-		VkDeviceSize bytesAllocated;
-		VkDeviceSize bytesUsed;
-		uint8 isDedicated;
-	};
-	DEFINE_REF(VulkanAllocation);
-
-	class VulkanAllocator
-	{
-	public:
-		VulkanAllocator(PVulkanGraphics graphics);
-		~VulkanAllocator();
-		PVulkanSubAllocation allocate(uint64 size, VkMemoryPropertyFlags properties);
-	private:
-		struct HeapInfo
+		DECLARE_REF(Graphics);
+		class Allocation;
+		class Allocator;
+		class SubAllocation
 		{
-			uint32 maxSize = 0;
-			Array<VulkanAllocation> allocations;
-			Array<VkMemoryType> types;
+		public:
+			SubAllocation(Allocation* owner, uint32 allocatedOffset, uint32 size, uint32 alignedOffset, uint32 allocatedSize);
+		private:
+			Allocation* owner;
+			uint32 allocatedOffset;
+			uint32 size;
+			uint32 alignedOffset;
+			uint32 allocatedSize;
+			friend class Allocation;
+			friend class Allocator;
 		};
-		Array<HeapInfo> heaps;
-		PVulkanGraphics graphics;
-		VkPhysicalDeviceMemoryProperties memProperties;
-	};
-	DEFINE_REF(VulkanAllocator);
+		DEFINE_REF(SubAllocation);
+		class Allocation
+		{
+		public:
+			Allocation(PGraphics graphics, Allocator* allocator, uint32 size, uint32 memoryTypeIndex, VkMemoryPropertyFlags properties, bool isDedicated);
+			PSubAllocation getSuballocation(uint32 size, uint32 alignment);
+		private:
+			Allocator* allocator;
+			VkDevice device;
+			VkDeviceMemory allocatedMemory;
+			VkDeviceSize bytesAllocated;
+			VkDeviceSize bytesUsed;
+			VkMemoryPropertyFlags properties;
+			Array<PSubAllocation> activeAllocations;
+			Array<PSubAllocation> freeRanges;
+			void* mappedPointer;
+			uint8 isDedicated : 1;
+			uint8 canMap : 1;
+			uint8 memoryTypeIndex;
+			friend class Allocator;
+		};
+		DEFINE_REF(Allocation);
+
+		class Allocator
+		{
+		public:
+			Allocator(PGraphics graphics);
+			~Allocator();
+			PSubAllocation allocate(uint64 size, const VkMemoryRequirements2& requirements, VkMemoryPropertyFlags props);
+
+		private:
+			enum
+			{
+				MemoryBlockSize = 64 * 1024 * 1024 // 64MB
+			};
+			struct HeapInfo
+			{
+				uint32 maxSize = 0;
+				Array<PAllocation> allocations;
+			};
+			Array<HeapInfo> heaps;
+			VkResult findMemoryType(uint32 typeBits, VkMemoryPropertyFlags properties, uint32* typeIndex);
+			PGraphics graphics;
+			VkPhysicalDeviceMemoryProperties memProperties;
+		};
+		DEFINE_REF(Allocator);
+	}
 }

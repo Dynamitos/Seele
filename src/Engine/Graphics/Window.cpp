@@ -1,7 +1,7 @@
 #include "Window.h"
 #include "SceneView.h"
 
-Seele::Window::Window(const WindowCreateInfo& createInfo, PGraphics graphics)
+Seele::Window::Window(const WindowCreateInfo& createInfo, Gfx::PGraphics graphics)
 	: width(createInfo.width)
 	, height(createInfo.height)
 	, graphics(graphics)

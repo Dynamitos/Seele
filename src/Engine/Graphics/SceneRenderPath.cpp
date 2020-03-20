@@ -1,6 +1,6 @@
 #include "SceneRenderPath.h"
 
-Seele::SceneRenderPath::SceneRenderPath(PGraphics graphics)
+Seele::SceneRenderPath::SceneRenderPath(Gfx::PGraphics graphics)
 	: RenderPath(graphics)
 {
 }

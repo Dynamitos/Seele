@@ -15,7 +15,7 @@ namespace Seele
 		void endFrame();
 	private:
 		Array<PWindow> windows;
-		PGraphics graphics;
+		Gfx::PGraphics graphics;
 	};
 	DEFINE_REF(WindowManager);
 }
