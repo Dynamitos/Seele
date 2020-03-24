@@ -1,0 +1,8 @@
+{
+    "C_Cpp.default.configurationProvider": "go2sh.cmake-integration",
+    "telemetry.enableTelemetry": false,
+    "cmake.buildDirectory": "${workspaceFolder}/bin/${buildType}",
+    "files.associations": {
+        "xstring": "cpp"
+    }
+}

@@ -14,7 +14,7 @@ SubAllocation::SubAllocation(Allocation* owner, uint32 allocatedOffset, uint32 s
 {
 }
 
-Allocation::Allocation(PGraphics graphics, Allocator* allocator, uint32 size, uint32 memoryTypeIndex, VkMemoryPropertyFlags properties, bool isDedicated)
+Allocation::Allocation(WGraphics graphics, Allocator* allocator, uint32 size, uint32 memoryTypeIndex, VkMemoryPropertyFlags properties, bool isDedicated)
 	: device(graphics->getDevice())
 	, allocator(allocator)
 	, bytesAllocated(0)
@@ -32,13 +32,13 @@ Allocation::Allocation(PGraphics graphics, Allocator* allocator, uint32 size, ui
 	freeRanges.add(freeRange);
 }
 
-PSubAllocation Allocation::getSuballocation(uint32 size, uint32 alignment)
+PSubAllocation Allocation::getSuballocation(uint32 requestedSize, uint32 alignment)
 {
 	if (isDedicated)
 	{
 		if (activeAllocations.size() == 0)
 		{
-			assert(size == bytesAllocated);
+			assert(requestedSize == bytesAllocated);
 			activeAllocations.add(freeRanges.back());
 			freeRanges.clear();
 		}
@@ -53,7 +53,7 @@ PSubAllocation Allocation::getSuballocation(uint32 size, uint32 alignment)
 		uint32 allocatedOffset = freeAllocation->allocatedOffset;
 		uint32 alignedOffset = align(allocatedOffset, alignment);
 		uint32 alignmentAdjustment = alignedOffset - allocatedOffset;
-		uint32 size = alignmentAdjustment + size;
+		uint32 size = alignmentAdjustment + requestedSize;
 		if (freeAllocation->size == size)
 		{
 			freeRanges.remove(i);
@@ -66,7 +66,7 @@ PSubAllocation Allocation::getSuballocation(uint32 size, uint32 alignment)
 			freeAllocation->allocatedSize -= size;
 			freeAllocation->allocatedOffset += allocatedOffset;
 			freeAllocation->alignedOffset += allocatedOffset;
-			PSubAllocation subAlloc = new VulkanSubAllocation(this, allocatedOffset, size, alignedOffset, size);
+			PSubAllocation subAlloc = new SubAllocation(this, allocatedOffset, size, alignedOffset, size);
 			activeAllocations.add(subAlloc);
 			return subAlloc;
 		}
@@ -74,7 +74,7 @@ PSubAllocation Allocation::getSuballocation(uint32 size, uint32 alignment)
 	return nullptr;
 }
 
-Allocator::Allocator(PGraphics graphics)
+Allocator::Allocator(WGraphics graphics)
 	: graphics(graphics)
 {
 	vkGetPhysicalDeviceMemoryProperties(graphics->getPhysicalDevice(), &memProperties);

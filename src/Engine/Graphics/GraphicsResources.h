@@ -54,9 +54,6 @@ namespace Seele
 			uint32_t              offset;
 			uint32_t              size;
 		};
-
-		
-
 		class RenderCommandBase
 		{
 

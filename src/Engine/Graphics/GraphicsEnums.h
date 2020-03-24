@@ -4,6 +4,8 @@ namespace Seele
 {
     namespace Gfx
     {
+        static bool useAsyncCompute = true;
+
         typedef uint32_t SeFlags;
         typedef uint32_t SeBool32;
         typedef uint64_t SeDeviceSize;

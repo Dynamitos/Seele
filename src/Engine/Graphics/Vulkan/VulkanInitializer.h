@@ -1,3 +1,4 @@
+#pragma once
 #include "Containers/Array.h"
 #include <vulkan/vulkan.h>
 

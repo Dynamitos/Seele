@@ -3,7 +3,7 @@
 
 Seele::WindowManager::WindowManager()
 {
-	graphics = new VulkanGraphics();
+	graphics = new Vulkan::Graphics();
 	GraphicsInitializer initializer;
 	graphics->init(initializer);
 }

@@ -2,12 +2,21 @@ target_sources(SeeleEngine
 	PRIVATE
 		VulkanAllocator.h
 		VulkanAllocator.cpp
+		VulkanCommandBuffer.h
+		VulkanCommandBuffer.cpp
 		VulkanBuffer.cpp
+		VulkanFramebuffer.h
+		VulkanFramebuffer.cpp
 		VulkanGraphics.h
 		VulkanGraphics.cpp
 		VulkanGraphicsResources.h
+		VulkanGraphicsResources.cpp
 		VulkanDescriptorSets.cpp
 		VulkanGraphicsEnums.h
 		VulkanGraphicsEnums.cpp
 		VulkanInitializer.h
-		VulkanInitializer.cpp)
+		VulkanInitializer.cpp
+		VulkanRenderPass.h
+		VulkanRenderPass.cpp
+		VulkanQueue.h
+		VulkanQueue.cpp)

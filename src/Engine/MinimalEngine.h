@@ -43,7 +43,6 @@ namespace Seele
 		{
 
 		}
-
 		~RefObject()
 		{}
 		bool operator==(const RefObject& other) const
@@ -78,6 +77,10 @@ namespace Seele
 	{
 	public:
 		RefPtr()
+		{
+			object = nullptr;
+		}
+		RefPtr(nullptr_t)
 		{
 			object = nullptr;
 		}
@@ -160,14 +163,19 @@ namespace Seele
 	private:
 		RefObject<T>* object;
 	};
+	//A weak pointer has no ownership over an object and thus cant delete it
 	template<typename T>
 	class WeakPtr
 	{
 	public:
 		WeakPtr()
+			: pointer(nullptr)
+		{}
+		WeakPtr(T* ptr)
+			: pointer(ptr)
 		{}
 		WeakPtr(RefPtr<T>& sharedPtr)
-			: pointer(sharedPtr.object)
+			: pointer(sharedPtr.object->handle)
 		{}
 		WeakPtr& operator=(WeakPtr<T>& weakPtr)
 		{
@@ -176,17 +184,20 @@ namespace Seele
 		}
 		WeakPtr& operator=(RefPtr<T>& sharedPtr)
 		{
-			pointer = sharedPtr;
+			pointer = sharedPtr.object->handle;
 			return *this;
 		}
-		RefPtr<T>& lock()
+		WeakPtr& operator=(T* ptr)
 		{
-			RefPtr<T> temp;
-			temp.object = pointer;
-			return temp;
+			pointer = ptr;
+			return *this;
+		}
+		inline T* operator->()
+		{
+			return pointer;
 		}
 	private:
-		RefObject<T>* pointer;
+		T* pointer;
 	};
 	template<typename T>
 	class UniquePtr

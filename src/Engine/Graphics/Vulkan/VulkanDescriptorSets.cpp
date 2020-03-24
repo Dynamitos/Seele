@@ -149,7 +149,7 @@ void DescriptorSet::writeChanges()
 	}
 }
 
-DescriptorAllocator::DescriptorAllocator(PGraphics graphics, DescriptorLayout& layout)
+DescriptorAllocator::DescriptorAllocator(WGraphics graphics, DescriptorLayout& layout)
 	: layout(layout)
 	, graphics(graphics)
 {

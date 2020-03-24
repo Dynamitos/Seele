@@ -1,3 +1,4 @@
+#pragma once
 #include "Graphics/Graphics.h"
 #include "VulkanGraphicsResources.h"
 
@@ -6,6 +7,8 @@ namespace Seele
 	namespace Vulkan
 	{
 		DECLARE_REF(Allocator);
+		DECLARE_REF(CommandBufferManager);
+		DECLARE_REF(Queue);
 		class Graphics : public Gfx::Graphics
 		{
 		public:
@@ -13,6 +16,11 @@ namespace Seele
 			virtual ~Graphics();
 			VkDevice getDevice() const;
 			VkPhysicalDevice getPhysicalDevice() const;
+
+			PCommandBufferManager getGraphicsCommands();
+			PCommandBufferManager getComputeCommands();
+			PCommandBufferManager getTransferCommands();
+			PCommandBufferManager getDedicatedTransferCommands();
 
 			// Inherited via Graphics
 			virtual void init(GraphicsInitializer initializer) override;
@@ -24,14 +32,27 @@ namespace Seele
 			void initInstance(GraphicsInitializer initInfo);
 			void setupDebugCallback();
 			void pickPhysicalDevice();
-			void createDevice();
+			void createDevice(GraphicsInitializer initInfo);
 
 			VkDevice handle;
 			VkPhysicalDevice physicalDevice;
 			VkInstance instance;
+			
+			WQueue graphicsQueue;
+			WQueue computeQueue;
+			WQueue transferQueue;
+			WQueue dedicatedTransferQueue;
+			QueueFamilyMapping queueMapping;
+			PCommandBufferManager graphicsCommands;
+			PCommandBufferManager computeCommands;
+			PCommandBufferManager transferCommands;
+			PCommandBufferManager dedicatedTransferCommands;
+			VkPhysicalDeviceProperties props;
+			VkPhysicalDeviceFeatures features;
 			VkDebugReportCallbackEXT callback;
 			Array<PViewport> viewports;
 			PAllocator allocator;
+
 			friend class Window;
 		};
 		DEFINE_REF(Graphics);

@@ -3,7 +3,7 @@
 using namespace Seele::Vulkan;
 using namespace Seele::Gfx;
 
-VkDescriptorType cast(const Seele::Gfx::SeDescriptorType& descriptorType)
+VkDescriptorType Seele::Vulkan::cast(const Seele::Gfx::SeDescriptorType& descriptorType)
 {
 	switch (descriptorType)
 	{
@@ -41,7 +41,7 @@ VkDescriptorType cast(const Seele::Gfx::SeDescriptorType& descriptorType)
 	return VK_DESCRIPTOR_TYPE_MAX_ENUM;
 }
 
-Seele::Gfx::SeDescriptorType cast(const VkDescriptorType& descriptorType)
+Seele::Gfx::SeDescriptorType Seele::Vulkan::cast(const VkDescriptorType& descriptorType)
 {
 	switch (descriptorType)
 	{
@@ -80,7 +80,7 @@ Seele::Gfx::SeDescriptorType cast(const VkDescriptorType& descriptorType)
 	return SE_DESCRIPTOR_TYPE_MAX_ENUM;
 }
 
-VkShaderStageFlagBits cast(const Seele::Gfx::SeShaderStageFlagBits& stage)
+VkShaderStageFlagBits Seele::Vulkan::cast(const Seele::Gfx::SeShaderStageFlagBits& stage)
 {
 	switch (stage)
 	{
@@ -125,7 +125,7 @@ VkShaderStageFlagBits cast(const Seele::Gfx::SeShaderStageFlagBits& stage)
 	return VK_SHADER_STAGE_ALL;
 }
 
-Seele::Gfx::SeShaderStageFlagBits cast(const VkShaderStageFlagBits& stage)
+Seele::Gfx::SeShaderStageFlagBits Seele::Vulkan::cast(const VkShaderStageFlagBits& stage)
 {
 	switch (stage)
 	{

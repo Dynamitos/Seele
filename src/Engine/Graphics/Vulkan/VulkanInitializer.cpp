@@ -743,11 +743,11 @@ VkPipelineShaderStageCreateInfo init::PipelineShaderStageCreateInfo(VkShaderStag
 }
 
 
-VkBool32 debugCallback(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objType, uint64_t obj, size_t location, int32_t code, const char* layerPrefix, const char* msg, void* userDataManager) {
+VkBool32 Seele::Vulkan::debugCallback(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objType, uint64_t obj, size_t location, int32_t code, const char* layerPrefix, const char* msg, void* userDataManager) {
 	std::cerr << layerPrefix << ": " << msg << std::endl;
 	return VK_FALSE;
 }
-VkResult CreateDebugReportCallbackEXT(VkInstance instance, const VkDebugReportCallbackCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugReportCallbackEXT* pCallback) {
+VkResult Seele::Vulkan::CreateDebugReportCallbackEXT(VkInstance instance, const VkDebugReportCallbackCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugReportCallbackEXT* pCallback) {
 	auto func = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugReportCallbackEXT");
 	if (func != nullptr) {
 		return func(instance, pCreateInfo, pAllocator, pCallback);
@@ -757,7 +757,7 @@ VkResult CreateDebugReportCallbackEXT(VkInstance instance, const VkDebugReportCa
 	}
 }
 
-void DestroyDebugReportCallbackEXT(VkInstance instance, const VkAllocationCallbacks* pAllocator, VkDebugReportCallbackEXT pCallback)
+void Seele::Vulkan::DestroyDebugReportCallbackEXT(VkInstance instance, const VkAllocationCallbacks* pAllocator, VkDebugReportCallbackEXT pCallback)
 {
 	auto func = (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugReportCallbackEXT");
 	if (func != nullptr) {

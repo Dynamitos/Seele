@@ -1,16 +1,15 @@
 #include "VulkanGraphics.h"
 #include "VulkanAllocator.h"
+#include "VulkanQueue.h"
 #include "Containers/Array.h"
 #include "VulkanInitializer.h"
+#include "VulkanCommandBuffer.h"
 #include <GLFW/glfw3.h>
 
 using namespace Seele::Vulkan;
 
 Graphics::Graphics()
-	: callback(VK_NULL_HANDLE)
-	, handle(VK_NULL_HANDLE)
-	, instance(VK_NULL_HANDLE)
-	, physicalDevice(VK_NULL_HANDLE)
+	: callback(VK_NULL_HANDLE), handle(VK_NULL_HANDLE), instance(VK_NULL_HANDLE), physicalDevice(VK_NULL_HANDLE)
 {
 	glfwInit();
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -18,6 +17,9 @@ Graphics::Graphics()
 
 Graphics::~Graphics()
 {
+	vkDestroyDevice(handle, nullptr);
+	DestroyDebugReportCallbackEXT(instance, nullptr, callback);
+	vkDestroyInstance(instance, nullptr);
 	glfwTerminate();
 }
 
@@ -26,23 +28,28 @@ void Graphics::init(GraphicsInitializer initInfo)
 	initInstance(initInfo);
 	setupDebugCallback();
 	pickPhysicalDevice();
-	allocator = new VulkanAllocator(this);
+	createDevice(initInfo);
+	allocator = new Allocator(this);
+	graphicsCommands = new CommandBufferManager(this, graphicsQueue);
+	computeCommands = new CommandBufferManager(this, computeQueue);
+	transferCommands = new CommandBufferManager(this, transferQueue);
+	dedicatedTransferCommands = new CommandBufferManager(this, dedicatedTransferQueue);
 }
 
-void Graphics::beginFrame(void* windowHandle)
+void Graphics::beginFrame(void *windowHandle)
 {
-	GLFWwindow* window = static_cast<GLFWwindow*>(windowHandle);
+	GLFWwindow *window = static_cast<GLFWwindow *>(windowHandle);
 	glfwPollEvents();
 }
 
-void Graphics::endFrame(void* windowHandle)
+void Graphics::endFrame(void *windowHandle)
 {
-	GLFWwindow* window = static_cast<GLFWwindow*>(windowHandle);
+	GLFWwindow *window = static_cast<GLFWwindow *>(windowHandle);
 }
 
-void* Graphics::createWindow(const WindowCreateInfo& createInfo)
+void *Graphics::createWindow(const WindowCreateInfo &createInfo)
 {
-	GLFWwindow* window = glfwCreateWindow(createInfo.width, createInfo.height, createInfo.title, createInfo.bFullscreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
+	GLFWwindow *window = glfwCreateWindow(createInfo.width, createInfo.height, createInfo.title, createInfo.bFullscreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
 	return window;
 }
 
@@ -56,14 +63,15 @@ VkPhysicalDevice Graphics::getPhysicalDevice() const
 	return physicalDevice;
 }
 
-Array<const char*> Graphics::getRequiredExtensions()
+Array<const char *> Graphics::getRequiredExtensions()
 {
-	Array<const char*> extensions;
+	Array<const char *> extensions;
 
 	unsigned int glfwExtensionCount = 0;
-	const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+	const char **glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
-	for (unsigned int i = 0; i < glfwExtensionCount; i++) {
+	for (unsigned int i = 0; i < glfwExtensionCount; i++)
+	{
 		extensions.add(glfwExtensions[i]);
 	}
 #ifdef ENABLE_VALIDATION
@@ -84,7 +92,7 @@ void Graphics::initInstance(GraphicsInitializer initInfo)
 	VkInstanceCreateInfo info = {};
 	info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 	info.pApplicationInfo = &appInfo;
-	Array<const char*> extensions = getRequiredExtensions();
+	Array<const char *> extensions = getRequiredExtensions();
 	for (uint32 i = 0; i < initInfo.instanceExtensions.size(); ++i)
 	{
 		extensions.add(initInfo.instanceExtensions[i]);
@@ -119,8 +127,8 @@ void Graphics::pickPhysicalDevice()
 	for (auto physicalDevice : physicalDevices)
 	{
 		uint32 currentRating = 0;
-		VkPhysicalDeviceProperties props;
 		vkGetPhysicalDeviceProperties(physicalDevice, &props);
+		vkGetPhysicalDeviceFeatures(physicalDevice, &features);
 		if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
 		{
 			currentRating += 100;
@@ -138,7 +146,104 @@ void Graphics::pickPhysicalDevice()
 	this->physicalDevice = bestDevice;
 }
 
-void Graphics::createDevice()
+void Graphics::createDevice(GraphicsInitializer initializer)
 {
+	uint32_t numQueueFamilies = 0;
+	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &numQueueFamilies, nullptr);
+	Array<VkQueueFamilyProperties> queueProperties(numQueueFamilies);
+	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &numQueueFamilies, queueProperties.data());
 
+	Array<VkDeviceQueueCreateInfo> queueInfos;
+	int32_t graphicsQueueFamilyIndex = -1;
+	int32_t transferQueueFamilyIndex = -1;
+	int32_t dedicatedTransferQueueFamilyIndex = -1;
+	int32_t computeQueueFamilyIndex = -1;
+	int32_t asyncComputeFamilyIndex = -1;
+	for (int32_t familyIndex = 0; familyIndex < queueProperties.size(); ++familyIndex)
+	{
+		const VkQueueFamilyProperties currProps = queueProperties[familyIndex];
+		if ((currProps.queueFlags & VK_QUEUE_GRAPHICS_BIT) == VK_QUEUE_GRAPHICS_BIT)
+		{
+			if (graphicsQueueFamilyIndex == -1)
+			{
+				graphicsQueueFamilyIndex = familyIndex;
+			}
+		}
+		if ((currProps.queueFlags & VK_QUEUE_COMPUTE_BIT) == VK_QUEUE_COMPUTE_BIT)
+		{
+			if (computeQueueFamilyIndex == -1)
+			{
+				computeQueueFamilyIndex = familyIndex;
+			}
+			if (Gfx::useAsyncCompute)
+			{
+				if (asyncComputeFamilyIndex == -1)
+				{
+					if (familyIndex == graphicsQueueFamilyIndex)
+					{
+						if (currProps.queueCount > 1)
+						{
+							asyncComputeFamilyIndex = familyIndex;
+						}
+					}
+					else
+					{
+						asyncComputeFamilyIndex = familyIndex;
+					}
+				}
+			}
+		}
+		if ((currProps.queueFlags & VK_QUEUE_TRANSFER_BIT) == VK_QUEUE_TRANSFER_BIT)
+		{
+			if (transferQueueFamilyIndex == -1)
+			{
+				transferQueueFamilyIndex = familyIndex;
+			}
+			if ((currProps.queueFlags ^ VK_QUEUE_TRANSFER_BIT) == 0)
+			{
+				dedicatedTransferQueueFamilyIndex = familyIndex;
+			}
+		}
+		VkDeviceQueueCreateInfo info =
+			init::DeviceQueueCreateInfo(familyIndex, 1);
+		queueInfos.add(info);
+	}
+	VkDeviceCreateInfo deviceInfo = init::DeviceCreateInfo(
+		queueInfos.data(),
+		(uint32)queueInfos.size(),
+		&features);
+	deviceInfo.enabledExtensionCount = (uint32)initializer.deviceExtensions.size();
+	deviceInfo.ppEnabledExtensionNames = initializer.deviceExtensions.data();
+	deviceInfo.enabledLayerCount = (uint32_t)initializer.layers.size();
+	deviceInfo.ppEnabledLayerNames = initializer.layers.data();
+
+	VK_CHECK(vkCreateDevice(physicalDevice, &deviceInfo, nullptr, &handle));
+
+	graphicsQueue = new Queue(this, QueueType::GRAPHICS, graphicsQueueFamilyIndex, 0);
+	if (Gfx::useAsyncCompute && asyncComputeFamilyIndex != -1)
+	{
+		if (asyncComputeFamilyIndex == graphicsQueueFamilyIndex)
+		{
+			// Same family as graphics, but different queue
+			computeQueue = new Queue(this, QueueType::COMPUTE, asyncComputeFamilyIndex, 1);
+		}
+		else
+		{
+			// Different family
+			computeQueue = new Queue(this, QueueType::COMPUTE, asyncComputeFamilyIndex, 0);
+		}
+	}
+	else
+	{
+		computeQueue = new Queue(this, QueueType::COMPUTE, computeQueueFamilyIndex, 0);
+	}
+	transferQueue = new Queue(this, QueueType::TRANSFER, transferQueueFamilyIndex, 0);
+	if (dedicatedTransferQueueFamilyIndex != -1)
+	{
+		dedicatedTransferQueue = new Queue(this, QueueType::DEDICATED_TRANSFER, dedicatedTransferQueueFamilyIndex, 0);
+	}
+	queueMapping.graphicsFamily = graphicsQueue->getFamilyIndex();
+	queueMapping.computeFamily = computeQueue->getFamilyIndex();
+	queueMapping.transferFamily = transferQueue->getFamilyIndex();
+	queueMapping.dedicatedTransferFamily = dedicatedTransferQueue->getFamilyIndex();
 }
