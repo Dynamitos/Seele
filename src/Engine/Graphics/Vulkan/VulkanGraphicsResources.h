@@ -176,7 +176,7 @@ DEFINE_REF(QueueOwnedResource);
 class Buffer : public QueueOwnedResource
 {
 public:
-	Buffer(WGraphics graphics, uint32 size, VkBufferUsageFlags usage);
+	Buffer(WGraphics graphics, uint32 size, VkBufferUsageFlags usage, QueueType queueType = QueueType::GRAPHICS);
 	virtual ~Buffer();
 
 private:

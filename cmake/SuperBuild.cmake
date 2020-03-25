@@ -5,7 +5,7 @@ set_property(DIRECTORY PROPERTY EP_BASE external)
 set(DEPENDENCIES)
 set(EXTRA_CMAKE_ARGS)
 set(DEPENDENT_BINARIES "")
-#execute_process(COMMAND git submodule update --init --recursive -- ${CMAKE_SOURCE_DIR})
+execute_process(COMMAND git submodule update --init --recursive -- ${CMAKE_SOURCE_DIR})
 
 #-------------BOOST----------------
 list(APPEND DEPENDENCIES boost)
@@ -56,6 +56,7 @@ list(APPEND EXTRA_CMAKE_ARGS
 #
 #--------------SLang------------------------------
 list(APPEND DEPENDENCIES slang)
+string(TOLOWER ${CMAKE_BUILD_TYPE}_${CMAKE_PLATFORM} SLANG_CONFIG)
 if(WIN32)
 ExternalProject_Add(slang
 	SOURCE_DIR ${SLANG_ROOT}
@@ -72,13 +73,16 @@ elseif(UNIX)
 ExternalProject_Add(slang
 	SOURCE_DIR ${SLANG_ROOT}
 	BINARY_DIR ${CMAKE_BINARY_DIR}/lib
-	CONFIGURE_COMMAND ""
-	BUILD_COMMAND premake5 config=${CMAKE_BUILD_TYPE}_${CMAKE_PLATFORM}
+	CONFIGURE_COMMAND ${CMAKE_SOURCE_DIR}/premake5 --file=${CMAKE_SOURCE_DIR}/external/slang/premake5.lua gmake2 --build-location=build.linux
+	BUILD_COMMAND make -C ${CMAKE_SOURCE_DIR}/external/slang/build.linux config=${SLANG_CONFIG}
 	INSTALL_COMMAND "")
 	
 	string(TOLOWER bin/linux-${CMAKE_PLATFORM}/${CMAKE_BUILD_TYPE}/libslang.so SLANG_BINARY)
 	set(SLANG_LIB_PATH)
+
 endif()
+
+
 
 list(APPEND EXTRA_CMAKE_ARGS
 	-DSLANG_INCLUDE_DIRS=${EXTERNAL_ROOT}

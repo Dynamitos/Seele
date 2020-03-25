@@ -2,9 +2,9 @@ target_sources(SeeleEngine
 	PRIVATE
 		VulkanAllocator.h
 		VulkanAllocator.cpp
+		VulkanBuffer.cpp
 		VulkanCommandBuffer.h
 		VulkanCommandBuffer.cpp
-		VulkanBuffer.cpp
 		VulkanFramebuffer.h
 		VulkanFramebuffer.cpp
 		VulkanGraphics.h
