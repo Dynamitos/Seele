@@ -22,12 +22,16 @@
             "x64": {
                 "short": "x64",
                 "long": "amd64 platform",
-                "CMAKE_GENERATOR_PLATFORM": "x64"
+                "settings": {
+                    "CMAKE_PLATFORM": "x64"
+                }
             },
             "x86": {
                 "short": "x86",
                 "long": "x86 platform",
-                "CMAKE_GENERATOR_PLATFORM": "x86"
+                "settings": {
+                    "CMAKE_PLATFORM": "x86"
+                }
             }
         }
     }
