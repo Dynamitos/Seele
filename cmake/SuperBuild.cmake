@@ -5,12 +5,13 @@ set_property(DIRECTORY PROPERTY EP_BASE external)
 set(DEPENDENCIES)
 set(EXTRA_CMAKE_ARGS)
 set(DEPENDENT_BINARIES "")
+execute_process(COMMAND git submodule update --init --recursive -- ${CMAKE_SOURCE_DIR})
 
 #-------------BOOST----------------
 list(APPEND DEPENDENCIES boost)
 if(WIN32)
 	set(BOOTSTRAP_EXTENSION bat)
-elseif(UNIX)
+else()
 	set(BOOTSTRAP_EXTENSION sh)
 endif()
 ExternalProject_Add(boost
@@ -55,21 +56,28 @@ list(APPEND EXTRA_CMAKE_ARGS
 #
 #--------------SLang------------------------------
 list(APPEND DEPENDENCIES slang)
+if(WIN32)
 ExternalProject_Add(slang
 	SOURCE_DIR ${SLANG_ROOT}
 	BINARY_DIR ${CMAKE_BINARY_DIR}/lib
 	CONFIGURE_COMMAND ""
-	BUILD_COMMAND ""
-	# BUILD_COMMAND devenv /upgrade ${SLANG_ROOT}/source/slang/slang.vcxproj
-	# 	COMMAND msbuild -m /p:WindowsTargetPlatformVersion=10.0 ${SLANG_ROOT}/source/slang/slang.vcxproj
+	BUILD_COMMAND devenv /upgrade ${SLANG_ROOT}/source/slang/slang.vcxproj
+		COMMAND msbuild -m /p:WindowsTargetPlatformVersion=10.0 ${SLANG_ROOT}/source/slang/slang.vcxproj
 	INSTALL_COMMAND "")
-
+elseif(UNIX)
+ExternalProject_Add(slang
+	SOURCE_DIR ${SLANG_ROOT}
+	BINARY_DIR ${CMAKE_BINARY_DIR}/lib
+	CONFIGURE_COMMAND ""
+	BUILD_COMMAND premake5 config=${CMAKE_BUILD_TYPE}_${CMAKE_GENERATOR_PLATFORM}
+	INSTALL_COMMAND "")
+endif()
 if(WIN32)
-	string(TOLOWER bin/windows-x64/${CMAKE_BUILD_TYPE}/slang.dll SLANG_BINARY)
-	string(TOLOWER bin/windows-x64/${CMAKE_BUILD_TYPE}/slang.lib SLANG_LIB_PATH)
+	string(TOLOWER bin/windows-${CMAKE_GENERATOR_PLATFORM}/${CMAKE_BUILD_TYPE}/slang.dll SLANG_BINARY)
+	string(TOLOWER bin/windows-${CMAKE_GENERATOR_PLATFORM}/${CMAKE_BUILD_TYPE}/slang.lib SLANG_LIB_PATH)
 	set(SLANG_LIB_PATH ${SLANG_ROOT}/${SLANG_LIB_PATH})
 elseif(UNIX)
-	string(TOLOWER bin/linux-x86/${CMAKE_BUILD_TYPE}/libslang.so SLANG_BINARY)
+	string(TOLOWER bin/linux-${CMAKE_GENERATOR_PLATFORM}/${CMAKE_BUILD_TYPE}/libslang.so SLANG_BINARY)
 	set(SLANG_LIB_PATH)
 endif()
 
