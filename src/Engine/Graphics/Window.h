@@ -55,6 +55,7 @@ namespace Seele {
 	public:
 		Window(const WindowCreateInfo& createInfo, Gfx::PGraphics graphics);
 		~Window();
+		void onWindowCloseEvent();
 		void beginFrame();
 		void endFrame();
 	private:

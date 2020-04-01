@@ -28,7 +28,7 @@ namespace Seele
 		class Allocation
 		{
 		public:
-			Allocation(WGraphics graphics, Allocator* allocator, uint32 size, uint32 memoryTypeIndex, VkMemoryPropertyFlags properties, bool isDedicated);
+			Allocation(PGraphics graphics, Allocator* allocator, uint32 size, uint32 memoryTypeIndex, VkMemoryPropertyFlags properties, bool isDedicated);
 			PSubAllocation getSuballocation(uint32 size, uint32 alignment);
 		private:
 			Allocator* allocator;
@@ -50,7 +50,7 @@ namespace Seele
 		class Allocator
 		{
 		public:
-			Allocator(WGraphics graphics);
+			Allocator(PGraphics graphics);
 			~Allocator();
 			PSubAllocation allocate(uint64 size, const VkMemoryRequirements2& requirements, VkMemoryPropertyFlags props);
 
@@ -66,7 +66,7 @@ namespace Seele
 			};
 			Array<HeapInfo> heaps;
 			VkResult findMemoryType(uint32 typeBits, VkMemoryPropertyFlags properties, uint32* typeIndex);
-			WGraphics graphics;
+			PGraphics graphics;
 			VkPhysicalDeviceMemoryProperties memProperties;
 		};
 		DEFINE_REF(Allocator);

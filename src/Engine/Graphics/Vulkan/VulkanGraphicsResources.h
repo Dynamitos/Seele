@@ -13,19 +13,22 @@ DECLARE_REF(Graphics);
 class Semaphore
 {
 public:
-	Semaphore(WGraphics graphics);
+	Semaphore(PGraphics graphics);
 	virtual ~Semaphore();
-
+	inline VkSemaphore getHandle() const
+	{
+		return handle;
+	}
 private:
 	VkSemaphore handle;
-	WGraphics graphics;
+	PGraphics graphics;
 };
 DEFINE_REF(Semaphore);
 
 class DescriptorLayout : public Gfx::DescriptorLayout
 {
 public:
-	DescriptorLayout(WGraphics graphics)
+	DescriptorLayout(PGraphics graphics)
 		: graphics(graphics), layoutHandle(VK_NULL_HANDLE)
 	{
 	}
@@ -37,7 +40,7 @@ public:
 	}
 
 private:
-	WGraphics graphics;
+	PGraphics graphics;
 	Array<VkDescriptorSetLayoutBinding> bindings;
 	VkDescriptorSetLayout layoutHandle;
 	friend class PipelineStateCacheManager;
@@ -46,7 +49,7 @@ DEFINE_REF(DescriptorLayout);
 class PipelineLayout : public Gfx::PipelineLayout
 {
 public:
-	PipelineLayout(WGraphics graphics)
+	PipelineLayout(PGraphics graphics)
 		: graphics(graphics), layoutHash(0), layoutHandle(VK_NULL_HANDLE)
 	{
 	}
@@ -65,7 +68,7 @@ private:
 	Array<VkDescriptorSetLayout> vulkanDescriptorLayouts;
 	uint32 layoutHash;
 	VkPipelineLayout layoutHandle;
-	WGraphics graphics;
+	PGraphics graphics;
 	friend class PipelineStateCacheManager;
 };
 DEFINE_REF(PipelineLayout);
@@ -73,7 +76,7 @@ DEFINE_REF(PipelineLayout);
 class DescriptorSet : public Gfx::DescriptorSet
 {
 public:
-	DescriptorSet(WGraphics graphics, PDescriptorAllocator owner)
+	DescriptorSet(PGraphics graphics, PDescriptorAllocator owner)
 		: graphics(graphics), owner(owner), setHandle(VK_NULL_HANDLE)
 	{
 	}
@@ -95,7 +98,7 @@ private:
 	Array<VkWriteDescriptorSet> writeDescriptors;
 	VkDescriptorSet setHandle;
 	PDescriptorAllocator owner;
-	WGraphics graphics;
+	PGraphics graphics;
 	friend class DescriptorAllocator;
 };
 DEFINE_REF(DescriptorSet);
@@ -103,7 +106,7 @@ DEFINE_REF(DescriptorSet);
 class DescriptorAllocator : public Gfx::DescriptorAllocator
 {
 public:
-	DescriptorAllocator(WGraphics graphics, DescriptorLayout &layout);
+	DescriptorAllocator(PGraphics graphics, DescriptorLayout &layout);
 	~DescriptorAllocator();
 	virtual void allocateDescriptorSet(Gfx::PDescriptorSet &descriptorSet);
 
@@ -113,7 +116,7 @@ public:
 	}
 
 private:
-	WGraphics graphics;
+	PGraphics graphics;
 	int maxSets = 512;
 	VkDescriptorPool poolHandle;
 	DescriptorLayout &layout;
@@ -159,7 +162,7 @@ struct QueueFamilyMapping
 class QueueOwnedResource
 {
 public:
-	QueueOwnedResource(WGraphics graphics, QueueType startQueueType);
+	QueueOwnedResource(PGraphics graphics, QueueType startQueueType);
 	~QueueOwnedResource();
 	PCommandBufferManager getCommands();
 	//Preliminary checks to see if the barrier should be executed at all
@@ -168,7 +171,7 @@ public:
 protected:
 	virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
 	QueueType currentOwner;
-	WGraphics graphics;
+	PGraphics graphics;
 	CommandBufferManager *cachedCmdBufferManager;
 };
 DEFINE_REF(QueueOwnedResource);
@@ -176,7 +179,7 @@ DEFINE_REF(QueueOwnedResource);
 class Buffer : public QueueOwnedResource
 {
 public:
-	Buffer(WGraphics graphics, uint32 size, VkBufferUsageFlags usage, QueueType queueType = QueueType::GRAPHICS);
+	Buffer(PGraphics graphics, uint32 size, VkBufferUsageFlags usage, QueueType queueType = QueueType::GRAPHICS);
 	virtual ~Buffer();
 
 private:
@@ -200,21 +203,51 @@ DEFINE_REF(StructuredBuffer);
 class TextureBase
 {
 public:
-	TextureBase();
+	TextureBase(PGraphics graphics, VkImageViewType viewType, uint32 sizeX, uint32 sizeY, uint32 sizeZ, 
+		bool bArray, uint32 arraySize, uint32 mipLevels, Gfx::SeFormat format, 
+		uint32 samples, Gfx::SeImageUsageFlags usage);
 	virtual ~TextureBase();
-private:
+
+	PGraphics graphics;
 	uint32 sizeX;
 	uint32 sizeY;
 	uint32 sizeZ;
 	uint32 arrayCount;
-	uint32 layerCount;
+	uint32 mipLevels;
+	Gfx::SeFormat format;
 	VkImage image;
+	VkImageView defaultView;
+	VkImageAspectFlags aspect;
 };
 DEFINE_REF(TextureBase);
 
 class Texture2D : public Gfx::Texture2D
 {
 public:
+	Texture2D(PGraphics graphics, uint32 sizeX, uint32 sizeY, 
+		bool bArray, uint32 arraySize, uint32 mipLevels, 
+		Gfx::SeFormat format, uint32 samples, Gfx::SeImageUsageFlags usage);
+	virtual ~Texture2D();
+	inline uint32 getSizeX() const
+	{
+		return textureHandle->sizeX;
+	}
+	inline uint32 getSizeY() const
+	{
+		return textureHandle->sizeY;
+	}
+	inline Gfx::SeFormat getFormat() const
+	{
+		return textureHandle->format;
+	}
+	inline VkImage getHandle() const
+	{
+		return textureHandle->image;
+	}
+	inline VkImageView getView() const
+	{
+		return textureHandle->defaultView;
+	}
 private:
 	PTextureBase textureHandle;
 };

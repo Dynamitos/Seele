@@ -18,5 +18,6 @@ target_sources(SeeleEngine
 		VulkanInitializer.cpp
 		VulkanRenderPass.h
 		VulkanRenderPass.cpp
+		VulkanTexture.cpp
 		VulkanQueue.h
 		VulkanQueue.cpp)

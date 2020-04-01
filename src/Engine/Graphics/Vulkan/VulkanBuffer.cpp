@@ -4,7 +4,7 @@
 using namespace Seele;
 using namespace Seele::Vulkan;
 
-QueueOwnedResource::QueueOwnedResource(WGraphics graphics, QueueType startQueueType)
+QueueOwnedResource::QueueOwnedResource(PGraphics graphics, QueueType startQueueType)
 	: graphics(graphics)
 	, currentOwner(startQueueType)
 {
@@ -14,7 +14,7 @@ QueueOwnedResource::~QueueOwnedResource()
 {
 }
 
-Buffer::Buffer(WGraphics graphics, uint32 size, VkBufferUsageFlags usage, QueueType queueType)
+Buffer::Buffer(PGraphics graphics, uint32 size, VkBufferUsageFlags usage, QueueType queueType)
 	: QueueOwnedResource(graphics, queueType)
 {
 }

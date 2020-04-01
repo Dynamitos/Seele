@@ -11,7 +11,7 @@ namespace Seele
 		class CmdBufferBase : public Gfx::RenderCommandBase
 		{
 		public:
-			CmdBufferBase(WGraphics graphics, VkCommandPool cmdPool);
+			CmdBufferBase(PGraphics graphics, VkCommandPool cmdPool);
 			virtual ~CmdBufferBase();
 			inline VkCommandBuffer getHandle()
 			{
@@ -21,7 +21,7 @@ namespace Seele
 			VkViewport currentViewport;
 			VkRect2D currentScissor;
 		protected:
-			WGraphics graphics;
+			PGraphics graphics;
 			VkCommandBuffer handle;
 			VkCommandPool owner;
 		};
@@ -31,13 +31,13 @@ namespace Seele
 		class CmdBuffer : public CmdBufferBase
 		{
 		public:
-			CmdBuffer(WGraphics graphics, VkCommandPool cmdPool);
+			CmdBuffer(PGraphics graphics, VkCommandPool cmdPool);
 			virtual ~CmdBuffer();
 			void begin();
 			void end();
-			void beginRenderPass(WRenderPass renderPass, WFramebuffer framebuffer);
+			void beginRenderPass(PRenderPass renderPass, PFramebuffer framebuffer);
 			void endRenderPass();
-			void executeCommands(Array<WSecondaryCmdBuffer> secondaryCommands);
+			void executeCommands(Array<PSecondaryCmdBuffer> secondaryCommands);
 			void addWaitSemaphore(VkPipelineStageFlags stages, PSemaphore waitSemaphore);
 			enum State
 			{
@@ -49,20 +49,21 @@ namespace Seele
 			};
 
 		private:
-			WRenderPass renderPass;
-			WFramebuffer framebuffer;
+			PRenderPass renderPass;
+			PFramebuffer framebuffer;
 			uint32 subpassIndex;
 			State state;
 			friend class SecondaryCmdBuffer;
+			friend class CommandBufferManager;
 		};
 		DEFINE_REF(CmdBuffer);
 
 		class SecondaryCmdBuffer : public CmdBufferBase
 		{
 		public:
-			SecondaryCmdBuffer(WGraphics graphics, VkCommandPool cmdPool);
+			SecondaryCmdBuffer(PGraphics graphics, VkCommandPool cmdPool);
 			virtual ~SecondaryCmdBuffer();
-			void begin(WCmdBuffer parent);
+			void begin(PCmdBuffer parent);
 			void end();
 		private:
 		};
@@ -71,16 +72,16 @@ namespace Seele
 		class CommandBufferManager
 		{
 		public:
-			CommandBufferManager(WGraphics graphics, WQueue queue);
+			CommandBufferManager(PGraphics graphics, PQueue queue);
 			virtual ~CommandBufferManager();
 			PCmdBuffer getCommands();
 			PSecondaryCmdBuffer createSecondaryCmdBuffer();
 			void submitCommands(PSemaphore signalSemaphore = nullptr);
 			void waitForCommands(PCmdBuffer cmdBuffer, float timeToWait = 1.0f);
 		private:
-			WGraphics graphics;
+			PGraphics graphics;
 			VkCommandPool commandPool;
-			WQueue queue;
+			PQueue queue;
 			uint32 queueFamilyIndex;
 			PCmdBuffer activeCmdBuffer;
 			Array<PCmdBuffer> allocatedBuffers;

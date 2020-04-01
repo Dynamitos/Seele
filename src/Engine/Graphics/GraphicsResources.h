@@ -212,9 +212,28 @@ namespace Seele
 		DEFINE_REF(Texture);
 		class Texture2D : public Texture
 		{
+		public:
+			virtual ~Texture2D()
+			{
 
+			}
 		};
 		DEFINE_REF(Texture2D);
+		
+		class RenderTargetLayout
+		{
+		public:
+			RenderTargetLayout();
+			RenderTargetLayout(PTexture2D depthAttachment);
+			RenderTargetLayout(PTexture2D colorAttachment, PTexture2D depthAttachment);
+			RenderTargetLayout(Array<PTexture2D> colorAttachments, PTexture2D depthAttachmet);
+			RenderTargetLayout(Array<PTexture2D> inputAttachments, Array<PTexture2D> colorAttachments, PTexture2D depthAttachment);
+			Array<PTexture2D> inputAttachments;
+			Array<PTexture2D> colorAttachments;
+			PTexture2D depthAttachment;
+		};
+		DEFINE_REF(RenderTargetLayout);
+
 		class RenderPass
 		{
 

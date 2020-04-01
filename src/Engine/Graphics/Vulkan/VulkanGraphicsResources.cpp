@@ -6,7 +6,7 @@
 using namespace Seele;
 using namespace Seele::Vulkan;
 
-Semaphore::Semaphore(WGraphics graphics)
+Semaphore::Semaphore(PGraphics graphics)
     : graphics(graphics)
 {
     VkSemaphoreCreateInfo info =
@@ -16,5 +16,5 @@ Semaphore::Semaphore(WGraphics graphics)
 
 Semaphore::~Semaphore()
 {
-
+    vkDestroySemaphore(graphics->getDevice(), handle, nullptr);
 }

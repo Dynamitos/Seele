@@ -2,7 +2,15 @@
     "C_Cpp.default.configurationProvider": "go2sh.cmake-integration",
     "telemetry.enableTelemetry": false,
     "cmake.buildDirectory": "${workspaceFolder}/bin/${buildType}",
+    "git.autofetch": false,
     "files.associations": {
-        "xstring": "cpp"
+        "*.h": "cpp",
+        "xstring": "cpp",
+        "list": "cpp",
+        "xhash": "cpp",
+        "xiosbase": "cpp",
+        "xmemory": "cpp",
+        "xtree": "cpp",
+        "type_traits": "cpp"
     }
 }

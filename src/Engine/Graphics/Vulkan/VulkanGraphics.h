@@ -22,6 +22,8 @@ namespace Seele
 			PCommandBufferManager getTransferCommands();
 			PCommandBufferManager getDedicatedTransferCommands();
 
+			PAllocator getAllocator();
+
 			// Inherited via Graphics
 			virtual void init(GraphicsInitializer initializer) override;
 			virtual void beginFrame(void* windowHandle) override;
@@ -38,10 +40,10 @@ namespace Seele
 			VkPhysicalDevice physicalDevice;
 			VkInstance instance;
 			
-			WQueue graphicsQueue;
-			WQueue computeQueue;
-			WQueue transferQueue;
-			WQueue dedicatedTransferQueue;
+			PQueue graphicsQueue;
+			PQueue computeQueue;
+			PQueue transferQueue;
+			PQueue dedicatedTransferQueue;
 			QueueFamilyMapping queueMapping;
 			PCommandBufferManager graphicsCommands;
 			PCommandBufferManager computeCommands;

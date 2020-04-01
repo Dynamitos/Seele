@@ -61,9 +61,8 @@ if(WIN32)
 ExternalProject_Add(slang
 	SOURCE_DIR ${SLANG_ROOT}
 	BINARY_DIR ${CMAKE_BINARY_DIR}/lib
-	CONFIGURE_COMMAND ""
-	BUILD_COMMAND devenv /upgrade ${SLANG_ROOT}/source/slang/slang.vcxproj
-		COMMAND msbuild -p:Configuration=${CMAKE_BUILD_TYPE} -p:Platform=${CMAKE_PLATFORM} -p:WindowsTargetPlatformVersion=10.0 ${SLANG_ROOT}/source/slang/slang.vcxproj
+	CONFIGURE_COMMAND devenv /upgrade ${SLANG_ROOT}/source/slang/slang.vcxproj
+	BUILD_COMMAND msbuild -p:Configuration=${CMAKE_BUILD_TYPE} -p:Platform=${CMAKE_PLATFORM} -p:WindowsTargetPlatformVersion=10.0 ${SLANG_ROOT}/source/slang/slang.vcxproj
 	INSTALL_COMMAND "")
 
 	string(TOLOWER bin/windows-${CMAKE_PLATFORM}/${CMAKE_BUILD_TYPE}/slang.dll SLANG_BINARY)
@@ -79,7 +78,6 @@ ExternalProject_Add(slang
 	
 	string(TOLOWER bin/linux-${CMAKE_PLATFORM}/${CMAKE_BUILD_TYPE}/libslang.so SLANG_BINARY)
 	set(SLANG_LIB_PATH)
-
 endif()
 
 

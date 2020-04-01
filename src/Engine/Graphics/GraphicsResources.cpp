@@ -52,3 +52,40 @@ void PipelineLayout::addPushConstants(const SePushConstantRange& pushConstant)
 {
 	pushConstants.add(pushConstant);
 }
+
+RenderTargetLayout::RenderTargetLayout()
+	: inputAttachments()
+	, colorAttachments()
+	, depthAttachment()
+{
+
+}
+
+RenderTargetLayout::RenderTargetLayout(PTexture2D depthAttachment)
+	: inputAttachments()
+	, colorAttachments()
+	, depthAttachment(depthAttachment)
+{
+
+}
+
+RenderTargetLayout::RenderTargetLayout(PTexture2D colorAttachment, PTexture2D depthAttachment)
+	: inputAttachments()
+	, depthAttachment(depthAttachment)
+{
+	colorAttachments.add(colorAttachment);
+}
+RenderTargetLayout::RenderTargetLayout(Array<PTexture2D> colorAttachments, PTexture2D depthAttachmet)
+	: inputAttachments()
+	, colorAttachments(colorAttachments)
+	, depthAttachment(depthAttachment)
+{
+
+}
+RenderTargetLayout::RenderTargetLayout(Array<PTexture2D> inputAttachments, Array<PTexture2D> colorAttachments, PTexture2D depthAttachment)
+	: inputAttachments(inputAttachments)
+	, colorAttachments(colorAttachments)
+	, depthAttachment(depthAttachment)
+{
+
+}

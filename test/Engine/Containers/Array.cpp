@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(random_access)
 	BOOST_CHECK_EQUAL(array[0], 4);
 }
 
-BOOST_AUTO_TEST_CASE(benchmark)
+/*BOOST_AUTO_TEST_CASE(benchmark)
 {
 	using namespace std::chrono;
 	srand(time(NULL));
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(benchmark)
 	std::cout << "Vector: " << time_vector << "ms Array: " << time_array << "ms" << std::endl;
 	std::cout << "Vector remove: " << remove_vector << "ms Array remove: " << remove_array << "ms" << std::endl;
 	delete[] testSet;
-} 
+}*/
 
 BOOST_AUTO_TEST_SUITE_END()
 

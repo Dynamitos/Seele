@@ -1,10 +1,11 @@
 #pragma once
-#include <stdint.h>
 #include <assert.h>
 #include <memory>
 #include <atomic>
 #include <cstring>
 #include <iostream>
+#include "Containers/Map.h"
+#include "EngineTypes.h"
 #include "Math/Math.h"
 
 #define DEFINE_REF(x) typedef RefPtr<x> P##x; \
@@ -16,18 +17,9 @@
 		typedef UniquePtr<x> UP##x; \
 		typedef WeakPtr<x> W##x;
 
+extern Seele::Map<void*, void*> registeredObjects;
 namespace Seele
 {
-	typedef uint64_t uint64;
-	typedef uint32_t uint32;
-	typedef uint16_t uint16;
-	typedef uint8_t uint8;
-
-	typedef int64_t int64;
-	typedef int32_t int32;
-	typedef int16_t int16;
-	typedef int8_t int8;
-
 	template<typename T>
 	class RefObject
 	{
@@ -36,18 +28,25 @@ namespace Seele
 			: handle(ptr)
 			, refCount(1)
 		{
+			registeredObjects[ptr] = this;
 		}
 		RefObject(const RefObject& rhs)
 			: handle(rhs.handle)
 			, refCount(rhs.refCount)
 		{
-
 		}
 		~RefObject()
-		{}
+		{
+			registeredObjects.erase(handle);
+			delete handle;
+		}
 		bool operator==(const RefObject& other) const
 		{
-			return handle == other.handle && refCount == other.refCount;
+			return handle == other.handle;
+		}
+		bool operator<(const RefObject& other) const
+		{
+			return handle < other.handle;
 		}
 		void addRef()
 		{
@@ -58,8 +57,6 @@ namespace Seele
 			refCount--;
 			if (refCount.load() <= 0)
 			{
-				delete handle;
-				handle = nullptr;
 				delete this;
 			}
 		}
@@ -71,6 +68,7 @@ namespace Seele
 		T* handle;
 		std::atomic_uint64_t refCount;
 	};
+
 
 	template<typename T>
 	class RefPtr
@@ -86,7 +84,15 @@ namespace Seele
 		}
 		RefPtr(T* ptr)
 		{
-			object = new RefObject<T>(ptr);
+			auto registeredObj = registeredObjects.find(ptr);
+			if(registeredObj == registeredObjects.end())
+			{
+				object = new RefObject<T>(ptr);
+			}
+			else
+			{
+				object = (RefObject<T>*)registeredObj->value;
+			}
 		}
 		explicit RefPtr(RefObject<T>* other)
 			: object(other)
@@ -171,11 +177,8 @@ namespace Seele
 		WeakPtr()
 			: pointer(nullptr)
 		{}
-		WeakPtr(T* ptr)
-			: pointer(ptr)
-		{}
 		WeakPtr(RefPtr<T>& sharedPtr)
-			: pointer(sharedPtr.object->handle)
+			: pointer(sharedPtr)
 		{}
 		WeakPtr& operator=(WeakPtr<T>& weakPtr)
 		{
@@ -184,20 +187,11 @@ namespace Seele
 		}
 		WeakPtr& operator=(RefPtr<T>& sharedPtr)
 		{
-			pointer = sharedPtr.object->handle;
+			pointer = sharedPtr;
 			return *this;
-		}
-		WeakPtr& operator=(T* ptr)
-		{
-			pointer = ptr;
-			return *this;
-		}
-		inline T* operator->()
-		{
-			return pointer;
 		}
 	private:
-		T* pointer;
+		RefPtr<T> pointer;
 	};
 	template<typename T>
 	class UniquePtr

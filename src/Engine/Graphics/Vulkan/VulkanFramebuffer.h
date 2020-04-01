@@ -5,18 +5,21 @@ namespace Seele
 {
     namespace Vulkan
     {
+        DECLARE_REF(RenderPass);
         class Framebuffer
         {
         public:
-            Framebuffer(WGraphics graphics);
+            Framebuffer(PGraphics graphics, PRenderPass renderpass, Gfx::PRenderTargetLayout renderTargetLayout);
             virtual ~Framebuffer();
             inline VkFramebuffer getHandle() const
             {
                 return handle;
             }
         private:
-            WGraphics graphics;
+            PGraphics graphics;
             VkFramebuffer handle;
+            Gfx::PRenderTargetLayout layout;
+            PRenderPass renderPass;
         };
         DEFINE_REF(Framebuffer);
     }

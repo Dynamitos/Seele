@@ -1,4 +1,5 @@
 #include "VulkanInitializer.h"
+#include <iostream>
 
 using namespace Seele::Vulkan;
 
@@ -45,7 +46,7 @@ VkDeviceQueueCreateInfo init::DeviceQueueCreateInfo(int queueFamilyIndex, int qu
 	VkDeviceQueueCreateInfo createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
 	createInfo.queueFamilyIndex = queueFamilyIndex;
-	createInfo.queueCount = 1;
+	createInfo.queueCount = queueCount;
 	createInfo.pQueuePriorities = queuePriority;
 	return createInfo;
 }

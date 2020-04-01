@@ -1,6 +1,7 @@
 target_sources(SeeleEngine
     PRIVATE
         MinimalEngine.h
+        MinimalEngine.cpp
         main.cpp)
 
 add_subdirectory(Graphics/)

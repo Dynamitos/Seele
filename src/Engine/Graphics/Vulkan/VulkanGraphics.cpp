@@ -63,6 +63,27 @@ VkPhysicalDevice Graphics::getPhysicalDevice() const
 	return physicalDevice;
 }
 
+PCommandBufferManager Graphics::getGraphicsCommands()
+{
+	return graphicsCommands;
+}
+PCommandBufferManager Graphics::getComputeCommands()
+{
+	return computeCommands;
+}
+PCommandBufferManager Graphics::getTransferCommands()
+{
+	return transferCommands;
+}
+PCommandBufferManager Graphics::getDedicatedTransferCommands()
+{
+	return dedicatedTransferCommands;
+}
+PAllocator Graphics::getAllocator()
+{
+	return allocator;
+}
+
 Array<const char *> Graphics::getRequiredExtensions()
 {
 	Array<const char *> extensions;
@@ -161,12 +182,16 @@ void Graphics::createDevice(GraphicsInitializer initializer)
 	int32_t asyncComputeFamilyIndex = -1;
 	for (int32_t familyIndex = 0; familyIndex < queueProperties.size(); ++familyIndex)
 	{
-		const VkQueueFamilyProperties currProps = queueProperties[familyIndex];
+		uint32 numQueuesForFamily = 0;
+		VkQueueFamilyProperties currProps = queueProperties[familyIndex];
+		bool bSparse = currProps.queueFlags & VK_QUEUE_SPARSE_BINDING_BIT;
+		currProps.queueFlags = currProps.queueFlags ^ VK_QUEUE_SPARSE_BINDING_BIT;
 		if ((currProps.queueFlags & VK_QUEUE_GRAPHICS_BIT) == VK_QUEUE_GRAPHICS_BIT)
 		{
 			if (graphicsQueueFamilyIndex == -1)
 			{
 				graphicsQueueFamilyIndex = familyIndex;
+				numQueuesForFamily++;
 			}
 		}
 		if ((currProps.queueFlags & VK_QUEUE_COMPUTE_BIT) == VK_QUEUE_COMPUTE_BIT)
@@ -184,6 +209,7 @@ void Graphics::createDevice(GraphicsInitializer initializer)
 						if (currProps.queueCount > 1)
 						{
 							asyncComputeFamilyIndex = familyIndex;
+							numQueuesForFamily++;
 						}
 					}
 					else
@@ -198,15 +224,20 @@ void Graphics::createDevice(GraphicsInitializer initializer)
 			if (transferQueueFamilyIndex == -1)
 			{
 				transferQueueFamilyIndex = familyIndex;
+				numQueuesForFamily++;
 			}
 			if ((currProps.queueFlags ^ VK_QUEUE_TRANSFER_BIT) == 0)
 			{
 				dedicatedTransferQueueFamilyIndex = familyIndex;
+				numQueuesForFamily++;
 			}
 		}
-		VkDeviceQueueCreateInfo info =
-			init::DeviceQueueCreateInfo(familyIndex, 1);
-		queueInfos.add(info);
+		if(numQueuesForFamily > 0)
+		{
+			VkDeviceQueueCreateInfo info =
+				init::DeviceQueueCreateInfo(familyIndex, numQueuesForFamily);
+			queueInfos.add(info);
+		}
 	}
 	VkDeviceCreateInfo deviceInfo = init::DeviceCreateInfo(
 		queueInfos.data(),

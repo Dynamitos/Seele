@@ -5,7 +5,7 @@
 using namespace Seele;
 using namespace Seele::Vulkan;
 
-Queue::Queue(WGraphics graphics, QueueType queueType, uint32 familyIndex, uint32 queueIndex)
+Queue::Queue(PGraphics graphics, QueueType queueType, uint32 familyIndex, uint32 queueIndex)
     : familyIndex(familyIndex)
     , graphics(graphics)
     , queueType(queueType)

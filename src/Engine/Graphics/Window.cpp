@@ -1,7 +1,9 @@
 #include "Window.h"
 #include "SceneView.h"
 
-Seele::Window::Window(const WindowCreateInfo& createInfo, Gfx::PGraphics graphics)
+using namespace Seele;
+
+Window::Window(const WindowCreateInfo& createInfo, Gfx::PGraphics graphics)
 	: width(createInfo.width)
 	, height(createInfo.height)
 	, graphics(graphics)
@@ -12,17 +14,22 @@ Seele::Window::Window(const WindowCreateInfo& createInfo, Gfx::PGraphics graphic
 	windowHandle = graphics->createWindow(createInfo);
 }
 
-Seele::Window::~Window()
+Window::~Window()
 {
 }
 
-void Seele::Window::beginFrame()
+void Window::onWindowCloseEvent()
+{
+	
+}
+
+void Window::beginFrame()
 {
 	graphics->beginFrame(windowHandle);
 	center->beginFrame();
 }
 
-void Seele::Window::endFrame()
+void Window::endFrame()
 {
 	graphics->endFrame(windowHandle);
 }

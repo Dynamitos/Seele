@@ -14,7 +14,7 @@ SubAllocation::SubAllocation(Allocation* owner, uint32 allocatedOffset, uint32 s
 {
 }
 
-Allocation::Allocation(WGraphics graphics, Allocator* allocator, uint32 size, uint32 memoryTypeIndex, VkMemoryPropertyFlags properties, bool isDedicated)
+Allocation::Allocation(PGraphics graphics, Allocator* allocator, uint32 size, uint32 memoryTypeIndex, VkMemoryPropertyFlags properties, bool isDedicated)
 	: device(graphics->getDevice())
 	, allocator(allocator)
 	, bytesAllocated(0)
@@ -74,7 +74,7 @@ PSubAllocation Allocation::getSuballocation(uint32 requestedSize, uint32 alignme
 	return nullptr;
 }
 
-Allocator::Allocator(WGraphics graphics)
+Allocator::Allocator(PGraphics graphics)
 	: graphics(graphics)
 {
 	vkGetPhysicalDeviceMemoryProperties(graphics->getPhysicalDevice(), &memProperties);
@@ -119,5 +119,6 @@ VkResult Allocator::findMemoryType(uint32 typeBits, VkMemoryPropertyFlags proper
 		}
 		typeBits >>= 1;
 	}
+	
 	return VK_ERROR_FORMAT_NOT_SUPPORTED;
 }

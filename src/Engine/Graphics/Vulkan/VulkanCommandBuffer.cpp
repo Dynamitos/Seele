@@ -8,7 +8,7 @@
 using namespace Seele;
 using namespace Seele::Vulkan;
 
-CmdBufferBase::CmdBufferBase(WGraphics graphics, VkCommandPool cmdPool)
+CmdBufferBase::CmdBufferBase(PGraphics graphics, VkCommandPool cmdPool)
     : graphics(graphics)
     , owner(cmdPool)
 {
@@ -19,7 +19,7 @@ CmdBufferBase::~CmdBufferBase()
 {
 }
 
-CmdBuffer::CmdBuffer(WGraphics graphics, VkCommandPool cmdPool)
+CmdBuffer::CmdBuffer(PGraphics graphics, VkCommandPool cmdPool)
     : CmdBufferBase(graphics, cmdPool)
     , renderPass(nullptr)
     , framebuffer(nullptr)
@@ -54,7 +54,7 @@ void CmdBuffer::end()
     state = State::Ended;
 }
 
-void CmdBuffer::beginRenderPass(WRenderPass renderPass, WFramebuffer framebuffer)
+void CmdBuffer::beginRenderPass(PRenderPass renderPass, PFramebuffer framebuffer)
 {
     VkRenderPassBeginInfo beginInfo =
         init::RenderPassBeginInfo();
@@ -71,7 +71,7 @@ void CmdBuffer::endRenderPass()
     vkCmdEndRenderPass(handle);
 }
 
-SecondaryCmdBuffer::SecondaryCmdBuffer(WGraphics graphics, VkCommandPool cmdPool)
+SecondaryCmdBuffer::SecondaryCmdBuffer(PGraphics graphics, VkCommandPool cmdPool)
     : CmdBufferBase(graphics, cmdPool)
 {
     VkCommandBufferAllocateInfo allocInfo =
@@ -86,7 +86,7 @@ SecondaryCmdBuffer::~SecondaryCmdBuffer()
     vkFreeCommandBuffers(graphics->getDevice(), owner, 1, &handle);
 }
 
-void SecondaryCmdBuffer::begin(WCmdBuffer parent)
+void SecondaryCmdBuffer::begin(PCmdBuffer parent)
 {
     VkCommandBufferBeginInfo beginInfo =
         init::CommandBufferBeginInfo();
@@ -104,7 +104,7 @@ void SecondaryCmdBuffer::end()
     VK_CHECK(vkEndCommandBuffer(handle));
 }
 
-CommandBufferManager::CommandBufferManager(WGraphics graphics, WQueue queue)
+CommandBufferManager::CommandBufferManager(PGraphics graphics, PQueue queue)
     : graphics(graphics)
     , queue(queue)
 {
@@ -131,9 +131,45 @@ PCmdBuffer CommandBufferManager::getCommands()
 
 PSecondaryCmdBuffer CommandBufferManager::createSecondaryCmdBuffer()
 {
-    return PSecondaryCmdBuffer();
+    return new SecondaryCmdBuffer(graphics, commandPool);
 }
 
-void Seele::Vulkan::CommandBufferManager::submitCommands(PSemaphore signalSemaphore)
+void CommandBufferManager::submitCommands(PSemaphore signalSemaphore)
 {
+    if(activeCmdBuffer->state == CmdBuffer::State::InsideBegin 
+    || activeCmdBuffer->state == CmdBuffer::State::RenderPassActive)
+    {
+        if(!activeCmdBuffer->state == CmdBuffer::State::RenderPassActive)
+        {
+            std::cout << "End of renderpass forced" << std::endl;
+            activeCmdBuffer->endRenderPass();
+        }
+        activeCmdBuffer->end();
+        if(signalSemaphore != nullptr)
+        {
+            queue->submitCommandBuffer(activeCmdBuffer, signalSemaphore->getHandle());
+        }
+        else
+        {
+            queue->submitCommandBuffer(activeCmdBuffer);
+        }
+    }
+    for(int32_t i = 0; i < allocatedBuffers.size(); ++i)
+    {
+        PCmdBuffer cmdBuffer = allocatedBuffers[i];
+        cmdBuffer->refreshFences();
+        if(cmdBuffer->state == CmdBuffer::State::ReadyBegin)
+        {
+            activeCmdBuffer = cmdBuffer;
+            activeCmdBuffer->begin();
+            return;
+        }
+        else
+        {
+            assert(cmdBuffer->state == CmdBuffer::State::Submitted);
+        }
+    }
+    activeCmdBuffer = new CmdBuffer(graphics, commandPool);
+    allocatedBuffers.add(activeCmdBuffer);
+    activeCmdBuffer->begin();
 }

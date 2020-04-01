@@ -1,5 +1,7 @@
 #pragma once
-#include "MinimalEngine.h"
+#include "EngineTypes.h"
+#include <initializer_list>
+#include <iterator>
 #include <assert.h>
 
 #ifndef DEFAULT_ALLOC_SIZE
@@ -95,11 +97,15 @@ namespace Seele
 				_data = other._data;
 				other._data = nullptr;
 			}
+			return *this;
 		}
 		~Array()
 		{
-			free(_data);
-			_data = nullptr;
+			if(_data)
+			{
+				free(_data);
+				_data = nullptr;
+			}
 		}
 		template<typename X>
 		class IteratorBase {
@@ -132,7 +138,7 @@ namespace Seele
 			{
 				return p == other.p;
 			}
-			inline bool operator-(const IteratorBase& other)
+			inline int operator-(const IteratorBase& other)
 			{
 				return p - other.p;
 			}
@@ -140,9 +146,18 @@ namespace Seele
 				p++;
 				return *this;
 			}
+			IteratorBase& operator--() {
+				p--;
+				return *this;
+			}
 			IteratorBase operator++(int) {
 				IteratorBase tmp(*this);
 				++*this;
+				return tmp;
+			}
+			IteratorBase operator--(int) {
+				IteratorBase tmp(*this);
+				--*this;
 				return tmp;
 			}
 		private:
@@ -150,6 +165,16 @@ namespace Seele
 		};
 		typedef IteratorBase<T> Iterator;
 		typedef IteratorBase<const T> ConstIterator;
+
+		bool operator==(const Array& other)
+		{
+			return _data == other._data;
+		}
+
+		bool operator!=(const Array& other)
+		{
+			return !(*this == other);
+		}
 
 		Iterator find(const T& item)
 		{
@@ -179,8 +204,8 @@ namespace Seele
 				allocated = calculateGrowth(newSize);
 				void* tempArray = malloc(sizeof(T) * allocated);
 				assert(tempArray != nullptr);
+				std::memset(tempArray, 0, sizeof(T) * allocated);
 				std::memcpy(tempArray, _data, arraySize * sizeof(T));
-				memset(tempArray, 0, sizeof(T) * allocated);
 				delete _data;
 				_data = (T*)tempArray;
 			}
@@ -218,7 +243,8 @@ namespace Seele
 			}
 			else
 			{
-				T* newData = new T[newSize];
+				T* newData = (T*)malloc(newSize * sizeof(T));
+				assert(newData != nullptr);
 				allocated = newSize;
 				std::memcpy(newData, _data, sizeof(T) * arraySize);
 				arraySize = newSize;
@@ -242,6 +268,10 @@ namespace Seele
 		T& back() const
 		{
 			return _data[arraySize - 1];
+		}
+		void pop()
+		{
+			arraySize--;
 		}
 		T& operator[](int index) const
 		{

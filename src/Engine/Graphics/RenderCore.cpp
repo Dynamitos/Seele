@@ -21,6 +21,11 @@ void Seele::RenderCore::init()
 
 void Seele::RenderCore::renderLoop()
 {
+	while(windowManager->isActive())
+	{
+		windowManager->beginFrame();
+		windowManager->endFrame();
+	}
 }
 
 void Seele::RenderCore::shutdown()

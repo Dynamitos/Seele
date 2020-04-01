@@ -20,5 +20,7 @@ namespace Seele
 		Gfx::SeDescriptorType cast(const VkDescriptorType& descriptorType);
 		VkShaderStageFlagBits cast(const Gfx::SeShaderStageFlagBits& stage);
 		Gfx::SeShaderStageFlagBits cast(const VkShaderStageFlagBits& stage);
+		VkFormat cast(const Gfx::SeFormat& format);
+		Gfx::SeFormat cast(const VkFormat& format);
 	}
 }

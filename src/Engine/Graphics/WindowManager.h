@@ -13,6 +13,10 @@ namespace Seele
 		void addWindow(const WindowCreateInfo& createInfo);
 		void beginFrame();
 		void endFrame();
+		inline bool isActive() const
+		{
+			return windows.size();
+		}
 	private:
 		Array<PWindow> windows;
 		Gfx::PGraphics graphics;
