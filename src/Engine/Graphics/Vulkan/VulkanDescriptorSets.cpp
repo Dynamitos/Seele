@@ -2,6 +2,7 @@
 #include "VulkanGraphicsEnums.h"
 #include "VulkanGraphics.h"
 #include "VulkanInitializer.h"
+#include "VulkanDescriptorSets.h"
 
 using namespace Seele;
 using namespace Seele::Vulkan;
@@ -23,8 +24,8 @@ void DescriptorLayout::create()
 	bindings.resize(descriptorBindings.size());
 	for (size_t i = 0; i < descriptorBindings.size(); ++i)
 	{
-		VkDescriptorSetLayoutBinding& binding = bindings[i];
-		const Gfx::DescriptorBinding& rhiBinding = descriptorBindings[i];
+		VkDescriptorSetLayoutBinding &binding = bindings[i];
+		const Gfx::DescriptorBinding &rhiBinding = descriptorBindings[i];
 		binding.binding = rhiBinding.binding;
 		binding.descriptorCount = rhiBinding.descriptorCount;
 		binding.descriptorType = cast(rhiBinding.descriptorType);
@@ -78,8 +79,8 @@ DescriptorSet::~DescriptorSet()
 void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PUniformBuffer uniformBuffer)
 {
 	PUniformBuffer vulkanBuffer = uniformBuffer.cast<UniformBuffer>();
-//	VkDescriptorBufferInfo bufferInfo = init::DescriptorBufferInfo(vulkanBuffer->getHandle(), vulkanBuffer->getOffset(), vulkanBuffer->getSize());
-//	bufferInfos.add(bufferInfo);
+	//	VkDescriptorBufferInfo bufferInfo = init::DescriptorBufferInfo(vulkanBuffer->getHandle(), vulkanBuffer->getOffset(), vulkanBuffer->getSize());
+	//	bufferInfos.add(bufferInfo);
 
 	VkWriteDescriptorSet writeDescriptor = init::WriteDescriptorSet(setHandle, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, binding, &bufferInfos.back());
 	writeDescriptors.add(writeDescriptor);
@@ -88,8 +89,8 @@ void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PUniformBuffer uniformBu
 void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PStructuredBuffer uniformBuffer)
 {
 	PStructuredBuffer vulkanBuffer = uniformBuffer.cast<StructuredBuffer>();
-//	VkDescriptorBufferInfo bufferInfo = init::DescriptorBufferInfo(vulkanBuffer->getHandle(), vulkanBuffer->getOffset(), vulkanBuffer->getSize());
-//	bufferInfos.add(bufferInfo);
+	//	VkDescriptorBufferInfo bufferInfo = init::DescriptorBufferInfo(vulkanBuffer->getHandle(), vulkanBuffer->getOffset(), vulkanBuffer->getSize());
+	//	bufferInfos.add(bufferInfo);
 
 	VkWriteDescriptorSet writeDescriptor = init::WriteDescriptorSet(setHandle, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, binding, &bufferInfos.back());
 	writeDescriptors.add(writeDescriptor);
@@ -111,23 +112,23 @@ void DescriptorSet::updateSampler(uint32_t binding, Gfx::PSamplerState samplerSt
 
 void DescriptorSet::updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::PSamplerState samplerState)
 {
-//	VulkanTextureBase* vulkanTexture = VulkanTextureBase::cast(texture);
+	PTextureHandle vulkanTexture = TextureBase::cast(texture);
 	//It is assumed that the image is in the correct layout
-//	VkDescriptorImageInfo imageInfo =
-//		init::DescriptorImageInfo(
-//			VK_NULL_HANDLE,
-//			vulkanTexture->defaultView.view,
-//			graphics->getRHIDevice().findLayout(vulkanTexture->surface.image));
+	VkDescriptorImageInfo imageInfo =
+		init::DescriptorImageInfo(
+			VK_NULL_HANDLE,
+			vulkanTexture->getView(),
+			vulkanTexture->getLayout());
 	if (samplerState != nullptr)
 	{
-//		PVulkanSamplerState vulkanSampler = samplerState.cast<VulkanSamplerState>();
-//		imageInfo.sampler = vulkanSampler->sampler;
+		PSamplerState vulkanSampler = samplerState.cast<SamplerState>();
+		imageInfo.sampler = vulkanSampler->sampler;
 	}
-//	imageInfos.add(imageInfo);
+	imageInfos.add(imageInfo);
 	VkWriteDescriptorSet writeDescriptor = init::WriteDescriptorSet(setHandle, samplerState != nullptr ? VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER : VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, binding, &imageInfos.back());
-//	if (vulkanTexture->surface.usageFlags & TexCreate_UAV)
+	if (vulkanTexture->getUsage() & VK_IMAGE_USAGE_STORAGE_BIT)
 	{
-//		writeDescriptor.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+		writeDescriptor.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
 	}
 	writeDescriptors.add(writeDescriptor);
 }
@@ -149,20 +150,19 @@ void DescriptorSet::writeChanges()
 	}
 }
 
-DescriptorAllocator::DescriptorAllocator(PGraphics graphics, DescriptorLayout& layout)
-	: layout(layout)
-	, graphics(graphics)
+DescriptorAllocator::DescriptorAllocator(PGraphics graphics, DescriptorLayout &layout)
+	: layout(layout), graphics(graphics)
 {
 	uint32 perTypeSizes[VK_DESCRIPTOR_TYPE_END_RANGE];
 	std::memset(perTypeSizes, 0, sizeof(perTypeSizes));
-	for (int i = 0; i < layout.getBindings().size(); ++i)
+	for (uint32 i = 0; i < layout.getBindings().size(); ++i)
 	{
-		auto& binding = layout.getBindings()[i];
+		auto &binding = layout.getBindings()[i];
 		int typeIndex = binding.descriptorType;
 		perTypeSizes[typeIndex] += 256;
 	}
 	Array<VkDescriptorPoolSize> poolSizes;
-	for (int i = 0; i < VK_DESCRIPTOR_TYPE_END_RANGE; ++i)
+	for (uint32 i = 0; i < VK_DESCRIPTOR_TYPE_END_RANGE; ++i)
 	{
 		if (perTypeSizes[i] > 0)
 		{
@@ -179,9 +179,10 @@ DescriptorAllocator::DescriptorAllocator(PGraphics graphics, DescriptorLayout& l
 DescriptorAllocator::~DescriptorAllocator()
 {
 	vkDestroyDescriptorPool(graphics->getDevice(), poolHandle, nullptr);
+	graphics = nullptr;
 }
 
-void DescriptorAllocator::allocateDescriptorSet(Gfx::PDescriptorSet& descriptorSet)
+void DescriptorAllocator::allocateDescriptorSet(Gfx::PDescriptorSet &descriptorSet)
 {
 	descriptorSet = new DescriptorSet(graphics, this);
 	PDescriptorSet vulkanSet = descriptorSet.cast<DescriptorSet>();

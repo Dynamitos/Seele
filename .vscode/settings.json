@@ -11,6 +11,9 @@
         "xiosbase": "cpp",
         "xmemory": "cpp",
         "xtree": "cpp",
-        "type_traits": "cpp"
-    }
+        "type_traits": "cpp",
+        "vector": "cpp",
+        "*.rh": "cpp",
+        "memory": "cpp"
+    },
 }

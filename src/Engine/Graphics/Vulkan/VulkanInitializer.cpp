@@ -3,7 +3,7 @@
 
 using namespace Seele::Vulkan;
 
-VkApplicationInfo init::ApplicationInfo(const char* appName, uint32_t appVersion, const char* engineName, uint32_t engineVersion, uint32_t apiVersion)
+VkApplicationInfo init::ApplicationInfo(const char *appName, uint32_t appVersion, const char *engineName, uint32_t engineVersion, uint32_t apiVersion)
 {
 	VkApplicationInfo info = {};
 	info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -11,10 +11,11 @@ VkApplicationInfo init::ApplicationInfo(const char* appName, uint32_t appVersion
 	info.applicationVersion = appVersion;
 	info.pEngineName = engineName;
 	info.engineVersion = engineVersion;
+	info.apiVersion = apiVersion;
 	return info;
 }
 
-VkInstanceCreateInfo init::InstanceCreateInfo(VkApplicationInfo* appInfo, const Array<const char*>& extensions, const Array<const char*>& layers)
+VkInstanceCreateInfo init::InstanceCreateInfo(VkApplicationInfo *appInfo, const Array<const char *> &extensions, const Array<const char *> &layers)
 {
 	VkInstanceCreateInfo info = {};
 	info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -41,7 +42,7 @@ VkDeviceQueueCreateInfo init::DeviceQueueCreateInfo(int queueFamilyIndex, int qu
 	return DeviceQueueCreateInfo(queueFamilyIndex, queueCount, &priority);
 }
 
-VkDeviceQueueCreateInfo init::DeviceQueueCreateInfo(int queueFamilyIndex, int queueCount, float* queuePriority)
+VkDeviceQueueCreateInfo init::DeviceQueueCreateInfo(int queueFamilyIndex, int queueCount, float *queuePriority)
 {
 	VkDeviceQueueCreateInfo createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -51,7 +52,7 @@ VkDeviceQueueCreateInfo init::DeviceQueueCreateInfo(int queueFamilyIndex, int qu
 	return createInfo;
 }
 
-VkDeviceCreateInfo init::DeviceCreateInfo(VkDeviceQueueCreateInfo* queueInfos, uint32_t queueCount, VkPhysicalDeviceFeatures* features)
+VkDeviceCreateInfo init::DeviceCreateInfo(VkDeviceQueueCreateInfo *queueInfos, uint32_t queueCount, VkPhysicalDeviceFeatures *features)
 {
 	return DeviceCreateInfo(queueInfos, queueCount, features, nullptr, 0, nullptr, 0);
 }
@@ -93,7 +94,7 @@ VkSwapchainCreateInfoKHR init::SwapchainCreateInfo(VkSurfaceKHR surface, uint32_
 	return createInfo;
 }
 
-VkFramebufferCreateInfo init::FramebufferCreateInfo(VkRenderPass renderPass, uint32_t attachmentCount, VkImageView* attachments, uint32_t width, uint32_t height, uint32_t layers)
+VkFramebufferCreateInfo init::FramebufferCreateInfo(VkRenderPass renderPass, uint32_t attachmentCount, VkImageView *attachments, uint32_t width, uint32_t height, uint32_t layers)
 {
 	VkFramebufferCreateInfo frameBufferCreateInfo = {};
 	frameBufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -121,16 +122,26 @@ VkAttachmentDescription init::AttachmentDescription(VkFormat format, VkSampleCou
 	return desc;
 }
 
-VkSubpassDescription init::SubpassDescription(VkPipelineBindPoint bindPoint, uint32_t colorAttachmentCount, VkAttachmentReference* colorReference, uint32_t depthAttachmentCount, VkAttachmentReference* depthReference, uint32_t inputAttachmentCount, VkAttachmentReference* inputReference, uint32_t resolveAttachmentCount, VkAttachmentReference* resolveReference, uint32_t preserveAttachmentCount, VkAttachmentReference* preserveReference)
+VkSubpassDescription init::SubpassDescription(VkPipelineBindPoint bindPoint,
+											  uint32_t colorAttachmentCount, VkAttachmentReference *colorReference,
+											  VkAttachmentReference *depthReference,
+											  uint32_t inputAttachmentCount, VkAttachmentReference *inputReference,
+											  VkAttachmentReference *resolveReference, uint32_t preserveAttachmentCount, uint32_t *preserveReference)
 {
 	VkSubpassDescription desc = {};
 	desc.pipelineBindPoint = bindPoint;
 	desc.colorAttachmentCount = colorAttachmentCount;
 	desc.pColorAttachments = colorReference;
+	desc.inputAttachmentCount = inputAttachmentCount;
+	desc.pInputAttachments = inputReference;
+	desc.pResolveAttachments = resolveReference;
+	desc.preserveAttachmentCount = preserveAttachmentCount;
+	desc.pPreserveAttachments = preserveReference;
+	desc.pDepthStencilAttachment = depthReference;
 	return desc;
 }
 
-VkRenderPassCreateInfo init::RenderPassCreateInfo(uint32_t attachmentCount, const VkAttachmentDescription* attachments, uint32_t subpassCount, const VkSubpassDescription* subpasses, uint32_t dependencyCount, const VkSubpassDependency* subpassDependencies)
+VkRenderPassCreateInfo init::RenderPassCreateInfo(uint32_t attachmentCount, const VkAttachmentDescription *attachments, uint32_t subpassCount, const VkSubpassDescription *subpasses, uint32_t dependencyCount, const VkSubpassDependency *subpassDependencies)
 {
 	VkRenderPassCreateInfo info = {};
 	info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
@@ -143,7 +154,7 @@ VkRenderPassCreateInfo init::RenderPassCreateInfo(uint32_t attachmentCount, cons
 
 	return info;
 }
-VkDeviceCreateInfo init::DeviceCreateInfo(VkDeviceQueueCreateInfo* queueInfos, uint32_t queueCount, VkPhysicalDeviceFeatures* features, const char* const* deviceExtensions, uint32_t deviceExtensionCount, const char* const* layers, uint32_t layerCount)
+VkDeviceCreateInfo init::DeviceCreateInfo(VkDeviceQueueCreateInfo *queueInfos, uint32_t queueCount, VkPhysicalDeviceFeatures *features, const char *const *deviceExtensions, uint32_t deviceExtensionCount, const char *const *layers, uint32_t layerCount)
 {
 	VkDeviceCreateInfo createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -160,6 +171,8 @@ VkDeviceCreateInfo init::DeviceCreateInfo(VkDeviceQueueCreateInfo* queueInfos, u
 	createInfo.ppEnabledLayerNames = layers;
 #else
 	createInfo.enabledLayerCount = 0;
+	layerCount = 0;
+	layers = nullptr;
 #endif // ENABLE_VALIDATION
 
 	return createInfo;
@@ -230,33 +243,40 @@ VkImageMemoryBarrier init::ImageMemoryBarrier(VkImage image, VkImageLayout oldLa
 	barrier.srcQueueFamilyIndex = srcQueue;
 	barrier.dstQueueFamilyIndex = dstQueue;
 	barrier.image = image;
-	if (newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
+	if (newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+	{
 		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
 	}
-	else {
+	else
+	{
 		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 	}
 	barrier.subresourceRange.baseMipLevel = 0;
 	barrier.subresourceRange.levelCount = 1;
 	barrier.subresourceRange.baseArrayLayer = 0;
 	barrier.subresourceRange.layerCount = 1;
-	if (oldLayout == VK_IMAGE_LAYOUT_PREINITIALIZED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL) {
+	if (oldLayout == VK_IMAGE_LAYOUT_PREINITIALIZED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL)
+	{
 		barrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
 		barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
 	}
-	else if (oldLayout == VK_IMAGE_LAYOUT_PREINITIALIZED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
+	else if (oldLayout == VK_IMAGE_LAYOUT_PREINITIALIZED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+	{
 		barrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
 		barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 	}
-	else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+	else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+	{
 		barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 	}
-	else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
+	else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+	{
 		barrier.srcAccessMask = 0;
 		barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 	}
-	else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
+	else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+	{
 		barrier.srcAccessMask = 0;
 		barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 	}
@@ -422,7 +442,7 @@ VkBufferCreateInfo init::BufferCreateInfo(
 
 VkDescriptorPoolCreateInfo init::DescriptorPoolCreateInfo(
 	uint32_t poolSizeCount,
-	VkDescriptorPoolSize* pPoolSizes,
+	VkDescriptorPoolSize *pPoolSizes,
 	uint32_t maxSets)
 {
 	VkDescriptorPoolCreateInfo descriptorPoolInfo = {};
@@ -459,7 +479,7 @@ VkDescriptorSetLayoutBinding init::DescriptorSetLayoutBinding(
 }
 
 VkDescriptorSetLayoutCreateInfo init::DescriptorSetLayoutCreateInfo(
-	const VkDescriptorSetLayoutBinding* pBindings,
+	const VkDescriptorSetLayoutBinding *pBindings,
 	uint32_t bindingCount)
 {
 	VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = {};
@@ -471,7 +491,7 @@ VkDescriptorSetLayoutCreateInfo init::DescriptorSetLayoutCreateInfo(
 }
 
 VkPipelineLayoutCreateInfo init::PipelineLayoutCreateInfo(
-	const VkDescriptorSetLayout* pSetLayouts,
+	const VkDescriptorSetLayout *pSetLayouts,
 	uint32_t setLayoutCount)
 {
 	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {};
@@ -484,7 +504,7 @@ VkPipelineLayoutCreateInfo init::PipelineLayoutCreateInfo(
 
 VkDescriptorSetAllocateInfo init::DescriptorSetAllocateInfo(
 	VkDescriptorPool descriptorPool,
-	const VkDescriptorSetLayout* pSetLayouts,
+	const VkDescriptorSetLayout *pSetLayouts,
 	uint32_t descriptorSetCount)
 {
 	VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = {};
@@ -522,7 +542,7 @@ VkWriteDescriptorSet init::WriteDescriptorSet(
 	VkDescriptorSet dstSet,
 	VkDescriptorType type,
 	uint32_t binding,
-	VkDescriptorBufferInfo* bufferInfo)
+	VkDescriptorBufferInfo *bufferInfo)
 {
 	VkWriteDescriptorSet writeDescriptorSet = {};
 	writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -540,7 +560,7 @@ VkWriteDescriptorSet init::WriteDescriptorSet(
 	VkDescriptorSet dstSet,
 	VkDescriptorType type,
 	uint32_t binding,
-	VkDescriptorImageInfo* bufferInfo)
+	VkDescriptorImageInfo *bufferInfo)
 {
 	VkWriteDescriptorSet writeDescriptorSet = {};
 	writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -630,7 +650,7 @@ VkPipelineColorBlendAttachmentState init::PipelineColorBlendAttachmentState(
 
 VkPipelineColorBlendStateCreateInfo init::PipelineColorBlendStateCreateInfo(
 	uint32_t attachmentCount,
-	const VkPipelineColorBlendAttachmentState* pAttachments)
+	const VkPipelineColorBlendAttachmentState *pAttachments)
 {
 	VkPipelineColorBlendStateCreateInfo pipelineColorBlendStateCreateInfo = {};
 	pipelineColorBlendStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
@@ -674,17 +694,19 @@ VkPipelineMultisampleStateCreateInfo init::PipelineMultisampleStateCreateInfo(
 {
 	VkPipelineMultisampleStateCreateInfo pipelineMultisampleStateCreateInfo = {};
 	pipelineMultisampleStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+	pipelineMultisampleStateCreateInfo.flags = flags;
 	pipelineMultisampleStateCreateInfo.rasterizationSamples = rasterizationSamples;
 	return pipelineMultisampleStateCreateInfo;
 }
 
 VkPipelineDynamicStateCreateInfo init::PipelineDynamicStateCreateInfo(
-	const VkDynamicState* pDynamicStates,
+	const VkDynamicState *pDynamicStates,
 	uint32_t dynamicStateCount,
 	VkPipelineDynamicStateCreateFlags flags)
 {
 	VkPipelineDynamicStateCreateInfo pipelineDynamicStateCreateInfo = {};
 	pipelineDynamicStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+	pipelineDynamicStateCreateInfo.flags = flags;
 	pipelineDynamicStateCreateInfo.pDynamicStates = pDynamicStates;
 	pipelineDynamicStateCreateInfo.dynamicStateCount = dynamicStateCount;
 	return pipelineDynamicStateCreateInfo;
@@ -733,7 +755,7 @@ VkPushConstantRange init::PushConstantRange(
 	return pushConstantRange;
 }
 
-VkPipelineShaderStageCreateInfo init::PipelineShaderStageCreateInfo(VkShaderStageFlagBits stage, VkShaderModule module, const char* entryName)
+VkPipelineShaderStageCreateInfo init::PipelineShaderStageCreateInfo(VkShaderStageFlagBits stage, VkShaderModule module, const char *entryName)
 {
 	VkPipelineShaderStageCreateInfo info = {};
 	info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -743,25 +765,31 @@ VkPipelineShaderStageCreateInfo init::PipelineShaderStageCreateInfo(VkShaderStag
 	return info;
 }
 
-
-VkBool32 Seele::Vulkan::debugCallback(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objType, uint64_t obj, size_t location, int32_t code, const char* layerPrefix, const char* msg, void* userDataManager) {
+#pragma warning(disable : 4100)
+VkBool32 Seele::Vulkan::debugCallback(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objType, uint64_t obj, size_t location, int32_t code, const char *layerPrefix, const char *msg, void *userDataManager)
+{
 	std::cerr << layerPrefix << ": " << msg << std::endl;
 	return VK_FALSE;
 }
-VkResult Seele::Vulkan::CreateDebugReportCallbackEXT(VkInstance instance, const VkDebugReportCallbackCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugReportCallbackEXT* pCallback) {
+#pragma warning(default : 4100)
+VkResult Seele::Vulkan::CreateDebugReportCallbackEXT(VkInstance instance, const VkDebugReportCallbackCreateInfoEXT *pCreateInfo, const VkAllocationCallbacks *pAllocator, VkDebugReportCallbackEXT *pCallback)
+{
 	auto func = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugReportCallbackEXT");
-	if (func != nullptr) {
+	if (func != nullptr)
+	{
 		return func(instance, pCreateInfo, pAllocator, pCallback);
 	}
-	else {
+	else
+	{
 		return VK_ERROR_EXTENSION_NOT_PRESENT;
 	}
 }
 
-void Seele::Vulkan::DestroyDebugReportCallbackEXT(VkInstance instance, const VkAllocationCallbacks* pAllocator, VkDebugReportCallbackEXT pCallback)
+void Seele::Vulkan::DestroyDebugReportCallbackEXT(VkInstance instance, const VkAllocationCallbacks *pAllocator, VkDebugReportCallbackEXT pCallback)
 {
 	auto func = (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugReportCallbackEXT");
-	if (func != nullptr) {
+	if (func != nullptr)
+	{
 		func(instance, pCallback, pAllocator);
 	}
 }

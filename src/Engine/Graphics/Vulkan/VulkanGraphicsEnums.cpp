@@ -3,7 +3,7 @@
 using namespace Seele::Vulkan;
 using namespace Seele::Gfx;
 
-VkDescriptorType Seele::Vulkan::cast(const Seele::Gfx::SeDescriptorType& descriptorType)
+VkDescriptorType Seele::Vulkan::cast(const Seele::Gfx::SeDescriptorType &descriptorType)
 {
     switch (descriptorType)
     {
@@ -41,7 +41,7 @@ VkDescriptorType Seele::Vulkan::cast(const Seele::Gfx::SeDescriptorType& descrip
     return VK_DESCRIPTOR_TYPE_MAX_ENUM;
 }
 
-Seele::Gfx::SeDescriptorType Seele::Vulkan::cast(const VkDescriptorType& descriptorType)
+Seele::Gfx::SeDescriptorType Seele::Vulkan::cast(const VkDescriptorType &descriptorType)
 {
     switch (descriptorType)
     {
@@ -80,7 +80,7 @@ Seele::Gfx::SeDescriptorType Seele::Vulkan::cast(const VkDescriptorType& descrip
     return SE_DESCRIPTOR_TYPE_MAX_ENUM;
 }
 
-VkShaderStageFlagBits Seele::Vulkan::cast(const Seele::Gfx::SeShaderStageFlagBits& stage)
+VkShaderStageFlagBits Seele::Vulkan::cast(const Seele::Gfx::SeShaderStageFlagBits &stage)
 {
     switch (stage)
     {
@@ -125,7 +125,7 @@ VkShaderStageFlagBits Seele::Vulkan::cast(const Seele::Gfx::SeShaderStageFlagBit
     return VK_SHADER_STAGE_ALL;
 }
 
-Seele::Gfx::SeShaderStageFlagBits Seele::Vulkan::cast(const VkShaderStageFlagBits& stage)
+Seele::Gfx::SeShaderStageFlagBits Seele::Vulkan::cast(const VkShaderStageFlagBits &stage)
 {
     switch (stage)
     {
@@ -162,14 +162,14 @@ Seele::Gfx::SeShaderStageFlagBits Seele::Vulkan::cast(const VkShaderStageFlagBit
         return SE_SHADER_STAGE_TASK_BIT_NV;
     case VK_SHADER_STAGE_MESH_BIT_NV:
         return SE_SHADER_STAGE_MESH_BIT_NV;
-#endif	
+#endif
     default:
         break;
     }
     return SE_SHADER_STAGE_ALL;
 }
 
-VkFormat Seele::Vulkan::cast(const Seele::Gfx::SeFormat& format)
+VkFormat Seele::Vulkan::cast(const Seele::Gfx::SeFormat &format)
 {
     switch (format)
     {
@@ -631,7 +631,7 @@ VkFormat Seele::Vulkan::cast(const Seele::Gfx::SeFormat& format)
         return VK_FORMAT_MAX_ENUM;
     }
 }
-Seele::Gfx::SeFormat Seele::Vulkan::cast(const VkFormat& format)
+Seele::Gfx::SeFormat Seele::Vulkan::cast(const VkFormat &format)
 {
     switch (format)
     {
@@ -1091,5 +1091,57 @@ Seele::Gfx::SeFormat Seele::Vulkan::cast(const VkFormat& format)
         return SE_FORMAT_PVRTC2_4BPP_SRGB_BLOCK_IMG;
     default:
         return SE_FORMAT_MAX_ENUM;
+    }
+}
+VkAttachmentStoreOp Seele::Vulkan::cast(const Gfx::SeAttachmentStoreOp &storeOp)
+{
+    switch (storeOp)
+    {
+    case SE_ATTACHMENT_STORE_OP_STORE:
+        return VK_ATTACHMENT_STORE_OP_STORE;
+    case SE_ATTACHMENT_STORE_OP_DONT_CARE:
+        return VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    default:
+        return VK_ATTACHMENT_STORE_OP_MAX_ENUM;
+    }
+}
+Gfx::SeAttachmentStoreOp Seele::Vulkan::cast(const VkAttachmentStoreOp &storeOp)
+{
+    switch (storeOp)
+    {
+    case VK_ATTACHMENT_STORE_OP_STORE:
+        return SE_ATTACHMENT_STORE_OP_STORE;
+    case VK_ATTACHMENT_STORE_OP_DONT_CARE:
+        return SE_ATTACHMENT_STORE_OP_DONT_CARE;
+    default:
+        return SE_ATTACHMENT_STORE_OP_MAX_ENUM;
+    }
+}
+VkAttachmentLoadOp Seele::Vulkan::cast(const Gfx::SeAttachmentLoadOp &loadOp)
+{
+    switch (loadOp)
+    {
+    case SE_ATTACHMENT_LOAD_OP_LOAD:
+        return VK_ATTACHMENT_LOAD_OP_LOAD;
+    case SE_ATTACHMENT_LOAD_OP_CLEAR:
+        return VK_ATTACHMENT_LOAD_OP_CLEAR;
+    case SE_ATTACHMENT_LOAD_OP_DONT_CARE:
+        return VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    default:
+        return VK_ATTACHMENT_LOAD_OP_MAX_ENUM;
+    }
+}
+Gfx::SeAttachmentLoadOp Seele::Vulkan::cast(const VkAttachmentLoadOp &loadOp)
+{
+    switch (loadOp)
+    {
+    case VK_ATTACHMENT_LOAD_OP_LOAD:
+        return SE_ATTACHMENT_LOAD_OP_LOAD;
+    case VK_ATTACHMENT_LOAD_OP_CLEAR:
+        return SE_ATTACHMENT_LOAD_OP_CLEAR;
+    case VK_ATTACHMENT_LOAD_OP_DONT_CARE:
+        return SE_ATTACHMENT_LOAD_OP_DONT_CARE;
+    default:
+        return SE_ATTACHMENT_LOAD_OP_MAX_ENUM;
     }
 }

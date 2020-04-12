@@ -10,6 +10,7 @@ namespace Vulkan
 DECLARE_REF(DescriptorAllocator);
 DECLARE_REF(CommandBufferManager);
 DECLARE_REF(Graphics);
+DECLARE_REF(SubAllocation);
 class Semaphore
 {
 public:
@@ -19,116 +20,32 @@ public:
 	{
 		return handle;
 	}
+
 private:
 	VkSemaphore handle;
 	PGraphics graphics;
 };
 DEFINE_REF(Semaphore);
 
-class DescriptorLayout : public Gfx::DescriptorLayout
+class Fence
 {
 public:
-	DescriptorLayout(PGraphics graphics)
-		: graphics(graphics), layoutHandle(VK_NULL_HANDLE)
+	Fence(PGraphics graphics);
+	~Fence();
+	bool isSignaled();
+	void reset();
+	inline VkFence getHandle() const
 	{
+		return fence;
 	}
-	virtual ~DescriptorLayout();
-	virtual void create();
-	inline VkDescriptorSetLayout getHandle() const
-	{
-		return layoutHandle;
-	}
+	void wait(uint32 timeout);
 
 private:
+	bool signaled;
+	VkFence fence;
 	PGraphics graphics;
-	Array<VkDescriptorSetLayoutBinding> bindings;
-	VkDescriptorSetLayout layoutHandle;
-	friend class PipelineStateCacheManager;
 };
-DEFINE_REF(DescriptorLayout);
-class PipelineLayout : public Gfx::PipelineLayout
-{
-public:
-	PipelineLayout(PGraphics graphics)
-		: graphics(graphics), layoutHash(0), layoutHandle(VK_NULL_HANDLE)
-	{
-	}
-	virtual ~PipelineLayout();
-	virtual void create();
-	inline VkPipelineLayout getHandle() const
-	{
-		return layoutHandle;
-	}
-	virtual uint32 getHash() const
-	{
-		return layoutHash;
-	}
-
-private:
-	Array<VkDescriptorSetLayout> vulkanDescriptorLayouts;
-	uint32 layoutHash;
-	VkPipelineLayout layoutHandle;
-	PGraphics graphics;
-	friend class PipelineStateCacheManager;
-};
-DEFINE_REF(PipelineLayout);
-
-class DescriptorSet : public Gfx::DescriptorSet
-{
-public:
-	DescriptorSet(PGraphics graphics, PDescriptorAllocator owner)
-		: graphics(graphics), owner(owner), setHandle(VK_NULL_HANDLE)
-	{
-	}
-	virtual ~DescriptorSet();
-	virtual void updateBuffer(uint32_t binding, Gfx::PUniformBuffer uniformBuffer);
-	virtual void updateBuffer(uint32_t binding, Gfx::PStructuredBuffer uniformBuffer);
-	virtual void updateSampler(uint32_t binding, Gfx::PSamplerState samplerState);
-	virtual void updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::PSamplerState sampler = nullptr);
-	virtual bool operator<(Gfx::PDescriptorSet other);
-	inline VkDescriptorSet getHandle() const
-	{
-		return setHandle;
-	}
-
-private:
-	virtual void writeChanges();
-	Array<VkDescriptorImageInfo> imageInfos;
-	Array<VkDescriptorBufferInfo> bufferInfos;
-	Array<VkWriteDescriptorSet> writeDescriptors;
-	VkDescriptorSet setHandle;
-	PDescriptorAllocator owner;
-	PGraphics graphics;
-	friend class DescriptorAllocator;
-};
-DEFINE_REF(DescriptorSet);
-
-class DescriptorAllocator : public Gfx::DescriptorAllocator
-{
-public:
-	DescriptorAllocator(PGraphics graphics, DescriptorLayout &layout);
-	~DescriptorAllocator();
-	virtual void allocateDescriptorSet(Gfx::PDescriptorSet &descriptorSet);
-
-	inline VkDescriptorPool getHandle()
-	{
-		return poolHandle;
-	}
-
-private:
-	PGraphics graphics;
-	int maxSets = 512;
-	VkDescriptorPool poolHandle;
-	DescriptorLayout &layout;
-};
-DEFINE_REF(DescriptorAllocator);
-enum class QueueType
-{
-	GRAPHICS = 1,
-	COMPUTE = 2,
-	TRANSFER = 3,
-	DEDICATED_TRANSFER = 4
-};
+DEFINE_REF(Fence);
 
 struct QueueFamilyMapping
 {
@@ -136,23 +53,23 @@ struct QueueFamilyMapping
 	uint32 computeFamily;
 	uint32 transferFamily;
 	uint32 dedicatedTransferFamily;
-	uint32 getQueueTypeFamilyIndex(QueueType type)
+	uint32 getQueueTypeFamilyIndex(Gfx::QueueType type) const
 	{
 		switch (type)
 		{
-		case QueueType::GRAPHICS:
+		case Gfx::QueueType::GRAPHICS:
 			return graphicsFamily;
-		case QueueType::COMPUTE:
+		case Gfx::QueueType::COMPUTE:
 			return computeFamily;
-		case QueueType::TRANSFER:
+		case Gfx::QueueType::TRANSFER:
 			return transferFamily;
-		case QueueType::DEDICATED_TRANSFER:
+		case Gfx::QueueType::DEDICATED_TRANSFER:
 			return dedicatedTransferFamily;
 		default:
 			return VK_QUEUE_FAMILY_IGNORED;
 		}
 	}
-	bool needsTransfer(QueueType src, QueueType dst)
+	bool needsTransfer(Gfx::QueueType src, Gfx::QueueType dst) const
 	{
 		uint32 srcIndex = getQueueTypeFamilyIndex(src);
 		uint32 dstIndex = getQueueTypeFamilyIndex(dst);
@@ -162,71 +79,179 @@ struct QueueFamilyMapping
 class QueueOwnedResource
 {
 public:
-	QueueOwnedResource(PGraphics graphics, QueueType startQueueType);
-	~QueueOwnedResource();
+	QueueOwnedResource(PGraphics graphics, Gfx::QueueType startQueueType);
+	virtual ~QueueOwnedResource();
 	PCommandBufferManager getCommands();
 	//Preliminary checks to see if the barrier should be executed at all
-	void transferOwnership(QueueType newOwner);
+	void transferOwnership(Gfx::QueueType newOwner);
 
 protected:
-	virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
-	QueueType currentOwner;
+	virtual void executeOwnershipBarrier(Gfx::QueueType newOwner) = 0;
+	Gfx::QueueType currentOwner;
 	PGraphics graphics;
-	CommandBufferManager *cachedCmdBufferManager;
+	PCommandBufferManager cachedCmdBufferManager;
 };
 DEFINE_REF(QueueOwnedResource);
 
 class Buffer : public QueueOwnedResource
 {
 public:
-	Buffer(PGraphics graphics, uint32 size, VkBufferUsageFlags usage, QueueType queueType = QueueType::GRAPHICS);
+	Buffer(PGraphics graphics, uint32 size, VkBufferUsageFlags usage, Gfx::QueueType queueType);
 	virtual ~Buffer();
+	VkBuffer getHandle() const
+	{
+		return buffers[currentBuffer].buffer;
+	}
+	void advanceBuffer()
+	{
+		currentBuffer = (currentBuffer + 1) % numBuffers;
+	}
+	void *lock(bool bWriteOnly = true);
+	void unlock();
 
-private:
+protected:
+	struct BufferAllocation
+	{
+		VkBuffer buffer;
+		PSubAllocation allocation;
+	};
+	BufferAllocation buffers[Gfx::numFramesBuffered];
+	uint32 numBuffers;
+	uint32 currentBuffer;
+	uint32 size;
+
 	virtual VkAccessFlags getSourceAccessMask() = 0;
 	virtual VkAccessFlags getDestAccessMask() = 0;
 	// Inherited via QueueOwnedResource
-	virtual void executeOwnershipBarrier(QueueType newOwner);
+	virtual void executeOwnershipBarrier(Gfx::QueueType newOwner);
 };
 DEFINE_REF(Buffer);
 
 class UniformBuffer : public Buffer, public Gfx::UniformBuffer
 {
+public:
+	UniformBuffer(PGraphics graphics, const BulkResourceData &resourceData);
+	virtual ~UniformBuffer();
+
+protected:
+	virtual VkAccessFlags getSourceAccessMask();
+	virtual VkAccessFlags getDestAccessMask();
 };
 DEFINE_REF(UniformBuffer);
 
 class StructuredBuffer : public Buffer, public Gfx::StructuredBuffer
 {
+public:
+	StructuredBuffer(PGraphics graphics, const BulkResourceData &resourceData);
+	virtual ~StructuredBuffer();
+
+protected:
+	virtual VkAccessFlags getSourceAccessMask();
+	virtual VkAccessFlags getDestAccessMask();
 };
 DEFINE_REF(StructuredBuffer);
 
-class TextureBase
+class VertexBuffer : public Buffer, public Gfx::VertexBuffer
 {
 public:
-	TextureBase(PGraphics graphics, VkImageViewType viewType, uint32 sizeX, uint32 sizeY, uint32 sizeZ, 
-		bool bArray, uint32 arraySize, uint32 mipLevels, Gfx::SeFormat format, 
-		uint32 samples, Gfx::SeImageUsageFlags usage);
-	virtual ~TextureBase();
+	VertexBuffer(PGraphics graphics, const BulkResourceData &resourceData);
+	virtual ~VertexBuffer();
 
+protected:
+	virtual VkAccessFlags getSourceAccessMask();
+	virtual VkAccessFlags getDestAccessMask();
+};
+DEFINE_REF(VertexBuffer);
+
+class IndexBuffer : public Buffer, public Gfx::IndexBuffer
+{
+public:
+	IndexBuffer(PGraphics graphics, const BulkResourceData &resourceData);
+	virtual ~IndexBuffer();
+
+protected:
+	virtual VkAccessFlags getSourceAccessMask();
+	virtual VkAccessFlags getDestAccessMask();
+};
+DEFINE_REF(IndexBuffer);
+
+class TextureHandle : public QueueOwnedResource
+{
+public:
+	TextureHandle(PGraphics graphics, VkImageViewType viewType, uint32 sizeX, uint32 sizeY, uint32 sizeZ,
+				  bool bArray, uint32 arraySize, uint32 mipLevels, Gfx::SeFormat format,
+				  uint32 samples, Gfx::SeImageUsageFlags usage, Gfx::QueueType owner = Gfx::QueueType::GRAPHICS, VkImage existingImage = VK_NULL_HANDLE);
+	virtual ~TextureHandle();
+
+	inline VkImageView getView() const
+	{
+		return defaultView;
+	}
+	inline VkImageLayout getLayout() const
+	{
+		return layout;
+	}
+	inline VkImageAspectFlags getAspect() const
+	{
+		return aspect;
+	}
+	inline VkImageUsageFlags getUsage() const
+	{
+		return usage;
+	}
+	inline Gfx::SeFormat getFormat() const
+	{
+		return format;
+	}
+	inline bool isDepthStencil() const
+	{
+		return aspect & (VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
+	}
+	// Inherited via QueueOwnedResource
+	virtual void executeOwnershipBarrier(Gfx::QueueType newOwner);
+
+private:
 	PGraphics graphics;
+	PSubAllocation allocation;
 	uint32 sizeX;
 	uint32 sizeY;
 	uint32 sizeZ;
 	uint32 arrayCount;
 	uint32 mipLevels;
+	uint32 samples;
 	Gfx::SeFormat format;
+	Gfx::SeImageUsageFlags usage;
 	VkImage image;
 	VkImageView defaultView;
 	VkImageAspectFlags aspect;
+	VkImageLayout layout;
+	friend class TextureBase;
+	friend class Texture2D;
+};
+DEFINE_REF(TextureHandle);
+
+DECLARE_REF(TextureBase);
+class TextureBase
+{
+public:
+	static PTextureHandle cast(Gfx::PTexture texture)
+	{
+		PTextureBase base = texture.cast<TextureBase>();
+		return base->textureHandle;
+	}
+	void changeLayout(VkImageLayout newLayout);
+
+protected:
+	PTextureHandle textureHandle;
 };
 DEFINE_REF(TextureBase);
 
-class Texture2D : public Gfx::Texture2D
+class Texture2D : public TextureBase, public Gfx::Texture2D
 {
 public:
-	Texture2D(PGraphics graphics, uint32 sizeX, uint32 sizeY, 
-		bool bArray, uint32 arraySize, uint32 mipLevels, 
-		Gfx::SeFormat format, uint32 samples, Gfx::SeImageUsageFlags usage);
+	Texture2D(PGraphics graphics, uint32 sizeX, uint32 sizeY,
+			  bool bArray, uint32 arraySize, uint32 mipLevels, Gfx::SeFormat format,
+			  uint32 samples, Gfx::SeImageUsageFlags usage, Gfx::QueueType owner = Gfx::QueueType::GRAPHICS, VkImage existingImage = VK_NULL_HANDLE);
 	virtual ~Texture2D();
 	inline uint32 getSizeX() const
 	{
@@ -248,8 +273,12 @@ public:
 	{
 		return textureHandle->defaultView;
 	}
+	inline bool isDepthStencil() const
+	{
+		return textureHandle->isDepthStencil();
+	}
+
 private:
-	PTextureBase textureHandle;
 };
 DEFINE_REF(Texture2D);
 
@@ -260,16 +289,54 @@ public:
 };
 DEFINE_REF(SamplerState);
 
+class Window : public Gfx::Window
+{
+public:
+	Window(PGraphics graphics, const WindowCreateInfo &createInfo);
+	virtual ~Window();
+	virtual void beginFrame() override;
+	virtual void endFrame() override;
+	virtual Gfx::PTexture2D getBackBuffer() override;
+	virtual void onWindowCloseEvent() override;
+
+protected:
+	void advanceBackBuffer();
+	void recreateSwapchain(const WindowCreateInfo &createInfo);
+	void present();
+	void destroySwapchain();
+	void createSwapchain();
+	void chooseSurfaceFormat(const Array<VkSurfaceFormatKHR> &available, Gfx::SeFormat preferred);
+	void choosePresentMode(const Array<VkPresentModeKHR> &modes);
+	PTexture2D backBufferImages[Gfx::numFramesBuffered];
+	PSemaphore renderFinished[Gfx::numFramesBuffered];
+	PSemaphore imageAcquired[Gfx::numFramesBuffered];
+	PSemaphore imageAcquiredSemaphore;
+
+	PGraphics graphics;
+	VkFormat pixelFormat;
+	VkPresentModeKHR presentMode;
+	VkSwapchainKHR swapchain;
+	VkSurfaceKHR surface;
+	VkSurfaceFormatKHR surfaceFormat;
+	void *windowHandle;
+	int32 currentImageIndex;
+	int32 acquiredImageIndex;
+	int32 preAcquiredImageIndex;
+	int32 semaphoreIndex;
+	VkInstance instance;
+};
+DEFINE_REF(Window);
+
 class Viewport : public Gfx::Viewport
 {
 public:
+	Viewport(PGraphics graphics, PWindow owner, const ViewportCreateInfo &createInfo);
+	virtual ~Viewport();
+
+protected:
 private:
-	uint32 sizeX;
-	uint32 sizeY;
-	uint32 offsetX;
-	uint32 offsetY;
-	VkSwapchainKHR swapchain;
-	void *windowHandle;
+	PGraphics graphics;
+	friend class Graphics;
 };
 DECLARE_REF(Viewport);
 } // namespace Vulkan

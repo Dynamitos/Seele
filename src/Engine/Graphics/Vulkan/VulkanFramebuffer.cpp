@@ -12,23 +12,27 @@ Framebuffer::Framebuffer(PGraphics graphics, PRenderPass renderPass, Gfx::PRende
     , layout(renderTargetLayout)
     , renderPass(renderPass)
 {
+    FramebufferDescription description;
+    std::memset(&description, 0, sizeof(FramebufferDescription));
     Array<VkImageView> attachments;
-    for(auto inputAttachment : layout->inputAttachments)
+    for (auto inputAttachment : layout->inputAttachments)
     {
-        PTexture2D vkInputAttachment = inputAttachment.cast<Texture2D>();
+        PTexture2D vkInputAttachment = inputAttachment->getTexture().cast<Texture2D>();
         attachments.add(vkInputAttachment->getView());
+        description.inputAttachments[description.numInputAttachments++] = vkInputAttachment->getView();
     }
-    for(auto colorAttachment : layout->colorAttachments)
+    for (auto colorAttachment : layout->colorAttachments)
     {
-        PTexture2D vkColorAttachment = colorAttachment.cast<Texture2D>();
+        PTexture2D vkColorAttachment = colorAttachment->getTexture().cast<Texture2D>();
         attachments.add(vkColorAttachment->getView());
+        description.colorAttachments[description.numColorAttachments++] = vkColorAttachment->getView();
     }
-    if(layout->depthAttachment != nullptr)
+    if (layout->depthAttachment != nullptr)
     {
-        PTexture2D vkDepthAttachment = layout->depthAttachment.cast<Texture2D>();
+        PTexture2D vkDepthAttachment = layout->depthAttachment->getTexture().cast<Texture2D>();
         attachments.add(vkDepthAttachment->getView());
+        description.depthAttachment = vkDepthAttachment->getView();
     }
-
     VkFramebufferCreateInfo createInfo =
         init::FramebufferCreateInfo(
             renderPass->getHandle(),
@@ -36,9 +40,10 @@ Framebuffer::Framebuffer(PGraphics graphics, PRenderPass renderPass, Gfx::PRende
             attachments.data(),
             renderPass->getRenderArea().extent.width,
             renderPass->getRenderArea().extent.height,
-            1
-        );
+            1);
     VK_CHECK(vkCreateFramebuffer(graphics->getDevice(), &createInfo, nullptr, &handle));
+
+    hash = memCrc32(&description, sizeof(FramebufferDescription));
 }
 
 Framebuffer::~Framebuffer()

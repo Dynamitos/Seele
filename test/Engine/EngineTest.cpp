@@ -54,6 +54,8 @@ BOOST_AUTO_TEST_CASE(inheritance_cast)
 		Seele::RefPtr<TestStruct> base = derived;
 		BOOST_REQUIRE_EQUAL(base->data, 10);
 		backCast = base.cast<DerivedStruct>();
+		BOOST_REQUIRE_EQUAL(backCast->data, 10);
+		BOOST_REQUIRE_EQUAL(backCast->data2, 20);
 	}
 	BOOST_REQUIRE_EQUAL(backCast->data, 10);
 	BOOST_REQUIRE_EQUAL(backCast->data2, 20);

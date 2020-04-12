@@ -9,5 +9,4 @@ Graphics::Graphics()
 
 Graphics::~Graphics()
 {
-
 }

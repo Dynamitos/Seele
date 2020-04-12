@@ -14,8 +14,6 @@ target_sources(SeeleEngine
         SceneView.cpp
         WindowManager.h
         WindowManager.cpp
-        Window.h
-        Window.cpp
         GraphicsResources.h
         GraphicsResources.cpp
         GraphicsEnums.h)

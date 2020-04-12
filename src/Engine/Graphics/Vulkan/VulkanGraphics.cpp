@@ -1,26 +1,33 @@
+#include "Containers/Array.h"
 #include "VulkanGraphics.h"
 #include "VulkanAllocator.h"
 #include "VulkanQueue.h"
-#include "Containers/Array.h"
 #include "VulkanInitializer.h"
 #include "VulkanCommandBuffer.h"
-#include <GLFW/glfw3.h>
+#include "VulkanRenderPass.h"
+#include "VulkanFramebuffer.h"
+#include "Graphics/GraphicsResources.h"
+#include <glfw/glfw3.h>
 
 using namespace Seele::Vulkan;
 
 Graphics::Graphics()
 	: callback(VK_NULL_HANDLE), handle(VK_NULL_HANDLE), instance(VK_NULL_HANDLE), physicalDevice(VK_NULL_HANDLE)
 {
-	glfwInit();
-	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 }
 
 Graphics::~Graphics()
 {
+	allocator = nullptr;
+	stagingManager = nullptr;
+	graphicsCommands = nullptr;
+	computeCommands = nullptr;
+	transferCommands = nullptr;
+	dedicatedTransferCommands = nullptr;
+	viewports.clear();
 	vkDestroyDevice(handle, nullptr);
 	DestroyDebugReportCallbackEXT(instance, nullptr, callback);
 	vkDestroyInstance(instance, nullptr);
-	glfwTerminate();
 }
 
 void Graphics::init(GraphicsInitializer initInfo)
@@ -30,27 +37,86 @@ void Graphics::init(GraphicsInitializer initInfo)
 	pickPhysicalDevice();
 	createDevice(initInfo);
 	allocator = new Allocator(this);
+	stagingManager = new StagingManager(this, allocator);
 	graphicsCommands = new CommandBufferManager(this, graphicsQueue);
 	computeCommands = new CommandBufferManager(this, computeQueue);
 	transferCommands = new CommandBufferManager(this, transferQueue);
 	dedicatedTransferCommands = new CommandBufferManager(this, dedicatedTransferQueue);
 }
 
-void Graphics::beginFrame(void *windowHandle)
+Gfx::PWindow Graphics::createWindow(const WindowCreateInfo &createInfo)
 {
-	GLFWwindow *window = static_cast<GLFWwindow *>(windowHandle);
-	glfwPollEvents();
+	PWindow result = new Window(this, createInfo);
+	return result;
 }
 
-void Graphics::endFrame(void *windowHandle)
+Gfx::PViewport Graphics::createViewport(Gfx::PWindow owner, const ViewportCreateInfo &viewportInfo)
 {
-	GLFWwindow *window = static_cast<GLFWwindow *>(windowHandle);
+	PViewport result = new Viewport(this, owner, viewportInfo);
+	viewports.add(result);
+	return result;
+}
+Gfx::PRenderPass Graphics::createRenderPass(Gfx::PRenderTargetLayout layout)
+{
+	PRenderPass result = new RenderPass(this, layout);
+	return result;
+}
+void Graphics::beginRenderPass(Gfx::PRenderPass renderPass)
+{
+	PRenderPass rp = renderPass.cast<RenderPass>();
+	uint32 framebufferHash = rp->getFramebufferHash();
+	PFramebuffer framebuffer;
+	auto found = allocatedFramebuffers.find(framebufferHash);
+	if(found == allocatedFramebuffers.end())
+	{
+		framebuffer = new Framebuffer(this, rp, rp->getLayout());
+	}
+	else
+	{
+		framebuffer = found->value;
+	}
+	graphicsCommands->getCommands()->beginRenderPass(rp, framebuffer);
 }
 
-void *Graphics::createWindow(const WindowCreateInfo &createInfo)
+void Graphics::endRenderPass()
 {
-	GLFWwindow *window = glfwCreateWindow(createInfo.width, createInfo.height, createInfo.title, createInfo.bFullscreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
-	return window;
+	graphicsCommands->getCommands()->endRenderPass();
+}
+
+Gfx::PTexture2D Graphics::createTexture2D(const TextureCreateInfo &createInfo)
+{
+	PTexture2D result = new Texture2D(this, createInfo.width, createInfo.height, createInfo.bArray,
+									  createInfo.bArray, createInfo.arrayLayers, createInfo.format,
+									  createInfo.samples, createInfo.usage, createInfo.queueType);
+	return result;
+}
+
+Gfx::PUniformBuffer Graphics::createUniformBuffer(const BulkResourceData &bulkData) 
+{
+	PUniformBuffer uniformBuffer = new UniformBuffer(this, bulkData);
+	return uniformBuffer;
+}
+
+Gfx::PStructuredBuffer Graphics::createStructuredBuffer(const BulkResourceData &bulkData) 
+{
+	PStructuredBuffer structuredBuffer = new StructuredBuffer(this, bulkData);
+	return structuredBuffer;
+}
+Gfx::PVertexBuffer Graphics::createVertexBuffer(const BulkResourceData &bulkData) 
+{
+	PVertexBuffer vertexBuffer = new VertexBuffer(this, bulkData);
+	return vertexBuffer;
+}
+
+Gfx::PIndexBuffer Graphics::createIndexBuffer(const BulkResourceData &bulkData) 
+{
+	PIndexBuffer indexBuffer = new IndexBuffer(this, bulkData);
+	return indexBuffer;
+}
+
+VkInstance Graphics::getInstance() const
+{
+	return instance;
 }
 
 VkDevice Graphics::getDevice() const
@@ -82,6 +148,11 @@ PCommandBufferManager Graphics::getDedicatedTransferCommands()
 PAllocator Graphics::getAllocator()
 {
 	return allocator;
+}
+
+PStagingManager Graphics::getStagingManager()
+{
+	return stagingManager;
 }
 
 Array<const char *> Graphics::getRequiredExtensions()
@@ -143,13 +214,13 @@ void Graphics::pickPhysicalDevice()
 	vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, nullptr);
 	Array<VkPhysicalDevice> physicalDevices(physicalDeviceCount);
 	vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, physicalDevices.data());
-	VkPhysicalDevice bestDevice;
+	VkPhysicalDevice bestDevice = VK_NULL_HANDLE;
 	uint32 deviceRating = 0;
-	for (auto physicalDevice : physicalDevices)
+	for (auto dev : physicalDevices)
 	{
 		uint32 currentRating = 0;
-		vkGetPhysicalDeviceProperties(physicalDevice, &props);
-		vkGetPhysicalDeviceFeatures(physicalDevice, &features);
+		vkGetPhysicalDeviceProperties(dev, &props);
+		vkGetPhysicalDeviceFeatures(dev, &features);
 		if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
 		{
 			currentRating += 100;
@@ -161,10 +232,12 @@ void Graphics::pickPhysicalDevice()
 		if (currentRating > deviceRating)
 		{
 			deviceRating = currentRating;
-			bestDevice = physicalDevice;
+			bestDevice = dev;
 		}
 	}
-	this->physicalDevice = bestDevice;
+	physicalDevice = bestDevice;
+	vkGetPhysicalDeviceProperties(physicalDevice, &props);
+	vkGetPhysicalDeviceFeatures(physicalDevice, &features);
 }
 
 void Graphics::createDevice(GraphicsInitializer initializer)
@@ -180,11 +253,12 @@ void Graphics::createDevice(GraphicsInitializer initializer)
 	int32_t dedicatedTransferQueueFamilyIndex = -1;
 	int32_t computeQueueFamilyIndex = -1;
 	int32_t asyncComputeFamilyIndex = -1;
-	for (int32_t familyIndex = 0; familyIndex < queueProperties.size(); ++familyIndex)
+	uint32 numPriorities = 0;
+	for (uint32 familyIndex = 0; familyIndex < queueProperties.size(); ++familyIndex)
 	{
 		uint32 numQueuesForFamily = 0;
 		VkQueueFamilyProperties currProps = queueProperties[familyIndex];
-		bool bSparse = currProps.queueFlags & VK_QUEUE_SPARSE_BINDING_BIT;
+		// bool bSparse = currProps.queueFlags & VK_QUEUE_SPARSE_BINDING_BIT;
 		currProps.queueFlags = currProps.queueFlags ^ VK_QUEUE_SPARSE_BINDING_BIT;
 		if ((currProps.queueFlags & VK_QUEUE_GRAPHICS_BIT) == VK_QUEUE_GRAPHICS_BIT)
 		{
@@ -204,7 +278,7 @@ void Graphics::createDevice(GraphicsInitializer initializer)
 			{
 				if (asyncComputeFamilyIndex == -1)
 				{
-					if (familyIndex == graphicsQueueFamilyIndex)
+					if (familyIndex == (uint32)graphicsQueueFamilyIndex)
 					{
 						if (currProps.queueCount > 1)
 						{
@@ -232,11 +306,25 @@ void Graphics::createDevice(GraphicsInitializer initializer)
 				numQueuesForFamily++;
 			}
 		}
-		if(numQueuesForFamily > 0)
+		if (numQueuesForFamily > 0)
 		{
 			VkDeviceQueueCreateInfo info =
 				init::DeviceQueueCreateInfo(familyIndex, numQueuesForFamily);
+			numPriorities += numQueuesForFamily;
 			queueInfos.add(info);
+		}
+	}
+	Array<float> queuePriorities;
+	queuePriorities.resize(numPriorities);
+	float *currentPriority = queuePriorities.data();
+	for (uint32 index = 0; index < queueInfos.size(); ++index)
+	{
+		VkDeviceQueueCreateInfo &currQueue = queueInfos[index];
+		currQueue.pQueuePriorities = currentPriority;
+
+		for (int32_t queueIndex = 0; queueIndex < (int32_t)currQueue.queueCount; ++queueIndex)
+		{
+			*currentPriority++ = 1.0f;
 		}
 	}
 	VkDeviceCreateInfo deviceInfo = init::DeviceCreateInfo(
@@ -250,28 +338,32 @@ void Graphics::createDevice(GraphicsInitializer initializer)
 
 	VK_CHECK(vkCreateDevice(physicalDevice, &deviceInfo, nullptr, &handle));
 
-	graphicsQueue = new Queue(this, QueueType::GRAPHICS, graphicsQueueFamilyIndex, 0);
+	graphicsQueue = new Queue(this, Gfx::QueueType::GRAPHICS, graphicsQueueFamilyIndex, 0);
 	if (Gfx::useAsyncCompute && asyncComputeFamilyIndex != -1)
 	{
 		if (asyncComputeFamilyIndex == graphicsQueueFamilyIndex)
 		{
 			// Same family as graphics, but different queue
-			computeQueue = new Queue(this, QueueType::COMPUTE, asyncComputeFamilyIndex, 1);
+			computeQueue = new Queue(this, Gfx::QueueType::COMPUTE, asyncComputeFamilyIndex, 1);
 		}
 		else
 		{
 			// Different family
-			computeQueue = new Queue(this, QueueType::COMPUTE, asyncComputeFamilyIndex, 0);
+			computeQueue = new Queue(this, Gfx::QueueType::COMPUTE, asyncComputeFamilyIndex, 0);
 		}
 	}
 	else
 	{
-		computeQueue = new Queue(this, QueueType::COMPUTE, computeQueueFamilyIndex, 0);
+		computeQueue = new Queue(this, Gfx::QueueType::COMPUTE, computeQueueFamilyIndex, 0);
 	}
-	transferQueue = new Queue(this, QueueType::TRANSFER, transferQueueFamilyIndex, 0);
+	transferQueue = new Queue(this, Gfx::QueueType::TRANSFER, transferQueueFamilyIndex, 0);
 	if (dedicatedTransferQueueFamilyIndex != -1)
 	{
-		dedicatedTransferQueue = new Queue(this, QueueType::DEDICATED_TRANSFER, dedicatedTransferQueueFamilyIndex, 0);
+		dedicatedTransferQueue = new Queue(this, Gfx::QueueType::DEDICATED_TRANSFER, dedicatedTransferQueueFamilyIndex, 0);
+	}
+	else
+	{
+		dedicatedTransferQueue = transferQueue;
 	}
 	queueMapping.graphicsFamily = graphicsQueue->getFamilyIndex();
 	queueMapping.computeFamily = computeQueue->getFamilyIndex();

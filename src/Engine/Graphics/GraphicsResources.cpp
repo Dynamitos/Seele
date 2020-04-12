@@ -1,5 +1,6 @@
 #include "GraphicsResources.h"
 
+using namespace Seele;
 using namespace Seele::Gfx;
 
 void DescriptorLayout::addDescriptorBinding(uint32 bindingIndex, SeDescriptorType type, uint32 arrayCount)
@@ -30,8 +31,8 @@ void PipelineLayout::addDescriptorLayout(uint32 setIndex, PDescriptorLayout layo
 	}
 	if (descriptorSetLayouts[setIndex] != nullptr)
 	{
-		auto& thisBindings = descriptorSetLayouts[setIndex]->descriptorBindings;
-		auto& otherBindings = layout->descriptorBindings;
+		auto &thisBindings = descriptorSetLayouts[setIndex]->descriptorBindings;
+		auto &otherBindings = layout->descriptorBindings;
 		thisBindings.resize(otherBindings.size());
 		for (size_t i = 0; i < otherBindings.size(); ++i)
 		{
@@ -48,44 +49,57 @@ void PipelineLayout::addDescriptorLayout(uint32 setIndex, PDescriptorLayout layo
 	}
 }
 
-void PipelineLayout::addPushConstants(const SePushConstantRange& pushConstant)
+void PipelineLayout::addPushConstants(const SePushConstantRange &pushConstant)
 {
 	pushConstants.add(pushConstant);
 }
 
+UniformBuffer::UniformBuffer()
+{
+}
+
+UniformBuffer::~UniformBuffer()
+{
+}
+
 RenderTargetLayout::RenderTargetLayout()
-	: inputAttachments()
-	, colorAttachments()
-	, depthAttachment()
+	: inputAttachments(), colorAttachments(), depthAttachment()
 {
-
 }
 
-RenderTargetLayout::RenderTargetLayout(PTexture2D depthAttachment)
-	: inputAttachments()
-	, colorAttachments()
-	, depthAttachment(depthAttachment)
+RenderTargetLayout::RenderTargetLayout(PRenderTargetAttachment depthAttachment)
+	: inputAttachments(), colorAttachments(), depthAttachment(depthAttachment)
 {
-
 }
 
-RenderTargetLayout::RenderTargetLayout(PTexture2D colorAttachment, PTexture2D depthAttachment)
-	: inputAttachments()
-	, depthAttachment(depthAttachment)
+RenderTargetLayout::RenderTargetLayout(PRenderTargetAttachment colorAttachment, PRenderTargetAttachment depthAttachment)
+	: inputAttachments(), depthAttachment(depthAttachment)
 {
 	colorAttachments.add(colorAttachment);
 }
-RenderTargetLayout::RenderTargetLayout(Array<PTexture2D> colorAttachments, PTexture2D depthAttachmet)
-	: inputAttachments()
-	, colorAttachments(colorAttachments)
-	, depthAttachment(depthAttachment)
+RenderTargetLayout::RenderTargetLayout(Array<PRenderTargetAttachment> colorAttachments, PRenderTargetAttachment depthAttachmet)
+	: inputAttachments(), colorAttachments(colorAttachments), depthAttachment(depthAttachment)
 {
-
 }
-RenderTargetLayout::RenderTargetLayout(Array<PTexture2D> inputAttachments, Array<PTexture2D> colorAttachments, PTexture2D depthAttachment)
-	: inputAttachments(inputAttachments)
-	, colorAttachments(colorAttachments)
-	, depthAttachment(depthAttachment)
+RenderTargetLayout::RenderTargetLayout(Array<PRenderTargetAttachment> inputAttachments, Array<PRenderTargetAttachment> colorAttachments, PRenderTargetAttachment depthAttachment)
+	: inputAttachments(inputAttachments), colorAttachments(colorAttachments), depthAttachment(depthAttachment)
 {
+}
 
+Window::Window(const WindowCreateInfo &createInfo)
+	: sizeX(createInfo.width), sizeY(createInfo.height), bFullscreen(createInfo.bFullscreen), title(createInfo.title), pixelFormat(createInfo.pixelFormat)
+{
+}
+
+Window::~Window()
+{
+}
+
+Viewport::Viewport(PWindow owner, const ViewportCreateInfo &viewportInfo)
+	: sizeX(viewportInfo.sizeX), sizeY(viewportInfo.sizeY), offsetX(viewportInfo.offsetX), offsetY(viewportInfo.offsetY), owner(owner)
+{
+}
+
+Viewport::~Viewport()
+{
 }

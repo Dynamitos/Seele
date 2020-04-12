@@ -35,14 +35,42 @@ namespace Seele
 			, refCount(rhs.refCount)
 		{
 		}
+		RefObject(RefObject&& rhs)
+			: handle(std::move(rhs.handle))
+			, refCount(std::move(rhs.refCount))
+		{}
 		~RefObject()
 		{
 			registeredObjects.erase(handle);
 			delete handle;
 		}
+		RefObject& operator=(const RefObject& rhs)
+		{
+			if(*this != rhs)
+			{
+				handle = rhs.handle;
+				refCount = rhs.refCount;
+			}
+			return *this;
+		}
+		RefObject& operator=(RefObject&& rhs)
+		{
+			if(*this != rhs)
+			{
+				handle = std::move(rhs.handle);
+				refCount = std::move(rhs.refCount);
+				rhs.handle = nullptr;
+				rhs.refCount = 0;
+			}
+			return *this;
+		}
 		bool operator==(const RefObject& other) const
 		{
 			return handle == other.handle;
+		}
+		bool operator!=(const RefObject& other) const
+		{
+			return handle != other.handle;
 		}
 		bool operator<(const RefObject& other) const
 		{
@@ -55,7 +83,7 @@ namespace Seele
 		void removeRef()
 		{
 			refCount--;
-			if (refCount.load() <= 0)
+			if (refCount.load() == 0)
 			{
 				delete this;
 			}
@@ -102,13 +130,22 @@ namespace Seele
 		RefPtr(const RefPtr& other)
 			: object(other.object)
 		{
-			object->addRef();
+			if(object != nullptr)
+			{
+				object->addRef();
+			}
+		}
+		RefPtr(RefPtr&& rhs)
+			: object(std::move(rhs.object))
+		{
+			rhs.object = nullptr;
+			//Dont change references, they stay the same
 		}
 		template<typename F>
 		RefPtr(const RefPtr<F>& other)
 		{
 			F* f = other.getObject()->getHandle();
-			T* t = static_cast<T*>(f);
+			static_cast<T*>(f);
 			object = (RefObject<T>*)other.getObject();
 			object->addRef();
 		}
@@ -123,26 +160,57 @@ namespace Seele
 				return nullptr;
 			}
 			RefObject<F>* newObject = (RefObject<F>*)object;
-			RefPtr<F> result(newObject);
-			return result;
+			return RefPtr<F>(newObject);
+		}
+
+		template<typename F>
+		const RefPtr<F> cast() const
+		{
+			T* t = object->getHandle();
+			F* f = dynamic_cast<F*>(t);
+			if (f == nullptr)
+			{
+				return nullptr;
+			}
+			RefObject<F>* newObject = (RefObject<F>*)object;
+			return RefPtr<F>(newObject);
 		}
 
 		RefPtr& operator=(const RefPtr& other)
 		{
-			if (this != &other)
+			if (*this != other)
 			{
 				if (object != nullptr)
 				{
 					object->removeRef();
 				}
 				object = other.object;
-				object->addRef();
+				if(object != nullptr)
+				{
+					object->addRef();
+				}
+			}
+			return *this;
+		}
+		RefPtr& operator=(RefPtr&& rhs)
+		{
+			if(*this != rhs)
+			{
+				if(object != nullptr)
+				{
+					object->removeRef();
+				}
+				object = std::move(rhs.object);
+				rhs.object = nullptr;
 			}
 			return *this;
 		}
 		~RefPtr()
 		{
-			object->removeRef();
+			if(object != nullptr)
+			{
+				object->removeRef();
+			}
 		}
 		bool operator==(const RefPtr& other) const
 		{
@@ -165,6 +233,14 @@ namespace Seele
 		RefObject<T>* getObject() const
 		{
 			return object;
+		}
+		T* getHandle()
+		{
+			return object->getHandle();
+		}
+		const T* getHandle() const
+		{
+			return object->getHandle();
 		}
 	private:
 		RefObject<T>* object;

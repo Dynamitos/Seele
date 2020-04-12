@@ -58,6 +58,12 @@ target_link_libraries(SeeleEngine ${Vulkan_LIBRARY})
 target_link_libraries(SeeleEngine glfw ${GLFW_LIBRARIES})
 target_link_libraries(SeeleEngine ${SLANG_LIBRARY})
 
+if(MSVC)
+  target_compile_options(SeeleEngine PRIVATE /DEBUG:FASTLINK /Zi /W4)
+else()
+  target_compile_options(SeeleEngine PRIVATE -Wall -Wextra -pedantic)
+endif()
+
 add_subdirectory(test/)
 
 add_custom_command(TARGET SeeleEngine POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different ${DEPENDENT_BINARIES} $<TARGET_FILE_DIR:SeeleEngine>)

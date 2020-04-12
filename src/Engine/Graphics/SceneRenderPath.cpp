@@ -9,8 +9,9 @@ Seele::SceneRenderPath::~SceneRenderPath()
 {
 }
 
-void Seele::SceneRenderPath::applyArea(Rect area)
+void Seele::SceneRenderPath::applyArea(Rect newArea)
 {
+	area = newArea;
 }
 
 void Seele::SceneRenderPath::init()
