@@ -283,7 +283,8 @@ class Viewport
 public:
 	Viewport(PWindow owner, const ViewportCreateInfo &createInfo);
 	virtual ~Viewport();
-
+	virtual void resize(uint32 newX, uint32 newY) = 0;
+	virtual void move(uint32 newOffsetX, uint32 newOffsetY) = 0;
 protected:
 	uint32 sizeX;
 	uint32 sizeY;

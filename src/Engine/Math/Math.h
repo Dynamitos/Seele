@@ -26,7 +26,7 @@ struct Rect
 };
 struct Rect3D
 {
-	Vector3 size;
-	Vector3 offset;
+	Vector size;
+	Vector offset;
 };
 } // namespace Seele

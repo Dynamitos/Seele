@@ -1,21 +1,27 @@
 target_sources(SeeleEngine
     PRIVATE
+        ForwardPlusRenderPath.h
+        ForwardPlusRenderPath.cpp
+        GraphicsResources.h
+        GraphicsResources.cpp
+        GraphicsEnums.h
         Graphics.h
         Graphics.cpp
+        Mesh.h
+        Mesh.cpp
         RenderCore.h
         RenderCore.cpp
         RenderPath.h
         RenderPath.cpp
+        SceneView.h
+        SceneView.cpp
         SceneRenderPath.h
         SceneRenderPath.cpp
         View.h
         View.cpp
-        SceneView.h
-        SceneView.cpp
+        Window.cpp
+        Window.h
         WindowManager.h
-        WindowManager.cpp
-        GraphicsResources.h
-        GraphicsResources.cpp
-        GraphicsEnums.h)
+        WindowManager.cpp)
 
 add_subdirectory(Vulkan/)

@@ -5,7 +5,7 @@ namespace Seele
 class SceneView : public View
 {
 public:
-	SceneView(Gfx::PGraphics graphics);
+	SceneView(Gfx::PGraphics graphics, PWindow owner, const ViewportCreateInfo& createInfo);
 	~SceneView();
 };
 } // namespace Seele

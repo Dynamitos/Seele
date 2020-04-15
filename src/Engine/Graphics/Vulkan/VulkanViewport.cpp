@@ -241,3 +241,15 @@ Viewport::Viewport(PGraphics graphics, PWindow owner, const ViewportCreateInfo &
 Viewport::~Viewport()
 {
 }
+
+void Viewport::resize(uint32 newX, uint32 newY)
+{
+    sizeX = newX;
+    sizeY = newY;
+}
+
+void Viewport::move(uint32 newOffsetX, uint32 newOffsetY)
+{
+    offsetX = newOffsetX;
+    offsetY = newOffsetY;
+}

@@ -332,7 +332,8 @@ class Viewport : public Gfx::Viewport
 public:
 	Viewport(PGraphics graphics, PWindow owner, const ViewportCreateInfo &createInfo);
 	virtual ~Viewport();
-
+	virtual void resize(uint32 newX, uint32 newY);
+	virtual void move(uint32 newOffsetX, uint32 newOffsetY);
 protected:
 private:
 	PGraphics graphics;
