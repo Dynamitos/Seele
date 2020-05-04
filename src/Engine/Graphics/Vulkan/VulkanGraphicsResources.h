@@ -1,5 +1,8 @@
 #pragma once
 #include "Graphics/GraphicsResources.h"
+#include <thread>
+#include <functional>
+#include <condition_variable>
 #include <vulkan/vulkan.h>
 
 namespace Seele
@@ -39,6 +42,10 @@ public:
 		return fence;
 	}
 	void wait(uint32 timeout);
+	bool operator<(const Fence &other) const
+	{
+		return fence < other.fence;
+	}
 
 private:
 	bool signaled;
@@ -75,6 +82,26 @@ struct QueueFamilyMapping
 		uint32 dstIndex = getQueueTypeFamilyIndex(dst);
 		return srcIndex != dstIndex;
 	}
+};
+class QueueOwnedResourceDeletion
+{
+public:
+	QueueOwnedResourceDeletion();
+	virtual ~QueueOwnedResourceDeletion();
+	static void addPendingDelete(PFence fence, std::function<void()> function);
+
+private:
+	std::thread worker;
+	static volatile bool running;
+	static void run();
+	struct PendingItem
+	{
+		PFence fence;
+		std::function<void()> func;
+	};
+	static std::mutex mutex;
+	static std::condition_variable cv;
+	static List<PendingItem> deletionQueue;
 };
 class QueueOwnedResource
 {
@@ -154,7 +181,7 @@ DEFINE_REF(StructuredBuffer);
 class VertexBuffer : public Buffer, public Gfx::VertexBuffer
 {
 public:
-	VertexBuffer(PGraphics graphics, const BulkResourceData &resourceData);
+	VertexBuffer(PGraphics graphics, const VertexBufferCreateInfo &resourceData);
 	virtual ~VertexBuffer();
 
 protected:
@@ -166,7 +193,7 @@ DEFINE_REF(VertexBuffer);
 class IndexBuffer : public Buffer, public Gfx::IndexBuffer
 {
 public:
-	IndexBuffer(PGraphics graphics, const BulkResourceData &resourceData);
+	IndexBuffer(PGraphics graphics, const IndexBufferCreateInfo &resourceData);
 	virtual ~IndexBuffer();
 
 protected:
@@ -251,7 +278,8 @@ class Texture2D : public TextureBase, public Gfx::Texture2D
 public:
 	Texture2D(PGraphics graphics, uint32 sizeX, uint32 sizeY,
 			  bool bArray, uint32 arraySize, uint32 mipLevels, Gfx::SeFormat format,
-			  uint32 samples, Gfx::SeImageUsageFlags usage, Gfx::QueueType owner = Gfx::QueueType::GRAPHICS, VkImage existingImage = VK_NULL_HANDLE);
+			  uint32 samples, Gfx::SeImageUsageFlags usage,
+			  Gfx::QueueType owner = Gfx::QueueType::GRAPHICS, VkImage existingImage = VK_NULL_HANDLE);
 	virtual ~Texture2D();
 	inline uint32 getSizeX() const
 	{
@@ -334,6 +362,7 @@ public:
 	virtual ~Viewport();
 	virtual void resize(uint32 newX, uint32 newY);
 	virtual void move(uint32 newOffsetX, uint32 newOffsetY);
+
 protected:
 private:
 	PGraphics graphics;

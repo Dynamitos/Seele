@@ -9,22 +9,19 @@ using namespace Seele;
 using namespace Seele::Vulkan;
 
 Queue::Queue(PGraphics graphics, Gfx::QueueType queueType, uint32 familyIndex, uint32 queueIndex)
-    : familyIndex(familyIndex)
-    , graphics(graphics)
-    , queueType(queueType)
-{   
+    : familyIndex(familyIndex), graphics(graphics), queueType(queueType)
+{
     vkGetDeviceQueue(graphics->getDevice(), familyIndex, queueIndex, &queue);
 }
 
 Queue::~Queue()
 {
-
 }
 
-void Queue::submitCommandBuffer(PCmdBuffer cmdBuffer, uint32 numSignalSemaphores, VkSemaphore* signalSemaphores)
+void Queue::submitCommandBuffer(PCmdBuffer cmdBuffer, uint32 numSignalSemaphores, VkSemaphore *signalSemaphores)
 {
     assert(cmdBuffer->state == CmdBuffer::State::Ended);
-    
+
     PFence fence = cmdBuffer->fence;
     assert(!fence->isSignaled());
 
@@ -38,9 +35,9 @@ void Queue::submitCommandBuffer(PCmdBuffer cmdBuffer, uint32 numSignalSemaphores
     submitInfo.pSignalSemaphores = signalSemaphores;
 
     Array<VkSemaphore> waitSemaphores;
-    if(cmdBuffer->waitSemaphores.size() > 0)
+    if (cmdBuffer->waitSemaphores.size() > 0)
     {
-        for(PSemaphore semaphore : cmdBuffer->waitSemaphores)
+        for (PSemaphore semaphore : cmdBuffer->waitSemaphores)
         {
             waitSemaphores.add(semaphore->getHandle());
         }
@@ -55,7 +52,7 @@ void Queue::submitCommandBuffer(PCmdBuffer cmdBuffer, uint32 numSignalSemaphores
     cmdBuffer->waitFlags.clear();
     cmdBuffer->waitSemaphores.clear();
 
-    if(Gfx::waitIdleOnSubmit)
+    if (Gfx::waitIdleOnSubmit)
     {
         fence->wait(200 * 1000ull);
     }

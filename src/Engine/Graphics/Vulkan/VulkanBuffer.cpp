@@ -58,9 +58,14 @@ Buffer::Buffer(PGraphics graphics, uint32 size, VkBufferUsageFlags usage, Gfx::Q
 
 Buffer::~Buffer()
 {
+	auto fence = getCommands()->getCommands()->getFence();
+	auto &deletionQueue = graphics->getDeletionQueue();
+	VkDevice device = graphics->getDevice();
+	VkBuffer buf[Gfx::numFramesBuffered];
 	for (uint32 i = 0; i < numBuffers; ++i)
 	{
-		vkDestroyBuffer(graphics->getDevice(), buffers[i].buffer, nullptr);
+		buf[i] = buffers[i].buffer;
+		deletionQueue.addPendingDelete(fence, [device, buf, i]() { vkDestroyBuffer(device, buf[i], nullptr); });
 		buffers[i].allocation = nullptr;
 	}
 }
@@ -221,10 +226,9 @@ void Buffer::unlock()
 			std::memset(&region, 0, sizeof(VkBufferCopy));
 			region.size = size;
 			vkCmdCopyBuffer(cmdHandle, stagingBuffer->getHandle(), buffers[currentBuffer].buffer, 1, &region);
-
-			graphics->getStagingManager()->releaseStagingBuffer(stagingBuffer);
 		}
 		transferOwnership(pending.prevQueue);
+		graphics->getStagingManager()->releaseStagingBuffer(pending.stagingBuffer);
 	}
 }
 
@@ -278,13 +282,14 @@ VkAccessFlags StructuredBuffer::getDestAccessMask()
 	return VK_ACCESS_MEMORY_READ_BIT;
 }
 
-VertexBuffer::VertexBuffer(PGraphics graphics, const BulkResourceData &resourceData)
-	: Buffer(graphics, resourceData.size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, resourceData.owner)
+VertexBuffer::VertexBuffer(PGraphics graphics, const VertexBufferCreateInfo &resourceData)
+	: Buffer(graphics, resourceData.resourceData.size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, resourceData.resourceData.owner)
+	, Gfx::VertexBuffer(resourceData.numVertices, resourceData.vertexSize)
 {
-	if (resourceData.data != nullptr)
+	if (resourceData.resourceData.data != nullptr)
 	{
 		void *data = lock();
-		std::memcpy(data, resourceData.data, resourceData.size);
+		std::memcpy(data, resourceData.resourceData.data, resourceData.resourceData.size);
 		unlock();
 	}
 }
@@ -303,13 +308,14 @@ VkAccessFlags VertexBuffer::getDestAccessMask()
 	return VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT;
 }
 
-IndexBuffer::IndexBuffer(PGraphics graphics, const BulkResourceData &resourceData)
-	: Buffer(graphics, resourceData.size, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, resourceData.owner)
+IndexBuffer::IndexBuffer(PGraphics graphics, const IndexBufferCreateInfo &resourceData)
+	: Buffer(graphics, resourceData.resourceData.size, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, resourceData.resourceData.owner)
+	, Gfx::IndexBuffer(resourceData.resourceData.size, resourceData.indexType)
 {
-	if (resourceData.data != nullptr)
+	if (resourceData.resourceData.data != nullptr)
 	{
 		void *data = lock();
-		std::memcpy(data, resourceData.data, resourceData.size);
+		std::memcpy(data, resourceData.resourceData.data, resourceData.resourceData.size);
 		unlock();
 	}
 }

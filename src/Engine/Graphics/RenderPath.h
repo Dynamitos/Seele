@@ -8,10 +8,11 @@ class RenderPath
 public:
 	RenderPath(Gfx::PGraphics graphics, Gfx::PViewport target);
 	virtual ~RenderPath();
-	virtual void applyArea(Rect area);
+	virtual void applyArea(URect area);
 	virtual void beginFrame() = 0;
 	virtual void render() = 0;
 	virtual void endFrame() = 0;
+
 protected:
 	Gfx::PGraphics graphics;
 	Gfx::PViewport target;

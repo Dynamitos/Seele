@@ -1,3 +1,3 @@
 #include "MinimalEngine.h"
 
-Seele::Map<void*, void*> registeredObjects;
+Seele::Map<void *, void *> registeredObjects;

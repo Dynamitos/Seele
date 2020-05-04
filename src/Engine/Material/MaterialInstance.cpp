@@ -1,0 +1,32 @@
+#include "MaterialInstance.h"
+#include "Material.h"
+
+using namespace Seele;
+
+MaterialInstance::MaterialInstance()
+{
+}
+
+MaterialInstance::MaterialInstance(const std::string& directory, const std::string& name) 
+    : FileAsset(directory, name)
+{
+}
+
+MaterialInstance::MaterialInstance(const std::string& fullPath) 
+    : FileAsset(fullPath)
+{   
+}
+
+MaterialInstance::~MaterialInstance()
+{
+}
+
+PMaterial MaterialInstance::getBaseMaterial() const
+{
+    return baseMaterial;
+}
+
+Gfx::PDescriptorSet MaterialInstance::getDescriptor()
+{
+    return nullptr;
+}

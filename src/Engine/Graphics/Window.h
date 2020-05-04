@@ -15,9 +15,10 @@ public:
     void render();
     void endFrame();
     Gfx::PWindow getGfxHandle();
+
 private:
     Array<PView> viewports;
     Gfx::PWindow gfxHandle;
 };
 DEFINE_REF(Window);
-}
+} // namespace Seele

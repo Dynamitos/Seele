@@ -1,5 +1,6 @@
 #include "Actor.h"
-#include "Component.h"
+#include "Scene/Components/Component.h"
+#include "Scene/Scene.h"
 
 using namespace Seele;
 
@@ -11,6 +12,25 @@ Actor::~Actor()
 {
 
 }
+void Actor::tick(float deltaTime)
+{
+    rootComponent->tick(deltaTime);
+    for(auto child : children)
+    {
+        child->tick(deltaTime);
+    }
+}
+void Actor::notifySceneAttach(PScene scene)
+{
+    owningScene = scene;
+    rootComponent->notifySceneAttach(scene);
+}
+
+PScene Actor::getScene()
+{
+    return owningScene;
+}
+
 void Actor::setParent(PActor newParent)
 {
     parent = newParent;
@@ -18,10 +38,14 @@ void Actor::setParent(PActor newParent)
 void Actor::addChild(PActor child)
 {
     children.add(child);
+    child->setParent(this);
+    child->notifySceneAttach(owningScene);
 }
 void Actor::detachChild(PActor child)
 {
     children.remove(children.find(child), false);
+    child->setParent(nullptr);
+    child->notifySceneAttach(nullptr);
 }
 void Actor::setWorldLocation(Vector location)
 {
@@ -55,15 +79,16 @@ void Actor::addWorldRotation(Vector4 rotation)
 {
     rootComponent->addWorldRotation(rotation);
 }
-void Actor::addWorldScale(Vector scale)
-{
-    rootComponent->addWorldScale(scale);
-}
 PComponent Actor::getRootComponent()
 {
     return rootComponent;
 }
 void Actor::setRootComponent(PComponent newRoot)
 {
+    if(rootComponent != nullptr)
+    {
+        rootComponent->owner = nullptr;
+    }
     rootComponent = newRoot;
+    rootComponent->owner = this;
 }

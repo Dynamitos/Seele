@@ -1846,5 +1846,12 @@ typedef enum SeStencilFaceFlagBits
     SE_STENCIL_FACE_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
 } SeStencilFaceFlagBits;
 typedef SeFlags SeStencilFaceFlags;
+enum class QueueType
+{
+    GRAPHICS = 1,
+    COMPUTE = 2,
+    TRANSFER = 3,
+    DEDICATED_TRANSFER = 4
+};
 } // namespace Gfx
 } // namespace Seele

@@ -1,7 +1,10 @@
 #pragma once
 #include "GraphicsEnums.h"
 #include "Containers/Array.h"
+#include "Containers/List.h"
 #include "Math/MemCRC.h"
+#include "Material/MaterialInstance.h"
+#include "GraphicsInitializer.h"
 
 #ifdef _DEBUG
 #define ENABLE_VALIDATION
@@ -9,97 +12,35 @@
 
 namespace Seele
 {
-namespace Gfx
+
+DECLARE_NAME_REF(Gfx, VertexBuffer);
+DECLARE_NAME_REF(Gfx, IndexBuffer);
+struct DrawInstance
 {
-enum class QueueType
-{
-	GRAPHICS = 1,
-	COMPUTE = 2,
-	TRANSFER = 3,
-	DEDICATED_TRANSFER = 4
-};
-} // namespace Gfx
-struct GraphicsInitializer
-{
-	const char *windowLayoutFile;
-	const char *applicationName;
-	const char *engineName;
-	void *windowHandle;
-	/**
-	 * layers defines the enabled Vulkan layers used in the instance,
-	 * if ENABLE_VALIDATION is defined, standard validation is already enabled
-	 * not yet implemented
-	 */
-	Array<const char *> layers;
-	Array<const char *> instanceExtensions;
-	Array<const char *> deviceExtensions;
-	GraphicsInitializer()
-		: applicationName("SeeleEngine"), engineName("SeeleEngine"), layers{"VK_LAYER_LUNARG_standard_validation"}, instanceExtensions{}, deviceExtensions{"VK_KHR_swapchain"}, windowHandle(nullptr)
-	{
-	}
-	GraphicsInitializer(const GraphicsInitializer &other)
-		: applicationName(other.applicationName), engineName(other.engineName), layers(other.layers), instanceExtensions(other.instanceExtensions), deviceExtensions(other.deviceExtensions)
+	Matrix4 modelMatrix;
+	PMaterialInstance instance;
+	Gfx::PIndexBuffer indexBuffer;
+	Gfx::PVertexBuffer vertexBuffer;
+
+	uint32 numInstances;
+	uint32 baseVertexIndex;
+	uint32 minVertexIndex;
+	uint32 firstInstance;
+	DrawInstance()
+		: instance(nullptr), indexBuffer(nullptr), vertexBuffer(nullptr), modelMatrix(1), numInstances(1), baseVertexIndex(0), minVertexIndex(0), firstInstance(0)
 	{
 	}
 };
-struct WindowCreateInfo
+struct DrawState
 {
-	int32 width;
-	int32 height;
-	const char *title;
-	bool bFullscreen;
-	Gfx::SeFormat pixelFormat;
-	void *windowHandle;
-};
-struct ViewportCreateInfo
-{
-	uint32 sizeX;
-	uint32 sizeY;
-	uint32 offsetX;
-	uint32 offsetY;
-	bool bFullscreen;
-	bool bVsync;
-};
-struct TextureCreateInfo
-{
-	uint32 width;
-	uint32 height;
-	uint32 depth;
-	bool bArray;
-	uint32 arrayLayers;
-	uint32 mipLevels;
-	uint32 samples;
-	Gfx::SeFormat format;
-	Gfx::SeImageUsageFlagBits usage;
-	Gfx::QueueType queueType;
-	TextureCreateInfo()
-		: width(1), height(1), depth(1), bArray(false), arrayLayers(1), mipLevels(1), samples(1), format(Gfx::SE_FORMAT_R32G32B32A32_SFLOAT), usage(Gfx::SE_IMAGE_USAGE_SAMPLED_BIT)
+	Array<DrawInstance> instances;
+
+	DrawState()
 	{
 	}
-};
-//doesnt own the data, only proxy it
-struct BulkResourceData
-{
-	uint32 size;
-	uint8 *data;
-	Gfx::QueueType owner;
 };
 namespace Gfx
 {
-struct SePushConstantRange
-{
-	SeShaderStageFlags stageFlags;
-	uint32_t offset;
-	uint32_t size;
-};
-class RenderCommandBase
-{
-public:
-	virtual ~RenderCommandBase()
-	{
-	}
-};
-DEFINE_REF(RenderCommandBase);
 class SamplerState
 {
 public:
@@ -108,6 +49,54 @@ public:
 	}
 };
 DEFINE_REF(SamplerState);
+
+class VertexShader
+{
+public:
+	VertexShader() {}
+	virtual ~VertexShader() {}
+};
+DEFINE_REF(VertexShader);
+class ControlShader
+{
+public:
+	ControlShader() {}
+	virtual ~ControlShader() {}
+	uint32 getNumPatches() const { return numPatchPoints; }
+
+protected:
+	uint32 numPatchPoints;
+};
+DEFINE_REF(ControlShader);
+class EvaluationShader
+{
+public:
+	EvaluationShader() {}
+	virtual ~EvaluationShader() {}
+};
+DEFINE_REF(EvaluationShader);
+class GeometryShader
+{
+public:
+	GeometryShader() {}
+	virtual ~GeometryShader() {}
+};
+DEFINE_REF(GeometryShader);
+class FragmentShader
+{
+public:
+	FragmentShader() {}
+	virtual ~FragmentShader() {}
+};
+DEFINE_REF(FragmentShader);
+class ComputeShader
+{
+public:
+	ComputeShader() {}
+	virtual ~ComputeShader() {}
+};
+DEFINE_REF(ComputeShader);
+
 class DescriptorBinding
 {
 public:
@@ -155,13 +144,18 @@ public:
 	virtual void updateSampler(uint32 binding, PSamplerState samplerState) = 0;
 	virtual void updateTexture(uint32 binding, PTexture texture, PSamplerState samplerState = nullptr) = 0;
 	virtual bool operator<(PDescriptorSet other) = 0;
+
+	virtual uint32 getSetIndex() const = 0;
 };
 DEFINE_REF(DescriptorSet);
 
 class DescriptorLayout
 {
 public:
-	DescriptorLayout() {}
+	DescriptorLayout()
+		: setIndex(0)
+	{
+	}
 	virtual ~DescriptorLayout() {}
 	void operator=(const DescriptorLayout &other)
 	{
@@ -172,10 +166,12 @@ public:
 	virtual void addDescriptorBinding(uint32 binding, SeDescriptorType type, uint32 arrayCount = 1);
 	virtual PDescriptorSet allocatedDescriptorSet();
 	const Array<DescriptorBinding> &getBindings() const { return descriptorBindings; }
+	inline uint32 getSetIndex() const { return setIndex; }
 
 protected:
 	Array<DescriptorBinding> descriptorBindings;
 	PDescriptorAllocator allocator;
+	uint32 setIndex;
 	friend class PipelineLayout;
 	friend class DescriptorAllocator;
 };
@@ -195,22 +191,6 @@ protected:
 	Array<SePushConstantRange> pushConstants;
 };
 DEFINE_REF(PipelineLayout);
-class VertexDeclaration
-{
-public:
-	virtual ~VertexDeclaration()
-	{
-	}
-};
-DEFINE_REF(VertexDeclaration);
-class GraphicsPipeline
-{
-public:
-	virtual ~GraphicsPipeline()
-	{
-	}
-};
-DEFINE_REF(GraphicsPipeline);
 class UniformBuffer
 {
 public:
@@ -221,17 +201,40 @@ DEFINE_REF(UniformBuffer);
 class VertexBuffer
 {
 public:
-	virtual ~VertexBuffer()
+	VertexBuffer(uint32 numVertices, uint32 vertexSize);
+	virtual ~VertexBuffer();
+	inline uint32 getNumVertices()
 	{
+		return numVertices;
 	}
+	// Size of one vertex in bytes
+	inline uint32 getVertexSize()
+	{
+		return vertexSize;
+	}
+
+protected:
+	uint32 numVertices;
+	uint32 vertexSize;
 };
 DEFINE_REF(VertexBuffer);
 class IndexBuffer
 {
 public:
-	virtual ~IndexBuffer()
+	IndexBuffer(uint32 size, Gfx::SeIndexType index);
+	virtual ~IndexBuffer();
+	inline uint32 getNumIndices() const
 	{
+		return numIndices;
 	}
+	inline Gfx::SeIndexType getIndexType() const
+	{
+		return indexType;
+	}
+
+protected:
+	Gfx::SeIndexType indexType;
+	uint32 numIndices;
 };
 DEFINE_REF(IndexBuffer);
 class StructuredBuffer
@@ -242,6 +245,44 @@ public:
 	}
 };
 DEFINE_REF(StructuredBuffer);
+class VertexStream
+{
+public:
+	VertexStream() {}
+	VertexStream(PVertexBuffer buffer, uint8 instanced);
+	~VertexStream();
+	void addVertexElement(VertexElement element);
+	const Array<VertexElement> getVertexDescriptions() const;
+	PVertexBuffer getVertexBuffer();
+	inline uint8 isInstanced() const { return instanced; }
+
+private:
+	PVertexBuffer buffer;
+	Array<VertexElement> vertexDescription;
+	uint8 instanced;
+};
+class VertexDeclaration
+{
+public:
+	VertexDeclaration();
+	~VertexDeclaration();
+	uint32 addVertexStream(const VertexStream &vertexStream);
+	const Array<VertexStream> &getVertexStreams() const;
+
+private:
+	Array<VertexStream> vertexStreams;
+};
+DEFINE_REF(VertexDeclaration);
+class GraphicsPipeline
+{
+public:
+	GraphicsPipeline(const GraphicsPipelineCreateInfo& createInfo) : createInfo(createInfo) {}
+	virtual ~GraphicsPipeline(){}
+	const GraphicsPipelineCreateInfo& getCreateInfo() const {return createInfo;}
+protected:
+	GraphicsPipelineCreateInfo createInfo;
+};
+DEFINE_REF(GraphicsPipeline);
 class Texture
 {
 public:
@@ -258,6 +299,20 @@ public:
 	}
 };
 DEFINE_REF(Texture2D);
+
+class RenderCommand
+{
+public:
+	virtual ~RenderCommand()
+	{
+	}
+	virtual void bindPipeline(Gfx::PGraphicsPipeline pipeline) = 0;
+	virtual void bindDescriptor(Gfx::PDescriptorSet set) = 0;
+	virtual void bindVertexBuffer(Gfx::PVertexBuffer vertexBuffer) = 0;
+	virtual void bindIndexBuffer(Gfx::PIndexBuffer indexBuffer) = 0;
+	virtual void draw(DrawInstance data) = 0;
+};
+DEFINE_REF(RenderCommand);
 
 class Window
 {
@@ -285,6 +340,7 @@ public:
 	virtual ~Viewport();
 	virtual void resize(uint32 newX, uint32 newY) = 0;
 	virtual void move(uint32 newOffsetX, uint32 newOffsetY) = 0;
+
 protected:
 	uint32 sizeX;
 	uint32 sizeY;
@@ -364,12 +420,13 @@ DEFINE_REF(RenderTargetLayout);
 class RenderPass
 {
 public:
-	virtual ~RenderPass()
-	{
-	}
-};
-DEFINE_REF(RenderPass);
+	RenderPass(PRenderTargetLayout layout) : layout(layout) {}
+	virtual ~RenderPass() {}
+	inline PRenderTargetLayout getLayout() const { return layout; }
 
+protected:
+	PRenderTargetLayout layout;
+};
 DEFINE_REF(RenderPass);
 } // namespace Gfx
 } // namespace Seele

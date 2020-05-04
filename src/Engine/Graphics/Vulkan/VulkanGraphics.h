@@ -11,6 +11,8 @@ DECLARE_REF(StagingManager);
 DECLARE_REF(CommandBufferManager);
 DECLARE_REF(Queue);
 DECLARE_REF(Framebuffer);
+DECLARE_REF(RenderCommand);
+DECLARE_REF(PipelineCache);
 class Graphics : public Gfx::Graphics
 {
 public:
@@ -29,6 +31,10 @@ public:
 	{
 		return queueMapping;
 	}
+	QueueOwnedResourceDeletion &getDeletionQueue()
+	{
+		return deletionQueue;
+	}
 
 	PAllocator getAllocator();
 	PStagingManager getStagingManager();
@@ -42,11 +48,15 @@ public:
 	virtual void beginRenderPass(Gfx::PRenderPass renderPass) override;
 	virtual void endRenderPass() override;
 
+	virtual void executeCommands(Array<Gfx::PRenderCommand> commands) override;
+
 	virtual Gfx::PTexture2D createTexture2D(const TextureCreateInfo &createInfo) override;
 	virtual Gfx::PUniformBuffer createUniformBuffer(const BulkResourceData &bulkData) override;
 	virtual Gfx::PStructuredBuffer createStructuredBuffer(const BulkResourceData &bulkData) override;
-	virtual Gfx::PVertexBuffer createVertexBuffer(const BulkResourceData &bulkData) override;
-	virtual Gfx::PIndexBuffer createIndexBuffer(const BulkResourceData &bulkData) override;
+	virtual Gfx::PVertexBuffer createVertexBuffer(const VertexBufferCreateInfo &bulkData) override;
+	virtual Gfx::PIndexBuffer createIndexBuffer(const IndexBufferCreateInfo &bulkData) override;
+	virtual Gfx::PRenderCommand createRenderCommand() override;
+	virtual Gfx::PGraphicsPipeline createGraphicsPipeline(const GraphicsPipelineCreateInfo& createInfo) override;
 
 protected:
 	Array<const char *> getRequiredExtensions();
@@ -64,6 +74,8 @@ protected:
 	PQueue transferQueue;
 	PQueue dedicatedTransferQueue;
 	QueueFamilyMapping queueMapping;
+	QueueOwnedResourceDeletion deletionQueue;
+	PPipelineCache pipelineCache;
 	PCommandBufferManager graphicsCommands;
 	PCommandBufferManager computeCommands;
 	PCommandBufferManager transferCommands;

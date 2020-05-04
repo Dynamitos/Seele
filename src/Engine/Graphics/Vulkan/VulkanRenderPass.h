@@ -30,13 +30,8 @@ public:
     {
         return subpassContents;
     }
-    inline Gfx::PRenderTargetLayout getLayout()
-    {
-        return layout;
-    }
 private:
     PGraphics graphics;
-    Gfx::PRenderTargetLayout layout;
     VkRenderPass renderPass;
     Array<VkClearValue> clearValues;
     VkRect2D renderArea;

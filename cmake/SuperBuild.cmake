@@ -18,7 +18,7 @@ ExternalProject_Add(boost
 	SOURCE_DIR ${BOOST_ROOT}
 	UPDATE_COMMAND ""
 	CONFIGURE_COMMAND ./bootstrap.${BOOTSTRAP_EXTENSION} --with-libraries=serialization,test
-	BUILD_COMMAND ./b2 link=static
+	BUILD_COMMAND ./b2 link=static -d0
 	BUILD_IN_SOURCE 1
 	INSTALL_COMMAND "")
 
@@ -37,23 +37,36 @@ list(APPEND EXTRA_CMAKE_ARGS
 	-DGLM_INCLUDE_DIRS=${GLM_ROOT}
 	)
 
+#--------------------JSON------------------
+#list(APPEND DEPENDENCIES nlohmann_json)
+set(JSON_MultipleHeaders ON CACHE INTERNAL "")
+set(JSON_BuildTests OFF CACHE INTERNAL "")
+set(JSON_Install OFF CACHE INTERNAL "")
+
+add_subdirectory(${JSON_ROOT})
+export(TARGETS nlohmann_json 
+	NAMESPACE nlohmann_json::
+	FILE ${nlohmann_json_BINARY_DIR}/json_target.cmake)
+
+list(APPEND EXTRA_CMAKE_ARGS
+	-DJSON_IMPORT=${nlohmann_json_BINARY_DIR}/json_target.cmake
+	)
+	
 
 #--------------GLFW------------------------------
-#list(APPEND DEPENDENCIES glfw)
-#set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-#set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-#set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-#
-#ExternalProject_Add(glfw
-#	SOURCE_DIR ${GLFW_ROOT}
-#	BINARY_DIR ${CMAKE_BINARY_DIR}/lib
-#	INSTALL_COMMAND "")
-#
-#list(APPEND EXTRA_CMAKE_ARGS
-#	-DGLFW_INCLUDE_DIRS=${GLFW_ROOT}/include
-#	-DGLFW_LIBRARY=${CMAKE_BINARY_DIR}/lib/src/glfw3.lib
-#	)
-#
+list(APPEND DEPENDENCIES glfw)
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+
+add_subdirectory(${GLFW_ROOT})
+export(TARGETS glfw
+	FILE ${GLFW_BINARY_DIR}/glfw.cmake)
+
+list(APPEND EXTRA_CMAKE_ARGS
+	-DGLFW_IMPORT=${GLFW_BINARY_DIR}/glfw.cmake
+	)
+
 #--------------SLang------------------------------
 list(APPEND DEPENDENCIES slang)
 string(TOLOWER ${CMAKE_BUILD_TYPE}_${CMAKE_PLATFORM} SLANG_CONFIG)
@@ -83,7 +96,7 @@ endif()
 
 
 list(APPEND EXTRA_CMAKE_ARGS
-	-DSLANG_INCLUDE_DIRS=${EXTERNAL_ROOT}
+	-DSLANG_INCLUDE_DIRS=${EXTERNAL_ROOT}/slang
 	-DSLANG_LIBRARY=${SLANG_LIB_PATH})
 	
 list(APPEND DEPENDENT_BINARIES ${SLANG_ROOT}/${SLANG_BINARY})

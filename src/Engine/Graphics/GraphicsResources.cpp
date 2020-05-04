@@ -1,4 +1,5 @@
 #include "GraphicsResources.h"
+#include "Material/MaterialInstance.h"
 
 using namespace Seele;
 using namespace Seele::Gfx;
@@ -46,6 +47,7 @@ void PipelineLayout::addDescriptorLayout(uint32 setIndex, PDescriptorLayout layo
 	else
 	{
 		descriptorSetLayouts[setIndex] = layout;
+		layout->setIndex = setIndex;
 	}
 }
 
@@ -60,6 +62,67 @@ UniformBuffer::UniformBuffer()
 
 UniformBuffer::~UniformBuffer()
 {
+}
+VertexBuffer::VertexBuffer(uint32 numVertices, uint32 vertexSize)
+	: numVertices(numVertices), vertexSize(vertexSize)
+{
+}
+VertexBuffer::~VertexBuffer()
+{
+}
+IndexBuffer::IndexBuffer(uint32 size, Gfx::SeIndexType indexType)
+	: indexType(indexType)
+{
+	switch (indexType)
+	{
+	case SE_INDEX_TYPE_UINT16:
+		numIndices = size / 16;
+		break;
+	case SE_INDEX_TYPE_UINT32:
+		numIndices = size / 32;
+	default:
+		break;
+	}
+}
+IndexBuffer::~IndexBuffer()
+{
+}
+VertexStream::VertexStream(PVertexBuffer buffer, uint8 instanced)
+	: buffer(buffer)
+	, instanced(instanced)
+{
+}
+VertexStream::~VertexStream()
+{
+}
+void VertexStream::addVertexElement(VertexElement element)
+{
+	vertexDescription.add(element);
+}
+const Array<VertexElement> VertexStream::getVertexDescriptions() const
+{
+	return vertexDescription;
+}
+Gfx::PVertexBuffer VertexStream::getVertexBuffer()
+{
+	return buffer;
+}
+
+VertexDeclaration::VertexDeclaration()
+{
+}
+VertexDeclaration::~VertexDeclaration()
+{
+}
+uint32 VertexDeclaration::addVertexStream(const VertexStream &element)
+{
+	uint32 currIndex = vertexStreams.size();
+	vertexStreams.add(element);
+	return currIndex;
+}
+const Array<VertexStream> &VertexDeclaration::getVertexStreams() const
+{
+	return vertexStreams;
 }
 
 RenderTargetLayout::RenderTargetLayout()

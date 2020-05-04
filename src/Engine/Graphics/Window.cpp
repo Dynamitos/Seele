@@ -7,7 +7,6 @@ Seele::Window::Window(Gfx::PWindow handle)
 
 Seele::Window::~Window()
 {
-    
 }
 
 void Seele::Window::addView(PView view)
@@ -18,7 +17,7 @@ void Seele::Window::addView(PView view)
 void Seele::Window::beginFrame()
 {
     gfxHandle->beginFrame();
-    for(auto view : viewports)
+    for (auto view : viewports)
     {
         view->beginFrame();
     }
@@ -26,7 +25,7 @@ void Seele::Window::beginFrame()
 
 void Seele::Window::render()
 {
-    for(auto view : viewports)
+    for (auto view : viewports)
     {
         view->render();
     }
@@ -35,7 +34,7 @@ void Seele::Window::render()
 void Seele::Window::endFrame()
 {
     gfxHandle->endFrame();
-    for(auto view : viewports)
+    for (auto view : viewports)
     {
         view->endFrame();
     }

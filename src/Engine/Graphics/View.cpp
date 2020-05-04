@@ -1,9 +1,8 @@
 #include "View.h"
 #include "Window.h"
 
-Seele::View::View(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo& viewportInfo)
-	: graphics(graphics)
-	, owner(owner)
+Seele::View::View(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo &viewportInfo)
+	: graphics(graphics), owner(window)
 {
 	viewport = graphics->createViewport(owner->getGfxHandle(), viewportInfo);
 }
@@ -27,7 +26,7 @@ void Seele::View::endFrame()
 	renderer->endFrame();
 }
 
-void Seele::View::applyArea(Rect area)
+void Seele::View::applyArea(URect area)
 {
 	renderer->applyArea(area);
 }

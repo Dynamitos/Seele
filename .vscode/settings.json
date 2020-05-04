@@ -14,6 +14,12 @@
         "type_traits": "cpp",
         "vector": "cpp",
         "*.rh": "cpp",
-        "memory": "cpp"
+        "memory": "cpp",
+        "*.ipp": "cpp",
+        "iostream": "cpp",
+        "initializer_list": "cpp"
     },
+    "C_Cpp.default.browse.limitSymbolsToIncludedHeaders": false,
+    "C_Cpp.default.intelliSenseMode": "msvc-x64",
+    "C_Cpp.errorSquiggles": "Disabled",
 }

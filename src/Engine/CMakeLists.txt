@@ -4,6 +4,9 @@ target_sources(SeeleEngine
         MinimalEngine.cpp
         main.cpp)
 
-add_subdirectory(Graphics/)
-add_subdirectory(Math/)
+add_subdirectory(Asset/)
 add_subdirectory(Containers/)
+add_subdirectory(Graphics/)
+add_subdirectory(Material/)
+add_subdirectory(Math/)
+add_subdirectory(Scene/)

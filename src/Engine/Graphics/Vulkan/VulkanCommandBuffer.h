@@ -8,7 +8,7 @@ namespace Vulkan
 {
 DECLARE_REF(RenderPass);
 DECLARE_REF(Framebuffer);
-class CmdBufferBase : public Gfx::RenderCommandBase
+class CmdBufferBase
 {
 public:
 	CmdBufferBase(PGraphics graphics, VkCommandPool cmdPool);
@@ -41,6 +41,7 @@ public:
 	void executeCommands(Array<PSecondaryCmdBuffer> secondaryCommands);
 	void addWaitSemaphore(VkPipelineStageFlags stages, PSemaphore waitSemaphore);
 	void refreshFence();
+	PFence getFence();
 	enum State
 	{
 		ReadyBegin,
@@ -64,15 +65,22 @@ private:
 };
 DEFINE_REF(CmdBuffer);
 
-class SecondaryCmdBuffer : public CmdBufferBase
+DECLARE_REF(GraphicsPipeline);
+class SecondaryCmdBuffer : public CmdBufferBase, public Gfx::RenderCommand
 {
 public:
 	SecondaryCmdBuffer(PGraphics graphics, VkCommandPool cmdPool);
 	virtual ~SecondaryCmdBuffer();
 	void begin(PCmdBuffer parent);
 	void end();
+	virtual void bindPipeline(Gfx::PGraphicsPipeline pipeline) override;
+	virtual void bindDescriptor(Gfx::PDescriptorSet descriptorSet) override;
+	virtual void bindVertexBuffer(Gfx::PVertexBuffer vertexBuffer) override;
+	virtual void bindIndexBuffer(Gfx::PIndexBuffer indexBuffer) override;
+	virtual void draw(DrawInstance data) override;
 
 private:
+	PGraphicsPipeline pipeline;
 };
 DEFINE_REF(SecondaryCmdBuffer);
 

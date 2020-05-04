@@ -1,9 +1,12 @@
 #include "VulkanCommandBuffer.h"
 #include "VulkanInitializer.h"
 #include "VulkanGraphics.h"
+#include "VulkanPipeline.h"
 #include "VulkanGraphicsEnums.h"
 #include "VulkanFramebuffer.h"
 #include "VulkanRenderPass.h"
+#include "VulkanPipeline.h"
+#include "VulkanDescriptorSets.h"
 
 using namespace Seele;
 using namespace Seele::Vulkan;
@@ -74,7 +77,6 @@ void CmdBuffer::endRenderPass()
 {
     vkCmdEndRenderPass(handle);
     state = State::InsideBegin;
-
 }
 
 void CmdBuffer::executeCommands(Array<PSecondaryCmdBuffer> commands)
@@ -112,6 +114,11 @@ void CmdBuffer::refreshFence()
     }
 }
 
+PFence CmdBuffer::getFence()
+{
+    return fence;
+}
+
 SecondaryCmdBuffer::SecondaryCmdBuffer(PGraphics graphics, VkCommandPool cmdPool)
     : CmdBufferBase(graphics, cmdPool)
 {
@@ -143,6 +150,33 @@ void SecondaryCmdBuffer::begin(PCmdBuffer parent)
 void SecondaryCmdBuffer::end()
 {
     VK_CHECK(vkEndCommandBuffer(handle));
+}
+
+void SecondaryCmdBuffer::bindPipeline(Gfx::PGraphicsPipeline gfxPipeline)
+{
+    pipeline = gfxPipeline.cast<GraphicsPipeline>();
+    pipeline->bind(handle);
+}
+void SecondaryCmdBuffer::bindDescriptor(Gfx::PDescriptorSet descriptorSet)
+{
+    VkDescriptorSet setHandle = descriptorSet.cast<DescriptorSet>()->getHandle();
+    vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getLayout(), descriptorSet->getSetIndex(), 1, &setHandle, 0, nullptr);
+}
+void SecondaryCmdBuffer::bindVertexBuffer(Gfx::PVertexBuffer vertexBuffer)
+{
+    PVertexBuffer buf = vertexBuffer.cast<VertexBuffer>();
+    const VkBuffer bufHandle[1] = {buf->getHandle()};
+    const VkDeviceSize offsets[1] = {0};
+    vkCmdBindVertexBuffers(handle, 0, 1, bufHandle, offsets);
+}
+void SecondaryCmdBuffer::bindIndexBuffer(Gfx::PIndexBuffer indexBuffer)
+{
+    PIndexBuffer buf = indexBuffer.cast<IndexBuffer>();
+    vkCmdBindIndexBuffer(handle, buf->getHandle(), 0, VK_INDEX_TYPE_UINT16);
+}
+void SecondaryCmdBuffer::draw(DrawInstance data) 
+{
+    vkCmdDrawIndexed(handle, data.indexBuffer->getNumIndices(), data.numInstances, data.minVertexIndex, data.baseVertexIndex, data.firstInstance);
 }
 
 CommandBufferManager::CommandBufferManager(PGraphics graphics, PQueue queue)

@@ -23,7 +23,6 @@ private:
 	PGraphics graphics;
 	Array<VkDescriptorSetLayoutBinding> bindings;
 	VkDescriptorSetLayout layoutHandle;
-	friend class PipelineStateCacheManager;
 };
 DEFINE_REF(DescriptorLayout);
 class PipelineLayout : public Gfx::PipelineLayout
@@ -49,9 +48,32 @@ private:
 	uint32 layoutHash;
 	VkPipelineLayout layoutHandle;
 	PGraphics graphics;
-	friend class PipelineStateCacheManager;
 };
 DEFINE_REF(PipelineLayout);
+
+class DescriptorAllocator : public Gfx::DescriptorAllocator
+{
+public:
+	DescriptorAllocator(PGraphics graphics, DescriptorLayout &layout);
+	virtual ~DescriptorAllocator();
+	virtual void allocateDescriptorSet(Gfx::PDescriptorSet &descriptorSet);
+
+	inline VkDescriptorPool getHandle() const
+	{
+		return poolHandle;
+	}
+	inline DescriptorLayout getLayout() const
+	{
+		return layout;
+	}
+
+private:
+	PGraphics graphics;
+	int maxSets = 512;
+	VkDescriptorPool poolHandle;
+	DescriptorLayout &layout;
+};
+DEFINE_REF(DescriptorAllocator);
 
 class DescriptorSet : public Gfx::DescriptorSet
 {
@@ -70,6 +92,10 @@ public:
 	{
 		return setHandle;
 	}
+	virtual uint32 getSetIndex() const
+	{
+		return owner->getLayout().getSetIndex();
+	}
 
 private:
 	virtual void writeChanges();
@@ -83,24 +109,5 @@ private:
 };
 DEFINE_REF(DescriptorSet);
 
-class DescriptorAllocator : public Gfx::DescriptorAllocator
-{
-public:
-	DescriptorAllocator(PGraphics graphics, DescriptorLayout &layout);
-	virtual ~DescriptorAllocator();
-	virtual void allocateDescriptorSet(Gfx::PDescriptorSet &descriptorSet);
-
-	inline VkDescriptorPool getHandle()
-	{
-		return poolHandle;
-	}
-
-private:
-	PGraphics graphics;
-	int maxSets = 512;
-	VkDescriptorPool poolHandle;
-	DescriptorLayout &layout;
-};
-DEFINE_REF(DescriptorAllocator);
 } // namespace Vulkan
 } // namespace Seele

@@ -7,7 +7,7 @@
       "inheritEnvironments": [ "msvc_x64_x64" ],
       "buildRoot": "${projectDir}\\bin\\${name}",
       "installRoot": "${projectDir}\\install\\${name}",
-      "cmakeCommandArgs": "",
+      "cmakeCommandArgs": "-DUSE_SUPERBUILD=TRUE",
       "buildCommandArgs": "-v",
       "ctestCommandArgs": "",
       "variables": []

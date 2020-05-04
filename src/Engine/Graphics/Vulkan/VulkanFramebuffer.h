@@ -27,6 +27,7 @@ public:
     {
         return hash;
     }
+
 private:
     uint32 hash;
     PGraphics graphics;

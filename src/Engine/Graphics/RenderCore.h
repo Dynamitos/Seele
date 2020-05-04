@@ -1,5 +1,6 @@
 #pragma once
 #include "WindowManager.h"
+#include "Scene/Scene.h"
 namespace Seele
 {
 class RenderCore
@@ -12,6 +13,7 @@ public:
 	void shutdown();
 
 private:
+	PScene scene;
 	PWindowManager windowManager;
 };
 } // namespace Seele

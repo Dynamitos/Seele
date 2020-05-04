@@ -2,7 +2,10 @@
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
+
+#pragma warning(disable : 4201)
 #include <glm/gtc/quaternion.hpp>
+#pragma warning(default : 4201)
 namespace Seele
 {
 typedef glm::vec2 Vector2;
@@ -21,7 +24,7 @@ typedef glm::quat Quaternion;
 
 static inline float square(float x)
 {
-    return x * x;
+	return x * x;
 }
 
 static inline Vector unrotateVector(Quaternion quaternion, Vector v)
@@ -32,10 +35,9 @@ static inline Vector unrotateVector(Quaternion quaternion, Vector v)
 	return result;
 }
 
-static inline bool equalsQuaternion(const Quaternion& right, const Quaternion& left, float tolerance)
+static inline bool equalsQuaternion(const Quaternion &right, const Quaternion &left, float tolerance)
 {
-	return (abs(right.x - left.x) <= tolerance && abs(right.y - left.y) <= tolerance && abs(right.z - left.z) <= tolerance && abs(right.w - left.w) <= tolerance)
-		|| (abs(right.x + left.x) <= tolerance && abs(right.y + left.y) <= tolerance && abs(right.z + left.z) <= tolerance && abs(right.w + left.w) <= tolerance);
+	return (abs(right.x - left.x) <= tolerance && abs(right.y - left.y) <= tolerance && abs(right.z - left.z) <= tolerance && abs(right.w - left.w) <= tolerance) || (abs(right.x + left.x) <= tolerance && abs(right.y + left.y) <= tolerance && abs(right.z + left.z) <= tolerance && abs(right.w + left.w) <= tolerance);
 }
 
 static inline float clampRotatorAxis(float angle)
@@ -58,7 +60,7 @@ static inline float normalizeRotatorAxis(float angle)
 	return angle;
 }
 
-static inline Quaternion toQuaternion(const Vector& other)
+static inline Quaternion toQuaternion(const Vector &other)
 {
 	Quaternion result;
 	const float DEG_TO_RAD = glm::pi<float>() / (180.f);
@@ -71,7 +73,7 @@ static inline Quaternion toQuaternion(const Vector& other)
 	const float SP = sin(PitchNoWinding * RADS_DIVIDED_BY_2);
 	const float SY = sin(YawNoWinding * RADS_DIVIDED_BY_2);
 	const float SR = sin(RollNoWinding * RADS_DIVIDED_BY_2);
-	
+
 	const float CP = cos(PitchNoWinding * RADS_DIVIDED_BY_2);
 	const float CY = cos(YawNoWinding * RADS_DIVIDED_BY_2);
 	const float CR = cos(RollNoWinding * RADS_DIVIDED_BY_2);
@@ -83,12 +85,12 @@ static inline Quaternion toQuaternion(const Vector& other)
 	return result;
 }
 
-static inline Vector toRotator(const Quaternion& other)
+static inline Vector toRotator(const Quaternion &other)
 {
 	const float singularityTest = other.z * other.x - other.w * other.y;
 	const float yawY = 2.f * (other.w * other.z + other.x * other.y);
 	const float yawX = (1.f - 2.f * (square(other.y) + square(other.z)));
-	
+
 	const float SINGULARITY_THRESHOLD = 0.4999995f;
 	const float RAD_TO_DEG = (180.f) / glm::pi<float>();
 	Vector rotatorFromQuat;

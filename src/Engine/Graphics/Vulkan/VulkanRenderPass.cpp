@@ -8,7 +8,8 @@ using namespace Seele;
 using namespace Seele::Vulkan;
 
 RenderPass::RenderPass(PGraphics graphics, Gfx::PRenderTargetLayout layout)
-    : layout(layout), graphics(graphics)
+    : Gfx::RenderPass(layout)
+    , graphics(graphics)
 {
     Array<VkAttachmentDescription> attachments;
     Array<VkAttachmentReference> inputRefs;
@@ -108,17 +109,17 @@ uint32 RenderPass::getFramebufferHash()
 {
     FramebufferDescription description;
     std::memset(&description, 0, sizeof(FramebufferDescription));
-    for(auto inputAttachment : layout->inputAttachments)
+    for (auto inputAttachment : layout->inputAttachments)
     {
         PTexture2D tex = inputAttachment->getTexture().cast<Texture2D>();
         description.inputAttachments[description.numInputAttachments++] = tex->getView();
     }
-    for(auto colorAttachment : layout->colorAttachments)
+    for (auto colorAttachment : layout->colorAttachments)
     {
         PTexture2D tex = colorAttachment->getTexture().cast<Texture2D>();
-        description.colorAttachments[description.numColorAttachments++] = tex->getView(); 
+        description.colorAttachments[description.numColorAttachments++] = tex->getView();
     }
-    if(layout->depthAttachment != nullptr)
+    if (layout->depthAttachment != nullptr)
     {
         PTexture2D tex = layout->depthAttachment->getTexture().cast<Texture2D>();
         description.depthAttachment = tex->getView();

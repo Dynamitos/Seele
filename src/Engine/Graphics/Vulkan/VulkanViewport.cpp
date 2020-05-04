@@ -9,7 +9,7 @@ using namespace Seele;
 using namespace Seele::Vulkan;
 
 Window::Window(PGraphics graphics, const WindowCreateInfo &createInfo)
-    : Gfx::Window(createInfo), graphics(graphics), instance(graphics->getInstance())
+    : Gfx::Window(createInfo), graphics(graphics), instance(graphics->getInstance()), swapchain(VK_NULL_HANDLE)
 {
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     GLFWwindow *handle = glfwCreateWindow(createInfo.width, createInfo.height, createInfo.title, createInfo.bFullscreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
@@ -19,7 +19,28 @@ Window::Window(PGraphics graphics, const WindowCreateInfo &createInfo)
 
     glfwCreateWindowSurface(instance, handle, nullptr, &surface);
 
-    createSwapchain();
+    uint32_t numQueueFamilies = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties(graphics->getPhysicalDevice(), &numQueueFamilies, nullptr);
+    Array<VkQueueFamilyProperties> queueProperties(numQueueFamilies);
+    vkGetPhysicalDeviceQueueFamilyProperties(graphics->getPhysicalDevice(), &numQueueFamilies, queueProperties.data());
+
+    bool viableDevice = false;
+    for (uint32 i = 0; i < numQueueFamilies; ++i)
+    {
+        VkBool32 supportsPresent;
+        vkGetPhysicalDeviceSurfaceSupportKHR(graphics->getPhysicalDevice(), i, surface, &supportsPresent);
+        if (supportsPresent)
+        {
+            viableDevice = true;
+            break;
+        }
+    }
+    if (!viableDevice)
+    {
+        std::cerr << "Device not suitable for presenting to surface " << surface << ", use a different one" << std::endl;
+    }
+
+    recreateSwapchain(createInfo);
 }
 
 Window::~Window()
@@ -30,6 +51,7 @@ Window::~Window()
 
 void Window::beginFrame()
 {
+    glfwPollEvents();
     advanceBackBuffer();
 }
 
@@ -75,16 +97,9 @@ void Window::advanceBackBuffer()
     imageAcquiredSemaphore = imageAcquired[semaphoreIndex];
     currentImageIndex = imageIndex;
 
-    VkImageMemoryBarrier barrier =
-        init::ImageMemoryBarrier(
-            backBufferImages[currentImageIndex]->getHandle(),
-            VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+    backBufferImages[currentImageIndex]->changeLayout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
     PCmdBuffer cmdBuffer = graphics->getGraphicsCommands()->getCommands();
-    vkCmdPipelineBarrier(cmdBuffer->getHandle(),
-                         VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-                         0, 0, nullptr, 0, nullptr, 1, &barrier);
-    cmdBuffer->addWaitSemaphore(VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, imageAcquiredSemaphore);
+    graphics->getGraphicsCommands()->getCommands()->addWaitSemaphore(VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, imageAcquiredSemaphore);
     graphics->getGraphicsCommands()->submitCommands();
 }
 
@@ -187,7 +202,10 @@ void Window::createSwapchain()
 
 void Window::destroySwapchain()
 {
-    vkDestroySwapchainKHR(graphics->getDevice(), swapchain, nullptr);
+    if (swapchain != VK_NULL_HANDLE)
+    {
+        vkDestroySwapchainKHR(graphics->getDevice(), swapchain, nullptr);
+    }
     for (uint32 i = 0; i < Gfx::numFramesBuffered; ++i)
     {
         imageAcquired[i] = nullptr;

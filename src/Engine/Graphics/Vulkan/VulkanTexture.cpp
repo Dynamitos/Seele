@@ -32,7 +32,7 @@ VkImageAspectFlags getAspectFromFormat(Gfx::SeFormat format)
 TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType, uint32 sizeX, uint32 sizeY, uint32 sizeZ,
                              bool bArray, uint32 arraySize, uint32 mipLevel,
                              Gfx::SeFormat format, uint32 samples, Gfx::SeImageUsageFlags usage, Gfx::QueueType owner, VkImage existingImage)
-    : QueueOwnedResource(graphics, owner), graphics(graphics), sizeX(sizeX), sizeY(sizeY), sizeZ(sizeZ), mipLevels(mipLevel), format(format), samples(samples), usage(usage), arrayCount(bArray ? arraySize : 1), aspect(getAspectFromFormat(format))
+    : QueueOwnedResource(graphics, owner), graphics(graphics), sizeX(sizeX), sizeY(sizeY), sizeZ(sizeZ), mipLevels(mipLevel), format(format), samples(samples), usage(usage), arrayCount(bArray ? arraySize : 1), aspect(getAspectFromFormat(format)), image(existingImage), layout(VK_IMAGE_LAYOUT_UNDEFINED)
 {
     if (existingImage == VK_NULL_HANDLE)
     {
@@ -105,8 +105,13 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType, uint3
 
 TextureHandle::~TextureHandle()
 {
-    vkDestroyImageView(graphics->getDevice(), defaultView, nullptr);
-    vkDestroyImage(graphics->getDevice(), image, nullptr);
+    auto &deletionQueue = graphics->getDeletionQueue();
+    auto fence = getCommands()->getCommands()->getFence();
+    VkDevice device = graphics->getDevice();
+    VkImageView view = defaultView;
+    VkImage img = image;
+    deletionQueue.addPendingDelete(fence, [device, view]() { vkDestroyImageView(device, view, nullptr); });
+    deletionQueue.addPendingDelete(fence, [device, img]() { vkDestroyImage(device, img, nullptr); });
 }
 
 void TextureHandle::executeOwnershipBarrier(Gfx::QueueType newOwner)
@@ -145,7 +150,7 @@ void TextureHandle::executeOwnershipBarrier(Gfx::QueueType newOwner)
         dstStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
         dstManager = graphics->getTransferCommands();
     }
-    else if(currentOwner == Gfx::QueueType::DEDICATED_TRANSFER)
+    else if (currentOwner == Gfx::QueueType::DEDICATED_TRANSFER)
     {
         imageBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
         dstStage = VK_PIPELINE_STAGE_TRANSFER_BIT;

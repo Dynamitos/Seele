@@ -24,10 +24,12 @@ Seele::WindowManager::~WindowManager()
 {
 }
 
-void Seele::WindowManager::addWindow(const WindowCreateInfo &createInfo)
+PWindow Seele::WindowManager::addWindow(const WindowCreateInfo &createInfo)
 {
-	Gfx::PWindow window = graphics->createWindow(createInfo);
+	Gfx::PWindow handle = graphics->createWindow(createInfo);
+	PWindow window = new Window(handle);
 	windows.add(window);
+	return window;
 }
 
 void Seele::WindowManager::beginFrame()

@@ -6,6 +6,7 @@
 #include "VulkanCommandBuffer.h"
 #include "VulkanRenderPass.h"
 #include "VulkanFramebuffer.h"
+#include "VulkanPipelineCache.h"
 #include "Graphics/GraphicsResources.h"
 #include <glfw/glfw3.h>
 
@@ -42,6 +43,7 @@ void Graphics::init(GraphicsInitializer initInfo)
 	computeCommands = new CommandBufferManager(this, computeQueue);
 	transferCommands = new CommandBufferManager(this, transferQueue);
 	dedicatedTransferCommands = new CommandBufferManager(this, dedicatedTransferQueue);
+	pipelineCache = new PipelineCache(this, "pipeline.cache");
 }
 
 Gfx::PWindow Graphics::createWindow(const WindowCreateInfo &createInfo)
@@ -67,7 +69,7 @@ void Graphics::beginRenderPass(Gfx::PRenderPass renderPass)
 	uint32 framebufferHash = rp->getFramebufferHash();
 	PFramebuffer framebuffer;
 	auto found = allocatedFramebuffers.find(framebufferHash);
-	if(found == allocatedFramebuffers.end())
+	if (found == allocatedFramebuffers.end())
 	{
 		framebuffer = new Framebuffer(this, rp, rp->getLayout());
 	}
@@ -83,6 +85,18 @@ void Graphics::endRenderPass()
 	graphicsCommands->getCommands()->endRenderPass();
 }
 
+void Graphics::executeCommands(Array<Gfx::PRenderCommand> commands)
+{
+	Array<VkCommandBuffer> cmdBuffers(commands.size());
+	for (uint32 i = 0; i < commands.size(); ++i)
+	{
+		PSecondaryCmdBuffer buf = commands[i].cast<SecondaryCmdBuffer>();
+		buf->end();
+		cmdBuffers[i] = buf->getHandle();
+	}
+	vkCmdExecuteCommands(graphicsCommands->getCommands()->getHandle(), cmdBuffers.size(), cmdBuffers.data());
+}
+
 Gfx::PTexture2D Graphics::createTexture2D(const TextureCreateInfo &createInfo)
 {
 	PTexture2D result = new Texture2D(this, createInfo.width, createInfo.height, createInfo.bArray,
@@ -91,27 +105,38 @@ Gfx::PTexture2D Graphics::createTexture2D(const TextureCreateInfo &createInfo)
 	return result;
 }
 
-Gfx::PUniformBuffer Graphics::createUniformBuffer(const BulkResourceData &bulkData) 
+Gfx::PUniformBuffer Graphics::createUniformBuffer(const BulkResourceData &bulkData)
 {
 	PUniformBuffer uniformBuffer = new UniformBuffer(this, bulkData);
 	return uniformBuffer;
 }
 
-Gfx::PStructuredBuffer Graphics::createStructuredBuffer(const BulkResourceData &bulkData) 
+Gfx::PStructuredBuffer Graphics::createStructuredBuffer(const BulkResourceData &bulkData)
 {
 	PStructuredBuffer structuredBuffer = new StructuredBuffer(this, bulkData);
 	return structuredBuffer;
 }
-Gfx::PVertexBuffer Graphics::createVertexBuffer(const BulkResourceData &bulkData) 
+Gfx::PVertexBuffer Graphics::createVertexBuffer(const VertexBufferCreateInfo &bulkData)
 {
 	PVertexBuffer vertexBuffer = new VertexBuffer(this, bulkData);
 	return vertexBuffer;
 }
 
-Gfx::PIndexBuffer Graphics::createIndexBuffer(const BulkResourceData &bulkData) 
+Gfx::PIndexBuffer Graphics::createIndexBuffer(const IndexBufferCreateInfo &bulkData)
 {
 	PIndexBuffer indexBuffer = new IndexBuffer(this, bulkData);
 	return indexBuffer;
+}
+Gfx::PRenderCommand Graphics::createRenderCommand()
+{
+	PSecondaryCmdBuffer cmdBuffer = graphicsCommands->createSecondaryCmdBuffer();
+	cmdBuffer->begin(getGraphicsCommands()->getCommands());
+	return cmdBuffer;
+}
+Gfx::PGraphicsPipeline Graphics::createGraphicsPipeline(const GraphicsPipelineCreateInfo& createInfo)
+{
+	PGraphicsPipeline pipeline = pipelineCache->createPipeline(createInfo);
+	return pipeline;
 }
 
 VkInstance Graphics::getInstance() const
@@ -173,6 +198,7 @@ Array<const char *> Graphics::getRequiredExtensions()
 }
 void Graphics::initInstance(GraphicsInitializer initInfo)
 {
+	glfwInit();
 	VkApplicationInfo appInfo = {};
 	appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 	appInfo.pApplicationName = initInfo.applicationName;

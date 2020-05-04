@@ -1,4 +1,5 @@
 #include "RenderCore.h"
+#include "SceneView.h"
 
 Seele::RenderCore::RenderCore()
 {
@@ -16,7 +17,13 @@ void Seele::RenderCore::init()
 	mainWindowInfo.width = 1280;
 	mainWindowInfo.height = 720;
 	mainWindowInfo.bFullscreen = false;
-	windowManager->addWindow(mainWindowInfo);
+	auto window = windowManager->addWindow(mainWindowInfo);
+	ViewportCreateInfo sceneViewInfo;
+	sceneViewInfo.sizeX = 1280;
+	sceneViewInfo.sizeY = 720;
+	sceneViewInfo.offsetX = 0;
+	sceneViewInfo.offsetY = 0;
+	PSceneView sceneView = new SceneView(windowManager->getGraphics(), window, sceneViewInfo);
 }
 
 void Seele::RenderCore::renderLoop()

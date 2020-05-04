@@ -4,6 +4,7 @@ target_sources(SeeleEngine
         ForwardPlusRenderPath.cpp
         GraphicsResources.h
         GraphicsResources.cpp
+        GraphicsInitializer.h
         GraphicsEnums.h
         Graphics.h
         Graphics.cpp

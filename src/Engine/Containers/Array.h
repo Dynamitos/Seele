@@ -372,7 +372,11 @@ public:
 	{
 		return N;
 	}
-	inline T *data() const
+	inline T *data()
+	{
+		return _data;
+	}
+	inline const T* data() const
 	{
 		return _data;
 	}

@@ -7,6 +7,49 @@
 using namespace Seele;
 using namespace Seele::Vulkan;
 
+List<QueueOwnedResourceDeletion::PendingItem> QueueOwnedResourceDeletion::deletionQueue;
+volatile bool QueueOwnedResourceDeletion::running;
+std::mutex QueueOwnedResourceDeletion::mutex;
+std::condition_variable QueueOwnedResourceDeletion::cv;
+
+QueueOwnedResourceDeletion::QueueOwnedResourceDeletion()
+{
+    worker = std::thread(&run);
+    running = true;
+}
+
+QueueOwnedResourceDeletion::~QueueOwnedResourceDeletion()
+{
+    worker.join();
+}
+
+void QueueOwnedResourceDeletion::addPendingDelete(PFence fence, std::function<void()> func)
+{
+    PendingItem item;
+    item.fence = fence;
+    item.func = func;
+    deletionQueue.add(item);
+    std::unique_lock<std::mutex> lock(mutex);
+    cv.notify_all();
+}
+
+void QueueOwnedResourceDeletion::run()
+{
+    while (running || !deletionQueue.empty())
+    {
+        std::unique_lock<std::mutex> lock(mutex);
+        cv.wait(lock);
+        auto entry = deletionQueue.begin();
+        PFence fence = entry->fence;
+        fence->wait(1000ull);
+        if (fence->isSignaled())
+        {
+            entry->func();
+            deletionQueue.remove(entry);
+        }
+    }
+}
+
 QueueOwnedResource::QueueOwnedResource(PGraphics graphics, Gfx::QueueType startQueueType)
     : graphics(graphics), currentOwner(startQueueType)
 {

@@ -1145,3 +1145,166 @@ Gfx::SeAttachmentLoadOp Seele::Vulkan::cast(const VkAttachmentLoadOp &loadOp)
         return SE_ATTACHMENT_LOAD_OP_MAX_ENUM;
     }
 }
+
+VkIndexType Seele::Vulkan::cast(const Gfx::SeIndexType &indexType)
+{
+    switch (indexType)
+    {
+    case Gfx::SE_INDEX_TYPE_UINT16:
+        return VK_INDEX_TYPE_UINT16;
+    case Gfx::SE_INDEX_TYPE_UINT32:
+        return VK_INDEX_TYPE_UINT32;
+    default:
+        return VK_INDEX_TYPE_MAX_ENUM;
+    }
+}
+Gfx::SeIndexType Seele::Vulkan::cast(const VkIndexType &indexType)
+{
+    switch (indexType)
+    {
+    case VK_INDEX_TYPE_UINT16:
+        return Gfx::SE_INDEX_TYPE_UINT16;
+    case VK_INDEX_TYPE_UINT32:
+        return Gfx::SE_INDEX_TYPE_UINT32;
+    default:
+        return Gfx::SE_INDEX_TYPE_MAX_ENUM;
+    }
+}
+
+VkPrimitiveTopology Seele::Vulkan::cast(const Gfx::SePrimitiveTopology &topology)
+{
+    switch (topology)
+    {
+    case SE_PRIMITIVE_TOPOLOGY_POINT_LIST:
+        return VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
+    case SE_PRIMITIVE_TOPOLOGY_LINE_LIST:
+        return VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
+    case SE_PRIMITIVE_TOPOLOGY_LINE_STRIP:
+        return VK_PRIMITIVE_TOPOLOGY_LINE_STRIP;
+    case SE_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST:
+        return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    case SE_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP:
+        return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
+    case SE_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN:
+        return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN;
+    case SE_PRIMITIVE_TOPOLOGY_LINE_LIST_WITH_ADJACENCY:
+        return VK_PRIMITIVE_TOPOLOGY_LINE_LIST_WITH_ADJACENCY;
+    case SE_PRIMITIVE_TOPOLOGY_LINE_STRIP_WITH_ADJACENCY:
+        return VK_PRIMITIVE_TOPOLOGY_LINE_STRIP_WITH_ADJACENCY;
+    case SE_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST_WITH_ADJACENCY:
+        return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST_WITH_ADJACENCY;
+    case SE_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP_WITH_ADJACENCY:
+        return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP_WITH_ADJACENCY;
+    case SE_PRIMITIVE_TOPOLOGY_PATCH_LIST:
+        return VK_PRIMITIVE_TOPOLOGY_PATCH_LIST;
+    default:
+        return VK_PRIMITIVE_TOPOLOGY_MAX_ENUM;
+    }
+}
+Gfx::SePrimitiveTopology Seele::Vulkan::cast(const VkPrimitiveTopology &topology)
+{
+    switch (topology)
+    {
+    case VK_PRIMITIVE_TOPOLOGY_POINT_LIST:
+        return SE_PRIMITIVE_TOPOLOGY_POINT_LIST;
+    case VK_PRIMITIVE_TOPOLOGY_LINE_LIST:
+        return SE_PRIMITIVE_TOPOLOGY_LINE_LIST;
+    case VK_PRIMITIVE_TOPOLOGY_LINE_STRIP:
+        return SE_PRIMITIVE_TOPOLOGY_LINE_STRIP;
+    case VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST:
+        return SE_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    case VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP:
+        return SE_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
+    case VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN:
+        return SE_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN;
+    case VK_PRIMITIVE_TOPOLOGY_LINE_LIST_WITH_ADJACENCY:
+        return SE_PRIMITIVE_TOPOLOGY_LINE_LIST_WITH_ADJACENCY;
+    case VK_PRIMITIVE_TOPOLOGY_LINE_STRIP_WITH_ADJACENCY:
+        return SE_PRIMITIVE_TOPOLOGY_LINE_STRIP_WITH_ADJACENCY;
+    case VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST_WITH_ADJACENCY:
+        return SE_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST_WITH_ADJACENCY;
+    case VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP_WITH_ADJACENCY:
+        return SE_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP_WITH_ADJACENCY;
+    case VK_PRIMITIVE_TOPOLOGY_PATCH_LIST:
+        return SE_PRIMITIVE_TOPOLOGY_PATCH_LIST;
+    default:
+        return SE_PRIMITIVE_TOPOLOGY_MAX_ENUM;
+    }
+}
+
+VkPolygonMode Seele::Vulkan::cast(const Gfx::SePolygonMode &mode)
+{
+    switch (mode)
+    {
+    case SE_POLYGON_MODE_FILL:
+        return VK_POLYGON_MODE_FILL;
+    case SE_POLYGON_MODE_LINE:
+        return VK_POLYGON_MODE_LINE;
+    case SE_POLYGON_MODE_POINT:
+        return VK_POLYGON_MODE_POINT;
+    default:
+        return VK_POLYGON_MODE_MAX_ENUM;
+    }
+}
+Gfx::SePolygonMode Seele::Vulkan::cast(const VkPolygonMode &mode)
+{
+    switch (mode)
+    {
+    case VK_POLYGON_MODE_FILL:
+        return SE_POLYGON_MODE_FILL;
+    case VK_POLYGON_MODE_LINE:
+        return SE_POLYGON_MODE_LINE;
+    case VK_POLYGON_MODE_POINT:
+        return SE_POLYGON_MODE_POINT;
+    default:
+        return SE_POLYGON_MODE_MAX_ENUM;
+    }
+}
+VkCompareOp Seele::Vulkan::cast(const Gfx::SeCompareOp &op)
+{
+    switch (op)
+    {
+    case SE_COMPARE_OP_NEVER:
+        return VK_COMPARE_OP_NEVER;
+    case SE_COMPARE_OP_LESS:
+        return VK_COMPARE_OP_LESS;
+    case SE_COMPARE_OP_EQUAL:
+        return VK_COMPARE_OP_EQUAL;
+    case SE_COMPARE_OP_LESS_OR_EQUAL:
+        return VK_COMPARE_OP_LESS_OR_EQUAL;
+    case SE_COMPARE_OP_GREATER:
+        return VK_COMPARE_OP_GREATER;
+    case SE_COMPARE_OP_NOT_EQUAL:
+        return VK_COMPARE_OP_NOT_EQUAL;
+    case SE_COMPARE_OP_GREATER_OR_EQUAL:
+        return VK_COMPARE_OP_GREATER_OR_EQUAL;
+    case SE_COMPARE_OP_ALWAYS:
+        return VK_COMPARE_OP_ALWAYS;
+    default:
+        return VK_COMPARE_OP_MAX_ENUM;
+    }
+}
+Gfx::SeCompareOp Seele::Vulkan::cast(const VkCompareOp &op)
+{
+    switch (op)
+    {
+    case VK_COMPARE_OP_NEVER:
+        return SE_COMPARE_OP_NEVER;
+    case VK_COMPARE_OP_LESS:
+        return SE_COMPARE_OP_LESS;
+    case VK_COMPARE_OP_EQUAL:
+        return SE_COMPARE_OP_EQUAL;
+    case VK_COMPARE_OP_LESS_OR_EQUAL:
+        return SE_COMPARE_OP_LESS_OR_EQUAL;
+    case VK_COMPARE_OP_GREATER:
+        return SE_COMPARE_OP_GREATER;
+    case VK_COMPARE_OP_NOT_EQUAL:
+        return SE_COMPARE_OP_NOT_EQUAL;
+    case VK_COMPARE_OP_GREATER_OR_EQUAL:
+        return SE_COMPARE_OP_GREATER_OR_EQUAL;
+    case VK_COMPARE_OP_ALWAYS:
+        return SE_COMPARE_OP_ALWAYS;
+    default:
+        return SE_COMPARE_OP_MAX_ENUM;
+    }
+}

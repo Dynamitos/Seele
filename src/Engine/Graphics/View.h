@@ -7,12 +7,12 @@ DECLARE_REF(Window);
 class View
 {
 public:
-	View(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo& createInfo);
+	View(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo &createInfo);
 	virtual ~View();
 	void beginFrame();
 	void render();
 	void endFrame();
-	void applyArea(Rect area);
+	void applyArea(URect area);
 
 protected:
 	Gfx::PGraphics graphics;
