@@ -1,3 +1,4 @@
+#pragma once
 #include "GraphicsEnums.h"
 
 namespace Seele
@@ -42,8 +43,20 @@ struct ViewportCreateInfo
     uint32 offsetX;
     uint32 offsetY;
 };
+// doesnt own the data, only proxy it
+struct BulkResourceData
+{
+    uint32 size;
+    uint8 *data;
+    Gfx::QueueType owner;
+    BulkResourceData()
+        : size(0), data(nullptr), owner(Gfx::QueueType::GRAPHICS)
+    {
+    }
+};
 struct TextureCreateInfo
 {
+    BulkResourceData resourceData;
     uint32 width;
     uint32 height;
     uint32 depth;
@@ -53,20 +66,10 @@ struct TextureCreateInfo
     uint32 samples;
     Gfx::SeFormat format;
     Gfx::SeImageUsageFlagBits usage;
-    Gfx::QueueType queueType;
     TextureCreateInfo()
-        : width(1), height(1), depth(1), bArray(false), arrayLayers(1), mipLevels(1), samples(1), format(Gfx::SE_FORMAT_R32G32B32A32_SFLOAT), queueType(Gfx::QueueType::GRAPHICS), usage(Gfx::SE_IMAGE_USAGE_SAMPLED_BIT)
-    {
-    }
-};
-// doesnt own the data, only proxy it
-struct BulkResourceData
-{
-    uint32 size;
-    uint8 *data;
-    Gfx::QueueType owner;
-    BulkResourceData()
-        : size(0), data(nullptr), owner(Gfx::QueueType::GRAPHICS)
+        : resourceData(), width(1), height(1), depth(1), bArray(false), arrayLayers(1)
+        , mipLevels(1), samples(1), format(Gfx::SE_FORMAT_R32G32B32A32_SFLOAT)
+        , usage(Gfx::SE_IMAGE_USAGE_SAMPLED_BIT)
     {
     }
 };
@@ -90,6 +93,15 @@ struct IndexBufferCreateInfo
     {
     }
 };
+struct ShaderCreateInfo
+{
+    std::string code;
+    std::string entryPoint;
+    Array<const char*> typeParameter;
+    ShaderCreateInfo(const std::string& code)
+        : code(code)
+    {}
+};
 
 namespace Gfx
 {
@@ -101,6 +113,10 @@ struct SePushConstantRange
 };
 struct VertexElement
 {
+    VertexElement(){}
+    VertexElement(uint32 location, SeFormat vertexFormat, uint32 offset)
+        : location(location), vertexFormat(vertexFormat), offset(offset)
+    {}
     uint32 location;
     SeFormat vertexFormat;
     uint32 offset;
@@ -173,7 +189,6 @@ struct GraphicsPipelineCreateInfo
 	Gfx::PEvaluationShader evalShader;
 	Gfx::PGeometryShader geometryShader;
 	Gfx::PFragmentShader fragmentShader;
-	Gfx::PPipelineLayout pipelineLayout;
 	Gfx::PRenderPass renderPass;
 	Gfx::SePrimitiveTopology topology;
 	Gfx::RasterizationState rasterizationState;
@@ -183,6 +198,23 @@ struct GraphicsPipelineCreateInfo
 	GraphicsPipelineCreateInfo()
 	{
 		std::memset(this, 0, sizeof(*this));
+        topology = Gfx::SE_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+        rasterizationState.cullMode = Gfx::SE_CULL_MODE_BACK_BIT;
+        rasterizationState.polygonMode = Gfx::SE_POLYGON_MODE_FILL;
+        rasterizationState.frontFace = Gfx::SE_FRONT_FACE_COUNTER_CLOCKWISE;
+        depthStencilState.depthCompareOp = Gfx::SE_COMPARE_OP_LESS;
+        depthStencilState.minDepthBounds = 0.0f;
+        depthStencilState.maxDepthBounds = 1.0f;
+        depthStencilState.stencilTestEnable = false;
+        depthStencilState.depthWriteEnable = true;
+        depthStencilState.depthTestEnable = true;
+        multisampleState.samples = 1;
+        colorBlend.attachmentCount = 0;
+        colorBlend.logicOpEnable = false;
+        colorBlend.blendConstants[0] = 1.0f;
+        colorBlend.blendConstants[1] = 1.0f;
+        colorBlend.blendConstants[2] = 1.0f;
+        colorBlend.blendConstants[3] = 1.0f;
 	}
 };
 } // namespace Seele

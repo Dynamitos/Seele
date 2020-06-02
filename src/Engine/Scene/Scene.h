@@ -3,6 +3,8 @@
 #include "Actor/Actor.h"
 #include "Graphics/GraphicsResources.h"
 #include "Components/PrimitiveComponent.h"
+#include "Graphics/MeshBatch.h"
+#include "Material/Material.h"
 
 namespace Seele
 {
@@ -18,11 +20,11 @@ public:
     void addPrimitiveComponent(PPrimitiveComponent comp);
 
 private:
-    Map<PMaterial, DrawState> meshBatches;
+    Map<PMaterial, MeshBatch> meshBatches;
     Array<PActor> rootActors;
     Array<PPrimitiveComponent> primitives;
-
+    const static int constant = 10;
 public:
-    Map<PMaterial, DrawState> getMeshBatches();
+    Map<PMaterial, MeshBatch> getMeshBatches();
 };
 } // namespace Seele

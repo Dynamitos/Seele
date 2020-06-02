@@ -385,6 +385,11 @@ public:
 		assert(index >= 0 && index < N);
 		return _data[index];
 	}
+	const T &operator[](int index) const
+	{
+		assert(index >= 0 && index < N);
+		return _data[index];
+	}
 
 	template <typename X>
 	class IteratorBase

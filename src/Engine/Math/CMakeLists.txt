@@ -3,5 +3,6 @@ target_sources(SeeleEngine
 		Math.h
 		Matrix.h
 		Vector.h
+		Vector.cpp
 		Transform.h
 		Transform.cpp)

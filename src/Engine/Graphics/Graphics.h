@@ -13,6 +13,12 @@ public:
     Graphics();
     virtual ~Graphics();
     virtual void init(GraphicsInitializer initializer) = 0;
+    
+	const QueueFamilyMapping getFamilyMapping() const
+	{
+		return queueMapping;
+	}
+    
     virtual PWindow createWindow(const WindowCreateInfo &createInfo) = 0;
     virtual PViewport createViewport(PWindow owner, const ViewportCreateInfo &createInfo) = 0;
 
@@ -28,8 +34,18 @@ public:
     virtual PVertexBuffer createVertexBuffer(const VertexBufferCreateInfo &bulkData) = 0;
     virtual PIndexBuffer createIndexBuffer(const IndexBufferCreateInfo &bulkData) = 0;
     virtual PRenderCommand createRenderCommand() = 0;
+    virtual PVertexShader createVertexShader(const ShaderCreateInfo& createInfo) = 0;
+    virtual PControlShader createControlShader(const ShaderCreateInfo& createInfo) = 0;
+    virtual PEvaluationShader createEvaluationShader(const ShaderCreateInfo& createInfo) = 0;
+    virtual PGeometryShader createGeometryShader(const ShaderCreateInfo& createInfo) = 0;
+    virtual PFragmentShader createFragmentShader(const ShaderCreateInfo& createInfo) = 0;
     virtual PGraphicsPipeline createGraphicsPipeline(const GraphicsPipelineCreateInfo& createInfo) = 0;
+    
+	virtual Gfx::PDescriptorLayout createDescriptorLayout() = 0;
+	virtual Gfx::PPipelineLayout createPipelineLayout() = 0;
+
 protected:
+    QueueFamilyMapping queueMapping;
     friend class Window;
 };
 DEFINE_REF(Graphics);

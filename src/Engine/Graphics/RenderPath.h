@@ -9,6 +9,7 @@ public:
 	RenderPath(Gfx::PGraphics graphics, Gfx::PViewport target);
 	virtual ~RenderPath();
 	virtual void applyArea(URect area);
+	virtual void init() = 0;
 	virtual void beginFrame() = 0;
 	virtual void render() = 0;
 	virtual void endFrame() = 0;

@@ -1,7 +1,5 @@
 target_sources(SeeleEngine
     PRIVATE
-        ForwardPlusRenderPath.h
-        ForwardPlusRenderPath.cpp
         GraphicsResources.h
         GraphicsResources.cpp
         GraphicsInitializer.h
@@ -10,6 +8,7 @@ target_sources(SeeleEngine
         Graphics.cpp
         Mesh.h
         Mesh.cpp
+        MeshBatch.h
         RenderCore.h
         RenderCore.cpp
         RenderPath.h
@@ -25,4 +24,5 @@ target_sources(SeeleEngine
         WindowManager.h
         WindowManager.cpp)
 
+add_subdirectory(RenderPass/)
 add_subdirectory(Vulkan/)

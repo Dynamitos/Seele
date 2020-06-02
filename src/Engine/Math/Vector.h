@@ -22,6 +22,8 @@ typedef glm::ivec4 IVector4;
 
 typedef glm::quat Quaternion;
 
+Vector parseVector(const char*);
+
 static inline float square(float x)
 {
 	return x * x;

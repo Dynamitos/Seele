@@ -132,6 +132,24 @@ public:
 		size++;
 		return insertedElement;
 	}
+	Iterator add(T&& value)
+	{
+		if (root == nullptr)
+		{
+			root = new Node();
+			tail = root;
+		}
+		tail->data = std::move(value);
+		Node *newTail = new Node();
+		newTail->prev = tail;
+		newTail->next = nullptr;
+		tail->next = newTail;
+		Iterator insertedElement(tail);
+		tail = newTail;
+		refreshIterators();
+		size++;
+		return insertedElement;
+	}
 	Iterator remove(Iterator pos)
 	{
 		size--;

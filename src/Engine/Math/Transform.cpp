@@ -181,9 +181,10 @@ Transform &Transform::operator=(Transform &&other)
     return *this;
 }
 
-Transform &Transform::operator*(const Transform &other) const
+Transform &Transform::operator*(const Transform &other)
 {
     Transform outTransform;
     multiply(&outTransform, this, &other);
-    return outTransform;
+    *this = std::move(outTransform);
+    return *this;
 }

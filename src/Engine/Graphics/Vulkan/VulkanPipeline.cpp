@@ -6,9 +6,8 @@ using namespace Seele;
 using namespace Seele::Vulkan;
 
 GraphicsPipeline::GraphicsPipeline(PGraphics graphics, VkPipeline handle, PPipelineLayout pipelineLayout, const GraphicsPipelineCreateInfo& createInfo)
-    : Gfx::GraphicsPipeline(createInfo)
+    : Gfx::GraphicsPipeline(createInfo, pipelineLayout)
     , graphics(graphics)
-    , layout(pipelineLayout)
     , pipeline(handle)
 {
 }
@@ -24,5 +23,5 @@ void GraphicsPipeline::bind(VkCommandBuffer handle)
 
 VkPipelineLayout GraphicsPipeline::getLayout() const
 {
-    return layout->getHandle();  
+    return layout.cast<PipelineLayout>()->getHandle();  
 }

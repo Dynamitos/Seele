@@ -22,15 +22,12 @@ public:
 	VkDevice getDevice() const;
 	VkPhysicalDevice getPhysicalDevice() const;
 
+	PCommandBufferManager getQueueCommands(Gfx::QueueType queueType);
 	PCommandBufferManager getGraphicsCommands();
 	PCommandBufferManager getComputeCommands();
 	PCommandBufferManager getTransferCommands();
 	PCommandBufferManager getDedicatedTransferCommands();
 
-	const QueueFamilyMapping getFamilyMapping() const
-	{
-		return queueMapping;
-	}
 	QueueOwnedResourceDeletion &getDeletionQueue()
 	{
 		return deletionQueue;
@@ -56,7 +53,15 @@ public:
 	virtual Gfx::PVertexBuffer createVertexBuffer(const VertexBufferCreateInfo &bulkData) override;
 	virtual Gfx::PIndexBuffer createIndexBuffer(const IndexBufferCreateInfo &bulkData) override;
 	virtual Gfx::PRenderCommand createRenderCommand() override;
+    virtual Gfx::PVertexShader createVertexShader(const ShaderCreateInfo& createInfo) override;
+    virtual Gfx::PControlShader createControlShader(const ShaderCreateInfo& createInfo) override;
+    virtual Gfx::PEvaluationShader createEvaluationShader(const ShaderCreateInfo& createInfo) override;
+    virtual Gfx::PGeometryShader createGeometryShader(const ShaderCreateInfo& createInfo) override;
+    virtual Gfx::PFragmentShader createFragmentShader(const ShaderCreateInfo& createInfo) override;
 	virtual Gfx::PGraphicsPipeline createGraphicsPipeline(const GraphicsPipelineCreateInfo& createInfo) override;
+
+	virtual Gfx::PDescriptorLayout createDescriptorLayout() override;
+	virtual Gfx::PPipelineLayout createPipelineLayout() override;
 
 protected:
 	Array<const char *> getRequiredExtensions();
@@ -73,7 +78,6 @@ protected:
 	PQueue computeQueue;
 	PQueue transferQueue;
 	PQueue dedicatedTransferQueue;
-	QueueFamilyMapping queueMapping;
 	QueueOwnedResourceDeletion deletionQueue;
 	PPipelineCache pipelineCache;
 	PCommandBufferManager graphicsCommands;

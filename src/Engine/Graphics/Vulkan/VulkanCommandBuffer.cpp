@@ -7,6 +7,7 @@
 #include "VulkanRenderPass.h"
 #include "VulkanPipeline.h"
 #include "VulkanDescriptorSets.h"
+#include "Graphics/MeshBatch.h"
 
 using namespace Seele;
 using namespace Seele::Vulkan;
@@ -174,9 +175,9 @@ void SecondaryCmdBuffer::bindIndexBuffer(Gfx::PIndexBuffer indexBuffer)
     PIndexBuffer buf = indexBuffer.cast<IndexBuffer>();
     vkCmdBindIndexBuffer(handle, buf->getHandle(), 0, VK_INDEX_TYPE_UINT16);
 }
-void SecondaryCmdBuffer::draw(DrawInstance data) 
+void SecondaryCmdBuffer::draw(const MeshBatchElement& data) 
 {
-    vkCmdDrawIndexed(handle, data.indexBuffer->getNumIndices(), data.numInstances, data.minVertexIndex, data.baseVertexIndex, data.firstInstance);
+    vkCmdDrawIndexed(handle, data.indexBuffer->getNumIndices(), data.numInstances, data.minVertexIndex, data.baseVertexIndex, 0);
 }
 
 CommandBufferManager::CommandBufferManager(PGraphics graphics, PQueue queue)

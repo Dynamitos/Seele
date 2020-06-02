@@ -3,6 +3,7 @@
 #include "VulkanGraphicsEnums.h"
 #include "Containers/Map.h"
 #include "Containers/Array.h"
+#include <mutex>
 
 namespace Seele
 {
@@ -101,6 +102,7 @@ private:
 	VkMemoryPropertyFlags properties;
 	Map<VkDeviceSize, SubAllocation *> activeAllocations;
 	Map<VkDeviceSize, PSubAllocation> freeRanges;
+	std::mutex lock;
 	void *mappedPointer;
 	uint8 memoryTypeIndex;
 	uint8 isDedicated : 1;
@@ -153,6 +155,7 @@ private:
 	};
 	Array<HeapInfo> heaps;
 	VkResult findMemoryType(uint32 typeBits, VkMemoryPropertyFlags properties, uint8 *typeIndex);
+	std::mutex lock;
 	PGraphics graphics;
 	VkPhysicalDeviceMemoryProperties memProperties;
 };

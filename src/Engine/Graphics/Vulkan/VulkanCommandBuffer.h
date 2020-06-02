@@ -77,7 +77,7 @@ public:
 	virtual void bindDescriptor(Gfx::PDescriptorSet descriptorSet) override;
 	virtual void bindVertexBuffer(Gfx::PVertexBuffer vertexBuffer) override;
 	virtual void bindIndexBuffer(Gfx::PIndexBuffer indexBuffer) override;
-	virtual void draw(DrawInstance data) override;
+	virtual void draw(const MeshBatchElement& data) override;
 
 private:
 	PGraphicsPipeline pipeline;

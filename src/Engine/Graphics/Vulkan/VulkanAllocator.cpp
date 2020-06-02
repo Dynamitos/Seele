@@ -61,16 +61,15 @@ Allocation::Allocation(PGraphics graphics, Allocator *allocator, VkDeviceSize si
 
 Allocation::~Allocation()
 {
-	allocator->free(this);
 }
 
 PSubAllocation Allocation::getSuballocation(VkDeviceSize requestedSize, VkDeviceSize alignment)
 {
+	std::scoped_lock lck(lock);
 	if (isDedicated)
 	{
-		if (activeAllocations.empty())
+		if (activeAllocations.empty() && requestedSize == bytesAllocated)
 		{
-			assert(requestedSize == bytesAllocated);
 			PSubAllocation suballoc = freeRanges[0];
 			activeAllocations[0] = suballoc.getHandle();
 			freeRanges.clear();
@@ -82,9 +81,9 @@ PSubAllocation Allocation::getSuballocation(VkDeviceSize requestedSize, VkDevice
 			return nullptr;
 		}
 	}
-	for (uint32 i = 0; i < freeRanges.size(); ++i)
+	for (auto it : freeRanges)
 	{
-		PSubAllocation freeAllocation = freeRanges[i];
+		PSubAllocation freeAllocation = it.value;
 		VkDeviceSize allocatedOffset = freeAllocation->allocatedOffset;
 		VkDeviceSize alignedOffset = align(allocatedOffset, alignment);
 		VkDeviceSize alignmentAdjustment = alignedOffset - allocatedOffset;
@@ -115,32 +114,48 @@ PSubAllocation Allocation::getSuballocation(VkDeviceSize requestedSize, VkDevice
 
 void Allocation::markFree(SubAllocation *allocation)
 {
+	// Dont free if it is already a free allocation, since they also mark themselves on deletion
+	if(freeRanges.find(allocation->allocatedOffset) != nullptr)
+	{
+		return;
+	}
 	VkDeviceSize lowerBound = allocation->allocatedOffset;
 	VkDeviceSize upperBound = allocation->allocatedOffset + allocation->allocatedSize;
 	PSubAllocation allocHandle;
+	std::scoped_lock lck(lock);
+	//Join lower bound
 	for (auto freeRange : freeRanges)
 	{
 		PSubAllocation freeAlloc = freeRange.value;
-		if (freeAlloc->allocatedOffset + freeAlloc->allocatedSize + 1 == lowerBound)
+		if (freeAlloc->allocatedOffset + freeAlloc->allocatedSize == lowerBound)
 		{
+			//extend freeAlloc by the allocatedSize
 			freeAlloc->allocatedSize += allocation->allocatedSize;
 			allocHandle = freeAlloc;
 			break;
 		}
 	}
-	auto foundAlloc = freeRanges.find(upperBound + 1);
+	//Join upper bound
+	auto foundAlloc = freeRanges.find(upperBound);
 	if (foundAlloc != freeRanges.end())
 	{
-		if (allocHandle == nullptr)
+		// There is a free allocation ending where the new free one ends
+		if (allocHandle != nullptr)
 		{
+			// extend allocHandle by another foundAlloc->allocatedSize bytes
 			allocHandle->allocatedSize += foundAlloc->value->allocatedSize;
 			freeRanges.erase(foundAlloc->key);
 		}
 		else
 		{
+			// set foundAlloc back by size amount
 			allocHandle = foundAlloc->value;
+			// remove from offset map since key changes
+			freeRanges.erase(foundAlloc->key);
 			allocHandle->allocatedOffset -= allocation->allocatedSize;
 			allocHandle->alignedOffset -= allocation->allocatedSize;
+			// place back at correct offset
+			freeRanges[allocHandle->allocatedOffset] = allocHandle;
 		}
 	}
 	if (allocHandle == nullptr)
@@ -150,6 +165,8 @@ void Allocation::markFree(SubAllocation *allocation)
 	}
 	activeAllocations.erase(allocation->allocatedOffset);
 	bytesUsed -= allocation->allocatedSize;
+
+	// TODO: delete allocation when bytesUsed == 0
 }
 
 Allocator::Allocator(PGraphics graphics)
@@ -167,6 +184,7 @@ Allocator::Allocator(PGraphics graphics)
 
 Allocator::~Allocator()
 {
+	std::scoped_lock lck(lock);
 	for (auto heap : heaps)
 	{
 		for (auto alloc : heap.allocations)
@@ -181,6 +199,7 @@ Allocator::~Allocator()
 
 PSubAllocation Allocator::allocate(const VkMemoryRequirements2 &memRequirements2, VkMemoryPropertyFlags properties, VkMemoryDedicatedAllocateInfo *dedicatedInfo)
 {
+	std::scoped_lock lck(lock);
 	const VkMemoryRequirements &requirements = memRequirements2.memoryRequirements;
 	uint8 memoryTypeIndex;
 	VK_CHECK(findMemoryType(requirements.memoryTypeBits, properties, &memoryTypeIndex));
@@ -213,6 +232,7 @@ PSubAllocation Allocator::allocate(const VkMemoryRequirements2 &memRequirements2
 
 void Allocator::free(Allocation *allocation)
 {
+	std::scoped_lock lck(lock);
 	for (auto heap : heaps)
 	{
 		for (uint32 i = 0; i < heap.allocations.size(); ++i)

@@ -1,0 +1,75 @@
+{
+    "name": "Placeholder",
+    "profile": "BlinnPhong",
+    "params": {
+        "diffuseTexture": {
+            "type": "Texture2D"
+        },
+	    "specularTexture": {
+            "type": "Texture2D"
+        },
+	    "normalTexture": {
+            "type": "Texture2D"
+        },
+        "uvScale": {
+            "type": "float",
+            "default": "0.0f"
+        },
+        "metallic": {
+            "type": "float",
+            "default": "0.0f"
+        },
+        "subsurface": {
+            "type": "float",
+            "default": "0.0f"
+        },
+        "roughness": {
+            "type": "float",
+            "default": "0.5f"
+        },
+        "specularTint": {
+            "type": "float",
+            "default": "0.0f"
+        },
+        "anisotropic": {
+            "type": "float",
+            "default": "0.0f"
+        },
+        "sheen": {
+            "type": "float",
+            "default": "0.0f"
+        },
+        "sheenTint": {
+            "type": "float",
+            "default": "0.5f"
+        },
+        "clearCoat": {
+            "type": "float",
+            "default": "0.0f"
+        },
+        "clearCoatGloss": {
+            "type": "float",
+            "default": "1.0f"
+        },
+        "textureSampler": {
+            "type": "SamplerState"
+        }
+    },
+    "code": [
+        "result.baseColor = diffuseTexture.Sample(textureSampler, geometry.texCoord * uvScale).xyz;",
+		"result.metallic = 0;",
+		"float3 bumpMapNormal = normalTexture.Sample(textureSampler, geometry.texCoord * uvScale).xyz;",
+        "bumpMapNormal = 2.0 * bumpMapNormal - float3(1.0, 1.0, 1.0);",
+        "result.normal = geometry.transformLocalToWorld(bumpMapNormal);",
+        "result.specular = specularTexture.Sample(textureSampler, geometry.texCoord * uvScale).x;",
+		"result.roughness = roughness;",
+		"result.specularTint = specularTint;",
+		"result.anisotropic = anisotropic;",
+		"result.sheen = sheen;",
+		"result.sheenTint = sheenTint;",
+		"result.clearCoat = clearCoat;",
+		"result.clearCoatGloss = clearCoatGloss;",
+		"return result;"
+    ]
+
+}

@@ -2,5 +2,8 @@ target_sources(SeeleEngine
     PRIVATE
         Material.h
         Material.cpp
+        MaterialAsset.h
+        MaterialAsset.cpp
         MaterialInstance.h
-        MaterialInstance.cpp)
+        MaterialInstance.cpp
+        ShaderExpression.h)

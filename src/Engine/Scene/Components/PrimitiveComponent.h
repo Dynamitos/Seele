@@ -1,7 +1,9 @@
 #pragma once
 #include "Component.h"
 #include "Graphics/GraphicsResources.h"
+#include "Graphics/Mesh.h"
 #include "Material/MaterialInstance.h"
+#include "Graphics/MeshBatch.h"
 
 namespace Seele
 {
@@ -14,9 +16,10 @@ public:
     Matrix4 getRenderMatrix();
 
 private:
-    PMaterialInstance instance;
-    Gfx::PVertexBuffer vertexBuffer;
-    Gfx::PIndexBuffer indexBuffer;
+    Array<PMaterialInstance> materials;
+    Gfx::PUniformBuffer uniformBuffer;
+    Array<StaticMeshBatch> staticMeshes;
+    PMesh mesh;
     friend class Scene;
 };
 DEFINE_REF(PrimitiveComponent);

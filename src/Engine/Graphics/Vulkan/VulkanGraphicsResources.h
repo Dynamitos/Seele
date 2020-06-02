@@ -1,8 +1,5 @@
 #pragma once
 #include "Graphics/GraphicsResources.h"
-#include <thread>
-#include <functional>
-#include <condition_variable>
 #include <vulkan/vulkan.h>
 
 namespace Seele
@@ -54,35 +51,6 @@ private:
 };
 DEFINE_REF(Fence);
 
-struct QueueFamilyMapping
-{
-	uint32 graphicsFamily;
-	uint32 computeFamily;
-	uint32 transferFamily;
-	uint32 dedicatedTransferFamily;
-	uint32 getQueueTypeFamilyIndex(Gfx::QueueType type) const
-	{
-		switch (type)
-		{
-		case Gfx::QueueType::GRAPHICS:
-			return graphicsFamily;
-		case Gfx::QueueType::COMPUTE:
-			return computeFamily;
-		case Gfx::QueueType::TRANSFER:
-			return transferFamily;
-		case Gfx::QueueType::DEDICATED_TRANSFER:
-			return dedicatedTransferFamily;
-		default:
-			return VK_QUEUE_FAMILY_IGNORED;
-		}
-	}
-	bool needsTransfer(Gfx::QueueType src, Gfx::QueueType dst) const
-	{
-		uint32 srcIndex = getQueueTypeFamilyIndex(src);
-		uint32 dstIndex = getQueueTypeFamilyIndex(dst);
-		return srcIndex != dstIndex;
-	}
-};
 class QueueOwnedResourceDeletion
 {
 public:
@@ -103,24 +71,8 @@ private:
 	static std::condition_variable cv;
 	static List<PendingItem> deletionQueue;
 };
-class QueueOwnedResource
-{
-public:
-	QueueOwnedResource(PGraphics graphics, Gfx::QueueType startQueueType);
-	virtual ~QueueOwnedResource();
-	PCommandBufferManager getCommands();
-	//Preliminary checks to see if the barrier should be executed at all
-	void transferOwnership(Gfx::QueueType newOwner);
 
-protected:
-	virtual void executeOwnershipBarrier(Gfx::QueueType newOwner) = 0;
-	Gfx::QueueType currentOwner;
-	PGraphics graphics;
-	PCommandBufferManager cachedCmdBufferManager;
-};
-DEFINE_REF(QueueOwnedResource);
-
-class Buffer : public QueueOwnedResource
+class Buffer
 {
 public:
 	Buffer(PGraphics graphics, uint32 size, VkBufferUsageFlags usage, Gfx::QueueType queueType);
@@ -146,11 +98,14 @@ protected:
 	uint32 numBuffers;
 	uint32 currentBuffer;
 	uint32 size;
+	PGraphics graphics;
+	Gfx::QueueType currentOwner;
+
+	void executeOwnershipBarrier(Gfx::QueueType newOwner);
+	virtual void requestOwnershipTransfer(Gfx::QueueType newOwner) = 0;
 
 	virtual VkAccessFlags getSourceAccessMask() = 0;
 	virtual VkAccessFlags getDestAccessMask() = 0;
-	// Inherited via QueueOwnedResource
-	virtual void executeOwnershipBarrier(Gfx::QueueType newOwner);
 };
 DEFINE_REF(Buffer);
 
@@ -161,8 +116,12 @@ public:
 	virtual ~UniformBuffer();
 
 protected:
+	// Inherited via Vulkan::Buffer
+	virtual void requestOwnershipTransfer(Gfx::QueueType newOwner);
 	virtual VkAccessFlags getSourceAccessMask();
 	virtual VkAccessFlags getDestAccessMask();
+	// Inherited via QueueOwnedResource
+	virtual void executeOwnershipBarrier(Gfx::QueueType newOwner);
 };
 DEFINE_REF(UniformBuffer);
 
@@ -173,8 +132,12 @@ public:
 	virtual ~StructuredBuffer();
 
 protected:
+	// Inherited via Vulkan::Buffer
 	virtual VkAccessFlags getSourceAccessMask();
 	virtual VkAccessFlags getDestAccessMask();
+	virtual void requestOwnershipTransfer(Gfx::QueueType newOwner);
+	// Inherited via QueueOwnedResource
+	virtual void executeOwnershipBarrier(Gfx::QueueType newOwner);
 };
 DEFINE_REF(StructuredBuffer);
 
@@ -185,8 +148,12 @@ public:
 	virtual ~VertexBuffer();
 
 protected:
+	// Inherited via Vulkan::Buffer
 	virtual VkAccessFlags getSourceAccessMask();
 	virtual VkAccessFlags getDestAccessMask();
+	virtual void requestOwnershipTransfer(Gfx::QueueType newOwner);
+	// Inherited via QueueOwnedResource
+	virtual void executeOwnershipBarrier(Gfx::QueueType newOwner);
 };
 DEFINE_REF(VertexBuffer);
 
@@ -197,17 +164,20 @@ public:
 	virtual ~IndexBuffer();
 
 protected:
+	// Inherited via Vulkan::Buffer
+	virtual void requestOwnershipTransfer(Gfx::QueueType newOwner);
 	virtual VkAccessFlags getSourceAccessMask();
 	virtual VkAccessFlags getDestAccessMask();
+	// Inherited via QueueOwnedResource
+	virtual void executeOwnershipBarrier(Gfx::QueueType newOwner);
 };
 DEFINE_REF(IndexBuffer);
 
-class TextureHandle : public QueueOwnedResource
+class TextureHandle
 {
 public:
-	TextureHandle(PGraphics graphics, VkImageViewType viewType, uint32 sizeX, uint32 sizeY, uint32 sizeZ,
-				  bool bArray, uint32 arraySize, uint32 mipLevels, Gfx::SeFormat format,
-				  uint32 samples, Gfx::SeImageUsageFlags usage, Gfx::QueueType owner = Gfx::QueueType::GRAPHICS, VkImage existingImage = VK_NULL_HANDLE);
+	TextureHandle(PGraphics graphics, VkImageViewType viewType, 
+		const TextureCreateInfo& createInfo, VkImage existingImage = VK_NULL_HANDLE);
 	virtual ~TextureHandle();
 
 	inline VkImageView getView() const
@@ -234,9 +204,10 @@ public:
 	{
 		return aspect & (VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
 	}
-	// Inherited via QueueOwnedResource
-	virtual void executeOwnershipBarrier(Gfx::QueueType newOwner);
+	void executeOwnershipBarrier(Gfx::QueueType newOwner);
+	void changeLayout(VkImageLayout newLayout);
 
+	Gfx::QueueType currentOwner;
 private:
 	PGraphics graphics;
 	PSubAllocation allocation;
@@ -276,10 +247,7 @@ DEFINE_REF(TextureBase);
 class Texture2D : public TextureBase, public Gfx::Texture2D
 {
 public:
-	Texture2D(PGraphics graphics, uint32 sizeX, uint32 sizeY,
-			  bool bArray, uint32 arraySize, uint32 mipLevels, Gfx::SeFormat format,
-			  uint32 samples, Gfx::SeImageUsageFlags usage,
-			  Gfx::QueueType owner = Gfx::QueueType::GRAPHICS, VkImage existingImage = VK_NULL_HANDLE);
+	Texture2D(PGraphics graphics, const TextureCreateInfo& createInfo, VkImage existingImage = VK_NULL_HANDLE);
 	virtual ~Texture2D();
 	inline uint32 getSizeX() const
 	{
@@ -305,8 +273,10 @@ public:
 	{
 		return textureHandle->isDepthStencil();
 	}
+protected:
+	// Inherited via QueueOwnedResource
+	virtual void executeOwnershipBarrier(Gfx::QueueType newOwner);
 
-private:
 };
 DEFINE_REF(Texture2D);
 

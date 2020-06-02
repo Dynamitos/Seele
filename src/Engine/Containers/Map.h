@@ -141,6 +141,7 @@ public:
 		Node *node;
 		Array<Node *> traversal;
 	};
+	
 	V &operator[](const K &key)
 	{
 		root = splay(root, key);

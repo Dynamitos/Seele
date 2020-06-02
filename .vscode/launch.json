@@ -27,10 +27,10 @@
             "name": "Test",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceRoot}/bin/Debug/test/Seele_unit_tests.exe",
+            "program": "${workspaceRoot}/bin/Debug/Seele_unit_tests.exe",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${workspaceRoot}/bin/Debug/test",
+            "cwd": "${workspaceRoot}/bin/Debug",
             "environment": [],
             "externalConsole": false
         },

@@ -1,6 +1,8 @@
 #include "WindowManager.h"
 #include "Vulkan/VulkanGraphics.h"
 
+Gfx::PGraphics WindowManager::graphics;
+
 Seele::WindowManager::WindowManager()
 {
 	graphics = new Vulkan::Graphics();

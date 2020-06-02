@@ -5,6 +5,7 @@
 #include "Math/MemCRC.h"
 #include "Material/MaterialInstance.h"
 #include "GraphicsInitializer.h"
+#include "MeshBatch.h"
 
 #ifdef _DEBUG
 #define ENABLE_VALIDATION
@@ -13,34 +14,10 @@
 namespace Seele
 {
 
-DECLARE_NAME_REF(Gfx, VertexBuffer);
-DECLARE_NAME_REF(Gfx, IndexBuffer);
-struct DrawInstance
-{
-	Matrix4 modelMatrix;
-	PMaterialInstance instance;
-	Gfx::PIndexBuffer indexBuffer;
-	Gfx::PVertexBuffer vertexBuffer;
-
-	uint32 numInstances;
-	uint32 baseVertexIndex;
-	uint32 minVertexIndex;
-	uint32 firstInstance;
-	DrawInstance()
-		: instance(nullptr), indexBuffer(nullptr), vertexBuffer(nullptr), modelMatrix(1), numInstances(1), baseVertexIndex(0), minVertexIndex(0), firstInstance(0)
-	{
-	}
-};
-struct DrawState
-{
-	Array<DrawInstance> instances;
-
-	DrawState()
-	{
-	}
-};
 namespace Gfx
 {
+DECLARE_REF(Graphics);
+
 class SamplerState
 {
 public:
@@ -182,6 +159,7 @@ public:
 	PipelineLayout() {}
 	virtual ~PipelineLayout() {}
 	virtual void create() = 0;
+	virtual void reset() = 0;
 	void addDescriptorLayout(uint32 setIndex, PDescriptorLayout layout);
 	void addPushConstants(const SePushConstantRange &pushConstants);
 	virtual uint32 getHash() const = 0;
@@ -191,17 +169,79 @@ protected:
 	Array<SePushConstantRange> pushConstants;
 };
 DEFINE_REF(PipelineLayout);
-class UniformBuffer
+
+struct QueueFamilyMapping
+{
+	uint32 graphicsFamily;
+	uint32 computeFamily;
+	uint32 transferFamily;
+	uint32 dedicatedTransferFamily;
+	uint32 getQueueTypeFamilyIndex(Gfx::QueueType type) const
+	{
+		switch (type)
+		{
+		case Gfx::QueueType::GRAPHICS:
+			return graphicsFamily;
+		case Gfx::QueueType::COMPUTE:
+			return computeFamily;
+		case Gfx::QueueType::TRANSFER:
+			return transferFamily;
+		case Gfx::QueueType::DEDICATED_TRANSFER:
+			return dedicatedTransferFamily;
+		default:
+			return 0x7fff;
+		}
+	}
+	bool needsTransfer(Gfx::QueueType src, Gfx::QueueType dst) const
+	{
+		uint32 srcIndex = getQueueTypeFamilyIndex(src);
+		uint32 dstIndex = getQueueTypeFamilyIndex(dst);
+		return srcIndex != dstIndex;
+	}
+};
+
+class QueueOwnedResource
 {
 public:
-	UniformBuffer();
+	QueueOwnedResource(PGraphics graphics, QueueType startQueueType);
+	virtual ~QueueOwnedResource();
+
+	//Preliminary checks to see if the barrier should be executed at all
+	void transferOwnership(QueueType newOwner);
+
+protected:
+	virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
+	Gfx::QueueType currentOwner;
+	PGraphics graphics;
+};
+DEFINE_REF(QueueOwnedResource);
+
+class Buffer : public QueueOwnedResource
+{
+public:
+	Buffer(PGraphics graphics, QueueType startQueueType);
+	virtual ~Buffer();
+
+protected:
+	// Inherited via QueueOwnedResource
+	virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
+};
+
+class UniformBuffer : public Buffer
+{
+public:
+	UniformBuffer(PGraphics graphics, QueueType startQueueType);
 	virtual ~UniformBuffer();
+protected:
+	// Inherited via QueueOwnedResource
+	virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
 };
 DEFINE_REF(UniformBuffer);
-class VertexBuffer
+
+class VertexBuffer : public Buffer
 {
 public:
-	VertexBuffer(uint32 numVertices, uint32 vertexSize);
+	VertexBuffer(PGraphics graphics, uint32 numVertices, uint32 vertexSize, QueueType startQueueType);
 	virtual ~VertexBuffer();
 	inline uint32 getNumVertices()
 	{
@@ -214,14 +254,17 @@ public:
 	}
 
 protected:
+	// Inherited via QueueOwnedResource
+	virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
 	uint32 numVertices;
 	uint32 vertexSize;
 };
 DEFINE_REF(VertexBuffer);
-class IndexBuffer
+
+class IndexBuffer : public Buffer
 {
 public:
-	IndexBuffer(uint32 size, Gfx::SeIndexType index);
+	IndexBuffer(PGraphics graphics, uint32 size, Gfx::SeIndexType index, QueueType startQueueType);
 	virtual ~IndexBuffer();
 	inline uint32 getNumIndices() const
 	{
@@ -233,34 +276,41 @@ public:
 	}
 
 protected:
+	// Inherited via QueueOwnedResource
+	virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
 	Gfx::SeIndexType indexType;
 	uint32 numIndices;
 };
 DEFINE_REF(IndexBuffer);
-class StructuredBuffer
+
+class StructuredBuffer : public Buffer
 {
 public:
-	virtual ~StructuredBuffer()
-	{
-	}
+	StructuredBuffer(PGraphics graphics, QueueType startQueueType);
+	virtual ~StructuredBuffer();
+protected:
+	// Inherited via QueueOwnedResource
+	virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
 };
 DEFINE_REF(StructuredBuffer);
+
 class VertexStream
 {
 public:
 	VertexStream() {}
-	VertexStream(PVertexBuffer buffer, uint8 instanced);
+	VertexStream(uint32 stride, uint8 instanced);
 	~VertexStream();
 	void addVertexElement(VertexElement element);
 	const Array<VertexElement> getVertexDescriptions() const;
-	PVertexBuffer getVertexBuffer();
 	inline uint8 isInstanced() const { return instanced; }
 
-private:
-	PVertexBuffer buffer;
+	uint32 stride;
+	uint32 offset;
 	Array<VertexElement> vertexDescription;
 	uint8 instanced;
+	PVertexBuffer vertexBuffer;
 };
+DEFINE_REF(VertexStream);
 class VertexDeclaration
 {
 public:
@@ -276,41 +326,46 @@ DEFINE_REF(VertexDeclaration);
 class GraphicsPipeline
 {
 public:
-	GraphicsPipeline(const GraphicsPipelineCreateInfo& createInfo) : createInfo(createInfo) {}
+	GraphicsPipeline(const GraphicsPipelineCreateInfo& createInfo, PPipelineLayout layout) : createInfo(createInfo) , layout(layout) {}
 	virtual ~GraphicsPipeline(){}
 	const GraphicsPipelineCreateInfo& getCreateInfo() const {return createInfo;}
+	PPipelineLayout getPipelineLayout() const { return layout; }
 protected:
+    PPipelineLayout layout;
 	GraphicsPipelineCreateInfo createInfo;
 };
 DEFINE_REF(GraphicsPipeline);
-class Texture
+class Texture : public QueueOwnedResource
 {
 public:
-	virtual ~Texture()
-	{
-	}
+	Texture(PGraphics graphics, QueueType startQueueType);
+	virtual ~Texture();
+protected:
+    // Inherited via QueueOwnedResource
+	virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
 };
 DEFINE_REF(Texture);
 class Texture2D : public Texture
 {
 public:
-	virtual ~Texture2D()
-	{
-	}
+	Texture2D(PGraphics graphics, QueueType startQueueType);
+	virtual ~Texture2D();
+protected:
+	//Inherited via QueueOwnedResource
+	virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
 };
 DEFINE_REF(Texture2D);
 
 class RenderCommand
 {
 public:
-	virtual ~RenderCommand()
-	{
-	}
+	RenderCommand();
+	virtual ~RenderCommand();
 	virtual void bindPipeline(Gfx::PGraphicsPipeline pipeline) = 0;
 	virtual void bindDescriptor(Gfx::PDescriptorSet set) = 0;
 	virtual void bindVertexBuffer(Gfx::PVertexBuffer vertexBuffer) = 0;
 	virtual void bindIndexBuffer(Gfx::PIndexBuffer indexBuffer) = 0;
-	virtual void draw(DrawInstance data) = 0;
+	virtual void draw(const MeshBatchElement& data) = 0;
 };
 DEFINE_REF(RenderCommand);
 

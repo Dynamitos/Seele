@@ -6,12 +6,15 @@ namespace Seele
 {
 namespace Vulkan
 {
-
+DECLARE_REF(Graphics);
+DECLARE_REF(DescriptorLayout);
 class Shader
 {
 public:
     Shader(PGraphics graphics, ShaderType shaderType, VkShaderStageFlags stage);
     virtual ~Shader();
+
+    void create(const ShaderCreateInfo& createInfo);
 
     VkShaderModule getModuleHandle() const
     {
@@ -21,18 +24,23 @@ public:
     {
         return entryPointName.c_str();
     }
+    Map<uint32, PDescriptorLayout> getDescriptorLayouts();
 private:
+    PGraphics graphics;
+    Map<uint32, PDescriptorLayout> descriptorSets;
     VkShaderModule module;
+    VkShaderStageFlags stage;
+    ShaderType type;
     std::string entryPointName;
 };
 DEFINE_REF(Shader);
 
-template <typename Base, ShaderType shaderType, VkShaderStageFlags stage>
+template <typename Base, ShaderType shaderType, VkShaderStageFlags stageFlags>
 class ShaderBase : public Base, public Shader
 {
 public:
     ShaderBase(PGraphics graphics)
-        : Shader(graphics, shaderType, stage)
+        : Shader(graphics, shaderType, stageFlags)
     {
     }
     virtual ~ShaderBase()

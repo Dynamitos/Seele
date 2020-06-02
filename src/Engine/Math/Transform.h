@@ -28,7 +28,7 @@ public:
 
     Transform &operator=(const Transform &other);
     Transform &operator=(Transform &&other);
-    Transform &operator*(const Transform &other) const;
+    Transform &operator*(const Transform &other);
 
 private:
     Vector4 position;

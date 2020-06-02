@@ -1,12 +1,39 @@
 #include "SceneRenderPath.h"
 #include "Scene/Scene.h"
+#include "Material/Material.h"
 
-Seele::SceneRenderPath::SceneRenderPath(Gfx::PGraphics graphics, Gfx::PViewport target)
+using namespace Seele;
+
+SceneRenderPath::SceneRenderPath(Gfx::PGraphics graphics, Gfx::PViewport target)
 	: RenderPath(graphics, target)
 {
-	scene = new Scene();
 }
 
-Seele::SceneRenderPath::~SceneRenderPath()
+SceneRenderPath::~SceneRenderPath()
 {
+}
+
+void SceneRenderPath::setTargetScene(PScene newScene)
+{
+	scene = newScene;
+}
+
+void SceneRenderPath::init() 
+{
+    
+}
+
+void SceneRenderPath::beginFrame() 
+{
+    
+}
+
+void SceneRenderPath::render() 
+{
+    
+}
+
+void SceneRenderPath::endFrame() 
+{
+    
 }

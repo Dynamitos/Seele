@@ -9,9 +9,11 @@ class SceneRenderPath : public RenderPath
 public:
 	SceneRenderPath(Gfx::PGraphics graphics, Gfx::PViewport target);
 	virtual ~SceneRenderPath();
-	virtual void beginFrame() = 0;
-	virtual void render() = 0;
-	virtual void endFrame() = 0;
+	void setTargetScene(PScene scene);
+	virtual void init();
+	virtual void beginFrame();
+	virtual void render();
+	virtual void endFrame();
 
 protected:
 	PScene scene;

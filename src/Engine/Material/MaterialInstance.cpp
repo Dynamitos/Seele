@@ -8,12 +8,12 @@ MaterialInstance::MaterialInstance()
 }
 
 MaterialInstance::MaterialInstance(const std::string& directory, const std::string& name) 
-    : FileAsset(directory, name)
+    : Asset(directory, name)
 {
 }
 
 MaterialInstance::MaterialInstance(const std::string& fullPath) 
-    : FileAsset(fullPath)
+    : Asset(fullPath)
 {   
 }
 

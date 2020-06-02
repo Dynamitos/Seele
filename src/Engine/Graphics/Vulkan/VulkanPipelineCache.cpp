@@ -52,6 +52,9 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
     createInfo.pNext = 0;
     createInfo.flags = 0;
     createInfo.stageCount = 0;
+
+    PPipelineLayout layout = graphics->createPipelineLayout();
+
     VkPipelineTessellationStateCreateInfo tessInfo;
     VkPipelineShaderStageCreateInfo stageInfos[5];
     std::memset(stageInfos, 0, sizeof(stageInfos));
@@ -63,6 +66,10 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
         vertInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
         vertInfo.module = shader->getModuleHandle();
         vertInfo.pName = shader->getEntryPointName();
+        for(auto descriptor : shader->getDescriptorLayouts())
+        {
+            layout->addDescriptorLayout(descriptor.key, descriptor.value);
+        }
     }
     if(gfxInfo.controlShader != nullptr)
     {
@@ -86,6 +93,15 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
         tessInfo.pNext = 0;
         tessInfo.flags = 0;
         tessInfo.patchControlPoints = control->getNumPatches();
+        
+        for(auto descriptor : eval->getDescriptorLayouts())
+        {
+            layout->addDescriptorLayout(descriptor.key, descriptor.value);
+        }
+        for(auto descriptor : control->getDescriptorLayouts())
+        {
+            layout->addDescriptorLayout(descriptor.key, descriptor.value);
+        }
     }
     if(gfxInfo.geometryShader != nullptr)
     {
@@ -96,6 +112,11 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
         geometryInfo.stage = VK_SHADER_STAGE_GEOMETRY_BIT;
         geometryInfo.module = geometry->getModuleHandle();
         geometryInfo.pName = geometry->getEntryPointName();
+        
+        for(auto descriptor : geometry->getDescriptorLayouts())
+        {
+            layout->addDescriptorLayout(descriptor.key, descriptor.value);
+        }
     }
     if(gfxInfo.fragmentShader != nullptr)
     {
@@ -106,7 +127,13 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
         fragmentInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
         fragmentInfo.module = fragment->getModuleHandle();
         fragmentInfo.pName = fragment->getEntryPointName();
+
+        for(auto descriptor : fragment->getDescriptorLayouts())
+        {
+            layout->addDescriptorLayout(descriptor.key, descriptor.value);
+        }
     }
+    layout->create();
     VkPipelineVertexInputStateCreateInfo vertexInput =
         init::PipelineVertexInputStateCreateInfo();
     Gfx::PVertexDeclaration vertexDecl = gfxInfo.vertexDeclaration;
@@ -116,7 +143,7 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
     uint32 bindingNum = 0;
     for(auto vertexBinding : vertexStreams)
     {
-        uint32 stride = vertexBinding.getVertexBuffer()->getVertexSize();
+        uint32 stride = 0;
         for(auto vertexAttrib : vertexBinding.getVertexDescriptions())
         {
             auto attrib = attribDesc.add();
@@ -137,9 +164,9 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
 
     VkPipelineInputAssemblyStateCreateInfo assemblyInfo =
         init::PipelineInputAssemblyStateCreateInfo(
-                cast(gfxInfo.topology),
-                0,
-                false
+            cast(gfxInfo.topology),
+            0,
+            false
         );
 
     VkPipelineViewportStateCreateInfo viewportInfo =
@@ -214,6 +241,7 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
             0
         );
 
+
     createInfo.pStages = stageInfos;
     createInfo.pVertexInputState = &vertexInput;
     createInfo.pInputAssemblyState = &assemblyInfo;
@@ -225,7 +253,7 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
     createInfo.pColorBlendState = &blendState;
     createInfo.pDynamicState = &dynamicState;
     createInfo.renderPass = gfxInfo.renderPass.cast<RenderPass>()->getHandle();
-    createInfo.layout = gfxInfo.pipelineLayout.cast<PipelineLayout>()->getHandle();
+    createInfo.layout = layout->getHandle();
     createInfo.subpass = 0;
     
     VkPipeline pipelineHandle;
@@ -235,6 +263,6 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
     int64 delta = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - beginTime).count();
     std::cout << "Gfx creation time: " << delta << std::endl;
 
-    PGraphicsPipeline result = new GraphicsPipeline(graphics, pipelineHandle, gfxInfo.pipelineLayout.cast<PipelineLayout>(), gfxInfo);
+    PGraphicsPipeline result = new GraphicsPipeline(graphics, pipelineHandle, layout, gfxInfo);
     return result;
 }

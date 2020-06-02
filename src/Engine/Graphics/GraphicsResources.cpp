@@ -1,5 +1,6 @@
 #include "GraphicsResources.h"
 #include "Material/MaterialInstance.h"
+#include "Graphics.h"
 
 using namespace Seele;
 using namespace Seele::Gfx;
@@ -56,22 +57,60 @@ void PipelineLayout::addPushConstants(const SePushConstantRange &pushConstant)
 	pushConstants.add(pushConstant);
 }
 
-UniformBuffer::UniformBuffer()
+QueueOwnedResource::QueueOwnedResource(PGraphics graphics, QueueType startQueueType)
+	: graphics(graphics)
+	, currentOwner(startQueueType)
+{
+}
+
+QueueOwnedResource::~QueueOwnedResource()
+{
+}
+
+void QueueOwnedResource::transferOwnership(QueueType newOwner)
+{
+	if(graphics->getFamilyMapping().needsTransfer(currentOwner, newOwner))
+	{
+		executeOwnershipBarrier(newOwner);
+		currentOwner = newOwner;
+	}
+}
+
+Buffer::Buffer(PGraphics graphics, QueueType startQueue)
+	: QueueOwnedResource(graphics, startQueue)
+{
+}
+
+Buffer::~Buffer()
+{
+}
+
+UniformBuffer::UniformBuffer(PGraphics graphics, QueueType startQueueType)
+	: Buffer(graphics, startQueueType)
 {
 }
 
 UniformBuffer::~UniformBuffer()
 {
 }
-VertexBuffer::VertexBuffer(uint32 numVertices, uint32 vertexSize)
-	: numVertices(numVertices), vertexSize(vertexSize)
+StructuredBuffer::StructuredBuffer(PGraphics graphics, QueueType startQueueType)
+	: Buffer(graphics, startQueueType)
+{
+}
+StructuredBuffer::~StructuredBuffer()
+{
+}
+VertexBuffer::VertexBuffer(PGraphics graphics, uint32 numVertices, uint32 vertexSize, QueueType startQueueType)
+	: Buffer(graphics, startQueueType)
+	, numVertices(numVertices), vertexSize(vertexSize)
 {
 }
 VertexBuffer::~VertexBuffer()
 {
 }
-IndexBuffer::IndexBuffer(uint32 size, Gfx::SeIndexType indexType)
-	: indexType(indexType)
+IndexBuffer::IndexBuffer(PGraphics graphics, uint32 size, Gfx::SeIndexType indexType, QueueType startQueueType)
+	: Buffer(graphics, startQueueType)
+	, indexType(indexType)
 {
 	switch (indexType)
 	{
@@ -87,9 +126,8 @@ IndexBuffer::IndexBuffer(uint32 size, Gfx::SeIndexType indexType)
 IndexBuffer::~IndexBuffer()
 {
 }
-VertexStream::VertexStream(PVertexBuffer buffer, uint8 instanced)
-	: buffer(buffer)
-	, instanced(instanced)
+VertexStream::VertexStream(uint32 stride, uint8 instanced)
+	: stride(stride), instanced(instanced)
 {
 }
 VertexStream::~VertexStream()
@@ -103,11 +141,6 @@ const Array<VertexElement> VertexStream::getVertexDescriptions() const
 {
 	return vertexDescription;
 }
-Gfx::PVertexBuffer VertexStream::getVertexBuffer()
-{
-	return buffer;
-}
-
 VertexDeclaration::VertexDeclaration()
 {
 }
@@ -123,6 +156,32 @@ uint32 VertexDeclaration::addVertexStream(const VertexStream &element)
 const Array<VertexStream> &VertexDeclaration::getVertexStreams() const
 {
 	return vertexStreams;
+}
+
+Texture::Texture(PGraphics graphics, Gfx::QueueType startQueueType)
+	: QueueOwnedResource(graphics, startQueueType)
+{
+}
+
+Texture::~Texture()
+{
+}
+
+Texture2D::Texture2D(PGraphics graphics, Gfx::QueueType startQueueType)
+	: Texture(graphics, startQueueType)
+{	
+}
+
+Texture2D::~Texture2D()
+{
+}
+
+RenderCommand::RenderCommand()
+{
+}
+
+RenderCommand::~RenderCommand()
+{
 }
 
 RenderTargetLayout::RenderTargetLayout()

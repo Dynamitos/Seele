@@ -72,6 +72,13 @@ void PipelineLayout::create()
 	layoutHash = memCrc32(&createInfo, sizeof(VkPipelineLayoutCreateInfo), 0);
 }
 
+void PipelineLayout::reset()
+{
+	vkDestroyPipelineLayout(graphics->getDevice(), layoutHandle, nullptr);
+	descriptorSetLayouts.clear();
+	pushConstants.clear();
+}
+
 DescriptorSet::~DescriptorSet()
 {
 }

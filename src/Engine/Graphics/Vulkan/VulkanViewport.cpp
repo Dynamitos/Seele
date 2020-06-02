@@ -181,13 +181,17 @@ void Window::createSwapchain()
 
     PCmdBuffer cmdBuffer = graphics->getGraphicsCommands()->getCommands();
 
+    TextureCreateInfo backBufferCreateInfo;
+    backBufferCreateInfo.width = sizeX;
+    backBufferCreateInfo.height = sizeY;
+    backBufferCreateInfo.usage = Gfx::SE_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+    backBufferCreateInfo.resourceData.owner = Gfx::QueueType::GRAPHICS;
+    backBufferCreateInfo.format = cast(surfaceFormat.format);
     for (uint32 i = 0; i < numSwapchainImages; ++i)
     {
         imageAcquired[i] = new Semaphore(graphics);
         renderFinished[i] = new Semaphore(graphics);
-        backBufferImages[i] = new Texture2D(graphics, sizeX, sizeY, false, 1, 1,
-                                            cast(surfaceFormat.format), 1, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-                                            Gfx::QueueType::GRAPHICS, swapchainImages[i]);
+        backBufferImages[i] = new Texture2D(graphics, backBufferCreateInfo, swapchainImages[i]);
 
         VkClearColorValue clearColor;
         std::memset(&clearColor, 0, sizeof(VkClearColorValue));

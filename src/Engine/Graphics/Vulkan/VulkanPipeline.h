@@ -16,7 +16,6 @@ public:
     VkPipelineLayout getLayout() const;
 private:
     VkPipeline pipeline;
-    PPipelineLayout layout;
     PGraphics graphics;
 };
 DEFINE_REF(GraphicsPipeline);

@@ -3,4 +3,5 @@ target_sources(SeeleEngine
         Component.h
         Component.cpp
         PrimitiveComponent.cpp
-        PrimitiveComponent.h)
+        PrimitiveComponent.h
+        PrimitiveUniformBufferLayout.h)

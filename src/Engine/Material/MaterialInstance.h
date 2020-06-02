@@ -1,11 +1,11 @@
 #pragma once
-#include "Asset/FileAsset.h"
+#include "Asset/Asset.h"
 
 namespace Seele
 {
 DECLARE_NAME_REF(Gfx, DescriptorSet);
 DECLARE_REF(Material);
-class MaterialInstance : public FileAsset
+class MaterialInstance : public Asset
 {
 public:
     MaterialInstance();

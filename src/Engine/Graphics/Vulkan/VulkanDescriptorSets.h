@@ -34,6 +34,7 @@ public:
 	}
 	virtual ~PipelineLayout();
 	virtual void create();
+	virtual void reset();
 	inline VkPipelineLayout getHandle() const
 	{
 		return layoutHandle;

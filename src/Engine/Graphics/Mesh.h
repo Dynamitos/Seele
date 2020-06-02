@@ -10,7 +10,8 @@ public:
     ~Mesh();
 
 private:
-    Gfx::VertexBuffer vertexBuffer;
-    Gfx::IndexBuffer indexBuffer;
+    Gfx::PVertexBuffer vertexBuffer;
+    Gfx::PIndexBuffer indexBuffer;
 };
+DEFINE_REF(Mesh);
 } // namespace Seele

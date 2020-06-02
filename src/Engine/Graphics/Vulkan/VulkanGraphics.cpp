@@ -7,6 +7,8 @@
 #include "VulkanRenderPass.h"
 #include "VulkanFramebuffer.h"
 #include "VulkanPipelineCache.h"
+#include "VulkanDescriptorSets.h"
+#include "VulkanShader.h"
 #include "Graphics/GraphicsResources.h"
 #include <glfw/glfw3.h>
 
@@ -99,9 +101,7 @@ void Graphics::executeCommands(Array<Gfx::PRenderCommand> commands)
 
 Gfx::PTexture2D Graphics::createTexture2D(const TextureCreateInfo &createInfo)
 {
-	PTexture2D result = new Texture2D(this, createInfo.width, createInfo.height, createInfo.bArray,
-									  createInfo.bArray, createInfo.arrayLayers, createInfo.format,
-									  createInfo.samples, createInfo.usage, createInfo.queueType);
+	PTexture2D result = new Texture2D(this, createInfo);
 	return result;
 }
 
@@ -133,10 +133,50 @@ Gfx::PRenderCommand Graphics::createRenderCommand()
 	cmdBuffer->begin(getGraphicsCommands()->getCommands());
 	return cmdBuffer;
 }
+Gfx::PVertexShader Graphics::createVertexShader(const ShaderCreateInfo& createInfo)
+{
+	PVertexShader shader = new VertexShader(this);
+	shader->create(createInfo);
+	return shader;
+}
+Gfx::PControlShader Graphics::createControlShader(const ShaderCreateInfo& createInfo)
+{
+	PControlShader shader = new ControlShader(this);
+	shader->create(createInfo);
+	return shader;
+}
+Gfx::PEvaluationShader Graphics::createEvaluationShader(const ShaderCreateInfo& createInfo)
+{
+	PEvaluationShader shader = new EvaluationShader(this);
+	shader->create(createInfo);
+	return shader;
+}
+Gfx::PGeometryShader Graphics::createGeometryShader(const ShaderCreateInfo& createInfo)
+{
+	PGeometryShader shader = new GeometryShader(this);
+	shader->create(createInfo);
+	return shader;
+}
+Gfx::PFragmentShader Graphics::createFragmentShader(const ShaderCreateInfo& createInfo)
+{
+	PFragmentShader shader = new FragmentShader(this);
+	shader->create(createInfo);
+	return shader;
+}
 Gfx::PGraphicsPipeline Graphics::createGraphicsPipeline(const GraphicsPipelineCreateInfo& createInfo)
 {
 	PGraphicsPipeline pipeline = pipelineCache->createPipeline(createInfo);
 	return pipeline;
+}
+Gfx::PDescriptorLayout Graphics::createDescriptorLayout()
+{
+	PDescriptorLayout layout = new DescriptorLayout(this);
+	return layout;
+}
+Gfx::PPipelineLayout Graphics::createPipelineLayout()
+{
+	PPipelineLayout layout = new PipelineLayout(this);
+	return layout;
 }
 
 VkInstance Graphics::getInstance() const
@@ -152,6 +192,23 @@ VkDevice Graphics::getDevice() const
 VkPhysicalDevice Graphics::getPhysicalDevice() const
 {
 	return physicalDevice;
+}
+
+PCommandBufferManager Graphics::getQueueCommands(Gfx::QueueType queueType)
+{
+	switch (queueType)
+	{
+	case Gfx::QueueType::GRAPHICS:
+		return graphicsCommands;
+	case Gfx::QueueType::COMPUTE:
+		return computeCommands;
+	case Gfx::QueueType::TRANSFER:
+		return transferCommands;
+	case Gfx::QueueType::DEDICATED_TRANSFER:
+		return dedicatedTransferCommands;
+	default:
+		throw new std::logic_error("invalid queue type");
+	}
 }
 
 PCommandBufferManager Graphics::getGraphicsCommands()

@@ -50,47 +50,6 @@ void QueueOwnedResourceDeletion::run()
     }
 }
 
-QueueOwnedResource::QueueOwnedResource(PGraphics graphics, Gfx::QueueType startQueueType)
-    : graphics(graphics), currentOwner(startQueueType)
-{
-}
-
-QueueOwnedResource::~QueueOwnedResource()
-{
-    cachedCmdBufferManager = nullptr;
-    graphics = nullptr;
-}
-
-void QueueOwnedResource::transferOwnership(Gfx::QueueType newOwner)
-{
-    if (graphics->getFamilyMapping().needsTransfer(currentOwner, newOwner))
-    {
-        executeOwnershipBarrier(newOwner);
-        currentOwner = newOwner;
-    }
-}
-
-PCommandBufferManager QueueOwnedResource::getCommands()
-{
-    if (cachedCmdBufferManager != nullptr)
-    {
-        assert(cachedCmdBufferManager->getQueue()->getFamilyIndex() == graphics->getFamilyMapping().getQueueTypeFamilyIndex(currentOwner));
-        return cachedCmdBufferManager;
-    }
-    switch (currentOwner)
-    {
-    case Gfx::QueueType::GRAPHICS:
-        return graphics->getGraphicsCommands();
-    case Gfx::QueueType::COMPUTE:
-        return graphics->getComputeCommands();
-    case Gfx::QueueType::TRANSFER:
-        return graphics->getTransferCommands();
-    case Gfx::QueueType::DEDICATED_TRANSFER:
-        return graphics->getDedicatedTransferCommands();
-    }
-    return nullptr;
-}
-
 Semaphore::Semaphore(PGraphics graphics)
     : graphics(graphics)
 {

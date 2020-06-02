@@ -17,7 +17,7 @@ struct PendingBuffer
 static Map<Buffer *, PendingBuffer> pendingBuffers;
 
 Buffer::Buffer(PGraphics graphics, uint32 size, VkBufferUsageFlags usage, Gfx::QueueType queueType)
-	: QueueOwnedResource(graphics, queueType), currentBuffer(0), size(size)
+	: graphics(graphics), currentBuffer(0), size(size), currentOwner(queueType)
 {
 	if (usage & VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT ||
 		usage & VK_BUFFER_USAGE_INDEX_BUFFER_BIT ||
@@ -58,7 +58,7 @@ Buffer::Buffer(PGraphics graphics, uint32 size, VkBufferUsageFlags usage, Gfx::Q
 
 Buffer::~Buffer()
 {
-	auto fence = getCommands()->getCommands()->getFence();
+	auto fence = graphics->getQueueCommands(currentOwner)->getCommands()->getFence();
 	auto &deletionQueue = graphics->getDeletionQueue();
 	VkDevice device = graphics->getDevice();
 	VkBuffer buf[Gfx::numFramesBuffered];
@@ -74,11 +74,11 @@ void Buffer::executeOwnershipBarrier(Gfx::QueueType newOwner)
 {
 	VkBufferMemoryBarrier barrier =
 		init::BufferMemoryBarrier();
-	PCommandBufferManager sourceManager = getCommands();
+	PCommandBufferManager sourceManager = graphics->getQueueCommands(currentOwner);
 	PCommandBufferManager dstManager = nullptr;
 	VkPipelineStageFlags srcStage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
 	VkPipelineStageFlags dstStage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
-	QueueFamilyMapping mapping = graphics->getFamilyMapping();
+	Gfx::QueueFamilyMapping mapping = graphics->getFamilyMapping();
 	barrier.srcQueueFamilyIndex = mapping.getQueueTypeFamilyIndex(currentOwner);
 	barrier.dstQueueFamilyIndex = mapping.getQueueTypeFamilyIndex(newOwner);
 	assert(barrier.srcQueueFamilyIndex != barrier.dstQueueFamilyIndex);
@@ -134,7 +134,7 @@ void Buffer::executeOwnershipBarrier(Gfx::QueueType newOwner)
 	vkCmdPipelineBarrier(srcCommand, srcStage, dstStage, 0, 0, nullptr, numBuffers, dynamicBarriers, 0, nullptr);
 	vkCmdPipelineBarrier(dstCommand, srcStage, dstStage, 0, 0, nullptr, numBuffers, dynamicBarriers, 0, nullptr);
 	sourceManager->submitCommands();
-	cachedCmdBufferManager = dstManager;
+	currentOwner = newOwner;
 }
 
 void *Buffer::lock(bool bWriteOnly)
@@ -160,19 +160,19 @@ void *Buffer::lock(bool bWriteOnly)
 	pending.prevQueue = currentOwner;
 	if (bWriteOnly)
 	{
-		transferOwnership(Gfx::QueueType::DEDICATED_TRANSFER);
+		requestOwnershipTransfer(Gfx::QueueType::DEDICATED_TRANSFER);
 		PStagingBuffer stagingBuffer = graphics->getStagingManager()->allocateStagingBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
 		data = stagingBuffer->getMappedPointer();
 		pending.stagingBuffer = stagingBuffer;
 	}
 	else
 	{
-		PCmdBuffer current = getCommands()->getCommands();
-		getCommands()->submitCommands();
-		getCommands()->waitForCommands(current);
+		PCmdBuffer current = graphics->getQueueCommands(currentOwner)->getCommands();
+		graphics->getQueueCommands(currentOwner)->submitCommands();
+		graphics->getQueueCommands(currentOwner)->waitForCommands(current);
 
-		transferOwnership(Gfx::QueueType::DEDICATED_TRANSFER);
-		VkCommandBuffer handle = getCommands()->getCommands()->getHandle();
+		requestOwnershipTransfer(Gfx::QueueType::DEDICATED_TRANSFER);
+		VkCommandBuffer handle = graphics->getQueueCommands(currentOwner)->getCommands()->getHandle();
 
 		VkBufferMemoryBarrier barrier =
 			init::BufferMemoryBarrier();
@@ -194,8 +194,8 @@ void *Buffer::lock(bool bWriteOnly)
 
 		vkCmdCopyBuffer(handle, buffers[currentBuffer].buffer, stagingBuffer->getHandle(), 1, &regions);
 
-		getCommands()->submitCommands();
-		vkQueueWaitIdle(getCommands()->getQueue()->getHandle());
+		graphics->getQueueCommands(currentOwner)->submitCommands();
+		vkQueueWaitIdle(graphics->getQueueCommands(currentOwner)->getQueue()->getHandle());
 
 		stagingBuffer->flushMappedMemory();
 		pending.stagingBuffer = stagingBuffer;
@@ -219,7 +219,7 @@ void Buffer::unlock()
 		if (pending.bWriteOnly)
 		{
 			PStagingBuffer stagingBuffer = pending.stagingBuffer;
-			PCmdBuffer cmdBuffer = getCommands()->getCommands();
+			PCmdBuffer cmdBuffer = graphics->getQueueCommands(currentOwner)->getCommands();
 			VkCommandBuffer cmdHandle = cmdBuffer->getHandle();
 
 			VkBufferCopy region;
@@ -227,13 +227,14 @@ void Buffer::unlock()
 			region.size = size;
 			vkCmdCopyBuffer(cmdHandle, stagingBuffer->getHandle(), buffers[currentBuffer].buffer, 1, &region);
 		}
-		transferOwnership(pending.prevQueue);
+		requestOwnershipTransfer(pending.prevQueue);
 		graphics->getStagingManager()->releaseStagingBuffer(pending.stagingBuffer);
 	}
 }
 
 UniformBuffer::UniformBuffer(PGraphics graphics, const BulkResourceData &resourceData)
 	: Buffer(graphics, resourceData.size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, resourceData.owner)
+	, Gfx::UniformBuffer(graphics, resourceData.owner)
 {
 	if (resourceData.data != nullptr)
 	{
@@ -245,6 +246,17 @@ UniformBuffer::UniformBuffer(PGraphics graphics, const BulkResourceData &resourc
 
 UniformBuffer::~UniformBuffer()
 {
+}
+
+void UniformBuffer::requestOwnershipTransfer(Gfx::QueueType newOwner)
+{
+	Gfx::QueueOwnedResource::transferOwnership(newOwner);
+	Buffer::currentOwner = newOwner;
+}
+
+void UniformBuffer::executeOwnershipBarrier(Gfx::QueueType newOwner)
+{
+	Buffer::executeOwnershipBarrier(newOwner);
 }
 
 VkAccessFlags UniformBuffer::getSourceAccessMask()
@@ -259,6 +271,7 @@ VkAccessFlags UniformBuffer::getDestAccessMask()
 
 StructuredBuffer::StructuredBuffer(PGraphics graphics, const BulkResourceData &resourceData)
 	: Buffer(graphics, resourceData.size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, resourceData.owner)
+	, Gfx::StructuredBuffer(graphics, resourceData.owner)
 {
 	if (resourceData.data != nullptr)
 	{
@@ -270,6 +283,16 @@ StructuredBuffer::StructuredBuffer(PGraphics graphics, const BulkResourceData &r
 
 StructuredBuffer::~StructuredBuffer()
 {
+}
+
+void StructuredBuffer::requestOwnershipTransfer(Gfx::QueueType newOwner)
+{
+	Gfx::QueueOwnedResource::transferOwnership(newOwner);
+}
+
+void StructuredBuffer::executeOwnershipBarrier(Gfx::QueueType newOwner)
+{
+	Buffer::executeOwnershipBarrier(newOwner);
 }
 
 VkAccessFlags StructuredBuffer::getSourceAccessMask()
@@ -284,7 +307,7 @@ VkAccessFlags StructuredBuffer::getDestAccessMask()
 
 VertexBuffer::VertexBuffer(PGraphics graphics, const VertexBufferCreateInfo &resourceData)
 	: Buffer(graphics, resourceData.resourceData.size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, resourceData.resourceData.owner)
-	, Gfx::VertexBuffer(resourceData.numVertices, resourceData.vertexSize)
+	, Gfx::VertexBuffer(graphics, resourceData.numVertices, resourceData.vertexSize, resourceData.resourceData.owner)
 {
 	if (resourceData.resourceData.data != nullptr)
 	{
@@ -296,6 +319,16 @@ VertexBuffer::VertexBuffer(PGraphics graphics, const VertexBufferCreateInfo &res
 
 VertexBuffer::~VertexBuffer()
 {
+}
+
+void VertexBuffer::requestOwnershipTransfer(Gfx::QueueType newOwner)
+{
+	Gfx::QueueOwnedResource::transferOwnership(newOwner);
+}
+
+void VertexBuffer::executeOwnershipBarrier(Gfx::QueueType newOwner)
+{
+	Buffer::executeOwnershipBarrier(newOwner);
 }
 
 VkAccessFlags VertexBuffer::getSourceAccessMask()
@@ -310,7 +343,7 @@ VkAccessFlags VertexBuffer::getDestAccessMask()
 
 IndexBuffer::IndexBuffer(PGraphics graphics, const IndexBufferCreateInfo &resourceData)
 	: Buffer(graphics, resourceData.resourceData.size, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, resourceData.resourceData.owner)
-	, Gfx::IndexBuffer(resourceData.resourceData.size, resourceData.indexType)
+	, Gfx::IndexBuffer(graphics, resourceData.resourceData.size, resourceData.indexType, resourceData.resourceData.owner)
 {
 	if (resourceData.resourceData.data != nullptr)
 	{
@@ -322,6 +355,16 @@ IndexBuffer::IndexBuffer(PGraphics graphics, const IndexBufferCreateInfo &resour
 
 IndexBuffer::~IndexBuffer()
 {
+}
+
+void IndexBuffer::requestOwnershipTransfer(Gfx::QueueType newOwner)
+{
+	Gfx::QueueOwnedResource::transferOwnership(newOwner);
+}
+
+void IndexBuffer::executeOwnershipBarrier(Gfx::QueueType newOwner)
+{
+	Buffer::executeOwnershipBarrier(newOwner);
 }
 
 VkAccessFlags IndexBuffer::getSourceAccessMask()

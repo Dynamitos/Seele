@@ -1,9 +1,4 @@
 #pragma once
-#include <assert.h>
-#include <memory>
-#include <atomic>
-#include <cstring>
-#include <iostream>
 #include "Containers/Map.h"
 #include "EngineTypes.h"
 #include "Math/Math.h"
@@ -52,7 +47,10 @@ public:
 	~RefObject()
 	{
 		registeredObjects.erase(handle);
+// we cant always have the definition of every class
+#pragma warning(disable : 4150)
 		delete handle;
+#pragma warning(default : 4150)
 	}
 	RefObject &operator=(const RefObject &rhs)
 	{
@@ -74,15 +72,15 @@ public:
 		}
 		return *this;
 	}
-	bool operator==(const RefObject &other) const
+	inline bool operator==(const RefObject &other) const
 	{
 		return handle == other.handle;
 	}
-	bool operator!=(const RefObject &other) const
+	inline bool operator!=(const RefObject &other) const
 	{
 		return handle != other.handle;
 	}
-	bool operator<(const RefObject &other) const
+	inline bool operator<(const RefObject &other) const
 	{
 		return handle < other.handle;
 	}
@@ -90,7 +88,7 @@ public:
 	{
 		refCount++;
 	}
-	void removeRef()
+	inline void removeRef()
 	{
 		refCount--;
 		if (refCount.load() == 0)
@@ -222,11 +220,11 @@ public:
 			object->removeRef();
 		}
 	}
-	bool operator==(const RefPtr &other) const
+	inline bool operator==(const RefPtr &other) const
 	{
 		return object == other.object;
 	}
-	bool operator!=(const RefPtr &other) const
+	inline bool operator!=(const RefPtr &other) const
 	{
 		return object != other.object;
 	}
@@ -234,12 +232,12 @@ public:
 	{
 		return object < other.object;
 	}
-	T *operator->()
+	inline T *operator->()
 	{
 		assert(object != nullptr);
 		return object->getHandle();
 	}
-	const T *operator->() const
+	inline const T *operator->() const
 	{
 		assert(object != nullptr);
 		return object->getHandle();
@@ -248,11 +246,11 @@ public:
 	{
 		return object;
 	}
-	T *getHandle()
+	inline T *getHandle()
 	{
 		return object->getHandle();
 	}
-	const T *getHandle() const
+	inline const T *getHandle() const
 	{
 		return object->getHandle();
 	}
@@ -291,6 +289,14 @@ template <typename T>
 class UniquePtr
 {
 public:
+	UniquePtr()
+		: handle(nullptr)
+	{
+	}
+	UniquePtr(nullptr_t)
+		: handle(nullptr)
+	{
+	}
 	UniquePtr(T *ptr)
 		: handle(ptr)
 	{

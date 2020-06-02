@@ -2,5 +2,15 @@ target_sources(SeeleEngine
     PRIVATE
         Asset.h
         Asset.cpp
-        FileAsset.h
-        FileAsset.cpp)
+        AssetRegistry.h
+        AssetRegistry.cpp
+        MaterialLoader.h
+        MaterialLoader.cpp
+        MeshAsset.h
+        MeshAsset.cpp
+        MeshLoader.h
+        MeshLoader.cpp
+        TextureAsset.h
+        TextureAsset.cpp
+        TextureLoader.h
+        TextureLoader.cpp)

@@ -2,13 +2,8 @@
   "configurations": [
     {
       "name": "Debug",
-      "generator": "Ninja",
-      "configurationType": "Debug",
-      "inheritEnvironments": [ "msvc_x64_x64" ],
-      "buildRoot": "${projectDir}\\bin\\${name}",
-      "installRoot": "${projectDir}\\install\\${name}",
-      "cmakeCommandArgs": "-DUSE_SUPERBUILD=TRUE",
-      "buildCommandArgs": "-v",
+      "cmakeCommandArgs": "-DUSE_SUPERBUILD=OFF",
+      "buildCommandArgs": "",
       "ctestCommandArgs": "",
       "variables": []
     }

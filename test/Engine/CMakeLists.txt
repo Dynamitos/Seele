@@ -6,3 +6,4 @@ target_sources(Seele_unit_tests
 target_include_directories(Seele_unit_tests PUBLIC ./)
 add_subdirectory(Containers/)
 add_subdirectory(Graphics/)
+add_subdirectory(Math/)

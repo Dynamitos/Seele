@@ -32,14 +32,15 @@ void Scene::addPrimitiveComponent(PPrimitiveComponent comp)
     primitives.add(comp);
 }
 
-Map<PMaterial, DrawState> Scene::getMeshBatches()
+Map<PMaterial, MeshBatch> Scene::getMeshBatches()
 {
     meshBatches.clear();
     for (auto primitive : primitives)
     {
-        PMaterialInstance matInstance = primitive->instance;
+    /*    Array<PMaterial> materials = primitive->materials;
+        PMaterialInstance matInstance = primitive->;
         PMaterial mat = matInstance->getBaseMaterial();
-        DrawInstance inst;
+        MeshBatch inst;
         inst.instance = primitive->instance;
         inst.vertexBuffer = primitive->vertexBuffer;
         inst.indexBuffer = primitive->indexBuffer;
@@ -47,15 +48,15 @@ Map<PMaterial, DrawState> Scene::getMeshBatches()
 
         if (meshBatches.find(mat) != meshBatches.end())
         {
-            DrawState &state = meshBatches[mat];
+            MeshBatchElement &state = meshBatches[mat];
             state.instances.add(inst);
         }
         else
         {
-            DrawState state;
+            MeshBatchElement state;
             state.instances.add(inst);
             meshBatches[mat] = state;
-        }
+        }*/
     }
     return meshBatches;
 }

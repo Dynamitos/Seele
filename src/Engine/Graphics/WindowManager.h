@@ -14,7 +14,7 @@ public:
 	PWindow addWindow(const WindowCreateInfo &createInfo);
 	void beginFrame();
 	void endFrame();
-	Gfx::PGraphics getGraphics()
+	static Gfx::PGraphics getGraphics()
 	{
 		return graphics;
 	}
@@ -25,7 +25,7 @@ public:
 
 private:
 	Array<PWindow> windows;
-	Gfx::PGraphics graphics;
+	static Gfx::PGraphics graphics;
 };
 DEFINE_REF(WindowManager);
 } // namespace Seele
