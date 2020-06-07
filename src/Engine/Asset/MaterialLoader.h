@@ -13,7 +13,7 @@ class MaterialLoader
 public:
     MaterialLoader(Gfx::PGraphics graphic);
     ~MaterialLoader();
-    PMaterial queueAsset(const std::string& filePath);
+    PMaterial queueAsset(const std::filesystem::path& filePath);
 private:
     List<std::future<void>> futures;
     PMaterial placeholderMaterial;

@@ -17,6 +17,11 @@ MaterialInstance::MaterialInstance(const std::string& fullPath)
 {   
 }
 
+MaterialInstance::MaterialInstance(const std::filesystem::path& fullPath)
+    : Asset(fullPath)
+{
+}
+
 MaterialInstance::~MaterialInstance()
 {
 }

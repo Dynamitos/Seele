@@ -10,12 +10,13 @@ class Material : public MaterialAsset
 public:
     Material();
     Material(const std::string &directory, const std::string &name);
-    Material(const std::string &fullPath);
+    Material(const std::filesystem::path& fullPath);
     ~Material();
     inline std::string getMaterialName() const {return materialName;}
 private:
     void compile();
     std::string materialName;
+    Array<std::string> materialCode;
     friend class MaterialLoader;
 };
 DEFINE_REF(Material);

@@ -15,9 +15,11 @@ MeshProcessor::~MeshProcessor()
 {
 }
 
-void MeshProcessor::buildMeshDrawCommands(
+void MeshProcessor::buildMeshDrawCommand(
     const MeshBatch& meshBatch, 
-    const PPrimitiveComponent primitiveComponent, 
+    const PPrimitiveComponent primitiveComponent,
+    const Gfx::PRenderPass renderPass,
+    Gfx::PRenderCommand drawCommand,
     PMaterial material, 
     Gfx::PVertexShader vertexShader,
     Gfx::PControlShader controlShader,
@@ -37,6 +39,7 @@ void MeshProcessor::buildMeshDrawCommands(
     pipelineInitializer.evalShader = evaluationShader;
     pipelineInitializer.geometryShader = geometryShader;
     pipelineInitializer.fragmentShader = fragmentShader;
+    pipelineInitializer.renderPass = renderPass;
 
     VertexInputStreamArray vertexStreams;
     if(positionOnly)
@@ -47,8 +50,12 @@ void MeshProcessor::buildMeshDrawCommands(
     {
         vertexFactory->getStreams(vertexStreams);
     }
-    if(vertexShader != nullptr)
+    drawCommand->bindVertexBuffer(vertexStreams);
+    Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(pipelineInitializer);
+    drawCommand->bindPipeline(pipeline);
+    for(auto element : meshBatch.elements)
     {
-        
-    }    
+        drawCommand->bindIndexBuffer(element.indexBuffer);
+        drawCommand->draw(element);
+    }
 }

@@ -1,5 +1,6 @@
 #include "SceneView.h"
 #include "SceneRenderPath.h"
+#include "Scene/Scene.h"
 #include "Window.h"
 
 Seele::SceneView::SceneView(Gfx::PGraphics graphics, PWindow owner, const ViewportCreateInfo &createInfo)

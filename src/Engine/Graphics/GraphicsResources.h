@@ -13,7 +13,7 @@
 
 namespace Seele
 {
-
+struct VertexInputStream;
 namespace Gfx
 {
 DECLARE_REF(Graphics);
@@ -297,8 +297,8 @@ DEFINE_REF(StructuredBuffer);
 class VertexStream
 {
 public:
-	VertexStream() {}
-	VertexStream(uint32 stride, uint8 instanced);
+	VertexStream();
+	VertexStream(uint32 stride, uint32 offset, uint8 instanced, Gfx::PVertexBuffer vertexBuffer);
 	~VertexStream();
 	void addVertexElement(VertexElement element);
 	const Array<VertexElement> getVertexDescriptions() const;
@@ -363,7 +363,7 @@ public:
 	virtual ~RenderCommand();
 	virtual void bindPipeline(Gfx::PGraphicsPipeline pipeline) = 0;
 	virtual void bindDescriptor(Gfx::PDescriptorSet set) = 0;
-	virtual void bindVertexBuffer(Gfx::PVertexBuffer vertexBuffer) = 0;
+	virtual void bindVertexBuffer(const Array<VertexInputStream>& streams) = 0;
 	virtual void bindIndexBuffer(Gfx::PIndexBuffer indexBuffer) = 0;
 	virtual void draw(const MeshBatchElement& data) = 0;
 };

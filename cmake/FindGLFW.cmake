@@ -46,8 +46,6 @@ if (WIN32)
 			${GLFW_ROOT}/src
 		PATH_SUFFIXES Debug Release)
 
-	message(STATUS cant find ${GLFW_LIBRARY_NAME} in ${GLFW_ROOT}/src)
-
 	unset(GLFW_LIBRARY_NAME)
 
 	find_file(

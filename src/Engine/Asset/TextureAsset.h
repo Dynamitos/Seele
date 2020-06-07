@@ -8,7 +8,10 @@ class TextureAsset : public Asset
 public:
     TextureAsset();
     TextureAsset(const std::string& directory, const std::string& name);
-    TextureAsset(const std::string& fullPath);
+    TextureAsset(const std::filesystem::path& fullPath);
+    virtual ~TextureAsset();
+    virtual void save() override;
+    virtual void load() override;
     void setTexture(Gfx::PTexture texture)
     {
         std::scoped_lock lck(lock);

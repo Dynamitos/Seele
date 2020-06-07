@@ -126,8 +126,10 @@ IndexBuffer::IndexBuffer(PGraphics graphics, uint32 size, Gfx::SeIndexType index
 IndexBuffer::~IndexBuffer()
 {
 }
-VertexStream::VertexStream(uint32 stride, uint8 instanced)
-	: stride(stride), instanced(instanced)
+VertexStream::VertexStream()
+{}
+VertexStream::VertexStream(uint32 stride, uint32 offset, uint8 instanced, Gfx::PVertexBuffer vertexBuffer)
+	: stride(stride), instanced(instanced), offset(offset), vertexBuffer(vertexBuffer)
 {
 }
 VertexStream::~VertexStream()

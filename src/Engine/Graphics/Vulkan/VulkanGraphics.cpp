@@ -21,12 +21,6 @@ Graphics::Graphics()
 
 Graphics::~Graphics()
 {
-	allocator = nullptr;
-	stagingManager = nullptr;
-	graphicsCommands = nullptr;
-	computeCommands = nullptr;
-	transferCommands = nullptr;
-	dedicatedTransferCommands = nullptr;
 	viewports.clear();
 	vkDestroyDevice(handle, nullptr);
 	DestroyDebugReportCallbackEXT(instance, nullptr, callback);
@@ -41,10 +35,6 @@ void Graphics::init(GraphicsInitializer initInfo)
 	createDevice(initInfo);
 	allocator = new Allocator(this);
 	stagingManager = new StagingManager(this, allocator);
-	graphicsCommands = new CommandBufferManager(this, graphicsQueue);
-	computeCommands = new CommandBufferManager(this, computeQueue);
-	transferCommands = new CommandBufferManager(this, transferQueue);
-	dedicatedTransferCommands = new CommandBufferManager(this, dedicatedTransferQueue);
 	pipelineCache = new PipelineCache(this, "pipeline.cache");
 }
 
@@ -79,12 +69,12 @@ void Graphics::beginRenderPass(Gfx::PRenderPass renderPass)
 	{
 		framebuffer = found->value;
 	}
-	graphicsCommands->getCommands()->beginRenderPass(rp, framebuffer);
+	getGraphicsCommands()->getCommands()->beginRenderPass(rp, framebuffer);
 }
 
 void Graphics::endRenderPass()
 {
-	graphicsCommands->getCommands()->endRenderPass();
+	getGraphicsCommands()->getCommands()->endRenderPass();
 }
 
 void Graphics::executeCommands(Array<Gfx::PRenderCommand> commands)
@@ -96,7 +86,7 @@ void Graphics::executeCommands(Array<Gfx::PRenderCommand> commands)
 		buf->end();
 		cmdBuffers[i] = buf->getHandle();
 	}
-	vkCmdExecuteCommands(graphicsCommands->getCommands()->getHandle(), cmdBuffers.size(), cmdBuffers.data());
+	vkCmdExecuteCommands(getGraphicsCommands()->getCommands()->getHandle(), cmdBuffers.size(), cmdBuffers.data());
 }
 
 Gfx::PTexture2D Graphics::createTexture2D(const TextureCreateInfo &createInfo)
@@ -129,7 +119,7 @@ Gfx::PIndexBuffer Graphics::createIndexBuffer(const IndexBufferCreateInfo &bulkD
 }
 Gfx::PRenderCommand Graphics::createRenderCommand()
 {
-	PSecondaryCmdBuffer cmdBuffer = graphicsCommands->createSecondaryCmdBuffer();
+	PSecondaryCmdBuffer cmdBuffer = getGraphicsCommands()->createSecondaryCmdBuffer();
 	cmdBuffer->begin(getGraphicsCommands()->getCommands());
 	return cmdBuffer;
 }
@@ -199,33 +189,60 @@ PCommandBufferManager Graphics::getQueueCommands(Gfx::QueueType queueType)
 	switch (queueType)
 	{
 	case Gfx::QueueType::GRAPHICS:
-		return graphicsCommands;
+		return getGraphicsCommands();
 	case Gfx::QueueType::COMPUTE:
-		return computeCommands;
+		return getComputeCommands();
 	case Gfx::QueueType::TRANSFER:
-		return transferCommands;
+		return getTransferCommands();
 	case Gfx::QueueType::DEDICATED_TRANSFER:
-		return dedicatedTransferCommands;
+		return getDedicatedTransferCommands();
 	default:
 		throw new std::logic_error("invalid queue type");
 	}
 }
-
+std::mutex graphicsCommandLock;
 PCommandBufferManager Graphics::getGraphicsCommands()
 {
-	return graphicsCommands;
+	std::scoped_lock lock(graphicsCommandLock);
+	auto id = std::this_thread::get_id();
+	if(graphicsCommands.find(id) == graphicsCommands.end())
+	{
+		graphicsCommands[id] = new CommandBufferManager(this, graphicsQueue);
+	}
+	return graphicsCommands[id];
 }
+std::mutex computeCommandLock;
 PCommandBufferManager Graphics::getComputeCommands()
 {
-	return computeCommands;
+	std::scoped_lock lock(computeCommandLock);
+	auto id = std::this_thread::get_id();
+	if(computeCommands.find(id) == computeCommands.end())
+	{
+		computeCommands[id] = new CommandBufferManager(this, computeQueue);
+	}
+	return computeCommands[id];
 }
+std::mutex transferCommandLock;
 PCommandBufferManager Graphics::getTransferCommands()
 {
-	return transferCommands;
+	std::scoped_lock lock(transferCommandLock);
+	auto id = std::this_thread::get_id();
+	if(transferCommands.find(id) == transferCommands.end())
+	{
+		transferCommands[id] = new CommandBufferManager(this, transferQueue);
+	}
+	return transferCommands[id];
 }
+std::mutex dedicatedCommandLock;
 PCommandBufferManager Graphics::getDedicatedTransferCommands()
 {
-	return dedicatedTransferCommands;
+	std::scoped_lock lock(dedicatedCommandLock);
+	auto id = std::this_thread::get_id();
+	if(dedicatedTransferCommands.find(id) == dedicatedTransferCommands.end())
+	{
+		dedicatedTransferCommands[id] = new CommandBufferManager(this, dedicatedTransferQueue);
+	}
+	return dedicatedTransferCommands[id];
 }
 PAllocator Graphics::getAllocator()
 {

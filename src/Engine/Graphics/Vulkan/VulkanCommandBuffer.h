@@ -4,6 +4,7 @@
 
 namespace Seele
 {
+struct VertexInputStream;
 namespace Vulkan
 {
 DECLARE_REF(RenderPass);
@@ -75,7 +76,7 @@ public:
 	void end();
 	virtual void bindPipeline(Gfx::PGraphicsPipeline pipeline) override;
 	virtual void bindDescriptor(Gfx::PDescriptorSet descriptorSet) override;
-	virtual void bindVertexBuffer(Gfx::PVertexBuffer vertexBuffer) override;
+	virtual void bindVertexBuffer(const Array<VertexInputStream>& streams) override;
 	virtual void bindIndexBuffer(Gfx::PIndexBuffer indexBuffer) override;
 	virtual void draw(const MeshBatchElement& data) override;
 

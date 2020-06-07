@@ -5,7 +5,7 @@ namespace Seele
 namespace Gfx
 {
 static constexpr bool useAsyncCompute = true;
-static constexpr bool waitIdleOnSubmit = false;
+static constexpr bool waitIdleOnSubmit = true;
 static constexpr uint32 numFramesBuffered = 3;
 
 typedef uint32_t SeFlags;

@@ -50,11 +50,11 @@ struct MeshBatch
     uint8 isCastingShadow : 1;
     uint8 useWireframe : 1;
 
-    const Gfx::SePrimitiveTopology topology;
+    Gfx::SePrimitiveTopology topology;
 
-    const PVertexFactory vertexFactory;
+    PVertexFactory vertexFactory;
 
-    const PMaterial material;
+    PMaterial material;
 
     inline int32 getNumPrimitives() const
     {

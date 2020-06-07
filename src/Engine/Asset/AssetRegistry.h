@@ -27,13 +27,13 @@ private:
     static AssetRegistry& get();
 
     AssetRegistry();
-    void init(const std::string& rootFolder, Gfx::PGraphics graphics);
+    void init(const std::filesystem::path& rootFolder, Gfx::PGraphics graphics);
 
-    void registerMesh(const std::string& filePath);
-    void registerTexture(const std::string& filePath);
-    void registerMaterial(const std::string& filePath);
+    void registerMesh(const std::filesystem::path& filePath);
+    void registerTexture(const std::filesystem::path& filePath);
+    void registerMaterial(const std::filesystem::path& filePath);
     
-    std::string rootFolder;
+    std::filesystem::path rootFolder;
     Map<std::string, PTextureAsset> textures;
     Map<std::string, PMeshAsset> meshes;
     Map<std::string, PMaterialAsset> materials;

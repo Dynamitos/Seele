@@ -13,12 +13,12 @@ public:
         Ready
     };
     Asset();
-    Asset(const std::filesystem::path& path);
     Asset(const std::string& directory, const std::string& name);
-    Asset(const std::string& fullPath);
+    Asset(const std::filesystem::path& path);
     virtual ~Asset();
-    std::ifstream& getReadStream();
-    std::ofstream& getWriteStream();
+
+    virtual void save() = 0;
+    virtual void load() = 0;
     
     // returns the name of the file, without extension
     std::string getFileName();
@@ -38,6 +38,8 @@ public:
     }
 protected:
     std::mutex lock;
+    std::ifstream& getReadStream();
+    std::ofstream& getWriteStream();
 private:
     Status status;
     std::filesystem::path fullPath;

@@ -80,10 +80,10 @@ protected:
 	PQueue dedicatedTransferQueue;
 	QueueOwnedResourceDeletion deletionQueue;
 	PPipelineCache pipelineCache;
-	PCommandBufferManager graphicsCommands;
-	PCommandBufferManager computeCommands;
-	PCommandBufferManager transferCommands;
-	PCommandBufferManager dedicatedTransferCommands;
+	Map<std::thread::id, PCommandBufferManager> graphicsCommands;
+	Map<std::thread::id, PCommandBufferManager> computeCommands;
+	Map<std::thread::id, PCommandBufferManager> transferCommands;
+	Map<std::thread::id, PCommandBufferManager> dedicatedTransferCommands;
 	VkPhysicalDeviceProperties props;
 	VkPhysicalDeviceFeatures features;
 	VkDebugReportCallbackEXT callback;

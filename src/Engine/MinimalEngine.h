@@ -25,6 +25,7 @@
 	}
 
 extern Seele::Map<void *, void *> registeredObjects;
+extern std::mutex registeredObjectsLock;
 namespace Seele
 {
 template <typename T>
@@ -34,6 +35,7 @@ public:
 	RefObject(T *ptr)
 		: handle(ptr), refCount(1)
 	{
+		std::scoped_lock lock(registeredObjectsLock);
 		registeredObjects[ptr] = this;
 	}
 	RefObject(const RefObject &rhs)

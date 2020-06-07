@@ -11,6 +11,7 @@ public:
     MaterialInstance();
     MaterialInstance(const std::string& directory, const std::string& name);
     MaterialInstance(const std::string& fullPath);
+    MaterialInstance(const std::filesystem::path& fullPath);
     ~MaterialInstance();
     PMaterial getBaseMaterial() const;
     Gfx::PDescriptorSet getDescriptor();

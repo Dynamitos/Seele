@@ -7,6 +7,7 @@
 #include "Material/Material.h"
 #include "Graphics/Graphics.h"
 #include "graphics/WindowManager.h"
+#include <filesystem>
 
 using namespace Seele;
 
@@ -21,21 +22,22 @@ void AssetRegistry::init(const std::string& rootFolder)
 
 void AssetRegistry::importFile(const std::string &filePath)
 {
-    std::string extension = filePath.substr(filePath.find_last_of(".") + 1);
+    std::filesystem::path fsPath = std::filesystem::path(filePath);
+    std::string extension = fsPath.extension().string();
     std::cout << extension << std::endl;
-    if (extension.compare("fbx") == 0 
-     || extension.compare("obj") == 0)
+    if (extension.compare(".fbx") == 0 
+     || extension.compare(".obj") == 0)
     {
-        get().registerMesh(filePath);
+        get().registerMesh(fsPath);
     }
-    if (extension.compare("png") == 0
-     || extension.compare("jpg") == 0)
+    if (extension.compare(".png") == 0
+     || extension.compare(".jpg") == 0)
     {
-        get().registerTexture(filePath);
+        get().registerTexture(fsPath);
     }
-    if (extension.compare("semat") == 0)
+    if (extension.compare(".semat") == 0)
     {
-        get().registerMaterial(filePath);
+        get().registerMaterial(fsPath);
     }
 }
 
@@ -64,7 +66,7 @@ AssetRegistry::AssetRegistry()
 {
 }
 
-void AssetRegistry::init(const std::string &rootFolder, Gfx::PGraphics graphics)
+void AssetRegistry::init(const std::filesystem::path &rootFolder, Gfx::PGraphics graphics)
 {
     AssetRegistry &reg = get();
     reg.rootFolder = rootFolder;
@@ -73,17 +75,17 @@ void AssetRegistry::init(const std::string &rootFolder, Gfx::PGraphics graphics)
     reg.materialLoader = new MaterialLoader(graphics);
 }
 
-void AssetRegistry::registerMesh(const std::string &filePath)
+void AssetRegistry::registerMesh(const std::filesystem::path &filePath)
 {
     meshLoader->importAsset(filePath);
 }
 
-void AssetRegistry::registerTexture(const std::string &filePath)
+void AssetRegistry::registerTexture(const std::filesystem::path &filePath)
 {
     textureLoader->importAsset(filePath);
 }
 
-void AssetRegistry::registerMaterial(const std::string &filePath)
+void AssetRegistry::registerMaterial(const std::filesystem::path &filePath)
 {
     materialLoader->queueAsset(filePath);
 }

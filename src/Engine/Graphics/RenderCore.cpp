@@ -24,6 +24,7 @@ void Seele::RenderCore::init()
 	sceneViewInfo.offsetX = 0;
 	sceneViewInfo.offsetY = 0;
 	PSceneView sceneView = new SceneView(windowManager->getGraphics(), window, sceneViewInfo);
+	window->addView(sceneView);
 }
 
 void Seele::RenderCore::renderLoop()

@@ -35,7 +35,7 @@ struct VertexInputStream
     }
 };
 
-struct VertexStreamComponent
+/*struct VertexStreamComponent
 {
     const Gfx::PVertexBuffer vertexBuffer = nullptr;
 
@@ -68,21 +68,25 @@ struct VertexStreamComponent
         , type(type)
     {
     }
-};
+};*/
 
 typedef Array<VertexInputStream> VertexInputStreamArray;
+struct MeshDescription;
+DECLARE_REF(VertexFactory);
 class VertexFactory
 {
 public:
-    VertexFactory()
-    {
-    }
+    VertexFactory();
+    VertexFactory(MeshDescription description);
+    ~VertexFactory();
     void getStreams(VertexInputStreamArray& outVertexStreams) const;
     void getPositionOnlyStream(VertexInputStreamArray& outVertexStreams) const;
     virtual bool supportsTesselation() { return false; }
     Gfx::PVertexDeclaration getDeclaration() const {return declaration;}
     Gfx::PVertexDeclaration getPositionDeclaration() const {return positionDeclaration;}
 private:
+    static List<PVertexFactory> registeredVertexFactories;
+    static std::mutex registeredVertexFactoryLock;
     StaticArray<Gfx::VertexStream, 16> streams;
     StaticArray<Gfx::VertexStream, 16> positionStream;
     Gfx::PVertexDeclaration declaration;

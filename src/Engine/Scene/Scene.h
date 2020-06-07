@@ -20,11 +20,11 @@ public:
     void addPrimitiveComponent(PPrimitiveComponent comp);
 
 private:
-    Map<PMaterial, MeshBatch> meshBatches;
+    Array<MeshBatch> meshBatches;
     Array<PActor> rootActors;
     Array<PPrimitiveComponent> primitives;
     const static int constant = 10;
 public:
-    Map<PMaterial, MeshBatch> getMeshBatches();
+    Array<MeshBatch> getMeshBatches();
 };
 } // namespace Seele

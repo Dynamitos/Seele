@@ -9,7 +9,7 @@ class MaterialAsset : public Asset
 public:
     MaterialAsset();
     MaterialAsset(const std::string &directory, const std::string &name);
-    MaterialAsset(const std::string &fullPath);
+    MaterialAsset(const std::filesystem::path &fullPath);
     ~MaterialAsset();
 protected:
     //For now its simply the collection of parameters, since there is no point for expressions

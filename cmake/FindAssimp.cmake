@@ -89,7 +89,5 @@ if (ASSIMP_FOUND)
 	set(ASSIMP_INCLUDE_DIRS ${ASSIMP_INCLUDE_DIR})
 endif()
 
-message(STATUS BINARY: ${ASSIMP_BINARY})
-
 # Hide some variables
 mark_as_advanced(ASSIMP_INCLUDE_DIR ASSIMP_LIBRARY)

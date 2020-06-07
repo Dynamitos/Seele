@@ -78,6 +78,7 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType,
         default:
             break;
         }
+
         info.initialLayout = layout;
         info.mipLevels = mipLevels;
         info.arrayLayers = arrayCount * layerCount;

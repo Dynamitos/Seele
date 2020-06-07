@@ -15,7 +15,7 @@ Material::Material(const std::string& directory, const std::string& name)
 {
 }
 
-Material::Material(const std::string& fullPath) 
+Material::Material(const std::filesystem::path& fullPath)
     : MaterialAsset(fullPath)
 {
 }

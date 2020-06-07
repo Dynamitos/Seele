@@ -129,7 +129,7 @@ void Buffer::executeOwnershipBarrier(Gfx::QueueType newOwner)
 		dynamicBarriers[i] = barrier;
 		dynamicBarriers[i].buffer = buffers[i].buffer;
 		dynamicBarriers[i].offset = 0;
-		dynamicBarriers[i].size = buffers[i].allocation->getSize();
+		dynamicBarriers[i].size = size;
 	}
 	vkCmdPipelineBarrier(srcCommand, srcStage, dstStage, 0, 0, nullptr, numBuffers, dynamicBarriers, 0, nullptr);
 	vkCmdPipelineBarrier(dstCommand, srcStage, dstStage, 0, 0, nullptr, numBuffers, dynamicBarriers, 0, nullptr);

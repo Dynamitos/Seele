@@ -18,9 +18,11 @@ private:
         const MeshBatch& meshBatch, 
         const PPrimitiveComponent primitiveComponent, 
         int32 staticMeshId = -1) = 0;
-    void buildMeshDrawCommands(
+    void buildMeshDrawCommand(
         const MeshBatch& meshBatch, 
-        const PPrimitiveComponent primitiveComponent, 
+        const PPrimitiveComponent primitiveComponent,
+        const Gfx::PRenderPass renderPass,
+        Gfx::PRenderCommand drawCommand,
         PMaterial material, 
         Gfx::PVertexShader vertexShader,
         Gfx::PControlShader controlShader,

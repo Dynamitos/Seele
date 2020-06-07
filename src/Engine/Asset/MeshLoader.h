@@ -13,9 +13,9 @@ class MeshLoader
 public:
     MeshLoader(Gfx::PGraphics graphic);
     ~MeshLoader();
-    void importAsset(const std::string& filePath);
+    void importAsset(const std::filesystem::path& filePath);
 private:
-    void import(const std::string& path);
+    void import(const std::filesystem::path& path);
     List<std::future<void>> futures;
     Gfx::PGraphics graphics;
 };

@@ -1,10 +1,16 @@
 #include "PrimitiveComponent.h"
 #include "Scene/Scene.h"
 #include "Material/MaterialInstance.h"
+#include "Asset/MeshAsset.h"
+#include "Graphics/RenderPass/VertexFactory.h"
 
 using namespace Seele;
 
 PrimitiveComponent::PrimitiveComponent()
+{
+}
+
+PrimitiveComponent::PrimitiveComponent(PMeshAsset asset)
 {
 }
 

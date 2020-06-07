@@ -163,12 +163,17 @@ void SecondaryCmdBuffer::bindDescriptor(Gfx::PDescriptorSet descriptorSet)
     VkDescriptorSet setHandle = descriptorSet.cast<DescriptorSet>()->getHandle();
     vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getLayout(), descriptorSet->getSetIndex(), 1, &setHandle, 0, nullptr);
 }
-void SecondaryCmdBuffer::bindVertexBuffer(Gfx::PVertexBuffer vertexBuffer)
+void SecondaryCmdBuffer::bindVertexBuffer(const Array<VertexInputStream>& streams)
 {
-    PVertexBuffer buf = vertexBuffer.cast<VertexBuffer>();
-    const VkBuffer bufHandle[1] = {buf->getHandle()};
-    const VkDeviceSize offsets[1] = {0};
-    vkCmdBindVertexBuffers(handle, 0, 1, bufHandle, offsets);
+    Array<VkBuffer> buffers(streams.size());
+    Array<VkDeviceSize> offsets(streams.size());
+    for(uint32 i = 0; i < streams.size(); ++i)
+    {
+        PVertexBuffer buf = streams[i].vertexBuffer.cast<VertexBuffer>();
+        buffers[i] = buf->getHandle();
+        offsets[i] = streams[i].offset;
+    };
+    vkCmdBindVertexBuffers(handle, 0, streams.size(), buffers.data(), offsets.data());
 }
 void SecondaryCmdBuffer::bindIndexBuffer(Gfx::PIndexBuffer indexBuffer)
 {
@@ -181,7 +186,7 @@ void SecondaryCmdBuffer::draw(const MeshBatchElement& data)
 }
 
 CommandBufferManager::CommandBufferManager(PGraphics graphics, PQueue queue)
-    : graphics(graphics), queue(queue)
+    : graphics(graphics), queue(queue), queueFamilyIndex(queue->getFamilyIndex())
 {
     VkCommandPoolCreateInfo info =
         init::CommandPoolCreateInfo();

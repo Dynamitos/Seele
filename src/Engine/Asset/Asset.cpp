@@ -19,10 +19,6 @@ Asset::Asset(const std::filesystem::path& path)
     name = fullPath.stem();
     extension = fullPath.extension();
 }
-Asset::Asset(const std::string &fullPath)
-    : Asset(std::filesystem::path(fullPath))
-{
-}
 
 Asset::Asset(const std::string &directory, const std::string &fileName)
     : Asset(std::filesystem::path(directory + fileName))
