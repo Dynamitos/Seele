@@ -259,6 +259,12 @@ public:
 
 private:
 	RefObject<T> *object;
+	friend class boost::serialization::access;
+	template<class Archive>
+	void serialize(Archive& ar, const unsigned int version)
+	{
+		ar & *object->getHandle();
+	}
 };
 //A weak pointer has no ownership over an object and thus cant delete it
 template <typename T>
@@ -331,6 +337,12 @@ public:
 
 private:
 	T *handle;
+	friend class boost::serialization::access;
+	template<class Archive>
+	void serialize(Archive& ar, const unsigned int version)
+	{
+		ar & *handle;
+	}
 };
 } // namespace Seele
 

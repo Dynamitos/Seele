@@ -1,10 +1,61 @@
 #include "GraphicsResources.h"
 #include "Material/MaterialInstance.h"
+#include "Material/Material.h"
 #include "Graphics.h"
 
 using namespace Seele;
 using namespace Seele::Gfx;
 
+std::string getShaderNameFromRenderPassType(Gfx::RenderPassType type)
+{
+	switch (type)
+	{
+	case Gfx::RenderPassType::DepthPrepass:
+		return "DepthPrepass.slang";
+	case Gfx::RenderPassType::BasePass:
+		return "ForwardPlus.slang";
+	default:
+		return "";
+	}
+}
+
+ShaderMap::ShaderMap()
+{
+}
+
+ShaderMap::~ShaderMap()
+{
+}
+
+const ShaderCollection* ShaderMap::findShaders(PermutationId&& id) const 
+{
+	for(uint32 i = 0; i < shaders.size(); ++i)
+	{
+		if(shaders[i].id == id)
+		{
+			return &(shaders[i]);
+		}
+	}
+	return nullptr;
+}
+ShaderCollection& ShaderMap::createShaders(
+	PGraphics graphics,
+	RenderPassType renderPass, 
+	PMaterial material, 
+	PVertexShaderInput vertexInput,
+	bool bPositionOnly)
+{
+	ShaderCollection& collection = shaders.add();
+	collection.vertexDeclaration = bPositionOnly ? vertexInput->getPositionDeclaration() : vertexInput->getDeclaration();
+
+	ShaderCreateInfo createInfo;
+	createInfo.entryPoint = "vertexMain";
+	createInfo.typeParameter = {material->getMaterialName().c_str(), vertexInput->getName().c_str()};
+	
+	collection.vertexShader = graphics->createVertexShader(createInfo);
+
+	return collection;
+}
 void DescriptorLayout::addDescriptorBinding(uint32 bindingIndex, SeDescriptorType type, uint32 arrayCount)
 {
 	if (descriptorBindings.size() <= bindingIndex)

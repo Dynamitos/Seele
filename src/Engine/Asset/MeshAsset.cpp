@@ -1,5 +1,7 @@
 #include "MeshAsset.h"
 #include "Graphics/Mesh.h"
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
 
 using namespace Seele;
 
@@ -22,9 +24,23 @@ MeshAsset::~MeshAsset()
 }
 void MeshAsset::save()
 {
-    //TODO:
+    boost::archive::text_oarchive archive(getWriteStream());
+    archive << meshes;
 }
 void MeshAsset::load() 
 {
-    //TODO:
+    boost::archive::text_iarchive archive(getReadStream());
+    archive >> meshes;
+}
+
+void MeshAsset::addMesh(PMesh mesh) 
+{
+    std::scoped_lock lck(lock);
+    meshes.add(mesh);
+    referencedMaterials.add(mesh->referencedMaterial);   
+}
+
+const Array<PMesh> MeshAsset::getMeshes() const
+{
+    return meshes;
 }

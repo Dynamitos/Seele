@@ -69,7 +69,9 @@ void PipelineLayout::create()
 	createInfo.pPushConstantRanges = vkPushConstants.data();
 	VK_CHECK(vkCreatePipelineLayout(graphics->getDevice(), &createInfo, nullptr, &layoutHandle));
 
-	layoutHash = memCrc32(&createInfo, sizeof(VkPipelineLayoutCreateInfo), 0);
+	boost::crc_32_type result;
+	result.process_bytes(&createInfo, sizeof(VkPipelineLayoutCreateInfo));
+	layoutHash = result.checksum();
 }
 
 void PipelineLayout::reset()

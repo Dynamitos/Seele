@@ -56,12 +56,12 @@
         }
     },
     "code": [
-        "result.baseColor = diffuseTexture.Sample(textureSampler, geometry.texCoord * uvScale).xyz;",
+        "result.baseColor = diffuseTexture.Sample(textureSampler, input.texCoords[0] * uvScale).xyz;",
 		"result.metallic = 0;",
-		"float3 bumpMapNormal = normalTexture.Sample(textureSampler, geometry.texCoord * uvScale).xyz;",
+		"float3 bumpMapNormal = normalTexture.Sample(textureSampler, input.texCoords[0] * uvScale).xyz;",
         "bumpMapNormal = 2.0 * bumpMapNormal - float3(1.0, 1.0, 1.0);",
-        "result.normal = geometry.transformLocalToWorld(bumpMapNormal);",
-        "result.specular = specularTexture.Sample(textureSampler, geometry.texCoord * uvScale).x;",
+        "result.normal = input.transformLocalToWorld(bumpMapNormal);",
+        "result.specular = specularTexture.Sample(textureSampler, input.texCoords[0] * uvScale).x;",
 		"result.roughness = roughness;",
 		"result.specularTint = specularTint;",
 		"result.anisotropic = anisotropic;",

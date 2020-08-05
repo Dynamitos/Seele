@@ -19,6 +19,8 @@ target_sources(SeeleEngine
         SceneRenderPath.cpp
         View.h
         View.cpp
+        VertexShaderInput.h
+        VertexShaderInput.cpp
         Window.cpp
         Window.h
         WindowManager.h

@@ -9,7 +9,6 @@ list(APPEND DEPENDENCIES assimp)
 set(ASSIMP_BUILD_TESTS OFF CACHE INTERNAL "")
 set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE INTERNAL "")
 set(ASSIMP_INSTALL OFF CACHE INTERNAL "")
-set(ASSIMP_INJECT_DEBUG_POSTFIX OFF CACHE INTERNAL "")
 
 add_subdirectory(${ASSIMP_ROOT} ${ASSIMP_ROOT})
 target_compile_definitions(assimp PRIVATE _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
@@ -73,8 +72,8 @@ if(WIN32)
 ExternalProject_Add(slang
 	SOURCE_DIR ${SLANG_ROOT}
 	BINARY_DIR ${CMAKE_BINARY_DIR}/lib
-	CONFIGURE_COMMAND devenv /upgrade ${SLANG_ROOT}/source/slang/slang.vcxproj
-	BUILD_COMMAND msbuild -p:Configuration=Release -p:Platform=${CMAKE_PLATFORM} -p:WindowsTargetPlatformVersion=10.0 ${SLANG_ROOT}/source/slang/slang.vcxproj
+	CONFIGURE_COMMAND ""#devenv /upgrade ${SLANG_ROOT}/source/slang/slang.vcxproj
+	BUILD_COMMAND msbuild -p:Configuration=Release -p:WarningLevel=0 -p:Platform=${CMAKE_PLATFORM} -p:WindowsTargetPlatformVersion=10.0 ${SLANG_ROOT}/source/slang/slang.vcxproj
 	INSTALL_COMMAND "")
 
 	string(TOLOWER bin/windows-${CMAKE_PLATFORM}/Release/slang.dll SLANG_BINARY)

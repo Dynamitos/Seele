@@ -1,7 +1,7 @@
 import LightEnv;
 import Material;
 import BRDF;
-import InputGeometry;
+import MaterialParameter;
 
 struct TexturedMaterial : IMaterial
 {
@@ -21,15 +21,15 @@ struct TexturedMaterial : IMaterial
 	SamplerState textureSampler;
 	
 	typedef BlinnPhong BRDF;
-    BlinnPhong prepare(MaterialPixelParameter geometry)
+    BlinnPhong prepare(MaterialFragmentParameter geometry)
 	{
         BlinnPhong result;
-		result.baseColor = diffuseTexture.Sample(textureSampler, geometry.texCoord * uvScale).xyz;
+		result.baseColor = diffuseTexture.Sample(textureSampler, geometry.texCoords[0] * uvScale).xyz;
 		result.metallic = 0;
-		float3 bumpMapNormal = normalTexture.Sample(textureSampler, geometry.texCoord * uvScale).xyz;
+		float3 bumpMapNormal = normalTexture.Sample(textureSampler, geometry.texCoords[0] * uvScale).xyz;
         bumpMapNormal = 2.0 * bumpMapNormal - float3(1.0, 1.0, 1.0);
-        result.normal = geometry.transformLocalToWorld(bumpMapNormal);
-        result.specular = specularTexture.Sample(textureSampler, geometry.texCoord * uvScale).x;
+        result.normal = geometry.transformNormalToWorld(bumpMapNormal);
+        result.specular = specularTexture.Sample(textureSampler, geometry.texCoords[0] * uvScale).x;
 		result.roughness = roughness;
 		result.specularTint = specularTint;
 		result.anisotropic = anisotropic;

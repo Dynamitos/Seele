@@ -14,15 +14,8 @@ public:
     virtual ~MeshAsset();
     virtual void save() override;
     virtual void load() override;
-    void addMesh(PMesh mesh)
-    {
-        std::scoped_lock lck(lock);
-        meshes.add(mesh);
-    }
-    const Array<PMesh> getMeshes() const
-    {
-        return meshes;
-    }
+    void addMesh(PMesh mesh);
+    const Array<PMesh> getMeshes() const;
 private:
     Array<PMesh> meshes;
     Array<PMaterialAsset> referencedMaterials;

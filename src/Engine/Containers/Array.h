@@ -3,6 +3,8 @@
 #include <initializer_list>
 #include <iterator>
 #include <assert.h>
+#include <memory_resource>
+#include <boost/serialization/serialization.hpp>
 
 #ifndef DEFAULT_ALLOC_SIZE
 #define DEFAULT_ALLOC_SIZE 16
@@ -15,7 +17,8 @@ namespace Seele
 	{
 	public:
 		Array()
-			: allocated(DEFAULT_ALLOC_SIZE), arraySize(0)
+			: allocated(DEFAULT_ALLOC_SIZE)
+			, arraySize(0)
 		{
 			_data = new T[DEFAULT_ALLOC_SIZE];
 			assert(_data != nullptr);
@@ -360,6 +363,16 @@ namespace Seele
 			beginIt = Iterator(_data);
 			endIt = Iterator(_data + arraySize);
 		}
+		friend class boost::serialization::access;
+		template<class Archive>
+		void serialize(Archive& ar, const unsigned int version)
+		{
+			ar & arraySize;
+			ar & allocated;
+			for(uint32 i = 0; i < arraySize; ++i)
+				ar & _data[i];
+			refreshIterators();
+		}
 		uint32 arraySize;
 		uint32 allocated;
 		Iterator beginIt;
@@ -484,5 +497,13 @@ namespace Seele
 		T _data[N];
 		Iterator beginIt;
 		Iterator endIt;
+		friend class boost::serialization::access;
+		template<class Archive>
+		void serialize(Archive& ar, const unsigned int version)
+		{
+			ar & N;
+			ar & _data;
+			refreshIterators();
+		}
 	};
 } // namespace Seele

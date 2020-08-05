@@ -58,12 +58,15 @@ void Shader::create(const ShaderCreateInfo& createInfo)
 
     int translationUnitIndex = spAddTranslationUnit(request, SLANG_SOURCE_LANGUAGE_SLANG, "");
 
-    spAddTranslationUnitSourceString(
-        request,
-        translationUnitIndex,
-        entryPointName.c_str(),
-        createInfo.code.c_str()
-    );
+    for(auto code : createInfo.shaderCode)
+    {
+        spAddTranslationUnitSourceString(
+            request,
+            translationUnitIndex,
+            entryPointName.c_str(),
+            code.data()
+        );
+    }
     spAddSearchPath(request, "shaders/lib/");
 
     spSetGlobalGenericArgs(request, createInfo.typeParameter.size(), createInfo.typeParameter.data());

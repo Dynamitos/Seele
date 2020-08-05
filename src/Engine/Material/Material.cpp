@@ -24,6 +24,16 @@ Material::~Material()
 {
 }
 
+void Material::save() 
+{
+    
+}
+
+void Material::load() 
+{
+    
+}
+
 
 void Material::compile()
 {
@@ -91,4 +101,5 @@ void Material::compile()
     }
 
     codeStream << "}};" << std::endl;
+    materialCode = codeStream.str();
 }

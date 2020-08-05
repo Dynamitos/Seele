@@ -1,7 +1,7 @@
 import LightEnv;
 import Material;
 import BRDF;
-import InputGeometry;
+import MaterialParameter;
 
 struct FlatColorMaterial : IMaterial
 {
@@ -9,12 +9,12 @@ struct FlatColorMaterial : IMaterial
 	float specularity;
 
     typedef BlinnPhong BRDF;
-    BlinnPhong prepare(MaterialPixelParameter input)
+    BlinnPhong prepare(MaterialFragmentParameter input)
 	{
         BlinnPhong result;
 		result.baseColor = diffuseColor;
 		result.specular = specularity;
-        result.normal = normalize(input.normal);
+        result.normal = normalize(input.worldNormal);
         result.roughness = 0.5;
 		result.specularTint = 0;
 		result.anisotropic = 1;

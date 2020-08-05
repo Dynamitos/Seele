@@ -1,10 +1,11 @@
-import InputGeometry;
+import StaticMeshShaderAttributes;
+import MaterialParameter;
 import BRDF;
 import Common;
 
 interface ILightEnv
 {
-	float3 illuminate<B:IBRDF>(InputGeometry input, B brdf, float3 wo);
+	float3 illuminate<B:IBRDF>(VertexShaderInput input, B brdf, float3 wo);
 };
 
 struct DirectionalLight : ILightEnv
@@ -13,9 +14,9 @@ struct DirectionalLight : ILightEnv
 	float4 direction;
 	float4 intensity;
 
-    float3 illuminate<B:IBRDF>(MaterialPixelParameter input, B brdf, float3 wo)
+    float3 illuminate<B:IBRDF>(MaterialFragmentParameter input, B brdf, float3 wo)
 	{
-		return intensity.xyz * brdf.evaluate(wo, direction.xyz, input.normal, input.tangent, input.biTangent, color.xyz);	
+		return intensity.xyz * brdf.evaluate(wo, direction.xyz, input.worldNormal, input.worldTangent, input.worldBiTangent, color.xyz);	
     }
 };
 
@@ -26,13 +27,13 @@ struct PointLight : ILightEnv
     float3 color;
     float range;
 
-    float3 illuminate<B:IBRDF>(MaterialPixelParameter input, B brdf, float3 viewDir)
+    float3 illuminate<B:IBRDF>(MaterialFragmentParameter input, B brdf, float3 viewDir)
 	{
-        float3 lightVec = positionWS.xyz - input.position;
+        float3 lightVec = positionWS.xyz - input.worldPosition;
         float d = length(lightVec);
         float3 direction = normalize(lightVec);
         float illuminance = max(1 - d / range, 0);
-		return illuminance * brdf.evaluate(viewDir, direction, input.normal, input.tangent, input.biTangent, color);
+		return illuminance * brdf.evaluate(viewDir, direction, input.worldNormal, input.worldTangent, input.worldBiTangent, color);
     }
 
 	bool insidePlane(Plane plane)
@@ -68,3 +69,6 @@ struct Lights
     uint numDirectionalLights;
     uint numPointLights;
 };
+
+layout(set = 0, binding = 1, std430)
+ConstantBuffer<Lights> gLightEnv;

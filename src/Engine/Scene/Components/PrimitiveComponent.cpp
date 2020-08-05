@@ -2,7 +2,7 @@
 #include "Scene/Scene.h"
 #include "Material/MaterialInstance.h"
 #include "Asset/MeshAsset.h"
-#include "Graphics/RenderPass/VertexFactory.h"
+#include "Graphics/VertexShaderInput.h"
 
 using namespace Seele;
 

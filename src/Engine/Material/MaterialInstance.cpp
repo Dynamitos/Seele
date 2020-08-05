@@ -8,22 +8,32 @@ MaterialInstance::MaterialInstance()
 }
 
 MaterialInstance::MaterialInstance(const std::string& directory, const std::string& name) 
-    : Asset(directory, name)
+    : MaterialAsset(directory, name)
 {
 }
 
-MaterialInstance::MaterialInstance(const std::string& fullPath) 
-    : Asset(fullPath)
-{   
-}
-
 MaterialInstance::MaterialInstance(const std::filesystem::path& fullPath)
-    : Asset(fullPath)
+    : MaterialAsset(fullPath)
 {
 }
 
 MaterialInstance::~MaterialInstance()
 {
+}
+
+void MaterialInstance::save() 
+{
+    
+}
+
+void MaterialInstance::load() 
+{
+    
+}
+
+inline std::string MaterialInstance::getMaterialName() const
+{
+    return baseMaterial->getMaterialName();
 }
 
 PMaterial MaterialInstance::getBaseMaterial() const

@@ -11,12 +11,13 @@ class MeshProcessor
 public:
     MeshProcessor(const PScene scene, Gfx::PGraphics graphics);
     virtual ~MeshProcessor();
-private:
+protected:
     PScene scene;
     Gfx::PGraphics graphics;
     virtual void addMeshBatch(
         const MeshBatch& meshBatch, 
-        const PPrimitiveComponent primitiveComponent, 
+        const PPrimitiveComponent primitiveComponent,
+        const Gfx::PRenderPass renderPass,
         int32 staticMeshId = -1) = 0;
     void buildMeshDrawCommand(
         const MeshBatch& meshBatch, 

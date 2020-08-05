@@ -33,7 +33,7 @@ if (WIN32)
 	if (GLFW_USE_STATIC_LIBS)
 		set(GLFW_LIBRARY_NAME glfw3)
 	else()
-		set(GLFW_LIBRARY_NAME glfw3dll)
+		set(GLFW_LIBRARY_NAME glfw3ddll)
 	endif()
 
 	# Find library files

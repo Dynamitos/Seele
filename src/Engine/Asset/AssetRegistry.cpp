@@ -6,8 +6,7 @@
 #include "MeshLoader.h"
 #include "Material/Material.h"
 #include "Graphics/Graphics.h"
-#include "graphics/WindowManager.h"
-#include <filesystem>
+#include "Graphics/WindowManager.h"
 
 using namespace Seele;
 

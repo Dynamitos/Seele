@@ -2,11 +2,11 @@
 
 namespace Seele
 {
+DECLARE_REF(Material);
+DECLARE_REF(VertexShaderInput);
 DECLARE_NAME_REF(Gfx, VertexBuffer);
 DECLARE_NAME_REF(Gfx, IndexBuffer);
 DECLARE_NAME_REF(Gfx, UniformBuffer);
-DECLARE_REF(Material);
-DECLARE_REF(VertexFactory);
 struct MeshBatchElement
 {
 public:
@@ -52,7 +52,7 @@ struct MeshBatch
 
     Gfx::SePrimitiveTopology topology;
 
-    PVertexFactory vertexFactory;
+    PVertexShaderInput vertexInput;
 
     PMaterial material;
 
@@ -81,11 +81,10 @@ struct MeshBatch
         , isBackfaceCullingDisabled(false)
         , isCastingShadow(true)
         , useWireframe(false)
-        , vertexFactory(nullptr)
+        , vertexInput(nullptr)
         , material(nullptr)
         , topology(Gfx::SE_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
     {
-        elements.add();
     }
 };
 DECLARE_REF(PrimitiveComponent);

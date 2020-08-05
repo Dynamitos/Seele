@@ -2,10 +2,9 @@
 #include "GraphicsEnums.h"
 #include "Containers/Array.h"
 #include "Containers/List.h"
-#include "Math/MemCRC.h"
-#include "Material/MaterialInstance.h"
 #include "GraphicsInitializer.h"
 #include "MeshBatch.h"
+#include <boost/crc.hpp>
 
 #ifdef _DEBUG
 #define ENABLE_VALIDATION
@@ -26,6 +25,10 @@ public:
 	}
 };
 DEFINE_REF(SamplerState);
+
+class Shader
+{};
+DEFINE_REF(Shader);
 
 class VertexShader
 {
@@ -66,6 +69,72 @@ public:
 	virtual ~FragmentShader() {}
 };
 DEFINE_REF(FragmentShader);
+
+//Uniquely identifies a permutation of shaders
+//using the type parameters used to generate it
+struct ShaderPermutation
+{
+	RenderPassType passType;
+	char vertexInputName[15];
+	char materialName[16];
+	//TODO: lightmapping etc
+};
+//Hashed ShaderPermutation for fast lookup
+struct PermutationId
+{
+	uint32 hash;
+	PermutationId()
+	{}
+	PermutationId(ShaderPermutation permutation)
+	{
+		boost::crc_32_type result;
+    	result.process_bytes(&permutation, sizeof(ShaderPermutation));
+    	hash = result.checksum();
+	}
+	friend inline bool operator==(const PermutationId& lhs, const PermutationId& rhs)
+	{
+		return lhs.hash == rhs.hash;
+	}
+	friend inline bool operator!=(const PermutationId& lhs, const PermutationId& rhs)
+	{
+		return lhs.hash != rhs.hash;
+	}
+	friend inline bool operator<(const PermutationId& lhs, const PermutationId& rhs)
+	{
+		return lhs.hash < rhs.hash;
+	}
+	friend inline bool operator>(const PermutationId& lhs, const PermutationId& rhs)
+	{
+		return lhs.hash > rhs.hash;
+	}
+};
+struct ShaderCollection
+{
+	PermutationId id;
+	PVertexDeclaration vertexDeclaration;
+	PVertexShader vertexShader;
+	PControlShader controlShader;
+	PEvaluationShader evalutionShader;
+	PGeometryShader geometryShader;
+	PFragmentShader fragmentShader;
+};
+class ShaderMap
+{
+public:
+	ShaderMap();
+	~ShaderMap();
+	const ShaderCollection* findShaders(PermutationId&& id) const;
+	ShaderCollection& createShaders(
+		PGraphics graphics, 
+		RenderPassType passName, 
+		PMaterial material, 
+		PVertexShaderInput vertexInput,
+		bool bPositionOnly);
+private:
+	Array<ShaderCollection> shaders;
+};
+DEFINE_REF(ShaderMap);
+
 class ComputeShader
 {
 public:
@@ -395,7 +464,11 @@ public:
 	virtual ~Viewport();
 	virtual void resize(uint32 newX, uint32 newY) = 0;
 	virtual void move(uint32 newOffsetX, uint32 newOffsetY) = 0;
-
+	inline PWindow getOwner() const {return owner;}
+	inline uint32 getSizeX() const {return sizeX;}
+	inline uint32 getSizeY() const {return sizeY;}
+	inline uint32 getOffsetX() const {return offsetX;}
+	inline uint32 getOffsetY() const {return offsetY;}
 protected:
 	uint32 sizeX;
 	uint32 sizeY;

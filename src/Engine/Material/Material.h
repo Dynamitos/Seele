@@ -12,11 +12,14 @@ public:
     Material(const std::string &directory, const std::string &name);
     Material(const std::filesystem::path& fullPath);
     ~Material();
-    inline std::string getMaterialName() const {return materialName;}
+    virtual void save() override;
+    virtual void load() override;
+    virtual std::string getMaterialName() const { return materialName; }
+    inline std::string getCode() const { return materialCode; }
 private:
     void compile();
     std::string materialName;
-    Array<std::string> materialCode;
+    std::string materialCode;
     friend class MaterialLoader;
 };
 DEFINE_REF(Material);

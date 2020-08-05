@@ -95,12 +95,10 @@ struct IndexBufferCreateInfo
 };
 struct ShaderCreateInfo
 {
-    std::string code;
+    //It's possible to input multiple source files for materials or vertexFactories
+    Array<std::string> shaderCode;
     std::string entryPoint;
     Array<const char*> typeParameter;
-    ShaderCreateInfo(const std::string& code)
-        : code(code)
-    {}
 };
 
 namespace Gfx

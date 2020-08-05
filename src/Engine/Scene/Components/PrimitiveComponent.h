@@ -17,10 +17,10 @@ public:
     virtual void notifySceneAttach(PScene scene) override;
     Matrix4 getRenderMatrix();
 
+    Array<StaticMeshBatch> staticMeshes;
 private:
     Array<PMaterialAsset> materials;
     Gfx::PUniformBuffer uniformBuffer;
-    Array<StaticMeshBatch> staticMeshes;
     friend class Scene;
 };
 DEFINE_REF(PrimitiveComponent);

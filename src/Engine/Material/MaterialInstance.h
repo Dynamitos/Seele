@@ -1,18 +1,20 @@
 #pragma once
-#include "Asset/Asset.h"
+#include "MaterialAsset.h"
 
 namespace Seele
 {
 DECLARE_NAME_REF(Gfx, DescriptorSet);
 DECLARE_REF(Material);
-class MaterialInstance : public Asset
+class MaterialInstance : public MaterialAsset
 {
 public:
     MaterialInstance();
     MaterialInstance(const std::string& directory, const std::string& name);
-    MaterialInstance(const std::string& fullPath);
     MaterialInstance(const std::filesystem::path& fullPath);
     ~MaterialInstance();
+    virtual void save() override;
+    virtual void load() override;
+    inline std::string getMaterialName() const;
     PMaterial getBaseMaterial() const;
     Gfx::PDescriptorSet getDescriptor();
 private:

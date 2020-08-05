@@ -13,7 +13,6 @@
 
 # Additional modules
 include(FindPackageHandleStandardArgs)
-
 if (WIN32)
 	# Find include files
 	find_path(
@@ -27,7 +26,7 @@ if (WIN32)
 	# Find library files
 	find_library(
 		ASSIMP_LIBRARY
-		NAMES assimp${LIBRARY_SUFFIX}.lib
+		NAMES assimp${LIBRARY_SUFFIX}${CMAKE_DEBUG_POSTFIX}.lib
 		PATHS
 			$ENV{PROGRAMFILES}/lib
 			${ASSIMP_ROOT}/lib/
@@ -35,7 +34,7 @@ if (WIN32)
 	
 	find_file(
 		ASSIMP_BINARY
-		NAMES assimp${LIBRARY_SUFFIX}.dll
+		NAMES assimp${LIBRARY_SUFFIX}${CMAKE_DEBUG_POSTFIX}.dll
 		PATHS
 			$ENV{PROGRAMFILES}/bin
 			${ASSIMP_ROOT}/bin/

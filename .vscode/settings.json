@@ -85,13 +85,19 @@
         "regex": "cpp",
         "strstream": "cpp",
         "resumable": "cpp",
-        "future": "cpp"
+        "future": "cpp",
+        "cstdarg": "cpp",
+        "cwctype": "cpp",
+        "queue": "cpp",
+        "random": "cpp",
+        "shared_mutex": "cpp",
+        "unordered_set": "cpp",
+        "csetjmp": "cpp",
+        "memory_resource": "cpp"
     },
-    "C_Cpp.default.browse.limitSymbolsToIncludedHeaders": false,
-    "C_Cpp.default.intelliSenseMode": "msvc-x64",
-    "C_Cpp.errorSquiggles": "Disabled",
-    "cmake.generator": "Visual Studio 16 2019",
+    "cmake.generator": "Ninja",
     "cmake.skipConfigureIfCachePresent": false,
-    "cmake.configureArgs": ["-Wno-dev"],
-    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
+    "cmake.configureArgs": [
+        "-Wno-dev"
+    ]
 }

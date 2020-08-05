@@ -1,10 +1,10 @@
 #include "MeshLoader.h"
-#include "Graphics/Graphics.h"
 #include "Graphics/GraphicsResources.h"
+#include "Graphics/Graphics.h"
 #include "MeshAsset.h"
 #include "Graphics/Mesh.h"
 #include "AssetRegistry.h"
-#include <filesystem>
+#include "Material/Material.h"
 #include <fstream>
 #include <nlohmann/json.hpp>
 #include <stb_image_write.h>
@@ -28,6 +28,64 @@ MeshLoader::~MeshLoader()
 void MeshLoader::importAsset(const std::filesystem::path &path)
 {
     futures.add(std::async(std::launch::async, &MeshLoader::import, this, path));
+}
+
+void loadMaterials(const aiScene* scene, Array<PMaterialAsset>& globalMaterials, Gfx::PGraphics graphics)
+{
+    using json = nlohmann::json;
+    for(uint32 i = 0; i < scene->mNumMaterials; ++i)
+    {
+        aiMaterial* material = scene->mMaterials[i];
+        json matCode;
+        matCode["name"] = material->GetName().C_Str();
+        matCode["profile"] = "BlinnPhong"; //TODO: other shading models
+        std::vector<std::string> code;
+        aiString texPath;
+        //TODO make samplers based on used textures
+        matCode["params"]["texSampler"] =
+            {
+                {"type", "SamplerState"}
+            };
+        if(material->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS)
+        {
+            std::string texFilename = std::filesystem::path(texPath.C_Str()).stem().string();
+            matCode["params"]["diffuseTexture"] = 
+                {
+                    {"type", "Texture2D"}, 
+                    {"default", texFilename}
+                };
+            code.push_back("result.baseColor = diffuseTexture.Sample(textureSampler, geometry.texCoord).xyz;\n");
+        }
+        if(material->GetTexture(aiTextureType_SPECULAR, 0, &texPath) == AI_SUCCESS)
+        {
+            std::string texFilename = std::filesystem::path(texPath.C_Str()).stem().string();
+            matCode["params"]["specularTexture"] =
+                {
+                    {"type", "Texture2D"},
+                    {"default", texFilename}
+                };
+            code.push_back("result.specular = specularTexture.Sample(textureSampler, geometry.texCoord).xyz;\n");
+        }
+        if(material->GetTexture(aiTextureType_NORMALS, 0, &texPath) == AI_SUCCESS)
+        {
+            std::string texFilename = std::filesystem::path(texPath.C_Str()).stem().string();
+            matCode["params"]["normalTexture"] =
+                {
+                    {"type", "Texture2D"},
+                    {"default", texFilename}
+                };
+            code.push_back("float3 bumpMapNormal = normalTexture.Sample(textureSampler, geometry.texCoord).xyz;\n");
+            code.push_back("bumpMapNormal = 2.0 * bumpMapNormal - float3(1.0f, 1.0f, 1.0f);\n");
+            code.push_back("result.normal = geometry.transformLocalToWorld(bumpMapNormal);\n");
+        }
+        code.push_back("return result;\n");
+        matCode["code"] = code;
+        std::ofstream outMatFile("testMat.asset");
+        outMatFile << std::setw(4) << matCode;
+        outMatFile.flush();
+        PMaterial asset = new Material("testMat.asset");
+        globalMaterials[i] = asset;
+    }
 }
 
 void findMeshRoots(aiNode *node, List<aiNode *> &meshNodes)
@@ -86,7 +144,7 @@ Gfx::VertexStream createVertexStream(uint32 size, aiVector2D* sourceData, Gfx::P
     stream.addVertexElement(Gfx::VertexElement(0, Gfx::SE_FORMAT_R32G32B32_SFLOAT, 0));
     return stream;
 }
-void loadGlobalMeshes(const aiScene* scene, Array<PMesh>& globalMeshes, Gfx::PGraphics graphics)
+void loadGlobalMeshes(const aiScene* scene, Array<PMesh>& globalMeshes, Array<PMaterialAsset> materials, Gfx::PGraphics graphics)
 {
     for (uint32 meshIndex = 0; meshIndex < scene->mNumMeshes; ++meshIndex)
     {
@@ -95,27 +153,27 @@ void loadGlobalMeshes(const aiScene* scene, Array<PMesh>& globalMeshes, Gfx::PGr
         MeshDescription description;
         Gfx::PVertexDeclaration declaration = new Gfx::VertexDeclaration();
         declaration->addVertexStream(createVertexStream(mesh->mNumVertices, mesh->mVertices, graphics));
-        description.layout.add(VertexAttribute::POSITION);
+        description.layout.add(Gfx::VertexAttribute::POSITION);
 
         for(uint32 i = 0; i < MAX_TEX_CHANNELS; ++i)
         {
             if(mesh->HasTextureCoords(i))
             {
                 declaration->addVertexStream(createVertexStream(mesh->mNumVertices, mesh->mTextureCoords[i], graphics));
-                description.layout.add(VertexAttribute::TEXCOORD);
+                description.layout.add(Gfx::VertexAttribute::TEXCOORD);
             }
         }
         if(mesh->HasNormals())
         {
             declaration->addVertexStream(createVertexStream(mesh->mNumVertices, mesh->mNormals, graphics));
-            description.layout.add(VertexAttribute::NORMAL);
+            description.layout.add(Gfx::VertexAttribute::NORMAL);
         }
         if(mesh->HasTangentsAndBitangents())
         {
             declaration->addVertexStream(createVertexStream(mesh->mNumVertices, mesh->mVertices, graphics));
             declaration->addVertexStream(createVertexStream(mesh->mNumVertices, mesh->mVertices, graphics));
-            description.layout.add(VertexAttribute::TANGENT);
-            description.layout.add(VertexAttribute::BITANGENT);
+            description.layout.add(Gfx::VertexAttribute::TANGENT);
+            description.layout.add(Gfx::VertexAttribute::BITANGENT);
         }
         description.declaration = declaration;
 
@@ -135,6 +193,7 @@ void loadGlobalMeshes(const aiScene* scene, Array<PMesh>& globalMeshes, Gfx::PGr
         indexBuffer->transferOwnership(Gfx::QueueType::GRAPHICS);
 
         globalMeshes[meshIndex] = new Mesh(description, indexBuffer);
+        globalMeshes[meshIndex]->referencedMaterial = materials[mesh->mMaterialIndex];
     }
 }
 void convertAssimpARGB(unsigned char* dst, aiTexel* src, uint32 numPixels)
@@ -173,61 +232,6 @@ void loadTextures(const aiScene* scene, Gfx::PGraphics graphics, const std::file
         AssetRegistry::importFile(texPngPath.string());
     }
 }
-void loadMaterials(const aiScene* scene, Gfx::PGraphics graphics)
-{
-    using json = nlohmann::json;
-    for(uint32 i = 0; i < scene->mNumMaterials; ++i)
-    {
-        aiMaterial* material = scene->mMaterials[i];
-        json matCode;
-        matCode["name"] = material->GetName().C_Str();
-        matCode["profile"] = "BlinnPhong"; //TODO: other shading models
-        std::vector<std::string> code;
-        aiString texPath;
-        //TODO make samplers based on used textures
-        matCode["params"]["texSampler"] =
-            {
-                {"type", "SamplerState"}
-            };
-        if(material->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS)
-        {
-            std::string texFilename = std::filesystem::path(texPath.C_Str()).stem().string();
-            matCode["params"]["diffuseTexture"] = 
-                {
-                    {"type", "Texture2D"}, 
-                    {"default", texFilename}
-                };
-            code.push_back("result.baseColor = diffuseTexture.Sample(textureSampler, geometry.texCoord).xyz;\n");
-        }
-        if(material->GetTexture(aiTextureType_SPECULAR, 0, &texPath) == AI_SUCCESS)
-        {
-            std::string texFilename = std::filesystem::path(texPath.C_Str()).stem().string();
-            matCode["params"]["specularTexture"] =
-                {
-                    {"type", "Texture2D"},
-                    {"default", texFilename}
-                };
-            code.push_back("result.specular = specularTexture.Sample(textureSampler, geometry.texCoord).xyz;\n");
-        }
-        if(material->GetTexture(aiTextureType_NORMALS, 0, &texPath) == AI_SUCCESS)
-        {
-            std::string texFilename = std::filesystem::path(texPath.C_Str()).stem().string();
-            matCode["params"]["normalTexture"] =
-                {
-                    {"type", "Texture2D"},
-                    {"default", texFilename}
-                };
-            code.push_back("float3 bumpMapNormal = normalTexture.Sample(textureSampler, geometry.texCoord).xyz;\n");
-            code.push_back("bumpMapNormal = 2.0 * bumpMapNormal - float3(1.0f, 1.0f, 1.0f);\n");
-            code.push_back("result.normal = geometry.transformLocalToWorld(bumpMapNormal);\n");
-        }
-        code.push_back("return result;\n");
-        matCode["code"] = code;
-        std::ofstream outMatFile(material->GetName().C_Str());
-        outMatFile << std::setw(4) << matCode;
-        outMatFile.flush();
-    }
-}
 void MeshLoader::import(const std::filesystem::path &path)
 {
     Assimp::Importer importer;
@@ -244,20 +248,22 @@ void MeshLoader::import(const std::filesystem::path &path)
         aiProcess_EmbedTextures);
     const aiScene *scene = importer.ApplyPostProcessing(aiProcess_CalcTangentSpace);
     Array<PMesh> globalMeshes(scene->mNumMeshes);
-    loadGlobalMeshes(scene, globalMeshes, graphics);
+    Array<PMaterialAsset> globalMaterials(scene->mNumMaterials);
+    loadMaterials(scene, globalMaterials, graphics);
+    loadGlobalMeshes(scene, globalMeshes, globalMaterials, graphics);
     loadTextures(scene, graphics, path);
-    loadMaterials(scene, graphics);
 
     List<aiNode *> meshNodes;
     findMeshRoots(scene->mRootNode, meshNodes);
     for (auto meshNode : meshNodes)
     {
-        std::string fileName = std::string(meshNode->mName.C_Str()).append(".asset");
+        std::string fileName = std::string("arissa").append(".asset");
         PMeshAsset meshAsset = new MeshAsset(fileName);
         for(uint32 i = 0; i < meshNode->mNumMeshes; ++i)
         {
             meshAsset->addMesh(globalMeshes[meshNode->mMeshes[i]]);
         }
+        meshAsset->save();
         AssetRegistry::get().meshes[meshAsset->getFileName()] = meshAsset;
     }
 }

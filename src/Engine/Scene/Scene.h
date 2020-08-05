@@ -19,12 +19,11 @@ public:
     void addActor(PActor actor);
     void addPrimitiveComponent(PPrimitiveComponent comp);
 
+    const Array<PPrimitiveComponent>& getPrimitives() const { return primitives; }
 private:
     Array<MeshBatch> meshBatches;
     Array<PActor> rootActors;
     Array<PPrimitiveComponent> primitives;
-    const static int constant = 10;
 public:
-    Array<MeshBatch> getMeshBatches();
 };
 } // namespace Seele

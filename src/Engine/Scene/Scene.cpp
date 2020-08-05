@@ -31,16 +31,3 @@ void Scene::addPrimitiveComponent(PPrimitiveComponent comp)
 {
     primitives.add(comp);
 }
-
-Array<MeshBatch> Scene::getMeshBatches()
-{
-    meshBatches.clear();
-    for (auto primitive : primitives)
-    {
-        for(auto batch : primitive->staticMeshes)
-        {
-            meshBatches.add(batch);
-        }
-    }
-    return meshBatches;
-}

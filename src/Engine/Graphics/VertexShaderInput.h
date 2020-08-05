@@ -1,6 +1,7 @@
 #pragma once
 #include "MinimalEngine.h"
-#include "Graphics/GraphicsResources.h"
+#include "GraphicsEnums.h"
+#include "GraphicsResources.h"
 
 namespace Seele
 {
@@ -35,62 +36,32 @@ struct VertexInputStream
     }
 };
 
-/*struct VertexStreamComponent
-{
-    const Gfx::PVertexBuffer vertexBuffer = nullptr;
-
-    uint32 streamOffset = 0;
-
-    uint8 offset = 0;
-
-    uint8 stride;
-
-    Gfx::SeFormat type;
-
-    VertexStreamComponent()
-    {
-    }
-
-    VertexStreamComponent(const Gfx::PVertexBuffer vertexBuffer, uint32 offset, uint32 stride, Gfx::SeFormat type) 
-        : vertexBuffer(vertexBuffer)
-        , streamOffset(0)
-        , offset(offset)
-        , stride(stride)
-        , type(type)
-    {
-    }
-
-    VertexStreamComponent(const Gfx::PVertexBuffer vertexBuffer, uint32 streamOffset, uint32 offset, uint32 stride, Gfx::SeFormat type) 
-        : vertexBuffer(vertexBuffer)
-        , streamOffset(streamOffset)
-        , offset(offset)
-        , stride(stride)
-        , type(type)
-    {
-    }
-};*/
-
 typedef Array<VertexInputStream> VertexInputStreamArray;
 struct MeshDescription;
-DECLARE_REF(VertexFactory);
-class VertexFactory
+DECLARE_REF(VertexShaderInput);
+class VertexShaderInput
 {
 public:
-    VertexFactory();
-    VertexFactory(MeshDescription description);
-    ~VertexFactory();
+    VertexShaderInput(std::string name);
+    VertexShaderInput(MeshDescription description, std::string name);
+    ~VertexShaderInput();
     void getStreams(VertexInputStreamArray& outVertexStreams) const;
     void getPositionOnlyStream(VertexInputStreamArray& outVertexStreams) const;
     virtual bool supportsTesselation() { return false; }
     Gfx::PVertexDeclaration getDeclaration() const {return declaration;}
     Gfx::PVertexDeclaration getPositionDeclaration() const {return positionDeclaration;}
+    std::string getName() const { return name; }
+    std::string getCode() const { return code; }
 private:
-    static List<PVertexFactory> registeredVertexFactories;
-    static std::mutex registeredVertexFactoryLock;
+    static List<PVertexShaderInput> registeredInputs;
+    static std::mutex registeredInputsLock;
+    Array<Gfx::VertexAttribute> layout;
     StaticArray<Gfx::VertexStream, 16> streams;
-    StaticArray<Gfx::VertexStream, 16> positionStream;
+    StaticArray<Gfx::VertexStream, 16> positionStreams;
     Gfx::PVertexDeclaration declaration;
     Gfx::PVertexDeclaration positionDeclaration;
+    std::string name;
+    std::string code;
 };
-DEFINE_REF(VertexFactory);
+DEFINE_REF(VertexShaderInput);
 } // namespace Seele

@@ -53,4 +53,9 @@ struct Rect3D
 	Vector size;
 	Vector offset;
 };
+template <typename T>
+inline constexpr T align(const T ptr, int64_t alignment)
+{
+	return (T)(((uint64_t)ptr + alignment - 1) & ~(alignment - 1));
+}
 } // namespace Seele

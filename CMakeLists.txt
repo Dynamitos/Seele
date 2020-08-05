@@ -80,7 +80,9 @@ target_precompile_headers(SeeleEngine
     <filesystem>
     <fstream>
     <mutex>
-    <condition_variable>)
+    <condition_variable>
+    <boost/serialization/serialization.hpp>
+    <boost/crc.hpp>)
 
 add_subdirectory(src/)
 

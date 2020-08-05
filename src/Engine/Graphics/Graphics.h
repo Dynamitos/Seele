@@ -2,7 +2,7 @@
 #include "MinimalEngine.h"
 #include "GraphicsResources.h"
 #include "Containers/Array.h"
-#include "RenderPass/VertexFactory.h"
+#include "VertexShaderInput.h"
 
 namespace Seele
 {

@@ -1,6 +1,7 @@
 #pragma once
 #include "Graphics/GraphicsEnums.h"
 #include <vulkan/vulkan.h>
+#include <iostream>
 
 #define VK_CHECK(f)                                                                                                       \
 	{                                                                                                                     \

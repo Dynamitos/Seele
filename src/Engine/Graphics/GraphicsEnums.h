@@ -8,6 +8,27 @@ static constexpr bool useAsyncCompute = true;
 static constexpr bool waitIdleOnSubmit = true;
 static constexpr uint32 numFramesBuffered = 3;
 
+enum class MaterialShadingModel
+{
+    Unlit,
+    DefaultLit,
+    Subsurface,
+    PreintegratedSkin,
+    ClearCoat,
+    SubsurfaceProfile,
+    TwoSidedFoliage,
+    Hair,
+    Cloth,
+    Eye,
+    Max
+};
+
+enum class RenderPassType : uint8
+{
+    DepthPrepass,
+    BasePass
+};
+
 typedef uint32_t SeFlags;
 typedef uint32_t SeBool32;
 typedef uint64_t SeDeviceSize;
@@ -1852,6 +1873,14 @@ enum class QueueType
     COMPUTE = 2,
     TRANSFER = 3,
     DEDICATED_TRANSFER = 4
+};
+enum class VertexAttribute
+{
+    POSITION,
+    TEXCOORD,
+    NORMAL,
+    TANGENT,
+    BITANGENT
 };
 } // namespace Gfx
 } // namespace Seele

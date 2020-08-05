@@ -5,6 +5,4 @@ target_sources(SeeleEngine
         DepthPrepass.h
         DepthPrepass.cpp
         MeshProcessor.h
-        MeshProcessor.cpp
-        VertexFactory.h
-        VertexFactory.cpp)
+        MeshProcessor.cpp)

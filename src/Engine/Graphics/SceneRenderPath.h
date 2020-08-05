@@ -1,5 +1,6 @@
 #pragma once
 #include "RenderPath.h"
+#include "Graphics/RenderPass/BasePass.h"
 
 namespace Seele
 {
@@ -17,5 +18,6 @@ public:
 
 protected:
 	PScene scene;
+	UPBasePass basePass;
 };
 } // namespace Seele

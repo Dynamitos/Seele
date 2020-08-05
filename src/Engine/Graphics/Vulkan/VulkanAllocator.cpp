@@ -1,7 +1,6 @@
 #include "VulkanAllocator.h"
 #include "VulkanGraphics.h"
 #include "VulkanInitializer.h"
-#include "Math/MemCRC.h"
 
 using namespace Seele::Vulkan;
 

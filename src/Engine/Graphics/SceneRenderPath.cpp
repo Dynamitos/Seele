@@ -7,6 +7,7 @@ using namespace Seele;
 
 SceneRenderPath::SceneRenderPath(Gfx::PGraphics graphics, Gfx::PViewport target)
 	: RenderPath(graphics, target)
+	, basePass(new BasePass(scene, graphics, target))
 {
 	scene = new Scene();
 	PMeshAsset asset = AssetRegistry::findMesh("Unbenannt");
@@ -35,7 +36,7 @@ void SceneRenderPath::beginFrame()
 
 void SceneRenderPath::render() 
 {
-    
+    basePass->render();
 }
 
 void SceneRenderPath::endFrame() 

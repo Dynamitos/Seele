@@ -124,5 +124,7 @@ uint32 RenderPass::getFramebufferHash()
         PTexture2D tex = layout->depthAttachment->getTexture().cast<Texture2D>();
         description.depthAttachment = tex->getView();
     }
-    return memCrc32(&description, sizeof(FramebufferDescription));
+    boost::crc_32_type result;
+    result.process_bytes(&description, sizeof(FramebufferDescription));
+    return result.checksum();
 }

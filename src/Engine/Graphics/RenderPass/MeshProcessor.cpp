@@ -1,6 +1,6 @@
 #include "MeshProcessor.h"
 #include "Graphics/Graphics.h"
-#include "VertexFactory.h"
+#include "Graphics/VertexShaderInput.h"
 
 using namespace Seele;
 
@@ -28,11 +28,11 @@ void MeshProcessor::buildMeshDrawCommand(
     Gfx::PFragmentShader fragmentShader,
     bool positionOnly)
 {
-    const PVertexFactory vertexFactory = meshBatch.vertexFactory;
+    const PVertexShaderInput vertexInput = meshBatch.vertexInput;
 
     GraphicsPipelineCreateInfo pipelineInitializer;
     pipelineInitializer.topology = meshBatch.topology;
-    Gfx::PVertexDeclaration vertexDecl = positionOnly ? vertexFactory->getPositionDeclaration() : vertexFactory->getDeclaration();
+    Gfx::PVertexDeclaration vertexDecl = positionOnly ? vertexInput->getPositionDeclaration() : vertexInput->getDeclaration();
     pipelineInitializer.vertexDeclaration = vertexDecl;
     pipelineInitializer.vertexShader = vertexShader;
     pipelineInitializer.controlShader = controlShader;
@@ -44,11 +44,11 @@ void MeshProcessor::buildMeshDrawCommand(
     VertexInputStreamArray vertexStreams;
     if(positionOnly)
     {
-        vertexFactory->getPositionOnlyStream(vertexStreams);
+        vertexInput->getPositionOnlyStream(vertexStreams);
     }
     else
     {
-        vertexFactory->getStreams(vertexStreams);
+        vertexInput->getStreams(vertexStreams);
     }
     drawCommand->bindVertexBuffer(vertexStreams);
     Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(pipelineInitializer);

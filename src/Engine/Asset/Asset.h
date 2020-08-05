@@ -1,5 +1,6 @@
 #pragma once
 #include "MinimalEngine.h"
+#include <filesystem>
 
 namespace Seele
 {
