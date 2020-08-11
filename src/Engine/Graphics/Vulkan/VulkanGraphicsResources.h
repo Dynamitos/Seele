@@ -1,6 +1,7 @@
 #pragma once
-#include "Graphics/GraphicsResources.h"
 #include <vulkan/vulkan.h>
+#include "Graphics/GraphicsResources.h"
+#include <functional>
 
 namespace Seele
 {

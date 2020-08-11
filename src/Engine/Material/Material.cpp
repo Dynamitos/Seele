@@ -3,6 +3,7 @@
 #include "Graphics/VertexShaderInput.h"
 #include <nlohmann/json.hpp>
 #include <sstream>
+#include <iostream>
 
 Gfx::ShaderMap Material::shaderMap;
 std::mutex Material::shaderMapLock;

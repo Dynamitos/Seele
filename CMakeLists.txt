@@ -67,28 +67,28 @@ target_link_libraries(SeeleEngine ${SLANG_LIBRARY})
 target_link_libraries(SeeleEngine ${ASSIMP_LIBRARIES})
 target_link_libraries(SeeleEngine ${JSON_LIBRARY})
 
-target_precompile_headers(SeeleEngine 
-  PRIVATE    
-    <assert.h>
-    <memory>
-    <atomic>
-    <cstring>
-    <iostream>
-    <string>
-    <thread>
-    <functional>
-    <filesystem>
-    <fstream>
-    <mutex>
-    <condition_variable>
-    <boost/serialization/serialization.hpp>
-    <boost/crc.hpp>)
+#target_precompile_headers(SeeleEngine 
+#  PRIVATE    
+#    <assert.h>
+#    <memory>
+#    <atomic>
+#    <cstring>
+#    <iostream>
+#    <string>
+#    <thread>
+#    <functional>
+#    <filesystem>
+#    <fstream>
+#    <mutex>
+#    <condition_variable>
+#    <boost/serialization/serialization.hpp>
+#    <boost/crc.hpp>)
 
 add_subdirectory(src/)
 
 if(MSVC)
   set(_CRT_SECURE_NO_WARNINGS)
-  target_compile_options(SeeleEngine PRIVATE /DEBUG:FASTLINK /Zi)
+#  target_compile_options(SeeleEngine PRIVATE /DEBUG:FASTLINK /Zi)
 else()
   target_compile_options(SeeleEngine PRIVATE -Wall -Wextra -pedantic)
 endif()

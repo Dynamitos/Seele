@@ -3,6 +3,7 @@
 #include "Containers/List.h"
 #include <thread>
 #include <future>
+#include <filesystem>
 
 namespace Seele
 {

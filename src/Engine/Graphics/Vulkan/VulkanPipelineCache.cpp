@@ -5,6 +5,7 @@
 #include "VulkanRenderPass.h"
 #include "VulkanDescriptorSets.h"
 #include "VulkanShader.h"
+#include <fstream>
 
 using namespace Seele;
 using namespace Seele::Vulkan;
@@ -230,7 +231,7 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
     std::memcpy(blendState.blendConstants, gfxInfo.colorBlend.blendConstants, sizeof(float)*4);
 
     uint32 numDynamicEnabled = 0;
-    StaticArray<VkDynamicState, VK_DYNAMIC_STATE_RANGE_SIZE> dynamicEnabled;
+    StaticArray<VkDynamicState, 2> dynamicEnabled;
     dynamicEnabled[numDynamicEnabled++] = VK_DYNAMIC_STATE_VIEWPORT;
     dynamicEnabled[numDynamicEnabled++] = VK_DYNAMIC_STATE_SCISSOR;
 

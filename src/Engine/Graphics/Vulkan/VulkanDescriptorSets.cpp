@@ -112,7 +112,7 @@ void DescriptorSet::updateSampler(uint32_t binding, Gfx::PSamplerState samplerSt
 		init::DescriptorImageInfo(
 			vulkanSampler->sampler,
 			VK_NULL_HANDLE,
-			VK_IMAGE_LAYOUT_BEGIN_RANGE);
+			VK_IMAGE_LAYOUT_UNDEFINED);
 	imageInfos.add(imageInfo);
 
 	VkWriteDescriptorSet writeDescriptor = init::WriteDescriptorSet(setHandle, VK_DESCRIPTOR_TYPE_SAMPLER, binding, &imageInfos.back());
@@ -162,7 +162,7 @@ void DescriptorSet::writeChanges()
 DescriptorAllocator::DescriptorAllocator(PGraphics graphics, DescriptorLayout &layout)
 	: layout(layout), graphics(graphics)
 {
-	uint32 perTypeSizes[VK_DESCRIPTOR_TYPE_END_RANGE];
+	uint32 perTypeSizes[VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT]; // TODO: FIX ENUM
 	std::memset(perTypeSizes, 0, sizeof(perTypeSizes));
 	for (uint32 i = 0; i < layout.getBindings().size(); ++i)
 	{
@@ -171,7 +171,7 @@ DescriptorAllocator::DescriptorAllocator(PGraphics graphics, DescriptorLayout &l
 		perTypeSizes[typeIndex] += 256;
 	}
 	Array<VkDescriptorPoolSize> poolSizes;
-	for (uint32 i = 0; i < VK_DESCRIPTOR_TYPE_END_RANGE; ++i)
+	for (uint32 i = 0; i < VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT; ++i)
 	{
 		if (perTypeSizes[i] > 0)
 		{

@@ -7,6 +7,7 @@
 #include "Material/Material.h"
 #include "Graphics/Graphics.h"
 #include "Graphics/WindowManager.h"
+#include <iostream>
 
 using namespace Seele;
 

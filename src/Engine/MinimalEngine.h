@@ -93,7 +93,7 @@ public:
 	inline void removeRef()
 	{
 		refCount--;
-		if (refCount.load() == 0)
+		if (refCount == 0)
 		{
 			delete this;
 		}
@@ -105,7 +105,7 @@ public:
 
 private:
 	T *handle;
-	std::atomic_uint64_t refCount;
+	uint64 refCount;
 };
 
 template <typename T>
