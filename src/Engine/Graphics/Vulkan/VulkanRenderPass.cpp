@@ -19,7 +19,7 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::PRenderTargetLayout layout)
     for (auto inputAttachment : layout->inputAttachments)
     {
         PTexture2D image = inputAttachment->getTexture().cast<Texture2D>();
-        VkAttachmentDescription desc = attachments.add();
+        VkAttachmentDescription& desc = attachments.add();
         desc.flags = 0;
         desc.format = cast(image->getFormat());
         desc.storeOp = cast(inputAttachment->getStoreOp());
@@ -36,10 +36,10 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::PRenderTargetLayout layout)
     }
     for (auto colorAttachment : layout->colorAttachments)
     {
-        PTexture2D image = colorAttachment->getTexture().cast<Texture2D>();
-        VkAttachmentDescription desc = attachments.add();
+        VkAttachmentDescription& desc = attachments.add();
         desc.flags = 0;
-        desc.format = cast(image->getFormat());
+        desc.samples = (VkSampleCountFlagBits)colorAttachment->getNumSamples();
+        desc.format = cast(colorAttachment->getFormat());
         desc.storeOp = cast(colorAttachment->getStoreOp());
         desc.loadOp = cast(colorAttachment->getLoadOp());
         desc.stencilStoreOp = cast(colorAttachment->getStencilStoreOp());
@@ -55,8 +55,9 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::PRenderTargetLayout layout)
     if (layout->depthAttachment != nullptr)
     {
         PTexture2D image = layout->depthAttachment->getTexture().cast<Texture2D>();
-        VkAttachmentDescription desc = attachments.add();
+        VkAttachmentDescription& desc = attachments.add();
         desc.flags = 0;
+        desc.samples = (VkSampleCountFlagBits)image->getNumSamples();
         desc.format = cast(image->getFormat());
         desc.storeOp = cast(layout->depthAttachment->getStoreOp());
         desc.loadOp = cast(layout->depthAttachment->getLoadOp());

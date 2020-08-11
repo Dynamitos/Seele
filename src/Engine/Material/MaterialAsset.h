@@ -19,13 +19,9 @@ public:
     Gfx::SeBlendOp getBlendMode() const {return Gfx::SE_BLEND_OP_END_RANGE;}
     Gfx::MaterialShadingModel getShadingModel() const {return Gfx::MaterialShadingModel::DefaultLit;}
 
-    const Gfx::ShaderCollection* getShaders(Gfx::RenderPassType renderPass, PVertexShaderInput vertexInput) const;
-    Gfx::ShaderCollection& createShaders(Gfx::RenderPassType renderPass, PVertexShaderInput vertexInput);
-
 protected:
     //For now its simply the collection of parameters, since there is no point for expressions
     Array<PShaderParameter> parameters;
-    static Gfx::ShaderMap shaderMap;
 };
 DEFINE_REF(MaterialAsset);
 } // namespace Seele

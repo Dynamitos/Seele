@@ -16,7 +16,13 @@ public:
     virtual void load() override;
     virtual std::string getMaterialName() const { return materialName; }
     inline std::string getCode() const { return materialCode; }
+
+    const Gfx::ShaderCollection* getShaders(Gfx::RenderPassType renderPass, PVertexShaderInput vertexInput) const;
+    Gfx::ShaderCollection& createShaders(Gfx::PGraphics graphics, Gfx::RenderPassType renderPass, PVertexShaderInput vertexInput);
 private:
+    static Gfx::ShaderMap shaderMap;
+    static std::mutex shaderMapLock;
+
     void compile();
     std::string materialName;
     std::string materialCode;

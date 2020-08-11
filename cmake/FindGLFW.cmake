@@ -29,11 +29,11 @@ if (WIN32)
 			${GLFW_ROOT}/include
 		DOC "The directory where GLFW/glfw.h resides")
 
-	# Use glfw3.lib for static library
+	# Use glfw3(d).lib for static library
 	if (GLFW_USE_STATIC_LIBS)
-		set(GLFW_LIBRARY_NAME glfw3)
+		set(GLFW_LIBRARY_NAME glfw3${CMAKE_DEBUG_POSTFIX})
 	else()
-		set(GLFW_LIBRARY_NAME glfw3ddll)
+		set(GLFW_LIBRARY_NAME glfw3${CMAKE_DEBUG_POSTFIX}dll)
 	endif()
 
 	# Find library files
@@ -50,7 +50,7 @@ if (WIN32)
 
 	find_file(
 		GLFW_BINARY
-		NAMES glfw3.dll
+		NAMES glfw3${CMAKE_DEBUG_POSTFIX}.dll
 		PATHS
 			$ENV{PROGRAMFILES}/bin
 			${GLFW_ROOT}/src
@@ -102,7 +102,7 @@ find_package_handle_standard_args(GLFW DEFAULT_MSG GLFW_INCLUDE_DIR GLFW_LIBRARY
 
 # Define GLFW_LIBRARIES and GLFW_INCLUDE_DIRS
 if (GLFW_FOUND)
-	set(GLFW_LIBRARIES ${OPENGL_LIBRARIES} ${GLFW_LIBRARY})
+	set(GLFW_LIBRARIES ${GLFW_LIBRARY})
 	set(GLFW_INCLUDE_DIRS ${GLFW_INCLUDE_DIR})
 endif()
 

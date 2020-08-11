@@ -33,6 +33,7 @@ struct WindowCreateInfo
     int32 height;
     const char *title;
     bool bFullscreen;
+    Gfx::SeSampleCountFlags numSamples;
     Gfx::SeFormat pixelFormat;
     void *windowHandle;
 };

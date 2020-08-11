@@ -2,8 +2,6 @@ include (ExternalProject)
 
 set(DEPENDENCIES)
 set(EXTRA_CMAKE_ARGS)
-execute_process(COMMAND git submodule update --init --recursive -- ${CMAKE_SOURCE_DIR})
-
 #------------ASSIMP---------------
 list(APPEND DEPENDENCIES assimp)
 set(ASSIMP_BUILD_TESTS OFF CACHE INTERNAL "")
@@ -72,7 +70,7 @@ if(WIN32)
 ExternalProject_Add(slang
 	SOURCE_DIR ${SLANG_ROOT}
 	BINARY_DIR ${CMAKE_BINARY_DIR}/lib
-	CONFIGURE_COMMAND ""#devenv /upgrade ${SLANG_ROOT}/source/slang/slang.vcxproj
+	CONFIGURE_COMMAND devenv /upgrade ${SLANG_ROOT}/source/slang/slang.vcxproj
 	BUILD_COMMAND msbuild -p:Configuration=Release -p:WarningLevel=0 -p:Platform=${CMAKE_PLATFORM} -p:WindowsTargetPlatformVersion=10.0 ${SLANG_ROOT}/source/slang/slang.vcxproj
 	INSTALL_COMMAND "")
 

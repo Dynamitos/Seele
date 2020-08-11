@@ -1,6 +1,7 @@
 #pragma once
 #include "MinimalEngine.h"
 #include <filesystem>
+#include <fstream>
 
 namespace Seele
 {

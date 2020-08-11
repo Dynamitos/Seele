@@ -9,7 +9,7 @@ using namespace Seele;
 using namespace Seele::Vulkan;
 
 Window::Window(PGraphics graphics, const WindowCreateInfo &createInfo)
-    : Gfx::Window(createInfo), graphics(graphics), instance(graphics->getInstance()), swapchain(VK_NULL_HANDLE)
+    : Gfx::Window(createInfo), graphics(graphics), instance(graphics->getInstance()), swapchain(VK_NULL_HANDLE), numSamples(createInfo.numSamples), pixelFormat(cast(createInfo.pixelFormat))
 {
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     GLFWwindow *handle = glfwCreateWindow(createInfo.width, createInfo.height, createInfo.title, createInfo.bFullscreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);

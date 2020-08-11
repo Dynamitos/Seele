@@ -20,7 +20,7 @@ void BasePassMeshProcessor::addMeshBatch(
     const Gfx::PRenderPass renderPass,
     int32 staticMeshId) 
 {
-    const PMaterialAsset material = batch.material;
+    const PMaterial material = batch.material;
     const Gfx::MaterialShadingModel shadingModel = material->getShadingModel();
 
     const PVertexShaderInput vertexInput = batch.vertexInput;

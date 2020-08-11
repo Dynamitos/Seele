@@ -1,7 +1,11 @@
 #include "Material.h"
 #include "Asset/AssetRegistry.h"
+#include "Graphics/VertexShaderInput.h"
 #include <nlohmann/json.hpp>
 #include <sstream>
+
+Gfx::ShaderMap Material::shaderMap;
+std::mutex Material::shaderMapLock;
 
 using namespace Seele;
 using json = nlohmann::json;
@@ -102,4 +106,20 @@ void Material::compile()
 
     codeStream << "}};" << std::endl;
     materialCode = codeStream.str();
+}
+
+const Gfx::ShaderCollection* Material::getShaders(Gfx::RenderPassType renderPass, PVertexShaderInput vertexInput) const
+{
+    Gfx::ShaderPermutation permutation;
+    std::string materialName = getMaterialName();
+    std::string vertexInputName = vertexInput->getName();
+    std::memcpy(permutation.materialName, materialName.c_str(), sizeof(permutation.materialName));
+    std::memcpy(permutation.materialName, vertexInputName.c_str(), sizeof(permutation.materialName));
+    return shaderMap.findShaders(Gfx::PermutationId(permutation));
+}
+
+Gfx::ShaderCollection& Material::createShaders(Gfx::PGraphics graphics, Gfx::RenderPassType renderPass, PVertexShaderInput vertexInput) 
+{
+    std::lock_guard lock(shaderMapLock);
+    return shaderMap.createShaders(graphics, renderPass, this, vertexInput, false);
 }

@@ -17,6 +17,8 @@ void Seele::RenderCore::init()
 	mainWindowInfo.width = 1280;
 	mainWindowInfo.height = 720;
 	mainWindowInfo.bFullscreen = false;
+	mainWindowInfo.numSamples = 1;
+	mainWindowInfo.pixelFormat = Gfx::SE_FORMAT_R8G8B8_UNORM;
 	auto window = windowManager->addWindow(mainWindowInfo);
 	ViewportCreateInfo sceneViewInfo;
 	sceneViewInfo.sizeX = 1280;

@@ -409,6 +409,11 @@ class Texture : public QueueOwnedResource
 public:
 	Texture(PGraphics graphics, QueueType startQueueType);
 	virtual ~Texture();
+
+	virtual SeFormat getFormat() const = 0;
+	virtual uint32 getSizeX() const = 0;
+	virtual uint32 getSizeY() const = 0;
+	virtual SeSampleCountFlags getNumSamples() const = 0;
 protected:
     // Inherited via QueueOwnedResource
 	virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
@@ -419,6 +424,11 @@ class Texture2D : public Texture
 public:
 	Texture2D(PGraphics graphics, QueueType startQueueType);
 	virtual ~Texture2D();
+
+	virtual SeFormat getFormat() const = 0;
+	virtual uint32 getSizeX() const = 0;
+	virtual uint32 getSizeY() const = 0;
+	virtual SeSampleCountFlags getNumSamples() const = 0;
 protected:
 	//Inherited via QueueOwnedResource
 	virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
@@ -447,6 +457,14 @@ public:
 	virtual void endFrame() = 0;
 	virtual void onWindowCloseEvent() = 0;
 	virtual PTexture2D getBackBuffer() = 0;
+	SeFormat getSwapchainFormat() const
+	{
+		return pixelFormat;
+	}
+	SeSampleCountFlags getNumSamples() const
+	{
+		return samples;
+	}
 
 protected:
 	uint32 sizeX;
@@ -454,6 +472,7 @@ protected:
 	bool bFullscreen;
 	const char *title;
 	SeFormat pixelFormat;
+	uint32 samples;
 };
 DEFINE_REF(Window);
 
@@ -496,6 +515,14 @@ public:
 	{
 		return texture;
 	}
+	virtual SeFormat getFormat() const
+	{
+		return texture->getFormat();
+	}
+	virtual SeSampleCountFlags getNumSamples() const
+	{
+		return texture->getNumSamples();
+	}
 	inline SeAttachmentLoadOp getLoadOp() const { return loadOp; }
 	inline SeAttachmentStoreOp getStoreOp() const { return storeOp; }
 	inline SeAttachmentLoadOp getStencilLoadOp() const { return stencilLoadOp; }
@@ -518,12 +545,20 @@ public:
 						SeAttachmentStoreOp storeOp = SE_ATTACHMENT_STORE_OP_STORE,
 						SeAttachmentLoadOp stencilLoadOp = SE_ATTACHMENT_LOAD_OP_DONT_CARE,
 						SeAttachmentStoreOp stencilStoreOp = SE_ATTACHMENT_STORE_OP_DONT_CARE)
-		: RenderTargetAttachment(owner->getBackBuffer(), loadOp, storeOp, stencilLoadOp, stencilStoreOp), owner(owner)
+		: RenderTargetAttachment(nullptr, loadOp, storeOp, stencilLoadOp, stencilStoreOp), owner(owner)
 	{
 	}
 	virtual PTexture2D getTexture() override
 	{
 		return owner->getBackBuffer();
+	}
+	virtual SeFormat getFormat() const override
+	{
+		return owner->getSwapchainFormat();
+	}
+	virtual SeSampleCountFlags getNumSamples() const override
+	{
+		return owner->getNumSamples();
 	}
 
 private:

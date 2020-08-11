@@ -262,7 +262,7 @@ RenderTargetLayout::RenderTargetLayout(Array<PRenderTargetAttachment> inputAttac
 }
 
 Window::Window(const WindowCreateInfo &createInfo)
-	: sizeX(createInfo.width), sizeY(createInfo.height), bFullscreen(createInfo.bFullscreen), title(createInfo.title), pixelFormat(createInfo.pixelFormat)
+	: sizeX(createInfo.width), sizeY(createInfo.height), bFullscreen(createInfo.bFullscreen), title(createInfo.title), pixelFormat(createInfo.pixelFormat), samples(createInfo.numSamples)
 {
 }
 

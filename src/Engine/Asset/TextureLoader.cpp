@@ -12,8 +12,8 @@ using namespace Seele;
 TextureLoader::TextureLoader(Gfx::PGraphics graphics)
     : graphics(graphics)
 {
-    import("./textures/placeholder.png");
-    placeholderTexture = AssetRegistry::findTexture("./textures/placeholder.png");
+    import("textures/placeholder.png");
+    placeholderTexture = AssetRegistry::findTexture("textures/placeholder.png");
 }
 
 TextureLoader::~TextureLoader()
@@ -27,11 +27,11 @@ void TextureLoader::importAsset(const std::filesystem::path& filePath)
 
 void TextureLoader::import(const std::filesystem::path& path)
 {
-    std::filesystem::path assetPath = path.stem().append(".asset");
+    auto assetFileName = path;
+    std::filesystem::path assetPath = AssetRegistry::get().rootFolder.append(assetFileName.replace_extension("asset").filename().string());
     PTextureAsset asset = new TextureAsset(assetPath);
     asset->setStatus(Asset::Status::Loading);
     int x, y, n;
-    const std::string fullPath = std::string(asset->getFullPath());
     unsigned char* data = stbi_load(path.string().c_str(), &x, &y, &n, 4);
     TextureCreateInfo createInfo;
     createInfo.format = Gfx::SE_FORMAT_R8G8B8A8_UINT;
@@ -45,5 +45,5 @@ void TextureLoader::import(const std::filesystem::path& path)
     texture->transferOwnership(Gfx::QueueType::GRAPHICS);
     asset->setTexture(texture);
     asset->setStatus(Asset::Status::Ready);
-    AssetRegistry::get().textures[assetPath.string()] = asset;
+    AssetRegistry::get().textures[path.string()] = asset;
 }

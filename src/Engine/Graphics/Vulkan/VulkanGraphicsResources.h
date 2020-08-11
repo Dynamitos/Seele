@@ -200,6 +200,10 @@ public:
 	{
 		return format;
 	}
+	inline Gfx::SeSampleCountFlags getNumSamples() const
+	{
+		return samples;
+	}
 	inline bool isDepthStencil() const
 	{
 		return aspect & (VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
@@ -249,17 +253,21 @@ class Texture2D : public TextureBase, public Gfx::Texture2D
 public:
 	Texture2D(PGraphics graphics, const TextureCreateInfo& createInfo, VkImage existingImage = VK_NULL_HANDLE);
 	virtual ~Texture2D();
-	inline uint32 getSizeX() const
+	virtual uint32 getSizeX() const override
 	{
 		return textureHandle->sizeX;
 	}
-	inline uint32 getSizeY() const
+	virtual uint32 getSizeY() const override
 	{
 		return textureHandle->sizeY;
 	}
-	inline Gfx::SeFormat getFormat() const
+	virtual Gfx::SeFormat getFormat() const override
 	{
 		return textureHandle->format;
+	}
+	virtual Gfx::SeSampleCountFlags getNumSamples() const override
+	{
+		return textureHandle->getNumSamples();
 	}
 	inline VkImage getHandle() const
 	{
@@ -312,6 +320,7 @@ protected:
 
 	PGraphics graphics;
 	VkFormat pixelFormat;
+	VkSampleCountFlags numSamples;
 	VkPresentModeKHR presentMode;
 	VkSwapchainKHR swapchain;
 	VkSurfaceKHR surface;
