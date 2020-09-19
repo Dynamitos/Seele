@@ -10,7 +10,7 @@ struct ComputeShaderInput
 	uint groupIndex : SV_GroupIndex;
 };
 
-layout(set = 0, binding = 0)
+layout(set = 0, binding = 0, std430)
 cbuffer DispatchParams
 {
 	uint3 numThreadGroups;
@@ -18,7 +18,7 @@ cbuffer DispatchParams
 	uint3 numThreads;
 	uint pad1;
 }
-layout(set = 0, binding = 2)
+layout(set = 0, binding = 2, std430)
 RWStructuredBuffer<Frustum> out_Frustums;
 
 

@@ -18,21 +18,33 @@ public:
     ~AssetRegistry();
     static void init(const std::string& rootFolder);
 
+    static std::string getRootFolder();
+
     static void importFile(const std::string& filePath);
     
     static PMeshAsset findMesh(const std::string& filePath);
     static PTextureAsset findTexture(const std::string& filePath);
     static PMaterialAsset findMaterial(const std::string& filePath);
+
+    static std::ofstream createWriteStream(const std::string& relativePath, std::ios_base::openmode openmode = 0);
+    static std::ifstream createReadStream(const std::string& relativePath, std::ios_base::openmode openmode = 0);
 private:
     static AssetRegistry& get();
 
     AssetRegistry();
     void init(const std::filesystem::path& rootFolder, Gfx::PGraphics graphics);
 
-    void registerMesh(const std::filesystem::path& filePath);
-    void registerTexture(const std::filesystem::path& filePath);
-    void registerMaterial(const std::filesystem::path& filePath);
-    
+    void importMesh(const std::filesystem::path& filePath);
+    void importTexture(const std::filesystem::path& filePath);
+    void importMaterial(const std::filesystem::path& filePath);
+
+    void registerMesh(PMeshAsset mesh);
+    void registerTexture(PTextureAsset texture);
+    void registerMaterial(PMaterialAsset material);
+
+    std::ofstream internalCreateWriteStream(const std::string& relativePath, std::ios_base::openmode openmode = 0);
+    std::ifstream internalCreateReadStream(const std::string& relaitvePath, std::ios_base::openmode openmode = 0);
+
     std::filesystem::path rootFolder;
     Map<std::string, PTextureAsset> textures;
     Map<std::string, PMeshAsset> meshes;

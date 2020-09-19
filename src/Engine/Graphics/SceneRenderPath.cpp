@@ -5,14 +5,11 @@
 
 using namespace Seele;
 
-SceneRenderPath::SceneRenderPath(Gfx::PGraphics graphics, Gfx::PViewport target)
+SceneRenderPath::SceneRenderPath(PScene scene, Gfx::PGraphics graphics, Gfx::PViewport target)
 	: RenderPath(graphics, target)
-	, basePass(new BasePass(scene, graphics, target))
+	, scene(scene)
 {
-	scene = new Scene();
-	PMeshAsset asset = AssetRegistry::findMesh("Unbenannt");
-	PActor rootActor = new Actor();
-	PPrimitiveComponent primitiveComponent = new PrimitiveComponent();
+	basePass = new BasePass(scene, graphics, target);
 }
 
 SceneRenderPath::~SceneRenderPath()

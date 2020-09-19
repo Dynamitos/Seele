@@ -100,6 +100,7 @@ struct ShaderCreateInfo
     Array<std::string> shaderCode;
     std::string entryPoint;
     Array<const char*> typeParameter;
+    Map<const char*, const char*> defines;
 };
 
 namespace Gfx

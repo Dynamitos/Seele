@@ -114,7 +114,7 @@ PSubAllocation Allocation::getSuballocation(VkDeviceSize requestedSize, VkDevice
 void Allocation::markFree(SubAllocation *allocation)
 {
 	// Dont free if it is already a free allocation, since they also mark themselves on deletion
-	if(freeRanges.find(allocation->allocatedOffset) != nullptr)
+	if (freeRanges.find(allocation->allocatedOffset) != nullptr)
 	{
 		return;
 	}
@@ -286,6 +286,8 @@ void StagingManager::clearPending()
 
 PStagingBuffer StagingManager::allocateStagingBuffer(uint32 size, VkBufferUsageFlags usage, bool bCPURead)
 {
+	
+	std::unique_lock l(lock);
 	for (auto it = freeBuffers.begin(); it != freeBuffers.end(); ++it)
 	{
 		auto freeBuffer = *it;
@@ -296,6 +298,7 @@ PStagingBuffer StagingManager::allocateStagingBuffer(uint32 size, VkBufferUsageF
 			return freeBuffer;
 		}
 	}
+
 	PStagingBuffer stagingBuffer = new StagingBuffer();
 	VkBufferCreateInfo stagingBufferCreateInfo = init::BufferCreateInfo(usage, size);
 	VkDevice vulkanDevice = graphics->getDevice();
@@ -322,11 +325,13 @@ PStagingBuffer StagingManager::allocateStagingBuffer(uint32 size, VkBufferUsageF
 	vkBindBufferMemory(graphics->getDevice(), stagingBuffer->buffer, stagingBuffer->getMemoryHandle(), stagingBuffer->getOffset());
 
 	activeBuffers.add(stagingBuffer.getHandle());
+	
 	return stagingBuffer;
 }
 
 void StagingManager::releaseStagingBuffer(PStagingBuffer buffer)
 {
+	std::unique_lock l(lock);
 	freeBuffers.add(buffer);
 	activeBuffers.remove(activeBuffers.find(buffer.getHandle()));
 }

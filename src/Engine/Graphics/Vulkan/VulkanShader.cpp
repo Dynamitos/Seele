@@ -55,7 +55,6 @@ void Shader::create(const ShaderCreateInfo& createInfo)
     int targetIndex = spAddCodeGenTarget(request, SLANG_SPIRV);
     spSetTargetProfile(request, targetIndex, spFindProfile(session, "glsl_vk"));
     spSetDumpIntermediates(request, true);
-
     int translationUnitIndex = spAddTranslationUnit(request, SLANG_SOURCE_LANGUAGE_SLANG, "");
 
     for(auto code : createInfo.shaderCode)
@@ -67,15 +66,20 @@ void Shader::create(const ShaderCreateInfo& createInfo)
             code.data()
         );
     }
+    for(auto define : createInfo.defines)
+    {
+        spAddPreprocessorDefine(request, define.key, define.value);
+    }
     spAddSearchPath(request, "shaders/lib/");
+    spAddSearchPath(request, "shaders/generated/");
 
     spSetGlobalGenericArgs(request, createInfo.typeParameter.size(), createInfo.typeParameter.data());
     
     int entryPointIndex = spAddEntryPoint(request, translationUnitIndex, entryPointName.c_str(), getStageFromShaderType(type));
     if(spCompile(request))
     {
-        char const* diagnostice = spGetDiagnosticOutput(request);
-        std::cout << diagnostice << std::endl;
+        char const* diagnostics = spGetDiagnosticOutput(request);
+        std::cout << diagnostics << std::endl;
     }
 
     ShaderReflection* reflection = slang::ShaderReflection::get(request);

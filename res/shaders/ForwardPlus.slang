@@ -1,11 +1,10 @@
 import LightEnv;
 import BRDF;
 import Material;
-import TexturedMaterial;
-import FlatColorMaterial;
 import Common;
-//TODO revert to pre processed shader attributes
-import StaticMeshShaderAttributes;
+
+import VERTEX_INPUT_IMPORT;
+import MATERIAL_IMPORT;
 import PrimitiveSceneData;
 import MaterialParameter;
 
@@ -14,9 +13,9 @@ import MaterialParameter;
 //layout(set = 0, binding = 3)
 //RWTexture2D<uint2> lightGrid;
 
-layout(set = 1, std430)
-//type_param TMaterial : IMaterial;
-ParameterBlock<TexturedMaterial> gMaterial;
+type_param TMaterial : IMaterial;
+layout(set = 1)
+ParameterBlock<TMaterial> gMaterial;
 
 struct VertexStageOutput
 {
@@ -31,7 +30,7 @@ VertexStageOutput vertexMain(
 {
     VertexStageOutput output;
     VertexValueCache cache = input.getVertexCache();
-	float3 worldPosition = input.getWorldPosition(cache);
+	float3 worldPosition = input.getWorldPosition();
     float4 clipSpacePosition;
     
     float3x3 tangentToLocal = cache.tangentToLocal;
@@ -52,7 +51,7 @@ float4 fragmentMain(
     ) : SV_Target
 {
     MaterialFragmentParameter materialParams = input.getMaterialParameter(position);
-	BlinnPhong brdf = gMaterial.prepare(materialParams);
+	TMaterial.BRDF brdf = gMaterial.prepare(materialParams);
 	
 	float3 viewDir = normalize(materialParams.viewDir);
     

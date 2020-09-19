@@ -12,8 +12,7 @@ using namespace Seele;
 TextureLoader::TextureLoader(Gfx::PGraphics graphics)
     : graphics(graphics)
 {
-    import("textures/placeholder.png");
-    placeholderTexture = AssetRegistry::findTexture("textures/placeholder.png");
+    placeholderTexture = import("./textures/placeholder.png");
 }
 
 TextureLoader::~TextureLoader()
@@ -22,15 +21,20 @@ TextureLoader::~TextureLoader()
 
 void TextureLoader::importAsset(const std::filesystem::path& filePath)
 {
-    futures.add(std::async(std::launch::async, &TextureLoader::import, this, filePath));
+    auto assetFileName = filePath;
+    PTextureAsset asset = new TextureAsset(assetFileName.replace_extension("asset").filename().generic_string());
+    asset->setStatus(Asset::Status::Loading);
+    asset->setTexture(placeholderTexture);
+    AssetRegistry::get().textures[filePath.string()] = asset;
+    futures.add(std::async(std::launch::async, [this, filePath, asset] () mutable {
+        Gfx::PTexture2D texture = import(filePath);
+        asset->setTexture(texture);
+        asset->setStatus(Asset::Status::Ready);
+    }));
 }
 
-void TextureLoader::import(const std::filesystem::path& path)
+Gfx::PTexture2D TextureLoader::import(const std::filesystem::path& path)
 {
-    auto assetFileName = path;
-    std::filesystem::path assetPath = AssetRegistry::get().rootFolder.append(assetFileName.replace_extension("asset").filename().string());
-    PTextureAsset asset = new TextureAsset(assetPath);
-    asset->setStatus(Asset::Status::Loading);
     int x, y, n;
     unsigned char* data = stbi_load(path.string().c_str(), &x, &y, &n, 4);
     TextureCreateInfo createInfo;
@@ -43,7 +47,5 @@ void TextureLoader::import(const std::filesystem::path& path)
     Gfx::PTexture2D texture = graphics->createTexture2D(createInfo);
     stbi_image_free(data);
     texture->transferOwnership(Gfx::QueueType::GRAPHICS);
-    asset->setTexture(texture);
-    asset->setStatus(Asset::Status::Ready);
-    AssetRegistry::get().textures[path.string()] = asset;
+    return texture;
 }

@@ -30,10 +30,11 @@ protected:
 DEFINE_REF(CmdBufferBase);
 
 DECLARE_REF(SecondaryCmdBuffer);
+DECLARE_REF(CommandBufferManager);
 class CmdBuffer : public CmdBufferBase
 {
 public:
-	CmdBuffer(PGraphics graphics, VkCommandPool cmdPool);
+	CmdBuffer(PGraphics graphics, VkCommandPool cmdPool, PCommandBufferManager manager);
 	virtual ~CmdBuffer();
 	void begin();
 	void end();
@@ -43,6 +44,7 @@ public:
 	void addWaitSemaphore(VkPipelineStageFlags stages, PSemaphore waitSemaphore);
 	void refreshFence();
 	PFence getFence();
+	PCommandBufferManager getManager();
 	enum State
 	{
 		ReadyBegin,
@@ -53,6 +55,7 @@ public:
 	};
 
 private:
+	PCommandBufferManager manager;
 	PRenderPass renderPass;
 	PFramebuffer framebuffer;
 	PFence fence;
@@ -105,6 +108,7 @@ private:
 	PQueue queue;
 	uint32 queueFamilyIndex;
 	PCmdBuffer activeCmdBuffer;
+	std::mutex allocatedBufferLock;
 	Array<PCmdBuffer> allocatedBuffers;
 };
 DEFINE_REF(CommandBufferManager);

@@ -242,7 +242,6 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
             0
         );
 
-
     createInfo.pStages = stageInfos;
     createInfo.pVertexInputState = &vertexInput;
     createInfo.pInputAssemblyState = &assemblyInfo;

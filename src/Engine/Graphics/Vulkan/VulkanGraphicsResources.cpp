@@ -23,10 +23,10 @@ QueueOwnedResourceDeletion::~QueueOwnedResourceDeletion()
     worker.join();
 }
 
-void QueueOwnedResourceDeletion::addPendingDelete(PFence fence, std::function<void()> func)
+void QueueOwnedResourceDeletion::addPendingDelete(PCmdBuffer cmdbuffer, std::function<void()> func)
 {
     PendingItem item;
-    item.fence = fence;
+    item.cmdBuffer = cmdbuffer;
     item.func = func;
     deletionQueue.add(item);
     std::unique_lock<std::mutex> lock(mutex);
@@ -40,13 +40,12 @@ void QueueOwnedResourceDeletion::run()
         std::unique_lock<std::mutex> lock(mutex);
         cv.wait(lock);
         auto entry = deletionQueue.begin();
-        PFence fence = entry->fence;
-        fence->wait(1000ull);
-        if (fence->isSignaled())
-        {
-            entry->func();
-            deletionQueue.remove(entry);
-        }
+        PCmdBuffer cmdBuffer = entry->cmdBuffer;
+        //cmdBuffer->getManager()->waitForCommands(cmdBuffer);
+        //cmdBuffer->begin();
+
+        //entry->func();
+        deletionQueue.remove(entry);
     }
 }
 

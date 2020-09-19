@@ -163,7 +163,14 @@ public:
 		{
 			prev->next = next;
 		}
-		next->prev = prev;
+		if(next == nullptr)
+		{
+			root = prev;
+		}
+		else
+		{
+			next->prev = prev;
+		}
 		delete pos.node;
 		refreshIterators();
 		return Iterator(next);

@@ -1,4 +1,5 @@
 #include "Asset.h"
+#include "AssetRegistry.h"
 
 using namespace Seele;
 
@@ -11,9 +12,18 @@ Asset::Asset()
 {
 }
 Asset::Asset(const std::filesystem::path& path)
-    : fullPath(std::filesystem::absolute(path))
-    , status(Status::Uninitialized)
+    : status(Status::Uninitialized)
 {
+    if(path.is_absolute())
+    {
+        fullPath = path;
+    }
+    else
+    {
+        fullPath = AssetRegistry::getRootFolder();
+        fullPath.append(path.generic_string());
+    }
+    
     fullPath.make_preferred();
     parentDir = fullPath.parent_path();
     name = fullPath.stem();
@@ -49,15 +59,15 @@ std::ofstream &Asset::getWriteStream()
     return outStream;
 }
 
-std::string Asset::getFileName()
+std::string Asset::getFileName() const
 {
     return name.generic_string();
 }
-std::string Asset::getFullPath()
+std::string Asset::getFullPath() const
 {
     return fullPath.generic_string();
 }
-std::string Asset::getExtension()
+std::string Asset::getExtension() const
 {
     return extension.generic_string();
 }

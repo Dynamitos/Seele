@@ -5,6 +5,7 @@
 
 namespace Seele
 {
+// Minimal vertex source used for building commands
 struct VertexInputStream
 {
     uint32 streamIndex : 4;
@@ -35,33 +36,103 @@ struct VertexInputStream
         return !(*this == rhs);
     }
 };
+typedef Array<VertexInputStream> VertexInputStreamArray; //TODO inline allocation
 
-typedef Array<VertexInputStream> VertexInputStreamArray;
+// Typed data source for a vertex factory
+struct VertexStreamComponent
+{
+    // Source vertex buffer
+    Gfx::PVertexBuffer vertexBuffer = nullptr;
+
+    // Offset to the start of the vertex buffer fetch
+    uint32 streamOffset = 0;
+
+    // Offset of the data, relative to the beginnning of each element in the vertex buffer
+    uint32 offset = 0;
+
+    // Stride of the data
+    uint32 stride = 0;
+
+    Gfx::SeFormat type = Gfx::SE_FORMAT_UNDEFINED;
+
+    VertexStreamComponent()
+    {}
+    
+    VertexStreamComponent(const Gfx::PVertexBuffer vertexBuffer, uint32 offset, uint32 stride, Gfx::SeFormat type)
+        : vertexBuffer(vertexBuffer)
+        , streamOffset(0)
+        , offset(offset)
+        , stride(stride)
+        , type(type)
+    {}
+
+    VertexStreamComponent(const Gfx::PVertexBuffer vertexBuffer, uint32 streamOffset, uint32 offset, uint32 stride, Gfx::SeFormat type)
+        : vertexBuffer(vertexBuffer)
+        , streamOffset(streamOffset)
+        , offset(offset)
+        , stride(stride)
+        , type(type)
+    {}
+};
+
+#define STRUCTMEMBER_VERTEXSTREAMCOMPONENT(vertexBuffer, vertexType, member, memberType) \
+    VertexStreamComponent(vertexBuffer, offsetof(vertexType, member), sizeof(vertexType), memberType)
+
+class VertexInputType
+{
+public:
+    static List<VertexInputType*> getTypeList();
+    static VertexInputType* getVertexInputByName(const std::string& name);
+
+    VertexInputType(
+        const char* name,
+        const char* shaderFilename
+    );
+    virtual ~VertexInputType();
+
+    const char* getName();
+    const char* getShaderFilename();
+private:
+    const char* name;
+    const char* shaderFilename;
+
+    static List<VertexInputType*> globalTypeList;
+};
+
+#define DECLARE_VERTEX_INPUT_TYPE(inputClass) \
+    public: \
+    static VertexInputType staticType; \
+    virtual VertexInputType* getType() const override;
+
+#define IMPLEMENT_VERTEX_INPUT_TYPE(inputClass, shaderFilename) \
+    VertexInputType inputClass::staticType( \
+        #inputClass, \
+        shaderFilename); \
+        VertexInputType* inputClass::getType() const { return &staticType; }
+
 struct MeshDescription;
 DECLARE_REF(VertexShaderInput);
 class VertexShaderInput
 {
 public:
     VertexShaderInput(std::string name);
-    VertexShaderInput(MeshDescription description, std::string name);
-    ~VertexShaderInput();
+    virtual ~VertexShaderInput();
     void getStreams(VertexInputStreamArray& outVertexStreams) const;
     void getPositionOnlyStream(VertexInputStreamArray& outVertexStreams) const;
     virtual bool supportsTesselation() { return false; }
+    virtual VertexInputType* getType() const { return nullptr; }
     Gfx::PVertexDeclaration getDeclaration() const {return declaration;}
     Gfx::PVertexDeclaration getPositionDeclaration() const {return positionDeclaration;}
     std::string getName() const { return name; }
-    std::string getCode() const { return code; }
-private:
+protected:
     static List<PVertexShaderInput> registeredInputs;
     static std::mutex registeredInputsLock;
     Array<Gfx::VertexAttribute> layout;
-    StaticArray<Gfx::VertexStream, 16> streams;
-    StaticArray<Gfx::VertexStream, 16> positionStreams;
+    StaticArray<VertexInputStream, 16> streams;
+    StaticArray<VertexInputStream, 16> positionStreams;
     Gfx::PVertexDeclaration declaration;
     Gfx::PVertexDeclaration positionDeclaration;
     std::string name;
-    std::string code;
 };
 DEFINE_REF(VertexShaderInput);
 } // namespace Seele

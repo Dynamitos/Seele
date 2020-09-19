@@ -22,8 +22,8 @@ CmdBufferBase::~CmdBufferBase()
     graphics = nullptr;
 }
 
-CmdBuffer::CmdBuffer(PGraphics graphics, VkCommandPool cmdPool)
-    : CmdBufferBase(graphics, cmdPool), renderPass(nullptr), framebuffer(nullptr), subpassIndex(0)
+CmdBuffer::CmdBuffer(PGraphics graphics, VkCommandPool cmdPool, PCommandBufferManager manager)
+    : CmdBufferBase(graphics, cmdPool), renderPass(nullptr), framebuffer(nullptr), subpassIndex(0), manager(manager)
 {
     VkCommandBufferAllocateInfo allocInfo =
         init::CommandBufferAllocateInfo(cmdPool,
@@ -120,6 +120,11 @@ PFence CmdBuffer::getFence()
     return fence;
 }
 
+PCommandBufferManager CmdBuffer::getManager() 
+{
+    return manager;
+}
+
 SecondaryCmdBuffer::SecondaryCmdBuffer(PGraphics graphics, VkCommandPool cmdPool)
     : CmdBufferBase(graphics, cmdPool)
 {
@@ -195,8 +200,9 @@ CommandBufferManager::CommandBufferManager(PGraphics graphics, PQueue queue)
 
     VK_CHECK(vkCreateCommandPool(graphics->getDevice(), &info, nullptr, &commandPool));
 
-    activeCmdBuffer = new CmdBuffer(graphics, commandPool);
+    activeCmdBuffer = new CmdBuffer(graphics, commandPool, this);
     activeCmdBuffer->begin();
+    std::lock_guard lock(allocatedBufferLock);
     allocatedBuffers.add(activeCmdBuffer);
 }
 
@@ -236,6 +242,7 @@ void CommandBufferManager::submitCommands(PSemaphore signalSemaphore)
             queue->submitCommandBuffer(activeCmdBuffer);
         }
     }
+    std::lock_guard lock(allocatedBufferLock);
     for (uint32 i = 0; i < allocatedBuffers.size(); ++i)
     {
         PCmdBuffer cmdBuffer = allocatedBuffers[i];
@@ -251,7 +258,7 @@ void CommandBufferManager::submitCommands(PSemaphore signalSemaphore)
             assert(cmdBuffer->state == CmdBuffer::State::Submitted);
         }
     }
-    activeCmdBuffer = new CmdBuffer(graphics, commandPool);
+    activeCmdBuffer = new CmdBuffer(graphics, commandPool, this);
     allocatedBuffers.add(activeCmdBuffer);
     activeCmdBuffer->begin();
 }

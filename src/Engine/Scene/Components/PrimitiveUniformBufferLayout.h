@@ -6,7 +6,7 @@ namespace Seele
 struct PrimitiveUniformBuffer
 {
     Matrix4 localToWorld;
-    Vector4 worldToLocal;
+    Matrix4 worldToLocal;
     Vector4 actorWorldPosition;
 };
 } // namespace Seele

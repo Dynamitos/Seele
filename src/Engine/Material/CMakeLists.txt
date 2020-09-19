@@ -1,5 +1,7 @@
 target_sources(SeeleEngine
     PRIVATE
+        BRDF.h
+        BRDF.cpp
         Material.h
         Material.cpp
         MaterialAsset.h

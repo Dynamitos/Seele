@@ -64,6 +64,7 @@ void Graphics::beginRenderPass(Gfx::PRenderPass renderPass)
 	if (found == allocatedFramebuffers.end())
 	{
 		framebuffer = new Framebuffer(this, rp, rp->getLayout());
+		allocatedFramebuffers[framebufferHash] = framebuffer;
 	}
 	else
 	{

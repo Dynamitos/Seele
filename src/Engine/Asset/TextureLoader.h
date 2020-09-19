@@ -9,6 +9,7 @@ namespace Seele
 {
 DECLARE_REF(TextureAsset);
 DECLARE_NAME_REF(Gfx, Graphics);
+DECLARE_NAME_REF(Gfx, Texture2D);
 class TextureLoader
 {
 public:
@@ -16,10 +17,10 @@ public:
     ~TextureLoader();
     void importAsset(const std::filesystem::path& filePath);
 private:
-    void import(const std::filesystem::path& path);
+    Gfx::PTexture2D import(const std::filesystem::path& path);
     Gfx::PGraphics graphics;
     List<std::future<void>> futures;
-    PTextureAsset placeholderTexture;
+    Gfx::PTexture2D placeholderTexture;
 };
 DEFINE_REF(TextureLoader);
 } // namespace Seele

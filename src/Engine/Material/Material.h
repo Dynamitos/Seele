@@ -4,7 +4,7 @@
 
 namespace Seele
 {
-
+class VertexInputType;
 class Material : public MaterialAsset
 {
 public:
@@ -14,18 +14,17 @@ public:
     ~Material();
     virtual void save() override;
     virtual void load() override;
-    virtual std::string getMaterialName() const { return materialName; }
-    inline std::string getCode() const { return materialCode; }
+    virtual PMaterial getRenderMaterial() { return this; }
+    const std::string& getName() {return materialName;}
 
-    const Gfx::ShaderCollection* getShaders(Gfx::RenderPassType renderPass, PVertexShaderInput vertexInput) const;
-    Gfx::ShaderCollection& createShaders(Gfx::PGraphics graphics, Gfx::RenderPassType renderPass, PVertexShaderInput vertexInput);
+    const Gfx::ShaderCollection* getShaders(Gfx::RenderPassType renderPass, VertexInputType* vertexInput) const;
+    Gfx::ShaderCollection& createShaders(Gfx::PGraphics graphics, Gfx::RenderPassType renderPass, VertexInputType* vertexInput);
+    void compile();
 private:
     static Gfx::ShaderMap shaderMap;
     static std::mutex shaderMapLock;
 
-    void compile();
     std::string materialName;
-    std::string materialCode;
     friend class MaterialLoader;
 };
 DEFINE_REF(Material);

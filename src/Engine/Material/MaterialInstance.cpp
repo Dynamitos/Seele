@@ -31,9 +31,9 @@ void MaterialInstance::load()
     
 }
 
-inline std::string MaterialInstance::getMaterialName() const
+PMaterial MaterialInstance::getRenderMaterial() 
 {
-    return baseMaterial->getMaterialName();
+    return baseMaterial;    
 }
 
 PMaterial MaterialInstance::getBaseMaterial() const

@@ -8,7 +8,7 @@ DECLARE_REF(Scene);
 class SceneRenderPath : public RenderPath
 {
 public:
-	SceneRenderPath(Gfx::PGraphics graphics, Gfx::PViewport target);
+	SceneRenderPath(PScene scene, Gfx::PGraphics graphics, Gfx::PViewport target);
 	virtual ~SceneRenderPath();
 	void setTargetScene(PScene scene);
 	virtual void init();

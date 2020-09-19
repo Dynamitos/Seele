@@ -213,6 +213,7 @@ private:
 	PAllocator allocator;
 	Array<PStagingBuffer> freeBuffers;
 	Array<StagingBuffer *> activeBuffers;
+	std::mutex lock;
 };
 DEFINE_REF(StagingManager);
 } // namespace Vulkan

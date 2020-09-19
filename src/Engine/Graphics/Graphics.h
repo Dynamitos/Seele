@@ -3,6 +3,7 @@
 #include "GraphicsResources.h"
 #include "Containers/Array.h"
 #include "VertexShaderInput.h"
+#include "ShaderCompiler.h"
 
 namespace Seele
 {
@@ -19,6 +20,11 @@ public:
 	{
 		return queueMapping;
 	}
+
+    PShaderCompiler getShaderCompiler() const
+    {
+        return shaderCompiler;
+    }
     
     virtual PWindow createWindow(const WindowCreateInfo &createInfo) = 0;
     virtual PViewport createViewport(PWindow owner, const ViewportCreateInfo &createInfo) = 0;
@@ -47,6 +53,7 @@ public:
 
 protected:
     QueueFamilyMapping queueMapping;
+    PShaderCompiler shaderCompiler;
     friend class Window;
 };
 DEFINE_REF(Graphics);

@@ -42,17 +42,36 @@ ShaderCollection& ShaderMap::createShaders(
 	PGraphics graphics,
 	RenderPassType renderPass, 
 	PMaterial material, 
-	PVertexShaderInput vertexInput,
+	VertexInputType* vertexInput,
 	bool bPositionOnly)
 {
 	ShaderCollection& collection = shaders.add();
-	collection.vertexDeclaration = bPositionOnly ? vertexInput->getPositionDeclaration() : vertexInput->getDeclaration();
+	//collection.vertexDeclaration = bPositionOnly ? vertexInput->getPositionDeclaration() : vertexInput->getDeclaration();
 
 	ShaderCreateInfo createInfo;
 	createInfo.entryPoint = "vertexMain";
-	createInfo.typeParameter = {material->getMaterialName().c_str(), vertexInput->getName().c_str()};
+	createInfo.typeParameter = {material->getName().c_str()};
+	createInfo.defines["VERTEX_INPUT_IMPORT"] = vertexInput->getShaderFilename();
+	createInfo.defines["MATERIAL_IMPORT"] = material->getName().c_str();
+	createInfo.defines["NUM_MATERIAL_TEXCOORDS"] = "1";
+	createInfo.defines["USE_INSTANCING"] = "0";
 	
+    std::ifstream codeStream("./shaders/" + getShaderNameFromRenderPassType(renderPass), std::ios::ate);
+    auto fileSize = codeStream.tellg();
+    codeStream.seekg(0);
+    Array<char> buffer(static_cast<uint32>(fileSize));
+    codeStream.read(buffer.data(), fileSize);
+
+	createInfo.shaderCode.add(std::string(buffer.data()));
+
 	collection.vertexShader = graphics->createVertexShader(createInfo);
+
+	if(renderPass != RenderPassType::DepthPrepass)
+	{
+		createInfo.entryPoint = "fragmentMain";
+
+		collection.fragmentShader = graphics->createFragmentShader(createInfo);
+	}
 
 	return collection;
 }
@@ -108,8 +127,8 @@ void PipelineLayout::addPushConstants(const SePushConstantRange &pushConstant)
 	pushConstants.add(pushConstant);
 }
 
-QueueOwnedResource::QueueOwnedResource(PGraphics graphics, QueueType startQueueType)
-	: graphics(graphics)
+QueueOwnedResource::QueueOwnedResource(QueueFamilyMapping mapping, QueueType startQueueType)
+	: mapping(mapping)
 	, currentOwner(startQueueType)
 {
 }
@@ -120,15 +139,15 @@ QueueOwnedResource::~QueueOwnedResource()
 
 void QueueOwnedResource::transferOwnership(QueueType newOwner)
 {
-	if(graphics->getFamilyMapping().needsTransfer(currentOwner, newOwner))
+	if(mapping.needsTransfer(currentOwner, newOwner))
 	{
 		executeOwnershipBarrier(newOwner);
 		currentOwner = newOwner;
 	}
 }
 
-Buffer::Buffer(PGraphics graphics, QueueType startQueue)
-	: QueueOwnedResource(graphics, startQueue)
+Buffer::Buffer(QueueFamilyMapping mapping, QueueType startQueue)
+	: QueueOwnedResource(mapping, startQueue)
 {
 }
 
@@ -136,31 +155,32 @@ Buffer::~Buffer()
 {
 }
 
-UniformBuffer::UniformBuffer(PGraphics graphics, QueueType startQueueType)
-	: Buffer(graphics, startQueueType)
+UniformBuffer::UniformBuffer(QueueFamilyMapping mapping, QueueType startQueueType)
+	: Buffer(mapping, startQueueType)
 {
 }
 
 UniformBuffer::~UniformBuffer()
 {
 }
-StructuredBuffer::StructuredBuffer(PGraphics graphics, QueueType startQueueType)
-	: Buffer(graphics, startQueueType)
+StructuredBuffer::StructuredBuffer(QueueFamilyMapping mapping, QueueType startQueueType)
+	: Buffer(mapping, startQueueType)
 {
 }
 StructuredBuffer::~StructuredBuffer()
 {
 }
-VertexBuffer::VertexBuffer(PGraphics graphics, uint32 numVertices, uint32 vertexSize, QueueType startQueueType)
-	: Buffer(graphics, startQueueType)
-	, numVertices(numVertices), vertexSize(vertexSize)
+VertexBuffer::VertexBuffer(QueueFamilyMapping mapping, uint32 numVertices, uint32 vertexSize, QueueType startQueueType)
+	: Buffer(mapping, startQueueType)
+	, numVertices(numVertices)
+	, vertexSize(vertexSize)
 {
 }
 VertexBuffer::~VertexBuffer()
 {
 }
-IndexBuffer::IndexBuffer(PGraphics graphics, uint32 size, Gfx::SeIndexType indexType, QueueType startQueueType)
-	: Buffer(graphics, startQueueType)
+IndexBuffer::IndexBuffer(QueueFamilyMapping mapping, uint32 size, Gfx::SeIndexType indexType, QueueType startQueueType)
+	: Buffer(mapping, startQueueType)
 	, indexType(indexType)
 {
 	switch (indexType)
@@ -179,8 +199,8 @@ IndexBuffer::~IndexBuffer()
 }
 VertexStream::VertexStream()
 {}
-VertexStream::VertexStream(uint32 stride, uint32 offset, uint8 instanced, Gfx::PVertexBuffer vertexBuffer)
-	: stride(stride), instanced(instanced), offset(offset), vertexBuffer(vertexBuffer)
+VertexStream::VertexStream(uint32 stride, uint32 offset, uint8 instanced)
+	: stride(stride), instanced(instanced), offset(offset)
 {
 }
 VertexStream::~VertexStream()
@@ -200,19 +220,19 @@ VertexDeclaration::VertexDeclaration()
 VertexDeclaration::~VertexDeclaration()
 {
 }
-uint32 VertexDeclaration::addVertexStream(const VertexStream &element)
+uint32 VertexDeclaration::addVertexStream(const VertexStreamComponent &element)
 {
-	uint32 currIndex = vertexStreams.size();
-	vertexStreams.add(element);
-	return currIndex;
+	VertexStream& stream = vertexStreams.add();
+	stream.addVertexElement(VertexElement(element.streamOffset, element.type, element.offset));
+	return stream.vertexDescription.size() - 1;
 }
 const Array<VertexStream> &VertexDeclaration::getVertexStreams() const
 {
 	return vertexStreams;
 }
 
-Texture::Texture(PGraphics graphics, Gfx::QueueType startQueueType)
-	: QueueOwnedResource(graphics, startQueueType)
+Texture::Texture(QueueFamilyMapping mapping, Gfx::QueueType startQueueType)
+	: QueueOwnedResource(mapping, startQueueType)
 {
 }
 
@@ -220,8 +240,8 @@ Texture::~Texture()
 {
 }
 
-Texture2D::Texture2D(PGraphics graphics, Gfx::QueueType startQueueType)
-	: Texture(graphics, startQueueType)
+Texture2D::Texture2D(QueueFamilyMapping mapping, Gfx::QueueType startQueueType)
+	: Texture(mapping, startQueueType)
 {	
 }
 

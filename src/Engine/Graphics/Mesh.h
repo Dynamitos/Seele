@@ -4,7 +4,7 @@
 
 namespace Seele
 {
-#define MAX_TEX_CHANNELS 8
+/*#define MAX_TEX_CHANNELS 8
 struct MeshDescription
 {
     Array<Gfx::VertexAttribute> layout;
@@ -41,23 +41,22 @@ struct MeshDescription
 		ar & layout;
         //TODO declaration
 	}
-};
+};*/
 DECLARE_REF(MaterialAsset);
 class Mesh
 {
 public:
-    Mesh(MeshDescription description, Gfx::PIndexBuffer indexBuffer);
+    Mesh(PVertexShaderInput vertexInput, Gfx::PIndexBuffer indexBuffer);
     ~Mesh();
 
     Gfx::PIndexBuffer indexBuffer;
-    MeshDescription description;
+    PVertexShaderInput vertexInput;
     PMaterialAsset referencedMaterial;
 private:
 	friend class boost::serialization::access;
 	template<class Archive>
 	void serialize(Archive& ar, const unsigned int version)
 	{
-		ar & description;
         ar & referencedMaterial->getFullPath();
         //TODO: 
 	}

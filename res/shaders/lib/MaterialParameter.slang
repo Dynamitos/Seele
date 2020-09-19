@@ -5,7 +5,7 @@ struct MaterialVertexParameter
 #if NUM_MATERIAL_TEXCOORDS
     float2 texCoords[NUM_MATERIAL_TEXCOORDS];
 #endif
-#if USE_INSTANCING
+#ifdef USE_INSTANCING
     float4x4 instanceLocalToWorld;
     float3 instanceLocalPosition;
     float4 perInstanceParams;
@@ -26,7 +26,7 @@ struct MaterialFragmentParameter
 	float4 clipPosition;
     float4 vertexColor;
     float3x3 tangentToWorld;
-#if USE_INSTANCING
+#ifdef USE_INSTANCING
     float3 perInstanceParams;
 #endif
 #if NUM_MATERIAL_TEXCOORDS
@@ -37,4 +37,11 @@ struct MaterialFragmentParameter
         float3 result = mul(tangentToWorld, tangentSpaceNormal);
         return result;
     }
+    float3 transformNormalTexture(float3 rawNormal)
+    {
+	    rawNormal = 2.0 * rawNormal - float3(1.0, 1.0, 1.0);
+	    return transformNormalToWorld(rawNormal);
+    }
 };
+
+

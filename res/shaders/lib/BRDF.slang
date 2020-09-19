@@ -10,15 +10,9 @@ struct BlinnPhong : IBRDF
     float3 baseColor;
     float metallic = 0;
     float3 normal = float3(0, 1, 0);
-    float subsurface = 0;
     float specular = 0.5;
     float roughness = 0.5;
-    float specularTint = 0;
-    float anisotropic = 0;
-    float sheen = 0;
-    float sheenTint = 0.5f;
-    float clearCoat = 0;
-    float clearCoatGloss = 1;
+    float sheen = 1.f;
 
     float3 evaluate(float3 view, float3 light, float3 surfaceNormal, float3 tangent, float3 biTangent, float3 lightColor)
     {

@@ -16,6 +16,7 @@ public:
     ~MaterialLoader();
     PMaterial queueAsset(const std::filesystem::path& filePath);
 private:
+    Gfx::PGraphics graphics;
     List<std::future<void>> futures;
     PMaterial placeholderMaterial;
 };

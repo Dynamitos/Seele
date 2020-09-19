@@ -2,8 +2,8 @@
 
 using namespace Seele;
 
-Mesh::Mesh(MeshDescription description, Gfx::PIndexBuffer indexBuffer) 
-    : description(description)
+Mesh::Mesh(PVertexShaderInput vertexInput, Gfx::PIndexBuffer indexBuffer) 
+    : vertexInput(vertexInput)
     , indexBuffer(indexBuffer)
 {    
 }

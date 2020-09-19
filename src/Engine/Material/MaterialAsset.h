@@ -6,6 +6,7 @@
 namespace Seele
 {
 DECLARE_REF(VertexShaderInput);
+DECLARE_REF(Material);
 class MaterialAsset : public Asset
 {
 public:
@@ -15,7 +16,7 @@ public:
     ~MaterialAsset();
     virtual void save() = 0;
     virtual void load() = 0;
-    virtual std::string getMaterialName() const = 0;
+    virtual PMaterial getRenderMaterial() = 0;
     Gfx::SeBlendOp getBlendMode() const {return Gfx::SE_BLEND_OP_END_RANGE;}
     Gfx::MaterialShadingModel getShadingModel() const {return Gfx::MaterialShadingModel::DefaultLit;}
 

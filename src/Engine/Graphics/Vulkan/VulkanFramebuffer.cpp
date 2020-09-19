@@ -49,4 +49,5 @@ Framebuffer::Framebuffer(PGraphics graphics, PRenderPass renderPass, Gfx::PRende
 Framebuffer::~Framebuffer()
 {
     vkDestroyFramebuffer(graphics->getDevice(), handle, nullptr);
+    graphics = nullptr;
 }

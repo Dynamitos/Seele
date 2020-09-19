@@ -1,11 +1,10 @@
-import StaticMeshShaderAttributes;
 import MaterialParameter;
 import BRDF;
 import Common;
 
 interface ILightEnv
 {
-	float3 illuminate<B:IBRDF>(VertexShaderInput input, B brdf, float3 wo);
+	float3 illuminate<B:IBRDF>(MaterialFragmentParameter input, B brdf, float3 wo);
 };
 
 struct DirectionalLight : ILightEnv
@@ -70,5 +69,5 @@ struct Lights
     uint numPointLights;
 };
 
-layout(set = 0, binding = 1, std430)
+layout(set = 0, binding = 1)
 ConstantBuffer<Lights> gLightEnv;

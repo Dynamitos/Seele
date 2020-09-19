@@ -154,12 +154,12 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType,
 TextureHandle::~TextureHandle()
 {
     auto &deletionQueue = graphics->getDeletionQueue();
-    auto fence = graphics->getQueueCommands(currentOwner)->getCommands()->getFence();
+    auto cmdBuffer = graphics->getQueueCommands(currentOwner)->getCommands();
     VkDevice device = graphics->getDevice();
     VkImageView view = defaultView;
     VkImage img = image;
-    deletionQueue.addPendingDelete(fence, [device, view]() { vkDestroyImageView(device, view, nullptr); });
-    deletionQueue.addPendingDelete(fence, [device, img]() { vkDestroyImage(device, img, nullptr); });
+    deletionQueue.addPendingDelete(cmdBuffer, [device, view]() { vkDestroyImageView(device, view, nullptr); });
+    deletionQueue.addPendingDelete(cmdBuffer, [device, img]() { vkDestroyImage(device, img, nullptr); });
 }
 
 void TextureHandle::changeLayout(VkImageLayout newLayout)
@@ -243,7 +243,7 @@ void TextureBase::changeLayout(VkImageLayout newLayout)
 }
 
 Texture2D::Texture2D(PGraphics graphics, const TextureCreateInfo& createInfo, VkImage existingImage)
-    : Gfx::Texture2D(graphics, createInfo.resourceData.owner)
+    : Gfx::Texture2D(graphics->getFamilyMapping(), createInfo.resourceData.owner)
 {
     textureHandle = new TextureHandle(graphics, createInfo.bArray ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D, 
         createInfo, existingImage);

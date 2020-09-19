@@ -23,11 +23,11 @@ public:
     virtual void load() = 0;
     
     // returns the name of the file, without extension
-    std::string getFileName();
+    std::string getFileName() const;
     // returns the full absolute path, from root to extension
-    std::string getFullPath();
+    std::string getFullPath() const;
     // returns the file extension, without preceding dot
-    std::string getExtension();
+    std::string getExtension() const;
     inline Status getStatus() 
     {
         std::scoped_lock lck(lock);
@@ -44,6 +44,7 @@ protected:
     std::ofstream& getWriteStream();
 private:
     Status status;
+    // Path relative to the project root
     std::filesystem::path fullPath;
     std::filesystem::path parentDir;
     std::filesystem::path name;

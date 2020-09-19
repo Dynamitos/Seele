@@ -42,6 +42,14 @@ void Seele::WindowManager::beginFrame()
 	}
 }
 
+void WindowManager::render() 
+{
+	for(auto window : windows)
+	{
+		window->render();
+	}	
+}
+
 void Seele::WindowManager::endFrame()
 {
 	for (auto window : windows)

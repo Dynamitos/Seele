@@ -27,7 +27,8 @@ void BasePassMeshProcessor::addMeshBatch(
 
     //TODO query tesselation
 
-	const Gfx::ShaderCollection* collection = material->getShaders(Gfx::RenderPassType::BasePass, vertexInput);
+	const Gfx::ShaderCollection* collection = material->getShaders(Gfx::RenderPassType::BasePass, vertexInput->getType());
+    assert(collection != nullptr);
     Gfx::PRenderCommand renderCommand = graphics->createRenderCommand();
     buildMeshDrawCommand(batch, 
         primitiveComponent, 
@@ -79,12 +80,9 @@ void BasePass::render()
 {
     processor->clearCommands();
     graphics->beginRenderPass(renderPass);
-    for (auto &&primitive : scene->getPrimitives())
+    for (auto &&primitive : scene->getStaticMeshes())
     {
-        for (auto &&meshBatch : primitive->staticMeshes)
-        {
-            processor->addMeshBatch(meshBatch, primitive, renderPass);
-        }
+        processor->addMeshBatch(primitive, nullptr, renderPass);
     }
     graphics->executeCommands(processor->getRenderCommands());
     graphics->endRenderPass();

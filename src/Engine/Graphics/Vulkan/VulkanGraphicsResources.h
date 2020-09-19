@@ -10,6 +10,7 @@ namespace Vulkan
 
 DECLARE_REF(DescriptorAllocator);
 DECLARE_REF(CommandBufferManager);
+DECLARE_REF(CmdBuffer);
 DECLARE_REF(Graphics);
 DECLARE_REF(SubAllocation);
 class Semaphore
@@ -57,7 +58,7 @@ class QueueOwnedResourceDeletion
 public:
 	QueueOwnedResourceDeletion();
 	virtual ~QueueOwnedResourceDeletion();
-	static void addPendingDelete(PFence fence, std::function<void()> function);
+	static void addPendingDelete(PCmdBuffer fence, std::function<void()> function);
 
 private:
 	std::thread worker;
@@ -65,7 +66,7 @@ private:
 	static void run();
 	struct PendingItem
 	{
-		PFence fence;
+		PCmdBuffer cmdBuffer;
 		std::function<void()> func;
 	};
 	static std::mutex mutex;
@@ -73,11 +74,11 @@ private:
 	static List<PendingItem> deletionQueue;
 };
 
-class Buffer
+class ShaderBuffer
 {
 public:
-	Buffer(PGraphics graphics, uint32 size, VkBufferUsageFlags usage, Gfx::QueueType queueType);
-	virtual ~Buffer();
+	ShaderBuffer(PGraphics graphics, uint32 size, VkBufferUsageFlags usage, Gfx::QueueType queueType);
+	virtual ~ShaderBuffer();
 	VkBuffer getHandle() const
 	{
 		return buffers[currentBuffer].buffer;
@@ -108,9 +109,9 @@ protected:
 	virtual VkAccessFlags getSourceAccessMask() = 0;
 	virtual VkAccessFlags getDestAccessMask() = 0;
 };
-DEFINE_REF(Buffer);
+DEFINE_REF(ShaderBuffer);
 
-class UniformBuffer : public Buffer, public Gfx::UniformBuffer
+class UniformBuffer : public Gfx::UniformBuffer, public ShaderBuffer
 {
 public:
 	UniformBuffer(PGraphics graphics, const BulkResourceData &resourceData);
@@ -126,7 +127,7 @@ protected:
 };
 DEFINE_REF(UniformBuffer);
 
-class StructuredBuffer : public Buffer, public Gfx::StructuredBuffer
+class StructuredBuffer : public Gfx::StructuredBuffer, public ShaderBuffer
 {
 public:
 	StructuredBuffer(PGraphics graphics, const BulkResourceData &resourceData);
@@ -142,7 +143,7 @@ protected:
 };
 DEFINE_REF(StructuredBuffer);
 
-class VertexBuffer : public Buffer, public Gfx::VertexBuffer
+class VertexBuffer : public Gfx::VertexBuffer, public ShaderBuffer
 {
 public:
 	VertexBuffer(PGraphics graphics, const VertexBufferCreateInfo &resourceData);
@@ -158,7 +159,7 @@ protected:
 };
 DEFINE_REF(VertexBuffer);
 
-class IndexBuffer : public Buffer, public Gfx::IndexBuffer
+class IndexBuffer : public Gfx::IndexBuffer, public ShaderBuffer
 {
 public:
 	IndexBuffer(PGraphics graphics, const IndexBufferCreateInfo &resourceData);
@@ -249,7 +250,7 @@ protected:
 };
 DEFINE_REF(TextureBase);
 
-class Texture2D : public TextureBase, public Gfx::Texture2D
+class Texture2D : public Gfx::Texture2D, public TextureBase
 {
 public:
 	Texture2D(PGraphics graphics, const TextureCreateInfo& createInfo, VkImage existingImage = VK_NULL_HANDLE);

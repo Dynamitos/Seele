@@ -1,6 +1,7 @@
 #include "Material.h"
 #include "Asset/AssetRegistry.h"
 #include "Graphics/VertexShaderInput.h"
+#include "BRDF.h"
 #include <nlohmann/json.hpp>
 #include <sstream>
 #include <iostream>
@@ -45,13 +46,15 @@ void Material::compile()
     auto& stream = getReadStream();
     json j;
     stream >> j;
-    std::stringstream codeStream;
     materialName = j["name"].get<std::string>();
+    std::ofstream codeStream("./shaders/generated/"+materialName+".slang");
     std::string profile = j["profile"].get<std::string>();
+
+    codeStream << "import VERTEX_INPUT_IMPORT;" << std::endl;
     codeStream << "import LightEnv;" << std::endl;
     codeStream << "import Material;" << std::endl;
     codeStream << "import BRDF;" << std::endl;
-    codeStream << "import InputGeometry;" << std::endl;
+    codeStream << "import MaterialParameter;" << std::endl;
 
     codeStream << "struct " << materialName << ": IMaterial {" << std::endl;
     for(auto param : j["params"].items())
@@ -62,6 +65,7 @@ void Material::compile()
         if(type.compare("float") == 0)
         {
             PFloatParameter p = new FloatParameter();
+            p->name = param.key();
             if(default != param.value().end())
             {
                 p->defaultValue = std::stof(default.value().get<std::string>());
@@ -71,6 +75,7 @@ void Material::compile()
         else if(type.compare("float3") == 0)
         {
             PVectorParameter p = new VectorParameter();
+            p->name = param.key();
             if(default != param.value().end())
             {
                 p->defaultValue = parseVector(default.value().get<std::string>().c_str());
@@ -80,6 +85,7 @@ void Material::compile()
         else if(type.compare("Texture2D") == 0)
         {
             PTextureParameter p = new TextureParameter();
+            p->name = param.key();
             if(default != param.value().end())
             {
                 
@@ -89,37 +95,32 @@ void Material::compile()
         else if(type.compare("SamplerState") == 0)
         {
             PSamplerParameter p = new SamplerParameter();
+            p->name = param.key();
             parameters.add(p);
         }
         else
         {
             std::cout << "Error unsupported parameter type" << std::endl;
         }
-        codeStream << type << " " << param.key();
+        codeStream << type << " " << param.key() << ";\n";
     }
-    codeStream << "typedef " << profile << " BRDF;" << std::endl;
-    codeStream << profile << " prepare(MaterialPixelParameter geometry){" << std::endl;
-    codeStream << profile << " result;" << std::endl;
-    for(auto c : j["code"].items())
-    {
-        codeStream << c.value().get<std::string>() << std::endl;
-    }
-
-    codeStream << "}};" << std::endl;
-    materialCode = codeStream.str();
+    BRDF* brdf = BRDF::getBRDFByName(profile);
+    brdf->generateMaterialCode(codeStream, j["code"]);
+    codeStream << "};";
+    codeStream.close();
 }
 
-const Gfx::ShaderCollection* Material::getShaders(Gfx::RenderPassType renderPass, PVertexShaderInput vertexInput) const
+const Gfx::ShaderCollection* Material::getShaders(Gfx::RenderPassType renderPass, VertexInputType* vertexInput) const
 {
     Gfx::ShaderPermutation permutation;
-    std::string materialName = getMaterialName();
+    std::string materialName = getFileName();
     std::string vertexInputName = vertexInput->getName();
     std::memcpy(permutation.materialName, materialName.c_str(), sizeof(permutation.materialName));
     std::memcpy(permutation.materialName, vertexInputName.c_str(), sizeof(permutation.materialName));
     return shaderMap.findShaders(Gfx::PermutationId(permutation));
 }
 
-Gfx::ShaderCollection& Material::createShaders(Gfx::PGraphics graphics, Gfx::RenderPassType renderPass, PVertexShaderInput vertexInput) 
+Gfx::ShaderCollection& Material::createShaders(Gfx::PGraphics graphics, Gfx::RenderPassType renderPass, VertexInputType* vertexInput) 
 {
     std::lock_guard lock(shaderMapLock);
     return shaderMap.createShaders(graphics, renderPass, this, vertexInput, false);

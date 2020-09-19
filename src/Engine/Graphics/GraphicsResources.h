@@ -6,13 +6,16 @@
 #include "MeshBatch.h"
 #include <boost/crc.hpp>
 
-#ifdef _DEBUG
 #define ENABLE_VALIDATION
+
+#ifdef DEBUG
 #endif
 
 namespace Seele
 {
 struct VertexInputStream;
+struct VertexStreamComponent;
+class VertexInputType;
 namespace Gfx
 {
 DECLARE_REF(Graphics);
@@ -111,7 +114,7 @@ struct PermutationId
 struct ShaderCollection
 {
 	PermutationId id;
-	PVertexDeclaration vertexDeclaration;
+	//PVertexDeclaration vertexDeclaration;
 	PVertexShader vertexShader;
 	PControlShader controlShader;
 	PEvaluationShader evalutionShader;
@@ -128,7 +131,7 @@ public:
 		PGraphics graphics, 
 		RenderPassType passName, 
 		PMaterial material, 
-		PVertexShaderInput vertexInput,
+		VertexInputType* vertexInput,
 		bool bPositionOnly);
 private:
 	Array<ShaderCollection> shaders;
@@ -272,7 +275,7 @@ struct QueueFamilyMapping
 class QueueOwnedResource
 {
 public:
-	QueueOwnedResource(PGraphics graphics, QueueType startQueueType);
+	QueueOwnedResource(QueueFamilyMapping mapping, QueueType startQueueType);
 	virtual ~QueueOwnedResource();
 
 	//Preliminary checks to see if the barrier should be executed at all
@@ -281,14 +284,20 @@ public:
 protected:
 	virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
 	Gfx::QueueType currentOwner;
-	PGraphics graphics;
+	QueueFamilyMapping mapping;
 };
 DEFINE_REF(QueueOwnedResource);
 
+// IMPORTANT!! 
+// WHEN DERIVING FROM ANY Gfx:: BASE CLASSES WITH MULTIPLE INHERITANCE
+// ALWAYS PUT THE Gfx:: BASE CLASS FIRST
+// This is because the refcounting object is unique per allocation, so
+// the base address of both the Gfx:: and the implementation class
+// need to match for it to work
 class Buffer : public QueueOwnedResource
 {
 public:
-	Buffer(PGraphics graphics, QueueType startQueueType);
+	Buffer(QueueFamilyMapping mapping, QueueType startQueueType);
 	virtual ~Buffer();
 
 protected:
@@ -299,7 +308,7 @@ protected:
 class UniformBuffer : public Buffer
 {
 public:
-	UniformBuffer(PGraphics graphics, QueueType startQueueType);
+	UniformBuffer(QueueFamilyMapping mapping, QueueType startQueueType);
 	virtual ~UniformBuffer();
 protected:
 	// Inherited via QueueOwnedResource
@@ -310,7 +319,7 @@ DEFINE_REF(UniformBuffer);
 class VertexBuffer : public Buffer
 {
 public:
-	VertexBuffer(PGraphics graphics, uint32 numVertices, uint32 vertexSize, QueueType startQueueType);
+	VertexBuffer(QueueFamilyMapping mapping, uint32 numVertices, uint32 vertexSize, QueueType startQueueType);
 	virtual ~VertexBuffer();
 	inline uint32 getNumVertices()
 	{
@@ -333,7 +342,7 @@ DEFINE_REF(VertexBuffer);
 class IndexBuffer : public Buffer
 {
 public:
-	IndexBuffer(PGraphics graphics, uint32 size, Gfx::SeIndexType index, QueueType startQueueType);
+	IndexBuffer(QueueFamilyMapping mapping, uint32 size, Gfx::SeIndexType index, QueueType startQueueType);
 	virtual ~IndexBuffer();
 	inline uint32 getNumIndices() const
 	{
@@ -355,7 +364,7 @@ DEFINE_REF(IndexBuffer);
 class StructuredBuffer : public Buffer
 {
 public:
-	StructuredBuffer(PGraphics graphics, QueueType startQueueType);
+	StructuredBuffer(QueueFamilyMapping mapping, QueueType startQueueType);
 	virtual ~StructuredBuffer();
 protected:
 	// Inherited via QueueOwnedResource
@@ -367,7 +376,7 @@ class VertexStream
 {
 public:
 	VertexStream();
-	VertexStream(uint32 stride, uint32 offset, uint8 instanced, Gfx::PVertexBuffer vertexBuffer);
+	VertexStream(uint32 stride, uint32 offset, uint8 instanced);
 	~VertexStream();
 	void addVertexElement(VertexElement element);
 	const Array<VertexElement> getVertexDescriptions() const;
@@ -377,7 +386,6 @@ public:
 	uint32 offset;
 	Array<VertexElement> vertexDescription;
 	uint8 instanced;
-	PVertexBuffer vertexBuffer;
 };
 DEFINE_REF(VertexStream);
 class VertexDeclaration
@@ -385,7 +393,7 @@ class VertexDeclaration
 public:
 	VertexDeclaration();
 	~VertexDeclaration();
-	uint32 addVertexStream(const VertexStream &vertexStream);
+	uint32 addVertexStream(const VertexStreamComponent &vertexStream);
 	const Array<VertexStream> &getVertexStreams() const;
 
 private:
@@ -404,10 +412,17 @@ protected:
 	GraphicsPipelineCreateInfo createInfo;
 };
 DEFINE_REF(GraphicsPipeline);
+
+// IMPORTANT!! 
+// WHEN DERIVING FROM ANY Gfx:: BASE CLASSES WITH MULTIPLE INHERITANCE
+// ALWAYS PUT THE Gfx:: BASE CLASS FIRST
+// This is because the refcounting object is unique per allocation, so
+// the base address of both the Gfx:: and the implementation class
+// need to match for it to work
 class Texture : public QueueOwnedResource
 {
 public:
-	Texture(PGraphics graphics, QueueType startQueueType);
+	Texture(QueueFamilyMapping mapping, QueueType startQueueType);
 	virtual ~Texture();
 
 	virtual SeFormat getFormat() const = 0;
@@ -422,7 +437,7 @@ DEFINE_REF(Texture);
 class Texture2D : public Texture
 {
 public:
-	Texture2D(PGraphics graphics, QueueType startQueueType);
+	Texture2D(QueueFamilyMapping mapping, QueueType startQueueType);
 	virtual ~Texture2D();
 
 	virtual SeFormat getFormat() const = 0;

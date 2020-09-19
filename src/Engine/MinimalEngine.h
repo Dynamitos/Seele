@@ -48,7 +48,10 @@ public:
 	}
 	~RefObject()
 	{
-		registeredObjects.erase(handle);
+		{
+			std::scoped_lock lock(registeredObjectsLock);
+			registeredObjects.erase(handle);
+		}
 // we cant always have the definition of every class
 #pragma warning(disable : 4150)
 		delete handle;
@@ -122,7 +125,9 @@ public:
 	}
 	RefPtr(T *ptr)
 	{
+		std::unique_lock l(registeredObjectsLock);
 		auto registeredObj = registeredObjects.find(ptr);
+		l.unlock();
 		if (registeredObj == registeredObjects.end())
 		{
 			object = new RefObject<T>(ptr);
@@ -155,7 +160,7 @@ public:
 	RefPtr(const RefPtr<F> &other)
 	{
 		F *f = other.getObject()->getHandle();
-		static_cast<T *>(f);
+		T* t = static_cast<T *>(f);
 		object = (RefObject<T> *)other.getObject();
 		object->addRef();
 	}

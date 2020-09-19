@@ -12,6 +12,7 @@ public:
 	void renderLoop();
 	void shutdown();
 
+	PWindowManager getWindowManager() const { return windowManager; };
 private:
 	PScene scene;
 	PWindowManager windowManager;

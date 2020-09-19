@@ -14,7 +14,7 @@ public:
     ~MaterialInstance();
     virtual void save() override;
     virtual void load() override;
-    inline std::string getMaterialName() const;
+    virtual PMaterial getRenderMaterial();
     PMaterial getBaseMaterial() const;
     Gfx::PDescriptorSet getDescriptor();
 private:

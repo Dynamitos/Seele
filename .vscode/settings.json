@@ -4,6 +4,7 @@
     "git.enabled": false,
     "files.associations": {
         "*.h": "cpp",
+        "*.ush": "hlsl",
         "xstring": "cpp",
         "list": "cpp",
         "xhash": "cpp",
@@ -93,7 +94,18 @@
         "shared_mutex": "cpp",
         "unordered_set": "cpp",
         "csetjmp": "cpp",
-        "memory_resource": "cpp"
+        "memory_resource": "cpp",
+        "*.inc": "cpp",
+        "any": "cpp",
+        "bit": "cpp",
+        "cfenv": "cpp",
+        "cinttypes": "cpp",
+        "compare": "cpp",
+        "execution": "cpp",
+        "hash_map": "cpp",
+        "hash_set": "cpp",
+        "scoped_allocator": "cpp",
+        "stack": "cpp"
     },
     "cmake.generator": "Ninja",
     "cmake.skipConfigureIfCachePresent": false,

@@ -114,7 +114,7 @@ struct VertexShaderInput
         return result;
     }
     
-    float3 getWorldPosition(VertexValueCache cache)
+    float3 getWorldPosition()
     {
         float4x4 localToWorld = gSceneData.localToWorld;
         float3 rotatedPosition = localToWorld[0].xyz * position.xxx + localToWorld[1].xyz * position.yyy + localToWorld[2].xyz * position.zzz;
@@ -191,4 +191,10 @@ struct PositionOnlyVertexShaderInput
     float3 instanceTransform2;
     float3 instanceTransform3;
 #endif // USE_INSTANCING
+    float3 getWorldPosition()
+    {
+        float4x4 localToWorld = gSceneData.localToWorld;
+        float3 rotatedPosition = localToWorld[0].xyz * position.xxx + localToWorld[1].xyz * position.yyy + localToWorld[2].xyz * position.zzz;
+        return rotatedPosition + localToWorld[3].xyz;
+    }
 };

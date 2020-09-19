@@ -13,17 +13,18 @@ DECLARE_REF(Material);
 class Scene
 {
 public:
-    Scene();
+    Scene(Gfx::PGraphics graphics);
     ~Scene();
     void tick(float deltaTime);
     void addActor(PActor actor);
     void addPrimitiveComponent(PPrimitiveComponent comp);
 
     const Array<PPrimitiveComponent>& getPrimitives() const { return primitives; }
+    const Array<MeshBatch>& getStaticMeshes() const { return staticMeshes; }
 private:
-    Array<MeshBatch> meshBatches;
+    Array<MeshBatch> staticMeshes;
     Array<PActor> rootActors;
     Array<PPrimitiveComponent> primitives;
-public:
+    Gfx::PGraphics graphics;
 };
 } // namespace Seele

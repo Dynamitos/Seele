@@ -1,4 +1,6 @@
-import InputGeometry;
+import Material;
+import VERTEX_INPUT_IMPORT;
+import MATERIAL_IMPORT;
 
 struct ViewParams
 {
@@ -10,6 +12,11 @@ struct ViewParams
 layout(set = 0, binding = 0)
 ParameterBlock<ViewParams> gViewParams;
 
+
+layout(set = 1)
+type_param TMaterial : IMaterial;
+ParameterBlock<TMaterial> gMaterial;
+
 struct ModelParameter
 {
 	float4x4 modelMatrix;
@@ -18,16 +25,21 @@ struct ModelParameter
 [[vk::push_constant]]
 ConstantBuffer<ModelParameter> gModelParams;
 
-struct VertexShaderOutput
+struct VertexStageOutput
 {
-	float4 out_Position : SV_Position;
+	float4 position : SV_Position;
 }
 [shader("vertex")]
-VertexShaderOutput depthPrepass(PositionOnlyVertexInput input)
-{
-	VertexShaderOutput out;
-	float4 worldPos = mul(gModelParams.modelMatrix, float4(input.getVertexPosition(), 1));
-	float4 viewPos = mul(gViewParams.viewMatrix, worldPos);
-	out.out_Position = mul(gViewParams.projectionMatrix, viewPos);
-	return out;
+VertexStageOutput vertexMain(PositionOnlyVertexShaderInput input)
+{ 
+	VertexStageOutput output;
+    
+	float3 worldPosition = input.getWorldPosition();
+    worldPosition += gMaterial.getWorldOffset();
+    float4 clipSpacePosition;
+    
+    float4 viewSpacePosition = mul(gViewParams.viewMatrix, float4(worldPosition, 1));
+    clipSpacePosition = mul(gViewParams.projectionMatrix, viewSpacePosition);
+    output.position = clipSpacePosition;
+    return output;
 }
