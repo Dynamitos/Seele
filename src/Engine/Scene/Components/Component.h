@@ -15,6 +15,8 @@ public:
     void tick(float deltaTime);
     PComponent getParent();
     PActor getOwner();
+    void setParent(PComponent parent);
+    void setOwner(PActor owner);
     virtual void notifySceneAttach(PScene scene);
 
     void setWorldLocation(Vector location);
@@ -34,7 +36,6 @@ public:
     Transform getTransform() const;
 
 private:
-    void setParent(PComponent parent);
     void internalSetTransform(Vector newLocation, Quaternion newRotation);
     void propagateTransformUpdate();
     void updateComponentTransform(Quaternion relativeRotationQuat);

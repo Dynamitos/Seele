@@ -35,7 +35,7 @@ public:
     PComponent getRootComponent();
     void setRootComponent(PComponent newRoot);
 
-private:
+protected:
     void setParent(PActor parent);
     PScene owningScene;
     PActor parent;

@@ -124,6 +124,11 @@ void Component::setParent(PComponent newParent)
     parent = newParent;
 }
 
+void Component::setOwner(PActor newOwner) 
+{
+    owner = newOwner;
+}
+
 void Component::internalSetTransform(Vector newLocation, Quaternion newRotation)
 {
     if (parent != nullptr)

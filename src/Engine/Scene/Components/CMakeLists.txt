@@ -1,5 +1,7 @@
 target_sources(SeeleEngine
     PRIVATE
+        CameraComponent.h
+        CameraComponent.cpp
         Component.h
         Component.cpp
         PrimitiveComponent.cpp
