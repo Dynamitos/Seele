@@ -2,6 +2,7 @@
 #include "Asset/AssetRegistry.h"
 #include "Graphics/VertexShaderInput.h"
 #include "BRDF.h"
+#include "Graphics/WindowManager.h"
 #include <nlohmann/json.hpp>
 #include <sstream>
 #include <iostream>
@@ -32,21 +33,23 @@ Material::~Material()
 
 void Material::save() 
 {
-    
 }
 
 void Material::load() 
 {
-    
 }
 
 
 void Material::compile()
 {
+    layout = WindowManager::getGraphics()->createDescriptorLayout();
     auto& stream = getReadStream();
     json j;
     stream >> j;
     materialName = j["name"].get<std::string>();
+    std::cout << "Compiling material " << materialName << std::endl;
+    //Shader file needs to conform to the slang standard, which prohibits _
+    materialName.erase(std::remove(materialName.begin(), materialName.end(), '_'), materialName.end());
     std::ofstream codeStream("./shaders/generated/"+materialName+".slang");
     std::string profile = j["profile"].get<std::string>();
 
@@ -57,45 +60,55 @@ void Material::compile()
     codeStream << "import MaterialParameter;" << std::endl;
 
     codeStream << "struct " << materialName << ": IMaterial {" << std::endl;
+    uint32 uniformBufferOffset = 0;
+    uint32 bindingCounter = 1; // Uniform buffers are always binding 0
+    layout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
     for(auto param : j["params"].items())
     {
         std::string type = param.value()["type"].get<std::string>();
-        
         auto default = param.value().find("default");
         if(type.compare("float") == 0)
         {
-            PFloatParameter p = new FloatParameter();
-            p->name = param.key();
+            PFloatParameter p = new FloatParameter(param.key(), uniformBufferOffset, 0);
+            codeStream << "layout(offset = " << uniformBufferOffset << ")";
+            uniformBufferOffset += 4;
             if(default != param.value().end())
             {
-                p->defaultValue = std::stof(default.value().get<std::string>());
+                p->data = std::stof(default.value().get<std::string>());
             }
             parameters.add(p);
         }
         else if(type.compare("float3") == 0)
         {
-            PVectorParameter p = new VectorParameter();
-            p->name = param.key();
+            PVectorParameter p = new VectorParameter(param.key(), uniformBufferOffset, 0);
+            codeStream << "layout(offset = " << uniformBufferOffset << ")";
+            uniformBufferOffset += 12;
             if(default != param.value().end())
             {
-                p->defaultValue = parseVector(default.value().get<std::string>().c_str());
+                p->data = parseVector(default.value().get<std::string>().c_str());
             }
             parameters.add(p);
         }
         else if(type.compare("Texture2D") == 0)
         {
-            PTextureParameter p = new TextureParameter();
-            p->name = param.key();
+            PTextureParameter p = new TextureParameter(param.key(), 0, bindingCounter);
+            layout->addDescriptorBinding(bindingCounter++, Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
             if(default != param.value().end())
             {
-                
+                p->data = AssetRegistry::findTexture(default.value().get<std::string>());
+            }
+            else
+            {
+                p->data = AssetRegistry::findTexture(""); // this will return placeholder texture
             }
             parameters.add(p);
         }
         else if(type.compare("SamplerState") == 0)
         {
-            PSamplerParameter p = new SamplerParameter();
-            p->name = param.key();
+            PSamplerParameter p = new SamplerParameter(param.key(), 0, bindingCounter);
+            layout->addDescriptorBinding(bindingCounter++, Gfx::SE_DESCRIPTOR_TYPE_SAMPLER);
+            SamplerCreateInfo createInfo;
+            p->data = WindowManager::getGraphics()->createSamplerState(createInfo);
             parameters.add(p);
         }
         else
@@ -104,6 +117,18 @@ void Material::compile()
         }
         codeStream << type << " " << param.key() << ";\n";
     }
+    uniformDataSize = uniformBufferOffset;
+    if(uniformDataSize != 0)
+    {
+        uniformData = new uint8[uniformDataSize];
+        BulkResourceData resourceData;
+        resourceData.data = uniformData;
+        resourceData.size = uniformDataSize;
+        uniformBuffer = WindowManager::getGraphics()->createUniformBuffer(resourceData);
+    }
+    layout->create();
+    descriptorSet = layout->allocatedDescriptorSet();
+    updateDescriptorData();
     BRDF* brdf = BRDF::getBRDFByName(profile);
     brdf->generateMaterialCode(codeStream, j["code"]);
     codeStream << "};";
@@ -113,10 +138,11 @@ void Material::compile()
 const Gfx::ShaderCollection* Material::getShaders(Gfx::RenderPassType renderPass, VertexInputType* vertexInput) const
 {
     Gfx::ShaderPermutation permutation;
+    permutation.passType = renderPass;
     std::string materialName = getFileName();
     std::string vertexInputName = vertexInput->getName();
     std::memcpy(permutation.materialName, materialName.c_str(), sizeof(permutation.materialName));
-    std::memcpy(permutation.materialName, vertexInputName.c_str(), sizeof(permutation.materialName));
+    std::memcpy(permutation.vertexInputName, vertexInputName.c_str(), sizeof(permutation.vertexInputName));
     return shaderMap.findShaders(Gfx::PermutationId(permutation));
 }
 

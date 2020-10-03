@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 # Handle superbuild first
 option (USE_SUPERBUILD "Whether or not a superbuild should be invoked" ON)
 
+
 set(ENGINE_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/src/Engine)
 set(EXTERNAL_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/external)
 set(ASSIMP_ROOT ${EXTERNAL_ROOT}/assimp)
@@ -14,11 +15,17 @@ set(GLM_ROOT ${EXTERNAL_ROOT}/glm)
 set(GLFW_ROOT ${EXTERNAL_ROOT}/glfw)
 set(JSON_ROOT ${EXTERNAL_ROOT}/json)
 set(STB_ROOT ${EXTERNAL_ROOT}/stb)
+set(SPIRV_ROOT ${EXTERNAL_ROOT}/SPIRV-Cross)
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/)
 
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_LIB_PREFIX lib)
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE})
+#Workaround for vs, because it places artifacts into an additional subfolder
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_SOURCE_DIR}/bin/Debug)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_CURRENT_SOURCE_DIR}/bin/Release)
 
 if (USE_SUPERBUILD)
   project (SUPERBUILD NONE)
@@ -30,26 +37,25 @@ else()
   project (Seele)
 endif()
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE})
-#Workaround for vs, because it places artifacts into an additional subfolder
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_SOURCE_DIR}/bin/Debug)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_CURRENT_SOURCE_DIR}/bin/Release)
 
 find_package(Vulkan REQUIRED)
 find_package(Boost REQUIRED COMPONENTS serialization)
 find_package(Threads REQUIRED)
-find_package(assimp REQUIRED ${ASSIMP_ROOT})
+find_package(assimp REQUIRED)
 find_package(JSON REQUIRED)
 find_package(GLFW REQUIRED)
+find_package(SPIRV REQUIRED)
 
 include_directories(${GLM_INCLUDE_DIRS})
 include_directories(${STB_INCLUDE_DIRS})
 include_directories(${Vulkan_INCLUDE_DIR})
+include_directories(${SPIRV_INCLUDE_DIRS})
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${GLFW_INCLUDE_DIRS})
 include_directories(${SLANG_INCLUDE_DIRS})
 include_directories(${ASSIMP_INCLUDE_DIRS})
 include_directories(${JSON_INCLUDE_DIRS})
+include_directories(${SPIRV_INCLUDE_DIRS})
 include_directories(${ENGINE_ROOT})
 include_directories(src/Engine)
 add_definitions(${GLM_DEFINITIONS})
@@ -66,6 +72,7 @@ target_link_libraries(SeeleEngine ${GLFW_LIBRARIES})
 target_link_libraries(SeeleEngine ${SLANG_LIBRARY})
 target_link_libraries(SeeleEngine ${ASSIMP_LIBRARIES})
 target_link_libraries(SeeleEngine ${JSON_LIBRARY})
+target_link_libraries(SeeleEngine ${SPIRV_LIBRARIES})
 
 #target_precompile_headers(SeeleEngine 
 #  PRIVATE    

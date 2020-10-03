@@ -6,7 +6,10 @@
             "debug": {
                 "short": "Debug",
                 "long": "Enable debugging and validation",
-                "buildType": "Debug"
+                "buildType": "Debug",
+                "settings": {
+                    "CMAKE_DEBUG_POSTFIX": "d"
+                }
             },
             "release": {
                 "short": "Release",

@@ -136,6 +136,7 @@ public:
 		{
 			object = (RefObject<T> *)registeredObj->value;
 		}
+		object->addRef();
 	}
 	explicit RefPtr(RefObject<T> *other)
 		: object(other)

@@ -124,6 +124,13 @@ Gfx::PRenderCommand Graphics::createRenderCommand()
 	cmdBuffer->begin(getGraphicsCommands()->getCommands());
 	return cmdBuffer;
 }
+
+Gfx::PVertexDeclaration Graphics::createVertexDeclaration(const Array<Gfx::VertexElement>& element) 
+{
+	PVertexDeclaration declaration = new VertexDeclaration(element);
+	return declaration;
+}
+
 Gfx::PVertexShader Graphics::createVertexShader(const ShaderCreateInfo& createInfo)
 {
 	PVertexShader shader = new VertexShader(this);
@@ -158,6 +165,15 @@ Gfx::PGraphicsPipeline Graphics::createGraphicsPipeline(const GraphicsPipelineCr
 {
 	PGraphicsPipeline pipeline = pipelineCache->createPipeline(createInfo);
 	return pipeline;
+}
+
+Gfx::PSamplerState Graphics::createSamplerState(const SamplerCreateInfo& createInfo) 
+{
+	PSamplerState sampler = new SamplerState(); // TODO: proper sampler creation
+	VkSamplerCreateInfo vkInfo = 
+		init::SamplerCreateInfo();
+	VK_CHECK(vkCreateSampler(handle, &vkInfo, nullptr, &sampler->sampler));
+	return sampler;
 }
 Gfx::PDescriptorLayout Graphics::createDescriptorLayout()
 {
@@ -280,7 +296,7 @@ void Graphics::initInstance(GraphicsInitializer initInfo)
 	appInfo.applicationVersion = VK_MAKE_VERSION(0, 0, 1);
 	appInfo.pEngineName = initInfo.engineName;
 	appInfo.engineVersion = VK_MAKE_VERSION(0, 0, 1);
-	appInfo.apiVersion = VK_API_VERSION_1_1;
+	appInfo.apiVersion = VK_API_VERSION_1_2;
 
 	VkInstanceCreateInfo info = {};
 	info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;

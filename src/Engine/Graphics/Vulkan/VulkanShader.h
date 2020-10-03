@@ -22,7 +22,8 @@ public:
     }
     const char* getEntryPointName() const
     {
-        return entryPointName.c_str();
+        //SLang renames all entry points to main, so we dont need that
+        return "main";//entryPointName.c_str();
     }
     Map<uint32, PDescriptorLayout> getDescriptorLayouts();
 private:

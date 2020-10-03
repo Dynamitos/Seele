@@ -14,11 +14,9 @@ public:
     ~MaterialInstance();
     virtual void save() override;
     virtual void load() override;
-    virtual PMaterial getRenderMaterial();
-    PMaterial getBaseMaterial() const;
-    Gfx::PDescriptorSet getDescriptor();
+    virtual const Material* getRenderMaterial() const;
 private:
-    PMaterial baseMaterial;
+    Material* baseMaterial;
 };
 DEFINE_REF(MaterialInstance);
 } // namespace Seele

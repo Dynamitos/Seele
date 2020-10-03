@@ -14,7 +14,9 @@ public:
     ~Material();
     virtual void save() override;
     virtual void load() override;
-    virtual PMaterial getRenderMaterial() { return this; }
+    virtual const Material* getRenderMaterial() const { return this; }
+    Gfx::PDescriptorLayout getDescriptorLayout() const { return layout; }
+    // The name of the generated material shader, opposed to the name of the .asset file
     const std::string& getName() {return materialName;}
 
     const Gfx::ShaderCollection* getShaders(Gfx::RenderPassType renderPass, VertexInputType* vertexInput) const;
@@ -25,7 +27,9 @@ private:
     static std::mutex shaderMapLock;
 
     std::string materialName;
+    Gfx::PDescriptorLayout layout;
     friend class MaterialLoader;
+    friend class MaterialInstance;
 };
 DEFINE_REF(Material);
 } // namespace Seele

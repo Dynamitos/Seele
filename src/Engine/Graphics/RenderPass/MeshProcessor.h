@@ -16,15 +16,19 @@ protected:
     Gfx::PGraphics graphics;
     virtual void addMeshBatch(
         const MeshBatch& meshBatch, 
-        const PPrimitiveComponent primitiveComponent,
+//        const PPrimitiveComponent primitiveComponent,
         const Gfx::PRenderPass renderPass,
+        Gfx::PPipelineLayout pipelineLayout,
+        Gfx::PDescriptorLayout primitiveLayout,
+        Array<Gfx::PDescriptorSet> descriptorSets,
         int32 staticMeshId = -1) = 0;
     void buildMeshDrawCommand(
         const MeshBatch& meshBatch, 
-        const PPrimitiveComponent primitiveComponent,
+//        const PPrimitiveComponent primitiveComponent,
         const Gfx::PRenderPass renderPass,
+        Gfx::PPipelineLayout pipelineLayout,
         Gfx::PRenderCommand drawCommand,
-        PMaterial material, 
+        Array<Gfx::PDescriptorSet> descriptors, 
         Gfx::PVertexShader vertexShader,
         Gfx::PControlShader controlShader,
         Gfx::PEvaluationShader evaluationShader,

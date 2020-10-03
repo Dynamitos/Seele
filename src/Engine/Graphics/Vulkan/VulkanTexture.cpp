@@ -162,6 +162,16 @@ TextureHandle::~TextureHandle()
     deletionQueue.addPendingDelete(cmdBuffer, [device, img]() { vkDestroyImage(device, img, nullptr); });
 }
 
+TextureHandle* TextureBase::cast(Gfx::PTexture texture) 
+{
+    if(texture->getTexture2D() != nullptr)
+    {
+        PTexture2D texture2D = texture.cast<Texture2D>();
+        return texture2D->textureHandle;
+    }
+    return nullptr;
+}
+
 void TextureHandle::changeLayout(VkImageLayout newLayout)
 {
     VkImageMemoryBarrier barrier =

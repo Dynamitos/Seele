@@ -258,6 +258,9 @@ void Window::choosePresentMode(const Array<VkPresentModeKHR> &modes)
 Viewport::Viewport(PGraphics graphics, PWindow owner, const ViewportCreateInfo &viewportInfo)
     : Gfx::Viewport(owner, viewportInfo), graphics(graphics)
 {
+    handle = init::Viewport(static_cast<float>(viewportInfo.sizeX), static_cast<float>(viewportInfo.sizeY), 0.f, 1.f);
+    handle.x = static_cast<float>(viewportInfo.offsetX);
+    handle.y = static_cast<float>(viewportInfo.offsetY);
 }
 
 Viewport::~Viewport()

@@ -16,6 +16,7 @@ namespace Seele
 struct VertexInputStream;
 struct VertexStreamComponent;
 class VertexInputType;
+DECLARE_REF(Material)
 namespace Gfx
 {
 DECLARE_REF(Graphics);
@@ -178,6 +179,7 @@ public:
 	DescriptorAllocator() {}
 	virtual ~DescriptorAllocator() {}
 	virtual void allocateDescriptorSet(PDescriptorSet &descriptorSet) = 0;
+	virtual void reset() = 0;
 };
 DEFINE_REF(DescriptorAllocator);
 DECLARE_REF(UniformBuffer);
@@ -187,6 +189,8 @@ class DescriptorSet
 {
 public:
 	virtual ~DescriptorSet() {}
+	virtual void beginFrame() = 0;
+	virtual void endFrame() = 0;
 	virtual void writeChanges() = 0;
 	virtual void updateBuffer(uint32 binding, PUniformBuffer uniformBuffer) = 0;
 	virtual void updateBuffer(uint32 binding, PStructuredBuffer structuredBuffer) = 0;
@@ -213,6 +217,7 @@ public:
 	}
 	virtual void create() = 0;
 	virtual void addDescriptorBinding(uint32 binding, SeDescriptorType type, uint32 arrayCount = 1);
+	virtual void reset();
 	virtual PDescriptorSet allocatedDescriptorSet();
 	const Array<DescriptorBinding> &getBindings() const { return descriptorBindings; }
 	inline uint32 getSetIndex() const { return setIndex; }
@@ -308,9 +313,28 @@ protected:
 class UniformBuffer : public Buffer
 {
 public:
-	UniformBuffer(QueueFamilyMapping mapping, QueueType startQueueType);
+	UniformBuffer(QueueFamilyMapping mapping, const BulkResourceData& resourceData);
 	virtual ~UniformBuffer();
+	virtual void updateContents(const BulkResourceData& resourceData);
+	bool isDataEquals(UniformBuffer* other)
+	{
+		if(other == nullptr)
+		{
+			return false;
+		}
+		if(size != other->size)
+		{
+			return false;
+		}
+		if(std::memcmp(contents, other->contents, size) != 0)
+		{
+			return false;
+		}
+		return true;
+	}
 protected:
+	void* contents;
+	uint32 size;
 	// Inherited via QueueOwnedResource
 	virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
 };
@@ -393,11 +417,9 @@ class VertexDeclaration
 public:
 	VertexDeclaration();
 	~VertexDeclaration();
-	uint32 addVertexStream(const VertexStreamComponent &vertexStream);
-	const Array<VertexStream> &getVertexStreams() const;
 
+	static PVertexDeclaration createDeclaration(PGraphics graphics, const Array<VertexElement>& elementList);
 private:
-	Array<VertexStream> vertexStreams;
 };
 DEFINE_REF(VertexDeclaration);
 class GraphicsPipeline
@@ -429,6 +451,7 @@ public:
 	virtual uint32 getSizeX() const = 0;
 	virtual uint32 getSizeY() const = 0;
 	virtual SeSampleCountFlags getNumSamples() const = 0;
+	virtual class Texture2D* getTexture2D() { return nullptr; }
 protected:
     // Inherited via QueueOwnedResource
 	virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
@@ -444,19 +467,23 @@ public:
 	virtual uint32 getSizeX() const = 0;
 	virtual uint32 getSizeY() const = 0;
 	virtual SeSampleCountFlags getNumSamples() const = 0;
+	virtual class Texture2D* getTexture2D() { return this; }
 protected:
 	//Inherited via QueueOwnedResource
 	virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
 };
 DEFINE_REF(Texture2D);
 
+DECLARE_REF(Viewport);
 class RenderCommand
 {
 public:
 	RenderCommand();
 	virtual ~RenderCommand();
+	virtual void setViewport(Gfx::PViewport viewport) = 0;
 	virtual void bindPipeline(Gfx::PGraphicsPipeline pipeline) = 0;
 	virtual void bindDescriptor(Gfx::PDescriptorSet set) = 0;
+	virtual void bindDescriptor(Array<Gfx::PDescriptorSet> sets) = 0;
 	virtual void bindVertexBuffer(const Array<VertexInputStream>& streams) = 0;
 	virtual void bindIndexBuffer(Gfx::PIndexBuffer indexBuffer) = 0;
 	virtual void draw(const MeshBatchElement& data) = 0;
@@ -592,6 +619,8 @@ public:
 	Array<PRenderTargetAttachment> inputAttachments;
 	Array<PRenderTargetAttachment> colorAttachments;
 	PRenderTargetAttachment depthAttachment;
+	uint32 width;
+	uint32 height;
 };
 DEFINE_REF(RenderTargetLayout);
 

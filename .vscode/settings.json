@@ -111,5 +111,7 @@
     "cmake.skipConfigureIfCachePresent": false,
     "cmake.configureArgs": [
         "-Wno-dev"
-    ]
+    ],
+    "C_Cpp.default.cppStandard": "c++17",
+    "C_Cpp.default.intelliSenseMode": "msvc-x64"
 }

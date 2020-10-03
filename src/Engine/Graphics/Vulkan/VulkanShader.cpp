@@ -2,6 +2,8 @@
 #include "VulkanGraphics.h"
 #include "VulkanDescriptorSets.h"
 #include "slang.h"
+#include "spirv_cross/spirv_reflect.hpp"
+#include <fstream>
 
 using namespace slang;
 using namespace Seele;
@@ -46,8 +48,42 @@ static SlangStage getStageFromShaderType(ShaderType type)
     }
 }
 
+/*static void createMixedDescriptorLayout(PDescriptorLayout layout, VariableLayoutReflection* parameter)
+{
+    //std::cout << "category: " << (uint32)parameter->ge << std::endl;
+    uint32 categoryCount = parameter->getCategoryCount();
+    std::cout << "Mixed parameter " << parameter->getName() << " with categories: " << std::endl;
+    for(uint32 i = 0; i < categoryCount; ++i)
+    {
+        ParameterCategory category = parameter->getCategoryByIndex(i);
+        uint32 offset = parameter->getOffset(category);
+        uint32 space = parameter->getBindingSpace(category);
+        std::cout << "category: " << category  << std::endl << "    offset: " << offset << std::endl << "    space: " << space << std::endl;
+    }
+}
+
+static Gfx::SeDescriptorType getTypeFromKind(slang::TypeReflection::Kind kind)
+{
+    switch (kind)
+    {
+    case slang::TypeReflection::Kind::ConstantBuffer:
+    case slang::TypeReflection::Kind::GenericTypeParameter:
+    case slang::TypeReflection::Kind::ParameterBlock:
+        return Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    case slang::TypeReflection::Kind::ShaderStorageBuffer:
+        return Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    case slang::TypeReflection::Kind::TextureBuffer:
+        return Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+    case slang::TypeReflection::Kind::SamplerState:
+        return Gfx::SE_DESCRIPTOR_TYPE_SAMPLER;
+    default:
+        return Gfx::SE_DESCRIPTOR_TYPE_MAX_ENUM;
+    }
+}*/
+
 void Shader::create(const ShaderCreateInfo& createInfo)
 {
+    std::cout << "--------------------------------" << std::endl;
     entryPointName = createInfo.entryPoint;
     static SlangSession* session = spCreateSession(NULL);
 
@@ -82,28 +118,14 @@ void Shader::create(const ShaderCreateInfo& createInfo)
         std::cout << diagnostics << std::endl;
     }
 
-    ShaderReflection* reflection = slang::ShaderReflection::get(request);
-    
-    uint32 parameterCount = reflection->getParameterCount();
-    for(uint32 i = 0; i < parameterCount; ++i)
-    {
-        VariableLayoutReflection* parameter =
-            reflection->getParameterByIndex(i);
-        uint32 descriptorIndex = parameter->getBindingSpace();
-        uint32 descriptorBinding = parameter->getBindingIndex();
-        PDescriptorLayout& layout = descriptorSets[descriptorIndex];
-        std::cout << parameter->getTypeLayout()->getName() << std::endl;
-        //layout->addDescriptorBinding(descriptorBinding, parame)
-     }
-
     size_t dataSize = 0;
-    const void* data = spGetEntryPointCode(request, entryPointIndex, &dataSize);
+    const uint32* data = reinterpret_cast<const uint32*>(spGetEntryPointCode(request, entryPointIndex, &dataSize));
 
     VkShaderModuleCreateInfo moduleInfo;
 	moduleInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
 	moduleInfo.pNext = nullptr;
 	moduleInfo.flags = 0;
 	moduleInfo.codeSize = dataSize;
-	moduleInfo.pCode = static_cast<const uint32*>(data);
+	moduleInfo.pCode = data;
 	VK_CHECK(vkCreateShaderModule(graphics->getDevice(), &moduleInfo, nullptr, &module));
 }

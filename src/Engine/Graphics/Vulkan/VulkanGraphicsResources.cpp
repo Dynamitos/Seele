@@ -49,6 +49,14 @@ void QueueOwnedResourceDeletion::run()
     }
 }
 
+void UniformBuffer::updateContents(const BulkResourceData &resourceData) 
+{
+    Gfx::UniformBuffer::updateContents(resourceData);
+    void* data = lock();
+    std::memcpy(data, resourceData.data, resourceData.size);
+    unlock();
+}
+
 Semaphore::Semaphore(PGraphics graphics)
     : graphics(graphics)
 {
@@ -120,4 +128,13 @@ void Fence::wait(uint32 timeout)
         VK_CHECK(r);
         break;
     }
+}
+
+VertexDeclaration::VertexDeclaration(const Array<Gfx::VertexElement>& elementList) 
+    : elementList(elementList)
+{
+}
+
+VertexDeclaration::~VertexDeclaration() 
+{   
 }

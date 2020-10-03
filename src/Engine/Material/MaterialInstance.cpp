@@ -1,5 +1,6 @@
 #include "MaterialInstance.h"
 #include "Material.h"
+#include "Graphics/WindowManager.h"
 
 using namespace Seele;
 
@@ -28,20 +29,15 @@ void MaterialInstance::save()
 
 void MaterialInstance::load() 
 {
-    
+    baseMaterial = nullptr; // TODO: actually load the file
+    BulkResourceData resourceData;
+    resourceData.size = baseMaterial->uniformDataSize;
+    resourceData.data = nullptr;
+    uniformBuffer = WindowManager::getGraphics()->createUniformBuffer(resourceData);
+    descriptorSet = baseMaterial->layout->allocatedDescriptorSet();
 }
 
-PMaterial MaterialInstance::getRenderMaterial() 
+const Material* MaterialInstance::getRenderMaterial() const
 {
     return baseMaterial;    
-}
-
-PMaterial MaterialInstance::getBaseMaterial() const
-{
-    return baseMaterial;
-}
-
-Gfx::PDescriptorSet MaterialInstance::getDescriptor()
-{
-    return nullptr;
 }

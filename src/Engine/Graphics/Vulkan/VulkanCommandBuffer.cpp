@@ -150,12 +150,21 @@ void SecondaryCmdBuffer::begin(PCmdBuffer parent)
     inheritanceInfo.renderPass = parent->renderPass->getHandle();
     inheritanceInfo.subpass = parent->subpassIndex;
     beginInfo.pInheritanceInfo = &inheritanceInfo;
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
     VK_CHECK(vkBeginCommandBuffer(handle, &beginInfo));
 }
 
 void SecondaryCmdBuffer::end()
 {
     VK_CHECK(vkEndCommandBuffer(handle));
+}
+
+void SecondaryCmdBuffer::setViewport(Gfx::PViewport viewport) 
+{
+    VkViewport vp = viewport.cast<Viewport>()->getHandle();
+    VkRect2D scissors = init::Rect2D(viewport->getSizeX(), viewport->getSizeY(), viewport->getOffsetX(), viewport->getOffsetY());
+    vkCmdSetViewport(handle, 0, 1, &vp);
+    vkCmdSetScissor(handle, 0, 1, &scissors);
 }
 
 void SecondaryCmdBuffer::bindPipeline(Gfx::PGraphicsPipeline gfxPipeline)
@@ -167,6 +176,17 @@ void SecondaryCmdBuffer::bindDescriptor(Gfx::PDescriptorSet descriptorSet)
 {
     VkDescriptorSet setHandle = descriptorSet.cast<DescriptorSet>()->getHandle();
     vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getLayout(), descriptorSet->getSetIndex(), 1, &setHandle, 0, nullptr);
+}
+void SecondaryCmdBuffer::bindDescriptor(Array<Gfx::PDescriptorSet> descriptorSets)
+{
+    VkDescriptorSet* sets = new VkDescriptorSet[descriptorSets.size()];
+    for(uint32 i = 0; i < descriptorSets.size(); ++i)
+    {
+        auto descriptorSet = descriptorSets[i].cast<DescriptorSet>();
+        sets[descriptorSet->getSetIndex()] = descriptorSet->getHandle();
+    }
+    vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getLayout(), 0, descriptorSets.size(), sets, 0, nullptr);
+    delete[] sets;
 }
 void SecondaryCmdBuffer::bindVertexBuffer(const Array<VertexInputStream>& streams)
 {

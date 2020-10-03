@@ -5,11 +5,11 @@
 
 using namespace Seele;
 
-SceneRenderPath::SceneRenderPath(PScene scene, Gfx::PGraphics graphics, Gfx::PViewport target)
+SceneRenderPath::SceneRenderPath(PScene scene, Gfx::PGraphics graphics, Gfx::PViewport target, PCameraActor source)
 	: RenderPath(graphics, target)
 	, scene(scene)
 {
-	basePass = new BasePass(scene, graphics, target);
+	basePass = new BasePass(scene, graphics, target, source);
 }
 
 SceneRenderPath::~SceneRenderPath()
@@ -28,7 +28,7 @@ void SceneRenderPath::init()
 
 void SceneRenderPath::beginFrame() 
 {
-    
+    basePass->beginFrame();
 }
 
 void SceneRenderPath::render() 
@@ -38,5 +38,5 @@ void SceneRenderPath::render()
 
 void SceneRenderPath::endFrame() 
 {
-    
+    basePass->endFrame();
 }

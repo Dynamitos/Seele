@@ -70,15 +70,17 @@ private:
 DEFINE_REF(CmdBuffer);
 
 DECLARE_REF(GraphicsPipeline);
-class SecondaryCmdBuffer : public CmdBufferBase, public Gfx::RenderCommand
+class SecondaryCmdBuffer : public Gfx::RenderCommand, public CmdBufferBase
 {
 public:
 	SecondaryCmdBuffer(PGraphics graphics, VkCommandPool cmdPool);
 	virtual ~SecondaryCmdBuffer();
 	void begin(PCmdBuffer parent);
 	void end();
+	virtual void setViewport(Gfx::PViewport viewport) override;
 	virtual void bindPipeline(Gfx::PGraphicsPipeline pipeline) override;
 	virtual void bindDescriptor(Gfx::PDescriptorSet descriptorSet) override;
+	virtual void bindDescriptor(Array<Gfx::PDescriptorSet> descriptorSets) override;
 	virtual void bindVertexBuffer(const Array<VertexInputStream>& streams) override;
 	virtual void bindIndexBuffer(Gfx::PIndexBuffer indexBuffer) override;
 	virtual void draw(const MeshBatchElement& data) override;

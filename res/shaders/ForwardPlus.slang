@@ -1,7 +1,7 @@
+import Common;
 import LightEnv;
 import BRDF;
 import Material;
-import Common;
 
 import VERTEX_INPUT_IMPORT;
 import MATERIAL_IMPORT;
@@ -13,9 +13,6 @@ import MaterialParameter;
 //layout(set = 0, binding = 3)
 //RWTexture2D<uint2> lightGrid;
 
-type_param TMaterial : IMaterial;
-layout(set = 1)
-ParameterBlock<TMaterial> gMaterial;
 
 struct VertexStageOutput
 {
@@ -31,9 +28,10 @@ VertexStageOutput vertexMain(
     VertexStageOutput output;
     VertexValueCache cache = input.getVertexCache();
 	float3 worldPosition = input.getWorldPosition();
+    worldPosition += gMaterial.getWorldOffset();
     float4 clipSpacePosition;
     
-    float3x3 tangentToLocal = cache.tangentToLocal;
+    float3x3 tangentToLocal = cache.getTangentToLocal();
     MaterialVertexParameter vertexParams = input.getMaterialVertexParameters(cache, worldPosition, tangentToLocal);
 
     float4 viewSpacePosition = mul(gViewParams.viewMatrix, float4(worldPosition, 1));
@@ -75,5 +73,5 @@ float4 fragmentMain(
     }
 	
     
-    return float4(0, 1, 0, 1);
+    return float4(result, 1);
 }

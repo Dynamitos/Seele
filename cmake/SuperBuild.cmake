@@ -8,7 +8,7 @@ set(ASSIMP_BUILD_TESTS OFF CACHE INTERNAL "")
 set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE INTERNAL "")
 set(ASSIMP_INSTALL OFF CACHE INTERNAL "")
 
-add_subdirectory(${ASSIMP_ROOT} ${ASSIMP_ROOT})
+add_subdirectory(${ASSIMP_ROOT} ${})
 target_compile_definitions(assimp PRIVATE _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
 
 #-------------BOOST----------------
@@ -96,6 +96,18 @@ list(APPEND EXTRA_CMAKE_ARGS
 	-DSLANG_LIBRARY=${SLANG_LIB_PATH}
 	-DSLANG_BINARY=${SLANG_BINARY}
 	-DSLANG_GLSLANG=${SLANG_GLSLANG})
+
+
+#----------------SPIR-V-CROSS--------------------
+list(APPEND DEPENDENCIES spirv-cross-reflect)
+set(SPIRV_CROSS_ENABLE_HLSL OFF CACHE BOOL "")
+set(SPIRV_CROSS_ENABLE_TESTS OFF CACHE BOOL "")
+set(SPIRV_CROSS_CLI OFF CACHE BOOL "")
+set(SPIRV_CROSS_ENABLE_C_API OFF CACHE BOOL "")
+set(SPIRV_CROSS_ENABLE_UTIL OFF CACHE BOOL "")
+set(SPIRV_CROSS_SKIP_INSTALL ON CACHE BOOL "")
+add_subdirectory(${SPIRV_ROOT})
+
 
 #-----------------SeeleEngine--------------------
 ExternalProject_Add(SeeleEngine

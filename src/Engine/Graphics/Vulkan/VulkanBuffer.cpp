@@ -71,6 +71,11 @@ ShaderBuffer::~ShaderBuffer()
 	graphics = nullptr;
 }
 
+VkDeviceSize ShaderBuffer::getOffset() const
+{
+	return buffers[currentBuffer].allocation->getOffset();
+}
+
 void ShaderBuffer::executeOwnershipBarrier(Gfx::QueueType newOwner)
 {
 	VkBufferMemoryBarrier barrier =
@@ -235,7 +240,7 @@ void ShaderBuffer::unlock()
 
 UniformBuffer::UniformBuffer(PGraphics graphics, const BulkResourceData &resourceData)
 	: Vulkan::ShaderBuffer(graphics, resourceData.size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, resourceData.owner)
-	, Gfx::UniformBuffer(graphics->getFamilyMapping(), resourceData.owner)
+	, Gfx::UniformBuffer(graphics->getFamilyMapping(), resourceData)
 {
 	if (resourceData.data != nullptr)
 	{

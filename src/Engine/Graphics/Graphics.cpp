@@ -11,3 +11,18 @@ Graphics::Graphics()
 Graphics::~Graphics()
 {
 }
+
+PVertexBuffer Graphics::getNullVertexBuffer() 
+{
+    if(nullVertexBuffer == nullptr)
+    {
+        VertexBufferCreateInfo createInfo;
+        createInfo.numVertices = 1;
+        createInfo.vertexSize = sizeof(Vector4);
+        Vector4 data =  Vector4(1, 1, 1, 1);
+        createInfo.resourceData.data = reinterpret_cast<uint8*>(&data);
+        createInfo.resourceData.size = sizeof(Vector4);
+        nullVertexBuffer = createVertexBuffer(createInfo);
+    }
+    return nullVertexBuffer;
+}

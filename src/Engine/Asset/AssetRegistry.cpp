@@ -24,7 +24,6 @@ void AssetRegistry::importFile(const std::string &filePath)
 {
     std::filesystem::path fsPath = std::filesystem::path(filePath);
     std::string extension = fsPath.extension().string();
-    std::cout << extension << std::endl;
     if (extension.compare(".fbx") == 0 
      || extension.compare(".obj") == 0)
     {
@@ -46,6 +45,16 @@ PMeshAsset AssetRegistry::findMesh(const std::string &filePath)
     return get().meshes[filePath];
 }
 
+PTextureAsset AssetRegistry::findTexture(const std::string &filePath)
+{
+    PTextureAsset result = get().textures[filePath];
+    if(result == nullptr)
+    {
+        return get().textureLoader->getPlaceholderTexture();
+    }
+    return result;
+}
+
 PMaterialAsset AssetRegistry::findMaterial(const std::string &filePath)
 {
     return get().materials[filePath];
@@ -59,11 +68,6 @@ std::ofstream AssetRegistry::createWriteStream(const std::string& relativePath, 
 std::ifstream AssetRegistry::createReadStream(const std::string& relativePath, std::ios_base::openmode openmode) 
 {
     return get().internalCreateReadStream(relativePath, openmode);
-}
-
-PTextureAsset AssetRegistry::findTexture(const std::string &filePath)
-{
-    return get().textures[filePath];
 }
 
 AssetRegistry &AssetRegistry::get()
@@ -120,6 +124,11 @@ void AssetRegistry::registerMesh(PMeshAsset mesh)
     {
         meshes[mesh->getFileName()] = mesh;
     }
+}
+
+void AssetRegistry::registerMaterial(PMaterialAsset material)
+{
+    materials[material->getFileName()] = material;
 }
 
 std::ofstream AssetRegistry::internalCreateWriteStream(const std::string& relativePath, std::ios_base::openmode openmode) 

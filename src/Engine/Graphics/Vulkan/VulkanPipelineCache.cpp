@@ -54,24 +54,17 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
     createInfo.flags = 0;
     createInfo.stageCount = 0;
 
-    PPipelineLayout layout = graphics->createPipelineLayout();
-
     VkPipelineTessellationStateCreateInfo tessInfo;
     VkPipelineShaderStageCreateInfo stageInfos[5];
     std::memset(stageInfos, 0, sizeof(stageInfos));
-    if(gfxInfo.vertexShader != nullptr)
-    {
-        PVertexShader shader = gfxInfo.vertexShader.cast<VertexShader>();
-        VkPipelineShaderStageCreateInfo& vertInfo = stageInfos[createInfo.stageCount++];
-        vertInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        vertInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-        vertInfo.module = shader->getModuleHandle();
-        vertInfo.pName = shader->getEntryPointName();
-        for(auto descriptor : shader->getDescriptorLayouts())
-        {
-            layout->addDescriptorLayout(descriptor.key, descriptor.value);
-        }
-    }
+    
+    PVertexShader vertexShader = gfxInfo.vertexShader.cast<VertexShader>();
+    VkPipelineShaderStageCreateInfo& vertInfo = stageInfos[createInfo.stageCount++];
+    vertInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    vertInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+    vertInfo.module = vertexShader->getModuleHandle();
+    vertInfo.pName = vertexShader->getEntryPointName();
+
     if(gfxInfo.controlShader != nullptr)
     {
         assert(gfxInfo.evalShader != nullptr);
@@ -94,15 +87,6 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
         tessInfo.pNext = 0;
         tessInfo.flags = 0;
         tessInfo.patchControlPoints = control->getNumPatches();
-        
-        for(auto descriptor : eval->getDescriptorLayouts())
-        {
-            layout->addDescriptorLayout(descriptor.key, descriptor.value);
-        }
-        for(auto descriptor : control->getDescriptorLayouts())
-        {
-            layout->addDescriptorLayout(descriptor.key, descriptor.value);
-        }
     }
     if(gfxInfo.geometryShader != nullptr)
     {
@@ -113,11 +97,6 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
         geometryInfo.stage = VK_SHADER_STAGE_GEOMETRY_BIT;
         geometryInfo.module = geometry->getModuleHandle();
         geometryInfo.pName = geometry->getEntryPointName();
-        
-        for(auto descriptor : geometry->getDescriptorLayouts())
-        {
-            layout->addDescriptorLayout(descriptor.key, descriptor.value);
-        }
     }
     if(gfxInfo.fragmentShader != nullptr)
     {
@@ -128,40 +107,81 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
         fragmentInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
         fragmentInfo.module = fragment->getModuleHandle();
         fragmentInfo.pName = fragment->getEntryPointName();
-
-        for(auto descriptor : fragment->getDescriptorLayouts())
-        {
-            layout->addDescriptorLayout(descriptor.key, descriptor.value);
-        }
     }
-    layout->create();
     VkPipelineVertexInputStateCreateInfo vertexInput =
         init::PipelineVertexInputStateCreateInfo();
-    Gfx::PVertexDeclaration vertexDecl = gfxInfo.vertexDeclaration;
-    auto vertexStreams = vertexDecl->getVertexStreams();
-    Array<VkVertexInputBindingDescription> bindingDesc(vertexStreams.size());
-    Array<VkVertexInputAttributeDescription> attribDesc;
+    PVertexDeclaration vertexDecl = gfxInfo.vertexDeclaration;
+    auto vertexStreams = vertexDecl->elementList;
     uint32 bindingNum = 0;
-    for(auto vertexBinding : vertexStreams)
+    uint32 bindingsMask = 0;
+    uint32 attributesNum = 0;
+    Array<VkVertexInputBindingDescription> bindings;
+    Array<VkVertexInputAttributeDescription> attributes;
+    Map<uint32, uint32> bindingToStream;
+    Map<uint32, uint32> streamToBinding;
+    std::memset(bindings.data(), 0, sizeof(VkVertexInputBindingDescription) * 16); // if default allocation size ever changes, this breaks
+    std::memset(attributes.data(), 0, sizeof(VkVertexInputAttributeDescription) * 16);
+    for(auto& element : vertexStreams)
     {
-        uint32 stride = 0;
-        for(auto vertexAttrib : vertexBinding.getVertexDescriptions())
+        //if((1 << element.attributeIndex) & vertexAttributeMask) // TODO: attribute mask
         {
-            auto attrib = attribDesc.add();
-            attrib.binding = bindingNum;
-            attrib.format = cast(vertexAttrib.vertexFormat);
-            attrib.location = vertexAttrib.location;
-            attrib.offset = vertexAttrib.offset;
+            if(element.streamIndex >= bindings.size())
+            {
+                bindings.resize(element.streamIndex + 1); // This should not cause any actual allocations
+            }
+            VkVertexInputBindingDescription currBinding = bindings[element.streamIndex];
+            if((bindingsMask & (1 << element.streamIndex)) != 0)
+            {
+                assert(currBinding.binding == element.streamIndex);
+                assert(currBinding.inputRate == element.bInstanced ? VK_VERTEX_INPUT_RATE_INSTANCE : VK_VERTEX_INPUT_RATE_VERTEX);
+                assert(currBinding.stride == element.stride);
+            }
+            else
+            {
+                assert(currBinding.binding == 0 && currBinding.inputRate == 0 && currBinding.stride == 0);
+                currBinding.binding = element.streamIndex;
+                currBinding.inputRate = element.bInstanced ? VK_VERTEX_INPUT_RATE_INSTANCE : VK_VERTEX_INPUT_RATE_VERTEX;
+                currBinding.stride = element.stride;
+
+                bindingsMask |= 1 << element.streamIndex;
+            }
         }
-        bindingDesc[bindingNum].binding = bindingNum;
-        bindingDesc[bindingNum].stride = stride;
-        bindingDesc[bindingNum].inputRate = vertexBinding.isInstanced() ? VK_VERTEX_INPUT_RATE_INSTANCE : VK_VERTEX_INPUT_RATE_VERTEX;
+    }
+
+    for(uint32 i = 0; i < bindings.size(); ++i)
+    {
+        if(!((1 << i) & bindingsMask))
+        {
+            continue;
+        }
+
+        bindingToStream[bindingNum] = i;
+        streamToBinding[i] = bindingNum;
+        VkVertexInputBindingDescription& currBinding = bindings[bindingNum];
+        currBinding = bindings[i];
+        currBinding.binding = bindingNum;
         bindingNum++;
     }
-    vertexInput.pVertexBindingDescriptions = bindingDesc.data();
-    vertexInput.vertexBindingDescriptionCount = bindingDesc.size();
-    vertexInput.pVertexAttributeDescriptions = attribDesc.data();
-    vertexInput.vertexAttributeDescriptionCount = attribDesc.size();
+
+    for(auto& element : vertexStreams)
+    {
+        //TODO: vertex attribute mask
+        if(attributesNum >= attributes.size())
+        {
+            attributes.resize(attributesNum + 1); // This should not cause any actual allocations
+        }
+
+        VkVertexInputAttributeDescription& currAttribute = attributes[attributesNum++];
+        currAttribute.location = element.attributeIndex;
+        currAttribute.binding = streamToBinding[element.streamIndex];
+        currAttribute.format = cast(element.vertexFormat);
+        currAttribute.offset = element.offset;
+    }
+
+    vertexInput.pVertexBindingDescriptions = bindings.data();
+    vertexInput.vertexBindingDescriptionCount = bindings.size();
+    vertexInput.pVertexAttributeDescriptions = attributes.data();
+    vertexInput.vertexAttributeDescriptionCount = attributes.size();
 
     VkPipelineInputAssemblyStateCreateInfo assemblyInfo =
         init::PipelineInputAssemblyStateCreateInfo(
@@ -242,6 +262,8 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
             0
         );
 
+    PPipelineLayout layout = gfxInfo.pipelineLayout.cast<PipelineLayout>();
+
     createInfo.pStages = stageInfos;
     createInfo.pVertexInputState = &vertexInput;
     createInfo.pInputAssemblyState = &assemblyInfo;
@@ -260,7 +282,7 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
     auto beginTime = std::chrono::high_resolution_clock::now();
     VK_CHECK(vkCreateGraphicsPipelines(graphics->getDevice(), cache, 1, &createInfo, nullptr, &pipelineHandle));
     auto endTime = std::chrono::high_resolution_clock::now();
-    int64 delta = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - beginTime).count();
+    int64 delta = std::chrono::duration_cast<std::chrono::microseconds>(endTime - beginTime).count();
     std::cout << "Gfx creation time: " << delta << std::endl;
 
     PGraphicsPipeline result = new GraphicsPipeline(graphics, pipelineHandle, layout, gfxInfo);

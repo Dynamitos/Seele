@@ -8,4 +8,5 @@ target_sources(SeeleEngine
         MaterialAsset.cpp
         MaterialInstance.h
         MaterialInstance.cpp
-        ShaderExpression.h)
+        ShaderExpression.h
+        ShaderExpression.cpp)

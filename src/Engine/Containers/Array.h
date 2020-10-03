@@ -229,6 +229,15 @@ namespace Seele
 			refreshIterators();
 			return _data[arraySize - 1];
 		}
+		T &addUnique(const T &item = T())
+		{
+			Iterator it;
+			if((it = find(item)) != endIt)
+			{
+				return *it;
+			}
+			return add(item);
+		}
 		template<typename... args>
 		T &emplace(args...)
 		{
@@ -290,6 +299,22 @@ namespace Seele
 				_data = newData;
 			}
 			refreshIterators();
+		}
+		inline uint32 indexOf(Iterator iterator)
+		{
+			return iterator - beginIt;
+		}
+		inline uint32 indexOf(ConstIterator iterator) const
+		{
+			return iterator.p - beginIt.p;
+		}
+		inline uint32 indexOf(T& t)
+		{
+			return indexOf(find(t));
+		}
+		inline uint32 indexOf(const T& t) const
+		{
+			return indexOf(find(t));
 		}
 		inline uint32 size() const
 		{

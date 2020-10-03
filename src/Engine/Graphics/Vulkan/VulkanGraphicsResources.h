@@ -53,6 +53,17 @@ private:
 };
 DEFINE_REF(Fence);
 
+class VertexDeclaration : public Gfx::VertexDeclaration
+{
+public:
+	Array<Gfx::VertexElement> elementList;
+
+	VertexDeclaration(const Array<Gfx::VertexElement>& elementList);
+	virtual ~VertexDeclaration();
+private:
+};
+DEFINE_REF(VertexDeclaration);
+
 class QueueOwnedResourceDeletion
 {
 public:
@@ -83,6 +94,11 @@ public:
 	{
 		return buffers[currentBuffer].buffer;
 	}
+	uint32 getSize() const
+	{
+		return size;
+	}
+	VkDeviceSize getOffset() const;
 	void advanceBuffer()
 	{
 		currentBuffer = (currentBuffer + 1) % numBuffers;
@@ -116,7 +132,7 @@ class UniformBuffer : public Gfx::UniformBuffer, public ShaderBuffer
 public:
 	UniformBuffer(PGraphics graphics, const BulkResourceData &resourceData);
 	virtual ~UniformBuffer();
-
+	virtual void updateContents(const BulkResourceData &resourceData);
 protected:
 	// Inherited via Vulkan::Buffer
 	virtual void requestOwnershipTransfer(Gfx::QueueType newOwner);
@@ -232,23 +248,16 @@ private:
 	friend class TextureBase;
 	friend class Texture2D;
 };
-DEFINE_REF(TextureHandle);
 
-DECLARE_REF(TextureBase);
 class TextureBase
 {
 public:
-	static PTextureHandle cast(Gfx::PTexture texture)
-	{
-		PTextureBase base = texture.cast<TextureBase>();
-		return base->textureHandle;
-	}
+	static TextureHandle* cast(Gfx::PTexture texture);
 	void changeLayout(VkImageLayout newLayout);
 
 protected:
-	PTextureHandle textureHandle;
+	TextureHandle* textureHandle;
 };
-DEFINE_REF(TextureBase);
 
 class Texture2D : public Gfx::Texture2D, public TextureBase
 {
@@ -290,7 +299,7 @@ protected:
 };
 DEFINE_REF(Texture2D);
 
-class SamplerState
+class SamplerState : public Gfx::SamplerState
 {
 public:
 	VkSampler sampler;
@@ -343,9 +352,9 @@ public:
 	virtual ~Viewport();
 	virtual void resize(uint32 newX, uint32 newY);
 	virtual void move(uint32 newOffsetX, uint32 newOffsetY);
-
-protected:
+	VkViewport getHandle() const { return handle; }
 private:
+	VkViewport handle;
 	PGraphics graphics;
 	friend class Graphics;
 };

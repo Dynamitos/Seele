@@ -16,3 +16,7 @@ interface IMaterial
 	float getRoughness(MaterialFragmentParameter input);
 	float getSheen(MaterialFragmentParameter input);
 };
+
+type_param TMaterial : IMaterial;
+layout(set = 2, binding = 0, std430)
+ParameterBlock<TMaterial> gMaterial;

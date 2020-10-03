@@ -20,11 +20,8 @@ class StaticMeshVertexInput : public VertexShaderInput
 public:
     StaticMeshVertexInput(std::string name);
     virtual ~StaticMeshVertexInput();
-    void setPositionStream(const VertexStreamComponent& positionStream);
-    void setTangentXStream(const VertexStreamComponent& tangentXStream);
-    void setTangentZStream(const VertexStreamComponent& tangentZStream);
-    void setTexCoordStream(uint32 index, const VertexStreamComponent& textureStream);
-    void setColorStream(const VertexStreamComponent& colorStream);
+    virtual void init(Gfx::PGraphics graphics) override;
+    void setData(StaticMeshDataType data);
 private:
     StaticMeshDataType data;
 };

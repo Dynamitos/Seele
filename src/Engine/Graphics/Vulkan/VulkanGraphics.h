@@ -53,12 +53,14 @@ public:
 	virtual Gfx::PVertexBuffer createVertexBuffer(const VertexBufferCreateInfo &bulkData) override;
 	virtual Gfx::PIndexBuffer createIndexBuffer(const IndexBufferCreateInfo &bulkData) override;
 	virtual Gfx::PRenderCommand createRenderCommand() override;
+	virtual Gfx::PVertexDeclaration createVertexDeclaration(const Array<Gfx::VertexElement>& element) override;
     virtual Gfx::PVertexShader createVertexShader(const ShaderCreateInfo& createInfo) override;
     virtual Gfx::PControlShader createControlShader(const ShaderCreateInfo& createInfo) override;
     virtual Gfx::PEvaluationShader createEvaluationShader(const ShaderCreateInfo& createInfo) override;
     virtual Gfx::PGeometryShader createGeometryShader(const ShaderCreateInfo& createInfo) override;
     virtual Gfx::PFragmentShader createFragmentShader(const ShaderCreateInfo& createInfo) override;
 	virtual Gfx::PGraphicsPipeline createGraphicsPipeline(const GraphicsPipelineCreateInfo& createInfo) override;
+    virtual Gfx::PSamplerState createSamplerState(const SamplerCreateInfo& createInfo) override;
 
 	virtual Gfx::PDescriptorLayout createDescriptorLayout() override;
 	virtual Gfx::PPipelineLayout createPipelineLayout() override;

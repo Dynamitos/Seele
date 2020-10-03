@@ -11,6 +11,11 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::PRenderTargetLayout layout)
     : Gfx::RenderPass(layout)
     , graphics(graphics)
 {
+    renderArea.extent.width = layout->width;
+    renderArea.extent.height = layout->height;
+    renderArea.offset.x = 0;
+    renderArea.offset.y = 0;
+    subpassContents = VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS;
     Array<VkAttachmentDescription> attachments;
     Array<VkAttachmentReference> inputRefs;
     Array<VkAttachmentReference> colorRefs;

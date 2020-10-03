@@ -72,6 +72,13 @@ ShaderCollection& ShaderMap::createShaders(
 
 		collection.fragmentShader = graphics->createFragmentShader(createInfo);
 	}
+	ShaderPermutation permutation;
+    std::string materialName = material->getFileName(); //Filename is fine, because it just has to be unique
+    std::string vertexInputName = vertexInput->getName();
+	permutation.passType = renderPass;
+    std::memcpy(permutation.materialName, materialName.c_str(), sizeof(permutation.materialName));
+    std::memcpy(permutation.vertexInputName, vertexInputName.c_str(), sizeof(permutation.vertexInputName));
+	collection.id = PermutationId(permutation);
 
 	return collection;
 }
@@ -95,6 +102,11 @@ PDescriptorSet DescriptorLayout::allocatedDescriptorSet()
 	return result;
 }
 
+void DescriptorLayout::reset() 
+{
+	allocator->reset();
+}
+
 void PipelineLayout::addDescriptorLayout(uint32 setIndex, PDescriptorLayout layout)
 {
 	if (descriptorSetLayouts.size() <= setIndex)
@@ -110,7 +122,6 @@ void PipelineLayout::addDescriptorLayout(uint32 setIndex, PDescriptorLayout layo
 		{
 			if (otherBindings[i].descriptorType != SE_DESCRIPTOR_TYPE_MAX_ENUM)
 			{
-				assert(thisBindings[i].descriptorType != SE_DESCRIPTOR_TYPE_MAX_ENUM ? thisBindings[i].descriptorType == otherBindings[i].descriptorType : true);
 				thisBindings[i] = otherBindings[i];
 			}
 		}
@@ -118,8 +129,8 @@ void PipelineLayout::addDescriptorLayout(uint32 setIndex, PDescriptorLayout layo
 	else
 	{
 		descriptorSetLayouts[setIndex] = layout;
-		layout->setIndex = setIndex;
 	}
+	layout->setIndex = setIndex;
 }
 
 void PipelineLayout::addPushConstants(const SePushConstantRange &pushConstant)
@@ -155,14 +166,27 @@ Buffer::~Buffer()
 {
 }
 
-UniformBuffer::UniformBuffer(QueueFamilyMapping mapping, QueueType startQueueType)
-	: Buffer(mapping, startQueueType)
+UniformBuffer::UniformBuffer(QueueFamilyMapping mapping, const BulkResourceData& resourceData)
+	: Buffer(mapping, resourceData.owner)
+	, size(resourceData.size)
 {
+	if(resourceData.data != nullptr)
+	{
+		contents = new uint8[size];
+		std::memcpy(contents, resourceData.data, size);
+	}
 }
 
 UniformBuffer::~UniformBuffer()
 {
 }
+
+void UniformBuffer::updateContents(const BulkResourceData& resourceData) 
+{
+	assert(size == resourceData.size);
+	std::memcpy(contents, resourceData.data, size);
+}
+
 StructuredBuffer::StructuredBuffer(QueueFamilyMapping mapping, QueueType startQueueType)
 	: Buffer(mapping, startQueueType)
 {
@@ -220,15 +244,27 @@ VertexDeclaration::VertexDeclaration()
 VertexDeclaration::~VertexDeclaration()
 {
 }
-uint32 VertexDeclaration::addVertexStream(const VertexStreamComponent &element)
+
+static std::mutex vertexDeclarationLock;
+static Map<uint32, PVertexDeclaration> vertexDeclarationCache;
+
+PVertexDeclaration VertexDeclaration::createDeclaration(PGraphics graphics, const Array<VertexElement>& elementList)
 {
-	VertexStream& stream = vertexStreams.add();
-	stream.addVertexElement(VertexElement(element.streamOffset, element.type, element.offset));
-	return stream.vertexDescription.size() - 1;
-}
-const Array<VertexStream> &VertexDeclaration::getVertexStreams() const
-{
-	return vertexStreams;
+	std::scoped_lock lock(vertexDeclarationLock);
+	boost::crc_32_type result;
+	result.process_bytes(&elementList, sizeof(VertexElement) * elementList.size());
+	uint32 key = result.checksum();
+
+	auto found = vertexDeclarationCache[key];
+	if(found == nullptr)
+	{
+		return found;
+	}
+
+	PVertexDeclaration newDeclaration = graphics->createVertexDeclaration(elementList);
+
+	vertexDeclarationCache[key] = newDeclaration;
+	return newDeclaration;
 }
 
 Texture::Texture(QueueFamilyMapping mapping, Gfx::QueueType startQueueType)
@@ -263,21 +299,21 @@ RenderTargetLayout::RenderTargetLayout()
 }
 
 RenderTargetLayout::RenderTargetLayout(PRenderTargetAttachment depthAttachment)
-	: inputAttachments(), colorAttachments(), depthAttachment(depthAttachment)
+	: inputAttachments(), colorAttachments(), depthAttachment(depthAttachment), width(depthAttachment->getTexture()->getSizeX()), height(depthAttachment->getTexture()->getSizeY())
 {
 }
 
 RenderTargetLayout::RenderTargetLayout(PRenderTargetAttachment colorAttachment, PRenderTargetAttachment depthAttachment)
-	: inputAttachments(), depthAttachment(depthAttachment)
+	: inputAttachments(), depthAttachment(depthAttachment), width(depthAttachment->getTexture()->getSizeX()), height(depthAttachment->getTexture()->getSizeY())
 {
 	colorAttachments.add(colorAttachment);
 }
 RenderTargetLayout::RenderTargetLayout(Array<PRenderTargetAttachment> colorAttachments, PRenderTargetAttachment depthAttachmet)
-	: inputAttachments(), colorAttachments(colorAttachments), depthAttachment(depthAttachment)
+	: inputAttachments(), colorAttachments(colorAttachments), depthAttachment(depthAttachment), width(depthAttachment->getTexture()->getSizeX()), height(depthAttachment->getTexture()->getSizeY())
 {
 }
 RenderTargetLayout::RenderTargetLayout(Array<PRenderTargetAttachment> inputAttachments, Array<PRenderTargetAttachment> colorAttachments, PRenderTargetAttachment depthAttachment)
-	: inputAttachments(inputAttachments), colorAttachments(colorAttachments), depthAttachment(depthAttachment)
+	: inputAttachments(inputAttachments), colorAttachments(colorAttachments), depthAttachment(depthAttachment), width(depthAttachment->getTexture()->getSizeX()), height(depthAttachment->getTexture()->getSizeY())
 {
 }
 
@@ -298,3 +334,4 @@ Viewport::Viewport(PWindow owner, const ViewportCreateInfo &viewportInfo)
 Viewport::~Viewport()
 {
 }
+

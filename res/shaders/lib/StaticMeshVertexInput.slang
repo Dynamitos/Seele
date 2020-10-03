@@ -1,12 +1,29 @@
+import Common;
 import MaterialParameter;
 import PrimitiveSceneData;
 
 struct VertexValueCache
 {
-    float3x3 tangentToLocal;
-    float3x3 tangentToWorld;
+    //This struct is passed between vertex and fragment stage
+    //which means, that it is passed as out mat3x3 in glsl
+    //but Slang for some reason puts a layout(row_major) above
+    //every attribute, including this matrix, but matrix layout
+    //qualifiers are illegal for non-uniform and buffer fields,
+    //leading to a compiler error
+    float3 tangentToLocal[3];
+    float3 tangentToWorld[3];
     float tangentToWorldSign;
     float4 color;
+
+    float3x3 getTangentToLocal()
+    {
+        return float3x3(tangentToLocal[0], tangentToLocal[1], tangentToLocal[2]);
+    }
+
+    float3x3 getTangentToWorld()
+    {
+        return float3x3(tangentToWorld[0], tangentToWorld[1], tangentToWorld[2]);
+    }
 
 #if USE_INSTANCING
     float4 instanceOrigin;
@@ -133,9 +150,15 @@ struct VertexShaderInput
 #endif
 
         float tangentSign;
-        cache.tangentToLocal = calcTangentToLocal(tangentSign);
+        float3x3 tangentToLocal = calcTangentToLocal(tangentSign);
+        cache.tangentToLocal[0] = tangentToLocal[0];
+        cache.tangentToLocal[1] = tangentToLocal[1];
+        cache.tangentToLocal[2] = tangentToLocal[2];
         float3x3 localToWorld = float3x3(gSceneData.localToWorld[0].xyz, gSceneData.localToWorld[1].xyz, gSceneData.localToWorld[2].xyz);
-        cache.tangentToWorld = mul(cache.tangentToLocal, localToWorld);
+        float3x3 tangentToWorld = mul(tangentToLocal, localToWorld);
+        cache.tangentToWorld[0] = tangentToWorld[0];
+        cache.tangentToWorld[1] = tangentToWorld[1];
+        cache.tangentToWorld[2] = tangentToWorld[2];
         cache.tangentToWorldSign = tangentSign;
 
         return cache;
@@ -146,7 +169,7 @@ struct VertexShaderInput
         MaterialVertexParameter result;
         result.worldPosition = worldPosition;
         result.vertexColor = cache.color;
-        result.tangentToWorld = cache.tangentToWorld;
+        result.tangentToWorld = cache.getTangentToWorld();
         // TODO instancing
         /*for(int i = 0; i < NUM_MATERIAL_TEXCOORDS-1; i+=2)
         {

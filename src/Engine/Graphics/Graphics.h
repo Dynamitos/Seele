@@ -41,17 +41,22 @@ public:
     virtual PVertexBuffer createVertexBuffer(const VertexBufferCreateInfo &bulkData) = 0;
     virtual PIndexBuffer createIndexBuffer(const IndexBufferCreateInfo &bulkData) = 0;
     virtual PRenderCommand createRenderCommand() = 0;
+    virtual PVertexDeclaration createVertexDeclaration(const Array<VertexElement>& element) = 0;
     virtual PVertexShader createVertexShader(const ShaderCreateInfo& createInfo) = 0;
     virtual PControlShader createControlShader(const ShaderCreateInfo& createInfo) = 0;
     virtual PEvaluationShader createEvaluationShader(const ShaderCreateInfo& createInfo) = 0;
     virtual PGeometryShader createGeometryShader(const ShaderCreateInfo& createInfo) = 0;
     virtual PFragmentShader createFragmentShader(const ShaderCreateInfo& createInfo) = 0;
     virtual PGraphicsPipeline createGraphicsPipeline(const GraphicsPipelineCreateInfo& createInfo) = 0;
-    
-	virtual Gfx::PDescriptorLayout createDescriptorLayout() = 0;
-	virtual Gfx::PPipelineLayout createPipelineLayout() = 0;
+    virtual PSamplerState createSamplerState(const SamplerCreateInfo& createInfo) = 0;
+
+	virtual PDescriptorLayout createDescriptorLayout() = 0;
+	virtual PPipelineLayout createPipelineLayout() = 0;
+
+    PVertexBuffer getNullVertexBuffer();
 
 protected:
+    PVertexBuffer nullVertexBuffer;
     QueueFamilyMapping queueMapping;
     PShaderCompiler shaderCompiler;
     friend class Window;

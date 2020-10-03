@@ -12,7 +12,7 @@ int main()
 	mainWindowInfo.height = 720;
 	mainWindowInfo.bFullscreen = false;
 	mainWindowInfo.numSamples = 1;
-	mainWindowInfo.pixelFormat = Gfx::SE_FORMAT_R8G8B8_UNORM;
+	mainWindowInfo.pixelFormat = Gfx::SE_FORMAT_B8G8R8A8_UNORM;
 	auto window = core.getWindowManager()->addWindow(mainWindowInfo);
 	ViewportCreateInfo sceneViewInfo;
 	sceneViewInfo.sizeX = 1280;

@@ -39,6 +39,7 @@ Framebuffer::Framebuffer(PGraphics graphics, PRenderPass renderPass, Gfx::PRende
             renderPass->getRenderArea().extent.width,
             renderPass->getRenderArea().extent.height,
             1);
+    
     VK_CHECK(vkCreateFramebuffer(graphics->getDevice(), &createInfo, nullptr, &handle));
 
     boost::crc_32_type result;

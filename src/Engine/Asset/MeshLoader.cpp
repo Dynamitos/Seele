@@ -33,7 +33,7 @@ void MeshLoader::importAsset(const std::filesystem::path &path)
     import(path);
 }
 
-void loadMaterials(const aiScene* scene, Array<PMaterialAsset>& globalMaterials, Gfx::PGraphics graphics)
+void MeshLoader::loadMaterials(const aiScene* scene, Array<PMaterialAsset>& globalMaterials, Gfx::PGraphics graphics)
 {
     using json = nlohmann::json;
     for(uint32 i = 0; i < scene->mNumMaterials; ++i)
@@ -42,7 +42,6 @@ void loadMaterials(const aiScene* scene, Array<PMaterialAsset>& globalMaterials,
         json matCode;
         matCode["name"] = material->GetName().C_Str();
         matCode["profile"] = "BlinnPhong"; //TODO: other shading models
-        std::vector<std::string> code;
         aiString texPath;
         //TODO make samplers based on used textures
         matCode["params"]["texSampler"] =
@@ -57,7 +56,7 @@ void loadMaterials(const aiScene* scene, Array<PMaterialAsset>& globalMaterials,
                     {"type", "Texture2D"}, 
                     {"default", texPath.C_Str()}
                 };
-            code.push_back("result.baseColor = diffuseTexture.Sample(textureSampler, geometry.texCoord).xyz;\n");
+            matCode["code"]["baseColor"] = "return diffuseTexture.Sample(textureSampler, geometry.texCoord).xyz;";
         }
         if(material->GetTexture(aiTextureType_SPECULAR, 0, &texPath) == AI_SUCCESS)
         {
@@ -67,7 +66,7 @@ void loadMaterials(const aiScene* scene, Array<PMaterialAsset>& globalMaterials,
                     {"type", "Texture2D"},
                     {"default", texPath.C_Str()}
                 };
-            code.push_back("result.specular = specularTexture.Sample(textureSampler, geometry.texCoord).xyz;\n");
+            matCode["code"]["specular"] = "return specularTexture.Sample(textureSampler, geometry.texCoord).xyz;";
         }
         if(material->GetTexture(aiTextureType_NORMALS, 0, &texPath) == AI_SUCCESS)
         {
@@ -77,21 +76,20 @@ void loadMaterials(const aiScene* scene, Array<PMaterialAsset>& globalMaterials,
                     {"type", "Texture2D"},
                     {"default", texPath.C_Str()}
                 };
-            code.push_back("float3 bumpMapNormal = normalTexture.Sample(textureSampler, geometry.texCoord).xyz;\n");
-            code.push_back("bumpMapNormal = 2.0 * bumpMapNormal - float3(1.0f, 1.0f, 1.0f);\n");
-            code.push_back("result.normal = geometry.transformLocalToWorld(bumpMapNormal);\n");
+            matCode["code"]["normal"] = "return normalTexture.Sample(textureSampler, geometry.texCoord).xyz;";
         }
-        code.push_back("return result;\n");
-        matCode["code"] = code;
         std::string outMatFilename = matCode["name"].get<std::string>().append(".asset");
         std::ofstream outMatFile = AssetRegistry::createWriteStream(outMatFilename);
         outMatFile << std::setw(4) << matCode;
         outMatFile.flush();
         outMatFile.close();
         //TODO: let the material loader handle this instead
-        std::cout << matCode["name"] << std::endl;
-        AssetRegistry::importFile(outMatFilename);
-        PMaterialAsset asset = AssetRegistry::findMaterial(outMatFilename);
+        //std::cout << matCode << std::endl;
+        PMaterial result = new Material(outMatFilename);
+        result->compile();
+        graphics->getShaderCompiler()->registerMaterial(result);
+        AssetRegistry::get().registerMaterial(result);
+        PMaterialAsset asset = AssetRegistry::findMaterial(result->getFileName());
         globalMaterials[i] = asset;
     }
 }
@@ -148,35 +146,38 @@ VertexStreamComponent createVertexStream(uint32 size, aiVector2D* sourceData, Gf
     Gfx::PVertexBuffer vertexBuffer = graphics->createVertexBuffer(vbInfo);
     return VertexStreamComponent(vertexBuffer, 0, vbInfo.vertexSize, Gfx::SE_FORMAT_R32G32_SFLOAT);
 }
-void loadGlobalMeshes(const aiScene* scene, Array<PMesh>& globalMeshes, Array<PMaterialAsset> materials, Gfx::PGraphics graphics)
+void MeshLoader::loadGlobalMeshes(const aiScene* scene, Array<PMesh>& globalMeshes, Array<PMaterialAsset> materials, Gfx::PGraphics graphics)
 {
     for (uint32 meshIndex = 0; meshIndex < scene->mNumMeshes; ++meshIndex)
     {
         aiMesh *mesh = scene->mMeshes[meshIndex];
 
         PStaticMeshVertexInput vertexShaderInput = new StaticMeshVertexInput(std::string(mesh->mName.C_Str()));
-        VertexStreamComponent positionStream = createVertexStream(mesh->mNumVertices, mesh->mVertices, graphics);
-        vertexShaderInput->setPositionStream(positionStream);
+        StaticMeshDataType data;
+        data.positionStream = createVertexStream(mesh->mNumVertices, mesh->mVertices, graphics);
 
         for(uint32 i = 0; i < MAX_TEXCOORDS; ++i)
         {
             if(mesh->HasTextureCoords(i))
             {
-                VertexStreamComponent texCoordStream = createVertexStream(mesh->mNumVertices, mesh->mTextureCoords[i], graphics);
-                vertexShaderInput->setTexCoordStream(i, texCoordStream);
+                data.textureCoordinates.add(createVertexStream(mesh->mNumVertices, mesh->mTextureCoords[i], graphics));
             }
         }
         if(mesh->HasNormals())
         {
-            VertexStreamComponent normalStream = createVertexStream(mesh->mNumVertices, mesh->mNormals, graphics);
-            vertexShaderInput->setTangentXStream(normalStream);
+            data.tangentBasisComponents[0] = createVertexStream(mesh->mNumVertices, mesh->mNormals, graphics);
         }
         if(mesh->HasTangentsAndBitangents())
         {
             //TODO: use bitangent to calculate sign for 4th coordinate of tangentstream
-            VertexStreamComponent tangentStream = createVertexStream(mesh->mNumVertices, mesh->mTangents, graphics);
-            vertexShaderInput->setTangentZStream(tangentStream);
+            data.tangentBasisComponents[1] = createVertexStream(mesh->mNumVertices, mesh->mTangents, graphics);
         }
+        if(mesh->HasVertexColors(0))
+        {
+            //data.colorComponent = createVertexStream(mesh->mNumVertices, mesh->mColors[0], graphics);
+        }
+        vertexShaderInput->setData(data);
+        vertexShaderInput->init(graphics);
 
         Array<uint32> indices(mesh->mNumFaces * 3);
         for (uint32 faceIndex = 0; faceIndex < mesh->mNumFaces; ++faceIndex)
@@ -197,7 +198,7 @@ void loadGlobalMeshes(const aiScene* scene, Array<PMesh>& globalMeshes, Array<PM
         globalMeshes[meshIndex]->referencedMaterial = materials[mesh->mMaterialIndex];
     }
 }
-void convertAssimpARGB(unsigned char* dst, aiTexel* src, uint32 numPixels)
+void MeshLoader::convertAssimpARGB(unsigned char* dst, aiTexel* src, uint32 numPixels)
 {
     for(uint32 i = 0; i < numPixels; ++i)
     {
@@ -207,7 +208,7 @@ void convertAssimpARGB(unsigned char* dst, aiTexel* src, uint32 numPixels)
         dst[i * 4 + 3] = src[i].a;
     }
 }
-void loadTextures(const aiScene* scene, Gfx::PGraphics graphics, const std::filesystem::path& meshPath)
+void MeshLoader::loadTextures(const aiScene* scene, Gfx::PGraphics graphics, const std::filesystem::path& meshPath)
 {
     for (uint32 i = 0; i < scene->mNumTextures; ++i)
     {

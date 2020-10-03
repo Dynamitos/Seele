@@ -26,19 +26,17 @@ if (WIN32)
 	# Find library files
 	find_library(
 		ASSIMP_LIBRARY
-		NAMES assimp${LIBRARY_SUFFIX}${CMAKE_DEBUG_POSTFIX}.lib
+		NAMES assimp-vc${MSVC_TOOLSET_VERSION}-mt${CMAKE_DEBUG_POSTFIX}
 		PATHS
 			$ENV{PROGRAMFILES}/lib
-			${ASSIMP_ROOT}/lib/
-		PATH_SUFFIXES Debug Release)
+			${ASSIMP_ROOT}/lib/)
 	
 	find_file(
 		ASSIMP_BINARY
-		NAMES assimp${LIBRARY_SUFFIX}${CMAKE_DEBUG_POSTFIX}.dll
+		NAMES assimp-vc${MSVC_TOOLSET_VERSION}-mt${CMAKE_DEBUG_POSTFIX}.dll
 		PATHS
 			$ENV{PROGRAMFILES}/bin
-			${ASSIMP_ROOT}/bin/
-		PATH_SUFFIXES Debug Release)
+			${ASSIMP_ROOT}/bin/)
 else()
 	# Find include files
 	find_path(

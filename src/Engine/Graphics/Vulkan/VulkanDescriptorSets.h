@@ -9,10 +9,7 @@ DECLARE_REF(Graphics);
 class DescriptorLayout : public Gfx::DescriptorLayout
 {
 public:
-	DescriptorLayout(PGraphics graphics)
-		: graphics(graphics), layoutHandle(VK_NULL_HANDLE)
-	{
-	}
+	DescriptorLayout(PGraphics graphics);
 	virtual ~DescriptorLayout();
 	virtual void create();
 	inline VkDescriptorSetLayout getHandle() const
@@ -21,9 +18,11 @@ public:
 	}
 
 private:
+	uint32 hash;
 	PGraphics graphics;
 	Array<VkDescriptorSetLayoutBinding> bindings;
 	VkDescriptorSetLayout layoutHandle;
+	friend class DescriptorAllocator;
 };
 DEFINE_REF(DescriptorLayout);
 class PipelineLayout : public Gfx::PipelineLayout
@@ -59,6 +58,7 @@ public:
 	DescriptorAllocator(PGraphics graphics, DescriptorLayout &layout);
 	virtual ~DescriptorAllocator();
 	virtual void allocateDescriptorSet(Gfx::PDescriptorSet &descriptorSet);
+	virtual void reset();
 
 	inline VkDescriptorPool getHandle() const
 	{
@@ -71,7 +71,9 @@ public:
 
 private:
 	PGraphics graphics;
-	int maxSets = 512;
+	const static int maxSets = 512;
+	VkDescriptorSet cachedHandles[maxSets];
+	uint32 currentCachedIndex;
 	VkDescriptorPool poolHandle;
 	DescriptorLayout &layout;
 };
@@ -81,10 +83,13 @@ class DescriptorSet : public Gfx::DescriptorSet
 {
 public:
 	DescriptorSet(PGraphics graphics, PDescriptorAllocator owner)
-		: graphics(graphics), owner(owner), setHandle(VK_NULL_HANDLE)
+		: graphics(graphics), owner(owner), currentFrameSet(0)
 	{
 	}
 	virtual ~DescriptorSet();
+	virtual void beginFrame();
+	virtual void endFrame();
+	virtual void writeChanges();
 	virtual void updateBuffer(uint32_t binding, Gfx::PUniformBuffer uniformBuffer);
 	virtual void updateBuffer(uint32_t binding, Gfx::PStructuredBuffer uniformBuffer);
 	virtual void updateSampler(uint32_t binding, Gfx::PSamplerState samplerState);
@@ -92,7 +97,7 @@ public:
 	virtual bool operator<(Gfx::PDescriptorSet other);
 	inline VkDescriptorSet getHandle() const
 	{
-		return setHandle;
+		return setHandle[currentFrameSet];
 	}
 	virtual uint32 getSetIndex() const
 	{
@@ -100,11 +105,15 @@ public:
 	}
 
 private:
-	virtual void writeChanges();
 	Array<VkDescriptorImageInfo> imageInfos;
 	Array<VkDescriptorBufferInfo> bufferInfos;
 	Array<VkWriteDescriptorSet> writeDescriptors;
-	VkDescriptorSet setHandle;
+	// contains the previously bound resources at every binding
+	// since the layout is fixed, trying to bind a texture to a buffer
+	// would not work anyways, so casts should be safe
+	Array<void*> cachedData[Gfx::numFramesBuffered];
+	VkDescriptorSet setHandle[Gfx::numFramesBuffered];
+	uint32 currentFrameSet;
 	PDescriptorAllocator owner;
 	PGraphics graphics;
 	friend class DescriptorAllocator;

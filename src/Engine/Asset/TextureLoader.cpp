@@ -12,7 +12,10 @@ using namespace Seele;
 TextureLoader::TextureLoader(Gfx::PGraphics graphics)
     : graphics(graphics)
 {
+    placeholderAsset = new TextureAsset();
     placeholderTexture = import("./textures/placeholder.png");
+    placeholderAsset->setTexture(placeholderTexture);
+    placeholderAsset->setStatus(Asset::Status::Ready);
 }
 
 TextureLoader::~TextureLoader()
@@ -26,11 +29,16 @@ void TextureLoader::importAsset(const std::filesystem::path& filePath)
     asset->setStatus(Asset::Status::Loading);
     asset->setTexture(placeholderTexture);
     AssetRegistry::get().textures[filePath.string()] = asset;
-    futures.add(std::async(std::launch::async, [this, filePath, asset] () mutable {
+    //futures.add(std::async(std::launch::async, [this, filePath, asset] () mutable {
         Gfx::PTexture2D texture = import(filePath);
         asset->setTexture(texture);
         asset->setStatus(Asset::Status::Ready);
-    }));
+    //}));
+}
+
+PTextureAsset TextureLoader::getPlaceholderTexture() 
+{
+    return placeholderAsset;
 }
 
 Gfx::PTexture2D TextureLoader::import(const std::filesystem::path& path)

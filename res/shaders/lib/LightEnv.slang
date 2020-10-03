@@ -23,28 +23,27 @@ struct PointLight : ILightEnv
 {
     float4 positionWS;
     float4 positionVS;
-    float3 color;
-    float range;
-
+    float4 colorRange;
+    
     float3 illuminate<B:IBRDF>(MaterialFragmentParameter input, B brdf, float3 viewDir)
 	{
         float3 lightVec = positionWS.xyz - input.worldPosition;
         float d = length(lightVec);
         float3 direction = normalize(lightVec);
-        float illuminance = max(1 - d / range, 0);
-		return illuminance * brdf.evaluate(viewDir, direction, input.worldNormal, input.worldTangent, input.worldBiTangent, color);
+        float illuminance = max(1 - d / colorRange.w, 0);
+		return illuminance * brdf.evaluate(viewDir, direction, input.worldNormal, input.worldTangent, input.worldBiTangent, colorRange.xyz);
     }
 
 	bool insidePlane(Plane plane)
 	{
-        return dot(plane.n, positionVS.xyz) - plane.d < -range;
+        return dot(plane.n, positionVS.xyz) - plane.d < -colorRange.w;
 	}
 
 	bool insideFrustum(Frustum frustum, float zNear, float zFar)
 	{
         bool result = true;
 
-		//if(positionVS.z - range > zNear || positionVS.z + range < zFar)
+		//if(positionVS.z - range > zNear || positionVS.z + colorRange.w < zFar)
 		{
 		//	result = false;
 		}
@@ -69,5 +68,5 @@ struct Lights
     uint numPointLights;
 };
 
-layout(set = 0, binding = 1)
+layout(set = 0, binding = 0, std430)
 ConstantBuffer<Lights> gLightEnv;

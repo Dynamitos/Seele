@@ -81,7 +81,7 @@ struct VertexStreamComponent
 class VertexInputType
 {
 public:
-    static List<VertexInputType*> getTypeList();
+    static List<VertexInputType*>& getTypeList();
     static VertexInputType* getVertexInputByName(const std::string& name);
 
     VertexInputType(
@@ -117,6 +117,7 @@ class VertexShaderInput
 public:
     VertexShaderInput(std::string name);
     virtual ~VertexShaderInput();
+    virtual void init(Gfx::PGraphics graphics) {};
     void getStreams(VertexInputStreamArray& outVertexStreams) const;
     void getPositionOnlyStream(VertexInputStreamArray& outVertexStreams) const;
     virtual bool supportsTesselation() { return false; }
@@ -125,11 +126,34 @@ public:
     Gfx::PVertexDeclaration getPositionDeclaration() const {return positionDeclaration;}
     std::string getName() const { return name; }
 protected:
+    Gfx::VertexElement accessStreamComponent(const VertexStreamComponent& component, uint8 attributeIndex);
+    Gfx::VertexElement accessPositionStreamComponent(const VertexStreamComponent& component, uint8 attributeIndex);
+
+    void initDeclaration(Gfx::PGraphics graphics, Array<Gfx::VertexElement>& elements);
+    void initPositionDeclaration(Gfx::PGraphics graphics, const Array<Gfx::VertexElement>& elements);
+
     static List<PVertexShaderInput> registeredInputs;
     static std::mutex registeredInputsLock;
     Array<Gfx::VertexAttribute> layout;
-    StaticArray<VertexInputStream, 16> streams;
-    StaticArray<VertexInputStream, 16> positionStreams;
+
+    // internal helper class, basically a VertexInputStream plus stride
+    struct VertexStream
+    {
+        Gfx::PVertexBuffer vertexBuffer = nullptr;
+        uint8 stride = 0;
+        uint8 offset = 0;
+        friend bool operator==(const VertexStream& a, const VertexStream& b)
+        {
+            return a.vertexBuffer == b.vertexBuffer &&
+                a.stride == b.stride &&
+                a.offset == b.offset;
+        }
+        VertexStream()
+        {
+        }
+    };
+    Array<VertexStream> streams;
+    Array<VertexStream> positionStreams;
     Gfx::PVertexDeclaration declaration;
     Gfx::PVertexDeclaration positionDeclaration;
     std::string name;

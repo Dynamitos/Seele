@@ -19,7 +19,7 @@ struct GraphicsInitializer
     Array<const char *> instanceExtensions;
     Array<const char *> deviceExtensions;
     GraphicsInitializer()
-        : applicationName("SeeleEngine"), engineName("SeeleEngine"), layers{"VK_LAYER_LUNARG_standard_validation"}, instanceExtensions{}, deviceExtensions{"VK_KHR_swapchain"}, windowHandle(nullptr)
+        : applicationName("SeeleEngine"), engineName("SeeleEngine"), layers{"VK_LAYER_KHRONOS_validation"}, instanceExtensions{}, deviceExtensions{"VK_KHR_swapchain"}, windowHandle(nullptr)
     {
     }
     GraphicsInitializer(const GraphicsInitializer &other)
@@ -74,6 +74,9 @@ struct TextureCreateInfo
     {
     }
 };
+struct SamplerCreateInfo
+{
+};
 struct VertexBufferCreateInfo
 {
     BulkResourceData resourceData;
@@ -114,12 +117,18 @@ struct SePushConstantRange
 struct VertexElement
 {
     VertexElement(){}
-    VertexElement(uint32 location, SeFormat vertexFormat, uint32 offset)
-        : location(location), vertexFormat(vertexFormat), offset(offset)
+    //VertexElement(uint8 attributeIndex, SeFormat vertexFormat, uint8 offset)
+    //    : attributeIndex(attributeIndex), vertexFormat(vertexFormat), offset(offset)
+    //{}
+    VertexElement(uint8 streamIndex, uint8 offset, SeFormat vertexFormat, uint8 attributeIndex, uint8 stride)
+        : streamIndex(streamIndex), offset(offset), vertexFormat(vertexFormat), attributeIndex(attributeIndex), stride(stride)
     {}
-    uint32 location;
+    uint8 streamIndex;
+    uint8 offset;
     SeFormat vertexFormat;
-    uint32 offset;
+    uint8 attributeIndex;
+    uint8 stride;
+    uint8 bInstanced = 0;
 };
 struct RasterizationState
 {
@@ -190,6 +199,7 @@ struct GraphicsPipelineCreateInfo
 	Gfx::PGeometryShader geometryShader;
 	Gfx::PFragmentShader fragmentShader;
 	Gfx::PRenderPass renderPass;
+    Gfx::PPipelineLayout pipelineLayout;
 	Gfx::SePrimitiveTopology topology;
 	Gfx::RasterizationState rasterizationState;
 	Gfx::DepthStencilState depthStencilState;

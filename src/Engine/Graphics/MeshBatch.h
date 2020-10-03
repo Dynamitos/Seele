@@ -2,7 +2,7 @@
 
 namespace Seele
 {
-DECLARE_REF(Material);
+DECLARE_REF(MaterialAsset);
 DECLARE_REF(VertexShaderInput);
 DECLARE_NAME_REF(Gfx, VertexBuffer);
 DECLARE_NAME_REF(Gfx, IndexBuffer);
@@ -54,7 +54,7 @@ struct MeshBatch
 
     PVertexShaderInput vertexInput;
 
-    PMaterial material;
+    PMaterialAsset material;
 
     inline int32 getNumPrimitives() const
     {

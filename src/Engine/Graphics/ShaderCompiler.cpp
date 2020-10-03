@@ -18,7 +18,7 @@ ShaderCompiler::~ShaderCompiler()
 
 void ShaderCompiler::registerMaterial(PMaterial material) 
 {
-    for(auto type : VertexInputType::getTypeList())
+    for(auto& type : VertexInputType::getTypeList())
     {
         material->createShaders(graphics, Gfx::RenderPassType::DepthPrepass, type);
         material->createShaders(graphics, Gfx::RenderPassType::BasePass, type);

@@ -1,5 +1,6 @@
 #include "VertexShaderInput.h"
 #include "Graphics/Mesh.h"
+#include "Graphics/Graphics.h"
 #include <sstream>
 #include <memory>
 
@@ -7,7 +8,7 @@ using namespace Seele;
 
 List<VertexInputType*> VertexInputType::globalTypeList;
 
-List<VertexInputType*> VertexInputType::getTypeList()
+List<VertexInputType*>& VertexInputType::getTypeList()
 {
     return globalTypeList;
 }
@@ -62,7 +63,7 @@ void VertexShaderInput::getStreams(VertexInputStreamArray& outVertexStreams) con
 {
     for(uint32 i = 0; i < streams.size(); ++i)
     {
-        const VertexInputStream& stream = streams[i];
+        const VertexStream& stream = streams[i];
         if(stream.vertexBuffer == nullptr)
         {
             outVertexStreams.add(VertexInputStream(i, 0, nullptr));
@@ -78,7 +79,37 @@ void VertexShaderInput::getPositionOnlyStream(VertexInputStreamArray& outVertexS
 {
     for (uint32 i = 0; i < positionStreams.size(); ++i)
     {
-        const VertexInputStream& stream = positionStreams[i];
+        const VertexStream& stream = positionStreams[i];
         outVertexStreams.add(VertexInputStream(i, stream.offset, stream.vertexBuffer));
     }
+}
+
+Gfx::VertexElement VertexShaderInput::accessStreamComponent(const VertexStreamComponent& component, uint8 attributeIndex) 
+{
+    VertexStream vertexStream;
+    vertexStream.vertexBuffer = component.vertexBuffer;
+    vertexStream.stride = component.stride;
+    vertexStream.offset = component.offset;
+    
+    return Gfx::VertexElement(streams.indexOf(streams.addUnique(vertexStream)), component.offset, component.type, attributeIndex, vertexStream.stride);
+}
+
+Gfx::VertexElement VertexShaderInput::accessPositionStreamComponent(const VertexStreamComponent& component, uint8 attributeIndex) 
+{
+    VertexStream vertexStream;
+    vertexStream.vertexBuffer = component.vertexBuffer;
+    vertexStream.stride = component.stride;
+    vertexStream.offset = component.offset;
+    
+    return Gfx::VertexElement(streams.indexOf(streams.addUnique(vertexStream)), component.offset, component.type, attributeIndex, vertexStream.stride);
+}
+
+void VertexShaderInput::initDeclaration(Gfx::PGraphics graphics, Array<Gfx::VertexElement>& elements) 
+{
+    declaration = graphics->createVertexDeclaration(elements);
+}
+
+void VertexShaderInput::initPositionDeclaration(Gfx::PGraphics graphics, const Array<Gfx::VertexElement>& elements) 
+{
+    positionDeclaration = graphics->createVertexDeclaration(elements);
 }
