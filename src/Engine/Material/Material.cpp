@@ -47,7 +47,6 @@ void Material::compile()
     json j;
     stream >> j;
     materialName = j["name"].get<std::string>();
-    std::cout << "Compiling material " << materialName << std::endl;
     //Shader file needs to conform to the slang standard, which prohibits _
     materialName.erase(std::remove(materialName.begin(), materialName.end(), '_'), materialName.end());
     std::ofstream codeStream("./shaders/generated/"+materialName+".slang");

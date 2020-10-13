@@ -55,6 +55,7 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
     createInfo.stageCount = 0;
 
     VkPipelineTessellationStateCreateInfo tessInfo;
+    std::memset(&tessInfo, 0, sizeof(VkPipelineTessellationStateCreateInfo));
     VkPipelineShaderStageCreateInfo stageInfos[5];
     std::memset(stageInfos, 0, sizeof(stageInfos));
     
@@ -119,7 +120,8 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
     Array<VkVertexInputAttributeDescription> attributes;
     Map<uint32, uint32> bindingToStream;
     Map<uint32, uint32> streamToBinding;
-    std::memset(bindings.data(), 0, sizeof(VkVertexInputBindingDescription) * 16); // if default allocation size ever changes, this breaks
+    assert(DEFAULT_ALLOC_SIZE == 16);
+    std::memset(bindings.data(), 0, sizeof(VkVertexInputBindingDescription) * 16);
     std::memset(attributes.data(), 0, sizeof(VkVertexInputAttributeDescription) * 16);
     for(auto& element : vertexStreams)
     {

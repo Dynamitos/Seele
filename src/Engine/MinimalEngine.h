@@ -135,8 +135,8 @@ public:
 		else
 		{
 			object = (RefObject<T> *)registeredObj->value;
+			object->addRef();
 		}
-		object->addRef();
 	}
 	explicit RefPtr(RefObject<T> *other)
 		: object(other)

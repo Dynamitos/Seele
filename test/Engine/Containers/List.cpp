@@ -26,10 +26,6 @@ BOOST_AUTO_TEST_CASE(basic_insert)
 	List<int>::Iterator it = list.find(3);
 	it = list.insert(it, 1);
 	BOOST_REQUIRE_EQUAL(*it, 1);
-	for (auto i : list)
-	{
-		std::cout << i << std::endl;
-	}
 	BOOST_REQUIRE_EQUAL(list.length(), 4);
 }
 BOOST_AUTO_TEST_CASE(basic_remove)
@@ -41,10 +37,6 @@ BOOST_AUTO_TEST_CASE(basic_remove)
 	List<int>::Iterator it = list.find(3);
 	it = list.remove(it);
 	BOOST_REQUIRE_EQUAL(*it, 4);
-	for (auto i : list)
-	{
-		std::cout << i << std::endl;
-	}
 	BOOST_REQUIRE_EQUAL(list.length(), 2);
 }
 

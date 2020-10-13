@@ -21,7 +21,7 @@ void MeshProcessor::buildMeshDrawCommand(
     const Gfx::PRenderPass renderPass,
     Gfx::PPipelineLayout pipelineLayout,
     Gfx::PRenderCommand drawCommand,
-    Array<Gfx::PDescriptorSet> descriptors, 
+    const Array<Gfx::PDescriptorSet>& descriptors, 
     Gfx::PVertexShader vertexShader,
     Gfx::PControlShader controlShader,
     Gfx::PEvaluationShader evaluationShader,

@@ -282,7 +282,8 @@ Array<const char *> Graphics::getRequiredExtensions()
 	{
 		extensions.add(glfwExtensions[i]);
 	}
-#ifdef ENABLE_VALIDATION
+	std::cout << ENABLE_VALIDATION << std::endl;
+#if ENABLE_VALIDATION
 	extensions.add(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
 #endif // ENABLE_VALIDATION
 	return extensions;
@@ -308,7 +309,7 @@ void Graphics::initInstance(GraphicsInitializer initInfo)
 	}
 	info.enabledExtensionCount = (uint32)extensions.size();
 	info.ppEnabledExtensionNames = extensions.data();
-#ifdef ENABLE_VALIDATION
+#if ENABLE_VALIDATION
 	info.enabledLayerCount = (uint32)initInfo.layers.size();
 	info.ppEnabledLayerNames = initInfo.layers.data();
 #else

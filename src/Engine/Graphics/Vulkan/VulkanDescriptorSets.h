@@ -64,7 +64,7 @@ public:
 	{
 		return poolHandle;
 	}
-	inline DescriptorLayout getLayout() const
+	inline DescriptorLayout& getLayout() const
 	{
 		return layout;
 	}
@@ -83,7 +83,7 @@ class DescriptorSet : public Gfx::DescriptorSet
 {
 public:
 	DescriptorSet(PGraphics graphics, PDescriptorAllocator owner)
-		: graphics(graphics), owner(owner), currentFrameSet(0)
+		: graphics(graphics), owner(owner)
 	{
 	}
 	virtual ~DescriptorSet();
@@ -97,7 +97,7 @@ public:
 	virtual bool operator<(Gfx::PDescriptorSet other);
 	inline VkDescriptorSet getHandle() const
 	{
-		return setHandle[currentFrameSet];
+		return setHandle[Gfx::currentFrameIndex];
 	}
 	virtual uint32 getSetIndex() const
 	{
@@ -113,7 +113,6 @@ private:
 	// would not work anyways, so casts should be safe
 	Array<void*> cachedData[Gfx::numFramesBuffered];
 	VkDescriptorSet setHandle[Gfx::numFramesBuffered];
-	uint32 currentFrameSet;
 	PDescriptorAllocator owner;
 	PGraphics graphics;
 	friend class DescriptorAllocator;

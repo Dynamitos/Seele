@@ -61,9 +61,9 @@ void StaticMeshVertexInput::init(Gfx::PGraphics graphics)
     initDeclaration(graphics, elements);
 }
 
-void StaticMeshVertexInput::setData(StaticMeshDataType data) 
+void StaticMeshVertexInput::setData(StaticMeshDataType&& data) 
 {
-    this->data = data;
+    this->data = std::move(data);
 }
 
 IMPLEMENT_VERTEX_INPUT_TYPE(StaticMeshVertexInput, "StaticMeshVertexInput");

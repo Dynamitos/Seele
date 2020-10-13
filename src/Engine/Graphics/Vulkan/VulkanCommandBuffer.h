@@ -80,7 +80,7 @@ public:
 	virtual void setViewport(Gfx::PViewport viewport) override;
 	virtual void bindPipeline(Gfx::PGraphicsPipeline pipeline) override;
 	virtual void bindDescriptor(Gfx::PDescriptorSet descriptorSet) override;
-	virtual void bindDescriptor(Array<Gfx::PDescriptorSet> descriptorSets) override;
+	virtual void bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorSets) override;
 	virtual void bindVertexBuffer(const Array<VertexInputStream>& streams) override;
 	virtual void bindIndexBuffer(Gfx::PIndexBuffer indexBuffer) override;
 	virtual void draw(const MeshBatchElement& data) override;

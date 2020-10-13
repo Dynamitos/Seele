@@ -16,13 +16,14 @@ public:
         const Gfx::PRenderPass renderPass,
         Gfx::PPipelineLayout pipelineLayout,
         Gfx::PDescriptorLayout primitiveLayout,
-        Array<Gfx::PDescriptorSet> descriptorSets,
+        Array<Gfx::PDescriptorSet>& descriptorSets,
         int32 staticMeshId = -1) override;
     Array<Gfx::PRenderCommand> getRenderCommands();
     void clearCommands();
 private:
     Array<Gfx::PRenderCommand> renderCommands;
     Array<Gfx::PDescriptorSet> cachedPrimitiveSets;
+    uint32 cachedPrimitiveIndex;
     Gfx::PViewport target;
     uint8 translucentBasePass;
 };

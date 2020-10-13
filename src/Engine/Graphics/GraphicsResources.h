@@ -6,9 +6,9 @@
 #include "MeshBatch.h"
 #include <boost/crc.hpp>
 
-#define ENABLE_VALIDATION
 
-#ifdef DEBUG
+#ifndef ENABLE_VALIDATION
+#define ENABLE_VALIDATION 0
 #endif
 
 namespace Seele
@@ -483,7 +483,7 @@ public:
 	virtual void setViewport(Gfx::PViewport viewport) = 0;
 	virtual void bindPipeline(Gfx::PGraphicsPipeline pipeline) = 0;
 	virtual void bindDescriptor(Gfx::PDescriptorSet set) = 0;
-	virtual void bindDescriptor(Array<Gfx::PDescriptorSet> sets) = 0;
+	virtual void bindDescriptor(const Array<Gfx::PDescriptorSet>& sets) = 0;
 	virtual void bindVertexBuffer(const Array<VertexInputStream>& streams) = 0;
 	virtual void bindIndexBuffer(Gfx::PIndexBuffer indexBuffer) = 0;
 	virtual void draw(const MeshBatchElement& data) = 0;

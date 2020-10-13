@@ -33,7 +33,7 @@ void Scene::addActor(PActor actor)
 void Scene::addPrimitiveComponent(PPrimitiveComponent comp)
 {
     primitives.add(comp);
-    for(auto batch : comp->staticMeshes)
+    for(auto& batch : comp->staticMeshes)
     {
         PrimitiveUniformBuffer data;
         data.actorWorldPosition = Vector4(comp->getTransform().getPosition(), 1);

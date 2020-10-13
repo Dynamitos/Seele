@@ -21,7 +21,7 @@ public:
     StaticMeshVertexInput(std::string name);
     virtual ~StaticMeshVertexInput();
     virtual void init(Gfx::PGraphics graphics) override;
-    void setData(StaticMeshDataType data);
+    void setData(StaticMeshDataType&& data);
 private:
     StaticMeshDataType data;
 };

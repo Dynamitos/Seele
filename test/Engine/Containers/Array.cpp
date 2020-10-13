@@ -1,5 +1,6 @@
 #include "EngineTest.h"
 #include "Containers/Array.h"
+#include "MinimalEngine.h"
 #include <time.h>
 #include <chrono>
 #define BOOST_TEST_MODULE SeeleEngine
@@ -110,6 +111,32 @@ BOOST_AUTO_TEST_CASE(random_access)
 	array.add(6);
 	BOOST_CHECK_EQUAL(array[2], 6);
 	BOOST_CHECK_EQUAL(array[0], 4);
+}
+
+class TestStruct
+{
+public:
+	uint32 data;
+	~TestStruct()
+	{
+		data = 1;
+	}
+};
+DECLARE_REF(TestStruct);
+
+BOOST_AUTO_TEST_CASE(refptr_interaction)
+{
+	uint32* dataPtr;
+	{
+		PTestStruct test = new TestStruct();
+		test->data = 32123;
+		dataPtr = &test->data;
+		{
+			Array<PTestStruct> arr(1);
+			arr[0] = test;
+		}
+		BOOST_CHECK_EQUAL(test->data, 32123);
+	}
 }
 
 /*BOOST_AUTO_TEST_CASE(benchmark)

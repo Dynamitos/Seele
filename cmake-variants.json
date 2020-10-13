@@ -14,7 +14,10 @@
             "release": {
                 "short": "Release",
                 "long": "Optimize binary for speed",
-                "buildType": "Release"
+                "buildType": "Release",
+                "settings": {
+                    "CMAKE_DEBUG_POSTFIX": ""
+                }
             }
         }
     },

@@ -27,12 +27,28 @@ private:
 		Pair<K, V> pair;
 		Node *leftChild;
 		Node *rightChild;
+		Node()
+			: leftChild(nullptr), rightChild(nullptr), pair(K(), V())
+		{
+		}
 		Node(const K &key)
 			: leftChild(nullptr), rightChild(nullptr), pair(key, V())
 		{
 		}
-		Node()
-			: leftChild(nullptr), rightChild(nullptr), pair(K(), V())
+		Node(const Node& other)
+			: pair(other.pair.key, other.pair.value)
+		{
+			if(other.leftChild != nullptr)
+			{
+				leftChild = new Node(*other.leftChild);
+			}
+			if(other.rightChild != nullptr)
+			{
+				rightChild = new Node(*other.rightChild);
+			}
+		}
+		Node(Node&& other)
+			: leftChild(std::move(other.leftChild)), rightChild(std::move(other.rightChild))
 		{
 		}
 		~Node()
@@ -46,6 +62,45 @@ private:
 				delete rightChild;
 			}
 		}
+		Node& operator=(const Node& other)
+		{
+			if(this != &other)
+			{
+				if(leftChild != nullptr)
+				{
+					delete leftChild;
+				}
+				if(rightChild != nullptr)
+				{
+					delete rightChild;
+				}
+				if(other.leftChild != nullptr)
+				{
+					leftChild = new Node(*other.leftChild);
+				}
+				if(other.rightChild != nullptr)
+				{
+					rightChild = new Node(*other.rightChild);
+				}
+			}
+		}
+		Node& operator=(Node&& other)
+		{
+			if(this != &other)
+			{
+				if(leftChild != nullptr)
+				{
+					delete leftChild;
+				}
+				if(rightChild != nullptr)
+				{
+					delete rightChild;
+				}
+				leftChild = std::move(other.leftChild);
+				rightChild = std::move(other.rightChild);
+			}
+			return *this;
+		}
 	};
 
 public:
@@ -53,9 +108,47 @@ public:
 		: root(nullptr), _size(0)
 	{
 	}
+	Map(const Map& other)
+		: root(new Node(*other.root)), _size(other._size)
+	{
+		refreshIterators();
+	}
+	Map(Map&& other)
+		: root(std::move(other.root)), _size(other._size)
+	{
+		refreshIterators();
+	}
 	~Map()
 	{
 		delete root;
+	}
+	Map& operator=(const Map& other)
+	{
+		if(this != &other)
+		{
+			if(root != nullptr)
+			{
+				delete root;
+			}
+			root = new Node(*other.root);
+			_size = other.size;
+			refreshIterators();
+		}
+		return *this;
+	}
+	Map& operator=(Map&& other)
+	{
+		if(this != &other)
+		{
+			if(root != nullptr)
+			{
+				delete root;
+			}
+			root = new Node(std::move(*other.root));
+			_size = std::move(other._size);
+			refreshIterators();
+		}
+		return *this;
 	}
 	class Iterator
 	{
@@ -77,6 +170,28 @@ public:
 		Iterator(const Iterator &i)
 			: node(i.node), traversal(i.traversal)
 		{
+		}
+		Iterator(Iterator&& i)
+			: node(std::move(i.node)), traversal(std::move(i.traversal))
+		{
+		}
+		Iterator& operator=(const Iterator& other)
+		{
+			if(this != &other)
+			{
+				node = other.node; // No copy, since no ownership
+				traversal = other.traversal;
+			}
+			return *this;
+		}
+		Iterator& operator=(Iterator&& other)
+		{
+			if(this != &other)
+			{
+				node = std::move(other.node);
+				traversal = std::move(other.traversal);
+			}
+			return *this;
 		}
 		reference operator*() const
 		{

@@ -45,6 +45,9 @@ find_package(assimp REQUIRED)
 find_package(JSON REQUIRED)
 find_package(GLFW REQUIRED)
 find_package(SPIRV REQUIRED)
+find_package(GLM REQUIRED)
+find_package(STB REQUIRED)
+find_package(SLang REQUIRED)
 
 include_directories(${GLM_INCLUDE_DIRS})
 include_directories(${STB_INCLUDE_DIRS})
@@ -58,18 +61,20 @@ include_directories(${JSON_INCLUDE_DIRS})
 include_directories(${SPIRV_INCLUDE_DIRS})
 include_directories(${ENGINE_ROOT})
 include_directories(src/Engine)
-add_definitions(${GLM_DEFINITIONS})
 add_definitions(${Vulkan_DEFINITIONS})
 add_definitions(${Boost_DEFINITIONS})
 add_compile_definitions(GLFW_WINDOWS)
 if(WIN32)
 	add_compile_definitions(USE_EXTENSIONS)
 endif()
+if(CMAKE_DEBUG_POSTFIX)
+  add_compile_definitions(ENABLE_VALIDATION)
+endif()
 add_executable(SeeleEngine "")
 target_link_libraries(SeeleEngine ${Vulkan_LIBRARY})
 target_link_libraries(SeeleEngine ${Boost_LIBRARIES})
 target_link_libraries(SeeleEngine ${GLFW_LIBRARIES})
-target_link_libraries(SeeleEngine ${SLANG_LIBRARY})
+target_link_libraries(SeeleEngine ${SLANG_LIBRARIES})
 target_link_libraries(SeeleEngine ${ASSIMP_LIBRARIES})
 target_link_libraries(SeeleEngine ${JSON_LIBRARY})
 target_link_libraries(SeeleEngine ${SPIRV_LIBRARIES})
@@ -105,8 +110,7 @@ add_subdirectory(test/)
 
 add_custom_target(copy-runtime-files ALL
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/res $<TARGET_FILE_DIR:SeeleEngine>
-	COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SLANG_ROOT}/${SLANG_BINARY} $<TARGET_FILE_DIR:SeeleEngine>
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SLANG_ROOT}/${SLANG_GLSLANG} $<TARGET_FILE_DIR:SeeleEngine>
+	COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SLANG_BINARY} $<TARGET_FILE_DIR:SeeleEngine>
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SLANG_GLSLANG} $<TARGET_FILE_DIR:SeeleEngine>
   COMMAND ${CMAKE_COMMAND} -E copy_if_different ${GLFW_BINARY} $<TARGET_FILE_DIR:SeeleEngine>
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different ${ASSIMP_BINARY} $<TARGET_FILE_DIR:SeeleEngine>
 	DEPENDS SeeleEngine)

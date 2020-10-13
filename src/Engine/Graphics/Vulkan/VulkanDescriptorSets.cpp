@@ -41,8 +41,6 @@ void DescriptorLayout::create()
 		init::DescriptorSetLayoutCreateInfo(bindings.data(), bindings.size());
 	VK_CHECK(vkCreateDescriptorSetLayout(graphics->getDevice(), &createInfo, nullptr, &layoutHandle));
 
-	std::cout << "creating descriptorlayout " << layoutHandle << std::endl;
-
 	allocator = new DescriptorAllocator(graphics, *this);
 
 	boost::crc_32_type result;
@@ -115,7 +113,6 @@ DescriptorSet::~DescriptorSet()
 
 void DescriptorSet::beginFrame() 
 {
-	currentFrameSet = (currentFrameSet + 1) % Gfx::numFramesBuffered;
 }
 
 void DescriptorSet::endFrame() 
@@ -125,41 +122,39 @@ void DescriptorSet::endFrame()
 void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PUniformBuffer uniformBuffer)
 {
 	PUniformBuffer vulkanBuffer = uniformBuffer.cast<UniformBuffer>();
-	UniformBuffer* cachedBuffer = reinterpret_cast<UniformBuffer*>(cachedData[currentFrameSet][binding]);
+	UniformBuffer* cachedBuffer = reinterpret_cast<UniformBuffer*>(cachedData[Gfx::currentFrameIndex][binding]);
 	if(vulkanBuffer->isDataEquals(cachedBuffer))
 	{
 		return;
 	}
-	VkDescriptorBufferInfo bufferInfo = init::DescriptorBufferInfo(vulkanBuffer->getHandle(), 0, vulkanBuffer->getSize());
-	bufferInfos.add(bufferInfo);
+	bufferInfos.add(init::DescriptorBufferInfo(vulkanBuffer->getHandle(), 0, vulkanBuffer->getSize()));
 
-	VkWriteDescriptorSet writeDescriptor = init::WriteDescriptorSet(setHandle[currentFrameSet], VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, binding, &bufferInfos.back());
+	VkWriteDescriptorSet writeDescriptor = init::WriteDescriptorSet(setHandle[Gfx::currentFrameIndex], VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, binding, &bufferInfos.back());
 	writeDescriptors.add(writeDescriptor);
 
-	cachedData[currentFrameSet][binding] = vulkanBuffer.getHandle();
+	cachedData[Gfx::currentFrameIndex][binding] = vulkanBuffer.getHandle();
 }
 
 void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PStructuredBuffer uniformBuffer)
 {
 	PStructuredBuffer vulkanBuffer = uniformBuffer.cast<StructuredBuffer>();
-	StructuredBuffer* cachedBuffer = reinterpret_cast<StructuredBuffer*>(cachedData[currentFrameSet][binding]);
+	StructuredBuffer* cachedBuffer = reinterpret_cast<StructuredBuffer*>(cachedData[Gfx::currentFrameIndex][binding]);
 	if(vulkanBuffer.getHandle() == cachedBuffer)
 	{
 		return;
 	}
-	VkDescriptorBufferInfo bufferInfo = init::DescriptorBufferInfo(vulkanBuffer->getHandle(), 0, vulkanBuffer->getSize());
-	bufferInfos.add(bufferInfo);
+	bufferInfos.add(init::DescriptorBufferInfo(vulkanBuffer->getHandle(), 0, vulkanBuffer->getSize()));
 
-	VkWriteDescriptorSet writeDescriptor = init::WriteDescriptorSet(setHandle[currentFrameSet], VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, binding, &bufferInfos.back());
+	VkWriteDescriptorSet writeDescriptor = init::WriteDescriptorSet(setHandle[Gfx::currentFrameIndex], VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, binding, &bufferInfos.back());
 	writeDescriptors.add(writeDescriptor);
 
-	cachedData[currentFrameSet][binding] = vulkanBuffer.getHandle();
+	cachedData[Gfx::currentFrameIndex][binding] = vulkanBuffer.getHandle();
 }
 
 void DescriptorSet::updateSampler(uint32_t binding, Gfx::PSamplerState samplerState)
 {
 	PSamplerState vulkanSampler = samplerState.cast<SamplerState>();
-	SamplerState* cachedSampler = reinterpret_cast<SamplerState*>(cachedData[currentFrameSet][binding]);
+	SamplerState* cachedSampler = reinterpret_cast<SamplerState*>(cachedData[Gfx::currentFrameIndex][binding]);
 	if(vulkanSampler.getHandle() == cachedSampler)
 	{
 		return;
@@ -171,16 +166,16 @@ void DescriptorSet::updateSampler(uint32_t binding, Gfx::PSamplerState samplerSt
 			VK_IMAGE_LAYOUT_UNDEFINED);
 	imageInfos.add(imageInfo);
 
-	VkWriteDescriptorSet writeDescriptor = init::WriteDescriptorSet(setHandle[currentFrameSet], VK_DESCRIPTOR_TYPE_SAMPLER, binding, &imageInfos.back());
+	VkWriteDescriptorSet writeDescriptor = init::WriteDescriptorSet(setHandle[Gfx::currentFrameIndex], VK_DESCRIPTOR_TYPE_SAMPLER, binding, &imageInfos.back());
 	writeDescriptors.add(writeDescriptor);
 
-	cachedData[currentFrameSet][binding] = vulkanSampler.getHandle();
+	cachedData[Gfx::currentFrameIndex][binding] = vulkanSampler.getHandle();
 }
 
 void DescriptorSet::updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::PSamplerState samplerState)
 {
 	TextureHandle* vulkanTexture = TextureBase::cast(texture);
-	TextureHandle* cachedTexture = reinterpret_cast<TextureHandle*>(cachedData[currentFrameSet][binding]);
+	TextureHandle* cachedTexture = reinterpret_cast<TextureHandle*>(cachedData[Gfx::currentFrameIndex][binding]);
 	if(vulkanTexture == cachedTexture)
 	{
 		return;
@@ -197,14 +192,14 @@ void DescriptorSet::updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::
 		imageInfo.sampler = vulkanSampler->sampler;
 	}
 	imageInfos.add(imageInfo);
-	VkWriteDescriptorSet writeDescriptor = init::WriteDescriptorSet(setHandle[currentFrameSet], samplerState != nullptr ? VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER : VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, binding, &imageInfos.back());
+	VkWriteDescriptorSet writeDescriptor = init::WriteDescriptorSet(setHandle[Gfx::currentFrameIndex], samplerState != nullptr ? VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER : VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, binding, &imageInfos.back());
 	if (vulkanTexture->getUsage() & VK_IMAGE_USAGE_STORAGE_BIT)
 	{
 		writeDescriptor.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
 	}
 	writeDescriptors.add(writeDescriptor);
 
-	cachedData[currentFrameSet][binding] = vulkanTexture;
+	cachedData[Gfx::currentFrameIndex][binding] = vulkanTexture;
 }
 
 bool DescriptorSet::operator<(Gfx::PDescriptorSet other)

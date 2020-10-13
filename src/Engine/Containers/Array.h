@@ -54,8 +54,8 @@ namespace Seele
 		{
 			_data = new T[other.allocated];
 			assert(_data != nullptr);
-			std::memcpy(_data, other._data, sizeof(T) * allocated);
 			refreshIterators();
+			std::copy(other.begin(), other.end(), beginIt);
 		}
 		Array(Array &&other) noexcept
 			: allocated(std::move(other.allocated)), arraySize(std::move(other.arraySize))
@@ -68,7 +68,7 @@ namespace Seele
 		}
 		Array &operator=(const Array &other) noexcept
 		{
-			if (*this != other)
+			if (this != &other)
 			{
 				if (_data != nullptr)
 				{
@@ -77,14 +77,14 @@ namespace Seele
 				allocated = other.allocated;
 				arraySize = other.arraySize;
 				_data = new T[other.allocated];
-				std::memcpy(_data, other._data, sizeof(T) * allocated);
 				refreshIterators();
+				std::copy(other.begin(), other.end(), beginIt);
 			}
 			return *this;
 		}
 		Array &operator=(Array &&other) noexcept
 		{
-			if (*this != other)
+			if (this != &other)
 			{
 				if (_data != nullptr)
 				{
@@ -94,6 +94,7 @@ namespace Seele
 				arraySize = std::move(other.arraySize);
 				_data = other._data;
 				other._data = nullptr;
+				refreshIterators();
 			}
 			return *this;
 		}

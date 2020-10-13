@@ -48,7 +48,7 @@ void MaterialAsset::updateDescriptorData()
     descriptorSet->writeChanges();
 }
 
-Gfx::PDescriptorSet MaterialAsset::getDescriptor() const
+const Gfx::PDescriptorSet MaterialAsset::getDescriptor() const
 {
     return descriptorSet;
 }

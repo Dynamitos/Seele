@@ -7,8 +7,9 @@ list(APPEND DEPENDENCIES assimp)
 set(ASSIMP_BUILD_TESTS OFF CACHE INTERNAL "")
 set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE INTERNAL "")
 set(ASSIMP_INSTALL OFF CACHE INTERNAL "")
+set(BUILD_SHARED_LIBS ON CACHE INTERNAL "")
 
-add_subdirectory(${ASSIMP_ROOT} ${})
+add_subdirectory(${ASSIMP_ROOT} ${ASSIMP_ROOT})
 target_compile_definitions(assimp PRIVATE _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
 
 #-------------BOOST----------------
@@ -29,25 +30,13 @@ ExternalProject_Add(boost
 list (APPEND EXTRA_CMAKE_ARGS
 	-DBoost_NO_SYSTEM_PATHS=ON)
 
-#----------------GLM-----------------------
-list(APPEND DEPENDENCIES glm)
-ExternalProject_Add(glm
-	SOURCE_DIR ${GLM_ROOT}
-	CONFIGURE_COMMAND ""
-	BUILD_COMMAND ""
-	INSTALL_COMMAND "")
-
-list(APPEND EXTRA_CMAKE_ARGS
-	-DGLM_INCLUDE_DIRS=${GLM_ROOT}
-	)
-
 #--------------------JSON------------------
 list(APPEND DEPENDENCIES nlohmann_json)
 set(JSON_MultipleHeaders ON CACHE INTERNAL "")
 set(JSON_BuildTests OFF CACHE INTERNAL "")
 set(JSON_Install OFF CACHE INTERNAL "")
 
-add_subdirectory(${JSON_ROOT})
+add_subdirectory(${JSON_ROOT} ${JSON_ROOT})
 
 #--------------GLFW------------------------------
 list(APPEND DEPENDENCIES glfw)
@@ -58,10 +47,6 @@ set(GLFW_BUILD_DOCS OFF CACHE BOOL  "GLFW lib only" )
 set(GLFW_BUILD_INSTALL OFF CACHE BOOL  "GLFW lib only" )
 
 add_subdirectory(${GLFW_ROOT} ${GLFW_ROOT})
-
-#---------------STB_IMAGE------------------------
-list(APPEND EXTRA_CMAKE_ARGS
-	-DSTB_INCLUDE_DIRS=${STB_ROOT})
 
 #--------------SLang------------------------------
 list(APPEND DEPENDENCIES slang)
@@ -74,9 +59,6 @@ ExternalProject_Add(slang
 	BUILD_COMMAND msbuild -p:Configuration=Release -p:WarningLevel=0 -p:Platform=${CMAKE_PLATFORM} -p:WindowsTargetPlatformVersion=10.0 ${SLANG_ROOT}/source/slang/slang.vcxproj
 	INSTALL_COMMAND "")
 
-	string(TOLOWER bin/windows-${CMAKE_PLATFORM}/Release/slang.dll SLANG_BINARY)
-	string(TOLOWER bin/windows-${CMAKE_PLATFORM}/Release/slang-glslang.dll SLANG_GLSLANG)
-	string(TOLOWER bin/windows-${CMAKE_PLATFORM}/Release/slang.lib SLANG_LIB_PATH)
 	set(SLANG_LIB_PATH ${SLANG_ROOT}/${SLANG_LIB_PATH})
 elseif(UNIX)
 ExternalProject_Add(slang
@@ -90,13 +72,6 @@ ExternalProject_Add(slang
 	string(TOLOWER bin/linux-${CMAKE_PLATFORM}/Release/libslang-glslang.so SLANG_GLSLANG)
 	set(SLANG_LIB_PATH)
 endif()
-
-list(APPEND EXTRA_CMAKE_ARGS
-	-DSLANG_INCLUDE_DIRS=${EXTERNAL_ROOT}/slang
-	-DSLANG_LIBRARY=${SLANG_LIB_PATH}
-	-DSLANG_BINARY=${SLANG_BINARY}
-	-DSLANG_GLSLANG=${SLANG_GLSLANG})
-
 
 #----------------SPIR-V-CROSS--------------------
 list(APPEND DEPENDENCIES spirv-cross-reflect)

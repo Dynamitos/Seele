@@ -20,7 +20,7 @@ protected:
         const Gfx::PRenderPass renderPass,
         Gfx::PPipelineLayout pipelineLayout,
         Gfx::PDescriptorLayout primitiveLayout,
-        Array<Gfx::PDescriptorSet> descriptorSets,
+        Array<Gfx::PDescriptorSet>& descriptorSets,
         int32 staticMeshId = -1) = 0;
     void buildMeshDrawCommand(
         const MeshBatch& meshBatch, 
@@ -28,7 +28,7 @@ protected:
         const Gfx::PRenderPass renderPass,
         Gfx::PPipelineLayout pipelineLayout,
         Gfx::PRenderCommand drawCommand,
-        Array<Gfx::PDescriptorSet> descriptors, 
+        const Array<Gfx::PDescriptorSet>& descriptors, 
         Gfx::PVertexShader vertexShader,
         Gfx::PControlShader controlShader,
         Gfx::PEvaluationShader evaluationShader,

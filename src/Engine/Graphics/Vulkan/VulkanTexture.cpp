@@ -138,6 +138,10 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType,
         // When loading a texture from a file, we will almost always use it as a texture map for fragment shaders
         changeLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     }
+    if(usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
+    {
+        changeLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+    }
 
     VkImageViewCreateInfo viewInfo =
         init::ImageViewCreateInfo();

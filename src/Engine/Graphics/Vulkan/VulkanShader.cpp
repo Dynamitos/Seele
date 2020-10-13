@@ -83,7 +83,6 @@ static Gfx::SeDescriptorType getTypeFromKind(slang::TypeReflection::Kind kind)
 
 void Shader::create(const ShaderCreateInfo& createInfo)
 {
-    std::cout << "--------------------------------" << std::endl;
     entryPointName = createInfo.entryPoint;
     static SlangSession* session = spCreateSession(NULL);
 

@@ -146,7 +146,7 @@ VertexStreamComponent createVertexStream(uint32 size, aiVector2D* sourceData, Gf
     Gfx::PVertexBuffer vertexBuffer = graphics->createVertexBuffer(vbInfo);
     return VertexStreamComponent(vertexBuffer, 0, vbInfo.vertexSize, Gfx::SE_FORMAT_R32G32_SFLOAT);
 }
-void MeshLoader::loadGlobalMeshes(const aiScene* scene, Array<PMesh>& globalMeshes, Array<PMaterialAsset> materials, Gfx::PGraphics graphics)
+void MeshLoader::loadGlobalMeshes(const aiScene* scene, Array<PMesh>& globalMeshes, const Array<PMaterialAsset>& materials, Gfx::PGraphics graphics)
 {
     for (uint32 meshIndex = 0; meshIndex < scene->mNumMeshes; ++meshIndex)
     {
@@ -176,7 +176,7 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, Array<PMesh>& globalMesh
         {
             //data.colorComponent = createVertexStream(mesh->mNumVertices, mesh->mColors[0], graphics);
         }
-        vertexShaderInput->setData(data);
+        vertexShaderInput->setData(std::move(data));
         vertexShaderInput->init(graphics);
 
         Array<uint32> indices(mesh->mNumFaces * 3);

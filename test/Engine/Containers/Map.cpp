@@ -31,13 +31,10 @@ BOOST_AUTO_TEST_CASE(for_each)
 	map[6] = 4;
 	map[4] = 7;
 	int count = 0;
-	std::cout << "Map start" << std::endl;
 	for(auto it = map.begin(); it != map.end(); ++it)
 	{
-		std::cout << (*it).key << std::endl;
 		count++;
 	}
-	std::cout << "Map end" << std::endl;
 	BOOST_REQUIRE_EQUAL(count, 4);
 }
 

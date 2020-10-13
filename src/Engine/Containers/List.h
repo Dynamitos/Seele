@@ -20,11 +20,63 @@ public:
 		tail = nullptr;
 		beginIt = Iterator(root);
 		endIt = Iterator(tail);
-		size = 0;
+		_size = 0;
+	}
+	List(const List& other)
+	{
+		//TODO: improve
+		for(const auto& it : other)
+		{
+			add(it);
+		}
+	}
+	List(List&& other)
+		: root(std::move(other.root))
+		, tail(std::move(other.tail))
+		, beginIt(std::move(other.beginIt))
+		, endIt(std::move(other.endIt))
+		, _size(std::move(other._size))
+	{
 	}
 	~List()
 	{
 		clear();
+	}
+	List& operator=(const List& other)
+	{
+		if(this != &other)
+		{
+			if(root != nullptr)
+			{
+				delete root;
+			}
+			if(tail != nullptr)
+			{
+				delete tail;
+			}
+			_size = 0;
+			for(const auto& it : other)
+			{
+				add(it);
+			}
+		}
+		return *this;
+	}
+	List& operator=(List&& other)
+	{
+		if(this != &other)
+		{
+			if(root != nullptr)
+			{
+				clear();
+			}
+			root = other.root;
+			tail = other.tail;
+			beginIt = other.beginIt;
+			endIt = other.endIt;
+			_size = other._size;
+		}
+		return *this;
 	}
 	template <typename X>
 	class IteratorBase
@@ -43,6 +95,29 @@ public:
 		IteratorBase(const IteratorBase &i)
 			: node(i.node)
 		{
+		}
+		IteratorBase(IteratorBase&& i)
+			: node(std::move(i.node))
+		{
+		}
+		~IteratorBase()
+		{
+		}
+		IteratorBase& operator=(const IteratorBase& other)
+		{
+			if(this != &other)
+			{
+				node = other.node;
+			}
+			return *this;
+		}
+		IteratorBase& operator=(IteratorBase&& other)
+		{
+			if(this != &other)
+			{
+				node = std::move(other.node);
+			}
+			return *this;
 		}
 		reference operator*() const
 		{
@@ -129,7 +204,7 @@ public:
 		Iterator insertedElement(tail);
 		tail = newTail;
 		refreshIterators();
-		size++;
+		_size++;
 		return insertedElement;
 	}
 	Iterator add(T&& value)
@@ -147,12 +222,12 @@ public:
 		Iterator insertedElement(tail);
 		tail = newTail;
 		refreshIterators();
-		size++;
+		_size++;
 		return insertedElement;
 	}
 	Iterator remove(Iterator pos)
 	{
-		size--;
+		_size--;
 		Node *prev = pos.node->prev;
 		Node *next = pos.node->next;
 		if (prev == nullptr)
@@ -177,7 +252,7 @@ public:
 	}
 	Iterator insert(Iterator pos, const T &value)
 	{
-		size++;
+		_size++;
 		if (root == nullptr)
 		{
 			root = new Node();
@@ -212,17 +287,25 @@ public:
 	}
 	bool empty()
 	{
-		return size == 0;
+		return _size == 0;
 	}
-	uint32 length()
+	uint32 size()
 	{
-		return size;
+		return _size;
 	}
 	Iterator begin()
 	{
 		return beginIt;
 	}
+	const Iterator begin() const
+	{
+		return beginIt;
+	}
 	Iterator end()
+	{
+		return endIt;
+	}
+	const Iterator end() const
 	{
 		return endIt;
 	}
@@ -237,6 +320,6 @@ private:
 	Node *tail;
 	Iterator beginIt;
 	Iterator endIt;
-	uint32 size;
+	uint32 _size;
 };
 } // namespace Seele
