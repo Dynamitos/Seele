@@ -106,14 +106,6 @@ void findMeshRoots(aiNode *node, List<aiNode *> &meshNodes)
         findMeshRoots(node->mChildren[i], meshNodes);
     }
 }
-void loadToBuffer(Array<Vector>& buffer, const aiVector3D* sourceData, uint32 size)
-{
-    buffer.resize(size);
-    for(uint32 i = 0; i < size; ++i)
-    {
-        buffer[i] = Vector(sourceData[i].x, sourceData[i].y, sourceData[i].z);
-    }
-}
 VertexStreamComponent createVertexStream(uint32 size, aiVector3D* sourceData, Gfx::PGraphics graphics)
 {
     Array<Vector> buffer(size);
@@ -126,9 +118,8 @@ VertexStreamComponent createVertexStream(uint32 size, aiVector3D* sourceData, Gf
     vbInfo.vertexSize = sizeof(Vector);
     vbInfo.resourceData.data = (uint8 *)buffer.data();
     vbInfo.resourceData.owner = Gfx::QueueType::DEDICATED_TRANSFER;
-    vbInfo.resourceData.size = buffer.size();
-    const Gfx::PVertexBuffer vertexBuffer = graphics->createVertexBuffer(vbInfo);
-    return VertexStreamComponent(vertexBuffer, 0, vbInfo.vertexSize, Gfx::SE_FORMAT_R32G32B32_SFLOAT);
+    vbInfo.resourceData.size = sizeof(Vector) * buffer.size();
+    return VertexStreamComponent(graphics->createVertexBuffer(vbInfo), 0, vbInfo.vertexSize, Gfx::SE_FORMAT_R32G32B32_SFLOAT);
 }
 VertexStreamComponent createVertexStream(uint32 size, aiVector2D* sourceData, Gfx::PGraphics graphics)
 {
@@ -142,9 +133,8 @@ VertexStreamComponent createVertexStream(uint32 size, aiVector2D* sourceData, Gf
     vbInfo.vertexSize = sizeof(Vector2);
     vbInfo.resourceData.data = (uint8 *)buffer.data();
     vbInfo.resourceData.owner = Gfx::QueueType::DEDICATED_TRANSFER;
-    vbInfo.resourceData.size = buffer.size();
-    Gfx::PVertexBuffer vertexBuffer = graphics->createVertexBuffer(vbInfo);
-    return VertexStreamComponent(vertexBuffer, 0, vbInfo.vertexSize, Gfx::SE_FORMAT_R32G32_SFLOAT);
+    vbInfo.resourceData.size = sizeof(Vector2) * buffer.size();
+    return VertexStreamComponent(graphics->createVertexBuffer(vbInfo), 0, vbInfo.vertexSize, Gfx::SE_FORMAT_R32G32_SFLOAT);
 }
 void MeshLoader::loadGlobalMeshes(const aiScene* scene, Array<PMesh>& globalMeshes, const Array<PMaterialAsset>& materials, Gfx::PGraphics graphics)
 {
@@ -190,7 +180,7 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, Array<PMesh>& globalMesh
         idxInfo.indexType = Gfx::SE_INDEX_TYPE_UINT32;
         idxInfo.resourceData.data = (uint8 *)indices.data();
         idxInfo.resourceData.owner = Gfx::QueueType::DEDICATED_TRANSFER;
-        idxInfo.resourceData.size = indices.size();
+        idxInfo.resourceData.size = sizeof(uint32) * indices.size();
         Gfx::PIndexBuffer indexBuffer = graphics->createIndexBuffer(idxInfo);
         indexBuffer->transferOwnership(Gfx::QueueType::GRAPHICS);
 
@@ -239,15 +229,11 @@ void MeshLoader::import(const std::filesystem::path &path)
     Assimp::Importer importer;
     importer.ReadFile(path.string().c_str(),
         aiProcess_FlipUVs |
-        aiProcess_ImproveCacheLocality |
-        aiProcess_OptimizeMeshes |
-        aiProcess_GenBoundingBoxes |
         aiProcess_Triangulate |
         aiProcess_SortByPType |
         aiProcess_GenSmoothNormals |
         aiProcess_GenUVCoords |
-        aiProcess_FindDegenerates |
-        aiProcess_EmbedTextures);
+        aiProcess_FindDegenerates);
     const aiScene *scene = importer.ApplyPostProcessing(aiProcess_CalcTangentSpace);
     
     Array<PMaterialAsset> globalMaterials(scene->mNumMaterials);

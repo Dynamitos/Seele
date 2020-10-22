@@ -8,7 +8,7 @@ Transform::Transform()
 }
 
 Transform::Transform(Transform &&other)
-    : position(other.position), rotation(other.rotation), scale(scale)
+    : position(other.position), rotation(other.rotation), scale(other.scale)
 {
     other.position = Vector4(0, 0, 0, 0);
     other.rotation = Quaternion(0, 0, 0, 0);
@@ -16,7 +16,7 @@ Transform::Transform(Transform &&other)
 }
 
 Transform::Transform(const Transform &other)
-    : position(other.position), rotation(other.rotation), scale(scale)
+    : position(other.position), rotation(other.rotation), scale(other.scale)
 {
 }
 
@@ -45,7 +45,7 @@ Vector Transform::inverseTransformPosition(const Vector &v) const
 }
 Matrix4 Transform::toMatrix()
 {
-    Matrix4 mat;
+    Matrix4 mat(1.0f);
 
     mat[3][0] = position.x;
     mat[3][1] = position.y;

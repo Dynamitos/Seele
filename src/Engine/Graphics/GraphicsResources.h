@@ -569,7 +569,8 @@ public:
 	inline SeAttachmentStoreOp getStoreOp() const { return storeOp; }
 	inline SeAttachmentLoadOp getStencilLoadOp() const { return stencilLoadOp; }
 	inline SeAttachmentStoreOp getStencilStoreOp() const { return stencilStoreOp; }
-
+	SeClearValue clear;
+	SeColorComponentFlags componentFlags;
 protected:
 	PTexture2D texture;
 	SeAttachmentLoadOp loadOp;
@@ -589,6 +590,11 @@ public:
 						SeAttachmentStoreOp stencilStoreOp = SE_ATTACHMENT_STORE_OP_DONT_CARE)
 		: RenderTargetAttachment(nullptr, loadOp, storeOp, stencilLoadOp, stencilStoreOp), owner(owner)
 	{
+		clear.color.float32[0] = 0.0f;
+		clear.color.float32[1] = 0.0f;
+		clear.color.float32[2] = 0.0f;
+		clear.color.float32[3] = 0.0f;
+		componentFlags = SE_COLOR_COMPONENT_R_BIT | SE_COLOR_COMPONENT_G_BIT | SE_COLOR_COMPONENT_B_BIT | SE_COLOR_COMPONENT_A_BIT;
 	}
 	virtual PTexture2D getTexture() override
 	{

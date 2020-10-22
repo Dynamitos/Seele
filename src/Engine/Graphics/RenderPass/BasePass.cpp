@@ -93,7 +93,8 @@ BasePass::BasePass(const PScene scene, Gfx::PGraphics graphics, Gfx::PViewport v
     depthBufferInfo.usage = Gfx::SE_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
     depthBuffer = graphics->createTexture2D(depthBufferInfo);
     Gfx::PRenderTargetAttachment depthAttachment = 
-        new Gfx::RenderTargetAttachment(depthBuffer, Gfx::SE_ATTACHMENT_LOAD_OP_DONT_CARE, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
+        new Gfx::RenderTargetAttachment(depthBuffer, Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
+    depthAttachment->clear.depthStencil.depth = 1.0f;
     Gfx::PRenderTargetLayout layout = new Gfx::RenderTargetLayout(colorAttachment, depthAttachment);
     renderPass = graphics->createRenderPass(layout);
 

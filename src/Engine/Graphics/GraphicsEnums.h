@@ -1868,6 +1868,23 @@ typedef enum SeStencilFaceFlagBits
     SE_STENCIL_FACE_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
 } SeStencilFaceFlagBits;
 typedef SeFlags SeStencilFaceFlags;
+
+typedef union SeClearColorValue {
+    float       float32[4];
+    int32_t     int32[4];
+    uint32_t    uint32[4];
+} SeClearColorValue;
+
+typedef struct SeClearDepthStencilValue {
+    float       depth;
+    uint32_t    stencil;
+} SeClearDepthStencilValue;
+
+typedef union SeClearValue {
+    SeClearColorValue           color;
+    SeClearDepthStencilValue    depthStencil;
+} SeClearValue;
+
 enum class QueueType
 {
     GRAPHICS = 1,

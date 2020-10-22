@@ -46,5 +46,7 @@ VkPolygonMode cast(const Gfx::SePolygonMode &mode);
 Gfx::SePolygonMode cast(const VkPolygonMode &mode);
 VkCompareOp cast(const Gfx::SeCompareOp &op);
 Gfx::SeCompareOp cast(const VkCompareOp &op);
+VkClearValue cast(const Gfx::SeClearValue &clear);
+Gfx::SeClearValue cast(const VkClearValue &clear);
 } // namespace Vulkan
 } // namespace Seele

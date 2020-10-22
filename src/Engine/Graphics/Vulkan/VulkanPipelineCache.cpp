@@ -131,7 +131,7 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
             {
                 bindings.resize(element.streamIndex + 1); // This should not cause any actual allocations
             }
-            VkVertexInputBindingDescription currBinding = bindings[element.streamIndex];
+            VkVertexInputBindingDescription& currBinding = bindings[element.streamIndex];
             if((bindingsMask & (1 << element.streamIndex)) != 0)
             {
                 assert(currBinding.binding == element.streamIndex);
@@ -228,7 +228,7 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
             cast(gfxInfo.depthStencilState.depthCompareOp)
         );
     
-    const auto colorAttachments = gfxInfo.renderPass->getLayout()->colorAttachments;
+    const auto& colorAttachments = gfxInfo.renderPass->getLayout()->colorAttachments;
     Array<VkPipelineColorBlendAttachmentState> blendAttachments(colorAttachments.size());
     for(uint32 i = 0; i < colorAttachments.size(); ++i)
     {
@@ -237,7 +237,7 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
         blendAttachment.alphaBlendOp = (VkBlendOp)attachment.alphaBlendOp;
         blendAttachment.blendEnable = attachment.blendEnable;
         blendAttachment.colorBlendOp = (VkBlendOp)attachment.colorBlendOp;
-        blendAttachment.colorWriteMask = attachment.colorWriteMask;
+        blendAttachment.colorWriteMask = colorAttachments[i]->componentFlags;
         blendAttachment.dstAlphaBlendFactor = (VkBlendFactor)attachment.dstAlphaBlendFactor;
         blendAttachment.srcAlphaBlendFactor = (VkBlendFactor)attachment.srcAlphaBlendFactor;
         blendAttachment.dstColorBlendFactor = (VkBlendFactor)attachment.dstColorBlendFactor;

@@ -1308,3 +1308,39 @@ Gfx::SeCompareOp Seele::Vulkan::cast(const VkCompareOp &op)
         return SE_COMPARE_OP_MAX_ENUM;
     }
 }
+
+VkClearValue Seele::Vulkan::cast(const Gfx::SeClearValue& clear)
+{
+    VkClearValue result;
+    if(sizeof(clear) == sizeof(Gfx::SeClearColorValue))
+    {
+        result.color.float32[0] = clear.color.float32[0];
+        result.color.float32[1] = clear.color.float32[1];
+        result.color.float32[2] = clear.color.float32[2];
+        result.color.float32[3] = clear.color.float32[3];
+    }
+    else
+    {
+        result.depthStencil.depth = clear.depthStencil.depth;
+        result.depthStencil.stencil = clear.depthStencil.stencil;
+    }
+    return result;
+}
+
+Gfx::SeClearValue Seele::Vulkan::cast(const VkClearValue& clear)
+{
+    Gfx::SeClearValue result;
+    if(sizeof(clear) == sizeof(VkClearColorValue))
+    {
+        result.color.float32[0] = clear.color.float32[0];
+        result.color.float32[1] = clear.color.float32[1];
+        result.color.float32[2] = clear.color.float32[2];
+        result.color.float32[3] = clear.color.float32[3];
+    }
+    else
+    {
+        result.depthStencil.depth = clear.depthStencil.depth;
+        result.depthStencil.stencil = clear.depthStencil.stencil;
+    }
+    return result;
+}

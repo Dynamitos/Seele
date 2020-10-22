@@ -203,7 +203,7 @@ void SecondaryCmdBuffer::bindVertexBuffer(const Array<VertexInputStream>& stream
 void SecondaryCmdBuffer::bindIndexBuffer(Gfx::PIndexBuffer indexBuffer)
 {
     PIndexBuffer buf = indexBuffer.cast<IndexBuffer>();
-    vkCmdBindIndexBuffer(handle, buf->getHandle(), 0, VK_INDEX_TYPE_UINT16);
+    vkCmdBindIndexBuffer(handle, buf->getHandle(), 0, cast(buf->getIndexType()));
 }
 void SecondaryCmdBuffer::draw(const MeshBatchElement& data) 
 {

@@ -36,6 +36,10 @@ ShaderBuffer::ShaderBuffer(PGraphics graphics, uint32 size, VkBufferUsageFlags u
 		init::BufferCreateInfo(
 			usage,
 			size);
+	info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	uint32 queueFamilyIndex =  graphics->getFamilyMapping().getQueueTypeFamilyIndex(queueType);
+	info.pQueueFamilyIndices = &queueFamilyIndex;
+	info.queueFamilyIndexCount = 0;
 	VkBufferMemoryRequirementsInfo2 bufferReqInfo;
 	bufferReqInfo.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_REQUIREMENTS_INFO_2;
 	bufferReqInfo.pNext = nullptr;
@@ -53,7 +57,6 @@ ShaderBuffer::ShaderBuffer(PGraphics graphics, uint32 size, VkBufferUsageFlags u
 		buffers[i].allocation = graphics->getAllocator()->allocate(memRequirements, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, buffers[i].buffer);
 		vkBindBufferMemory(graphics->getDevice(), buffers[i].buffer, buffers[i].allocation->getHandle(), buffers[i].allocation->getOffset());
 	}
-	info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 }
 
 ShaderBuffer::~ShaderBuffer()

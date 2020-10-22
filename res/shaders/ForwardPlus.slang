@@ -73,5 +73,5 @@ float4 fragmentMain(
     }
 	
     
-    return float4(result, 1);
+    return float4(0, 1, 0, 1);
 }

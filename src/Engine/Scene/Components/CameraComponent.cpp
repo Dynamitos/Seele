@@ -24,6 +24,7 @@ void CameraComponent::mouseMove(float deltaX, float deltaY)
 	rotationX += deltaX/100.f;
 	rotationY += deltaY/100.f;
 	rotationY = std::clamp(rotationY, -1.5f, 1.5f);
+	addWorldRotation(Vector(rotationX, rotationY, 0));
 	bNeedsViewBuild = true;
 }
 
@@ -31,18 +32,20 @@ void CameraComponent::mouseScroll(double x)
 {
     distance += static_cast<float>(x);
 	distance = std::max(distance, 1.f);
+	addWorldTranslation(Vector(0, 0, x));
 	bNeedsViewBuild = true;
 }
 
 void CameraComponent::moveOrigin(float up) 
 {
 	originPoint.y += up;
+	addWorldTranslation(Vector(0, up, 0));
 	bNeedsViewBuild = true;
 }
 
 void CameraComponent::buildViewMatrix() 
 {
-    Matrix4 rotation = glm::rotate(Matrix4(), rotationX, Vector(0, 1, 0));
+    Matrix4 rotation = glm::rotate(Matrix4(1.0f), rotationX, Vector(0, 1, 0));
 	rotation = glm::rotate(rotation, rotationY, Vector(1, 0, 0));
 	Vector4 translation(0, 0, distance, 1);
 	translation = rotation * translation;

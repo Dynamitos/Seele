@@ -282,7 +282,6 @@ Array<const char *> Graphics::getRequiredExtensions()
 	{
 		extensions.add(glfwExtensions[i]);
 	}
-	std::cout << ENABLE_VALIDATION << std::endl;
 #if ENABLE_VALIDATION
 	extensions.add(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
 #endif // ENABLE_VALIDATION

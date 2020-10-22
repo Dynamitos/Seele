@@ -203,7 +203,7 @@ void Component::setRelativeLocationAndRotation(Vector newLocation, Quaternion ne
     }
 
     const Transform desiredRelTransform(newLocation, newRotation);
-    const Transform desiredWorldTransform = parent->getTransform() * desiredRelTransform;
+    const Transform desiredWorldTransform = desiredRelTransform; // Check for absolutes etc
 
     internalSetTransform(desiredWorldTransform.getPosition(), desiredWorldTransform.getRotation());
 }

@@ -22,15 +22,18 @@ public:
     void detachChild(PActor child);
     Array<PActor> getChildren();
     void setWorldLocation(Vector location);
-    void setWorldRotation(Vector4 rotation);
+    void setWorldRotation(Quaternion rotation);
+    void setWorldRotation(Vector rotation);
     void setWorldScale(Vector scale);
 
     void setRelativeLocation(Vector location);
-    void setRelativeRotation(Vector4 rotation);
+    void setRelativeRotation(Quaternion rotation);
+    void setRelativeRotation(Vector rotation);
     void setRelativeScale(Vector scale);
 
     void addWorldTranslation(Vector translation);
-    void addWorldRotation(Vector4 rotation);
+    void addWorldRotation(Quaternion rotation);
+    void addWorldRotation(Vector rotation);
 
     PComponent getRootComponent();
     void setRootComponent(PComponent newRoot);

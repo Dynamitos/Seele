@@ -51,7 +51,12 @@ void Actor::setWorldLocation(Vector location)
 {
     rootComponent->setWorldLocation(location);
 }
-void Actor::setWorldRotation(Vector4 rotation)
+
+void Actor::setWorldRotation(Quaternion rotation) 
+{
+    rootComponent->setWorldRotation(rotation);
+}
+void Actor::setWorldRotation(Vector rotation)
 {
     rootComponent->setWorldRotation(rotation);
 }
@@ -63,7 +68,11 @@ void Actor::setRelativeLocation(Vector location)
 {
     rootComponent->setRelativeLocation(location);
 }
-void Actor::setRelativeRotation(Vector4 rotation)
+void Actor::setRelativeRotation(Quaternion rotation)
+{
+    rootComponent->setRelativeRotation(rotation);
+}
+void Actor::setRelativeRotation(Vector rotation)
 {
     rootComponent->setRelativeRotation(rotation);
 }
@@ -75,7 +84,11 @@ void Actor::addWorldTranslation(Vector translation)
 {
     rootComponent->addWorldTranslation(translation);
 }
-void Actor::addWorldRotation(Vector4 rotation)
+void Actor::addWorldRotation(Quaternion rotation)
+{
+    rootComponent->addWorldRotation(rotation);
+}
+void Actor::addWorldRotation(Vector rotation)
 {
     rootComponent->addWorldRotation(rotation);
 }

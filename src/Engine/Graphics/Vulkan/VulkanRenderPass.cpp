@@ -52,6 +52,12 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::PRenderTargetLayout layout)
         desc.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         desc.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
+        VkClearValue& clearValue = clearValues.add();
+        if(desc.loadOp == VK_ATTACHMENT_LOAD_OP_CLEAR)
+        {
+            clearValue = cast(colorAttachment->clear);
+        }
+
         VkAttachmentReference &ref = colorRefs.add();
         ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         ref.attachment = attachmentCounter;
@@ -70,6 +76,12 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::PRenderTargetLayout layout)
         desc.stencilLoadOp = cast(layout->depthAttachment->getStencilLoadOp());
         desc.initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
         desc.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        VkClearValue& clearValue = clearValues.add();
+        if(desc.loadOp == VK_ATTACHMENT_LOAD_OP_CLEAR)
+        {
+            clearValue = cast(layout->depthAttachment->clear);
+        }
 
         VkAttachmentReference &ref = depthRef;
         ref.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
