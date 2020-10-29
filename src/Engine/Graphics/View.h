@@ -13,12 +13,16 @@ public:
 	void render();
 	void endFrame();
 	void applyArea(URect area);
+	void setFocused();
 
 protected:
 	Gfx::PGraphics graphics;
 	Gfx::PViewport viewport;
 	PWindow owner;
 	PRenderPath renderer;
+
+	virtual void keyCallback(KeyCode code, KeyAction action, KeyModifier modifier) = 0;
+	friend class Window;
 };
 
 DEFINE_REF(View)

@@ -15,9 +15,11 @@ public:
     void render();
     void endFrame();
     Gfx::PWindow getGfxHandle();
+    void setFocused(PView view);
 
 private:
     Array<PView> viewports;
+    PView focusedView;
     Gfx::PWindow gfxHandle;
 };
 DEFINE_REF(Window);

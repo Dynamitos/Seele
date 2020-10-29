@@ -1,4 +1,5 @@
 #include "Window.h"
+#include <functional>
 
 Seele::Window::Window(Gfx::PWindow handle)
     : gfxHandle(handle)
@@ -43,4 +44,11 @@ void Seele::Window::endFrame()
 Gfx::PWindow Seele::Window::getGfxHandle()
 {
     return gfxHandle;
+}
+    
+void Window::setFocused(PView view) 
+{
+    focusedView = view;
+    auto boundFunction = std::bind(&View::keyCallback, view.getHandle(), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+    gfxHandle->setKeyCallback(boundFunction);
 }

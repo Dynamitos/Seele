@@ -768,9 +768,9 @@ VkPipelineShaderStageCreateInfo init::PipelineShaderStageCreateInfo(VkShaderStag
 #pragma warning(disable : 4100)
 VkBool32 Seele::Vulkan::debugCallback(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objType, uint64_t obj, size_t location, int32_t code, const char *layerPrefix, const char *msg, void *userDataManager)
 {
-	if(flags & VK_DEBUG_REPORT_ERROR_BIT_EXT)
+	if(flags & VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT)
 	{
-		std::cerr << layerPrefix << ": " << msg << std::endl;
+		//std::cerr << layerPrefix << ": " << msg << std::endl;
 	}
 	else
 	{

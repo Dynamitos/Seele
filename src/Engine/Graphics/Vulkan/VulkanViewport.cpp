@@ -8,14 +8,22 @@
 using namespace Seele;
 using namespace Seele::Vulkan;
 
+void glfwKeyCallback(GLFWwindow* handle, int key, int scancode, int action, int modifier)
+{
+    Window* window = (Window*)glfwGetWindowUserPointer(handle);
+    std::cout << "glfw callback: " << key << std::endl;
+    window->keyCallback((KeyCode)key, (KeyAction)action, (KeyModifier)modifier);
+}
+
 Window::Window(PGraphics graphics, const WindowCreateInfo &createInfo)
     : Gfx::Window(createInfo), graphics(graphics), instance(graphics->getInstance()), swapchain(VK_NULL_HANDLE), numSamples(createInfo.numSamples), pixelFormat(cast(createInfo.pixelFormat))
 {
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     GLFWwindow *handle = glfwCreateWindow(createInfo.width, createInfo.height, createInfo.title, createInfo.bFullscreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
     windowHandle = handle;
+    glfwSetWindowUserPointer(handle, this);
 
-    //TODO: callbacks
+    glfwSetKeyCallback(handle, &glfwKeyCallback);
 
     glfwCreateWindowSurface(instance, handle, nullptr, &surface);
 
@@ -67,6 +75,11 @@ void Window::onWindowCloseEvent()
 Gfx::PTexture2D Window::getBackBuffer()
 {
     return backBufferImages[currentImageIndex];
+}
+
+void Window::setKeyCallback(std::function<void(KeyCode, KeyAction, KeyModifier)> callback)
+{
+    keyCallback = callback;
 }
 
 void Window::advanceBackBuffer()
@@ -258,9 +271,13 @@ void Window::choosePresentMode(const Array<VkPresentModeKHR> &modes)
 Viewport::Viewport(PGraphics graphics, PWindow owner, const ViewportCreateInfo &viewportInfo)
     : Gfx::Viewport(owner, viewportInfo), graphics(graphics)
 {
-    handle = init::Viewport(static_cast<float>(viewportInfo.sizeX), static_cast<float>(viewportInfo.sizeY), 0.f, 1.f);
+    handle.width = static_cast<float>(viewportInfo.sizeX);
+    handle.height = static_cast<float>(viewportInfo.sizeY);
     handle.x = static_cast<float>(viewportInfo.offsetX);
-    handle.y = static_cast<float>(viewportInfo.offsetY);
+    handle.y = static_cast<float>(viewportInfo.offsetY) + handle.height;
+    handle.height = -handle.height;
+    handle.minDepth =  0.f;
+    handle.maxDepth =  1.f;
 }
 
 Viewport::~Viewport()
@@ -271,10 +288,15 @@ void Viewport::resize(uint32 newX, uint32 newY)
 {
     sizeX = newX;
     sizeY = newY;
+    handle.width = static_cast<float>(sizeX);
+    handle.y = static_cast<float>(sizeY + offsetX);
+    handle.height = -static_cast<float>(sizeY);
 }
 
 void Viewport::move(uint32 newOffsetX, uint32 newOffsetY)
 {
     offsetX = newOffsetX;
     offsetY = newOffsetY;
+    handle.x = static_cast<float>(offsetX);
+    handle.y = static_cast<float>(offsetY + sizeY);
 }

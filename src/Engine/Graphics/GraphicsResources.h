@@ -5,6 +5,7 @@
 #include "GraphicsInitializer.h"
 #include "MeshBatch.h"
 #include <boost/crc.hpp>
+#include <functional>
 
 
 #ifndef ENABLE_VALIDATION
@@ -499,6 +500,7 @@ public:
 	virtual void endFrame() = 0;
 	virtual void onWindowCloseEvent() = 0;
 	virtual PTexture2D getBackBuffer() = 0;
+	virtual void setKeyCallback(std::function<void(KeyCode, KeyAction, KeyModifier)> callback) = 0;
 	SeFormat getSwapchainFormat() const
 	{
 		return pixelFormat;

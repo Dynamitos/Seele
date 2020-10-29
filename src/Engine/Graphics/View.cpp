@@ -30,3 +30,8 @@ void Seele::View::applyArea(URect area)
 {
 	renderer->applyArea(area);
 }
+
+void View::setFocused() 
+{
+	owner->setFocused(this);	
+}

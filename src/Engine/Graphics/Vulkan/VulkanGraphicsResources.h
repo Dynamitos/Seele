@@ -315,7 +315,9 @@ public:
 	virtual void endFrame() override;
 	virtual Gfx::PTexture2D getBackBuffer() override;
 	virtual void onWindowCloseEvent() override;
+	virtual void setKeyCallback(std::function<void(KeyCode, KeyAction, KeyModifier)> callback) override;
 
+	std::function<void(KeyCode, KeyAction, KeyModifier)> keyCallback;
 protected:
 	void advanceBackBuffer();
 	void recreateSwapchain(const WindowCreateInfo &createInfo);
@@ -324,6 +326,7 @@ protected:
 	void createSwapchain();
 	void chooseSurfaceFormat(const Array<VkSurfaceFormatKHR> &available, Gfx::SeFormat preferred);
 	void choosePresentMode(const Array<VkPresentModeKHR> &modes);
+
 	PTexture2D backBufferImages[Gfx::numFramesBuffered];
 	PSemaphore renderFinished[Gfx::numFramesBuffered];
 	PSemaphore imageAcquired[Gfx::numFramesBuffered];

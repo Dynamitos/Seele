@@ -285,7 +285,7 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
     VK_CHECK(vkCreateGraphicsPipelines(graphics->getDevice(), cache, 1, &createInfo, nullptr, &pipelineHandle));
     auto endTime = std::chrono::high_resolution_clock::now();
     int64 delta = std::chrono::duration_cast<std::chrono::microseconds>(endTime - beginTime).count();
-    std::cout << "Gfx creation time: " << delta << std::endl;
+    //std::cout << "Gfx creation time: " << delta << std::endl;
 
     PGraphicsPipeline result = new GraphicsPipeline(graphics, pipelineHandle, layout, gfxInfo);
     return result;
