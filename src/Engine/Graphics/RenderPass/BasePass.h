@@ -22,6 +22,7 @@ public:
     void clearCommands();
 private:
     Array<Gfx::PRenderCommand> renderCommands;
+    Array<Gfx::PRenderCommand> cachedCommandBuffers;
     Array<Gfx::PDescriptorSet> cachedPrimitiveSets;
     uint32 cachedPrimitiveIndex;
     Gfx::PViewport target;

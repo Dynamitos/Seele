@@ -23,6 +23,5 @@ Seele::SceneView::~SceneView()
 
 void SceneView::keyCallback(KeyCode code, KeyAction action, KeyModifier modifier)
 {
-	std::cout << "Key callback " << (uint32)code << std::endl;
 	activeCamera->getCameraComponent()->moveOrigin(1);
 }

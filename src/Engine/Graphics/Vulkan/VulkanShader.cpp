@@ -29,6 +29,11 @@ Map<uint32, PDescriptorLayout> Shader::getDescriptorLayouts()
     return descriptorSets;
 }
 
+uint32 Seele::Vulkan::Shader::getShaderHash() const
+{
+    return hash;
+}
+
 static SlangStage getStageFromShaderType(ShaderType type)
 {
     switch (type)
@@ -127,4 +132,9 @@ void Shader::create(const ShaderCreateInfo& createInfo)
 	moduleInfo.codeSize = dataSize;
 	moduleInfo.pCode = data;
 	VK_CHECK(vkCreateShaderModule(graphics->getDevice(), &moduleInfo, nullptr, &module));
+
+    boost::crc_32_type result;
+    result.process_bytes(entryPointName.data(), entryPointName.size());
+    result.process_bytes(data, dataSize);
+    hash = result.checksum();
 }

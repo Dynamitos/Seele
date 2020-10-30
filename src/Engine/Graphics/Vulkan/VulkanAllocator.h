@@ -190,10 +190,20 @@ public:
 	{
 		return allocation->getOffset();
 	}
+	uint32 getSize() const
+	{
+		return size;
+	}
+	bool isReadable() const
+	{
+		return bReadable;
+	}
 
 private:
 	PSubAllocation allocation;
 	VkBuffer buffer;
+	uint32 size;
+	VkBufferUsageFlags usage;
 	uint8 bReadable;
 	friend class StagingManager;
 };

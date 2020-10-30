@@ -44,7 +44,7 @@ find_package(Threads REQUIRED)
 find_package(assimp REQUIRED)
 find_package(JSON REQUIRED)
 find_package(GLFW REQUIRED)
-find_package(SPIRV REQUIRED)
+#find_package(SPIRV REQUIRED)
 find_package(GLM REQUIRED)
 find_package(STB REQUIRED)
 find_package(SLang REQUIRED)
@@ -113,4 +113,5 @@ add_custom_target(copy-runtime-files ALL
 	COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SLANG_BINARY} $<TARGET_FILE_DIR:SeeleEngine>
   COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SLANG_GLSLANG} $<TARGET_FILE_DIR:SeeleEngine>
   COMMAND ${CMAKE_COMMAND} -E copy_if_different ${GLFW_BINARY} $<TARGET_FILE_DIR:SeeleEngine>
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different ${ASSIMP_BINARY} $<TARGET_FILE_DIR:SeeleEngine>
 	DEPENDS SeeleEngine)

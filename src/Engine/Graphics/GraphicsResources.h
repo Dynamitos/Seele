@@ -190,8 +190,6 @@ class DescriptorSet
 {
 public:
 	virtual ~DescriptorSet() {}
-	virtual void beginFrame() = 0;
-	virtual void endFrame() = 0;
 	virtual void writeChanges() = 0;
 	virtual void updateBuffer(uint32 binding, PUniformBuffer uniformBuffer) = 0;
 	virtual void updateBuffer(uint32 binding, PStructuredBuffer structuredBuffer) = 0;
@@ -481,6 +479,7 @@ class RenderCommand
 public:
 	RenderCommand();
 	virtual ~RenderCommand();
+	virtual void begin() = 0;
 	virtual void setViewport(Gfx::PViewport viewport) = 0;
 	virtual void bindPipeline(Gfx::PGraphicsPipeline pipeline) = 0;
 	virtual void bindDescriptor(Gfx::PDescriptorSet set) = 0;
@@ -586,7 +585,7 @@ class SwapchainAttachment : public RenderTargetAttachment
 {
 public:
 	SwapchainAttachment(PWindow owner,
-						SeAttachmentLoadOp loadOp = SE_ATTACHMENT_LOAD_OP_LOAD,
+						SeAttachmentLoadOp loadOp = SE_ATTACHMENT_LOAD_OP_CLEAR,
 						SeAttachmentStoreOp storeOp = SE_ATTACHMENT_STORE_OP_STORE,
 						SeAttachmentLoadOp stencilLoadOp = SE_ATTACHMENT_LOAD_OP_DONT_CARE,
 						SeAttachmentStoreOp stencilStoreOp = SE_ATTACHMENT_STORE_OP_DONT_CARE)
@@ -595,7 +594,7 @@ public:
 		clear.color.float32[0] = 0.0f;
 		clear.color.float32[1] = 0.0f;
 		clear.color.float32[2] = 0.0f;
-		clear.color.float32[3] = 0.0f;
+		clear.color.float32[3] = 1.0f;
 		componentFlags = SE_COLOR_COMPONENT_R_BIT | SE_COLOR_COMPONENT_G_BIT | SE_COLOR_COMPONENT_B_BIT | SE_COLOR_COMPONENT_A_BIT;
 	}
 	virtual PTexture2D getTexture() override

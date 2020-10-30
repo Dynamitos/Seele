@@ -286,21 +286,22 @@ void StagingManager::clearPending()
 
 PStagingBuffer StagingManager::allocateStagingBuffer(uint32 size, VkBufferUsageFlags usage, bool bCPURead)
 {
-	
 	std::unique_lock l(lock);
 	for (auto it = freeBuffers.begin(); it != freeBuffers.end(); ++it)
 	{
 		auto freeBuffer = *it;
-		if (freeBuffer->allocation->getSize() == size && freeBuffer->allocation->isReadable() == bCPURead)
+		if (freeBuffer->getSize() == size && freeBuffer->isReadable() == bCPURead && freeBuffer->usage == usage)
 		{
+			std::cout << "Reusing staging buffer" << std::endl;
 			activeBuffers.add(freeBuffer.getHandle());
 			freeBuffers.remove(it, false);
 			return freeBuffer;
 		}
 	}
-
+	std::cout << "Creating new stagingbuffer" << std::endl;
 	PStagingBuffer stagingBuffer = new StagingBuffer();
 	VkBufferCreateInfo stagingBufferCreateInfo = init::BufferCreateInfo(usage, size);
+	stagingBufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	VkDevice vulkanDevice = graphics->getDevice();
 
 	VK_CHECK(vkCreateBuffer(vulkanDevice, &stagingBufferCreateInfo, nullptr, &stagingBuffer->buffer));
@@ -319,9 +320,11 @@ PStagingBuffer StagingManager::allocateStagingBuffer(uint32 size, VkBufferUsageF
 
 	memReqs.memoryRequirements.alignment =
 		(16 > memReqs.memoryRequirements.alignment) ? 16 : memReqs.memoryRequirements.alignment;
-
+	
 	stagingBuffer->allocation = allocator->allocate(memReqs, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | (bCPURead ? VK_MEMORY_PROPERTY_HOST_COHERENT_BIT : VK_MEMORY_PROPERTY_HOST_CACHED_BIT), stagingBuffer->buffer);
 	stagingBuffer->bReadable = bCPURead;
+	stagingBuffer->size = size;
+	stagingBuffer->usage = usage;
 	vkBindBufferMemory(graphics->getDevice(), stagingBuffer->buffer, stagingBuffer->getMemoryHandle(), stagingBuffer->getOffset());
 
 	activeBuffers.add(stagingBuffer.getHandle());

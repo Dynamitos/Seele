@@ -159,6 +159,11 @@ void SecondaryCmdBuffer::end()
     VK_CHECK(vkEndCommandBuffer(handle));
 }
 
+void SecondaryCmdBuffer::begin()
+{
+    begin(graphics->getGraphicsCommands()->getCommands());
+}
+
 void SecondaryCmdBuffer::setViewport(Gfx::PViewport viewport) 
 {
     VkViewport vp = viewport.cast<Viewport>()->getHandle();

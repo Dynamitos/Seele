@@ -46,6 +46,26 @@ PipelineCache::~PipelineCache()
     vkDestroyPipelineCache(graphics->getDevice(), cache, nullptr);
 }
 
+struct PipelineCreateHashStruct
+{
+    uint32 vertexHash;
+    uint32 controlHash;
+    uint32 evalHash;
+    uint32 geometryHash;
+    uint32 fragmentHash;
+    uint32 pipelineLayoutHash;
+    VkPipelineTessellationStateCreateInfo tess;
+    VkVertexInputAttributeDescription attribs[16];
+    VkVertexInputBindingDescription bindings[16];
+    VkPipelineInputAssemblyStateCreateInfo inputAssembly;
+    VkPipelineViewportStateCreateInfo viewport;
+    VkPipelineRasterizationStateCreateInfo rasterization;
+    VkPipelineMultisampleStateCreateInfo multisample;
+    VkPipelineDepthStencilStateCreateInfo depthStencil;
+    VkPipelineColorBlendAttachmentState blendAttachments[16];
+    VkPipelineColorBlendStateCreateInfo blendState;
+};
+
 PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo& gfxInfo)
 {
     VkGraphicsPipelineCreateInfo createInfo;
@@ -58,6 +78,8 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
     std::memset(&tessInfo, 0, sizeof(VkPipelineTessellationStateCreateInfo));
     VkPipelineShaderStageCreateInfo stageInfos[5];
     std::memset(stageInfos, 0, sizeof(stageInfos));
+    PipelineCreateHashStruct hashStruct;
+    std::memset(&hashStruct, 0, sizeof(PipelineCreateHashStruct));
     
     PVertexShader vertexShader = gfxInfo.vertexShader.cast<VertexShader>();
     VkPipelineShaderStageCreateInfo& vertInfo = stageInfos[createInfo.stageCount++];
@@ -65,6 +87,7 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
     vertInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
     vertInfo.module = vertexShader->getModuleHandle();
     vertInfo.pName = vertexShader->getEntryPointName();
+    hashStruct.vertexHash = vertexShader->getShaderHash();
 
     if(gfxInfo.controlShader != nullptr)
     {
@@ -88,6 +111,10 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
         tessInfo.pNext = 0;
         tessInfo.flags = 0;
         tessInfo.patchControlPoints = control->getNumPatches();
+
+        hashStruct.controlHash = control->getShaderHash();
+        hashStruct.evalHash = eval->getShaderHash();
+        hashStruct.tess = tessInfo;
     }
     if(gfxInfo.geometryShader != nullptr)
     {
@@ -98,6 +125,8 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
         geometryInfo.stage = VK_SHADER_STAGE_GEOMETRY_BIT;
         geometryInfo.module = geometry->getModuleHandle();
         geometryInfo.pName = geometry->getEntryPointName();
+
+        hashStruct.geometryHash = geometry->getShaderHash();
     }
     if(gfxInfo.fragmentShader != nullptr)
     {
@@ -108,6 +137,8 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
         fragmentInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
         fragmentInfo.module = fragment->getModuleHandle();
         fragmentInfo.pName = fragment->getEntryPointName();
+
+        hashStruct.fragmentHash = fragment->getShaderHash();
     }
     VkPipelineVertexInputStateCreateInfo vertexInput =
         init::PipelineVertexInputStateCreateInfo();
@@ -180,6 +211,9 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
         currAttribute.offset = element.offset;
     }
 
+    std::memcpy(hashStruct.bindings, bindings.data(), bindings.size() * sizeof(VkVertexInputBindingDescription));
+    std::memcpy(hashStruct.attribs, attributes.data(), attributes.size() * sizeof(VkVertexInputAttributeDescription));
+
     vertexInput.pVertexBindingDescriptions = bindings.data();
     vertexInput.vertexBindingDescriptionCount = bindings.size();
     vertexInput.pVertexAttributeDescriptions = attributes.data();
@@ -191,6 +225,7 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
             0,
             false
         );
+    hashStruct.inputAssembly = assemblyInfo;
 
     VkPipelineViewportStateCreateInfo viewportInfo =
         init::PipelineViewportStateCreateInfo(
@@ -198,7 +233,8 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
             1,
             0
         );
-    
+    hashStruct.viewport = viewportInfo;
+
     VkPipelineRasterizationStateCreateInfo rasterizationState =
         init::PipelineRasterizationStateCreateInfo(
             cast(gfxInfo.rasterizationState.polygonMode),
@@ -214,12 +250,18 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
     rasterizationState.lineWidth = gfxInfo.rasterizationState.lineWidth;
     rasterizationState.rasterizerDiscardEnable = gfxInfo.rasterizationState.rasterizerDiscardEnable;
 
+    hashStruct.rasterization = rasterizationState;
+
     VkPipelineMultisampleStateCreateInfo multisampleState =
-        init::PipelineMultisampleStateCreateInfo((VkSampleCountFlagBits)gfxInfo.multisampleState.samples, 0);
+        init::PipelineMultisampleStateCreateInfo(
+            (VkSampleCountFlagBits)gfxInfo.multisampleState.samples, 
+            0);
     multisampleState.alphaToCoverageEnable = gfxInfo.multisampleState.alphaCoverageEnable;
     multisampleState.alphaToOneEnable = gfxInfo.multisampleState.alphaToOneEnable;
     multisampleState.minSampleShading = gfxInfo.multisampleState.minSampleShading;
     multisampleState.sampleShadingEnable = gfxInfo.multisampleState.sampleShadingEnable;
+
+    hashStruct.multisample = multisampleState;
 
     VkPipelineDepthStencilStateCreateInfo depthStencilState =
         init::PipelineDepthStencilStateCreateInfo(
@@ -227,6 +269,8 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
             gfxInfo.depthStencilState.depthWriteEnable,
             cast(gfxInfo.depthStencilState.depthCompareOp)
         );
+
+    hashStruct.depthStencil = depthStencilState;
     
     const auto& colorAttachments = gfxInfo.renderPass->getLayout()->colorAttachments;
     Array<VkPipelineColorBlendAttachmentState> blendAttachments(colorAttachments.size());
@@ -242,6 +286,8 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
         blendAttachment.srcAlphaBlendFactor = (VkBlendFactor)attachment.srcAlphaBlendFactor;
         blendAttachment.dstColorBlendFactor = (VkBlendFactor)attachment.dstColorBlendFactor;
         blendAttachment.srcColorBlendFactor = (VkBlendFactor)attachment.srcColorBlendFactor;
+
+        hashStruct.blendAttachments[i] = blendAttachment;
     }
     VkPipelineColorBlendStateCreateInfo blendState = 
         init::PipelineColorBlendStateCreateInfo(
@@ -251,6 +297,9 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
     blendState.logicOpEnable = gfxInfo.colorBlend.logicOpEnable;
     blendState.logicOp = (VkLogicOp)gfxInfo.colorBlend.logicOp;
     std::memcpy(blendState.blendConstants, gfxInfo.colorBlend.blendConstants, sizeof(float)*4);
+
+    hashStruct.blendState = blendState;
+    hashStruct.blendState.pAttachments = nullptr;
 
     uint32 numDynamicEnabled = 0;
     StaticArray<VkDynamicState, 2> dynamicEnabled;
@@ -265,27 +314,41 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
         );
 
     PPipelineLayout layout = gfxInfo.pipelineLayout.cast<PipelineLayout>();
+    hashStruct.pipelineLayoutHash = layout->getHash();
 
-    createInfo.pStages = stageInfos;
-    createInfo.pVertexInputState = &vertexInput;
-    createInfo.pInputAssemblyState = &assemblyInfo;
-    createInfo.pTessellationState = &tessInfo;
-    createInfo.pViewportState = &viewportInfo;
-    createInfo.pRasterizationState = &rasterizationState;
-    createInfo.pMultisampleState = &multisampleState;
-    createInfo.pDepthStencilState = &depthStencilState;
-    createInfo.pColorBlendState = &blendState;
-    createInfo.pDynamicState = &dynamicState;
-    createInfo.renderPass = gfxInfo.renderPass.cast<RenderPass>()->getHandle();
-    createInfo.layout = layout->getHandle();
-    createInfo.subpass = 0;
-    
+    boost::crc_32_type crc;
+    crc.process_bytes(&hashStruct, sizeof(PipelineCreateHashStruct));
+    uint32 hash = crc.checksum();
     VkPipeline pipelineHandle;
-    auto beginTime = std::chrono::high_resolution_clock::now();
-    VK_CHECK(vkCreateGraphicsPipelines(graphics->getDevice(), cache, 1, &createInfo, nullptr, &pipelineHandle));
-    auto endTime = std::chrono::high_resolution_clock::now();
-    int64 delta = std::chrono::duration_cast<std::chrono::microseconds>(endTime - beginTime).count();
-    //std::cout << "Gfx creation time: " << delta << std::endl;
+
+    auto foundPipeline = createdPipelines.find(hash);
+    if (foundPipeline != createdPipelines.end())
+    {
+        pipelineHandle = foundPipeline->value;
+    }
+    else
+    {
+        createInfo.pStages = stageInfos;
+        createInfo.pVertexInputState = &vertexInput;
+        createInfo.pInputAssemblyState = &assemblyInfo;
+        createInfo.pTessellationState = &tessInfo;
+        createInfo.pViewportState = &viewportInfo;
+        createInfo.pRasterizationState = &rasterizationState;
+        createInfo.pMultisampleState = &multisampleState;
+        createInfo.pDepthStencilState = &depthStencilState;
+        createInfo.pColorBlendState = &blendState;
+        createInfo.pDynamicState = &dynamicState;
+        createInfo.renderPass = gfxInfo.renderPass.cast<RenderPass>()->getHandle();
+        createInfo.layout = layout->getHandle();
+        createInfo.subpass = 0;
+
+        auto beginTime = std::chrono::high_resolution_clock::now();
+        VK_CHECK(vkCreateGraphicsPipelines(graphics->getDevice(), cache, 1, &createInfo, nullptr, &pipelineHandle));
+        auto endTime = std::chrono::high_resolution_clock::now();
+        int64 delta = std::chrono::duration_cast<std::chrono::microseconds>(endTime - beginTime).count();
+        createdPipelines[hash] = pipelineHandle;
+        std::cout << "Gfx creation time: " << delta << std::endl;
+    }
 
     PGraphicsPipeline result = new GraphicsPipeline(graphics, pipelineHandle, layout, gfxInfo);
     return result;

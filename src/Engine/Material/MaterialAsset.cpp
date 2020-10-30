@@ -23,12 +23,10 @@ MaterialAsset::~MaterialAsset()
 
 void MaterialAsset::beginFrame() 
 {
-    descriptorSet->beginFrame();
 }
 
 void MaterialAsset::endFrame() 
 {
-    descriptorSet->endFrame();
 }
 
 void MaterialAsset::updateDescriptorData() 

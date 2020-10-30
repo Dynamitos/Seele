@@ -26,6 +26,7 @@ public:
         return "main";//entryPointName.c_str();
     }
     Map<uint32, PDescriptorLayout> getDescriptorLayouts();
+    uint32 getShaderHash() const;
 private:
     PGraphics graphics;
     Map<uint32, PDescriptorLayout> descriptorSets;
@@ -33,6 +34,7 @@ private:
     VkShaderStageFlags stage;
     ShaderType type;
     std::string entryPointName;
+    uint32 hash;
 };
 DEFINE_REF(Shader);
 

@@ -111,14 +111,6 @@ DescriptorSet::~DescriptorSet()
 {
 }
 
-void DescriptorSet::beginFrame() 
-{
-}
-
-void DescriptorSet::endFrame() 
-{
-}
-
 void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PUniformBuffer uniformBuffer)
 {
 	PUniformBuffer vulkanBuffer = uniformBuffer.cast<UniformBuffer>();

@@ -19,8 +19,7 @@ static Map<ShaderBuffer *, PendingBuffer> pendingBuffers;
 ShaderBuffer::ShaderBuffer(PGraphics graphics, uint32 size, VkBufferUsageFlags usage, Gfx::QueueType queueType)
 	: graphics(graphics), currentBuffer(0), size(size), currentOwner(queueType)
 {
-	if (usage & VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT ||
-		usage & VK_BUFFER_USAGE_INDEX_BUFFER_BIT ||
+	if (usage & VK_BUFFER_USAGE_INDEX_BUFFER_BIT ||
 		usage & VK_BUFFER_USAGE_VERTEX_BUFFER_BIT ||
 		usage & VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT)
 	{
@@ -54,7 +53,7 @@ ShaderBuffer::ShaderBuffer(PGraphics graphics, uint32 size, VkBufferUsageFlags u
 		vkCreateBuffer(graphics->getDevice(), &info, nullptr, &buffers[i].buffer);
 		bufferReqInfo.buffer = buffers[i].buffer;
 		vkGetBufferMemoryRequirements2(graphics->getDevice(), &bufferReqInfo, &memRequirements);
-		buffers[i].allocation = graphics->getAllocator()->allocate(memRequirements, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, buffers[i].buffer);
+		buffers[i].allocation = graphics->getAllocator()->allocate(memRequirements, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, buffers[i].buffer);
 		vkBindBufferMemory(graphics->getDevice(), buffers[i].buffer, buffers[i].allocation->getHandle(), buffers[i].allocation->getOffset());
 	}
 }
@@ -169,7 +168,7 @@ void *ShaderBuffer::lock(bool bWriteOnly)
 	pending.prevQueue = currentOwner;
 	if (bWriteOnly)
 	{
-		requestOwnershipTransfer(Gfx::QueueType::DEDICATED_TRANSFER);
+		//requestOwnershipTransfer(Gfx::QueueType::DEDICATED_TRANSFER);
 		PStagingBuffer stagingBuffer = graphics->getStagingManager()->allocateStagingBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
 		data = stagingBuffer->getMappedPointer();
 		pending.stagingBuffer = stagingBuffer;
@@ -236,7 +235,7 @@ void ShaderBuffer::unlock()
 			region.size = size;
 			vkCmdCopyBuffer(cmdHandle, stagingBuffer->getHandle(), buffers[currentBuffer].buffer, 1, &region);
 		}
-		requestOwnershipTransfer(pending.prevQueue);
+		//requestOwnershipTransfer(pending.prevQueue);
 		graphics->getStagingManager()->releaseStagingBuffer(pending.stagingBuffer);
 	}
 }

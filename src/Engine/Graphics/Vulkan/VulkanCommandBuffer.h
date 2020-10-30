@@ -77,6 +77,7 @@ public:
 	virtual ~SecondaryCmdBuffer();
 	void begin(PCmdBuffer parent);
 	void end();
+	virtual void begin() override;
 	virtual void setViewport(Gfx::PViewport viewport) override;
 	virtual void bindPipeline(Gfx::PGraphicsPipeline pipeline) override;
 	virtual void bindDescriptor(Gfx::PDescriptorSet descriptorSet) override;

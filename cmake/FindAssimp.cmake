@@ -30,6 +30,13 @@ if (WIN32)
 		PATHS
 			$ENV{PROGRAMFILES}/lib
 			${ASSIMP_ROOT}/lib/)
+
+	find_file(
+		ASSIMP_BINARY
+		NAMES assimp-vc${MSVC_TOOLSET_VERSION}-mt${CMAKE_DEBUG_POSTFIX}.dll
+		PATHS
+			$ENV{PROGRAMFILES}/bin
+			${ASSIMP_ROOT}/bin)
 else()
 	# Find include files
 	find_path(
@@ -58,13 +65,14 @@ else()
 endif()
 
 # Handle REQUIRD argument, define *_FOUND variable
-find_package_handle_standard_args(assimp DEFAULT_MSG ASSIMP_INCLUDE_DIR ASSIMP_LIBRARY)
+find_package_handle_standard_args(assimp DEFAULT_MSG ASSIMP_INCLUDE_DIR ASSIMP_LIBRARY ASSIMP_BINARY)
 
 # Define GLFW_LIBRARIES and GLFW_INCLUDE_DIRS
 if (ASSIMP_FOUND)
 	set(ASSIMP_LIBRARIES ${ASSIMP_LIBRARY})
 	set(ASSIMP_INCLUDE_DIRS ${ASSIMP_INCLUDE_DIR})
+	set(ASSIMP_BINARIES ${ASSIMP_BINARY})
 endif()
 
 # Hide some variables
-mark_as_advanced(ASSIMP_INCLUDE_DIR ASSIMP_LIBRARY)
+mark_as_advanced(ASSIMP_INCLUDE_DIR ASSIMP_LIBRARY, ASSIMP_BINARY)

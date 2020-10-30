@@ -30,7 +30,9 @@ Graphics::~Graphics()
 void Graphics::init(GraphicsInitializer initInfo)
 {
 	initInstance(initInfo);
+#if ENABLE_VALIDATION
 	setupDebugCallback();
+#endif
 	pickPhysicalDevice();
 	createDevice(initInfo);
 	allocator = new Allocator(this);
@@ -121,7 +123,6 @@ Gfx::PIndexBuffer Graphics::createIndexBuffer(const IndexBufferCreateInfo &bulkD
 Gfx::PRenderCommand Graphics::createRenderCommand()
 {
 	PSecondaryCmdBuffer cmdBuffer = getGraphicsCommands()->createSecondaryCmdBuffer();
-	cmdBuffer->begin(getGraphicsCommands()->getCommands());
 	return cmdBuffer;
 }
 

@@ -15,6 +15,7 @@ private:
     VkPipelineCache cache;
     PGraphics graphics;
     std::string cacheFile;
+    Map<uint32, VkPipeline> createdPipelines;
 };
 DEFINE_REF(PipelineCache);
 } // namespace Vulkan

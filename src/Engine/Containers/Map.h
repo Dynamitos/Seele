@@ -264,8 +264,8 @@ public:
 		{
 			root = insert(root, key);
 			_size++;
+			refreshIterators();
 		}
-		refreshIterators();
 		return root->pair.value;
 	}
 	Iterator find(const K &key)

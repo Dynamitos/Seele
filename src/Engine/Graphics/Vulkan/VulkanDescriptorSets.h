@@ -87,8 +87,6 @@ public:
 	{
 	}
 	virtual ~DescriptorSet();
-	virtual void beginFrame();
-	virtual void endFrame();
 	virtual void writeChanges();
 	virtual void updateBuffer(uint32_t binding, Gfx::PUniformBuffer uniformBuffer);
 	virtual void updateBuffer(uint32_t binding, Gfx::PStructuredBuffer uniformBuffer);

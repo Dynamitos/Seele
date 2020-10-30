@@ -20,12 +20,12 @@ int main()
 	sceneViewInfo.offsetX = 0;
 	sceneViewInfo.offsetY = 0;
 	PSceneView sceneView = new SceneView(core.getWindowManager()->getGraphics(), window, sceneViewInfo);
-	sceneView->applyArea(URect(1280/2, 720/2, 10, 10));
 	window->addView(sceneView);
 	sceneView->setFocused();
 	AssetRegistry::init("D:\\Private\\Programming\\C++\\TestSeeleProject");
 	AssetRegistry::importFile("D:\\Private\\Programming\\Unreal Engine\\Assets\\Arissa\\Arissa.fbx");
 	PPrimitiveComponent arissa = new PrimitiveComponent(AssetRegistry::findMesh("Arissa"));
+	arissa->addWorldTranslation(Vector(0, 0, 100));
 	sceneView->getScene()->addPrimitiveComponent(arissa);
 	core.renderLoop();
 	core.shutdown();

@@ -38,7 +38,7 @@ public:
 		std::scoped_lock lock(registeredObjectsLock);
 		registeredObjects[ptr] = this;
 	}
-	RefObject(const RefObject &rhs)
+	inline RefObject(const RefObject &rhs)
 		: handle(rhs.handle), refCount(rhs.refCount)
 	{
 	}
@@ -143,7 +143,7 @@ public:
 	{
 		object->addRef();
 	}
-	RefPtr(const RefPtr &other)
+	inline RefPtr(const RefPtr &other)
 		: object(other.object)
 	{
 		if (object != nullptr)

@@ -107,7 +107,7 @@
         "scoped_allocator": "cpp",
         "stack": "cpp"
     },
-    "cmake.generator": "Ninja",
+    "cmake.generator": "Visual Studio 16 2019",
     "cmake.skipConfigureIfCachePresent": false,
     "cmake.configureArgs": [
         "-Wno-dev"

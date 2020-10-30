@@ -11,7 +11,6 @@ using namespace Seele::Vulkan;
 void glfwKeyCallback(GLFWwindow* handle, int key, int scancode, int action, int modifier)
 {
     Window* window = (Window*)glfwGetWindowUserPointer(handle);
-    std::cout << "glfw callback: " << key << std::endl;
     window->keyCallback((KeyCode)key, (KeyAction)action, (KeyModifier)modifier);
 }
 
