@@ -150,7 +150,7 @@ typedef uint32 KeyModifierFlags;
 namespace Gfx
 {
 static constexpr bool useAsyncCompute = true;
-static constexpr bool waitIdleOnSubmit = true;
+static constexpr bool waitIdleOnSubmit = false;
 static constexpr uint32 numFramesBuffered = 3;
 static uint32 currentFrameIndex = 0;
 

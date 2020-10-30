@@ -234,6 +234,7 @@ void ShaderBuffer::unlock()
 			std::memset(&region, 0, sizeof(VkBufferCopy));
 			region.size = size;
 			vkCmdCopyBuffer(cmdHandle, stagingBuffer->getHandle(), buffers[currentBuffer].buffer, 1, &region);
+			graphics->getQueueCommands(currentOwner)->submitCommands();
 		}
 		//requestOwnershipTransfer(pending.prevQueue);
 		graphics->getStagingManager()->releaseStagingBuffer(pending.stagingBuffer);

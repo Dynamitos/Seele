@@ -292,13 +292,13 @@ PStagingBuffer StagingManager::allocateStagingBuffer(uint32 size, VkBufferUsageF
 		auto freeBuffer = *it;
 		if (freeBuffer->getSize() == size && freeBuffer->isReadable() == bCPURead && freeBuffer->usage == usage)
 		{
-			std::cout << "Reusing staging buffer" << std::endl;
+			//std::cout << "Reusing staging buffer" << std::endl;
 			activeBuffers.add(freeBuffer.getHandle());
 			freeBuffers.remove(it, false);
 			return freeBuffer;
 		}
 	}
-	std::cout << "Creating new stagingbuffer" << std::endl;
+	//std::cout << "Creating new stagingbuffer" << std::endl;
 	PStagingBuffer stagingBuffer = new StagingBuffer();
 	VkBufferCreateInfo stagingBufferCreateInfo = init::BufferCreateInfo(usage, size);
 	stagingBufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
