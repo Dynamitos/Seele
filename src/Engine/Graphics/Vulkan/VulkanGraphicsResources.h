@@ -103,8 +103,8 @@ public:
 	{
 		currentBuffer = (currentBuffer + 1) % numBuffers;
 	}
-	void *lock(bool bWriteOnly = true);
-	void unlock();
+	virtual void *lock(bool bWriteOnly = true);
+	virtual void unlock();
 
 protected:
 	struct BufferAllocation
@@ -127,12 +127,16 @@ protected:
 };
 DEFINE_REF(ShaderBuffer);
 
+DECLARE_REF(StagingBuffer);
 class UniformBuffer : public Gfx::UniformBuffer, public ShaderBuffer
 {
 public:
-	UniformBuffer(PGraphics graphics, const BulkResourceData &resourceData);
+	UniformBuffer(PGraphics graphics, const UniformBufferCreateInfo &resourceData);
 	virtual ~UniformBuffer();
 	virtual void updateContents(const BulkResourceData &resourceData);
+	
+	virtual void* lock(bool bWriteOnly = true) override;
+	virtual void unlock() override;
 protected:
 	// Inherited via Vulkan::Buffer
 	virtual void requestOwnershipTransfer(Gfx::QueueType newOwner);
@@ -140,6 +144,8 @@ protected:
 	virtual VkAccessFlags getDestAccessMask();
 	// Inherited via QueueOwnedResource
 	virtual void executeOwnershipBarrier(Gfx::QueueType newOwner);
+private:
+	PStagingBuffer dedicatedStagingBuffer;
 };
 DEFINE_REF(UniformBuffer);
 
@@ -315,9 +321,13 @@ public:
 	virtual void endFrame() override;
 	virtual Gfx::PTexture2D getBackBuffer() override;
 	virtual void onWindowCloseEvent() override;
-	virtual void setKeyCallback(std::function<void(KeyCode, KeyAction, KeyModifier)> callback) override;
+	virtual void setKeyCallback(std::function<void(KeyCode, InputAction, KeyModifier)> callback) override;
+	virtual void setMouseMoveCallback(std::function<void(double, double)> callback) override;
+	virtual void setMouseButtonCallback(std::function<void(MouseButton, InputAction, KeyModifier)> callback) override;
 
-	std::function<void(KeyCode, KeyAction, KeyModifier)> keyCallback;
+	std::function<void(KeyCode, InputAction, KeyModifier)> keyCallback;
+	std::function<void(double, double)> mouseMoveCallback;
+	std::function<void(MouseButton, InputAction, KeyModifier)> mouseButtonCallback;
 protected:
 	void advanceBackBuffer();
 	void recreateSwapchain(const WindowCreateInfo &createInfo);

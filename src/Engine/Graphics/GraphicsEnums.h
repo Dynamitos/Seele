@@ -129,7 +129,19 @@ enum class KeyCode
     KEY_MENU               = 348,
 };
 
-enum class KeyAction
+enum class MouseButton
+{
+    MOUSE_BUTTON_1         = 0,
+    MOUSE_BUTTON_2         = 1,
+    MOUSE_BUTTON_3         = 2,
+    MOUSE_BUTTON_4         = 3,
+    MOUSE_BUTTON_5         = 4,
+    MOUSE_BUTTON_6         = 5,
+    MOUSE_BUTTON_7         = 6,
+    MOUSE_BUTTON_8         = 7,
+};
+
+enum class InputAction
 {
     RELEASE                = 0,
     PRESS                  = 1,
@@ -151,7 +163,7 @@ namespace Gfx
 {
 static constexpr bool useAsyncCompute = true;
 static constexpr bool waitIdleOnSubmit = false;
-static constexpr uint32 numFramesBuffered = 3;
+static constexpr uint32 numFramesBuffered = 8;
 static uint32 currentFrameIndex = 0;
 
 enum class MaterialShadingModel

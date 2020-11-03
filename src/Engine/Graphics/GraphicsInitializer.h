@@ -97,6 +97,15 @@ struct IndexBufferCreateInfo
     {
     }
 };
+struct UniformBufferCreateInfo
+{
+    BulkResourceData resourceData;
+    uint8 bDynamic : 1;
+    UniformBufferCreateInfo()
+        : resourceData(), bDynamic(0)
+    {
+    }
+};
 struct ShaderCreateInfo
 {
     //It's possible to input multiple source files for materials or vertexFactories

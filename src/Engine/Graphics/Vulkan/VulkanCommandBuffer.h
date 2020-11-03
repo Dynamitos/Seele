@@ -40,7 +40,7 @@ public:
 	void end();
 	void beginRenderPass(PRenderPass renderPass, PFramebuffer framebuffer);
 	void endRenderPass();
-	void executeCommands(Array<PSecondaryCmdBuffer> secondaryCommands);
+	void executeCommands(Array<Gfx::PRenderCommand> secondaryCommands);
 	void addWaitSemaphore(VkPipelineStageFlags stages, PSemaphore waitSemaphore);
 	void refreshFence();
 	PFence getFence();
@@ -63,6 +63,7 @@ private:
 	State state;
 	Array<PSemaphore> waitSemaphores;
 	Array<VkPipelineStageFlags> waitFlags;
+	Array<PSecondaryCmdBuffer> executingCommands;
 	friend class SecondaryCmdBuffer;
 	friend class CommandBufferManager;
 	friend class Queue;
@@ -70,6 +71,7 @@ private:
 DEFINE_REF(CmdBuffer);
 
 DECLARE_REF(GraphicsPipeline);
+DECLARE_REF(DescriptorSet);
 class SecondaryCmdBuffer : public Gfx::RenderCommand, public CmdBufferBase
 {
 public:
@@ -77,6 +79,7 @@ public:
 	virtual ~SecondaryCmdBuffer();
 	void begin(PCmdBuffer parent);
 	void end();
+	void reset();
 	virtual void begin() override;
 	virtual void setViewport(Gfx::PViewport viewport) override;
 	virtual void bindPipeline(Gfx::PGraphicsPipeline pipeline) override;
@@ -88,6 +91,7 @@ public:
 
 private:
 	PGraphicsPipeline pipeline;
+	Array<PDescriptorSet> boundDescriptors;
 };
 DEFINE_REF(SecondaryCmdBuffer);
 

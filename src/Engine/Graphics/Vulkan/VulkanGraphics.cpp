@@ -82,14 +82,7 @@ void Graphics::endRenderPass()
 
 void Graphics::executeCommands(Array<Gfx::PRenderCommand> commands)
 {
-	Array<VkCommandBuffer> cmdBuffers(commands.size());
-	for (uint32 i = 0; i < commands.size(); ++i)
-	{
-		PSecondaryCmdBuffer buf = commands[i].cast<SecondaryCmdBuffer>();
-		buf->end();
-		cmdBuffers[i] = buf->getHandle();
-	}
-	vkCmdExecuteCommands(getGraphicsCommands()->getCommands()->getHandle(), cmdBuffers.size(), cmdBuffers.data());
+	getGraphicsCommands()->getCommands()->executeCommands(commands);
 }
 
 Gfx::PTexture2D Graphics::createTexture2D(const TextureCreateInfo &createInfo)
@@ -98,7 +91,7 @@ Gfx::PTexture2D Graphics::createTexture2D(const TextureCreateInfo &createInfo)
 	return result;
 }
 
-Gfx::PUniformBuffer Graphics::createUniformBuffer(const BulkResourceData &bulkData)
+Gfx::PUniformBuffer Graphics::createUniformBuffer(const UniformBufferCreateInfo &bulkData)
 {
 	PUniformBuffer uniformBuffer = new UniformBuffer(this, bulkData);
 	return uniformBuffer;

@@ -110,14 +110,15 @@ BasePass::BasePass(const PScene scene, Gfx::PGraphics graphics, Gfx::PViewport v
     Gfx::PRenderTargetLayout layout = new Gfx::RenderTargetLayout(colorAttachment, depthAttachment);
     renderPass = graphics->createRenderPass(layout);
 
-    BulkResourceData uniformInitializer;
+    UniformBufferCreateInfo uniformInitializer;
 
     basePassLayout = graphics->createPipelineLayout();
 
     lightLayout = graphics->createDescriptorLayout();
     lightLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-    uniformInitializer.size = sizeof(LightEnv);
-    uniformInitializer.data = (uint8*)&scene->getLightEnvironment();
+    uniformInitializer.resourceData.size = sizeof(LightEnv);
+    uniformInitializer.resourceData.data = (uint8*)&scene->getLightEnvironment();
+    uniformInitializer.bDynamic = true;
     lightUniform = graphics->createUniformBuffer(uniformInitializer);
     lightLayout->create();
     basePassLayout->addDescriptorLayout(0, lightLayout);
@@ -125,12 +126,14 @@ BasePass::BasePass(const PScene scene, Gfx::PGraphics graphics, Gfx::PViewport v
 
     viewLayout = graphics->createDescriptorLayout();
     viewLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-    uniformInitializer.size = sizeof(ViewParameter);
-    uniformInitializer.data = (uint8*)&viewParams;
+    uniformInitializer.resourceData.size = sizeof(ViewParameter);
+    uniformInitializer.resourceData.data = (uint8*)&viewParams;
+    uniformInitializer.bDynamic = true;
     viewParamBuffer = graphics->createUniformBuffer(uniformInitializer);
     viewLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-    uniformInitializer.size = sizeof(ScreenToViewParameter);
-    uniformInitializer.data = (uint8*)&screenToViewParams;
+    uniformInitializer.resourceData.size = sizeof(ScreenToViewParameter);
+    uniformInitializer.resourceData.data = (uint8*)&screenToViewParams;
+    uniformInitializer.bDynamic = true;
     screenToViewParamBuffer = graphics->createUniformBuffer(uniformInitializer);
     viewLayout->create();
     basePassLayout->addDescriptorLayout(1, viewLayout);

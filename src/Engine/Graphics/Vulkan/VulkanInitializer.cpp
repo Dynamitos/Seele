@@ -775,10 +775,12 @@ VkBool32 Seele::Vulkan::debugCallback(VkDebugReportFlagsEXT flags, VkDebugReport
 	else
 	{
 		std::cerr << layerPrefix << ": " << msg << std::endl;
+		return VK_FALSE;
 	}
 	return VK_FALSE;
 }
 #pragma warning(default : 4100)
+
 VkResult Seele::Vulkan::CreateDebugReportCallbackEXT(VkInstance instance, const VkDebugReportCallbackCreateInfoEXT *pCreateInfo, const VkAllocationCallbacks *pAllocator, VkDebugReportCallbackEXT *pCallback)
 {
 	auto func = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugReportCallbackEXT");

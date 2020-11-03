@@ -30,10 +30,10 @@ void MaterialInstance::save()
 void MaterialInstance::load() 
 {
     baseMaterial = nullptr; // TODO: actually load the file
-    BulkResourceData resourceData;
-    resourceData.size = baseMaterial->uniformDataSize;
-    resourceData.data = nullptr;
-    uniformBuffer = WindowManager::getGraphics()->createUniformBuffer(resourceData);
+    UniformBufferCreateInfo uniformInitializer;
+    uniformInitializer.resourceData.size = baseMaterial->uniformDataSize;
+    uniformInitializer.resourceData.data = nullptr;
+    uniformBuffer = WindowManager::getGraphics()->createUniformBuffer(uniformInitializer);
     descriptorSet = baseMaterial->layout->allocatedDescriptorSet();
 }
 

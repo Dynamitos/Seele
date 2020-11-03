@@ -241,20 +241,54 @@ void ShaderBuffer::unlock()
 	}
 }
 
-UniformBuffer::UniformBuffer(PGraphics graphics, const BulkResourceData &resourceData)
-	: Vulkan::ShaderBuffer(graphics, resourceData.size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, resourceData.owner)
-	, Gfx::UniformBuffer(graphics->getFamilyMapping(), resourceData)
+UniformBuffer::UniformBuffer(PGraphics graphics, const UniformBufferCreateInfo &createInfo)
+	: Vulkan::ShaderBuffer(graphics, createInfo.resourceData.size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, createInfo.resourceData.owner)
+	, Gfx::UniformBuffer(graphics->getFamilyMapping(), createInfo.resourceData)
+	, dedicatedStagingBuffer(nullptr)
 {
-	if (resourceData.data != nullptr)
+	if(createInfo.bDynamic)
+	{
+		dedicatedStagingBuffer = graphics->getStagingManager()->allocateStagingBuffer(createInfo.resourceData.size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+	}
+	if (createInfo.resourceData.data != nullptr)
 	{
 		void *data = lock();
-		std::memcpy(data, resourceData.data, resourceData.size);
+		std::memcpy(data, createInfo.resourceData.data, createInfo.resourceData.size);
 		unlock();
 	}
 }
 
 UniformBuffer::~UniformBuffer()
 {
+}
+
+void* UniformBuffer::lock(bool bWriteOnly)
+{
+	if(dedicatedStagingBuffer != nullptr)
+	{
+		return dedicatedStagingBuffer->getMappedPointer();
+	}
+	return ShaderBuffer::lock(bWriteOnly);
+}
+
+void UniformBuffer::unlock()
+{
+	if(dedicatedStagingBuffer != nullptr)
+	{
+		dedicatedStagingBuffer->flushMappedMemory();
+		PCmdBuffer cmdBuffer = graphics->getQueueCommands(ShaderBuffer::currentOwner)->getCommands();
+		VkCommandBuffer cmdHandle = cmdBuffer->getHandle();
+
+		VkBufferCopy region;
+		std::memset(&region, 0, sizeof(VkBufferCopy));
+		region.size = ShaderBuffer::size;
+		vkCmdCopyBuffer(cmdHandle, dedicatedStagingBuffer->getHandle(), buffers[currentBuffer].buffer, 1, &region);
+		graphics->getQueueCommands(ShaderBuffer::currentOwner)->submitCommands();
+	}
+	else
+	{
+		ShaderBuffer::unlock();
+	}
 }
 
 void UniformBuffer::requestOwnershipTransfer(Gfx::QueueType newOwner)

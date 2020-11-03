@@ -38,6 +38,9 @@ public:
     PComponent getRootComponent();
     void setRootComponent(PComponent newRoot);
 
+    // Returns a read-only copy of the actors transform
+    Transform getTransform() const;
+
 protected:
     void setParent(PActor parent);
     PScene owningScene;

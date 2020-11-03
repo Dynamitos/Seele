@@ -11,7 +11,7 @@ using namespace Seele::Vulkan;
 void glfwKeyCallback(GLFWwindow* handle, int key, int scancode, int action, int modifier)
 {
     Window* window = (Window*)glfwGetWindowUserPointer(handle);
-    window->keyCallback((KeyCode)key, (KeyAction)action, (KeyModifier)modifier);
+    window->keyCallback((KeyCode)key, (InputAction)action, (KeyModifier)modifier);
 }
 
 Window::Window(PGraphics graphics, const WindowCreateInfo &createInfo)
@@ -76,9 +76,19 @@ Gfx::PTexture2D Window::getBackBuffer()
     return backBufferImages[currentImageIndex];
 }
 
-void Window::setKeyCallback(std::function<void(KeyCode, KeyAction, KeyModifier)> callback)
+void Window::setKeyCallback(std::function<void(KeyCode, InputAction, KeyModifier)> callback)
 {
     keyCallback = callback;
+}
+
+void Window::setMouseMoveCallback(std::function<void(double, double)> callback)
+{
+    mouseMoveCallback = callback;
+}
+
+void Window::setMouseButtonCallback(std::function<void(MouseButton, InputAction, KeyModifier)> callback)
+{
+    mouseButtonCallback = callback;
 }
 
 void Window::advanceBackBuffer()
@@ -167,6 +177,14 @@ void Window::createSwapchain()
     VK_CHECK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(graphics->getPhysicalDevice(), surface, &surfProperties));
 
     uint32 desiredNumBuffers = Gfx::numFramesBuffered;
+    if (desiredNumBuffers < surfProperties.minImageCount)
+    {
+        throw new std::logic_error("Trying to buffer less than the minimal number of frames");
+    }
+    if (desiredNumBuffers > surfProperties.maxImageCount)
+    {
+        throw new std::logic_error("Trying to buffer more than the maximum number of frames");
+    }
 
     VkExtent2D extent;
     extent.width = sizeX;

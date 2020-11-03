@@ -93,6 +93,14 @@ public:
 	virtual void updateSampler(uint32_t binding, Gfx::PSamplerState samplerState);
 	virtual void updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::PSamplerState sampler = nullptr);
 	virtual bool operator<(Gfx::PDescriptorSet other);
+	void setCurrentlyBound(PCmdBuffer boundBy)
+	{
+		currentlyBound = boundBy;
+	}
+	void releaseFromCmd()
+	{
+		currentlyBound = nullptr;
+	}
 	inline VkDescriptorSet getHandle() const
 	{
 		return setHandle[Gfx::currentFrameIndex];
@@ -112,6 +120,7 @@ private:
 	Array<void*> cachedData[Gfx::numFramesBuffered];
 	VkDescriptorSet setHandle[Gfx::numFramesBuffered];
 	PDescriptorAllocator owner;
+	PCmdBuffer currentlyBound;
 	PGraphics graphics;
 	friend class DescriptorAllocator;
 };

@@ -12,14 +12,14 @@ Seele::WindowManager::WindowManager()
 	info.width = 4096;
 	info.height = 4096;
 	Gfx::PTexture2D testTexture = graphics->createTexture2D(info);
-	BulkResourceData resourceData;
-	resourceData.size = 4096;
-	resourceData.data = new uint8[4096];
+	UniformBufferCreateInfo uniformInitializer;
+	uniformInitializer.resourceData.size = 4096;
+	uniformInitializer.resourceData.data = new uint8[4096];
 	for (int i = 0; i < 4096; ++i)
 	{
-		resourceData.data[i] = (uint8)i;
+		uniformInitializer.resourceData.data[i] = (uint8)i;
 	}
-	Gfx::PUniformBuffer testUniform = graphics->createUniformBuffer(resourceData);
+	Gfx::PUniformBuffer testUniform = graphics->createUniformBuffer(uniformInitializer);
 }
 
 Seele::WindowManager::~WindowManager()

@@ -3,6 +3,7 @@
 #include "VulkanGraphicsEnums.h"
 #include "VulkanGraphics.h"
 #include "VulkanInitializer.h"
+#include "VulkanCommandBuffer.h"
 
 using namespace Seele;
 using namespace Seele::Vulkan;
@@ -204,6 +205,10 @@ void DescriptorSet::writeChanges()
 {
 	if (writeDescriptors.size() > 0)
 	{
+		if(currentlyBound != nullptr)
+		{
+			currentlyBound->getManager()->waitForCommands(currentlyBound);
+		}
 		vkUpdateDescriptorSets(graphics->getDevice(), writeDescriptors.size(), writeDescriptors.data(), 0, nullptr);
 		writeDescriptors.clear();
 		imageInfos.clear();

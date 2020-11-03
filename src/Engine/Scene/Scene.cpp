@@ -39,10 +39,11 @@ void Scene::addPrimitiveComponent(PPrimitiveComponent comp)
         data.actorWorldPosition = Vector4(comp->getTransform().getPosition(), 1);
         data.localToWorld = comp->getRenderMatrix();
         data.worldToLocal = glm::inverse(data.localToWorld);
-        BulkResourceData createInfo;
-        createInfo.data = reinterpret_cast<uint8*>(&data);
-        createInfo.owner = Gfx::QueueType::GRAPHICS;
-        createInfo.size = sizeof(data);
+        UniformBufferCreateInfo createInfo;
+        createInfo.resourceData.data = reinterpret_cast<uint8*>(&data);
+        createInfo.resourceData.owner = Gfx::QueueType::GRAPHICS;
+        createInfo.resourceData.size = sizeof(data);
+        createInfo.bDynamic = true;
         Gfx::PUniformBuffer uniformBuffer = graphics->createUniformBuffer(createInfo);
         for(auto& element : batch.elements)
         {

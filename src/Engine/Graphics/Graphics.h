@@ -36,7 +36,7 @@ public:
     virtual void executeCommands(Array<PRenderCommand> commands) = 0;
 
     virtual PTexture2D createTexture2D(const TextureCreateInfo &createInfo) = 0;
-    virtual PUniformBuffer createUniformBuffer(const BulkResourceData &bulkData) = 0;
+    virtual PUniformBuffer createUniformBuffer(const UniformBufferCreateInfo &bulkData) = 0;
     virtual PStructuredBuffer createStructuredBuffer(const BulkResourceData &bulkData) = 0;
     virtual PVertexBuffer createVertexBuffer(const VertexBufferCreateInfo &bulkData) = 0;
     virtual PIndexBuffer createIndexBuffer(const IndexBufferCreateInfo &bulkData) = 0;

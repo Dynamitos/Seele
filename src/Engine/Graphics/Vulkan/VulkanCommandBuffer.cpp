@@ -80,13 +80,16 @@ void CmdBuffer::endRenderPass()
     state = State::InsideBegin;
 }
 
-void CmdBuffer::executeCommands(Array<PSecondaryCmdBuffer> commands)
+void CmdBuffer::executeCommands(Array<Gfx::PRenderCommand> commands)
 {
     assert(state == State::RenderPassActive);
     Array<VkCommandBuffer> cmdBuffers(commands.size());
     for (uint32 i = 0; i < commands.size(); ++i)
     {
-        cmdBuffers[i] = commands[i]->getHandle();
+        auto command = commands[i].cast<SecondaryCmdBuffer>();
+        command->end();
+        executingCommands.add(command);
+        cmdBuffers[i] = command->getHandle();
     }
     vkCmdExecuteCommands(handle, cmdBuffers.size(), cmdBuffers.data());
 }
@@ -105,6 +108,10 @@ void CmdBuffer::refreshFence()
         {
             state = State::ReadyBegin;
             vkResetCommandBuffer(handle, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+            for(auto command : executingCommands)
+            {
+                command->reset();
+            }
 
             fence->reset();
         }
@@ -159,6 +166,14 @@ void SecondaryCmdBuffer::end()
     VK_CHECK(vkEndCommandBuffer(handle));
 }
 
+void SecondaryCmdBuffer::reset() 
+{
+    for(auto descriptor : boundDescriptors)
+    {
+        descriptor->releaseFromCmd();
+    }
+}
+
 void SecondaryCmdBuffer::begin()
 {
     begin(graphics->getGraphicsCommands()->getCommands());
@@ -179,7 +194,9 @@ void SecondaryCmdBuffer::bindPipeline(Gfx::PGraphicsPipeline gfxPipeline)
 }
 void SecondaryCmdBuffer::bindDescriptor(Gfx::PDescriptorSet descriptorSet)
 {
-    VkDescriptorSet setHandle = descriptorSet.cast<DescriptorSet>()->getHandle();
+    auto descriptor = descriptorSet.cast<DescriptorSet>();
+    boundDescriptors.add(descriptor);
+    VkDescriptorSet setHandle = descriptor->getHandle();
     vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getLayout(), descriptorSet->getSetIndex(), 1, &setHandle, 0, nullptr);
 }
 void SecondaryCmdBuffer::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorSets)
@@ -188,6 +205,7 @@ void SecondaryCmdBuffer::bindDescriptor(const Array<Gfx::PDescriptorSet>& descri
     for(uint32 i = 0; i < descriptorSets.size(); ++i)
     {
         auto descriptorSet = descriptorSets[i].cast<DescriptorSet>();
+        boundDescriptors.add(descriptorSet);
         sets[descriptorSet->getSetIndex()] = descriptorSet->getHandle();
     }
     vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getLayout(), 0, descriptorSets.size(), sets, 0, nullptr);

@@ -48,7 +48,7 @@ public:
 	virtual void executeCommands(Array<Gfx::PRenderCommand> commands) override;
 
 	virtual Gfx::PTexture2D createTexture2D(const TextureCreateInfo &createInfo) override;
-	virtual Gfx::PUniformBuffer createUniformBuffer(const BulkResourceData &bulkData) override;
+	virtual Gfx::PUniformBuffer createUniformBuffer(const UniformBufferCreateInfo &bulkData) override;
 	virtual Gfx::PStructuredBuffer createStructuredBuffer(const BulkResourceData &bulkData) override;
 	virtual Gfx::PVertexBuffer createVertexBuffer(const VertexBufferCreateInfo &bulkData) override;
 	virtual Gfx::PIndexBuffer createIndexBuffer(const IndexBufferCreateInfo &bulkData) override;

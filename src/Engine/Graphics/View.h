@@ -21,7 +21,9 @@ protected:
 	PWindow owner;
 	PRenderPath renderer;
 
-	virtual void keyCallback(KeyCode code, KeyAction action, KeyModifier modifier) = 0;
+	virtual void keyCallback(KeyCode code, InputAction action, KeyModifier modifier) = 0;
+	virtual void mouseMoveCallback(double xPos, double yPos) = 0;
+	virtual void mouseButtonCallback(MouseButton button, InputAction action, KeyModifier modifier) = 0;
 	friend class Window;
 };
 

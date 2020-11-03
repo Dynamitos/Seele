@@ -499,7 +499,9 @@ public:
 	virtual void endFrame() = 0;
 	virtual void onWindowCloseEvent() = 0;
 	virtual PTexture2D getBackBuffer() = 0;
-	virtual void setKeyCallback(std::function<void(KeyCode, KeyAction, KeyModifier)> callback) = 0;
+	virtual void setKeyCallback(std::function<void(KeyCode, InputAction, KeyModifier)> callback) = 0;
+	virtual void setMouseMoveCallback(std::function<void(double, double)> callback) = 0;
+	virtual void setMouseButtonCallback(std::function<void(MouseButton, InputAction, KeyModifier)> callback) = 0;
 	SeFormat getSwapchainFormat() const
 	{
 		return pixelFormat;

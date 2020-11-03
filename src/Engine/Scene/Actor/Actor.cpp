@@ -105,3 +105,8 @@ void Actor::setRootComponent(PComponent newRoot)
     rootComponent = newRoot;
     rootComponent->owner = this;
 }
+
+Transform Actor::getTransform() const
+{
+    return rootComponent->getTransform();
+}

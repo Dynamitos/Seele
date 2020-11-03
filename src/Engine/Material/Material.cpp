@@ -120,10 +120,10 @@ void Material::compile()
     if(uniformDataSize != 0)
     {
         uniformData = new uint8[uniformDataSize];
-        BulkResourceData resourceData;
-        resourceData.data = uniformData;
-        resourceData.size = uniformDataSize;
-        uniformBuffer = WindowManager::getGraphics()->createUniformBuffer(resourceData);
+        UniformBufferCreateInfo uniformInitializer;
+        uniformInitializer.resourceData.data = uniformData;
+        uniformInitializer.resourceData.size = uniformDataSize;
+        uniformBuffer = WindowManager::getGraphics()->createUniformBuffer(uniformInitializer);
     }
     layout->create();
     descriptorSet = layout->allocatedDescriptorSet();

@@ -21,7 +21,20 @@ Seele::SceneView::~SceneView()
 {
 }
 
-void SceneView::keyCallback(KeyCode code, KeyAction action, KeyModifier modifier)
+void SceneView::keyCallback(KeyCode code, InputAction action, KeyModifier modifier)
 {
-	activeCamera->getCameraComponent()->moveOrigin(1);
+}
+
+void SceneView::mouseMoveCallback(double xPos, double yPos) 
+{
+	static double prevXPos = 0.0f, prevYPos = 0.0f;
+	double deltaX = xPos - prevXPos;
+	double deltaY = yPos - prevYPos;
+	prevXPos = xPos;
+	prevYPos = yPos;
+	activeCamera->getCameraComponent()->mouseMove(deltaX, deltaY);
+}
+
+void SceneView::mouseButtonCallback(MouseButton button, InputAction action, KeyModifier modifier) 
+{
 }
