@@ -6,6 +6,9 @@ using namespace Seele;
 
 Component::Component()
 {
+    relativeLocation = Vector(0);
+    relativeRotation = Vector(0);
+    relativeScale = Vector(1, 1, 1);
 }
 Component::~Component()
 {
@@ -101,17 +104,17 @@ void Component::setRelativeScale(Vector scale)
 }
 void Component::addWorldTranslation(Vector translation)
 {
-    const Vector newWorldLocation = translation + transform.getPosition();
+    const Vector newWorldLocation = translation + getTransform().getPosition();
     setWorldLocation(newWorldLocation);
 }
 void Component::addWorldRotation(Vector rotation)
 {
-    const Quaternion newWorldRotation = toQuaternion(rotation) * transform.getRotation();
+    const Quaternion newWorldRotation = toQuaternion(rotation) * getTransform().getRotation();
     setWorldRotation(newWorldRotation);
 }
 void Component::addWorldRotation(Quaternion rotation)
 {
-    const Quaternion newWorldRotation = rotation * transform.getRotation();
+    const Quaternion newWorldRotation = rotation * getTransform().getRotation();
     setWorldRotation(newWorldRotation);
 }
 Transform Component::getTransform() const
@@ -169,9 +172,13 @@ void Component::updateComponentTransform(Quaternion relativeRotationQuat)
     bComponentTransformClean = true;
     Transform newTransform;
     const Transform relTransform(relativeLocation, relativeRotationQuat, relativeScale);
-    if (parent != nullptr)
+    if(parent != nullptr)
     {
-        newTransform = parent->getTransform() * relTransform;
+        newTransform = relTransform * parent->getTransform();
+    }
+    else
+    {
+        newTransform = relTransform;
     }
     bool bHasChanged = !getTransform().equals(newTransform);
     if (bHasChanged)

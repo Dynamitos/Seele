@@ -1,5 +1,5 @@
 #include "RenderCore.h"
-#include "SceneView.h"
+#include "Window/SceneView.h"
 
 Seele::RenderCore::RenderCore()
 {

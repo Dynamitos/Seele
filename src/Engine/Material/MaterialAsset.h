@@ -32,6 +32,7 @@ protected:
     Gfx::PUniformBuffer uniformBuffer;
     uint32 uniformDataSize;
     uint8* uniformData;
+    int32 uniformBinding;
 };
 DEFINE_REF(MaterialAsset);
 } // namespace Seele

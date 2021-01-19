@@ -1,5 +1,7 @@
 #include "CameraComponent.h"
+#include "Scene/Actor/Actor.h"
 #include <algorithm>
+#include <iostream>
 
 using namespace Seele;
 
@@ -11,7 +13,7 @@ CameraComponent::CameraComponent()
 {
     distance = 50;
     rotationX = 0;
-    rotationY = -0.5f;
+    rotationY = -1.f;
 }
 
 CameraComponent::~CameraComponent()
@@ -21,25 +23,26 @@ CameraComponent::~CameraComponent()
 void CameraComponent::mouseMove(float deltaX, float deltaY) 
 {
     //0.01 mouse sensitivity
-	rotationX += deltaX/100.f;
-	rotationY += deltaY/100.f;
+	rotationX += deltaX/500.f;
+	rotationY += deltaY/500.f;
 	rotationY = std::clamp(rotationY, -1.5f, 1.5f);
-	addWorldRotation(Vector(rotationX, rotationY, 0));
+	getParent()->setWorldRotation(glm::rotate(glm::quat(), rotationX, Vector(0, 1, 0)));
+	getParent()->setWorldRotation(glm::rotate(glm::quat(), rotationY, Vector(1, 0, 0)));
 	bNeedsViewBuild = true;
 }
 
 void CameraComponent::mouseScroll(double x) 
 {
-    distance += static_cast<float>(x);
+    distance -= static_cast<float>(x);
 	distance = std::max(distance, 1.f);
-	addWorldTranslation(Vector(0, 0, x));
+	getParent()->addWorldTranslation(Vector(0, 0, x));
 	bNeedsViewBuild = true;
 }
 
 void CameraComponent::moveOrigin(float up) 
 {
 	originPoint.y += up;
-	addWorldTranslation(Vector(0, up, 0));
+	getParent()->addWorldTranslation(Vector(0, up, 0));
 	bNeedsViewBuild = true;
 }
 

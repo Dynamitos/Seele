@@ -1,7 +1,7 @@
 #include "TextureAsset.h"
 #include "Graphics/GraphicsResources.h"
 #include "Graphics/Graphics.h"
-#include "Graphics/WindowManager.h"
+#include "Window/WindowManager.h"
 #include <stb_image.h>
 #include <stb_image_write.h>
 
@@ -28,6 +28,7 @@ TextureAsset::~TextureAsset()
 void TextureAsset::save() 
 {
     //TODO: make this an actual file, not just a png wrapper
+    assert(false && "Editing textures is not yet supported");
 }
 
 void TextureAsset::load() 

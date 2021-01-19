@@ -26,6 +26,14 @@ public:
 		}
 		return projectionMatrix;
 	}
+	Vector getCameraPosition()
+	{
+		if(bNeedsViewBuild)
+		{
+			buildViewMatrix();
+		}
+		return cameraPosition;
+	}
 	void mouseMove(float deltaX, float deltaY);
 	void mouseScroll(double x);
 	void moveOrigin(float up);

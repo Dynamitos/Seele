@@ -1,5 +1,5 @@
 #pragma once
-#include "Graphics.h"
+#include "Graphics/Graphics.h"
 namespace Seele
 {
 //A renderpath is a general Renderer for a view.

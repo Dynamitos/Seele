@@ -1,3 +1,4 @@
+#pragma once
 #include "View.h"
 #include "Window.h"
 

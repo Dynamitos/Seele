@@ -1,0 +1,16 @@
+target_sources(SeeleEngine
+    PRIVATE
+        InspectorView.h
+        InspectorView.cpp
+        RenderPath.h
+        RenderPath.cpp
+        SceneView.h
+        SceneView.cpp
+        SceneRenderPath.h
+        SceneRenderPath.cpp
+        View.h
+        View.cpp
+        Window.cpp
+        Window.h
+        WindowManager.h
+        WindowManager.cpp)

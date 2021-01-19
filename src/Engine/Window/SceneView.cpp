@@ -4,7 +4,6 @@
 #include "Window.h"
 #include "Scene/Actor/CameraActor.h"
 #include "Scene/Components/CameraComponent.h"
-#include <iostream>
 
 using namespace Seele;
 
@@ -21,20 +20,60 @@ Seele::SceneView::~SceneView()
 {
 }
 
+void SceneView::beginFrame() 
+{
+	View::beginFrame();
+	scene->tick(0);//TODO: update in separate thread
+}
+
 void SceneView::keyCallback(KeyCode code, InputAction action, KeyModifier modifier)
 {
+	if(action != InputAction::RELEASE)
+	{
+		if(code == KeyCode::KEY_W)
+		{
+			activeCamera->getCameraComponent()->moveOrigin(1);
+		}
+		if(code == KeyCode::KEY_S)
+		{
+			activeCamera->getCameraComponent()->moveOrigin(-1);
+		}
+	}
 }
+
+static bool mouseDown = false;
 
 void SceneView::mouseMoveCallback(double xPos, double yPos) 
 {
 	static double prevXPos = 0.0f, prevYPos = 0.0f;
-	double deltaX = xPos - prevXPos;
-	double deltaY = yPos - prevYPos;
+	double deltaX = prevXPos - xPos;
+	double deltaY = prevYPos - yPos;
 	prevXPos = xPos;
 	prevYPos = yPos;
-	activeCamera->getCameraComponent()->mouseMove(deltaX, deltaY);
+	if(mouseDown)
+	{
+		activeCamera->getCameraComponent()->mouseMove((float)deltaX, (float)deltaY);
+	}
 }
 
 void SceneView::mouseButtonCallback(MouseButton button, InputAction action, KeyModifier modifier) 
 {
+	if(button == MouseButton::MOUSE_BUTTON_1 && action != InputAction::RELEASE)
+	{
+		mouseDown = true;
+	}
+	else
+	{
+		mouseDown = false;
+	}
+}
+
+void SceneView::scrollCallback(double xOffset, double yOffset) 
+{
+	activeCamera->getCameraComponent()->mouseScroll(yOffset);
+}
+
+void SceneView::fileCallback(int count, const char** paths) 
+{
+	
 }

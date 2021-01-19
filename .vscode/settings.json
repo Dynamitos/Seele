@@ -1,7 +1,6 @@
 {
     "telemetry.enableTelemetry": false,
     "cmake.buildDirectory": "${workspaceFolder}/bin/${buildType}",
-    "git.enabled": false,
     "files.associations": {
         "*.h": "cpp",
         "*.ush": "hlsl",

@@ -1,6 +1,6 @@
 #pragma once
-#include "GraphicsResources.h"
-#include "Graphics.h"
+#include "Graphics/GraphicsResources.h"
+#include "Graphics/Graphics.h"
 #include "Containers/Array.h"
 #include "Window.h"
 

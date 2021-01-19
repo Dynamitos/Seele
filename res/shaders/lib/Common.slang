@@ -1,4 +1,3 @@
-#pragma pack_matrix(column_major)
 const static float PI = 3.1415926535897932f;
 const static uint MAX_PARTICLES = 65536;
 const static uint BLOCK_SIZE = 8;

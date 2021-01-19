@@ -208,6 +208,7 @@ void DescriptorSet::writeChanges()
 		if(currentlyBound != nullptr)
 		{
 			currentlyBound->getManager()->waitForCommands(currentlyBound);
+			currentlyBound = nullptr;
 		}
 		vkUpdateDescriptorSets(graphics->getDevice(), writeDescriptors.size(), writeDescriptors.data(), 0, nullptr);
 		writeDescriptors.clear();

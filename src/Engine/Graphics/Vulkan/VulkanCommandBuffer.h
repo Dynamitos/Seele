@@ -92,6 +92,7 @@ public:
 private:
 	PGraphicsPipeline pipeline;
 	Array<PDescriptorSet> boundDescriptors;
+	friend class CmdBuffer;
 };
 DEFINE_REF(SecondaryCmdBuffer);
 

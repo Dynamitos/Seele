@@ -14,6 +14,30 @@ void glfwKeyCallback(GLFWwindow* handle, int key, int scancode, int action, int 
     window->keyCallback((KeyCode)key, (InputAction)action, (KeyModifier)modifier);
 }
 
+void glfwMouseMoveCallback(GLFWwindow* handle, double xpos, double ypos)
+{
+    Window* window = (Window*)glfwGetWindowUserPointer(handle);
+    window->mouseMoveCallback(xpos, ypos);
+}
+
+void glfwMouseButtonCallback(GLFWwindow* handle, int button, int action, int modifier)
+{
+    Window* window = (Window*)glfwGetWindowUserPointer(handle);
+    window->mouseButtonCallback((MouseButton)button, (InputAction)action, (KeyModifier)modifier);
+}
+
+void glfwScrollCallback(GLFWwindow* handle, double xoffset, double yoffset)
+{
+    Window* window = (Window*)glfwGetWindowUserPointer(handle);
+    window->scrollCallback(xoffset, yoffset);
+}
+
+void glfwFileCallback(GLFWwindow* handle, int count, const char** paths)
+{
+    Window* window = (Window*)glfwGetWindowUserPointer(handle);
+    window->fileCallback(count, paths);
+}
+
 Window::Window(PGraphics graphics, const WindowCreateInfo &createInfo)
     : Gfx::Window(createInfo), graphics(graphics), instance(graphics->getInstance()), swapchain(VK_NULL_HANDLE), numSamples(createInfo.numSamples), pixelFormat(cast(createInfo.pixelFormat))
 {
@@ -23,6 +47,10 @@ Window::Window(PGraphics graphics, const WindowCreateInfo &createInfo)
     glfwSetWindowUserPointer(handle, this);
 
     glfwSetKeyCallback(handle, &glfwKeyCallback);
+    glfwSetCursorPosCallback(handle, &glfwMouseMoveCallback);
+    glfwSetMouseButtonCallback(handle, &glfwMouseButtonCallback);
+    glfwSetScrollCallback(handle, &glfwScrollCallback);
+    glfwSetDropCallback(handle, &glfwFileCallback);
 
     glfwCreateWindowSurface(instance, handle, nullptr, &surface);
 
@@ -89,6 +117,16 @@ void Window::setMouseMoveCallback(std::function<void(double, double)> callback)
 void Window::setMouseButtonCallback(std::function<void(MouseButton, InputAction, KeyModifier)> callback)
 {
     mouseButtonCallback = callback;
+}
+
+void Window::setScrollCallback(std::function<void(double, double)> callback) 
+{
+    scrollCallback = callback;
+}
+
+void Window::setFileCallback(std::function<void(int, const char**)> callback)
+{
+    fileCallback = callback;
 }
 
 void Window::advanceBackBuffer()

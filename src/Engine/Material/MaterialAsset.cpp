@@ -1,5 +1,5 @@
 #include "MaterialAsset.h"
-#include "Graphics/WindowManager.h"
+#include "Window/WindowManager.h"
 
 using namespace Seele;
 
@@ -41,7 +41,7 @@ void MaterialAsset::updateDescriptorData()
     if(uniformUpdate.size != 0)
     {
         uniformBuffer->updateContents(uniformUpdate);
-        descriptorSet->updateBuffer(0, uniformBuffer);
+        descriptorSet->updateBuffer(uniformBinding, uniformBuffer);
     }
     descriptorSet->writeChanges();
 }

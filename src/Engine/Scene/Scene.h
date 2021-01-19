@@ -30,7 +30,7 @@ struct LightEnv
 {
     DirectionalLight directionalLights[MAX_DIRECTIONAL_LIGHTS];
     PointLight pointLights[MAX_POINT_LIGHTS];
-    uint32 numDirectionalLgiths;
+    uint32 numDirectionalLights;
     uint32 numPointLights;
 };
 

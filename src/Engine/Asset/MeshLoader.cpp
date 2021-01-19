@@ -44,39 +44,39 @@ void MeshLoader::loadMaterials(const aiScene* scene, Array<PMaterialAsset>& glob
         matCode["profile"] = "BlinnPhong"; //TODO: other shading models
         aiString texPath;
         //TODO make samplers based on used textures
-        matCode["params"]["texSampler"] =
+        matCode["params"]["textureSampler"] =
             {
                 {"type", "SamplerState"}
             };
         if(material->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS)
         {
-            std::string texFilename = std::filesystem::path(texPath.C_Str()).stem().string();
+            std::string texFilename = std::filesystem::path(texPath.C_Str()).replace_extension("asset").stem().string();
             matCode["params"]["diffuseTexture"] = 
                 {
                     {"type", "Texture2D"}, 
-                    {"default", texPath.C_Str()}
+                    {"default", texFilename}
                 };
-            matCode["code"]["baseColor"] = "return diffuseTexture.Sample(textureSampler, geometry.texCoord).xyz;";
+            matCode["code"]["baseColor"] = "return diffuseTexture.Sample(textureSampler, input.texCoords[0]).xyz;";
         }
         if(material->GetTexture(aiTextureType_SPECULAR, 0, &texPath) == AI_SUCCESS)
         {
-            std::string texFilename = std::filesystem::path(texPath.C_Str()).stem().string();
+            std::string texFilename = std::filesystem::path(texPath.C_Str()).replace_extension("asset").stem().string();
             matCode["params"]["specularTexture"] =
                 {
                     {"type", "Texture2D"},
-                    {"default", texPath.C_Str()}
+                    {"default", texFilename}
                 };
-            matCode["code"]["specular"] = "return specularTexture.Sample(textureSampler, geometry.texCoord).xyz;";
+            matCode["code"]["specular"] = "return specularTexture.Sample(textureSampler, input.texCoords[0]).x;";
         }
         if(material->GetTexture(aiTextureType_NORMALS, 0, &texPath) == AI_SUCCESS)
         {
-            std::string texFilename = std::filesystem::path(texPath.C_Str()).stem().string();
+            std::string texFilename = std::filesystem::path(texPath.C_Str()).replace_extension("asset").stem().string();
             matCode["params"]["normalTexture"] =
                 {
                     {"type", "Texture2D"},
-                    {"default", texPath.C_Str()}
+                    {"default", texFilename}
                 };
-            matCode["code"]["normal"] = "return normalTexture.Sample(textureSampler, geometry.texCoord).xyz;";
+            matCode["code"]["normal"] = "return normalTexture.Sample(textureSampler, input.texCoords[0]).xyz;";
         }
         std::string outMatFilename = matCode["name"].get<std::string>().append(".asset");
         std::ofstream outMatFile = AssetRegistry::createWriteStream(outMatFilename);
@@ -198,13 +198,14 @@ void MeshLoader::convertAssimpARGB(unsigned char* dst, aiTexel* src, uint32 numP
         dst[i * 4 + 3] = src[i].a;
     }
 }
-void MeshLoader::loadTextures(const aiScene* scene, Gfx::PGraphics graphics, const std::filesystem::path& meshPath)
+void MeshLoader::loadTextures(const aiScene* scene, Gfx::PGraphics graphics, const std::filesystem::path& meshDirectory)
 {
     for (uint32 i = 0; i < scene->mNumTextures; ++i)
     {
         aiTexture* tex = scene->mTextures[i];
         auto texPath = std::filesystem::path(tex->mFilename.C_Str());
-        auto texPngPath = meshPath.parent_path().append(texPath.filename().string());
+        auto texPngPath = meshDirectory;
+        texPngPath.append(texPath.filename().string());
         if(tex->mHeight == 0)
         {
             // already compressed, just dump it to the disk
@@ -237,7 +238,7 @@ void MeshLoader::import(const std::filesystem::path &path)
     const aiScene *scene = importer.ApplyPostProcessing(aiProcess_CalcTangentSpace);
     
     Array<PMaterialAsset> globalMaterials(scene->mNumMaterials);
-    loadTextures(scene, graphics, path);
+    loadTextures(scene, graphics, path.parent_path());
     loadMaterials(scene, globalMaterials, graphics);
     
     Array<PMesh> globalMeshes(scene->mNumMeshes);

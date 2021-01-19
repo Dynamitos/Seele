@@ -1,5 +1,5 @@
 #include "RenderPath.h"
-#include "GraphicsResources.h"
+#include "Graphics/GraphicsResources.h"
 
 Seele::RenderPath::RenderPath(Gfx::PGraphics graphics, Gfx::PViewport target)
 	: graphics(graphics), target(target)

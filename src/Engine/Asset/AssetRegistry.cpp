@@ -6,7 +6,7 @@
 #include "MeshLoader.h"
 #include "Material/Material.h"
 #include "Graphics/Graphics.h"
-#include "Graphics/WindowManager.h"
+#include "Window/WindowManager.h"
 #include <iostream>
 
 using namespace Seele;
@@ -133,10 +133,14 @@ void AssetRegistry::registerMaterial(PMaterialAsset material)
 
 std::ofstream AssetRegistry::internalCreateWriteStream(const std::string& relativePath, std::ios_base::openmode openmode) 
 {
-    return std::ofstream(rootFolder.generic_string().append(relativePath), openmode);
+    auto fullPath = rootFolder;
+    fullPath.append(relativePath);
+    return std::ofstream(fullPath.string(), openmode);
 }
 
 std::ifstream AssetRegistry::internalCreateReadStream(const std::string& relativePath, std::ios_base::openmode openmode)
 {
-    return std::ifstream(rootFolder.generic_string().append(relativePath), openmode);
+    auto fullPath = rootFolder;
+    fullPath.append(relativePath);
+    return std::ifstream(fullPath.string(), openmode);
 }

@@ -1,4 +1,5 @@
 #include "Transform.h"
+#include <glm/gtx/quaternion.hpp>
 
 using namespace Seele;
 
@@ -45,7 +46,7 @@ Vector Transform::inverseTransformPosition(const Vector &v) const
 }
 Matrix4 Transform::toMatrix()
 {
-    Matrix4 mat(1.0f);
+    Matrix4 mat;
 
     mat[3][0] = position.x;
     mat[3][1] = position.y;
@@ -123,6 +124,11 @@ Vector Transform::getSafeScaleReciprocal(const Vector4 &inScale, float tolerance
     return safeReciprocalScale;
 }
 
+Vector Transform::transformPosition(const Vector &v) const
+{
+    return Vector(glm::toMat4(rotation) * Vector4(v, 1));
+}
+
 Vector Transform::getPosition() const
 {
     return Vector(position);
@@ -158,7 +164,7 @@ bool Transform::equals(const Transform &other, float tolerance)
 void Transform::multiply(Transform *outTransform, const Transform *a, const Transform *b)
 {
     outTransform->rotation = b->rotation * a->rotation;
-    outTransform->position = b->position * (b->scale * a->position) + b->position;
+    outTransform->position = b->rotation * (b->scale * a->position) + b->position;
     outTransform->scale = b->scale * a->scale;
 }
 
@@ -181,10 +187,9 @@ Transform &Transform::operator=(Transform &&other)
     return *this;
 }
 
-Transform &Transform::operator*(const Transform &other)
+Transform Transform::operator*(const Transform &other) const
 {
     Transform outTransform;
     multiply(&outTransform, this, &other);
-    *this = std::move(outTransform);
-    return *this;
+    return std::move(outTransform);
 }

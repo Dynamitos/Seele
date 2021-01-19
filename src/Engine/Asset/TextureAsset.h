@@ -23,6 +23,7 @@ public:
     }
 private:
     Gfx::PTexture texture;
+    friend class TextureLoader;
 };
 DEFINE_REF(TextureAsset);
 } // namespace Seele

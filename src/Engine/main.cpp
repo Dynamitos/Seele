@@ -1,5 +1,5 @@
 #include "Graphics/RenderCore.h"
-#include "Graphics/SceneView.h"
+#include "Window/SceneView.h"
 #include "Asset/AssetRegistry.h"
 using namespace Seele;
 int main()
@@ -22,10 +22,11 @@ int main()
 	PSceneView sceneView = new SceneView(core.getWindowManager()->getGraphics(), window, sceneViewInfo);
 	window->addView(sceneView);
 	sceneView->setFocused();
-	AssetRegistry::init("D:\\Private\\Programming\\C++\\TestSeeleProject");
+	AssetRegistry::init("D:\\Private\\Programming\\C++\\TestSeeleProject\\");
 	AssetRegistry::importFile("D:\\Private\\Programming\\Unreal Engine\\Assets\\Arissa\\Arissa.fbx");
 	PPrimitiveComponent arissa = new PrimitiveComponent(AssetRegistry::findMesh("Arissa"));
 	arissa->addWorldTranslation(Vector(0, 0, 100));
+	arissa->setWorldScale(Vector(0.1f, 0.1f, 0.1f));
 	sceneView->getScene()->addPrimitiveComponent(arissa);
 	core.renderLoop();
 	core.shutdown();

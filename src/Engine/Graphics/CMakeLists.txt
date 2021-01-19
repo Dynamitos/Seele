@@ -13,24 +13,12 @@ target_sources(SeeleEngine
         RenderCore.cpp
         RenderMaterial.h
         RenderMaterial.cpp
-        RenderPath.h
-        RenderPath.cpp
-        SceneView.h
-        SceneView.cpp
-        SceneRenderPath.h
-        SceneRenderPath.cpp
         ShaderCompiler.h
         ShaderCompiler.cpp
-        View.h
-        View.cpp
         VertexShaderInput.h
         VertexShaderInput.cpp
         StaticMeshVertexInput.h
-        StaticMeshVertexInput.cpp
-        Window.cpp
-        Window.h
-        WindowManager.h
-        WindowManager.cpp)
+        StaticMeshVertexInput.cpp)
 
 add_subdirectory(RenderPass/)
 add_subdirectory(Vulkan/)

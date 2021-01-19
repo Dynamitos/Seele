@@ -55,7 +55,7 @@ float4 fragmentMain(
     
     float3 result = float3(0, 0, 0);
 
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < gLightEnv.numDirectionalLights; i++)
     {
         result += gLightEnv.directionalLights[i].illuminate(materialParams, brdf, viewDir);
     }
@@ -72,6 +72,5 @@ float4 fragmentMain(
         result += pointLight.illuminate(materialParams, brdf, viewDir);
     }
 	
-    
-    return float4(0, 1, 0, 1);
+    return float4(result, 1);
 }

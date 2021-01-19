@@ -2,7 +2,7 @@
 #include "Asset/AssetRegistry.h"
 #include "Graphics/VertexShaderInput.h"
 #include "BRDF.h"
-#include "Graphics/WindowManager.h"
+#include "Window/WindowManager.h"
 #include <nlohmann/json.hpp>
 #include <sstream>
 #include <iostream>
@@ -60,8 +60,8 @@ void Material::compile()
 
     codeStream << "struct " << materialName << ": IMaterial {" << std::endl;
     uint32 uniformBufferOffset = 0;
-    uint32 bindingCounter = 1; // Uniform buffers are always binding 0
-    layout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+    uint32 bindingCounter = 0; // Uniform buffers are always binding 0
+    uniformBinding = -1;
     for(auto param : j["params"].items())
     {
         std::string type = param.value()["type"].get<std::string>();
@@ -70,6 +70,11 @@ void Material::compile()
         {
             PFloatParameter p = new FloatParameter(param.key(), uniformBufferOffset, 0);
             codeStream << "layout(offset = " << uniformBufferOffset << ")";
+            if(uniformBinding == -1)
+            {
+                layout->addDescriptorBinding(bindingCounter, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+                uniformBinding = bindingCounter++;
+            }
             uniformBufferOffset += 4;
             if(default != param.value().end())
             {
@@ -81,6 +86,11 @@ void Material::compile()
         {
             PVectorParameter p = new VectorParameter(param.key(), uniformBufferOffset, 0);
             codeStream << "layout(offset = " << uniformBufferOffset << ")";
+            if(uniformBinding == -1)
+            {
+                layout->addDescriptorBinding(bindingCounter, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+                uniformBinding = bindingCounter++;
+            }
             uniformBufferOffset += 12;
             if(default != param.value().end())
             {

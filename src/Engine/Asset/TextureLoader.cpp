@@ -28,7 +28,7 @@ void TextureLoader::importAsset(const std::filesystem::path& filePath)
     PTextureAsset asset = new TextureAsset(assetFileName.replace_extension("asset").filename().generic_string());
     asset->setStatus(Asset::Status::Loading);
     asset->setTexture(placeholderTexture);
-    AssetRegistry::get().textures[filePath.string()] = asset;
+    AssetRegistry::get().textures[asset->getFileName()] = asset;
     //futures.add(std::async(std::launch::async, [this, filePath, asset] () mutable {
         Gfx::PTexture2D texture = import(filePath);
         asset->setTexture(texture);
@@ -45,8 +45,9 @@ Gfx::PTexture2D TextureLoader::import(const std::filesystem::path& path)
 {
     int x, y, n;
     unsigned char* data = stbi_load(path.string().c_str(), &x, &y, &n, 4);
+    
     TextureCreateInfo createInfo;
-    createInfo.format = Gfx::SE_FORMAT_R8G8B8A8_UINT;
+    createInfo.format = Gfx::SE_FORMAT_R8G8B8A8_SRGB;
     createInfo.resourceData.data = data;
     createInfo.resourceData.size = x * y * 4 * sizeof(unsigned char);
     createInfo.resourceData.owner = Gfx::QueueType::DEDICATED_TRANSFER;

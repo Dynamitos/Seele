@@ -1,5 +1,5 @@
 #pragma once
-#include "WindowManager.h"
+#include "Window/WindowManager.h"
 #include "Scene/Scene.h"
 namespace Seele
 {

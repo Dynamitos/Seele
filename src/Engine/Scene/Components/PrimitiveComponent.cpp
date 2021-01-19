@@ -3,6 +3,7 @@
 #include "Material/MaterialInstance.h"
 #include "Asset/MeshAsset.h"
 #include "Graphics/VertexShaderInput.h"
+#include <iostream>
 
 using namespace Seele;
 

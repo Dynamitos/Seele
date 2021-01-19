@@ -1,8 +1,9 @@
 #include "BasePass.h"
 #include "Graphics/Graphics.h"
-#include "Graphics/Window.h"
+#include "Window/Window.h"
 #include "Scene/Components/CameraComponent.h"
 #include "Scene/Actor/CameraActor.h"
+#include "Math/Vector.h"
 
 using namespace Seele;
 
@@ -162,7 +163,7 @@ void BasePass::beginFrame()
 
     viewParams.viewMatrix = source->getViewMatrix();
     viewParams.projectionMatrix = source->getProjectionMatrix();
-    viewParams.cameraPosition = Vector4(source->getTransform().getPosition(), 0);
+    viewParams.cameraPosition = Vector4(source->getCameraPosition(), 0);
     screenToViewParams.inverseProjectionMatrix = glm::inverse(viewParams.projectionMatrix);
     screenToViewParams.screenDimensions = Vector2(static_cast<float>(viewport->getSizeX()), static_cast<float>(viewport->getSizeY()));
     uniformUpdate.size = sizeof(ViewParameter);

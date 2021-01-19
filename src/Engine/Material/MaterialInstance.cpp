@@ -1,6 +1,6 @@
 #include "MaterialInstance.h"
 #include "Material.h"
-#include "Graphics/WindowManager.h"
+#include "Window/WindowManager.h"
 
 using namespace Seele;
 

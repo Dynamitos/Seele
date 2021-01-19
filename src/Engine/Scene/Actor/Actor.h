@@ -47,7 +47,6 @@ protected:
     PActor parent;
     Array<PActor> children;
     PComponent rootComponent;
-    Transform transform;
 };
 DEFINE_REF(Actor);
 } // namespace Seele

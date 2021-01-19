@@ -89,6 +89,10 @@ void CmdBuffer::executeCommands(Array<Gfx::PRenderCommand> commands)
         auto command = commands[i].cast<SecondaryCmdBuffer>();
         command->end();
         executingCommands.add(command);
+        for(PDescriptorSet set : command->boundDescriptors)
+        {
+            set->setCurrentlyBound(this);
+        }
         cmdBuffers[i] = command->getHandle();
     }
     vkCmdExecuteCommands(handle, cmdBuffers.size(), cmdBuffers.data());
@@ -112,7 +116,7 @@ void CmdBuffer::refreshFence()
             {
                 command->reset();
             }
-
+            executingCommands.clear();
             fence->reset();
         }
     }

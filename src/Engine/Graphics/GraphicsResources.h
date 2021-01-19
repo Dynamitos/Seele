@@ -502,6 +502,8 @@ public:
 	virtual void setKeyCallback(std::function<void(KeyCode, InputAction, KeyModifier)> callback) = 0;
 	virtual void setMouseMoveCallback(std::function<void(double, double)> callback) = 0;
 	virtual void setMouseButtonCallback(std::function<void(MouseButton, InputAction, KeyModifier)> callback) = 0;
+	virtual void setScrollCallback(std::function<void(double, double)> callback) = 0;
+	virtual void setFileCallback(std::function<void(int, const char**)> callback) = 0;
 	SeFormat getSwapchainFormat() const
 	{
 		return pixelFormat;

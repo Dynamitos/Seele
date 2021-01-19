@@ -9,9 +9,9 @@ class View
 public:
 	View(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo &createInfo);
 	virtual ~View();
-	void beginFrame();
-	void render();
-	void endFrame();
+	virtual void beginFrame();
+	virtual void render();
+	virtual void endFrame();
 	void applyArea(URect area);
 	void setFocused();
 
@@ -24,6 +24,8 @@ protected:
 	virtual void keyCallback(KeyCode code, InputAction action, KeyModifier modifier) = 0;
 	virtual void mouseMoveCallback(double xPos, double yPos) = 0;
 	virtual void mouseButtonCallback(MouseButton button, InputAction action, KeyModifier modifier) = 0;
+	virtual void scrollCallback(double xOffset, double yOffset) = 0;
+	virtual void fileCallback(int count, const char** paths) = 0;
 	friend class Window;
 };
 

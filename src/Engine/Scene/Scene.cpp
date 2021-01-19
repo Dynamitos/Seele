@@ -10,6 +10,12 @@ using namespace Seele;
 Scene::Scene(Gfx::PGraphics graphics)
     : graphics(graphics)
 {
+    lightEnv.directionalLights[0].color = Vector4(1, 0, 0, 1);
+    lightEnv.directionalLights[0].direction = Vector4(1, 1, 0, 1);
+    lightEnv.directionalLights[0].intensity = Vector4(1, 1, 1, 1);
+    lightEnv.numDirectionalLights = 1;
+    lightEnv.numPointLights = 0;
+    srand(time(NULL));
 }
 
 Scene::~Scene()

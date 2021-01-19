@@ -18,6 +18,7 @@ public:
     Vector inverseTransformPosition(const Vector &v) const;
     Matrix4 toMatrix();
     static Vector getSafeScaleReciprocal(const Vector4 &inScale, float tolerance = 0.000000001f);
+    Vector transformPosition(const Vector &v) const;
 
     Vector getPosition() const;
     Quaternion getRotation() const;
@@ -28,7 +29,7 @@ public:
 
     Transform &operator=(const Transform &other);
     Transform &operator=(Transform &&other);
-    Transform &operator*(const Transform &other);
+    Transform operator*(const Transform &other) const;
 
 private:
     Vector4 position;
