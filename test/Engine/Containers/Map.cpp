@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(for_each)
 	map[6] = 4;
 	map[4] = 7;
 	int count = 0;
-	for(auto it = map.begin(); it != map.end(); ++it)
+	for(auto it : map)
 	{
 		count++;
 	}

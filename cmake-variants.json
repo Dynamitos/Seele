@@ -6,17 +6,17 @@
             "debug": {
                 "short": "Debug",
                 "long": "Enable debugging and validation",
-                "buildType": "Debug",
                 "settings": {
-                    "CMAKE_DEBUG_POSTFIX": "d"
+                    "CMAKE_DEBUG_POSTFIX": "d",
+                    "CMAKE_BUILD_TYPE": "Debug"
                 }
             },
             "release": {
                 "short": "Release",
                 "long": "Optimize binary for speed",
-                "buildType": "Release",
                 "settings": {
-                    "CMAKE_DEBUG_POSTFIX": ""
+                    "CMAKE_DEBUG_POSTFIX": "",
+                    "CMAKE_BUILD_TYPE": "Release"
                 }
             }
         }

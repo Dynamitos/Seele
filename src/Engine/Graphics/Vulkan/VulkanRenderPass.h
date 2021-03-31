@@ -15,7 +15,7 @@ public:
     {
         return renderPass;
     }
-    inline uint32 getClearValueCount() const
+    inline size_t getClearValueCount() const
     {
         return clearValues.size();
     }

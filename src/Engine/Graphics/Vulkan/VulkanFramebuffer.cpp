@@ -34,7 +34,7 @@ Framebuffer::Framebuffer(PGraphics graphics, PRenderPass renderPass, Gfx::PRende
     VkFramebufferCreateInfo createInfo =
         init::FramebufferCreateInfo(
             renderPass->getHandle(),
-            attachments.size(),
+            (uint32)attachments.size(),
             attachments.data(),
             renderPass->getRenderArea().extent.width,
             renderPass->getRenderArea().extent.height,

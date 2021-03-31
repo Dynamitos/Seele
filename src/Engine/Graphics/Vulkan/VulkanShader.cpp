@@ -113,7 +113,7 @@ void Shader::create(const ShaderCreateInfo& createInfo)
     spAddSearchPath(request, "shaders/lib/");
     spAddSearchPath(request, "shaders/generated/");
 
-    spSetGlobalGenericArgs(request, createInfo.typeParameter.size(), createInfo.typeParameter.data());
+    spSetGlobalGenericArgs(request, (int)createInfo.typeParameter.size(), createInfo.typeParameter.data());
     
     int entryPointIndex = spAddEntryPoint(request, translationUnitIndex, entryPointName.c_str(), getStageFromShaderType(type));
     if(spCompile(request))

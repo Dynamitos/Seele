@@ -39,7 +39,7 @@ void DescriptorLayout::create()
 		binding.pImmutableSamplers = nullptr;
 	}
 	VkDescriptorSetLayoutCreateInfo createInfo =
-		init::DescriptorSetLayoutCreateInfo(bindings.data(), bindings.size());
+		init::DescriptorSetLayoutCreateInfo(bindings.data(), (uint32)bindings.size());
 	VK_CHECK(vkCreateDescriptorSetLayout(graphics->getDevice(), &createInfo, nullptr, &layoutHandle));
 
 	allocator = new DescriptorAllocator(graphics, *this);
@@ -75,7 +75,7 @@ void PipelineLayout::create()
 	}
 
 	VkPipelineLayoutCreateInfo createInfo =
-		init::PipelineLayoutCreateInfo(vulkanDescriptorLayouts.data(), vulkanDescriptorLayouts.size());
+		init::PipelineLayoutCreateInfo(vulkanDescriptorLayouts.data(), (uint32)vulkanDescriptorLayouts.size());
 	Array<VkPushConstantRange> vkPushConstants(pushConstants.size());
 	for (size_t i = 0; i < pushConstants.size(); i++)
 	{
@@ -83,7 +83,7 @@ void PipelineLayout::create()
 		vkPushConstants[i].size = pushConstants[i].size;
 		vkPushConstants[i].stageFlags = cast((VkShaderStageFlagBits)pushConstants[i].stageFlags);
 	}
-	createInfo.pushConstantRangeCount = vkPushConstants.size();
+	createInfo.pushConstantRangeCount = (uint32)vkPushConstants.size();
 	createInfo.pPushConstantRanges = vkPushConstants.data();
 
 	boost::crc_32_type result;
@@ -198,7 +198,7 @@ void DescriptorSet::updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::
 bool DescriptorSet::operator<(Gfx::PDescriptorSet other)
 {
 	PDescriptorSet otherSet = other.cast<DescriptorSet>();
-	return setHandle < otherSet->setHandle;
+	return this < otherSet.getHandle();
 }
 
 void DescriptorSet::writeChanges()
@@ -210,7 +210,7 @@ void DescriptorSet::writeChanges()
 			currentlyBound->getManager()->waitForCommands(currentlyBound);
 			currentlyBound = nullptr;
 		}
-		vkUpdateDescriptorSets(graphics->getDevice(), writeDescriptors.size(), writeDescriptors.data(), 0, nullptr);
+		vkUpdateDescriptorSets(graphics->getDevice(), (uint32)writeDescriptors.size(), writeDescriptors.data(), 0, nullptr);
 		writeDescriptors.clear();
 		imageInfos.clear();
 		bufferInfos.clear();
@@ -241,7 +241,7 @@ DescriptorAllocator::DescriptorAllocator(PGraphics graphics, DescriptorLayout &l
 			poolSizes.add(size);
 		}
 	}
-	VkDescriptorPoolCreateInfo createInfo = init::DescriptorPoolCreateInfo(poolSizes.size(), poolSizes.data(), maxSets);
+	VkDescriptorPoolCreateInfo createInfo = init::DescriptorPoolCreateInfo((uint32)poolSizes.size(), poolSizes.data(), maxSets);
 	VK_CHECK(vkCreateDescriptorPool(graphics->getDevice(), &createInfo, nullptr, &poolHandle));
 }
 

@@ -1,4 +1,5 @@
 #pragma once
+#include <utility>
 #include "Array.h"
 
 namespace Seele
@@ -9,12 +10,15 @@ struct Pair
 public:
 	Pair()
 		: key(K()), value(V())
-	{
-	}
-	Pair(K key, V value)
-		: key(key), value(value)
-	{
-	}
+	{}
+	template<class KeyType>
+	explicit Pair(KeyType&& key)
+		: key(key), value(V())
+	{}
+	template<class KeyType, class ValueType>
+	explicit Pair(KeyType&& key, ValueType&& value)
+		: key(std::move(key)), value(std::move(value))
+	{}
 	K key;
 	V value;
 };
@@ -28,11 +32,12 @@ private:
 		Node *leftChild;
 		Node *rightChild;
 		Node()
-			: leftChild(nullptr), rightChild(nullptr), pair(K(), V())
+			: leftChild(nullptr), rightChild(nullptr), pair()
 		{
 		}
-		Node(const K &key)
-			: leftChild(nullptr), rightChild(nullptr), pair(key, V())
+		template<class KeyType, class ValueType>
+		explicit Node(KeyType&& key, ValueType&& value)
+			: leftChild(nullptr), rightChild(nullptr), pair(key, value)
 		{
 		}
 		Node(const Node& other)
@@ -242,7 +247,7 @@ public:
 		Iterator operator--(int)
 		{
 			Iterator tmp(*this);
-			++*this;
+			--*this;
 			return tmp;
 		}
 		Iterator operator++(int)
@@ -256,8 +261,7 @@ public:
 		Node *node;
 		Array<Node *> traversal;
 	};
-	
-	V &operator[](const K &key)
+	V &operator[](const K& key)
 	{
 		root = splay(root, key);
 		if (root == nullptr || root->pair.key < key || key < root->pair.key)
@@ -268,7 +272,18 @@ public:
 		}
 		return root->pair.value;
 	}
-	Iterator find(const K &key)
+	V &operator[](K&& key)
+	{
+		root = splay(root, std::forward<K>(key));
+		if (root == nullptr || root->pair.key < key || key < root->pair.key)
+		{
+			root = insert(root, std::forward<K>(key));
+			_size++;
+			refreshIterators();
+		}
+		return root->pair.value;
+	}
+	Iterator find(const K& key)
 	{
 		root = splay(root, key);
 		if (root == nullptr || root->pair.key != key)
@@ -277,9 +292,24 @@ public:
 		}
 		return Iterator(root);
 	}
-	Iterator erase(const K &key)
+	Iterator find(K&& key)
+	{
+		root = splay(root, std::move(key));
+		if (root == nullptr || root->pair.key != key)
+		{
+			return endIt;
+		}
+		return Iterator(root);
+	}
+	Iterator erase(const K& key)
 	{
 		root = remove(root, key);
+		refreshIterators();
+		return Iterator(root);	
+	}
+	Iterator erase(K&& key)
+	{
+		root = remove(root, std::move(key));
 		refreshIterators();
 		return Iterator(root);
 	}
@@ -290,9 +320,9 @@ public:
 		_size = 0;
 		refreshIterators();
 	}
-	bool exists(const K &key)
+	bool exists(K&& key)
 	{
-		return find(key) != endIt;
+		return find(std::forward<K>(key)) != endIt;
 	}
 	Iterator begin() const
 	{
@@ -365,21 +395,19 @@ private:
 		y->leftChild = node;
 		return y;
 	}
-	Node *makeNode(const K &key)
-	{
-		return new Node(key);
-	}
-	Node *insert(Node *r, const K &key)
+	template<class KeyType>
+	Node *insert(Node *r, KeyType&& key)
 	{
 		if (r == nullptr)
-			return makeNode(key);
-
+		{
+			return new Node(std::forward<KeyType>(key), V());
+		}
 		r = splay(r, key);
 
 		if (!(r->pair.key < key || key < r->pair.key))
 			return r;
 
-		Node *newNode = makeNode(key);
+		Node *newNode = new Node(std::forward<KeyType>(key), V());
 
 		if (key < r->pair.key)
 		{
@@ -395,7 +423,8 @@ private:
 		}
 		return newNode;
 	}
-	Node *remove(Node *r, const K &key)
+	template<class KeyType>
+	Node *remove(Node *r, KeyType&& key)
 	{
 		Node *temp;
 		if (!r)
@@ -424,7 +453,8 @@ private:
 		delete temp;
 		return r;
 	}
-	Node *splay(Node *r, const K &key)
+	template<class KeyType>
+	Node *splay(Node *r, KeyType&& key)
 	{
 		if (r == nullptr || !(r->pair.key < key || key < r->pair.key))
 		{

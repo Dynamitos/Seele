@@ -3,7 +3,7 @@
 #include <boost/test/unit_test.hpp>
 
 using namespace Seele;
-
+BOOST_TEST_GLOBAL_FIXTURE(GlobalFixture);
 BOOST_AUTO_TEST_SUITE(RefPtr)
 
 struct TestStruct

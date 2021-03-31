@@ -91,7 +91,7 @@ Gfx::VertexElement VertexShaderInput::accessStreamComponent(const VertexStreamCo
     vertexStream.stride = component.stride;
     vertexStream.offset = component.offset;
     
-    return Gfx::VertexElement(streams.indexOf(streams.addUnique(vertexStream)), component.offset, component.type, attributeIndex, vertexStream.stride);
+    return Gfx::VertexElement((uint8)streams.indexOf(streams.addUnique(vertexStream)), component.offset, component.type, attributeIndex, vertexStream.stride);
 }
 
 Gfx::VertexElement VertexShaderInput::accessPositionStreamComponent(const VertexStreamComponent& component, uint8 attributeIndex) 
@@ -101,7 +101,7 @@ Gfx::VertexElement VertexShaderInput::accessPositionStreamComponent(const Vertex
     vertexStream.stride = component.stride;
     vertexStream.offset = component.offset;
     
-    return Gfx::VertexElement(streams.indexOf(streams.addUnique(vertexStream)), component.offset, component.type, attributeIndex, vertexStream.stride);
+    return Gfx::VertexElement((uint8)streams.indexOf(streams.addUnique(vertexStream)), component.offset, component.type, attributeIndex, vertexStream.stride);
 }
 
 void VertexShaderInput::initDeclaration(Gfx::PGraphics graphics, Array<Gfx::VertexElement>& elements) 

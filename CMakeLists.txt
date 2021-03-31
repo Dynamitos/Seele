@@ -1,6 +1,6 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.19)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 # Handle superbuild first
 option (USE_SUPERBUILD "Whether or not a superbuild should be invoked" ON)
@@ -27,6 +27,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_SOURCE_DIR}/bin/Debug)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_CURRENT_SOURCE_DIR}/bin/Release)
 
+add_compile_options($<$<CXX_COMPILER_ID:MSVC>:/MP>)
+
 if (USE_SUPERBUILD)
   project (SUPERBUILD NONE)
   # execute the superbuild (this script will be invoked again without the
@@ -52,13 +54,12 @@ find_package(SLang REQUIRED)
 include_directories(${GLM_INCLUDE_DIRS})
 include_directories(${STB_INCLUDE_DIRS})
 include_directories(${Vulkan_INCLUDE_DIR})
-include_directories(${SPIRV_INCLUDE_DIRS})
+#include_directories(${SPIRV_INCLUDE_DIRS})
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${GLFW_INCLUDE_DIRS})
 include_directories(${SLANG_INCLUDE_DIRS})
 include_directories(${ASSIMP_INCLUDE_DIRS})
 include_directories(${JSON_INCLUDE_DIRS})
-include_directories(${SPIRV_INCLUDE_DIRS})
 include_directories(${ENGINE_ROOT})
 include_directories(src/Engine)
 add_definitions(${Vulkan_DEFINITIONS})
@@ -77,7 +78,7 @@ target_link_libraries(SeeleEngine ${GLFW_LIBRARIES})
 target_link_libraries(SeeleEngine ${SLANG_LIBRARIES})
 target_link_libraries(SeeleEngine ${ASSIMP_LIBRARIES})
 target_link_libraries(SeeleEngine ${JSON_LIBRARY})
-target_link_libraries(SeeleEngine ${SPIRV_LIBRARIES})
+#target_link_libraries(SeeleEngine ${SPIRV_LIBRARIES})
 
 #target_precompile_headers(SeeleEngine 
 #  PRIVATE    

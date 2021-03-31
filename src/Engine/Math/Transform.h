@@ -10,7 +10,7 @@ public:
     Transform();
     Transform(const Transform &other);
     Transform(Transform &&other);
-    Transform(Vector position);
+    explicit Transform(Vector position);
     Transform(Vector position, Quaternion rotation);
     Transform(Vector position, Quaternion rotation, Vector scale);
     Transform(Quaternion rotation, Vector scale);

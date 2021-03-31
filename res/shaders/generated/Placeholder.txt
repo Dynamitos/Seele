@@ -1,0 +1,1 @@
+This file needs to be here because otherwise git will delete the folder and the engine can't automatically generate it
