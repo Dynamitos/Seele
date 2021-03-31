@@ -25,12 +25,12 @@ namespace Seele
 			//std::memset(_data, 0, sizeof(T) * DEFAULT_ALLOC_SIZE);
 			refreshIterators();
 		}
-		Array(uint32 size, T value = T())
+		Array(size_t size, T value = T())
 			: allocated(size), arraySize(size)
 		{
 			_data = new T[size];
 			assert(_data != nullptr);
-			for (uint32 i = 0; i < size; ++i)
+			for (size_t i = 0; i < size; ++i)
 			{
 				assert(i < size);
 				_data[i] = value;
@@ -38,7 +38,7 @@ namespace Seele
 			refreshIterators();
 		}
 		Array(std::initializer_list<T> init)
-			: allocated((uint32)init.size()), arraySize((uint32)init.size())
+			: allocated(init.size()), arraySize(init.size())
 		{
 			_data = new T[init.size()];
 			auto it = init.begin();
@@ -194,6 +194,17 @@ namespace Seele
 			}
 			return endIt;
 		}
+		Iterator find(T&& item)
+		{
+			for (uint32 i = 0; i < arraySize; ++i)
+			{
+				if (_data[i] == item)
+				{
+					return Iterator(&_data[i]);
+				}
+			}
+			return endIt;	
+		}
 		Iterator begin() const
 		{
 			return beginIt;
@@ -215,11 +226,11 @@ namespace Seele
 		{
 			if (arraySize == allocated)
 			{
-				uint32 newSize = arraySize + 1;
+				size_t newSize = arraySize + 1;
 				allocated = calculateGrowth(newSize);
 				T *tempArray = new T[allocated];
 				assert(tempArray != nullptr);
-				for (uint32 i = 0; i < arraySize; ++i)
+				for (size_t i = 0; i < arraySize; ++i)
 				{
 					tempArray[i] = _data[i];
 				}
@@ -227,6 +238,25 @@ namespace Seele
 				_data = tempArray;
 			}
 			_data[arraySize++] = item;
+			refreshIterators();
+			return _data[arraySize - 1];
+		}
+		T &add(T&& item)
+		{
+			if (arraySize == allocated)
+			{
+				size_t newSize = arraySize + 1;
+				allocated = calculateGrowth(newSize);
+				T *tempArray = new T[allocated];
+				assert(tempArray != nullptr);
+				for (size_t i = 0; i < arraySize; ++i)
+				{
+					tempArray[i] = std::move(_data[i]);
+				}
+				delete[] _data;
+				_data = tempArray;
+			}
+			_data[arraySize++] = std::move(item);
 			refreshIterators();
 			return _data[arraySize - 1];
 		}
@@ -240,22 +270,22 @@ namespace Seele
 			return add(item);
 		}
 		template<typename... args>
-		T &emplace(args...)
+		T &emplace(args... arguments)
 		{
 			if (arraySize == allocated)
 			{
-				uint32 newSize = arraySize + 1;
+				size_t newSize = arraySize + 1;
 				allocated = calculateGrowth(newSize);
 				T *tempArray = new T[allocated];
 				assert(tempArray != nullptr);
-				for (uint32 i = 0; i < arraySize; ++i)
+				for (size_t i = 0; i < arraySize; ++i)
 				{
 					tempArray[i] = _data[i];
 				}
 				delete[] _data;
 				_data = tempArray;
 			}
-			_data[arraySize++] = T(args...);
+			_data[arraySize++] = T(arguments...);
 			refreshIterators();
 			return _data[arraySize - 1];
 		}
@@ -271,7 +301,7 @@ namespace Seele
 			}
 			else
 			{
-				_data[index] = _data[arraySize - 1];
+				_data[index] = std::move(_data[arraySize - 1]);
 			}
 			arraySize--;
 		}
@@ -283,7 +313,7 @@ namespace Seele
 			allocated = 0;
 			refreshIterators();
 		}
-		void resize(uint32 newSize)
+		void resize(size_t newSize)
 		{
 			if (newSize < allocated)
 			{
@@ -301,27 +331,31 @@ namespace Seele
 			}
 			refreshIterators();
 		}
-		inline uint32 indexOf(Iterator iterator)
+		inline size_t indexOf(Iterator iterator)
 		{
 			return iterator - beginIt;
 		}
-		inline uint32 indexOf(ConstIterator iterator) const
+		inline size_t indexOf(ConstIterator iterator) const
 		{
 			return iterator.p - beginIt.p;
 		}
-		inline uint32 indexOf(T& t)
+		inline size_t indexOf(T& t)
 		{
 			return indexOf(find(t));
 		}
-		inline uint32 indexOf(const T& t) const
+		inline size_t indexOf(const T& t) const
 		{
 			return indexOf(find(t));
 		}
-		inline uint32 size() const
+		inline size_t size() const
 		{
 			return arraySize;
 		}
-		inline uint32 capacity() const
+		inline size_t empty() const
+		{
+			return arraySize == 0;
+		}
+		inline size_t capacity() const
 		{
 			return allocated;
 		}
@@ -338,44 +372,27 @@ namespace Seele
 			arraySize--;
 			refreshIterators();
 		}
-		T &operator[](uint32 index)
+		T &operator[](size_t index)
 		{
 			assert(index < arraySize);
 			return _data[index];
 		}
-		inline T &operator[](size_t index)
-		{
-			return this->operator[]((uint32)index);
-		}
-		inline T &operator[](int32 index)
-		{
-			return this->operator[]((uint32)index);
-		}
-		const T &operator[](uint32 index) const
+		const T &operator[](size_t index) const
 		{
 			assert(index < arraySize);
 			return _data[index];
 		}
-		inline const T &operator[](size_t index) const
-		{
-			return this->operator[]((uint32)index);
-		}
-		inline const T &operator[](int32 index) const
-		{
-			return this->operator[]((uint32)index);
-		}
-
 	private:
-		uint32 calculateGrowth(uint32 newSize) const
+		size_t calculateGrowth(size_t newSize) const
 		{
-			const uint32 oldCapacity = capacity();
+			const size_t oldCapacity = capacity();
 
-			if (oldCapacity > UINT32_MAX - oldCapacity / 2)
+			if (oldCapacity > SIZE_MAX - oldCapacity / 2)
 			{
 				return newSize; // geometric growth would overflow
 			}
 
-			const uint32 geometric = oldCapacity + oldCapacity / 2;
+			const size_t geometric = oldCapacity + oldCapacity / 2;
 
 			if (geometric < newSize)
 			{
@@ -395,71 +412,30 @@ namespace Seele
 		{
 			ar & arraySize;
 			ar & allocated;
-			for(uint32 i = 0; i < arraySize; ++i)
+			for(size_t i = 0; i < arraySize; ++i)
 				ar & _data[i];
 			refreshIterators();
 		}
-		uint32 arraySize;
-		uint32 allocated;
+		size_t arraySize;
+		size_t allocated;
 		Iterator beginIt;
 		Iterator endIt;
 		T *_data;
 	};
 
-	template <typename T, uint32 N>
+	template <typename T, size_t N>
 	struct StaticArray
 	{
-	public:
-		StaticArray()
-		{
-			beginIt = Iterator(_data);
-			endIt = Iterator(_data + N);
-		}
-		StaticArray(T value)
-		{
-			for (int i = 0; i < N; ++i)
-			{
-				_data[i] = value;
-			}
-			beginIt = Iterator(_data);
-			endIt = Iterator(_data + N);
-		}
-		~StaticArray()
-		{
-		}
-		
-		inline uint32 size() const
-		{
-			return N;
-		}
-		inline T *data()
-		{
-			return _data;
-		}
-		inline const T *data() const
-		{
-			return _data;
-		}
-		T &operator[](int index)
-		{
-			assert(index >= 0 && index < N);
-			return _data[index];
-		}
-		const T &operator[](int index) const
-		{
-			assert(index >= 0 && index < N);
-			return _data[index];
-		}
-
+	public:	
 		template <typename X>
 		class IteratorBase
 		{
 		public:
-			typedef std::forward_iterator_tag iterator_category;
-			typedef X value_type;
-			typedef std::ptrdiff_t difference_type;
-			typedef X &reference;
-			typedef X *pointer;
+			using iterator_category = std::forward_iterator_tag;
+			using value_type = X;
+			using difference_type = std::ptrdiff_t;
+			using reference = X&;
+			using pointer = X*;
 
 			IteratorBase(X *x = nullptr)
 				: p(x)
@@ -500,36 +476,86 @@ namespace Seele
 		private:
 			X *p;
 		};
-		typedef IteratorBase<T> Iterator;
-		typedef IteratorBase<const T> ConstIterator;
+		using value_type = T;
+		using size_type = size_t;
+		using difference_type = std::ptrdiff_t;
+		using pointer = T*;
+		using const_pointer = const T*;
+		using reference = T&;
+		using const_reference = const T&;
 
-		Iterator begin()
+		using iterator = IteratorBase<T>;
+		using const_iterator = IteratorBase<const T>;
+
+		using reverse_iterator = std::reverse_iterator<iterator>;
+		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+
+		StaticArray()
+		{
+			beginIt = iterator(_data);
+			endIt = iterator(_data + N);
+		}
+		StaticArray(T value)
+		{
+			for (int i = 0; i < N; ++i)
+			{
+				_data[i] = value;
+			}
+			beginIt = iterator(_data);
+			endIt = iterator(_data + N);
+		}
+		~StaticArray()
+		{
+		}
+		
+		inline size_type size() const
+		{
+			return N;
+		}
+		inline pointer data()
+		{
+			return _data;
+		}
+		inline const_pointer data() const
+		{
+			return _data;
+		}
+		constexpr reference operator[](size_type index) noexcept
+		{
+			assert(index >= 0 && index < N);
+			return _data[index];
+		}
+		constexpr const_reference operator[](size_type index) const noexcept
+		{
+			assert(index >= 0 && index < N);
+			return _data[index];
+		}
+		iterator begin()
 		{
 			return beginIt;
 		}
-		Iterator end()
+		iterator end()
 		{
 			return endIt;
 		}
-		ConstIterator begin() const
+		const_iterator begin() const
 		{
 			return beginIt;
 		}
-		ConstIterator end() const
+		const_iterator end() const
 		{
 			return beginIt;
 		}
 	private:
 		T _data[N];
-		Iterator beginIt;
-		Iterator endIt;
+		iterator beginIt;
+		iterator endIt;
 		friend class boost::serialization::access;
 		template<class Archive>
 		void serialize(Archive& ar, const unsigned int version)
 		{
 			ar & N;
 			ar & _data;
-			refreshIterators();
 		}
 	};
 } // namespace Seele

@@ -1,7 +1,11 @@
 #include "Graphics/RenderCore.h"
 #include "Window/SceneView.h"
 #include "Asset/AssetRegistry.h"
+#include "Fibers/Fibers.h"
+#include <queue>
+
 using namespace Seele;
+
 int main()
 {
 	RenderCore core;

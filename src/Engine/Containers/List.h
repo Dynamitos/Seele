@@ -250,6 +250,14 @@ public:
 		refreshIterators();
 		return Iterator(next);
 	}
+	void popBack()
+	{
+		remove(Iterator(tail->prev));
+	}
+	void popFront()
+	{
+		remove(Iterator(root));
+	}
 	Iterator insert(Iterator pos, const T &value)
 	{
 		_size++;

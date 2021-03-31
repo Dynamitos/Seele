@@ -65,7 +65,7 @@ void CmdBuffer::beginRenderPass(PRenderPass newRenderPass, PFramebuffer newFrame
 
     VkRenderPassBeginInfo beginInfo =
         init::RenderPassBeginInfo();
-    beginInfo.clearValueCount = renderPass->getClearValueCount();
+    beginInfo.clearValueCount = (uint32)renderPass->getClearValueCount();
     beginInfo.pClearValues = renderPass->getClearValues();
     beginInfo.renderArea = renderPass->getRenderArea();
     beginInfo.renderPass = renderPass->getHandle();
@@ -95,7 +95,7 @@ void CmdBuffer::executeCommands(Array<Gfx::PRenderCommand> commands)
         }
         cmdBuffers[i] = command->getHandle();
     }
-    vkCmdExecuteCommands(handle, cmdBuffers.size(), cmdBuffers.data());
+    vkCmdExecuteCommands(handle, (uint32)cmdBuffers.size(), cmdBuffers.data());
 }
 
 void CmdBuffer::addWaitSemaphore(VkPipelineStageFlags flags, PSemaphore semaphore)
@@ -212,7 +212,7 @@ void SecondaryCmdBuffer::bindDescriptor(const Array<Gfx::PDescriptorSet>& descri
         boundDescriptors.add(descriptorSet);
         sets[descriptorSet->getSetIndex()] = descriptorSet->getHandle();
     }
-    vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getLayout(), 0, descriptorSets.size(), sets, 0, nullptr);
+    vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getLayout(), 0, (uint32)descriptorSets.size(), sets, 0, nullptr);
     delete[] sets;
 }
 void SecondaryCmdBuffer::bindVertexBuffer(const Array<VertexInputStream>& streams)
@@ -225,7 +225,7 @@ void SecondaryCmdBuffer::bindVertexBuffer(const Array<VertexInputStream>& stream
         buffers[i] = buf->getHandle();
         offsets[i] = streams[i].offset;
     };
-    vkCmdBindVertexBuffers(handle, 0, streams.size(), buffers.data(), offsets.data());
+    vkCmdBindVertexBuffers(handle, 0, (uint32)streams.size(), buffers.data(), offsets.data());
 }
 void SecondaryCmdBuffer::bindIndexBuffer(Gfx::PIndexBuffer indexBuffer)
 {

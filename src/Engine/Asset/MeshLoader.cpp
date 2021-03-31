@@ -29,8 +29,7 @@ MeshLoader::~MeshLoader()
 
 void MeshLoader::importAsset(const std::filesystem::path &path)
 {
-    //futures.add(std::async(std::launch::async, &MeshLoader::import, this, path));
-    import(path);
+    futures.add(std::async(std::launch::async, &MeshLoader::import, this, path));
 }
 
 void MeshLoader::loadMaterials(const aiScene* scene, Array<PMaterialAsset>& globalMaterials, Gfx::PGraphics graphics)
@@ -118,7 +117,7 @@ VertexStreamComponent createVertexStream(uint32 size, aiVector3D* sourceData, Gf
     vbInfo.vertexSize = sizeof(Vector);
     vbInfo.resourceData.data = (uint8 *)buffer.data();
     vbInfo.resourceData.owner = Gfx::QueueType::DEDICATED_TRANSFER;
-    vbInfo.resourceData.size = sizeof(Vector) * buffer.size();
+    vbInfo.resourceData.size = sizeof(Vector) * (uint32)buffer.size();
     return VertexStreamComponent(graphics->createVertexBuffer(vbInfo), 0, vbInfo.vertexSize, Gfx::SE_FORMAT_R32G32B32_SFLOAT);
 }
 VertexStreamComponent createVertexStream(uint32 size, aiVector2D* sourceData, Gfx::PGraphics graphics)
@@ -133,7 +132,7 @@ VertexStreamComponent createVertexStream(uint32 size, aiVector2D* sourceData, Gf
     vbInfo.vertexSize = sizeof(Vector2);
     vbInfo.resourceData.data = (uint8 *)buffer.data();
     vbInfo.resourceData.owner = Gfx::QueueType::DEDICATED_TRANSFER;
-    vbInfo.resourceData.size = sizeof(Vector2) * buffer.size();
+    vbInfo.resourceData.size = sizeof(Vector2) * (uint32)buffer.size();
     return VertexStreamComponent(graphics->createVertexBuffer(vbInfo), 0, vbInfo.vertexSize, Gfx::SE_FORMAT_R32G32_SFLOAT);
 }
 void MeshLoader::loadGlobalMeshes(const aiScene* scene, Array<PMesh>& globalMeshes, const Array<PMaterialAsset>& materials, Gfx::PGraphics graphics)
@@ -180,7 +179,7 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, Array<PMesh>& globalMesh
         idxInfo.indexType = Gfx::SE_INDEX_TYPE_UINT32;
         idxInfo.resourceData.data = (uint8 *)indices.data();
         idxInfo.resourceData.owner = Gfx::QueueType::DEDICATED_TRANSFER;
-        idxInfo.resourceData.size = sizeof(uint32) * indices.size();
+        idxInfo.resourceData.size = sizeof(uint32) * (uint32)indices.size();
         Gfx::PIndexBuffer indexBuffer = graphics->createIndexBuffer(idxInfo);
         indexBuffer->transferOwnership(Gfx::QueueType::GRAPHICS);
 

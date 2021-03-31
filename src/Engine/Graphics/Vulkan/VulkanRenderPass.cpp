@@ -91,10 +91,10 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::PRenderTargetLayout layout)
     VkSubpassDescription subPassDesc =
         init::SubpassDescription(
             VK_PIPELINE_BIND_POINT_GRAPHICS,
-            colorRefs.size(),
+            (uint32)colorRefs.size(),
             colorRefs.data(),
             &depthRef,
-            inputRefs.size(),
+            (uint32)inputRefs.size(),
             inputRefs.data());
     VkSubpassDependency dependency = {};
     dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -108,7 +108,7 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::PRenderTargetLayout layout)
 
     VkRenderPassCreateInfo info =
         init::RenderPassCreateInfo(
-            attachments.size(),
+            (uint32)attachments.size(),
             attachments.data(),
             1,
             &subPassDesc,

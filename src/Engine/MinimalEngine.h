@@ -108,7 +108,7 @@ public:
 
 private:
 	T *handle;
-	uint64 refCount;
+	std::atomic_uint64_t refCount;
 };
 
 template <typename T>

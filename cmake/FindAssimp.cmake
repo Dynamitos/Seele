@@ -29,7 +29,8 @@ if (WIN32)
 		NAMES assimp-vc${MSVC_TOOLSET_VERSION}-mt${CMAKE_DEBUG_POSTFIX}.lib
 		PATHS
 			$ENV{PROGRAMFILES}/lib
-			${ASSIMP_ROOT}/lib/)
+			${ASSIMP_ROOT}/lib
+			${ASSIMP_ROOT}/lib/${CMAKE_BUILD_TYPE})
 
 	find_file(
 		ASSIMP_BINARY

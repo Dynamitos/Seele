@@ -215,9 +215,9 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
     std::memcpy(hashStruct.attribs, attributes.data(), attributes.size() * sizeof(VkVertexInputAttributeDescription));
 
     vertexInput.pVertexBindingDescriptions = bindings.data();
-    vertexInput.vertexBindingDescriptionCount = bindings.size();
+    vertexInput.vertexBindingDescriptionCount = (uint32)bindings.size();
     vertexInput.pVertexAttributeDescriptions = attributes.data();
-    vertexInput.vertexAttributeDescriptionCount = attributes.size();
+    vertexInput.vertexAttributeDescriptionCount = (uint32)attributes.size();
 
     VkPipelineInputAssemblyStateCreateInfo assemblyInfo =
         init::PipelineInputAssemblyStateCreateInfo(
@@ -291,7 +291,7 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
     }
     VkPipelineColorBlendStateCreateInfo blendState = 
         init::PipelineColorBlendStateCreateInfo(
-            blendAttachments.size(),
+            (uint32)blendAttachments.size(),
             blendAttachments.data()
         );
     blendState.logicOpEnable = gfxInfo.colorBlend.logicOpEnable;

@@ -65,7 +65,7 @@ void Material::compile()
     for(auto param : j["params"].items())
     {
         std::string type = param.value()["type"].get<std::string>();
-        auto default = param.value().find("default");
+        auto defaultValue = param.value().find("default");
         if(type.compare("float") == 0)
         {
             PFloatParameter p = new FloatParameter(param.key(), uniformBufferOffset, 0);
@@ -76,9 +76,9 @@ void Material::compile()
                 uniformBinding = bindingCounter++;
             }
             uniformBufferOffset += 4;
-            if(default != param.value().end())
+            if(defaultValue != param.value().end())
             {
-                p->data = std::stof(default.value().get<std::string>());
+                p->data = std::stof(defaultValue.value().get<std::string>());
             }
             parameters.add(p);
         }
@@ -92,9 +92,9 @@ void Material::compile()
                 uniformBinding = bindingCounter++;
             }
             uniformBufferOffset += 12;
-            if(default != param.value().end())
+            if(defaultValue != param.value().end())
             {
-                p->data = parseVector(default.value().get<std::string>().c_str());
+                p->data = parseVector(defaultValue.value().get<std::string>().c_str());
             }
             parameters.add(p);
         }
@@ -102,9 +102,9 @@ void Material::compile()
         {
             PTextureParameter p = new TextureParameter(param.key(), 0, bindingCounter);
             layout->addDescriptorBinding(bindingCounter++, Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
-            if(default != param.value().end())
+            if(defaultValue != param.value().end())
             {
-                p->data = AssetRegistry::findTexture(default.value().get<std::string>());
+                p->data = AssetRegistry::findTexture(defaultValue.value().get<std::string>());
             }
             else
             {

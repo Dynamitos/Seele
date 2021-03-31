@@ -15,7 +15,7 @@ Scene::Scene(Gfx::PGraphics graphics)
     lightEnv.directionalLights[0].intensity = Vector4(1, 1, 1, 1);
     lightEnv.numDirectionalLights = 1;
     lightEnv.numPointLights = 0;
-    srand(time(NULL));
+    srand((unsigned int)time(NULL));
 }
 
 Scene::~Scene()
