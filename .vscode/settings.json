@@ -106,11 +106,10 @@
         "scoped_allocator": "cpp",
         "stack": "cpp"
     },
-    "cmake.generator": "Visual Studio 16 2019",
     "cmake.skipConfigureIfCachePresent": false,
     "cmake.configureArgs": [
         "-Wno-dev"
     ],
-    "C_Cpp.default.cppStandard": "c++17",
-    "C_Cpp.default.intelliSenseMode": "msvc-x64"
+    "C_Cpp.default.cppStandard": "c++20",
+    "C_Cpp.default.intelliSenseMode": "gcc-x64"
 }
