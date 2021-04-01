@@ -5,7 +5,7 @@ namespace Seele
 {
 namespace Vulkan
 {
-DECLARE_REF(Graphics);
+DECLARE_REF(Graphics)
 class DescriptorLayout : public Gfx::DescriptorLayout
 {
 public:
@@ -24,12 +24,14 @@ private:
 	VkDescriptorSetLayout layoutHandle;
 	friend class DescriptorAllocator;
 };
-DEFINE_REF(DescriptorLayout);
+DEFINE_REF(DescriptorLayout)
 class PipelineLayout : public Gfx::PipelineLayout
 {
 public:
 	PipelineLayout(PGraphics graphics)
-		: graphics(graphics), layoutHash(0), layoutHandle(VK_NULL_HANDLE)
+		: graphics(graphics)
+		, layoutHash(0)
+		, layoutHandle(VK_NULL_HANDLE)
 	{
 	}
 	virtual ~PipelineLayout();
@@ -46,11 +48,11 @@ public:
 
 private:
 	Array<VkDescriptorSetLayout> vulkanDescriptorLayouts;
+	PGraphics graphics;
 	uint32 layoutHash;
 	VkPipelineLayout layoutHandle;
-	PGraphics graphics;
 };
-DEFINE_REF(PipelineLayout);
+DEFINE_REF(PipelineLayout)
 
 class DescriptorAllocator : public Gfx::DescriptorAllocator
 {
@@ -71,13 +73,13 @@ public:
 
 private:
 	PGraphics graphics;
+	DescriptorLayout &layout;
+	uint32 currentCachedIndex;
 	const static int maxSets = 512;
 	VkDescriptorSet cachedHandles[maxSets];
-	uint32 currentCachedIndex;
 	VkDescriptorPool poolHandle;
-	DescriptorLayout &layout;
 };
-DEFINE_REF(DescriptorAllocator);
+DEFINE_REF(DescriptorAllocator)
 
 class DescriptorSet : public Gfx::DescriptorSet
 {
@@ -119,12 +121,12 @@ private:
 	// would not work anyways, so casts should be safe
 	Array<void*> cachedData[Gfx::numFramesBuffered];
 	VkDescriptorSet setHandle[Gfx::numFramesBuffered];
+	PGraphics graphics;
 	PDescriptorAllocator owner;
 	PCmdBuffer currentlyBound;
-	PGraphics graphics;
 	friend class DescriptorAllocator;
 };
-DEFINE_REF(DescriptorSet);
+DEFINE_REF(DescriptorSet)
 
 } // namespace Vulkan
 } // namespace Seele

@@ -24,7 +24,7 @@ FloatParameter::~FloatParameter()
 {
 }
 
-void FloatParameter::updateDescriptorSet(Gfx::PDescriptorSet descriptorSet, uint8* dst) 
+void FloatParameter::updateDescriptorSet(Gfx::PDescriptorSet, uint8* dst) 
 {
     std::memcpy(dst + byteOffset, &data, sizeof(float));
 }
@@ -38,7 +38,7 @@ VectorParameter::~VectorParameter()
 {
 }
 
-void VectorParameter::updateDescriptorSet(Gfx::PDescriptorSet descriptorSet, uint8* dst) 
+void VectorParameter::updateDescriptorSet(Gfx::PDescriptorSet, uint8* dst) 
 {
     std::memcpy(dst + byteOffset, &data, sizeof(Vector));
 }
@@ -52,7 +52,7 @@ TextureParameter::~TextureParameter()
 {
 }
 
-void TextureParameter::updateDescriptorSet(Gfx::PDescriptorSet descriptorSet, uint8* dst) 
+void TextureParameter::updateDescriptorSet(Gfx::PDescriptorSet descriptorSet, uint8*) 
 {
     descriptorSet->updateTexture(binding, data->getTexture());
 }
@@ -67,7 +67,7 @@ SamplerParameter::~SamplerParameter()
     
 }
 
-void SamplerParameter::updateDescriptorSet(Gfx::PDescriptorSet descriptorSet, uint8* dst) 
+void SamplerParameter::updateDescriptorSet(Gfx::PDescriptorSet descriptorSet, uint8*) 
 {
     descriptorSet->updateSampler(binding, data);
 }

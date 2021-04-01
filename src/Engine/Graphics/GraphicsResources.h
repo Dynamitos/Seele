@@ -20,7 +20,7 @@ class VertexInputType;
 DECLARE_REF(Material)
 namespace Gfx
 {
-DECLARE_REF(Graphics);
+DECLARE_REF(Graphics)
 
 class SamplerState
 {
@@ -29,11 +29,11 @@ public:
 	{
 	}
 };
-DEFINE_REF(SamplerState);
+DEFINE_REF(SamplerState)
 
 class Shader
 {};
-DEFINE_REF(Shader);
+DEFINE_REF(Shader)
 
 class VertexShader
 {
@@ -41,7 +41,7 @@ public:
 	VertexShader() {}
 	virtual ~VertexShader() {}
 };
-DEFINE_REF(VertexShader);
+DEFINE_REF(VertexShader)
 class ControlShader
 {
 public:
@@ -52,28 +52,28 @@ public:
 protected:
 	uint32 numPatchPoints;
 };
-DEFINE_REF(ControlShader);
+DEFINE_REF(ControlShader)
 class EvaluationShader
 {
 public:
 	EvaluationShader() {}
 	virtual ~EvaluationShader() {}
 };
-DEFINE_REF(EvaluationShader);
+DEFINE_REF(EvaluationShader)
 class GeometryShader
 {
 public:
 	GeometryShader() {}
 	virtual ~GeometryShader() {}
 };
-DEFINE_REF(GeometryShader);
+DEFINE_REF(GeometryShader)
 class FragmentShader
 {
 public:
 	FragmentShader() {}
 	virtual ~FragmentShader() {}
 };
-DEFINE_REF(FragmentShader);
+DEFINE_REF(FragmentShader)
 
 //Uniquely identifies a permutation of shaders
 //using the type parameters used to generate it
@@ -138,7 +138,7 @@ public:
 private:
 	Array<ShaderCollection> shaders;
 };
-DEFINE_REF(ShaderMap);
+DEFINE_REF(ShaderMap)
 
 class ComputeShader
 {
@@ -146,7 +146,7 @@ public:
 	ComputeShader() {}
 	virtual ~ComputeShader() {}
 };
-DEFINE_REF(ComputeShader);
+DEFINE_REF(ComputeShader)
 
 class DescriptorBinding
 {
@@ -171,9 +171,9 @@ public:
 	uint32_t descriptorCount;
 	SeShaderStageFlags shaderStages;
 };
-DEFINE_REF(DescriptorBinding);
+DEFINE_REF(DescriptorBinding)
 
-DECLARE_REF(DescriptorSet);
+DECLARE_REF(DescriptorSet)
 class DescriptorAllocator
 {
 public:
@@ -182,10 +182,10 @@ public:
 	virtual void allocateDescriptorSet(PDescriptorSet &descriptorSet) = 0;
 	virtual void reset() = 0;
 };
-DEFINE_REF(DescriptorAllocator);
-DECLARE_REF(UniformBuffer);
-DECLARE_REF(StructuredBuffer);
-DECLARE_REF(Texture);
+DEFINE_REF(DescriptorAllocator)
+DECLARE_REF(UniformBuffer)
+DECLARE_REF(StructuredBuffer)
+DECLARE_REF(Texture)
 class DescriptorSet
 {
 public:
@@ -199,7 +199,7 @@ public:
 
 	virtual uint32 getSetIndex() const = 0;
 };
-DEFINE_REF(DescriptorSet);
+DEFINE_REF(DescriptorSet)
 
 class DescriptorLayout
 {
@@ -209,10 +209,17 @@ public:
 	{
 	}
 	virtual ~DescriptorLayout() {}
-	void operator=(const DescriptorLayout &other)
+	DescriptorLayout& operator=(const DescriptorLayout &other)
 	{
-		descriptorBindings.resize(other.descriptorBindings.size());
-		std::memcpy(descriptorBindings.data(), other.descriptorBindings.data(), sizeof(DescriptorLayout) * descriptorBindings.size());
+		if(this != &other)
+		{
+			descriptorBindings.resize(other.descriptorBindings.size());
+			for(uint32 i = 0; i < descriptorBindings.size(); ++i)
+			{
+				descriptorBindings[i] = other.descriptorBindings[i];
+			}
+		}
+		return *this;
 	}
 	virtual void create() = 0;
 	virtual void addDescriptorBinding(uint32 binding, SeDescriptorType type, uint32 arrayCount = 1);
@@ -228,7 +235,7 @@ protected:
 	friend class PipelineLayout;
 	friend class DescriptorAllocator;
 };
-DEFINE_REF(DescriptorLayout);
+DEFINE_REF(DescriptorLayout)
 class PipelineLayout
 {
 public:
@@ -244,7 +251,7 @@ protected:
 	Array<PDescriptorLayout> descriptorSetLayouts;
 	Array<SePushConstantRange> pushConstants;
 };
-DEFINE_REF(PipelineLayout);
+DEFINE_REF(PipelineLayout)
 
 struct QueueFamilyMapping
 {
@@ -290,7 +297,7 @@ protected:
 	Gfx::QueueType currentOwner;
 	QueueFamilyMapping mapping;
 };
-DEFINE_REF(QueueOwnedResource);
+DEFINE_REF(QueueOwnedResource)
 
 // IMPORTANT!! 
 // WHEN DERIVING FROM ANY Gfx:: BASE CLASSES WITH MULTIPLE INHERITANCE
@@ -337,7 +344,7 @@ protected:
 	// Inherited via QueueOwnedResource
 	virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
 };
-DEFINE_REF(UniformBuffer);
+DEFINE_REF(UniformBuffer)
 
 class VertexBuffer : public Buffer
 {
@@ -360,7 +367,7 @@ protected:
 	uint32 numVertices;
 	uint32 vertexSize;
 };
-DEFINE_REF(VertexBuffer);
+DEFINE_REF(VertexBuffer)
 
 class IndexBuffer : public Buffer
 {
@@ -382,7 +389,7 @@ protected:
 	Gfx::SeIndexType indexType;
 	uint32 numIndices;
 };
-DEFINE_REF(IndexBuffer);
+DEFINE_REF(IndexBuffer)
 
 class StructuredBuffer : public Buffer
 {
@@ -393,7 +400,7 @@ protected:
 	// Inherited via QueueOwnedResource
 	virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
 };
-DEFINE_REF(StructuredBuffer);
+DEFINE_REF(StructuredBuffer)
 
 class VertexStream
 {
@@ -410,7 +417,7 @@ public:
 	Array<VertexElement> vertexDescription;
 	uint8 instanced;
 };
-DEFINE_REF(VertexStream);
+DEFINE_REF(VertexStream)
 class VertexDeclaration
 {
 public:
@@ -420,7 +427,7 @@ public:
 	static PVertexDeclaration createDeclaration(PGraphics graphics, const Array<VertexElement>& elementList);
 private:
 };
-DEFINE_REF(VertexDeclaration);
+DEFINE_REF(VertexDeclaration)
 class GraphicsPipeline
 {
 public:
@@ -429,10 +436,10 @@ public:
 	const GraphicsPipelineCreateInfo& getCreateInfo() const {return createInfo;}
 	PPipelineLayout getPipelineLayout() const { return layout; }
 protected:
-    PPipelineLayout layout;
 	GraphicsPipelineCreateInfo createInfo;
+    PPipelineLayout layout;
 };
-DEFINE_REF(GraphicsPipeline);
+DEFINE_REF(GraphicsPipeline)
 
 // IMPORTANT!! 
 // WHEN DERIVING FROM ANY Gfx:: BASE CLASSES WITH MULTIPLE INHERITANCE
@@ -455,7 +462,7 @@ protected:
     // Inherited via QueueOwnedResource
 	virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
 };
-DEFINE_REF(Texture);
+DEFINE_REF(Texture)
 class Texture2D : public Texture
 {
 public:
@@ -471,9 +478,9 @@ protected:
 	//Inherited via QueueOwnedResource
 	virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
 };
-DEFINE_REF(Texture2D);
+DEFINE_REF(Texture2D)
 
-DECLARE_REF(Viewport);
+DECLARE_REF(Viewport)
 class RenderCommand
 {
 public:
@@ -488,7 +495,7 @@ public:
 	virtual void bindIndexBuffer(Gfx::PIndexBuffer indexBuffer) = 0;
 	virtual void draw(const MeshBatchElement& data) = 0;
 };
-DEFINE_REF(RenderCommand);
+DEFINE_REF(RenderCommand)
 
 class Window
 {
@@ -521,7 +528,7 @@ protected:
 	SeFormat pixelFormat;
 	uint32 samples;
 };
-DEFINE_REF(Window);
+DEFINE_REF(Window)
 
 class Viewport
 {
@@ -542,7 +549,7 @@ protected:
 	uint32 offsetY;
 	PWindow owner;
 };
-DEFINE_REF(Viewport);
+DEFINE_REF(Viewport)
 
 class RenderTargetAttachment
 {
@@ -583,7 +590,7 @@ protected:
 	SeAttachmentLoadOp stencilLoadOp;
 	SeAttachmentStoreOp stencilStoreOp;
 };
-DEFINE_REF(RenderTargetAttachment);
+DEFINE_REF(RenderTargetAttachment)
 
 class SwapchainAttachment : public RenderTargetAttachment
 {
@@ -617,7 +624,7 @@ public:
 private:
 	PWindow owner;
 };
-DEFINE_REF(SwapchainAttachment);
+DEFINE_REF(SwapchainAttachment)
 
 class RenderTargetLayout
 {
@@ -633,7 +640,7 @@ public:
 	uint32 width;
 	uint32 height;
 };
-DEFINE_REF(RenderTargetLayout);
+DEFINE_REF(RenderTargetLayout)
 
 class RenderPass
 {
@@ -645,6 +652,6 @@ public:
 protected:
 	PRenderTargetLayout layout;
 };
-DEFINE_REF(RenderPass);
+DEFINE_REF(RenderPass)
 } // namespace Gfx
 } // namespace Seele

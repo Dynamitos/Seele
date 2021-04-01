@@ -3,8 +3,8 @@
 
 namespace Seele
 {
-DECLARE_NAME_REF(Gfx, DescriptorSet);
-DECLARE_REF(Material);
+DECLARE_NAME_REF(Gfx, DescriptorSet)
+DECLARE_REF(Material)
 class MaterialInstance : public MaterialAsset
 {
 public:
@@ -18,5 +18,5 @@ public:
 private:
     Material* baseMaterial;
 };
-DEFINE_REF(MaterialInstance);
+DEFINE_REF(MaterialInstance)
 } // namespace Seele

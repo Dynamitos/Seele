@@ -13,11 +13,11 @@ namespace Seele
         }
         void setup()
         {
-            Fibers::JobQueue::initJobQueues();
+            //Fibers::JobQueue::initJobQueues();
         }
         void teardown()
         {
-            Fibers::JobQueue::cleanupJobQueues();
+            //Fibers::JobQueue::cleanupJobQueues();
         }
     };
 };

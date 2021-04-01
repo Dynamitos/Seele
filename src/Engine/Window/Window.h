@@ -22,5 +22,5 @@ private:
     PView focusedView;
     Gfx::PWindow gfxHandle;
 };
-DEFINE_REF(Window);
+DEFINE_REF(Window)
 } // namespace Seele

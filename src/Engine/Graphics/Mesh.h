@@ -42,7 +42,7 @@ struct MeshDescription
         //TODO declaration
 	}
 };*/
-DECLARE_REF(MaterialAsset);
+DECLARE_REF(MaterialAsset)
 class Mesh
 {
 public:
@@ -55,11 +55,9 @@ public:
 private:
 	friend class boost::serialization::access;
 	template<class Archive>
-	void serialize(Archive& ar, const unsigned int version)
+	void serialize(Archive&, const unsigned int)
 	{
-        //ar & referencedMaterial->getFullPath();
-        //TODO: 
-	}
+    }
 };
-DEFINE_REF(Mesh);
+DEFINE_REF(Mesh)
 } // namespace Seele

@@ -26,7 +26,7 @@ void SceneView::beginFrame()
 	scene->tick(0);//TODO: update in separate thread
 }
 
-void SceneView::keyCallback(KeyCode code, InputAction action, KeyModifier modifier)
+void SceneView::keyCallback(KeyCode code, InputAction action, KeyModifier)
 {
 	if(action != InputAction::RELEASE)
 	{
@@ -56,7 +56,7 @@ void SceneView::mouseMoveCallback(double xPos, double yPos)
 	}
 }
 
-void SceneView::mouseButtonCallback(MouseButton button, InputAction action, KeyModifier modifier) 
+void SceneView::mouseButtonCallback(MouseButton button, InputAction action, KeyModifier) 
 {
 	if(button == MouseButton::MOUSE_BUTTON_1 && action != InputAction::RELEASE)
 	{
@@ -68,12 +68,12 @@ void SceneView::mouseButtonCallback(MouseButton button, InputAction action, KeyM
 	}
 }
 
-void SceneView::scrollCallback(double xOffset, double yOffset) 
+void SceneView::scrollCallback(double, double yOffset) 
 {
 	activeCamera->getCameraComponent()->mouseScroll(yOffset);
 }
 
-void SceneView::fileCallback(int count, const char** paths) 
+void SceneView::fileCallback(int, const char**) 
 {
 	
 }

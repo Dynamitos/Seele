@@ -2,7 +2,7 @@
 #include "RenderPath.h"
 namespace Seele
 {
-DECLARE_REF(Window);
+DECLARE_REF(Window)
 // A view is a part of the window, which can be anything from a viewport to an editor
 class View
 {

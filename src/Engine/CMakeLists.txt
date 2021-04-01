@@ -5,9 +5,8 @@ target_sources(SeeleEngine
         main.cpp)
 
 add_subdirectory(Asset/)
-add_subdirectory(Arch/)
 add_subdirectory(Containers/)
-add_subdirectory(Fibers/)
+#add_subdirectory(Fibers/)
 add_subdirectory(Graphics/)
 add_subdirectory(Material/)
 add_subdirectory(Math/)

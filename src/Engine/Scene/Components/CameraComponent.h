@@ -56,5 +56,5 @@ private:
 	Matrix4 viewMatrix;
 	Matrix4 projectionMatrix;
 };
-DEFINE_REF(CameraComponent);
+DEFINE_REF(CameraComponent)
 } // namespace Seele

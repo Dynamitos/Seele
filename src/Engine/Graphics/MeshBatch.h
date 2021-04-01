@@ -2,11 +2,11 @@
 
 namespace Seele
 {
-DECLARE_REF(MaterialAsset);
-DECLARE_REF(VertexShaderInput);
-DECLARE_NAME_REF(Gfx, VertexBuffer);
-DECLARE_NAME_REF(Gfx, IndexBuffer);
-DECLARE_NAME_REF(Gfx, UniformBuffer);
+DECLARE_REF(MaterialAsset)
+DECLARE_REF(VertexShaderInput)
+DECLARE_NAME_REF(Gfx, VertexBuffer)
+DECLARE_NAME_REF(Gfx, IndexBuffer)
+DECLARE_NAME_REF(Gfx, UniformBuffer)
 struct MeshBatchElement
 {
 public:
@@ -32,13 +32,13 @@ public:
     MeshBatchElement()
         : uniformBuffer(nullptr)
         , indexBuffer(nullptr)
-        , indirectArgsBuffer(nullptr)
         , firstIndex(0)
         , numPrimitives(0)
         , numInstances(1)
         , baseVertexIndex(0)
         , minVertexIndex(0)
         , maxVertexIndex(0)
+        , indirectArgsBuffer(nullptr)
     {}
 };
 struct MeshBatch
@@ -81,13 +81,13 @@ struct MeshBatch
         , isBackfaceCullingDisabled(false)
         , isCastingShadow(true)
         , useWireframe(false)
+        , topology(Gfx::SE_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
         , vertexInput(nullptr)
         , material(nullptr)
-        , topology(Gfx::SE_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
     {
     }
 };
-DECLARE_REF(PrimitiveComponent);
+DECLARE_REF(PrimitiveComponent)
 struct StaticMeshBatch : public MeshBatch
 {
     uint32 index;

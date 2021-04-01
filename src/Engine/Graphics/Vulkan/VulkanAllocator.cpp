@@ -5,7 +5,11 @@
 using namespace Seele::Vulkan;
 
 SubAllocation::SubAllocation(Allocation *owner, VkDeviceSize allocatedOffset, VkDeviceSize size, VkDeviceSize alignedOffset, VkDeviceSize allocatedSize)
-	: owner(owner), size(size), allocatedOffset(allocatedOffset), alignedOffset(alignedOffset), allocatedSize(allocatedSize)
+	: owner(owner)
+	, size(size)
+	, allocatedOffset(allocatedOffset)
+	, alignedOffset(alignedOffset)
+	, allocatedSize(allocatedSize)
 {
 }
 
@@ -41,7 +45,13 @@ void SubAllocation::invalidateMemory()
 
 Allocation::Allocation(PGraphics graphics, Allocator *allocator, VkDeviceSize size, uint8 memoryTypeIndex,
 					   VkMemoryPropertyFlags properties, VkMemoryDedicatedAllocateInfo *dedicatedInfo)
-	: device(graphics->getDevice()), allocator(allocator), bytesAllocated(0), bytesUsed(0), readable(properties & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT), properties(properties), memoryTypeIndex(memoryTypeIndex)
+	: device(graphics->getDevice())
+	, allocator(allocator)
+	, bytesAllocated(0)
+	, bytesUsed(0)
+	, readable(properties & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
+	, properties(properties)
+	, memoryTypeIndex(memoryTypeIndex)
 {
 	VkMemoryAllocateInfo allocInfo =
 		init::MemoryAllocateInfo();
@@ -224,7 +234,7 @@ PSubAllocation Allocator::allocate(const VkMemoryRequirements2 &memRequirements2
 	}
 
 	// no suitable allocations found, allocate new block
-	PAllocation newAllocation = new Allocation(graphics, this, (requirements.size > MemoryBlockSize) ? requirements.size : MemoryBlockSize, memoryTypeIndex, properties, nullptr);
+	PAllocation newAllocation = new Allocation(graphics, this, (requirements.size > MemoryBlockSize) ? requirements.size : (VkDeviceSize)MemoryBlockSize, memoryTypeIndex, properties, nullptr);
 	heaps[heapIndex].allocations.add(newAllocation);
 	return newAllocation->getSuballocation(requirements.size, requirements.alignment);
 }

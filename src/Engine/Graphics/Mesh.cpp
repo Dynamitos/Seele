@@ -3,8 +3,8 @@
 using namespace Seele;
 
 Mesh::Mesh(PVertexShaderInput vertexInput, Gfx::PIndexBuffer indexBuffer) 
-    : vertexInput(vertexInput)
-    , indexBuffer(indexBuffer)
+    : indexBuffer(indexBuffer)
+    , vertexInput(vertexInput)
 {    
 }
 

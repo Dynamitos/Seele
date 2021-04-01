@@ -5,7 +5,7 @@ namespace Seele
 {
 namespace Vulkan
 {
-DECLARE_REF(RenderPass);
+DECLARE_REF(RenderPass)
 struct FramebufferDescription
 {
     VkImageView inputAttachments[16];
@@ -35,6 +35,6 @@ private:
     Gfx::PRenderTargetLayout layout;
     PRenderPass renderPass;
 };
-DEFINE_REF(Framebuffer);
+DEFINE_REF(Framebuffer)
 } // namespace Vulkan
 } // namespace Seele

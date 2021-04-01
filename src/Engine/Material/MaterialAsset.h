@@ -5,8 +5,8 @@
 
 namespace Seele
 {
-DECLARE_REF(VertexShaderInput);
-DECLARE_REF(Material);
+DECLARE_REF(VertexShaderInput)
+DECLARE_REF(Material)
 class MaterialAsset : public Asset
 {
 public:
@@ -34,5 +34,5 @@ protected:
     uint8* uniformData;
     int32 uniformBinding;
 };
-DEFINE_REF(MaterialAsset);
+DEFINE_REF(MaterialAsset)
 } // namespace Seele

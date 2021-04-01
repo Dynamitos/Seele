@@ -17,5 +17,5 @@ private:
     PCameraComponent cameraComponent;
     PComponent sceneComponent; // This will be the root, camera will be the child
 };
-DEFINE_REF(CameraActor);
+DEFINE_REF(CameraActor)
 } // namespace Seele

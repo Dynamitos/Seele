@@ -5,8 +5,8 @@ namespace Seele
 {
 namespace Vulkan
 {
-DECLARE_REF(PipelineLayout);
-DECLARE_REF(Graphics);
+DECLARE_REF(PipelineLayout)
+DECLARE_REF(Graphics)
 class GraphicsPipeline : public Gfx::GraphicsPipeline
 {
 public:
@@ -15,9 +15,9 @@ public:
     void bind(VkCommandBuffer handle);
     VkPipelineLayout getLayout() const;
 private:
-    VkPipeline pipeline;
     PGraphics graphics;
+    VkPipeline pipeline;
 };
-DEFINE_REF(GraphicsPipeline);
+DEFINE_REF(GraphicsPipeline)
 } // namespace Vulkan
 } // namespace Seele

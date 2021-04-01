@@ -8,7 +8,7 @@
 namespace Seele
 {
 DECLARE_REF(Material)
-DECLARE_NAME_REF(Gfx, Graphics);
+DECLARE_NAME_REF(Gfx, Graphics)
 class MaterialLoader
 {
 public:
@@ -21,5 +21,5 @@ private:
     List<std::future<void>> futures;
     PMaterial placeholderMaterial;
 };
-DEFINE_REF(MaterialLoader);
+DEFINE_REF(MaterialLoader)
 } // namespace Seele

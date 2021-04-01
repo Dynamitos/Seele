@@ -24,13 +24,13 @@ private:
     Array<Gfx::PRenderCommand> renderCommands;
     Array<Gfx::PRenderCommand> cachedCommandBuffers;
     Array<Gfx::PDescriptorSet> cachedPrimitiveSets;
-    uint32 cachedPrimitiveIndex;
     Gfx::PViewport target;
     uint8 translucentBasePass;
+    uint32 cachedPrimitiveIndex;
 };
-DEFINE_REF(BasePassMeshProcessor);
-DECLARE_REF(CameraActor);
-DECLARE_REF(CameraComponent);
+DEFINE_REF(BasePassMeshProcessor)
+DECLARE_REF(CameraActor)
+DECLARE_REF(CameraComponent)
 class BasePass
 {
 public:
@@ -54,8 +54,12 @@ private:
 
     Gfx::PRenderPass renderPass;
     Gfx::PTexture2D depthBuffer;
-    const PScene scene;
     UPBasePassMeshProcessor processor;
+    const PScene scene;
+    Gfx::PGraphics graphics;
+    Gfx::PViewport viewport;
+    Array<Gfx::PDescriptorSet> descriptorSets;
+    PCameraComponent source;
     Gfx::PPipelineLayout basePassLayout;
     // Set 0: Light environment
     Gfx::PDescriptorLayout lightLayout;
@@ -68,10 +72,6 @@ private:
     // Set 3: primitive scene data
     Gfx::PDescriptorLayout primitiveLayout;
     Gfx::PUniformBuffer primitiveUniformBuffer;
-    Array<Gfx::PDescriptorSet> descriptorSets;
-    Gfx::PGraphics graphics;
-    PCameraComponent source;
-    Gfx::PViewport viewport;
 };
-DEFINE_REF(BasePass);
+DEFINE_REF(BasePass)
 } // namespace Seele

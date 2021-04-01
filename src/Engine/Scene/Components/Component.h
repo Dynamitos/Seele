@@ -4,9 +4,9 @@
 
 namespace Seele
 {
-DECLARE_REF(Actor);
-DECLARE_REF(Scene);
-DECLARE_REF(Component);
+DECLARE_REF(Actor)
+DECLARE_REF(Scene)
+DECLARE_REF(Component)
 class Component
 {
 public:

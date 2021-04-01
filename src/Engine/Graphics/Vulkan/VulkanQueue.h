@@ -5,8 +5,8 @@ namespace Seele
 {
 namespace Vulkan
 {
-DECLARE_REF(CmdBuffer);
-DECLARE_REF(Graphics);
+DECLARE_REF(CmdBuffer)
+DECLARE_REF(Graphics)
 class Queue
 {
 public:

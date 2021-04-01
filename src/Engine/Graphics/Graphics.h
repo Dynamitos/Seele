@@ -61,6 +61,6 @@ protected:
     PShaderCompiler shaderCompiler;
     friend class Window;
 };
-DEFINE_REF(Graphics);
+DEFINE_REF(Graphics)
 } // namespace Gfx
 } // namespace Seele

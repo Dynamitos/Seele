@@ -17,6 +17,6 @@ private:
     std::string cacheFile;
     Map<uint32, VkPipeline> createdPipelines;
 };
-DEFINE_REF(PipelineCache);
+DEFINE_REF(PipelineCache)
 } // namespace Vulkan
 } // namespace Seele

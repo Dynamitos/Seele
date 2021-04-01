@@ -197,7 +197,7 @@ void MeshLoader::convertAssimpARGB(unsigned char* dst, aiTexel* src, uint32 numP
         dst[i * 4 + 3] = src[i].a;
     }
 }
-void MeshLoader::loadTextures(const aiScene* scene, Gfx::PGraphics graphics, const std::filesystem::path& meshDirectory)
+void MeshLoader::loadTextures(const aiScene* scene, const std::filesystem::path& meshDirectory)
 {
     for (uint32 i = 0; i < scene->mNumTextures; ++i)
     {
@@ -237,7 +237,7 @@ void MeshLoader::import(const std::filesystem::path &path)
     const aiScene *scene = importer.ApplyPostProcessing(aiProcess_CalcTangentSpace);
     
     Array<PMaterialAsset> globalMaterials(scene->mNumMaterials);
-    loadTextures(scene, graphics, path.parent_path());
+    loadTextures(scene, path.parent_path());
     loadMaterials(scene, globalMaterials, graphics);
     
     Array<PMesh> globalMeshes(scene->mNumMeshes);

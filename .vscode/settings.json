@@ -104,7 +104,9 @@
         "hash_map": "cpp",
         "hash_set": "cpp",
         "scoped_allocator": "cpp",
-        "stack": "cpp"
+        "stack": "cpp",
+        "coroutine": "cpp",
+        "*.tcc": "cpp"
     },
     "cmake.skipConfigureIfCachePresent": false,
     "cmake.configureArgs": [

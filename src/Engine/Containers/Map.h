@@ -28,9 +28,9 @@ struct Map
 private:
 	struct Node
 	{
-		Pair<K, V> pair;
 		Node *leftChild;
 		Node *rightChild;
+		Pair<K, V> pair;
 		Node()
 			: leftChild(nullptr), rightChild(nullptr), pair()
 		{

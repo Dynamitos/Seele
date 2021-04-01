@@ -38,6 +38,6 @@ private:
     VkRect2D renderArea;
     VkSubpassContents subpassContents;
 };
-DEFINE_REF(RenderPass);
+DEFINE_REF(RenderPass)
 } // namespace Vulkan
 } // namespace Seele

@@ -43,7 +43,7 @@ ShaderCollection& ShaderMap::createShaders(
 	RenderPassType renderPass, 
 	PMaterial material, 
 	VertexInputType* vertexInput,
-	bool bPositionOnly)
+	bool /*bPositionOnly*/)
 {
 	ShaderCollection& collection = shaders.add();
 	//collection.vertexDeclaration = bPositionOnly ? vertexInput->getPositionDeclaration() : vertexInput->getDeclaration();
@@ -139,8 +139,8 @@ void PipelineLayout::addPushConstants(const SePushConstantRange &pushConstant)
 }
 
 QueueOwnedResource::QueueOwnedResource(QueueFamilyMapping mapping, QueueType startQueueType)
-	: mapping(mapping)
-	, currentOwner(startQueueType)
+	: currentOwner(startQueueType)
+	, mapping(mapping)
 {
 }
 
@@ -224,7 +224,9 @@ IndexBuffer::~IndexBuffer()
 VertexStream::VertexStream()
 {}
 VertexStream::VertexStream(uint32 stride, uint32 offset, uint8 instanced)
-	: stride(stride), instanced(instanced), offset(offset)
+	: stride(stride)
+	, offset(offset)
+	, instanced(instanced)
 {
 }
 VertexStream::~VertexStream()
@@ -294,31 +296,53 @@ RenderCommand::~RenderCommand()
 }
 
 RenderTargetLayout::RenderTargetLayout()
-	: inputAttachments(), colorAttachments(), depthAttachment()
+	: inputAttachments()
+	, colorAttachments()
+	, depthAttachment()
 {
 }
 
 RenderTargetLayout::RenderTargetLayout(PRenderTargetAttachment depthAttachment)
-	: inputAttachments(), colorAttachments(), depthAttachment(depthAttachment), width(depthAttachment->getTexture()->getSizeX()), height(depthAttachment->getTexture()->getSizeY())
+	: inputAttachments()
+	, colorAttachments()
+	, depthAttachment(depthAttachment)
+	, width(depthAttachment->getTexture()->getSizeX())
+	, height(depthAttachment->getTexture()->getSizeY())
 {
 }
 
 RenderTargetLayout::RenderTargetLayout(PRenderTargetAttachment colorAttachment, PRenderTargetAttachment depthAttachment)
-	: inputAttachments(), depthAttachment(depthAttachment), width(depthAttachment->getTexture()->getSizeX()), height(depthAttachment->getTexture()->getSizeY())
+	: inputAttachments()
+	, depthAttachment(depthAttachment)
+	, width(depthAttachment->getTexture()->getSizeX())
+	, height(depthAttachment->getTexture()->getSizeY())
 {
 	colorAttachments.add(colorAttachment);
 }
-RenderTargetLayout::RenderTargetLayout(Array<PRenderTargetAttachment> colorAttachments, PRenderTargetAttachment depthAttachmet)
-	: inputAttachments(), colorAttachments(colorAttachments), depthAttachment(depthAttachment), width(depthAttachment->getTexture()->getSizeX()), height(depthAttachment->getTexture()->getSizeY())
+RenderTargetLayout::RenderTargetLayout(Array<PRenderTargetAttachment> colorAttachments, PRenderTargetAttachment depthAttachment)
+	: inputAttachments()
+	, colorAttachments(colorAttachments)
+	, depthAttachment(depthAttachment)
+	, width(depthAttachment->getTexture()->getSizeX())
+	, height(depthAttachment->getTexture()->getSizeY())
 {
 }
 RenderTargetLayout::RenderTargetLayout(Array<PRenderTargetAttachment> inputAttachments, Array<PRenderTargetAttachment> colorAttachments, PRenderTargetAttachment depthAttachment)
-	: inputAttachments(inputAttachments), colorAttachments(colorAttachments), depthAttachment(depthAttachment), width(depthAttachment->getTexture()->getSizeX()), height(depthAttachment->getTexture()->getSizeY())
+	: inputAttachments(inputAttachments)
+	, colorAttachments(colorAttachments)
+	, depthAttachment(depthAttachment)
+	, width(depthAttachment->getTexture()->getSizeX())
+	, height(depthAttachment->getTexture()->getSizeY())
 {
 }
 
 Window::Window(const WindowCreateInfo &createInfo)
-	: sizeX(createInfo.width), sizeY(createInfo.height), bFullscreen(createInfo.bFullscreen), title(createInfo.title), pixelFormat(createInfo.pixelFormat), samples(createInfo.numSamples)
+	: sizeX(createInfo.width)
+	, sizeY(createInfo.height)
+	, bFullscreen(createInfo.bFullscreen)
+	, title(createInfo.title)
+	, pixelFormat(createInfo.pixelFormat)
+	, samples(createInfo.numSamples)
 {
 }
 
@@ -327,7 +351,11 @@ Window::~Window()
 }
 
 Viewport::Viewport(PWindow owner, const ViewportCreateInfo &viewportInfo)
-	: sizeX(viewportInfo.sizeX), sizeY(viewportInfo.sizeY), offsetX(viewportInfo.offsetX), offsetY(viewportInfo.offsetY), owner(owner)
+	: sizeX(viewportInfo.sizeX)
+	, sizeY(viewportInfo.sizeY)
+	, offsetX(viewportInfo.offsetX)
+	, offsetY(viewportInfo.offsetY)
+	, owner(owner)
 {
 }
 

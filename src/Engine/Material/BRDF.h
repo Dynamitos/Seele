@@ -29,7 +29,7 @@ protected:
 
 class BlinnPhong : public BRDF
 {
-    DECLARE_BRDF(BlinnPhong);
+    DECLARE_BRDF(BlinnPhong)
 public:
     virtual void generateMaterialCode(std::ofstream& codeStream, nlohmann::json codeJson);
 protected:

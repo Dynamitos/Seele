@@ -23,7 +23,11 @@ CmdBufferBase::~CmdBufferBase()
 }
 
 CmdBuffer::CmdBuffer(PGraphics graphics, VkCommandPool cmdPool, PCommandBufferManager manager)
-    : CmdBufferBase(graphics, cmdPool), renderPass(nullptr), framebuffer(nullptr), subpassIndex(0), manager(manager)
+    : CmdBufferBase(graphics, cmdPool)
+    , manager(manager)
+    , renderPass(nullptr)
+    , framebuffer(nullptr)
+    , subpassIndex(0)
 {
     VkCommandBufferAllocateInfo allocInfo =
         init::CommandBufferAllocateInfo(cmdPool,

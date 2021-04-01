@@ -28,5 +28,5 @@ private:
 	Array<PWindow> windows;
 	static Gfx::PGraphics graphics;
 };
-DEFINE_REF(WindowManager);
+DEFINE_REF(WindowManager)
 } // namespace Seele

@@ -14,6 +14,7 @@ set(BUILD_SHARED_LIBS ON CACHE INTERNAL "")
 
 add_subdirectory(${ASSIMP_ROOT} ${ASSIMP_ROOT})
 target_compile_definitions(assimp PRIVATE _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
+target_compile_options(assimp PRIVATE -Wno-error)
 
 #-------------BOOST----------------
 list(APPEND DEPENDENCIES boost)
@@ -31,7 +32,7 @@ ExternalProject_Add(boost
 	INSTALL_COMMAND "")
 
 list (APPEND EXTRA_CMAKE_ARGS
-	-DBoost_NO_SYSTEM_PATHS=ON)
+	-DBoost_NO_SYSTEM_PATHS=OFF)
 
 #--------------------JSON------------------
 list(APPEND DEPENDENCIES nlohmann_json)

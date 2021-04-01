@@ -4,8 +4,8 @@
 
 namespace Seele
 {
-DECLARE_REF(Scene);
-DECLARE_REF(CameraActor);
+DECLARE_REF(Scene)
+DECLARE_REF(CameraActor)
 class SceneRenderPath : public RenderPath
 {
 public:

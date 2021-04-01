@@ -1,13 +1,12 @@
 #pragma once
 #include "MinimalEngine.h"
 #include "Containers/List.h"
-#include <coroutine>
 namespace Seele
 {
 namespace Fibers
 {
 class FiberJob;
-DECLARE_REF(Counter);
+DECLARE_REF(Counter)
 enum class JobPriority : size_t
 {
     HIGH = 0, 

@@ -9,7 +9,7 @@ namespace Seele
 {
 namespace Vulkan
 {
-DECLARE_REF(Graphics);
+DECLARE_REF(Graphics)
 class Allocation;
 class Allocator;
 class SubAllocation
@@ -33,14 +33,14 @@ public:
 
 private:
 	Allocation *owner;
-	VkDeviceSize allocatedOffset;
 	VkDeviceSize size;
+	VkDeviceSize allocatedOffset;
 	VkDeviceSize alignedOffset;
 	VkDeviceSize allocatedSize;
 	friend class Allocation;
 	friend class Allocator;
 };
-DEFINE_REF(SubAllocation);
+DEFINE_REF(SubAllocation)
 class Allocation
 {
 public:
@@ -94,24 +94,24 @@ public:
 	}
 
 private:
-	Allocator *allocator;
 	VkDevice device;
-	VkDeviceMemory allocatedMemory;
+	Allocator *allocator;
 	VkDeviceSize bytesAllocated;
 	VkDeviceSize bytesUsed;
-	VkMemoryPropertyFlags properties;
+	VkDeviceMemory allocatedMemory;
 	Map<VkDeviceSize, SubAllocation *> activeAllocations;
 	Map<VkDeviceSize, PSubAllocation> freeRanges;
 	std::mutex lock;
 	void *mappedPointer;
-	uint8 memoryTypeIndex;
 	uint8 isDedicated : 1;
 	uint8 canMap : 1;
 	uint8 isMapped : 1;
 	uint8 readable : 1;
+	VkMemoryPropertyFlags properties;
+	uint8 memoryTypeIndex;
 	friend class Allocator;
 };
-DEFINE_REF(Allocation);
+DEFINE_REF(Allocation)
 
 class Allocator
 {
@@ -159,7 +159,7 @@ private:
 	PGraphics graphics;
 	VkPhysicalDeviceMemoryProperties memProperties;
 };
-DEFINE_REF(Allocator);
+DEFINE_REF(Allocator)
 
 class StagingBuffer
 {
@@ -207,7 +207,7 @@ private:
 	uint8 bReadable;
 	friend class StagingManager;
 };
-DEFINE_REF(StagingBuffer);
+DEFINE_REF(StagingBuffer)
 
 class StagingManager
 {
@@ -225,6 +225,6 @@ private:
 	Array<StagingBuffer *> activeBuffers;
 	std::mutex lock;
 };
-DEFINE_REF(StagingManager);
+DEFINE_REF(StagingManager)
 } // namespace Vulkan
 } // namespace Seele

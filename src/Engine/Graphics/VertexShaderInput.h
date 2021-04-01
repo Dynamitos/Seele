@@ -111,13 +111,13 @@ private:
         VertexInputType* inputClass::getType() const { return &staticType; }
 
 struct MeshDescription;
-DECLARE_REF(VertexShaderInput);
+DECLARE_REF(VertexShaderInput)
 class VertexShaderInput
 {
 public:
     VertexShaderInput(std::string name);
     virtual ~VertexShaderInput();
-    virtual void init(Gfx::PGraphics graphics) {};
+    virtual void init(Gfx::PGraphics) {}
     void getStreams(VertexInputStreamArray& outVertexStreams) const;
     void getPositionOnlyStream(VertexInputStreamArray& outVertexStreams) const;
     virtual bool supportsTesselation() { return false; }
@@ -158,5 +158,5 @@ protected:
     Gfx::PVertexDeclaration positionDeclaration;
     std::string name;
 };
-DEFINE_REF(VertexShaderInput);
+DEFINE_REF(VertexShaderInput)
 } // namespace Seele

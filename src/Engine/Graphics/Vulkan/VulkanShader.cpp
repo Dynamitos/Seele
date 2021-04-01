@@ -2,8 +2,7 @@
 #include "VulkanGraphics.h"
 #include "VulkanDescriptorSets.h"
 #include "slang.h"
-#include "spirv_cross/spirv_reflect.hpp"
-#include <fstream>
+//#include "spirv_cross/spirv_reflect.hpp"
 
 using namespace slang;
 using namespace Seele;

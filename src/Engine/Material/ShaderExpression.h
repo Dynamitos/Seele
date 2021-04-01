@@ -14,7 +14,7 @@ struct ExpressionOutput
 struct ShaderExpression
 {
 };
-DECLARE_NAME_REF(Gfx, DescriptorSet);
+DECLARE_NAME_REF(Gfx, DescriptorSet)
 struct ShaderParameter : public ShaderExpression
 {
     std::string name;
@@ -25,7 +25,7 @@ struct ShaderParameter : public ShaderExpression
     // update a descriptorset, in case of a uniform buffer, copy the data to the dst + byteOffset
     virtual void updateDescriptorSet(Gfx::PDescriptorSet descriptorSet, uint8* dst) = 0;
 };
-DEFINE_REF(ShaderParameter);
+DEFINE_REF(ShaderParameter)
 struct FloatParameter : public ShaderParameter
 {
     float data;
@@ -33,7 +33,7 @@ struct FloatParameter : public ShaderParameter
     virtual ~FloatParameter();
     virtual void updateDescriptorSet(Gfx::PDescriptorSet descriptorSet, uint8* dst) override;
 };
-DEFINE_REF(FloatParameter);
+DEFINE_REF(FloatParameter)
 struct VectorParameter : public ShaderParameter
 {
     Vector data;
@@ -41,8 +41,8 @@ struct VectorParameter : public ShaderParameter
     virtual ~VectorParameter();
     virtual void updateDescriptorSet(Gfx::PDescriptorSet descriptorSet, uint8* dst) override;
 };
-DEFINE_REF(VectorParameter);
-DECLARE_REF(TextureAsset);
+DEFINE_REF(VectorParameter)
+DECLARE_REF(TextureAsset)
 struct TextureParameter : public ShaderParameter
 {
     PTextureAsset data;
@@ -50,8 +50,8 @@ struct TextureParameter : public ShaderParameter
     virtual ~TextureParameter();
     virtual void updateDescriptorSet(Gfx::PDescriptorSet descriptorSet, uint8* dst) override;
 };
-DEFINE_REF(TextureParameter);
-DECLARE_NAME_REF(Gfx, SamplerState);
+DEFINE_REF(TextureParameter)
+DECLARE_NAME_REF(Gfx, SamplerState)
 struct SamplerParameter : public ShaderParameter
 {
     Gfx::PSamplerState data;
@@ -59,6 +59,6 @@ struct SamplerParameter : public ShaderParameter
     virtual ~SamplerParameter();
     virtual void updateDescriptorSet(Gfx::PDescriptorSet descriptorSet, uint8* dst) override;
 };
-DEFINE_REF(SamplerParameter);
+DEFINE_REF(SamplerParameter)
 
 } // namespace Seele

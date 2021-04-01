@@ -66,4 +66,4 @@ void StaticMeshVertexInput::setData(StaticMeshDataType&& data)
     this->data = std::move(data);
 }
 
-IMPLEMENT_VERTEX_INPUT_TYPE(StaticMeshVertexInput, "StaticMeshVertexInput");
+IMPLEMENT_VERTEX_INPUT_TYPE(StaticMeshVertexInput, "StaticMeshVertexInput")

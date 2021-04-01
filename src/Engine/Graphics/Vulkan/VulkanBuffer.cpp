@@ -17,7 +17,10 @@ struct PendingBuffer
 static Map<ShaderBuffer *, PendingBuffer> pendingBuffers;
 
 ShaderBuffer::ShaderBuffer(PGraphics graphics, uint32 size, VkBufferUsageFlags usage, Gfx::QueueType queueType)
-	: graphics(graphics), currentBuffer(0), size(size), currentOwner(queueType)
+	: graphics(graphics)
+	, currentBuffer(0)
+	, size(size)
+	, currentOwner(queueType)
 {
 	if (usage & VK_BUFFER_USAGE_INDEX_BUFFER_BIT ||
 		usage & VK_BUFFER_USAGE_VERTEX_BUFFER_BIT ||
@@ -242,8 +245,8 @@ void ShaderBuffer::unlock()
 }
 
 UniformBuffer::UniformBuffer(PGraphics graphics, const UniformBufferCreateInfo &createInfo)
-	: Vulkan::ShaderBuffer(graphics, createInfo.resourceData.size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, createInfo.resourceData.owner)
-	, Gfx::UniformBuffer(graphics->getFamilyMapping(), createInfo.resourceData)
+	: Gfx::UniformBuffer(graphics->getFamilyMapping(), createInfo.resourceData)
+	, Vulkan::ShaderBuffer(graphics, createInfo.resourceData.size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, createInfo.resourceData.owner)
 	, dedicatedStagingBuffer(nullptr)
 {
 	if(createInfo.bDynamic)
@@ -313,8 +316,8 @@ VkAccessFlags UniformBuffer::getDestAccessMask()
 }
 
 StructuredBuffer::StructuredBuffer(PGraphics graphics, const BulkResourceData &resourceData)
-	: Vulkan::ShaderBuffer(graphics, resourceData.size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, resourceData.owner)
-	, Gfx::StructuredBuffer(graphics->getFamilyMapping(), resourceData.owner)
+	: Gfx::StructuredBuffer(graphics->getFamilyMapping(), resourceData.owner)
+	, Vulkan::ShaderBuffer(graphics, resourceData.size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, resourceData.owner)
 {
 	if (resourceData.data != nullptr)
 	{
@@ -349,8 +352,8 @@ VkAccessFlags StructuredBuffer::getDestAccessMask()
 }
 
 VertexBuffer::VertexBuffer(PGraphics graphics, const VertexBufferCreateInfo &resourceData)
-	: Vulkan::ShaderBuffer(graphics, resourceData.resourceData.size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, resourceData.resourceData.owner)
-	, Gfx::VertexBuffer(graphics->getFamilyMapping(), resourceData.numVertices, resourceData.vertexSize, resourceData.resourceData.owner)
+	: Gfx::VertexBuffer(graphics->getFamilyMapping(), resourceData.numVertices, resourceData.vertexSize, resourceData.resourceData.owner)
+	, Vulkan::ShaderBuffer(graphics, resourceData.resourceData.size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, resourceData.resourceData.owner)
 {
 	if (resourceData.resourceData.data != nullptr)
 	{
@@ -385,8 +388,8 @@ VkAccessFlags VertexBuffer::getDestAccessMask()
 }
 
 IndexBuffer::IndexBuffer(PGraphics graphics, const IndexBufferCreateInfo &resourceData)
-	: Vulkan::ShaderBuffer(graphics, resourceData.resourceData.size, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, resourceData.resourceData.owner)
-	, Gfx::IndexBuffer(graphics->getFamilyMapping(), resourceData.resourceData.size, resourceData.indexType, resourceData.resourceData.owner)
+	: Gfx::IndexBuffer(graphics->getFamilyMapping(), resourceData.resourceData.size, resourceData.indexType, resourceData.resourceData.owner)
+	, Vulkan::ShaderBuffer(graphics, resourceData.resourceData.size, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, resourceData.resourceData.owner)
 {
 	if (resourceData.resourceData.data != nullptr)
 	{

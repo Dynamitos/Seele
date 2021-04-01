@@ -32,12 +32,13 @@ else()
 	# Find include files
 	find_path(
 		GLM_INCLUDE_DIR
-		NAMES GLM/glfw.h
+		NAMES glm/glm.hpp
 		PATHS
 			/usr/include
 			/usr/local/include
 			/sw/include
 			/opt/local/include
+			${GLM_ROOT}
 		DOC "The directory where GLM/glm.h resides")
 endif()
 

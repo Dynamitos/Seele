@@ -6,10 +6,9 @@ namespace Seele
 
 struct GraphicsInitializer
 {
-    const char *windowLayoutFile;
     const char *applicationName;
     const char *engineName;
-    void *windowHandle;
+    const char *windowLayoutFile;
     /**
 	 * layers defines the enabled Vulkan layers used in the instance,
 	 * if ENABLE_VALIDATION is defined, standard validation is already enabled
@@ -18,12 +17,23 @@ struct GraphicsInitializer
     Array<const char *> layers;
     Array<const char *> instanceExtensions;
     Array<const char *> deviceExtensions;
+    
+    void *windowHandle;
     GraphicsInitializer()
-        : applicationName("SeeleEngine"), engineName("SeeleEngine"), layers{"VK_LAYER_KHRONOS_validation"}, instanceExtensions{}, deviceExtensions{"VK_KHR_swapchain"}, windowHandle(nullptr)
+        : applicationName("SeeleEngine")
+        , engineName("SeeleEngine")
+        , layers{"VK_LAYER_KHRONOS_validation"}
+        , instanceExtensions{}
+        , deviceExtensions{"VK_KHR_swapchain"}
+        , windowHandle(nullptr)
     {
     }
     GraphicsInitializer(const GraphicsInitializer &other)
-        : applicationName(other.applicationName), engineName(other.engineName), layers(other.layers), instanceExtensions(other.instanceExtensions), deviceExtensions(other.deviceExtensions)
+        : applicationName(other.applicationName)
+        , engineName(other.engineName)
+        , layers(other.layers)
+        , instanceExtensions(other.instanceExtensions)
+        , deviceExtensions(other.deviceExtensions)
     {
     }
 };
@@ -191,14 +201,14 @@ struct ColorBlendState
     float blendConstants[4];
 };
 } // namespace Gfx
-DECLARE_NAME_REF(Gfx, VertexDeclaration);
-DECLARE_NAME_REF(Gfx, VertexShader);
-DECLARE_NAME_REF(Gfx, ControlShader);
-DECLARE_NAME_REF(Gfx, EvaluationShader);
-DECLARE_NAME_REF(Gfx, GeometryShader);
-DECLARE_NAME_REF(Gfx, FragmentShader);
-DECLARE_NAME_REF(Gfx, PipelineLayout);
-DECLARE_NAME_REF(Gfx, RenderPass);
+DECLARE_NAME_REF(Gfx, VertexDeclaration)
+DECLARE_NAME_REF(Gfx, VertexShader)
+DECLARE_NAME_REF(Gfx, ControlShader)
+DECLARE_NAME_REF(Gfx, EvaluationShader)
+DECLARE_NAME_REF(Gfx, GeometryShader)
+DECLARE_NAME_REF(Gfx, FragmentShader)
+DECLARE_NAME_REF(Gfx, PipelineLayout)
+DECLARE_NAME_REF(Gfx, RenderPass)
 struct GraphicsPipelineCreateInfo
 {
 	Gfx::PVertexDeclaration vertexDeclaration;
@@ -216,7 +226,7 @@ struct GraphicsPipelineCreateInfo
 	Gfx::ColorBlendState colorBlend;
 	GraphicsPipelineCreateInfo()
 	{
-		std::memset(this, 0, sizeof(*this));
+		std::memset((void*)this, 0, sizeof(*this));
         topology = Gfx::SE_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
         rasterizationState.cullMode = Gfx::SE_CULL_MODE_BACK_BIT;
         rasterizationState.polygonMode = Gfx::SE_POLYGON_MODE_FILL;

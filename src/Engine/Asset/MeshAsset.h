@@ -3,8 +3,8 @@
 
 namespace Seele
 {
-DECLARE_REF(Mesh);
-DECLARE_REF(MaterialAsset);
+DECLARE_REF(Mesh)
+DECLARE_REF(MaterialAsset)
 class MeshAsset : public Asset
 {
 public:
@@ -20,5 +20,5 @@ private:
     Array<PMesh> meshes;
     Array<PMaterialAsset> referencedMaterials;
 };
-DEFINE_REF(MeshAsset);
+DEFINE_REF(MeshAsset)
 } // namespace Seele

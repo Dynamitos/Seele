@@ -3,9 +3,7 @@
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 
-#pragma warning(disable : 4201)
 #include <glm/gtc/quaternion.hpp>
-#pragma warning(default : 4201)
 namespace Seele
 {
 typedef glm::vec2 Vector2;

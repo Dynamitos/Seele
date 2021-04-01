@@ -6,8 +6,8 @@ namespace Seele
 {
 namespace Vulkan
 {
-DECLARE_REF(Graphics);
-DECLARE_REF(DescriptorLayout);
+DECLARE_REF(Graphics)
+DECLARE_REF(DescriptorLayout)
 class Shader
 {
 public:
@@ -31,12 +31,12 @@ private:
     PGraphics graphics;
     Map<uint32, PDescriptorLayout> descriptorSets;
     VkShaderModule module;
-    VkShaderStageFlags stage;
     ShaderType type;
+    VkShaderStageFlags stage;
     std::string entryPointName;
     uint32 hash;
 };
-DEFINE_REF(Shader);
+DEFINE_REF(Shader)
 
 template <typename Base, ShaderType shaderType, VkShaderStageFlags stageFlags>
 class ShaderBase : public Base, public Shader
@@ -57,12 +57,12 @@ typedef ShaderBase<Gfx::GeometryShader, ShaderType::GEOMETRY, VK_SHADER_STAGE_GE
 typedef ShaderBase<Gfx::FragmentShader, ShaderType::FRAGMENT, VK_SHADER_STAGE_FRAGMENT_BIT> FragmentShader;
 typedef ShaderBase<Gfx::ComputeShader, ShaderType::COMPUTE, VK_SHADER_STAGE_COMPUTE_BIT> ComputeShader;
 
-DEFINE_REF(VertexShader);
-DEFINE_REF(ControlShader);
-DEFINE_REF(EvaluationShader);
-DEFINE_REF(GeometryShader);
-DEFINE_REF(FragmentShader);
-DEFINE_REF(ComputeShader);
+DEFINE_REF(VertexShader)
+DEFINE_REF(ControlShader)
+DEFINE_REF(EvaluationShader)
+DEFINE_REF(GeometryShader)
+DEFINE_REF(FragmentShader)
+DEFINE_REF(ComputeShader)
 
 } // namespace Vulkan
 }

@@ -16,7 +16,7 @@ struct StaticMeshDataType
 };
 class StaticMeshVertexInput : public VertexShaderInput
 {
-    DECLARE_VERTEX_INPUT_TYPE(StaticMeshVertexInput);
+    DECLARE_VERTEX_INPUT_TYPE(StaticMeshVertexInput)
 public:
     StaticMeshVertexInput(std::string name);
     virtual ~StaticMeshVertexInput();
@@ -25,5 +25,5 @@ public:
 private:
     StaticMeshDataType data;
 };
-DEFINE_REF(StaticMeshVertexInput);
+DEFINE_REF(StaticMeshVertexInput)
 }

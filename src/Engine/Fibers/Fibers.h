@@ -1,8 +1,6 @@
 #pragma once
 #include "MinimalEngine.h"
 #include "JobQueue.h"
-#include <atomic>
-#include <functional>
 
 namespace Seele
 {
@@ -67,14 +65,14 @@ public:
 private:
     std::atomic_uint64_t count;
 };
-DEFINE_REF(Counter);
+DEFINE_REF(Counter)
 struct AwaitCounter
 {
     PCounter counter;
     uint64 target;
     JobPriority priority = JobPriority::MEDIUM;
     bool await_ready() { return counter->greaterEqual(target); }
-    void await_suspend(std::coroutine_handle<> h) {
+    void await_suspend(std::coroutine_handle<>) {
     }
     void await_resume() {}
 };

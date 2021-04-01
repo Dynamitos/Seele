@@ -7,8 +7,8 @@ namespace Seele
 struct VertexInputStream;
 namespace Vulkan
 {
-DECLARE_REF(RenderPass);
-DECLARE_REF(Framebuffer);
+DECLARE_REF(RenderPass)
+DECLARE_REF(Framebuffer)
 class CmdBufferBase
 {
 public:
@@ -27,10 +27,10 @@ protected:
 	VkCommandBuffer handle;
 	VkCommandPool owner;
 };
-DEFINE_REF(CmdBufferBase);
+DEFINE_REF(CmdBufferBase)
 
-DECLARE_REF(SecondaryCmdBuffer);
-DECLARE_REF(CommandBufferManager);
+DECLARE_REF(SecondaryCmdBuffer)
+DECLARE_REF(CommandBufferManager)
 class CmdBuffer : public CmdBufferBase
 {
 public:
@@ -68,10 +68,10 @@ private:
 	friend class CommandBufferManager;
 	friend class Queue;
 };
-DEFINE_REF(CmdBuffer);
+DEFINE_REF(CmdBuffer)
 
-DECLARE_REF(GraphicsPipeline);
-DECLARE_REF(DescriptorSet);
+DECLARE_REF(GraphicsPipeline)
+DECLARE_REF(DescriptorSet)
 class SecondaryCmdBuffer : public Gfx::RenderCommand, public CmdBufferBase
 {
 public:
@@ -94,7 +94,7 @@ private:
 	Array<PDescriptorSet> boundDescriptors;
 	friend class CmdBuffer;
 };
-DEFINE_REF(SecondaryCmdBuffer);
+DEFINE_REF(SecondaryCmdBuffer)
 
 class CommandBufferManager
 {
@@ -119,6 +119,6 @@ private:
 	std::mutex allocatedBufferLock;
 	Array<PCmdBuffer> allocatedBuffers;
 };
-DEFINE_REF(CommandBufferManager);
+DEFINE_REF(CommandBufferManager)
 } // namespace Vulkan
 } // namespace Seele

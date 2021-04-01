@@ -2,8 +2,8 @@
 #include "View.h"
 namespace Seele
 {
-DECLARE_REF(Scene);
-DECLARE_REF(CameraActor);
+DECLARE_REF(Scene)
+DECLARE_REF(CameraActor)
 class SceneView : public View
 {
 public:
@@ -20,5 +20,5 @@ private:
 	virtual void scrollCallback(double xOffset, double yOffset) override;
 	virtual void fileCallback(int count, const char** paths) override;
 };
-DEFINE_REF(SceneView);
+DEFINE_REF(SceneView)
 } // namespace Seele

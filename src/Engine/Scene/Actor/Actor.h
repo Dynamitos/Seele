@@ -4,9 +4,9 @@
 
 namespace Seele
 {
-DECLARE_REF(Actor);
-DECLARE_REF(Component);
-DECLARE_REF(Scene);
+DECLARE_REF(Actor)
+DECLARE_REF(Component)
+DECLARE_REF(Scene)
 class Actor
 {
 public:
@@ -48,5 +48,5 @@ protected:
     Array<PActor> children;
     PComponent rootComponent;
 };
-DEFINE_REF(Actor);
+DEFINE_REF(Actor)
 } // namespace Seele

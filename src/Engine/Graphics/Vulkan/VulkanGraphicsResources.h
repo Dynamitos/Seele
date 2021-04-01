@@ -8,11 +8,11 @@ namespace Seele
 namespace Vulkan
 {
 
-DECLARE_REF(DescriptorAllocator);
-DECLARE_REF(CommandBufferManager);
-DECLARE_REF(CmdBuffer);
-DECLARE_REF(Graphics);
-DECLARE_REF(SubAllocation);
+DECLARE_REF(DescriptorAllocator)
+DECLARE_REF(CommandBufferManager)
+DECLARE_REF(CmdBuffer)
+DECLARE_REF(Graphics)
+DECLARE_REF(SubAllocation)
 class Semaphore
 {
 public:
@@ -27,7 +27,7 @@ private:
 	VkSemaphore handle;
 	PGraphics graphics;
 };
-DEFINE_REF(Semaphore);
+DEFINE_REF(Semaphore)
 
 class Fence
 {
@@ -47,11 +47,11 @@ public:
 	}
 
 private:
+	PGraphics graphics;
 	bool signaled;
 	VkFence fence;
-	PGraphics graphics;
 };
-DEFINE_REF(Fence);
+DEFINE_REF(Fence)
 
 class VertexDeclaration : public Gfx::VertexDeclaration
 {
@@ -62,7 +62,7 @@ public:
 	virtual ~VertexDeclaration();
 private:
 };
-DEFINE_REF(VertexDeclaration);
+DEFINE_REF(VertexDeclaration)
 
 class QueueOwnedResourceDeletion
 {
@@ -112,12 +112,12 @@ protected:
 		VkBuffer buffer;
 		PSubAllocation allocation;
 	};
-	BufferAllocation buffers[Gfx::numFramesBuffered];
-	uint32 numBuffers;
+	PGraphics graphics;
 	uint32 currentBuffer;
 	uint32 size;
-	PGraphics graphics;
 	Gfx::QueueType currentOwner;
+	BufferAllocation buffers[Gfx::numFramesBuffered];
+	uint32 numBuffers;
 
 	void executeOwnershipBarrier(Gfx::QueueType newOwner);
 	virtual void requestOwnershipTransfer(Gfx::QueueType newOwner) = 0;
@@ -125,9 +125,9 @@ protected:
 	virtual VkAccessFlags getSourceAccessMask() = 0;
 	virtual VkAccessFlags getDestAccessMask() = 0;
 };
-DEFINE_REF(ShaderBuffer);
+DEFINE_REF(ShaderBuffer)
 
-DECLARE_REF(StagingBuffer);
+DECLARE_REF(StagingBuffer)
 class UniformBuffer : public Gfx::UniformBuffer, public ShaderBuffer
 {
 public:
@@ -147,7 +147,7 @@ protected:
 private:
 	PStagingBuffer dedicatedStagingBuffer;
 };
-DEFINE_REF(UniformBuffer);
+DEFINE_REF(UniformBuffer)
 
 class StructuredBuffer : public Gfx::StructuredBuffer, public ShaderBuffer
 {
@@ -163,7 +163,7 @@ protected:
 	// Inherited via QueueOwnedResource
 	virtual void executeOwnershipBarrier(Gfx::QueueType newOwner);
 };
-DEFINE_REF(StructuredBuffer);
+DEFINE_REF(StructuredBuffer)
 
 class VertexBuffer : public Gfx::VertexBuffer, public ShaderBuffer
 {
@@ -179,7 +179,7 @@ protected:
 	// Inherited via QueueOwnedResource
 	virtual void executeOwnershipBarrier(Gfx::QueueType newOwner);
 };
-DEFINE_REF(VertexBuffer);
+DEFINE_REF(VertexBuffer)
 
 class IndexBuffer : public Gfx::IndexBuffer, public ShaderBuffer
 {
@@ -195,7 +195,7 @@ protected:
 	// Inherited via QueueOwnedResource
 	virtual void executeOwnershipBarrier(Gfx::QueueType newOwner);
 };
-DEFINE_REF(IndexBuffer);
+DEFINE_REF(IndexBuffer)
 
 class TextureHandle
 {
@@ -303,14 +303,14 @@ protected:
 	virtual void executeOwnershipBarrier(Gfx::QueueType newOwner);
 
 };
-DEFINE_REF(Texture2D);
+DEFINE_REF(Texture2D)
 
 class SamplerState : public Gfx::SamplerState
 {
 public:
 	VkSampler sampler;
 };
-DEFINE_REF(SamplerState);
+DEFINE_REF(SamplerState)
 
 class Window : public Gfx::Window
 {
@@ -347,10 +347,11 @@ protected:
 	PSemaphore imageAcquiredSemaphore;
 
 	PGraphics graphics;
-	VkFormat pixelFormat;
-	VkSampleCountFlags numSamples;
-	VkPresentModeKHR presentMode;
+	VkInstance instance;
 	VkSwapchainKHR swapchain;
+	VkSampleCountFlags numSamples;
+	VkFormat pixelFormat;
+	VkPresentModeKHR presentMode;
 	VkSurfaceKHR surface;
 	VkSurfaceFormatKHR surfaceFormat;
 	void *windowHandle;
@@ -358,9 +359,8 @@ protected:
 	int32 acquiredImageIndex;
 	int32 preAcquiredImageIndex;
 	int32 semaphoreIndex;
-	VkInstance instance;
 };
-DEFINE_REF(Window);
+DEFINE_REF(Window)
 
 class Viewport : public Gfx::Viewport
 {
@@ -375,6 +375,6 @@ private:
 	PGraphics graphics;
 	friend class Graphics;
 };
-DECLARE_REF(Viewport);
+DECLARE_REF(Viewport)
 } // namespace Vulkan
 } // namespace Seele

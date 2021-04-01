@@ -6,13 +6,13 @@ namespace Seele
 {
 namespace Vulkan
 {
-DECLARE_REF(Allocator);
-DECLARE_REF(StagingManager);
-DECLARE_REF(CommandBufferManager);
-DECLARE_REF(Queue);
-DECLARE_REF(Framebuffer);
-DECLARE_REF(RenderCommand);
-DECLARE_REF(PipelineCache);
+DECLARE_REF(Allocator)
+DECLARE_REF(StagingManager)
+DECLARE_REF(CommandBufferManager)
+DECLARE_REF(Queue)
+DECLARE_REF(Framebuffer)
+DECLARE_REF(RenderCommand)
+DECLARE_REF(PipelineCache)
 class Graphics : public Gfx::Graphics
 {
 public:
@@ -72,9 +72,9 @@ protected:
 	void pickPhysicalDevice();
 	void createDevice(GraphicsInitializer initInfo);
 
+	VkInstance instance;
 	VkDevice handle;
 	VkPhysicalDevice physicalDevice;
-	VkInstance instance;
 
 	PQueue graphicsQueue;
 	PQueue computeQueue;
@@ -96,6 +96,6 @@ protected:
 
 	friend class Window;
 };
-DEFINE_REF(Graphics);
+DEFINE_REF(Graphics)
 } // namespace Vulkan
 } // namespace Seele

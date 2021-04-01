@@ -38,6 +38,7 @@ else()
 			/usr/local/include
 			/sw/include
 			/opt/local/include
+			${STB_ROOT}
 		DOC "The directory where STB/stb.h resides")
 endif()
 

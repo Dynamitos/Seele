@@ -31,5 +31,5 @@ private:
     friend class MaterialLoader;
     friend class MaterialInstance;
 };
-DEFINE_REF(Material);
+DEFINE_REF(Material)
 } // namespace Seele

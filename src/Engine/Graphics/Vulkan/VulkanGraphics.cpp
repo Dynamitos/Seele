@@ -10,12 +10,15 @@
 #include "VulkanDescriptorSets.h"
 #include "VulkanShader.h"
 #include "Graphics/GraphicsResources.h"
-#include <glfw/glfw3.h>
+#include <GLFW/glfw3.h>
 
 using namespace Seele::Vulkan;
 
 Graphics::Graphics()
-	: callback(VK_NULL_HANDLE), handle(VK_NULL_HANDLE), instance(VK_NULL_HANDLE), physicalDevice(VK_NULL_HANDLE)
+	: instance(VK_NULL_HANDLE)
+	, handle(VK_NULL_HANDLE)
+	, physicalDevice(VK_NULL_HANDLE)
+	, callback(VK_NULL_HANDLE)
 {
 }
 
@@ -161,7 +164,7 @@ Gfx::PGraphicsPipeline Graphics::createGraphicsPipeline(const GraphicsPipelineCr
 	return pipeline;
 }
 
-Gfx::PSamplerState Graphics::createSamplerState(const SamplerCreateInfo& createInfo) 
+Gfx::PSamplerState Graphics::createSamplerState(const SamplerCreateInfo&) 
 {
 	PSamplerState sampler = new SamplerState(); // TODO: proper sampler creation
 	VkSamplerCreateInfo vkInfo = 

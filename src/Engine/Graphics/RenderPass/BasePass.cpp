@@ -26,10 +26,10 @@ void BasePassMeshProcessor::addMeshBatch(
     Gfx::PPipelineLayout pipelineLayout,
     Gfx::PDescriptorLayout primitiveLayout,
     Array<Gfx::PDescriptorSet>& descriptorSets,
-    int32 staticMeshId) 
+    int32 /*staticMeshId*/) 
 {
     const PMaterialAsset material = batch.material;
-    const Gfx::MaterialShadingModel shadingModel = material->getShadingModel();
+    //const Gfx::MaterialShadingModel shadingModel = material->getShadingModel();
 
     const PVertexShaderInput vertexInput = batch.vertexInput;
 

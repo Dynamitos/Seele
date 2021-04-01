@@ -7,7 +7,7 @@
 
 namespace Seele
 {
-DECLARE_REF(MeshAsset);
+DECLARE_REF(MeshAsset)
 class PrimitiveComponent : public Component
 {
 public:
@@ -23,5 +23,5 @@ private:
     Gfx::PUniformBuffer uniformBuffer;
     friend class Scene;
 };
-DEFINE_REF(PrimitiveComponent);
+DEFINE_REF(PrimitiveComponent)
 } // namespace Seele

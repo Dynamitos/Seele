@@ -16,10 +16,11 @@ set(GLFW_ROOT ${EXTERNAL_ROOT}/glfw)
 set(JSON_ROOT ${EXTERNAL_ROOT}/json)
 set(STB_ROOT ${EXTERNAL_ROOT}/stb)
 set(SPIRV_ROOT ${EXTERNAL_ROOT}/SPIRV-Cross)
+set(Boost_DEBUG ON)
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/)
 
-set(Boost_USE_STATIC_LIBS ON)
+set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_LIB_PREFIX lib)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE})
@@ -43,13 +44,13 @@ endif()
 find_package(Vulkan REQUIRED)
 find_package(Boost REQUIRED COMPONENTS serialization)
 find_package(Threads REQUIRED)
-find_package(assimp REQUIRED)
+find_package(Assimp REQUIRED)
 find_package(JSON REQUIRED)
 find_package(GLFW REQUIRED)
 #find_package(SPIRV REQUIRED)
 find_package(GLM REQUIRED)
 find_package(STB REQUIRED)
-find_package(SLang REQUIRED)
+find_package(SLANG REQUIRED)
 
 include_directories(${GLM_INCLUDE_DIRS})
 include_directories(${STB_INCLUDE_DIRS})
@@ -80,22 +81,23 @@ target_link_libraries(SeeleEngine ${ASSIMP_LIBRARIES})
 target_link_libraries(SeeleEngine ${JSON_LIBRARY})
 #target_link_libraries(SeeleEngine ${SPIRV_LIBRARIES})
 
-#target_precompile_headers(SeeleEngine 
-#  PRIVATE    
-#    <assert.h>
-#    <memory>
-#    <atomic>
-#    <cstring>
-#    <iostream>
-#    <string>
-#    <thread>
-#    <functional>
-#    <filesystem>
-#    <fstream>
-#    <mutex>
-#    <condition_variable>
-#    <boost/serialization/serialization.hpp>
-#    <boost/crc.hpp>)
+target_precompile_headers(SeeleEngine 
+  PRIVATE    
+    <assert.h>
+    <atomic>
+    <condition_variable>
+    <coroutine>
+    <cstring>
+    <filesystem>
+    <functional>
+    <fstream>
+    <iostream>
+    <memory>
+    <mutex>
+    <string>
+    <thread>
+    <boost/serialization/serialization.hpp>
+    <boost/crc.hpp>)
 
 add_subdirectory(src/)
 
@@ -103,7 +105,7 @@ if(MSVC)
   set(_CRT_SECURE_NO_WARNINGS)
 #  target_compile_options(SeeleEngine PRIVATE /DEBUG:FASTLINK /Zi)
 else()
-  target_compile_options(SeeleEngine PRIVATE -Wall -Wextra -pedantic)
+  target_compile_options(SeeleEngine PRIVATE -Wall -Wextra -Wno-delete-incomplete -pedantic -fcoroutines)
 endif()
 
 add_executable(Seele_unit_tests "")

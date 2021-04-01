@@ -72,7 +72,8 @@ Semaphore::~Semaphore()
 }
 
 Fence::Fence(PGraphics graphics)
-    : graphics(graphics), signaled(false)
+    : graphics(graphics)
+    , signaled(false)
 {
     VkFenceCreateInfo info =
         init::FenceCreateInfo(0);

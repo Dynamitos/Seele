@@ -18,5 +18,5 @@ protected:
 	Gfx::PGraphics graphics;
 	Gfx::PViewport target;
 };
-DEFINE_REF(RenderPath);
+DEFINE_REF(RenderPath)
 } // namespace Seele

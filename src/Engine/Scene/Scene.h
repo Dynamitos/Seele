@@ -8,7 +8,7 @@
 
 namespace Seele
 {
-DECLARE_REF(Material);
+DECLARE_REF(Material)
 
 struct DirectionalLight
 {

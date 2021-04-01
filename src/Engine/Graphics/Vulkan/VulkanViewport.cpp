@@ -3,12 +3,12 @@
 #include "VulkanInitializer.h"
 #include "VulkanGraphicsEnums.h"
 #include "VulkanCommandBuffer.h"
-#include <glfw/glfw3.h>
+#include <GLFW/glfw3.h>
 
 using namespace Seele;
 using namespace Seele::Vulkan;
 
-void glfwKeyCallback(GLFWwindow* handle, int key, int scancode, int action, int modifier)
+void glfwKeyCallback(GLFWwindow* handle, int key, int action, int, int modifier)
 {
     Window* window = (Window*)glfwGetWindowUserPointer(handle);
     window->keyCallback((KeyCode)key, (InputAction)action, (KeyModifier)modifier);
@@ -39,7 +39,12 @@ void glfwFileCallback(GLFWwindow* handle, int count, const char** paths)
 }
 
 Window::Window(PGraphics graphics, const WindowCreateInfo &createInfo)
-    : Gfx::Window(createInfo), graphics(graphics), instance(graphics->getInstance()), swapchain(VK_NULL_HANDLE), numSamples(createInfo.numSamples), pixelFormat(cast(createInfo.pixelFormat))
+    : Gfx::Window(createInfo)
+    , graphics(graphics)
+    , instance(graphics->getInstance())
+    , swapchain(VK_NULL_HANDLE)
+    , numSamples(createInfo.numSamples)
+    , pixelFormat(cast(createInfo.pixelFormat))
 {
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     GLFWwindow *handle = glfwCreateWindow(createInfo.width, createInfo.height, createInfo.title, createInfo.bFullscreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
@@ -207,6 +212,7 @@ void Window::present()
     {
         presentResult = vkQueuePresentKHR(graphics->getGraphicsCommands()->getQueue()->getHandle(), &info);
     }
+    Gfx::currentFrameIndex = (Gfx::currentFrameIndex + 1)%Gfx::numFramesBuffered;
 }
 
 void Window::createSwapchain()

@@ -129,4 +129,4 @@ void BlinnPhong::generateMaterialCode(std::ofstream& codeStream, json codeJson)
     codeStream << "}" << std::endl;
 }
 
-IMPLEMENT_BRDF(BlinnPhong);
+IMPLEMENT_BRDF(BlinnPhong)

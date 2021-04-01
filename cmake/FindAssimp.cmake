@@ -48,12 +48,13 @@ else()
 			/usr/local/include
 			/sw/include
 			/opt/local/include
+			${ASSIMP_ROOT}/include
 		DOC "The directory where assimp/scene.h resides")
 
 	# Find library files
 	find_library(
 		ASSIMP_LIBRARY
-		NAMES assimp
+		NAMES libassimp${CMAKE_DEBUG_POSTFIX}.so
 		PATHS
 			/usr/lib64
 			/usr/lib
@@ -61,12 +62,12 @@ else()
 			/usr/local/lib
 			/sw/lib
 			/opt/local/lib
-			${ASSIMP_ROOT}/lib
+			${ASSIMP_ROOT}/bin
 		DOC "The Assimp library")
 endif()
 
 # Handle REQUIRD argument, define *_FOUND variable
-find_package_handle_standard_args(assimp DEFAULT_MSG ASSIMP_INCLUDE_DIR ASSIMP_LIBRARY ASSIMP_BINARY)
+find_package_handle_standard_args(assimp DEFAULT_MSG ASSIMP_INCLUDE_DIR ASSIMP_LIBRARY)
 
 # Define GLFW_LIBRARIES and GLFW_INCLUDE_DIRS
 if (ASSIMP_FOUND)

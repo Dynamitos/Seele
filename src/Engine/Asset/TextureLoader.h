@@ -7,9 +7,9 @@
 
 namespace Seele
 {
-DECLARE_REF(TextureAsset);
-DECLARE_NAME_REF(Gfx, Graphics);
-DECLARE_NAME_REF(Gfx, Texture2D);
+DECLARE_REF(TextureAsset)
+DECLARE_NAME_REF(Gfx, Graphics)
+DECLARE_NAME_REF(Gfx, Texture2D)
 class TextureLoader
 {
 public:
@@ -24,5 +24,5 @@ private:
     Gfx::PTexture2D placeholderTexture;
     PTextureAsset placeholderAsset;
 };
-DEFINE_REF(TextureLoader);
+DEFINE_REF(TextureLoader)
 } // namespace Seele

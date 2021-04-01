@@ -2,7 +2,7 @@
 
 namespace Seele
 {
-DECLARE_NAME_REF(Gfx, Texture);
+DECLARE_NAME_REF(Gfx, Texture)
 class TextureAsset : public Asset
 {
 public:
@@ -25,5 +25,5 @@ private:
     Gfx::PTexture texture;
     friend class TextureLoader;
 };
-DEFINE_REF(TextureAsset);
+DEFINE_REF(TextureAsset)
 } // namespace Seele

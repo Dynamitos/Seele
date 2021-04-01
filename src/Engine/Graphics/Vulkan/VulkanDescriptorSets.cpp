@@ -218,7 +218,9 @@ void DescriptorSet::writeChanges()
 }
 
 DescriptorAllocator::DescriptorAllocator(PGraphics graphics, DescriptorLayout &layout)
-	: layout(layout), graphics(graphics), currentCachedIndex(0)
+	: graphics(graphics)
+	, layout(layout)
+	, currentCachedIndex(0)
 {
 	std::memset(&cachedHandles, 0, sizeof(cachedHandles));
 

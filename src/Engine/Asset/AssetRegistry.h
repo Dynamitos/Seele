@@ -5,13 +5,13 @@
 
 namespace Seele
 {
-DECLARE_REF(TextureLoader);
-DECLARE_REF(MeshLoader);
-DECLARE_REF(MaterialLoader);
-DECLARE_REF(TextureAsset);
-DECLARE_REF(MeshAsset);
-DECLARE_REF(MaterialAsset);
-DECLARE_NAME_REF(Gfx, Graphics);
+DECLARE_REF(TextureLoader)
+DECLARE_REF(MeshLoader)
+DECLARE_REF(MaterialLoader)
+DECLARE_REF(TextureAsset)
+DECLARE_REF(MeshAsset)
+DECLARE_REF(MaterialAsset)
+DECLARE_NAME_REF(Gfx, Graphics)
 class AssetRegistry
 {
 public:
@@ -26,8 +26,8 @@ public:
     static PTextureAsset findTexture(const std::string& filePath);
     static PMaterialAsset findMaterial(const std::string& filePath);
 
-    static std::ofstream createWriteStream(const std::string& relativePath, std::ios_base::openmode openmode = 0);
-    static std::ifstream createReadStream(const std::string& relativePath, std::ios_base::openmode openmode = 0);
+    static std::ofstream createWriteStream(const std::string& relativePath, std::ios_base::openmode openmode = std::ios::out);
+    static std::ifstream createReadStream(const std::string& relativePath, std::ios_base::openmode openmode = std::ios::in);
 private:
     static AssetRegistry& get();
 
@@ -42,8 +42,8 @@ private:
     void registerTexture(PTextureAsset texture);
     void registerMaterial(PMaterialAsset material);
 
-    std::ofstream internalCreateWriteStream(const std::string& relativePath, std::ios_base::openmode openmode = 0);
-    std::ifstream internalCreateReadStream(const std::string& relaitvePath, std::ios_base::openmode openmode = 0);
+    std::ofstream internalCreateWriteStream(const std::string& relativePath, std::ios_base::openmode openmode = std::ios::out);
+    std::ifstream internalCreateReadStream(const std::string& relaitvePath, std::ios_base::openmode openmode = std::ios::in);
 
     std::filesystem::path rootFolder;
     Map<std::string, PTextureAsset> textures;

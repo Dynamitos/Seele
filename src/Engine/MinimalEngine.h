@@ -52,10 +52,7 @@ public:
 			std::scoped_lock lock(registeredObjectsLock);
 			registeredObjects.erase(handle);
 		}
-// we cant always have the definition of every class
-#pragma warning(disable : 4150)
 		delete handle;
-#pragma warning(default : 4150)
 	}
 	RefObject &operator=(const RefObject &rhs)
 	{
@@ -105,7 +102,6 @@ public:
 	{
 		return handle;
 	}
-
 private:
 	T *handle;
 	std::atomic_uint64_t refCount;
@@ -161,7 +157,7 @@ public:
 	RefPtr(const RefPtr<F> &other)
 	{
 		F *f = other.getObject()->getHandle();
-		T* t = static_cast<T *>(f);
+		assert(static_cast<T *>(f));
 		object = (RefObject<T> *)other.getObject();
 		object->addRef();
 	}
@@ -267,7 +263,7 @@ private:
 	RefObject<T> *object;
 	friend class boost::serialization::access;
 	template<class Archive>
-	void serialize(Archive& ar, const unsigned int version)
+	void serialize(Archive& ar, const unsigned int)
 	{
 		ar & *object->getHandle();
 	}

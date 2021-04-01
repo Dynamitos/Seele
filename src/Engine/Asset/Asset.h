@@ -1,7 +1,5 @@
 #pragma once
 #include "MinimalEngine.h"
-#include <filesystem>
-#include <fstream>
 
 namespace Seele
 {
@@ -43,15 +41,15 @@ protected:
     std::ifstream& getReadStream();
     std::ofstream& getWriteStream();
 private:
-    Status status;
     // Path relative to the project root
     std::filesystem::path fullPath;
-    std::filesystem::path parentDir;
     std::filesystem::path name;
+    std::filesystem::path parentDir;
     std::filesystem::path extension;
+    Status status;
     uint32 byteSize;
     std::ifstream inStream;
     std::ofstream outStream;
 };
-DEFINE_REF(Asset);
+DEFINE_REF(Asset)
 } // namespace Seele

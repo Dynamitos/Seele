@@ -17,8 +17,8 @@ namespace Seele
 	{
 	public:
 		Array()
-			: allocated(DEFAULT_ALLOC_SIZE)
-			, arraySize(0)
+			: arraySize(0)
+			, allocated(DEFAULT_ALLOC_SIZE)
 		{
 			_data = new T[DEFAULT_ALLOC_SIZE];
 			assert(_data != nullptr);
@@ -26,7 +26,8 @@ namespace Seele
 			refreshIterators();
 		}
 		Array(size_t size, T value = T())
-			: allocated(size), arraySize(size)
+			: arraySize(size)
+			, allocated(size)
 		{
 			_data = new T[size];
 			assert(_data != nullptr);
@@ -38,7 +39,8 @@ namespace Seele
 			refreshIterators();
 		}
 		Array(std::initializer_list<T> init)
-			: allocated(init.size()), arraySize(init.size())
+			: arraySize(init.size())
+			, allocated(init.size())
 		{
 			_data = new T[init.size()];
 			auto it = init.begin();
@@ -50,7 +52,8 @@ namespace Seele
 			refreshIterators();
 		}
 		Array(const Array &other)
-			: allocated(other.allocated), arraySize(other.arraySize)
+			: arraySize(other.arraySize)
+			, allocated(other.allocated)
 		{
 			_data = new T[other.allocated];
 			assert(_data != nullptr);
@@ -58,7 +61,8 @@ namespace Seele
 			std::copy(other.begin(), other.end(), beginIt);
 		}
 		Array(Array &&other) noexcept
-			: allocated(std::move(other.allocated)), arraySize(std::move(other.arraySize))
+			: arraySize(std::move(other.arraySize))
+			, allocated(std::move(other.allocated))
 		{
 			_data = other._data;
 			other._data = nullptr;
@@ -110,18 +114,14 @@ namespace Seele
 		class IteratorBase
 		{
 		public:
-			typedef std::forward_iterator_tag iterator_category;
-			typedef X value_type;
-			typedef std::ptrdiff_t difference_type;
-			typedef X &reference;
-			typedef X *pointer;
+			using iterator_category = std::random_access_iterator_tag;
+			using value_type = X;
+			using difference_type = std::ptrdiff_t;
+			using reference = X&;
+			using pointer = X*;
 
 			IteratorBase(X *x = nullptr)
 				: p(x)
-			{
-			}
-			IteratorBase(const IteratorBase &i)
-				: p(i.p)
 			{
 			}
 			reference operator*() const
@@ -263,7 +263,7 @@ namespace Seele
 		T &addUnique(const T &item = T())
 		{
 			Iterator it;
-			if((it = find(item)) != endIt)
+			if((it = std::move(find(item))) != endIt)
 			{
 				return *it;
 			}
@@ -297,7 +297,10 @@ namespace Seele
 		{
 			if (keepOrder)
 			{
-				std::memcpy(&_data[index], &_data[index + 1], sizeof(T) * (arraySize - index));
+				for(uint32 i = index; i < arraySize-1; ++i)
+				{
+					_data[i] = std::move(_data[i+1]);
+				}
 			}
 			else
 			{
@@ -324,7 +327,10 @@ namespace Seele
 				T *newData = new T[newSize];
 				assert(newData != nullptr);
 				allocated = newSize;
-				std::memcpy(newData, _data, sizeof(T) * arraySize);
+				for(uint32 i = 0; i < arraySize; ++i)
+				{
+					newData[i] = std::move(_data[i]);
+				}
 				arraySize = newSize;
 				delete _data;
 				_data = newData;
@@ -410,8 +416,9 @@ namespace Seele
 		template<class Archive>
 		void serialize(Archive& ar, const unsigned int version)
 		{
+			ar & version;
 			ar & arraySize;
-			ar & allocated;
+			resize(arraySize);
 			for(size_t i = 0; i < arraySize; ++i)
 				ar & _data[i];
 			refreshIterators();
@@ -431,7 +438,7 @@ namespace Seele
 		class IteratorBase
 		{
 		public:
-			using iterator_category = std::forward_iterator_tag;
+			using iterator_category = std::random_access_iterator_tag;
 			using value_type = X;
 			using difference_type = std::ptrdiff_t;
 			using reference = X&;
@@ -439,10 +446,6 @@ namespace Seele
 
 			IteratorBase(X *x = nullptr)
 				: p(x)
-			{
-			}
-			IteratorBase(const IteratorBase &i)
-				: p(i.p)
 			{
 			}
 			reference operator*() const
@@ -472,6 +475,18 @@ namespace Seele
 				++*this;
 				return tmp;
 			}
+			IteratorBase &operator--()
+			{
+				p--;
+				return *this;
+			}
+			IteratorBase operator--(int)
+			{
+				IteratorBase tmp(*this);
+				--*this;
+				return tmp;
+			}
+			
 
 		private:
 			X *p;
@@ -522,12 +537,12 @@ namespace Seele
 		}
 		constexpr reference operator[](size_type index) noexcept
 		{
-			assert(index >= 0 && index < N);
+			assert(index < N);
 			return _data[index];
 		}
 		constexpr const_reference operator[](size_type index) const noexcept
 		{
-			assert(index >= 0 && index < N);
+			assert(index < N);
 			return _data[index];
 		}
 		iterator begin()
@@ -554,6 +569,7 @@ namespace Seele
 		template<class Archive>
 		void serialize(Archive& ar, const unsigned int version)
 		{
+			ar & version;
 			ar & N;
 			ar & _data;
 		}
