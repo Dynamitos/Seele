@@ -14,8 +14,11 @@ set(BUILD_SHARED_LIBS ON CACHE INTERNAL "")
 
 add_subdirectory(${ASSIMP_ROOT} ${ASSIMP_ROOT})
 target_compile_definitions(assimp PRIVATE _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
-target_compile_options(assimp PRIVATE -Wno-error)
-
+#if(WIN32)
+#	target_compile_options(assimp PRIVATE /WX-)
+#else()
+#	target_compile_options(assimp PRIVATE -Wno-error)
+#endif()
 #-------------BOOST----------------
 list(APPEND DEPENDENCIES boost)
 if(WIN32)

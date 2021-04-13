@@ -171,8 +171,10 @@ void DescriptorSet::updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::
 	TextureHandle* cachedTexture = reinterpret_cast<TextureHandle*>(cachedData[Gfx::currentFrameIndex][binding]);
 	if(vulkanTexture == cachedTexture)
 	{
+		std::cout << "Cached texture is same as new one, skipping update" << std::endl;
 		return;
 	}
+	std::cout << "Texture changed, updating" << std::endl;
 	//It is assumed that the image is in the correct layout
 	VkDescriptorImageInfo imageInfo =
 		init::DescriptorImageInfo(
@@ -201,15 +203,16 @@ bool DescriptorSet::operator<(Gfx::PDescriptorSet other)
 	return this < otherSet.getHandle();
 }
 
+uint32 DescriptorSet::getSetIndex() const
+{
+	return owner->getLayout().getSetIndex();
+}
+
 void DescriptorSet::writeChanges()
 {
 	if (writeDescriptors.size() > 0)
 	{
-		if(currentlyBound != nullptr)
-		{
-			currentlyBound->getManager()->waitForCommands(currentlyBound);
-			currentlyBound = nullptr;
-		}
+		assert(!isCurrentlyBound());
 		vkUpdateDescriptorSets(graphics->getDevice(), (uint32)writeDescriptors.size(), writeDescriptors.data(), 0, nullptr);
 		writeDescriptors.clear();
 		imageInfos.clear();
@@ -220,9 +223,11 @@ void DescriptorSet::writeChanges()
 DescriptorAllocator::DescriptorAllocator(PGraphics graphics, DescriptorLayout &layout)
 	: graphics(graphics)
 	, layout(layout)
-	, currentCachedIndex(0)
 {
-	std::memset(&cachedHandles, 0, sizeof(cachedHandles));
+	for(uint32 i = 0; i < cachedHandles.size(); ++i)
+	{
+		cachedHandles[i] = new DescriptorSet(graphics, this);
+	}
 
 	uint32 perTypeSizes[VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT]; // TODO: FIX ENUM
 	std::memset(perTypeSizes, 0, sizeof(perTypeSizes));
@@ -243,7 +248,7 @@ DescriptorAllocator::DescriptorAllocator(PGraphics graphics, DescriptorLayout &l
 			poolSizes.add(size);
 		}
 	}
-	VkDescriptorPoolCreateInfo createInfo = init::DescriptorPoolCreateInfo((uint32)poolSizes.size(), poolSizes.data(), maxSets);
+	VkDescriptorPoolCreateInfo createInfo = init::DescriptorPoolCreateInfo((uint32)poolSizes.size(), poolSizes.data(), maxSets * Gfx::numFramesBuffered);
 	VK_CHECK(vkCreateDescriptorPool(graphics->getDevice(), &createInfo, nullptr, &poolHandle));
 }
 
@@ -255,30 +260,48 @@ DescriptorAllocator::~DescriptorAllocator()
 
 void DescriptorAllocator::allocateDescriptorSet(Gfx::PDescriptorSet &descriptorSet)
 {
-	descriptorSet = new DescriptorSet(graphics, this);
-	PDescriptorSet vulkanSet = descriptorSet.cast<DescriptorSet>();
 	VkDescriptorSetLayout layoutHandle = layout.getHandle();
-	VkDescriptorSetAllocateInfo allocInfo =
-		init::DescriptorSetAllocateInfo(poolHandle, &layoutHandle, 1);
-	for(uint32 i = 0; i < Gfx::numFramesBuffered; ++i)
+	VkDescriptorSetLayout layoutArray[Gfx::numFramesBuffered];
+	for (uint32 i = 0; i < Gfx::numFramesBuffered; i++)
 	{
-		if(cachedHandles[currentCachedIndex] != VK_NULL_HANDLE)
-		{
-			vulkanSet->setHandle[i] = cachedHandles[currentCachedIndex++];
-		}
-		else
-		{
-			VK_CHECK(vkAllocateDescriptorSets(graphics->getDevice(), &allocInfo, &vulkanSet->setHandle[i]));
-			cachedHandles[currentCachedIndex++] = vulkanSet->setHandle[i];
-		}
-		
-		vulkanSet->cachedData[i].resize(layout.bindings.size());
-		// Not really pretty, but this way the set knows which ones are valid
-		std::memset(vulkanSet->cachedData[i].data(), 0, sizeof(void*) * vulkanSet->cachedData[i].size());
+		layoutArray[i] = layoutHandle;
 	}
+	
+	VkDescriptorSetAllocateInfo allocInfo =
+		init::DescriptorSetAllocateInfo(poolHandle, layoutArray, Gfx::numFramesBuffered);
+
+	for(uint32 setIndex = 0; setIndex < cachedHandles.size(); ++setIndex)
+	{
+		if(cachedHandles[setIndex]->isCurrentlyBound() || cachedHandles[setIndex]->isCurrentlyInUse())
+		{
+			// Currently in use, skip
+			continue;
+		}
+		if(cachedHandles[setIndex]->getHandle() == VK_NULL_HANDLE)
+		{
+			//If it hasnt been initialized, allocate it
+			VK_CHECK(vkAllocateDescriptorSets(graphics->getDevice(), &allocInfo, cachedHandles[setIndex]->setHandle));
+		}
+		cachedHandles[setIndex]->currentlyInUse = true;
+		descriptorSet = cachedHandles[setIndex];
+		
+		PDescriptorSet vulkanSet = descriptorSet.cast<DescriptorSet>();
+		for(uint32 frameIndex = 0; frameIndex < Gfx::numFramesBuffered; ++frameIndex)
+		{
+			vulkanSet->cachedData[frameIndex].resize(layout.bindings.size());
+			// Not really pretty, but this way the set knows which ones are valid
+			std::memset(vulkanSet->cachedData[frameIndex].data(), 0, sizeof(void*) * vulkanSet->cachedData[frameIndex].size());
+		}
+		//Found set, stop searching
+		return;
+	}
+	throw std::logic_error("Out of descriptor sets");
 }
 
 void DescriptorAllocator::reset()
 {
-	currentCachedIndex = 0;
+	for(uint32 i = 0; i < cachedHandles.size(); ++i)
+	{
+		cachedHandles[i]->free();
+	}
 }

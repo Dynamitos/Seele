@@ -27,6 +27,7 @@ public:
     }
 
 private:
+    std::mutex queueLock;
     PGraphics graphics;
     VkQueue queue;
     uint32 familyIndex;

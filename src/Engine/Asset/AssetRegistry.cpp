@@ -43,7 +43,9 @@ void AssetRegistry::importFile(const std::string &filePath)
 
 PMeshAsset AssetRegistry::findMesh(const std::string &filePath)
 {
-    return get().meshes[filePath];
+    auto it = get().meshes.find(filePath);
+    assert(it != get().meshes.end());
+    return it->value;
 }
 
 PTextureAsset AssetRegistry::findTexture(const std::string &filePath)

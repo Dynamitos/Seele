@@ -1,4 +1,5 @@
 #include "Mesh.h"
+#include "VertexShaderInput.h"
 
 using namespace Seele;
 

@@ -22,7 +22,7 @@ struct GraphicsInitializer
     GraphicsInitializer()
         : applicationName("SeeleEngine")
         , engineName("SeeleEngine")
-        , layers{"VK_LAYER_KHRONOS_validation"}
+        , layers{"VK_LAYER_KHRONOS_validation", "VK_LAYER_LUNARG_monitor"}
         , instanceExtensions{}
         , deviceExtensions{"VK_KHR_swapchain"}
         , windowHandle(nullptr)

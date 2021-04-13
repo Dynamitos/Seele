@@ -11,7 +11,7 @@
                 "UNICODE",
                 "_UNICODE"
             ],
-            "intelliSenseMode": "clang-x64",
+            "intelliSenseMode": "msvc-x64",
             "configurationProvider": "ms-vscode.cmake-tools",
             "cppStandard": "c++20",
             "browse": {

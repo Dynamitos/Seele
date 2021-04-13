@@ -29,7 +29,11 @@ MeshLoader::~MeshLoader()
 
 void MeshLoader::importAsset(const std::filesystem::path &path)
 {
-    futures.add(std::async(std::launch::async, &MeshLoader::import, this, path));
+    std::filesystem::path assetPath = path.filename();
+    assetPath.replace_extension("asset");
+    PMeshAsset meshAsset = new MeshAsset(assetPath.generic_string());
+    AssetRegistry::get().registerMesh(meshAsset);
+    futures.add(std::async(std::launch::async, &MeshLoader::import, this, meshAsset, path));
 }
 
 void MeshLoader::loadMaterials(const aiScene* scene, Array<PMaterialAsset>& globalMaterials, Gfx::PGraphics graphics)
@@ -224,8 +228,9 @@ void MeshLoader::loadTextures(const aiScene* scene, const std::filesystem::path&
         AssetRegistry::importFile(texPngPath.string());
     }
 }
-void MeshLoader::import(const std::filesystem::path &path)
+void MeshLoader::import(PMeshAsset meshAsset, const std::filesystem::path &path)
 {
+    meshAsset->setStatus(Asset::Status::Loading);
     Assimp::Importer importer;
     importer.ReadFile(path.string().c_str(),
         aiProcess_FlipUVs |
@@ -246,9 +251,7 @@ void MeshLoader::import(const std::filesystem::path &path)
 
     List<aiNode *> meshNodes;
     findMeshRoots(scene->mRootNode, meshNodes);
-    std::filesystem::path filePath = path.filename();
-    filePath.replace_extension("asset");
-    PMeshAsset meshAsset = new MeshAsset(filePath.generic_string());
+    
     for (auto meshNode : meshNodes)
     {
         for(uint32 i = 0; i < meshNode->mNumMeshes; ++i)
@@ -256,6 +259,6 @@ void MeshLoader::import(const std::filesystem::path &path)
             meshAsset->addMesh(globalMeshes[meshNode->mMeshes[i]]);
         }
     }
+    meshAsset->setStatus(Asset::Status::Ready);
     meshAsset->save();
-    AssetRegistry::get().registerMesh(meshAsset);
 }

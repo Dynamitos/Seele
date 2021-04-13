@@ -42,6 +42,7 @@ void Material::load()
 
 void Material::compile()
 {
+    setStatus(Status::Loading);
     layout = WindowManager::getGraphics()->createDescriptorLayout();
     auto& stream = getReadStream();
     json j;
@@ -142,13 +143,13 @@ void Material::compile()
     brdf->generateMaterialCode(codeStream, j["code"]);
     codeStream << "};";
     codeStream.close();
+    setStatus(Status::Ready);
 }
 
 const Gfx::ShaderCollection* Material::getShaders(Gfx::RenderPassType renderPass, VertexInputType* vertexInput) const
 {
     Gfx::ShaderPermutation permutation;
     permutation.passType = renderPass;
-    std::string materialName = getFileName();
     std::string vertexInputName = vertexInput->getName();
     std::memcpy(permutation.materialName, materialName.c_str(), sizeof(permutation.materialName));
     std::memcpy(permutation.vertexInputName, vertexInputName.c_str(), sizeof(permutation.vertexInputName));

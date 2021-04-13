@@ -15,7 +15,7 @@ public:
     virtual void save() override;
     virtual void load() override;
     void addMesh(PMesh mesh);
-    const Array<PMesh> getMeshes() const;
+    const Array<PMesh> getMeshes();
 private:
     Array<PMesh> meshes;
     Array<PMaterialAsset> referencedMaterials;

@@ -110,16 +110,22 @@ private:
 
 public:
 	Map()
-		: root(nullptr), _size(0)
+		: root(nullptr)
+		, _size(0)
+		, iteratorsDirty(false)
+		, beginIt(nullptr)
+		, endIt(nullptr)
 	{
 	}
 	Map(const Map& other)
-		: root(new Node(*other.root)), _size(other._size)
+		: root(new Node(*other.root))
+		, _size(other._size)
 	{
 		refreshIterators();
 	}
 	Map(Map&& other)
-		: root(std::move(other.root)), _size(other._size)
+		: root(std::move(other.root))
+		, _size(other._size)
 	{
 		refreshIterators();
 	}
@@ -137,7 +143,7 @@ public:
 			}
 			root = new Node(*other.root);
 			_size = other.size;
-			refreshIterators();
+			markIteratorDirty();
 		}
 		return *this;
 	}
@@ -151,21 +157,21 @@ public:
 			}
 			root = new Node(std::move(*other.root));
 			_size = std::move(other._size);
-			refreshIterators();
+			markIteratorDirty();
 		}
 		return *this;
 	}
 	class Iterator
 	{
 	public:
-		typedef std::bidirectional_iterator_tag iterator_category;
-		typedef Pair<K, V> value_type;
-		typedef std::ptrdiff_t difference_type;
-		typedef Pair<K, V> &reference;
-		typedef Pair<K, V> *pointer;
+		using iterator_category = std::bidirectional_iterator_tag;
+		using value_type = Pair<K, V>;
+		using difference_type = std::ptrdiff_t;
+		using reference = Pair<K, V>&;
+		using pointer = Pair<K, V>*;
 
 		Iterator(Node *x = nullptr)
-			: node(x)
+			: node(x), traversal(Init_t::NO_INIT)
 		{
 		}
 		Iterator(Node *x, Array<Node *> &&beginIt)
@@ -261,31 +267,32 @@ public:
 		Node *node;
 		Array<Node *> traversal;
 	};
-	V &operator[](const K& key)
+	inline V &operator[](const K& key)
 	{
 		root = splay(root, key);
+		markIteratorDirty();
 		if (root == nullptr || root->pair.key < key || key < root->pair.key)
 		{
 			root = insert(root, key);
 			_size++;
-			refreshIterators();
 		}
 		return root->pair.value;
 	}
-	V &operator[](K&& key)
+	inline V &operator[](K&& key)
 	{
 		root = splay(root, std::forward<K>(key));
+		markIteratorDirty();
 		if (root == nullptr || root->pair.key < key || key < root->pair.key)
 		{
 			root = insert(root, std::forward<K>(key));
 			_size++;
-			refreshIterators();
 		}
 		return root->pair.value;
 	}
 	Iterator find(const K& key)
 	{
 		root = splay(root, key);
+		markIteratorDirty();
 		if (root == nullptr || root->pair.key != key)
 		{
 			return endIt;
@@ -295,6 +302,7 @@ public:
 	Iterator find(K&& key)
 	{
 		root = splay(root, std::move(key));
+		markIteratorDirty();
 		if (root == nullptr || root->pair.key != key)
 		{
 			return endIt;
@@ -304,13 +312,13 @@ public:
 	Iterator erase(const K& key)
 	{
 		root = remove(root, key);
-		refreshIterators();
+		markIteratorDirty();
 		return Iterator(root);	
 	}
 	Iterator erase(K&& key)
 	{
 		root = remove(root, std::move(key));
-		refreshIterators();
+		markIteratorDirty();
 		return Iterator(root);
 	}
 	void clear()
@@ -318,18 +326,42 @@ public:
 		delete root;
 		root = nullptr;
 		_size = 0;
-		refreshIterators();
+		markIteratorDirty();
 	}
 	bool exists(K&& key)
 	{
 		return find(std::forward<K>(key)) != endIt;
 	}
+	Iterator begin()
+	{
+		if(iteratorsDirty)
+		{
+			refreshIterators();
+		}
+		return beginIt;
+	}
+	Iterator end()
+	{
+		if(iteratorsDirty)
+		{
+			refreshIterators();
+		}
+		return endIt;
+	}
 	Iterator begin() const
 	{
+		if(iteratorsDirty)
+		{
+			return calcBeginIterator();
+		}
 		return beginIt;
 	}
 	Iterator end() const
 	{
+		if(iteratorsDirty)
+		{
+			return calcEndIterator();
+		}
 		return endIt;
 	}
 	bool empty() const
@@ -342,12 +374,22 @@ public:
 	}
 
 private:
+	void markIteratorDirty()
+	{
+		iteratorsDirty = true;
+	}
 	void refreshIterators()
+	{
+		beginIt = calcBeginIterator();
+		endIt = calcEndIterator();
+		iteratorsDirty = false;
+	}
+	inline Iterator calcBeginIterator() const
 	{
 		Node *beginNode = root;
 		if (root == nullptr)
 		{
-			beginIt = Iterator(nullptr);
+			return Iterator(nullptr);
 		}
 		else
 		{
@@ -359,12 +401,15 @@ private:
 			}
 			beginNode = beginTraversal.back();
 			beginTraversal.pop();
-			beginIt = Iterator(beginNode, std::move(beginTraversal));
+			return Iterator(beginNode, std::move(beginTraversal));
 		}
+	}
+	inline Iterator calcEndIterator() const
+	{
 		Node *endNode = root;
 		if (root == nullptr)
 		{
-			endIt = Iterator(nullptr);
+			return Iterator(nullptr);
 		}
 		else
 		{
@@ -374,12 +419,13 @@ private:
 				endTraversal.add(endNode);
 				endNode = endNode->rightChild;
 			}
-			endIt = Iterator(endNode, std::move(endTraversal));
+			return Iterator(endNode, std::move(endTraversal));
 		}
 	}
 	Node *root;
 	Iterator beginIt;
 	Iterator endIt;
+	bool iteratorsDirty;
 	uint32 _size;
 	Node *rotateRight(Node *node)
 	{

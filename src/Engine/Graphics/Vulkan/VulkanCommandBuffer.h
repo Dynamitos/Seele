@@ -80,7 +80,7 @@ public:
 	void begin(PCmdBuffer parent);
 	void end();
 	void reset();
-	virtual void begin() override;
+	virtual bool isReady() override;
 	virtual void setViewport(Gfx::PViewport viewport) override;
 	virtual void bindPipeline(Gfx::PGraphicsPipeline pipeline) override;
 	virtual void bindDescriptor(Gfx::PDescriptorSet descriptorSet) override;
@@ -91,7 +91,8 @@ public:
 
 private:
 	PGraphicsPipeline pipeline;
-	Array<PDescriptorSet> boundDescriptors;
+	Array<DescriptorSet*> boundDescriptors;
+	bool ready;
 	friend class CmdBuffer;
 };
 DEFINE_REF(SecondaryCmdBuffer)
@@ -118,6 +119,8 @@ private:
 	PCmdBuffer activeCmdBuffer;
 	std::mutex allocatedBufferLock;
 	Array<PCmdBuffer> allocatedBuffers;
+	std::mutex allocatedSecondBufferLock;
+	Array<PSecondaryCmdBuffer> allocatedSecondBuffers;
 };
 DEFINE_REF(CommandBufferManager)
 } // namespace Vulkan

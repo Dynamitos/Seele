@@ -28,12 +28,14 @@ void TextureLoader::importAsset(const std::filesystem::path& filePath)
     PTextureAsset asset = new TextureAsset(assetFileName.replace_extension("asset").filename().generic_string());
     asset->setStatus(Asset::Status::Loading);
     asset->setTexture(placeholderTexture);
+    std::cout << "Loading texture, placeholder" << std::endl;
     AssetRegistry::get().textures[asset->getFileName()] = asset;
-    //futures.add(std::async(std::launch::async, [this, filePath, asset] () mutable {
+    futures.add(std::async(std::launch::async, [this, filePath, asset] () mutable {
         Gfx::PTexture2D texture = import(filePath);
         asset->setTexture(texture);
         asset->setStatus(Asset::Status::Ready);
-    //}));
+        std::cout << "Finished loading texture" << std::endl;
+    }));
 }
 
 PTextureAsset TextureLoader::getPlaceholderTexture() 

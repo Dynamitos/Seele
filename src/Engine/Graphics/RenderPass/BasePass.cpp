@@ -42,18 +42,7 @@ void BasePassMeshProcessor::addMeshBatch(
         descriptorSet->writeChanges();
         cachedPrimitiveSets.add(descriptorSet);
     }
-    Gfx::PRenderCommand renderCommand;
-    if (cachedCommandBuffers.size() > 0)
-    {
-        renderCommand = cachedCommandBuffers.back();
-        cachedCommandBuffers.pop();
-        renderCommand->begin();
-    }
-    else
-    {
-        renderCommand = graphics->createRenderCommand();
-        renderCommand->begin();
-    }
+    Gfx::PRenderCommand renderCommand = graphics->createRenderCommand();    
     renderCommand->setViewport(target);
     for(uint32 i = 0; i < batch.elements.size(); ++i)
     {
@@ -84,7 +73,6 @@ Array<Gfx::PRenderCommand> BasePassMeshProcessor::getRenderCommands()
 
 void BasePassMeshProcessor::clearCommands()
 {
-    cachedCommandBuffers = renderCommands;
     renderCommands.clear();
     cachedPrimitiveSets.clear();
     cachedPrimitiveIndex = 0;

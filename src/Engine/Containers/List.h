@@ -203,7 +203,7 @@ public:
 		tail->next = newTail;
 		Iterator insertedElement(tail);
 		tail = newTail;
-		refreshIterators();
+		markIteratorDirty();
 		_size++;
 		return insertedElement;
 	}
@@ -221,7 +221,7 @@ public:
 		tail->next = newTail;
 		Iterator insertedElement(tail);
 		tail = newTail;
-		refreshIterators();
+		markIteratorDirty();
 		_size++;
 		return insertedElement;
 	}
@@ -247,7 +247,7 @@ public:
 			next->prev = prev;
 		}
 		delete pos.node;
-		refreshIterators();
+		markIteratorDirty();
 		return Iterator(next);
 	}
 	void popBack()
@@ -270,7 +270,7 @@ public:
 			root->prev = nullptr;
 			tail->prev = root;
 			tail->next = nullptr;
-			refreshIterators();
+			markIteratorDirty();
 			return beginIt;
 		}
 		Node *tmp = pos.node->prev;
@@ -319,7 +319,7 @@ public:
 	}
 
 private:
-	void refreshIterators()
+	void markIteratorDirty()
 	{
 		beginIt = Iterator(root);
 		endIt = Iterator(tail);

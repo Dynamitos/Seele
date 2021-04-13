@@ -54,6 +54,60 @@ private:
 };
 DEFINE_REF(PipelineLayout)
 
+
+class DescriptorSet : public Gfx::DescriptorSet
+{
+public:
+	DescriptorSet(PGraphics graphics, PDescriptorAllocator owner)
+		: graphics(graphics), owner(owner), currentlyInUse(false), currentlyBound(nullptr)
+	{
+		std::memset(setHandle, 0, sizeof(setHandle));
+	}
+	virtual ~DescriptorSet();
+	virtual void writeChanges();
+	virtual void updateBuffer(uint32_t binding, Gfx::PUniformBuffer uniformBuffer);
+	virtual void updateBuffer(uint32_t binding, Gfx::PStructuredBuffer uniformBuffer);
+	virtual void updateSampler(uint32_t binding, Gfx::PSamplerState samplerState);
+	virtual void updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::PSamplerState sampler = nullptr);
+	virtual bool operator<(Gfx::PDescriptorSet other);
+	
+	inline bool isCurrentlyBound() const
+	{
+		return currentlyBound;
+	}
+	inline bool isCurrentlyInUse() const
+	{
+		return currentlyInUse;
+	}
+	void free()
+	{
+		currentlyInUse = false;
+	}
+	inline VkDescriptorSet getHandle() const
+	{
+		return setHandle[Gfx::currentFrameIndex];
+	}
+	virtual uint32 getSetIndex() const;
+
+private:
+	Array<VkDescriptorImageInfo> imageInfos;
+	Array<VkDescriptorBufferInfo> bufferInfos;
+	Array<VkWriteDescriptorSet> writeDescriptors;
+	// contains the previously bound resources at every binding
+	// since the layout is fixed, trying to bind a texture to a buffer
+	// would not work anyways, so casts should be safe
+	Array<void*> cachedData[Gfx::numFramesBuffered];
+	VkDescriptorSet setHandle[Gfx::numFramesBuffered];
+	PGraphics graphics;
+	PDescriptorAllocator owner;
+	bool currentlyBound;
+	bool currentlyInUse;
+	friend class DescriptorAllocator;
+	friend class CmdBuffer;
+	friend class SecondaryCmdBuffer;
+};
+DEFINE_REF(DescriptorSet)
+
 class DescriptorAllocator : public Gfx::DescriptorAllocator
 {
 public:
@@ -74,59 +128,10 @@ public:
 private:
 	PGraphics graphics;
 	DescriptorLayout &layout;
-	uint32 currentCachedIndex;
 	const static int maxSets = 512;
-	VkDescriptorSet cachedHandles[maxSets];
+	StaticArray<PDescriptorSet, maxSets> cachedHandles;
 	VkDescriptorPool poolHandle;
 };
 DEFINE_REF(DescriptorAllocator)
-
-class DescriptorSet : public Gfx::DescriptorSet
-{
-public:
-	DescriptorSet(PGraphics graphics, PDescriptorAllocator owner)
-		: graphics(graphics), owner(owner)
-	{
-	}
-	virtual ~DescriptorSet();
-	virtual void writeChanges();
-	virtual void updateBuffer(uint32_t binding, Gfx::PUniformBuffer uniformBuffer);
-	virtual void updateBuffer(uint32_t binding, Gfx::PStructuredBuffer uniformBuffer);
-	virtual void updateSampler(uint32_t binding, Gfx::PSamplerState samplerState);
-	virtual void updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::PSamplerState sampler = nullptr);
-	virtual bool operator<(Gfx::PDescriptorSet other);
-	void setCurrentlyBound(PCmdBuffer boundBy)
-	{
-		currentlyBound = boundBy;
-	}
-	void releaseFromCmd()
-	{
-		currentlyBound = nullptr;
-	}
-	inline VkDescriptorSet getHandle() const
-	{
-		return setHandle[Gfx::currentFrameIndex];
-	}
-	virtual uint32 getSetIndex() const
-	{
-		return owner->getLayout().getSetIndex();
-	}
-
-private:
-	Array<VkDescriptorImageInfo> imageInfos;
-	Array<VkDescriptorBufferInfo> bufferInfos;
-	Array<VkWriteDescriptorSet> writeDescriptors;
-	// contains the previously bound resources at every binding
-	// since the layout is fixed, trying to bind a texture to a buffer
-	// would not work anyways, so casts should be safe
-	Array<void*> cachedData[Gfx::numFramesBuffered];
-	VkDescriptorSet setHandle[Gfx::numFramesBuffered];
-	PGraphics graphics;
-	PDescriptorAllocator owner;
-	PCmdBuffer currentlyBound;
-	friend class DescriptorAllocator;
-};
-DEFINE_REF(DescriptorSet)
-
 } // namespace Vulkan
 } // namespace Seele

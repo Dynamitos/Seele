@@ -73,7 +73,7 @@ ShaderCollection& ShaderMap::createShaders(
 		collection.fragmentShader = graphics->createFragmentShader(createInfo);
 	}
 	ShaderPermutation permutation;
-    std::string materialName = material->getFileName(); //Filename is fine, because it just has to be unique
+    std::string materialName = material->getName();
     std::string vertexInputName = vertexInput->getName();
 	permutation.passType = renderPass;
     std::memcpy(permutation.materialName, materialName.c_str(), sizeof(permutation.materialName));

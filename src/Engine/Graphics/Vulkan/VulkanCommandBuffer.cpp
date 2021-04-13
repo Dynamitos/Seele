@@ -91,12 +91,15 @@ void CmdBuffer::executeCommands(Array<Gfx::PRenderCommand> commands)
     for (uint32 i = 0; i < commands.size(); ++i)
     {
         auto command = commands[i].cast<SecondaryCmdBuffer>();
+        // Cache array and size to save on pointer access
+        DescriptorSet** boundDescriptors = command->boundDescriptors.data();
+        size_t numDescriptors = command->boundDescriptors.size();
+        for(size_t i = 0; i < numDescriptors; ++i)
+        {
+            boundDescriptors[i]->currentlyBound = true;
+        }
         command->end();
         executingCommands.add(command);
-        for(PDescriptorSet set : command->boundDescriptors)
-        {
-            set->setCurrentlyBound(this);
-        }
         cmdBuffers[i] = command->getHandle();
     }
     vkCmdExecuteCommands(handle, (uint32)cmdBuffers.size(), cmdBuffers.data());
@@ -114,14 +117,14 @@ void CmdBuffer::refreshFence()
     {
         if (fence->isSignaled())
         {
-            state = State::ReadyBegin;
             vkResetCommandBuffer(handle, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+            fence->reset();
             for(auto command : executingCommands)
             {
                 command->reset();
             }
             executingCommands.clear();
-            fence->reset();
+            state = State::ReadyBegin;
         }
     }
     else
@@ -142,6 +145,7 @@ PCommandBufferManager CmdBuffer::getManager()
 
 SecondaryCmdBuffer::SecondaryCmdBuffer(PGraphics graphics, VkCommandPool cmdPool)
     : CmdBufferBase(graphics, cmdPool)
+    , ready(true)
 {
     VkCommandBufferAllocateInfo allocInfo =
         init::CommandBufferAllocateInfo(cmdPool,
@@ -157,6 +161,7 @@ SecondaryCmdBuffer::~SecondaryCmdBuffer()
 
 void SecondaryCmdBuffer::begin(PCmdBuffer parent)
 {
+    ready = false;
     VkCommandBufferBeginInfo beginInfo =
         init::CommandBufferBeginInfo();
     VkCommandBufferInheritanceInfo inheritanceInfo =
@@ -176,15 +181,20 @@ void SecondaryCmdBuffer::end()
 
 void SecondaryCmdBuffer::reset() 
 {
-    for(auto descriptor : boundDescriptors)
+    vkResetCommandBuffer(handle, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+    size_t numBoundDescriptors = boundDescriptors.size();
+    DescriptorSet** boundDescriptorSets = boundDescriptors.data();
+    for(size_t i = 0; i < numBoundDescriptors; ++i)
     {
-        descriptor->releaseFromCmd();
+        boundDescriptorSets[i]->currentlyBound = false;
     }
+    boundDescriptors.clear();
+    ready = true;
 }
 
-void SecondaryCmdBuffer::begin()
+bool SecondaryCmdBuffer::isReady() 
 {
-    begin(graphics->getGraphicsCommands()->getCommands());
+    return ready;
 }
 
 void SecondaryCmdBuffer::setViewport(Gfx::PViewport viewport) 
@@ -203,7 +213,7 @@ void SecondaryCmdBuffer::bindPipeline(Gfx::PGraphicsPipeline gfxPipeline)
 void SecondaryCmdBuffer::bindDescriptor(Gfx::PDescriptorSet descriptorSet)
 {
     auto descriptor = descriptorSet.cast<DescriptorSet>();
-    boundDescriptors.add(descriptor);
+    boundDescriptors.add(descriptor.getHandle());
     VkDescriptorSet setHandle = descriptor->getHandle();
     vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getLayout(), descriptorSet->getSetIndex(), 1, &setHandle, 0, nullptr);
 }
@@ -213,7 +223,7 @@ void SecondaryCmdBuffer::bindDescriptor(const Array<Gfx::PDescriptorSet>& descri
     for(uint32 i = 0; i < descriptorSets.size(); ++i)
     {
         auto descriptorSet = descriptorSets[i].cast<DescriptorSet>();
-        boundDescriptors.add(descriptorSet);
+        boundDescriptors.add(descriptorSet.getHandle());
         sets[descriptorSet->getSetIndex()] = descriptorSet->getHandle();
     }
     vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getLayout(), 0, (uint32)descriptorSets.size(), sets, 0, nullptr);
@@ -271,7 +281,20 @@ PCmdBuffer CommandBufferManager::getCommands()
 
 PSecondaryCmdBuffer CommandBufferManager::createSecondaryCmdBuffer()
 {
-    return new SecondaryCmdBuffer(graphics, commandPool);
+    std::scoped_lock lck(allocatedSecondBufferLock);
+    for (uint32 i = 0; i < allocatedSecondBuffers.size(); ++i)
+    {
+        PSecondaryCmdBuffer cmdBuffer = allocatedSecondBuffers[i];
+        if (cmdBuffer->isReady())
+        {
+            cmdBuffer->begin(activeCmdBuffer);
+            return cmdBuffer;
+        }
+    }
+    PSecondaryCmdBuffer result = new SecondaryCmdBuffer(graphics, commandPool);
+    allocatedSecondBuffers.add(result);
+    result->begin(activeCmdBuffer);
+    return result;
 }
 
 void CommandBufferManager::submitCommands(PSemaphore signalSemaphore)
@@ -293,7 +316,7 @@ void CommandBufferManager::submitCommands(PSemaphore signalSemaphore)
             queue->submitCommandBuffer(activeCmdBuffer);
         }
     }
-    std::lock_guard lock(allocatedBufferLock);
+    std::scoped_lock lock(allocatedBufferLock);
     for (uint32 i = 0; i < allocatedBuffers.size(); ++i)
     {
         PCmdBuffer cmdBuffer = allocatedBuffers[i];

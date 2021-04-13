@@ -11,6 +11,7 @@ target_sources(SeeleEngine
 		VulkanGraphics.cpp
 		VulkanGraphicsResources.h
 		VulkanGraphicsResources.cpp
+		VulkanDescriptorSets.h
 		VulkanDescriptorSets.cpp
 		VulkanGraphicsEnums.h
 		VulkanGraphicsEnums.cpp

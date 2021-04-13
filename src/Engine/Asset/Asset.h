@@ -28,16 +28,31 @@ public:
     std::string getExtension() const;
     inline Status getStatus() 
     {
-        std::scoped_lock lck(lock);
+        std::unique_lock lck(lock);
         return status;
     }
     inline void setStatus(Status status)
     {
-        std::scoped_lock lck(lock);
+        std::unique_lock lck(lock);
         this->status = status;
+        if(status == Status::Ready)
+        {
+            readyCV.notify_all();
+        }
     }
 protected:
+    inline void waitReady()
+    {
+        std::unique_lock lck(lock);
+        if(status != Status::Ready)
+        {
+            std::cout << "Asset " << name.generic_string() << " not ready yet, waiting" << std::endl;
+            readyCV.wait(lck);
+            std::cout << "Asset " << name.generic_string() << " now ready, continuing" << std::endl;
+        }
+    }
     std::mutex lock;
+    std::condition_variable readyCV;
     std::ifstream& getReadStream();
     std::ofstream& getWriteStream();
 private:

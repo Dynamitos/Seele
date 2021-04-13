@@ -5,13 +5,32 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Engine",
+            "name": "Engine Debug",
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceRoot}/bin/Debug/SeeleEngine.exe",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceRoot}/bin/Debug",
+            "console": "internalConsole",
+            "environment": [],
+            "symbolSearchPath": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.25.28610\\lib\\x64",
+            "requireExactSource": false,
+            "logging": {
+                "moduleLoad": false,
+                "exceptions": true,
+                "trace": true,
+                "traceResponse": true
+            }
+        },
+        {
+            "name": "Engine Release",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceRoot}/bin/Release/SeeleEngine.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceRoot}/bin/Release",
             "console": "internalConsole",
             "environment": [],
             "symbolSearchPath": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.25.28610\\lib\\x64",

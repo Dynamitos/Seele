@@ -29,6 +29,8 @@ extern std::mutex registeredObjectsLock;
 namespace Seele
 {
 template <typename T>
+class RefPtr;
+template <typename T>
 class RefObject
 {
 public:
@@ -98,13 +100,14 @@ public:
 			delete this;
 		}
 	}
-	inline T *getHandle() const
+	T *getHandle() const
 	{
 		return handle;
 	}
 private:
 	T *handle;
 	std::atomic_uint64_t refCount;
+	friend class RefPtr<T>;
 };
 
 template <typename T>
@@ -239,12 +242,12 @@ public:
 	inline T *operator->()
 	{
 		assert(object != nullptr);
-		return object->getHandle();
+		return object->handle;
 	}
 	inline const T *operator->() const
 	{
 		assert(object != nullptr);
-		return object->getHandle();
+		return object->handle;
 	}
 	RefObject<T> *getObject() const
 	{

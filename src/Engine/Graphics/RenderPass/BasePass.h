@@ -22,7 +22,6 @@ public:
     void clearCommands();
 private:
     Array<Gfx::PRenderCommand> renderCommands;
-    Array<Gfx::PRenderCommand> cachedCommandBuffers;
     Array<Gfx::PDescriptorSet> cachedPrimitiveSets;
     Gfx::PViewport target;
     uint8 translucentBasePass;

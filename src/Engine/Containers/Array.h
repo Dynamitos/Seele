@@ -12,10 +12,14 @@
 
 namespace Seele
 {
+	enum class Init_t {
+		NO_INIT
+	};
 	template <typename T>
 	struct Array
 	{
 	public:
+		
 		Array()
 			: arraySize(0)
 			, allocated(DEFAULT_ALLOC_SIZE)
@@ -23,7 +27,15 @@ namespace Seele
 			_data = new T[DEFAULT_ALLOC_SIZE];
 			assert(_data != nullptr);
 			//std::memset(_data, 0, sizeof(T) * DEFAULT_ALLOC_SIZE);
-			refreshIterators();
+			markIteratorDirty();
+		}
+		Array(Init_t)
+			: arraySize(0)
+			, allocated(0)
+			, _data(nullptr)
+			, beginIt(Iterator(nullptr))
+			, endIt(Iterator(nullptr))
+		{
 		}
 		Array(size_t size, T value = T())
 			: arraySize(size)
@@ -36,7 +48,7 @@ namespace Seele
 				assert(i < size);
 				_data[i] = value;
 			}
-			refreshIterators();
+			markIteratorDirty();
 		}
 		Array(std::initializer_list<T> init)
 			: arraySize(init.size())
@@ -49,7 +61,7 @@ namespace Seele
 				assert(i < init.size());
 				_data[i] = *it;
 			}
-			refreshIterators();
+			markIteratorDirty();
 		}
 		Array(const Array &other)
 			: arraySize(other.arraySize)
@@ -57,7 +69,7 @@ namespace Seele
 		{
 			_data = new T[other.allocated];
 			assert(_data != nullptr);
-			refreshIterators();
+			markIteratorDirty();
 			std::copy(other.begin(), other.end(), beginIt);
 		}
 		Array(Array &&other) noexcept
@@ -68,7 +80,7 @@ namespace Seele
 			other._data = nullptr;
 			other.allocated = 0;
 			other.arraySize = 0;
-			refreshIterators();
+			markIteratorDirty();
 		}
 		Array &operator=(const Array &other) noexcept
 		{
@@ -76,12 +88,15 @@ namespace Seele
 			{
 				if (_data != nullptr)
 				{
-					delete[] _data;
+					if(other.arraySize > allocated)
+					{
+						delete[] _data;
+						_data = new T[other.allocated];
+						allocated = other.allocated;
+					}
 				}
-				allocated = other.allocated;
 				arraySize = other.arraySize;
-				_data = new T[other.allocated];
-				refreshIterators();
+				markIteratorDirty();
 				std::copy(other.begin(), other.end(), beginIt);
 			}
 			return *this;
@@ -93,12 +108,13 @@ namespace Seele
 				if (_data != nullptr)
 				{
 					delete[] _data;
+					_data = nullptr;
 				}
 				allocated = std::move(other.allocated);
 				arraySize = std::move(other.arraySize);
 				_data = other._data;
 				other._data = nullptr;
-				refreshIterators();
+				markIteratorDirty();
 			}
 			return *this;
 		}
@@ -132,15 +148,15 @@ namespace Seele
 			{
 				return p;
 			}
-			inline bool operator!=(const IteratorBase &other)
+			inline bool operator!=(const IteratorBase &other) const
 			{
 				return p != other.p;
 			}
-			inline bool operator==(const IteratorBase &other)
+			inline bool operator==(const IteratorBase &other) const
 			{
 				return p == other.p;
 			}
-			inline int operator-(const IteratorBase &other)
+			inline int operator-(const IteratorBase &other) const
 			{
 				return (int)(p - other.p);
 			}
@@ -238,7 +254,7 @@ namespace Seele
 				_data = tempArray;
 			}
 			_data[arraySize++] = item;
-			refreshIterators();
+			markIteratorDirty();
 			return _data[arraySize - 1];
 		}
 		T &add(T&& item)
@@ -257,7 +273,7 @@ namespace Seele
 				_data = tempArray;
 			}
 			_data[arraySize++] = std::move(item);
-			refreshIterators();
+			markIteratorDirty();
 			return _data[arraySize - 1];
 		}
 		T &addUnique(const T &item = T())
@@ -286,7 +302,7 @@ namespace Seele
 				_data = tempArray;
 			}
 			_data[arraySize++] = T(arguments...);
-			refreshIterators();
+			markIteratorDirty();
 			return _data[arraySize - 1];
 		}
 		void remove(Iterator it, bool keepOrder = true)
@@ -314,7 +330,7 @@ namespace Seele
 			_data = nullptr;
 			arraySize = 0;
 			allocated = 0;
-			refreshIterators();
+			markIteratorDirty();
 		}
 		void resize(size_t newSize)
 		{
@@ -335,7 +351,7 @@ namespace Seele
 				delete _data;
 				_data = newData;
 			}
-			refreshIterators();
+			markIteratorDirty();
 		}
 		inline size_t indexOf(Iterator iterator)
 		{
@@ -369,21 +385,21 @@ namespace Seele
 		{
 			return _data;
 		}
-		T &back() const
+		inline T &back() const
 		{
 			return _data[arraySize - 1];
 		}
 		void pop()
 		{
 			arraySize--;
-			refreshIterators();
+			markIteratorDirty();
 		}
-		T &operator[](size_t index)
+		constexpr inline T &operator[](size_t index)
 		{
 			assert(index < arraySize);
 			return _data[index];
 		}
-		const T &operator[](size_t index) const
+		constexpr inline const T &operator[](size_t index) const
 		{
 			assert(index < arraySize);
 			return _data[index];
@@ -407,7 +423,7 @@ namespace Seele
 
 			return geometric; // geometric growth is sufficient
 		}
-		void refreshIterators()
+		void markIteratorDirty()
 		{
 			beginIt = Iterator(_data);
 			endIt = Iterator(_data + arraySize);
@@ -416,18 +432,17 @@ namespace Seele
 		template<class Archive>
 		void serialize(Archive& ar, const unsigned int version)
 		{
-			ar & version;
 			ar & arraySize;
 			resize(arraySize);
 			for(size_t i = 0; i < arraySize; ++i)
 				ar & _data[i];
-			refreshIterators();
+			markIteratorDirty();
 		}
-		size_t arraySize;
-		size_t allocated;
+		size_t arraySize = 0;
+		size_t allocated = 0;
 		Iterator beginIt;
 		Iterator endIt;
-		T *_data;
+		T *_data = nullptr;
 	};
 
 	template <typename T, size_t N>

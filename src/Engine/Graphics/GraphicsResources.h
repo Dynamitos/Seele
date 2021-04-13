@@ -486,7 +486,7 @@ class RenderCommand
 public:
 	RenderCommand();
 	virtual ~RenderCommand();
-	virtual void begin() = 0;
+	virtual bool isReady() = 0;
 	virtual void setViewport(Gfx::PViewport viewport) = 0;
 	virtual void bindPipeline(Gfx::PGraphicsPipeline pipeline) = 0;
 	virtual void bindDescriptor(Gfx::PDescriptorSet set) = 0;

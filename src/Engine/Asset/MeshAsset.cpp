@@ -1,5 +1,6 @@
 #include "MeshAsset.h"
 #include "Graphics/Mesh.h"
+#include "Graphics/VertexShaderInput.h"
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 
@@ -40,7 +41,8 @@ void MeshAsset::addMesh(PMesh mesh)
     referencedMaterials.add(mesh->referencedMaterial);   
 }
 
-const Array<PMesh> MeshAsset::getMeshes() const
+const Array<PMesh> MeshAsset::getMeshes()
 {
+    waitReady();
     return meshes;
 }

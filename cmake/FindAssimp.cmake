@@ -30,7 +30,8 @@ if (WIN32)
 		PATHS
 			$ENV{PROGRAMFILES}/lib
 			${ASSIMP_ROOT}/lib
-			${ASSIMP_ROOT}/lib/${CMAKE_BUILD_TYPE})
+			${ASSIMP_ROOT}/code
+		PATH_SUFFIXES Debug Release)
 
 	find_file(
 		ASSIMP_BINARY

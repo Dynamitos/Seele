@@ -106,12 +106,13 @@
         "scoped_allocator": "cpp",
         "stack": "cpp",
         "coroutine": "cpp",
-        "*.tcc": "cpp"
+        "*.tcc": "cpp",
+        "stop_token": "cpp"
     },
     "cmake.skipConfigureIfCachePresent": false,
     "cmake.configureArgs": [
         "-Wno-dev"
     ],
     "C_Cpp.default.cppStandard": "c++20",
-    "C_Cpp.default.intelliSenseMode": "gcc-x64"
+    "C_Cpp.default.intelliSenseMode": "msvc-x64"
 }
