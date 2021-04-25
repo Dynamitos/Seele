@@ -265,6 +265,18 @@ UniformBuffer::~UniformBuffer()
 {
 }
 
+bool UniformBuffer::updateContents(const BulkResourceData &resourceData) 
+{
+    if(!Gfx::UniformBuffer::updateContents(resourceData))
+	{
+		// no update was performed, skip
+		return false;
+	}
+    void* data = lock();
+    std::memcpy(data, resourceData.data, resourceData.size);
+    unlock();
+	return true;
+}
 void* UniformBuffer::lock(bool bWriteOnly)
 {
 	if(dedicatedStagingBuffer != nullptr)

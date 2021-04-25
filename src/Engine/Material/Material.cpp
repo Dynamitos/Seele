@@ -111,6 +111,7 @@ void Material::compile()
             {
                 p->data = AssetRegistry::findTexture(""); // this will return placeholder texture
             }
+            assert(p->data != nullptr);
             parameters.add(p);
         }
         else if(type.compare("SamplerState") == 0)
@@ -137,8 +138,6 @@ void Material::compile()
         uniformBuffer = WindowManager::getGraphics()->createUniformBuffer(uniformInitializer);
     }
     layout->create();
-    descriptorSet = layout->allocatedDescriptorSet();
-    updateDescriptorData();
     BRDF* brdf = BRDF::getBRDFByName(profile);
     brdf->generateMaterialCode(codeStream, j["code"]);
     codeStream << "};";

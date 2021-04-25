@@ -92,11 +92,9 @@ void CmdBuffer::executeCommands(Array<Gfx::PRenderCommand> commands)
     {
         auto command = commands[i].cast<SecondaryCmdBuffer>();
         // Cache array and size to save on pointer access
-        DescriptorSet** boundDescriptors = command->boundDescriptors.data();
-        size_t numDescriptors = command->boundDescriptors.size();
-        for(size_t i = 0; i < numDescriptors; ++i)
+        for(auto boundDescriptor : command->boundDescriptors)
         {
-            boundDescriptors[i]->currentlyBound = true;
+            boundDescriptor->currentlyBound = this;
         }
         command->end();
         executingCommands.add(command);
@@ -182,11 +180,9 @@ void SecondaryCmdBuffer::end()
 void SecondaryCmdBuffer::reset() 
 {
     vkResetCommandBuffer(handle, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
-    size_t numBoundDescriptors = boundDescriptors.size();
-    DescriptorSet** boundDescriptorSets = boundDescriptors.data();
-    for(size_t i = 0; i < numBoundDescriptors; ++i)
+    for(auto boundDescriptor : boundDescriptors)
     {
-        boundDescriptorSets[i]->currentlyBound = false;
+        boundDescriptor->currentlyBound = nullptr;
     }
     boundDescriptors.clear();
     ready = true;

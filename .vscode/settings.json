@@ -107,7 +107,8 @@
         "stack": "cpp",
         "coroutine": "cpp",
         "*.tcc": "cpp",
-        "stop_token": "cpp"
+        "stop_token": "cpp",
+        "span": "cpp"
     },
     "cmake.skipConfigureIfCachePresent": false,
     "cmake.configureArgs": [

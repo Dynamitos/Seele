@@ -31,6 +31,8 @@ void MaterialAsset::endFrame()
 
 void MaterialAsset::updateDescriptorData() 
 {
+    layout->reset();
+    descriptorSet = layout->allocatedDescriptorSet();
     BulkResourceData uniformUpdate;
     uniformUpdate.size = uniformDataSize;
     uniformUpdate.data = uniformData;

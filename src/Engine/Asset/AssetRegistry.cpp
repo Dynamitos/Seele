@@ -45,17 +45,12 @@ PMeshAsset AssetRegistry::findMesh(const std::string &filePath)
 {
     auto it = get().meshes.find(filePath);
     assert(it != get().meshes.end());
-    return it->value;
+    return it->second;
 }
 
 PTextureAsset AssetRegistry::findTexture(const std::string &filePath)
 {
-    PTextureAsset result = get().textures[filePath];
-    if(result == nullptr)
-    {
-        return get().textureLoader->getPlaceholderTexture();
-    }
-    return result;
+    return get().textures[filePath];
 }
 
 PMaterialAsset AssetRegistry::findMaterial(const std::string &filePath)

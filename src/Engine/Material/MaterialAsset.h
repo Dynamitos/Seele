@@ -24,11 +24,14 @@ public:
 
     // This needs to be called while the descriptorset is unused
     void updateDescriptorData();
+    void resetDescriptorSet();
     const Gfx::PDescriptorSet getDescriptor() const;
+
 protected:
     //For now its simply the collection of parameters, since there is no point for expressions
     Array<PShaderParameter> parameters;
     Gfx::PDescriptorSet descriptorSet;
+    Gfx::PDescriptorLayout layout;
     Gfx::PUniformBuffer uniformBuffer;
     uint32 uniformDataSize;
     uint8* uniformData;

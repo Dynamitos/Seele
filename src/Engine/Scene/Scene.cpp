@@ -11,7 +11,7 @@ Scene::Scene(Gfx::PGraphics graphics)
     : graphics(graphics)
 {
     lightEnv.directionalLights[0].color = Vector4(1, 0, 0, 1);
-    lightEnv.directionalLights[0].direction = Vector4(1, 1, 0, 1);
+    lightEnv.directionalLights[0].direction = Vector4(0, 0, 0, 1);
     lightEnv.directionalLights[0].intensity = Vector4(1, 1, 1, 1);
     lightEnv.numDirectionalLights = 1;
     lightEnv.numPointLights = 0;
@@ -22,11 +22,15 @@ Scene::~Scene()
 {
 }
 
-void Scene::tick(float deltaTime)
+void Scene::tick(double deltaTime)
 {
+    lightEnv.directionalLights[0].direction.x += ((rand() / (double)RAND_MAX) - 0.5f) * 100.f * deltaTime;
+    lightEnv.directionalLights[0].direction.y += ((rand() / (double)RAND_MAX) - 0.5f) * 100.f * deltaTime;
+    lightEnv.directionalLights[0].direction.z += ((rand() / (double)RAND_MAX) - 0.5f) * 100.f * deltaTime;
+    std::cout << lightEnv.directionalLights[0].direction << std::endl;
     for (auto actor : rootActors)
     {
-        actor->tick(deltaTime);
+        actor->tick(static_cast<float>(deltaTime));
     }
 }
 
@@ -39,7 +43,7 @@ void Scene::addActor(PActor actor)
 void Scene::addPrimitiveComponent(PPrimitiveComponent comp)
 {
     primitives.add(comp);
-    for(auto& batch : comp->staticMeshes)
+    for(auto& batch : comp->getStaticMeshes())
     {
         PrimitiveUniformBuffer data;
         data.actorWorldPosition = Vector4(comp->getTransform().getPosition(), 1);

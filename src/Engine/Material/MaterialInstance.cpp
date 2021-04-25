@@ -34,7 +34,6 @@ void MaterialInstance::load()
     uniformInitializer.resourceData.size = baseMaterial->uniformDataSize;
     uniformInitializer.resourceData.data = nullptr;
     uniformBuffer = WindowManager::getGraphics()->createUniformBuffer(uniformInitializer);
-    descriptorSet = baseMaterial->layout->allocatedDescriptorSet();
 }
 
 const Material* MaterialInstance::getRenderMaterial() const

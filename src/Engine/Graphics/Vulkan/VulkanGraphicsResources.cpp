@@ -49,13 +49,6 @@ void QueueOwnedResourceDeletion::run()
     }
 }
 
-void UniformBuffer::updateContents(const BulkResourceData &resourceData) 
-{
-    Gfx::UniformBuffer::updateContents(resourceData);
-    void* data = lock();
-    std::memcpy(data, resourceData.data, resourceData.size);
-    unlock();
-}
 
 Semaphore::Semaphore(PGraphics graphics)
     : graphics(graphics)

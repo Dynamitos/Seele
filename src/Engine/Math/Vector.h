@@ -22,6 +22,10 @@ typedef glm::quat Quaternion;
 
 Vector parseVector(const char*);
 
+std::ostream& operator<<(std::ostream& stream, const Vector2& vector);
+std::ostream& operator<<(std::ostream& stream, const Vector& vector);
+std::ostream& operator<<(std::ostream& stream, const Vector4& vector);
+
 static inline float square(float x)
 {
 	return x * x;

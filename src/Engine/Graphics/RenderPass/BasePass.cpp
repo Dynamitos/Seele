@@ -106,7 +106,7 @@ BasePass::BasePass(const PScene scene, Gfx::PGraphics graphics, Gfx::PViewport v
     lightLayout = graphics->createDescriptorLayout();
     lightLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
     uniformInitializer.resourceData.size = sizeof(LightEnv);
-    uniformInitializer.resourceData.data = (uint8*)&scene->getLightEnvironment();
+    uniformInitializer.resourceData.data = nullptr;
     uniformInitializer.bDynamic = true;
     lightUniform = graphics->createUniformBuffer(uniformInitializer);
     lightLayout->create();
@@ -163,14 +163,18 @@ void BasePass::beginFrame()
     descriptorSets[1]->updateBuffer(0, viewParamBuffer);
     descriptorSets[1]->updateBuffer(1, screenToViewParamBuffer);
     descriptorSets[1]->writeChanges();
+    for(auto &&meshBatch : scene->getStaticMeshes())
+    {
+        meshBatch.material->updateDescriptorData();
+    }
 }
 
 void BasePass::render() 
 {
     graphics->beginRenderPass(renderPass);
-    for (auto &&primitive : scene->getStaticMeshes())
+    for (auto &&meshBatch : scene->getStaticMeshes())
     {
-        processor->addMeshBatch(primitive, renderPass, basePassLayout, primitiveLayout, descriptorSets);
+        processor->addMeshBatch(meshBatch, renderPass, basePassLayout, primitiveLayout, descriptorSets);
     }
     graphics->executeCommands(processor->getRenderCommands());
     graphics->endRenderPass();

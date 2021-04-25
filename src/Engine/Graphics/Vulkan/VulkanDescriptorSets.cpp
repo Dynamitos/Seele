@@ -116,16 +116,17 @@ void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PUniformBuffer uniformBu
 {
 	PUniformBuffer vulkanBuffer = uniformBuffer.cast<UniformBuffer>();
 	UniformBuffer* cachedBuffer = reinterpret_cast<UniformBuffer*>(cachedData[Gfx::currentFrameIndex][binding]);
-	if(vulkanBuffer->isDataEquals(cachedBuffer))
+	/*if(vulkanBuffer->isDataEquals(cachedBuffer))
 	{
+		std::cout << "uniform data equal, skip" << std::endl; 
 		return;
-	}
+	}*/
 	bufferInfos.add(init::DescriptorBufferInfo(vulkanBuffer->getHandle(), 0, vulkanBuffer->getSize()));
 
 	VkWriteDescriptorSet writeDescriptor = init::WriteDescriptorSet(setHandle[Gfx::currentFrameIndex], VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, binding, &bufferInfos.back());
 	writeDescriptors.add(writeDescriptor);
 
-	cachedData[Gfx::currentFrameIndex][binding] = vulkanBuffer.getHandle();
+	cachedData[Gfx::currentFrameIndex][binding] = new UniformBuffer(*vulkanBuffer.getHandle());
 }
 
 void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PStructuredBuffer uniformBuffer)
@@ -171,10 +172,8 @@ void DescriptorSet::updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::
 	TextureHandle* cachedTexture = reinterpret_cast<TextureHandle*>(cachedData[Gfx::currentFrameIndex][binding]);
 	if(vulkanTexture == cachedTexture)
 	{
-		std::cout << "Cached texture is same as new one, skipping update" << std::endl;
 		return;
 	}
-	std::cout << "Texture changed, updating" << std::endl;
 	//It is assumed that the image is in the correct layout
 	VkDescriptorImageInfo imageInfo =
 		init::DescriptorImageInfo(
@@ -187,7 +186,12 @@ void DescriptorSet::updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::
 		imageInfo.sampler = vulkanSampler->sampler;
 	}
 	imageInfos.add(imageInfo);
-	VkWriteDescriptorSet writeDescriptor = init::WriteDescriptorSet(setHandle[Gfx::currentFrameIndex], samplerState != nullptr ? VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER : VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, binding, &imageInfos.back());
+	VkWriteDescriptorSet writeDescriptor = 
+		init::WriteDescriptorSet(
+			setHandle[Gfx::currentFrameIndex], 
+			samplerState != nullptr ? VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER : VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 
+			binding, 
+			&imageInfos.back());
 	if (vulkanTexture->getUsage() & VK_IMAGE_USAGE_STORAGE_BIT)
 	{
 		writeDescriptor.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
@@ -212,7 +216,11 @@ void DescriptorSet::writeChanges()
 {
 	if (writeDescriptors.size() > 0)
 	{
-		assert(!isCurrentlyBound());
+		if(isCurrentlyBound())
+		{
+			graphics->getGraphicsCommands()->waitForCommands(currentlyBound);
+			currentlyBound = nullptr;
+		}
 		vkUpdateDescriptorSets(graphics->getDevice(), (uint32)writeDescriptors.size(), writeDescriptors.data(), 0, nullptr);
 		writeDescriptors.clear();
 		imageInfos.clear();

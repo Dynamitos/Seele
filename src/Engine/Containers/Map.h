@@ -280,11 +280,11 @@ public:
 	}
 	inline V &operator[](K&& key)
 	{
-		root = splay(root, std::forward<K>(key));
+		root = splay(root, std::move(key));
 		markIteratorDirty();
 		if (root == nullptr || root->pair.key < key || key < root->pair.key)
 		{
-			root = insert(root, std::forward<K>(key));
+			root = insert(root, std::move(key));
 			_size++;
 		}
 		return root->pair.value;

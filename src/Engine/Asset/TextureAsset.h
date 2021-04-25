@@ -19,6 +19,7 @@ public:
     }
     Gfx::PTexture getTexture()
     {
+        std::scoped_lock lck(lock);
         return texture;
     }
 private:

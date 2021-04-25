@@ -4,6 +4,7 @@ target_sources(SeeleEngine
         GraphicsResources.cpp
         GraphicsInitializer.h
         GraphicsEnums.h
+        GraphicsEnums.cpp
         Graphics.h
         Graphics.cpp
         Mesh.h

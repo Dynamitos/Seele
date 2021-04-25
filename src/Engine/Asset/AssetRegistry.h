@@ -2,6 +2,7 @@
 #include "MinimalEngine.h"
 #include "Asset.h"
 #include <string>
+#include <map>
 
 namespace Seele
 {
@@ -46,9 +47,10 @@ private:
     std::ifstream internalCreateReadStream(const std::string& relaitvePath, std::ios_base::openmode openmode = std::ios::in);
 
     std::filesystem::path rootFolder;
-    Map<std::string, PTextureAsset> textures;
-    Map<std::string, PMeshAsset> meshes;
-    Map<std::string, PMaterialAsset> materials;
+    //Todo: Seele::Map doesn't really work with strings for some reason, so just use std::map for now
+    std::map<std::string, PTextureAsset> textures;
+    std::map<std::string, PMeshAsset> meshes;
+    std::map<std::string, PMaterialAsset> materials;
     UPTextureLoader textureLoader;
     UPMeshLoader meshLoader;
     UPMaterialLoader materialLoader;

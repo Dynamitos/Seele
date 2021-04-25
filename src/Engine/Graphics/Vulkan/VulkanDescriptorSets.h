@@ -73,7 +73,7 @@ public:
 	
 	inline bool isCurrentlyBound() const
 	{
-		return currentlyBound;
+		return currentlyBound != nullptr;
 	}
 	inline bool isCurrentlyInUse() const
 	{
@@ -90,8 +90,8 @@ public:
 	virtual uint32 getSetIndex() const;
 
 private:
-	Array<VkDescriptorImageInfo> imageInfos;
-	Array<VkDescriptorBufferInfo> bufferInfos;
+	List<VkDescriptorImageInfo> imageInfos;
+	List<VkDescriptorBufferInfo> bufferInfos;
 	Array<VkWriteDescriptorSet> writeDescriptors;
 	// contains the previously bound resources at every binding
 	// since the layout is fixed, trying to bind a texture to a buffer
@@ -100,7 +100,7 @@ private:
 	VkDescriptorSet setHandle[Gfx::numFramesBuffered];
 	PGraphics graphics;
 	PDescriptorAllocator owner;
-	bool currentlyBound;
+	PCmdBuffer currentlyBound;
 	bool currentlyInUse;
 	friend class DescriptorAllocator;
 	friend class CmdBuffer;

@@ -66,4 +66,13 @@ BOOST_AUTO_TEST_CASE(custom_key)
 
 }
 
+BOOST_AUTO_TEST_CASE(string_key)
+{
+	std::map<std::string, int> map;
+	map["Test"] = 2;
+	map["Test2"] = 3;
+	BOOST_REQUIRE_EQUAL(map["Test"], 2);
+	BOOST_REQUIRE_EQUAL(map["Test2"], 3);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -9,7 +9,7 @@ class SceneView : public View
 public:
 	SceneView(Gfx::PGraphics graphics, PWindow owner, const ViewportCreateInfo &createInfo);
 	~SceneView();
-	virtual void beginFrame();
+	virtual void beginFrame() override;
 	PScene getScene() const { return scene; }
 private:
 	PScene scene;

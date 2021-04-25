@@ -321,26 +321,26 @@ class UniformBuffer : public Buffer
 public:
 	UniformBuffer(QueueFamilyMapping mapping, const BulkResourceData& resourceData);
 	virtual ~UniformBuffer();
-	virtual void updateContents(const BulkResourceData& resourceData);
+	// returns true if an update was performed, false if the old contents == new contents
+	virtual bool updateContents(const BulkResourceData& resourceData);
 	bool isDataEquals(UniformBuffer* other)
 	{
 		if(other == nullptr)
 		{
 			return false;
 		}
-		if(size != other->size)
+		if(contents.size() != other->contents.size())
 		{
 			return false;
 		}
-		if(std::memcmp(contents, other->contents, size) != 0)
+		if(std::memcmp(contents.data(), other->contents.data(), contents.size()) != 0)
 		{
 			return false;
 		}
 		return true;
 	}
 protected:
-	void* contents;
-	uint32 size;
+	Array<uint8> contents;
 	// Inherited via QueueOwnedResource
 	virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
 };

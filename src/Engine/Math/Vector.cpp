@@ -3,6 +3,22 @@
 
 using namespace Seele;
 
+std::ostream& Seele::operator<<(std::ostream& stream, const Vector2& vector)
+{
+    stream << "(" << vector.x << ", " << vector.y << ")";
+    return stream;
+}
+std::ostream& Seele::operator<<(std::ostream& stream, const Vector& vector)
+{
+    stream << "(" << vector.x << ", " << vector.y << ", " << vector.z << ")";
+    return stream;
+}
+std::ostream& Seele::operator<<(std::ostream& stream, const Vector4& vector)
+{
+    stream << "(" << vector.x << ", " << vector.y << ", " << vector.z << ", " << vector.w << ")";
+    return stream;
+}
+
 Vector Seele::parseVector(const char* str)
 {
     //regex pattern consisting of 'float3(xComp, yComp, zComp)', more also matches for invalid floats, but that will throw later

@@ -39,7 +39,7 @@ class Scene
 public:
     Scene(Gfx::PGraphics graphics);
     ~Scene();
-    void tick(float deltaTime);
+    void tick(double deltaTime);
     void addActor(PActor actor);
     void addPrimitiveComponent(PPrimitiveComponent comp);
 

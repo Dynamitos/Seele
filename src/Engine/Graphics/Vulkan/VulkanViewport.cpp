@@ -213,6 +213,11 @@ void Window::present()
         presentResult = vkQueuePresentKHR(graphics->getGraphicsCommands()->getQueue()->getHandle(), &info);
     }
     Gfx::currentFrameIndex = (Gfx::currentFrameIndex + 1)%Gfx::numFramesBuffered;
+    static double lastFrameTime = 0.f;
+    double currentTime = glfwGetTime();
+    double currentDelta = currentTime - lastFrameTime;
+    Gfx::currentFrameDelta = currentDelta;
+    lastFrameTime = currentTime;
 }
 
 void Window::createSwapchain()

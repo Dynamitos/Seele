@@ -168,12 +168,11 @@ Buffer::~Buffer()
 
 UniformBuffer::UniformBuffer(QueueFamilyMapping mapping, const BulkResourceData& resourceData)
 	: Buffer(mapping, resourceData.owner)
-	, size(resourceData.size)
+	, contents(resourceData.size)
 {
 	if(resourceData.data != nullptr)
 	{
-		contents = new uint8[size];
-		std::memcpy(contents, resourceData.data, size);
+		std::memcpy(contents.data(), resourceData.data, contents.size());
 	}
 }
 
@@ -181,10 +180,15 @@ UniformBuffer::~UniformBuffer()
 {
 }
 
-void UniformBuffer::updateContents(const BulkResourceData& resourceData) 
+bool UniformBuffer::updateContents(const BulkResourceData& resourceData) 
 {
-	assert(size == resourceData.size);
-	std::memcpy(contents, resourceData.data, size);
+	assert(contents.size() == resourceData.size);
+	if(std::memcmp(contents.data(), resourceData.data, contents.size()) == 0)
+	{
+		return false;
+	}
+	std::memcpy(contents.data(), resourceData.data, contents.size());
+	return true;
 }
 
 StructuredBuffer::StructuredBuffer(QueueFamilyMapping mapping, QueueType startQueueType)

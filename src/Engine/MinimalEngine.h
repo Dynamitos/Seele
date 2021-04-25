@@ -37,7 +37,6 @@ public:
 	RefObject(T *ptr)
 		: handle(ptr), refCount(1)
 	{
-		std::scoped_lock lock(registeredObjectsLock);
 		registeredObjects[ptr] = this;
 	}
 	inline RefObject(const RefObject &rhs)
@@ -54,7 +53,9 @@ public:
 			std::scoped_lock lock(registeredObjectsLock);
 			registeredObjects.erase(handle);
 		}
+	#pragma warning( disable: 4150)
 		delete handle;
+	#pragma warning( default: 4150)
 	}
 	RefObject &operator=(const RefObject &rhs)
 	{
@@ -126,13 +127,16 @@ public:
 	{
 		std::unique_lock l(registeredObjectsLock);
 		auto registeredObj = registeredObjects.find(ptr);
-		l.unlock();
-		if (registeredObj == registeredObjects.end())
+		// get here for thread safetly
+		auto registeredEnd = registeredObjects.end();
+		if (registeredObj == registeredEnd)
 		{
 			object = new RefObject<T>(ptr);
+			l.unlock();
 		}
 		else
-		{
+		{		
+			l.unlock();
 			object = (RefObject<T> *)registeredObj->value;
 			object->addRef();
 		}

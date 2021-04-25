@@ -23,7 +23,7 @@ Seele::SceneView::~SceneView()
 void SceneView::beginFrame() 
 {
 	View::beginFrame();
-	scene->tick(0);//TODO: update in separate thread
+	scene->tick(Gfx::currentFrameDelta);//TODO: update in separate thread
 }
 
 void SceneView::keyCallback(KeyCode code, InputAction action, KeyModifier)

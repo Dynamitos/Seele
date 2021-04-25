@@ -133,7 +133,7 @@ class UniformBuffer : public Gfx::UniformBuffer, public ShaderBuffer
 public:
 	UniformBuffer(PGraphics graphics, const UniformBufferCreateInfo &resourceData);
 	virtual ~UniformBuffer();
-	virtual void updateContents(const BulkResourceData &resourceData);
+	virtual bool updateContents(const BulkResourceData &resourceData);
 	
 	virtual void* lock(bool bWriteOnly = true) override;
 	virtual void unlock() override;

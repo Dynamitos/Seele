@@ -27,7 +27,6 @@ private:
     static std::mutex shaderMapLock;
 
     std::string materialName;
-    Gfx::PDescriptorLayout layout;
     friend class MaterialLoader;
     friend class MaterialInstance;
 };
