@@ -164,6 +164,7 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, Array<PMesh>& globalMesh
         {
             //TODO: use bitangent to calculate sign for 4th coordinate of tangentstream
             data.tangentBasisComponents[1] = createVertexStream(mesh->mNumVertices, mesh->mTangents, graphics);
+            data.tangentBasisComponents[2] = createVertexStream(mesh->mNumVertices, mesh->mBitangents, graphics);
         }
         if(mesh->HasVertexColors(0))
         {

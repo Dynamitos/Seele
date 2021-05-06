@@ -353,3 +353,24 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
     PGraphicsPipeline result = new GraphicsPipeline(graphics, pipelineHandle, layout, gfxInfo);
     return result;
 }
+
+PComputePipeline PipelineCache::createPipeline(const ComputePipelineCreateInfo& computeInfo) 
+{
+    VkComputePipelineCreateInfo createInfo;
+    createInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+    createInfo.pNext = 0;
+    createInfo.flags = 0;
+    createInfo.basePipelineIndex = 0;
+    createInfo.basePipelineHandle = VK_NULL_HANDLE;
+    auto layout = computeInfo.pipelineLayout.cast<PipelineLayout>();
+    createInfo.layout = layout->getHandle();
+    auto computeStage = computeInfo.computeShader.cast<ComputeShader>();
+    createInfo.stage = init::PipelineShaderStageCreateInfo(
+        VK_SHADER_STAGE_COMPUTE_BIT,
+        computeStage->getModuleHandle(),
+        computeStage->getEntryPointName());
+    VkPipeline pipelineHandle;
+    VK_CHECK(vkCreateComputePipelines(graphics->getDevice(), cache, 1, &createInfo, nullptr, &pipelineHandle));
+    PComputePipeline result = new ComputePipeline(graphics, pipelineHandle, layout, computeInfo);
+    return result;
+}

@@ -60,9 +60,10 @@ public:
     virtual Gfx::PGeometryShader createGeometryShader(const ShaderCreateInfo& createInfo) override;
     virtual Gfx::PFragmentShader createFragmentShader(const ShaderCreateInfo& createInfo) override;
 	virtual Gfx::PGraphicsPipeline createGraphicsPipeline(const GraphicsPipelineCreateInfo& createInfo) override;
+	virtual Gfx::PComputePipeline createComputePipeline(const ComputePipelineCreateInfo& createInfo) override;
     virtual Gfx::PSamplerState createSamplerState(const SamplerCreateInfo& createInfo) override;
 
-	virtual Gfx::PDescriptorLayout createDescriptorLayout() override;
+	virtual Gfx::PDescriptorLayout createDescriptorLayout(const std::string& name = "") override;
 	virtual Gfx::PPipelineLayout createPipelineLayout() override;
 
 protected:

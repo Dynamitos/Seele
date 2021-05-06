@@ -7,15 +7,26 @@
 
 using namespace Seele;
 
+inline float frand()
+{
+    return (float)rand()/RAND_MAX;
+}
+
 Scene::Scene(Gfx::PGraphics graphics)
     : graphics(graphics)
+    , updater(new SceneUpdater())
 {
-    lightEnv.directionalLights[0].color = Vector4(1, 0, 0, 1);
-    lightEnv.directionalLights[0].direction = Vector4(0, 0, 0, 1);
+    lightEnv.directionalLights[0].color = Vector4(1, 1, 1, 1);
+    lightEnv.directionalLights[0].direction = Vector4(1, 0, 0, 1);
     lightEnv.directionalLights[0].intensity = Vector4(1, 1, 1, 1);
     lightEnv.numDirectionalLights = 1;
-    lightEnv.numPointLights = 0;
     srand((unsigned int)time(NULL));
+    for(uint32 i = 0; i < MAX_POINT_LIGHTS; ++i)
+    {
+        lightEnv.pointLights[i].colorRange = Vector4(frand(), frand(), frand(), frand() * 30);
+        lightEnv.pointLights[i].positionWS = Vector4(frand() * 200-100, frand(), frand() * 200-100, 1);
+    }
+    lightEnv.numPointLights = MAX_POINT_LIGHTS;
 }
 
 Scene::~Scene()
@@ -24,14 +35,7 @@ Scene::~Scene()
 
 void Scene::tick(double deltaTime)
 {
-    lightEnv.directionalLights[0].direction.x += ((rand() / (double)RAND_MAX) - 0.5f) * 100.f * deltaTime;
-    lightEnv.directionalLights[0].direction.y += ((rand() / (double)RAND_MAX) - 0.5f) * 100.f * deltaTime;
-    lightEnv.directionalLights[0].direction.z += ((rand() / (double)RAND_MAX) - 0.5f) * 100.f * deltaTime;
-    std::cout << lightEnv.directionalLights[0].direction << std::endl;
-    for (auto actor : rootActors)
-    {
-        actor->tick(static_cast<float>(deltaTime));
-    }
+    updater->runUpdates(static_cast<float>(deltaTime));
 }
 
 void Scene::addActor(PActor actor)

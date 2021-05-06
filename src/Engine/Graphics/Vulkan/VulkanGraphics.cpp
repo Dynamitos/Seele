@@ -164,6 +164,12 @@ Gfx::PGraphicsPipeline Graphics::createGraphicsPipeline(const GraphicsPipelineCr
 	return pipeline;
 }
 
+Gfx::PComputePipeline Graphics::createComputePipeline(const ComputePipelineCreateInfo& createInfo) 
+{
+	PComputePipeline pipeline = pipelineCache->createPipeline(createInfo);
+	return pipeline;
+}
+
 Gfx::PSamplerState Graphics::createSamplerState(const SamplerCreateInfo&) 
 {
 	PSamplerState sampler = new SamplerState(); // TODO: proper sampler creation
@@ -172,9 +178,9 @@ Gfx::PSamplerState Graphics::createSamplerState(const SamplerCreateInfo&)
 	VK_CHECK(vkCreateSampler(handle, &vkInfo, nullptr, &sampler->sampler));
 	return sampler;
 }
-Gfx::PDescriptorLayout Graphics::createDescriptorLayout()
+Gfx::PDescriptorLayout Graphics::createDescriptorLayout(const std::string& name)
 {
-	PDescriptorLayout layout = new DescriptorLayout(this);
+	PDescriptorLayout layout = new DescriptorLayout(this, name);
 	return layout;
 }
 Gfx::PPipelineLayout Graphics::createPipelineLayout()

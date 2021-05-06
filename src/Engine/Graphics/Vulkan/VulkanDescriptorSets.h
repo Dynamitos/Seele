@@ -9,7 +9,7 @@ DECLARE_REF(Graphics)
 class DescriptorLayout : public Gfx::DescriptorLayout
 {
 public:
-	DescriptorLayout(PGraphics graphics);
+	DescriptorLayout(PGraphics graphics, const std::string& name);
 	virtual ~DescriptorLayout();
 	virtual void create();
 	inline VkDescriptorSetLayout getHandle() const
@@ -22,6 +22,7 @@ private:
 	PGraphics graphics;
 	Array<VkDescriptorSetLayoutBinding> bindings;
 	VkDescriptorSetLayout layoutHandle;
+	std::string name;
 	friend class DescriptorAllocator;
 };
 DEFINE_REF(DescriptorLayout)

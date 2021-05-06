@@ -38,6 +38,7 @@ VertexStageOutput vertexMain(
     clipSpacePosition = mul(gViewParams.projectionMatrix, viewSpacePosition);
     output.position = clipSpacePosition;
     output.shaderAttributeInterpolation = input.getInterpolants(cache, vertexParams);
+    output.cache = cache;
     return output;
 }
 
@@ -72,5 +73,5 @@ float4 fragmentMain(
         result += pointLight.illuminate(materialParams, brdf, viewDir);
     }
 	
-    return float4(result, 1);
+    return float4(result, 0);
 }

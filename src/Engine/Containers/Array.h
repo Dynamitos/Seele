@@ -334,7 +334,7 @@ namespace Seele
 		}
 		void resize(size_t newSize)
 		{
-			if (newSize < allocated)
+			if (newSize <= allocated)
 			{
 				arraySize = newSize;
 			}

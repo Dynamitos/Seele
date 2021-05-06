@@ -75,6 +75,14 @@ public:
 };
 DEFINE_REF(FragmentShader)
 
+class ComputeShader
+{
+public:
+	ComputeShader() {}
+	virtual ~ComputeShader() {}
+};
+DEFINE_REF(ComputeShader)
+
 //Uniquely identifies a permutation of shaders
 //using the type parameters used to generate it
 struct ShaderPermutation
@@ -204,8 +212,9 @@ DEFINE_REF(DescriptorSet)
 class DescriptorLayout
 {
 public:
-	DescriptorLayout()
+	DescriptorLayout(const std::string& name)
 		: setIndex(0)
+		, name(name)
 	{
 	}
 	virtual ~DescriptorLayout() {}
@@ -232,6 +241,7 @@ protected:
 	Array<DescriptorBinding> descriptorBindings;
 	PDescriptorAllocator allocator;
 	uint32 setIndex;
+	std::string name;
 	friend class PipelineLayout;
 	friend class DescriptorAllocator;
 };
@@ -441,6 +451,19 @@ protected:
 };
 DEFINE_REF(GraphicsPipeline)
 
+class ComputePipeline
+{
+public:
+	ComputePipeline(const ComputePipelineCreateInfo& createInfo, PPipelineLayout layout) : createInfo(createInfo), layout(layout) {}
+	virtual ~ComputePipeline(){}
+	const ComputePipelineCreateInfo& getCreateInfo() const { return createInfo; }
+	PPipelineLayout getPipelineLayout() const { return layout; }
+protected:
+	ComputePipelineCreateInfo createInfo;
+	PPipelineLayout layout;
+};
+DEFINE_REF(ComputePipeline)
+
 // IMPORTANT!! 
 // WHEN DERIVING FROM ANY Gfx:: BASE CLASSES WITH MULTIPLE INHERITANCE
 // ALWAYS PUT THE Gfx:: BASE CLASS FIRST
@@ -505,7 +528,7 @@ public:
 	virtual void beginFrame() = 0;
 	virtual void endFrame() = 0;
 	virtual void onWindowCloseEvent() = 0;
-	virtual PTexture2D getBackBuffer() = 0;
+	virtual PTexture2D getBackBuffer() const = 0;
 	virtual void setKeyCallback(std::function<void(KeyCode, InputAction, KeyModifier)> callback) = 0;
 	virtual void setMouseMoveCallback(std::function<void(double, double)> callback) = 0;
 	virtual void setMouseButtonCallback(std::function<void(MouseButton, InputAction, KeyModifier)> callback) = 0;
@@ -559,7 +582,7 @@ public:
 						   SeAttachmentStoreOp storeOp = SE_ATTACHMENT_STORE_OP_STORE,
 						   SeAttachmentLoadOp stencilLoadOp = SE_ATTACHMENT_LOAD_OP_DONT_CARE,
 						   SeAttachmentStoreOp stencilStoreOp = SE_ATTACHMENT_STORE_OP_DONT_CARE)
-		: texture(texture), loadOp(loadOp), storeOp(storeOp), stencilLoadOp(stencilLoadOp), stencilStoreOp(stencilStoreOp)
+		: loadOp(loadOp), storeOp(storeOp), stencilLoadOp(stencilLoadOp), stencilStoreOp(stencilStoreOp), texture(texture)
 	{
 	}
 	virtual ~RenderTargetAttachment()
@@ -583,12 +606,12 @@ public:
 	inline SeAttachmentStoreOp getStencilStoreOp() const { return stencilStoreOp; }
 	SeClearValue clear;
 	SeColorComponentFlags componentFlags;
-protected:
-	PTexture2D texture;
 	SeAttachmentLoadOp loadOp;
 	SeAttachmentStoreOp storeOp;
 	SeAttachmentLoadOp stencilLoadOp;
 	SeAttachmentStoreOp stencilStoreOp;
+protected:
+	PTexture2D texture;
 };
 DEFINE_REF(RenderTargetAttachment)
 

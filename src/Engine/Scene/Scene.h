@@ -5,6 +5,7 @@
 #include "Components/PrimitiveComponent.h"
 #include "Graphics/MeshBatch.h"
 #include "Material/Material.h"
+#include "SceneUpdater.h"
 
 namespace Seele
 {
@@ -46,11 +47,13 @@ public:
     const Array<PPrimitiveComponent>& getPrimitives() const { return primitives; }
     const Array<MeshBatch>& getStaticMeshes() const { return staticMeshes; }
     const LightEnv& getLightEnvironment() const { return lightEnv; }
+    UPSceneUpdater& getSceneUpdater() { return updater; }
 private:
     Array<MeshBatch> staticMeshes;
     Array<PActor> rootActors;
     Array<PPrimitiveComponent> primitives;
     LightEnv lightEnv;
     Gfx::PGraphics graphics;
+    UPSceneUpdater updater;
 };
 } // namespace Seele

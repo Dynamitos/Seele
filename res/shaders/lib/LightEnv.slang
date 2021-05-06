@@ -15,7 +15,7 @@ struct DirectionalLight : ILightEnv
 
     float3 illuminate<B:IBRDF>(MaterialFragmentParameter input, B brdf, float3 wo)
 	{
-		return intensity.xyz * brdf.evaluate(wo, direction.xyz, input.worldNormal, input.worldTangent, input.worldBiTangent, color.xyz);	
+		return intensity.xyz * brdf.evaluate(wo, normalize(direction.xyz), input.worldNormal, input.worldTangent, input.worldBiTangent, color.xyz);	
     }
 };
 
@@ -68,5 +68,5 @@ struct Lights
     uint numPointLights;
 };
 
-layout(set = 0, binding = 0, std430)
+layout(set = INDEX_LIGHT_ENV, binding = 0, std430)
 ConstantBuffer<Lights> gLightEnv;

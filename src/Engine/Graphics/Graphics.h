@@ -48,9 +48,10 @@ public:
     virtual PGeometryShader createGeometryShader(const ShaderCreateInfo& createInfo) = 0;
     virtual PFragmentShader createFragmentShader(const ShaderCreateInfo& createInfo) = 0;
     virtual PGraphicsPipeline createGraphicsPipeline(const GraphicsPipelineCreateInfo& createInfo) = 0;
+    virtual PComputePipeline createComputePipeline(const ComputePipelineCreateInfo& createInfo) = 0;
     virtual PSamplerState createSamplerState(const SamplerCreateInfo& createInfo) = 0;
 
-	virtual PDescriptorLayout createDescriptorLayout() = 0;
+	virtual PDescriptorLayout createDescriptorLayout(const std::string& name = "") = 0;
 	virtual PPipelineLayout createPipelineLayout() = 0;
 
     PVertexBuffer getNullVertexBuffer();

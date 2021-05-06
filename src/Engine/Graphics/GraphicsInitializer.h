@@ -120,6 +120,7 @@ struct ShaderCreateInfo
 {
     //It's possible to input multiple source files for materials or vertexFactories
     Array<std::string> shaderCode;
+    std::string name; // Debug info
     std::string entryPoint;
     Array<const char*> typeParameter;
     Map<const char*, const char*> defines;
@@ -231,7 +232,7 @@ struct GraphicsPipelineCreateInfo
         rasterizationState.cullMode = Gfx::SE_CULL_MODE_BACK_BIT;
         rasterizationState.polygonMode = Gfx::SE_POLYGON_MODE_FILL;
         rasterizationState.frontFace = Gfx::SE_FRONT_FACE_COUNTER_CLOCKWISE;
-        depthStencilState.depthCompareOp = Gfx::SE_COMPARE_OP_LESS;
+        depthStencilState.depthCompareOp = Gfx::SE_COMPARE_OP_LESS_OR_EQUAL;
         depthStencilState.minDepthBounds = 0.0f;
         depthStencilState.maxDepthBounds = 1.0f;
         depthStencilState.stencilTestEnable = false;
@@ -245,5 +246,14 @@ struct GraphicsPipelineCreateInfo
         colorBlend.blendConstants[2] = 1.0f;
         colorBlend.blendConstants[3] = 1.0f;
 	}
+};
+struct ComputePipelineCreateInfo
+{
+    Gfx::PComputeShader computeShader;
+    Gfx::PPipelineLayout pipelineLayout;
+    ComputePipelineCreateInfo()
+    {
+        std::memset((void*)this, 0, sizeof(*this));
+    }
 };
 } // namespace Seele

@@ -30,8 +30,8 @@ void StaticMeshVertexInput::init(Gfx::PGraphics graphics)
         elements.add(accessStreamComponent(data.positionStream, 0));
     }
     
-    uint8 tangentBasisAttributes[2] = {1, 2};
-    for(int32 axisIndex = 0; axisIndex < 2; axisIndex++)
+    uint8 tangentBasisAttributes[3] = {1, 2, 3};
+    for(int32 axisIndex = 0; axisIndex < 3; axisIndex++)
     {
         if(data.tangentBasisComponents[axisIndex].vertexBuffer != nullptr)
         {
@@ -41,15 +41,15 @@ void StaticMeshVertexInput::init(Gfx::PGraphics graphics)
 
     if(data.colorComponent.vertexBuffer != nullptr)
     {
-        elements.add(accessStreamComponent(data.colorComponent, 3));
+        elements.add(accessStreamComponent(data.colorComponent, 4));
     }
     else
     {
-        elements.add(accessStreamComponent(VertexStreamComponent(graphics->getNullVertexBuffer(), 0, 0, Gfx::SE_FORMAT_R32G32B32A32_SFLOAT), 3));
+        elements.add(accessStreamComponent(VertexStreamComponent(graphics->getNullVertexBuffer(), 0, 0, Gfx::SE_FORMAT_R32G32B32A32_SFLOAT), 4));
     }
     if(data.textureCoordinates.size())
     {
-        const int32 baseTexCoordAttribute = 4;
+        const int32 baseTexCoordAttribute = 5;
         for(uint32 coordinateIndex = 0; coordinateIndex < data.textureCoordinates.size(); ++coordinateIndex)
         {
             elements.add(accessStreamComponent(

@@ -15,10 +15,6 @@ Component::~Component()
 }
 void Component::tick(float deltaTime)
 {
-    for (auto child : children)
-    {
-        child->tick(deltaTime);
-    }
 }
 PComponent Component::getParent()
 {
@@ -40,6 +36,7 @@ PActor Component::getOwner()
 void Component::notifySceneAttach(PScene scene)
 {
     owningScene = scene;
+    scene->getSceneUpdater()->registerComponentUpdate(this);
     for (auto child : children)
     {
         child->notifySceneAttach(scene);

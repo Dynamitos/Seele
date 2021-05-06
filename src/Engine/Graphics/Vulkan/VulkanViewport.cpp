@@ -104,7 +104,7 @@ void Window::onWindowCloseEvent()
 {
 }
 
-Gfx::PTexture2D Window::getBackBuffer()
+Gfx::PTexture2D Window::getBackBuffer() const
 {
     return backBufferImages[currentImageIndex];
 }

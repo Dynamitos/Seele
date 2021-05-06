@@ -19,8 +19,6 @@ cbuffer DispatchParams
 
 layout(binding = 2)
 RWTexture2D depthTextureVS;
-layout(binding = 3)
-ConstantBuffer<Lights> lights;
 layout(binding = 4)
 StructuredBuffer<Frustum> frustums;
 

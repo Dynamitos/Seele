@@ -19,5 +19,17 @@ private:
     VkPipeline pipeline;
 };
 DEFINE_REF(GraphicsPipeline)
+class ComputePipeline : public Gfx::ComputePipeline
+{
+public:
+    ComputePipeline(PGraphics graphics, VkPipeline handle, PPipelineLayout pipelineLayout, const ComputePipelineCreateInfo& createInfo);
+    virtual ~ComputePipeline();
+    void bind(VkCommandBuffer handle);
+    VkPipelineLayout getLayout() const;
+private:
+    PGraphics graphics;
+    VkPipeline pipeline;
+};
+DEFINE_REF(ComputePipeline)
 } // namespace Vulkan
 } // namespace Seele

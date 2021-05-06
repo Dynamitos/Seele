@@ -1,6 +1,7 @@
 #pragma once
 #include "MinimalEngine.h"
 #include "MeshProcessor.h"
+#include "RenderPass.h"
 
 namespace Seele
 {
@@ -30,28 +31,19 @@ private:
 DEFINE_REF(BasePassMeshProcessor)
 DECLARE_REF(CameraActor)
 DECLARE_REF(CameraComponent)
-class BasePass
+class BasePass : public RenderPass
 {
 public:
-    BasePass(const PScene scene, Gfx::PGraphics graphics, Gfx::PViewport viewport, PCameraActor source);
-    ~BasePass();
-    void beginFrame();
-    void render();
-    void endFrame();
+    BasePass(PRenderGraph renderGraph, const PScene scene, Gfx::PGraphics graphics, Gfx::PViewport viewport, PCameraActor source);
+    virtual ~BasePass();
+    virtual void beginFrame() override;
+    virtual void render() override;
+    virtual void endFrame() override;
+    virtual void publishOutputs() override;
+    virtual void createRenderPass() override;
+    static void modifyRenderPassMacros(Map<const char*, const char*>& defines);
 private:
-    struct ViewParameter
-    {
-        Matrix4 viewMatrix;
-        Matrix4 projectionMatrix;
-        Vector4 cameraPosition;
-    } viewParams;
-    struct ScreenToViewParameter
-    {
-        Matrix4 inverseProjectionMatrix;
-        Vector2 screenDimensions;
-    } screenToViewParams;
-
-    Gfx::PRenderPass renderPass;
+    Gfx::PRenderTargetAttachment colorAttachment;
     Gfx::PTexture2D depthBuffer;
     UPBasePassMeshProcessor processor;
     const PScene scene;
@@ -61,16 +53,21 @@ private:
     PCameraComponent source;
     Gfx::PPipelineLayout basePassLayout;
     // Set 0: Light environment
+    static constexpr uint32 INDEX_LIGHT_ENV = 0;
     Gfx::PDescriptorLayout lightLayout;
     Gfx::PUniformBuffer lightUniform;
     // Set 1: viewParameter
+    static constexpr uint32 INDEX_VIEW_PARAMS = 1;
     Gfx::PDescriptorLayout viewLayout;
     Gfx::PUniformBuffer viewParamBuffer;
     Gfx::PUniformBuffer screenToViewParamBuffer;
     // Set 2: materials, generated
+    static constexpr uint32 INDEX_MATERIAL = 2;
     // Set 3: primitive scene data
+    static constexpr uint32 INDEX_SCENE_DATA = 3;
     Gfx::PDescriptorLayout primitiveLayout;
     Gfx::PUniformBuffer primitiveUniformBuffer;
+    friend class BasePassMeshProcessor;
 };
 DEFINE_REF(BasePass)
 } // namespace Seele

@@ -1,5 +1,3 @@
-
-import LightEnv;
 import Common;
 
 struct ComputeShaderInput

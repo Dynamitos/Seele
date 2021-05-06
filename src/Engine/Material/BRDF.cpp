@@ -66,7 +66,7 @@ void BlinnPhong::generateMaterialCode(std::ofstream& codeStream, json codeJson)
         
     };
     accessorStream << "float3 getBaseColor(MaterialFragmentParameter input) {\n";
-    generateAccessor(accessorStream, "baseColor", "float3(0, 0, 0)");
+    generateAccessor(accessorStream, "baseColor", "float3(0.5f, 0.5f, 0.5f)");
     accessorStream << "}";
 
     accessorStream << "float getMetallic(MaterialFragmentParameter input) {\n";
@@ -121,7 +121,7 @@ void BlinnPhong::generateMaterialCode(std::ofstream& codeStream, json codeJson)
     codeStream << name << " result;" << std::endl;
     codeStream << "result.baseColor = getBaseColor(geometry);" << std::endl;
     codeStream << "result.metallic = getMetallic(geometry);" << std::endl;
-    codeStream << "result.normal = geometry.transformNormalTexture(getNormal(geometry));" << std::endl;
+    codeStream << "result.normal = getNormal(geometry);" << std::endl;
     codeStream << "result.specular = getSpecular(geometry);" << std::endl;
     codeStream << "result.roughness = getRoughness(geometry);" << std::endl;
     codeStream << "result.sheen = getSheen(geometry);" << std::endl;

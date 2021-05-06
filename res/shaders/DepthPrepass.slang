@@ -4,10 +4,6 @@ import VERTEX_INPUT_IMPORT;
 import MATERIAL_IMPORT;
 import PrimitiveSceneData;
 
-struct ModelParameter
-{
-	float4x4 modelMatrix;
-}
 
 struct VertexStageOutput
 {

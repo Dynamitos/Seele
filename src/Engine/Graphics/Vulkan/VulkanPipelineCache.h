@@ -11,6 +11,7 @@ public:
     PipelineCache(PGraphics graphics, const std::string& cacheFilePath);
     ~PipelineCache();
     PGraphicsPipeline createPipeline(const GraphicsPipelineCreateInfo& createInfo);
+    PComputePipeline createPipeline(const ComputePipelineCreateInfo& createInfo);
 private:
     VkPipelineCache cache;
     PGraphics graphics;

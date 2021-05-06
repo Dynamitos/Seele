@@ -4,5 +4,11 @@ target_sources(SeeleEngine
         BasePass.cpp
         DepthPrepass.h
         DepthPrepass.cpp
+        LightCullingPass.h
+        LightCullingPass.cpp
         MeshProcessor.h
-        MeshProcessor.cpp)
+        MeshProcessor.cpp
+        RenderGraph.h
+        RenderGraph.cpp
+        RenderPass.h
+        RenderPass.cpp)

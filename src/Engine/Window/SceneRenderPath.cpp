@@ -2,6 +2,7 @@
 #include "Scene/Scene.h"
 #include "Material/Material.h"
 #include "Asset/AssetRegistry.h"
+#include "Graphics/RenderPass/RenderGraph.h"
 
 using namespace Seele;
 
@@ -9,7 +10,10 @@ SceneRenderPath::SceneRenderPath(PScene scene, Gfx::PGraphics graphics, Gfx::PVi
 	: RenderPath(graphics, target)
 	, scene(scene)
 {
-	basePass = new BasePass(scene, graphics, target, source);
+	renderGraph = new RenderGraph();
+	depthPrepass = new DepthPrepass(renderGraph, scene, graphics, target, source);
+	basePass = new BasePass(renderGraph, scene, graphics, target, source);
+	renderGraph->setup();
 }
 
 SceneRenderPath::~SceneRenderPath()
@@ -28,15 +32,15 @@ void SceneRenderPath::init()
 
 void SceneRenderPath::beginFrame() 
 {
-    basePass->beginFrame();
+	depthPrepass->beginFrame();
 }
 
 void SceneRenderPath::render() 
 {
-    basePass->render();
+    depthPrepass->render();
 }
 
 void SceneRenderPath::endFrame() 
 {
-    basePass->endFrame();
+    depthPrepass->endFrame();
 }

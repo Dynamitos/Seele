@@ -7,7 +7,7 @@ enum { MAX_TEXCOORDS = 4 };
 struct StaticMeshDataType
 {
     VertexStreamComponent positionStream;
-    VertexStreamComponent tangentBasisComponents[2];
+    VertexStreamComponent tangentBasisComponents[3];
     
     //Dont forget these are 4 component vectors
     Array<VertexStreamComponent> textureCoordinates;

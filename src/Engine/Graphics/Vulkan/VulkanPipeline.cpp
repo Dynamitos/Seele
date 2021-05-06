@@ -25,3 +25,25 @@ VkPipelineLayout GraphicsPipeline::getLayout() const
 {
     return layout.cast<PipelineLayout>()->getHandle();  
 }
+
+ComputePipeline::ComputePipeline(PGraphics graphics, VkPipeline handle, PPipelineLayout pipelineLayout, const ComputePipelineCreateInfo& createInfo) 
+    : Gfx::ComputePipeline(createInfo, pipelineLayout)
+    , graphics(graphics)
+    , pipeline(handle)
+{
+    
+}
+
+ComputePipeline::~ComputePipeline() 
+{
+}
+
+void ComputePipeline::bind(VkCommandBuffer handle) 
+{
+    vkCmdBindPipeline(handle, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
+}
+
+VkPipelineLayout ComputePipeline::getLayout() const
+{
+    return layout.cast<PipelineLayout>()->getHandle();
+}

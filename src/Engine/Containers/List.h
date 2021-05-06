@@ -37,6 +37,7 @@ public:
 		, endIt(std::move(other.endIt))
 		, _size(std::move(other._size))
 	{
+		other._size = 0;
 	}
 	~List()
 	{
@@ -75,6 +76,7 @@ public:
 			beginIt = other.beginIt;
 			endIt = other.endIt;
 			_size = other._size;
+			other._size = 0;
 		}
 		return *this;
 	}
@@ -252,10 +254,12 @@ public:
 	}
 	void popBack()
 	{
+		assert(_size > 0);
 		remove(Iterator(tail->prev));
 	}
 	void popFront()
 	{
+		assert(_size > 0);
 		remove(Iterator(root));
 	}
 	Iterator insert(Iterator pos, const T &value)

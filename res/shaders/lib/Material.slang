@@ -18,5 +18,5 @@ interface IMaterial
 };
 
 type_param TMaterial : IMaterial;
-layout(set = 2, binding = 0, std430)
+layout(set = INDEX_MATERIAL, binding = 0, std430)
 ParameterBlock<TMaterial> gMaterial;

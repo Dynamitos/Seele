@@ -8,8 +8,9 @@
 using namespace Seele;
 using namespace Seele::Vulkan;
 
-DescriptorLayout::DescriptorLayout(PGraphics graphics) 
-	: graphics(graphics)
+DescriptorLayout::DescriptorLayout(PGraphics graphics, const std::string& name)
+	: Gfx::DescriptorLayout(name)
+	, graphics(graphics)
 	, layoutHandle(VK_NULL_HANDLE)
 {
 }
@@ -67,6 +68,7 @@ void PipelineLayout::create()
 		// There could be unused descriptor set indices
 		if(descriptorSetLayouts[i] == nullptr)
 		{
+			vulkanDescriptorLayouts[i] = VK_NULL_HANDLE;
 			continue;
 		}
 		PDescriptorLayout layout = descriptorSetLayouts[i].cast<DescriptorLayout>();
@@ -81,7 +83,7 @@ void PipelineLayout::create()
 	{
 		vkPushConstants[i].offset = pushConstants[i].offset;
 		vkPushConstants[i].size = pushConstants[i].size;
-		vkPushConstants[i].stageFlags = cast((VkShaderStageFlagBits)pushConstants[i].stageFlags);
+		vkPushConstants[i].stageFlags = (VkShaderStageFlagBits)pushConstants[i].stageFlags;
 	}
 	createInfo.pushConstantRangeCount = (uint32)vkPushConstants.size();
 	createInfo.pPushConstantRanges = vkPushConstants.data();

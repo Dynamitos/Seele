@@ -8,7 +8,7 @@ struct ViewParameter
     float4x4 projectionMatrix;
     float4 cameraPos_WS;
 }
-layout(set = 1, binding = 0, std430)
+layout(set = INDEX_VIEW_PARAMS, binding = 0, std430)
 ConstantBuffer<ViewParameter> gViewParams;
 
 struct ScreenToViewParams
@@ -16,7 +16,7 @@ struct ScreenToViewParams
 	float4x4 inverseProjection;
 	float2 screenDimensions;
 }
-layout(set = 1, binding = 1, std430)
+layout(set = INDEX_VIEW_PARAMS, binding = 1, std430)
 ConstantBuffer<ScreenToViewParams> gScreenToViewParams;
 
 // Convert clip space coordinates to view space

@@ -2,6 +2,8 @@
 #include "Material/MaterialInstance.h"
 #include "Material/Material.h"
 #include "Graphics.h"
+#include "RenderPass/DepthPrepass.h"
+#include "RenderPass/BasePass.h"
 
 using namespace Seele;
 using namespace Seele::Gfx;
@@ -16,6 +18,16 @@ std::string getShaderNameFromRenderPassType(Gfx::RenderPassType type)
 		return "ForwardPlus.slang";
 	default:
 		return "";
+	}
+}
+void modifyRenderPassMacros(Gfx::RenderPassType type, Map<const char*, const char*>& defines)
+{
+	switch (type)
+	{
+	case Gfx::RenderPassType::DepthPrepass:
+		DepthPrepass::modifyRenderPassMacros(defines);
+	case Gfx::RenderPassType::BasePass:
+		BasePass::modifyRenderPassMacros(defines);
 	}
 }
 
@@ -55,6 +67,8 @@ ShaderCollection& ShaderMap::createShaders(
 	createInfo.defines["MATERIAL_IMPORT"] = material->getName().c_str();
 	createInfo.defines["NUM_MATERIAL_TEXCOORDS"] = "1";
 	createInfo.defines["USE_INSTANCING"] = "0";
+	modifyRenderPassMacros(renderPass, createInfo.defines);
+	createInfo.name = getShaderNameFromRenderPassType(renderPass) + " Material " + material->getName();
 	
     std::ifstream codeStream("./shaders/" + getShaderNameFromRenderPassType(renderPass), std::ios::ate);
     auto fileSize = codeStream.tellg();
@@ -113,7 +127,8 @@ void PipelineLayout::addDescriptorLayout(uint32 setIndex, PDescriptorLayout layo
 	{
 		descriptorSetLayouts.resize(setIndex + 1);
 	}
-	if (descriptorSetLayouts[setIndex] != nullptr)
+	// After a second thought, merging descriptor layout bindings is not a good idea
+	/*if (descriptorSetLayouts[setIndex] != nullptr)
 	{
 		auto &thisBindings = descriptorSetLayouts[setIndex]->descriptorBindings;
 		auto &otherBindings = layout->descriptorBindings;
@@ -126,7 +141,7 @@ void PipelineLayout::addDescriptorLayout(uint32 setIndex, PDescriptorLayout layo
 			}
 		}
 	}
-	else
+	else*/
 	{
 		descriptorSetLayouts[setIndex] = layout;
 	}

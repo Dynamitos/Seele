@@ -43,11 +43,11 @@ void Material::load()
 void Material::compile()
 {
     setStatus(Status::Loading);
-    layout = WindowManager::getGraphics()->createDescriptorLayout();
     auto& stream = getReadStream();
     json j;
     stream >> j;
     materialName = j["name"].get<std::string>();
+    layout = WindowManager::getGraphics()->createDescriptorLayout(materialName + "Layout");
     //Shader file needs to conform to the slang standard, which prohibits _
     materialName.erase(std::remove(materialName.begin(), materialName.end(), '_'), materialName.end());
     std::ofstream codeStream("./shaders/generated/"+materialName+".slang");

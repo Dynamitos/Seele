@@ -4,6 +4,7 @@
 #include "Scene/Components/CameraComponent.h"
 #include "Scene/Actor/CameraActor.h"
 #include "Math/Vector.h"
+#include "RenderGraph.h"
 
 using namespace Seele;
 
@@ -46,10 +47,10 @@ void BasePassMeshProcessor::addMeshBatch(
     renderCommand->setViewport(target);
     for(uint32 i = 0; i < batch.elements.size(); ++i)
     {
-        pipelineLayout->addDescriptorLayout(2, material->getRenderMaterial()->getDescriptorLayout());
+        pipelineLayout->addDescriptorLayout(BasePass::INDEX_MATERIAL, material->getRenderMaterial()->getDescriptorLayout());
         pipelineLayout->create();
-        descriptorSets[2] = material->getDescriptor();
-        descriptorSets[3] = cachedPrimitiveSets[cachedPrimitiveIndex++];
+        descriptorSets[BasePass::INDEX_MATERIAL] = material->getDescriptor();
+        descriptorSets[BasePass::INDEX_SCENE_DATA] = cachedPrimitiveSets[cachedPrimitiveIndex++];
         buildMeshDrawCommand(batch, 
 //            primitiveComponent, 
             renderPass,
@@ -78,42 +79,29 @@ void BasePassMeshProcessor::clearCommands()
     cachedPrimitiveIndex = 0;
 }
 
-BasePass::BasePass(const PScene scene, Gfx::PGraphics graphics, Gfx::PViewport viewport, PCameraActor source) 
-    : processor(new BasePassMeshProcessor(scene, viewport, graphics, false))
+BasePass::BasePass(PRenderGraph renderGraph, const PScene scene, Gfx::PGraphics graphics, Gfx::PViewport viewport, PCameraActor source) 
+    : RenderPass(renderGraph)
+    , processor(new BasePassMeshProcessor(scene, viewport, graphics, false))
     , scene(scene)
     , graphics(graphics)
     , viewport(viewport)
     , descriptorSets(4)
     , source(source->getCameraComponent())
 {
-    Gfx::PRenderTargetAttachment colorAttachment = new Gfx::SwapchainAttachment(viewport->getOwner());
-    TextureCreateInfo depthBufferInfo;
-    depthBufferInfo.width = viewport->getSizeX();
-    depthBufferInfo.height = viewport->getSizeY();
-    depthBufferInfo.format = Gfx::SE_FORMAT_D32_SFLOAT;
-    depthBufferInfo.usage = Gfx::SE_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-    depthBuffer = graphics->createTexture2D(depthBufferInfo);
-    Gfx::PRenderTargetAttachment depthAttachment = 
-        new Gfx::RenderTargetAttachment(depthBuffer, Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
-    depthAttachment->clear.depthStencil.depth = 1.0f;
-    Gfx::PRenderTargetLayout layout = new Gfx::RenderTargetLayout(colorAttachment, depthAttachment);
-    renderPass = graphics->createRenderPass(layout);
-
     UniformBufferCreateInfo uniformInitializer;
-
     basePassLayout = graphics->createPipelineLayout();
 
-    lightLayout = graphics->createDescriptorLayout();
+    lightLayout = graphics->createDescriptorLayout("LightLayout");
     lightLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
     uniformInitializer.resourceData.size = sizeof(LightEnv);
     uniformInitializer.resourceData.data = nullptr;
     uniformInitializer.bDynamic = true;
     lightUniform = graphics->createUniformBuffer(uniformInitializer);
     lightLayout->create();
-    basePassLayout->addDescriptorLayout(0, lightLayout);
-    descriptorSets[0] = lightLayout->allocatedDescriptorSet();
+    basePassLayout->addDescriptorLayout(INDEX_LIGHT_ENV, lightLayout);
+    descriptorSets[INDEX_LIGHT_ENV] = lightLayout->allocatedDescriptorSet();
 
-    viewLayout = graphics->createDescriptorLayout();
+    viewLayout = graphics->createDescriptorLayout("ViewLayout");
     viewLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
     uniformInitializer.resourceData.size = sizeof(ViewParameter);
     uniformInitializer.resourceData.data = (uint8*)&viewParams;
@@ -125,13 +113,13 @@ BasePass::BasePass(const PScene scene, Gfx::PGraphics graphics, Gfx::PViewport v
     uniformInitializer.bDynamic = true;
     screenToViewParamBuffer = graphics->createUniformBuffer(uniformInitializer);
     viewLayout->create();
-    basePassLayout->addDescriptorLayout(1, viewLayout);
-    descriptorSets[1] = viewLayout->allocatedDescriptorSet();
+    basePassLayout->addDescriptorLayout(INDEX_VIEW_PARAMS, viewLayout);
+    descriptorSets[INDEX_VIEW_PARAMS] = viewLayout->allocatedDescriptorSet();
 
-    primitiveLayout = graphics->createDescriptorLayout();
+    primitiveLayout = graphics->createDescriptorLayout("PrimitiveLayout");
     primitiveLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
     primitiveLayout->create();
-    basePassLayout->addDescriptorLayout(3, primitiveLayout);
+    basePassLayout->addDescriptorLayout(INDEX_SCENE_DATA, primitiveLayout);
 }
 
 BasePass::~BasePass()
@@ -146,8 +134,8 @@ void BasePass::beginFrame()
     uniformUpdate.size = sizeof(LightEnv);
     uniformUpdate.data = (uint8*)&scene->getLightEnvironment();
     lightUniform->updateContents(uniformUpdate);
-    descriptorSets[0]->updateBuffer(0, lightUniform);
-    descriptorSets[0]->writeChanges();
+    descriptorSets[INDEX_LIGHT_ENV]->updateBuffer(0, lightUniform);
+    descriptorSets[INDEX_LIGHT_ENV]->writeChanges();
 
     viewParams.viewMatrix = source->getViewMatrix();
     viewParams.projectionMatrix = source->getProjectionMatrix();
@@ -160,9 +148,9 @@ void BasePass::beginFrame()
     uniformUpdate.size = sizeof(ScreenToViewParameter);
     uniformUpdate.data = (uint8*)&screenToViewParams;
     screenToViewParamBuffer->updateContents(uniformUpdate);
-    descriptorSets[1]->updateBuffer(0, viewParamBuffer);
-    descriptorSets[1]->updateBuffer(1, screenToViewParamBuffer);
-    descriptorSets[1]->writeChanges();
+    descriptorSets[INDEX_VIEW_PARAMS]->updateBuffer(0, viewParamBuffer);
+    descriptorSets[INDEX_VIEW_PARAMS]->updateBuffer(1, screenToViewParamBuffer);
+    descriptorSets[INDEX_VIEW_PARAMS]->writeChanges();
     for(auto &&meshBatch : scene->getStaticMeshes())
     {
         meshBatch.material->updateDescriptorData();
@@ -182,4 +170,26 @@ void BasePass::render()
 
 void BasePass::endFrame() 
 {
+}
+
+void BasePass::publishOutputs() 
+{
+    colorAttachment = new Gfx::SwapchainAttachment(viewport->getOwner());
+    renderGraph->registerRenderPassOutput("BASEPASS_COLOR", colorAttachment);
+}
+
+void BasePass::createRenderPass() 
+{
+    Gfx::PRenderTargetAttachment depthAttachment = renderGraph->requestRenderTarget("DEPTHPREPASS_DEPTH");
+    depthAttachment->loadOp = Gfx::SE_ATTACHMENT_LOAD_OP_LOAD;
+    Gfx::PRenderTargetLayout layout = new Gfx::RenderTargetLayout(colorAttachment, depthAttachment);
+    renderPass = graphics->createRenderPass(layout);
+}
+
+void BasePass::modifyRenderPassMacros(Map<const char*, const char*>& defines)
+{
+    defines["INDEX_LIGHT_ENV"] = "0";
+    defines["INDEX_VIEW_PARAMS"] = "1";
+    defines["INDEX_MATERIAL"] = "2";
+    defines["INDEX_SCENE_DATA"] = "3";
 }

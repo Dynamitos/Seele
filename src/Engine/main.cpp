@@ -27,10 +27,16 @@ int main()
 	window->addView(sceneView);
 	sceneView->setFocused();
 	AssetRegistry::init("D:\\Private\\Programming\\C++\\TestSeeleProject\\");
-	AssetRegistry::importFile("D:\\Private\\Programming\\Unreal Engine\\Assets\\Arissa\\Arissa.fbx");
-	PPrimitiveComponent arissa = new PrimitiveComponent(AssetRegistry::findMesh("Arissa"));
+	AssetRegistry::importFile("D:\\Private\\Programming\\Unreal Engine\\Assets\\Ely\\Ely.fbx");
+	AssetRegistry::importFile("D:\\Private\\Programming\\Unreal Engine\\Assets\\Cube\\cube.obj");
+	AssetRegistry::importFile("D:\\Private\\Programming\\Unreal Engine\\Assets\\Plane\\plane.obj");
+	PPrimitiveComponent plane = new PrimitiveComponent(AssetRegistry::findMesh("plane"));
+	plane->setWorldScale(Vector(100, 100, 100));
+	plane->addWorldTranslation(Vector(0, -10, 0));
+	PPrimitiveComponent arissa = new PrimitiveComponent(AssetRegistry::findMesh("Ely"));
 	arissa->addWorldTranslation(Vector(0, 0, 100));
 	arissa->setWorldScale(Vector(0.1f, 0.1f, 0.1f));
+	sceneView->getScene()->addPrimitiveComponent(plane);
 	sceneView->getScene()->addPrimitiveComponent(arissa);
 	core.renderLoop();
 	core.shutdown();

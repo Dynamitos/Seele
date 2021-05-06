@@ -12,7 +12,6 @@ struct VertexValueCache
     //leading to a compiler error
     float3 tangentToLocal[3];
     float3 tangentToWorld[3];
-    float tangentToWorldSign;
     float4 color;
 
     float3x3 getTangentToLocal()
@@ -46,8 +45,9 @@ struct VertexValueCache
 struct ShaderAttributeInterpolation
 {
     float3 worldPosition;
-    float3 tangentX;
-    float4 tangentZ;
+    float3 normal;
+    float3 tangent;
+    float3 biTangent;
     float4 color;
 #if NUM_MATERIAL_TEXCOORDS
     float4 packedTexCoords[(NUM_MATERIAL_TEXCOORDS+1) / 2];
@@ -72,16 +72,15 @@ struct ShaderAttributeInterpolation
             }
         }
 #endif
-        float3 tangentY = cross(tangentZ.xyz, tangentX) * tangentZ.w;
-        result.tangentToWorld[0] = cross(tangentY, tangentZ.xyz) * tangentZ.w;
-        result.tangentToWorld[1] = tangentY;
-        result.tangentToWorld[2] = tangentZ.xyz;
+        result.tangentToWorld[0] = tangent;
+        result.tangentToWorld[1] = biTangent;
+        result.tangentToWorld[2] = normal;
         result.clipPosition = clipSpacePosition;
         result.worldPosition = worldPosition;
         result.viewDir = gViewParams.cameraPos_WS.xyz - worldPosition;
-        result.worldNormal = tangentZ.xyz;
-        result.worldTangent = tangentX;
-        result.worldBiTangent = tangentY;
+        result.worldNormal = normal;
+        result.worldTangent = tangent;
+        result.worldBiTangent = biTangent;
         result.vertexColor = color;
         return result;
     }
@@ -90,8 +89,9 @@ struct ShaderAttributeInterpolation
 struct VertexShaderInput
 {
 	float4 position;
-    float3 tangentX;
-    float4 tangentZ;
+    float3 normal;
+    float3 tangent;
+    float3 biTangent;
     float4 color;
 #if NUM_MATERIAL_TEXCOORDS
     #if NUM_MATERIAL_TEXCOORDS > 1
@@ -118,15 +118,12 @@ struct VertexShaderInput
     float3 instanceTransform3;
 #endif // USE_INSTANCING
     
-    float3x3 calcTangentToLocal(out float tangentSign)
+    float3x3 calcTangentToLocal()
     {
         float3x3 result;
-        tangentSign = tangentZ.w;
-
-        float3 tangentY = cross(tangentZ.xyz, tangentX) * tangentZ.w;
-        result[0] = cross(tangentY, tangentZ.xyz) * tangentZ.w;
-        result[1] = tangentY;
-        result[2] = tangentZ.xyz;
+        result[0] = tangent;
+        result[1] = biTangent;
+        result[2] = normal;
 
         return result;
     }
@@ -149,17 +146,14 @@ struct VertexShaderInput
         cache.instanceOrigin = instanceOrigin;
 #endif
 
-        float tangentSign;
-        float3x3 tangentToLocal = calcTangentToLocal(tangentSign);
+        float3x3 tangentToLocal = calcTangentToLocal();
         cache.tangentToLocal[0] = tangentToLocal[0];
         cache.tangentToLocal[1] = tangentToLocal[1];
         cache.tangentToLocal[2] = tangentToLocal[2];
-        float3x3 localToWorld = float3x3(gSceneData.localToWorld[0].xyz, gSceneData.localToWorld[1].xyz, gSceneData.localToWorld[2].xyz);
-        float3x3 tangentToWorld = mul(tangentToLocal, localToWorld);
-        cache.tangentToWorld[0] = tangentToWorld[0];
-        cache.tangentToWorld[1] = tangentToWorld[1];
-        cache.tangentToWorld[2] = tangentToWorld[2];
-        cache.tangentToWorldSign = tangentSign;
+
+        cache.tangentToWorld[0] = mul(gSceneData.localToWorld, float4(tangentToLocal[0], 0.0f)).xyz;
+        cache.tangentToWorld[1] = mul(gSceneData.localToWorld, float4(tangentToLocal[1], 0.0f)).xyz;
+        cache.tangentToWorld[2] = mul(gSceneData.localToWorld, float4(tangentToLocal[2], 0.0f)).xyz;
 
         return cache;
     }
@@ -186,8 +180,10 @@ struct VertexShaderInput
     ShaderAttributeInterpolation getInterpolants(VertexValueCache cache, MaterialVertexParameter vertexParams)
     {
         ShaderAttributeInterpolation result = (ShaderAttributeInterpolation)0;
-        result.tangentX = tangentX;
-        result.tangentZ = tangentZ;
+        float3x3 tangentToWorld = cache.getTangentToWorld();
+        result.normal = mul(gSceneData.localToWorld, float4(normal, 0.0f)).xyz;
+        result.tangent = mul(gSceneData.localToWorld, float4(tangent, 0.0f)).xyz;
+        result.biTangent = mul(gSceneData.localToWorld, float4(biTangent, 0.0f)).xyz;
         result.color = color;
         result.worldPosition = vertexParams.worldPosition;
         for(int i = 0; i < NUM_MATERIAL_TEXCOORDS; ++i)
