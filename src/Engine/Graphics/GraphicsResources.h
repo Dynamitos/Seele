@@ -148,14 +148,6 @@ private:
 };
 DEFINE_REF(ShaderMap)
 
-class ComputeShader
-{
-public:
-	ComputeShader() {}
-	virtual ~ComputeShader() {}
-};
-DEFINE_REF(ComputeShader)
-
 class DescriptorBinding
 {
 public:
@@ -233,7 +225,7 @@ public:
 	virtual void create() = 0;
 	virtual void addDescriptorBinding(uint32 binding, SeDescriptorType type, uint32 arrayCount = 1);
 	virtual void reset();
-	virtual PDescriptorSet allocatedDescriptorSet();
+	virtual PDescriptorSet allocateDescriptorSet();
 	const Array<DescriptorBinding> &getBindings() const { return descriptorBindings; }
 	inline uint32 getSetIndex() const { return setIndex; }
 
@@ -301,9 +293,12 @@ public:
 
 	//Preliminary checks to see if the barrier should be executed at all
 	void transferOwnership(QueueType newOwner);
+	void pipelineBarrier(SeAccessFlags srcAccess, SePipelineStageFlags srcStage, SeAccessFlags dstAccess, SePipelineStageFlags dstStage);
 
 protected:
 	virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
+	virtual void executePipelineBarrier(SeAccessFlags srcAccess, SePipelineStageFlags srcStage, 
+		SeAccessFlags dstAccess, SePipelineStageFlags dstStage) = 0;
 	Gfx::QueueType currentOwner;
 	QueueFamilyMapping mapping;
 };
@@ -353,6 +348,8 @@ protected:
 	Array<uint8> contents;
 	// Inherited via QueueOwnedResource
 	virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
+	virtual void executePipelineBarrier(SeAccessFlags srcAccess, SePipelineStageFlags srcStage, 
+		SeAccessFlags dstAccess, SePipelineStageFlags dstStage) = 0;
 };
 DEFINE_REF(UniformBuffer)
 
@@ -374,6 +371,8 @@ public:
 protected:
 	// Inherited via QueueOwnedResource
 	virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
+	virtual void executePipelineBarrier(SeAccessFlags srcAccess, SePipelineStageFlags srcStage, 
+		SeAccessFlags dstAccess, SePipelineStageFlags dstStage) = 0;
 	uint32 numVertices;
 	uint32 vertexSize;
 };
@@ -396,6 +395,8 @@ public:
 protected:
 	// Inherited via QueueOwnedResource
 	virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
+	virtual void executePipelineBarrier(SeAccessFlags srcAccess, SePipelineStageFlags srcStage, 
+		SeAccessFlags dstAccess, SePipelineStageFlags dstStage) = 0;
 	Gfx::SeIndexType indexType;
 	uint32 numIndices;
 };
@@ -409,6 +410,8 @@ public:
 protected:
 	// Inherited via QueueOwnedResource
 	virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
+	virtual void executePipelineBarrier(SeAccessFlags srcAccess, SePipelineStageFlags srcStage, 
+		SeAccessFlags dstAccess, SePipelineStageFlags dstStage) = 0;
 };
 DEFINE_REF(StructuredBuffer)
 
@@ -480,10 +483,14 @@ public:
 	virtual uint32 getSizeX() const = 0;
 	virtual uint32 getSizeY() const = 0;
 	virtual SeSampleCountFlags getNumSamples() const = 0;
+	virtual void changeLayout(SeImageLayout newLayout) = 0;
 	virtual class Texture2D* getTexture2D() { return nullptr; }
+	virtual void* getNativeHandle() { return nullptr; }
 protected:
     // Inherited via QueueOwnedResource
 	virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
+	virtual void executePipelineBarrier(SeAccessFlags srcAccess, SePipelineStageFlags srcStage, 
+		SeAccessFlags dstAccess, SePipelineStageFlags dstStage) = 0;
 };
 DEFINE_REF(Texture)
 class Texture2D : public Texture
@@ -496,10 +503,13 @@ public:
 	virtual uint32 getSizeX() const = 0;
 	virtual uint32 getSizeY() const = 0;
 	virtual SeSampleCountFlags getNumSamples() const = 0;
+	virtual void changeLayout(SeImageLayout newLayout) = 0;
 	virtual class Texture2D* getTexture2D() { return this; }
 protected:
 	//Inherited via QueueOwnedResource
 	virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
+	virtual void executePipelineBarrier(SeAccessFlags srcAccess, SePipelineStageFlags srcStage, 
+		SeAccessFlags dstAccess, SePipelineStageFlags dstStage) = 0;
 };
 DEFINE_REF(Texture2D)
 
@@ -517,8 +527,22 @@ public:
 	virtual void bindVertexBuffer(const Array<VertexInputStream>& streams) = 0;
 	virtual void bindIndexBuffer(Gfx::PIndexBuffer indexBuffer) = 0;
 	virtual void draw(const MeshBatchElement& data) = 0;
+	std::string name;
 };
 DEFINE_REF(RenderCommand)
+class ComputeCommand
+{
+public:
+	ComputeCommand();
+	virtual ~ComputeCommand();
+	virtual bool isReady() = 0;
+	virtual void bindPipeline(Gfx::PComputePipeline pipeline) = 0;
+	virtual void bindDescriptor(Gfx::PDescriptorSet set) = 0;
+	virtual void bindDescriptor(const Array<Gfx::PDescriptorSet>& sets) = 0;
+	virtual void dispatch(uint32 threadX, uint32 threadY, uint32 threadZ) = 0;
+	std::string name;
+};
+DEFINE_REF(ComputeCommand)
 
 class Window
 {

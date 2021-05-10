@@ -60,9 +60,12 @@ class DescriptorSet : public Gfx::DescriptorSet
 {
 public:
 	DescriptorSet(PGraphics graphics, PDescriptorAllocator owner)
-		: graphics(graphics), owner(owner), currentlyInUse(false), currentlyBound(nullptr)
+		: setHandle(VK_NULL_HANDLE)
+		, graphics(graphics)
+		, owner(owner)
+		, currentlyInUse(false)
+		, currentlyBound(nullptr)
 	{
-		std::memset(setHandle, 0, sizeof(setHandle));
 	}
 	virtual ~DescriptorSet();
 	virtual void writeChanges();
@@ -86,7 +89,7 @@ public:
 	}
 	inline VkDescriptorSet getHandle() const
 	{
-		return setHandle[Gfx::currentFrameIndex];
+		return setHandle;
 	}
 	virtual uint32 getSetIndex() const;
 
@@ -97,8 +100,8 @@ private:
 	// contains the previously bound resources at every binding
 	// since the layout is fixed, trying to bind a texture to a buffer
 	// would not work anyways, so casts should be safe
-	Array<void*> cachedData[Gfx::numFramesBuffered];
-	VkDescriptorSet setHandle[Gfx::numFramesBuffered];
+	Array<void*> cachedData;
+	VkDescriptorSet setHandle;
 	PGraphics graphics;
 	PDescriptorAllocator owner;
 	PCmdBuffer currentlyBound;

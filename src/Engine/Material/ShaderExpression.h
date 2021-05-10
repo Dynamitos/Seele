@@ -60,5 +60,13 @@ struct SamplerParameter : public ShaderParameter
     virtual void updateDescriptorSet(Gfx::PDescriptorSet descriptorSet, uint8* dst) override;
 };
 DEFINE_REF(SamplerParameter)
-
+struct CombinedTextureParameter : public ShaderParameter
+{
+    PTextureAsset data;
+    Gfx::PSamplerState sampler;
+    CombinedTextureParameter(std::string name, uint32 byteOffset, uint32 binding);
+    virtual ~CombinedTextureParameter();
+    virtual void updateDescriptorSet(Gfx::PDescriptorSet descriptorSet, uint8* dst) override;
+};
+DEFINE_REF(CombinedTextureParameter)
 } // namespace Seele

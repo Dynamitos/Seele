@@ -27,6 +27,14 @@ Scene::Scene(Gfx::PGraphics graphics)
         lightEnv.pointLights[i].positionWS = Vector4(frand() * 200-100, frand(), frand() * 200-100, 1);
     }
     lightEnv.numPointLights = MAX_POINT_LIGHTS;
+
+    BulkResourceData lightInit;
+    StructuredBufferCreateInfo structuredInfo;
+    lightInit.size = sizeof(LightEnv);
+    lightInit.data = (uint8*)&lightEnv;
+    structuredInfo.resourceData = lightInit;
+    structuredInfo.bDynamic = false;
+    lightBuffer = graphics->createStructuredBuffer(structuredInfo);
 }
 
 Scene::~Scene()

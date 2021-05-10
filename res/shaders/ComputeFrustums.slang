@@ -8,7 +8,7 @@ struct ComputeShaderInput
 	uint groupIndex : SV_GroupIndex;
 };
 
-layout(set = 0, binding = 0, std430)
+layout(set = 0, binding = 1, std430)
 cbuffer DispatchParams
 {
 	uint3 numThreadGroups;

@@ -162,7 +162,7 @@ void Window::advanceBackBuffer()
     imageAcquiredSemaphore = imageAcquired[semaphoreIndex];
     currentImageIndex = imageIndex;
 
-    backBufferImages[currentImageIndex]->changeLayout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+    backBufferImages[currentImageIndex]->changeLayout(Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
     PCmdBuffer cmdBuffer = graphics->getGraphicsCommands()->getCommands();
     graphics->getGraphicsCommands()->getCommands()->addWaitSemaphore(VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, imageAcquiredSemaphore);
     graphics->getGraphicsCommands()->submitCommands();
@@ -193,7 +193,7 @@ void Window::recreateSwapchain(const WindowCreateInfo &windowInfo)
 
 void Window::present()
 {
-    backBufferImages[currentImageIndex]->changeLayout(VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+    backBufferImages[currentImageIndex]->changeLayout(Gfx::SE_IMAGE_LAYOUT_PRESENT_SRC_KHR);
     graphics->getGraphicsCommands()->submitCommands(renderFinished[currentImageIndex]);
     VkSemaphore renderFinishedHandle = renderFinished[currentImageIndex]->getHandle();
     VkPresentInfoKHR info;
@@ -258,7 +258,6 @@ void Window::createSwapchain()
     Array<VkImage> swapchainImages(numSwapchainImages);
     VK_CHECK(vkGetSwapchainImagesKHR(graphics->getDevice(), swapchain, &numSwapchainImages, swapchainImages.data()));
 
-    PCmdBuffer cmdBuffer = graphics->getGraphicsCommands()->getCommands();
 
     TextureCreateInfo backBufferCreateInfo;
     backBufferCreateInfo.width = sizeX;
@@ -274,10 +273,11 @@ void Window::createSwapchain()
 
         VkClearColorValue clearColor;
         std::memset(&clearColor, 0, sizeof(VkClearColorValue));
-        backBufferImages[i]->changeLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+        backBufferImages[i]->changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
         VkImageSubresourceRange range = init::ImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT);
+        PCmdBuffer cmdBuffer = graphics->getGraphicsCommands()->getCommands();
         vkCmdClearColorImage(cmdBuffer->getHandle(), backBufferImages[i]->getHandle(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clearColor, 1, &range);
-        backBufferImages[i]->changeLayout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+        backBufferImages[i]->changeLayout(Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
     }
     graphics->getGraphicsCommands()->submitCommands();
     currentImageIndex = -1;

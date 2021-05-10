@@ -34,6 +34,8 @@ VkShaderStageFlagBits cast(const Gfx::SeShaderStageFlagBits &stage);
 Gfx::SeShaderStageFlagBits cast(const VkShaderStageFlagBits &stage);
 VkFormat cast(const Gfx::SeFormat &format);
 Gfx::SeFormat cast(const VkFormat &format);
+VkImageLayout cast(const Gfx::SeImageLayout &imageLayout);
+Gfx::SeImageLayout cast(const VkImageLayout &imageLayout);
 VkAttachmentStoreOp cast(const Gfx::SeAttachmentStoreOp &storeOp);
 Gfx::SeAttachmentStoreOp cast(const VkAttachmentStoreOp &storeOp);
 VkAttachmentLoadOp cast(const Gfx::SeAttachmentLoadOp &loadOp);

@@ -8,10 +8,10 @@ import MATERIAL_IMPORT;
 import PrimitiveSceneData;
 import MaterialParameter;
 
-//layout(set = 0, binding = 2)
-//StructuredBuffer<uint> lightIndexList;
-//layout(set = 0, binding = 3)
-//RWTexture2D<uint2> lightGrid;
+layout(set = INDEX_LIGHT_ENV, binding = 1)
+StructuredBuffer<uint> lightIndexList;
+layout(set = INDEX_LIGHT_ENV, binding = 2)
+RWTexture2D<uint2> lightGrid;
 
 
 struct VertexStageOutput
@@ -56,20 +56,20 @@ float4 fragmentMain(
     
     float3 result = float3(0, 0, 0);
 
-    for (int i = 0; i < gLightEnv.numDirectionalLights; i++)
+    for (int i = 0; i < gLightEnv[0].numDirectionalLights; i++)
     {
-        result += gLightEnv.directionalLights[i].illuminate(materialParams, brdf, viewDir);
+        result += gLightEnv[0].directionalLights[i].illuminate(materialParams, brdf, viewDir);
     }
     
 	uint2 tileIndex = uint2(floor(materialParams.clipPosition.xy) / BLOCK_SIZE);
 
-	//uint startOffset = lightGrid[tileIndex].x;
-	//uint lightCount = lightGrid[tileIndex].y;
+	uint startOffset = lightGrid[tileIndex].x;
+	uint lightCount = lightGrid[tileIndex].y;
 
-    for (int j = 0; j < gLightEnv.numPointLights; ++j)
+    for (int j = 0; j < gLightEnv[0].numPointLights; ++j)
     {
-		//uint lightIndex = lightIndexList[startOffset + j];
-		PointLight pointLight = gLightEnv.pointLights[j];
+		uint lightIndex = lightIndexList[startOffset + j];
+		PointLight pointLight = gLightEnv[0].pointLights[lightIndex];
         result += pointLight.illuminate(materialParams, brdf, viewDir);
     }
 	

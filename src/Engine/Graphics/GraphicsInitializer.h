@@ -59,7 +59,7 @@ struct BulkResourceData
 {
     uint32 size;
     uint8 *data;
-    Gfx::QueueType owner;
+    Gfx::QueueType owner = Gfx::QueueType::GRAPHICS;
     BulkResourceData()
         : size(0), data(nullptr), owner(Gfx::QueueType::GRAPHICS)
     {
@@ -112,6 +112,15 @@ struct UniformBufferCreateInfo
     BulkResourceData resourceData;
     uint8 bDynamic : 1;
     UniformBufferCreateInfo()
+        : resourceData(), bDynamic(0)
+    {
+    }
+};
+struct StructuredBufferCreateInfo
+{
+    BulkResourceData resourceData;
+    uint8 bDynamic: 1;
+    StructuredBufferCreateInfo()
         : resourceData(), bDynamic(0)
     {
     }
@@ -208,6 +217,7 @@ DECLARE_NAME_REF(Gfx, ControlShader)
 DECLARE_NAME_REF(Gfx, EvaluationShader)
 DECLARE_NAME_REF(Gfx, GeometryShader)
 DECLARE_NAME_REF(Gfx, FragmentShader)
+DECLARE_NAME_REF(Gfx, ComputeShader)
 DECLARE_NAME_REF(Gfx, PipelineLayout)
 DECLARE_NAME_REF(Gfx, RenderPass)
 struct GraphicsPipelineCreateInfo

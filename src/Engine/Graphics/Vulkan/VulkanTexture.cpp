@@ -30,8 +30,8 @@ VkImageAspectFlags getAspectFromFormat(Gfx::SeFormat format)
 }
 
 TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType, 
-    const TextureCreateInfo& createInfo, VkImage existingImage)
-    : currentOwner(createInfo.resourceData.owner)
+    const TextureCreateInfo& createInfo, Gfx::QueueType& owner, VkImage existingImage)
+    : currentOwner(owner)
     , graphics(graphics)
     , sizeX(createInfo.width)
     , sizeY(createInfo.height)
@@ -43,7 +43,7 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType,
     , usage(createInfo.usage)
     , image(existingImage)
     , aspect(getAspectFromFormat(createInfo.format))
-    , layout(VK_IMAGE_LAYOUT_UNDEFINED)
+    , layout(Gfx::SE_IMAGE_LAYOUT_UNDEFINED)
 {
     if (existingImage == VK_NULL_HANDLE)
     {
@@ -79,18 +79,18 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType,
             break;
         }
 
-        info.initialLayout = layout;
+        info.initialLayout = cast(layout);
         info.mipLevels = mipLevels;
         info.arrayLayers = arrayCount * layerCount;
         info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
         info.samples = (VkSampleCountFlagBits)samples;
         info.tiling = VK_IMAGE_TILING_OPTIMAL;
         info.usage = usage;
-        //To upload to the image we need to specify transfer dst
-        if(createInfo.resourceData.size > 0)
-        {
-            info.usage |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
-        }
+        // Most of these flags will almost always be used
+        info.usage |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+        info.usage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+        info.usage |= VK_IMAGE_USAGE_SAMPLED_BIT;
+        
         VK_CHECK(vkCreateImage(graphics->getDevice(), &info, nullptr, &image));
 
         VkMemoryDedicatedRequirements memDedicatedRequirements;
@@ -112,7 +112,7 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType,
     const BulkResourceData& resourceData = createInfo.resourceData;
     if(resourceData.size > 0)
     {
-        changeLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+        changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
         PStagingBuffer staging = graphics->getStagingManager()->allocateStagingBuffer(resourceData.size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
         void* data = staging->getMappedPointer();
         std::memcpy(data, resourceData.data, resourceData.size);
@@ -136,11 +136,15 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType,
             staging->getHandle(), image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
         
         // When loading a texture from a file, we will almost always use it as a texture map for fragment shaders
-        changeLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        changeLayout(Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     }
-    if(usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
+    else if(usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
     {
-        changeLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+        changeLayout(Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+    }
+    else
+    {
+        changeLayout(Gfx::SE_IMAGE_LAYOUT_GENERAL);
     }
 
     VkImageViewCreateInfo viewInfo =
@@ -176,17 +180,20 @@ TextureHandle* TextureBase::cast(Gfx::PTexture texture)
     return nullptr;
 }
 
-void TextureHandle::changeLayout(VkImageLayout newLayout)
+void TextureHandle::changeLayout(Gfx::SeImageLayout newLayout)
 {
     VkImageMemoryBarrier barrier =
         init::ImageMemoryBarrier(
             image,
-            layout,
-            newLayout);
+            cast(layout),
+            cast(newLayout));
+    barrier.subresourceRange =
+        init::ImageSubresourceRange(aspect);
     PCommandBufferManager cmdManager = graphics->getQueueCommands(currentOwner);
     vkCmdPipelineBarrier(cmdManager->getCommands()->getHandle(),
                             VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
                             0, 0, nullptr, 0, nullptr, 1, &barrier);
+    cmdManager->submitCommands();
     layout = newLayout;
 }
 
@@ -195,8 +202,8 @@ void TextureHandle::executeOwnershipBarrier(Gfx::QueueType newOwner)
     VkImageMemoryBarrier imageBarrier =
         init::ImageMemoryBarrier();
     imageBarrier.image = image;
-    imageBarrier.oldLayout = layout;
-    imageBarrier.newLayout = layout;
+    imageBarrier.oldLayout = cast(layout);
+    imageBarrier.newLayout = cast(layout);
     imageBarrier.subresourceRange = init::ImageSubresourceRange(aspect);
     PCommandBufferManager sourceManager = graphics->getQueueCommands(currentOwner);
     PCommandBufferManager dstManager = nullptr;
@@ -248,26 +255,49 @@ void TextureHandle::executeOwnershipBarrier(Gfx::QueueType newOwner)
     VkCommandBuffer destCmd = dstManager->getCommands()->getHandle();
     vkCmdPipelineBarrier(sourceCmd, srcStage, dstStage, 0, 0, nullptr, 0, nullptr, 1, &imageBarrier);
     vkCmdPipelineBarrier(destCmd, srcStage, dstStage, 0, 0, nullptr, 0, nullptr, 1, &imageBarrier);
+    currentOwner = newOwner;
     sourceManager->submitCommands();
 }
 
-void TextureBase::changeLayout(VkImageLayout newLayout)
+void TextureHandle::executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage,
+        VkAccessFlags dstAccess, VkPipelineStageFlags dstStage) 
 {
-    textureHandle->changeLayout(newLayout);
+    VkImageMemoryBarrier imageBarrier =
+        init::ImageMemoryBarrier(
+            image,
+            cast(layout),
+            cast(layout)
+        );
+    imageBarrier.srcAccessMask = srcAccess;
+    imageBarrier.dstAccessMask = dstAccess;
+    imageBarrier.subresourceRange = init::ImageSubresourceRange(aspect);
+    PCmdBuffer cmdBuffer = graphics->getQueueCommands(currentOwner)->getCommands();
+    vkCmdPipelineBarrier(cmdBuffer->getHandle(), srcStage, dstStage, 0, 0, nullptr, 0, nullptr, 1, &imageBarrier);
 }
 
 Texture2D::Texture2D(PGraphics graphics, const TextureCreateInfo& createInfo, VkImage existingImage)
     : Gfx::Texture2D(graphics->getFamilyMapping(), createInfo.resourceData.owner)
 {
     textureHandle = new TextureHandle(graphics, createInfo.bArray ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D, 
-        createInfo, existingImage);
+        createInfo, currentOwner, existingImage);
 }
 
 Texture2D::~Texture2D()
 {
 }
 
+void Texture2D::changeLayout(Gfx::SeImageLayout newLayout) 
+{
+    textureHandle->changeLayout(newLayout);
+}
+
 void Texture2D::executeOwnershipBarrier(Gfx::QueueType newOwner)
 {
     textureHandle->executeOwnershipBarrier(newOwner);
+}
+
+void Texture2D::executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, 
+        VkAccessFlags dstAccess, VkPipelineStageFlags dstStage) 
+{
+    textureHandle->executePipelineBarrier(srcAccess, srcStage, dstAccess, dstStage);
 }

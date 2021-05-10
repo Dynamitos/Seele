@@ -55,7 +55,6 @@ private:
     static constexpr uint32 INDEX_VIEW_PARAMS = 0;
     Gfx::PDescriptorLayout viewLayout;
     Gfx::PUniformBuffer viewParamBuffer;
-    Gfx::PUniformBuffer screenToViewParamBuffer;
     // Set 1: materials, generated
     static constexpr uint32 INDEX_MATERIAL = 1;
     // Set 2: primitive scene data

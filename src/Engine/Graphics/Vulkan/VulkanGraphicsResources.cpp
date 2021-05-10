@@ -49,7 +49,6 @@ void QueueOwnedResourceDeletion::run()
     }
 }
 
-
 Semaphore::Semaphore(PGraphics graphics)
     : graphics(graphics)
 {

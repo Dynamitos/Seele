@@ -109,7 +109,7 @@ void DescriptorLayout::addDescriptorBinding(uint32 bindingIndex, SeDescriptorTyp
 	descriptorBindings[bindingIndex] = binding;
 }
 
-PDescriptorSet DescriptorLayout::allocatedDescriptorSet()
+PDescriptorSet DescriptorLayout::allocateDescriptorSet()
 {
 	PDescriptorSet result;
 	allocator->allocateDescriptorSet(result);
@@ -168,8 +168,14 @@ void QueueOwnedResource::transferOwnership(QueueType newOwner)
 	if(mapping.needsTransfer(currentOwner, newOwner))
 	{
 		executeOwnershipBarrier(newOwner);
-		currentOwner = newOwner;
 	}
+	currentOwner = newOwner;
+}
+
+void QueueOwnedResource::pipelineBarrier(SeAccessFlags srcAccess, SePipelineStageFlags srcStage, SeAccessFlags dstAccess, SePipelineStageFlags dstStage) 
+{
+	// maybe add some checks
+	executePipelineBarrier(srcAccess, srcStage, dstAccess, dstStage);
 }
 
 Buffer::Buffer(QueueFamilyMapping mapping, QueueType startQueue)
@@ -312,6 +318,16 @@ RenderCommand::RenderCommand()
 
 RenderCommand::~RenderCommand()
 {
+}
+
+ComputeCommand::ComputeCommand() 
+{
+	
+}
+
+ComputeCommand::~ComputeCommand() 
+{
+	
 }
 
 RenderTargetLayout::RenderTargetLayout()

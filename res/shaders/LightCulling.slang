@@ -8,7 +8,7 @@ struct ComputeShaderInput
 	uint3 dispatchThreadID : SV_DispatchThreadID;
 	uint groupIndex : SV_GroupIndex;
 };
-layout(binding = 0)
+layout(set = INDEX_VIEW_PARAMS, binding = 1)
 cbuffer DispatchParams
 {
 	uint3 numThreadGroups;
@@ -17,23 +17,23 @@ cbuffer DispatchParams
 	uint pad1;
 }
 
-layout(binding = 2)
-RWTexture2D depthTextureVS;
-layout(binding = 4)
+layout(set = INDEX_VIEW_PARAMS, binding = 2)
+Texture2D depthTextureVS;
+layout(set = INDEX_VIEW_PARAMS, binding = 3)
 StructuredBuffer<Frustum> frustums;
 
-layout(binding = 5)
+layout(set = INDEX_VIEW_PARAMS, binding = 4)
 RWStructuredBuffer<uint> oLightIndexCounter;
-layout(binding = 6)
+layout(set = INDEX_VIEW_PARAMS, binding = 5)
 RWStructuredBuffer<uint> tLightIndexCounter;
 
-layout(binding = 7)
+layout(set = INDEX_VIEW_PARAMS, binding = 6)
 RWStructuredBuffer<uint> oLightIndexList;
-layout(binding = 8)
+layout(set = INDEX_VIEW_PARAMS, binding = 7)
 RWStructuredBuffer<uint> tLightIndexList;
-layout(binding = 9)
+layout(set = INDEX_VIEW_PARAMS, binding = 8)
 RWTexture2D<uint2> oLightGrid;
-layout(binding = 10)
+layout(set = INDEX_VIEW_PARAMS, binding = 9)
 RWTexture2D<uint2> tLightGrid;
 
 groupshared uint uMinDepth;
@@ -71,9 +71,10 @@ void tAppendLight(uint lightIndex)
 }
 
 [numthreads(BLOCK_SIZE, BLOCK_SIZE, 1)]
+[shader("compute")]
 void cullLights(ComputeShaderInput in)
 {
-	int2 texCoord = in.dispatchThreadID.xy;
+	int3 texCoord = int3(in.dispatchThreadID.xy, 0);
 	float fDepth = depthTextureVS.Load(texCoord).r;
 
 	uint uDepth = asuint(fDepth);
@@ -101,10 +102,10 @@ void cullLights(ComputeShaderInput in)
 
 	Plane minPlane = {float3(0, 0, -1), -minDepthVS};
 
-    for ( uint i = in.groupIndex; i < lights.numPointLights; i += BLOCK_SIZE * BLOCK_SIZE )
+    for ( uint i = in.groupIndex; i < gLightEnv[0].numPointLights; i += BLOCK_SIZE * BLOCK_SIZE )
 	{
-        PointLight light = lights.pointLights[i];
-		//if(light.insideFrustum(groupFrustum, nearClipVS, maxDepthVS))
+        PointLight light = gLightEnv[0].pointLights[i];
+		//if(gLightEnv.insideFrustum(groupFrustum, nearClipVS, maxDepthVS))
 		{
 			//InterlockedAdd(tLightCount, 1, index);
             //if(index < 1024)

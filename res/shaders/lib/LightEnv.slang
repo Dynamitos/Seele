@@ -69,4 +69,4 @@ struct Lights
 };
 
 layout(set = INDEX_LIGHT_ENV, binding = 0, std430)
-ConstantBuffer<Lights> gLightEnv;
+StructuredBuffer<Lights> gLightEnv;

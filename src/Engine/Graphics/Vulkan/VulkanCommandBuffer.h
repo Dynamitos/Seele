@@ -29,7 +29,8 @@ protected:
 };
 DEFINE_REF(CmdBufferBase)
 
-DECLARE_REF(SecondaryCmdBuffer)
+DECLARE_REF(RenderCommand)
+DECLARE_REF(ComputeCommand)
 DECLARE_REF(CommandBufferManager)
 class CmdBuffer : public CmdBufferBase
 {
@@ -40,9 +41,11 @@ public:
 	void end();
 	void beginRenderPass(PRenderPass renderPass, PFramebuffer framebuffer);
 	void endRenderPass();
-	void executeCommands(Array<Gfx::PRenderCommand> secondaryCommands);
+	void executeCommands(const Array<Gfx::PRenderCommand>& secondaryCommands);
+	void executeCommands(const Array<Gfx::PComputeCommand>& secondaryCommands);
 	void addWaitSemaphore(VkPipelineStageFlags stages, PSemaphore waitSemaphore);
 	void refreshFence();
+	void waitForCommand(uint32 timeToWait = 1000000u);
 	PFence getFence();
 	PCommandBufferManager getManager();
 	enum State
@@ -63,23 +66,40 @@ private:
 	State state;
 	Array<PSemaphore> waitSemaphores;
 	Array<VkPipelineStageFlags> waitFlags;
-	Array<PSecondaryCmdBuffer> executingCommands;
-	friend class SecondaryCmdBuffer;
+	Array<PRenderCommand> executingRenders;
+	Array<PComputeCommand> executingComputes;
+	friend class RenderCommand;
 	friend class CommandBufferManager;
 	friend class Queue;
 };
 DEFINE_REF(CmdBuffer)
 
 DECLARE_REF(GraphicsPipeline)
+DECLARE_REF(ComputePipeline)
 DECLARE_REF(DescriptorSet)
-class SecondaryCmdBuffer : public Gfx::RenderCommand, public CmdBufferBase
+
+class SecondaryCmdBuffer: public CmdBufferBase
 {
 public:
 	SecondaryCmdBuffer(PGraphics graphics, VkCommandPool cmdPool);
 	virtual ~SecondaryCmdBuffer();
-	void begin(PCmdBuffer parent);
+	virtual void begin(PCmdBuffer parent) = 0;
 	void end();
 	void reset();
+	bool ready;
+
+protected:
+	Array<DescriptorSet*> boundDescriptors;
+	friend class CmdBuffer;
+};
+DEFINE_REF(SecondaryCmdBuffer);
+
+class RenderCommand : public Gfx::RenderCommand, public SecondaryCmdBuffer
+{
+public:
+	RenderCommand(PGraphics graphics, VkCommandPool cmdPool);
+	virtual ~RenderCommand();
+	virtual void begin(PCmdBuffer parent) override;
 	virtual bool isReady() override;
 	virtual void setViewport(Gfx::PViewport viewport) override;
 	virtual void bindPipeline(Gfx::PGraphicsPipeline pipeline) override;
@@ -91,12 +111,26 @@ public:
 
 private:
 	PGraphicsPipeline pipeline;
-	Array<DescriptorSet*> boundDescriptors;
-	bool ready;
 	friend class CmdBuffer;
 };
-DEFINE_REF(SecondaryCmdBuffer)
+DEFINE_REF(RenderCommand)
 
+class ComputeCommand : public Gfx::ComputeCommand, public SecondaryCmdBuffer
+{
+public:
+	ComputeCommand(PGraphics graphics, VkCommandPool cmdPool);
+	virtual ~ComputeCommand();
+	virtual void begin(PCmdBuffer parent) override;
+	virtual bool isReady() override;
+	virtual void bindPipeline(Gfx::PComputePipeline pipeline) override;
+	virtual void bindDescriptor(Gfx::PDescriptorSet set) override;
+	virtual void bindDescriptor(const Array<Gfx::PDescriptorSet>& sets) override;
+	virtual void dispatch(uint32 threadX, uint32 threadY, uint32 threadZ) override;
+private:
+	PComputePipeline pipeline;
+	friend class CmdBuffer;
+};
+DEFINE_REF(ComputeCommand)
 class CommandBufferManager
 {
 public:
@@ -107,9 +141,9 @@ public:
 		return queue;
 	}
 	PCmdBuffer getCommands();
-	PSecondaryCmdBuffer createSecondaryCmdBuffer();
+	PRenderCommand createRenderCommand(const std::string& name);
+	PComputeCommand createComputeCommand(const std::string& name);
 	void submitCommands(PSemaphore signalSemaphore = nullptr);
-	void waitForCommands(PCmdBuffer cmdBuffer, uint32 timeToWait = 1000000u);
 
 private:
 	PGraphics graphics;
@@ -119,8 +153,10 @@ private:
 	PCmdBuffer activeCmdBuffer;
 	std::mutex allocatedBufferLock;
 	Array<PCmdBuffer> allocatedBuffers;
-	std::mutex allocatedSecondBufferLock;
-	Array<PSecondaryCmdBuffer> allocatedSecondBuffers;
+	std::mutex allocatedRenderLock;
+	std::mutex allocatedComputeLock;
+	Array<PRenderCommand> allocatedRenderCommands;
+	Array<PComputeCommand> allocatedComputeCommands;
 };
 DEFINE_REF(CommandBufferManager)
 } // namespace Vulkan

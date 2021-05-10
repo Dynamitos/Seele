@@ -84,20 +84,38 @@ void CmdBuffer::endRenderPass()
     state = State::InsideBegin;
 }
 
-void CmdBuffer::executeCommands(Array<Gfx::PRenderCommand> commands)
+void CmdBuffer::executeCommands(const Array<Gfx::PRenderCommand>& commands)
 {
     assert(state == State::RenderPassActive);
     Array<VkCommandBuffer> cmdBuffers(commands.size());
     for (uint32 i = 0; i < commands.size(); ++i)
     {
-        auto command = commands[i].cast<SecondaryCmdBuffer>();
+        auto command = commands[i].cast<RenderCommand>();
         // Cache array and size to save on pointer access
         for(auto boundDescriptor : command->boundDescriptors)
         {
             boundDescriptor->currentlyBound = this;
         }
         command->end();
-        executingCommands.add(command);
+        executingRenders.add(command);
+        cmdBuffers[i] = command->getHandle();
+    }
+    vkCmdExecuteCommands(handle, (uint32)cmdBuffers.size(), cmdBuffers.data());
+}
+
+void CmdBuffer::executeCommands(const Array<Gfx::PComputeCommand>& commands) 
+{
+    Array<VkCommandBuffer> cmdBuffers(commands.size());
+    for (uint32 i = 0; i < commands.size(); ++i)
+    {
+        auto command = commands[i].cast<ComputeCommand>();
+        // Cache array and size to save on pointer access
+        for(auto boundDescriptor : command->boundDescriptors)
+        {
+            boundDescriptor->currentlyBound = this;
+        }
+        command->end();
+        executingComputes.add(command);
         cmdBuffers[i] = command->getHandle();
     }
     vkCmdExecuteCommands(handle, (uint32)cmdBuffers.size(), cmdBuffers.data());
@@ -117,11 +135,16 @@ void CmdBuffer::refreshFence()
         {
             vkResetCommandBuffer(handle, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
             fence->reset();
-            for(auto command : executingCommands)
+            for(auto command : executingComputes)
             {
                 command->reset();
             }
-            executingCommands.clear();
+            executingComputes.clear();
+            for(auto command : executingRenders)
+            {
+                command->reset();
+            }
+            executingRenders.clear();
             state = State::ReadyBegin;
         }
     }
@@ -130,6 +153,13 @@ void CmdBuffer::refreshFence()
         assert(!fence->isSignaled());
     }
 }
+
+void CmdBuffer::waitForCommand(uint32 timeout)
+{
+    fence->wait(timeout);
+    refreshFence();
+}
+
 
 PFence CmdBuffer::getFence()
 {
@@ -141,7 +171,7 @@ PCommandBufferManager CmdBuffer::getManager()
     return manager;
 }
 
-SecondaryCmdBuffer::SecondaryCmdBuffer(PGraphics graphics, VkCommandPool cmdPool)
+SecondaryCmdBuffer::SecondaryCmdBuffer(PGraphics graphics, VkCommandPool cmdPool) 
     : CmdBufferBase(graphics, cmdPool)
     , ready(true)
 {
@@ -152,27 +182,13 @@ SecondaryCmdBuffer::SecondaryCmdBuffer(PGraphics graphics, VkCommandPool cmdPool
     VK_CHECK(vkAllocateCommandBuffers(graphics->getDevice(), &allocInfo, &handle));
 }
 
-SecondaryCmdBuffer::~SecondaryCmdBuffer()
+SecondaryCmdBuffer::~SecondaryCmdBuffer() 
 {
     vkFreeCommandBuffers(graphics->getDevice(), owner, 1, &handle);
 }
 
-void SecondaryCmdBuffer::begin(PCmdBuffer parent)
-{
-    ready = false;
-    VkCommandBufferBeginInfo beginInfo =
-        init::CommandBufferBeginInfo();
-    VkCommandBufferInheritanceInfo inheritanceInfo =
-        init::CommandBufferInheritanceInfo();
-    inheritanceInfo.framebuffer = parent->framebuffer->getHandle();
-    inheritanceInfo.renderPass = parent->renderPass->getHandle();
-    inheritanceInfo.subpass = parent->subpassIndex;
-    beginInfo.pInheritanceInfo = &inheritanceInfo;
-    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
-    VK_CHECK(vkBeginCommandBuffer(handle, &beginInfo));
-}
 
-void SecondaryCmdBuffer::end()
+void SecondaryCmdBuffer::end() 
 {
     VK_CHECK(vkEndCommandBuffer(handle));
 }
@@ -188,12 +204,37 @@ void SecondaryCmdBuffer::reset()
     ready = true;
 }
 
-bool SecondaryCmdBuffer::isReady() 
+RenderCommand::RenderCommand(PGraphics graphics, VkCommandPool cmdPool)
+    : SecondaryCmdBuffer(graphics, cmdPool)
+{}
+
+
+RenderCommand::~RenderCommand()
+{
+}
+
+void RenderCommand::begin(PCmdBuffer parent)
+{
+    ready = false;
+    VkCommandBufferBeginInfo beginInfo =
+        init::CommandBufferBeginInfo();
+    VkCommandBufferInheritanceInfo inheritanceInfo =
+        init::CommandBufferInheritanceInfo();
+    inheritanceInfo.framebuffer = parent->framebuffer->getHandle();
+    inheritanceInfo.renderPass = parent->renderPass->getHandle();
+    inheritanceInfo.subpass = parent->subpassIndex;
+    beginInfo.pInheritanceInfo = &inheritanceInfo;
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
+    VK_CHECK(vkBeginCommandBuffer(handle, &beginInfo));
+}
+
+
+bool RenderCommand::isReady() 
 {
     return ready;
 }
 
-void SecondaryCmdBuffer::setViewport(Gfx::PViewport viewport) 
+void RenderCommand::setViewport(Gfx::PViewport viewport) 
 {
     VkViewport vp = viewport.cast<Viewport>()->getHandle();
     VkRect2D scissors = init::Rect2D(viewport->getSizeX(), viewport->getSizeY(), viewport->getOffsetX(), viewport->getOffsetY());
@@ -201,19 +242,19 @@ void SecondaryCmdBuffer::setViewport(Gfx::PViewport viewport)
     vkCmdSetScissor(handle, 0, 1, &scissors);
 }
 
-void SecondaryCmdBuffer::bindPipeline(Gfx::PGraphicsPipeline gfxPipeline)
+void RenderCommand::bindPipeline(Gfx::PGraphicsPipeline gfxPipeline)
 {
     pipeline = gfxPipeline.cast<GraphicsPipeline>();
     pipeline->bind(handle);
 }
-void SecondaryCmdBuffer::bindDescriptor(Gfx::PDescriptorSet descriptorSet)
+void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet)
 {
     auto descriptor = descriptorSet.cast<DescriptorSet>();
     boundDescriptors.add(descriptor.getHandle());
     VkDescriptorSet setHandle = descriptor->getHandle();
     vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getLayout(), descriptorSet->getSetIndex(), 1, &setHandle, 0, nullptr);
 }
-void SecondaryCmdBuffer::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorSets)
+void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorSets)
 {
     VkDescriptorSet* sets = new VkDescriptorSet[descriptorSets.size()];
     for(uint32 i = 0; i < descriptorSets.size(); ++i)
@@ -225,7 +266,7 @@ void SecondaryCmdBuffer::bindDescriptor(const Array<Gfx::PDescriptorSet>& descri
     vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getLayout(), 0, (uint32)descriptorSets.size(), sets, 0, nullptr);
     delete[] sets;
 }
-void SecondaryCmdBuffer::bindVertexBuffer(const Array<VertexInputStream>& streams)
+void RenderCommand::bindVertexBuffer(const Array<VertexInputStream>& streams)
 {
     Array<VkBuffer> buffers(streams.size());
     Array<VkDeviceSize> offsets(streams.size());
@@ -237,14 +278,74 @@ void SecondaryCmdBuffer::bindVertexBuffer(const Array<VertexInputStream>& stream
     };
     vkCmdBindVertexBuffers(handle, 0, (uint32)streams.size(), buffers.data(), offsets.data());
 }
-void SecondaryCmdBuffer::bindIndexBuffer(Gfx::PIndexBuffer indexBuffer)
+void RenderCommand::bindIndexBuffer(Gfx::PIndexBuffer indexBuffer)
 {
     PIndexBuffer buf = indexBuffer.cast<IndexBuffer>();
     vkCmdBindIndexBuffer(handle, buf->getHandle(), 0, cast(buf->getIndexType()));
 }
-void SecondaryCmdBuffer::draw(const MeshBatchElement& data) 
+void RenderCommand::draw(const MeshBatchElement& data) 
 {
     vkCmdDrawIndexed(handle, data.indexBuffer->getNumIndices(), data.numInstances, data.minVertexIndex, data.baseVertexIndex, 0);
+}
+
+ComputeCommand::ComputeCommand(PGraphics graphics, VkCommandPool cmdPool) 
+    : SecondaryCmdBuffer(graphics, cmdPool)
+{
+}
+
+ComputeCommand::~ComputeCommand() 
+{
+}
+
+void ComputeCommand::begin(PCmdBuffer parent) 
+{
+    ready = false;
+    VkCommandBufferBeginInfo beginInfo =
+        init::CommandBufferBeginInfo();
+    VkCommandBufferInheritanceInfo inheritanceInfo =
+        init::CommandBufferInheritanceInfo();
+    inheritanceInfo.framebuffer = VK_NULL_HANDLE;
+    inheritanceInfo.renderPass = VK_NULL_HANDLE;
+    inheritanceInfo.subpass = 0;
+    beginInfo.pInheritanceInfo = &inheritanceInfo;
+    VK_CHECK(vkBeginCommandBuffer(handle, &beginInfo));
+}
+
+bool ComputeCommand::isReady() 
+{
+    return ready;
+}
+
+void ComputeCommand::bindPipeline(Gfx::PComputePipeline computePipeline) 
+{
+    pipeline = computePipeline.cast<ComputePipeline>();
+    pipeline->bind(handle);
+}
+
+void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet) 
+{
+    auto descriptor = descriptorSet.cast<DescriptorSet>();
+    boundDescriptors.add(descriptor.getHandle());
+    VkDescriptorSet setHandle = descriptor->getHandle();
+    vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->getLayout(), descriptorSet->getSetIndex(), 1, &setHandle, 0, nullptr);
+}
+
+void ComputeCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorSets) 
+{
+    VkDescriptorSet* sets = new VkDescriptorSet[descriptorSets.size()];
+    for(uint32 i = 0; i < descriptorSets.size(); ++i)
+    {
+        auto descriptorSet = descriptorSets[i].cast<DescriptorSet>();
+        boundDescriptors.add(descriptorSet.getHandle());
+        sets[descriptorSet->getSetIndex()] = descriptorSet->getHandle();
+    }
+    vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->getLayout(), 0, (uint32)descriptorSets.size(), sets, 0, nullptr);
+    delete[] sets;
+}
+
+void ComputeCommand::dispatch(uint32 threadX, uint32 threadY, uint32 threadZ) 
+{
+    vkCmdDispatch(handle, threadX, threadY, threadZ);
 }
 
 CommandBufferManager::CommandBufferManager(PGraphics graphics, PQueue queue)
@@ -275,20 +376,40 @@ PCmdBuffer CommandBufferManager::getCommands()
     return activeCmdBuffer;
 }
 
-PSecondaryCmdBuffer CommandBufferManager::createSecondaryCmdBuffer()
+PRenderCommand CommandBufferManager::createRenderCommand(const std::string& name)
 {
-    std::scoped_lock lck(allocatedSecondBufferLock);
-    for (uint32 i = 0; i < allocatedSecondBuffers.size(); ++i)
+    std::scoped_lock lck(allocatedRenderLock);
+    for (uint32 i = 0; i < allocatedRenderCommands.size(); ++i)
     {
-        PSecondaryCmdBuffer cmdBuffer = allocatedSecondBuffers[i];
-        if (cmdBuffer->isReady())
+        PRenderCommand cmdBuffer = allocatedRenderCommands[i];
+        if (cmdBuffer->ready)
         {
             cmdBuffer->begin(activeCmdBuffer);
             return cmdBuffer;
         }
     }
-    PSecondaryCmdBuffer result = new SecondaryCmdBuffer(graphics, commandPool);
-    allocatedSecondBuffers.add(result);
+    PRenderCommand result = new RenderCommand(graphics, commandPool);
+    result->name = name;
+    allocatedRenderCommands.add(result);
+    result->begin(activeCmdBuffer);
+    return result;
+}
+
+PComputeCommand CommandBufferManager::createComputeCommand(const std::string& name)
+{
+    std::scoped_lock lck(allocatedComputeLock);
+    for (uint32 i = 0; i < allocatedComputeCommands.size(); ++i)
+    {
+        PComputeCommand cmdBuffer = allocatedComputeCommands[i];
+        if (cmdBuffer->ready)
+        {
+            cmdBuffer->begin(activeCmdBuffer);
+            return cmdBuffer;
+        }
+    }
+    PComputeCommand result = new ComputeCommand(graphics, commandPool);
+    result->name = name;
+    allocatedComputeCommands.add(result);
     result->begin(activeCmdBuffer);
     return result;
 }
@@ -331,10 +452,4 @@ void CommandBufferManager::submitCommands(PSemaphore signalSemaphore)
     activeCmdBuffer = new CmdBuffer(graphics, commandPool, this);
     allocatedBuffers.add(activeCmdBuffer);
     activeCmdBuffer->begin();
-}
-
-void CommandBufferManager::waitForCommands(PCmdBuffer cmdBuffer, uint32 timeout)
-{
-    cmdBuffer->fence->wait(timeout);
-    cmdBuffer->refreshFence();
 }

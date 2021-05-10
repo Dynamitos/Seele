@@ -54,13 +54,13 @@ private:
     Gfx::PPipelineLayout basePassLayout;
     // Set 0: Light environment
     static constexpr uint32 INDEX_LIGHT_ENV = 0;
+    Gfx::PStructuredBuffer oLightIndexList;
+    Gfx::PTexture oLightGrid;
     Gfx::PDescriptorLayout lightLayout;
-    Gfx::PUniformBuffer lightUniform;
     // Set 1: viewParameter
     static constexpr uint32 INDEX_VIEW_PARAMS = 1;
     Gfx::PDescriptorLayout viewLayout;
     Gfx::PUniformBuffer viewParamBuffer;
-    Gfx::PUniformBuffer screenToViewParamBuffer;
     // Set 2: materials, generated
     static constexpr uint32 INDEX_MATERIAL = 2;
     // Set 3: primitive scene data

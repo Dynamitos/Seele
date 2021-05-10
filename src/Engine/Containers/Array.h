@@ -70,7 +70,7 @@ namespace Seele
 			_data = new T[other.allocated];
 			assert(_data != nullptr);
 			markIteratorDirty();
-			std::copy(other.begin(), other.end(), beginIt);
+			std::copy(other.begin(), other.end(), begin());
 		}
 		Array(Array &&other) noexcept
 			: arraySize(std::move(other.arraySize))
@@ -97,7 +97,7 @@ namespace Seele
 				}
 				arraySize = other.arraySize;
 				markIteratorDirty();
-				std::copy(other.begin(), other.end(), beginIt);
+				std::copy(other.begin(), other.end(), begin());
 			}
 			return *this;
 		}

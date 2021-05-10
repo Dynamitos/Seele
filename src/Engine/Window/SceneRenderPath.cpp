@@ -12,7 +12,11 @@ SceneRenderPath::SceneRenderPath(PScene scene, Gfx::PGraphics graphics, Gfx::PVi
 {
 	renderGraph = new RenderGraph();
 	depthPrepass = new DepthPrepass(renderGraph, scene, graphics, target, source);
+	lightCullingPass = new LightCullingPass(renderGraph, scene, graphics, target, source);
 	basePass = new BasePass(renderGraph, scene, graphics, target, source);
+	renderGraph->addRenderPass(depthPrepass);
+	renderGraph->addRenderPass(lightCullingPass);
+	renderGraph->addRenderPass(basePass);
 	renderGraph->setup();
 }
 
@@ -33,14 +37,20 @@ void SceneRenderPath::init()
 void SceneRenderPath::beginFrame() 
 {
 	depthPrepass->beginFrame();
+	lightCullingPass->beginFrame();
+	basePass->beginFrame();
 }
 
 void SceneRenderPath::render() 
 {
     depthPrepass->render();
+	lightCullingPass->render();
+	basePass->render();
 }
 
 void SceneRenderPath::endFrame() 
 {
     depthPrepass->endFrame();
+	lightCullingPass->endFrame();
+	basePass->endFrame();
 }

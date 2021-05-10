@@ -37,7 +37,7 @@ void DepthPrepassMeshProcessor::addMeshBatch(
     assert(collection != nullptr);
     for(uint32 i = 0; i < batch.elements.size(); ++i)
     {
-        Gfx::PDescriptorSet descriptorSet = primitiveLayout->allocatedDescriptorSet();
+        Gfx::PDescriptorSet descriptorSet = primitiveLayout->allocateDescriptorSet();
         descriptorSet->updateBuffer(0, batch.elements[i].uniformBuffer);
         descriptorSet->writeChanges();
         cachedPrimitiveSets.add(descriptorSet);
@@ -97,14 +97,9 @@ DepthPrepass::DepthPrepass(PRenderGraph renderGraph, const PScene scene, Gfx::PG
     uniformInitializer.resourceData.data = (uint8*)&viewParams;
     uniformInitializer.bDynamic = true;
     viewParamBuffer = graphics->createUniformBuffer(uniformInitializer);
-    viewLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-    uniformInitializer.resourceData.size = sizeof(ScreenToViewParameter);
-    uniformInitializer.resourceData.data = (uint8*)&screenToViewParams;
-    uniformInitializer.bDynamic = true;
-    screenToViewParamBuffer = graphics->createUniformBuffer(uniformInitializer);
     viewLayout->create();
     depthPrepassLayout->addDescriptorLayout(INDEX_VIEW_PARAMS, viewLayout);
-    descriptorSets[INDEX_VIEW_PARAMS] = viewLayout->allocatedDescriptorSet();
+    descriptorSets[INDEX_VIEW_PARAMS] = viewLayout->allocateDescriptorSet();
 
     primitiveLayout = graphics->createDescriptorLayout("PrimitiveLayout");
     primitiveLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
@@ -125,16 +120,12 @@ void DepthPrepass::beginFrame()
     viewParams.viewMatrix = source->getViewMatrix();
     viewParams.projectionMatrix = source->getProjectionMatrix();
     viewParams.cameraPosition = Vector4(source->getCameraPosition(), 0);
-    screenToViewParams.inverseProjectionMatrix = glm::inverse(viewParams.projectionMatrix);
-    screenToViewParams.screenDimensions = Vector2(static_cast<float>(viewport->getSizeX()), static_cast<float>(viewport->getSizeY()));
+    viewParams.inverseProjectionMatrix = glm::inverse(viewParams.projectionMatrix);
+    viewParams.screenDimensions = Vector2(static_cast<float>(viewport->getSizeX()), static_cast<float>(viewport->getSizeY()));
     uniformUpdate.size = sizeof(ViewParameter);
     uniformUpdate.data = (uint8*)&viewParams;
     viewParamBuffer->updateContents(uniformUpdate);
-    uniformUpdate.size = sizeof(ScreenToViewParameter);
-    uniformUpdate.data = (uint8*)&screenToViewParams;
-    screenToViewParamBuffer->updateContents(uniformUpdate);
     descriptorSets[INDEX_VIEW_PARAMS]->updateBuffer(0, viewParamBuffer);
-    descriptorSets[INDEX_VIEW_PARAMS]->updateBuffer(1, screenToViewParamBuffer);
     descriptorSets[INDEX_VIEW_PARAMS]->writeChanges();
     for(auto &&meshBatch : scene->getStaticMeshes())
     {
@@ -144,6 +135,10 @@ void DepthPrepass::beginFrame()
 
 void DepthPrepass::render() 
 {
+    depthAttachment->getTexture()->pipelineBarrier(
+        Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+        Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT);
+    depthAttachment->getTexture()->transferOwnership(Gfx::QueueType::GRAPHICS);
     graphics->beginRenderPass(renderPass);
     for (auto &&meshBatch : scene->getStaticMeshes())
     {

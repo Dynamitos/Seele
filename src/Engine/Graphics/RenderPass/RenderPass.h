@@ -21,13 +21,10 @@ protected:
     {
         Matrix4 viewMatrix;
         Matrix4 projectionMatrix;
-        Vector4 cameraPosition;
-    } viewParams;
-    struct ScreenToViewParameter
-    {
         Matrix4 inverseProjectionMatrix;
         Vector2 screenDimensions;
-    } screenToViewParams;
+        Vector4 cameraPosition;
+    } viewParams;
     Gfx::PRenderPass renderPass;
     PRenderGraph renderGraph;
 };

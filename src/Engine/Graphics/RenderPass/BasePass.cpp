@@ -38,7 +38,7 @@ void BasePassMeshProcessor::addMeshBatch(
     assert(collection != nullptr);
     for(uint32 i = 0; i < batch.elements.size(); ++i)
     {
-        Gfx::PDescriptorSet descriptorSet = primitiveLayout->allocatedDescriptorSet();
+        Gfx::PDescriptorSet descriptorSet = primitiveLayout->allocateDescriptorSet();
         descriptorSet->updateBuffer(0, batch.elements[i].uniformBuffer);
         descriptorSet->writeChanges();
         cachedPrimitiveSets.add(descriptorSet);
@@ -92,14 +92,12 @@ BasePass::BasePass(PRenderGraph renderGraph, const PScene scene, Gfx::PGraphics 
     basePassLayout = graphics->createPipelineLayout();
 
     lightLayout = graphics->createDescriptorLayout("LightLayout");
-    lightLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-    uniformInitializer.resourceData.size = sizeof(LightEnv);
-    uniformInitializer.resourceData.data = nullptr;
-    uniformInitializer.bDynamic = true;
-    lightUniform = graphics->createUniformBuffer(uniformInitializer);
+    lightLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    lightLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    lightLayout->addDescriptorBinding(2, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_IMAGE);
     lightLayout->create();
     basePassLayout->addDescriptorLayout(INDEX_LIGHT_ENV, lightLayout);
-    descriptorSets[INDEX_LIGHT_ENV] = lightLayout->allocatedDescriptorSet();
+    descriptorSets[INDEX_LIGHT_ENV] = lightLayout->allocateDescriptorSet();
 
     viewLayout = graphics->createDescriptorLayout("ViewLayout");
     viewLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
@@ -107,14 +105,9 @@ BasePass::BasePass(PRenderGraph renderGraph, const PScene scene, Gfx::PGraphics 
     uniformInitializer.resourceData.data = (uint8*)&viewParams;
     uniformInitializer.bDynamic = true;
     viewParamBuffer = graphics->createUniformBuffer(uniformInitializer);
-    viewLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-    uniformInitializer.resourceData.size = sizeof(ScreenToViewParameter);
-    uniformInitializer.resourceData.data = (uint8*)&screenToViewParams;
-    uniformInitializer.bDynamic = true;
-    screenToViewParamBuffer = graphics->createUniformBuffer(uniformInitializer);
     viewLayout->create();
     basePassLayout->addDescriptorLayout(INDEX_VIEW_PARAMS, viewLayout);
-    descriptorSets[INDEX_VIEW_PARAMS] = viewLayout->allocatedDescriptorSet();
+    descriptorSets[INDEX_VIEW_PARAMS] = viewLayout->allocateDescriptorSet();
 
     primitiveLayout = graphics->createDescriptorLayout("PrimitiveLayout");
     primitiveLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
@@ -131,25 +124,16 @@ void BasePass::beginFrame()
     processor->clearCommands();
     primitiveLayout->reset();
     BulkResourceData uniformUpdate;
-    uniformUpdate.size = sizeof(LightEnv);
-    uniformUpdate.data = (uint8*)&scene->getLightEnvironment();
-    lightUniform->updateContents(uniformUpdate);
-    descriptorSets[INDEX_LIGHT_ENV]->updateBuffer(0, lightUniform);
-    descriptorSets[INDEX_LIGHT_ENV]->writeChanges();
 
     viewParams.viewMatrix = source->getViewMatrix();
     viewParams.projectionMatrix = source->getProjectionMatrix();
     viewParams.cameraPosition = Vector4(source->getCameraPosition(), 0);
-    screenToViewParams.inverseProjectionMatrix = glm::inverse(viewParams.projectionMatrix);
-    screenToViewParams.screenDimensions = Vector2(static_cast<float>(viewport->getSizeX()), static_cast<float>(viewport->getSizeY()));
+    viewParams.inverseProjectionMatrix = glm::inverse(viewParams.projectionMatrix);
+    viewParams.screenDimensions = Vector2(static_cast<float>(viewport->getSizeX()), static_cast<float>(viewport->getSizeY()));
     uniformUpdate.size = sizeof(ViewParameter);
     uniformUpdate.data = (uint8*)&viewParams;
     viewParamBuffer->updateContents(uniformUpdate);
-    uniformUpdate.size = sizeof(ScreenToViewParameter);
-    uniformUpdate.data = (uint8*)&screenToViewParams;
-    screenToViewParamBuffer->updateContents(uniformUpdate);
     descriptorSets[INDEX_VIEW_PARAMS]->updateBuffer(0, viewParamBuffer);
-    descriptorSets[INDEX_VIEW_PARAMS]->updateBuffer(1, screenToViewParamBuffer);
     descriptorSets[INDEX_VIEW_PARAMS]->writeChanges();
     for(auto &&meshBatch : scene->getStaticMeshes())
     {
@@ -159,6 +143,17 @@ void BasePass::beginFrame()
 
 void BasePass::render() 
 {
+    descriptorSets[INDEX_LIGHT_ENV]->updateBuffer(0, scene->getLightBuffer());
+    
+	oLightIndexList->pipelineBarrier( 
+		Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+		Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+	oLightGrid->pipelineBarrier( 
+		Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 
+		Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+    descriptorSets[INDEX_LIGHT_ENV]->updateBuffer(1, oLightIndexList);
+    descriptorSets[INDEX_LIGHT_ENV]->updateTexture(2, oLightGrid);
+    descriptorSets[INDEX_LIGHT_ENV]->writeChanges();
     graphics->beginRenderPass(renderPass);
     for (auto &&meshBatch : scene->getStaticMeshes())
     {
@@ -184,6 +179,8 @@ void BasePass::createRenderPass()
     depthAttachment->loadOp = Gfx::SE_ATTACHMENT_LOAD_OP_LOAD;
     Gfx::PRenderTargetLayout layout = new Gfx::RenderTargetLayout(colorAttachment, depthAttachment);
     renderPass = graphics->createRenderPass(layout);
+    oLightIndexList = renderGraph->requestBuffer("LIGHTCULLING_OLIGHTLIST");
+    oLightGrid = renderGraph->requestTexture("LIGHTCULLING_OLIGHTGRID");
 }
 
 void BasePass::modifyRenderPassMacros(Map<const char*, const char*>& defines)

@@ -1,7 +1,7 @@
 #pragma once
 #include <vulkan/vulkan.h>
-#include "Graphics/GraphicsResources.h"
 #include <functional>
+#include "Graphics/GraphicsResources.h"
 
 namespace Seele
 {
@@ -88,7 +88,7 @@ private:
 class ShaderBuffer
 {
 public:
-	ShaderBuffer(PGraphics graphics, uint32 size, VkBufferUsageFlags usage, Gfx::QueueType queueType);
+	ShaderBuffer(PGraphics graphics, uint32 size, VkBufferUsageFlags usage, Gfx::QueueType& queueType, bool bDynamic = false);
 	virtual ~ShaderBuffer();
 	VkBuffer getHandle() const
 	{
@@ -115,11 +115,14 @@ protected:
 	PGraphics graphics;
 	uint32 currentBuffer;
 	uint32 size;
-	Gfx::QueueType currentOwner;
+	Gfx::QueueType& owner;
 	BufferAllocation buffers[Gfx::numFramesBuffered];
 	uint32 numBuffers;
 
 	void executeOwnershipBarrier(Gfx::QueueType newOwner);
+	void executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, 
+		VkAccessFlags dstAccess, VkPipelineStageFlags dstStage);
+		
 	virtual void requestOwnershipTransfer(Gfx::QueueType newOwner) = 0;
 
 	virtual VkAccessFlags getSourceAccessMask() = 0;
@@ -139,11 +142,14 @@ public:
 	virtual void unlock() override;
 protected:
 	// Inherited via Vulkan::Buffer
-	virtual void requestOwnershipTransfer(Gfx::QueueType newOwner);
 	virtual VkAccessFlags getSourceAccessMask();
 	virtual VkAccessFlags getDestAccessMask();
+	virtual void requestOwnershipTransfer(Gfx::QueueType newOwner);
 	// Inherited via QueueOwnedResource
 	virtual void executeOwnershipBarrier(Gfx::QueueType newOwner);
+	virtual void executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, 
+		VkAccessFlags dstAccess, VkPipelineStageFlags dstStage);
+
 private:
 	PStagingBuffer dedicatedStagingBuffer;
 };
@@ -152,7 +158,7 @@ DEFINE_REF(UniformBuffer)
 class StructuredBuffer : public Gfx::StructuredBuffer, public ShaderBuffer
 {
 public:
-	StructuredBuffer(PGraphics graphics, const BulkResourceData &resourceData);
+	StructuredBuffer(PGraphics graphics, const StructuredBufferCreateInfo &resourceData);
 	virtual ~StructuredBuffer();
 
 protected:
@@ -162,6 +168,10 @@ protected:
 	virtual void requestOwnershipTransfer(Gfx::QueueType newOwner);
 	// Inherited via QueueOwnedResource
 	virtual void executeOwnershipBarrier(Gfx::QueueType newOwner);
+	virtual void executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, 
+		VkAccessFlags dstAccess, VkPipelineStageFlags dstStage);
+private:
+	PStagingBuffer dedicatedStagingBuffer;
 };
 DEFINE_REF(StructuredBuffer)
 
@@ -178,6 +188,8 @@ protected:
 	virtual void requestOwnershipTransfer(Gfx::QueueType newOwner);
 	// Inherited via QueueOwnedResource
 	virtual void executeOwnershipBarrier(Gfx::QueueType newOwner);
+	virtual void executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, 
+		VkAccessFlags dstAccess, VkPipelineStageFlags dstStage);
 };
 DEFINE_REF(VertexBuffer)
 
@@ -189,11 +201,13 @@ public:
 
 protected:
 	// Inherited via Vulkan::Buffer
-	virtual void requestOwnershipTransfer(Gfx::QueueType newOwner);
 	virtual VkAccessFlags getSourceAccessMask();
 	virtual VkAccessFlags getDestAccessMask();
+	virtual void requestOwnershipTransfer(Gfx::QueueType newOwner);
 	// Inherited via QueueOwnedResource
 	virtual void executeOwnershipBarrier(Gfx::QueueType newOwner);
+	virtual void executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, 
+		VkAccessFlags dstAccess, VkPipelineStageFlags dstStage);
 };
 DEFINE_REF(IndexBuffer)
 
@@ -201,14 +215,18 @@ class TextureHandle
 {
 public:
 	TextureHandle(PGraphics graphics, VkImageViewType viewType, 
-		const TextureCreateInfo& createInfo, VkImage existingImage = VK_NULL_HANDLE);
+		const TextureCreateInfo& createInfo, Gfx::QueueType& owner, VkImage existingImage = VK_NULL_HANDLE);
 	virtual ~TextureHandle();
 
+	inline VkImage getImage() const
+	{
+		return image;
+	}
 	inline VkImageView getView() const
 	{
 		return defaultView;
 	}
-	inline VkImageLayout getLayout() const
+	inline Gfx::SeImageLayout getLayout() const
 	{
 		return layout;
 	}
@@ -233,10 +251,13 @@ public:
 		return aspect & (VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
 	}
 	void executeOwnershipBarrier(Gfx::QueueType newOwner);
-	void changeLayout(VkImageLayout newLayout);
+	void executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage,
+		VkAccessFlags dstAccess, VkPipelineStageFlags dstStage);
+	void changeLayout(Gfx::SeImageLayout newLayout);
 
-	Gfx::QueueType currentOwner;
 private:
+	//Updates via reference
+	Gfx::QueueType& currentOwner;
 	PGraphics graphics;
 	PSubAllocation allocation;
 	uint32 sizeX;
@@ -250,21 +271,22 @@ private:
 	VkImage image;
 	VkImageView defaultView;
 	VkImageAspectFlags aspect;
-	VkImageLayout layout;
+	Gfx::SeImageLayout layout;
 	friend class TextureBase;
 	friend class Texture2D;
+	friend class Graphics;
 };
 
 class TextureBase
 {
 public:
 	static TextureHandle* cast(Gfx::PTexture texture);
-	void changeLayout(VkImageLayout newLayout);
 
 protected:
 	TextureHandle* textureHandle;
+	friend class Graphics;
 };
-
+DECLARE_REF(TextureBase)
 class Texture2D : public Gfx::Texture2D, public TextureBase
 {
 public:
@@ -286,6 +308,11 @@ public:
 	{
 		return textureHandle->getNumSamples();
 	}
+	virtual void changeLayout(Gfx::SeImageLayout newLayout) override;
+	virtual void* getNativeHandle() override
+	{
+		return textureHandle;
+	}
 	inline VkImage getHandle() const
 	{
 		return textureHandle->image;
@@ -301,6 +328,8 @@ public:
 protected:
 	// Inherited via QueueOwnedResource
 	virtual void executeOwnershipBarrier(Gfx::QueueType newOwner);
+	virtual void executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, 
+		VkAccessFlags dstAccess, VkPipelineStageFlags dstStage);
 
 };
 DEFINE_REF(Texture2D)

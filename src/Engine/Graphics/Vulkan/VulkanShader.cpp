@@ -120,6 +120,7 @@ void Shader::create(const ShaderCreateInfo& createInfo)
         char const* diagnostics = spGetDiagnosticOutput(request);
         std::cout << "Compile error for shader " << createInfo.name << std::endl;
         std::cout << diagnostics << std::endl;
+        return;
     }
     size_t dataSize = 0;
     const uint32* data = reinterpret_cast<const uint32*>(spGetEntryPointCode(request, entryPointIndex, &dataSize));

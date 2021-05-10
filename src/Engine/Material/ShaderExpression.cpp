@@ -71,3 +71,18 @@ void SamplerParameter::updateDescriptorSet(Gfx::PDescriptorSet descriptorSet, ui
 {
     descriptorSet->updateSampler(binding, data);
 }
+
+CombinedTextureParameter::CombinedTextureParameter(std::string name, uint32 byteOffset, uint32 binding) 
+    : ShaderParameter(name, byteOffset, binding)
+{
+}
+
+CombinedTextureParameter::~CombinedTextureParameter() 
+{
+    
+}
+
+void CombinedTextureParameter::updateDescriptorSet(Gfx::PDescriptorSet descriptorSet, uint8* dst) 
+{
+    descriptorSet->updateTexture(binding, data->getTexture(), sampler);
+}

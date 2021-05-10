@@ -6,24 +6,18 @@ struct ViewParameter
 {
     float4x4 viewMatrix;
     float4x4 projectionMatrix;
+	float4x4 inverseProjection;
+	float2 screenDimensions;
     float4 cameraPos_WS;
 }
 layout(set = INDEX_VIEW_PARAMS, binding = 0, std430)
 ConstantBuffer<ViewParameter> gViewParams;
 
-struct ScreenToViewParams
-{
-	float4x4 inverseProjection;
-	float2 screenDimensions;
-}
-layout(set = INDEX_VIEW_PARAMS, binding = 1, std430)
-ConstantBuffer<ScreenToViewParams> gScreenToViewParams;
-
 // Convert clip space coordinates to view space
 float4 clipToView( float4 clip )
 {
     // View space position.
-    float4 view = mul( gScreenToViewParams.inverseProjection, clip );
+    float4 view = mul( gViewParams.inverseProjection, clip );
     // Perspective projection.
     view = view / view.w;
  
@@ -34,7 +28,7 @@ float4 clipToView( float4 clip )
 float4 screenToView( float4 screen )
 {
     // Convert to normalized texture coordinates
-    float2 texCoord = screen.xy / gScreenToViewParams.screenDimensions;
+    float2 texCoord = screen.xy / gViewParams.screenDimensions;
  
     // Convert to clip space
     float4 clip = float4( float2( texCoord.x, -texCoord.y ) * 2.0f - 1.0f, screen.z, screen.w );

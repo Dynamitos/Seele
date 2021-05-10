@@ -32,7 +32,7 @@ void TextureLoader::importAsset(const std::filesystem::path& filePath)
     AssetRegistry::get().textures[asset->getFileName()] = asset;
     futures.add(std::async(std::launch::async, [this, filePath, asset] () mutable {
         using namespace std::chrono_literals;
-        std::this_thread::sleep_for(5s);
+        //std::this_thread::sleep_for(5s);
         Gfx::PTexture2D texture = import(filePath);
         asset->setTexture(texture);
         asset->setStatus(Asset::Status::Ready);
