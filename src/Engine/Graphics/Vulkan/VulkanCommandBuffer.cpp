@@ -91,13 +91,12 @@ void CmdBuffer::executeCommands(const Array<Gfx::PRenderCommand>& commands)
     for (uint32 i = 0; i < commands.size(); ++i)
     {
         auto command = commands[i].cast<RenderCommand>();
-        // Cache array and size to save on pointer access
-        for(auto boundDescriptor : command->boundDescriptors)
-        {
-            boundDescriptor->currentlyBound = this;
-        }
         command->end();
         executingRenders.add(command);
+        for(auto descriptor : command->boundDescriptors)
+        {
+            boundDescriptors.add(descriptor);
+        }
         cmdBuffers[i] = command->getHandle();
     }
     vkCmdExecuteCommands(handle, (uint32)cmdBuffers.size(), cmdBuffers.data());
@@ -109,13 +108,12 @@ void CmdBuffer::executeCommands(const Array<Gfx::PComputeCommand>& commands)
     for (uint32 i = 0; i < commands.size(); ++i)
     {
         auto command = commands[i].cast<ComputeCommand>();
-        // Cache array and size to save on pointer access
-        for(auto boundDescriptor : command->boundDescriptors)
-        {
-            boundDescriptor->currentlyBound = this;
-        }
         command->end();
         executingComputes.add(command);
+        for(auto descriptor : command->boundDescriptors)
+        {
+            boundDescriptors.add(descriptor);
+        }
         cmdBuffers[i] = command->getHandle();
     }
     vkCmdExecuteCommands(handle, (uint32)cmdBuffers.size(), cmdBuffers.data());
@@ -145,6 +143,10 @@ void CmdBuffer::refreshFence()
                 command->reset();
             }
             executingRenders.clear();
+            for(auto descriptor : boundDescriptors)
+            {
+                descriptor->unbind();
+            }
             state = State::ReadyBegin;
         }
     }
@@ -196,10 +198,6 @@ void SecondaryCmdBuffer::end()
 void SecondaryCmdBuffer::reset() 
 {
     vkResetCommandBuffer(handle, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
-    for(auto boundDescriptor : boundDescriptors)
-    {
-        boundDescriptor->currentlyBound = nullptr;
-    }
     boundDescriptors.clear();
     ready = true;
 }
@@ -251,6 +249,8 @@ void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet)
 {
     auto descriptor = descriptorSet.cast<DescriptorSet>();
     boundDescriptors.add(descriptor.getHandle());
+    descriptor->bind();
+    //std::cout << "Binding descriptor " << descriptor->getHandle() << " to cmd " << handle << std::endl;
     VkDescriptorSet setHandle = descriptor->getHandle();
     vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getLayout(), descriptorSet->getSetIndex(), 1, &setHandle, 0, nullptr);
 }
@@ -260,6 +260,8 @@ void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorS
     for(uint32 i = 0; i < descriptorSets.size(); ++i)
     {
         auto descriptorSet = descriptorSets[i].cast<DescriptorSet>();
+        descriptorSet->bind();
+        //std::cout << "Binding descriptor " << descriptorSet->getHandle() << " to cmd " << handle << std::endl;
         boundDescriptors.add(descriptorSet.getHandle());
         sets[descriptorSet->getSetIndex()] = descriptorSet->getHandle();
     }
@@ -326,6 +328,8 @@ void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet)
 {
     auto descriptor = descriptorSet.cast<DescriptorSet>();
     boundDescriptors.add(descriptor.getHandle());
+    descriptor->bind();
+    //std::cout << "Binding descriptor " << descriptor->getHandle() << " to cmd " << handle << std::endl;
     VkDescriptorSet setHandle = descriptor->getHandle();
     vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->getLayout(), descriptorSet->getSetIndex(), 1, &setHandle, 0, nullptr);
 }
@@ -337,6 +341,8 @@ void ComputeCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptor
     {
         auto descriptorSet = descriptorSets[i].cast<DescriptorSet>();
         boundDescriptors.add(descriptorSet.getHandle());
+        descriptorSet->bind();
+        //std::cout << "Binding descriptor " << descriptorSet->getHandle() << " to cmd " << handle << std::endl;
         sets[descriptorSet->getSetIndex()] = descriptorSet->getHandle();
     }
     vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->getLayout(), 0, (uint32)descriptorSets.size(), sets, 0, nullptr);

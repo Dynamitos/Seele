@@ -160,7 +160,10 @@ class StructuredBuffer : public Gfx::StructuredBuffer, public ShaderBuffer
 public:
 	StructuredBuffer(PGraphics graphics, const StructuredBufferCreateInfo &resourceData);
 	virtual ~StructuredBuffer();
+	virtual bool updateContents(const BulkResourceData &resourceData);
 
+	virtual void* lock(bool bWriteOnly = true) override;
+	virtual void unlock() override;
 protected:
 	// Inherited via Vulkan::Buffer
 	virtual VkAccessFlags getSourceAccessMask();

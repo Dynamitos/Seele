@@ -17,24 +17,25 @@ Scene::Scene(Gfx::PGraphics graphics)
     , updater(new SceneUpdater())
 {
     lightEnv.directionalLights[0].color = Vector4(1, 1, 1, 1);
-    lightEnv.directionalLights[0].direction = Vector4(1, 0, 0, 1);
+    lightEnv.directionalLights[0].direction = Vector4(1, 1, 0, 1);
     lightEnv.directionalLights[0].intensity = Vector4(1, 1, 1, 1);
-    lightEnv.numDirectionalLights = 1;
+    lightEnv.numDirectionalLights = 0;
     srand((unsigned int)time(NULL));
-    for(uint32 i = 0; i < MAX_POINT_LIGHTS; ++i)
+    for(uint32 i = 0; i < MAX_POINT_LIGHTS/2; ++i)
     {
         lightEnv.pointLights[i].colorRange = Vector4(frand(), frand(), frand(), frand() * 30);
-        lightEnv.pointLights[i].positionWS = Vector4(frand() * 200-100, frand(), frand() * 200-100, 1);
+        lightEnv.pointLights[i].positionWS = Vector4(frand() * 100-50, frand(), frand() * 100-50, 1);
+        lightEnv.pointLights[i].positionVS = Vector4(frand() * 100-50, frand(), frand() * 100-50, 1);
     }
-    lightEnv.numPointLights = MAX_POINT_LIGHTS;
+    lightEnv.numPointLights = MAX_POINT_LIGHTS/2;
 
     BulkResourceData lightInit;
-    StructuredBufferCreateInfo structuredInfo;
+    UniformBufferCreateInfo structuredInfo;
     lightInit.size = sizeof(LightEnv);
     lightInit.data = (uint8*)&lightEnv;
     structuredInfo.resourceData = lightInit;
     structuredInfo.bDynamic = false;
-    lightBuffer = graphics->createStructuredBuffer(structuredInfo);
+    lightBuffer = graphics->createUniformBuffer(structuredInfo);
 }
 
 Scene::~Scene()

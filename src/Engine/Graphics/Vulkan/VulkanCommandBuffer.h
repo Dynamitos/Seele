@@ -31,6 +31,7 @@ DEFINE_REF(CmdBufferBase)
 
 DECLARE_REF(RenderCommand)
 DECLARE_REF(ComputeCommand)
+DECLARE_REF(DescriptorSet)
 DECLARE_REF(CommandBufferManager)
 class CmdBuffer : public CmdBufferBase
 {
@@ -68,6 +69,7 @@ private:
 	Array<VkPipelineStageFlags> waitFlags;
 	Array<PRenderCommand> executingRenders;
 	Array<PComputeCommand> executingComputes;
+	Array<DescriptorSet*> boundDescriptors;
 	friend class RenderCommand;
 	friend class CommandBufferManager;
 	friend class Queue;
@@ -76,7 +78,6 @@ DEFINE_REF(CmdBuffer)
 
 DECLARE_REF(GraphicsPipeline)
 DECLARE_REF(ComputePipeline)
-DECLARE_REF(DescriptorSet)
 
 class SecondaryCmdBuffer: public CmdBufferBase
 {

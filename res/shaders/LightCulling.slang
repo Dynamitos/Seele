@@ -102,16 +102,11 @@ void cullLights(ComputeShaderInput in)
 
 	Plane minPlane = {float3(0, 0, -1), -minDepthVS};
 
-    for ( uint i = in.groupIndex; i < gLightEnv[0].numPointLights; i += BLOCK_SIZE * BLOCK_SIZE )
+    for ( uint i = in.groupIndex; i < gLightEnv.numPointLights; i += BLOCK_SIZE * BLOCK_SIZE )
 	{
-        PointLight light = gLightEnv[0].pointLights[i];
+        PointLight light = gLightEnv.pointLights[i];
 		//if(gLightEnv.insideFrustum(groupFrustum, nearClipVS, maxDepthVS))
 		{
-			//InterlockedAdd(tLightCount, 1, index);
-            //if(index < 1024)
-            //{
-            //    tLightList[index] = i;
-            //}
             //if(!light.insidePlane(minPlane))
 			//{
             oAppendLight(i);
@@ -131,15 +126,11 @@ void cullLights(ComputeShaderInput in)
 	}
 	GroupMemoryBarrierWithGroupSync();
 
-    if(in.groupIndex == 0)
-    {
-        for (uint j = 0; j < (uint)oLightCount; j += 1/*BLOCK_SIZE * BLOCK_SIZE*/)
-	    {
-		    oLightIndexList[oLightIndexStartOffset + j] = oLightList[j];
-        }
-    }
+	for (uint j = in.groupIndex; j < (uint)oLightCount; j += BLOCK_SIZE * BLOCK_SIZE)
+	{
+		oLightIndexList[oLightIndexStartOffset + j] = oLightList[j];
+	}
     
-	
 	// For transparent geometry.
 	for ( uint k = in.groupIndex; k < (uint)tLightCount; k += BLOCK_SIZE * BLOCK_SIZE )
 	{

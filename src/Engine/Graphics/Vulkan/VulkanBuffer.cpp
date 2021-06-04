@@ -350,7 +350,7 @@ VkAccessFlags UniformBuffer::getDestAccessMask()
 }
 
 StructuredBuffer::StructuredBuffer(PGraphics graphics, const StructuredBufferCreateInfo &resourceData)
-	: Gfx::StructuredBuffer(graphics->getFamilyMapping(), resourceData.resourceData.owner)
+	: Gfx::StructuredBuffer(graphics->getFamilyMapping(), resourceData.resourceData)
 	, Vulkan::ShaderBuffer(graphics, resourceData.resourceData.size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, currentOwner, resourceData.bDynamic)
 {
 	if (resourceData.resourceData.data != nullptr)
@@ -363,6 +363,44 @@ StructuredBuffer::StructuredBuffer(PGraphics graphics, const StructuredBufferCre
 
 StructuredBuffer::~StructuredBuffer()
 {
+}
+
+bool StructuredBuffer::updateContents(const BulkResourceData &resourceData) 
+{
+    Gfx::StructuredBuffer::updateContents(resourceData);
+	//We always want to update, as the contents could be different on the GPU
+    void* data = lock();
+    std::memcpy(data, resourceData.data, resourceData.size);
+    unlock();
+	return true;
+}
+void* StructuredBuffer::lock(bool bWriteOnly)
+{
+	if(dedicatedStagingBuffer != nullptr)
+	{
+		return dedicatedStagingBuffer->getMappedPointer();
+	}
+	return ShaderBuffer::lock(bWriteOnly);
+}
+
+void StructuredBuffer::unlock()
+{
+	if(dedicatedStagingBuffer != nullptr)
+	{
+		dedicatedStagingBuffer->flushMappedMemory();
+		PCmdBuffer cmdBuffer = graphics->getQueueCommands(currentOwner)->getCommands();
+		VkCommandBuffer cmdHandle = cmdBuffer->getHandle();
+
+		VkBufferCopy region;
+		std::memset(&region, 0, sizeof(VkBufferCopy));
+		region.size = ShaderBuffer::size;
+		vkCmdCopyBuffer(cmdHandle, dedicatedStagingBuffer->getHandle(), buffers[currentBuffer].buffer, 1, &region);
+		graphics->getQueueCommands(currentOwner)->submitCommands();
+	}
+	else
+	{
+		ShaderBuffer::unlock();
+	}
 }
 
 void StructuredBuffer::requestOwnershipTransfer(Gfx::QueueType newOwner)

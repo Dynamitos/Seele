@@ -7,8 +7,8 @@ struct ViewParameter
     float4x4 viewMatrix;
     float4x4 projectionMatrix;
 	float4x4 inverseProjection;
-	float2 screenDimensions;
     float4 cameraPos_WS;
+	float2 screenDimensions;
 }
 layout(set = INDEX_VIEW_PARAMS, binding = 0, std430)
 ConstantBuffer<ViewParameter> gViewParams;

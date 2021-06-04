@@ -212,12 +212,24 @@ bool UniformBuffer::updateContents(const BulkResourceData& resourceData)
 	return true;
 }
 
-StructuredBuffer::StructuredBuffer(QueueFamilyMapping mapping, QueueType startQueueType)
-	: Buffer(mapping, startQueueType)
+StructuredBuffer::StructuredBuffer(QueueFamilyMapping mapping, const BulkResourceData& resourceData)
+	: Buffer(mapping, resourceData.owner)
+	, contents(resourceData.size)
 {
 }
 StructuredBuffer::~StructuredBuffer()
 {
+}
+
+bool StructuredBuffer::updateContents(const BulkResourceData& resourceData) 
+{
+	assert(contents.size() == resourceData.size);
+	if(std::memcmp(contents.data(), resourceData.data, contents.size()) == 0)
+	{
+		return false;
+	}
+	std::memcpy(contents.data(), resourceData.data, contents.size());
+	return true;
 }
 VertexBuffer::VertexBuffer(QueueFamilyMapping mapping, uint32 numVertices, uint32 vertexSize, QueueType startQueueType)
 	: Buffer(mapping, startQueueType)

@@ -56,22 +56,21 @@ float4 fragmentMain(
     
     float3 result = float3(0, 0, 0);
 
-    for (int i = 0; i < gLightEnv[0].numDirectionalLights; i++)
+    for (int i = 0; i < gLightEnv.numDirectionalLights; i++)
     {
-        result += gLightEnv[0].directionalLights[i].illuminate(materialParams, brdf, viewDir);
+        result += gLightEnv.directionalLights[i].illuminate(materialParams, brdf, viewDir);
     }
     
-	uint2 tileIndex = uint2(floor(materialParams.clipPosition.xy) / BLOCK_SIZE);
+	uint2 tileIndex = uint2(floor(position.xy / BLOCK_SIZE));
+    uint2 gridValue = lightGrid[tileIndex];
+	uint startOffset = gridValue.x;
+	uint lightCount = gridValue.y;
 
-	uint startOffset = lightGrid[tileIndex].x;
-	uint lightCount = lightGrid[tileIndex].y;
-
-    for (int j = 0; j < gLightEnv[0].numPointLights; ++j)
+    for (int j = 0; j < lightCount; ++j)
     {
 		uint lightIndex = lightIndexList[startOffset + j];
-		PointLight pointLight = gLightEnv[0].pointLights[lightIndex];
+		PointLight pointLight = gLightEnv.pointLights[lightIndex];
         result += pointLight.illuminate(materialParams, brdf, viewDir);
     }
-	
-    return float4(result, 0);
+    return float4(result, 1);
 }

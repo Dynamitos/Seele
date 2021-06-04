@@ -412,6 +412,8 @@ void Graphics::setupDebugCallback()
 			VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT);
 
 	VK_CHECK(CreateDebugReportCallbackEXT(instance, &createInfo, nullptr, &callback));
+
+	crashTracker.Initialize();
 }
 
 void Graphics::pickPhysicalDevice()
@@ -537,6 +539,16 @@ void Graphics::createDevice(GraphicsInitializer initializer)
 		queueInfos.data(),
 		(uint32)queueInfos.size(),
 		&features);
+#if ENABLE_VALIDATION
+	VkDeviceDiagnosticsConfigCreateInfoNV crashDiagInfo;
+	crashDiagInfo.sType = VK_STRUCTURE_TYPE_DEVICE_DIAGNOSTICS_CONFIG_CREATE_INFO_NV;
+	crashDiagInfo.pNext = nullptr;
+	crashDiagInfo.flags = 
+		VK_DEVICE_DIAGNOSTICS_CONFIG_ENABLE_RESOURCE_TRACKING_BIT_NV |
+		VK_DEVICE_DIAGNOSTICS_CONFIG_ENABLE_AUTOMATIC_CHECKPOINTS_BIT_NV |
+		VK_DEVICE_DIAGNOSTICS_CONFIG_ENABLE_SHADER_DEBUG_INFO_BIT_NV;
+	deviceInfo.pNext = &crashDiagInfo;
+#endif
 	deviceInfo.enabledExtensionCount = (uint32)initializer.deviceExtensions.size();
 	deviceInfo.ppEnabledExtensionNames = initializer.deviceExtensions.data();
 	deviceInfo.enabledLayerCount = (uint32_t)initializer.layers.size();

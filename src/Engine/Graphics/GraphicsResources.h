@@ -405,9 +405,27 @@ DEFINE_REF(IndexBuffer)
 class StructuredBuffer : public Buffer
 {
 public:
-	StructuredBuffer(QueueFamilyMapping mapping, QueueType startQueueType);
+	StructuredBuffer(QueueFamilyMapping mapping, const BulkResourceData& bulkResourceData);
 	virtual ~StructuredBuffer();
+	virtual bool updateContents(const BulkResourceData& resourceData);
+	bool isDataEquals(StructuredBuffer* other)
+	{
+		if(other == nullptr)
+		{
+			return false;
+		}
+		if(contents.size() != other->contents.size())
+		{
+			return false;
+		}
+		if(std::memcmp(contents.data(), other->contents.data(), contents.size()) != 0)
+		{
+			return false;
+		}
+		return true;
+	}
 protected:
+	Array<uint8> contents;
 	// Inherited via QueueOwnedResource
 	virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
 	virtual void executePipelineBarrier(SeAccessFlags srcAccess, SePipelineStageFlags srcStage, 

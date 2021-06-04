@@ -92,7 +92,7 @@ BasePass::BasePass(PRenderGraph renderGraph, const PScene scene, Gfx::PGraphics 
     basePassLayout = graphics->createPipelineLayout();
 
     lightLayout = graphics->createDescriptorLayout("LightLayout");
-    lightLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    lightLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
     lightLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
     lightLayout->addDescriptorBinding(2, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_IMAGE);
     lightLayout->create();
@@ -133,6 +133,10 @@ void BasePass::beginFrame()
     uniformUpdate.size = sizeof(ViewParameter);
     uniformUpdate.data = (uint8*)&viewParams;
     viewParamBuffer->updateContents(uniformUpdate);
+    viewLayout->reset();
+    lightLayout->reset();
+    descriptorSets[INDEX_LIGHT_ENV] = lightLayout->allocateDescriptorSet();
+    descriptorSets[INDEX_VIEW_PARAMS] = viewLayout->allocateDescriptorSet();
     descriptorSets[INDEX_VIEW_PARAMS]->updateBuffer(0, viewParamBuffer);
     descriptorSets[INDEX_VIEW_PARAMS]->writeChanges();
     for(auto &&meshBatch : scene->getStaticMeshes())
@@ -143,7 +147,6 @@ void BasePass::beginFrame()
 
 void BasePass::render() 
 {
-    descriptorSets[INDEX_LIGHT_ENV]->updateBuffer(0, scene->getLightBuffer());
     
 	oLightIndexList->pipelineBarrier( 
 		Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
@@ -151,6 +154,8 @@ void BasePass::render()
 	oLightGrid->pipelineBarrier( 
 		Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 
 		Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+
+    descriptorSets[INDEX_LIGHT_ENV]->updateBuffer(0, scene->getLightBuffer());
     descriptorSets[INDEX_LIGHT_ENV]->updateBuffer(1, oLightIndexList);
     descriptorSets[INDEX_LIGHT_ENV]->updateTexture(2, oLightGrid);
     descriptorSets[INDEX_LIGHT_ENV]->writeChanges();

@@ -46,14 +46,14 @@ public:
 
     const Array<PPrimitiveComponent>& getPrimitives() const { return primitives; }
     const Array<MeshBatch>& getStaticMeshes() const { return staticMeshes; }
-    const Gfx::PStructuredBuffer& getLightBuffer() const { return lightBuffer; }
+    const Gfx::PUniformBuffer& getLightBuffer() const { return lightBuffer; }
     UPSceneUpdater& getSceneUpdater() { return updater; }
 private:
     Array<MeshBatch> staticMeshes;
     Array<PActor> rootActors;
     Array<PPrimitiveComponent> primitives;
     LightEnv lightEnv;
-    Gfx::PStructuredBuffer lightBuffer;
+    Gfx::PUniformBuffer lightBuffer;
     Gfx::PGraphics graphics;
     UPSceneUpdater updater;
 };

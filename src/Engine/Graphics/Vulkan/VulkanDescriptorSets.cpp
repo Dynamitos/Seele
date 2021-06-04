@@ -220,7 +220,7 @@ void DescriptorSet::writeChanges()
 	{
 		if(isCurrentlyBound())
 		{
-			currentlyBound->waitForCommand(1000000000u);
+			std::cout << "Descriptor currently bound, allocate a new one instead" << std::endl;
 			assert(!isCurrentlyBound());
 		}
 		vkUpdateDescriptorSets(graphics->getDevice(), (uint32)writeDescriptors.size(), writeDescriptors.data(), 0, nullptr);
@@ -289,7 +289,6 @@ void DescriptorAllocator::allocateDescriptorSet(Gfx::PDescriptorSet &descriptorS
 		{
 			//If it hasnt been initialized, allocate it
 			VK_CHECK(vkAllocateDescriptorSets(graphics->getDevice(), &allocInfo, &cachedHandles[setIndex]->setHandle));
-			
 		}
 		cachedHandles[setIndex]->currentlyInUse = true;
 		descriptorSet = cachedHandles[setIndex];

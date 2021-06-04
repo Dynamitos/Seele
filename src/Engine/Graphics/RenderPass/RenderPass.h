@@ -17,13 +17,13 @@ public:
     virtual void publishOutputs() = 0;
     virtual void createRenderPass() = 0;
 protected:
-    struct ViewParameter
+    _declspec(align(16)) struct ViewParameter
     {
         Matrix4 viewMatrix;
         Matrix4 projectionMatrix;
         Matrix4 inverseProjectionMatrix;
-        Vector2 screenDimensions;
         Vector4 cameraPosition;
+        Vector2 screenDimensions;
     } viewParams;
     Gfx::PRenderPass renderPass;
     PRenderGraph renderGraph;

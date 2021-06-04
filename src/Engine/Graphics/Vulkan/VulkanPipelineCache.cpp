@@ -370,7 +370,11 @@ PComputePipeline PipelineCache::createPipeline(const ComputePipelineCreateInfo& 
         computeStage->getModuleHandle(),
         computeStage->getEntryPointName());
     VkPipeline pipelineHandle;
+    auto beginTime = std::chrono::high_resolution_clock::now();
     VK_CHECK(vkCreateComputePipelines(graphics->getDevice(), cache, 1, &createInfo, nullptr, &pipelineHandle));
+    auto endTime = std::chrono::high_resolution_clock::now();
+    int64 delta = std::chrono::duration_cast<std::chrono::microseconds>(endTime - beginTime).count();
+    std::cout << "Compute creation time: " << delta << std::endl;
     PComputePipeline result = new ComputePipeline(graphics, pipelineHandle, layout, computeInfo);
     return result;
 }

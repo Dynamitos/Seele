@@ -64,7 +64,7 @@ public:
 		, graphics(graphics)
 		, owner(owner)
 		, currentlyInUse(false)
-		, currentlyBound(nullptr)
+		, currentlyBound(false)
 	{
 	}
 	virtual ~DescriptorSet();
@@ -77,11 +77,19 @@ public:
 	
 	inline bool isCurrentlyBound() const
 	{
-		return currentlyBound != nullptr;
+		return currentlyBound;
 	}
 	inline bool isCurrentlyInUse() const
 	{
 		return currentlyInUse;
+	}
+	void bind()
+	{
+		currentlyBound = true;
+	}
+	void unbind()
+	{
+		currentlyBound = false;
 	}
 	void free()
 	{
@@ -104,7 +112,8 @@ private:
 	VkDescriptorSet setHandle;
 	PGraphics graphics;
 	PDescriptorAllocator owner;
-	PCmdBuffer currentlyBound;
+	//PCmdBuffer currentlyBound;
+	bool currentlyBound;
 	bool currentlyInUse;
 	friend class DescriptorAllocator;
 	friend class CmdBuffer;

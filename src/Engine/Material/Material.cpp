@@ -137,11 +137,11 @@ void Material::compile()
         uniformInitializer.resourceData.size = uniformDataSize;
         uniformBuffer = WindowManager::getGraphics()->createUniformBuffer(uniformInitializer);
     }
-    layout->create();
     BRDF* brdf = BRDF::getBRDFByName(profile);
     brdf->generateMaterialCode(codeStream, j["code"]);
     codeStream << "};";
     codeStream.close();
+    layout->create();
     setStatus(Status::Ready);
 }
 

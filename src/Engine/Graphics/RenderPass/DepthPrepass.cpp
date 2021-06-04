@@ -99,7 +99,6 @@ DepthPrepass::DepthPrepass(PRenderGraph renderGraph, const PScene scene, Gfx::PG
     viewParamBuffer = graphics->createUniformBuffer(uniformInitializer);
     viewLayout->create();
     depthPrepassLayout->addDescriptorLayout(INDEX_VIEW_PARAMS, viewLayout);
-    descriptorSets[INDEX_VIEW_PARAMS] = viewLayout->allocateDescriptorSet();
 
     primitiveLayout = graphics->createDescriptorLayout("PrimitiveLayout");
     primitiveLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
@@ -125,6 +124,8 @@ void DepthPrepass::beginFrame()
     uniformUpdate.size = sizeof(ViewParameter);
     uniformUpdate.data = (uint8*)&viewParams;
     viewParamBuffer->updateContents(uniformUpdate);
+    viewLayout->reset();
+    descriptorSets[INDEX_VIEW_PARAMS] = viewLayout->allocateDescriptorSet();
     descriptorSets[INDEX_VIEW_PARAMS]->updateBuffer(0, viewParamBuffer);
     descriptorSets[INDEX_VIEW_PARAMS]->writeChanges();
     for(auto &&meshBatch : scene->getStaticMeshes())

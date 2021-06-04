@@ -16,6 +16,7 @@ set(GLFW_ROOT ${EXTERNAL_ROOT}/glfw)
 set(JSON_ROOT ${EXTERNAL_ROOT}/json)
 set(STB_ROOT ${EXTERNAL_ROOT}/stb)
 set(SPIRV_ROOT ${EXTERNAL_ROOT}/SPIRV-Cross)
+set(NSAM_ROOT ${EXTERNAL_ROOT}/aftermath)
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/)
 
@@ -50,6 +51,7 @@ find_package(GLFW REQUIRED)
 find_package(GLM REQUIRED)
 find_package(STB REQUIRED)
 find_package(SLANG REQUIRED)
+find_package(Aftermath REQUIRED)
 
 include_directories(${GLM_INCLUDE_DIRS})
 include_directories(${STB_INCLUDE_DIRS})
@@ -60,6 +62,7 @@ include_directories(${GLFW_INCLUDE_DIRS})
 include_directories(${SLANG_INCLUDE_DIRS})
 include_directories(${ASSIMP_INCLUDE_DIRS})
 include_directories(${JSON_INCLUDE_DIRS})
+include_directories(${NSAM_INCLUDE_DIRS})
 include_directories(${ENGINE_ROOT})
 include_directories(src/Engine)
 add_definitions(${Vulkan_DEFINITIONS})
@@ -78,6 +81,7 @@ target_link_libraries(SeeleEngine ${GLFW_LIBRARIES})
 target_link_libraries(SeeleEngine ${SLANG_LIBRARIES})
 target_link_libraries(SeeleEngine ${ASSIMP_LIBRARIES})
 target_link_libraries(SeeleEngine ${JSON_LIBRARY})
+target_link_libraries(SeeleEngine ${NSAM_LIBRARIES})
 #target_link_libraries(SeeleEngine ${SPIRV_LIBRARIES})
 
 target_precompile_headers(SeeleEngine 
@@ -112,8 +116,9 @@ add_subdirectory(test/)
 
 add_custom_target(copy-runtime-files ALL
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/res $<TARGET_FILE_DIR:SeeleEngine>
-	COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SLANG_BINARY} $<TARGET_FILE_DIR:SeeleEngine>
+	COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SLANG_BINARIES} $<TARGET_FILE_DIR:SeeleEngine>
   COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SLANG_GLSLANG} $<TARGET_FILE_DIR:SeeleEngine>
   COMMAND ${CMAKE_COMMAND} -E copy_if_different ${GLFW_BINARY} $<TARGET_FILE_DIR:SeeleEngine>
   COMMAND ${CMAKE_COMMAND} -E copy_if_different ${ASSIMP_BINARY} $<TARGET_FILE_DIR:SeeleEngine>
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different ${NSAM_BINARIES} $<TARGET_FILE_DIR:SeeleEngine>
 	DEPENDS SeeleEngine)
