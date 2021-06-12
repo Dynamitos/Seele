@@ -48,7 +48,6 @@ Gfx::PTexture RenderGraph::requestTexture(const std::string& outputName)
     return registeredTextures[outputName];
 }
 
-
 Gfx::PStructuredBuffer RenderGraph::requestBuffer(const std::string& outputName) 
 {
     if(registeredBuffers.find(outputName) == registeredBuffers.end())
@@ -57,6 +56,16 @@ Gfx::PStructuredBuffer RenderGraph::requestBuffer(const std::string& outputName)
         return nullptr;
     }
     return registeredBuffers[outputName];
+}
+
+Gfx::PUniformBuffer RenderGraph::requestUniform(const std::string& outputName) 
+{
+    if(registeredUniforms.find(outputName) == registeredUniforms.end())
+    {
+        std::cout << "Attachment " << outputName << " not found" << std::endl; 
+        return nullptr;
+    }
+    return registeredUniforms[outputName];
 }
 
 void RenderGraph::registerRenderPassOutput(const std::string& outputName, Gfx::PRenderTargetAttachment attachment) 
@@ -72,4 +81,8 @@ void RenderGraph::registerTextureOutput(const std::string& outputName, Gfx::PTex
 void RenderGraph::registerBufferOutput(const std::string& outputName, Gfx::PStructuredBuffer buffer) 
 {
     registeredBuffers[outputName] = buffer;
+}
+void RenderGraph::registerUniformOutput(const std::string& outputName, Gfx::PUniformBuffer buffer) 
+{
+    registeredUniforms[outputName] = buffer;
 }

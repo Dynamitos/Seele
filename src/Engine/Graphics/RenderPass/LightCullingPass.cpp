@@ -42,7 +42,6 @@ void LightCullingPass::beginFrame()
 	counterReset.size = sizeof(uint32);
 	oLightIndexCounter->updateContents(counterReset);
 	tLightIndexCounter->updateContents(counterReset);
-	
 
 	cullingDescriptorLayout->reset();
 	lightEnvDescriptorLayout->reset();
@@ -58,6 +57,12 @@ void LightCullingPass::beginFrame()
 	cullingDescriptorSet->updateBuffer(7, tLightIndexList);
 	cullingDescriptorSet->updateTexture(8, oLightGrid);
 	cullingDescriptorSet->updateTexture(9, tLightGrid);
+
+	lightEnvDescriptorSet->updateBuffer(0, directLightBuffer);
+	lightEnvDescriptorSet->updateBuffer(1, numDirLightBuffer);
+	lightEnvDescriptorSet->updateBuffer(2, pointLightBuffer);
+	lightEnvDescriptorSet->updateBuffer(3, numPointLightBuffer);
+	lightEnvDescriptorSet->writeChanges();
 }
 
 void LightCullingPass::render() 
@@ -75,8 +80,6 @@ void LightCullingPass::render()
 	depthAttachment->transferOwnership(Gfx::QueueType::COMPUTE);
 	cullingDescriptorSet->updateTexture(2, depthAttachment);
 	cullingDescriptorSet->writeChanges();
-	lightEnvDescriptorSet->updateBuffer(0, scene->getLightBuffer());
-	lightEnvDescriptorSet->writeChanges();
 	Gfx::PComputeCommand computeCommand = graphics->createComputeCommand("CullingCommand");
 	computeCommand->bindPipeline(cullingPipeline);
 	Array<Gfx::PDescriptorSet> descriptorSets = {cullingDescriptorSet, lightEnvDescriptorSet};
@@ -103,26 +106,50 @@ void LightCullingPass::publishOutputs()
 	dispatchParams.numThreads = numThreadGroups * glm::uvec3(BLOCK_SIZE, BLOCK_SIZE, 1);
 
 	BulkResourceData resourceData;
-	StructuredBufferCreateInfo createInfo;
+	StructuredBufferCreateInfo structInfo;
 	uint32 counterReset = 0;
 	resourceData.size = sizeof(uint32);
 	resourceData.data = (uint8*)&counterReset;
 	resourceData.owner = Gfx::QueueType::COMPUTE;
-	createInfo.bDynamic = true;
-	createInfo.resourceData = resourceData;
-	oLightIndexCounter = graphics->createStructuredBuffer(createInfo);
-	tLightIndexCounter = graphics->createStructuredBuffer(createInfo);
+	structInfo.bDynamic = true;
+	structInfo.resourceData = resourceData;
+	oLightIndexCounter = graphics->createStructuredBuffer(structInfo);
+	tLightIndexCounter = graphics->createStructuredBuffer(structInfo);
 	resourceData.data = nullptr;
 	resourceData.size = sizeof(uint32_t) 
 		* dispatchParams.numThreadGroups.x 
 		* dispatchParams.numThreadGroups.y 
 		* dispatchParams.numThreadGroups.z * 200;
-	createInfo.resourceData = resourceData;
-	createInfo.bDynamic = false;
-	oLightIndexList = graphics->createStructuredBuffer(createInfo);
-	tLightIndexList = graphics->createStructuredBuffer(createInfo);
+	structInfo.resourceData = resourceData;
+	structInfo.bDynamic = false;
+	oLightIndexList = graphics->createStructuredBuffer(structInfo);
+	tLightIndexList = graphics->createStructuredBuffer(structInfo);
 	renderGraph->registerBufferOutput("LIGHTCULLING_OLIGHTLIST", oLightIndexList);
 	renderGraph->registerBufferOutput("LIGHTCULLING_TLIGHTLIST", tLightIndexList);
+	const LightEnv& lightEnv = scene->getLightBuffer();
+	resourceData.size = sizeof(DirectionalLight) * MAX_DIRECTIONAL_LIGHTS;
+	resourceData.data = (uint8*)&lightEnv.directionalLights;
+	structInfo.resourceData = resourceData;
+	structInfo.bDynamic = true;
+	directLightBuffer = graphics->createStructuredBuffer(structInfo);
+	resourceData.size = sizeof(PointLight) * MAX_POINT_LIGHTS;
+	resourceData.data = (uint8*)&lightEnv.pointLights;
+	structInfo.resourceData = resourceData;
+	pointLightBuffer = graphics->createStructuredBuffer(structInfo);
+	UniformBufferCreateInfo uniformInfo;
+	resourceData.size = sizeof(uint32);
+	resourceData.data = (uint8*)&lightEnv.numDirectionalLights;
+	uniformInfo.resourceData = resourceData;
+	uniformInfo.bDynamic = true;
+	numDirLightBuffer = graphics->createUniformBuffer(uniformInfo);
+	resourceData.data = (uint8*)&lightEnv.numPointLights;
+	uniformInfo.resourceData = resourceData;
+	uniformInfo.bDynamic = true;
+	numPointLightBuffer = graphics->createUniformBuffer(uniformInfo);
+	renderGraph->registerBufferOutput("DIRECTIONAL_LIGHTS", directLightBuffer);
+	renderGraph->registerUniformOutput("NUM_DIRECTIONAL_LIGHTS", numDirLightBuffer);
+	renderGraph->registerBufferOutput("POINT_LIGHTS", pointLightBuffer);
+	renderGraph->registerUniformOutput("NUM_POINT_LIGHTS", numPointLightBuffer);
 	TextureCreateInfo textureInfo;
 	textureInfo.width = dispatchParams.numThreadGroups.x;
 	textureInfo.height = dispatchParams.numThreadGroups.y;
@@ -132,6 +159,7 @@ void LightCullingPass::publishOutputs()
 	tLightGrid = graphics->createTexture2D(textureInfo);
 	renderGraph->registerTextureOutput("LIGHTCULLING_OLIGHTGRID", oLightGrid);
 	renderGraph->registerTextureOutput("LIGHTCULLING_TLIGHTGRID", tLightGrid);
+
 }
 
 
@@ -162,8 +190,12 @@ void LightCullingPass::createRenderPass()
 
 
 	lightEnvDescriptorLayout = graphics->createDescriptorLayout("LightEnv");
-	//LightEnv
-	lightEnvDescriptorLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+	// Directional Lights
+	lightEnvDescriptorLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+	lightEnvDescriptorLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+	// Point Lights
+	lightEnvDescriptorLayout->addDescriptorBinding(2, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+	lightEnvDescriptorLayout->addDescriptorBinding(3, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
 
 	cullingLayout = graphics->createPipelineLayout();
 	cullingLayout->addDescriptorLayout(0, cullingDescriptorLayout);

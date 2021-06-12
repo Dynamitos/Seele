@@ -18,7 +18,7 @@ PrimitiveComponent::PrimitiveComponent(PMeshAsset asset)
     for (uint32 i = 0; i < assetMeshes.size(); i++)
     {
         auto& batch = staticMeshes[i];
-        batch.material = assetMeshes[i]->referencedMaterial;
+        batch.material = asset->referencedMaterials[i];
         batch.isBackfaceCullingDisabled = false;
         batch.isCastingShadow = true;
         batch.primitiveComponent = this;

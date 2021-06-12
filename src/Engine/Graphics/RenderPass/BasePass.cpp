@@ -92,9 +92,17 @@ BasePass::BasePass(PRenderGraph renderGraph, const PScene scene, Gfx::PGraphics 
     basePassLayout = graphics->createPipelineLayout();
 
     lightLayout = graphics->createDescriptorLayout("LightLayout");
-    lightLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-    lightLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
-    lightLayout->addDescriptorBinding(2, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_IMAGE);
+    
+    // Directional Lights
+	lightLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+	lightLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+	// Point Lights
+	lightLayout->addDescriptorBinding(2, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+	lightLayout->addDescriptorBinding(3, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+    // Light Index List
+    lightLayout->addDescriptorBinding(4, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    // Light Grid
+    lightLayout->addDescriptorBinding(5, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_IMAGE);
     lightLayout->create();
     basePassLayout->addDescriptorLayout(INDEX_LIGHT_ENV, lightLayout);
     descriptorSets[INDEX_LIGHT_ENV] = lightLayout->allocateDescriptorSet();
@@ -155,9 +163,12 @@ void BasePass::render()
 		Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 
 		Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
 
-    descriptorSets[INDEX_LIGHT_ENV]->updateBuffer(0, scene->getLightBuffer());
-    descriptorSets[INDEX_LIGHT_ENV]->updateBuffer(1, oLightIndexList);
-    descriptorSets[INDEX_LIGHT_ENV]->updateTexture(2, oLightGrid);
+    descriptorSets[INDEX_LIGHT_ENV]->updateBuffer(0, directLightBuffer);
+    descriptorSets[INDEX_LIGHT_ENV]->updateBuffer(1, numDirLightBuffer);
+    descriptorSets[INDEX_LIGHT_ENV]->updateBuffer(2, pointLightBuffer);
+    descriptorSets[INDEX_LIGHT_ENV]->updateBuffer(3, numPointLightBuffer);
+    descriptorSets[INDEX_LIGHT_ENV]->updateBuffer(4, oLightIndexList);
+    descriptorSets[INDEX_LIGHT_ENV]->updateTexture(5, oLightGrid);
     descriptorSets[INDEX_LIGHT_ENV]->writeChanges();
     graphics->beginRenderPass(renderPass);
     for (auto &&meshBatch : scene->getStaticMeshes())
@@ -174,12 +185,16 @@ void BasePass::endFrame()
 
 void BasePass::publishOutputs() 
 {
-    colorAttachment = new Gfx::SwapchainAttachment(viewport->getOwner());
+	colorAttachment = new Gfx::SwapchainAttachment(viewport->getOwner());
     renderGraph->registerRenderPassOutput("BASEPASS_COLOR", colorAttachment);
 }
 
 void BasePass::createRenderPass() 
-{
+{    
+	directLightBuffer = renderGraph->requestBuffer("DIRECTIONAL_LIGHTS");
+	pointLightBuffer = renderGraph->requestBuffer("POINT_LIGHTS");
+	numDirLightBuffer = renderGraph->requestUniform("NUM_DIRECTIONAL_LIGHTS");
+	numPointLightBuffer = renderGraph->requestUniform("NUM_POINT_LIGHTS");
     Gfx::PRenderTargetAttachment depthAttachment = renderGraph->requestRenderTarget("DEPTHPREPASS_DEPTH");
     depthAttachment->loadOp = Gfx::SE_ATTACHMENT_LOAD_OP_LOAD;
     Gfx::PRenderTargetLayout layout = new Gfx::RenderTargetLayout(colorAttachment, depthAttachment);

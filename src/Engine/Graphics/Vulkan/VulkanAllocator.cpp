@@ -296,7 +296,7 @@ void StagingManager::clearPending()
 
 PStagingBuffer StagingManager::allocateStagingBuffer(uint32 size, VkBufferUsageFlags usage, bool bCPURead)
 {
-	std::unique_lock l(lock);
+	std::scoped_lock l(lock);
 	for (auto it = freeBuffers.begin(); it != freeBuffers.end(); ++it)
 	{
 		auto freeBuffer = *it;
@@ -344,7 +344,7 @@ PStagingBuffer StagingManager::allocateStagingBuffer(uint32 size, VkBufferUsageF
 
 void StagingManager::releaseStagingBuffer(PStagingBuffer buffer)
 {
-	std::unique_lock l(lock);
+	std::scoped_lock l(lock);
 	freeBuffers.add(buffer);
 	activeBuffers.remove(activeBuffers.find(buffer.getHandle()));
 }

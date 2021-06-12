@@ -323,6 +323,7 @@ namespace Seele
 				_data[index] = std::move(_data[arraySize - 1]);
 			}
 			arraySize--;
+			markIteratorDirty();
 		}
 		void clear()
 		{

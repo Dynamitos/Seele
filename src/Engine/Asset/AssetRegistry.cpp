@@ -35,7 +35,7 @@ void AssetRegistry::importFile(const std::string &filePath)
     {
         get().importTexture(fsPath);
     }
-    if (extension.compare(".semat") == 0)
+    if (extension.compare(".asset") == 0)
     {
         get().importMaterial(fsPath);
     }

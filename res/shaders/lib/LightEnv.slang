@@ -58,15 +58,11 @@ struct PointLight : ILightEnv
 	}
 };
 
-#define MAX_DIRECTIONAL_LIGHTS 4
-#define MAX_POINT_LIGHTS 256
-struct Lights
-{
-    DirectionalLight directionalLights[MAX_DIRECTIONAL_LIGHTS];
-    PointLight pointLights[MAX_POINT_LIGHTS];
-    uint numDirectionalLights;
-    uint numPointLights;
-};
-
 layout(set = INDEX_LIGHT_ENV, binding = 0, std430)
-ConstantBuffer<Lights> gLightEnv;
+StructuredBuffer<DirectionalLight> directionalLights;
+layout(set = INDEX_LIGHT_ENV, binding = 1, std430)
+ConstantBuffer<uint> numDirectionalLights;
+layout(set = INDEX_LIGHT_ENV, binding = 2, std430)
+StructuredBuffer<PointLight> pointLights;
+layout(set = INDEX_LIGHT_ENV, binding = 3, std430)
+ConstantBuffer<uint> numPointLights;

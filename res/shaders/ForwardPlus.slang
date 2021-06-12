@@ -8,9 +8,9 @@ import MATERIAL_IMPORT;
 import PrimitiveSceneData;
 import MaterialParameter;
 
-layout(set = INDEX_LIGHT_ENV, binding = 1)
+layout(set = INDEX_LIGHT_ENV, binding = 4)
 StructuredBuffer<uint> lightIndexList;
-layout(set = INDEX_LIGHT_ENV, binding = 2)
+layout(set = INDEX_LIGHT_ENV, binding = 5)
 RWTexture2D<uint2> lightGrid;
 
 
@@ -56,9 +56,9 @@ float4 fragmentMain(
     
     float3 result = float3(0, 0, 0);
 
-    for (int i = 0; i < gLightEnv.numDirectionalLights; i++)
+    for (int i = 0; i < numDirectionalLights; i++)
     {
-        result += gLightEnv.directionalLights[i].illuminate(materialParams, brdf, viewDir);
+        result += directionalLights[i].illuminate(materialParams, brdf, viewDir);
     }
     
 	uint2 tileIndex = uint2(floor(position.xy / BLOCK_SIZE));
@@ -69,7 +69,7 @@ float4 fragmentMain(
     for (int j = 0; j < lightCount; ++j)
     {
 		uint lightIndex = lightIndexList[startOffset + j];
-		PointLight pointLight = gLightEnv.pointLights[lightIndex];
+		PointLight pointLight = pointLights[lightIndex];
         result += pointLight.illuminate(materialParams, brdf, viewDir);
     }
     return float4(result, 1);

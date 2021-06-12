@@ -102,15 +102,16 @@ void cullLights(ComputeShaderInput in)
 
 	Plane minPlane = {float3(0, 0, -1), -minDepthVS};
 
-    for ( uint i = in.groupIndex; i < gLightEnv.numPointLights; i += BLOCK_SIZE * BLOCK_SIZE )
+    for ( uint i = in.groupIndex; i < numPointLights; i += BLOCK_SIZE * BLOCK_SIZE )
 	{
-        PointLight light = gLightEnv.pointLights[i];
-		//if(gLightEnv.insideFrustum(groupFrustum, nearClipVS, maxDepthVS))
+        PointLight light = pointLights[i];
+		//if(light.insideFrustum(groupFrustum, nearClipVS, maxDepthVS))
 		{
+			tAppendLight(i);
             //if(!light.insidePlane(minPlane))
-			//{
-            oAppendLight(i);
-			//}
+			{
+            	oAppendLight(i);
+			}
 		}
     }
 	

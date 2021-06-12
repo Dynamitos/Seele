@@ -64,6 +64,10 @@ private:
     Gfx::PStructuredBuffer tLightIndexList;
     Gfx::PTexture2D oLightGrid;
     Gfx::PTexture2D tLightGrid;
+    Gfx::PStructuredBuffer directLightBuffer;
+    Gfx::PUniformBuffer numDirLightBuffer;
+    Gfx::PStructuredBuffer pointLightBuffer;
+    Gfx::PUniformBuffer numPointLightBuffer;
     Gfx::PDescriptorSet lightEnvDescriptorSet;
     Gfx::PDescriptorSet cullingDescriptorSet;
     Gfx::PDescriptorLayout lightEnvDescriptorLayout;
