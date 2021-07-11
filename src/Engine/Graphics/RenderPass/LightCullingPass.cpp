@@ -36,6 +36,15 @@ void LightCullingPass::beginFrame()
     uniformUpdate.data = (uint8*)&viewParams;
     viewParamsBuffer->updateContents(uniformUpdate);
 	
+	LightEnv lightEnv = scene->getLightBuffer();
+	for(uint32 i = 0; i < lightEnv.numPointLights; ++i)
+	{
+		lightEnv.pointLights[i].positionVS = lightEnv.pointLights[i].positionWS;
+	}
+	uniformUpdate.size = sizeof(PointLight) * MAX_POINT_LIGHTS;
+	uniformUpdate.data = (uint8*)&lightEnv.pointLights;
+	pointLightBuffer->updateContents(uniformUpdate);
+
 	BulkResourceData counterReset;
 	uint32 reset = 0;
 	counterReset.data = (uint8*)&reset;

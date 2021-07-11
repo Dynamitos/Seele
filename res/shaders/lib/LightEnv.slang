@@ -43,9 +43,9 @@ struct PointLight : ILightEnv
 	{
         bool result = true;
 
-		//if(positionVS.z - range > zNear || positionVS.z + colorRange.w < zFar)
+		if(positionVS.z - colorRange.w > zNear || positionVS.z + colorRange.w < zFar)
 		{
-		//	result = false;
+			result = false;
 		}
 		for(int i = 0; i < 4 && result; ++i)
 		{

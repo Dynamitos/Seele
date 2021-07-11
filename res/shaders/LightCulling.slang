@@ -105,10 +105,10 @@ void cullLights(ComputeShaderInput in)
     for ( uint i = in.groupIndex; i < numPointLights; i += BLOCK_SIZE * BLOCK_SIZE )
 	{
         PointLight light = pointLights[i];
-		//if(light.insideFrustum(groupFrustum, nearClipVS, maxDepthVS))
+		if(light.insideFrustum(groupFrustum, nearClipVS, maxDepthVS))
 		{
 			tAppendLight(i);
-            //if(!light.insidePlane(minPlane))
+            if(!light.insidePlane(minPlane))
 			{
             	oAppendLight(i);
 			}
