@@ -14,6 +14,5 @@ public:
 	virtual void endFrame();
 	
 private:
-    PUIComponent root;
 };
 } // namespace Seele

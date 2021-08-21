@@ -1,6 +1,8 @@
 target_sources(SeeleEngine
     PRIVATE
-        UIComponent.h
-        UIComponent.cpp
+        Element.h
+        Element.cpp
+        RenderHierarchy.h
+        RenderHierarchy.cpp
         UIRenderPath.h
         UIRenderPath.cpp)

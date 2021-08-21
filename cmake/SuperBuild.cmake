@@ -37,6 +37,11 @@ ExternalProject_Add(boost
 list (APPEND EXTRA_CMAKE_ARGS
 	-DBoost_NO_SYSTEM_PATHS=OFF)
 
+#-----------------KTX----------------------------
+list(APPEND DEPENDENCIES ktx)
+
+add_subdirectory(${KTX_ROOT} ${KTX_ROOT})
+
 #--------------------JSON------------------
 list(APPEND DEPENDENCIES nlohmann_json)
 set(JSON_MultipleHeaders ON CACHE INTERNAL "")
@@ -61,16 +66,16 @@ string(TOLOWER release_${CMAKE_PLATFORM} SLANG_CONFIG)
 if(WIN32)
 ExternalProject_Add(slang
 	SOURCE_DIR ${SLANG_ROOT}
-	BINARY_DIR ${CMAKE_BINARY_DIR}/lib
-	CONFIGURE_COMMAND devenv /upgrade ${SLANG_ROOT}/source/slang/slang.vcxproj
-	BUILD_COMMAND msbuild -p:Configuration=Release -p:WarningLevel=0 -p:Platform=${CMAKE_PLATFORM} -p:WindowsTargetPlatformVersion=10.0 ${SLANG_ROOT}/source/slang/slang.vcxproj
+	BINARY_DIR ${SLANG_ROOT}
+	CONFIGURE_COMMAND ""
+	BUILD_COMMAND msbuild slang.sln
 	INSTALL_COMMAND "")
 
 	set(SLANG_LIB_PATH ${SLANG_ROOT}/${SLANG_LIB_PATH})
 elseif(UNIX)
 ExternalProject_Add(slang
 	SOURCE_DIR ${SLANG_ROOT}
-	BINARY_DIR ${CMAKE_BINARY_DIR}/lib
+	BINARY_DIR ${SLANG_ROOT}/lib
 	CONFIGURE_COMMAND ${CMAKE_SOURCE_DIR}/premake5 --file=${CMAKE_SOURCE_DIR}/external/slang/premake5.lua gmake2 --build-location=build.linux
 	BUILD_COMMAND make -C ${CMAKE_SOURCE_DIR}/external/slang/build.linux config=${SLANG_CONFIG}
 	INSTALL_COMMAND "")
@@ -79,16 +84,6 @@ ExternalProject_Add(slang
 	string(TOLOWER bin/linux-${CMAKE_PLATFORM}/Release/libslang-glslang.so SLANG_GLSLANG)
 	set(SLANG_LIB_PATH)
 endif()
-
-#----------------SPIR-V-CROSS--------------------
-# list(APPEND DEPENDENCIES spirv-cross-reflect)
-# set(SPIRV_CROSS_ENABLE_HLSL OFF CACHE BOOL "")
-# set(SPIRV_CROSS_ENABLE_TESTS OFF CACHE BOOL "")
-# set(SPIRV_CROSS_CLI OFF CACHE BOOL "")
-# set(SPIRV_CROSS_ENABLE_C_API OFF CACHE BOOL "")
-# set(SPIRV_CROSS_ENABLE_UTIL OFF CACHE BOOL "")
-# set(SPIRV_CROSS_SKIP_INSTALL ON CACHE BOOL "")
-# add_subdirectory(${SPIRV_ROOT})
 
 
 #-----------------SeeleEngine--------------------

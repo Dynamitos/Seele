@@ -11,9 +11,6 @@
 # - STB_ROOT : Root library directory of STB
 # - STB_USE_STATIC_LIBS : Specifies to use static version of STB library (Windows only)
 #
-# References:
-# - https://github.com/progschj/OpenGL-Examples/blob/master/cmake_modules/FindSTB.cmake
-# - https://bitbucket.org/Ident8/cegui-mk2-opengl3-renderer/src/befd47200265/cmake/FindSTB.cmake
 #
 
 # Additional modules
@@ -26,7 +23,7 @@ if (WIN32)
 		NAMES stb.h
 		PATHS
 			$ENV{PROGRAMFILES}/include
-			${STB_ROOT}
+			${STB_ROOT}/include
 		DOC "The directory where STB/stb.h resides")
 else()
 	# Find include files

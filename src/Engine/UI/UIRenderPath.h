@@ -1,6 +1,6 @@
 #pragma once
 #include "Window/RenderPath.h"
-#include "UIComponent.h"
+#include "Element.h"
 
 namespace Seele
 {
@@ -13,6 +13,7 @@ public:
     virtual void render();
     virtual void endFrame();
 private:
+    Array<UI::PElement> rootElements;
 };
 DEFINE_REF(UIRenderPath);
 } // namespace Seele

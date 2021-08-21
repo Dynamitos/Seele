@@ -7,18 +7,17 @@
 [submodule "external/glfw"]
 	path = external/glfw
 	url = https://github.com/glfw/glfw.git
-[submodule "external/slang"]
-	path = external/slang
-	url = https://github.com/shader-slang/slang.git
 [submodule "external/json"]
 	path = external/json
 	url = https://github.com/nlohmann/json.git
 [submodule "external/assimp"]
 	path = external/assimp
 	url = https://github.com/assimp/assimp.git
-[submodule "external/stb"]
-	path = external/stb
-	url = https://github.com/nothings/stb.git
 [submodule "external/SPIRV-Cross"]
 	path = external/SPIRV-Cross
 	url = https://github.com/KhronosGroup/SPIRV-Cross.git
+[submodule "external/ktx"]
+	path = external/ktx
+	url = https://github.com/KhronosGroup/KTX-Software
+[submodule "external/stb"]
+	url = https://github.com/nothings/stb
