@@ -50,6 +50,7 @@ find_package(JSON REQUIRED)
 find_package(GLFW REQUIRED)
 find_package(GLM REQUIRED)
 find_package(KTX REQUIRED)
+find_package(STB REQUIRED)
 find_package(SLANG REQUIRED)
 find_package(Aftermath REQUIRED)
 
@@ -80,8 +81,8 @@ target_link_libraries(SeeleEngine ${Boost_LIBRARIES})
 target_link_libraries(SeeleEngine ${GLFW_LIBRARIES})
 target_link_libraries(SeeleEngine ${SLANG_LIBRARIES})
 target_link_libraries(SeeleEngine ${ASSIMP_LIBRARIES})
-target_link_libraries(SeeleEngine ${JSON_LIBRARY})
 target_link_libraries(SeeleEngine ${NSAM_LIBRARIES})
+target_link_libraries(SeeleEngine ${KTX_LIBRARIES})
 #target_link_libraries(SeeleEngine ${SPIRV_LIBRARIES})
 
 target_precompile_headers(SeeleEngine 

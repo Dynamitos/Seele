@@ -68,7 +68,7 @@ ExternalProject_Add(slang
 	SOURCE_DIR ${SLANG_ROOT}
 	BINARY_DIR ${SLANG_ROOT}
 	CONFIGURE_COMMAND ""
-	BUILD_COMMAND msbuild slang.sln
+	BUILD_COMMAND msbuild slang.sln -p:Configuration=Release -p:Platform=${CMAKE_PLATFORM}
 	INSTALL_COMMAND "")
 
 	set(SLANG_LIB_PATH ${SLANG_ROOT}/${SLANG_LIB_PATH})

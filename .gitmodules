@@ -21,3 +21,6 @@
 	url = https://github.com/KhronosGroup/KTX-Software
 [submodule "external/stb"]
 	url = https://github.com/nothings/stb
+[submodule "external/slang"]
+	path = external/slang
+	url = https://github.com/shader-slang/slang.git

@@ -360,6 +360,7 @@ PStagingManager Graphics::getStagingManager()
 	return stagingManager;
 }
 
+
 Array<const char *> Graphics::getRequiredExtensions()
 {
 	Array<const char *> extensions;

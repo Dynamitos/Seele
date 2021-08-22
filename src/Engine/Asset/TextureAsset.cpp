@@ -2,9 +2,7 @@
 #include "Graphics/GraphicsResources.h"
 #include "Graphics/Graphics.h"
 #include "Window/WindowManager.h"
-#include <stb_image.h>
-#include <stb_image_write.h>
-
+#include "Graphics/Vulkan/VulkanGraphicsEnums.h"
 using namespace Seele;
 
 
@@ -34,19 +32,23 @@ void TextureAsset::save()
 void TextureAsset::load() 
 {
     setStatus(Status::Loading);
-    int x, y, n;
-    unsigned char* data = stbi_load(getFullPath().c_str(), &x, &y, &n, 4);
+    ktxTexture2* kTexture;
+    KTX_error_code result = ktxTexture2_CreateFromNamedFile(getFullPath().c_str(), 
+        KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, 
+        &kTexture);
     TextureCreateInfo createInfo;
-    
-    //TODO: support other formats
-    createInfo.format = Gfx::SE_FORMAT_R8G8B8A8_UINT;
-    createInfo.resourceData.data = data;
-    createInfo.resourceData.size = x * y * 4 * sizeof(unsigned char);
+    createInfo.width = kTexture->baseWidth;
+    createInfo.height = kTexture->baseHeight;
+    createInfo.depth = kTexture->baseDepth;
+    createInfo.bArray = kTexture->isArray;
+    createInfo.arrayLayers = kTexture->numLayers;
+    createInfo.format = Vulkan::cast((VkFormat)kTexture->vkFormat);
+    createInfo.mipLevels = kTexture->numLevels;
+    createInfo.usage = Gfx::SE_IMAGE_USAGE_SAMPLED_BIT;
+    createInfo.resourceData.data = ktxTexture_GetData(ktxTexture(kTexture));
+    createInfo.resourceData.size = (uint32)ktxTexture_GetDataSize(ktxTexture(kTexture));
     createInfo.resourceData.owner = Gfx::QueueType::DEDICATED_TRANSFER;
-    createInfo.width = x;
-    createInfo.height = y;
     Gfx::PTexture2D texture = WindowManager::getGraphics()->createTexture2D(createInfo);
-    stbi_image_free(data);
     texture->transferOwnership(Gfx::QueueType::GRAPHICS);
     setTexture(texture);
     setStatus(Asset::Status::Ready);

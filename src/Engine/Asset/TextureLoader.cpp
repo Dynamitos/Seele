@@ -2,6 +2,7 @@
 #include "TextureAsset.h"
 #include "Graphics/Graphics.h"
 #include "AssetRegistry.h"
+#include "Graphics/Vulkan/VulkanGraphicsEnums.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -12,10 +13,8 @@ using namespace Seele;
 TextureLoader::TextureLoader(Gfx::PGraphics graphics)
     : graphics(graphics)
 {
-    placeholderAsset = new TextureAsset();
-    placeholderTexture = import("./textures/placeholder.png");
-    placeholderAsset->setTexture(placeholderTexture);
-    placeholderAsset->setStatus(Asset::Status::Ready);
+    placeholderAsset = new TextureAsset(std::filesystem::absolute("./textures/placeholder.ktx"));
+    placeholderAsset->load();
     AssetRegistry::get().textures[""] = placeholderAsset;
 }
 
@@ -28,13 +27,13 @@ void TextureLoader::importAsset(const std::filesystem::path& filePath)
     auto assetFileName = filePath;
     PTextureAsset asset = new TextureAsset(assetFileName.replace_extension("asset").filename().generic_string());
     asset->setStatus(Asset::Status::Loading);
-    asset->setTexture(placeholderTexture);
+    asset->setTexture(placeholderAsset->getTexture());
     AssetRegistry::get().textures[asset->getFileName()] = asset;
     futures.add(std::async(std::launch::async, [this, filePath, asset] () mutable {
         using namespace std::chrono_literals;
         //std::this_thread::sleep_for(5s);
-        Gfx::PTexture2D texture = import(filePath);
-        asset->setTexture(texture);
+        import(filePath, asset);
+        asset->load();
         asset->setStatus(Asset::Status::Ready);
     }));
 }
@@ -44,20 +43,34 @@ PTextureAsset TextureLoader::getPlaceholderTexture()
     return placeholderAsset;
 }
 
-Gfx::PTexture2D TextureLoader::import(const std::filesystem::path& path)
+void TextureLoader::import(const std::filesystem::path& path, PTextureAsset textureAsset)
 {
     int x, y, n;
     unsigned char* data = stbi_load(path.string().c_str(), &x, &y, &n, 4);
-    
-    TextureCreateInfo createInfo;
-    createInfo.format = Gfx::SE_FORMAT_R8G8B8A8_SRGB;
-    createInfo.resourceData.data = data;
-    createInfo.resourceData.size = x * y * 4 * sizeof(unsigned char);
-    createInfo.resourceData.owner = Gfx::QueueType::DEDICATED_TRANSFER;
-    createInfo.width = x;
-    createInfo.height = y;
-    Gfx::PTexture2D texture = graphics->createTexture2D(createInfo);
+    ktxTexture2* kTexture;
+    ktxTextureCreateInfo createInfo;
+    KTX_error_code result;
+
+    createInfo.vkFormat = VK_FORMAT_R8G8B8A8_SRGB;
+    createInfo.baseWidth = x;
+    createInfo.baseHeight = y;
+    createInfo.baseDepth = 1;
+    createInfo.numDimensions = 1 + (y > 1);
+    createInfo.numLevels = 1;
+    createInfo.numLayers = 1;
+    createInfo.numFaces = 1;
+    createInfo.isArray = false;
+    createInfo.generateMipmaps = true;
+
+    result = ktxTexture2_Create(&createInfo,
+        KTX_TEXTURE_CREATE_ALLOC_STORAGE,
+        &kTexture);
+
+    result = ktxTexture_SetImageFromMemory(ktxTexture(kTexture),
+        0, 0, 0, data, x * y * 4 * sizeof(unsigned char));
+
     stbi_image_free(data);
-    texture->transferOwnership(Gfx::QueueType::GRAPHICS);
-    return texture;
+
+    result = ktxTexture_WriteToNamedFile(ktxTexture(kTexture), textureAsset->getFullPath().c_str());
+    ktxTexture_Destroy(ktxTexture(kTexture));
 }

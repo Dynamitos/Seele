@@ -500,7 +500,9 @@ public:
 	virtual SeFormat getFormat() const = 0;
 	virtual uint32 getSizeX() const = 0;
 	virtual uint32 getSizeY() const = 0;
+	virtual uint32 getSizeZ() const = 0;
 	virtual SeSampleCountFlags getNumSamples() const = 0;
+	virtual uint32 getMipLevels() const = 0;
 	virtual void changeLayout(SeImageLayout newLayout) = 0;
 	virtual class Texture2D* getTexture2D() { return nullptr; }
 	virtual void* getNativeHandle() { return nullptr; }
@@ -520,7 +522,9 @@ public:
 	virtual SeFormat getFormat() const = 0;
 	virtual uint32 getSizeX() const = 0;
 	virtual uint32 getSizeY() const = 0;
+	virtual uint32 getSizeZ() const = 0;
 	virtual SeSampleCountFlags getNumSamples() const = 0;
+	virtual uint32 getMipLevels() const = 0;
 	virtual void changeLayout(SeImageLayout newLayout) = 0;
 	virtual class Texture2D* getTexture2D() { return this; }
 protected:

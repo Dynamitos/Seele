@@ -29,7 +29,7 @@ int main()
 	AssetRegistry::init("D:\\Private\\Programming\\C++\\TestSeeleProject\\");
 	AssetRegistry::importFile("D:\\Private\\Programming\\Unreal Engine\\Assets\\Ely\\Ely.fbx");
 	AssetRegistry::importFile("D:\\Private\\Programming\\Unreal Engine\\Assets\\Cube\\cube.obj");
-	AssetRegistry::importFile("D:\\Private\\Programming\\Unreal Engine\\Assets\\Plane\\plane.obj");
+	AssetRegistry::importFile("D:\\Private\\Programming\\Unreal Engine\\Assets\\Plane\\plane.fbx");
 	PPrimitiveComponent plane = new PrimitiveComponent(AssetRegistry::findMesh("plane"));
 	plane->setWorldScale(Vector(100, 100, 100));
 	PPrimitiveComponent arissa = new PrimitiveComponent(AssetRegistry::findMesh("Ely"));

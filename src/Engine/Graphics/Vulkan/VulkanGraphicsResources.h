@@ -249,6 +249,10 @@ public:
 	{
 		return samples;
 	}
+	inline uint32 getMipLevels() const
+	{
+		return mipLevels;
+	}
 	inline bool isDepthStencil() const
 	{
 		return aspect & (VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
@@ -303,6 +307,10 @@ public:
 	{
 		return textureHandle->sizeY;
 	}
+	virtual uint32 getSizeZ() const override
+	{
+		return textureHandle->sizeZ;
+	}
 	virtual Gfx::SeFormat getFormat() const override
 	{
 		return textureHandle->format;
@@ -310,6 +318,10 @@ public:
 	virtual Gfx::SeSampleCountFlags getNumSamples() const override
 	{
 		return textureHandle->getNumSamples();
+	}
+	virtual uint32 getMipLevels() const override
+	{
+		return textureHandle->getMipLevels();
 	}
 	virtual void changeLayout(Gfx::SeImageLayout newLayout) override;
 	virtual void* getNativeHandle() override

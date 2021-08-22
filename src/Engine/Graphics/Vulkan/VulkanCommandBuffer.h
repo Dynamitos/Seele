@@ -144,6 +144,10 @@ public:
 	PCmdBuffer getCommands();
 	PRenderCommand createRenderCommand(const std::string& name);
 	PComputeCommand createComputeCommand(const std::string& name);
+	VkCommandPool getPoolHandle() const
+	{
+		return commandPool;
+	}
 	void submitCommands(PSemaphore signalSemaphore = nullptr);
 
 private:
