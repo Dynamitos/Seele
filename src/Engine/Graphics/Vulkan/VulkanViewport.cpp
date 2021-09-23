@@ -162,8 +162,19 @@ void Window::advanceBackBuffer()
     imageAcquiredSemaphore = imageAcquired[semaphoreIndex];
     currentImageIndex = imageIndex;
 
-    backBufferImages[currentImageIndex]->changeLayout(Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
     PCmdBuffer cmdBuffer = graphics->getGraphicsCommands()->getCommands();
+    backBufferImages[currentImageIndex]->changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+    VkClearColorValue clearColor = {0.0f, 0.0f, 0.0f, 0.0f};
+    VkImageSubresourceRange range = init::ImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT);
+    vkCmdClearColorImage(
+        cmdBuffer->getHandle(), 
+        backBufferImages[currentImageIndex]->getHandle(),
+        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+        &clearColor,
+        1,
+        &range);
+
+    backBufferImages[currentImageIndex]->changeLayout(Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
     graphics->getGraphicsCommands()->getCommands()->addWaitSemaphore(VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, imageAcquiredSemaphore);
     graphics->getGraphicsCommands()->submitCommands();
 }

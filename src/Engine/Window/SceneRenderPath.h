@@ -25,6 +25,5 @@ protected:
 	PDepthPrepass depthPrepass;
 	PLightCullingPass lightCullingPass;
 	PBasePass basePass;
-
 };
 } // namespace Seele

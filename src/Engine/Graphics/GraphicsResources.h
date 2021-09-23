@@ -549,6 +549,7 @@ public:
 	virtual void bindVertexBuffer(const Array<VertexInputStream>& streams) = 0;
 	virtual void bindIndexBuffer(Gfx::PIndexBuffer indexBuffer) = 0;
 	virtual void draw(const MeshBatchElement& data) = 0;
+	virtual void draw(uint32 vertexCount, uint32 instanceCount, int32 firstVertex, uint32 firstInstance) = 0;
 	std::string name;
 };
 DEFINE_REF(RenderCommand)
@@ -587,6 +588,14 @@ public:
 	SeSampleCountFlags getNumSamples() const
 	{
 		return samples;
+	}
+	uint32 getSizeX() const
+	{
+		return sizeX;
+	}
+	uint32 getSizeY() const
+	{
+		return sizeY;
 	}
 
 protected:
@@ -628,7 +637,11 @@ public:
 						   SeAttachmentStoreOp storeOp = SE_ATTACHMENT_STORE_OP_STORE,
 						   SeAttachmentLoadOp stencilLoadOp = SE_ATTACHMENT_LOAD_OP_DONT_CARE,
 						   SeAttachmentStoreOp stencilStoreOp = SE_ATTACHMENT_STORE_OP_DONT_CARE)
-		: loadOp(loadOp), storeOp(storeOp), stencilLoadOp(stencilLoadOp), stencilStoreOp(stencilStoreOp), texture(texture)
+		: loadOp(loadOp)
+		, storeOp(storeOp)
+		, stencilLoadOp(stencilLoadOp)
+		, stencilStoreOp(stencilStoreOp)
+		, texture(texture)
 	{
 	}
 	virtual ~RenderTargetAttachment()
@@ -645,6 +658,14 @@ public:
 	virtual SeSampleCountFlags getNumSamples() const
 	{
 		return texture->getNumSamples();
+	}
+	virtual uint32 getSizeX() const 
+	{ 
+		return texture->getSizeX(); 
+	}
+	virtual uint32 getSizeY() const 
+	{ 
+		return texture->getSizeY(); 
 	}
 	inline SeAttachmentLoadOp getLoadOp() const { return loadOp; }
 	inline SeAttachmentStoreOp getStoreOp() const { return storeOp; }
@@ -665,7 +686,7 @@ class SwapchainAttachment : public RenderTargetAttachment
 {
 public:
 	SwapchainAttachment(PWindow owner,
-						SeAttachmentLoadOp loadOp = SE_ATTACHMENT_LOAD_OP_CLEAR,
+						SeAttachmentLoadOp loadOp = SE_ATTACHMENT_LOAD_OP_LOAD,
 						SeAttachmentStoreOp storeOp = SE_ATTACHMENT_STORE_OP_STORE,
 						SeAttachmentLoadOp stencilLoadOp = SE_ATTACHMENT_LOAD_OP_DONT_CARE,
 						SeAttachmentStoreOp stencilStoreOp = SE_ATTACHMENT_STORE_OP_DONT_CARE)
@@ -689,7 +710,14 @@ public:
 	{
 		return owner->getNumSamples();
 	}
-
+	virtual uint32 getSizeX() const 
+	{ 
+		return owner->getSizeX(); 
+	}
+	virtual uint32 getSizeY() const 
+	{ 
+		return owner->getSizeY(); 
+	}
 private:
 	PWindow owner;
 };

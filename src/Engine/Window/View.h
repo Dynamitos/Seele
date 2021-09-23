@@ -3,7 +3,7 @@
 namespace Seele
 {
 DECLARE_REF(Window)
-// A view is a part of the window, which can be anything from a viewport to an editor
+// A view is a part of the window, which can be anything from a viewport to an inspector
 class View
 {
 public:

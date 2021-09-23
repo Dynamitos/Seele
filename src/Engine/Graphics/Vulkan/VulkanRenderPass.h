@@ -8,7 +8,7 @@ namespace Vulkan
 class RenderPass : public Gfx::RenderPass
 {
 public:
-    RenderPass(PGraphics graphics, Gfx::PRenderTargetLayout layout);
+    RenderPass(PGraphics graphics, Gfx::PRenderTargetLayout layout, Gfx::PViewport viewport);
     virtual ~RenderPass();
     uint32 getFramebufferHash();
     inline VkRenderPass getHandle() const

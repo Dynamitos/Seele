@@ -250,7 +250,7 @@ void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet)
     auto descriptor = descriptorSet.cast<DescriptorSet>();
     boundDescriptors.add(descriptor.getHandle());
     descriptor->bind();
-    //std::cout << "Binding descriptor " << descriptor->getHandle() << " to cmd " << handle << std::endl;
+
     VkDescriptorSet setHandle = descriptor->getHandle();
     vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getLayout(), descriptorSet->getSetIndex(), 1, &setHandle, 0, nullptr);
 }
@@ -261,7 +261,7 @@ void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorS
     {
         auto descriptorSet = descriptorSets[i].cast<DescriptorSet>();
         descriptorSet->bind();
-        //std::cout << "Binding descriptor " << descriptorSet->getHandle() << " to cmd " << handle << std::endl;
+
         boundDescriptors.add(descriptorSet.getHandle());
         sets[descriptorSet->getSetIndex()] = descriptorSet->getHandle();
     }
@@ -288,6 +288,11 @@ void RenderCommand::bindIndexBuffer(Gfx::PIndexBuffer indexBuffer)
 void RenderCommand::draw(const MeshBatchElement& data) 
 {
     vkCmdDrawIndexed(handle, data.indexBuffer->getNumIndices(), data.numInstances, data.minVertexIndex, data.baseVertexIndex, 0);
+}
+
+void RenderCommand::draw(uint32 vertexCount, uint32 instanceCount, int32 firstVertex, uint32 firstInstance) 
+{
+    vkCmdDraw(handle, vertexCount, instanceCount, firstVertex, firstInstance);
 }
 
 ComputeCommand::ComputeCommand(PGraphics graphics, VkCommandPool cmdPool) 

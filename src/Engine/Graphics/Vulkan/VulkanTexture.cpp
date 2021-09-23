@@ -130,7 +130,7 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType,
         region.imageSubresource.layerCount = 1;
 
         region.imageOffset = {0, 0, 0};
-        region.imageExtent = {sizeX, sizeX, sizeZ};
+        region.imageExtent = {sizeX, sizeY, sizeZ};
 
         vkCmdCopyBufferToImage(cmdBufferManager->getCommands()->getHandle(), 
             staging->getHandle(), image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
@@ -251,10 +251,11 @@ void TextureHandle::executeOwnershipBarrier(Gfx::QueueType newOwner)
         dstStage = VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT;
         dstManager = graphics->getGraphicsCommands();
     }
+    
     VkCommandBuffer sourceCmd = sourceManager->getCommands()->getHandle();
     VkCommandBuffer destCmd = dstManager->getCommands()->getHandle();
-    vkCmdPipelineBarrier(sourceCmd, srcStage, dstStage, 0, 0, nullptr, 0, nullptr, 1, &imageBarrier);
-    vkCmdPipelineBarrier(destCmd, srcStage, dstStage, 0, 0, nullptr, 0, nullptr, 1, &imageBarrier);
+    vkCmdPipelineBarrier(sourceCmd, srcStage, srcStage, 0, 0, nullptr, 0, nullptr, 1, &imageBarrier);
+    vkCmdPipelineBarrier(destCmd, dstStage, dstStage, 0, 0, nullptr, 0, nullptr, 1, &imageBarrier);
     currentOwner = newOwner;
     sourceManager->submitCommands();
 }

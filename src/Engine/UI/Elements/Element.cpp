@@ -11,12 +11,12 @@ Element::~Element()
 {
 }
 
-void Element::addElement(PElement element) 
+void Element::addChild(PElement element) 
 {
-    children.add(element);   
+    children.add(element);
 }
 
-const Array<PElement> Element::getChildren() const
+const Array<PElement> Element::getChildren()
 {
     return children;
 }
@@ -39,4 +39,14 @@ void Element::setEnabled(bool newEnabled)
 bool Element::isEnabled() const
 {
     return enabled;
+}
+
+Rect& Element::getBoundingBox() 
+{
+    return boundingBox;
+}
+
+const Rect Element::getBoundingBox() const
+{
+    return boundingBox;
 }

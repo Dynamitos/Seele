@@ -1,8 +1,12 @@
 target_sources(SeeleEngine
     PRIVATE
-        Element.h
-        Element.cpp
+        HorizontalLayout.h
+        HorizontalLayout.cpp
+        Layout.h
+        Layout.cpp
         RenderHierarchy.h
         RenderHierarchy.cpp
-        UIRenderPath.h
-        UIRenderPath.cpp)
+        VerticalLayout.h
+        VerticalLayout.cpp)
+
+add_subdirectory(Elements/)

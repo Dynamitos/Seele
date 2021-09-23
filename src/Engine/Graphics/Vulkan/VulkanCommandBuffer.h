@@ -109,7 +109,7 @@ public:
 	virtual void bindVertexBuffer(const Array<VertexInputStream>& streams) override;
 	virtual void bindIndexBuffer(Gfx::PIndexBuffer indexBuffer) override;
 	virtual void draw(const MeshBatchElement& data) override;
-
+	virtual void draw(uint32 vertexCount, uint32 instanceCount, int32 firstVertex, uint32 firstInstance) override;
 private:
 	PGraphicsPipeline pipeline;
 	friend class CmdBuffer;

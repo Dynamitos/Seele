@@ -1,5 +1,6 @@
 #include "Graphics/RenderCore.h"
 #include "Window/SceneView.h"
+#include "Window/InspectorView.h"
 #include "Asset/AssetRegistry.h"
 #include "Fibers/Fibers.h"
 #include <queue>
@@ -19,12 +20,20 @@ int main()
 	mainWindowInfo.pixelFormat = Gfx::SE_FORMAT_B8G8R8A8_UNORM;
 	auto window = core.getWindowManager()->addWindow(mainWindowInfo);
 	ViewportCreateInfo sceneViewInfo;
-	sceneViewInfo.sizeX = 1280;
+	sceneViewInfo.sizeX = 640;
 	sceneViewInfo.sizeY = 720;
 	sceneViewInfo.offsetX = 0;
 	sceneViewInfo.offsetY = 0;
 	PSceneView sceneView = new SceneView(core.getWindowManager()->getGraphics(), window, sceneViewInfo);
 	window->addView(sceneView);
+	
+	ViewportCreateInfo inspectorViewInfo;
+	inspectorViewInfo.sizeX = 640;
+	inspectorViewInfo.sizeY = 720;
+	inspectorViewInfo.offsetX = 640;
+	inspectorViewInfo.offsetY = 0;
+	PInspectorView inspectorView = new InspectorView(core.getWindowManager()->getGraphics(), window, inspectorViewInfo);
+	window->addView(inspectorView);
 	sceneView->setFocused();
 	AssetRegistry::init("D:\\Private\\Programming\\C++\\TestSeeleProject\\");
 	AssetRegistry::importFile("D:\\Private\\Programming\\Unreal Engine\\Assets\\Ely\\Ely.fbx");

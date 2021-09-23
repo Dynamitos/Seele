@@ -7,14 +7,14 @@
 using namespace Seele;
 using namespace Seele::Vulkan;
 
-RenderPass::RenderPass(PGraphics graphics, Gfx::PRenderTargetLayout layout)
+RenderPass::RenderPass(PGraphics graphics, Gfx::PRenderTargetLayout layout, Gfx::PViewport viewport)
     : Gfx::RenderPass(layout)
     , graphics(graphics)
 {
-    renderArea.extent.width = layout->width;
-    renderArea.extent.height = layout->height;
-    renderArea.offset.x = 0;
-    renderArea.offset.y = 0;
+    renderArea.extent.width = viewport->getSizeX();
+    renderArea.extent.height = viewport->getSizeY();
+    renderArea.offset.x = viewport->getOffsetX();
+    renderArea.offset.y = viewport->getOffsetY();
     subpassContents = VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS;
     Array<VkAttachmentDescription> attachments;
     Array<VkAttachmentReference> inputRefs;

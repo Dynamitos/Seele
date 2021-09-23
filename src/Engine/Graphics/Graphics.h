@@ -30,7 +30,7 @@ public:
     virtual PWindow createWindow(const WindowCreateInfo &createInfo) = 0;
     virtual PViewport createViewport(PWindow owner, const ViewportCreateInfo &createInfo) = 0;
 
-    virtual PRenderPass createRenderPass(PRenderTargetLayout layout) = 0;
+    virtual PRenderPass createRenderPass(PRenderTargetLayout layout, PViewport renderArea) = 0;
     virtual void beginRenderPass(PRenderPass renderPass) = 0;
     virtual void endRenderPass() = 0;
 

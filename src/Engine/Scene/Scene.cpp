@@ -27,7 +27,7 @@ Scene::Scene(Gfx::PGraphics graphics)
         lightEnv.pointLights[i].positionWS = Vector4(frand() * 100-50, frand(), frand() * 100-50, 1);
     }
     lightEnv.numPointLights = 16;
-    lightEnv.pointLights[0].colorRange = Vector4(1, 0, 0, 100);
+    lightEnv.pointLights[0].colorRange = Vector4(1, 1, 1, 1000);
     lightEnv.pointLights[0].positionWS = Vector4(0, 10, 0, 1);
 }
 

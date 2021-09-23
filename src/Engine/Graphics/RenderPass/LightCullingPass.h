@@ -44,9 +44,7 @@ private:
     };
     
     PScene scene;
-    Gfx::PViewport viewport;
-    Gfx::PGraphics graphics;
-
+    
     Gfx::PStructuredBuffer frustumBuffer;
     Gfx::PUniformBuffer dispatchParamsBuffer;
     Gfx::PUniformBuffer viewParamsBuffer;

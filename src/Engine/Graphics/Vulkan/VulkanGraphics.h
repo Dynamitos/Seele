@@ -42,7 +42,7 @@ public:
 	virtual Gfx::PWindow createWindow(const WindowCreateInfo &createInfo) override;
 	virtual Gfx::PViewport createViewport(Gfx::PWindow owner, const ViewportCreateInfo &createInfo) override;
 
-	virtual Gfx::PRenderPass createRenderPass(Gfx::PRenderTargetLayout layout) override;
+	virtual Gfx::PRenderPass createRenderPass(Gfx::PRenderTargetLayout layout, Gfx::PViewport renderArea) override;
 	virtual void beginRenderPass(Gfx::PRenderPass renderPass) override;
 	virtual void endRenderPass() override;
 

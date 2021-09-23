@@ -80,11 +80,9 @@ void BasePassMeshProcessor::clearCommands()
 }
 
 BasePass::BasePass(PRenderGraph renderGraph, const PScene scene, Gfx::PGraphics graphics, Gfx::PViewport viewport, PCameraActor source) 
-    : RenderPass(renderGraph)
+    : RenderPass(renderGraph, graphics, viewport)
     , processor(new BasePassMeshProcessor(scene, viewport, graphics, false))
     , scene(scene)
-    , graphics(graphics)
-    , viewport(viewport)
     , descriptorSets(4)
     , source(source->getCameraComponent())
 {
@@ -198,7 +196,7 @@ void BasePass::createRenderPass()
     Gfx::PRenderTargetAttachment depthAttachment = renderGraph->requestRenderTarget("DEPTHPREPASS_DEPTH");
     depthAttachment->loadOp = Gfx::SE_ATTACHMENT_LOAD_OP_LOAD;
     Gfx::PRenderTargetLayout layout = new Gfx::RenderTargetLayout(colorAttachment, depthAttachment);
-    renderPass = graphics->createRenderPass(layout);
+    renderPass = graphics->createRenderPass(layout, viewport);
     oLightIndexList = renderGraph->requestBuffer("LIGHTCULLING_OLIGHTLIST");
     oLightGrid = renderGraph->requestTexture("LIGHTCULLING_OLIGHTGRID");
 }

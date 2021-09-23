@@ -8,10 +8,8 @@
 using namespace Seele;
 
 LightCullingPass::LightCullingPass(PRenderGraph renderGraph, const PScene scene, Gfx::PGraphics graphics, Gfx::PViewport viewport, PCameraActor camera)
-    : RenderPass(renderGraph)
+    : RenderPass(renderGraph, graphics, viewport)
 	, scene(scene)
-    , viewport(viewport)
-    , graphics(graphics)
     , source(camera->getCameraComponent())
 {
 }

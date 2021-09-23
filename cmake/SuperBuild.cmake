@@ -40,6 +40,8 @@ list (APPEND EXTRA_CMAKE_ARGS
 #-----------------KTX----------------------------
 list(APPEND DEPENDENCIES ktx)
 
+find_program(BASH_EXECUTABLE git-bash)
+
 add_subdirectory(${KTX_ROOT} ${KTX_ROOT})
 
 #--------------------JSON------------------

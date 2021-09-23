@@ -140,8 +140,8 @@ void ShaderBuffer::executeOwnershipBarrier(Gfx::QueueType newOwner)
 		dynamicBarriers[i] = barrier;
 		dynamicBarriers[i].buffer = buffers[i].buffer;
 	}
-	vkCmdPipelineBarrier(srcCommand, srcStage, dstStage, 0, 0, nullptr, numBuffers, dynamicBarriers, 0, nullptr);
-	vkCmdPipelineBarrier(dstCommand, srcStage, dstStage, 0, 0, nullptr, numBuffers, dynamicBarriers, 0, nullptr);
+	vkCmdPipelineBarrier(srcCommand, srcStage, srcStage, 0, 0, nullptr, numBuffers, dynamicBarriers, 0, nullptr);
+	vkCmdPipelineBarrier(dstCommand, dstStage, dstStage, 0, 0, nullptr, numBuffers, dynamicBarriers, 0, nullptr);
 	sourceManager->submitCommands();
 }
 

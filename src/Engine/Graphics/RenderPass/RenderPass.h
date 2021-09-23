@@ -4,12 +4,14 @@
 
 namespace Seele
 {
+DECLARE_NAME_REF(Gfx, Viewport)
+DECLARE_NAME_REF(Gfx, Graphics)
 DECLARE_NAME_REF(Gfx, RenderPass)
 DECLARE_REF(RenderGraph)
 class RenderPass
 {
 public:
-    RenderPass(PRenderGraph rendergraph);
+    RenderPass(PRenderGraph rendergraph, Gfx::PGraphics graphics, Gfx::PViewport viewport);
     virtual ~RenderPass();
     virtual void beginFrame() = 0;
     virtual void render() = 0;
@@ -27,6 +29,8 @@ protected:
     } viewParams;
     Gfx::PRenderPass renderPass;
     PRenderGraph renderGraph;
+    Gfx::PGraphics graphics;
+    Gfx::PViewport viewport;
 };
 DEFINE_REF(RenderPass)
 } // namespace Seele

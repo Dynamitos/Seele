@@ -2,8 +2,8 @@
 
 using namespace Seele;
 
-RenderPass::RenderPass(PRenderGraph renderGraph) 
-    : renderGraph(renderGraph)
+RenderPass::RenderPass(PRenderGraph renderGraph, Gfx::PGraphics graphics, Gfx::PViewport viewport) 
+    : renderGraph(renderGraph), graphics(graphics), viewport(viewport)
 {
 }
 

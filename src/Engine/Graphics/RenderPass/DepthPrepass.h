@@ -46,8 +46,7 @@ private:
     Gfx::PTexture2D depthBuffer;
     UPDepthPrepassMeshProcessor processor;
     const PScene scene;
-    Gfx::PGraphics graphics;
-    Gfx::PViewport viewport;
+    
     Array<Gfx::PDescriptorSet> descriptorSets;
     PCameraComponent source;
     Gfx::PPipelineLayout depthPrepassLayout;

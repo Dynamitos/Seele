@@ -55,9 +55,9 @@ Gfx::PViewport Graphics::createViewport(Gfx::PWindow owner, const ViewportCreate
 	viewports.add(result);
 	return result;
 }
-Gfx::PRenderPass Graphics::createRenderPass(Gfx::PRenderTargetLayout layout)
+Gfx::PRenderPass Graphics::createRenderPass(Gfx::PRenderTargetLayout layout, Gfx::PViewport renderArea)
 {
-	PRenderPass result = new RenderPass(this, layout);
+	PRenderPass result = new RenderPass(this, layout, renderArea);
 	return result;
 }
 void Graphics::beginRenderPass(Gfx::PRenderPass renderPass)

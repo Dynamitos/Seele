@@ -4,6 +4,7 @@
     "files.associations": {
         "*.h": "cpp",
         "*.ush": "hlsl",
+        "*.pl": "prolog",
         "xstring": "cpp",
         "list": "cpp",
         "xhash": "cpp",
@@ -108,7 +109,10 @@
         "coroutine": "cpp",
         "*.tcc": "cpp",
         "stop_token": "cpp",
-        "span": "cpp"
+        "span": "cpp",
+        "charconv": "cpp",
+        "format": "cpp",
+        "semaphore": "cpp"
     },
     "cmake.skipConfigureIfCachePresent": false,
     "cmake.configureArgs": [
@@ -118,5 +122,6 @@
     "C_Cpp.default.intelliSenseMode": "msvc-x64",
     "files.watcherExclude": {
         "**/target": true
-    }
+    },
+    "C_Cpp.errorSquiggles": "Disabled"
 }

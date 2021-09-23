@@ -79,11 +79,9 @@ void DepthPrepassMeshProcessor::clearCommands()
 }
 
 DepthPrepass::DepthPrepass(PRenderGraph renderGraph, const PScene scene, Gfx::PGraphics graphics, Gfx::PViewport viewport, PCameraActor source) 
-    : RenderPass(renderGraph)
+    : RenderPass(renderGraph, graphics, viewport)
     , processor(new DepthPrepassMeshProcessor(scene, viewport, graphics))
     , scene(scene)
-    , graphics(graphics)
-    , viewport(viewport)
     , descriptorSets(3)
     , source(source->getCameraComponent())
 {
@@ -156,8 +154,10 @@ void DepthPrepass::endFrame()
 void DepthPrepass::publishOutputs() 
 {
     TextureCreateInfo depthBufferInfo;
-    depthBufferInfo.width = viewport->getSizeX();
-    depthBufferInfo.height = viewport->getSizeY();
+    // If we render to a part of an image, the depth buffer itself must
+    // still match the size of the whole image or their coordinate systems go out of sync
+    depthBufferInfo.width = viewport->getOwner()->getSizeX();
+    depthBufferInfo.height = viewport->getOwner()->getSizeY();
     depthBufferInfo.format = Gfx::SE_FORMAT_D32_SFLOAT;
     depthBufferInfo.usage = Gfx::SE_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
     depthBuffer = graphics->createTexture2D(depthBufferInfo);
@@ -170,7 +170,7 @@ void DepthPrepass::publishOutputs()
 void DepthPrepass::createRenderPass() 
 {
     Gfx::PRenderTargetLayout layout = new Gfx::RenderTargetLayout(depthAttachment);
-    renderPass = graphics->createRenderPass(layout);
+    renderPass = graphics->createRenderPass(layout, viewport);
 }
 
 void DepthPrepass::modifyRenderPassMacros(Map<const char*, const char*>& defines) 
