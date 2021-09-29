@@ -81,7 +81,6 @@ void DepthPrepassMeshProcessor::clearCommands()
 DepthPrepass::DepthPrepass(PRenderGraph renderGraph, const PScene scene, Gfx::PGraphics graphics, Gfx::PViewport viewport, PCameraActor source) 
     : RenderPass(renderGraph, graphics, viewport)
     , processor(new DepthPrepassMeshProcessor(scene, viewport, graphics))
-    , scene(scene)
     , descriptorSets(3)
     , source(source->getCameraComponent())
 {
@@ -108,7 +107,7 @@ DepthPrepass::~DepthPrepass()
 {   
 }
 
-void DepthPrepass::beginFrame() 
+void DepthPrepass::beginFrame(UPViewFrame& viewFrame) 
 {
     processor->clearCommands();
     primitiveLayout->reset();
@@ -126,28 +125,28 @@ void DepthPrepass::beginFrame()
     descriptorSets[INDEX_VIEW_PARAMS] = viewLayout->allocateDescriptorSet();
     descriptorSets[INDEX_VIEW_PARAMS]->updateBuffer(0, viewParamBuffer);
     descriptorSets[INDEX_VIEW_PARAMS]->writeChanges();
-    for(auto &&meshBatch : scene->getStaticMeshes())
+    /*for(auto &&meshBatch : scene->getStaticMeshes())
     {
         meshBatch.material->updateDescriptorData();
-    }
+    }*/
 }
 
-void DepthPrepass::render() 
+void DepthPrepass::render(UPViewFrame& viewFrame) 
 {
     depthAttachment->getTexture()->pipelineBarrier(
         Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
         Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT);
     depthAttachment->getTexture()->transferOwnership(Gfx::QueueType::GRAPHICS);
     graphics->beginRenderPass(renderPass);
-    for (auto &&meshBatch : scene->getStaticMeshes())
+    /*for (auto &&meshBatch : scene->getStaticMeshes())
     {
         processor->addMeshBatch(meshBatch, renderPass, depthPrepassLayout, primitiveLayout, descriptorSets);
-    }
+    }*/
     graphics->executeCommands(processor->getRenderCommands());
     graphics->endRenderPass();
 }
 
-void DepthPrepass::endFrame() 
+void DepthPrepass::endFrame(UPViewFrame& viewFrame) 
 {
 }
 

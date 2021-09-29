@@ -1,9 +1,19 @@
 #pragma once
-#include "RenderPath.h"
+#include "Graphics/RenderPass/RenderGraph.h"
+
 namespace Seele
 {
 DECLARE_REF(Window)
-// A view is a part of the window, which can be anything from a viewport to an inspector
+
+// A ViewFrame is the render relevant data of a View
+class ViewFrame
+{
+public:
+protected:
+};
+DEFINE_REF(ViewFrame)
+
+// A view is a part of the window, which can be anything from a scene viewport to an inspector
 class View
 {
 public:
@@ -16,10 +26,11 @@ public:
 	void setFocused();
 
 protected:
+	UPViewFrame currentFrame;
 	Gfx::PGraphics graphics;
 	Gfx::PViewport viewport;
 	PWindow owner;
-	PRenderPath renderer;
+	PRenderGraph renderGraph;
 
 	virtual void keyCallback(KeyCode code, InputAction action, KeyModifier modifier) = 0;
 	virtual void mouseMoveCallback(double xPos, double yPos) = 0;

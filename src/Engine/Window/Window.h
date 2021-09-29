@@ -4,6 +4,15 @@
 
 namespace Seele
 {
+struct WindowView
+{
+    PView view;
+    PRenderGraph renderGraph;
+    UPViewFrame currentFrame;
+    std::thread worker;
+    std::mutex workerMutex;
+};
+DEFINE_REF(WindowView)
 // The logical window, with the graphics proxy
 class Window
 {
@@ -11,16 +20,15 @@ public:
     Window(Gfx::PWindow handle);
     ~Window();
     void addView(PView view);
-    void beginFrame();
     void render();
-    void endFrame();
     Gfx::PWindow getGfxHandle();
     void setFocused(PView view);
 
-private:
-    Array<PView> viewports;
-    PView focusedView;
+protected:
+    Array<WindowView*> views;
     Gfx::PWindow gfxHandle;
+
+    void viewWorker(WindowView* view);
 };
 DEFINE_REF(Window)
 } // namespace Seele

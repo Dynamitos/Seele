@@ -13,6 +13,7 @@ class RenderPass
 public:
     RenderPass(PRenderGraph rendergraph, Gfx::PGraphics graphics, Gfx::PViewport viewport);
     virtual ~RenderPass();
+    virtual void updateViewFrame(PViewFrame viewFrame) = 0;
     virtual void beginFrame() = 0;
     virtual void render() = 0;
     virtual void endFrame() = 0;

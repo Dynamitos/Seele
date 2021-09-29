@@ -82,7 +82,6 @@ void BasePassMeshProcessor::clearCommands()
 BasePass::BasePass(PRenderGraph renderGraph, const PScene scene, Gfx::PGraphics graphics, Gfx::PViewport viewport, PCameraActor source) 
     : RenderPass(renderGraph, graphics, viewport)
     , processor(new BasePassMeshProcessor(scene, viewport, graphics, false))
-    , scene(scene)
     , descriptorSets(4)
     , source(source->getCameraComponent())
 {
@@ -125,6 +124,11 @@ BasePass::~BasePass()
 {   
 }
 
+void BasePass::updateViewFrame(PViewFrame viewFrame) 
+{
+    
+}
+
 void BasePass::beginFrame() 
 {
     processor->clearCommands();
@@ -145,10 +149,10 @@ void BasePass::beginFrame()
     descriptorSets[INDEX_VIEW_PARAMS] = viewLayout->allocateDescriptorSet();
     descriptorSets[INDEX_VIEW_PARAMS]->updateBuffer(0, viewParamBuffer);
     descriptorSets[INDEX_VIEW_PARAMS]->writeChanges();
-    for(auto &&meshBatch : scene->getStaticMeshes())
+    /*for(auto &&meshBatch : scene->getStaticMeshes())
     {
         meshBatch.material->updateDescriptorData();
-    }
+    }*/
 }
 
 void BasePass::render() 
@@ -169,10 +173,10 @@ void BasePass::render()
     descriptorSets[INDEX_LIGHT_ENV]->updateTexture(5, oLightGrid);
     descriptorSets[INDEX_LIGHT_ENV]->writeChanges();
     graphics->beginRenderPass(renderPass);
-    for (auto &&meshBatch : scene->getStaticMeshes())
+    /*for (auto &&meshBatch : scene->getStaticMeshes())
     {
         processor->addMeshBatch(meshBatch, renderPass, basePassLayout, primitiveLayout, descriptorSets);
-    }
+    }*/
     graphics->executeCommands(processor->getRenderCommands());
     graphics->endRenderPass();
 }

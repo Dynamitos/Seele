@@ -29,8 +29,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_SOURCE_DIR}/bin/Debug)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_CURRENT_SOURCE_DIR}/bin/Release)
 
-add_compile_options($<$<CXX_COMPILER_ID:MSVC>:/MP>)
-
 if (USE_SUPERBUILD)
   project (SUPERBUILD NONE)
   # execute the superbuild (this script will be invoked again without the

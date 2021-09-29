@@ -45,7 +45,6 @@ private:
     Gfx::PRenderTargetAttachment depthAttachment;
     Gfx::PTexture2D depthBuffer;
     UPDepthPrepassMeshProcessor processor;
-    const PScene scene;
     
     Array<Gfx::PDescriptorSet> descriptorSets;
     PCameraComponent source;

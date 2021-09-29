@@ -237,44 +237,13 @@ namespace Seele
 		{
 			return endIt;
 		}
-
 		T &add(const T &item = T())
 		{
-			if (arraySize == allocated)
-			{
-				size_t newSize = arraySize + 1;
-				allocated = calculateGrowth(newSize);
-				T *tempArray = new T[allocated];
-				assert(tempArray != nullptr);
-				for (size_t i = 0; i < arraySize; ++i)
-				{
-					tempArray[i] = _data[i];
-				}
-				delete[] _data;
-				_data = tempArray;
-			}
-			_data[arraySize++] = item;
-			markIteratorDirty();
-			return _data[arraySize - 1];
+			return addInternal(item);
 		}
 		T &add(T&& item)
 		{
-			if (arraySize == allocated)
-			{
-				size_t newSize = arraySize + 1;
-				allocated = calculateGrowth(newSize);
-				T *tempArray = new T[allocated];
-				assert(tempArray != nullptr);
-				for (size_t i = 0; i < arraySize; ++i)
-				{
-					tempArray[i] = std::move(_data[i]);
-				}
-				delete[] _data;
-				_data = tempArray;
-			}
-			_data[arraySize++] = std::move(item);
-			markIteratorDirty();
-			return _data[arraySize - 1];
+			return addInternal(std::forward<T>(item));
 		}
 		T &addUnique(const T &item = T())
 		{
@@ -283,7 +252,7 @@ namespace Seele
 			{
 				return *it;
 			}
-			return add(item);
+			return addInternal(item);
 		}
 		template<typename... args>
 		T &emplace(args... arguments)
@@ -428,6 +397,26 @@ namespace Seele
 		{
 			beginIt = Iterator(_data);
 			endIt = Iterator(_data + arraySize);
+		}
+		template<typename Type>
+		T& addInternal(Type&& t)
+		{
+			if (arraySize == allocated)
+			{
+				size_t newSize = arraySize + 1;
+				allocated = calculateGrowth(newSize);
+				T *tempArray = new T[allocated];
+				assert(tempArray != nullptr);
+				for (size_t i = 0; i < arraySize; ++i)
+				{
+					tempArray[i] = std::forward<Type>(_data[i]);
+				}
+				delete[] _data;
+				_data = tempArray;
+			}
+			_data[arraySize++] = std::forward<Type>(t);
+			markIteratorDirty();
+			return _data[arraySize - 1];
 		}
 		friend class boost::serialization::access;
 		template<class Archive>

@@ -1,9 +1,11 @@
 #include "SceneView.h"
-#include "SceneRenderPath.h"
 #include "Scene/Scene.h"
 #include "Window.h"
 #include "Scene/Actor/CameraActor.h"
 #include "Scene/Components/CameraComponent.h"
+#include "Graphics/RenderPass/DepthPrepass.h"
+#include "Graphics/RenderPass/LightCullingPass.h"
+#include "Graphics/RenderPass/BasePass.h"
 
 using namespace Seele;
 
@@ -13,7 +15,11 @@ Seele::SceneView::SceneView(Gfx::PGraphics graphics, PWindow owner, const Viewpo
 	scene = new Scene(graphics);
 	activeCamera = new CameraActor();
 	scene->addActor(activeCamera);
-	renderer = new SceneRenderPath(scene, graphics, viewport, activeCamera);
+	renderGraph = new RenderGraph();
+	renderGraph->addRenderPass(new DepthPrepass(renderGraph, scene, graphics, viewport, activeCamera));
+	renderGraph->addRenderPass(new LightCullingPass(renderGraph, scene, graphics, viewport, activeCamera));
+	renderGraph->addRenderPass(new BasePass(renderGraph, scene, graphics, viewport, activeCamera));
+	renderGraph->setup();
 }
 
 Seele::SceneView::~SceneView()
@@ -23,7 +29,7 @@ Seele::SceneView::~SceneView()
 void SceneView::beginFrame() 
 {
 	View::beginFrame();
-	scene->tick(Gfx::currentFrameDelta);//TODO: update in separate thread
+	scene->tick(Gfx::currentFrameDelta);
 }
 
 void SceneView::keyCallback(KeyCode code, InputAction action, KeyModifier)

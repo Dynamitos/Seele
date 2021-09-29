@@ -42,9 +42,7 @@ private:
     {
         Plane planes[4];
     };
-    
-    PScene scene;
-    
+        
     Gfx::PStructuredBuffer frustumBuffer;
     Gfx::PUniformBuffer dispatchParamsBuffer;
     Gfx::PUniformBuffer viewParamsBuffer;
@@ -54,7 +52,6 @@ private:
     Gfx::PComputePipeline frustumPipeline;
 
     Gfx::PTexture2D depthAttachment;
-    //Gfx::PTexture2D depthComputeTexture;
     Gfx::PStructuredBuffer frustums;
     Gfx::PStructuredBuffer oLightIndexCounter;
     Gfx::PStructuredBuffer tLightIndexCounter;

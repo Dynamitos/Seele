@@ -31,11 +31,17 @@ private:
 DEFINE_REF(BasePassMeshProcessor)
 DECLARE_REF(CameraActor)
 DECLARE_REF(CameraComponent)
+struct BasePassData
+{
+    const LightEnv lightEnv;
+    const Array<StaticMeshBatch> staticDrawList;
+};
 class BasePass : public RenderPass
 {
 public:
     BasePass(PRenderGraph renderGraph, const PScene scene, Gfx::PGraphics graphics, Gfx::PViewport viewport, PCameraActor source);
     virtual ~BasePass();
+    virtual void updateViewFrame(PViewFrame viewFrame) override;
     virtual void beginFrame() override;
     virtual void render() override;
     virtual void endFrame() override;
@@ -47,7 +53,6 @@ private:
     Gfx::PTexture2D depthBuffer;
     UPBasePassMeshProcessor processor;
     
-    const PScene scene;
     Array<Gfx::PDescriptorSet> descriptorSets;
     PCameraComponent source;
     Gfx::PPipelineLayout basePassLayout;

@@ -11,5 +11,6 @@ public:
     Panel();
     virtual ~Panel();
 };
+DEFINE_REF(Panel);
 } // namespace UI
 } // namespace Seele

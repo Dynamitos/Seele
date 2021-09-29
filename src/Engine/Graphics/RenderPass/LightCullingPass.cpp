@@ -9,7 +9,6 @@ using namespace Seele;
 
 LightCullingPass::LightCullingPass(PRenderGraph renderGraph, const PScene scene, Gfx::PGraphics graphics, Gfx::PViewport viewport, PCameraActor camera)
     : RenderPass(renderGraph, graphics, viewport)
-	, scene(scene)
     , source(camera->getCameraComponent())
 {
 }
@@ -19,7 +18,7 @@ LightCullingPass::~LightCullingPass()
     
 }
 
-void LightCullingPass::beginFrame() 
+void LightCullingPass::beginFrame(UPViewFrame& viewFrame) 
 {
     uint32_t viewportWidth = viewport->getSizeX();
 	uint32_t viewportHeight = viewport->getSizeY();
@@ -34,7 +33,7 @@ void LightCullingPass::beginFrame()
     uniformUpdate.data = (uint8*)&viewParams;
     viewParamsBuffer->updateContents(uniformUpdate);
 	
-	LightEnv lightEnv = scene->getLightBuffer();
+	/*LightEnv lightEnv = scene->getLightBuffer();
 	for(uint32 i = 0; i < lightEnv.numPointLights; ++i)
 	{
 		lightEnv.pointLights[i].positionVS = lightEnv.pointLights[i].positionWS;
@@ -42,7 +41,7 @@ void LightCullingPass::beginFrame()
 	uniformUpdate.size = sizeof(PointLight) * MAX_POINT_LIGHTS;
 	uniformUpdate.data = (uint8*)&lightEnv.pointLights;
 	pointLightBuffer->updateContents(uniformUpdate);
-
+*/
 	BulkResourceData counterReset;
 	uint32 reset = 0;
 	counterReset.data = (uint8*)&reset;
@@ -72,7 +71,7 @@ void LightCullingPass::beginFrame()
 	lightEnvDescriptorSet->writeChanges();
 }
 
-void LightCullingPass::render() 
+void LightCullingPass::render(UPViewFrame& viewFrame) 
 {
 	oLightIndexList->pipelineBarrier( 
 		Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
@@ -98,7 +97,7 @@ void LightCullingPass::render()
 	depthAttachment->transferOwnership(Gfx::QueueType::GRAPHICS);
 }
 
-void LightCullingPass::endFrame() 
+void LightCullingPass::endFrame(UPViewFrame& viewFrame) 
 {
     
 }
@@ -133,23 +132,23 @@ void LightCullingPass::publishOutputs()
 	tLightIndexList = graphics->createStructuredBuffer(structInfo);
 	renderGraph->registerBufferOutput("LIGHTCULLING_OLIGHTLIST", oLightIndexList);
 	renderGraph->registerBufferOutput("LIGHTCULLING_TLIGHTLIST", tLightIndexList);
-	const LightEnv& lightEnv = scene->getLightBuffer();
+	/*const LightEnv& lightEnv = scene->getLightBuffer();
 	resourceData.size = sizeof(DirectionalLight) * MAX_DIRECTIONAL_LIGHTS;
-	resourceData.data = (uint8*)&lightEnv.directionalLights;
+	resourceData.data = (uint8*)&lightEnv.directionalLights;*/
 	structInfo.resourceData = resourceData;
 	structInfo.bDynamic = true;
 	directLightBuffer = graphics->createStructuredBuffer(structInfo);
 	resourceData.size = sizeof(PointLight) * MAX_POINT_LIGHTS;
-	resourceData.data = (uint8*)&lightEnv.pointLights;
+	//resourceData.data = (uint8*)&lightEnv.pointLights;
 	structInfo.resourceData = resourceData;
 	pointLightBuffer = graphics->createStructuredBuffer(structInfo);
 	UniformBufferCreateInfo uniformInfo;
 	resourceData.size = sizeof(uint32);
-	resourceData.data = (uint8*)&lightEnv.numDirectionalLights;
+	//resourceData.data = (uint8*)&lightEnv.numDirectionalLights;
 	uniformInfo.resourceData = resourceData;
 	uniformInfo.bDynamic = true;
 	numDirLightBuffer = graphics->createUniformBuffer(uniformInfo);
-	resourceData.data = (uint8*)&lightEnv.numPointLights;
+	//resourceData.data = (uint8*)&lightEnv.numPointLights;
 	uniformInfo.resourceData = resourceData;
 	uniformInfo.bDynamic = true;
 	numPointLightBuffer = graphics->createUniformBuffer(uniformInfo);

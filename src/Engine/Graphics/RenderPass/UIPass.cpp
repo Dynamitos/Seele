@@ -15,12 +15,12 @@ UIPass::~UIPass()
     
 }
 
-void UIPass::beginFrame() 
+void UIPass::beginFrame(UPViewFrame& viewFrame) 
 {
     
 }
 
-void UIPass::render() 
+void UIPass::render(UPViewFrame& viewFrame) 
 {
     graphics->beginRenderPass(renderPass);
     Gfx::PRenderCommand command = graphics->createRenderCommand("UIPassCommand");
@@ -31,7 +31,7 @@ void UIPass::render()
     graphics->endRenderPass();
 }
 
-void UIPass::endFrame() 
+void UIPass::endFrame(UPViewFrame& viewFrame) 
 {
     
 }

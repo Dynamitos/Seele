@@ -2,10 +2,18 @@
 #include "View.h"
 #include "Graphics/RenderPass/RenderGraph.h"
 #include "Graphics/RenderPass/UIPass.h"
+#include "UI/Elements/Panel.h"
 
 namespace Seele
 {
 DECLARE_REF(Actor)
+class InspectorViewFrame : public ViewFrame
+{
+public:
+protected:
+    const UI::RenderHierarchy hierarchy;
+};
+
 class InspectorView : public View
 {
 public:
@@ -17,10 +25,8 @@ public:
     void selectActor();
 
 protected:
-    Array<UI::PElement> rootElements;
-    PUIPass uiPass;
+    UI::PPanel rootPanel;
     PActor selectedActor;
-    PRenderGraph renderGraph;
     
 	virtual void keyCallback(KeyCode code, InputAction action, KeyModifier modifier) override;
 	virtual void mouseMoveCallback(double xPos, double yPos) override;

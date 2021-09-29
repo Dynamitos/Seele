@@ -6,7 +6,6 @@ target_sources(SeeleEngine
 
 add_subdirectory(Asset/)
 add_subdirectory(Containers/)
-#add_subdirectory(Fibers/)
 add_subdirectory(Graphics/)
 add_subdirectory(Material/)
 add_subdirectory(Math/)

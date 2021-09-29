@@ -1,9 +1,11 @@
 #include "WindowManager.h"
 #include "Graphics/Vulkan/VulkanGraphics.h"
 
+using namespace Seele;
+
 Gfx::PGraphics WindowManager::graphics;
 
-Seele::WindowManager::WindowManager()
+WindowManager::WindowManager()
 {
 	graphics = new Vulkan::Graphics();
 	GraphicsInitializer initializer;
@@ -22,24 +24,16 @@ Seele::WindowManager::WindowManager()
 	Gfx::PUniformBuffer testUniform = graphics->createUniformBuffer(uniformInitializer);
 }
 
-Seele::WindowManager::~WindowManager()
+WindowManager::~WindowManager()
 {
 }
 
-PWindow Seele::WindowManager::addWindow(const WindowCreateInfo &createInfo)
+PWindow WindowManager::addWindow(const WindowCreateInfo &createInfo)
 {
 	Gfx::PWindow handle = graphics->createWindow(createInfo);
 	PWindow window = new Window(handle);
 	windows.add(window);
 	return window;
-}
-
-void Seele::WindowManager::beginFrame()
-{
-	for (auto window : windows)
-	{
-		window->beginFrame();
-	}
 }
 
 void WindowManager::render() 
@@ -50,10 +44,3 @@ void WindowManager::render()
 	}	
 }
 
-void Seele::WindowManager::endFrame()
-{
-	for (auto window : windows)
-	{
-		window->endFrame();
-	}
-}

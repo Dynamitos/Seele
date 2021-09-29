@@ -29,6 +29,8 @@ public:
     const Rect getBoundingBox() const;
 protected:
     Rect boundingBox;
+    bool dirty;
+    
     bool enabled;
     PElement parent;
     Array<PElement> children;

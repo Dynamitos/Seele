@@ -7,6 +7,10 @@ namespace Seele
 {
 DECLARE_NAME_REF(Gfx, Texture2D)
 DECLARE_NAME_REF(Gfx, RenderTargetAttachment)
+struct UIPassData
+{
+    const UI::RenderHierarchy hierarchy;
+};
 class UIPass : public RenderPass
 {
 public:
@@ -18,7 +22,7 @@ public:
     virtual void publishOutputs() override;
     virtual void createRenderPass() override;
 private:
-    UI::RenderHierarchy hierarchy;
+    PUIViewFrame uiFrame;
     Gfx::PRenderTargetAttachment renderTarget;
     Gfx::PRenderTargetAttachment depthAttachment;
     Gfx::PTexture2D depthBuffer;

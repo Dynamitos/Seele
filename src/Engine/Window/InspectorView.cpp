@@ -8,8 +8,7 @@ InspectorView::InspectorView(Gfx::PGraphics graphics, PWindow window, const View
 {
     renderGraph = new RenderGraph();
     Gfx::PRenderTargetAttachment attachment = new Gfx::SwapchainAttachment(window->getGfxHandle());
-    uiPass = new UIPass(renderGraph, graphics, viewport, attachment);
-    renderGraph->addRenderPass(uiPass);
+    renderGraph->addRenderPass(new UIPass(renderGraph, graphics, viewport, attachment));
     renderGraph->setup();
 }
 
@@ -19,17 +18,14 @@ InspectorView::~InspectorView()
 
 void InspectorView::beginFrame() 
 {
-    uiPass->beginFrame();
 }
 
 void InspectorView::render() 
 {
-    uiPass->render();
 }
 
 void InspectorView::endFrame() 
 {
-    uiPass->endFrame();
 }
 
 void InspectorView::keyCallback(KeyCode code, InputAction action, KeyModifier modifier) 

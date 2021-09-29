@@ -12,9 +12,7 @@ public:
 	WindowManager();
 	~WindowManager();
 	PWindow addWindow(const WindowCreateInfo &createInfo);
-	void beginFrame();
 	void render();
-	void endFrame();
 	static Gfx::PGraphics getGraphics()
 	{
 		return graphics;

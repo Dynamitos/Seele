@@ -4,6 +4,15 @@ namespace Seele
 {
 DECLARE_REF(Scene)
 DECLARE_REF(CameraActor)
+
+class SceneViewFrame : public ViewFrame
+{
+public:
+protected:
+	const PScene scene;
+};
+DEFINE_REF(SceneViewFrame)
+
 class SceneView : public View
 {
 public:
@@ -14,6 +23,7 @@ public:
 private:
 	PScene scene;
 	PCameraActor activeCamera;
+
 	virtual void keyCallback(KeyCode code, InputAction action, KeyModifier modifier) override;
 	virtual void mouseMoveCallback(double xPos, double yPos) override;
 	virtual void mouseButtonCallback(MouseButton button, InputAction action, KeyModifier modifier) override;

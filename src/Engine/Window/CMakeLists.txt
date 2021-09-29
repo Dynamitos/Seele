@@ -1,13 +1,11 @@
 target_sources(SeeleEngine
     PRIVATE
+        Frame.h
+        Frame.cpp
         InspectorView.h
         InspectorView.cpp
-        RenderPath.h
-        RenderPath.cpp
         SceneView.h
         SceneView.cpp
-        SceneRenderPath.h
-        SceneRenderPath.cpp
         View.h
         View.cpp
         Window.cpp

@@ -13,19 +13,35 @@ RenderGraph::~RenderGraph()
 
 void RenderGraph::setup() 
 {
-    for(auto pass : renderPasses)
+    for(auto& pass : renderPasses)
     {
         pass->publishOutputs();
     }
-    for(auto pass : renderPasses)
+    for(auto& pass : renderPasses)
     {
         pass->createRenderPass();
     }
 }
 
-void RenderGraph::addRenderPass(PRenderPass renderPass) 
+void RenderGraph::addRenderPass(UPRenderPass renderPass) 
 {
-    renderPasses.add(renderPass);
+    renderPasses.add(std::move(renderPass));
+}
+
+void RenderGraph::render(PViewFrame viewFrame) 
+{
+    for(auto& pass : renderPasses)
+    {
+        pass->beginFrame(viewFrame);
+    }
+    for(auto& pass : renderPasses)
+    {
+        pass->render(viewFrame);
+    }
+    for(auto& pass : renderPasses)
+    {
+        pass->endFrame(viewFrame);
+    }
 }
 
 Gfx::PRenderTargetAttachment RenderGraph::requestRenderTarget(const std::string& outputName) 

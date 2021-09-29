@@ -275,33 +275,6 @@ private:
 		ar & *object->getHandle();
 	}
 };
-//A weak pointer has no ownership over an object and thus cant delete it
-template <typename T>
-class WeakPtr
-{
-public:
-	WeakPtr()
-		: pointer(nullptr)
-	{
-	}
-	WeakPtr(RefPtr<T> &sharedPtr)
-		: pointer(sharedPtr)
-	{
-	}
-	WeakPtr &operator=(WeakPtr<T> &weakPtr)
-	{
-		pointer = weakPtr.pointer;
-		return *this;
-	}
-	WeakPtr &operator=(RefPtr<T> &sharedPtr)
-	{
-		pointer = sharedPtr;
-		return *this;
-	}
-
-private:
-	RefPtr<T> pointer;
-};
 template <typename T>
 class UniquePtr
 {
@@ -335,7 +308,15 @@ public:
 	{
 		delete handle;
 	}
-	T *operator->()
+	inline bool operator==(const UniquePtr &other) const
+	{
+		return handle == other.handle;
+	}
+	inline bool operator!=(const UniquePtr &other) const
+	{
+		return handle != other.handle;
+	}
+	inline T *operator->()
 	{
 		return handle;
 	}
@@ -352,6 +333,33 @@ private:
 	{
 		ar & *handle;
 	}
+};
+//A weak pointer has no ownership over an object and thus cant delete it
+template <typename T>
+class WeakPtr
+{
+public:
+	WeakPtr()
+		: pointer(nullptr)
+	{
+	}
+	WeakPtr(RefPtr<T> &sharedPtr)
+		: pointer(sharedPtr)
+	{
+	}
+	WeakPtr &operator=(WeakPtr<T> &weakPtr)
+	{
+		pointer = weakPtr.pointer;
+		return *this;
+	}
+	WeakPtr &operator=(RefPtr<T> &sharedPtr)
+	{
+		pointer = sharedPtr;
+		return *this;
+	}
+
+private:
+	RefPtr<T> pointer;
 };
 } // namespace Seele
 
