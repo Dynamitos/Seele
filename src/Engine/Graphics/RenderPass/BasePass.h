@@ -8,7 +8,7 @@ namespace Seele
 class BasePassMeshProcessor : public MeshProcessor
 {
 public:
-    BasePassMeshProcessor(const PScene scene, Gfx::PViewport viewport, Gfx::PGraphics graphics, uint8 translucentBasePass);
+    BasePassMeshProcessor(Gfx::PViewport viewport, Gfx::PGraphics graphics, uint8 translucentBasePass);
     virtual ~BasePassMeshProcessor();
 
     virtual void addMeshBatch(
@@ -33,15 +33,13 @@ DECLARE_REF(CameraActor)
 DECLARE_REF(CameraComponent)
 struct BasePassData
 {
-    const LightEnv lightEnv;
     const Array<StaticMeshBatch> staticDrawList;
 };
-class BasePass : public RenderPass
+class BasePass : public RenderPass<BasePassData>
 {
 public:
-    BasePass(PRenderGraph renderGraph, const PScene scene, Gfx::PGraphics graphics, Gfx::PViewport viewport, PCameraActor source);
+    BasePass(Gfx::PGraphics graphics, Gfx::PViewport viewport, PCameraActor source);
     virtual ~BasePass();
-    virtual void updateViewFrame(PViewFrame viewFrame) override;
     virtual void beginFrame() override;
     virtual void render() override;
     virtual void endFrame() override;

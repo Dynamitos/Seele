@@ -11,6 +11,5 @@ target_sources(SeeleEngine
         RenderGraph.h
         RenderGraph.cpp
         RenderPass.h
-        RenderPass.cpp
         UIPass.h
         UIPass.cpp)

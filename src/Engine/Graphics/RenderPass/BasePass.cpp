@@ -8,8 +8,8 @@
 
 using namespace Seele;
 
-BasePassMeshProcessor::BasePassMeshProcessor(const PScene scene, Gfx::PViewport viewport, Gfx::PGraphics graphics, uint8 translucentBasePass) 
-    : MeshProcessor(scene, graphics)
+BasePassMeshProcessor::BasePassMeshProcessor(Gfx::PViewport viewport, Gfx::PGraphics graphics, uint8 translucentBasePass) 
+    : MeshProcessor(graphics)
     , target(viewport)
     , translucentBasePass(translucentBasePass)
     , cachedPrimitiveIndex(0)
@@ -79,9 +79,9 @@ void BasePassMeshProcessor::clearCommands()
     cachedPrimitiveIndex = 0;
 }
 
-BasePass::BasePass(PRenderGraph renderGraph, const PScene scene, Gfx::PGraphics graphics, Gfx::PViewport viewport, PCameraActor source) 
-    : RenderPass(renderGraph, graphics, viewport)
-    , processor(new BasePassMeshProcessor(scene, viewport, graphics, false))
+BasePass::BasePass(Gfx::PGraphics graphics, Gfx::PViewport viewport, PCameraActor source) 
+    : RenderPass(graphics, viewport)
+    , processor(new BasePassMeshProcessor(viewport, graphics, false))
     , descriptorSets(4)
     , source(source->getCameraComponent())
 {
@@ -124,11 +124,6 @@ BasePass::~BasePass()
 {   
 }
 
-void BasePass::updateViewFrame(PViewFrame viewFrame) 
-{
-    
-}
-
 void BasePass::beginFrame() 
 {
     processor->clearCommands();
@@ -149,10 +144,10 @@ void BasePass::beginFrame()
     descriptorSets[INDEX_VIEW_PARAMS] = viewLayout->allocateDescriptorSet();
     descriptorSets[INDEX_VIEW_PARAMS]->updateBuffer(0, viewParamBuffer);
     descriptorSets[INDEX_VIEW_PARAMS]->writeChanges();
-    /*for(auto &&meshBatch : scene->getStaticMeshes())
+    for(auto &&meshBatch : passData.staticDrawList)
     {
         meshBatch.material->updateDescriptorData();
-    }*/
+    }
 }
 
 void BasePass::render() 
@@ -173,10 +168,10 @@ void BasePass::render()
     descriptorSets[INDEX_LIGHT_ENV]->updateTexture(5, oLightGrid);
     descriptorSets[INDEX_LIGHT_ENV]->writeChanges();
     graphics->beginRenderPass(renderPass);
-    /*for (auto &&meshBatch : scene->getStaticMeshes())
+    for (auto &&meshBatch : passData.staticDrawList)
     {
         processor->addMeshBatch(meshBatch, renderPass, basePassLayout, primitiveLayout, descriptorSets);
-    }*/
+    }
     graphics->executeCommands(processor->getRenderCommands());
     graphics->endRenderPass();
 }
@@ -188,21 +183,21 @@ void BasePass::endFrame()
 void BasePass::publishOutputs() 
 {
 	colorAttachment = new Gfx::SwapchainAttachment(viewport->getOwner());
-    renderGraph->registerRenderPassOutput("BASEPASS_COLOR", colorAttachment);
+    resources->registerRenderPassOutput("BASEPASS_COLOR", colorAttachment);
 }
 
 void BasePass::createRenderPass() 
 {    
-	directLightBuffer = renderGraph->requestBuffer("DIRECTIONAL_LIGHTS");
-	pointLightBuffer = renderGraph->requestBuffer("POINT_LIGHTS");
-	numDirLightBuffer = renderGraph->requestUniform("NUM_DIRECTIONAL_LIGHTS");
-	numPointLightBuffer = renderGraph->requestUniform("NUM_POINT_LIGHTS");
-    Gfx::PRenderTargetAttachment depthAttachment = renderGraph->requestRenderTarget("DEPTHPREPASS_DEPTH");
+	directLightBuffer = resources->requestBuffer("DIRECTIONAL_LIGHTS");
+	pointLightBuffer = resources->requestBuffer("POINT_LIGHTS");
+	numDirLightBuffer = resources->requestUniform("NUM_DIRECTIONAL_LIGHTS");
+	numPointLightBuffer = resources->requestUniform("NUM_POINT_LIGHTS");
+    Gfx::PRenderTargetAttachment depthAttachment = resources->requestRenderTarget("DEPTHPREPASS_DEPTH");
     depthAttachment->loadOp = Gfx::SE_ATTACHMENT_LOAD_OP_LOAD;
     Gfx::PRenderTargetLayout layout = new Gfx::RenderTargetLayout(colorAttachment, depthAttachment);
     renderPass = graphics->createRenderPass(layout, viewport);
-    oLightIndexList = renderGraph->requestBuffer("LIGHTCULLING_OLIGHTLIST");
-    oLightGrid = renderGraph->requestTexture("LIGHTCULLING_OLIGHTGRID");
+    oLightIndexList = resources->requestBuffer("LIGHTCULLING_OLIGHTLIST");
+    oLightGrid = resources->requestTexture("LIGHTCULLING_OLIGHTGRID");
 }
 
 void BasePass::modifyRenderPassMacros(Map<const char*, const char*>& defines)

@@ -8,8 +8,8 @@
 
 using namespace Seele;
 
-DepthPrepassMeshProcessor::DepthPrepassMeshProcessor(const PScene scene, Gfx::PViewport viewport, Gfx::PGraphics graphics) 
-    : MeshProcessor(scene, graphics)
+DepthPrepassMeshProcessor::DepthPrepassMeshProcessor(Gfx::PViewport viewport, Gfx::PGraphics graphics) 
+    : MeshProcessor(graphics)
     , target(viewport)
     , cachedPrimitiveIndex(0)
 {
@@ -78,9 +78,9 @@ void DepthPrepassMeshProcessor::clearCommands()
     cachedPrimitiveIndex = 0;
 }
 
-DepthPrepass::DepthPrepass(PRenderGraph renderGraph, const PScene scene, Gfx::PGraphics graphics, Gfx::PViewport viewport, PCameraActor source) 
-    : RenderPass(renderGraph, graphics, viewport)
-    , processor(new DepthPrepassMeshProcessor(scene, viewport, graphics))
+DepthPrepass::DepthPrepass(Gfx::PGraphics graphics, Gfx::PViewport viewport, PCameraActor source) 
+    : RenderPass(graphics, viewport)
+    , processor(new DepthPrepassMeshProcessor(viewport, graphics))
     , descriptorSets(3)
     , source(source->getCameraComponent())
 {
@@ -107,7 +107,7 @@ DepthPrepass::~DepthPrepass()
 {   
 }
 
-void DepthPrepass::beginFrame(UPViewFrame& viewFrame) 
+void DepthPrepass::beginFrame() 
 {
     processor->clearCommands();
     primitiveLayout->reset();
@@ -125,13 +125,13 @@ void DepthPrepass::beginFrame(UPViewFrame& viewFrame)
     descriptorSets[INDEX_VIEW_PARAMS] = viewLayout->allocateDescriptorSet();
     descriptorSets[INDEX_VIEW_PARAMS]->updateBuffer(0, viewParamBuffer);
     descriptorSets[INDEX_VIEW_PARAMS]->writeChanges();
-    /*for(auto &&meshBatch : scene->getStaticMeshes())
+    for(auto &&meshBatch : passData.staticDrawList)
     {
         meshBatch.material->updateDescriptorData();
-    }*/
+    }
 }
 
-void DepthPrepass::render(UPViewFrame& viewFrame) 
+void DepthPrepass::render() 
 {
     depthAttachment->getTexture()->pipelineBarrier(
         Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
@@ -146,7 +146,7 @@ void DepthPrepass::render(UPViewFrame& viewFrame)
     graphics->endRenderPass();
 }
 
-void DepthPrepass::endFrame(UPViewFrame& viewFrame) 
+void DepthPrepass::endFrame() 
 {
 }
 
@@ -163,7 +163,7 @@ void DepthPrepass::publishOutputs()
     depthAttachment = 
         new Gfx::RenderTargetAttachment(depthBuffer, Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
     depthAttachment->clear.depthStencil.depth = 1.0f;
-    renderGraph->registerRenderPassOutput("DEPTHPREPASS_DEPTH", depthAttachment);
+    resources->registerRenderPassOutput("DEPTHPREPASS_DEPTH", depthAttachment);
 }
 
 void DepthPrepass::createRenderPass() 

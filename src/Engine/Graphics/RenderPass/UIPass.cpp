@@ -4,8 +4,8 @@
 
 using namespace Seele;
 
-UIPass::UIPass(PRenderGraph renderGraph, Gfx::PGraphics graphics, Gfx::PViewport viewport, Gfx::PRenderTargetAttachment attachment) 
-    : RenderPass(renderGraph, graphics, viewport)
+UIPass::UIPass(Gfx::PGraphics graphics, Gfx::PViewport viewport, Gfx::PRenderTargetAttachment attachment) 
+    : RenderPass(graphics, viewport)
     , renderTarget(attachment)
 {
 }
@@ -15,12 +15,12 @@ UIPass::~UIPass()
     
 }
 
-void UIPass::beginFrame(UPViewFrame& viewFrame) 
+void UIPass::beginFrame() 
 {
     
 }
 
-void UIPass::render(UPViewFrame& viewFrame) 
+void UIPass::render() 
 {
     graphics->beginRenderPass(renderPass);
     Gfx::PRenderCommand command = graphics->createRenderCommand("UIPassCommand");
@@ -31,7 +31,7 @@ void UIPass::render(UPViewFrame& viewFrame)
     graphics->endRenderPass();
 }
 
-void UIPass::endFrame(UPViewFrame& viewFrame) 
+void UIPass::endFrame() 
 {
     
 }
@@ -51,7 +51,7 @@ void UIPass::publishOutputs()
     depthAttachment = 
         new Gfx::RenderTargetAttachment(depthBuffer, Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
         depthAttachment->clear.depthStencil.depth = 1.0f;
-    renderGraph->registerRenderPassOutput("UIPASS_DEPTH", depthAttachment);
+    resources->registerRenderPassOutput("UIPASS_DEPTH", depthAttachment);
 }
 
 void UIPass::createRenderPass() 

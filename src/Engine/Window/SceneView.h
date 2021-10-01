@@ -1,17 +1,12 @@
 #pragma once
 #include "View.h"
+#include "Graphics/RenderPass/DepthPrepass.h"
+#include "Graphics/RenderPass/LightCullingPass.h"
+#include "Graphics/RenderPass/BasePass.h"
 namespace Seele
 {
 DECLARE_REF(Scene)
 DECLARE_REF(CameraActor)
-
-class SceneViewFrame : public ViewFrame
-{
-public:
-protected:
-	const PScene scene;
-};
-DEFINE_REF(SceneViewFrame)
 
 class SceneView : public View
 {
@@ -19,10 +14,24 @@ public:
 	SceneView(Gfx::PGraphics graphics, PWindow owner, const ViewportCreateInfo &createInfo);
 	~SceneView();
 	virtual void beginFrame() override;
+	virtual void update() override;
+	virtual void endFrame() override;
+
+	virtual void prepareRender() override;
+	virtual void render() override;
+
 	PScene getScene() const { return scene; }
 private:
 	PScene scene;
 	PCameraActor activeCamera;
+	
+	DepthPrepass depthPrepass;
+	LightCullingPass lightCullingPass;
+	BasePass basePass;
+
+	DepthPrepassData depthPrepassData;
+	LightCullingPassData lightCullingData;
+	BasePassData basePassData;
 
 	virtual void keyCallback(KeyCode code, InputAction action, KeyModifier modifier) override;
 	virtual void mouseMoveCallback(double xPos, double yPos) override;

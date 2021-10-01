@@ -8,7 +8,7 @@ namespace Seele
 class DepthPrepassMeshProcessor : public MeshProcessor
 {
 public:
-    DepthPrepassMeshProcessor(const PScene scene, Gfx::PViewport viewport, Gfx::PGraphics graphics);
+    DepthPrepassMeshProcessor(Gfx::PViewport viewport, Gfx::PGraphics graphics);
     virtual ~DepthPrepassMeshProcessor();
     
     virtual void addMeshBatch(
@@ -30,10 +30,14 @@ private:
 DEFINE_REF(DepthPrepassMeshProcessor)
 DECLARE_REF(CameraActor)
 DECLARE_REF(CameraComponent)
-class DepthPrepass : public RenderPass
+struct DepthPrepassData
+{
+    const Array<StaticMeshBatch> staticDrawList;
+};
+class DepthPrepass : public RenderPass<DepthPrepassData>
 {
 public:
-    DepthPrepass(PRenderGraph renderGraph, const PScene scene, Gfx::PGraphics graphics, Gfx::PViewport viewport, PCameraActor source);
+    DepthPrepass(Gfx::PGraphics graphics, Gfx::PViewport viewport, PCameraActor source);
     ~DepthPrepass();
     virtual void beginFrame() override;
     virtual void render() override;

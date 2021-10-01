@@ -11,10 +11,10 @@ struct UIPassData
 {
     const UI::RenderHierarchy hierarchy;
 };
-class UIPass : public RenderPass
+class UIPass : public RenderPass<UIPassData>
 {
 public:
-    UIPass(PRenderGraph renderGraph, Gfx::PGraphics graphics, Gfx::PViewport viewport, Gfx::PRenderTargetAttachment renderTarget);
+    UIPass(Gfx::PGraphics graphics, Gfx::PViewport viewport, Gfx::PRenderTargetAttachment renderTarget);
     virtual ~UIPass();
     virtual void beginFrame() override;
     virtual void render() override;
@@ -22,7 +22,6 @@ public:
     virtual void publishOutputs() override;
     virtual void createRenderPass() override;
 private:
-    PUIViewFrame uiFrame;
     Gfx::PRenderTargetAttachment renderTarget;
     Gfx::PRenderTargetAttachment depthAttachment;
     Gfx::PTexture2D depthBuffer;

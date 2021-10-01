@@ -3,23 +3,18 @@
 #include "Window.h"
 #include "Scene/Actor/CameraActor.h"
 #include "Scene/Components/CameraComponent.h"
-#include "Graphics/RenderPass/DepthPrepass.h"
-#include "Graphics/RenderPass/LightCullingPass.h"
-#include "Graphics/RenderPass/BasePass.h"
 
 using namespace Seele;
 
 Seele::SceneView::SceneView(Gfx::PGraphics graphics, PWindow owner, const ViewportCreateInfo &createInfo)
 	: View(graphics, owner, createInfo)
+	, activeCamera(new CameraActor())
+	, depthPrepass(DepthPrepass(graphics, viewport, activeCamera))
+	, lightCullingPass(LightCullingPass(graphics, viewport, activeCamera))
+	, basePass(BasePass(graphics, viewport, activeCamera))
 {
 	scene = new Scene(graphics);
-	activeCamera = new CameraActor();
 	scene->addActor(activeCamera);
-	renderGraph = new RenderGraph();
-	renderGraph->addRenderPass(new DepthPrepass(renderGraph, scene, graphics, viewport, activeCamera));
-	renderGraph->addRenderPass(new LightCullingPass(renderGraph, scene, graphics, viewport, activeCamera));
-	renderGraph->addRenderPass(new BasePass(renderGraph, scene, graphics, viewport, activeCamera));
-	renderGraph->setup();
 }
 
 Seele::SceneView::~SceneView()
@@ -30,6 +25,31 @@ void SceneView::beginFrame()
 {
 	View::beginFrame();
 	scene->tick(Gfx::currentFrameDelta);
+}
+
+void SceneView::update() 
+{
+}
+
+void SceneView::endFrame() 
+{
+	depthPrepassData.staticDrawList = scene->getStaticMeshes();
+	lightCullingPassData.lightEnv = scene->getLightBuffer();
+	basePassData.staticDrawList = scene->getStaticMeshes();
+}
+
+void SceneView::prepareRender() 
+{
+	depthPrepass.updateViewFrame(depthPrepassData);
+	lightCullingPass.updateViewFrame(lightCullingPassData);
+	basePass.updateViewFrame(basePassData);
+}
+
+void SceneView::render() 
+{
+	depthPrepass.render();
+	lightCullingPass.render();
+	basePass.render();
 }
 
 void SceneView::keyCallback(KeyCode code, InputAction action, KeyModifier)

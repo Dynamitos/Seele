@@ -7,8 +7,6 @@ namespace Seele
 struct WindowView
 {
     PView view;
-    PRenderGraph renderGraph;
-    UPViewFrame currentFrame;
     std::thread worker;
     std::mutex workerMutex;
 };

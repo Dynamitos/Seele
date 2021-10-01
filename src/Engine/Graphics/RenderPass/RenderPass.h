@@ -7,18 +7,26 @@ namespace Seele
 DECLARE_NAME_REF(Gfx, Viewport)
 DECLARE_NAME_REF(Gfx, Graphics)
 DECLARE_NAME_REF(Gfx, RenderPass)
-DECLARE_REF(RenderGraph)
+DECLARE_REF(RenderGraphResources)
+template<typename RenderPassDataType>
 class RenderPass
 {
 public:
-    RenderPass(PRenderGraph rendergraph, Gfx::PGraphics graphics, Gfx::PViewport viewport);
-    virtual ~RenderPass();
-    virtual void updateViewFrame(PViewFrame viewFrame) = 0;
+    RenderPass(Gfx::PGraphics graphics, Gfx::PViewport viewport)
+        : graphics(graphics)
+        , viewport(viewport)
+    {}
+    virtual ~RenderPass()
+    {}
+    void updateViewFrame(RenderPassDataType viewFrame) {
+        passData = std::move(viewFrame);
+    }
     virtual void beginFrame() = 0;
     virtual void render() = 0;
     virtual void endFrame() = 0;
     virtual void publishOutputs() = 0;
     virtual void createRenderPass() = 0;
+    void setResources(PRenderGraphResources resources) { this->resources = resources; }
 protected:
     _declspec(align(16)) struct ViewParameter
     {
@@ -28,10 +36,13 @@ protected:
         Vector4 cameraPosition;
         Vector2 screenDimensions;
     } viewParams;
+    PRenderGraphResources resources;
+    RenderPassDataType passData;
     Gfx::PRenderPass renderPass;
-    PRenderGraph renderGraph;
     Gfx::PGraphics graphics;
     Gfx::PViewport viewport;
 };
-DEFINE_REF(RenderPass)
+template<typename T>
+concept RenderPassType = true;
+
 } // namespace Seele

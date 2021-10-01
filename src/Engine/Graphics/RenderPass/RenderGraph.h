@@ -6,14 +6,12 @@
 namespace Seele
 {
 DECLARE_REF(ViewFrame)
-class RenderGraph
+
+class RenderGraphResources
 {
 public:
-    RenderGraph();
-    ~RenderGraph();
-    void setup();
-    void addRenderPass(UPRenderPass renderPass);
-    void render(PViewFrame viewFrame);
+    RenderGraphResources();
+    ~RenderGraphResources();
     Gfx::PRenderTargetAttachment requestRenderTarget(const std::string& outputName);
     Gfx::PTexture requestTexture(const std::string& outputName);
     Gfx::PStructuredBuffer requestBuffer(const std::string& outputName);
@@ -22,12 +20,11 @@ public:
     void registerTextureOutput(const std::string& outputName, Gfx::PTexture buffer);
     void registerBufferOutput(const std::string& outputName, Gfx::PStructuredBuffer buffer);
     void registerUniformOutput(const std::string& outputName, Gfx::PUniformBuffer buffer);
-private:
+protected:
     Map<std::string, Gfx::PRenderTargetAttachment> registeredAttachments;
     Map<std::string, Gfx::PTexture> registeredTextures;
     Map<std::string, Gfx::PStructuredBuffer> registeredBuffers;
     Map<std::string, Gfx::PUniformBuffer> registeredUniforms;
-    List<UPRenderPass> renderPasses;
 };
-DEFINE_REF(RenderGraph)
+DEFINE_REF(RenderGraphResources)
 } // namespace Seele

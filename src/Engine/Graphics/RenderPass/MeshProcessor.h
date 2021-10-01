@@ -9,7 +9,7 @@ namespace Seele
 class MeshProcessor
 {
 public:
-    MeshProcessor(const PScene scene, Gfx::PGraphics graphics);
+    MeshProcessor(Gfx::PGraphics graphics);
     virtual ~MeshProcessor();
 protected:
     PScene scene;

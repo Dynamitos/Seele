@@ -5,33 +5,31 @@ namespace Seele
 {
 DECLARE_REF(Window)
 
-// A ViewFrame is the render relevant data of a View
-class ViewFrame
-{
-public:
-protected:
-};
-DEFINE_REF(ViewFrame)
-
 // A view is a part of the window, which can be anything from a scene viewport to an inspector
 class View
 {
 public:
 	View(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo &createInfo);
 	virtual ~View();
-	virtual void beginFrame();
-	virtual void render();
-	virtual void endFrame();
+	
+	// These are called from the view thread, and handle updating game data
+	virtual void beginFrame() {}
+	virtual void update() {}
+	// End frame is called with a lock, so it is safe to write to shared memory
+	virtual void endFrame() {}
+
+	// These are called from the render thread
+	// prepare render is also locked, so reading from shared memory is also safe
+	virtual void prepareRender() {}
+	virtual void render() {}
 	void applyArea(URect area);
 	void setFocused();
 
 protected:
-	UPViewFrame currentFrame;
 	Gfx::PGraphics graphics;
 	Gfx::PViewport viewport;
 	PWindow owner;
-	PRenderGraph renderGraph;
-
+	
 	virtual void keyCallback(KeyCode code, InputAction action, KeyModifier modifier) = 0;
 	virtual void mouseMoveCallback(double xPos, double yPos) = 0;
 	virtual void mouseButtonCallback(MouseButton button, InputAction action, KeyModifier modifier) = 0;

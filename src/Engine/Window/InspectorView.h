@@ -7,24 +7,24 @@
 namespace Seele
 {
 DECLARE_REF(Actor)
-class InspectorViewFrame : public ViewFrame
-{
-public:
-protected:
-    const UI::RenderHierarchy hierarchy;
-};
-
 class InspectorView : public View
 {
 public:
     InspectorView(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo &createInfo);
     virtual ~InspectorView();
-    virtual void beginFrame();
-	virtual void render();
-	virtual void endFrame();
-    void selectActor();
 
+    virtual void beginFrame() override;
+	virtual void update() override;
+	virtual void endFrame() override;
+    
+    virtual void prepareRender() override;
+    virtual void render() override;
+    void selectActor();
 protected:
+    UIPass renderGraph;
+    
+    UIPassData uiPassData;
+
     UI::PPanel rootPanel;
     PActor selectedActor;
     

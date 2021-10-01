@@ -4,9 +4,8 @@
 
 using namespace Seele;
 
-MeshProcessor::MeshProcessor(const PScene scene, Gfx::PGraphics graphics)
-    : scene(scene)
-    , graphics(graphics)
+MeshProcessor::MeshProcessor(Gfx::PGraphics graphics)
+    : graphics(graphics)
 {
 
 }

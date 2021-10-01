@@ -2,49 +2,17 @@
 
 using namespace Seele;
 
-
-RenderGraph::RenderGraph() 
+RenderGraphResources::RenderGraphResources() 
 {
+    
 }
 
-RenderGraph::~RenderGraph() 
-{   
-}
-
-void RenderGraph::setup() 
+RenderGraphResources::~RenderGraphResources() 
 {
-    for(auto& pass : renderPasses)
-    {
-        pass->publishOutputs();
-    }
-    for(auto& pass : renderPasses)
-    {
-        pass->createRenderPass();
-    }
+    
 }
 
-void RenderGraph::addRenderPass(UPRenderPass renderPass) 
-{
-    renderPasses.add(std::move(renderPass));
-}
-
-void RenderGraph::render(PViewFrame viewFrame) 
-{
-    for(auto& pass : renderPasses)
-    {
-        pass->beginFrame(viewFrame);
-    }
-    for(auto& pass : renderPasses)
-    {
-        pass->render(viewFrame);
-    }
-    for(auto& pass : renderPasses)
-    {
-        pass->endFrame(viewFrame);
-    }
-}
-
-Gfx::PRenderTargetAttachment RenderGraph::requestRenderTarget(const std::string& outputName) 
+Gfx::PRenderTargetAttachment RenderGraphResources::requestRenderTarget(const std::string& outputName) 
 {
     if(registeredAttachments.find(outputName) == registeredAttachments.end())
     {
@@ -54,7 +22,7 @@ Gfx::PRenderTargetAttachment RenderGraph::requestRenderTarget(const std::string&
     return registeredAttachments[outputName];
 }
 
-Gfx::PTexture RenderGraph::requestTexture(const std::string& outputName) 
+Gfx::PTexture RenderGraphResources::requestTexture(const std::string& outputName) 
 {
     if(registeredTextures.find(outputName) == registeredTextures.end())
     {
@@ -64,7 +32,7 @@ Gfx::PTexture RenderGraph::requestTexture(const std::string& outputName)
     return registeredTextures[outputName];
 }
 
-Gfx::PStructuredBuffer RenderGraph::requestBuffer(const std::string& outputName) 
+Gfx::PStructuredBuffer RenderGraphResources::requestBuffer(const std::string& outputName) 
 {
     if(registeredBuffers.find(outputName) == registeredBuffers.end())
     {
@@ -74,7 +42,7 @@ Gfx::PStructuredBuffer RenderGraph::requestBuffer(const std::string& outputName)
     return registeredBuffers[outputName];
 }
 
-Gfx::PUniformBuffer RenderGraph::requestUniform(const std::string& outputName) 
+Gfx::PUniformBuffer RenderGraphResources::requestUniform(const std::string& outputName) 
 {
     if(registeredUniforms.find(outputName) == registeredUniforms.end())
     {
@@ -84,21 +52,21 @@ Gfx::PUniformBuffer RenderGraph::requestUniform(const std::string& outputName)
     return registeredUniforms[outputName];
 }
 
-void RenderGraph::registerRenderPassOutput(const std::string& outputName, Gfx::PRenderTargetAttachment attachment) 
+void RenderGraphResources::registerRenderPassOutput(const std::string& outputName, Gfx::PRenderTargetAttachment attachment) 
 {
     registeredAttachments[outputName] = attachment;
 }
 
-void RenderGraph::registerTextureOutput(const std::string& outputName, Gfx::PTexture texture)
+void RenderGraphResources::registerTextureOutput(const std::string& outputName, Gfx::PTexture texture)
 {
     registeredTextures[outputName] = texture;
 }
 
-void RenderGraph::registerBufferOutput(const std::string& outputName, Gfx::PStructuredBuffer buffer) 
+void RenderGraphResources::registerBufferOutput(const std::string& outputName, Gfx::PStructuredBuffer buffer) 
 {
     registeredBuffers[outputName] = buffer;
 }
-void RenderGraph::registerUniformOutput(const std::string& outputName, Gfx::PUniformBuffer buffer) 
+void RenderGraphResources::registerUniformOutput(const std::string& outputName, Gfx::PUniformBuffer buffer) 
 {
     registeredUniforms[outputName] = buffer;
 }
