@@ -7,6 +7,7 @@ namespace UI
 {
 //Element defines any part of the UI
 DECLARE_REF(Element)
+DECLARE_REF(System)
 class Element
 {
 public:
@@ -32,6 +33,7 @@ protected:
     bool dirty;
     
     bool enabled;
+    PSystem system;
     PElement parent;
     Array<PElement> children;
     friend class Layout;

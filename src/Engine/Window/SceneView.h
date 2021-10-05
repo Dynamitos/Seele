@@ -30,7 +30,7 @@ private:
 	BasePass basePass;
 
 	DepthPrepassData depthPrepassData;
-	LightCullingPassData lightCullingData;
+	LightCullingPassData lightCullingPassData;
 	BasePassData basePassData;
 
 	virtual void keyCallback(KeyCode code, InputAction action, KeyModifier modifier) override;

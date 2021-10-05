@@ -11,7 +11,7 @@ DECLARE_REF(Scene)
 DECLARE_REF(Viewport)
 struct LightCullingPassData
 {
-    const LightEnv lightEnv;
+    LightEnv lightEnv;
 };
 class LightCullingPass : public RenderPass<LightCullingPassData>
 {

@@ -45,11 +45,11 @@ public:
     void addPrimitiveComponent(PPrimitiveComponent comp);
 
     const Array<PPrimitiveComponent>& getPrimitives() const { return primitives; }
-    const Array<MeshBatch>& getStaticMeshes() const { return staticMeshes; }
+    const Array<StaticMeshBatch>& getStaticMeshes() const { return staticMeshes; }
     const LightEnv& getLightBuffer() const { return lightEnv; }
     UPSceneUpdater& getSceneUpdater() { return updater; }
 private:
-    Array<MeshBatch> staticMeshes;
+    Array<StaticMeshBatch> staticMeshes;
     Array<PActor> rootActors;
     Array<PPrimitiveComponent> primitives;
     LightEnv lightEnv;

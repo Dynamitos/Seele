@@ -33,7 +33,7 @@ DECLARE_REF(CameraActor)
 DECLARE_REF(CameraComponent)
 struct BasePassData
 {
-    const Array<StaticMeshBatch> staticDrawList;
+    Array<StaticMeshBatch> staticDrawList;
 };
 class BasePass : public RenderPass<BasePassData>
 {

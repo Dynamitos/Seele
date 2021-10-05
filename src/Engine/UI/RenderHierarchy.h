@@ -1,5 +1,6 @@
 #pragma once
 #include "Elements/Element.h"
+#include "Containers/List.h"
 
 namespace Seele
 {
@@ -9,32 +10,50 @@ DECLARE_NAME_REF(Gfx, RenderCommand);
 class RenderElement
 {
 public:
-    RenderElement();
-    virtual ~RenderElement();
-private:
+    RenderElement() = default;
+    ~RenderElement() = default;
     uint32 hierarchyIndex;
-    RenderElement* parent;
-    PElement referencedElement;
-    Gfx::PRenderCommand renderCommand;
-    friend class RenderHierarchy;
+    Element* parent;
+    Element* referencedElement;
 };
 
 struct RenderHierarchyUpdate
-{};
-DEFINE_REF(RenderHierarchyUpdate)
+{
+    virtual void apply(Array<RenderElement>& elements) = 0;
+};
 
+struct AddElementRenderHierarchyUpdate : public RenderHierarchyUpdate
+{
+    Element* addedElement;
+    Element* parent;
+    virtual void apply(Array<RenderElement>& elements) override;
+};
+
+struct RemoveElementRenderHierarchyUpdate : public RenderHierarchyUpdate
+{
+    Element* element;
+    virtual void apply(Array<RenderElement>& elements) override;
+};
 
 class RenderHierarchy
 {
 public:
     RenderHierarchy();
     ~RenderHierarchy();
-    
-private:
-    void updateHierarchyIndices();
+    // logic thread interface, queue hierarchy changes
+    void addElement(PElement addedElement);
+    void removeElement(PElement elementToRemove);
+    void moveElement(PElement elementToMove, PElement newParent);
 
+    // render thread interface, apply changes
+    void updateHierarchy();
+private:
+    static_assert(std::is_trivially_copyable_v<RenderElement>);
     // List of all drawable elements in draw order
     Array<RenderElement> drawElements;
+
+    List<RenderHierarchyUpdate*> updates;
+    std::mutex updateLock;
 };
 } // namespace UI
 } // namespace Seele

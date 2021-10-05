@@ -32,7 +32,7 @@ DECLARE_REF(CameraActor)
 DECLARE_REF(CameraComponent)
 struct DepthPrepassData
 {
-    const Array<StaticMeshBatch> staticDrawList;
+    Array<StaticMeshBatch> staticDrawList;
 };
 class DepthPrepass : public RenderPass<DepthPrepassData>
 {

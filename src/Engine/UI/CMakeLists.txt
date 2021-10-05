@@ -6,6 +6,8 @@ target_sources(SeeleEngine
         Layout.cpp
         RenderHierarchy.h
         RenderHierarchy.cpp
+        System.h
+        System.cpp
         VerticalLayout.h
         VerticalLayout.cpp)
 
