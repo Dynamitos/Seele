@@ -35,7 +35,7 @@ void RenderHierarchy::addElement(PElement addedElement)
     updates.add(new AddElementRenderHierarchyUpdate{
         addedElement.getHandle(), 
         addedElement->getParent().getHandle()
-    }));
+    });
 }
 
 void RenderHierarchy::removeElement(PElement elementToRemove) 
@@ -68,6 +68,6 @@ void RenderHierarchy::updateHierarchy()
     }
     for(auto update : localUpdates)
     {
-        
+        update->apply(drawElements);
     }
 }

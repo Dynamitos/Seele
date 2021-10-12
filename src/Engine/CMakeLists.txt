@@ -1,5 +1,6 @@
 target_sources(SeeleEngine
     PRIVATE
+        EngineTypes.h
         MinimalEngine.h
         MinimalEngine.cpp
         main.cpp)

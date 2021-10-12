@@ -54,7 +54,7 @@ void Window::setFocused(PView view)
 }
 
 
-void Window::viewWorker(WindowView* windowView) 
+void Window::viewWorker(WindowView* windowView)
 {
     while(true)
     {
