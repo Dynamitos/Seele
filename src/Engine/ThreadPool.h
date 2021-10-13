@@ -58,6 +58,7 @@ public:
     }
 private:
     Array<std::thread> workers;
+    Map<JobStage, List<Job>> jobs;
     void threadLoop();
 };
 static ThreadPool& getGlobalThreadPool();

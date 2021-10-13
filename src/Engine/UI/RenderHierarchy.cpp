@@ -60,7 +60,7 @@ void RenderHierarchy::moveElement(PElement elementToMove, PElement newParent)
 
 void RenderHierarchy::updateHierarchy() 
 {
-    Array<RenderHierarchyUpdate*> localUpdates;
+    List<RenderHierarchyUpdate*> localUpdates;
     { // make a local copy of the updates so we dont hold the lock for too long
         std::lock_guard lock(updateLock);
         localUpdates = updates;

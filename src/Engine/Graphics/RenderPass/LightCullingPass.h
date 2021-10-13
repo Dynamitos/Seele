@@ -28,14 +28,14 @@ private:
     void setupFrustums();
     static constexpr uint32 BLOCK_SIZE = 8;
     static constexpr uint32 INDEX_LIGHT_ENV = 1;
-    _declspec(align(16)) struct DispatchParams
+    struct DispatchParams
     {
         glm::uvec3 numThreadGroups;
         uint32_t pad0;
         glm::uvec3 numThreads;
         uint32_t pad1;
     } dispatchParams;
-    __declspec(align(16)) struct Plane
+    struct Plane
     {
         Vector n;
         float d;
@@ -43,7 +43,7 @@ private:
         Vector p1;
         Vector p2;
     };
-    __declspec(align(16)) struct Frustum
+    struct Frustum
     {
         Plane planes[4];
     };

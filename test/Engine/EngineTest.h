@@ -1,5 +1,4 @@
 #pragma once
-#include "Fibers/JobQueue.h"
 
 namespace Seele
 {

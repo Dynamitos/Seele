@@ -28,7 +28,7 @@ public:
     virtual void createRenderPass() = 0;
     void setResources(PRenderGraphResources resources) { this->resources = resources; }
 protected:
-    _declspec(align(16)) struct ViewParameter
+    struct ViewParameter
     {
         Matrix4 viewMatrix;
         Matrix4 projectionMatrix;

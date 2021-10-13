@@ -47,6 +47,17 @@ else()
 			/opt/local/include
 			${KTX_ROOT}
 		DOC "The directory where KTX/ktx.h resides")
+
+	find_library(
+		KTX_LIBRARY
+		NAMES libktx${CMAKE_DEBUG_POSTFIX}.so
+		PATHS
+			/usr/include
+			/usr/local/include
+			/sw/include
+			/opt/local/include
+			${KTX_ROOT}
+		DOC "The directory where KTX/libktx.so resides")
 endif()
 
 # Handle REQUIRD argument, define *_FOUND variable

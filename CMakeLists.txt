@@ -5,7 +5,6 @@ set(CMAKE_CXX_STANDARD 20)
 # Handle superbuild first
 option (USE_SUPERBUILD "Whether or not a superbuild should be invoked" ON)
 
-
 set(ENGINE_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/src/Engine)
 set(EXTERNAL_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/external)
 set(ASSIMP_ROOT ${EXTERNAL_ROOT}/assimp)
@@ -22,7 +21,6 @@ set(NSAM_ROOT ${EXTERNAL_ROOT}/aftermath)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/)
 
 set(Boost_USE_STATIC_LIBS OFF)
-set(Boost_LIB_PREFIX lib)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE})
 #Workaround for vs, because it places artifacts into an additional subfolder
@@ -81,8 +79,10 @@ target_link_libraries(SeeleEngine ${SLANG_LIBRARIES})
 target_link_libraries(SeeleEngine ${ASSIMP_LIBRARIES})
 target_link_libraries(SeeleEngine ${NSAM_LIBRARIES})
 target_link_libraries(SeeleEngine ${KTX_LIBRARIES})
-#target_link_libraries(SeeleEngine ${SPIRV_LIBRARIES})
-
+if(UNIX)
+  target_link_libraries(SeeleEngine Threads::Threads)
+  target_link_libraries(SeeleEngine dl)
+endif()
 target_precompile_headers(SeeleEngine 
   PRIVATE    
     <assert.h>

@@ -62,33 +62,18 @@ else()
 	# Find include files
 	find_path(
 		NSAM_INCLUDE_DIR
-		NAMES NSAM/nsam3.h
+		NAMES GFSDK_Aftermath.h
 		PATHS
 			/usr/include
 			/usr/local/include
 			/sw/include
 			/opt/local/include
+			${NSAM_ROOT}/include
 		DOC "The directory where GL/nsam.h resides")
-
-	# Find library files
-	# Try to use static libraries
-	#find_library(
-	#	NSAM_LIBRARY
-	#	NAMES nsam3
-	#	PATHS
-	#		/usr/lib64
-	#		/usr/lib
-	#		/usr/local/lib64
-	#		/usr/local/lib
-	#		/sw/lib
-	#		/opt/local/lib
-	#		${NSAM_ROOT}/lib
-	#	DOC "The NSAM library")
-	set(NSAM_LIBRARY "")
 
 	find_file(
 		NSAM_BINARY
-		NAMES libnsam${CMAKE_DEBUG_POSTFIX}.so
+		NAMES libGFSDK_Aftermath_Lib.${CMAKE_PLATFORM}.so
 		PATHS	
 			/usr/lib64
 			/usr/lib
@@ -96,8 +81,8 @@ else()
 			/usr/local/lib
 			/sw/lib
 			/opt/local/lib
-			${NSAM_ROOT}/src
-	)
+			${NSAM_ROOT}/lib
+		PATH_SUFFIXES x64 x86)
 endif()
 
 # Handle REQUIRD argument, define *_FOUND variable

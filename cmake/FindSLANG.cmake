@@ -49,7 +49,7 @@ if (WIN32)
 		PATHS
             ${SLANG_BINARY_PATH})
 else()
-	set(SLANG_BINARY_PATH ${SLANG_ROOT}/bin/linux-${CMAKE_PLATFORM}/release/)
+	set(SLANG_BINARY_PATH ${SLANG_ROOT}/bin/linux-${CMAKE_PLATFORM}/debug/)
 	# Find include files
 	find_path(
 		SLANG_INCLUDE_DIR
@@ -62,9 +62,29 @@ else()
 			${SLANG_ROOT}
 		DOC "The directory where GL/glfw.h resides")
 
+	find_library(
+		SLANG_LIBRARY
+		NAMES libcore.a
+		PATHS
+			/usr/include
+			/usr/local/include
+			/sw/include
+			/opt/local/include
+			${SLANG_BINARY_PATH}
+		DOC "The directory where GL/glfw.h resides")
+		
+	find_library(
+		SLANG_COMPILER
+		NAMES libcompiler-core.a
+		PATHS
+			/usr/include
+			/usr/local/include
+			/sw/include
+			/opt/local/include
+			${SLANG_BINARY_PATH}
+		DOC "The directory where GL/glfw.h resides")
+		
 	# Find library files
-	# Try to use static libraries
-	set(SLANG_LIBRARY "")
 	find_library(
 		SLANG_BINARY
 		NAMES libslang.so
@@ -77,28 +97,15 @@ else()
 			/opt/local/lib
 			${SLANG_BINARY_PATH}
 		DOC "The SLANG library")
-	
-	find_file(
-		SLANG_GLSLANG
-		NAMES libslang-glslang.so
-		PATHS	
-			/usr/lib64
-			/usr/lib
-			/usr/local/lib64
-			/usr/local/lib
-			/sw/lib
-			/opt/local/lib
-			${SLANG_BINARY_PATH}
-	)
 endif()
 
 # Handle REQUIRD argument, define *_FOUND variable
-find_package_handle_standard_args(SLANG DEFAULT_MSG SLANG_INCLUDE_DIR SLANG_BINARY SLANG_GLSLANG)
+find_package_handle_standard_args(SLANG DEFAULT_MSG SLANG_INCLUDE_DIR SLANG_LIBRARY SLANG_BINARY)
 
 # Define SLANG_LIBRARIES and SLANG_INCLUDE_DIRS
 if (SLANG_FOUND)
     set(SLANG_BINARIES ${SLANG_BINARY} ${SLANG_GLSLANG})
-	set(SLANG_LIBRARIES ${SLANG_LIBRARY})
+	set(SLANG_LIBRARIES ${SLANG_LIBRARY} ${SLANG_COMPILER})
 	set(SLANG_INCLUDE_DIRS ${SLANG_INCLUDE_DIR})
 endif()
 

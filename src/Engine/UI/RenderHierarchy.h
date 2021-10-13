@@ -26,12 +26,19 @@ struct AddElementRenderHierarchyUpdate : public RenderHierarchyUpdate
 {
     Element* addedElement;
     Element* parent;
+    AddElementRenderHierarchyUpdate(Element* addedElement, Element* parent)
+        : addedElement(addedElement)
+        , parent(parent)
+    {}
     virtual void apply(Array<RenderElement>& elements) override;
 };
 
 struct RemoveElementRenderHierarchyUpdate : public RenderHierarchyUpdate
 {
     Element* element;
+    RemoveElementRenderHierarchyUpdate(Element* elementToRemove)
+        : element(elementToRemove)
+    {}
     virtual void apply(Array<RenderElement>& elements) override;
 };
 
