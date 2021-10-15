@@ -82,7 +82,7 @@ CombinedTextureParameter::~CombinedTextureParameter()
     
 }
 
-void CombinedTextureParameter::updateDescriptorSet(Gfx::PDescriptorSet descriptorSet, uint8* dst) 
+void CombinedTextureParameter::updateDescriptorSet(Gfx::PDescriptorSet descriptorSet, uint8*) 
 {
     descriptorSet->updateTexture(binding, data->getTexture(), sampler);
 }

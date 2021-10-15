@@ -26,8 +26,10 @@ void modifyRenderPassMacros(Gfx::RenderPassType type, Map<const char*, const cha
 	{
 	case Gfx::RenderPassType::DepthPrepass:
 		DepthPrepass::modifyRenderPassMacros(defines);
+		break;
 	case Gfx::RenderPassType::BasePass:
 		BasePass::modifyRenderPassMacros(defines);
+		break;
 	}
 }
 

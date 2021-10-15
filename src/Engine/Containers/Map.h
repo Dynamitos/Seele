@@ -111,10 +111,10 @@ private:
 public:
 	Map()
 		: root(nullptr)
-		, _size(0)
-		, iteratorsDirty(false)
 		, beginIt(nullptr)
 		, endIt(nullptr)
+		, iteratorsDirty(false)
+		, _size(0)
 	{
 	}
 	Map(const Map& other)

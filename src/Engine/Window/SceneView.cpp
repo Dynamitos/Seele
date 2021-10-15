@@ -1,6 +1,7 @@
 #include "SceneView.h"
 #include "Scene/Scene.h"
 #include "Window.h"
+#include "Asset/AssetRegistry.h"
 #include "Scene/Actor/CameraActor.h"
 #include "Scene/Components/CameraComponent.h"
 
@@ -15,15 +16,39 @@ Seele::SceneView::SceneView(Gfx::PGraphics graphics, PWindow owner, const Viewpo
 {
 	scene = new Scene(graphics);
 	scene->addActor(activeCamera);
+	AssetRegistry::importFile("/home/dynamitos/Assets/Ayaka/Avatar_Girl_Sword_Ayaka_Tex_Body_Diffuse.png");
+	AssetRegistry::importFile("/home/dynamitos/Assets/Ayaka/Avatar_Girl_Sword_Ayaka_Tex_Body_Lightmap.png");
+	AssetRegistry::importFile("/home/dynamitos/Assets/Ayaka/Avatar_Girl_Sword_Ayaka_Tex_Face_Diffuse.png");
+	AssetRegistry::importFile("/home/dynamitos/Assets/Ayaka/Avatar_Girl_Sword_Ayaka_Tex_Hair_Diffuse.png");
+	AssetRegistry::importFile("/home/dynamitos/Assets/Ayaka/Avatar_Girl_Sword_Ayaka_Tex_Hair_Lightmap.png");
+	AssetRegistry::importFile("/home/dynamitos/Assets/Ayaka/Avatar_Girl_Tex_FaceLightmap.png");
+	AssetRegistry::importFile("/home/dynamitos/Assets/Ayaka/Ayaka.fbx");
+	PPrimitiveComponent ayaka = new PrimitiveComponent(AssetRegistry::findMesh("Ayaka"));
+	ayaka->addWorldTranslation(Vector(0, 0, 100));
+	ayaka->setWorldScale(Vector(0.1f, 0.1f, 0.1f));
+	scene->addPrimitiveComponent(ayaka);
+
+	PRenderGraphResources resources = new RenderGraphResources();
+	depthPrepass.setResources(resources);
+	lightCullingPass.setResources(resources);
+	basePass.setResources(resources);
+
+	depthPrepass.publishOutputs();
+	lightCullingPass.publishOutputs();
+	basePass.publishOutputs();
+
+	depthPrepass.createRenderPass();
+	lightCullingPass.createRenderPass();
+	basePass.createRenderPass();
 }
 
 Seele::SceneView::~SceneView()
 {
 }
 
-void SceneView::beginFrame() 
+void SceneView::beginUpdate() 
 {
-	View::beginFrame();
+	View::beginUpdate();
 	scene->tick(Gfx::currentFrameDelta);
 }
 
@@ -31,7 +56,7 @@ void SceneView::update()
 {
 }
 
-void SceneView::endFrame() 
+void SceneView::commitUpdate() 
 {
 	depthPrepassData.staticDrawList = scene->getStaticMeshes();
 	lightCullingPassData.lightEnv = scene->getLightBuffer();
@@ -47,9 +72,17 @@ void SceneView::prepareRender()
 
 void SceneView::render() 
 {
+	depthPrepass.beginFrame();
+	lightCullingPass.beginFrame();
+	basePass.beginFrame();
+
 	depthPrepass.render();
 	lightCullingPass.render();
 	basePass.render();
+
+	depthPrepass.endFrame();
+	lightCullingPass.endFrame();
+	basePass.endFrame();
 }
 
 void SceneView::keyCallback(KeyCode code, InputAction action, KeyModifier)

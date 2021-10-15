@@ -28,7 +28,8 @@ void TextureLoader::importAsset(const std::filesystem::path& filePath)
     PTextureAsset asset = new TextureAsset(assetFileName.replace_extension("asset").filename().generic_string());
     asset->setStatus(Asset::Status::Loading);
     asset->setTexture(placeholderAsset->getTexture());
-    AssetRegistry::get().textures[asset->getFileName()] = asset;
+    std::cout << "Loading texture " << asset->getFileName() << std::endl;
+    AssetRegistry::get().registerTexture(asset);
     futures.add(std::async(std::launch::async, [this, filePath, asset] () mutable {
         using namespace std::chrono_literals;
         //std::this_thread::sleep_for(5s);
@@ -49,7 +50,6 @@ void TextureLoader::import(const std::filesystem::path& path, PTextureAsset text
     unsigned char* data = stbi_load(path.string().c_str(), &x, &y, &n, 4);
     ktxTexture2* kTexture;
     ktxTextureCreateInfo createInfo;
-    KTX_error_code result;
 
     createInfo.vkFormat = VK_FORMAT_R8G8B8A8_SRGB;
     createInfo.baseWidth = x;
@@ -62,15 +62,15 @@ void TextureLoader::import(const std::filesystem::path& path, PTextureAsset text
     createInfo.isArray = false;
     createInfo.generateMipmaps = true;
 
-    result = ktxTexture2_Create(&createInfo,
+    ktxTexture2_Create(&createInfo,
         KTX_TEXTURE_CREATE_ALLOC_STORAGE,
         &kTexture);
 
-    result = ktxTexture_SetImageFromMemory(ktxTexture(kTexture),
+    ktxTexture_SetImageFromMemory(ktxTexture(kTexture),
         0, 0, 0, data, x * y * 4 * sizeof(unsigned char));
 
     stbi_image_free(data);
 
-    result = ktxTexture_WriteToNamedFile(ktxTexture(kTexture), textureAsset->getFullPath().c_str());
+    ktxTexture_WriteToNamedFile(ktxTexture(kTexture), textureAsset->getFullPath().c_str());
     ktxTexture_Destroy(ktxTexture(kTexture));
 }

@@ -86,8 +86,8 @@ void MeshLoader::loadMaterials(const aiScene* scene, Array<PMaterialAsset>& glob
         outMatFile << std::setw(4) << matCode;
         outMatFile.flush();
         outMatFile.close();
-        //TODO: let the material loader handle this instead
-        //std::cout << matCode << std::endl;
+
+        std::cout << "writing json to " << outMatFilename << std::endl;
         PMaterial result = new Material(outMatFilename);
         result->compile();
         graphics->getShaderCompiler()->registerMaterial(result);
@@ -225,12 +225,13 @@ void MeshLoader::loadTextures(const aiScene* scene, const std::filesystem::path&
             stbi_write_png(texPngPath.string().c_str(), tex->mWidth, tex->mHeight, 4, tex->pcData, tex->mWidth * 32);
             delete texData;
         }
-
+        std::cout << "Loading model texture " << texPngPath.string() << std::endl;
         AssetRegistry::importFile(texPngPath.string());
     }
 }
 void MeshLoader::import(PMeshAsset meshAsset, const std::filesystem::path &path)
 {
+    std::cout << "Starting to import "<<path << std::endl;
     meshAsset->setStatus(Asset::Status::Loading);
     Assimp::Importer importer;
     importer.ReadFile(path.string().c_str(),
@@ -262,4 +263,5 @@ void MeshLoader::import(PMeshAsset meshAsset, const std::filesystem::path &path)
     }
     meshAsset->setStatus(Asset::Status::Ready);
     meshAsset->save();
+    std::cout << "Finished loading " << path << std::endl;
 }

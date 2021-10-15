@@ -63,8 +63,8 @@ public:
 		: setHandle(VK_NULL_HANDLE)
 		, graphics(graphics)
 		, owner(owner)
-		, currentlyInUse(false)
 		, currentlyBound(false)
+		, currentlyInUse(false)
 	{
 	}
 	virtual ~DescriptorSet();

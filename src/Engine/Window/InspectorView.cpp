@@ -5,7 +5,7 @@ using namespace Seele;
 
 InspectorView::InspectorView(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo &createInfo) 
     : View(graphics, window, createInfo)
-    , renderGraph(UIPass(graphics, viewport, new Gfx::SwapchainAttachment(window->getGfxHandle())))
+    , uiPass(UIPass(graphics, viewport, new Gfx::SwapchainAttachment(window->getGfxHandle())))
 {
 }
 
@@ -13,7 +13,7 @@ InspectorView::~InspectorView()
 {
 }
 
-void InspectorView::beginFrame() 
+void InspectorView::beginUpdate() 
 {
 }
 
@@ -22,7 +22,7 @@ void InspectorView::update()
     
 }
 
-void InspectorView::endFrame() 
+void InspectorView::commitUpdate() 
 {
     
 }

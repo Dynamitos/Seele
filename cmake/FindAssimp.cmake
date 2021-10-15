@@ -55,7 +55,7 @@ else()
 	# Find library files
 	find_library(
 		ASSIMP_LIBRARY
-		NAMES libassimp${CMAKE_DEBUG_POSTFIX}.a
+		NAMES libassimp${CMAKE_DEBUG_POSTFIX}.so
 		PATHS
 			/usr/lib64
 			/usr/lib
@@ -66,22 +66,10 @@ else()
 			${ASSIMP_ROOT}/code
 		DOC "Assimp library file")
 
-	find_file(
-		ASSIMP_BINARY
-		NAMES libassimp${CMAKE_DEBUG_POSTFIX}.so
-		PATHS
-			/usr/lib64
-			/usr/lib
-			/usr/local/lib64
-			/usr/local/lib
-			/sw/lib
-			/opt/local/lib
-			${ASSIMP_ROOT}/code
-		DOC "The Assimp library")
 endif()
 
 # Handle REQUIRD argument, define *_FOUND variable
-find_package_handle_standard_args(assimp DEFAULT_MSG ASSIMP_INCLUDE_DIR ASSIMP_BINARY)
+find_package_handle_standard_args(assimp DEFAULT_MSG ASSIMP_INCLUDE_DIR ASSIMP_LIBRARY)
 
 # Define GLFW_LIBRARIES and GLFW_INCLUDE_DIRS
 if (ASSIMP_FOUND)

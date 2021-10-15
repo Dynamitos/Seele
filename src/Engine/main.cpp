@@ -9,6 +9,7 @@ using namespace Seele;
 int main()
 {
 	PWindowManager windowManager = new WindowManager();
+	AssetRegistry::init("/home/dynamitos/TestSeeleProject");
 	WindowCreateInfo mainWindowInfo;
 	mainWindowInfo.title = "SeeleEngine";
 	mainWindowInfo.width = 1280;
@@ -33,15 +34,6 @@ int main()
 	PInspectorView inspectorView = new InspectorView(windowManager->getGraphics(), window, inspectorViewInfo);
 	window->addView(inspectorView);
 	sceneView->setFocused();
-	AssetRegistry::init("D:\\Private\\Programming\\C++\\TestSeeleProject\\");
-	AssetRegistry::importFile("D:\\Private\\Programming\\Unreal Engine\\Assets\\Ely\\Ely.fbx");
-	AssetRegistry::importFile("D:\\Private\\Programming\\Unreal Engine\\Assets\\Cube\\cube.obj");
-	AssetRegistry::importFile("D:\\Private\\Programming\\Unreal Engine\\Assets\\Plane\\plane.fbx");
-	PPrimitiveComponent plane = new PrimitiveComponent(AssetRegistry::findMesh("plane"));
-	plane->setWorldScale(Vector(100, 100, 100));
-	PPrimitiveComponent arissa = new PrimitiveComponent(AssetRegistry::findMesh("Ely"));
-	arissa->addWorldTranslation(Vector(0, 0, 100));
-	arissa->setWorldScale(Vector(0.1f, 0.1f, 0.1f));
 	while (windowManager->isActive())
 	{
 		windowManager->render();

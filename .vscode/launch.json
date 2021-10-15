@@ -5,6 +5,26 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Engine Debug (Linux)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceRoot}/bin/Debug/SeeleEngine",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceRoot}/bin/Debug",
+            "console": "internalConsole",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable break on all exceptions",
+                    "text": "catch throw",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
             "name": "Engine Debug",
             "type": "cppvsdbg",
             "request": "launch",

@@ -5,10 +5,10 @@
         "diffuseTexture": {
             "type": "Texture2D"
         },
-	    "specularTexture": {
+        "specularTexture": {
             "type": "Texture2D"
         },
-	    "normalTexture": {
+        "normalTexture": {
             "type": "Texture2D"
         },
         "uvScale": {
@@ -19,82 +19,43 @@
             "type": "float",
             "default": "0.0f"
         },
-        "subsurface": {
-            "type": "float",
-            "default": "0.0f"
-        },
         "roughness": {
             "type": "float",
             "default": "0.5f"
-        },
-        "specularTint": {
-            "type": "float",
-            "default": "0.0f"
-        },
-        "anisotropic": {
-            "type": "float",
-            "default": "0.0f"
         },
         "sheen": {
             "type": "float",
             "default": "0.0f"
         },
-        "sheenTint": {
-            "type": "float",
-            "default": "0.5f"
-        },
-        "clearCoat": {
-            "type": "float",
-            "default": "0.0f"
-        },
-        "clearCoatGloss": {
-            "type": "float",
-            "default": "1.0f"
-        },
-		"worldOffset": {
-			"type": "float3",
-			"default": "float3(0, 0, 0)"
+        "worldOffset": {
+            "type": "float3",
+            "default": "float3(0, 0, 0)"
         },
         "textureSampler": {
             "type": "SamplerState"
         }
     },
     "code": {
-		"baseColor": [
-			"return diffuseTexture.Sample(textureSampler, input.texCoords[0] * uvScale).xyz;"
+        "baseColor": [
+            "return diffuseTexture.Sample(textureSampler, input.texCoords[0] * uvScale).xyz;"
         ],
-		"metallic": [
-			"return 0;"
+        "metallic": [
+            "return metallic;"
         ],
-		"normal": [
-			"return normalTexture.Sample(textureSampler, input.texCoords[0] * uvScale).xyz;"
+        "normal": [
+            "return normalTexture.Sample(textureSampler, input.texCoords[0] * uvScale).xyz;"
         ],
-		"specular": [
-			"return specularTexture.Sample(textureSampler, input.texCoords[0] * uvScale).x;"
+        "specular": [
+            "return specularTexture.Sample(textureSampler, input.texCoords[0] * uvScale).x;"
         ],
-		"roughness": [
-			"return roughness;"
+        "roughness": [
+            "return roughness;"
         ],
-		"specularTint": [
-			"return specularTint;"
+        "sheen": [
+            "return sheen;"
         ],
-		"anisotropic": [
-			"return anisotropic;"
-        ],
-		"sheen": [
-			"return sheen;"
-        ],
-		"sheenTint": [
-			"return sheenTint;"
-        ],
-		"clearCoat": [
-			"return clearCoat;"
-        ],
-		"clearCoatGloss": [
-			"return clearCoatGloss;"
-        ],
-		"worldOffset": [
-			"return worldOffset;"
+        "worldOffset": [
+            "return worldOffset;"
         ]
     }
 }

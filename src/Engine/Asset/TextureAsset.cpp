@@ -33,7 +33,8 @@ void TextureAsset::load()
 {
     setStatus(Status::Loading);
     ktxTexture2* kTexture;
-    KTX_error_code result = ktxTexture2_CreateFromNamedFile(getFullPath().c_str(), 
+    // TODO: consider return
+    ktxTexture2_CreateFromNamedFile(getFullPath().c_str(), 
         KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, 
         &kTexture);
     TextureCreateInfo createInfo;

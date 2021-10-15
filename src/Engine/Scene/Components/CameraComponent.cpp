@@ -6,8 +6,8 @@
 using namespace Seele;
 
 CameraComponent::CameraComponent() 
-    : bNeedsProjectionBuild(true)
-    , bNeedsViewBuild(true)
+    : bNeedsViewBuild(true)
+    , bNeedsProjectionBuild(true)
     , originPoint(0, 0, 0)
     , cameraPosition(0, 0, 0)
 {

@@ -32,9 +32,9 @@ namespace Seele
 		Array(Init_t)
 			: arraySize(0)
 			, allocated(0)
-			, _data(nullptr)
 			, beginIt(Iterator(nullptr))
 			, endIt(Iterator(nullptr))
+			, _data(nullptr)
 		{
 		}
 		Array(size_t size, T value = T())
@@ -420,7 +420,7 @@ namespace Seele
 		}
 		friend class boost::serialization::access;
 		template<class Archive>
-		void serialize(Archive& ar, const unsigned int version)
+		void serialize(Archive& ar, const unsigned int)
 		{
 			ar & arraySize;
 			resize(arraySize);

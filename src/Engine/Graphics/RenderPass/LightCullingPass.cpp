@@ -232,7 +232,7 @@ void LightCullingPass::createRenderPass()
 	depthAttachment = resources->requestRenderTarget("DEPTHPREPASS_DEPTH")->getTexture();
 }
 
-void LightCullingPass::modifyRenderPassMacros(Map<const char*, const char*>& defines) 
+void LightCullingPass::modifyRenderPassMacros(Map<const char*, const char*>&) 
 {
 }
 

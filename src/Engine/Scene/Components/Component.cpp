@@ -13,7 +13,7 @@ Component::Component()
 Component::~Component()
 {
 }
-void Component::tick(float deltaTime)
+void Component::tick(float)
 {
 }
 PComponent Component::getParent()

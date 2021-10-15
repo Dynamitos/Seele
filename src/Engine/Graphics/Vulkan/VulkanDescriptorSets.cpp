@@ -117,7 +117,7 @@ DescriptorSet::~DescriptorSet()
 void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PUniformBuffer uniformBuffer)
 {
 	PUniformBuffer vulkanBuffer = uniformBuffer.cast<UniformBuffer>();
-	UniformBuffer* cachedBuffer = reinterpret_cast<UniformBuffer*>(cachedData[binding]);
+	//UniformBuffer* cachedBuffer = reinterpret_cast<UniformBuffer*>(cachedData[binding]);
 	/*if(vulkanBuffer->isDataEquals(cachedBuffer))
 	{
 		std::cout << "uniform data equal, skip" << std::endl; 

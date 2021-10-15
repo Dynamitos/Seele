@@ -14,7 +14,7 @@ View::~View()
 {
 }
 
-void View::applyArea(URect area)
+void View::applyArea(URect)
 {
 
 }

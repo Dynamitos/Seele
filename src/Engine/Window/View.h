@@ -12,10 +12,10 @@ public:
 	virtual ~View();
 	
 	// These are called from the view thread, and handle updating game data
-	virtual void beginFrame() {}
+	virtual void beginUpdate() {}
 	virtual void update() {}
 	// End frame is called with a lock, so it is safe to write to shared memory
-	virtual void endFrame() {}
+	virtual void commitUpdate() {}
 
 	// These are called from the render thread
 	// prepare render is also locked, so reading from shared memory is also safe

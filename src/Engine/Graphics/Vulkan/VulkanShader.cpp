@@ -2,7 +2,7 @@
 #include "VulkanGraphics.h"
 #include "VulkanDescriptorSets.h"
 #include "slang.h"
-//#include "spirv_cross/spirv_reflect.hpp"
+#include "stdlib.h"
 
 using namespace slang;
 using namespace Seele;
@@ -55,7 +55,7 @@ static SlangStage getStageFromShaderType(ShaderType type)
 void Shader::create(const ShaderCreateInfo& createInfo)
 {
     entryPointName = createInfo.entryPoint;
-    static SlangSession* session = spCreateSession(NULL);
+    static SlangSession* session = spCreateSession(nullptr);
 
     SlangCompileRequest* request = spCreateCompileRequest(session);
     int targetIndex = spAddCodeGenTarget(request, SLANG_SPIRV);

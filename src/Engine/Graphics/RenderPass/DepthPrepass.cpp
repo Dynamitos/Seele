@@ -138,10 +138,10 @@ void DepthPrepass::render()
         Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT);
     depthAttachment->getTexture()->transferOwnership(Gfx::QueueType::GRAPHICS);
     graphics->beginRenderPass(renderPass);
-    /*for (auto &&meshBatch : scene->getStaticMeshes())
+    for (auto &&meshBatch : passData.staticDrawList)
     {
         processor->addMeshBatch(meshBatch, renderPass, depthPrepassLayout, primitiveLayout, descriptorSets);
-    }*/
+    }
     graphics->executeCommands(processor->getRenderCommands());
     graphics->endRenderPass();
 }

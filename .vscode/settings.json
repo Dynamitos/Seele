@@ -112,14 +112,19 @@
         "span": "cpp",
         "charconv": "cpp",
         "format": "cpp",
-        "semaphore": "cpp"
+        "semaphore": "cpp",
+        "netfwd": "cpp",
+        "string_view": "cpp",
+        "rope": "cpp",
+        "slist": "cpp",
+        "numbers": "cpp"
     },
     "cmake.skipConfigureIfCachePresent": false,
     "cmake.configureArgs": [
         "-Wno-dev"
     ],
     "C_Cpp.default.cppStandard": "c++20",
-    "C_Cpp.default.intelliSenseMode": "msvc-x64",
+    "C_Cpp.default.intelliSenseMode": "gcc-x64",
     "files.watcherExclude": {
         "**/target": true
     },

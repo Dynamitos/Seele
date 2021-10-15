@@ -304,7 +304,7 @@ ComputeCommand::~ComputeCommand()
 {
 }
 
-void ComputeCommand::begin(PCmdBuffer parent) 
+void ComputeCommand::begin(PCmdBuffer) 
 {
     ready = false;
     VkCommandBufferBeginInfo beginInfo =

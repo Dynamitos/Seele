@@ -162,9 +162,9 @@ void Window::advanceBackBuffer()
     imageAcquiredSemaphore = imageAcquired[semaphoreIndex];
     currentImageIndex = imageIndex;
 
-    PCmdBuffer cmdBuffer = graphics->getGraphicsCommands()->getCommands();
     backBufferImages[currentImageIndex]->changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
     VkClearColorValue clearColor = {0.0f, 0.0f, 0.0f, 0.0f};
+    PCmdBuffer cmdBuffer = graphics->getGraphicsCommands()->getCommands();
     VkImageSubresourceRange range = init::ImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT);
     vkCmdClearColorImage(
         cmdBuffer->getHandle(), 

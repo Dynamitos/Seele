@@ -432,16 +432,19 @@ void Graphics::pickPhysicalDevice()
 		vkGetPhysicalDeviceFeatures(dev, &features);
 		if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
 		{
+			std::cout << "found dedicated gpu " << props.deviceName << std::endl;
 			currentRating += 100;
 		}
 		else if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)
 		{
+			std::cout << "found integrated gpu " << props.deviceName << std::endl;
 			currentRating += 10;
 		}
 		if (currentRating > deviceRating)
 		{
 			deviceRating = currentRating;
 			bestDevice = dev;
+			std::cout << "bestDevice: " << props.deviceName << std::endl; 
 		}
 	}
 	physicalDevice = bestDevice;

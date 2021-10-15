@@ -58,9 +58,9 @@ void Window::viewWorker(WindowView* windowView)
 {
     while(true)
     {
-        windowView->view->beginFrame();
+        windowView->view->beginUpdate();
         windowView->view->update();
         std::lock_guard lock(windowView->workerMutex);
-        windowView->view->endFrame();
+        windowView->view->commitUpdate();
     }
 }

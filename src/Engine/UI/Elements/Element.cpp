@@ -11,6 +11,11 @@ Element::~Element()
 {
 }
 
+PElement Element::getParent() const
+{
+    return parent;
+}
+
 void Element::addChild(PElement element) 
 {
     children.add(element);

@@ -68,23 +68,9 @@ else()
 			/opt/local/include
 		DOC "The directory where GL/glfw.h resides")
 
-	# Find library files
-	# Try to use static libraries
-	find_library(
-		GLFW_LIBRARY
-		NAMES libglfw3${CMAKE_DEBUG_POSTFIX}.a
-		PATHS
-			/usr/lib64
-			/usr/lib
-			/usr/local/lib64
-			/usr/local/lib
-			/sw/lib
-			/opt/local/lib
-			${GLFW_ROOT}/src
-		DOC "The GLFW library")
-	
+	# Find library files	
 	find_file(
-		GLFW_BINARY
+		GLFW_LIBRARY
 		NAMES libglfw${CMAKE_DEBUG_POSTFIX}.so
 		PATHS	
 			/usr/lib64
@@ -98,7 +84,7 @@ else()
 endif()
 
 # Handle REQUIRD argument, define *_FOUND variable
-find_package_handle_standard_args(GLFW DEFAULT_MSG GLFW_INCLUDE_DIR GLFW_LIBRARY GLFW_BINARY)
+find_package_handle_standard_args(GLFW DEFAULT_MSG GLFW_INCLUDE_DIR GLFW_LIBRARY)
 
 # Define GLFW_LIBRARIES and GLFW_INCLUDE_DIRS
 if (GLFW_FOUND)

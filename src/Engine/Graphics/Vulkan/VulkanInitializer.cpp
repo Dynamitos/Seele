@@ -765,8 +765,7 @@ VkPipelineShaderStageCreateInfo init::PipelineShaderStageCreateInfo(VkShaderStag
 	return info;
 }
 
-#pragma warning(disable : 4100)
-VkBool32 Seele::Vulkan::debugCallback(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objType, uint64_t obj, size_t location, int32_t code, const char *layerPrefix, const char *msg, void *userDataManager)
+VkBool32 Seele::Vulkan::debugCallback(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT, uint64_t, size_t, int32_t, const char *layerPrefix, const char *msg, void *)
 {
 	if(flags & VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT)
 	{
@@ -778,7 +777,6 @@ VkBool32 Seele::Vulkan::debugCallback(VkDebugReportFlagsEXT flags, VkDebugReport
 		return VK_FALSE;
 	}
 }
-#pragma warning(default : 4100)
 
 VkResult Seele::Vulkan::CreateDebugReportCallbackEXT(VkInstance instance, const VkDebugReportCallbackCreateInfoEXT *pCreateInfo, const VkAllocationCallbacks *pAllocator, VkDebugReportCallbackEXT *pCallback)
 {

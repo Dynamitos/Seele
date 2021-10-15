@@ -124,6 +124,11 @@ void AssetRegistry::registerMesh(PMeshAsset mesh)
     }
 }
 
+void AssetRegistry::registerTexture(PTextureAsset texture) 
+{
+    textures[texture->getFileName()] = texture;
+}
+
 void AssetRegistry::registerMaterial(PMaterialAsset material)
 {
     materials[material->getFileName()] = material;

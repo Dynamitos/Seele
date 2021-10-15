@@ -54,7 +54,6 @@ void Material::compile()
     std::string profile = j["profile"].get<std::string>();
 
     codeStream << "import VERTEX_INPUT_IMPORT;" << std::endl;
-    codeStream << "import LightEnv;" << std::endl;
     codeStream << "import Material;" << std::endl;
     codeStream << "import BRDF;" << std::endl;
     codeStream << "import MaterialParameter;" << std::endl;
@@ -105,7 +104,9 @@ void Material::compile()
             layout->addDescriptorBinding(bindingCounter++, Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
             if(defaultValue != param.value().end())
             {
-                p->data = AssetRegistry::findTexture(defaultValue.value().get<std::string>());
+                std::string defaultString = defaultValue.value().get<std::string>();
+                std::cout << "Texture parameter " << defaultString << std::endl;
+                p->data = AssetRegistry::findTexture(defaultString);
             }
             else
             {

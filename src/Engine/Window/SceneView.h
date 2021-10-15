@@ -13,9 +13,9 @@ class SceneView : public View
 public:
 	SceneView(Gfx::PGraphics graphics, PWindow owner, const ViewportCreateInfo &createInfo);
 	~SceneView();
-	virtual void beginFrame() override;
+	virtual void beginUpdate() override;
 	virtual void update() override;
-	virtual void endFrame() override;
+	virtual void commitUpdate() override;
 
 	virtual void prepareRender() override;
 	virtual void render() override;
