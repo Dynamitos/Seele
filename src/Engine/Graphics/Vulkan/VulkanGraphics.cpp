@@ -460,61 +460,68 @@ void Graphics::createDevice(GraphicsInitializer initializer)
 	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &numQueueFamilies, queueProperties.data());
 
 	Array<VkDeviceQueueCreateInfo> queueInfos;
-	int32_t graphicsQueueFamilyIndex = -1;
-	int32_t transferQueueFamilyIndex = -1;
-	int32_t dedicatedTransferQueueFamilyIndex = -1;
-	int32_t computeQueueFamilyIndex = -1;
-	int32_t asyncComputeFamilyIndex = -1;
+	struct QueueCreateInfo
+	{
+		int32 familyIndex = -1;
+		int32 queueIndex = -1;
+	};
+	QueueCreateInfo graphicsQueueInfo;
+	QueueCreateInfo transferQueueInfo;
+	QueueCreateInfo dedicatedTransferQueueInfo;
+	QueueCreateInfo computeQueueInfo;
+	QueueCreateInfo asyncComputeInfo;
 	uint32 numPriorities = 0;
+	auto checkFamilyProperty = [](VkQueueFamilyProperties currProps, uint32 checkBit){
+		return (currProps.queueFlags & checkBit) == checkBit;
+	};
 	for (uint32 familyIndex = 0; familyIndex < queueProperties.size(); ++familyIndex)
 	{
 		uint32 numQueuesForFamily = 0;
 		VkQueueFamilyProperties currProps = queueProperties[familyIndex];
-		// bool bSparse = currProps.queueFlags & VK_QUEUE_SPARSE_BINDING_BIT;
-		currProps.queueFlags = currProps.queueFlags ^ VK_QUEUE_SPARSE_BINDING_BIT;
-		if ((currProps.queueFlags & VK_QUEUE_GRAPHICS_BIT) == VK_QUEUE_GRAPHICS_BIT)
+
+		if (checkFamilyProperty(currProps, VK_QUEUE_GRAPHICS_BIT))
 		{
-			if (graphicsQueueFamilyIndex == -1)
+			if (graphicsQueueInfo.familyIndex == -1)
 			{
-				graphicsQueueFamilyIndex = familyIndex;
+				graphicsQueueInfo.familyIndex = familyIndex;
 				numQueuesForFamily++;
 			}
 		}
 		if ((currProps.queueFlags & VK_QUEUE_COMPUTE_BIT) == VK_QUEUE_COMPUTE_BIT)
 		{
-			if (computeQueueFamilyIndex == -1)
+			if (computeQueueInfo.familyIndex == -1)
 			{
-				computeQueueFamilyIndex = familyIndex;
+				computeQueueInfo.familyIndex = familyIndex;
 			}
-			if (Gfx::useAsyncCompute)
+			if (Gfx::useAsyncCompute && numQueueFamilies > 1)
 			{
-				if (asyncComputeFamilyIndex == -1)
+				if (asyncComputeInfo.familyIndex == -1)
 				{
-					if (familyIndex == (uint32)graphicsQueueFamilyIndex)
+					if (familyIndex == (uint32)graphicsQueueInfo.familyIndex)
 					{
 						if (currProps.queueCount > 1)
 						{
-							asyncComputeFamilyIndex = familyIndex;
+							asyncComputeInfo.familyIndex = familyIndex;
 							numQueuesForFamily++;
 						}
 					}
 					else
 					{
-						asyncComputeFamilyIndex = familyIndex;
+						asyncComputeInfo.familyIndex = familyIndex;
 					}
 				}
 			}
 		}
 		if ((currProps.queueFlags & VK_QUEUE_TRANSFER_BIT) == VK_QUEUE_TRANSFER_BIT)
 		{
-			if (transferQueueFamilyIndex == -1)
+			if (transferQueueInfo.familyIndex == -1)
 			{
-				transferQueueFamilyIndex = familyIndex;
+				transferQueueInfo.familyIndex = familyIndex;
 				numQueuesForFamily++;
 			}
 			if ((currProps.queueFlags ^ VK_QUEUE_TRANSFER_BIT) == 0)
 			{
-				dedicatedTransferQueueFamilyIndex = familyIndex;
+				dedicatedTransferQueueInfo.familyIndex = familyIndex;
 				numQueuesForFamily++;
 			}
 		}
@@ -560,28 +567,28 @@ void Graphics::createDevice(GraphicsInitializer initializer)
 
 	VK_CHECK(vkCreateDevice(physicalDevice, &deviceInfo, nullptr, &handle));
 
-	graphicsQueue = new Queue(this, Gfx::QueueType::GRAPHICS, graphicsQueueFamilyIndex, 0);
-	if (Gfx::useAsyncCompute && asyncComputeFamilyIndex != -1)
+	graphicsQueue = new Queue(this, Gfx::QueueType::GRAPHICS, graphicsQueueInfo.familyIndex, 0);
+	if (Gfx::useAsyncCompute && asyncComputeInfo.familyIndex != -1)
 	{
-		if (asyncComputeFamilyIndex == graphicsQueueFamilyIndex)
+		if (asyncComputeInfo.familyIndex == graphicsQueueInfo.familyIndex)
 		{
 			// Same family as graphics, but different queue
-			computeQueue = new Queue(this, Gfx::QueueType::COMPUTE, asyncComputeFamilyIndex, 1);
+			computeQueue = new Queue(this, Gfx::QueueType::COMPUTE, asyncComputeInfo.familyIndex, 1);
 		}
 		else
 		{
 			// Different family
-			computeQueue = new Queue(this, Gfx::QueueType::COMPUTE, asyncComputeFamilyIndex, 0);
+			computeQueue = new Queue(this, Gfx::QueueType::COMPUTE, asyncComputeInfo.familyIndex, 0);
 		}
 	}
 	else
 	{
-		computeQueue = new Queue(this, Gfx::QueueType::COMPUTE, computeQueueFamilyIndex, 0);
+		computeQueue = new Queue(this, Gfx::QueueType::COMPUTE, computeQueueInfo.familyIndex, 0);
 	}
-	transferQueue = new Queue(this, Gfx::QueueType::TRANSFER, transferQueueFamilyIndex, 0);
-	if (dedicatedTransferQueueFamilyIndex != -1)
+	transferQueue = new Queue(this, Gfx::QueueType::TRANSFER, transferQueueInfo.familyIndex, 0);
+	if (dedicatedTransferQueueInfo.familyIndex != -1)
 	{
-		dedicatedTransferQueue = new Queue(this, Gfx::QueueType::DEDICATED_TRANSFER, dedicatedTransferQueueFamilyIndex, 0);
+		dedicatedTransferQueue = new Queue(this, Gfx::QueueType::DEDICATED_TRANSFER, dedicatedTransferQueueInfo.familyIndex, 0);
 	}
 	else
 	{
