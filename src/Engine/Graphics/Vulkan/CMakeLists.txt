@@ -1,5 +1,10 @@
 target_sources(SeeleEngine
 	PRIVATE
+		NsightAftermathGpuCrashTracker.h
+		NsightAftermathGpuCrashTracker.cpp
+		NsightAftermathHelpers.h
+		NsightAftermathShaderDatabase.h
+		NsightAftermathShaderDatabase.cpp
 		VulkanAllocator.h
 		VulkanAllocator.cpp
 		VulkanBuffer.cpp

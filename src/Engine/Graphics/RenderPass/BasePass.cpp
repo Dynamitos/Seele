@@ -144,10 +144,6 @@ void BasePass::beginFrame()
     descriptorSets[INDEX_VIEW_PARAMS] = viewLayout->allocateDescriptorSet();
     descriptorSets[INDEX_VIEW_PARAMS]->updateBuffer(0, viewParamBuffer);
     descriptorSets[INDEX_VIEW_PARAMS]->writeChanges();
-    for(auto &&meshBatch : passData.staticDrawList)
-    {
-        meshBatch.material->updateDescriptorData();
-    }
 }
 
 void BasePass::render() 

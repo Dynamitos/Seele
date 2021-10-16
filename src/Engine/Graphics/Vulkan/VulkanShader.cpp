@@ -87,6 +87,16 @@ void Shader::create(const ShaderCreateInfo& createInfo)
         char const* diagnostics = spGetDiagnosticOutput(request);
         std::cout << "Compile error for shader " << createInfo.name << std::endl;
         std::cout << diagnostics << std::endl;
+        std::cout << "Defines: " << std::endl;
+        for(auto define : createInfo.defines)
+        {
+            std::cout << define.key << ": " << define.value << std::endl;
+        }
+        std::cout << "For shader code: " << std::endl;
+        for(auto code : createInfo.shaderCode)
+        {
+            std::cout << code << std::endl;
+        }
         return;
     }
     size_t dataSize = 0;

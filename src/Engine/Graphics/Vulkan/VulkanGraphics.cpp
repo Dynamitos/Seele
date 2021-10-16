@@ -414,7 +414,7 @@ void Graphics::setupDebugCallback()
 
 	VK_CHECK(CreateDebugReportCallbackEXT(instance, &createInfo, nullptr, &callback));
 
-	//crashTracker.Initialize();
+	crashTracker.Initialize();
 }
 
 void Graphics::pickPhysicalDevice()

@@ -147,6 +147,7 @@ void CmdBuffer::refreshFence()
             {
                 descriptor->unbind();
             }
+            boundDescriptors.clear();
             state = State::ReadyBegin;
         }
     }
@@ -249,7 +250,7 @@ void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet)
 {
     auto descriptor = descriptorSet.cast<DescriptorSet>();
     boundDescriptors.add(descriptor.getHandle());
-    descriptor->bind();
+    descriptor->bind(this);
 
     VkDescriptorSet setHandle = descriptor->getHandle();
     vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getLayout(), descriptorSet->getSetIndex(), 1, &setHandle, 0, nullptr);
@@ -260,7 +261,7 @@ void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorS
     for(uint32 i = 0; i < descriptorSets.size(); ++i)
     {
         auto descriptorSet = descriptorSets[i].cast<DescriptorSet>();
-        descriptorSet->bind();
+        descriptorSet->bind(this);
 
         boundDescriptors.add(descriptorSet.getHandle());
         sets[descriptorSet->getSetIndex()] = descriptorSet->getHandle();
@@ -333,7 +334,7 @@ void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet)
 {
     auto descriptor = descriptorSet.cast<DescriptorSet>();
     boundDescriptors.add(descriptor.getHandle());
-    descriptor->bind();
+    descriptor->bind(this);
     //std::cout << "Binding descriptor " << descriptor->getHandle() << " to cmd " << handle << std::endl;
     VkDescriptorSet setHandle = descriptor->getHandle();
     vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->getLayout(), descriptorSet->getSetIndex(), 1, &setHandle, 0, nullptr);
@@ -346,7 +347,7 @@ void ComputeCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptor
     {
         auto descriptorSet = descriptorSets[i].cast<DescriptorSet>();
         boundDescriptors.add(descriptorSet.getHandle());
-        descriptorSet->bind();
+        descriptorSet->bind(this);
         //std::cout << "Binding descriptor " << descriptorSet->getHandle() << " to cmd " << handle << std::endl;
         sets[descriptorSet->getSetIndex()] = descriptorSet->getHandle();
     }
@@ -393,7 +394,7 @@ PRenderCommand CommandBufferManager::createRenderCommand(const std::string& name
     for (uint32 i = 0; i < allocatedRenderCommands.size(); ++i)
     {
         PRenderCommand cmdBuffer = allocatedRenderCommands[i];
-        if (cmdBuffer->ready)
+        if (cmdBuffer->isReady())
         {
             cmdBuffer->begin(activeCmdBuffer);
             return cmdBuffer;

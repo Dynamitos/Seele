@@ -105,19 +105,25 @@ add_subdirectory(src/)
 
 if(MSVC)
   set(_CRT_SECURE_NO_WARNINGS)
-#  target_compile_options(SeeleEngine PRIVATE /DEBUG:FASTLINK /Zi)
+  target_compile_options(SeeleEngine PRIVATE /DEBUG:FASTLINK /Zi)
 else()
-  target_compile_options(SeeleEngine PRIVATE -Wall -Wextra -Wno-delete-incomplete -pedantic -fcoroutines)
+  target_compile_options(SeeleEngine PRIVATE -g -Wall -Wextra -Wno-delete-incomplete -pedantic -fcoroutines)
 endif()
 
 add_executable(Seele_unit_tests "")
 add_subdirectory(test/)
 
+if(WIN32)
+  add_custom_target(copy-binaries ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SLANG_BINARIES} $<TARGET_FILE_DIR:SeeleEngine>
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SLANG_GLSLANG} $<TARGET_FILE_DIR:SeeleEngine>
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${GLFW_BINARY} $<TARGET_FILE_DIR:SeeleEngine>
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${ASSIMP_BINARY} $<TARGET_FILE_DIR:SeeleEngine>
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${NSAM_BINARIES} $<TARGET_FILE_DIR:SeeleEngine>)
+else()
+  add_custom_target(copy-binaries ALL COMMAND "")
+endif()
+
 add_custom_target(copy-runtime-files ALL
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/res $<TARGET_FILE_DIR:SeeleEngine>
-	COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SLANG_BINARIES} $<TARGET_FILE_DIR:SeeleEngine>
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SLANG_GLSLANG} $<TARGET_FILE_DIR:SeeleEngine>
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different ${GLFW_BINARY} $<TARGET_FILE_DIR:SeeleEngine>
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different ${ASSIMP_BINARY} $<TARGET_FILE_DIR:SeeleEngine>
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different ${NSAM_BINARIES} $<TARGET_FILE_DIR:SeeleEngine>
-	DEPENDS SeeleEngine)
+	DEPENDS SeeleEngine copy-binaries)

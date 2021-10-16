@@ -56,9 +56,9 @@ void Material::compile()
     codeStream << "import VERTEX_INPUT_IMPORT;" << std::endl;
     codeStream << "import Material;" << std::endl;
     codeStream << "import BRDF;" << std::endl;
-    codeStream << "import MaterialParameter;" << std::endl;
+    codeStream << "import MaterialParameter;" << std::endl << std::endl;
 
-    codeStream << "struct " << materialName << ": IMaterial {" << std::endl;
+    codeStream << "struct " << materialName << " : IMaterial {" << std::endl;
     uint32 uniformBufferOffset = 0;
     uint32 bindingCounter = 0; // Uniform buffers are always binding 0
     uniformBinding = -1;
@@ -69,7 +69,7 @@ void Material::compile()
         if(type.compare("float") == 0)
         {
             PFloatParameter p = new FloatParameter(param.key(), uniformBufferOffset, 0);
-            codeStream << "layout(offset = " << uniformBufferOffset << ")";
+            codeStream << "\tlayout(offset = " << uniformBufferOffset << ")";
             if(uniformBinding == -1)
             {
                 layout->addDescriptorBinding(bindingCounter, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
@@ -85,7 +85,7 @@ void Material::compile()
         else if(type.compare("float3") == 0)
         {
             PVectorParameter p = new VectorParameter(param.key(), uniformBufferOffset, 0);
-            codeStream << "layout(offset = " << uniformBufferOffset << ")";
+            codeStream << "\tlayout(offset = " << uniformBufferOffset << ")";
             if(uniformBinding == -1)
             {
                 layout->addDescriptorBinding(bindingCounter, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
@@ -105,7 +105,6 @@ void Material::compile()
             if(defaultValue != param.value().end())
             {
                 std::string defaultString = defaultValue.value().get<std::string>();
-                std::cout << "Texture parameter " << defaultString << std::endl;
                 p->data = AssetRegistry::findTexture(defaultString);
             }
             else
@@ -127,7 +126,7 @@ void Material::compile()
         {
             std::cout << "Error unsupported parameter type" << std::endl;
         }
-        codeStream << type << " " << param.key() << ";\n";
+        codeStream << "\t" << type << " " << param.key() << ";\n";
     }
     uniformDataSize = uniformBufferOffset;
     if(uniformDataSize != 0)

@@ -78,7 +78,7 @@ ShaderCollection& ShaderMap::createShaders(
     Array<char> buffer(static_cast<uint32>(fileSize));
     codeStream.read(buffer.data(), fileSize);
 
-	createInfo.shaderCode.add(std::string(buffer.data()));
+	createInfo.shaderCode.add(std::string(buffer.data(), 0, fileSize));
 
 	collection.vertexShader = graphics->createVertexShader(createInfo);
 
@@ -113,6 +113,7 @@ void DescriptorLayout::addDescriptorBinding(uint32 bindingIndex, SeDescriptorTyp
 
 PDescriptorSet DescriptorLayout::allocateDescriptorSet()
 {
+	std::unique_lock lock(allocatorLock);
 	PDescriptorSet result;
 	allocator->allocateDescriptorSet(result);
 	return result;
@@ -120,6 +121,7 @@ PDescriptorSet DescriptorLayout::allocateDescriptorSet()
 
 void DescriptorLayout::reset() 
 {
+	std::unique_lock lock(allocatorLock);
 	allocator->reset();
 }
 
@@ -129,24 +131,7 @@ void PipelineLayout::addDescriptorLayout(uint32 setIndex, PDescriptorLayout layo
 	{
 		descriptorSetLayouts.resize(setIndex + 1);
 	}
-	// After a second thought, merging descriptor layout bindings is not a good idea
-	/*if (descriptorSetLayouts[setIndex] != nullptr)
-	{
-		auto &thisBindings = descriptorSetLayouts[setIndex]->descriptorBindings;
-		auto &otherBindings = layout->descriptorBindings;
-		thisBindings.resize(otherBindings.size());
-		for (size_t i = 0; i < otherBindings.size(); ++i)
-		{
-			if (otherBindings[i].descriptorType != SE_DESCRIPTOR_TYPE_MAX_ENUM)
-			{
-				thisBindings[i] = otherBindings[i];
-			}
-		}
-	}
-	else*/
-	{
-		descriptorSetLayouts[setIndex] = layout;
-	}
+	descriptorSetLayouts[setIndex] = layout;
 	layout->setIndex = setIndex;
 }
 

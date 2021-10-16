@@ -150,7 +150,14 @@ bool Transform::equals(const Transform &other, float tolerance)
     {
         return false;
     }
-    if (abs(rotation.x - other.rotation.x) <= tolerance && abs(rotation.y - other.rotation.y) <= tolerance && abs(rotation.z - other.rotation.z) <= tolerance && abs(rotation.w - other.rotation.w) <= tolerance || abs(rotation.x + other.rotation.x) <= tolerance && abs(rotation.y + other.rotation.y) <= tolerance && abs(rotation.z + other.rotation.z) <= tolerance && abs(rotation.w - other.rotation.w) <= tolerance)
+    if ((abs(rotation.x - other.rotation.x) <= tolerance 
+      && abs(rotation.y - other.rotation.y) <= tolerance 
+      && abs(rotation.z - other.rotation.z) <= tolerance 
+      && abs(rotation.w - other.rotation.w) <= tolerance)
+     || (abs(rotation.x + other.rotation.x) <= tolerance 
+      && abs(rotation.y + other.rotation.y) <= tolerance 
+      && abs(rotation.z + other.rotation.z) <= tolerance 
+      && abs(rotation.w + other.rotation.w) <= tolerance))
     {
         return false;
     }
@@ -191,5 +198,5 @@ Transform Transform::operator*(const Transform &other) const
 {
     Transform outTransform;
     multiply(&outTransform, this, &other);
-    return std::move(outTransform);
+    return outTransform;
 }

@@ -290,7 +290,7 @@ void DescriptorAllocator::allocateDescriptorSet(Gfx::PDescriptorSet &descriptorS
 			//If it hasnt been initialized, allocate it
 			VK_CHECK(vkAllocateDescriptorSets(graphics->getDevice(), &allocInfo, &cachedHandles[setIndex]->setHandle));
 		}
-		cachedHandles[setIndex]->currentlyInUse = true;
+		cachedHandles[setIndex]->allocate();
 		descriptorSet = cachedHandles[setIndex];
 		
 		PDescriptorSet vulkanSet = descriptorSet.cast<DescriptorSet>();

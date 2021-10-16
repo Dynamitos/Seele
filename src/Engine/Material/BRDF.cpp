@@ -56,77 +56,56 @@ void BlinnPhong::generateMaterialCode(std::ofstream& codeStream, json codeJson)
         {
             for(auto code : codeJson[key].items())
             {
-                accessorStream << code.value().get<std::string>() << ";" << std::endl;
+                accessorStream << "\t\t" << code.value().get<std::string>() << ";" << std::endl;
             }
         }
         else
         {
-            accessorStream << "return " << defaultVal << ";";
+            accessorStream << "\t\treturn " << defaultVal << ";\n";
         }
         
     };
-    accessorStream << "float3 getBaseColor(MaterialFragmentParameter input) {\n";
+    accessorStream << "\tfloat3 getBaseColor(MaterialFragmentParameter input) {\n";
     generateAccessor(accessorStream, "baseColor", "float3(0.5f, 0.5f, 0.5f)");
-    accessorStream << "}";
+    accessorStream << "\t}\n";
 
-    accessorStream << "float getMetallic(MaterialFragmentParameter input) {\n";
+    accessorStream << "\tfloat getMetallic(MaterialFragmentParameter input) {\n";
     generateAccessor(accessorStream, "metallic", "0.f");
-    accessorStream << "}";
+    accessorStream << "\t}\n";
     
-    accessorStream << "float3 getNormal(MaterialFragmentParameter input) {\n";
+    accessorStream << "\tfloat3 getNormal(MaterialFragmentParameter input) {\n";
     generateAccessor(accessorStream, "normal", "float3(0, 1, 0)");
-    accessorStream << "}";
+    accessorStream << "\t}\n";
     
-    accessorStream << "float getSpecular(MaterialFragmentParameter input) {\n";
+    accessorStream << "\tfloat getSpecular(MaterialFragmentParameter input) {\n";
     generateAccessor(accessorStream, "specular", "0.f");
-    accessorStream << "}";
+    accessorStream << "\t}\n";
 
-    accessorStream << "float getRoughness(MaterialFragmentParameter input) {\n";
+    accessorStream << "\tfloat getRoughness(MaterialFragmentParameter input) {\n";
     generateAccessor(accessorStream, "roughness", "0.f");
-    accessorStream << "}";
+    accessorStream << "\t}\n";
 
-    accessorStream << "float getSheen(MaterialFragmentParameter input) {\n";
+    accessorStream << "\tfloat getSheen(MaterialFragmentParameter input) {\n";
     generateAccessor(accessorStream, "sheen", "0.f");
-    accessorStream << "}";
+    accessorStream << "\t}\n";
     
-    /*accessorStream << "float getSpecularTint(MaterialFragmentParameter input) {\n";
-    generateAccessor(accessorStream, "specularTint", "0.f");
-    accessorStream << "}";
-    
-    accessorStream << "float getAnisotropic(MaterialFragmentParameter input) {\n";
-    generateAccessor(accessorStream, "anisotropic", "0.f");
-    accessorStream << "}";
-
-
-    accessorStream << "float getSheenTint(MaterialFragmentParameter input) {\n";
-    generateAccessor(accessorStream, "sheenTint", "0.f");
-    accessorStream << "}";
-    
-    accessorStream << "float getClearCoat(MaterialFragmentParameter input) {\n";
-    generateAccessor(accessorStream, "clearCoat", "0.f");
-    accessorStream << "}";
-    
-    accessorStream << "float getClearCoatGloss(MaterialFragmentParameter input) {\n";
-    generateAccessor(accessorStream, "clearCoatGloss", "0.f");
-    accessorStream << "}";*/
-    
-    accessorStream << "float3 getWorldOffset() {\n";
+    accessorStream << "\tfloat3 getWorldOffset() {\n";
     generateAccessor(accessorStream, "worldOffset", "0.f");
-    accessorStream << "}";
+    accessorStream << "\t}\n";
 
     codeStream << accessorStream.str();
 
-    codeStream << "typedef " << name << " BRDF;" << std::endl;
-    codeStream << name << " prepare(MaterialFragmentParameter geometry){" << std::endl;
-    codeStream << name << " result;" << std::endl;
-    codeStream << "result.baseColor = getBaseColor(geometry);" << std::endl;
-    codeStream << "result.metallic = getMetallic(geometry);" << std::endl;
-    codeStream << "result.normal = getNormal(geometry);" << std::endl;
-    codeStream << "result.specular = getSpecular(geometry);" << std::endl;
-    codeStream << "result.roughness = getRoughness(geometry);" << std::endl;
-    codeStream << "result.sheen = getSheen(geometry);" << std::endl;
-    codeStream << "return result;" << std::endl;
-    codeStream << "}" << std::endl;
+    codeStream << "\ttypedef " << name << " BRDF;" << std::endl;
+    codeStream << "\t" << name << " prepare(MaterialFragmentParameter geometry) {" << std::endl;
+    codeStream << "\t\t" << name << " result;" << std::endl;
+    codeStream << "\t\tresult.baseColor = getBaseColor(geometry);" << std::endl;
+    codeStream << "\t\tresult.metallic = getMetallic(geometry);" << std::endl;
+    codeStream << "\t\tresult.normal = getNormal(geometry);" << std::endl;
+    codeStream << "\t\tresult.specular = getSpecular(geometry);" << std::endl;
+    codeStream << "\t\tresult.roughness = getRoughness(geometry);" << std::endl;
+    codeStream << "\t\tresult.sheen = getSheen(geometry);" << std::endl;
+    codeStream << "\t\treturn result;" << std::endl;
+    codeStream << "\t}" << std::endl;
 }
 
 IMPLEMENT_BRDF(BlinnPhong)

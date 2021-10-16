@@ -232,6 +232,7 @@ public:
 protected:
 	Array<DescriptorBinding> descriptorBindings;
 	PDescriptorAllocator allocator;
+	std::mutex allocatorLock;
 	uint32 setIndex;
 	std::string name;
 	friend class PipelineLayout;

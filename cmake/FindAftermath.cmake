@@ -72,7 +72,7 @@ else()
 		DOC "The directory where GL/nsam.h resides")
 
 	find_file(
-		NSAM_BINARY
+		NSAM_LIBRARY
 		NAMES libGFSDK_Aftermath_Lib.${CMAKE_PLATFORM}.so
 		PATHS	
 			/usr/lib64
@@ -86,7 +86,7 @@ else()
 endif()
 
 # Handle REQUIRD argument, define *_FOUND variable
-find_package_handle_standard_args(NSAM DEFAULT_MSG NSAM_INCLUDE_DIR NSAM_BINARY)
+find_package_handle_standard_args(NSAM DEFAULT_MSG NSAM_INCLUDE_DIR NSAM_LIBRARY)
 
 # Define NSAM_LIBRARIES and NSAM_INCLUDE_DIRS
 if (NSAM_FOUND)
