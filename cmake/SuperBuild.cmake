@@ -28,14 +28,13 @@ else()
 endif()
 ExternalProject_Add(boost
 	SOURCE_DIR ${BOOST_ROOT}
-	UPDATE_COMMAND ""
 	CONFIGURE_COMMAND ./bootstrap.${BOOTSTRAP_EXTENSION} --with-libraries=serialization,test
 	BUILD_COMMAND ./b2 -d0
 	BUILD_IN_SOURCE 1
 	INSTALL_COMMAND "")
 
 list (APPEND EXTRA_CMAKE_ARGS
-	-DBoost_NO_SYSTEM_PATHS=OFF)
+	-DBoost_NO_SYSTEM_PATHS=ON)
 
 #-----------------KTX----------------------------
 list(APPEND DEPENDENCIES ktx)

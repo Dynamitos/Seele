@@ -1,8 +1,7 @@
 #include "Scene.h"
 #include "Components/PrimitiveComponent.h"
 #include "Components/PrimitiveUniformBufferLayout.h"
-#include "Material/MaterialInstance.h"
-#include "Material/Material.h"
+#include "Material/MaterialAsset.h"
 #include "Graphics/Graphics.h"
 
 using namespace Seele;

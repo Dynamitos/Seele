@@ -9,7 +9,7 @@ CameraComponent::CameraComponent()
     : bNeedsViewBuild(true)
     , bNeedsProjectionBuild(true)
     , originPoint(0, 0, 0)
-    , cameraPosition(0, 0, 0)
+    , cameraPosition(0, 0, 50)
 {
     distance = 50;
     rotationX = 0;

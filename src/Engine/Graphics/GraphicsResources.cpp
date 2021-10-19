@@ -1,6 +1,4 @@
 #include "GraphicsResources.h"
-#include "Material/MaterialInstance.h"
-#include "Material/Material.h"
 #include "Graphics.h"
 #include "RenderPass/DepthPrepass.h"
 #include "RenderPass/BasePass.h"
@@ -55,7 +53,7 @@ const ShaderCollection* ShaderMap::findShaders(PermutationId&& id) const
 ShaderCollection& ShaderMap::createShaders(
 	PGraphics graphics,
 	RenderPassType renderPass, 
-	PMaterial material, 
+	PMaterialAsset material, 
 	VertexInputType* vertexInput,
 	bool /*bPositionOnly*/)
 {

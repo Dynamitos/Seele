@@ -1,5 +1,5 @@
 #include "ShaderCompiler.h"
-#include "Material/Material.h"
+#include "Material/MaterialAsset.h"
 #include "VertexShaderInput.h"
 
 using namespace Seele;
@@ -16,7 +16,7 @@ ShaderCompiler::~ShaderCompiler()
     
 }
 
-void ShaderCompiler::registerMaterial(PMaterial material) 
+void ShaderCompiler::registerMaterial(PMaterialAsset material) 
 {
     for(auto& type : VertexInputType::getTypeList())
     {

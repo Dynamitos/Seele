@@ -2,11 +2,7 @@ target_sources(SeeleEngine
     PRIVATE
         BRDF.h
         BRDF.cpp
-        Material.h
-        Material.cpp
         MaterialAsset.h
         MaterialAsset.cpp
-        MaterialInstance.h
-        MaterialInstance.cpp
         ShaderExpression.h
         ShaderExpression.cpp)

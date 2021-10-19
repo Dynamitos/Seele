@@ -33,7 +33,7 @@ void DepthPrepassMeshProcessor::addMeshBatch(
 
     const PVertexShaderInput vertexInput = batch.vertexInput;
 
-	const Gfx::ShaderCollection* collection = material->getRenderMaterial()->getShaders(Gfx::RenderPassType::DepthPrepass, vertexInput->getType());
+	const Gfx::ShaderCollection* collection = material->getShaders(Gfx::RenderPassType::DepthPrepass, vertexInput->getType());
     assert(collection != nullptr);
     for(uint32 i = 0; i < batch.elements.size(); ++i)
     {
@@ -46,7 +46,7 @@ void DepthPrepassMeshProcessor::addMeshBatch(
     renderCommand->setViewport(target);
     for(uint32 i = 0; i < batch.elements.size(); ++i)
     {
-        pipelineLayout->addDescriptorLayout(DepthPrepass::INDEX_MATERIAL, material->getRenderMaterial()->getDescriptorLayout());
+        pipelineLayout->addDescriptorLayout(DepthPrepass::INDEX_MATERIAL, material->getDescriptorLayout());
         pipelineLayout->create();
         descriptorSets[DepthPrepass::INDEX_MATERIAL] = material->getDescriptor();
         descriptorSets[DepthPrepass::INDEX_SCENE_DATA] = cachedPrimitiveSets[cachedPrimitiveIndex++];

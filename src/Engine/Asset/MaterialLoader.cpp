@@ -1,6 +1,6 @@
 #include "MaterialLoader.h"
-#include "Material/Material.h"
 #include "Graphics/Graphics.h"
+#include "Material/MaterialAsset.h"
 #include "AssetRegistry.h"
 
 using namespace Seele;
@@ -8,8 +8,8 @@ using namespace Seele;
 MaterialLoader::MaterialLoader(Gfx::PGraphics graphics)
     : graphics(graphics)
 {
-    placeholderMaterial = new Material(std::filesystem::absolute("./shaders/Placeholder.asset"));
-    placeholderMaterial->compile();
+    placeholderMaterial = new MaterialAsset(std::filesystem::absolute("./shaders/Placeholder.asset"));
+    placeholderMaterial->load();
     graphics->getShaderCompiler()->registerMaterial(placeholderMaterial);
 }
 
@@ -17,10 +17,10 @@ MaterialLoader::~MaterialLoader()
 {
 }
 
-PMaterial MaterialLoader::queueAsset(const std::filesystem::path& filePath)
+PMaterialAsset MaterialLoader::queueAsset(const std::filesystem::path& filePath)
 {
-    PMaterial result = new Material(filePath);
-    result->compile();
+    PMaterialAsset result = new MaterialAsset(filePath);
+    result->load();
     graphics->getShaderCompiler()->registerMaterial(result);
     AssetRegistry::get().registerMaterial(result);
     // TODO: There is actually no real reason to import a standalone material,
@@ -28,7 +28,7 @@ PMaterial MaterialLoader::queueAsset(const std::filesystem::path& filePath)
     return result;
 }
 
-PMaterial MaterialLoader::getPlaceHolderMaterial() 
+PMaterialAsset MaterialLoader::getPlaceHolderMaterial() 
 {
     return placeholderMaterial;
 }

@@ -34,7 +34,7 @@ void BasePassMeshProcessor::addMeshBatch(
 
     const PVertexShaderInput vertexInput = batch.vertexInput;
 
-	const Gfx::ShaderCollection* collection = material->getRenderMaterial()->getShaders(Gfx::RenderPassType::BasePass, vertexInput->getType());
+	const Gfx::ShaderCollection* collection = material->getShaders(Gfx::RenderPassType::BasePass, vertexInput->getType());
     assert(collection != nullptr);
     for(uint32 i = 0; i < batch.elements.size(); ++i)
     {
@@ -47,7 +47,7 @@ void BasePassMeshProcessor::addMeshBatch(
     renderCommand->setViewport(target);
     for(uint32 i = 0; i < batch.elements.size(); ++i)
     {
-        pipelineLayout->addDescriptorLayout(BasePass::INDEX_MATERIAL, material->getRenderMaterial()->getDescriptorLayout());
+        pipelineLayout->addDescriptorLayout(BasePass::INDEX_MATERIAL, material->getDescriptorLayout());
         pipelineLayout->create();
         descriptorSets[BasePass::INDEX_MATERIAL] = material->getDescriptor();
         descriptorSets[BasePass::INDEX_SCENE_DATA] = cachedPrimitiveSets[cachedPrimitiveIndex++];

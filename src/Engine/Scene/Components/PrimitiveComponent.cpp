@@ -1,6 +1,6 @@
 #include "PrimitiveComponent.h"
 #include "Scene/Scene.h"
-#include "Material/MaterialInstance.h"
+#include "Material/MaterialAsset.h"
 #include "Asset/MeshAsset.h"
 #include "Graphics/VertexShaderInput.h"
 #include <iostream>

@@ -4,7 +4,7 @@
 #include "TextureLoader.h"
 #include "MaterialLoader.h"
 #include "MeshLoader.h"
-#include "Material/Material.h"
+#include "Material/MaterialAsset.h"
 #include "Graphics/Graphics.h"
 #include "Window/WindowManager.h"
 #include "MeshAsset.h"

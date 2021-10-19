@@ -1,7 +1,5 @@
 target_sources(SeeleEngine
     PRIVATE
-        Frame.h
-        Frame.cpp
         InspectorView.h
         InspectorView.cpp
         SceneView.h

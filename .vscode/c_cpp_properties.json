@@ -3,22 +3,22 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceFolder}/**",
-                "external/**"
+                "${workspaceFolder}/src/**"
             ],
             "defines": [
                 "_DEBUG",
                 "UNICODE",
                 "_UNICODE"
             ],
-            "intelliSenseMode": "msvc-x64",
+            "intelliSenseMode": "windows-msvc-x64",
             "configurationProvider": "ms-vscode.cmake-tools",
             "cppStandard": "c++20",
             "browse": {
                 "path": [
                     "external/**"
                 ]
-            }
+            },
+            "compilerPath": "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.29.30037/bin/Hostx64/x64/cl.exe"
         }
     ],
     "version": 4

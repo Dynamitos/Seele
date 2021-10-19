@@ -5,7 +5,6 @@
 #include "Graphics/Mesh.h"
 #include "Graphics/StaticMeshVertexInput.h"
 #include "AssetRegistry.h"
-#include "Material/Material.h"
 #include <fstream>
 #include <iostream>
 #include <nlohmann/json.hpp>
@@ -88,8 +87,8 @@ void MeshLoader::loadMaterials(const aiScene* scene, Array<PMaterialAsset>& glob
         outMatFile.close();
 
         std::cout << "writing json to " << outMatFilename << std::endl;
-        PMaterial result = new Material(outMatFilename);
-        result->compile();
+        PMaterialAsset result = new MaterialAsset(outMatFilename);
+        result->load();
         graphics->getShaderCompiler()->registerMaterial(result);
         AssetRegistry::get().registerMaterial(result);
         PMaterialAsset asset = AssetRegistry::findMaterial(result->getFileName());

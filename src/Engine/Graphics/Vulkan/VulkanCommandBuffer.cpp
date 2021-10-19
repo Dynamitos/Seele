@@ -336,7 +336,7 @@ void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet)
     auto descriptor = descriptorSet.cast<DescriptorSet>();
     boundDescriptors.add(descriptor.getHandle());
     descriptor->bind();
-    //std::cout << "Binding descriptor " << descriptor->getHandle() << " to cmd " << handle << std::endl;
+    
     VkDescriptorSet setHandle = descriptor->getHandle();
     vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->getLayout(), descriptorSet->getSetIndex(), 1, &setHandle, 0, nullptr);
 }
@@ -373,7 +373,7 @@ CommandBufferManager::CommandBufferManager(PGraphics graphics, PQueue queue)
 
     activeCmdBuffer = new CmdBuffer(graphics, commandPool, this);
     activeCmdBuffer->begin();
-    std::lock_guard lock(allocatedBufferLock);
+    std::unique_lock lock(allocatedBufferLock);
     allocatedBuffers.add(activeCmdBuffer);
 }
 
@@ -397,6 +397,7 @@ PRenderCommand CommandBufferManager::createRenderCommand(const std::string& name
         PRenderCommand cmdBuffer = allocatedRenderCommands[i];
         if (cmdBuffer->isReady())
         {
+            cmdBuffer->name = name;
             cmdBuffer->begin(activeCmdBuffer);
             return cmdBuffer;
         }
@@ -416,6 +417,7 @@ PComputeCommand CommandBufferManager::createComputeCommand(const std::string& na
         PComputeCommand cmdBuffer = allocatedComputeCommands[i];
         if (cmdBuffer->isReady())
         {
+            cmdBuffer->name = name;
             cmdBuffer->begin(activeCmdBuffer);
             return cmdBuffer;
         }

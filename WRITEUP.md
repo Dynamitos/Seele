@@ -9,7 +9,7 @@ API that doesn't support it, like OpenGL. These APIs would suffer a significant 
 ## Custom containers and other utilities
 
 Some of the basic containers are reimplemented, mostly not for any particular feature, but because that makes them more customizable and extendable for future uses and
-performance optimizations, like serialization for example. Due to them occuring in the code samples later, they will be quickly mentioned here.
+performance optimizations, like serialization for example. Due to some of them occuring in the code samples later, they will be quickly mentioned here.
 
 - `Array`: A heap-array backed dynamically resizable container, like `std::vector`
 - `StaticArray`: A static-array backed non-resizable container, like `std::array`
@@ -139,8 +139,70 @@ The document starts with the asset `name`, followed by the `profile`, which tell
 
 ### MaterialAsset
 
-The `MaterialAsset` class represents such a JSON document on disk, and is the base class for `Material` and `MaterialInstance`. It stores the layout of the parameters as well as their values, but does not store, parse or generate any shader code.
+A `MaterialAsset` represents such a JSON document on disk, as well as the GPU resources needed to render a mesh with the material. When loading the file, the a descriptor layout is generated to fit the `slang` code that will be generated later by consolidating the plain variables (`float`, `double`, etc.) into a single uniform buffer. The parameters are stored in an array of `ShaderParameter`s, which contain the current parameter value, like texture references or plain data, as well as information on how to update the GPU resources.
 
-### Material
+At the same time a slang-compilable shader is generated, which matches the parameters provided by the descriptor layout. The generated shader is a `Material`, which is an interface that "prepares" a BRDF by initializing its input values, similar to official slang example. How each input value is calculated is read from the `code` section of the JSON document, and wrapped in an accessor to allow for multi line calculations.
 
-The `Material` class inherits from `MaterialAsset` and represents a base material,
+Here is the material generated from the above JSON example:
+
+```cpp
+import VERTEX_INPUT_IMPORT;
+import Material;
+import BRDF;
+import MaterialParameter;
+
+struct Placeholder: IMaterial {
+    layout(offset = 0)float anisotropic;
+    layout(offset = 4)float clearCoat;
+    layout(offset = 8)float clearCoatGloss;
+    Texture2D diffuseTexture;
+    layout(offset = 12)float metallic;
+    Texture2D normalTexture;
+    layout(offset = 16)float roughness;
+    layout(offset = 20)float sheen;
+    layout(offset = 24)float sheenTint;
+    Texture2D specularTexture;
+    layout(offset = 28)float specularTint;
+    layout(offset = 32)float subsurface;
+    SamplerState textureSampler;
+    layout(offset = 36)float uvScale;
+    layout(offset = 40)float3 worldOffset;
+
+    float3 getBaseColor(MaterialFragmentParameter input) {
+        return diffuseTexture.Sample(textureSampler, input.texCoords[0] * uvScale).xyz;;
+    }
+    float getMetallic(MaterialFragmentParameter input) {
+        return 0;;
+    }
+    float3 getNormal(MaterialFragmentParameter input) {
+        return normalTexture.Sample(textureSampler, input.texCoords[0] * uvScale).xyz;;
+    }
+    float getSpecular(MaterialFragmentParameter input) {
+        return specularTexture.Sample(textureSampler, input.texCoords[0] * uvScale).x;;
+    }
+    float getRoughness(MaterialFragmentParameter input) {
+        return roughness;;
+    }
+    float getSheen(MaterialFragmentParameter input) {
+        return sheen;;
+    }
+    float3 getWorldOffset() {
+    return worldOffset;;
+    }
+    typedef BlinnPhong BRDF;
+    BlinnPhong prepare(MaterialFragmentParameter geometry){
+        BlinnPhong result;
+        result.baseColor = getBaseColor(geometry);
+        result.metallic = getMetallic(geometry);
+        result.normal = getNormal(geometry);
+        result.specular = getSpecular(geometry);
+        result.roughness = getRoughness(geometry);
+        result.sheen = getSheen(geometry);
+        return result;
+    }
+};
+```
+
+### Renderpass interaction
+
+Each render pass has a "base file" containing the vertex and fragment stages. From that base file a variant is generated for each material that will be used with that render pass using `#define` macros to change the material import, and a `type_param` to update the `ParameterBlock` containing the material itself. Other renderpass dependent data like camera parameter or lights are stored in separate descriptor sets, and to avoid code duplication, they parts that are used by more than one render pass are implemented in separate slang files. But since in Vulkan pipeline layouts cannot have empty indices, the descriptor set indices sometimes need to change. This is done using the static `modifyRenderPassMacros` function in each renderpass to `#define` the correct set indices for each shared descriptor layout.

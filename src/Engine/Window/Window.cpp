@@ -25,10 +25,10 @@ void Window::render()
     gfxHandle->beginFrame();
     for(auto& windowView : views)
     {
-        {
-            std::lock_guard lock(windowView->workerMutex);
-            windowView->view->prepareRender();
-        }
+        windowView->view->beginUpdate();
+        windowView->view->update();
+        windowView->view->commitUpdate();
+        windowView->view->prepareRender();
         windowView->view->render();
     }
     gfxHandle->endFrame();
@@ -58,9 +58,5 @@ void Window::viewWorker(WindowView* windowView)
 {
     while(true)
     {
-        windowView->view->beginUpdate();
-        windowView->view->update();
-        std::lock_guard lock(windowView->workerMutex);
-        windowView->view->commitUpdate();
     }
 }

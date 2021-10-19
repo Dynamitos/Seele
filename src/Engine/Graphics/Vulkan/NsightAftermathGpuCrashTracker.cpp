@@ -77,7 +77,7 @@ void GpuCrashTracker::Initialize()
 void GpuCrashTracker::OnCrashDump(const void* pGpuCrashDump, const uint32_t gpuCrashDumpSize)
 {
     // Make sure only one thread at a time...
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::unique_lock<std::mutex> lock(m_mutex);
 
     // Write to file for later in-depth analysis with Nsight Graphics.
     WriteGpuCrashDumpToFile(pGpuCrashDump, gpuCrashDumpSize);
@@ -87,7 +87,7 @@ void GpuCrashTracker::OnCrashDump(const void* pGpuCrashDump, const uint32_t gpuC
 void GpuCrashTracker::OnShaderDebugInfo(const void* pShaderDebugInfo, const uint32_t shaderDebugInfoSize)
 {
     // Make sure only one thread at a time...
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::unique_lock<std::mutex> lock(m_mutex);
 
     // Get shader debug information identifier
     GFSDK_Aftermath_ShaderDebugInfoIdentifier identifier = {};

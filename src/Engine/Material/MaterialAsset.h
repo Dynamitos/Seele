@@ -6,7 +6,6 @@
 namespace Seele
 {
 DECLARE_REF(VertexShaderInput)
-DECLARE_REF(Material)
 class MaterialAsset : public Asset
 {
 public:
@@ -16,18 +15,26 @@ public:
     ~MaterialAsset();
     virtual void beginFrame();
     virtual void endFrame();
-    virtual void save() = 0;
-    virtual void load() = 0;
-    virtual const Material* getRenderMaterial() const = 0;
+    virtual void save() override;
+    virtual void load() override;
     Gfx::SeBlendOp getBlendMode() const {return Gfx::SE_BLEND_OP_END_RANGE;}
     Gfx::MaterialShadingModel getShadingModel() const {return Gfx::MaterialShadingModel::DefaultLit;}
 
     // This needs to be called while the descriptorset is unused
     void updateDescriptorData();
     void resetDescriptorSet();
-    const Gfx::PDescriptorSet getDescriptor() const;
+    const Gfx::PDescriptorSet getDescriptor() const { return descriptorSet; };
+    
+    Gfx::PDescriptorLayout getDescriptorLayout() const { return layout; }
+    // The name of the generated material shader, opposed to the name of the .asset file
+    const std::string& getName() {return materialName;}
 
-protected:
+    const Gfx::ShaderCollection* getShaders(Gfx::RenderPassType renderPass, VertexInputType* vertexInput) const;
+    Gfx::ShaderCollection& createShaders(Gfx::PGraphics graphics, Gfx::RenderPassType renderPass, VertexInputType* vertexInput);
+private:
+    static Gfx::ShaderMap shaderMap;
+    static std::mutex shaderMapLock;
+
     //For now its simply the collection of parameters, since there is no point for expressions
     Array<PShaderParameter> parameters;
     Gfx::PDescriptorSet descriptorSet;
@@ -36,6 +43,7 @@ protected:
     uint32 uniformDataSize;
     uint8* uniformData;
     int32 uniformBinding;
+    std::string materialName;
 };
 DEFINE_REF(MaterialAsset)
 } // namespace Seele

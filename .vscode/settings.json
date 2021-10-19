@@ -133,5 +133,6 @@
         "**/target": true
     },
     "C_Cpp.errorSquiggles": "Disabled",
-    "git.ignoreSubmodules": true
+    "git.ignoreSubmodules": true,
+    "cmake.configureOnOpen": true
 }

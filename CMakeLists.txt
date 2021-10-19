@@ -21,6 +21,7 @@ set(NSAM_ROOT ${EXTERNAL_ROOT}/aftermath)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/)
 
 set(Boost_USE_STATIC_LIBS OFF)
+set(Boost_LIB_PREFIX lib)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE})
 #Workaround for vs, because it places artifacts into an additional subfolder
@@ -36,7 +37,6 @@ if (USE_SUPERBUILD)
 else()
   project (Seele)
 endif()
-
 
 find_package(Vulkan REQUIRED)
 find_package(Boost REQUIRED COMPONENTS serialization)
@@ -117,7 +117,7 @@ if(WIN32)
   add_custom_target(copy-binaries ALL
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SLANG_BINARIES} $<TARGET_FILE_DIR:SeeleEngine>
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SLANG_GLSLANG} $<TARGET_FILE_DIR:SeeleEngine>
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${GLFW_BINARY} $<TARGET_FILE_DIR:SeeleEngine>
+    #COMMAND ${CMAKE_COMMAND} -E copy_if_different ${GLFW_BINARY} $<TARGET_FILE_DIR:SeeleEngine>
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${ASSIMP_BINARY} $<TARGET_FILE_DIR:SeeleEngine>
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${NSAM_BINARIES} $<TARGET_FILE_DIR:SeeleEngine>)
 else()
@@ -127,3 +127,5 @@ endif()
 add_custom_target(copy-runtime-files ALL
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/res $<TARGET_FILE_DIR:SeeleEngine>
 	DEPENDS SeeleEngine copy-binaries)
+
+  

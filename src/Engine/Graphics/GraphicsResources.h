@@ -17,7 +17,6 @@ namespace Seele
 struct VertexInputStream;
 struct VertexStreamComponent;
 class VertexInputType;
-DECLARE_REF(Material)
 namespace Gfx
 {
 DECLARE_REF(Graphics)
@@ -140,7 +139,7 @@ public:
 	ShaderCollection& createShaders(
 		PGraphics graphics, 
 		RenderPassType passName, 
-		PMaterial material, 
+		PMaterialAsset material, 
 		VertexInputType* vertexInput,
 		bool bPositionOnly);
 private:

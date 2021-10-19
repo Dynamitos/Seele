@@ -3,7 +3,6 @@
 
 namespace Seele
 {
-DECLARE_REF(Material)
 DECLARE_NAME_REF(Gfx, Graphics)
 namespace Gfx
 {
@@ -12,9 +11,9 @@ class ShaderCompiler
 public:
     ShaderCompiler(PGraphics graphics);
     ~ShaderCompiler();
-    void registerMaterial(PMaterial material);
+    void registerMaterial(PMaterialAsset material);
 private:
-    Array<PMaterial> pendingCompiles;
+    Array<PMaterialAsset> pendingCompiles;
     PGraphics graphics;
 };
 DEFINE_REF(ShaderCompiler)

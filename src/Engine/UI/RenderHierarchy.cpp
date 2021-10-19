@@ -31,7 +31,7 @@ RenderHierarchy::~RenderHierarchy()
 
 void RenderHierarchy::addElement(PElement addedElement) 
 {
-    std::lock_guard lock(updateLock);
+    std::unique_lock lock(updateLock);
     updates.add(new AddElementRenderHierarchyUpdate{
         addedElement.getHandle(), 
         addedElement->getParent().getHandle()
@@ -40,7 +40,7 @@ void RenderHierarchy::addElement(PElement addedElement)
 
 void RenderHierarchy::removeElement(PElement elementToRemove) 
 {
-    std::lock_guard lock(updateLock);
+    std::unique_lock lock(updateLock);
     updates.add(new RemoveElementRenderHierarchyUpdate{
         elementToRemove.getHandle(),
     });
@@ -48,7 +48,7 @@ void RenderHierarchy::removeElement(PElement elementToRemove)
 
 void RenderHierarchy::moveElement(PElement elementToMove, PElement newParent) 
 {
-    std::lock_guard lock(updateLock);
+    std::unique_lock lock(updateLock);
     updates.add(new AddElementRenderHierarchyUpdate{
         elementToMove.getHandle(),
         newParent.getHandle()
@@ -62,7 +62,7 @@ void RenderHierarchy::updateHierarchy()
 {
     List<RenderHierarchyUpdate*> localUpdates;
     { // make a local copy of the updates so we dont hold the lock for too long
-        std::lock_guard lock(updateLock);
+        std::unique_lock lock(updateLock);
         localUpdates = updates;
         updates.clear();
     }

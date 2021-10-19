@@ -4,7 +4,6 @@
 #include "Graphics/GraphicsResources.h"
 #include "Components/PrimitiveComponent.h"
 #include "Graphics/MeshBatch.h"
-#include "Material/Material.h"
 #include "SceneUpdater.h"
 
 namespace Seele
