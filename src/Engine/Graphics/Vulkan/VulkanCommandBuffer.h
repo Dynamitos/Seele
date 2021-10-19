@@ -9,35 +9,20 @@ namespace Vulkan
 {
 DECLARE_REF(RenderPass)
 DECLARE_REF(Framebuffer)
-class CmdBufferBase
+DECLARE_REF(RenderCommand)
+DECLARE_REF(ComputeCommand)
+DECLARE_REF(DescriptorSet)
+DECLARE_REF(CommandBufferManager)
+class CmdBuffer
 {
 public:
-	CmdBufferBase(PGraphics graphics, VkCommandPool cmdPool);
-	virtual ~CmdBufferBase();
+	CmdBuffer(PGraphics graphics, VkCommandPool cmdPool, PCommandBufferManager manager);
+	virtual ~CmdBuffer();
 	inline VkCommandBuffer getHandle()
 	{
 		return handle;
 	}
 	void reset();
-	VkViewport currentViewport;
-	VkRect2D currentScissor;
-
-protected:
-	PGraphics graphics;
-	VkCommandBuffer handle;
-	VkCommandPool owner;
-};
-DEFINE_REF(CmdBufferBase)
-
-DECLARE_REF(RenderCommand)
-DECLARE_REF(ComputeCommand)
-DECLARE_REF(DescriptorSet)
-DECLARE_REF(CommandBufferManager)
-class CmdBuffer : public CmdBufferBase
-{
-public:
-	CmdBuffer(PGraphics graphics, VkCommandPool cmdPool, PCommandBufferManager manager);
-	virtual ~CmdBuffer();
 	void begin();
 	void end();
 	void beginRenderPass(PRenderPass renderPass, PFramebuffer framebuffer);
@@ -59,12 +44,17 @@ public:
 	};
 
 private:
+	PGraphics graphics;
 	PCommandBufferManager manager;
 	PRenderPass renderPass;
 	PFramebuffer framebuffer;
 	PFence fence;
 	uint32 subpassIndex;
 	State state;
+	VkViewport currentViewport;
+	VkRect2D currentScissor;
+	VkCommandBuffer handle;
+	VkCommandPool owner;
 	Array<PSemaphore> waitSemaphores;
 	Array<VkPipelineStageFlags> waitFlags;
 	Array<PRenderCommand> executingRenders;
@@ -78,29 +68,18 @@ DEFINE_REF(CmdBuffer)
 
 DECLARE_REF(GraphicsPipeline)
 DECLARE_REF(ComputePipeline)
-
-class SecondaryCmdBuffer: public CmdBufferBase
-{
-public:
-	SecondaryCmdBuffer(PGraphics graphics, VkCommandPool cmdPool);
-	virtual ~SecondaryCmdBuffer();
-	virtual void begin(PCmdBuffer parent) = 0;
-	void end();
-	void reset();
-	bool ready;
-
-protected:
-	Array<DescriptorSet*> boundDescriptors;
-	friend class CmdBuffer;
-};
-DEFINE_REF(SecondaryCmdBuffer);
-
-class RenderCommand : public Gfx::RenderCommand, public SecondaryCmdBuffer
+class RenderCommand : public Gfx::RenderCommand
 {
 public:
 	RenderCommand(PGraphics graphics, VkCommandPool cmdPool);
 	virtual ~RenderCommand();
-	virtual void begin(PCmdBuffer parent) override;
+	inline VkCommandBuffer getHandle()
+	{
+		return handle;
+	}
+	void begin(PCmdBuffer parent);
+	void end();
+	void reset();
 	virtual bool isReady() override;
 	virtual void setViewport(Gfx::PViewport viewport) override;
 	virtual void bindPipeline(Gfx::PGraphicsPipeline pipeline) override;
@@ -112,16 +91,29 @@ public:
 	virtual void draw(uint32 vertexCount, uint32 instanceCount, int32 firstVertex, uint32 firstInstance) override;
 private:
 	PGraphicsPipeline pipeline;
+	bool ready;
+	Array<DescriptorSet*> boundDescriptors;
+	VkViewport currentViewport;
+	VkRect2D currentScissor;
+	PGraphics graphics;
+	VkCommandBuffer handle;
+	VkCommandPool owner;
 	friend class CmdBuffer;
 };
 DEFINE_REF(RenderCommand)
 
-class ComputeCommand : public Gfx::ComputeCommand, public SecondaryCmdBuffer
+class ComputeCommand : public Gfx::ComputeCommand
 {
 public:
 	ComputeCommand(PGraphics graphics, VkCommandPool cmdPool);
 	virtual ~ComputeCommand();
-	virtual void begin(PCmdBuffer parent) override;
+	inline VkCommandBuffer getHandle()
+	{
+		return handle;
+	}
+	void begin(PCmdBuffer parent);
+	void end();
+	void reset();
 	virtual bool isReady() override;
 	virtual void bindPipeline(Gfx::PComputePipeline pipeline) override;
 	virtual void bindDescriptor(Gfx::PDescriptorSet set) override;
@@ -129,6 +121,13 @@ public:
 	virtual void dispatch(uint32 threadX, uint32 threadY, uint32 threadZ) override;
 private:
 	PComputePipeline pipeline;
+	bool ready;
+	Array<DescriptorSet*> boundDescriptors;
+	VkViewport currentViewport;
+	VkRect2D currentScissor;
+	PGraphics graphics;
+	VkCommandBuffer handle;
+	VkCommandPool owner;
 	friend class CmdBuffer;
 };
 DEFINE_REF(ComputeCommand)

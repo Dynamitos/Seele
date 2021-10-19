@@ -14,12 +14,12 @@ public:
     virtual void load() override;
     void setTexture(Gfx::PTexture texture)
     {
-        std::scoped_lock lck(lock);
+        std::unique_lock lck(lock);
         this->texture = texture;
     }
     Gfx::PTexture getTexture()
     {
-        std::scoped_lock lck(lock);
+        std::unique_lock lck(lock);
         return texture;
     }
 private:

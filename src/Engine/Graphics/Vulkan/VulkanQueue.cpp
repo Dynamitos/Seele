@@ -22,7 +22,7 @@ Queue::~Queue()
 
 void Queue::submitCommandBuffer(PCmdBuffer cmdBuffer, uint32 numSignalSemaphores, VkSemaphore *signalSemaphores)
 {
-    std::scoped_lock lck(queueLock);
+    std::unique_lock lck(queueLock);
     assert(cmdBuffer->state == CmdBuffer::State::Ended);
 
     PFence fence = cmdBuffer->fence;

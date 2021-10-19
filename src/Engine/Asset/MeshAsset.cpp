@@ -36,7 +36,7 @@ void MeshAsset::load()
 
 void MeshAsset::addMesh(PMesh mesh) 
 {
-    std::scoped_lock lck(lock);
+    std::unique_lock lck(lock);
     meshes.add(mesh);
     referencedMaterials.add(mesh->referencedMaterial);   
 }

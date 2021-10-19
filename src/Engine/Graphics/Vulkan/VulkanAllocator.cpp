@@ -74,7 +74,7 @@ Allocation::~Allocation()
 
 PSubAllocation Allocation::getSuballocation(VkDeviceSize requestedSize, VkDeviceSize alignment)
 {
-	std::scoped_lock lck(lock);
+	std::unique_lock lck(lock);
 	if (isDedicated)
 	{
 		if (activeAllocations.empty() && requestedSize == bytesAllocated)
@@ -131,7 +131,7 @@ void Allocation::markFree(SubAllocation *allocation)
 	VkDeviceSize lowerBound = allocation->allocatedOffset;
 	VkDeviceSize upperBound = allocation->allocatedOffset + allocation->allocatedSize;
 	PSubAllocation allocHandle;
-	std::scoped_lock lck(lock);
+	std::unique_lock lck(lock);
 	//Join lower bound
 	for (auto freeRange : freeRanges)
 	{
@@ -193,7 +193,7 @@ Allocator::Allocator(PGraphics graphics)
 
 Allocator::~Allocator()
 {
-	std::scoped_lock lck(lock);
+	std::unique_lock lck(lock);
 	for (auto heap : heaps)
 	{
 		for (auto alloc : heap.allocations)
@@ -208,7 +208,7 @@ Allocator::~Allocator()
 
 PSubAllocation Allocator::allocate(const VkMemoryRequirements2 &memRequirements2, VkMemoryPropertyFlags properties, VkMemoryDedicatedAllocateInfo *dedicatedInfo)
 {
-	std::scoped_lock lck(lock);
+	std::unique_lock lck(lock);
 	const VkMemoryRequirements &requirements = memRequirements2.memoryRequirements;
 	uint8 memoryTypeIndex;
 	VK_CHECK(findMemoryType(requirements.memoryTypeBits, properties, &memoryTypeIndex));
@@ -241,7 +241,7 @@ PSubAllocation Allocator::allocate(const VkMemoryRequirements2 &memRequirements2
 
 void Allocator::free(Allocation *allocation)
 {
-	std::scoped_lock lck(lock);
+	std::unique_lock lck(lock);
 	for (auto heap : heaps)
 	{
 		for (uint32 i = 0; i < heap.allocations.size(); ++i)
@@ -296,7 +296,7 @@ void StagingManager::clearPending()
 
 PStagingBuffer StagingManager::allocateStagingBuffer(uint32 size, VkBufferUsageFlags usage, bool bCPURead)
 {
-	std::scoped_lock l(lock);
+	std::unique_lock l(lock);
 	for (auto it = freeBuffers.begin(); it != freeBuffers.end(); ++it)
 	{
 		auto freeBuffer = *it;
@@ -344,7 +344,7 @@ PStagingBuffer StagingManager::allocateStagingBuffer(uint32 size, VkBufferUsageF
 
 void StagingManager::releaseStagingBuffer(PStagingBuffer buffer)
 {
-	std::scoped_lock l(lock);
+	std::unique_lock l(lock);
 	freeBuffers.add(buffer);
 	activeBuffers.remove(activeBuffers.find(buffer.getHandle()));
 }

@@ -276,7 +276,7 @@ static Map<uint32, PVertexDeclaration> vertexDeclarationCache;
 
 PVertexDeclaration VertexDeclaration::createDeclaration(PGraphics graphics, const Array<VertexElement>& elementList)
 {
-	std::scoped_lock lock(vertexDeclarationLock);
+	std::unique_lock lock(vertexDeclarationLock);
 	boost::crc_32_type result;
 	result.process_bytes(&elementList, sizeof(VertexElement) * elementList.size());
 	uint32 key = result.checksum();

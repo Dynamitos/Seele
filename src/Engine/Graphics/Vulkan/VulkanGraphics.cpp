@@ -309,7 +309,7 @@ PCommandBufferManager Graphics::getQueueCommands(Gfx::QueueType queueType)
 std::mutex graphicsCommandLock;
 PCommandBufferManager Graphics::getGraphicsCommands()
 {
-	std::scoped_lock lock(graphicsCommandLock);
+	std::unique_lock lock(graphicsCommandLock);
 	auto id = std::this_thread::get_id();
 	if(graphicsCommands.find(id) == graphicsCommands.end())
 	{
@@ -320,7 +320,7 @@ PCommandBufferManager Graphics::getGraphicsCommands()
 std::mutex computeCommandLock;
 PCommandBufferManager Graphics::getComputeCommands()
 {
-	std::scoped_lock lock(computeCommandLock);
+	std::unique_lock lock(computeCommandLock);
 	auto id = std::this_thread::get_id();
 	if(computeCommands.find(id) == computeCommands.end())
 	{
@@ -331,7 +331,7 @@ PCommandBufferManager Graphics::getComputeCommands()
 std::mutex transferCommandLock;
 PCommandBufferManager Graphics::getTransferCommands()
 {
-	std::scoped_lock lock(transferCommandLock);
+	std::unique_lock lock(transferCommandLock);
 	auto id = std::this_thread::get_id();
 	if(transferCommands.find(id) == transferCommands.end())
 	{
@@ -342,7 +342,7 @@ PCommandBufferManager Graphics::getTransferCommands()
 std::mutex dedicatedCommandLock;
 PCommandBufferManager Graphics::getDedicatedTransferCommands()
 {
-	std::scoped_lock lock(dedicatedCommandLock);
+	std::unique_lock lock(dedicatedCommandLock);
 	auto id = std::this_thread::get_id();
 	if(dedicatedTransferCommands.find(id) == dedicatedTransferCommands.end())
 	{

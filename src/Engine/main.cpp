@@ -9,7 +9,7 @@ using namespace Seele;
 int main()
 {
 	PWindowManager windowManager = new WindowManager();
-	AssetRegistry::init("/home/dynamitos/TestSeeleProject");
+	AssetRegistry::init("D:\\Private\\Programming\\C++\\TestSeeleProject\\");
 	WindowCreateInfo mainWindowInfo;
 	mainWindowInfo.title = "SeeleEngine";
 	mainWindowInfo.width = 1280;

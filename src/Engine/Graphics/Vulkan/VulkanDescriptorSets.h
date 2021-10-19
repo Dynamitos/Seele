@@ -55,7 +55,6 @@ private:
 };
 DEFINE_REF(PipelineLayout)
 
-DECLARE_REF(SecondaryCmdBuffer)
 class DescriptorSet : public Gfx::DescriptorSet
 {
 public:
@@ -63,7 +62,6 @@ public:
         : setHandle(VK_NULL_HANDLE)
         , graphics(graphics)
         , owner(owner)
-        , boundBuffer(nullptr)
         , currentlyBound(false)
         , currentlyInUse(false)
     {
@@ -84,14 +82,12 @@ public:
     {
         return currentlyInUse;
     }
-    void bind(PSecondaryCmdBuffer cmdBuffer)
+    void bind()
     {
-        boundBuffer = cmdBuffer;
         currentlyBound = true;
     }
     void unbind()
     {
-        boundBuffer = nullptr;
         currentlyBound = false;
     }
     void allocate()
@@ -119,12 +115,10 @@ private:
     VkDescriptorSet setHandle;
     PGraphics graphics;
     PDescriptorAllocator owner;
-    PSecondaryCmdBuffer boundBuffer;
     bool currentlyBound;
     bool currentlyInUse;
     friend class DescriptorAllocator;
     friend class CmdBuffer;
-    friend class SecondaryCmdBuffer;
 };
 DEFINE_REF(DescriptorSet)
 
