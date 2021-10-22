@@ -1,12 +1,14 @@
 #pragma once
 #include "Graphics/GraphicsResources.h"
 #include "View.h"
+#include "ThreadPool.h"
 
 namespace Seele
 {
 struct WindowView
 {
     PView view;
+    Event updateFinished;
     std::thread worker;
     std::mutex workerMutex;
 };

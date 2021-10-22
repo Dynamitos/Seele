@@ -171,7 +171,7 @@ public:
 		using pointer = Pair<K, V>*;
 
 		Iterator(Node *x = nullptr)
-			: node(x), traversal(Init_t::NO_INIT)
+			: node(x)
 		{
 		}
 		Iterator(Node *x, Array<Node *> &&beginIt)

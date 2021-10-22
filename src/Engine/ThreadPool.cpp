@@ -2,7 +2,11 @@
 
 using namespace Seele;
 
-static ThreadPool gThreadPool;
+
+void Event::await_suspend(std::coroutine_handle<JobPromise> h)
+{
+    getGlobalThreadPool().addJob(Job(h));
+}
 
 Job JobPromise::get_return_object() noexcept {
     return Job { std::coroutine_handle<JobPromise>::from_promise(*this) };
@@ -14,7 +18,16 @@ ThreadPool::ThreadPool(uint32 threadCount)
 
 }
 
-static ThreadPool& getGlobalThreadPool()
+ThreadPool::~ThreadPool()
 {
-    return gThreadPool;
+    for(auto& thread : workers)
+    {
+        thread.join();
+    }
+}
+
+ThreadPool& Seele::getGlobalThreadPool()
+{
+    static ThreadPool threadPool;
+    return threadPool;
 }

@@ -1,23 +1,35 @@
 #pragma once
 #include <thread>
 #include <coroutine>
-#include "MinimalEngine.h"
+#include "Containers/List.h"
 
 namespace Seele
 {
-enum class JobStage
+struct JobPromise;
+struct Event
 {
-    INPUT,
-    GAMELOGIC,
-    RENDER,
-    DONT_CARE
+public:
+    void raise()
+    {
+        flag.test_and_set();
+        flag.notify_all();
+    }
+    void reset()
+    {
+        flag.clear();
+    }
+    bool await_ready() { return flag.test(); }
+    void await_suspend(std::coroutine_handle<JobPromise> h);
+    void await_resume() {}
+private:
+    std::atomic_flag flag;
 };
 struct [[nodiscard]] Job;
 struct JobPromise
 {
     Job get_return_object() noexcept;
 
-    std::suspend_never initial_suspend() const noexcept { return {}; }
+    std::suspend_always initial_suspend() const noexcept { return {}; }
     std::suspend_never final_suspend() const noexcept { return {}; }
 
     void return_void() noexcept {}
@@ -31,9 +43,8 @@ struct [[nodiscard]] Job
 public:
     using promise_type = JobPromise;
     
-    explicit Job(std::coroutine_handle<task_promise> handle, JobStage stage = JobStage::DONT_CARE)
+    explicit Job(std::coroutine_handle<JobPromise> handle)
         : handle(handle)
-        , stage(stage)
     {}
     ~Job()
     {
@@ -44,22 +55,21 @@ public:
     }
 private:
     std::coroutine_handle<JobPromise> handle;
-    JobStage stage;
 };
 
 class ThreadPool
 {
 public:
-    ThreadPool(uint32 threadCount = std::thread::hardware_concurrency);
+    ThreadPool(uint32 threadCount = std::thread::hardware_concurrency());
     virtual ~ThreadPool();
-    void schedule(std::function<void()> function)
+    void addJob(Job&& job)
     {
-
+        jobs.add(std::move(job));
     }
 private:
-    Array<std::thread> workers;
-    Map<JobStage, List<Job>> jobs;
+    std::vector<std::thread> workers;
+    List<Job> jobs;
     void threadLoop();
 };
-static ThreadPool& getGlobalThreadPool();
+extern ThreadPool& getGlobalThreadPool();
 } // namespace Seele

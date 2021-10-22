@@ -70,13 +70,9 @@ ShaderCollection& ShaderMap::createShaders(
 	modifyRenderPassMacros(renderPass, createInfo.defines);
 	createInfo.name = getShaderNameFromRenderPassType(renderPass) + " Material " + material->getName();
 	
-    std::ifstream codeStream("./shaders/" + getShaderNameFromRenderPassType(renderPass), std::ios::ate);
-    auto fileSize = codeStream.tellg();
-    codeStream.seekg(0);
-    Array<char> buffer(static_cast<uint32>(fileSize));
-    codeStream.read(buffer.data(), fileSize);
-
-	createInfo.shaderCode.add(std::string(buffer.data(), 0, fileSize));
+    std::ifstream codeStream("./shaders/" + getShaderNameFromRenderPassType(renderPass));
+    
+	createInfo.shaderCode.add(std::string(std::istreambuf_iterator<char>{codeStream}, {}));
 
 	collection.vertexShader = graphics->createVertexShader(createInfo);
 

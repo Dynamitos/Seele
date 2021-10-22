@@ -3,6 +3,8 @@ target_sources(SeeleEngine
         EngineTypes.h
         MinimalEngine.h
         MinimalEngine.cpp
+        ThreadPool.h
+        ThreadPool.cpp
         main.cpp)
 
 add_subdirectory(Asset/)

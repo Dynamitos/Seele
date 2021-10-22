@@ -35,12 +35,3 @@ PWindow WindowManager::addWindow(const WindowCreateInfo &createInfo)
 	windows.add(window);
 	return window;
 }
-
-void WindowManager::render() 
-{
-	for(auto window : windows)
-	{
-		window->render();
-	}	
-}
-

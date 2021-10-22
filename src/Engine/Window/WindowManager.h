@@ -12,7 +12,6 @@ public:
 	WindowManager();
 	~WindowManager();
 	PWindow addWindow(const WindowCreateInfo &createInfo);
-	void render();
 	static Gfx::PGraphics getGraphics()
 	{
 		return graphics;

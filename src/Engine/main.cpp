@@ -34,9 +34,9 @@ int main()
 	PInspectorView inspectorView = new InspectorView(windowManager->getGraphics(), window, inspectorViewInfo);
 	window->addView(inspectorView);
 	sceneView->setFocused();
-	while (windowManager->isActive())
+	while(true)
 	{
-		windowManager->render();
+		window->render();
 	}
 	return 0;
 }

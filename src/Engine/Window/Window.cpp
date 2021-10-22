@@ -16,7 +16,7 @@ void Window::addView(PView view)
 {
     WindowView* windowView = new WindowView();
     windowView->view = view;
-    windowView->worker = std::thread(&Window::viewWorker, this, windowView);
+    //windowView->worker = std::thread(&Window::viewWorker, this, windowView);
     views.add(windowView); 
 }
 
@@ -24,11 +24,19 @@ void Window::render()
 {
     gfxHandle->beginFrame();
     for(auto& windowView : views)
-    {
+    {   
         windowView->view->beginUpdate();
         windowView->view->update();
-        windowView->view->commitUpdate();
-        windowView->view->prepareRender();
+        {
+            std::unique_lock lock(windowView->workerMutex);
+            windowView->view->commitUpdate();
+        }
+        windowView->updateFinished.raise();
+        {
+            std::unique_lock lock(windowView->workerMutex);
+            windowView->view->prepareRender();
+        }
+        windowView->updateFinished.reset();
         windowView->view->render();
     }
     gfxHandle->endFrame();
