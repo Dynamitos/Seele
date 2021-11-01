@@ -370,12 +370,14 @@ public:
 	virtual void setMouseButtonCallback(std::function<void(MouseButton, InputAction, KeyModifier)> callback) override;
 	virtual void setScrollCallback(std::function<void(double, double)> callback) override;
 	virtual void setFileCallback(std::function<void(int, const char**)> callback) override;
+	virtual void setCloseCallback(std::function<void()> callback);
 
 	std::function<void(KeyCode, InputAction, KeyModifier)> keyCallback;
 	std::function<void(double, double)> mouseMoveCallback;
 	std::function<void(MouseButton, InputAction, KeyModifier)> mouseButtonCallback;
 	std::function<void(double, double)> scrollCallback;
 	std::function<void(int, const char**)> fileCallback;
+	std::function<void()> closeCallback;
 protected:
 	void advanceBackBuffer();
 	void recreateSwapchain(const WindowCreateInfo &createInfo);

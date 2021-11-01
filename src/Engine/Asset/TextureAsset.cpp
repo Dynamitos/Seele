@@ -34,6 +34,7 @@ void TextureAsset::load()
     setStatus(Status::Loading);
     ktxTexture2* kTexture;
     // TODO: consider return
+    std::cout << "Loading texture " << getFullPath() << std::endl;
     ktxTexture2_CreateFromNamedFile(getFullPath().c_str(), 
         KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, 
         &kTexture);

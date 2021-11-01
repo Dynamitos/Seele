@@ -1,6 +1,6 @@
 #pragma once
 #include "MinimalEngine.h"
-#include <xmemory>
+#include <memory_resource>
 
 namespace Seele
 {
@@ -187,11 +187,11 @@ public:
         return *this;
     }
     
-    T &front()
+    reference front()
     {
         return root->data;
     }
-    T &back()
+    reference back()
     {
         return tail->prev->data;
     }
@@ -218,7 +218,7 @@ public:
             root = allocateNode();
             tail = root;
         }
-        tail->data = value;
+        initializeNode(tail, value);
         Node *newTail = allocateNode();
         newTail->prev = tail;
         newTail->next = nullptr;
@@ -236,7 +236,7 @@ public:
             root = allocateNode();
             tail = root;
         }
-        tail->data = std::move(value);
+        initializeNode(tail, std::move(value));
         Node *newTail = allocateNode();
         newTail->prev = tail;
         newTail->next = nullptr;
@@ -246,6 +246,13 @@ public:
         markIteratorDirty();
         _size++;
         return insertedElement;
+    }
+    // front + popFront
+    value_type&& retrieve()
+    {
+        auto&& temp = std::move(root->data);
+        popFront();
+        return std::move(temp);
     }
     iterator remove(iterator pos)
     {
@@ -299,7 +306,7 @@ public:
         }
         Node *tmp = pos.node->prev;
         Node *newNode = allocateNode();
-        newNode->data = value;
+        initializeNode(newNode, value);
         tmp->next = newNode;
         newNode->prev = tmp;
         newNode->next = pos.node;
@@ -346,9 +353,19 @@ private:
     Node* allocateNode()
     {
         Node* node = allocator.allocate(1);
-        std::memset(node, 0, sizeof(Node));
         assert(node != nullptr);
+        node->prev = nullptr;
+        node->next = nullptr;
         return node;
+    }
+    template<typename Type>
+    void initializeNode(Node* node, Type&& data)
+    {
+        std::allocator_traits<NodeAllocator>::construct(allocator, 
+            node, 
+            node->prev, 
+            node->next, 
+            std::forward<Type>(data));
     }
     void deallocateNode(Node* node)
     {

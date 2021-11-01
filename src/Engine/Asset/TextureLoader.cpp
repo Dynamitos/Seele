@@ -28,7 +28,6 @@ void TextureLoader::importAsset(const std::filesystem::path& filePath)
     PTextureAsset asset = new TextureAsset(assetFileName.replace_extension("asset").filename().generic_string());
     asset->setStatus(Asset::Status::Loading);
     asset->setTexture(placeholderAsset->getTexture());
-    std::cout << "Loading texture " << asset->getFileName() << std::endl;
     AssetRegistry::get().registerTexture(asset);
     futures.add(std::async(std::launch::async, [this, filePath, asset] () mutable {
         using namespace std::chrono_literals;

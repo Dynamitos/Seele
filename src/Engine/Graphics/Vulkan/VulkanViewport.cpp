@@ -38,6 +38,12 @@ void glfwFileCallback(GLFWwindow* handle, int count, const char** paths)
     window->fileCallback(count, paths);
 }
 
+void glfwCloseCallback(GLFWwindow* handle)
+{
+    Window* window = (Window*)glfwGetWindowUserPointer(handle);
+    window->closeCallback();
+}
+
 Window::Window(PGraphics graphics, const WindowCreateInfo &createInfo)
     : Gfx::Window(createInfo)
     , graphics(graphics)
@@ -56,6 +62,7 @@ Window::Window(PGraphics graphics, const WindowCreateInfo &createInfo)
     glfwSetMouseButtonCallback(handle, &glfwMouseButtonCallback);
     glfwSetScrollCallback(handle, &glfwScrollCallback);
     glfwSetDropCallback(handle, &glfwFileCallback);
+    glfwSetWindowCloseCallback(handle, &glfwCloseCallback);
 
     glfwCreateWindowSurface(instance, handle, nullptr, &surface);
 
@@ -132,6 +139,11 @@ void Window::setScrollCallback(std::function<void(double, double)> callback)
 void Window::setFileCallback(std::function<void(int, const char**)> callback)
 {
     fileCallback = callback;
+}
+
+void Window::setCloseCallback(std::function<void()> callback)
+{
+    closeCallback = callback;
 }
 
 void Window::advanceBackBuffer()

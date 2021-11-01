@@ -54,9 +54,9 @@ public:
             std::unique_lock lock(registeredObjectsLock);
             registeredObjects.erase(handle);
         }
-    #pragma warning( disable: 4150)
+//    #pragma warning( disable: 4150)
         delete handle;
-    #pragma warning( default: 4150)
+//    #pragma warning( default: 4150)
     }
     RefObject &operator=(const RefObject &rhs)
     {

@@ -112,7 +112,7 @@ namespace Seele
             assert(_data != nullptr);
             markIteratorDirty();
         }
-        constexpr Array(size_type size, const T& value, const allocator_type& alloc = allocator_type())
+        constexpr Array(size_type size, const value_type& value, const allocator_type& alloc = allocator_type())
             : arraySize(size)
             , allocated(size)
             , allocator(alloc)
@@ -169,21 +169,16 @@ namespace Seele
         {
             if (this != &other)
             {
-                if constexpr (std::allocator_traits<allocator_type>::propagate_on_container_copy_assignment::value 
-                    && !std::allocator_traits<allocator_type>::is_always_equal::value)
+                if constexpr (std::allocator_traits<allocator_type>::propagate_on_container_copy_assignment::value )
                 {
-                    if(allocator != other.allocator)
+                    if (!std::allocator_traits<allocator_type>::is_always_equal::value
+                     && allocator != other.allocator)
                     {
                         deallocateArray(_data, allocated);
                         _data = nullptr;
                     }
-                }
-                if constexpr (std::allocator_traits<allocator_type>::propagate_on_container_copy_assignment::value)
-                {
                     allocator = other.allocator;
                 }
-                else
-                {}
                 if(other.arraySize > allocated)
                 {
                     if(_data != nullptr)
@@ -203,17 +198,14 @@ namespace Seele
         {
             if (this != &other)
             {
-                if constexpr (std::allocator_traits<allocator_type>::propagate_on_container_move_assignment::value 
-                    && !std::allocator_traits<allocator_type>::is_always_equal::value)
+                if constexpr (std::allocator_traits<allocator_type>::propagate_on_container_move_assignment::value)
                 {
-                    if(allocator != other.allocator)
+                    if (!std::allocator_traits<allocator_type>::is_always_equal::value
+                     && allocator != other.allocator)
                     {
                         deallocateArray(_data, allocated);
                         _data = nullptr;
                     }
-                }
-                if constexpr (std::allocator_traits<allocator_type>::propagate_on_container_move_assignment::value)
-                {
                     allocator = std::move(other.allocator);
                 }
                 if (_data != nullptr)
@@ -248,59 +240,59 @@ namespace Seele
             return !(*this == other);
         }
 
-        constexpr Iterator find(const T &item)
+        constexpr iterator find(const value_type &item)
         {
             for (uint32 i = 0; i < arraySize; ++i)
             {
                 if (_data[i] == item)
                 {
-                    return Iterator(&_data[i]);
+                    return iterator(&_data[i]);
                 }
             }
             return endIt;
         }
-        constexpr Iterator find(T&& item)
+        constexpr iterator find(value_type&& item)
         {
             for (uint32 i = 0; i < arraySize; ++i)
             {
                 if (_data[i] == item)
                 {
-                    return Iterator(&_data[i]);
+                    return iterator(&_data[i]);
                 }
             }
             return endIt;	
         }
-        constexpr Allocator get_allocator() const
+        constexpr allocator_type get_allocator() const
         {
             return allocator;
         }
-        constexpr Iterator begin() const
+        constexpr iterator begin() const
         {
             return beginIt;
         }
-        constexpr Iterator end() const
+        constexpr iterator end() const
         {
             return endIt;
         }
-        constexpr ConstIterator cbegin() const
+        constexpr const_iterator cbegin() const
         {
             return beginIt;
         }
-        constexpr ConstIterator cend() const
+        constexpr const_iterator cend() const
         {
             return endIt;
         }
-        constexpr T &add(const T &item = T())
+        constexpr reference add(const value_type &item = value_type())
         {
             return addInternal(item);
         }
-        constexpr T &add(T&& item)
+        constexpr reference add(value_type&& item)
         {
             return addInternal(std::forward<T>(item));
         }
-        constexpr T &addUnique(const T &item = T())
+        constexpr reference addUnique(const value_type &item = value_type())
         {
-            Iterator it;
+            iterator it;
             if((it = std::move(find(item))) != endIt)
             {
                 return *it;
@@ -308,7 +300,7 @@ namespace Seele
             return addInternal(item);
         }
         template<typename... args>
-        constexpr T &emplace(args... arguments)
+        constexpr reference emplace(args... arguments)
         {
             if (arraySize == allocated)
             {
@@ -316,10 +308,8 @@ namespace Seele
                 allocated = calculateGrowth(newSize);
                 T *tempArray = allocateArray(allocated);
                 assert(tempArray != nullptr);
-                for (size_type i = 0; i < arraySize; ++i)
-                {
-                    tempArray[i] = std::move(_data[i]);
-                }
+                
+                std::uninitialized_move(begin(), end(), Iterator(tempArray));
                 deallocateArray(_data, arraySize);
                 _data = tempArray;
             }
@@ -327,7 +317,7 @@ namespace Seele
             markIteratorDirty();
             return _data[arraySize - 1];
         }
-        constexpr void remove(Iterator it, bool keepOrder = true)
+        constexpr void remove(iterator it, bool keepOrder = true)
         {
             remove(it - beginIt, keepOrder);
         }
@@ -351,7 +341,7 @@ namespace Seele
         {
             resizeInternal(newSize, std::move(T()));
         }
-        constexpr void resize(size_type newSize, const T& value)
+        constexpr void resize(size_type newSize, const value_type& value)
         {
             resizeInternal(newSize, value);
         }
@@ -367,11 +357,11 @@ namespace Seele
             allocated = 0;
             markIteratorDirty();
         }
-        inline size_type indexOf(Iterator iterator)
+        inline size_type indexOf(iterator iterator)
         {
             return iterator - beginIt;
         }
-        inline size_type indexOf(ConstIterator iterator) const
+        inline size_type indexOf(const_iterator iterator) const
         {
             return iterator.p - beginIt.p;
         }
@@ -395,12 +385,18 @@ namespace Seele
         {
             return allocated;
         }
-        inline T *data() const
+        inline pointer data() const
         {
             return _data;
         }
-        inline T &back() const
+        inline reference front() const
         {
+            assert(arraySize > 0);
+            return _data[0];
+        }
+        inline reference back() const
+        {
+            assert(arraySize > 0);
             return _data[arraySize - 1];
         }
         void pop()
@@ -408,12 +404,12 @@ namespace Seele
             arraySize--;
             markIteratorDirty();
         }
-        constexpr inline T &operator[](size_type index)
+        constexpr inline reference operator[](size_type index)
         {
             assert(index < arraySize);
             return _data[index];
         }
-        constexpr inline const T &operator[](size_type index) const
+        constexpr inline const reference operator[](size_type index) const
         {
             assert(index < arraySize);
             return _data[index];

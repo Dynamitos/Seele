@@ -21,7 +21,9 @@ set(NSAM_ROOT ${EXTERNAL_ROOT}/aftermath)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/)
 
 set(Boost_USE_STATIC_LIBS OFF)
-set(Boost_LIB_PREFIX lib)
+if(WIN32)
+  set(Boost_LIB_PREFIX lib)
+endif()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE})
 #Workaround for vs, because it places artifacts into an additional subfolder

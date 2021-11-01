@@ -18,7 +18,7 @@ Scene::Scene(Gfx::PGraphics graphics)
     lightEnv.directionalLights[0].color = Vector4(1, 1, 1, 1);
     lightEnv.directionalLights[0].direction = Vector4(1, 1, 0, 1);
     lightEnv.directionalLights[0].intensity = Vector4(1, 1, 1, 1);
-    lightEnv.numDirectionalLights = 0;
+    lightEnv.numDirectionalLights = 1;
     srand((unsigned int)time(NULL));
     for(uint32 i = 0; i < 16; ++i)
     {

@@ -9,26 +9,27 @@ struct WindowView
 {
     PView view;
     Event updateFinished;
-    std::thread worker;
     std::mutex workerMutex;
 };
 DEFINE_REF(WindowView)
+DECLARE_REF(WindowManager)
 // The logical window, with the graphics proxy
 class Window
 {
 public:
-    Window(Gfx::PWindow handle);
+    Window(PWindowManager owner, Gfx::PWindow handle);
     ~Window();
     void addView(PView view);
-    void render();
+    MainJob render();
     Gfx::PWindow getGfxHandle();
     void setFocused(PView view);
 
 protected:
+    PWindowManager owner;
     Array<WindowView*> views;
     Gfx::PWindow gfxHandle;
 
-    void viewWorker(WindowView* view);
+    Job viewWorker(WindowView* view);
 };
 DEFINE_REF(Window)
 } // namespace Seele
