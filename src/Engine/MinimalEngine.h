@@ -29,14 +29,16 @@ extern Seele::Map<void *, void *> registeredObjects;
 extern std::mutex registeredObjectsLock;
 namespace Seele
 {
-template <typename T>
+template <typename T, typename Deleter>
 class RefPtr;
-template <typename T>
+template <typename T, typename Deleter>
 class RefObject
 {
 public:
-    RefObject(T *ptr)
-        : handle(ptr), refCount(1)
+    RefObject(T *ptr, Deleter&& deleter)
+        : handle(ptr)
+        , deleter(std::move(deleter))
+        , refCount(1)
     {
         registeredObjects[ptr] = this;
     }
@@ -55,7 +57,7 @@ public:
             registeredObjects.erase(handle);
         }
 //    #pragma warning( disable: 4150)
-        delete handle;
+        //deleter(handle);
 //    #pragma warning( default: 4150)
     }
     RefObject &operator=(const RefObject &rhs)
@@ -108,11 +110,12 @@ public:
     }
 private:
     T *handle;
+    Deleter deleter;
     std::atomic_uint64_t refCount;
-    friend class RefPtr<T>;
+    friend class RefPtr<T, Deleter>;
 };
 
-template <typename T>
+template <typename T, typename Deleter = std::default_delete<T>>
 class RefPtr
 {
 public:
@@ -124,7 +127,7 @@ public:
     {
         object = nullptr;
     }
-    RefPtr(T *ptr)
+    RefPtr(T *ptr, Deleter deleter = Deleter())
     {
         std::unique_lock l(registeredObjectsLock);
         auto registeredObj = registeredObjects.find(ptr);
@@ -132,17 +135,17 @@ public:
         auto registeredEnd = registeredObjects.end();
         if (registeredObj == registeredEnd)
         {
-            object = new RefObject<T>(ptr);
+            object = new RefObject<T, Deleter>(ptr, std::move(deleter));
             l.unlock();
         }
         else
         {		
             l.unlock();
-            object = (RefObject<T> *)registeredObj->value;
+            object = (RefObject<T, Deleter> *)registeredObj->value;
             object->addRef();
         }
     }
-    explicit RefPtr(RefObject<T> *other)
+    explicit RefPtr(RefObject<T, Deleter> *other)
         : object(other)
     {
         object->addRef();
@@ -166,12 +169,12 @@ public:
     {
         F *f = other.getObject()->getHandle();
         assert(static_cast<T *>(f));
-        object = (RefObject<T> *)other.getObject();
+        object = (RefObject<T, Deleter> *)other.getObject();
         object->addRef();
     }
 
-    template <typename F>
-    RefPtr<F> cast()
+    template <typename F, typename DeleterF = std::default_delete<F>>
+    RefPtr<F, DeleterF> cast()
     {
         T *t = object->getHandle();
         F *f = dynamic_cast<F *>(t);
@@ -179,12 +182,12 @@ public:
         {
             return nullptr;
         }
-        RefObject<F> *newObject = (RefObject<F> *)object;
-        return RefPtr<F>(newObject);
+        RefObject<F, DeleterF> *newObject = (RefObject<F, DeleterF> *)object;
+        return RefPtr<F, DeleterF>(newObject);
     }
 
-    template <typename F>
-    const RefPtr<F> cast() const
+    template <typename F, typename DeleterF = std::default_delete<F>>
+    const RefPtr<F, DeleterF> cast() const
     {
         T *t = object->getHandle();
         F *f = dynamic_cast<F *>(t);
@@ -192,8 +195,8 @@ public:
         {
             return nullptr;
         }
-        RefObject<F> *newObject = (RefObject<F> *)object;
-        return RefPtr<F>(newObject);
+        RefObject<F, DeleterF> *newObject = (RefObject<F, DeleterF> *)object;
+        return RefPtr<F, DeleterF>(newObject);
     }
 
     RefPtr &operator=(const RefPtr &other)
@@ -254,7 +257,7 @@ public:
         assert(object != nullptr);
         return object->handle;
     }
-    RefObject<T> *getObject() const
+    RefObject<T, Deleter> *getObject() const
     {
         return object;
     }
@@ -268,7 +271,7 @@ public:
     }
 
 private:
-    RefObject<T> *object;
+    RefObject<T, Deleter> *object;
     friend class boost::serialization::access;
     template<class Archive>
     void serialize(Archive& ar, const unsigned int)

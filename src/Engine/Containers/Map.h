@@ -189,7 +189,7 @@ public:
         : root(nullptr)
         , beginIt(nullptr)
         , endIt(nullptr)
-        , iteratorsDirty(false)
+        , iteratorsDirty(true)
         , _size(0)
         , comp(Compare())
     {
@@ -200,7 +200,7 @@ public:
         , root(nullptr)
         , beginIt(nullptr)
         , endIt(nullptr)
-        , iteratorsDirty(false)
+        , iteratorsDirty(true)
         , _size(0)
         , comp(comp)
     {
@@ -210,7 +210,7 @@ public:
         , root(nullptr)
         , beginIt(nullptr)
         , endIt(nullptr)
-        , iteratorsDirty(false)
+        , iteratorsDirty(true)
         , _size(0)
         , comp(Compare())
     {
@@ -221,7 +221,7 @@ public:
         , comp(other.comp)
     {
         root = &nodeContainer[nodeContainer.indexOf(other.root)];
-        refreshIterators();
+        markIteratorDirty();
     }
     Map(Map&& other)
         : nodeContainer(other.nodeContainer)
@@ -229,7 +229,7 @@ public:
         , comp(std::move(other.comp))
     {
         root = &nodeContainer[nodeContainer.indexOf(other.root)];
-        refreshIterators();
+        markIteratorDirty();
     }
     ~Map()
     {
@@ -242,7 +242,7 @@ public:
             root = &nodeContainer[nodeContainer.indexOf(other.root)];
             _size = other._size;
             comp = other.comp;
-            refreshIterators();
+            markIteratorDirty();
         }
         return *this;
     }
@@ -254,14 +254,14 @@ public:
             root = &nodeContainer[nodeContainer.indexOf(other.root)];
             _size = std::move(other._size);
             comp = std::move(other.comp);
-            refreshIterators();
+            markIteratorDirty();
         }
         return *this;
     }
     inline mapped_type& operator[](const key_type& key)
     {
         root = splay(root, key);
-        refreshIterators();
+        markIteratorDirty();
         if (root == nullptr || comp(root->pair.key, key) || comp(key, root->pair.key))
         {
             root = insert(root, key);
@@ -272,7 +272,7 @@ public:
     inline mapped_type& operator[](key_type&& key)
     {
         root = splay(root, std::move(key));
-        refreshIterators();
+        markIteratorDirty();
         if (root == nullptr || comp(root->pair.key, key) || comp(key, root->pair.key))
         {
             root = insert(root, std::move(key));
@@ -283,7 +283,7 @@ public:
     iterator find(const key_type& key)
     {
         root = splay(root, key);
-        refreshIterators();
+        markIteratorDirty();
         if (root == nullptr || comp(root->pair.key, key) || comp(key, root->pair.key))
         {
             return endIt;
@@ -293,7 +293,7 @@ public:
     iterator find(key_type&& key)
     {
         root = splay(root, std::move(key));
-        refreshIterators();
+        markIteratorDirty();
         if (root == nullptr || comp(root->pair.key, key) || comp(key, root->pair.key))
         {
             return endIt;
@@ -303,13 +303,13 @@ public:
     iterator erase(const key_type& key)
     {
         root = remove(root, key);
-        refreshIterators();
+        markIteratorDirty();
         return iterator(root);	
     }
     iterator erase(K&& key)
     {
         root = remove(root, std::move(key));
-        refreshIterators();
+        markIteratorDirty();
         return iterator(root);
     }
     void clear()
@@ -317,7 +317,7 @@ public:
         nodeContainer.clear();
         root = nullptr;
         _size = 0;
-        refreshIterators();
+        markIteratorDirty();
     }
     bool exists(key_type&& key)
     {
@@ -486,10 +486,22 @@ private:
             r = splay(r->leftChild, key);
             r->rightChild = temp->rightChild;
         }
-        temp->leftChild = nullptr;
-        temp->rightChild = nullptr;
+        Node& lastNode = nodeContainer.back();
+        size_t removedIndex = nodeContainer.indexOf(temp);
+        nodeContainer[removedIndex] = std::move(lastNode);
+        for(auto it : nodeContainer)
+        {
+            if(it.leftChild == &lastNode)
+            {
+                it.leftChild = &nodeContainer[removedIndex];
+            }
+            if(it.rightChild == &lastNode)
+            {
+                it.rightChild = &nodeContainer[removedIndex];
+            }
+        }
+        nodeContainer.pop();
         _size--;
-        delete temp;
         return r;
     }
     template<class KeyType>

@@ -124,15 +124,10 @@
         "-Wno-dev"
     ],
     "C_Cpp.default.cppStandard": "c++20",
-    "C_Cpp.default.intelliSenseMode": "msvc-x64",
-    "C_Cpp.files.exclude": {
-        "**/.vscode": true,
-        "external/**": true
-    },
     "files.watcherExclude": {
         "**/target": true
     },
-    "C_Cpp.errorSquiggles": "Disabled",
     "git.ignoreSubmodules": true,
-    "cmake.configureOnOpen": true
+    "cmake.configureOnOpen": true,
+    "C_Cpp.intelliSenseEngineFallback": "Enabled"
 }
