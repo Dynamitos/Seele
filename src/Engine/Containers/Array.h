@@ -401,7 +401,7 @@ namespace Seele
         }
         void pop()
         {
-            arraySize--;
+            _data[arraySize--].~T();
             markIteratorDirty();
         }
         constexpr inline reference operator[](size_type index)

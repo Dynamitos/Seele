@@ -1,5 +1,7 @@
 #include "EngineTest.h"
 #include "MinimalEngine.h"
+#define BOOST_TEST_MODULE SeeleEngine
+#define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 
 using namespace Seele;
@@ -18,6 +20,8 @@ struct TestStruct
 	}
 	uint32 data;
 };
+
+struct DeclStruct;
 BOOST_AUTO_TEST_CASE(basic_refcount)
 {
 	{
@@ -30,7 +34,16 @@ BOOST_AUTO_TEST_CASE(basic_refcount)
 		}
 		BOOST_REQUIRE_EQUAL(ptr->data, 10);
 	}
+	std::shared_ptr<DeclStruct> test;
 }
+struct DeclStruct
+{
+	~DeclStruct()
+	{
+		data = 10;
+	}
+	uint32 data = 20;
+};
 
 struct DerivedStruct : public TestStruct
 {

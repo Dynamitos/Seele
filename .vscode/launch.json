@@ -63,6 +63,17 @@
             }
         },
         {
+            "name": "Test (Linux)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceRoot}/bin/Debug/Seele_unit_tests",
+            "args": [],
+            "stopAtEntry": false,
+            "console": "internalConsole",
+            "cwd": "${workspaceRoot}/bin/Debug",
+            "environment": [],
+        },
+        {
             "name": "Test",
             "type": "cppvsdbg",
             "request": "launch",

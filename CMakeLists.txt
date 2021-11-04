@@ -5,6 +5,8 @@ set(CMAKE_CXX_STANDARD 20)
 # Handle superbuild first
 option (USE_SUPERBUILD "Whether or not a superbuild should be invoked" ON)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 set(ENGINE_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/src/Engine)
 set(EXTERNAL_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/external)
 set(ASSIMP_ROOT ${EXTERNAL_ROOT}/assimp)

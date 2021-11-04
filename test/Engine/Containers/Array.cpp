@@ -3,7 +3,6 @@
 #include "MinimalEngine.h"
 #include <time.h>
 #include <chrono>
-#define BOOST_TEST_MODULE SeeleEngine
 #include <boost/test/unit_test.hpp>
 
 using namespace Seele;

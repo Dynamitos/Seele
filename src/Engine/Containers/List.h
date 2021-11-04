@@ -1,5 +1,4 @@
 #pragma once
-#include "MinimalEngine.h"
 #include <memory_resource>
 
 namespace Seele
@@ -247,6 +246,29 @@ public:
         _size++;
         return insertedElement;
     }
+    template<typename... args>
+    constexpr reference emplace(args... arguments)
+    {
+        if (root == nullptr)
+        {
+            root = allocateNode();
+            tail = root;
+        }
+        std::allocator_traits<NodeAllocator>::construct(allocator, 
+            tail, 
+            tail->prev, 
+            tail->next, 
+            arguments...);
+        Node *newTail = allocateNode();
+        newTail->prev = tail;
+        newTail->next = nullptr;
+        tail->next = newTail;
+        Iterator insertedElement(tail);
+        tail = newTail;
+        markIteratorDirty();
+        _size++;
+        return insertedElement;
+    }
     // front + popFront
     value_type&& retrieve()
     {
@@ -275,7 +297,7 @@ public:
         {
             next->prev = prev;
         }
-        delete pos.node;
+        deallocateNode(pos.node);
         markIteratorDirty();
         return Iterator(next);
     }
@@ -384,7 +406,7 @@ private:
     Iterator endIt;
     ConstIterator cbeginIt;
     ConstIterator cendIt;
-    uint32 _size;
+    size_type _size;
     NodeAllocator allocator;
 };
 } // namespace Seele

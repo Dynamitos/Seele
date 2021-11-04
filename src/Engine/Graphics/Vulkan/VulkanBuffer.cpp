@@ -54,7 +54,8 @@ ShaderBuffer::ShaderBuffer(PGraphics graphics, uint32 size, VkBufferUsageFlags u
 		vkCreateBuffer(graphics->getDevice(), &info, nullptr, &buffers[i].buffer);
 		bufferReqInfo.buffer = buffers[i].buffer;
 		vkGetBufferMemoryRequirements2(graphics->getDevice(), &bufferReqInfo, &memRequirements);
-		buffers[i].allocation = graphics->getAllocator()->allocate(memRequirements, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, buffers[i].buffer);
+		auto temp = graphics->getAllocator()->allocate(memRequirements, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, buffers[i].buffer);
+		buffers[i].allocation = temp;
 		vkBindBufferMemory(graphics->getDevice(), buffers[i].buffer, buffers[i].allocation->getHandle(), buffers[i].allocation->getOffset());
 	}
 }
