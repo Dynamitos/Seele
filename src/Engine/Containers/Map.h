@@ -36,13 +36,11 @@ struct Map
 private:
     struct Node
     {
-        size_t self;
         size_t leftChild;
         size_t rightChild;
         Pair<K, V> pair;
         Node()
-            : self(-1)
-            , leftChild(-1)
+            : leftChild(-1)
             , rightChild(-1)
             , pair()
         {
@@ -51,9 +49,8 @@ private:
         Node(Node&& other) = default;
         Node& operator=(const Node& other) = default;
         Node& operator=(Node&& other) = default;
-        Node(size_t self, K key)
-            : self(self)
-            , leftChild(-1)
+        Node(K key)
+            : leftChild(-1)
             , rightChild(-1)
             , pair(std::move(key))
         {
@@ -74,27 +71,28 @@ public:
         using reference = PairType&;
         using pointer = PairType*;
 
-        IteratorBase(Node *x = nullptr)
+        IteratorBase(size_t x = -1)
             : node(x)
         {
         }
-        IteratorBase(Node *x, Array<size_t> &&beginIt, const Array<Node, NodeAlloc>* nodeContainer)
+        IteratorBase(size_t x, const Array<Node, NodeAlloc>* nodeContainer, Array<size_t> &&beginIt = Array<size_t>())
             : node(x), traversal(std::move(beginIt)), nodeContainer(nodeContainer)
         {
         }
         IteratorBase(const IteratorBase &i)
-            : node(i.node), traversal(i.traversal)
+            : node(i.node), traversal(i.traversal), nodeContainer(i.nodeContainer)
         {
         }
         IteratorBase(IteratorBase&& i)
-            : node(std::move(i.node)), traversal(std::move(i.traversal))
+            : node(std::move(i.node)), traversal(std::move(i.traversal)), nodeContainer(i.nodeContainer)
         {
         }
         IteratorBase& operator=(const IteratorBase& other)
         {
             if(this != &other)
             {
-                node = other.node; // No copy, since no ownership
+                node = other.node;
+                nodeContainer = other.nodeContainer;
                 traversal = other.traversal;
             }
             return *this;
@@ -104,17 +102,18 @@ public:
             if(this != &other)
             {
                 node = std::move(other.node);
+                nodeContainer = std::move(other.nodeContainer);
                 traversal = std::move(other.traversal);
             }
             return *this;
         }
         reference operator*() const
         {
-            return node->pair;
+            return getNode()->pair;
         }
         pointer operator->() const
         {
-            return &node->pair;
+            return &(getNode()->pair);
         }
         inline bool operator!=(const IteratorBase &other)
         {
@@ -126,34 +125,36 @@ public:
         }
         IteratorBase &operator++()
         {
-            size_t nextIndex = node->rightChild;
-            while (nextIndex != -1 && (*nodeContainer)[nextIndex].leftChild != -1)
+            node = getNode()->rightChild;
+            while (node < nodeContainer->size() 
+                && getNode()->leftChild < nodeContainer->size())
             {
-                traversal.add(nextIndex);
-                nextIndex = (*nodeContainer)[nextIndex].leftChild;
+                traversal.add(node);
+                node = getNode()->leftChild;
             }
-            if (nextIndex == -1 && traversal.size() > 0)
+            if (node >= nodeContainer->size() 
+                && traversal.size() > 0)
             {
-                nextIndex = traversal.back();
+                node = traversal.back();
                 traversal.pop();
             }
-            node = nextIndex != -1 ? &(*nodeContainer)[nextIndex] : nullptr;
             return *this;
         }
         IteratorBase &operator--()
         {
-            size_t nextIndex = node->leftChild;
-            while (nextIndex != -1 && (*nodeContainer)[nextIndex].rightChild != -1)
+            node = getNode()->leftChild;
+            while (node < nodeContainer->size() 
+                && getNode()->rightChild < nodeContainer->size())
             {
-                traversal.add(nextIndex);
-                nextIndex = (*nodeContainer)[nextIndex].rightchild;
+                traversal.add(node);
+                node = getNode()->rightchild;
             }
-            if (nextIndex == -1 && traversal.size() > 0)
+            if (node >= nodeContainer->size() 
+                && traversal.size() > 0)
             {
-                nextIndex = traversal.back();
+                node = traversal.back();
                 traversal.pop();
             }
-            node = nextIndex != -1 ? &(*nodeContainer)[nextIndex] : nullptr;
             return *this;
         }
         IteratorBase operator--(int)
@@ -170,7 +171,11 @@ public:
         }
 
     private:
-        Node *node;
+        Node* getNode() const
+        {
+            return &(*nodeContainer)[node];
+        }
+        size_t node;
         Array<size_t> traversal;
         const Array<Node, NodeAlloc>* nodeContainer;
     };
@@ -194,9 +199,9 @@ public:
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
     
     Map()
-        : root(nullptr)
-        , beginIt(nullptr)
-        , endIt(nullptr)
+        : root(-1)
+        , beginIt(-1)
+        , endIt(-1)
         , iteratorsDirty(true)
         , _size(0)
         , comp(Compare())
@@ -205,9 +210,9 @@ public:
     explicit Map(const Compare& comp,
         const Allocator& alloc = Allocator())
         : nodeContainer(alloc)
-        , root(nullptr)
-        , beginIt(nullptr)
-        , endIt(nullptr)
+        , root(-1)
+        , beginIt(-1)
+        , endIt(-1)
         , iteratorsDirty(true)
         , _size(0)
         , comp(comp)
@@ -215,9 +220,9 @@ public:
     }
     explicit Map(const Allocator& alloc)
         : nodeContainer(alloc)
-        , root(nullptr)
-        , beginIt(nullptr)
-        , endIt(nullptr)
+        , root(-1)
+        , beginIt(-1)
+        , endIt(-1)
         , iteratorsDirty(true)
         , _size(0)
         , comp(Compare())
@@ -225,18 +230,18 @@ public:
     }
     Map(const Map& other)
         : nodeContainer(other.nodeContainer)
+        , root(other.root)
         , _size(other._size)
         , comp(other.comp)
     {
-        root = &nodeContainer[nodeContainer.indexOf(other.root)];
         markIteratorDirty();
     }
     Map(Map&& other)
         : nodeContainer(other.nodeContainer)
+        , root(std::move(other.root))
         , _size(std::move(other._size))
         , comp(std::move(other.comp))
     {
-        root = &nodeContainer[nodeContainer.indexOf(other.root)];
         markIteratorDirty();
     }
     ~Map()
@@ -247,7 +252,7 @@ public:
         if(this != &other)
         {
             nodeContainer = other.nodeContainer;
-            root = &nodeContainer[nodeContainer.indexOf(other.root)];
+            root = other.root;
             _size = other._size;
             comp = other.comp;
             markIteratorDirty();
@@ -259,7 +264,7 @@ public:
         if(this != &other)
         {
             nodeContainer = std::move(other.nodeContainer);
-            root = &nodeContainer[nodeContainer.indexOf(other.root)];
+            root = std::move(other.root);
             _size = std::move(other._size);
             comp = std::move(other.comp);
             markIteratorDirty();
@@ -270,60 +275,68 @@ public:
     {
         root = splay(root, key);
         markIteratorDirty();
-        if (root == nullptr || comp(root->pair.key, key) || comp(key, root->pair.key))
+        if (root >= nodeContainer.size() 
+         || comp(getNode(root)->pair.key, key) 
+         || comp(key, getNode(root)->pair.key))
         {
             root = insert(root, key);
             _size++;
         }
-        return root->pair.value;
+        return getNode(root)->pair.value;
     }
     inline mapped_type& operator[](key_type&& key)
     {
         root = splay(root, std::move(key));
         markIteratorDirty();
-        if (root == nullptr || comp(root->pair.key, key) || comp(key, root->pair.key))
+        if (root >= nodeContainer.size() 
+         || comp(getNode(root)->pair.key, key) 
+         || comp(key, getNode(root)->pair.key))
         {
             root = insert(root, std::move(key));
             _size++;
         }
-        return root->pair.value;
+        return getNode(root)->pair.value;
     }
     iterator find(const key_type& key)
     {
         root = splay(root, key);
         refreshIterators();
-        if (root == nullptr || comp(root->pair.key, key) || comp(key, root->pair.key))
+        if (!isValid(root)
+         || comp(getNode(root)->pair.key, key) 
+         || comp(key, getNode(root)->pair.key))
         {
             return endIt;
         }
-        return iterator(root);
+        return iterator(root, &nodeContainer);
     }
     iterator find(key_type&& key)
     {
         root = splay(root, std::move(key));
         refreshIterators();
-        if (root == nullptr || comp(root->pair.key, key) || comp(key, root->pair.key))
+        if (!isValid(root)
+         || comp(getNode(root)->pair.key, key) 
+         || comp(key, getNode(root)->pair.key))
         {
             return endIt;
         }
-        return iterator(root);
+        return iterator(root, &nodeContainer);
     }
     iterator erase(const key_type& key)
     {
         root = remove(root, key);
         refreshIterators();
-        return iterator(root);	
+        return iterator(root, &nodeContainer);	
     }
     iterator erase(K&& key)
     {
         root = remove(root, std::move(key));
         refreshIterators();
-        return iterator(root);
+        return iterator(root, &nodeContainer);
     }
     void clear()
     {
         nodeContainer.clear();
-        root = nullptr;
+        root = -1;
         _size = 0;
         markIteratorDirty();
     }
@@ -373,25 +386,14 @@ public:
     }
 
 private:
-    Node* leftChild(Node* node)
+    Node* getNode(size_t index) const
     {
-        if(node->leftChild >= nodeContainer.size()) return nullptr;
-        return &nodeContainer[node->leftChild];
+        if(!isValid(index)) return nullptr;
+        return &nodeContainer[index];
     }
-    Node* rightChild(Node* node)
+    inline bool isValid(size_t index) const
     {
-        if(node->rightChild >= nodeContainer.size()) return nullptr;
-        return &nodeContainer[node->rightChild];
-    }
-    Node* leftChild(Node* node) const
-    {
-        if(node->leftChild >= nodeContainer.size()) return nullptr;
-        return &nodeContainer[node->leftChild];
-    }
-    Node* rightChild(Node* node) const
-    {
-        if(node->rightChild >= nodeContainer.size()) return nullptr;
-        return &nodeContainer[node->rightChild];
+        return index < nodeContainer.size();
     }
     void markIteratorDirty()
     {
@@ -405,192 +407,201 @@ private:
     }
     inline Iterator calcBeginIterator() const
     {
-        if (root == nullptr)
+        if (!isValid(root))
         {
-            return Iterator(nullptr);
+            return Iterator(-1, &nodeContainer);
         }
         else
         {
-            size_t beginIndex = root->self;
+            size_t beginIndex = root;
             Array<size_t> beginTraversal;
-            while (beginIndex < nodeContainer.size())
+            while (isValid(beginIndex))
             {
                 beginTraversal.add(beginIndex);
-                beginIndex = nodeContainer[beginIndex].leftChild;
+                beginIndex = getNode(beginIndex)->leftChild;
             }
-            Node* beginNode = &nodeContainer[beginTraversal.back()];
+            beginIndex = beginTraversal.back();
             beginTraversal.pop();
-            return Iterator(beginNode, std::move(beginTraversal), &nodeContainer);
+            return Iterator(beginIndex, &nodeContainer, std::move(beginTraversal));
         }
     }
     inline Iterator calcEndIterator() const
     {
-        if (root == nullptr)
+        if (!isValid(root))
         {
-            return Iterator(nullptr);
+            return Iterator(-1, &nodeContainer);
         }
         else
         {
-            size_t endIndex = root->self;
+            size_t endIndex = root;
             Array<size_t> endTraversal;
-            while (endIndex < nodeContainer.size())
+            while (isValid(endIndex))
             {
                 endTraversal.add(endIndex);
-                endIndex = nodeContainer[endIndex].rightChild;
+                endIndex = getNode(endIndex)->rightChild;
             }
-            return Iterator(nullptr, std::move(endTraversal), &nodeContainer);
+            return Iterator(-1, &nodeContainer, std::move(endTraversal));
         }
     }
     Array<Node, NodeAlloc> nodeContainer;
-    Node *root;
+    size_t root;
     Iterator beginIt;
     Iterator endIt;
     bool iteratorsDirty;
     uint32 _size;
     Compare comp;
-    Node *rotateRight(Node *node)
+    size_t rotateRight(size_t node)
     {
-        Node *y = leftChild(node);
-        node->leftChild = y->rightChild;
-        y->rightChild = node->self;
-        return y;
+        Node* x = getNode(node);
+        size_t res = x->leftChild;
+        Node* y = getNode(x->leftChild);
+        x->leftChild = y->rightChild;
+        y->rightChild = node;
+        return res;
     }
-    Node *rotateLeft(Node *node)
+    size_t rotateLeft(size_t node)
     {
-        Node *y = rightChild(node);
-        node->rightChild = y->leftChild;
-        y->leftChild = node->self;
-        return y;
+        Node* x = getNode(node);
+        size_t res = x->rightChild;
+        Node* y = getNode(x->rightChild);
+        x->rightChild = y->leftChild;
+        y->leftChild = node;
+        return res;
     }
     template<class KeyType>
-    Node *insert(Node *r, KeyType&& key)
+    size_t insert(size_t r, KeyType&& key)
     {
-        if (r == nullptr)
+        if (!isValid(r))
         {
-            return &nodeContainer.emplace(nodeContainer.size(), std::forward<KeyType>(key));
+            nodeContainer.emplace(std::forward<KeyType>(key));
+            return 0;
         }
         r = splay(r, key);
 
-        if (!(comp(r->pair.key, key) || comp(key, r->pair.key)))
+        if (!(comp(node->pair.key, key) || comp(key, node->pair.key)))
             return r;
 
-        Node *newNode = &nodeContainer.emplace(nodeContainer.size(), std::forward<KeyType>(key));
+        Node* node = getNode(r);
+        Node *newNode = &nodeContainer.emplace(std::forward<KeyType>(key));
 
-        if (comp(key, r->pair.key))
+        if (comp(key, node->pair.key))
         {
-            newNode->rightChild = r->self;
-            newNode->leftChild = r->leftChild;
-            r->leftChild = -1;
+            newNode->rightChild = r;
+            newNode->leftChild = node->leftChild;
+            node->leftChild = -1;
         }
         else
         {
-            newNode->leftChild = r->self;
-            newNode->rightChild = r->rightChild;
-            r->rightChild = -1;
+            newNode->leftChild = r;
+            newNode->rightChild = node->rightChild;
+            node->rightChild = -1;
         }
-        return newNode;
+        return nodeContainer.size() - 1;
     }
     template<class KeyType>
-    Node *remove(Node *r, KeyType&& key)
+    size_t remove(size_t r, KeyType&& key)
     {
-        Node *temp;
-        if (!r)
-            return nullptr;
+        size_t temp;
+        if (!isValid(r))
+            return -1;
 
         r = splay(r, key);
+        Node* node = getNode(r);
 
-        if (comp(r->pair.key, key) || comp(key, r->pair.key))
+        if (comp(node->pair.key, key) || comp(key, node->pair.key))
             return r;
 
-        if (r->leftChild == -1)
+        if (!isValid(node->leftChild))
         {
             temp = r;
-            r = rightChild(r);
+            r = node->rightChild;
         }
         else
         {
             temp = r;
 
-            r = splay(leftChild(r), key);
-            r->rightChild = temp->rightChild;
+            r = splay(node->leftChild, key);
+            node = getNode(r);
+            node->rightChild = getNode(temp)->rightChild;
         }
         Node& lastNode = nodeContainer.back();
-        size_t removedIndex = temp->self;
+        size_t lastIndex = nodeContainer.size() - 1;
+        size_t removedIndex = temp;
         //Arrays can only pop back, so we need to move the last element to the deleted index
-        if(removedIndex != lastNode.self)
+        if(removedIndex != lastIndex)
         {
             nodeContainer[removedIndex] = std::move(lastNode);
-            for(auto it : nodeContainer)
+            for(auto& it : nodeContainer)
             {
-                if(it.leftChild == lastNode.self)
+                if(it.leftChild == lastIndex)
                 {
                     it.leftChild = removedIndex;
                 }
-                if(it.rightChild == lastNode.self)
+                if(it.rightChild == lastIndex)
                 {
                     it.rightChild = removedIndex;
                 }
             }
-            lastNode.self = removedIndex;
         }
         nodeContainer.pop();
         _size--;
         return r;
     }
     template<class KeyType>
-    Node *splay(Node *r, KeyType&& key)
+    size_t splay(size_t r, KeyType&& key)
     {
-        if (r == nullptr || !(comp(r->pair.key, key) || comp(key, r->pair.key)))
+        Node* node = getNode(r);
+        if (node == nullptr 
+         || !(comp(node->pair.key, key) 
+          ||  comp(key, node->pair.key)))
         {
             return r;
         }
-
-        if (comp(key, r->pair.key))
+        if (comp(key, node->pair.key))
         {
-            if (r->leftChild >= nodeContainer.size())
+            if (!isValid(node->leftChild))
                 return r;
 
-            if (comp(key, leftChild(r)->pair.key))
+            if (comp(key, getNode(node->leftChild)->pair.key))
             {
-                Node* res = splay(leftChild(leftChild(r)), key);
-                leftChild(r)->leftChild = res ? res->self : -1;
+                getNode(node->leftChild)->leftChild = splay(getNode(node->leftChild)->leftChild, key);
 
                 r = rotateRight(r);
+                node = getNode(r);
             }
-            else if (comp(leftChild(r)->pair.key, key))
+            else if (comp(getNode(node->leftChild)->pair.key, key))
             {
-                Node* res = splay(rightChild(leftChild(r)), key);
-                leftChild(r)->rightChild = res ? res->self : -1;
+                getNode(node->leftChild)->rightChild = splay(getNode(node->leftChild)->rightChild, key);
 
-                if (leftChild(r)->rightChild < nodeContainer.size())
+                if (isValid(getNode(node->leftChild)->rightChild))
                 {
-                    r->leftChild = rotateLeft(leftChild(r))->self;
+                    node->leftChild = rotateLeft(node->leftChild);
                 }
             }
-            return (r->leftChild >= nodeContainer.size()) ? r : rotateRight(r);
+            return (!isValid(node->leftChild)) ? r : rotateRight(r);
         }
         else
         {
-            if (r->rightChild >= nodeContainer.size())
+            if (!isValid(node->rightChild))
                 return r;
 
-            if (comp(key, rightChild(r)->pair.key))
+            if (comp(key, getNode(node->rightChild)->pair.key))
             {
-                Node* res = splay(leftChild(rightChild(r)), key);
-                rightChild(r)->leftChild = res ? res->self : -1;
+                getNode(node->rightChild)->leftChild = splay(getNode(node->rightChild)->leftChild, key);
 
-                if (rightChild(r)->leftChild < nodeContainer.size())
+                if (isValid(getNode(node->rightChild)->leftChild))
                 {
-                    r->rightChild = rotateRight(rightChild(r))->self;
+                    node->rightChild = rotateRight(node->rightChild);
                 }
             }
-            else if (comp(rightChild(r)->pair.key, key))
+            else if (comp(getNode(node->rightChild)->pair.key, key))
             {
-                Node* res = splay(rightChild(rightChild(r)), key);
-                rightChild(r)->rightChild = res ? res->self : -1;
+                getNode(node->rightChild)->rightChild = splay(getNode(node->rightChild)->rightChild, key);
+
                 r = rotateLeft(r);
+                node = getNode(r);
             }
-            return (r->rightChild >= nodeContainer.size()) ? r : rotateLeft(r);
+            return (!isValid(node->rightChild)) ? r : rotateLeft(r);
         }
     }
 };
