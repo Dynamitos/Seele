@@ -274,6 +274,7 @@ public:
     inline mapped_type& operator[](const key_type& key)
     {
         root = splay(root, key);
+        verifyTree();
         markIteratorDirty();
         if (root >= nodeContainer.size() 
          || comp(getNode(root)->pair.key, key) 
@@ -287,6 +288,7 @@ public:
     inline mapped_type& operator[](key_type&& key)
     {
         root = splay(root, std::move(key));
+        verifyTree();
         markIteratorDirty();
         if (root >= nodeContainer.size() 
          || comp(getNode(root)->pair.key, key) 
@@ -300,6 +302,7 @@ public:
     iterator find(const key_type& key)
     {
         root = splay(root, key);
+        verifyTree();
         refreshIterators();
         if (!isValid(root)
          || comp(getNode(root)->pair.key, key) 
@@ -312,6 +315,7 @@ public:
     iterator find(key_type&& key)
     {
         root = splay(root, std::move(key));
+        verifyTree();
         refreshIterators();
         if (!isValid(root)
          || comp(getNode(root)->pair.key, key) 
@@ -324,12 +328,14 @@ public:
     iterator erase(const key_type& key)
     {
         root = remove(root, key);
+        verifyTree();
         refreshIterators();
         return iterator(root, &nodeContainer);	
     }
     iterator erase(K&& key)
     {
         root = remove(root, std::move(key));
+        verifyTree();
         refreshIterators();
         return iterator(root, &nodeContainer);
     }
@@ -386,6 +392,34 @@ public:
     }
 
 private:
+    void verifyTree()
+    {
+        for(size_t i = 0; i < nodeContainer.size(); ++i)
+        {
+            bool found = false;
+            for(auto it : nodeContainer)
+            {
+                if(it.leftChild == i)
+                {
+                    assert(!found);
+                    found = true;
+                }
+                if(it.rightChild == i)
+                {
+                    assert(!found);
+                    found = true;
+                }
+            }
+            if(isValid(nodeContainer[i].leftChild))
+            {
+                assert(comp(nodeContainer[nodeContainer[i].leftChild].pair.key, nodeContainer[i].pair.key));
+            }
+            if(isValid(nodeContainer[i].rightChild))
+            {
+                assert(comp(nodeContainer[i].pair.key, nodeContainer[nodeContainer[i].rightChild].pair.key));
+            }
+        }
+    }
     Node* getNode(size_t index) const
     {
         if(!isValid(index)) return nullptr;
@@ -477,11 +511,11 @@ private:
             return 0;
         }
         r = splay(r, key);
+        Node* node = getNode(r);
 
         if (!(comp(node->pair.key, key) || comp(key, node->pair.key)))
             return r;
 
-        Node* node = getNode(r);
         Node *newNode = &nodeContainer.emplace(std::forward<KeyType>(key));
 
         if (comp(key, node->pair.key))
