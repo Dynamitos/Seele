@@ -274,7 +274,6 @@ public:
     inline mapped_type& operator[](const key_type& key)
     {
         root = splay(root, key);
-        verifyTree();
         markIteratorDirty();
         if (root >= nodeContainer.size() 
          || comp(getNode(root)->pair.key, key) 
@@ -288,7 +287,6 @@ public:
     inline mapped_type& operator[](key_type&& key)
     {
         root = splay(root, std::move(key));
-        verifyTree();
         markIteratorDirty();
         if (root >= nodeContainer.size() 
          || comp(getNode(root)->pair.key, key) 
@@ -302,7 +300,6 @@ public:
     iterator find(const key_type& key)
     {
         root = splay(root, key);
-        verifyTree();
         refreshIterators();
         if (!isValid(root)
          || comp(getNode(root)->pair.key, key) 
@@ -315,7 +312,6 @@ public:
     iterator find(key_type&& key)
     {
         root = splay(root, std::move(key));
-        verifyTree();
         refreshIterators();
         if (!isValid(root)
          || comp(getNode(root)->pair.key, key) 
@@ -328,14 +324,12 @@ public:
     iterator erase(const key_type& key)
     {
         root = remove(root, key);
-        verifyTree();
         refreshIterators();
         return iterator(root, &nodeContainer);	
     }
     iterator erase(K&& key)
     {
         root = remove(root, std::move(key));
-        verifyTree();
         refreshIterators();
         return iterator(root, &nodeContainer);
     }
@@ -517,6 +511,7 @@ private:
             return r;
 
         Node *newNode = &nodeContainer.emplace(std::forward<KeyType>(key));
+        node = getNode(r);
 
         if (comp(key, node->pair.key))
         {
