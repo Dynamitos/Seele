@@ -124,7 +124,7 @@ PSubAllocation Allocation::getSuballocation(VkDeviceSize requestedSize, VkDevice
 void Allocation::markFree(SubAllocation *allocation)
 {
 	// Dont free if it is already a free allocation, since they also mark themselves on deletion
-	if (freeRanges.find(allocation->allocatedOffset) != nullptr)
+	if (freeRanges.find(allocation->allocatedOffset) != freeRanges.end())
 	{
 		return;
 	}
