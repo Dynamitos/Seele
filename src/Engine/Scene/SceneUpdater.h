@@ -2,7 +2,7 @@
 #include "MinimalEngine.h"
 #include "Containers/List.h"
 #include <semaphore>
-
+//DEPRECATED
 namespace Seele
 {
 DECLARE_REF(Component);

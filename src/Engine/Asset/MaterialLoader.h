@@ -1,6 +1,7 @@
 #pragma once
 #include "MinimalEngine.h"
 #include "Containers/List.h"
+#include "ThreadPool.h"
 #include <thread>
 #include <future>
 #include <filesystem>
@@ -14,9 +15,10 @@ class MaterialLoader
 public:
     MaterialLoader(Gfx::PGraphics graphic);
     ~MaterialLoader();
-    PMaterialAsset queueAsset(const std::filesystem::path& filePath);
+    void importAsset(const std::filesystem::path& name);
     PMaterialAsset getPlaceHolderMaterial();
 private:
+    Job import(std::filesystem::path filePath, PMaterialAsset asset);
     Gfx::PGraphics graphics;
     List<std::future<void>> futures;
     PMaterialAsset placeholderMaterial;

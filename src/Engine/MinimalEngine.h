@@ -2,7 +2,6 @@
 #include "Containers/Map.h"
 #include "EngineTypes.h"
 #include "Math/Math.h"
-//#include "ThreadPool.h"
 
 #define DEFINE_REF(x)           \
     typedef RefPtr<x> P##x;     \
@@ -80,23 +79,19 @@ public:
         }
         return *this;
     }
-    inline bool operator==(const RefObject &other) const
+    bool operator==(const RefObject &rhs) const 
     {
-        return handle == other.handle;
+        return handle == rhs.handle;
     }
-    inline bool operator!=(const RefObject &other) const
+    auto operator<=>(const RefObject& rhs) const
     {
-        return handle != other.handle;
-    }
-    inline bool operator<(const RefObject &other) const
-    {
-        return handle < other.handle;
+        return handle <=> rhs.handle;
     }
     void addRef()
     {
         refCount++;
     }
-    inline void removeRef()
+    void removeRef()
     {
         refCount--;
         if (refCount == 0)
@@ -235,17 +230,13 @@ public:
             object->removeRef();
         }
     }
-    inline bool operator==(const RefPtr &other) const
+    bool operator==(const RefPtr& rhs) const
     {
-        return object == other.object;
+        return object == rhs.object;
     }
-    inline bool operator!=(const RefPtr &other) const
+    auto operator<=>(const RefPtr &rhs) const
     {
-        return object != other.object;
-    }
-    bool operator<(const RefPtr &other) const
-    {
-        return object < other.object;
+        return object <=> rhs.object;
     }
     inline T *operator->()
     {

@@ -1,6 +1,7 @@
 #pragma once
 #include "MinimalEngine.h"
 #include "Containers/List.h"
+#include "ThreadPool.h"
 #include <thread>
 #include <future>
 #include <filesystem>
@@ -25,7 +26,7 @@ private:
     void loadGlobalMeshes(const aiScene* scene, Array<PMesh>& globalMeshes, const Array<PMaterialAsset>& materials, Gfx::PGraphics graphics);
     void convertAssimpARGB(unsigned char* dst, aiTexel* src, uint32 numPixels);
 
-    void import(PMeshAsset meshAsset, const std::filesystem::path& path);
+    Job import(std::filesystem::path path, PMeshAsset meshAsset);
     List<std::future<void>> futures;
     Gfx::PGraphics graphics;
 };

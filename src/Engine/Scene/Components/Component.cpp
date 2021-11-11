@@ -36,7 +36,6 @@ PActor Component::getOwner()
 void Component::notifySceneAttach(PScene scene)
 {
     owningScene = scene;
-    scene->getSceneUpdater()->registerComponentUpdate(this);
     for (auto child : children)
     {
         child->notifySceneAttach(scene);

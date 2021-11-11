@@ -30,9 +30,10 @@ void MeshLoader::importAsset(const std::filesystem::path &path)
 {
     std::filesystem::path assetPath = path.filename();
     assetPath.replace_extension("asset");
-    PMeshAsset meshAsset = new MeshAsset(assetPath.generic_string());
-    AssetRegistry::get().registerMesh(meshAsset);
-    futures.add(std::async(std::launch::async, &MeshLoader::import, this, meshAsset, path));
+    PMeshAsset asset = new MeshAsset(assetPath.generic_string());
+    asset->setStatus(Asset::Status::Loading);
+    AssetRegistry::get().registerMesh(asset);
+    import(path, asset);
 }
 
 void MeshLoader::loadMaterials(const aiScene* scene, Array<PMaterialAsset>& globalMaterials, Gfx::PGraphics graphics)
@@ -228,7 +229,7 @@ void MeshLoader::loadTextures(const aiScene* scene, const std::filesystem::path&
         AssetRegistry::importFile(texPngPath.string());
     }
 }
-void MeshLoader::import(PMeshAsset meshAsset, const std::filesystem::path &path)
+Job MeshLoader::import(std::filesystem::path path, PMeshAsset meshAsset)
 {
     std::cout << "Starting to import "<<path << std::endl;
     meshAsset->setStatus(Asset::Status::Loading);
@@ -263,4 +264,5 @@ void MeshLoader::import(PMeshAsset meshAsset, const std::filesystem::path &path)
     meshAsset->setStatus(Asset::Status::Ready);
     meshAsset->save();
     std::cout << "Finished loading " << path << std::endl;
+    co_return;
 }

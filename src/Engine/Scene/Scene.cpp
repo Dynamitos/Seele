@@ -13,7 +13,6 @@ inline float frand()
 
 Scene::Scene(Gfx::PGraphics graphics)
     : graphics(graphics)
-    , updater(new SceneUpdater())
 {
     lightEnv.directionalLights[0].color = Vector4(1, 1, 1, 1);
     lightEnv.directionalLights[0].direction = Vector4(1, 1, 0, 1);
@@ -36,7 +35,6 @@ Scene::~Scene()
 
 void Scene::tick(double deltaTime)
 {
-    updater->runUpdates(static_cast<float>(deltaTime));
     for(auto &&meshBatch : staticMeshes)
     {
         meshBatch.material->updateDescriptorData();

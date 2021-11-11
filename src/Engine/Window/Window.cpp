@@ -18,8 +18,10 @@ void Window::addView(PView view)
 {
     WindowView* windowView = new WindowView();
     windowView->view = view;
+    windowView->updateFinished = Event("test");
     //windowView->worker = std::thread(&Window::viewWorker, this, windowView);
-    views.add(windowView); 
+    views.add(windowView);
+    viewWorker(views.size() - 1);
 }
 
 MainJob Window::render() 
@@ -27,8 +29,8 @@ MainJob Window::render()
     gfxHandle->beginFrame();
     for(auto& windowView : views)
     {
-        viewWorker(windowView);
         co_await windowView->updateFinished;
+        std::cout << "view update finished" << std::endl;
         {
             std::unique_lock lock(windowView->workerMutex);
             windowView->view->prepareRender();
@@ -36,6 +38,8 @@ MainJob Window::render()
         windowView->view->render();
     }
     gfxHandle->endFrame();
+    //Enqueue a new render main job
+    render();
 }
 
 Gfx::PWindow Window::getGfxHandle()
@@ -60,17 +64,18 @@ void Window::setFocused(PView view)
     });
 }
 
-
-Job Window::viewWorker(WindowView* windowView)
+Job Window::viewWorker(size_t viewIndex)
 {
-    while(true)
+    WindowView* windowView = views[viewIndex];
+    windowView->view->beginUpdate();
+    windowView->view->update();
     {
-        windowView->view->beginUpdate();
-        windowView->view->update();
-        {
-            std::unique_lock lock(windowView->workerMutex);
-            windowView->view->commitUpdate();
-        }
-        windowView->updateFinished.raise();
+        std::unique_lock lock(windowView->workerMutex);
+        windowView->view->commitUpdate();
     }
+    std::cout << "Update completed" << std::endl;
+    windowView->updateFinished.raise();
+    // enqueue next frame update
+    viewWorker(viewIndex);
+    co_return;
 }

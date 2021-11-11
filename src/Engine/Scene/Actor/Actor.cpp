@@ -14,12 +14,10 @@ Actor::~Actor()
 }
 void Actor::tick(float deltaTime)
 {
-    addWorldRotation(glm::vec3(0, 1 * deltaTime, 0));
 }
 void Actor::notifySceneAttach(PScene scene)
 {
     owningScene = scene;
-    scene->getSceneUpdater()->registerActorUpdate(this);
     rootComponent->notifySceneAttach(scene);
     for(auto child : children)
     {

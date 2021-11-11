@@ -29,7 +29,7 @@ protected:
     Array<WindowView*> views;
     Gfx::PWindow gfxHandle;
 
-    Job viewWorker(WindowView* view);
+    Job viewWorker(size_t viewIndex);
 };
 DEFINE_REF(Window)
 } // namespace Seele

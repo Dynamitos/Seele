@@ -40,4 +40,22 @@ BOOST_AUTO_TEST_CASE(basic_remove)
 	BOOST_REQUIRE_EQUAL(list.size(), 2);
 }
 
+BOOST_AUTO_TEST_CASE(list_join)
+{
+	List<int> list1;
+	List<int> list2;
+	list1.add(2);
+	list1.add(1);
+	list1.add(3);
+	list1.add(4);
+	list2.add(5);
+	list2.add(7);
+	list2.add(8);
+	list2.add(6);
+	list2.add(9);
+	list1.moveElements(list2);
+	BOOST_REQUIRE_EQUAL(list1.size(), 9);
+	BOOST_REQUIRE_EQUAL(list2.size(), 0);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -1,6 +1,7 @@
 #pragma once
 #include "MinimalEngine.h"
 #include "Containers/List.h"
+#include "ThreadPool.h"
 #include <thread>
 #include <future>
 #include <filesystem>
@@ -18,7 +19,7 @@ public:
     void importAsset(const std::filesystem::path& filePath);
     PTextureAsset getPlaceholderTexture();
 private:
-    void import(const std::filesystem::path& path, PTextureAsset asset);
+    Job import(std::filesystem::path path, PTextureAsset asset);
     Gfx::PGraphics graphics;
     List<std::future<void>> futures;
     PTextureAsset placeholderAsset;

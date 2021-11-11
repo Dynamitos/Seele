@@ -22,20 +22,15 @@ TextureLoader::~TextureLoader()
 {
 }
 
-void TextureLoader::importAsset(const std::filesystem::path& filePath)
+void TextureLoader::importAsset(const std::filesystem::path& path)
 {
-    auto assetFileName = filePath;
-    PTextureAsset asset = new TextureAsset(assetFileName.replace_extension("asset").filename().generic_string());
+    std::filesystem::path assetPath = path.filename();
+    assetPath.replace_extension("asset");
+    PTextureAsset asset = new TextureAsset(assetPath.generic_string());
     asset->setStatus(Asset::Status::Loading);
     asset->setTexture(placeholderAsset->getTexture());
     AssetRegistry::get().registerTexture(asset);
-    futures.add(std::async(std::launch::async, [this, filePath, asset] () mutable {
-        using namespace std::chrono_literals;
-        //std::this_thread::sleep_for(5s);
-        import(filePath, asset);
-        asset->load();
-        asset->setStatus(Asset::Status::Ready);
-    }));
+    import(path, asset);
 }
 
 PTextureAsset TextureLoader::getPlaceholderTexture() 
@@ -43,7 +38,7 @@ PTextureAsset TextureLoader::getPlaceholderTexture()
     return placeholderAsset;
 }
 
-void TextureLoader::import(const std::filesystem::path& path, PTextureAsset textureAsset)
+Job TextureLoader::import(std::filesystem::path path, PTextureAsset textureAsset)
 {
     int x, y, n;
     unsigned char* data = stbi_load(path.string().c_str(), &x, &y, &n, 4);
@@ -72,4 +67,8 @@ void TextureLoader::import(const std::filesystem::path& path, PTextureAsset text
 
     ktxTexture_WriteToNamedFile(ktxTexture(kTexture), textureAsset->getFullPath().c_str());
     ktxTexture_Destroy(ktxTexture(kTexture));
+
+    textureAsset->load();
+    textureAsset->setStatus(Asset::Status::Ready);
+    co_return;
 }

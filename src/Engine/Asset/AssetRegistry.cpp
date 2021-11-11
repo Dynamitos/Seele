@@ -104,7 +104,7 @@ void AssetRegistry::importTexture(const std::filesystem::path &filePath)
 
 void AssetRegistry::importMaterial(const std::filesystem::path &filePath)
 {
-    materialLoader->queueAsset(filePath);
+    materialLoader->importAsset(filePath);
 }
 
 void AssetRegistry::registerMesh(PMeshAsset mesh) 

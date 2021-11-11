@@ -30,15 +30,48 @@ struct JobBase
 public:
     using promise_type = JobPromiseBase<MainJob>;
     
+    explicit JobBase()
+    {}
     explicit JobBase(std::coroutine_handle<promise_type> handle)
         : handle(handle)
-    {}
+    {
+        std::cout << "Creating job " << handle.address() << std::endl;
+    }
+    JobBase(const JobBase & rhs) = delete;
+    JobBase(JobBase&& rhs)
+        : handle(std::move(rhs.handle))
+    {
+        rhs.handle = nullptr;
+    }
     ~JobBase()
     {
         if(handle)
         {
+            std::cout << "Destroying job " << handle.address() << std::endl;
             handle.destroy();
         }
+    }
+    JobBase& operator=(const JobBase& rhs) = delete;
+    JobBase& operator=(JobBase&& rhs)
+    {
+        if(this != &rhs)
+        {
+            handle = std::move(rhs.handle);
+            rhs.handle = nullptr;
+        }
+        return *this;
+    }
+    friend std::basic_ostream<char>& operator<<(std::basic_ostream<char>& stream, const JobBase& obj)
+    {
+        if (obj.handle == nullptr)
+        {
+            stream << nullptr;
+        }
+        else
+        {
+            stream << obj.handle.address();
+        }
+        return stream;
     }
     void resume()
     {
@@ -56,6 +89,15 @@ struct Event
 public:
     Event();
     Event(const std::string& name);
+    auto operator<=>(const Event& other) const
+    {
+        return name <=> other.name;
+    }
+    Event operator co_await()
+    {
+        return *this;
+    }
+    
     void raise();
     void reset();
     bool await_ready();
@@ -65,6 +107,7 @@ public:
 private:
     std::string name;
     RefPtr<std::atomic_bool> flag;
+    friend class ThreadPool;
 };
 
 class ThreadPool
@@ -84,14 +127,16 @@ private:
 
     List<MainJob> mainJobs;
     std::mutex mainJobLock;
+    std::condition_variable mainJobCV;
     
     List<Job> jobQueue;
     std::mutex jobQueueLock;
+    std::condition_variable jobQueueCV;
     
-    Map<Event*, List<Job>> waitingJobs;
+    Map<Event, List<Job>> waitingJobs;
     std::mutex waitingLock;
     
-    Map<Event*, List<MainJob>> waitingMainJobs;
+    Map<Event, List<MainJob>> waitingMainJobs;
     std::mutex waitingMainLock;
     
     void threadLoop(const bool isMainThread);
@@ -100,7 +145,7 @@ private:
 
 template<bool MainJob>
 inline JobBase<MainJob> JobPromiseBase<MainJob>::get_return_object() noexcept {
-    return JobBase<MainJob> { std::coroutine_handle<JobPromiseBase<MainJob>>::from_promise(*this) };
+    return JobBase<MainJob>();
 }
 
 template<bool MainJob>
@@ -111,7 +156,7 @@ inline auto JobPromiseBase<MainJob>::initial_suspend() const noexcept
         constexpr bool await_ready() { return false; }
         constexpr void await_suspend(std::coroutine_handle<JobPromiseBase<MainJob>> h)
         {
-            getGlobalThreadPool().addJob(JobBase<MainJob>(h));
+            getGlobalThreadPool().addJob(std::move(JobBase<MainJob>(h)));
         }
         constexpr void await_resume() {}
     };
@@ -121,7 +166,7 @@ inline auto JobPromiseBase<MainJob>::initial_suspend() const noexcept
 template<bool MainJob>
 inline constexpr void Event::await_suspend(std::coroutine_handle<JobPromiseBase<MainJob>> h)
 {
-    getGlobalThreadPool().enqueueWaiting(this, JobBase<MainJob>(h));
+    getGlobalThreadPool().enqueueWaiting(this, std::move(JobBase<MainJob>(h)));
 }
 
 } // namespace Seele

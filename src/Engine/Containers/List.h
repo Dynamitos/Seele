@@ -246,6 +246,20 @@ public:
         _size++;
         return insertedElement;
     }
+    // takes all elements from other and move-inserts them into
+    // this, clearing other in the process
+    void moveElements(List& other){
+        tail->prev->next = other.root;
+        other.root->prev = tail->prev;
+        _size += other._size;
+        deallocateNode(tail);
+        tail = other.tail;
+        other._size = 0;
+        other.root = nullptr;
+        other.tail = nullptr;
+        markIteratorDirty();
+        other.markIteratorDirty();
+    }
     template<typename... args>
     constexpr reference emplace(args... arguments)
     {

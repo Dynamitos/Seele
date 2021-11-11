@@ -17,15 +17,22 @@ MaterialLoader::~MaterialLoader()
 {
 }
 
-PMaterialAsset MaterialLoader::queueAsset(const std::filesystem::path& filePath)
+void MaterialLoader::importAsset(const std::filesystem::path& name)
 {
-    PMaterialAsset result = new MaterialAsset(filePath);
-    result->load();
-    graphics->getShaderCompiler()->registerMaterial(result);
-    AssetRegistry::get().registerMaterial(result);
-    // TODO: There is actually no real reason to import a standalone material,
-    // maybe in the future there could be a substance loader or something
-    return result;
+    std::filesystem::path assetPath = name.filename();
+    assetPath.replace_extension("asset");
+    PMaterialAsset asset = new MaterialAsset(assetPath.generic_string());
+    asset->setStatus(Asset::Status::Loading);
+    AssetRegistry::get().registerMaterial(asset);
+    import(name, asset);
+}
+
+Job MaterialLoader::import(std::filesystem::path, PMaterialAsset asset)
+{
+    asset->load();
+    graphics->getShaderCompiler()->registerMaterial(asset);
+    AssetRegistry::get().registerMaterial(asset);
+    co_return;
 }
 
 PMaterialAsset MaterialLoader::getPlaceHolderMaterial() 
