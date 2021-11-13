@@ -35,7 +35,14 @@ public:
     explicit JobBase(std::coroutine_handle<promise_type> handle)
         : handle(handle)
     {
-        std::cout << "Creating job " << handle.address() << std::endl;
+        /*if constexpr(MainJob)
+        {
+            std::cout << "Creating mainjob " << handle.address() << std::endl;
+        }
+        else
+        {
+            std::cout << "Creating job " << handle.address() << std::endl;
+        }*/
     }
     JobBase(const JobBase & rhs) = delete;
     JobBase(JobBase&& rhs)
@@ -47,7 +54,6 @@ public:
     {
         if(handle)
         {
-            std::cout << "Destroying job " << handle.address() << std::endl;
             handle.destroy();
         }
     }
@@ -61,24 +67,12 @@ public:
         }
         return *this;
     }
-    friend std::basic_ostream<char>& operator<<(std::basic_ostream<char>& stream, const JobBase& obj)
-    {
-        if (obj.handle == nullptr)
-        {
-            stream << nullptr;
-        }
-        else
-        {
-            stream << obj.handle.address();
-        }
-        return stream;
-    }
     void resume()
     {
         handle.resume();
     }
-private:
     std::coroutine_handle<promise_type> handle;
+private:
 };
 
 using MainJob = JobBase<true>;
@@ -91,7 +85,7 @@ public:
     Event(const std::string& name);
     auto operator<=>(const Event& other) const
     {
-        return name <=> other.name;
+        return flag <=> other.flag;
     }
     Event operator co_await()
     {

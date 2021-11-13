@@ -20,10 +20,7 @@ public:
     Gfx::SeBlendOp getBlendMode() const {return Gfx::SE_BLEND_OP_END_RANGE;}
     Gfx::MaterialShadingModel getShadingModel() const {return Gfx::MaterialShadingModel::DefaultLit;}
 
-    // This needs to be called while the descriptorset is unused
-    void updateDescriptorData();
-    void resetDescriptorSet();
-    const Gfx::PDescriptorSet getDescriptor() const { return descriptorSet; };
+    Gfx::PDescriptorSet createDescriptorSet();
     
     Gfx::PDescriptorLayout getDescriptorLayout() const { return layout; }
     // The name of the generated material shader, opposed to the name of the .asset file
@@ -37,7 +34,6 @@ private:
 
     //For now its simply the collection of parameters, since there is no point for expressions
     Array<PShaderParameter> parameters;
-    Gfx::PDescriptorSet descriptorSet;
     Gfx::PDescriptorLayout layout;
     Gfx::PUniformBuffer uniformBuffer;
     uint32 uniformDataSize;

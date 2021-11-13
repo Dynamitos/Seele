@@ -152,10 +152,9 @@ void MaterialAsset::endFrame()
 {
 }
 
-void MaterialAsset::updateDescriptorData() 
+Gfx::PDescriptorSet MaterialAsset::createDescriptorSet()
 {
-    layout->reset();
-    descriptorSet = layout->allocateDescriptorSet();
+    Gfx::PDescriptorSet descriptorSet = layout->allocateDescriptorSet();
     BulkResourceData uniformUpdate;
     uniformUpdate.size = uniformDataSize;
     uniformUpdate.data = uniformData;
@@ -169,7 +168,9 @@ void MaterialAsset::updateDescriptorData()
         descriptorSet->updateBuffer(uniformBinding, uniformBuffer);
     }
     descriptorSet->writeChanges();
+    return descriptorSet;
 }
+
 
 const Gfx::ShaderCollection* MaterialAsset::getShaders(Gfx::RenderPassType renderPass, VertexInputType* vertexInput) const
 {

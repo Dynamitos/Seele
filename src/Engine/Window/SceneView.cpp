@@ -8,7 +8,7 @@
 using namespace Seele;
 
 Seele::SceneView::SceneView(Gfx::PGraphics graphics, PWindow owner, const ViewportCreateInfo &createInfo)
-    : View(graphics, owner, createInfo)
+    : View(graphics, owner, createInfo, "SceneView")
     , activeCamera(new CameraActor())
     , depthPrepass(DepthPrepass(graphics, viewport, activeCamera))
     , lightCullingPass(LightCullingPass(graphics, viewport, activeCamera))

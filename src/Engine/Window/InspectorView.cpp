@@ -4,7 +4,7 @@
 using namespace Seele;
 
 InspectorView::InspectorView(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo &createInfo) 
-    : View(graphics, window, createInfo)
+    : View(graphics, window, createInfo, "InspectorView")
     , uiPass(UIPass(graphics, viewport, new Gfx::SwapchainAttachment(window->getGfxHandle())))
 {
 }

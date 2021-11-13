@@ -66,6 +66,7 @@ else()
 			${ASSIMP_ROOT}/code
 		DOC "Assimp library file")
 
+
 endif()
 
 # Handle REQUIRD argument, define *_FOUND variable

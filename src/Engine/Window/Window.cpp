@@ -18,7 +18,7 @@ void Window::addView(PView view)
 {
     WindowView* windowView = new WindowView();
     windowView->view = view;
-    windowView->updateFinished = Event("test");
+    windowView->updateFinished = Event(view->name);
     //windowView->worker = std::thread(&Window::viewWorker, this, windowView);
     views.add(windowView);
     viewWorker(views.size() - 1);
@@ -30,7 +30,6 @@ MainJob Window::render()
     for(auto& windowView : views)
     {
         co_await windowView->updateFinished;
-        std::cout << "view update finished" << std::endl;
         {
             std::unique_lock lock(windowView->workerMutex);
             windowView->view->prepareRender();
@@ -73,7 +72,7 @@ Job Window::viewWorker(size_t viewIndex)
         std::unique_lock lock(windowView->workerMutex);
         windowView->view->commitUpdate();
     }
-    std::cout << "Update completed" << std::endl;
+    //std::cout << "Update completed" << std::endl;
     windowView->updateFinished.raise();
     // enqueue next frame update
     viewWorker(viewIndex);

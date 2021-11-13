@@ -53,7 +53,7 @@ void ThreadPool::addJob(Job&& job)
 void ThreadPool::addJob(MainJob&& job)
 {
     std::unique_lock lock(mainJobLock);
-    //std::cout << "Adding main job " << job << std::endl;
+    //std::cout << "Adding main job " << std::addressof(job.handle) << std::endl;
     mainJobs.add(std::move(job));
     mainJobCV.notify_one();
 }
@@ -65,7 +65,7 @@ void ThreadPool::enqueueWaiting(Event* event, Job&& job)
 }
 void ThreadPool::enqueueWaiting(Event* event, MainJob&& job)
 {
-    //std::cout << job << " main waiting for event " << event->name << std::endl;
+    //std::cout << std::addressof(job.handle) << " main waiting for event " << event->name << std::endl;
     std::unique_lock lock(waitingMainLock);
     waitingMainJobs[*event].add(std::move(job));
 }
@@ -74,23 +74,19 @@ void ThreadPool::notify(Event* event)
     {
         std::unique_lock lock(jobQueueLock);
         std::unique_lock lock2(waitingLock);
-        for(Job& job : waitingJobs[*event])
+        while(!waitingJobs.empty())
         {
             //std::cout << "Waking up job " << job << std::endl;
-            jobQueue.add(std::move(job));
+            jobQueue.add(std::move(waitingJobs[*event].retrieve()));
             jobQueueCV.notify_one();
         }
-        waitingJobs[*event].clear();
     }
     {
         std::unique_lock lock(mainJobLock);
         std::unique_lock lock2(waitingMainLock);
-        auto&& jobsToQueue = std::move(waitingMainJobs[*event]);
-        waitingMainJobs.erase(*event);
-        for(MainJob& job : jobsToQueue)
+        while(!waitingMainJobs[*event].empty())
         {
-            //std::cout << "Waking up main job " << job << std::endl;
-            mainJobs.add(std::move(job));
+            mainJobs.add(std::move(waitingMainJobs[*event].retrieve()));
             mainJobCV.notify_one();
         }
     }

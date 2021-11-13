@@ -23,9 +23,9 @@ public:
     void clearCommands();
 private:
     Array<Gfx::PRenderCommand> renderCommands;
-    Array<Gfx::PDescriptorSet> cachedPrimitiveSets;
+    //Array<Gfx::PDescriptorSet> cachedPrimitiveSets;
     Gfx::PViewport target;
-    uint32 cachedPrimitiveIndex;
+    //uint32 cachedPrimitiveIndex;
 };
 DEFINE_REF(DepthPrepassMeshProcessor)
 DECLARE_REF(CameraActor)

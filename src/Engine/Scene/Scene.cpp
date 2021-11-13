@@ -35,10 +35,6 @@ Scene::~Scene()
 
 void Scene::tick(double deltaTime)
 {
-    for(auto &&meshBatch : staticMeshes)
-    {
-        meshBatch.material->updateDescriptorData();
-    }
 }
 
 void Scene::addActor(PActor actor)

@@ -117,12 +117,12 @@ DescriptorSet::~DescriptorSet()
 void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PUniformBuffer uniformBuffer)
 {
 	PUniformBuffer vulkanBuffer = uniformBuffer.cast<UniformBuffer>();
-	//UniformBuffer* cachedBuffer = reinterpret_cast<UniformBuffer*>(cachedData[binding]);
-	/*if(vulkanBuffer->isDataEquals(cachedBuffer))
+	UniformBuffer* cachedBuffer = reinterpret_cast<UniformBuffer*>(cachedData[binding]);
+	if(vulkanBuffer->isDataEquals(cachedBuffer))
 	{
 		std::cout << "uniform data equal, skip" << std::endl; 
 		return;
-	}*/
+	}
 	bufferInfos.add(init::DescriptorBufferInfo(vulkanBuffer->getHandle(), 0, vulkanBuffer->getSize()));
 
 	VkWriteDescriptorSet writeDescriptor = init::WriteDescriptorSet(setHandle, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, binding, &bufferInfos.back());

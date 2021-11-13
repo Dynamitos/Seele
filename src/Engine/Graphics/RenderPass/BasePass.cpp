@@ -12,7 +12,7 @@ BasePassMeshProcessor::BasePassMeshProcessor(Gfx::PViewport viewport, Gfx::PGrap
     : MeshProcessor(graphics)
     , target(viewport)
     , translucentBasePass(translucentBasePass)
-    , cachedPrimitiveIndex(0)
+    //, cachedPrimitiveIndex(0)
 {
 }
 
@@ -29,28 +29,26 @@ void BasePassMeshProcessor::addMeshBatch(
     Array<Gfx::PDescriptorSet>& descriptorSets,
     int32 /*staticMeshId*/) 
 {
-    const PMaterialAsset material = batch.material;
+    PMaterialAsset material = batch.material;
     //const Gfx::MaterialShadingModel shadingModel = material->getShadingModel();
 
     const PVertexShaderInput vertexInput = batch.vertexInput;
 
 	const Gfx::ShaderCollection* collection = material->getShaders(Gfx::RenderPassType::BasePass, vertexInput->getType());
     assert(collection != nullptr);
+
+    Gfx::PRenderCommand renderCommand = graphics->createRenderCommand();    
+    renderCommand->setViewport(target);
+    pipelineLayout->addDescriptorLayout(BasePass::INDEX_MATERIAL, material->getDescriptorLayout());
+    pipelineLayout->create();
+    Gfx::PDescriptorSet materialSet = material->createDescriptorSet();
+    descriptorSets[BasePass::INDEX_MATERIAL] = materialSet;
     for(uint32 i = 0; i < batch.elements.size(); ++i)
     {
         Gfx::PDescriptorSet descriptorSet = primitiveLayout->allocateDescriptorSet();
         descriptorSet->updateBuffer(0, batch.elements[i].uniformBuffer);
         descriptorSet->writeChanges();
-        cachedPrimitiveSets.add(descriptorSet);
-    }
-    Gfx::PRenderCommand renderCommand = graphics->createRenderCommand();    
-    renderCommand->setViewport(target);
-    for(uint32 i = 0; i < batch.elements.size(); ++i)
-    {
-        pipelineLayout->addDescriptorLayout(BasePass::INDEX_MATERIAL, material->getDescriptorLayout());
-        pipelineLayout->create();
-        descriptorSets[BasePass::INDEX_MATERIAL] = material->getDescriptor();
-        descriptorSets[BasePass::INDEX_SCENE_DATA] = cachedPrimitiveSets[cachedPrimitiveIndex++];
+        descriptorSets[BasePass::INDEX_SCENE_DATA] = descriptorSet;
         buildMeshDrawCommand(batch, 
 //            primitiveComponent, 
             renderPass,
@@ -75,8 +73,6 @@ Array<Gfx::PRenderCommand> BasePassMeshProcessor::getRenderCommands()
 void BasePassMeshProcessor::clearCommands()
 {
     renderCommands.clear();
-    cachedPrimitiveSets.clear();
-    cachedPrimitiveIndex = 0;
 }
 
 BasePass::BasePass(Gfx::PGraphics graphics, Gfx::PViewport viewport, PCameraActor source) 
@@ -148,8 +144,7 @@ void BasePass::beginFrame()
 
 void BasePass::render() 
 {
-    
-	oLightIndexList->pipelineBarrier( 
+    oLightIndexList->pipelineBarrier( 
 		Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
 		Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
 	oLightGrid->pipelineBarrier( 

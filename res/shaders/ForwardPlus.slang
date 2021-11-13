@@ -72,6 +72,6 @@ float4 fragmentMain(
         PointLight pointLight = pointLights[lightIndex];
         result += pointLight.illuminate(materialParams, brdf, viewDir);
     }
-    return float4(result, 1);
+    return float4(result, 0.1f);
 }
 

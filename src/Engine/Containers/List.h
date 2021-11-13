@@ -165,6 +165,7 @@ public:
             {
                 add(it);
             }
+            markIteratorDirty();
         }
         return *this;
     }
@@ -182,6 +183,7 @@ public:
             endIt = other.endIt;
             _size = other._size;
             other._size = 0;
+            markIteratorDirty();
         }
         return *this;
     }
@@ -206,6 +208,7 @@ public:
             deallocateNode(tmp->prev);
         }
         deallocateNode(tail);
+        markIteratorDirty();
         tail = nullptr;
         root = nullptr;
     }
@@ -347,6 +350,7 @@ public:
         newNode->prev = tmp;
         newNode->next = pos.node;
         pos.node->prev = newNode;
+        markIteratorDirty();
         return Iterator(newNode);
     }
     iterator find(const T &value)
@@ -360,11 +364,11 @@ public:
         }
         return endIt;
     }
-    bool empty()
+    bool empty() const
     {
         return _size == 0;
     }
-    size_type size()
+    size_type size() const
     {
         return _size;
     }

@@ -4,8 +4,8 @@
 
 using namespace Seele;
 
-View::View(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo &viewportInfo)
-	: graphics(graphics), owner(window)
+View::View(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo &viewportInfo, std::string name)
+	: graphics(graphics), owner(window), name(name)
 {
 	viewport = graphics->createViewport(owner->getGfxHandle(), viewportInfo);
 }

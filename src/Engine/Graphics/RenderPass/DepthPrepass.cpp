@@ -11,7 +11,6 @@ using namespace Seele;
 DepthPrepassMeshProcessor::DepthPrepassMeshProcessor(Gfx::PViewport viewport, Gfx::PGraphics graphics) 
     : MeshProcessor(graphics)
     , target(viewport)
-    , cachedPrimitiveIndex(0)
 {
 }
 
@@ -28,28 +27,26 @@ void DepthPrepassMeshProcessor::addMeshBatch(
     Array<Gfx::PDescriptorSet>& descriptorSets,
     int32 /*staticMeshId*/) 
 {
-    const PMaterialAsset material = batch.material;
+    PMaterialAsset material = batch.material;
     //const Gfx::MaterialShadingModel shadingModel = material->getShadingModel();
 
     const PVertexShaderInput vertexInput = batch.vertexInput;
 
 	const Gfx::ShaderCollection* collection = material->getShaders(Gfx::RenderPassType::DepthPrepass, vertexInput->getType());
     assert(collection != nullptr);
+    
+    Gfx::PRenderCommand renderCommand = graphics->createRenderCommand();    
+    renderCommand->setViewport(target);
+    pipelineLayout->addDescriptorLayout(DepthPrepass::INDEX_MATERIAL, material->getDescriptorLayout());
+    pipelineLayout->create();
+    Gfx::PDescriptorSet materialSet = material->createDescriptorSet();
+    descriptorSets[DepthPrepass::INDEX_MATERIAL] = materialSet;
     for(uint32 i = 0; i < batch.elements.size(); ++i)
-    {
+    {   
         Gfx::PDescriptorSet descriptorSet = primitiveLayout->allocateDescriptorSet();
         descriptorSet->updateBuffer(0, batch.elements[i].uniformBuffer);
         descriptorSet->writeChanges();
-        cachedPrimitiveSets.add(descriptorSet);
-    }
-    Gfx::PRenderCommand renderCommand = graphics->createRenderCommand();    
-    renderCommand->setViewport(target);
-    for(uint32 i = 0; i < batch.elements.size(); ++i)
-    {
-        pipelineLayout->addDescriptorLayout(DepthPrepass::INDEX_MATERIAL, material->getDescriptorLayout());
-        pipelineLayout->create();
-        descriptorSets[DepthPrepass::INDEX_MATERIAL] = material->getDescriptor();
-        descriptorSets[DepthPrepass::INDEX_SCENE_DATA] = cachedPrimitiveSets[cachedPrimitiveIndex++];
+        descriptorSets[DepthPrepass::INDEX_SCENE_DATA] = descriptorSet;
         buildMeshDrawCommand(batch, 
 //            primitiveComponent, 
             renderPass,
@@ -74,8 +71,8 @@ Array<Gfx::PRenderCommand> DepthPrepassMeshProcessor::getRenderCommands()
 void DepthPrepassMeshProcessor::clearCommands()
 {
     renderCommands.clear();
-    cachedPrimitiveSets.clear();
-    cachedPrimitiveIndex = 0;
+    //cachedPrimitiveSets.clear();
+    //cachedPrimitiveIndex = 0;
 }
 
 DepthPrepass::DepthPrepass(Gfx::PGraphics graphics, Gfx::PViewport viewport, PCameraActor source) 
@@ -129,6 +126,7 @@ void DepthPrepass::beginFrame()
 
 void DepthPrepass::render() 
 {
+    
     depthAttachment->getTexture()->pipelineBarrier(
         Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
         Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT);

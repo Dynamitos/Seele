@@ -8,7 +8,7 @@ DECLARE_REF(Window)
 class View
 {
 public:
-	View(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo &createInfo);
+	View(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo &createInfo, std::string name);
 	virtual ~View();
 	
 	// These are called from the view thread, and handle updating game data
@@ -28,6 +28,7 @@ protected:
 	Gfx::PGraphics graphics;
 	Gfx::PViewport viewport;
 	PWindow owner;
+	std::string name;
 	
 	virtual void keyCallback(KeyCode code, InputAction action, KeyModifier modifier) = 0;
 	virtual void mouseMoveCallback(double xPos, double yPos) = 0;

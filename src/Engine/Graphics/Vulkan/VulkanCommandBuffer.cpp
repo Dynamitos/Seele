@@ -87,6 +87,7 @@ void CmdBuffer::executeCommands(const Array<Gfx::PRenderCommand>& commands)
         executingRenders.add(command);
         for(auto descriptor : command->boundDescriptors)
         {
+            descriptor->free();
             boundDescriptors.add(descriptor);
         }
         cmdBuffers[i] = command->getHandle();
@@ -104,6 +105,7 @@ void CmdBuffer::executeCommands(const Array<Gfx::PComputeCommand>& commands)
         executingComputes.add(command);
         for(auto descriptor : command->boundDescriptors)
         {
+            descriptor->free();
             boundDescriptors.add(descriptor);
         }
         cmdBuffers[i] = command->getHandle();
