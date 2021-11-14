@@ -1,9 +1,10 @@
 #pragma once
+#include "GraphicsEnums.h"
 
 namespace Seele
 {
-DECLARE_REF(MaterialAsset)
 DECLARE_REF(VertexShaderInput)
+DECLARE_REF(MaterialAsset)
 DECLARE_NAME_REF(Gfx, VertexBuffer)
 DECLARE_NAME_REF(Gfx, IndexBuffer)
 DECLARE_NAME_REF(Gfx, UniformBuffer)
@@ -29,17 +30,7 @@ public:
 
     uint8 isInstanced : 1;
     Gfx::PVertexBuffer indirectArgsBuffer;
-    MeshBatchElement()
-        : uniformBuffer(nullptr)
-        , indexBuffer(nullptr)
-        , firstIndex(0)
-        , numPrimitives(0)
-        , numInstances(1)
-        , baseVertexIndex(0)
-        , minVertexIndex(0)
-        , maxVertexIndex(0)
-        , indirectArgsBuffer(nullptr)
-    {}
+    MeshBatchElement();
 };
 struct MeshBatch
 {
@@ -76,16 +67,7 @@ struct MeshBatch
         return count;
     }
 
-    MeshBatch()
-        : useReverseCulling(false)
-        , isBackfaceCullingDisabled(false)
-        , isCastingShadow(true)
-        , useWireframe(false)
-        , topology(Gfx::SE_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
-        , vertexInput(nullptr)
-        , material(nullptr)
-    {
-    }
+    MeshBatch();
 };
 DECLARE_REF(PrimitiveComponent)
 struct StaticMeshBatch : public MeshBatch

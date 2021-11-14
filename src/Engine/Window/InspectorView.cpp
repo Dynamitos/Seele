@@ -1,4 +1,6 @@
 #include "InspectorView.h"
+#include "Graphics/Graphics.h"
+#include "Scene/Actor/Actor.h"
 #include "Window.h"
 
 using namespace Seele;

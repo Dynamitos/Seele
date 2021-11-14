@@ -8,7 +8,9 @@ using namespace Seele;
 using namespace Seele::Vulkan;
 
 Framebuffer::Framebuffer(PGraphics graphics, PRenderPass renderPass, Gfx::PRenderTargetLayout renderTargetLayout)
-    : graphics(graphics), layout(renderTargetLayout), renderPass(renderPass)
+    : graphics(graphics)
+    , layout(renderTargetLayout)
+    , renderPass(renderPass)
 {
     FramebufferDescription description;
     std::memset(&description, 0, sizeof(FramebufferDescription));

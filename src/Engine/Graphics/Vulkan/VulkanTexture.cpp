@@ -4,6 +4,7 @@
 #include "VulkanGraphicsEnums.h"
 #include "VulkanAllocator.h"
 #include "VulkanCommandBuffer.h"
+#include "ThreadPool.h"
 #include <math.h>
 
 using namespace Seele;
@@ -161,13 +162,17 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType,
 
 TextureHandle::~TextureHandle()
 {
-    auto &deletionQueue = graphics->getDeletionQueue();
     auto cmdBuffer = graphics->getQueueCommands(currentOwner)->getCommands();
     VkDevice device = graphics->getDevice();
     VkImageView view = defaultView;
     VkImage img = image;
-    deletionQueue.addPendingDelete(cmdBuffer, [device, view]() { vkDestroyImageView(device, view, nullptr); });
-    deletionQueue.addPendingDelete(cmdBuffer, [device, img]() { vkDestroyImage(device, img, nullptr); });
+    auto deletionLambda = [cmdBuffer, device, view, img]() -> Job
+    {
+        vkDestroyImageView(device, view, nullptr);
+        vkDestroyImage(device, img, nullptr);
+        co_return;
+    };
+    deletionLambda();
 }
 
 TextureHandle* TextureBase::cast(Gfx::PTexture texture) 

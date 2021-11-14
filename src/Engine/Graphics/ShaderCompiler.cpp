@@ -1,6 +1,7 @@
 #include "ShaderCompiler.h"
 #include "Material/MaterialAsset.h"
 #include "VertexShaderInput.h"
+#include "Graphics.h"
 
 using namespace Seele;
 using namespace Seele::Gfx;

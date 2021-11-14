@@ -3,7 +3,6 @@
 #include "Containers/Array.h"
 #include "Containers/List.h"
 #include "GraphicsInitializer.h"
-#include "MeshBatch.h"
 #include <boost/crc.hpp>
 #include <functional>
 
@@ -17,6 +16,8 @@ namespace Seele
 struct VertexInputStream;
 struct VertexStreamComponent;
 class VertexInputType;
+struct MeshBatchElement;
+DECLARE_REF(MaterialAsset)
 namespace Gfx
 {
 DECLARE_REF(Graphics)

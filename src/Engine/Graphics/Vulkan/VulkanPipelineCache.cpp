@@ -29,6 +29,7 @@ PipelineCache::PipelineCache(PGraphics graphics, const std::string& cacheFilePat
         stream.read((char*)cacheData.data(), fileSize);
         cacheCreateInfo.initialDataSize = fileSize;
         cacheCreateInfo.pInitialData = cacheData.data();
+        std::cout << "Loaded " << fileSize << " bytes from pipeline cache" << std::endl;
     }
     VK_CHECK(vkCreatePipelineCache(graphics->getDevice(), &cacheCreateInfo, nullptr, &cache));
 }
@@ -44,6 +45,7 @@ PipelineCache::~PipelineCache()
     stream.flush();
     stream.close();
     vkDestroyPipelineCache(graphics->getDevice(), cache, nullptr);
+    std::cout << "Written " << cacheSize << " bytes to cache" << std::endl;
 }
 
 struct PipelineCreateHashStruct
@@ -321,6 +323,7 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
     uint32 hash = crc.checksum();
     VkPipeline pipelineHandle;
 
+    std::unique_lock lock(createdPipelinesLock);
     auto foundPipeline = createdPipelines.find(hash);
     if (foundPipeline != createdPipelines.end())
     {

@@ -502,7 +502,7 @@ private:
         if (!isValid(r))
         {
             nodeContainer.emplace(std::forward<KeyType>(key));
-            return 0;
+            return nodeContainer.size() - 1;
         }
         r = splay(r, key);
         Node* node = getNode(r);

@@ -3,6 +3,7 @@
 #include "VulkanGraphics.h"
 #include "VulkanCommandBuffer.h"
 #include "VulkanAllocator.h"
+#include "ThreadPool.h"
 
 using namespace Seele;
 using namespace Seele::Vulkan;
@@ -62,14 +63,17 @@ ShaderBuffer::ShaderBuffer(PGraphics graphics, uint32 size, VkBufferUsageFlags u
 
 ShaderBuffer::~ShaderBuffer()
 {
-	auto cmdBuffer = graphics->getQueueCommands(owner)->getCommands();
-	auto &deletionQueue = graphics->getDeletionQueue();
+	PCmdBuffer cmdBuffer = graphics->getQueueCommands(owner)->getCommands();
 	VkDevice device = graphics->getDevice();
-	VkBuffer buf[Gfx::numFramesBuffered];
+	auto deletionLambda = [](PCmdBuffer cmdBuffer, VkDevice device, VkBuffer buffer) -> Job 
+	{
+		co_await cmdBuffer->asyncWait();
+		vkDestroyBuffer(device, buffer, nullptr);
+		co_return;
+	};
 	for (uint32 i = 0; i < numBuffers; ++i)
 	{
-		buf[i] = buffers[i].buffer;
-		deletionQueue.addPendingDelete(cmdBuffer, [device, buf, i]() { vkDestroyBuffer(device, buf[i], nullptr); });
+		deletionLambda(cmdBuffer, device, buffers[i].buffer);
 		buffers[i].allocation = nullptr;
 	}
 	graphics = nullptr;

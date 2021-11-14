@@ -1,6 +1,7 @@
 #include "MaterialAsset.h"
 #include "Window/WindowManager.h"
 #include "Asset/AssetRegistry.h"
+#include "Asset/TextureAsset.h"
 #include "BRDF.h"
 #include <nlohmann/json.hpp>
 #include <sstream>

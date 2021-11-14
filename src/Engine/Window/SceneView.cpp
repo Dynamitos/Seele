@@ -1,6 +1,8 @@
 #include "SceneView.h"
 #include "Scene/Scene.h"
 #include "Window.h"
+#include "Graphics/Graphics.h"
+#include "Asset/MeshAsset.h"
 #include "Asset/AssetRegistry.h"
 #include "Scene/Actor/CameraActor.h"
 #include "Scene/Components/CameraComponent.h"

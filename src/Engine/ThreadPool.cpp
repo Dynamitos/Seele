@@ -38,6 +38,7 @@ ThreadPool::ThreadPool(uint32 threadCount)
 
 ThreadPool::~ThreadPool()
 {
+    running.store(false);
     for(auto& thread : workers)
     {
         thread.join();
@@ -74,7 +75,7 @@ void ThreadPool::notify(Event* event)
     {
         std::unique_lock lock(jobQueueLock);
         std::unique_lock lock2(waitingLock);
-        while(!waitingJobs.empty())
+        while(!waitingJobs[*event].empty())
         {
             //std::cout << "Waking up job " << job << std::endl;
             jobQueue.add(std::move(waitingJobs[*event].retrieve()));
@@ -90,7 +91,6 @@ void ThreadPool::notify(Event* event)
             mainJobCV.notify_one();
         }
     }
-    event->reset();
 }
 void ThreadPool::threadLoop(const bool mainThread)
 {

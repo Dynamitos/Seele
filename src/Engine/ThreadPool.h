@@ -91,6 +91,10 @@ public:
     {
         return *this;
     }
+    operator bool()
+    {
+        return flag->load();
+    }
     
     void raise();
     void reset();

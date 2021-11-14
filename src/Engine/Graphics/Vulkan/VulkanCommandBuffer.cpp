@@ -25,6 +25,7 @@ CmdBuffer::CmdBuffer(PGraphics graphics, VkCommandPool cmdPool, PCommandBufferMa
         init::CommandBufferAllocateInfo(cmdPool,
                                         VK_COMMAND_BUFFER_LEVEL_PRIMARY,
                                         1);
+    std::unique_lock lock(handleLock);
     VK_CHECK(vkAllocateCommandBuffers(graphics->getDevice(), &allocInfo, &handle))
 
     fence = new Fence(graphics);
@@ -33,6 +34,7 @@ CmdBuffer::CmdBuffer(PGraphics graphics, VkCommandPool cmdPool, PCommandBufferMa
 
 CmdBuffer::~CmdBuffer()
 {
+    std::unique_lock lock(handleLock);
     vkFreeCommandBuffers(graphics->getDevice(), owner, 1, &handle);
     renderPass = nullptr;
     framebuffer = nullptr;
@@ -44,18 +46,21 @@ void CmdBuffer::begin()
     VkCommandBufferBeginInfo beginInfo =
         init::CommandBufferBeginInfo();
     beginInfo.pInheritanceInfo = nullptr;
+    std::unique_lock lock(handleLock);
     VK_CHECK(vkBeginCommandBuffer(handle, &beginInfo));
     state = State::InsideBegin;
 }
 
 void CmdBuffer::end()
 {
+    std::unique_lock lock(handleLock);
     VK_CHECK(vkEndCommandBuffer(handle));
     state = State::Ended;
 }
 
 void CmdBuffer::beginRenderPass(PRenderPass newRenderPass, PFramebuffer newFramebuffer)
 {
+    std::unique_lock lock(handleLock);
     renderPass = newRenderPass;
     framebuffer = newFramebuffer;
 
@@ -72,6 +77,7 @@ void CmdBuffer::beginRenderPass(PRenderPass newRenderPass, PFramebuffer newFrame
 
 void CmdBuffer::endRenderPass()
 {
+    std::unique_lock lock(handleLock);
     vkCmdEndRenderPass(handle);
     state = State::InsideBegin;
 }
@@ -79,6 +85,7 @@ void CmdBuffer::endRenderPass()
 void CmdBuffer::executeCommands(const Array<Gfx::PRenderCommand>& commands)
 {
     assert(state == State::RenderPassActive);
+    std::unique_lock lock(handleLock);
     Array<VkCommandBuffer> cmdBuffers(commands.size());
     for (uint32 i = 0; i < commands.size(); ++i)
     {
@@ -97,6 +104,7 @@ void CmdBuffer::executeCommands(const Array<Gfx::PRenderCommand>& commands)
 
 void CmdBuffer::executeCommands(const Array<Gfx::PComputeCommand>& commands) 
 {
+    std::unique_lock lock(handleLock);
     Array<VkCommandBuffer> cmdBuffers(commands.size());
     for (uint32 i = 0; i < commands.size(); ++i)
     {
@@ -115,12 +123,14 @@ void CmdBuffer::executeCommands(const Array<Gfx::PComputeCommand>& commands)
 
 void CmdBuffer::addWaitSemaphore(VkPipelineStageFlags flags, PSemaphore semaphore)
 {
+    std::unique_lock lock(handleLock);
     waitSemaphores.add(semaphore);
     waitFlags.add(flags);
 }
 
 void CmdBuffer::refreshFence()
 {
+    std::unique_lock lock(handleLock);
     if (state == State::Submitted)
     {
         if (fence->isSignaled())
@@ -153,8 +163,14 @@ void CmdBuffer::refreshFence()
 
 void CmdBuffer::waitForCommand(uint32 timeout)
 {
+    std::unique_lock lock(handleLock);
     fence->wait(timeout);
     refreshFence();
+}
+
+Event CmdBuffer::asyncWait() const
+{
+    return fence->asyncWait();
 }
 
 
@@ -187,6 +203,7 @@ RenderCommand::~RenderCommand()
 
 void RenderCommand::begin(PCmdBuffer parent)
 {
+    threadId = std::this_thread::get_id();
     ready = false;
     VkCommandBufferBeginInfo beginInfo =
         init::CommandBufferBeginInfo();
@@ -202,11 +219,13 @@ void RenderCommand::begin(PCmdBuffer parent)
 
 void RenderCommand::end() 
 {
+    assert(threadId == std::this_thread::get_id());
     VK_CHECK(vkEndCommandBuffer(handle));
 }
 
 void RenderCommand::reset() 
 {
+    assert(threadId == std::this_thread::get_id());
     vkResetCommandBuffer(handle, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
     boundDescriptors.clear();
     ready = true;
@@ -219,6 +238,7 @@ bool RenderCommand::isReady()
 
 void RenderCommand::setViewport(Gfx::PViewport viewport) 
 {
+    assert(threadId == std::this_thread::get_id());
     VkViewport vp = viewport.cast<Viewport>()->getHandle();
     VkRect2D scissors = init::Rect2D(viewport->getSizeX(), viewport->getSizeY(), viewport->getOffsetX(), viewport->getOffsetY());
     vkCmdSetViewport(handle, 0, 1, &vp);
@@ -227,11 +247,13 @@ void RenderCommand::setViewport(Gfx::PViewport viewport)
 
 void RenderCommand::bindPipeline(Gfx::PGraphicsPipeline gfxPipeline)
 {
+    assert(threadId == std::this_thread::get_id());
     pipeline = gfxPipeline.cast<GraphicsPipeline>();
     pipeline->bind(handle);
 }
 void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet)
 {
+    assert(threadId == std::this_thread::get_id());
     auto descriptor = descriptorSet.cast<DescriptorSet>();
     boundDescriptors.add(descriptor.getHandle());
     descriptor->bind();
@@ -241,6 +263,7 @@ void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet)
 }
 void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorSets)
 {
+    assert(threadId == std::this_thread::get_id());
     VkDescriptorSet* sets = new VkDescriptorSet[descriptorSets.size()];
     for(uint32 i = 0; i < descriptorSets.size(); ++i)
     {
@@ -255,6 +278,7 @@ void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorS
 }
 void RenderCommand::bindVertexBuffer(const Array<VertexInputStream>& streams)
 {
+    assert(threadId == std::this_thread::get_id());
     Array<VkBuffer> buffers(streams.size());
     Array<VkDeviceSize> offsets(streams.size());
     for(uint32 i = 0; i < streams.size(); ++i)
@@ -267,16 +291,19 @@ void RenderCommand::bindVertexBuffer(const Array<VertexInputStream>& streams)
 }
 void RenderCommand::bindIndexBuffer(Gfx::PIndexBuffer indexBuffer)
 {
+    assert(threadId == std::this_thread::get_id());
     PIndexBuffer buf = indexBuffer.cast<IndexBuffer>();
     vkCmdBindIndexBuffer(handle, buf->getHandle(), 0, cast(buf->getIndexType()));
 }
 void RenderCommand::draw(const MeshBatchElement& data) 
 {
+    assert(threadId == std::this_thread::get_id());
     vkCmdDrawIndexed(handle, data.indexBuffer->getNumIndices(), data.numInstances, data.minVertexIndex, data.baseVertexIndex, 0);
 }
 
 void RenderCommand::draw(uint32 vertexCount, uint32 instanceCount, int32 firstVertex, uint32 firstInstance) 
 {
+    assert(threadId == std::this_thread::get_id());
     vkCmdDraw(handle, vertexCount, instanceCount, firstVertex, firstInstance);
 }
 
@@ -299,6 +326,7 @@ ComputeCommand::~ComputeCommand()
 
 void ComputeCommand::begin(PCmdBuffer) 
 {
+    threadId = std::this_thread::get_id();
     ready = false;
     VkCommandBufferBeginInfo beginInfo =
         init::CommandBufferBeginInfo();
@@ -313,11 +341,13 @@ void ComputeCommand::begin(PCmdBuffer)
 
 void ComputeCommand::end() 
 {
+    assert(threadId == std::this_thread::get_id());
     VK_CHECK(vkEndCommandBuffer(handle));
 }
 
 void ComputeCommand::reset() 
 {
+    assert(threadId == std::this_thread::get_id());
     vkResetCommandBuffer(handle, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
     boundDescriptors.clear();
     ready = true;
@@ -329,12 +359,14 @@ bool ComputeCommand::isReady()
 
 void ComputeCommand::bindPipeline(Gfx::PComputePipeline computePipeline) 
 {
+    assert(threadId == std::this_thread::get_id());
     pipeline = computePipeline.cast<ComputePipeline>();
     pipeline->bind(handle);
 }
 
 void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet) 
 {
+    assert(threadId == std::this_thread::get_id());
     auto descriptor = descriptorSet.cast<DescriptorSet>();
     boundDescriptors.add(descriptor.getHandle());
     descriptor->bind();
@@ -345,6 +377,7 @@ void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet)
 
 void ComputeCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorSets) 
 {
+    assert(threadId == std::this_thread::get_id());
     VkDescriptorSet* sets = new VkDescriptorSet[descriptorSets.size()];
     for(uint32 i = 0; i < descriptorSets.size(); ++i)
     {
@@ -360,6 +393,7 @@ void ComputeCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptor
 
 void ComputeCommand::dispatch(uint32 threadX, uint32 threadY, uint32 threadZ) 
 {
+    assert(threadId == std::this_thread::get_id());
     vkCmdDispatch(handle, threadX, threadY, threadZ);
 }
 

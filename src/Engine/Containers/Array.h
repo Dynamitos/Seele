@@ -179,7 +179,7 @@ namespace Seele
                     }
                     allocator = other.allocator;
                 }
-                if(other.arraySize > allocated)
+                if(_data == nullptr || other.arraySize > allocated)
                 {
                     if(_data != nullptr)
                     {

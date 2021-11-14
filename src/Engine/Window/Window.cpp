@@ -30,6 +30,7 @@ MainJob Window::render()
     for(auto& windowView : views)
     {
         co_await windowView->updateFinished;
+        windowView->updateFinished.reset();
         {
             std::unique_lock lock(windowView->workerMutex);
             windowView->view->prepareRender();

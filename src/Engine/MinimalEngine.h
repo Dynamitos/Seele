@@ -39,12 +39,8 @@ public:
         , deleter(std::move(deleter))
         , refCount(1)
     {
-        registeredObjects[ptr] = this;
     }
-    inline RefObject(const RefObject &rhs)
-        : handle(rhs.handle), refCount(rhs.refCount)
-    {
-    }
+    RefObject(const RefObject &rhs) = delete;
     RefObject(RefObject &&rhs)
         : handle(std::move(rhs.handle)), refCount(std::move(rhs.refCount))
     {
@@ -56,18 +52,11 @@ public:
             registeredObjects.erase(handle);
         }
 //    #pragma warning( disable: 4150)
-        //deleter(handle);
+        deleter(handle);
+        handle = nullptr;
 //    #pragma warning( default: 4150)
     }
-    RefObject &operator=(const RefObject &rhs)
-    {
-        if (*this != rhs)
-        {
-            handle = rhs.handle;
-            refCount = rhs.refCount;
-        }
-        return *this;
-    }
+    RefObject &operator=(const RefObject &rhs) = delete;
     RefObject &operator=(RefObject &&rhs)
     {
         if (*this != rhs)
@@ -131,11 +120,10 @@ public:
         if (registeredObj == registeredEnd)
         {
             object = new RefObject<T, Deleter>(ptr, std::move(deleter));
-            l.unlock();
+            registeredObjects[ptr] = object;
         }
         else
         {		
-            l.unlock();
             object = (RefObject<T, Deleter> *)registeredObj->value;
             object->addRef();
         }

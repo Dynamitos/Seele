@@ -10,6 +10,7 @@ target_sources(SeeleEngine
         Mesh.h
         Mesh.cpp
         MeshBatch.h
+        MeshBatch.cpp
         RenderMaterial.h
         RenderMaterial.cpp
         ShaderCompiler.h

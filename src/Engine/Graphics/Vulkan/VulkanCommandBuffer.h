@@ -32,6 +32,7 @@ public:
 	void addWaitSemaphore(VkPipelineStageFlags stages, PSemaphore waitSemaphore);
 	void refreshFence();
 	void waitForCommand(uint32 timeToWait = 1000000u);
+	Event asyncWait() const;
 	PFence getFence();
 	PCommandBufferManager getManager();
 	enum State
@@ -53,6 +54,7 @@ private:
 	State state;
 	VkViewport currentViewport;
 	VkRect2D currentScissor;
+	std::mutex handleLock;
 	VkCommandBuffer handle;
 	VkCommandPool owner;
 	Array<PSemaphore> waitSemaphores;
@@ -96,6 +98,7 @@ private:
 	VkViewport currentViewport;
 	VkRect2D currentScissor;
 	PGraphics graphics;
+	std::thread::id threadId;
 	VkCommandBuffer handle;
 	VkCommandPool owner;
 	friend class CmdBuffer;
@@ -126,6 +129,7 @@ private:
 	VkViewport currentViewport;
 	VkRect2D currentScissor;
 	PGraphics graphics;
+	std::thread::id threadId;
 	VkCommandBuffer handle;
 	VkCommandPool owner;
 	friend class CmdBuffer;

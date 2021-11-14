@@ -7,48 +7,6 @@
 using namespace Seele;
 using namespace Seele::Vulkan;
 
-List<QueueOwnedResourceDeletion::PendingItem> QueueOwnedResourceDeletion::deletionQueue;
-volatile bool QueueOwnedResourceDeletion::running;
-std::mutex QueueOwnedResourceDeletion::mutex;
-std::condition_variable QueueOwnedResourceDeletion::cv;
-
-QueueOwnedResourceDeletion::QueueOwnedResourceDeletion()
-{
-    worker = std::thread(&run);
-    running = true;
-}
-
-QueueOwnedResourceDeletion::~QueueOwnedResourceDeletion()
-{
-    worker.join();
-}
-
-void QueueOwnedResourceDeletion::addPendingDelete(PCmdBuffer cmdbuffer, std::function<void()> func)
-{
-    PendingItem item;
-    item.cmdBuffer = cmdbuffer;
-    item.func = func;
-    deletionQueue.add(item);
-    std::unique_lock<std::mutex> lock(mutex);
-    cv.notify_all();
-}
-
-void QueueOwnedResourceDeletion::run()
-{
-    while (running || !deletionQueue.empty())
-    {
-        std::unique_lock<std::mutex> lock(mutex);
-        cv.wait(lock);
-        auto entry = deletionQueue.begin();
-        PCmdBuffer cmdBuffer = entry->cmdBuffer;
-        //cmdBuffer->getManager()->waitForCommands(cmdBuffer);
-        //cmdBuffer->begin();
-
-        //entry->func();
-        deletionQueue.remove(entry);
-    }
-}
-
 Semaphore::Semaphore(PGraphics graphics)
     : graphics(graphics)
 {
@@ -65,7 +23,7 @@ Semaphore::~Semaphore()
 
 Fence::Fence(PGraphics graphics)
     : graphics(graphics)
-    , signaled(false)
+    , signaled("Fence")
 {
     VkFenceCreateInfo info =
         init::FenceCreateInfo(0);
@@ -87,7 +45,7 @@ bool Fence::isSignaled()
     switch (res)
     {
     case VK_SUCCESS:
-        signaled = true;
+        signaled.raise();
         return true;
     case VK_NOT_READY:
         break;
@@ -102,7 +60,7 @@ void Fence::reset()
     if (signaled)
     {
         vkResetFences(graphics->getDevice(), 1, &fence);
-        signaled = false;
+        signaled.reset();
     }
 }
 
@@ -113,7 +71,7 @@ void Fence::wait(uint32 timeout)
     switch (r)
     {
     case VK_SUCCESS:
-        signaled = true;
+        signaled.raise();
         break;
     case VK_TIMEOUT:
         break;
@@ -122,6 +80,11 @@ void Fence::wait(uint32 timeout)
         break;
     }
 }
+Event Fence::asyncWait() const
+{
+    return signaled;
+}
+
 
 VertexDeclaration::VertexDeclaration(const Array<Gfx::VertexElement>& elementList) 
     : elementList(elementList)
