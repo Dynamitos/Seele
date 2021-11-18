@@ -27,7 +27,7 @@ endif()
 ExternalProject_Add(boost
 	SOURCE_DIR ${BOOST_ROOT}
 	CONFIGURE_COMMAND ./bootstrap.${BOOTSTRAP_EXTENSION} --with-libraries=serialization,test
-	BUILD_COMMAND ./b2 -d0
+	BUILD_COMMAND ./b2 -d0 -link=shared
 	BUILD_IN_SOURCE 1
 	INSTALL_COMMAND "")
 

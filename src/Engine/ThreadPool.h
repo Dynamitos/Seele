@@ -1,5 +1,6 @@
 #pragma once
 #include <thread>
+#include <coroutine>
 #include "MinimalEngine.h"
 #include "Containers/List.h"
 

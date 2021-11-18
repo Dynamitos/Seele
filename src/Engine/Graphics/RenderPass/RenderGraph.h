@@ -1,7 +1,6 @@
 #pragma once
 #include "MinimalEngine.h"
 #include "Graphics/GraphicsResources.h"
-#include "RenderPass.h"
 
 namespace Seele
 {

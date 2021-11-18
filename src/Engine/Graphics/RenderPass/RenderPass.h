@@ -1,13 +1,13 @@
 #pragma once
 #include "MinimalEngine.h"
 #include "Math/Math.h"
+#include "RenderGraph.h"
 
 namespace Seele
 {
 DECLARE_NAME_REF(Gfx, Viewport)
 DECLARE_NAME_REF(Gfx, Graphics)
 DECLARE_NAME_REF(Gfx, RenderPass)
-DECLARE_REF(RenderGraphResources)
 template<typename RenderPassDataType>
 class RenderPass
 {

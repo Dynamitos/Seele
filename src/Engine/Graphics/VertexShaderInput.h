@@ -117,7 +117,7 @@ class VertexShaderInput
 public:
     VertexShaderInput(std::string name);
     virtual ~VertexShaderInput();
-    virtual void init(Gfx::PGraphics) {}
+    virtual void init(Gfx::PGraphics);
     void getStreams(VertexInputStreamArray& outVertexStreams) const;
     void getPositionOnlyStream(VertexInputStreamArray& outVertexStreams) const;
     virtual bool supportsTesselation() { return false; }

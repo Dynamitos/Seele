@@ -22,16 +22,6 @@ set(NSAM_ROOT ${EXTERNAL_ROOT}/aftermath)
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/)
 
-set(Boost_USE_STATIC_LIBS OFF)
-if(WIN32)
-  set(Boost_LIB_PREFIX lib)
-endif()
-
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE})
-#Workaround for vs, because it places artifacts into an additional subfolder
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_SOURCE_DIR}/bin/Debug)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_CURRENT_SOURCE_DIR}/bin/Release)
-
 if (USE_SUPERBUILD)
   project (SUPERBUILD NONE)
   # execute the superbuild (this script will be invoked again without the
@@ -41,6 +31,12 @@ if (USE_SUPERBUILD)
 else()
   project (Seele)
 endif()
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE})
+#Workaround for vs, because it places artifacts into an additional subfolder
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_SOURCE_DIR}/bin/Debug)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_CURRENT_SOURCE_DIR}/bin/Release)
+
 
 find_package(Vulkan REQUIRED)
 find_package(Boost REQUIRED COMPONENTS serialization)
@@ -122,7 +118,7 @@ if(WIN32)
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SLANG_BINARIES} $<TARGET_FILE_DIR:SeeleEngine>
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SLANG_GLSLANG} $<TARGET_FILE_DIR:SeeleEngine>
     #COMMAND ${CMAKE_COMMAND} -E copy_if_different ${GLFW_BINARY} $<TARGET_FILE_DIR:SeeleEngine>
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${ASSIMP_BINARY} $<TARGET_FILE_DIR:SeeleEngine>
+    #COMMAND ${CMAKE_COMMAND} -E copy_if_different ${ASSIMP_BINARY} $<TARGET_FILE_DIR:SeeleEngine>
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${NSAM_BINARIES} $<TARGET_FILE_DIR:SeeleEngine>)
 else()
   add_custom_target(copy-binaries ALL COMMAND "")

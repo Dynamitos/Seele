@@ -59,6 +59,8 @@ VertexShaderInput::~VertexShaderInput()
 {
 }
 
+void VertexShaderInput::init(Gfx::PGraphics) {}
+
 void VertexShaderInput::getStreams(VertexInputStreamArray& outVertexStreams) const
 {
     for(uint32 i = 0; i < streams.size(); ++i)

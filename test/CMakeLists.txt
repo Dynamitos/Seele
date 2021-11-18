@@ -13,6 +13,8 @@ target_precompile_headers(Seele_unit_tests
     <assert.h>
     <memory>
     <atomic>
+    <coroutine>
+    <thread>
     <cstring>
     <iostream>
     <string>

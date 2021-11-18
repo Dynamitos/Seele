@@ -47,7 +47,6 @@ ThreadPool::~ThreadPool()
 void ThreadPool::addJob(Job&& job)
 {
     std::unique_lock lock(jobQueueLock);
-    //std::cout << "Adding job " << job << std::endl;
     jobQueue.add(std::move(job));
     jobQueueCV.notify_one();
 }
