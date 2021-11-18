@@ -17,7 +17,11 @@
 	path = external/ktx
 	url = https://github.com/KhronosGroup/KTX-Software
 [submodule "external/stb"]
+	path = external/stb
 	url = https://github.com/nothings/stb
 [submodule "external/slang"]
 	path = external/slang
 	url = https://github.com/shader-slang/slang.git
+[submodule "external/boost"]
+	path = external/boost
+	url = https://github.com/boostorg/boost
