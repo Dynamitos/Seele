@@ -287,9 +287,9 @@ public:
         return insertedElement;
     }
     // front + popFront
-    value_type&& retrieve()
+    value_type retrieve()
     {
-        auto&& temp = std::move(root->data);
+        value_type temp = std::move(root->data);
         popFront();
         return std::move(temp);
     }

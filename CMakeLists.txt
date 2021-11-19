@@ -37,6 +37,10 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_SOURCE_DIR}/bin/Debug)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_CURRENT_SOURCE_DIR}/bin/Release)
 
+set(Boost_USE_STATIC_LIBS OFF)
+if(WIN32)
+  set(Boost_LIB_PREFIX lib)
+endif()
 
 find_package(Vulkan REQUIRED)
 find_package(Boost REQUIRED COMPONENTS serialization)
@@ -117,9 +121,11 @@ if(WIN32)
   add_custom_target(copy-binaries ALL
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SLANG_BINARIES} $<TARGET_FILE_DIR:SeeleEngine>
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SLANG_GLSLANG} $<TARGET_FILE_DIR:SeeleEngine>
-    #COMMAND ${CMAKE_COMMAND} -E copy_if_different ${GLFW_BINARY} $<TARGET_FILE_DIR:SeeleEngine>
-    #COMMAND ${CMAKE_COMMAND} -E copy_if_different ${ASSIMP_BINARY} $<TARGET_FILE_DIR:SeeleEngine>
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${NSAM_BINARIES} $<TARGET_FILE_DIR:SeeleEngine>)
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${GLFW_BINARY} $<TARGET_FILE_DIR:SeeleEngine>
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${ASSIMP_BINARY} $<TARGET_FILE_DIR:SeeleEngine>
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${NSAM_BINARIES} $<TARGET_FILE_DIR:SeeleEngine>
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${NSAM_LLVM} $<TARGET_FILE_DIR:SeeleEngine>
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${KTX_BINARIES} $<TARGET_FILE_DIR:SeeleEngine>)
 else()
   add_custom_target(copy-binaries ALL COMMAND "")
 endif()

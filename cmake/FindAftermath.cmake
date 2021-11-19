@@ -92,7 +92,7 @@ find_package_handle_standard_args(NSAM DEFAULT_MSG NSAM_INCLUDE_DIR NSAM_LIBRARY
 if (NSAM_FOUND)
 	set(NSAM_LIBRARIES ${NSAM_LIBRARY})
 	set(NSAM_INCLUDE_DIRS ${NSAM_INCLUDE_DIR})
-    set(NSAM_BINARIES ${NSAM_BINARY} ${NSAM_LLVM})
+    set(NSAM_BINARIES ${NSAM_BINARY})
 endif()
 
 # Hide some variables

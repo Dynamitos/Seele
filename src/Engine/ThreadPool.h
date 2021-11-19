@@ -25,6 +25,7 @@ struct JobPromiseBase
         exit(1);
     };
 };
+static std::atomic_uint64_t globalCounter;
 template<bool MainJob>
 struct JobBase
 {
@@ -32,10 +33,13 @@ public:
     using promise_type = JobPromiseBase<MainJob>;
     
     explicit JobBase()
+        : id(-1)
     {}
     explicit JobBase(std::coroutine_handle<promise_type> handle)
         : handle(handle)
+        , id(globalCounter++)
     {
+        std::cout << "Creating job " << id << std::endl;
         /*if constexpr(MainJob)
         {
             std::cout << "Creating mainjob " << handle.address() << std::endl;
@@ -48,13 +52,16 @@ public:
     JobBase(const JobBase & rhs) = delete;
     JobBase(JobBase&& rhs)
         : handle(std::move(rhs.handle))
+        , id(std::move(rhs.id))
     {
+        rhs.id = -1;
         rhs.handle = nullptr;
     }
     ~JobBase()
     {
         if(handle)
         {
+            std::cout << "Destroying job " << id << std::endl;
             handle.destroy();
         }
     }
@@ -64,6 +71,8 @@ public:
         if(this != &rhs)
         {
             handle = std::move(rhs.handle);
+            id = std::move(rhs.id);
+            rhs.id = -1;
             rhs.handle = nullptr;
         }
         return *this;
@@ -73,6 +82,7 @@ public:
         handle.resume();
     }
     std::coroutine_handle<promise_type> handle;
+    uint64 id;
 private:
 };
 
@@ -138,6 +148,7 @@ private:
     Map<Event, List<MainJob>> waitingMainJobs;
     std::mutex waitingMainLock;
     
+    void tryMainJob();
     void threadLoop(const bool isMainThread);
 };
 

@@ -117,7 +117,12 @@
         "string_view": "cpp",
         "rope": "cpp",
         "slist": "cpp",
-        "numbers": "cpp"
+        "numbers": "cpp",
+        "barrier": "cpp",
+        "latch": "cpp",
+        "ranges": "cpp",
+        "source_location": "cpp",
+        "syncstream": "cpp"
     },
     "cmake.skipConfigureIfCachePresent": false,
     "cmake.configureArgs": [

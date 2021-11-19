@@ -38,7 +38,8 @@ if (WIN32)
 		NAMES assimp-vc${MSVC_TOOLSET_VERSION}-mt${CMAKE_DEBUG_POSTFIX}.dll
 		PATHS
 			$ENV{PROGRAMFILES}/bin
-			${ASSIMP_ROOT}/bin)
+			${ASSIMP_ROOT}/code
+		PATH_SUFFIXES Debug Release)
 else()
 	# Find include files
 	find_path(

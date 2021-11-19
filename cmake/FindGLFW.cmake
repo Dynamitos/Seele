@@ -48,15 +48,15 @@ if (WIN32)
 
 	unset(GLFW_LIBRARY_NAME)
 
-	#find_file(
-	#	GLFW_BINARY
-	#	NAMES glfw3${CMAKE_DEBUG_POSTFIX}.dll
-	#	PATHS
-	#		$ENV{PROGRAMFILES}/bin
-	#		${CMAKE_BINARY_DIR}
-	#		${GLFW_ROOT}/src
-	#		${GLFW_ROOT}/bin
-	#	PATH_SUFFIXES Debug Release)
+	find_file(
+		GLFW_BINARY
+		NAMES glfw3${CMAKE_DEBUG_POSTFIX}.dll
+		PATHS
+			$ENV{PROGRAMFILES}/bin
+			${CMAKE_BINARY_DIR}
+			${GLFW_ROOT}/src
+			${GLFW_ROOT}/bin
+		PATH_SUFFIXES Debug Release)
 else()
 	# Find include files
 	find_path(

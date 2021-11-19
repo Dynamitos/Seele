@@ -133,57 +133,58 @@ void Allocation::markFree(SubAllocation *allocation)
     PSubAllocation allocHandle;
     PSubAllocation freeRangeToDelete;
 
-    std::unique_lock lck(lock);
-    //Join lower bound
-    for (auto freeRange : freeRanges)
     {
-        PSubAllocation freeAlloc = freeRange.value;
-        if (freeAlloc->allocatedOffset <= lowerBound
-        && freeAlloc->allocatedOffset + freeAlloc->allocatedSize >= upperBound)
+        std::unique_lock lck(lock);
+        //Join lower bound
+        for (auto freeRange : freeRanges)
         {
-            // allocation is already in a free region
-            return;
+            PSubAllocation freeAlloc = freeRange.value;
+            if (freeAlloc->allocatedOffset <= lowerBound
+            && freeAlloc->allocatedOffset + freeAlloc->allocatedSize >= upperBound)
+            {
+                // allocation is already in a free region
+                return;
+            }
+            if (freeAlloc->allocatedOffset + freeAlloc->allocatedSize == lowerBound)
+            {
+                //extend freeAlloc by the allocatedSize
+                freeAlloc->allocatedSize += allocation->allocatedSize;
+                allocHandle = freeAlloc;
+                break;
+            }
         }
-        if (freeAlloc->allocatedOffset + freeAlloc->allocatedSize == lowerBound)
+        //Join upper bound
+        auto foundAlloc = freeRanges.find(upperBound);
+        if (foundAlloc != freeRanges.end())
         {
-            //extend freeAlloc by the allocatedSize
-            freeAlloc->allocatedSize += allocation->allocatedSize;
-            allocHandle = freeAlloc;
-            break;
+            freeRangeToDelete = foundAlloc->value;
+            // There is a free allocation ending where the new free one ends
+            if (allocHandle != nullptr)
+            {
+                // extend allocHandle by another foundAlloc->allocatedSize bytes
+                allocHandle->allocatedSize += foundAlloc->value->allocatedSize;
+                freeRanges.erase(foundAlloc->key);
+            }
+            else
+            {
+                // set foundAlloc back by size amount
+                allocHandle = foundAlloc->value;
+                allocHandle->allocatedOffset -= allocation->allocatedSize;
+                allocHandle->alignedOffset -= allocation->allocatedSize;
+                // place back at correct offset
+                freeRanges[allocHandle->allocatedOffset] = allocHandle;
+                // remove from offset map since key changes
+                freeRanges.erase(foundAlloc->key);
+            }
         }
+        
+        if (allocHandle == nullptr)
+        {
+            allocHandle = new SubAllocation(this, allocation->alignedOffset, allocation->size, allocation->alignedOffset, allocation->allocatedSize);
+            freeRanges[allocation->allocatedOffset] = allocHandle;
+        }
+        activeAllocations.erase(allocation->allocatedOffset);
     }
-    //Join upper bound
-    auto foundAlloc = freeRanges.find(upperBound);
-    if (foundAlloc != freeRanges.end())
-    {
-        freeRangeToDelete = foundAlloc->value;
-        // There is a free allocation ending where the new free one ends
-        if (allocHandle != nullptr)
-        {
-            // extend allocHandle by another foundAlloc->allocatedSize bytes
-            allocHandle->allocatedSize += foundAlloc->value->allocatedSize;
-            freeRanges.erase(foundAlloc->key);
-        }
-        else
-        {
-            // set foundAlloc back by size amount
-            allocHandle = foundAlloc->value;
-            allocHandle->allocatedOffset -= allocation->allocatedSize;
-            allocHandle->alignedOffset -= allocation->allocatedSize;
-            // place back at correct offset
-            freeRanges[allocHandle->allocatedOffset] = allocHandle;
-            // remove from offset map since key changes
-            freeRanges.erase(foundAlloc->key);
-        }
-    }
-    
-    if (allocHandle == nullptr)
-    {
-        allocHandle = new SubAllocation(this, allocation->alignedOffset, allocation->size, allocation->alignedOffset, allocation->allocatedSize);
-        freeRanges[allocation->allocatedOffset] = allocHandle;
-    }
-    activeAllocations.erase(allocation->allocatedOffset);
-    lock.unlock();
     bytesUsed -= allocation->allocatedSize;
     // TODO: delete allocation when bytesUsed == 0
 }
