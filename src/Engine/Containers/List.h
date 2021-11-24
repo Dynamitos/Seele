@@ -208,9 +208,10 @@ public:
             deallocateNode(tmp->prev);
         }
         deallocateNode(tail);
-        markIteratorDirty();
         tail = nullptr;
         root = nullptr;
+        markIteratorDirty();
+        _size = 0;
     }
     //Insert at the end
     iterator add(const T &value)
@@ -291,7 +292,7 @@ public:
     {
         value_type temp = std::move(root->data);
         popFront();
-        return std::move(temp);
+        return temp;
     }
     iterator remove(iterator pos)
     {

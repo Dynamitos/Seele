@@ -12,7 +12,7 @@ Actor::~Actor()
 {
 
 }
-void Actor::tick(float deltaTime)
+void Actor::tick(float)
 {
 }
 void Actor::notifySceneAttach(PScene scene)

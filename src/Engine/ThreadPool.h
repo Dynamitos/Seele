@@ -25,69 +25,6 @@ struct JobPromiseBase
         exit(1);
     };
 };
-static std::atomic_uint64_t globalCounter;
-template<bool MainJob>
-struct JobBase
-{
-public:
-    using promise_type = JobPromiseBase<MainJob>;
-    
-    explicit JobBase()
-        : id(-1)
-    {}
-    explicit JobBase(std::coroutine_handle<promise_type> handle)
-        : handle(handle)
-        , id(globalCounter++)
-    {
-        std::cout << "Creating job " << id << std::endl;
-        /*if constexpr(MainJob)
-        {
-            std::cout << "Creating mainjob " << handle.address() << std::endl;
-        }
-        else
-        {
-            std::cout << "Creating job " << handle.address() << std::endl;
-        }*/
-    }
-    JobBase(const JobBase & rhs) = delete;
-    JobBase(JobBase&& rhs)
-        : handle(std::move(rhs.handle))
-        , id(std::move(rhs.id))
-    {
-        rhs.id = -1;
-        rhs.handle = nullptr;
-    }
-    ~JobBase()
-    {
-        if(handle)
-        {
-            std::cout << "Destroying job " << id << std::endl;
-            handle.destroy();
-        }
-    }
-    JobBase& operator=(const JobBase& rhs) = delete;
-    JobBase& operator=(JobBase&& rhs)
-    {
-        if(this != &rhs)
-        {
-            handle = std::move(rhs.handle);
-            id = std::move(rhs.id);
-            rhs.id = -1;
-            rhs.handle = nullptr;
-        }
-        return *this;
-    }
-    void resume()
-    {
-        handle.resume();
-    }
-    std::coroutine_handle<promise_type> handle;
-    uint64 id;
-private:
-};
-
-using MainJob = JobBase<true>;
-using Job = JobBase<false>;
 
 struct Event
 {
@@ -119,16 +56,72 @@ private:
     friend class ThreadPool;
 };
 
+static std::atomic_uint64_t globalCounter;
+template<bool MainJob>
+struct JobBase
+{
+public:
+    using promise_type = JobPromiseBase<MainJob>;
+    
+    explicit JobBase()
+        : id(-1)
+    {}
+    explicit JobBase(std::coroutine_handle<promise_type> handle)
+        : handle(handle)
+        , id(globalCounter++)
+    {
+        //std::cout << "Creating job " << id << std::endl;
+    }
+    JobBase(const JobBase & rhs) = delete;
+    JobBase(JobBase&& rhs)
+        : handle(std::move(rhs.handle))
+        , id(std::move(rhs.id))
+    {
+        rhs.id = -1;
+        rhs.handle = nullptr;
+    }
+    ~JobBase()
+    {
+        if(handle && handle.done())
+        {
+            //std::cout << "Destroying job " << id << std::endl;
+            handle.destroy();
+        }
+    }
+    JobBase& operator=(const JobBase& rhs) = delete;
+    JobBase& operator=(JobBase&& rhs)
+    {
+        if(this != &rhs)
+        {
+            handle = std::move(rhs.handle);
+            id = std::move(rhs.id);
+            rhs.id = -1;
+            rhs.handle = nullptr;
+        }
+        return *this;
+    }
+    void resume()
+    {
+        handle.resume();
+    }
+private:
+    std::coroutine_handle<promise_type> handle;
+    uint64 id;
+};
+
+using MainJob = JobBase<true>;
+using Job = JobBase<false>;
+
 class ThreadPool
 {
 public:
-    ThreadPool(uint32 threadCount = std::thread::hardware_concurrency());
+    ThreadPool(uint32 threadCount = std::thread::hardware_concurrency() + 1);
     virtual ~ThreadPool();
     void addJob(Job&& job);
     void addJob(MainJob&& job);
-    void enqueueWaiting(Event* event, Job&& job);
-    void enqueueWaiting(Event* event, MainJob&& job);
-    void notify(Event* event);
+    void enqueueWaiting(Event& event, Job job);
+    void enqueueWaiting(Event& event, MainJob job);
+    void notify(Event& event);
 private:
     std::atomic_bool running;
     std::thread* mainThread;
@@ -176,7 +169,7 @@ inline auto JobPromiseBase<MainJob>::initial_suspend() const noexcept
 template<bool MainJob>
 inline constexpr void Event::await_suspend(std::coroutine_handle<JobPromiseBase<MainJob>> h)
 {
-    getGlobalThreadPool().enqueueWaiting(this, std::move(JobBase<MainJob>(h)));
+    getGlobalThreadPool().enqueueWaiting(*this, std::move(JobBase<MainJob>(h)));
 }
 
 } // namespace Seele

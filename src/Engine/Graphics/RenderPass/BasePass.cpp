@@ -20,13 +20,13 @@ BasePassMeshProcessor::~BasePassMeshProcessor()
 { 
 }
 
-void BasePassMeshProcessor::addMeshBatch(
+Job BasePassMeshProcessor::processMeshBatch(
     const MeshBatch& batch, 
 //    const PPrimitiveComponent primitiveComponent,
-    const Gfx::PRenderPass renderPass,
+    const Gfx::PRenderPass& renderPass,
     Gfx::PPipelineLayout pipelineLayout,
     Gfx::PDescriptorLayout primitiveLayout,
-    Array<Gfx::PDescriptorSet>& descriptorSets,
+    Array<Gfx::PDescriptorSet> descriptorSets,
     int32 /*staticMeshId*/) 
 {
     PMaterialAsset material = batch.material;
@@ -34,11 +34,12 @@ void BasePassMeshProcessor::addMeshBatch(
 
     const PVertexShaderInput vertexInput = batch.vertexInput;
 
-	const Gfx::ShaderCollection* collection = material->getShaders(Gfx::RenderPassType::BasePass, vertexInput->getType());
+    const Gfx::ShaderCollection* collection = material->getShaders(Gfx::RenderPassType::BasePass, vertexInput->getType());
     assert(collection != nullptr);
 
     Gfx::PRenderCommand renderCommand = graphics->createRenderCommand();    
     renderCommand->setViewport(target);
+    
     pipelineLayout->addDescriptorLayout(BasePass::INDEX_MATERIAL, material->getDescriptorLayout());
     pipelineLayout->create();
     Gfx::PDescriptorSet materialSet = material->createDescriptorSet();
@@ -63,6 +64,7 @@ void BasePassMeshProcessor::addMeshBatch(
             false);
     }
     renderCommands.add(renderCommand);
+    co_return;
 }
 
 Array<Gfx::PRenderCommand> BasePassMeshProcessor::getRenderCommands() 
@@ -120,7 +122,7 @@ BasePass::~BasePass()
 {   
 }
 
-void BasePass::beginFrame() 
+Job BasePass::beginFrame() 
 {
     processor->clearCommands();
     primitiveLayout->reset();
@@ -140,9 +142,10 @@ void BasePass::beginFrame()
     descriptorSets[INDEX_VIEW_PARAMS] = viewLayout->allocateDescriptorSet();
     descriptorSets[INDEX_VIEW_PARAMS]->updateBuffer(0, viewParamBuffer);
     descriptorSets[INDEX_VIEW_PARAMS]->writeChanges();
+    co_return;
 }
 
-void BasePass::render() 
+Job BasePass::render() 
 {
     oLightIndexList->pipelineBarrier( 
 		Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
@@ -159,16 +162,23 @@ void BasePass::render()
     descriptorSets[INDEX_LIGHT_ENV]->updateTexture(5, oLightGrid);
     descriptorSets[INDEX_LIGHT_ENV]->writeChanges();
     graphics->beginRenderPass(renderPass);
+    List<Job> jobs;
     for (auto &&meshBatch : passData.staticDrawList)
     {
-        processor->addMeshBatch(meshBatch, renderPass, basePassLayout, primitiveLayout, descriptorSets);
+        jobs.add(processor->processMeshBatch(meshBatch, renderPass, basePassLayout, primitiveLayout, descriptorSets));
+    }
+    for(auto& job : jobs)
+    {
+        co_await job;
     }
     graphics->executeCommands(processor->getRenderCommands());
     graphics->endRenderPass();
+    co_return;
 }
 
-void BasePass::endFrame() 
+Job BasePass::endFrame() 
 {
+    co_return;
 }
 
 void BasePass::publishOutputs() 

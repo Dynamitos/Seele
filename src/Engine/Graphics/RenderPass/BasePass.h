@@ -11,13 +11,13 @@ public:
     BasePassMeshProcessor(Gfx::PViewport viewport, Gfx::PGraphics graphics, uint8 translucentBasePass);
     virtual ~BasePassMeshProcessor();
 
-    virtual void addMeshBatch(
+    virtual Job processMeshBatch(
         const MeshBatch& batch, 
 //        const PPrimitiveComponent primitiveComponent,
-        const Gfx::PRenderPass renderPass,
+        const Gfx::PRenderPass& renderPass,
         Gfx::PPipelineLayout pipelineLayout,
         Gfx::PDescriptorLayout primitiveLayout,
-        Array<Gfx::PDescriptorSet>& descriptorSets,
+        Array<Gfx::PDescriptorSet> descriptorSets,
         int32 staticMeshId = -1) override;
     Array<Gfx::PRenderCommand> getRenderCommands();
     void clearCommands();
@@ -40,9 +40,9 @@ class BasePass : public RenderPass<BasePassData>
 public:
     BasePass(Gfx::PGraphics graphics, Gfx::PViewport viewport, PCameraActor source);
     virtual ~BasePass();
-    virtual void beginFrame() override;
-    virtual void render() override;
-    virtual void endFrame() override;
+    virtual Job beginFrame() override;
+    virtual Job render() override;
+    virtual Job endFrame() override;
     virtual void publishOutputs() override;
     virtual void createRenderPass() override;
     static void modifyRenderPassMacros(Map<const char*, const char*>& defines);

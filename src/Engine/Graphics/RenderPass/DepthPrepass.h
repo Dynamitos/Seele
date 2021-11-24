@@ -11,12 +11,12 @@ public:
     DepthPrepassMeshProcessor(Gfx::PViewport viewport, Gfx::PGraphics graphics);
     virtual ~DepthPrepassMeshProcessor();
     
-    virtual void addMeshBatch(
+    virtual Job processMeshBatch(
         const MeshBatch& batch,
-        const Gfx::PRenderPass renderPass,
+        const Gfx::PRenderPass& renderPass,
         Gfx::PPipelineLayout pipelineLayout,
         Gfx::PDescriptorLayout primitiveLayout,
-        Array<Gfx::PDescriptorSet>& descriptorSets,
+        Array<Gfx::PDescriptorSet> descriptorSets,
         int32 staticMeshId = -1) override;
 
     Array<Gfx::PRenderCommand> getRenderCommands();
@@ -39,9 +39,9 @@ class DepthPrepass : public RenderPass<DepthPrepassData>
 public:
     DepthPrepass(Gfx::PGraphics graphics, Gfx::PViewport viewport, PCameraActor source);
     ~DepthPrepass();
-    virtual void beginFrame() override;
-    virtual void render() override;
-    virtual void endFrame() override;
+    virtual Job beginFrame() override;
+    virtual Job render() override;
+    virtual Job endFrame() override;
     virtual void publishOutputs() override;
     virtual void createRenderPass() override;
     static void modifyRenderPassMacros(Map<const char*, const char*>& defines);

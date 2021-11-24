@@ -15,7 +15,6 @@
             "console": "internalConsole",
             "environment": [],
             "externalConsole": false,
-            "MIMode": "gdb",
             "setupCommands": [
                 {
                     "description": "Enable break on all exceptions",

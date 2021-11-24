@@ -1,5 +1,6 @@
 #pragma once
 #include "Graphics/RenderPass/RenderGraph.h"
+#include "ThreadPool.h"
 
 namespace Seele
 {
@@ -20,15 +21,17 @@ public:
 	// These are called from the render thread
 	// prepare render is also locked, so reading from shared memory is also safe
 	virtual void prepareRender() {}
-	virtual void render() {}
+	virtual Job render() { co_return; }
 	void applyArea(URect area);
 	void setFocused();
+	Event renderFinished() { return renderFinishedEvent; }
 
 protected:
 	Gfx::PGraphics graphics;
 	Gfx::PViewport viewport;
 	PWindow owner;
 	std::string name;
+	Event renderFinishedEvent;
 	
 	virtual void keyCallback(KeyCode code, InputAction action, KeyModifier modifier) = 0;
 	virtual void mouseMoveCallback(double xPos, double yPos) = 0;

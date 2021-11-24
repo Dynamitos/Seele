@@ -34,31 +34,36 @@ void InspectorView::prepareRender()
     
 }
 
-void InspectorView::render() 
+Job InspectorView::render() 
 {
+    co_await uiPass.beginFrame();
+    co_await uiPass.render();
+    co_await uiPass.endFrame();
+
+    renderFinishedEvent.raise();
 }
 
-void InspectorView::keyCallback(KeyCode code, InputAction action, KeyModifier modifier) 
-{
-    
-}
-
-void InspectorView::mouseMoveCallback(double xPos, double yPos) 
-{
-    
-}
-
-void InspectorView::mouseButtonCallback(MouseButton button, InputAction action, KeyModifier modifier) 
+void InspectorView::keyCallback(KeyCode, InputAction, KeyModifier) 
 {
     
 }
 
-void InspectorView::scrollCallback(double xOffset, double yOffset) 
+void InspectorView::mouseMoveCallback(double, double) 
 {
     
 }
 
-void InspectorView::fileCallback(int count, const char** paths) 
+void InspectorView::mouseButtonCallback(MouseButton, InputAction, KeyModifier) 
+{
+    
+}
+
+void InspectorView::scrollCallback(double, double) 
+{
+    
+}
+
+void InspectorView::fileCallback(int, const char**) 
 {
     
 }

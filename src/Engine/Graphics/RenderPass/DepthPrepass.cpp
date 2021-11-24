@@ -18,13 +18,13 @@ DepthPrepassMeshProcessor::~DepthPrepassMeshProcessor()
 { 
 }
 
-void DepthPrepassMeshProcessor::addMeshBatch(
+Job DepthPrepassMeshProcessor::processMeshBatch(
     const MeshBatch& batch, 
 //    const PPrimitiveComponent primitiveComponent,
-    const Gfx::PRenderPass renderPass,
+    const Gfx::PRenderPass& renderPass,
     Gfx::PPipelineLayout pipelineLayout,
     Gfx::PDescriptorLayout primitiveLayout,
-    Array<Gfx::PDescriptorSet>& descriptorSets,
+    Array<Gfx::PDescriptorSet> descriptorSets,
     int32 /*staticMeshId*/) 
 {
     PMaterialAsset material = batch.material;
@@ -61,6 +61,7 @@ void DepthPrepassMeshProcessor::addMeshBatch(
             true);
     }
     renderCommands.add(renderCommand);
+    co_return;
 }
 
 Array<Gfx::PRenderCommand> DepthPrepassMeshProcessor::getRenderCommands() 
@@ -104,7 +105,7 @@ DepthPrepass::~DepthPrepass()
 {   
 }
 
-void DepthPrepass::beginFrame() 
+Job DepthPrepass::beginFrame() 
 {
     processor->clearCommands();
     primitiveLayout->reset();
@@ -122,26 +123,33 @@ void DepthPrepass::beginFrame()
     descriptorSets[INDEX_VIEW_PARAMS] = viewLayout->allocateDescriptorSet();
     descriptorSets[INDEX_VIEW_PARAMS]->updateBuffer(0, viewParamBuffer);
     descriptorSets[INDEX_VIEW_PARAMS]->writeChanges();
+    co_return;
 }
 
-void DepthPrepass::render() 
+Job DepthPrepass::render() 
 {
-    
     depthAttachment->getTexture()->pipelineBarrier(
         Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
         Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT);
     depthAttachment->getTexture()->transferOwnership(Gfx::QueueType::GRAPHICS);
     graphics->beginRenderPass(renderPass);
+    List<Job> jobs;
     for (auto &&meshBatch : passData.staticDrawList)
     {
-        processor->addMeshBatch(meshBatch, renderPass, depthPrepassLayout, primitiveLayout, descriptorSets);
+        jobs.add(processor->processMeshBatch(meshBatch, renderPass, depthPrepassLayout, primitiveLayout, descriptorSets));
+    }
+    for(auto& job : jobs)
+    {
+        co_await job;
     }
     graphics->executeCommands(processor->getRenderCommands());
     graphics->endRenderPass();
+    co_return;
 }
 
-void DepthPrepass::endFrame() 
+Job DepthPrepass::endFrame() 
 {
+    co_return;
 }
 
 void DepthPrepass::publishOutputs() 

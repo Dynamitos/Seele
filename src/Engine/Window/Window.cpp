@@ -37,6 +37,10 @@ MainJob Window::render()
         }
         windowView->view->render();
     }
+    for(auto& windowView : views)
+    {
+        co_await windowView->view->renderFinished();
+    }
     gfxHandle->endFrame();
     //Enqueue a new render main job
     render();

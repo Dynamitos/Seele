@@ -33,7 +33,7 @@ Scene::~Scene()
 {
 }
 
-void Scene::tick(double deltaTime)
+void Scene::tick(double)
 {
 }
 

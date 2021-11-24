@@ -3,6 +3,7 @@
 #include "Scene/Scene.h"
 #include "Graphics/GraphicsResources.h"
 #include "Graphics/MeshBatch.h"
+#include "ThreadPool.h"
 
 namespace Seele
 {
@@ -14,13 +15,13 @@ public:
 protected:
     PScene scene;
     Gfx::PGraphics graphics;
-    virtual void addMeshBatch(
-        const MeshBatch& meshBatch, 
+    virtual Job processMeshBatch(
+        const MeshBatch& batch, 
 //        const PPrimitiveComponent primitiveComponent,
-        const Gfx::PRenderPass renderPass,
+        const Gfx::PRenderPass& renderPass,
         Gfx::PPipelineLayout pipelineLayout,
         Gfx::PDescriptorLayout primitiveLayout,
-        Array<Gfx::PDescriptorSet>& descriptorSets,
+        Array<Gfx::PDescriptorSet> descriptorSets,
         int32 staticMeshId = -1) = 0;
     void buildMeshDrawCommand(
         const MeshBatch& meshBatch, 

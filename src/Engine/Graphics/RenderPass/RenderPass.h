@@ -2,6 +2,7 @@
 #include "MinimalEngine.h"
 #include "Math/Math.h"
 #include "RenderGraph.h"
+#include "ThreadPool.h"
 
 namespace Seele
 {
@@ -21,9 +22,9 @@ public:
     void updateViewFrame(RenderPassDataType viewFrame) {
         passData = std::move(viewFrame);
     }
-    virtual void beginFrame() = 0;
-    virtual void render() = 0;
-    virtual void endFrame() = 0;
+    virtual Job beginFrame() = 0;
+    virtual Job render() = 0;
+    virtual Job endFrame() = 0;
     virtual void publishOutputs() = 0;
     virtual void createRenderPass() = 0;
     void setResources(PRenderGraphResources resources) { this->resources = resources; }

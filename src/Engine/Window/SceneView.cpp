@@ -83,19 +83,21 @@ void SceneView::prepareRender()
     basePass.updateViewFrame(basePassData);
 }
 
-void SceneView::render() 
+Job SceneView::render() 
 {
-    depthPrepass.beginFrame();
-    lightCullingPass.beginFrame();
-    basePass.beginFrame();
+    co_await depthPrepass.beginFrame();
+    co_await lightCullingPass.beginFrame();
+    co_await basePass.beginFrame();
 
-    depthPrepass.render();
-    lightCullingPass.render();
-    basePass.render();
+    co_await depthPrepass.render();
+    co_await lightCullingPass.render();
+    co_await basePass.render();
 
-    depthPrepass.endFrame();
-    lightCullingPass.endFrame();
-    basePass.endFrame();
+    co_await depthPrepass.endFrame();
+    co_await lightCullingPass.endFrame();
+    co_await basePass.endFrame();
+
+    renderFinishedEvent.raise();
 }
 
 void SceneView::keyCallback(KeyCode code, InputAction action, KeyModifier)

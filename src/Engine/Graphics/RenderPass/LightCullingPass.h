@@ -18,9 +18,9 @@ class LightCullingPass : public RenderPass<LightCullingPassData>
 public:
     LightCullingPass(Gfx::PGraphics graphics, Gfx::PViewport viewport, PCameraActor camera);
     virtual ~LightCullingPass();
-    virtual void beginFrame() override;
-    virtual void render() override;
-    virtual void endFrame() override;
+    virtual Job beginFrame() override;
+    virtual Job render() override;
+    virtual Job endFrame() override;
     virtual void publishOutputs() override;
     virtual void createRenderPass() override;
     static void modifyRenderPassMacros(Map<const char*, const char*>& defines);

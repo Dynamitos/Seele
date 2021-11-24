@@ -18,7 +18,7 @@ LightCullingPass::~LightCullingPass()
     
 }
 
-void LightCullingPass::beginFrame() 
+Job LightCullingPass::beginFrame() 
 {
     uint32_t viewportWidth = viewport->getSizeX();
 	uint32_t viewportHeight = viewport->getSizeY();
@@ -75,9 +75,10 @@ void LightCullingPass::beginFrame()
 	lightEnvDescriptorSet->updateBuffer(2, pointLightBuffer);
 	lightEnvDescriptorSet->updateBuffer(3, numPointLightBuffer);
 	lightEnvDescriptorSet->writeChanges();
+	co_return;
 }
 
-void LightCullingPass::render() 
+Job LightCullingPass::render() 
 {
 	oLightIndexList->pipelineBarrier( 
 		Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
@@ -101,11 +102,12 @@ void LightCullingPass::render()
 	graphics->executeCommands(commands);
     depthAttachment->changeLayout(Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
 	depthAttachment->transferOwnership(Gfx::QueueType::GRAPHICS);
+	co_return;
 }
 
-void LightCullingPass::endFrame() 
+Job LightCullingPass::endFrame() 
 {
-    
+    co_return;
 }
 
 void LightCullingPass::publishOutputs() 
