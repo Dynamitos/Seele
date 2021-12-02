@@ -168,8 +168,8 @@ TextureHandle::~TextureHandle()
     VkImage img = image;
     auto deletionLambda = [cmdBuffer, device, view, img]() -> Job
     {
-        vkDestroyImageView(device, view, nullptr);
-        vkDestroyImage(device, img, nullptr);
+        //vkDestroyImageView(device, view, nullptr);
+        //vkDestroyImage(device, img, nullptr);
         co_return;
     };
     deletionLambda();

@@ -43,6 +43,6 @@ void MeshAsset::addMesh(PMesh mesh)
 
 const Array<PMesh> MeshAsset::getMeshes()
 {
-    waitReady();
+    std::unique_lock lck(lock);
     return meshes;
 }

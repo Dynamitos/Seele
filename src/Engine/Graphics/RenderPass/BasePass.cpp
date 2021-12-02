@@ -67,16 +67,6 @@ Job BasePassMeshProcessor::processMeshBatch(
     co_return;
 }
 
-Array<Gfx::PRenderCommand> BasePassMeshProcessor::getRenderCommands() 
-{
-    return renderCommands;
-}
-
-void BasePassMeshProcessor::clearCommands()
-{
-    renderCommands.clear();
-}
-
 BasePass::BasePass(Gfx::PGraphics graphics, Gfx::PViewport viewport, PCameraActor source) 
     : RenderPass(graphics, viewport)
     , processor(new BasePassMeshProcessor(viewport, graphics, false))
@@ -122,7 +112,7 @@ BasePass::~BasePass()
 {   
 }
 
-Job BasePass::beginFrame() 
+void BasePass::beginFrame() 
 {
     processor->clearCommands();
     primitiveLayout->reset();
@@ -142,10 +132,9 @@ Job BasePass::beginFrame()
     descriptorSets[INDEX_VIEW_PARAMS] = viewLayout->allocateDescriptorSet();
     descriptorSets[INDEX_VIEW_PARAMS]->updateBuffer(0, viewParamBuffer);
     descriptorSets[INDEX_VIEW_PARAMS]->writeChanges();
-    co_return;
 }
 
-Job BasePass::render() 
+MainJob BasePass::render() 
 {
     oLightIndexList->pipelineBarrier( 
 		Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
@@ -167,18 +156,13 @@ Job BasePass::render()
     {
         jobs.add(processor->processMeshBatch(meshBatch, renderPass, basePassLayout, primitiveLayout, descriptorSets));
     }
-    for(auto& job : jobs)
-    {
-        co_await job;
-    }
+    co_await Job::all(jobs);
     graphics->executeCommands(processor->getRenderCommands());
     graphics->endRenderPass();
-    co_return;
 }
 
-Job BasePass::endFrame() 
+void BasePass::endFrame() 
 {
-    co_return;
 }
 
 void BasePass::publishOutputs() 

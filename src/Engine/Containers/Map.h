@@ -234,7 +234,7 @@ public:
         , _size(other._size)
         , comp(other.comp)
     {
-        markIteratorDirty();
+        markIteratorsDirty();
     }
     Map(Map&& other)
         : nodeContainer(other.nodeContainer)
@@ -242,7 +242,7 @@ public:
         , _size(std::move(other._size))
         , comp(std::move(other.comp))
     {
-        markIteratorDirty();
+        markIteratorsDirty();
     }
     ~Map()
     {
@@ -255,7 +255,7 @@ public:
             root = other.root;
             _size = other._size;
             comp = other.comp;
-            markIteratorDirty();
+            markIteratorsDirty();
         }
         return *this;
     }
@@ -267,34 +267,34 @@ public:
             root = std::move(other.root);
             _size = std::move(other._size);
             comp = std::move(other.comp);
-            markIteratorDirty();
+            markIteratorsDirty();
         }
         return *this;
     }
     inline mapped_type& operator[](const key_type& key)
     {
         root = splay(root, key);
-        markIteratorDirty();
-        if (root >= nodeContainer.size() 
+        if (!isValid(root) 
          || comp(getNode(root)->pair.key, key) 
          || comp(key, getNode(root)->pair.key))
         {
             root = insert(root, key);
             _size++;
         }
+        markIteratorsDirty();
         return getNode(root)->pair.value;
     }
     inline mapped_type& operator[](key_type&& key)
     {
         root = splay(root, std::move(key));
-        markIteratorDirty();
-        if (root >= nodeContainer.size() 
+        if (!isValid(root)
          || comp(getNode(root)->pair.key, key) 
          || comp(key, getNode(root)->pair.key))
         {
             root = insert(root, std::move(key));
             _size++;
         }
+        markIteratorsDirty();
         return getNode(root)->pair.value;
     }
     iterator find(const key_type& key)
@@ -338,7 +338,7 @@ public:
         nodeContainer.clear();
         root = -1;
         _size = 0;
-        markIteratorDirty();
+        markIteratorsDirty();
     }
     bool exists(key_type&& key)
     {
@@ -423,7 +423,7 @@ private:
     {
         return index < nodeContainer.size();
     }
-    void markIteratorDirty()
+    void markIteratorsDirty()
     {
         iteratorsDirty = true;
     }
@@ -435,41 +435,31 @@ private:
     }
     inline Iterator calcBeginIterator() const
     {
-        if (!isValid(root))
+        size_t beginIndex = root;
+        Array<size_t> beginTraversal;
+        while (isValid(beginIndex))
         {
-            return Iterator(-1, &nodeContainer);
+            beginTraversal.add(beginIndex);
+            beginIndex = getNode(beginIndex)->leftChild;
         }
-        else
+        if(!beginTraversal.empty())
         {
-            size_t beginIndex = root;
-            Array<size_t> beginTraversal;
-            while (isValid(beginIndex))
-            {
-                beginTraversal.add(beginIndex);
-                beginIndex = getNode(beginIndex)->leftChild;
-            }
             beginIndex = beginTraversal.back();
             beginTraversal.pop();
-            return Iterator(beginIndex, &nodeContainer, std::move(beginTraversal));
         }
+        return Iterator(beginIndex, &nodeContainer, std::move(beginTraversal));
     }
     inline Iterator calcEndIterator() const
     {
-        if (!isValid(root))
+        size_t endIndex = root;
+        Array<size_t> endTraversal;
+        while (isValid(endIndex))
         {
-            return Iterator(-1, &nodeContainer);
+            endTraversal.add(endIndex);
+            endIndex = getNode(endIndex)->rightChild;
         }
-        else
-        {
-            size_t endIndex = root;
-            Array<size_t> endTraversal;
-            while (isValid(endIndex))
-            {
-                endTraversal.add(endIndex);
-                endIndex = getNode(endIndex)->rightChild;
-            }
-            return Iterator(-1, &nodeContainer, std::move(endTraversal));
-        }
+        return Iterator(endIndex, &nodeContainer, std::move(endTraversal));
+    
     }
     Array<Node, NodeAlloc> nodeContainer;
     size_t root;

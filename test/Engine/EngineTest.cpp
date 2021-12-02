@@ -1,7 +1,6 @@
 #include "EngineTest.h"
 #include "MinimalEngine.h"
 #define BOOST_TEST_MODULE SeeleEngine
-#define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 
 using namespace Seele;
@@ -34,7 +33,6 @@ BOOST_AUTO_TEST_CASE(basic_refcount)
 		}
 		BOOST_REQUIRE_EQUAL(ptr->data, 10);
 	}
-	std::shared_ptr<DeclStruct> test;
 }
 struct DeclStruct
 {
@@ -76,10 +74,39 @@ BOOST_AUTO_TEST_CASE(inheritance_cast)
 
 BOOST_AUTO_TEST_CASE(unique_ptr)
 {
-	UniquePtr<TestStruct> uptr = new TestStruct();
-	UniquePtr<TestStruct> uptr2 = std::move(uptr);
+	Seele::UniquePtr<TestStruct> uptr = new TestStruct();
+	Seele::UniquePtr<TestStruct> uptr2 = std::move(uptr);
 	BOOST_REQUIRE_EQUAL(uptr2->data, 10);
 	BOOST_REQUIRE_EQUAL(uptr.isValid(), false);
+}
+struct ThisReference
+{
+	ThisReference()
+	{
+	}
+	~ThisReference()
+	{
+		data = 12;
+	}
+	Seele::RefPtr<ThisReference> getRef()
+	{
+		return this;
+	}
+	uint32 data = 1;
+};
+
+BOOST_AUTO_TEST_CASE(this_reference)
+{
+	Seele::RefPtr<ThisReference> ptr2;
+	{
+		Seele::RefPtr<ThisReference> ptr = new ThisReference();
+		BOOST_REQUIRE_EQUAL(ptr->data, 1);
+		ptr2 = ptr->getRef();
+		BOOST_REQUIRE_EQUAL(ptr2->data, 1);
+		ptr2->data = 5;
+		BOOST_REQUIRE_EQUAL(ptr->data, 5);
+	}
+	BOOST_REQUIRE_EQUAL(ptr2->data, 5);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

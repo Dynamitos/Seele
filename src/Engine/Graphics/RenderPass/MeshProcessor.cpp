@@ -61,3 +61,13 @@ void MeshProcessor::buildMeshDrawCommand(
         drawCommand->draw(element);
     }
 }
+
+Array<Gfx::PRenderCommand> MeshProcessor::getRenderCommands() 
+{
+    return renderCommands;
+}
+
+void MeshProcessor::clearCommands()
+{
+    renderCommands.clear();
+}

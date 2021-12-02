@@ -21,6 +21,9 @@ BOOST_AUTO_TEST_CASE(insert_find_basic)
     map[4] = 4;
     BOOST_REQUIRE_EQUAL(map[2], 5);
     BOOST_REQUIRE_EQUAL(map[4], 4);
+    BOOST_REQUIRE_EQUAL(map.find(2)->value, 5);
+    BOOST_REQUIRE_EQUAL(map.find(4)->value, 4);
+    //BOOST_REQUIRE_EQUAL(map.find(5), map.end());
 }
 
 BOOST_AUTO_TEST_CASE(for_each)

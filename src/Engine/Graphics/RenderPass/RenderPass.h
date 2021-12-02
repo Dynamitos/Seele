@@ -22,9 +22,9 @@ public:
     void updateViewFrame(RenderPassDataType viewFrame) {
         passData = std::move(viewFrame);
     }
-    virtual Job beginFrame() = 0;
-    virtual Job render() = 0;
-    virtual Job endFrame() = 0;
+    virtual void beginFrame() = 0;
+    virtual MainJob render() = 0;
+    virtual void endFrame() = 0;
     virtual void publishOutputs() = 0;
     virtual void createRenderPass() = 0;
     void setResources(PRenderGraphResources resources) { this->resources = resources; }

@@ -12,6 +12,8 @@ class MeshProcessor
 public:
     MeshProcessor(Gfx::PGraphics graphics);
     virtual ~MeshProcessor();
+    Array<Gfx::PRenderCommand> getRenderCommands();
+    void clearCommands();
 protected:
     PScene scene;
     Gfx::PGraphics graphics;
@@ -36,5 +38,6 @@ protected:
         Gfx::PGeometryShader geometryShader,
         Gfx::PFragmentShader fragmentShader,
         bool positionOnly);
+    Array<Gfx::PRenderCommand> renderCommands;
 };
 } // namespace Seele

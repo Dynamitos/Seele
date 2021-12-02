@@ -65,15 +65,15 @@ ShaderBuffer::~ShaderBuffer()
 {
 	PCmdBuffer cmdBuffer = graphics->getQueueCommands(owner)->getCommands();
 	VkDevice device = graphics->getDevice();
-	auto deletionLambda = [](PCmdBuffer cmdBuffer, VkDevice device, VkBuffer buffer) -> Job 
+	auto deletionLambda = [cmdBuffer, device](VkBuffer buffer) -> Job 
 	{
-		co_await cmdBuffer->asyncWait();
-		vkDestroyBuffer(device, buffer, nullptr);
-		co_return;
-	};
+		//co_await cmdBuffer->asyncWait();
+		//vkDestroyBuffer(device, buffer, nullptr);
+        co_return;
+    };
 	for (uint32 i = 0; i < numBuffers; ++i)
 	{
-		deletionLambda(cmdBuffer, device, buffers[i].buffer);
+		deletionLambda(buffers[i].buffer);
 		buffers[i].allocation = nullptr;
 	}
 	graphics = nullptr;

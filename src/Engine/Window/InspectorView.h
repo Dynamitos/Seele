@@ -18,7 +18,7 @@ public:
 	virtual void commitUpdate() override;
     
     virtual void prepareRender() override;
-    virtual Job render() override;
+    virtual MainJob render() override;
     void selectActor();
 protected:
     UIPass uiPass;

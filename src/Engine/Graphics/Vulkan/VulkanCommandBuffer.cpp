@@ -85,6 +85,10 @@ void CmdBuffer::endRenderPass()
 void CmdBuffer::executeCommands(const Array<Gfx::PRenderCommand>& commands)
 {
     assert(state == State::RenderPassActive);
+    if(commands.size() == 0)
+    {
+        return;
+    }
     std::unique_lock lock(handleLock);
     Array<VkCommandBuffer> cmdBuffers(commands.size());
     for (uint32 i = 0; i < commands.size(); ++i)
@@ -105,6 +109,10 @@ void CmdBuffer::executeCommands(const Array<Gfx::PRenderCommand>& commands)
 void CmdBuffer::executeCommands(const Array<Gfx::PComputeCommand>& commands) 
 {
     std::unique_lock lock(handleLock);
+    if(commands.size() == 0)
+    {
+        return;
+    }
     Array<VkCommandBuffer> cmdBuffers(commands.size());
     for (uint32 i = 0; i < commands.size(); ++i)
     {

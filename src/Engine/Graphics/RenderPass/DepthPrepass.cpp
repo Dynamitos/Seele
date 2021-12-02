@@ -64,18 +64,6 @@ Job DepthPrepassMeshProcessor::processMeshBatch(
     co_return;
 }
 
-Array<Gfx::PRenderCommand> DepthPrepassMeshProcessor::getRenderCommands() 
-{
-    return renderCommands;
-}
-
-void DepthPrepassMeshProcessor::clearCommands()
-{
-    renderCommands.clear();
-    //cachedPrimitiveSets.clear();
-    //cachedPrimitiveIndex = 0;
-}
-
 DepthPrepass::DepthPrepass(Gfx::PGraphics graphics, Gfx::PViewport viewport, PCameraActor source) 
     : RenderPass(graphics, viewport)
     , processor(new DepthPrepassMeshProcessor(viewport, graphics))
@@ -105,7 +93,7 @@ DepthPrepass::~DepthPrepass()
 {   
 }
 
-Job DepthPrepass::beginFrame() 
+void DepthPrepass::beginFrame() 
 {
     processor->clearCommands();
     primitiveLayout->reset();
@@ -123,10 +111,9 @@ Job DepthPrepass::beginFrame()
     descriptorSets[INDEX_VIEW_PARAMS] = viewLayout->allocateDescriptorSet();
     descriptorSets[INDEX_VIEW_PARAMS]->updateBuffer(0, viewParamBuffer);
     descriptorSets[INDEX_VIEW_PARAMS]->writeChanges();
-    co_return;
 }
 
-Job DepthPrepass::render() 
+MainJob DepthPrepass::render() 
 {
     depthAttachment->getTexture()->pipelineBarrier(
         Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
@@ -138,18 +125,13 @@ Job DepthPrepass::render()
     {
         jobs.add(processor->processMeshBatch(meshBatch, renderPass, depthPrepassLayout, primitiveLayout, descriptorSets));
     }
-    for(auto& job : jobs)
-    {
-        co_await job;
-    }
+    co_await Job::all(jobs);
     graphics->executeCommands(processor->getRenderCommands());
     graphics->endRenderPass();
-    co_return;
 }
 
-Job DepthPrepass::endFrame() 
+void DepthPrepass::endFrame() 
 {
-    co_return;
 }
 
 void DepthPrepass::publishOutputs() 

@@ -18,7 +18,7 @@ Seele::SceneView::SceneView(Gfx::PGraphics graphics, PWindow owner, const Viewpo
 {
     scene = new Scene(graphics);
     scene->addActor(activeCamera);
-    AssetRegistry::importFile("/home/dynamitos/Assets/Ayaka/Avatar_Girl_Sword_Ayaka_Tex_Body_Diffuse.png");
+    /*AssetRegistry::importFile("/home/dynamitos/Assets/Ayaka/Avatar_Girl_Sword_Ayaka_Tex_Body_Diffuse.png");
     AssetRegistry::importFile("/home/dynamitos/Assets/Ayaka/Avatar_Girl_Sword_Ayaka_Tex_Body_Lightmap.png");
     AssetRegistry::importFile("/home/dynamitos/Assets/Ayaka/Avatar_Girl_Sword_Ayaka_Tex_Face_Diffuse.png");
     AssetRegistry::importFile("/home/dynamitos/Assets/Ayaka/Avatar_Girl_Sword_Ayaka_Tex_Hair_Diffuse.png");
@@ -28,9 +28,9 @@ Seele::SceneView::SceneView(Gfx::PGraphics graphics, PWindow owner, const Viewpo
     PPrimitiveComponent ayaka = new PrimitiveComponent(AssetRegistry::findMesh("Ayaka"));
     ayaka->addWorldTranslation(Vector(0, 0, 0));
     ayaka->setWorldScale(Vector(10, 10, 10));
-    scene->addPrimitiveComponent(ayaka);
+    scene->addPrimitiveComponent(ayaka);*/
 
-    /*AssetRegistry::importFile("D:\\Private\\Programming\\Unreal Engine\\Assets\\Ely\\Ely.fbx");
+    AssetRegistry::importFile("D:\\Private\\Programming\\Unreal Engine\\Assets\\Ely\\Ely.fbx");
     AssetRegistry::importFile("D:\\Private\\Programming\\Unreal Engine\\Assets\\Cube\\cube.obj");
     AssetRegistry::importFile("D:\\Private\\Programming\\Unreal Engine\\Assets\\Plane\\plane.fbx");
     PPrimitiveComponent plane = new PrimitiveComponent(AssetRegistry::findMesh("plane"));
@@ -39,7 +39,7 @@ Seele::SceneView::SceneView(Gfx::PGraphics graphics, PWindow owner, const Viewpo
     arissa->addWorldTranslation(Vector(0, 0, 100));
     arissa->setWorldScale(Vector(0.1f, 0.1f, 0.1f));
     scene->addPrimitiveComponent(plane);
-    scene->addPrimitiveComponent(arissa);*/
+    scene->addPrimitiveComponent(arissa);
 
     PRenderGraphResources resources = new RenderGraphResources();
     depthPrepass.setResources(resources);
@@ -61,7 +61,6 @@ Seele::SceneView::~SceneView()
 
 void SceneView::beginUpdate() 
 {
-    View::beginUpdate();
     scene->tick(Gfx::currentFrameDelta);
 }
 
@@ -83,21 +82,22 @@ void SceneView::prepareRender()
     basePass.updateViewFrame(basePassData);
 }
 
-Job SceneView::render() 
+MainJob SceneView::render() 
 {
-    co_await depthPrepass.beginFrame();
-    co_await lightCullingPass.beginFrame();
-    co_await basePass.beginFrame();
+    depthPrepass.beginFrame();
+    lightCullingPass.beginFrame();
+    basePass.beginFrame();
 
-    co_await depthPrepass.render();
-    co_await lightCullingPass.render();
-    co_await basePass.render();
+    depthPrepass.render();
+    lightCullingPass.render();
+    basePass.render();
 
-    co_await depthPrepass.endFrame();
-    co_await lightCullingPass.endFrame();
-    co_await basePass.endFrame();
+    depthPrepass.endFrame();
+    lightCullingPass.endFrame();
+    basePass.endFrame();
 
     renderFinishedEvent.raise();
+    co_return;
 }
 
 void SceneView::keyCallback(KeyCode code, InputAction action, KeyModifier)

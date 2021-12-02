@@ -10,26 +10,27 @@ extern class ThreadPool& getGlobalThreadPool();
 
 template<bool MainJob>
 struct JobBase;
-
 template<bool MainJob>
 struct JobPromiseBase
 {
     JobBase<MainJob> get_return_object() noexcept;
 
     inline auto initial_suspend() const noexcept;
-    std::suspend_never final_suspend() const noexcept { return {}; }
+    inline auto final_suspend() const noexcept;
 
     void return_void() noexcept {}
     void unhandled_exception() noexcept {
-        std::cerr << "Unhandled exception caught" << std::endl;
+        std::cerr << "Unhandled exception" << std::endl;
         exit(1);
     };
+    std::coroutine_handle<> continuation;
 };
 
 struct Event
 {
 public:
     Event();
+    Event(nullptr_t);
     Event(const std::string& name);
     auto operator<=>(const Event& other) const
     {
@@ -56,6 +57,7 @@ private:
     friend class ThreadPool;
 };
 
+
 static std::atomic_uint64_t globalCounter;
 template<bool MainJob>
 struct JobBase
@@ -69,8 +71,8 @@ public:
     explicit JobBase(std::coroutine_handle<promise_type> handle)
         : handle(handle)
         , id(globalCounter++)
+        , event(std::format("Job {}", id))
     {
-        //std::cout << "Creating job " << id << std::endl;
     }
     JobBase(const JobBase & rhs) = delete;
     JobBase(JobBase&& rhs)
@@ -82,9 +84,8 @@ public:
     }
     ~JobBase()
     {
-        if(handle && handle.done())
+        if(handle && handle.done()) 
         {
-            //std::cout << "Destroying job " << id << std::endl;
             handle.destroy();
         }
     }
@@ -104,8 +105,55 @@ public:
     {
         handle.resume();
     }
+    void then(JobBase continuation)
+    {
+        handle.promise().continuation = continuation.handle;
+    }
+    bool done()
+    {
+        return handle.done();
+    }
+    void raise()
+    {
+        event.raise();
+    }
+    void reset()
+    {
+        event.reset();
+    }
+    Event operator co_await()
+    {
+        return event;
+    }
+    template<typename... Awaitable>
+    static JobBase all(Awaitable... jobs)
+    {
+        co_await jobs;
+    }
+    template<typename Iterable>
+    static JobBase all(Iterable&& collection)
+    {
+        for(auto&& it : collection)
+        {
+            co_await it;
+        }
+    }
+    template<typename JobFunc, typename IterableParams>
+    static JobBase launchJobs(JobFunc&& func, IterableParams params)
+    {
+        List<JobBase> jobs;
+        for(auto&& param : params)
+        {
+            jobs.add(func(param));
+        }
+        for(auto job : jobs)
+        {
+            co_await job;
+        }
+    }
 private:
     std::coroutine_handle<promise_type> handle;
+    Event event;
     uint64 id;
 };
 
@@ -115,16 +163,16 @@ using Job = JobBase<false>;
 class ThreadPool
 {
 public:
-    ThreadPool(uint32 threadCount = std::thread::hardware_concurrency() + 1);
+    ThreadPool(uint32 threadCount = std::thread::hardware_concurrency());
     virtual ~ThreadPool();
     void addJob(Job&& job);
     void addJob(MainJob&& job);
-    void enqueueWaiting(Event& event, Job job);
-    void enqueueWaiting(Event& event, MainJob job);
+    void enqueueWaiting(Event& event, Job&& job);
+    void enqueueWaiting(Event& event, MainJob&& job);
     void notify(Event& event);
+    void threadLoop(const bool isMainThread);
 private:
     std::atomic_bool running;
-    std::thread* mainThread;
     std::vector<std::thread> workers;
 
     List<MainJob> mainJobs;
@@ -142,7 +190,6 @@ private:
     std::mutex waitingMainLock;
     
     void tryMainJob();
-    void threadLoop(const bool isMainThread);
 };
 
 
@@ -162,6 +209,20 @@ inline auto JobPromiseBase<MainJob>::initial_suspend() const noexcept
             getGlobalThreadPool().addJob(std::move(JobBase<MainJob>(h)));
         }
         constexpr void await_resume() {}
+    };
+    return JobAwaitable{};
+}
+template<bool MainJob>
+inline auto JobPromiseBase<MainJob>::final_suspend() const noexcept
+{
+    struct JobAwaitable
+    {
+        constexpr bool await_ready() const noexcept { return false; }
+        constexpr auto await_suspend(std::coroutine_handle<JobPromiseBase<MainJob>> h) const noexcept
+        {
+            return h.promise().continuation;
+        }
+        constexpr void await_resume() const noexcept {}
     };
     return JobAwaitable{};
 }

@@ -40,9 +40,9 @@ MainJob Window::render()
     for(auto& windowView : views)
     {
         co_await windowView->view->renderFinished();
+        windowView->view->resetRender();
     }
     gfxHandle->endFrame();
-    //Enqueue a new render main job
     render();
 }
 
@@ -55,7 +55,7 @@ void Window::setFocused(PView view)
 {
     auto keyFunction = std::bind(&View::keyCallback, view.getHandle(), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
     auto mouseMoveFunction = std::bind(&View::mouseMoveCallback, view.getHandle(), std::placeholders::_1, std::placeholders::_2);
-    auto mouseButtonFunction = std::bind(&View::mouseButtonCallback, view.getHandle(), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+    auto mouseButtonFunction = std::bind(&View::mouseButtonCallback, view.getHandle() , std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
     auto scrollFunction = std::bind(&View::scrollCallback, view.getHandle(), std::placeholders::_1, std::placeholders::_2);
     auto fileFunction = std::bind(&View::fileCallback, view.getHandle(), std::placeholders::_1, std::placeholders::_2);
     gfxHandle->setKeyCallback(keyFunction);

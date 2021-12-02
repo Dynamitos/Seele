@@ -223,11 +223,7 @@ namespace Seele
         }
         ~Array()
         {
-            if (_data)
-            {
-                deallocateArray(_data, allocated);
-                _data = nullptr;
-            }
+            clear();
         }
 
         constexpr bool operator==(const Array &other)
@@ -347,6 +343,10 @@ namespace Seele
         }
         constexpr void clear()
         {
+            if(_data == nullptr)
+            {
+                return;
+            }
             for(size_type i = 0; i < arraySize; ++i)
             {
                 _data[i].~T();

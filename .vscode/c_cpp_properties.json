@@ -3,7 +3,8 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceFolder}/src/**"
+                "${workspaceFolder}/src/**",
+                "${workspaceFolder}/external/**"
             ],
             "defines": [
                 "_DEBUG",
@@ -15,7 +16,7 @@
             "cppStandard": "c++20",
             "browse": {
                 "path": [
-                    "external/**"
+                    "${workspaceFolder}/src/**"
                 ]
             },
             "compilerPath": "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.29.30037/bin/Hostx64/x64/cl.exe"
@@ -23,7 +24,9 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/src/**"
+                "${workspaceFolder}/src/**",
+                "${workspaceFolder}/external/**"
+
             ],
             "defines": [
                 "_DEBUG",
@@ -34,7 +37,7 @@
             "cppStandard": "c++20",
             "browse": {
                 "path": [
-                    "external/**"
+                    "${workspaceFolder}/src/**"
                 ]
             }
         }

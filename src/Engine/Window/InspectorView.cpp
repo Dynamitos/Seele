@@ -9,6 +9,10 @@ InspectorView::InspectorView(Gfx::PGraphics graphics, PWindow window, const View
     : View(graphics, window, createInfo, "InspectorView")
     , uiPass(UIPass(graphics, viewport, new Gfx::SwapchainAttachment(window->getGfxHandle())))
 {
+    PRenderGraphResources resources = new RenderGraphResources();
+    uiPass.setResources(resources);
+    uiPass.publishOutputs();
+    uiPass.createRenderPass();
 }
 
 InspectorView::~InspectorView() 
@@ -34,13 +38,14 @@ void InspectorView::prepareRender()
     
 }
 
-Job InspectorView::render() 
+MainJob InspectorView::render() 
 {
-    co_await uiPass.beginFrame();
-    co_await uiPass.render();
-    co_await uiPass.endFrame();
+    uiPass.beginFrame();
+    uiPass.render();
+    uiPass.endFrame();
 
     renderFinishedEvent.raise();
+    co_return;
 }
 
 void InspectorView::keyCallback(KeyCode, InputAction, KeyModifier) 

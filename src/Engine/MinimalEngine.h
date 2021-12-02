@@ -2,6 +2,7 @@
 #include "Containers/Map.h"
 #include "EngineTypes.h"
 #include "Math/Math.h"
+#include <map>
 
 #define DEFINE_REF(x)           \
     typedef RefPtr<x> P##x;     \
@@ -24,7 +25,7 @@
         typedef WeakPtr<x> W##x;    \
     }
 
-extern Seele::Map<void *, void *> registeredObjects;
+extern std::map<void *, void *> registeredObjects;
 extern std::mutex registeredObjectsLock;
 namespace Seele
 {
@@ -124,7 +125,7 @@ public:
         }
         else
         {		
-            object = (RefObject<T, Deleter> *)registeredObj->value;
+            object = (RefObject<T, Deleter> *)registeredObj->second;
             object->addRef();
         }
     }
@@ -300,6 +301,10 @@ public:
         return handle != other.handle;
     }
     inline T *operator->()
+    {
+        return handle;
+    }
+    inline T* getHandle()
     {
         return handle;
     }

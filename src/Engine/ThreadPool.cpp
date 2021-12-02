@@ -1,9 +1,14 @@
 #include "ThreadPool.h"
+#include <memory_resource>
 
 using namespace Seele;
 
 Event::Event()
     : flag(new std::atomic_bool()) 
+{}
+
+Event::Event(nullptr_t)
+    : flag(nullptr)
 {}
 
 Event::Event(const std::string& name)
@@ -32,7 +37,7 @@ ThreadPool::ThreadPool(uint32 threadCount)
     running.store(true);
     for(uint32 i = 0; i < threadCount; ++i)
     {
-        workers[i] = std::thread(&ThreadPool::threadLoop, this, i == 0);
+        workers[i] = std::thread(&ThreadPool::threadLoop, this, false);
     }
 }
 
@@ -58,13 +63,13 @@ void ThreadPool::addJob(MainJob&& job)
     mainJobs.add(std::move(job));
     mainJobCV.notify_one();
 }
-void ThreadPool::enqueueWaiting(Event& event, Job job)
+void ThreadPool::enqueueWaiting(Event& event, Job&& job)
 {
     //std::cout << job.id << " waiting for event " << event.name << std::endl;
     std::unique_lock lock(waitingLock);
     waitingJobs[event].add(std::move(job));
 }
-void ThreadPool::enqueueWaiting(Event& event, MainJob job)
+void ThreadPool::enqueueWaiting(Event& event, MainJob&& job)
 {
     //std::cout << job.id << " main waiting for event " << event.name << std::endl;
     std::unique_lock lock(waitingMainLock);
@@ -143,7 +148,7 @@ void ThreadPool::threadLoop(const bool mainThread)
         job.resume();
         if(job.done())
         {
-            job.signal();
+            job.raise();
         }
     }
 }
