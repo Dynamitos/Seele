@@ -236,7 +236,7 @@ DescriptorAllocator::DescriptorAllocator(PGraphics graphics, DescriptorLayout &l
 {
 	for(uint32 i = 0; i < cachedHandles.size(); ++i)
 	{
-		cachedHandles[i] = new DescriptorSet(graphics, this);
+		cachedHandles[i] = nullptr;
 	}
 
 	uint32 perTypeSizes[VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT]; // TODO: FIX ENUM
@@ -280,6 +280,10 @@ void DescriptorAllocator::allocateDescriptorSet(Gfx::PDescriptorSet &descriptorS
 
 	for(uint32 setIndex = 0; setIndex < cachedHandles.size(); ++setIndex)
 	{
+		if(cachedHandles[setIndex] == nullptr)
+		{
+			cachedHandles[setIndex] = new DescriptorSet(graphics, this);
+		}
 		if(cachedHandles[setIndex]->isCurrentlyBound() || cachedHandles[setIndex]->isCurrentlyInUse())
 		{
 			// Currently in use, skip
@@ -308,6 +312,10 @@ void DescriptorAllocator::reset()
 {
 	for(uint32 i = 0; i < cachedHandles.size(); ++i)
 	{
+		if(cachedHandles[i] == nullptr)
+		{
+			return;
+		}
 		cachedHandles[i]->free();
 	}
 }

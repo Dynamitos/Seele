@@ -37,9 +37,9 @@ class BasePass : public RenderPass<BasePassData>
 public:
     BasePass(Gfx::PGraphics graphics, Gfx::PViewport viewport, PCameraActor source);
     virtual ~BasePass();
-    virtual void beginFrame() override;
+    virtual MainJob beginFrame() override;
     virtual MainJob render() override;
-    virtual void endFrame() override;
+    virtual MainJob endFrame() override;
     virtual void publishOutputs() override;
     virtual void createRenderPass() override;
     static void modifyRenderPassMacros(Map<const char*, const char*>& defines);

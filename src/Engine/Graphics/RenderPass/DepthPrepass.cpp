@@ -93,7 +93,7 @@ DepthPrepass::~DepthPrepass()
 {   
 }
 
-void DepthPrepass::beginFrame() 
+MainJob DepthPrepass::beginFrame() 
 {
     processor->clearCommands();
     primitiveLayout->reset();
@@ -111,6 +111,7 @@ void DepthPrepass::beginFrame()
     descriptorSets[INDEX_VIEW_PARAMS] = viewLayout->allocateDescriptorSet();
     descriptorSets[INDEX_VIEW_PARAMS]->updateBuffer(0, viewParamBuffer);
     descriptorSets[INDEX_VIEW_PARAMS]->writeChanges();
+    co_return;
 }
 
 MainJob DepthPrepass::render() 
@@ -130,8 +131,9 @@ MainJob DepthPrepass::render()
     graphics->endRenderPass();
 }
 
-void DepthPrepass::endFrame() 
+MainJob DepthPrepass::endFrame() 
 {
+    co_return;
 }
 
 void DepthPrepass::publishOutputs() 

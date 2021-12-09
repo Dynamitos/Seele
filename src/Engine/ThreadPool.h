@@ -3,6 +3,7 @@
 #include <coroutine>
 #include "MinimalEngine.h"
 #include "Containers/List.h"
+#include "Concepts.h"
 
 namespace Seele
 {
@@ -10,12 +11,14 @@ extern class ThreadPool& getGlobalThreadPool();
 
 template<bool MainJob>
 struct JobBase;
+struct Event;
+static std::atomic_uint64_t globalCounter;
 template<bool MainJob>
 struct JobPromiseBase
 {
     JobBase<MainJob> get_return_object() noexcept;
 
-    inline auto initial_suspend() const noexcept;
+    inline auto initial_suspend() noexcept;
     inline auto final_suspend() const noexcept;
 
     void return_void() noexcept {}
@@ -23,7 +26,9 @@ struct JobPromiseBase
         std::cerr << "Unhandled exception" << std::endl;
         exit(1);
     };
-    std::coroutine_handle<> continuation;
+    std::coroutine_handle<> continuation = std::noop_coroutine();
+    uint64 id;
+    Event finishedEvent;
 };
 
 struct Event
@@ -57,9 +62,7 @@ private:
     friend class ThreadPool;
 };
 
-
-static std::atomic_uint64_t globalCounter;
-template<bool MainJob>
+template<bool MainJob = false>
 struct JobBase
 {
 public:
@@ -67,16 +70,18 @@ public:
     
     explicit JobBase()
         : id(-1)
-    {}
-    explicit JobBase(std::coroutine_handle<promise_type> handle)
+    {
+    }
+    explicit JobBase(std::coroutine_handle<promise_type> handle, uint64 id, Event finishedEvent)
         : handle(handle)
-        , id(globalCounter++)
-        , event(std::format("Job {}", id))
+        , event(std::move(finishedEvent))
+        , id(id)
     {
     }
     JobBase(const JobBase & rhs) = delete;
     JobBase(JobBase&& rhs)
         : handle(std::move(rhs.handle))
+        , event(rhs.event)
         , id(std::move(rhs.id))
     {
         rhs.id = -1;
@@ -86,6 +91,7 @@ public:
     {
         if(handle && handle.done()) 
         {
+            std::cout << "Destroy job " << handle.address() << std::endl;
             handle.destroy();
         }
     }
@@ -95,6 +101,7 @@ public:
         if(this != &rhs)
         {
             handle = std::move(rhs.handle);
+            event = std::move(rhs.event);
             id = std::move(rhs.id);
             rhs.id = -1;
             rhs.handle = nullptr;
@@ -105,9 +112,15 @@ public:
     {
         handle.resume();
     }
-    void then(JobBase continuation)
+    template<std::invocable Callable>
+    inline JobBase then(Callable callable)
+    {
+        return then(callable());
+    }
+    JobBase then(JobBase continuation)
     {
         handle.promise().continuation = continuation.handle;
+        return continuation;
     }
     bool done()
     {
@@ -125,12 +138,13 @@ public:
     {
         return event;
     }
+    static JobBase all() = delete;
     template<typename... Awaitable>
     static JobBase all(Awaitable... jobs)
     {
-        co_await jobs;
+        (co_await jobs, ...);
     }
-    template<typename Iterable>
+    template<iterable Iterable>
     static JobBase all(Iterable&& collection)
     {
         for(auto&& it : collection)
@@ -138,7 +152,7 @@ public:
             co_await it;
         }
     }
-    template<typename JobFunc, typename IterableParams>
+    template<std::invocable JobFunc, iterable IterableParams>
     static JobBase launchJobs(JobFunc&& func, IterableParams params)
     {
         List<JobBase> jobs;
@@ -194,23 +208,27 @@ private:
 
 
 template<bool MainJob>
-inline JobBase<MainJob> JobPromiseBase<MainJob>::get_return_object() noexcept {
-    return JobBase<MainJob>();
+inline JobBase<MainJob> JobPromiseBase<MainJob>::get_return_object() noexcept 
+{
+    id = globalCounter++;
+    return JobBase<MainJob>(std::coroutine_handle<JobPromiseBase<MainJob>>::from_promise(*this), id, finishedEvent);
 }
 
 template<bool MainJob>
-inline auto JobPromiseBase<MainJob>::initial_suspend() const noexcept
+inline auto JobPromiseBase<MainJob>::initial_suspend() noexcept
 {
     struct JobAwaitable
     {
         constexpr bool await_ready() { return false; }
         constexpr void await_suspend(std::coroutine_handle<JobPromiseBase<MainJob>> h)
         {
-            getGlobalThreadPool().addJob(std::move(JobBase<MainJob>(h)));
+            getGlobalThreadPool().addJob(std::move(JobBase<MainJob>(h, id, event)));
         }
         constexpr void await_resume() {}
+        uint64 id;
+        Event& event;
     };
-    return JobAwaitable{};
+    return JobAwaitable{id, finishedEvent};
 }
 template<bool MainJob>
 inline auto JobPromiseBase<MainJob>::final_suspend() const noexcept
@@ -230,7 +248,7 @@ inline auto JobPromiseBase<MainJob>::final_suspend() const noexcept
 template<bool MainJob>
 inline constexpr void Event::await_suspend(std::coroutine_handle<JobPromiseBase<MainJob>> h)
 {
-    getGlobalThreadPool().enqueueWaiting(*this, std::move(JobBase<MainJob>(h)));
+    getGlobalThreadPool().enqueueWaiting(*this, std::move(JobBase<MainJob>(h, h.promise().id, *this)));
 }
 
 } // namespace Seele

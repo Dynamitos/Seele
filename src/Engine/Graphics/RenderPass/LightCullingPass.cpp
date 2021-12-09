@@ -18,7 +18,7 @@ LightCullingPass::~LightCullingPass()
     
 }
 
-void LightCullingPass::beginFrame() 
+MainJob LightCullingPass::beginFrame() 
 {
     uint32_t viewportWidth = viewport->getSizeX();
     uint32_t viewportHeight = viewport->getSizeY();
@@ -75,6 +75,7 @@ void LightCullingPass::beginFrame()
     lightEnvDescriptorSet->updateBuffer(2, pointLightBuffer);
     lightEnvDescriptorSet->updateBuffer(3, numPointLightBuffer);
     lightEnvDescriptorSet->writeChanges();
+    co_return;
 }
 
 MainJob LightCullingPass::render() 
@@ -104,8 +105,9 @@ MainJob LightCullingPass::render()
     co_return;
 }
 
-void LightCullingPass::endFrame() 
+MainJob LightCullingPass::endFrame() 
 {
+    co_return;
 }
 
 void LightCullingPass::publishOutputs() 

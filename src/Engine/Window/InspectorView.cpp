@@ -40,12 +40,14 @@ void InspectorView::prepareRender()
 
 MainJob InspectorView::render() 
 {
-    uiPass.beginFrame();
-    uiPass.render();
-    uiPass.endFrame();
-
-    renderFinishedEvent.raise();
-    co_return;
+    return uiPass.beginFrame()
+        .then(uiPass.render())
+        .then(uiPass.endFrame())
+        .then([=]() -> MainJob
+        {
+            renderFinishedEvent.raise();
+            co_return;
+        });
 }
 
 void InspectorView::keyCallback(KeyCode, InputAction, KeyModifier) 

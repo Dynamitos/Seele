@@ -3,6 +3,7 @@
 
 using namespace Seele;
 
+
 Event::Event()
     : flag(new std::atomic_bool()) 
 {}

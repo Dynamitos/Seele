@@ -112,7 +112,7 @@ BasePass::~BasePass()
 {   
 }
 
-void BasePass::beginFrame() 
+MainJob BasePass::beginFrame() 
 {
     processor->clearCommands();
     primitiveLayout->reset();
@@ -132,6 +132,7 @@ void BasePass::beginFrame()
     descriptorSets[INDEX_VIEW_PARAMS] = viewLayout->allocateDescriptorSet();
     descriptorSets[INDEX_VIEW_PARAMS]->updateBuffer(0, viewParamBuffer);
     descriptorSets[INDEX_VIEW_PARAMS]->writeChanges();
+    co_return;
 }
 
 MainJob BasePass::render() 
@@ -161,8 +162,9 @@ MainJob BasePass::render()
     graphics->endRenderPass();
 }
 
-void BasePass::endFrame() 
+MainJob BasePass::endFrame() 
 {
+    co_return;
 }
 
 void BasePass::publishOutputs() 

@@ -16,9 +16,9 @@ class UIPass : public RenderPass<UIPassData>
 public:
     UIPass(Gfx::PGraphics graphics, Gfx::PViewport viewport, Gfx::PRenderTargetAttachment renderTarget);
     virtual ~UIPass();
-    virtual void beginFrame() override;
+    virtual MainJob beginFrame() override;
     virtual MainJob render() override;
-    virtual void endFrame() override;
+    virtual MainJob endFrame() override;
     virtual void publishOutputs() override;
     virtual void createRenderPass() override;
 private:

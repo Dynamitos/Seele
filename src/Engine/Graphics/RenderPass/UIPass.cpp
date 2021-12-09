@@ -15,8 +15,9 @@ UIPass::~UIPass()
     
 }
 
-void UIPass::beginFrame() 
+MainJob UIPass::beginFrame() 
 {
+    co_return;
 }
 
 MainJob UIPass::render() 
@@ -31,8 +32,9 @@ MainJob UIPass::render()
     co_return;
 }
 
-void UIPass::endFrame() 
+MainJob UIPass::endFrame() 
 {
+    co_return;
 }
 
 void UIPass::publishOutputs() 

@@ -142,7 +142,7 @@ public:
 private:
     PGraphics graphics;
     DescriptorLayout &layout;
-    const static int maxSets = 512;
+    const static int maxSets = 64;
     StaticArray<PDescriptorSet, maxSets> cachedHandles;
     VkDescriptorPool poolHandle;
 };
