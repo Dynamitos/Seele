@@ -60,6 +60,7 @@ void CmdBuffer::end()
 
 void CmdBuffer::beginRenderPass(PRenderPass newRenderPass, PFramebuffer newFramebuffer)
 {
+    assert(state == State::InsideBegin);
     std::unique_lock lock(handleLock);
     renderPass = newRenderPass;
     framebuffer = newFramebuffer;
@@ -87,6 +88,7 @@ void CmdBuffer::executeCommands(const Array<Gfx::PRenderCommand>& commands)
     assert(state == State::RenderPassActive);
     if(commands.size() == 0)
     {
+        std::cout << "No commands!" << std::endl;
         return;
     }
     std::unique_lock lock(handleLock);

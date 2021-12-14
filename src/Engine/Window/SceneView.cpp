@@ -93,11 +93,11 @@ MainJob SceneView::render()
         .then(depthPrepass.endFrame())
         .then(lightCullingPass.endFrame())
         .then(basePass.endFrame())
-        .then([=]() -> MainJob
+        .then([&](Event& event) -> MainJob
         {
-            renderFinishedEvent.raise();
+            event.raise();
             co_return;
-        });
+        }(renderFinishedEvent));
 }
 
 void SceneView::keyCallback(KeyCode code, InputAction action, KeyModifier)

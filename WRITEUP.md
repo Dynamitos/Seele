@@ -1,9 +1,7 @@
 # Seele Engine
 
 Seele is a Proof-of-Concept 3D render engine using Vulkan as it's primary graphics API, but other APIs could also be implemented. Due to this, a lot of terminology will be Vulkan-related, but it can be translated to other APIs.
-The focus of the project is to make the renderer use as many of the system resources as efficiently as possible to maximize the framerate
-while minimizing resource usage.
-It does this by being designed to support multithreading for more recent APIs, like DX12 or Vulkan, while still providing an interface that could be implemented by an
+It is designed to support multithreading for more recent APIs, like DX12 or Vulkan, while still providing an interface that could be implemented by an
 API that doesn't support it, like OpenGL. These APIs would suffer a significant performance loss, but would still work correctly.
 
 ## Custom containers and other utilities
@@ -206,3 +204,122 @@ struct Placeholder: IMaterial {
 ### Renderpass interaction
 
 Each render pass has a "base file" containing the vertex and fragment stages. From that base file a variant is generated for each material that will be used with that render pass using `#define` macros to change the material import, and a `type_param` to update the `ParameterBlock` containing the material itself. Other renderpass dependent data like camera parameter or lights are stored in separate descriptor sets, and to avoid code duplication, they parts that are used by more than one render pass are implemented in separate slang files. But since in Vulkan pipeline layouts cannot have empty indices, the descriptor set indices sometimes need to change. This is done using the static `modifyRenderPassMacros` function in each renderpass to `#define` the correct set indices for each shared descriptor layout.
+
+## Job System
+
+The Job System is based on C++20 coroutines, running on a thread pool with 1 main thread and as many worker threads as the native CPU has. This is so that when the main thread needs to block for some thread pool work, the CPU can utilize all its resources. Synchronization is done using `Event`s, which are awaitable wrappers for atomic flags.
+
+### Creating Jobs
+
+In order to run a function as a Job, its return type must simply be either `Job` or `MainJob`. Also, any `Job` must contain either a `co_await` or `co_return` statement.  As the names suggest, `MainJob`s will always run on the main thread, while `Job`s can run on any thread. Some graphics operations, especially regarding windowing, can only occur on the main thread, which is the reason for the separation. Due to the specification for [coroutines](https://en.cppreference.com/w/cpp/language/coroutines) being incredibly complicated and non-intuitive, a detailed description will be neglected for some code snippets.
+
+```cpp
+Job doSomething()
+{
+    std::cout << "Doing something" << std::endl;
+    co_return;
+}
+Job doSomethingElse()
+{
+    std::cout << "Doing something else" << std::endl;
+    co_return;
+}
+Job doSomethingAfterwards()
+{
+    std::cout << "Doing something afterwards" << std::endl;
+    co_return;
+}
+Job startHere()
+{
+    Job job1 = doSomething();
+    Job job2 = doSomethingElse();
+    co_await job1;
+    co_await job2;
+    co_await doSomethingAfterwards();
+}
+```
+
+This example will execute the first two functions in an undefined order, while the last one will always be executed last. This is because the jobs are launched as soon as the functions are called, while the co_await operator waits for them to finish. Keeping the return value of every job launched is a bit inconvenient, so there is are some helper functions to help with that. `Job::all()` takes a variable amount of `Job`s which it 'combines' into one. This reduces the previous example into this:
+
+```cpp
+Job doSomething()
+{
+    std::cout << "Doing something" << std::endl;
+    co_return;
+}
+Job doSomethingElse()
+{
+    std::cout << "Doing something else" << std::endl;
+    co_return;
+}
+Job doSomethingAfterwards()
+{
+    std::cout << "Doing something afterwards" << std::endl;
+    co_return;
+}
+Job startHere()
+{
+    co_await Job::all(
+        doSomething(),
+        doSomethingElse());
+    co_await doSomethingAfterwards();
+}
+```
+
+Any Job can also be continued with `then()`, taking in another `Job` or anything that evaluates to a `Job` if called. This further simplifies the example:
+
+```cpp
+Job doSomething()
+{
+    std::cout << "Doing something" << std::endl;
+    co_return;
+}
+Job doSomethingElse()
+{
+    std::cout << "Doing something else" << std::endl;
+    co_return;
+}
+Job doSomethingAfterwards()
+{
+    std::cout << "Doing something afterwards" << std::endl;
+    co_return;
+}
+Job startHere()
+{
+    co_await Job::all(
+            doSomething(),
+            doSomethingElse())
+        .then(doSomethingAfterwards());
+}
+```
+
+### Events
+
+Aside from `Job`s, `Event`s can also be used to synchronize functions. They are constructed with an optional name for easier debugging, and can be `co_await`ed. For the waiting job to continue, `raise()` must be called, after which one of the waiting jobs should `reset()` the event to make it reusable.
+
+```cpp
+Event updateFinished;
+std::mutex dataLock;
+uint64 data = 0;
+
+Job updateSomething()
+{
+    {
+        std::scoped_lock lock(dataLock);
+        data++;
+    }
+    updateFinished.raise();
+    updateSomething(); // if we call the function again it behaves like a loop  
+}
+
+Job processUpdates()
+{
+    co_await updateFinished;
+    updateFinished.reset();
+    {
+        std::scoped_lock lock(dataLock);
+        std::cout << data << std::endl;
+    }
+    processUpdates();
+}
+```

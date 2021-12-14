@@ -43,7 +43,11 @@ MainJob Window::render()
         windowView->view->resetRender();
     }
     gfxHandle->endFrame();
-    render();
+    if(owner->isActive())
+    {
+        render();
+    }
+    co_return;
 }
 
 Gfx::PWindow Window::getGfxHandle()

@@ -8,29 +8,8 @@
 namespace Seele
 {
 extern class ThreadPool& getGlobalThreadPool();
-
 template<bool MainJob>
-struct JobBase;
-struct Event;
-static std::atomic_uint64_t globalCounter;
-template<bool MainJob>
-struct JobPromiseBase
-{
-    JobBase<MainJob> get_return_object() noexcept;
-
-    inline auto initial_suspend() noexcept;
-    inline auto final_suspend() const noexcept;
-
-    void return_void() noexcept {}
-    void unhandled_exception() noexcept {
-        std::cerr << "Unhandled exception" << std::endl;
-        exit(1);
-    };
-    std::coroutine_handle<> continuation = std::noop_coroutine();
-    uint64 id;
-    Event finishedEvent;
-};
-
+struct JobPromiseBase;
 struct Event
 {
 public:
@@ -40,6 +19,10 @@ public:
     auto operator<=>(const Event& other) const
     {
         return flag <=> other.flag;
+    }
+    bool operator==(const Event& other) const
+    {
+        return flag == other.flag;
     }
     Event operator co_await()
     {
@@ -62,65 +45,43 @@ private:
     friend class ThreadPool;
 };
 
-template<bool MainJob = false>
-struct JobBase
+static std::atomic_uint64_t globalCounter;
+template<bool MainJob>
+struct JobBase;
+template<bool MainJob>
+struct JobPromiseBase
 {
-public:
-    using promise_type = JobPromiseBase<MainJob>;
-    
-    explicit JobBase()
-        : id(-1)
+    JobPromiseBase()
     {
+        handle = std::coroutine_handle<JobPromiseBase<MainJob>>::from_promise(*this);
+        id = globalCounter++;
+        finishedEvent = Event(std::format("Job {}", id));
     }
-    explicit JobBase(std::coroutine_handle<promise_type> handle, uint64 id, Event finishedEvent)
-        : handle(handle)
-        , event(std::move(finishedEvent))
-        , id(id)
-    {
-    }
-    JobBase(const JobBase & rhs) = delete;
-    JobBase(JobBase&& rhs)
-        : handle(std::move(rhs.handle))
-        , event(rhs.event)
-        , id(std::move(rhs.id))
-    {
-        rhs.id = -1;
-        rhs.handle = nullptr;
-    }
-    ~JobBase()
-    {
-        if(handle && handle.done()) 
-        {
-            std::cout << "Destroy job " << handle.address() << std::endl;
-            handle.destroy();
-        }
-    }
-    JobBase& operator=(const JobBase& rhs) = delete;
-    JobBase& operator=(JobBase&& rhs)
-    {
-        if(this != &rhs)
-        {
-            handle = std::move(rhs.handle);
-            event = std::move(rhs.event);
-            id = std::move(rhs.id);
-            rhs.id = -1;
-            rhs.handle = nullptr;
-        }
-        return *this;
-    }
+    JobBase<MainJob> get_return_object() noexcept;
+
+    inline auto initial_suspend() noexcept;
+    inline auto final_suspend() const noexcept;
+
+    void return_void() noexcept {}
+    void unhandled_exception() noexcept {
+        std::cerr << "Unhandled exception" << std::endl;
+        exit(1);
+    };
+
     void resume()
     {
-        handle.resume();
+        std::unique_lock lock(promiseLock);
+        if(handle && !handle.done())
+        {
+            handle.resume();
+        }
     }
-    template<std::invocable Callable>
-    inline JobBase then(Callable callable)
+    void setContinuation(JobPromiseBase* cont)
     {
-        return then(callable());
-    }
-    JobBase then(JobBase continuation)
-    {
-        handle.promise().continuation = continuation.handle;
-        return continuation;
+        std::unique_lock lock(promiseLock);
+        std::unique_lock lock2(cont->promiseLock);
+        continuation = cont->handle;
+        cont->precondition = finishedEvent;
     }
     bool done()
     {
@@ -128,15 +89,87 @@ public:
     }
     void raise()
     {
-        event.raise();
+        std::unique_lock lock(promiseLock);
+        finishedEvent.raise();
     }
     void reset()
     {
-        event.reset();
+        std::unique_lock lock(promiseLock);
+        finishedEvent.reset();
+    }
+    void enqueue(Event& event)
+    {
+        getGlobalThreadPool().enqueueWaiting(event, this);
+    }
+    void schedule()
+    {
+        std::unique_lock lock(promiseLock);
+        if(!handle || handle.done())
+        {
+            return;
+        }
+        getGlobalThreadPool().enqueueWaiting(precondition, this);
+    }
+
+    std::mutex promiseLock;
+    std::coroutine_handle<JobPromiseBase> handle;
+    std::coroutine_handle<> continuation = std::noop_coroutine();
+    uint64 id;
+    Event finishedEvent;
+    Event precondition = nullptr;
+};
+
+template<bool MainJob = false>
+struct JobBase
+{
+public:
+    using promise_type = JobPromiseBase<MainJob>;
+    
+    explicit JobBase()
+        : promise(nullptr)
+    {
+    }
+    explicit JobBase(JobPromiseBase<MainJob>* promise)
+        : promise(promise)
+    {
+    }
+    ~JobBase()
+    {
+        if(promise)
+        {
+            promise->schedule();
+        }
+    }
+    void resume()
+    {
+        promise->resume();
+    }
+    template<std::invocable Callable>
+    inline JobBase then(Callable callable)
+    {
+        return then(callable());
+    }
+    JobBase then(JobBase&& continuation)
+    {
+        promise->setContinuation(continuation.promise);
+        return continuation;
+    }
+    bool done()
+    {
+        return promise->done();
+    }
+    void raise()
+    {
+        promise->raise();
+    }
+    void reset()
+    {
+        promise->reset();
     }
     Event operator co_await()
     {
-        return event;
+        promise->resume();
+        return promise->finishedEvent;
     }
     static JobBase all() = delete;
     template<typename... Awaitable>
@@ -166,58 +199,54 @@ public:
         }
     }
 private:
-    std::coroutine_handle<promise_type> handle;
-    Event event;
-    uint64 id;
+    JobPromiseBase<MainJob>* promise;
 };
 
 using MainJob = JobBase<true>;
 using Job = JobBase<false>;
+using MainPromise = JobPromiseBase<true>;
+using Promise = JobPromiseBase<false>;
 
 class ThreadPool
 {
 public:
     ThreadPool(uint32 threadCount = std::thread::hardware_concurrency());
     virtual ~ThreadPool();
-    void addJob(Job&& job);
-    void addJob(MainJob&& job);
-    void enqueueWaiting(Event& event, Job&& job);
-    void enqueueWaiting(Event& event, MainJob&& job);
+    // Adds a job to the waiting queue for event, or directly to the job queue if event is nullptr
+    void enqueueWaiting(Event& event, Promise* job);
+    // Adds a job to the waiting queue for event, or directly to the job queue if event is nullptr
+    void enqueueWaiting(Event& event, MainPromise* job);
     void notify(Event& event);
     void threadLoop(const bool isMainThread);
 private:
     std::atomic_bool running;
     std::vector<std::thread> workers;
 
-    List<MainJob> mainJobs;
+    List<MainPromise*> mainJobs;
     std::mutex mainJobLock;
     std::condition_variable mainJobCV;
     
-    List<Job> jobQueue;
+    List<Promise*> jobQueue;
     std::mutex jobQueueLock;
     std::condition_variable jobQueueCV;
     
-    Map<Event, List<Job>> waitingJobs;
-    std::mutex waitingLock;
-    
-    Map<Event, List<MainJob>> waitingMainJobs;
+    Map<Event, List<MainPromise*>> waitingMainJobs;
     std::mutex waitingMainLock;
-    
-    void tryMainJob();
-};
 
+    Map<Event, List<Promise*>> waitingJobs;
+    std::mutex waitingLock;
+};
 
 template<bool MainJob>
 inline JobBase<MainJob> JobPromiseBase<MainJob>::get_return_object() noexcept 
 {
-    id = globalCounter++;
-    return JobBase<MainJob>(std::coroutine_handle<JobPromiseBase<MainJob>>::from_promise(*this), id, finishedEvent);
+    return JobBase<MainJob>(this);
 }
 
 template<bool MainJob>
 inline auto JobPromiseBase<MainJob>::initial_suspend() noexcept
 {
-    struct JobAwaitable
+    /*struct JobAwaitable
     {
         constexpr bool await_ready() { return false; }
         constexpr void await_suspend(std::coroutine_handle<JobPromiseBase<MainJob>> h)
@@ -228,7 +257,8 @@ inline auto JobPromiseBase<MainJob>::initial_suspend() noexcept
         uint64 id;
         Event& event;
     };
-    return JobAwaitable{id, finishedEvent};
+    return JobAwaitable{id, finishedEvent};*/
+    return std::suspend_always{};
 }
 template<bool MainJob>
 inline auto JobPromiseBase<MainJob>::final_suspend() const noexcept
@@ -248,7 +278,7 @@ inline auto JobPromiseBase<MainJob>::final_suspend() const noexcept
 template<bool MainJob>
 inline constexpr void Event::await_suspend(std::coroutine_handle<JobPromiseBase<MainJob>> h)
 {
-    getGlobalThreadPool().enqueueWaiting(*this, std::move(JobBase<MainJob>(h, h.promise().id, *this)));
+    h.promise().enqueue(*this);
 }
 
 } // namespace Seele
