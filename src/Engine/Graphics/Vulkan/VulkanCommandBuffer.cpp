@@ -74,6 +74,7 @@ void CmdBuffer::beginRenderPass(PRenderPass newRenderPass, PFramebuffer newFrame
     beginInfo.framebuffer = framebuffer->getHandle();
     vkCmdBeginRenderPass(handle, &beginInfo, renderPass->getSubpassContents());
     state = State::RenderPassActive;
+    std::cout << "Beginning renderPass" << std::endl;
 }
 
 void CmdBuffer::endRenderPass()
@@ -81,6 +82,7 @@ void CmdBuffer::endRenderPass()
     std::unique_lock lock(handleLock);
     vkCmdEndRenderPass(handle);
     state = State::InsideBegin;
+    std::cout << "Ending renderPass" << std::endl;
 }
 
 void CmdBuffer::executeCommands(const Array<Gfx::PRenderCommand>& commands)
@@ -88,7 +90,6 @@ void CmdBuffer::executeCommands(const Array<Gfx::PRenderCommand>& commands)
     assert(state == State::RenderPassActive);
     if(commands.size() == 0)
     {
-        std::cout << "No commands!" << std::endl;
         return;
     }
     std::unique_lock lock(handleLock);

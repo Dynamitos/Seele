@@ -84,20 +84,17 @@ void SceneView::prepareRender()
 
 MainJob SceneView::render() 
 {
-    return depthPrepass.beginFrame()
-        .then(lightCullingPass.beginFrame())
-        .then(basePass.beginFrame())
-        .then(depthPrepass.render())
-        .then(lightCullingPass.render())
-        .then(basePass.render())
-        .then(depthPrepass.endFrame())
-        .then(lightCullingPass.endFrame())
-        .then(basePass.endFrame())
-        .then([&](Event& event) -> MainJob
-        {
-            event.raise();
-            co_return;
-        }(renderFinishedEvent));
+    co_await depthPrepass.beginFrame();
+    co_await lightCullingPass.beginFrame();
+    co_await basePass.beginFrame();
+    co_await depthPrepass.render();
+    co_await lightCullingPass.render();
+    co_await basePass.render();
+    co_await depthPrepass.endFrame();
+    co_await lightCullingPass.endFrame();
+    co_await basePass.endFrame();
+    renderFinishedEvent.raise();
+    co_return;
 }
 
 void SceneView::keyCallback(KeyCode code, InputAction action, KeyModifier)

@@ -26,7 +26,7 @@ private:
     void loadGlobalMeshes(const aiScene* scene, Array<PMesh>& globalMeshes, const Array<PMaterialAsset>& materials, Gfx::PGraphics graphics);
     void convertAssimpARGB(unsigned char* dst, aiTexel* src, uint32 numPixels);
 
-    Job import(std::filesystem::path path, PMeshAsset meshAsset);
+    void import(std::filesystem::path path, PMeshAsset meshAsset);
     List<std::future<void>> futures;
     Gfx::PGraphics graphics;
 };

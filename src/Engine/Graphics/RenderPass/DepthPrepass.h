@@ -20,9 +20,7 @@ public:
         int32 staticMeshId = -1) override;
 
 private:
-    //Array<Gfx::PDescriptorSet> cachedPrimitiveSets;
     Gfx::PViewport target;
-    //uint32 cachedPrimitiveIndex;
 };
 DEFINE_REF(DepthPrepassMeshProcessor)
 DECLARE_REF(CameraActor)

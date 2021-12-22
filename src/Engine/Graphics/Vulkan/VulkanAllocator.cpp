@@ -233,7 +233,7 @@ PSubAllocation Allocator::allocate(const VkMemoryRequirements2 &memRequirements2
             PAllocation newAllocation = new Allocation(graphics, this, requirements.size, memoryTypeIndex, properties, dedicatedInfo);
             heaps[heapIndex].allocations.add(newAllocation);
             return newAllocation->getSuballocation(requirements.size, requirements.alignment);
-        }
+        } 
     }
     for (auto alloc : heaps[heapIndex].allocations)
     {

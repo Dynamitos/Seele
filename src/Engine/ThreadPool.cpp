@@ -54,35 +54,42 @@ ThreadPool::~ThreadPool()
 void ThreadPool::enqueueWaiting(Event &event, Promise* job)
 {
     assert(!job->done());
+    assert(job->schedulable);
     if(event == nullptr)
     {
         std::unique_lock lock(jobQueueLock);
+        //std::cout << "Queueing job " << job->finishedEvent.name << std::endl;
         jobQueue.add(job);
         jobQueueCV.notify_one();
     }
     else
     {
         std::unique_lock lock(waitingLock);
+        //std::cout << "Job " << job->finishedEvent.name << " waiting on event " << event.name << std::endl;
         waitingJobs[event].add(job);
     }
 }
 void ThreadPool::enqueueWaiting(Event &event, MainPromise* job)
 {
     assert(!job->done());
+    assert(job->schedulable);
     if(event == nullptr)
     {
         std::unique_lock lock(mainJobLock);
+        //std::cout << "Queueing job " << job->finishedEvent.name << std::endl;
         mainJobs.add(job);
         mainJobCV.notify_one();
     }
     else
     {
         std::unique_lock lock(waitingMainLock);
+        //std::cout << job->finishedEvent.name << " waiting on event " << event.name << std::endl;
         waitingMainJobs[event].add(job);
     }
 }
 void ThreadPool::notify(Event &event)
 {
+    //std::cout << "Event " << event.name << " raised" << std::endl;
     {
         std::unique_lock lock(jobQueueLock);
         std::unique_lock lock2(waitingLock);
@@ -90,11 +97,11 @@ void ThreadPool::notify(Event &event)
         for (auto &job : jobs)
         {
             //assert(job.id != -1ull);
-            //std::cout << "Waking up job " << job.id << std::endl;
+            //std::cout << "Waking up " << job->finishedEvent.name << std::endl;
             jobQueue.add(job);
             jobQueueCV.notify_one();
         }
-        jobs.clear();
+        waitingJobs.erase(event);
     }
     {
         std::unique_lock lock(mainJobLock);
@@ -103,11 +110,11 @@ void ThreadPool::notify(Event &event)
         for (auto &job : jobs)
         {
             //assert(job.id != -1ull);
-            //std::cout << "Waking up main job " << job.id << std::endl;
+            //std::cout << "Waking up main " << job->finishedEvent.name << std::endl;
             mainJobs.add(job);
             mainJobCV.notify_one();
         }
-        jobs.clear();
+        waitingMainJobs.erase(event);
     }
 }
 void ThreadPool::threadLoop(const bool mainThread)

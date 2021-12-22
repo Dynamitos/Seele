@@ -38,6 +38,7 @@ protected:
         Gfx::PGeometryShader geometryShader,
         Gfx::PFragmentShader fragmentShader,
         bool positionOnly);
+    std::mutex commandLock;
     Array<Gfx::PRenderCommand> renderCommands;
 };
 } // namespace Seele

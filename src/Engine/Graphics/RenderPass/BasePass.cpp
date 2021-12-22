@@ -63,6 +63,7 @@ Job BasePassMeshProcessor::processMeshBatch(
             collection->fragmentShader,
             false);
     }
+    std::unique_lock lock(commandLock);
     renderCommands.add(renderCommand);
     co_return;
 }
@@ -160,6 +161,7 @@ MainJob BasePass::render()
     co_await Job::all(jobs);
     graphics->executeCommands(processor->getRenderCommands());
     graphics->endRenderPass();
+    co_return;
 }
 
 MainJob BasePass::endFrame() 

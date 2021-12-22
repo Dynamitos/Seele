@@ -229,7 +229,7 @@ void MeshLoader::loadTextures(const aiScene* scene, const std::filesystem::path&
         AssetRegistry::importFile(texPngPath.string());
     }
 }
-Job MeshLoader::import(std::filesystem::path path, PMeshAsset meshAsset)
+void MeshLoader::import(std::filesystem::path path, PMeshAsset meshAsset)
 {
     std::cout << "Starting to import "<<path << std::endl;
     meshAsset->setStatus(Asset::Status::Loading);
@@ -264,5 +264,4 @@ Job MeshLoader::import(std::filesystem::path path, PMeshAsset meshAsset)
     meshAsset->setStatus(Asset::Status::Ready);
     meshAsset->save();
     std::cout << "Finished loading " << path << std::endl;
-    co_return;
 }

@@ -74,6 +74,7 @@ struct JobPromiseBase
         if(handle && !handle.done())
         {
             handle.resume();
+            schedulable = true;
         }
     }
     void setContinuation(JobPromiseBase* cont)
@@ -99,16 +100,22 @@ struct JobPromiseBase
     }
     void enqueue(Event& event)
     {
+        if(!handle || handle.done() || !schedulable)
+        {
+            return;
+        }
         getGlobalThreadPool().enqueueWaiting(event, this);
+        schedulable = false;
     }
     void schedule()
     {
         std::unique_lock lock(promiseLock);
-        if(!handle || handle.done())
+        if(!handle || handle.done() || !schedulable)
         {
             return;
         }
         getGlobalThreadPool().enqueueWaiting(precondition, this);
+        schedulable = false;
     }
 
     std::mutex promiseLock;
@@ -117,6 +124,7 @@ struct JobPromiseBase
     uint64 id;
     Event finishedEvent;
     Event precondition = nullptr;
+    bool schedulable = true;
 };
 
 template<bool MainJob = false>
@@ -145,14 +153,14 @@ public:
         promise->resume();
     }
     template<std::invocable Callable>
-    inline JobBase then(Callable callable)
+    inline JobBase&& then(Callable callable)
     {
         return then(callable());
     }
-    JobBase then(JobBase&& continuation)
+    JobBase&& then(JobBase&& continuation)
     {
         promise->setContinuation(continuation.promise);
-        return continuation;
+        return std::move(continuation);
     }
     bool done()
     {
@@ -168,7 +176,6 @@ public:
     }
     Event operator co_await()
     {
-        promise->resume();
         return promise->finishedEvent;
     }
     static JobBase all() = delete;
@@ -230,10 +237,10 @@ private:
     std::mutex jobQueueLock;
     std::condition_variable jobQueueCV;
     
-    Map<Event, List<MainPromise*>> waitingMainJobs;
+    std::map<Event, List<MainPromise*>> waitingMainJobs;
     std::mutex waitingMainLock;
 
-    Map<Event, List<Promise*>> waitingJobs;
+    std::map<Event, List<Promise*>> waitingJobs;
     std::mutex waitingLock;
 };
 
@@ -246,18 +253,6 @@ inline JobBase<MainJob> JobPromiseBase<MainJob>::get_return_object() noexcept
 template<bool MainJob>
 inline auto JobPromiseBase<MainJob>::initial_suspend() noexcept
 {
-    /*struct JobAwaitable
-    {
-        constexpr bool await_ready() { return false; }
-        constexpr void await_suspend(std::coroutine_handle<JobPromiseBase<MainJob>> h)
-        {
-            getGlobalThreadPool().addJob(std::move(JobBase<MainJob>(h, id, event)));
-        }
-        constexpr void await_resume() {}
-        uint64 id;
-        Event& event;
-    };
-    return JobAwaitable{id, finishedEvent};*/
     return std::suspend_always{};
 }
 template<bool MainJob>
