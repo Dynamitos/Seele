@@ -9,7 +9,7 @@ using namespace Seele;
 int main()
 {
 	PWindowManager windowManager = new WindowManager();
-	AssetRegistry::init("D:\\Private\\Programming\\C++\\TestSeeleProject");
+	AssetRegistry::init("C:\\Users\\Dynamitos\\TestSeeleProject");
 	WindowCreateInfo mainWindowInfo;
 	mainWindowInfo.title = "SeeleEngine";
 	mainWindowInfo.width = 1280;
@@ -34,9 +34,9 @@ int main()
 	//PInspectorView inspectorView = new InspectorView(windowManager->getGraphics(), window, inspectorViewInfo);
 	//window->addView(inspectorView);
 	sceneView->setFocused();
-	{
-		window->render();
-	}
+	
+	window->render();
+	
 	getGlobalThreadPool().threadLoop(true);
 	return 0;
 }

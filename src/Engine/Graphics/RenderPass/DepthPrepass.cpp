@@ -18,7 +18,7 @@ DepthPrepassMeshProcessor::~DepthPrepassMeshProcessor()
 { 
 }
 
-Job DepthPrepassMeshProcessor::processMeshBatch(
+void DepthPrepassMeshProcessor::processMeshBatch(
     const MeshBatch& batch, 
 //    const PPrimitiveComponent primitiveComponent,
     const Gfx::PRenderPass& renderPass,
@@ -27,7 +27,7 @@ Job DepthPrepassMeshProcessor::processMeshBatch(
     Array<Gfx::PDescriptorSet> descriptorSets,
     int32 /*staticMeshId*/) 
 {
-    std::cout << "Depth job started" << std::endl;
+    //std::cout << "Depth job started" << std::endl;
     PMaterialAsset material = batch.material;
     //const Gfx::MaterialShadingModel shadingModel = material->getShadingModel();
 
@@ -63,8 +63,8 @@ Job DepthPrepassMeshProcessor::processMeshBatch(
     }
     std::unique_lock lock(commandLock);
     renderCommands.add(renderCommand);
-    std::cout << "Finished depth job" << std::endl;
-    co_return;
+    //std::cout << "Finished depth job" << std::endl;
+    //co_return;
 }
 
 DepthPrepass::DepthPrepass(Gfx::PGraphics graphics, Gfx::PViewport viewport, PCameraActor source) 
@@ -127,10 +127,11 @@ MainJob DepthPrepass::render()
     List<Job> jobs;
     for (auto &&meshBatch : passData.staticDrawList)
     {
-        jobs.add(processor->processMeshBatch(meshBatch, renderPass, depthPrepassLayout, primitiveLayout, descriptorSets));
+        //jobs.add(
+        processor->processMeshBatch(meshBatch, renderPass, depthPrepassLayout, primitiveLayout, descriptorSets);
     }
-    co_await Job::all(jobs);
-    std::cout << "Finished waiting depth jobs " << std::endl;
+    //co_await Job::all(jobs);
+    //std::cout << "Finished waiting depth jobs " << std::endl;
     graphics->executeCommands(processor->getRenderCommands());
     graphics->endRenderPass();
     co_return;

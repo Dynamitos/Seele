@@ -45,12 +45,20 @@ private:
     friend class ThreadPool;
 };
 
-static std::atomic_uint64_t globalCounter;
+extern std::atomic_uint64_t globalCounter;
 template<bool MainJob>
 struct JobBase;
 template<bool MainJob>
 struct JobPromiseBase
 {
+    enum class State
+    {
+        READY,
+        WAITING,
+        SCHEDULED,
+        EXECUTING,
+        DONE
+    };
     JobPromiseBase()
     {
         handle = std::coroutine_handle<JobPromiseBase<MainJob>>::from_promise(*this);
@@ -71,11 +79,12 @@ struct JobPromiseBase
     void resume()
     {
         std::unique_lock lock(promiseLock);
-        if(handle && !handle.done())
+        if(!handle || handle.done() || executing())
         {
-            handle.resume();
-            schedulable = true;
+            return;
         }
+        state = State::EXECUTING;
+        handle.resume();
     }
     void setContinuation(JobPromiseBase* cont)
     {
@@ -88,9 +97,26 @@ struct JobPromiseBase
     {
         return handle.done();
     }
+    bool scheduled()
+    {
+        return state == State::SCHEDULED;
+    }
+    bool waiting()
+    {
+        return state == State::WAITING;
+    }
+    bool executing()
+    {
+        return state == State::EXECUTING;
+    }
+    bool ready()
+    {
+        return state == State::READY;
+    }
     void raise()
     {
         std::unique_lock lock(promiseLock);
+        state = State::DONE;
         finishedEvent.raise();
     }
     void reset()
@@ -100,22 +126,23 @@ struct JobPromiseBase
     }
     void enqueue(Event& event)
     {
-        if(!handle || handle.done() || !schedulable)
+        // no need to lock here, as it is only called while executing, where the lock is already held
+        if(!handle || handle.done() || waiting() || scheduled())
         {
             return;
         }
+        state = State::WAITING;
         getGlobalThreadPool().enqueueWaiting(event, this);
-        schedulable = false;
     }
     void schedule()
     {
         std::unique_lock lock(promiseLock);
-        if(!handle || handle.done() || !schedulable)
+        if(!handle || done() || !ready())
         {
             return;
         }
+        state = (precondition == nullptr) ? State::SCHEDULED : State::WAITING;
         getGlobalThreadPool().enqueueWaiting(precondition, this);
-        schedulable = false;
     }
 
     std::mutex promiseLock;
@@ -124,7 +151,7 @@ struct JobPromiseBase
     uint64 id;
     Event finishedEvent;
     Event precondition = nullptr;
-    bool schedulable = true;
+    State state = State::READY;
 };
 
 template<bool MainJob = false>
@@ -176,6 +203,7 @@ public:
     }
     Event operator co_await()
     {
+        promise->schedule();
         return promise->finishedEvent;
     }
     static JobBase all() = delete;

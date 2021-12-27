@@ -11,7 +11,7 @@ public:
     DepthPrepassMeshProcessor(Gfx::PViewport viewport, Gfx::PGraphics graphics);
     virtual ~DepthPrepassMeshProcessor();
     
-    virtual Job processMeshBatch(
+    virtual void processMeshBatch(
         const MeshBatch& batch,
         const Gfx::PRenderPass& renderPass,
         Gfx::PPipelineLayout pipelineLayout,

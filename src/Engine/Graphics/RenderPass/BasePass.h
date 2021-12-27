@@ -11,7 +11,7 @@ public:
     BasePassMeshProcessor(Gfx::PViewport viewport, Gfx::PGraphics graphics, uint8 translucentBasePass);
     virtual ~BasePassMeshProcessor();
 
-    virtual Job processMeshBatch(
+    virtual void processMeshBatch(
         const MeshBatch& batch, 
 //        const PPrimitiveComponent primitiveComponent,
         const Gfx::PRenderPass& renderPass,

@@ -3,6 +3,8 @@
 
 using namespace Seele;
 
+std::atomic_uint64_t Seele::globalCounter;
+
 Event::Event()
     : flag(new std::atomic_bool())
 {
@@ -54,7 +56,6 @@ ThreadPool::~ThreadPool()
 void ThreadPool::enqueueWaiting(Event &event, Promise* job)
 {
     assert(!job->done());
-    assert(job->schedulable);
     if(event == nullptr)
     {
         std::unique_lock lock(jobQueueLock);
@@ -72,8 +73,7 @@ void ThreadPool::enqueueWaiting(Event &event, Promise* job)
 void ThreadPool::enqueueWaiting(Event &event, MainPromise* job)
 {
     assert(!job->done());
-    assert(job->schedulable);
-    if(event == nullptr)
+    if(event == nullptr || event)
     {
         std::unique_lock lock(mainJobLock);
         //std::cout << "Queueing job " << job->finishedEvent.name << std::endl;
@@ -98,6 +98,7 @@ void ThreadPool::notify(Event &event)
         {
             //assert(job.id != -1ull);
             //std::cout << "Waking up " << job->finishedEvent.name << std::endl;
+            job->state = Promise::State::SCHEDULED;
             jobQueue.add(job);
             jobQueueCV.notify_one();
         }
@@ -111,6 +112,7 @@ void ThreadPool::notify(Event &event)
         {
             //assert(job.id != -1ull);
             //std::cout << "Waking up main " << job->finishedEvent.name << std::endl;
+            job->state = MainPromise::State::SCHEDULED;
             mainJobs.add(job);
             mainJobCV.notify_one();
         }

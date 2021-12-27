@@ -20,7 +20,7 @@ BasePassMeshProcessor::~BasePassMeshProcessor()
 { 
 }
 
-Job BasePassMeshProcessor::processMeshBatch(
+void BasePassMeshProcessor::processMeshBatch(
     const MeshBatch& batch, 
 //    const PPrimitiveComponent primitiveComponent,
     const Gfx::PRenderPass& renderPass,
@@ -65,7 +65,7 @@ Job BasePassMeshProcessor::processMeshBatch(
     }
     std::unique_lock lock(commandLock);
     renderCommands.add(renderCommand);
-    co_return;
+    //co_return;
 }
 
 BasePass::BasePass(Gfx::PGraphics graphics, Gfx::PViewport viewport, PCameraActor source) 
@@ -156,9 +156,10 @@ MainJob BasePass::render()
     List<Job> jobs;
     for (auto &&meshBatch : passData.staticDrawList)
     {
-        jobs.add(processor->processMeshBatch(meshBatch, renderPass, basePassLayout, primitiveLayout, descriptorSets));
+        //jobs.add(
+        processor->processMeshBatch(meshBatch, renderPass, basePassLayout, primitiveLayout, descriptorSets);
     }
-    co_await Job::all(jobs);
+    //co_await Job::all(jobs);
     graphics->executeCommands(processor->getRenderCommands());
     graphics->endRenderPass();
     co_return;

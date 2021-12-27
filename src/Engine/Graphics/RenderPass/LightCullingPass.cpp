@@ -75,7 +75,7 @@ MainJob LightCullingPass::beginFrame()
     lightEnvDescriptorSet->updateBuffer(2, pointLightBuffer);
     lightEnvDescriptorSet->updateBuffer(3, numPointLightBuffer);
     lightEnvDescriptorSet->writeChanges();
-    std::cout << "Finished light culling beginFrame()" << std::endl;
+    //std::cout << "Finished light culling beginFrame()" << std::endl;
     co_return;
 }
 

@@ -145,6 +145,7 @@ private:
     const static int maxSets = 64;
     StaticArray<PDescriptorSet, maxSets> cachedHandles;
     VkDescriptorPool poolHandle;
+    DescriptorAllocator* nextAlloc = nullptr;
 };
 DEFINE_REF(DescriptorAllocator)
 } // namespace Vulkan

@@ -8,7 +8,7 @@ View::View(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo &vi
 	: graphics(graphics)
 	, owner(window)
 	, name(name)
-	, renderFinishedEvent(name + "RenderFinished")
+	, renderFinishedEvent(std::format("{}RenderFinished", name))
 {
 	viewport = graphics->createViewport(owner->getGfxHandle(), viewportInfo);
 }

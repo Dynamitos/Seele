@@ -17,7 +17,7 @@ public:
 protected:
     PScene scene;
     Gfx::PGraphics graphics;
-    virtual Job processMeshBatch(
+    virtual void processMeshBatch(
         const MeshBatch& batch, 
 //        const PPrimitiveComponent primitiveComponent,
         const Gfx::PRenderPass& renderPass,

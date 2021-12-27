@@ -504,7 +504,7 @@ namespace Seele
                 // As well as default initialize the others
                 for(size_type i = arraySize; i < newSize; ++i)
                 {
-                    std::allocator_traits<allocator_type>::construct(allocator, &_data[i], std::move(value));
+                    std::allocator_traits<allocator_type>::construct(allocator, &newData[i], std::move(value));
                 }
                 deallocateArray(_data, allocated);
                 arraySize = newSize;

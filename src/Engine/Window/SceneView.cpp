@@ -18,29 +18,29 @@ Seele::SceneView::SceneView(Gfx::PGraphics graphics, PWindow owner, const Viewpo
 {
     scene = new Scene(graphics);
     scene->addActor(activeCamera);
-    /*AssetRegistry::importFile("/home/dynamitos/Assets/Ayaka/Avatar_Girl_Sword_Ayaka_Tex_Body_Diffuse.png");
-    AssetRegistry::importFile("/home/dynamitos/Assets/Ayaka/Avatar_Girl_Sword_Ayaka_Tex_Body_Lightmap.png");
-    AssetRegistry::importFile("/home/dynamitos/Assets/Ayaka/Avatar_Girl_Sword_Ayaka_Tex_Face_Diffuse.png");
-    AssetRegistry::importFile("/home/dynamitos/Assets/Ayaka/Avatar_Girl_Sword_Ayaka_Tex_Hair_Diffuse.png");
-    AssetRegistry::importFile("/home/dynamitos/Assets/Ayaka/Avatar_Girl_Sword_Ayaka_Tex_Hair_Lightmap.png");
-    AssetRegistry::importFile("/home/dynamitos/Assets/Ayaka/Avatar_Girl_Tex_FaceLightmap.png");
-    AssetRegistry::importFile("/home/dynamitos/Assets/Ayaka/Ayaka.fbx");
-    PPrimitiveComponent ayaka = new PrimitiveComponent(AssetRegistry::findMesh("Ayaka"));
-    ayaka->addWorldTranslation(Vector(0, 0, 0));
-    ayaka->setWorldScale(Vector(10, 10, 10));
-    scene->addPrimitiveComponent(ayaka);*/
+    AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Ayaka\\Avatar_Girl_Sword_Ayaka_Tex_Body_Diffuse.png");
+    AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Ayaka\\Avatar_Girl_Sword_Ayaka_Tex_Body_Lightmap.png");
+    AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Ayaka\\Avatar_Girl_Sword_Ayaka_Tex_Face_Diffuse.png");
+    AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Ayaka\\Avatar_Girl_Sword_Ayaka_Tex_Hair_Diffuse.png");
+    AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Ayaka\\Avatar_Girl_Sword_Ayaka_Tex_Hair_Lightmap.png");
+    AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Ayaka\\Avatar_Girl_Tex_FaceLightmap.png");
+    AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Ayaka\\Ayaka.fbx");
+    AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Ely\\Ely.fbx");
+    AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Cube\\cube.obj");
+    AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Plane\\plane.fbx");
+    srand(time(NULL));
+    for(uint32 i = 0; i < 100; ++i)
+    {
+        PPrimitiveComponent ayaka = new PrimitiveComponent(AssetRegistry::findMesh("Ayaka"));
+        ayaka->addWorldTranslation(Vector(((float)rand() / RAND_MAX) * 100, 0,  ((float)rand()/RAND_MAX) * 100));
+        ayaka->setWorldScale(Vector(10, 10, 10));
+        scene->addPrimitiveComponent(ayaka);
+    }
 
-    AssetRegistry::importFile("D:\\Private\\Programming\\Unreal Engine\\Assets\\Ely\\Ely.fbx");
-    AssetRegistry::importFile("D:\\Private\\Programming\\Unreal Engine\\Assets\\Cube\\cube.obj");
-    AssetRegistry::importFile("D:\\Private\\Programming\\Unreal Engine\\Assets\\Plane\\plane.fbx");
     PPrimitiveComponent plane = new PrimitiveComponent(AssetRegistry::findMesh("plane"));
     plane->setWorldScale(Vector(100, 100, 100));
-    PPrimitiveComponent arissa = new PrimitiveComponent(AssetRegistry::findMesh("Ely"));
-    arissa->addWorldTranslation(Vector(0, 0, 100));
-    arissa->setWorldScale(Vector(0.1f, 0.1f, 0.1f));
     scene->addPrimitiveComponent(plane);
-    scene->addPrimitiveComponent(arissa);
-
+    
     PRenderGraphResources resources = new RenderGraphResources();
     depthPrepass.setResources(resources);
     lightCullingPass.setResources(resources);
