@@ -6,6 +6,8 @@
 #include "Asset/AssetRegistry.h"
 #include "Scene/Actor/CameraActor.h"
 #include "Scene/Components/CameraComponent.h"
+#include "Scene/Components/MyComponent.h"
+#include "Scene/Components/MyOtherComponent.h"
 
 using namespace Seele;
 
@@ -28,18 +30,23 @@ Seele::SceneView::SceneView(Gfx::PGraphics graphics, PWindow owner, const Viewpo
     AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Ely\\Ely.fbx");
     AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Cube\\cube.obj");
     AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Plane\\plane.fbx");
-    srand(time(NULL));
-    for(uint32 i = 0; i < 100; ++i)
-    {
-        PPrimitiveComponent ayaka = new PrimitiveComponent(AssetRegistry::findMesh("Ayaka"));
-        ayaka->addWorldTranslation(Vector(((float)rand() / RAND_MAX) * 100, 0,  ((float)rand()/RAND_MAX) * 100));
-        ayaka->setWorldScale(Vector(10, 10, 10));
-        scene->addPrimitiveComponent(ayaka);
-    }
+ 
+    PPrimitiveComponent ayaka = new PrimitiveComponent(AssetRegistry::findMesh("Ayaka"));
+    ayaka->addWorldTranslation(Vector(0, 0, 0));
+    ayaka->setWorldScale(Vector(10, 10, 10));
+    scene->addPrimitiveComponent(ayaka);
 
     PPrimitiveComponent plane = new PrimitiveComponent(AssetRegistry::findMesh("plane"));
     plane->setWorldScale(Vector(100, 100, 100));
     scene->addPrimitiveComponent(plane);
+
+    PMyComponent myComp = new MyComponent();
+    PMyOtherComponent myOtherComp = new MyOtherComponent();
+    PActor actor = new Actor();
+    actor->setRootComponent(myComp);
+    myComp->addChildComponent(myOtherComp);
+    scene->addActor(actor);
+    scene->start();
     
     PRenderGraphResources resources = new RenderGraphResources();
     depthPrepass.setResources(resources);
@@ -59,13 +66,16 @@ Seele::SceneView::~SceneView()
 {
 }
 
-void SceneView::beginUpdate() 
+Job SceneView::beginUpdate() 
 {
-    scene->tick(Gfx::currentFrameDelta);
+    co_await scene->beginUpdate(Gfx::currentFrameDelta);
+    co_return;
 }
 
-void SceneView::update() 
+Job SceneView::update() 
 {
+    co_await scene->commitUpdate();
+    co_return;
 }
 
 void SceneView::commitUpdate() 

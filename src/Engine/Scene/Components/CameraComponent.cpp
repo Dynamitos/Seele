@@ -5,11 +5,16 @@
 
 using namespace Seele;
 
-CameraComponent::CameraComponent() 
-    : bNeedsViewBuild(true)
+CameraComponent::CameraComponent()
+	: aspectRatio(0)
+	, fieldOfView(0)
+    , bNeedsViewBuild(true)
     , bNeedsProjectionBuild(true)
     , originPoint(0, 0, 0)
     , cameraPosition(0, 0, 50)
+	, eye(Vector())
+	, projectionMatrix(Matrix4())
+	, viewMatrix(Matrix4())
 {
     distance = 50;
     rotationX = 0;

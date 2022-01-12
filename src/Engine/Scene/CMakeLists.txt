@@ -1,5 +1,6 @@
 target_sources(SeeleEngine
 	PRIVATE
+        Util.h
         Scene.cpp
         Scene.h)
 

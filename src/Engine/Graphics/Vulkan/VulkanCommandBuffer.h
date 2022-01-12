@@ -47,10 +47,7 @@ public:
 private:
 	PGraphics graphics;
 	PCommandBufferManager manager;
-	PRenderPass renderPass;
-	PFramebuffer framebuffer;
 	PFence fence;
-	uint32 subpassIndex;
 	State state;
 	VkViewport currentViewport;
 	VkRect2D currentScissor;
@@ -79,7 +76,7 @@ public:
 	{
 		return handle;
 	}
-	void begin(PCmdBuffer parent);
+	void begin(PRenderPass renderPass, PFramebuffer framebuffer);
 	void end();
 	void reset();
 	virtual bool isReady() override;
@@ -145,7 +142,7 @@ public:
 		return queue;
 	}
 	PCmdBuffer getCommands();
-	PRenderCommand createRenderCommand(const std::string& name);
+	PRenderCommand createRenderCommand(PRenderPass renderPass, PFramebuffer framebuffer, const std::string& name);
 	PComputeCommand createComputeCommand(const std::string& name);
 	VkCommandPool getPoolHandle() const
 	{

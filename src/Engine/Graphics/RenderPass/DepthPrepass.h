@@ -11,7 +11,7 @@ public:
     DepthPrepassMeshProcessor(Gfx::PViewport viewport, Gfx::PGraphics graphics);
     virtual ~DepthPrepassMeshProcessor();
     
-    virtual void processMeshBatch(
+    virtual Job processMeshBatch(
         const MeshBatch& batch,
         const Gfx::PRenderPass& renderPass,
         Gfx::PPipelineLayout pipelineLayout,
@@ -27,7 +27,7 @@ DECLARE_REF(CameraActor)
 DECLARE_REF(CameraComponent)
 struct DepthPrepassData
 {
-    Array<StaticMeshBatch> staticDrawList;
+    std::vector<StaticMeshBatch> staticDrawList;
 };
 class DepthPrepass : public RenderPass<DepthPrepassData>
 {

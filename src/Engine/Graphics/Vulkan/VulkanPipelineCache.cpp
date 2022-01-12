@@ -323,7 +323,7 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
     uint32 hash = crc.checksum();
     VkPipeline pipelineHandle;
 
-    std::unique_lock lock(createdPipelinesLock);
+    std::scoped_lock lock(createdPipelinesLock);
     auto foundPipeline = createdPipelines.find(hash);
     if (foundPipeline != createdPipelines.end())
     {

@@ -5,6 +5,8 @@ using namespace Seele;
 using namespace Seele::UI;
 
 Element::Element()
+    : dirty(false)
+    , enabled(false)
 {
 }
 

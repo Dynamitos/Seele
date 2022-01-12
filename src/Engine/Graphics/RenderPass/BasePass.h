@@ -11,7 +11,7 @@ public:
     BasePassMeshProcessor(Gfx::PViewport viewport, Gfx::PGraphics graphics, uint8 translucentBasePass);
     virtual ~BasePassMeshProcessor();
 
-    virtual void processMeshBatch(
+    virtual Job processMeshBatch(
         const MeshBatch& batch, 
 //        const PPrimitiveComponent primitiveComponent,
         const Gfx::PRenderPass& renderPass,
@@ -30,7 +30,7 @@ DECLARE_REF(CameraActor)
 DECLARE_REF(CameraComponent)
 struct BasePassData
 {
-    Array<StaticMeshBatch> staticDrawList;
+    std::vector<StaticMeshBatch> staticDrawList;
 };
 class BasePass : public RenderPass<BasePassData>
 {

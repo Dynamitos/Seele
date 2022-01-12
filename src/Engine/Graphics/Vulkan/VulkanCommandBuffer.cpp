@@ -16,16 +16,13 @@ using namespace Seele::Vulkan;
 CmdBuffer::CmdBuffer(PGraphics graphics, VkCommandPool cmdPool, PCommandBufferManager manager)
     : graphics(graphics)
     , manager(manager)
-    , renderPass(nullptr)
-    , framebuffer(nullptr)
-    , subpassIndex(0)
     , owner(cmdPool)
 {
     VkCommandBufferAllocateInfo allocInfo =
         init::CommandBufferAllocateInfo(cmdPool,
                                         VK_COMMAND_BUFFER_LEVEL_PRIMARY,
                                         1);
-    std::unique_lock lock(handleLock);
+    std::scoped_lock lock(handleLock);
     VK_CHECK(vkAllocateCommandBuffers(graphics->getDevice(), &allocInfo, &handle))
 
     fence = new Fence(graphics);
@@ -34,10 +31,8 @@ CmdBuffer::CmdBuffer(PGraphics graphics, VkCommandPool cmdPool, PCommandBufferMa
 
 CmdBuffer::~CmdBuffer()
 {
-    std::unique_lock lock(handleLock);
+    std::scoped_lock lock(handleLock);
     vkFreeCommandBuffers(graphics->getDevice(), owner, 1, &handle);
-    renderPass = nullptr;
-    framebuffer = nullptr;
     waitSemaphores.clear();
 }
 
@@ -46,24 +41,22 @@ void CmdBuffer::begin()
     VkCommandBufferBeginInfo beginInfo =
         init::CommandBufferBeginInfo();
     beginInfo.pInheritanceInfo = nullptr;
-    std::unique_lock lock(handleLock);
+    std::scoped_lock lock(handleLock);
     VK_CHECK(vkBeginCommandBuffer(handle, &beginInfo));
     state = State::InsideBegin;
 }
 
 void CmdBuffer::end()
 {
-    std::unique_lock lock(handleLock);
+    std::scoped_lock lock(handleLock);
     VK_CHECK(vkEndCommandBuffer(handle));
     state = State::Ended;
 }
 
-void CmdBuffer::beginRenderPass(PRenderPass newRenderPass, PFramebuffer newFramebuffer)
+void CmdBuffer::beginRenderPass(PRenderPass renderPass, PFramebuffer framebuffer)
 {
     assert(state == State::InsideBegin);
-    std::unique_lock lock(handleLock);
-    renderPass = newRenderPass;
-    framebuffer = newFramebuffer;
+    std::scoped_lock lock(handleLock);
 
     VkRenderPassBeginInfo beginInfo =
         init::RenderPassBeginInfo();
@@ -74,15 +67,13 @@ void CmdBuffer::beginRenderPass(PRenderPass newRenderPass, PFramebuffer newFrame
     beginInfo.framebuffer = framebuffer->getHandle();
     vkCmdBeginRenderPass(handle, &beginInfo, renderPass->getSubpassContents());
     state = State::RenderPassActive;
-    //std::cout << "Beginning renderPass" << std::endl;
 }
 
 void CmdBuffer::endRenderPass()
 {
-    std::unique_lock lock(handleLock);
+    std::scoped_lock lock(handleLock);
     vkCmdEndRenderPass(handle);
     state = State::InsideBegin;
-    //std::cout << "Ending renderPass" << std::endl;
 }
 
 void CmdBuffer::executeCommands(const Array<Gfx::PRenderCommand>& commands)
@@ -90,9 +81,10 @@ void CmdBuffer::executeCommands(const Array<Gfx::PRenderCommand>& commands)
     assert(state == State::RenderPassActive);
     if(commands.size() == 0)
     {
+        std::cout << "No commands provided" << std::endl;
         return;
     }
-    std::unique_lock lock(handleLock);
+    std::scoped_lock lock(handleLock);
     Array<VkCommandBuffer> cmdBuffers(commands.size());
     for (uint32 i = 0; i < commands.size(); ++i)
     {
@@ -111,7 +103,7 @@ void CmdBuffer::executeCommands(const Array<Gfx::PRenderCommand>& commands)
 
 void CmdBuffer::executeCommands(const Array<Gfx::PComputeCommand>& commands) 
 {
-    std::unique_lock lock(handleLock);
+    std::scoped_lock lock(handleLock);
     if(commands.size() == 0)
     {
         return;
@@ -134,14 +126,14 @@ void CmdBuffer::executeCommands(const Array<Gfx::PComputeCommand>& commands)
 
 void CmdBuffer::addWaitSemaphore(VkPipelineStageFlags flags, PSemaphore semaphore)
 {
-    std::unique_lock lock(handleLock);
+    std::scoped_lock lock(handleLock);
     waitSemaphores.add(semaphore);
     waitFlags.add(flags);
 }
 
 void CmdBuffer::refreshFence()
 {
-    std::unique_lock lock(handleLock);
+    std::scoped_lock lock(handleLock);
     if (state == State::Submitted)
     {
         if (fence->isSignaled())
@@ -174,7 +166,7 @@ void CmdBuffer::refreshFence()
 
 void CmdBuffer::waitForCommand(uint32 timeout)
 {
-    std::unique_lock lock(handleLock);
+    std::scoped_lock lock(handleLock);
     fence->wait(timeout);
     refreshFence();
 }
@@ -212,7 +204,7 @@ RenderCommand::~RenderCommand()
     vkFreeCommandBuffers(graphics->getDevice(), owner, 1, &handle);
 }
 
-void RenderCommand::begin(PCmdBuffer parent)
+void RenderCommand::begin(PRenderPass renderPass, PFramebuffer framebuffer)
 {
     threadId = std::this_thread::get_id();
     ready = false;
@@ -220,9 +212,9 @@ void RenderCommand::begin(PCmdBuffer parent)
         init::CommandBufferBeginInfo();
     VkCommandBufferInheritanceInfo inheritanceInfo =
         init::CommandBufferInheritanceInfo();
-    inheritanceInfo.framebuffer = parent->framebuffer->getHandle();
-    inheritanceInfo.renderPass = parent->renderPass->getHandle();
-    inheritanceInfo.subpass = parent->subpassIndex;
+    inheritanceInfo.framebuffer = framebuffer->getHandle();
+    inheritanceInfo.renderPass = renderPass->getHandle();
+    inheritanceInfo.subpass = 0;
     beginInfo.pInheritanceInfo = &inheritanceInfo;
     beginInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
     VK_CHECK(vkBeginCommandBuffer(handle, &beginInfo));
@@ -230,13 +222,11 @@ void RenderCommand::begin(PCmdBuffer parent)
 
 void RenderCommand::end() 
 {
-    assert(threadId == std::this_thread::get_id());
     VK_CHECK(vkEndCommandBuffer(handle));
 }
 
 void RenderCommand::reset() 
 {
-    assert(threadId == std::this_thread::get_id());
     vkResetCommandBuffer(handle, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
     boundDescriptors.clear();
     ready = true;
@@ -420,7 +410,7 @@ CommandBufferManager::CommandBufferManager(PGraphics graphics, PQueue queue)
 
     activeCmdBuffer = new CmdBuffer(graphics, commandPool, this);
     activeCmdBuffer->begin();
-    std::unique_lock lock(allocatedBufferLock);
+    std::scoped_lock lock(allocatedBufferLock);
     allocatedBuffers.add(activeCmdBuffer);
 }
 
@@ -436,29 +426,29 @@ PCmdBuffer CommandBufferManager::getCommands()
     return activeCmdBuffer;
 }
 
-PRenderCommand CommandBufferManager::createRenderCommand(const std::string& name)
+PRenderCommand CommandBufferManager::createRenderCommand(PRenderPass renderPass, PFramebuffer framebuffer, const std::string& name)
 {
-    std::unique_lock lck(allocatedRenderLock);
+    std::scoped_lock lck(allocatedRenderLock);
     for (uint32 i = 0; i < allocatedRenderCommands.size(); ++i)
     {
         PRenderCommand cmdBuffer = allocatedRenderCommands[i];
         if (cmdBuffer->isReady())
         {
             cmdBuffer->name = name;
-            cmdBuffer->begin(activeCmdBuffer);
+            cmdBuffer->begin(renderPass, framebuffer);
             return cmdBuffer;
         }
     }
     PRenderCommand result = new RenderCommand(graphics, commandPool);
     result->name = name;
-    result->begin(activeCmdBuffer);
+    result->begin(renderPass, framebuffer);
     allocatedRenderCommands.add(result);
     return result;
 }
 
 PComputeCommand CommandBufferManager::createComputeCommand(const std::string& name)
 {
-    std::unique_lock lck(allocatedComputeLock);
+    std::scoped_lock lck(allocatedComputeLock);
     for (uint32 i = 0; i < allocatedComputeCommands.size(); ++i)
     {
         PComputeCommand cmdBuffer = allocatedComputeCommands[i];
@@ -495,7 +485,7 @@ void CommandBufferManager::submitCommands(PSemaphore signalSemaphore)
             queue->submitCommandBuffer(activeCmdBuffer);
         }
     }
-    std::unique_lock lock(allocatedBufferLock);
+    std::scoped_lock lock(allocatedBufferLock);
     for (uint32 i = 0; i < allocatedBuffers.size(); ++i)
     {
         PCmdBuffer cmdBuffer = allocatedBuffers[i];

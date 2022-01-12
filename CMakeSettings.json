@@ -5,7 +5,7 @@
       "cmakeCommandArgs": "-DUSE_SUPERBUILD=OFF",
       "buildCommandArgs": "",
       "ctestCommandArgs": "",
-      "variables": []
+      "inheritEnvironments": []
     }
   ]
 }

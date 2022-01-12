@@ -4,6 +4,10 @@ target_sources(SeeleEngine
         CameraComponent.cpp
         Component.h
         Component.cpp
+        MyComponent.h
+        MyComponent.cpp
+        MyOtherComponent.h
+        MyOtherComponent.cpp
         PrimitiveComponent.cpp
         PrimitiveComponent.h
         PrimitiveUniformBufferLayout.h)

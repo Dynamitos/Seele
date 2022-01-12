@@ -13,9 +13,38 @@ Component::Component()
 Component::~Component()
 {
 }
-void Component::tick(float)
+
+void Component::launchStart()
 {
+    for(auto child : children)
+    {
+        child->launchStart();
+    }
+    start();
 }
+
+Array<Job> Component::launchTick(float deltaTime) const
+{
+    Array<Job> result;
+    for(auto child : children)
+    {
+        result.addAll(child->launchTick(deltaTime));
+    }
+    result.add(tick(deltaTime));
+    return result;
+}
+
+Array<Job> Component::launchUpdate()
+{
+    Array<Job> result;
+    for(auto child : children)
+    {
+        result.addAll(child->launchUpdate());
+    }
+    result.add(update());
+    return result;
+}
+
 PComponent Component::getParent()
 {
     return parent;
@@ -31,6 +60,25 @@ PActor Component::getOwner()
         return parent->getOwner();
     }
     return nullptr;
+}
+const Array<PComponent>& Component::getChildComponents()
+{
+    return children;
+}
+
+void Component::setParent(PComponent newParent)
+{
+    parent = newParent;
+}
+
+void Component::setOwner(PActor newOwner) 
+{
+    owner = newOwner;
+}
+
+void Component::addChildComponent(PComponent component)
+{
+    children.add(component);
 }
 
 void Component::notifySceneAttach(PScene scene)
@@ -116,16 +164,6 @@ void Component::addWorldRotation(Quaternion rotation)
 Transform Component::getTransform() const
 {
     return transform;
-}
-
-void Component::setParent(PComponent newParent)
-{
-    parent = newParent;
-}
-
-void Component::setOwner(PActor newOwner) 
-{
-    owner = newOwner;
 }
 
 void Component::internalSetTransform(Vector newLocation, Quaternion newRotation)

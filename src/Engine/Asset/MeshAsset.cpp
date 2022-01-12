@@ -25,24 +25,20 @@ MeshAsset::~MeshAsset()
 }
 void MeshAsset::save()
 {
-    boost::archive::text_oarchive archive(getWriteStream());
-    archive << meshes;
 }
 void MeshAsset::load() 
 {
-    boost::archive::text_iarchive archive(getReadStream());
-    archive >> meshes;
 }
 
 void MeshAsset::addMesh(PMesh mesh) 
 {
-    std::unique_lock lck(lock);
-    meshes.add(mesh);
-    referencedMaterials.add(mesh->referencedMaterial);   
+    std::scoped_lock lck(lock);
+    meshes.push_back(mesh);
+    referencedMaterials.push_back(mesh->referencedMaterial);   
 }
 
-const Array<PMesh> MeshAsset::getMeshes()
+const std::vector<PMesh> MeshAsset::getMeshes()
 {
-    std::unique_lock lck(lock);
+    std::scoped_lock lck(lock);
     return meshes;
 }

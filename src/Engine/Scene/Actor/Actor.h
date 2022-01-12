@@ -1,6 +1,7 @@
 #pragma once
 #include "MinimalEngine.h"
 #include "Math/Transform.h"
+#include "ThreadPool.h"
 
 namespace Seele
 {
@@ -12,8 +13,12 @@ class Actor
 public:
     Actor();
     virtual ~Actor();
-
-    void tick(float deltaTime);
+    virtual void launchStart();
+    virtual void start() {}
+    Array<Job> launchTick(float deltaTime) const;
+    virtual Job tick(float deltaTime) const { co_return; }
+    Array<Job> launchUpdate();
+    virtual Job update() { co_return; }
     void notifySceneAttach(PScene scene);
     PScene getScene();
 

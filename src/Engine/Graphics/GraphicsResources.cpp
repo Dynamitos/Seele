@@ -57,6 +57,7 @@ ShaderCollection& ShaderMap::createShaders(
 	VertexInputType* vertexInput,
 	bool /*bPositionOnly*/)
 {
+	std::scoped_lock lock(shadersLock);
 	ShaderCollection& collection = shaders.add();
 	//collection.vertexDeclaration = bPositionOnly ? vertexInput->getPositionDeclaration() : vertexInput->getDeclaration();
 
@@ -107,7 +108,7 @@ void DescriptorLayout::addDescriptorBinding(uint32 bindingIndex, SeDescriptorTyp
 
 PDescriptorSet DescriptorLayout::allocateDescriptorSet()
 {
-	std::unique_lock lock(allocatorLock);
+	std::scoped_lock lock(allocatorLock);
 	PDescriptorSet result;
 	allocator->allocateDescriptorSet(result);
 	return result;
@@ -115,7 +116,7 @@ PDescriptorSet DescriptorLayout::allocateDescriptorSet()
 
 void DescriptorLayout::reset() 
 {
-	std::unique_lock lock(allocatorLock);
+	std::scoped_lock lock(allocatorLock);
 	allocator->reset();
 }
 
@@ -270,7 +271,7 @@ static Map<uint32, PVertexDeclaration> vertexDeclarationCache;
 
 PVertexDeclaration VertexDeclaration::createDeclaration(PGraphics graphics, const Array<VertexElement>& elementList)
 {
-	std::unique_lock lock(vertexDeclarationLock);
+	std::scoped_lock lock(vertexDeclarationLock);
 	boost::crc_32_type result;
 	result.process_bytes(&elementList, sizeof(VertexElement) * elementList.size());
 	uint32 key = result.checksum();

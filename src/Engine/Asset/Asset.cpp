@@ -9,6 +9,7 @@ Asset::Asset()
     , parentDir("")
     , extension("")
     , status(Status::Uninitialized)
+    , byteSize(0)
 {
 }
 Asset::Asset(const std::filesystem::path& path)

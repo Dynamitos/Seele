@@ -16,6 +16,7 @@ public:
     Event();
     Event(nullptr_t);
     Event(const std::string& name);
+    ~Event() = default;
     auto operator<=>(const Event& other) const
     {
         return flag <=> other.flag;
@@ -41,7 +42,7 @@ public:
     constexpr void await_resume() {}
 private:
     std::string name;
-    RefPtr<std::atomic_bool> flag;
+    std::shared_ptr<std::atomic_bool> flag;
     friend class ThreadPool;
 };
 
@@ -65,6 +66,13 @@ struct JobPromiseBase
         id = globalCounter++;
         finishedEvent = Event(std::format("Job {}", id));
     }
+    ~JobPromiseBase() 
+    {
+        if (handle)
+        {
+            handle.destroy();
+        }
+    }
     JobBase<MainJob> get_return_object() noexcept;
 
     inline auto initial_suspend() noexcept;
@@ -78,7 +86,6 @@ struct JobPromiseBase
 
     void resume()
     {
-        std::unique_lock lock(promiseLock);
         if(!handle || handle.done() || executing())
         {
             return;
@@ -88,10 +95,9 @@ struct JobPromiseBase
     }
     void setContinuation(JobPromiseBase* cont)
     {
-        std::unique_lock lock(promiseLock);
-        std::unique_lock lock2(cont->promiseLock);
+        std::scoped_lock lock(promiseLock, cont->promiseLock);
         continuation = cont->handle;
-        cont->precondition = finishedEvent;
+        cont->state = State::SCHEDULED;
     }
     bool done()
     {
@@ -113,15 +119,15 @@ struct JobPromiseBase
     {
         return state == State::READY;
     }
-    void raise()
+    void finalize()
     {
-        std::unique_lock lock(promiseLock);
+        std::scoped_lock lock(promiseLock);
         state = State::DONE;
         finishedEvent.raise();
     }
     void reset()
     {
-        std::unique_lock lock(promiseLock);
+        std::scoped_lock lock(promiseLock);
         finishedEvent.reset();
     }
     void enqueue(Event& event)
@@ -136,13 +142,12 @@ struct JobPromiseBase
     }
     void schedule()
     {
-        std::unique_lock lock(promiseLock);
+        std::scoped_lock lock(promiseLock);
         if(!handle || done() || !ready())
         {
             return;
         }
-        state = (precondition == nullptr) ? State::SCHEDULED : State::WAITING;
-        getGlobalThreadPool().enqueueWaiting(precondition, this);
+        getGlobalThreadPool().scheduleJob(this);
     }
 
     std::mutex promiseLock;
@@ -150,7 +155,6 @@ struct JobPromiseBase
     std::coroutine_handle<> continuation = std::noop_coroutine();
     uint64 id;
     Event finishedEvent;
-    Event precondition = nullptr;
     State state = State::READY;
 };
 
@@ -193,13 +197,9 @@ public:
     {
         return promise->done();
     }
-    void raise()
+    void finalize()
     {
-        promise->raise();
-    }
-    void reset()
-    {
-        promise->reset();
+        promise->finalize();
     }
     Event operator co_await()
     {
@@ -245,30 +245,32 @@ using Promise = JobPromiseBase<false>;
 class ThreadPool
 {
 public:
-    ThreadPool(uint32 threadCount = std::thread::hardware_concurrency());
+    ThreadPool(uint32 threadCount = 1);
     virtual ~ThreadPool();
-    // Adds a job to the waiting queue for event, or directly to the job queue if event is nullptr
+    // Adds a job to the waiting queue for event
     void enqueueWaiting(Event& event, Promise* job);
-    // Adds a job to the waiting queue for event, or directly to the job queue if event is nullptr
+    // Adds a job to the waiting queue for event
     void enqueueWaiting(Event& event, MainPromise* job);
+    void scheduleJob(Promise* job);
+    void scheduleJob(MainPromise* job);
     void notify(Event& event);
     void threadLoop(const bool isMainThread);
 private:
     std::atomic_bool running;
     std::vector<std::thread> workers;
 
-    List<MainPromise*> mainJobs;
+    std::list<MainPromise*> mainJobs;
     std::mutex mainJobLock;
     std::condition_variable mainJobCV;
     
-    List<Promise*> jobQueue;
+    std::list<Promise*> jobQueue;
     std::mutex jobQueueLock;
     std::condition_variable jobQueueCV;
     
-    std::map<Event, List<MainPromise*>> waitingMainJobs;
+    std::map<Event, std::list<MainPromise*>> waitingMainJobs;
     std::mutex waitingMainLock;
 
-    std::map<Event, List<Promise*>> waitingJobs;
+    std::map<Event, std::list<Promise*>> waitingJobs;
     std::mutex waitingLock;
 };
 
@@ -283,6 +285,7 @@ inline auto JobPromiseBase<MainJob>::initial_suspend() noexcept
 {
     return std::suspend_always{};
 }
+
 template<bool MainJob>
 inline auto JobPromiseBase<MainJob>::final_suspend() const noexcept
 {

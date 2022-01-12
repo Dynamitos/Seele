@@ -20,11 +20,11 @@ BasePassMeshProcessor::~BasePassMeshProcessor()
 { 
 }
 
-void BasePassMeshProcessor::processMeshBatch(
+Job BasePassMeshProcessor::processMeshBatch(
     const MeshBatch& batch, 
 //    const PPrimitiveComponent primitiveComponent,
     const Gfx::PRenderPass& renderPass,
-    Gfx::PPipelineLayout pipelineLayout,
+    Gfx::PPipelineLayout baseLayout,
     Gfx::PDescriptorLayout primitiveLayout,
     Array<Gfx::PDescriptorSet> descriptorSets,
     int32 /*staticMeshId*/) 
@@ -40,6 +40,7 @@ void BasePassMeshProcessor::processMeshBatch(
     Gfx::PRenderCommand renderCommand = graphics->createRenderCommand();    
     renderCommand->setViewport(target);
     
+    Gfx::PPipelineLayout pipelineLayout = graphics->createPipelineLayout(baseLayout);
     pipelineLayout->addDescriptorLayout(BasePass::INDEX_MATERIAL, material->getDescriptorLayout());
     pipelineLayout->create();
     Gfx::PDescriptorSet materialSet = material->createDescriptorSet();
@@ -63,9 +64,9 @@ void BasePassMeshProcessor::processMeshBatch(
             collection->fragmentShader,
             false);
     }
-    std::unique_lock lock(commandLock);
+    std::scoped_lock lock(commandLock);
     renderCommands.add(renderCommand);
-    //co_return;
+    co_return;
 }
 
 BasePass::BasePass(Gfx::PGraphics graphics, Gfx::PViewport viewport, PCameraActor source) 
@@ -157,7 +158,7 @@ MainJob BasePass::render()
     for (auto &&meshBatch : passData.staticDrawList)
     {
         //jobs.add(
-        processor->processMeshBatch(meshBatch, renderPass, basePassLayout, primitiveLayout, descriptorSets);
+        co_await processor->processMeshBatch(meshBatch, renderPass, basePassLayout, primitiveLayout, descriptorSets);
     }
     //co_await Job::all(jobs);
     graphics->executeCommands(processor->getRenderCommands());

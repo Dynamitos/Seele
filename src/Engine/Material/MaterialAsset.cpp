@@ -185,6 +185,6 @@ const Gfx::ShaderCollection* MaterialAsset::getShaders(Gfx::RenderPassType rende
 
 Gfx::ShaderCollection& MaterialAsset::createShaders(Gfx::PGraphics graphics, Gfx::RenderPassType renderPass, VertexInputType* vertexInput) 
 {
-    std::unique_lock lock(shaderMapLock);
+    std::scoped_lock lock(shaderMapLock);
     return shaderMap.createShaders(graphics, renderPass, this, vertexInput, false);
 }

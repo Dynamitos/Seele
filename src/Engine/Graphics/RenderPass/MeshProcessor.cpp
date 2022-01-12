@@ -1,6 +1,7 @@
 #include "MeshProcessor.h"
 #include "Graphics/Graphics.h"
 #include "Graphics/VertexShaderInput.h"
+#include "Graphics/Vulkan/VulkanGraphicsResources.h"
 
 using namespace Seele;
 
@@ -32,8 +33,6 @@ void MeshProcessor::buildMeshDrawCommand(
 
     GraphicsPipelineCreateInfo pipelineInitializer;
     pipelineInitializer.topology = meshBatch.topology;
-    Gfx::PVertexDeclaration vertexDecl = positionOnly ? vertexInput->getPositionDeclaration() : vertexInput->getDeclaration();
-    pipelineInitializer.vertexDeclaration = vertexDecl;
     pipelineInitializer.vertexShader = vertexShader;
     pipelineInitializer.controlShader = controlShader;
     pipelineInitializer.evalShader = evaluationShader;
@@ -46,10 +45,12 @@ void MeshProcessor::buildMeshDrawCommand(
     if(positionOnly)
     {
         vertexInput->getPositionOnlyStream(vertexStreams);
+        pipelineInitializer.vertexDeclaration = vertexInput->getPositionDeclaration();
     }
     else
     {
         vertexInput->getStreams(vertexStreams);
+        pipelineInitializer.vertexDeclaration = vertexInput->getDeclaration();
     }
     Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(pipelineInitializer);
     drawCommand->bindPipeline(pipeline);

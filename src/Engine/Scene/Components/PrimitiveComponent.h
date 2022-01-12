@@ -16,14 +16,14 @@ public:
     ~PrimitiveComponent();
     virtual void notifySceneAttach(PScene scene) override;
     Matrix4 getRenderMatrix();
-    const Array<StaticMeshBatch>& getStaticMeshes()
+    std::vector<StaticMeshBatch>& getStaticMeshes()
     {
         return staticMeshes;
     }
 private:
-    Array<PMaterialAsset> materials;
+    std::vector<PMaterialAsset> materials;
     Gfx::PUniformBuffer uniformBuffer;
-    Array<StaticMeshBatch> staticMeshes;
+    std::vector<StaticMeshBatch> staticMeshes;
     friend class Scene;
 };
 DEFINE_REF(PrimitiveComponent)

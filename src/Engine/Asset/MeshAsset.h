@@ -15,11 +15,11 @@ public:
     virtual void save() override;
     virtual void load() override;
     void addMesh(PMesh mesh);
-    const Array<PMesh> getMeshes();
+    const std::vector<PMesh> getMeshes();
     //Workaround while no editor
-    Array<PMaterialAsset> referencedMaterials;
+    std::vector<PMaterialAsset> referencedMaterials;
 private:
-    Array<PMesh> meshes;
+    std::vector<PMesh> meshes;
 };
 DEFINE_REF(MeshAsset)
 } // namespace Seele

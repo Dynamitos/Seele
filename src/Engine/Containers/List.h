@@ -152,15 +152,7 @@ public:
     {
         if(this != &other)
         {
-            if(root != nullptr)
-            {
-                delete root;
-            }
-            if(tail != nullptr)
-            {
-                delete tail;
-            }
-            _size = 0;
+            clear();
             for(const auto& it : other)
             {
                 add(it);
@@ -173,10 +165,7 @@ public:
     {
         if(this != &other)
         {
-            if(root != nullptr)
-            {
-                clear();
-            }
+            clear();
             root = other.root;
             tail = other.tail;
             beginIt = other.beginIt;
@@ -205,6 +194,7 @@ public:
         for (Node *tmp = root; tmp != tail;)
         {
             tmp = tmp->next;
+            destroyNode(tmp->prev);
             deallocateNode(tmp->prev);
         }
         deallocateNode(tail);
@@ -216,43 +206,16 @@ public:
     //Insert at the end
     iterator add(const T &value)
     {
-        if (root == nullptr)
-        {
-            root = allocateNode();
-            tail = root;
-        }
-        initializeNode(tail, value);
-        Node *newTail = allocateNode();
-        newTail->prev = tail;
-        newTail->next = nullptr;
-        tail->next = newTail;
-        iterator insertedElement(tail);
-        tail = newTail;
-        markIteratorDirty();
-        _size++;
-        return insertedElement;
+        return addInternal(value);
     }
     iterator add(T&& value)
     {
-        if (root == nullptr)
-        {
-            root = allocateNode();
-            tail = root;
-        }
-        initializeNode(tail, std::move(value));
-        Node *newTail = allocateNode();
-        newTail->prev = tail;
-        newTail->next = nullptr;
-        tail->next = newTail;
-        Iterator insertedElement(tail);
-        tail = newTail;
-        markIteratorDirty();
-        _size++;
-        return insertedElement;
+        return addInternal(std::move(value));
     }
     // takes all elements from other and move-inserts them into
     // this, clearing other in the process
-    void moveElements(List& other){
+    void moveElements(List& other)
+    {
         tail->prev->next = other.root;
         other.root->prev = tail->prev;
         _size += other._size;
@@ -309,12 +272,13 @@ public:
         }
         if(next == nullptr)
         {
-            root = prev;
+            tail = prev;
         }
         else
         {
             next->prev = prev;
         }
+        destroyNode(pos.node);
         deallocateNode(pos.node);
         markIteratorDirty();
         return Iterator(next);
@@ -408,9 +372,32 @@ private:
             node->next, 
             std::forward<Type>(data));
     }
+    void destroyNode(Node* node)
+    {
+        std::allocator_traits<NodeAllocator>::destroy(allocator, node);
+    }
     void deallocateNode(Node* node)
     {
         allocator.deallocate(node, 1);
+    }
+    template<typename ValueType>
+    iterator addInternal(ValueType&& value)
+    {
+        if (root == nullptr)
+        {
+            root = allocateNode();
+            tail = root;
+        }
+        initializeNode(tail, std::forward<ValueType>(value));
+        Node* newTail = allocateNode();
+        newTail->prev = tail;
+        newTail->next = nullptr;
+        tail->next = newTail;
+        Iterator insertedElement(tail);
+        tail = newTail;
+        markIteratorDirty();
+        _size++;
+        return insertedElement;
     }
     void markIteratorDirty()
     {
@@ -421,10 +408,10 @@ private:
     }
     Node *root;
     Node *tail;
-    Iterator beginIt;
-    Iterator endIt;
-    ConstIterator cbeginIt;
-    ConstIterator cendIt;
+    iterator beginIt;
+    iterator endIt;
+    const_iterator cbeginIt;
+    const_iterator cendIt;
     size_type _size;
     NodeAllocator allocator;
 };

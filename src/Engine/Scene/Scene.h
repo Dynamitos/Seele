@@ -38,17 +38,19 @@ class Scene
 public:
     Scene(Gfx::PGraphics graphics);
     ~Scene();
-    void tick(double deltaTime);
+    void start();
+    Job beginUpdate(double deltaTime);
+    Job commitUpdate();
     void addActor(PActor actor);
     void addPrimitiveComponent(PPrimitiveComponent comp);
 
-    const Array<PPrimitiveComponent>& getPrimitives() const { return primitives; }
-    const Array<StaticMeshBatch>& getStaticMeshes() const { return staticMeshes; }
+    const std::vector<PPrimitiveComponent>& getPrimitives() const { return primitives; }
+    const std::vector<StaticMeshBatch>& getStaticMeshes() const { return staticMeshes; }
     const LightEnv& getLightBuffer() const { return lightEnv; }
 private:
-    Array<StaticMeshBatch> staticMeshes;
-    Array<PActor> rootActors;
-    Array<PPrimitiveComponent> primitives;
+    std::vector<StaticMeshBatch> staticMeshes;
+    std::vector<PActor> rootActors;
+    std::vector<PPrimitiveComponent> primitives;
     LightEnv lightEnv;
     Gfx::PGraphics graphics;
 };

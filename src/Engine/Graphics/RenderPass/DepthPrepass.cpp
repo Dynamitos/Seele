@@ -18,11 +18,11 @@ DepthPrepassMeshProcessor::~DepthPrepassMeshProcessor()
 { 
 }
 
-void DepthPrepassMeshProcessor::processMeshBatch(
+Job DepthPrepassMeshProcessor::processMeshBatch(
     const MeshBatch& batch, 
 //    const PPrimitiveComponent primitiveComponent,
     const Gfx::PRenderPass& renderPass,
-    Gfx::PPipelineLayout pipelineLayout,
+    Gfx::PPipelineLayout baseLayout,
     Gfx::PDescriptorLayout primitiveLayout,
     Array<Gfx::PDescriptorSet> descriptorSets,
     int32 /*staticMeshId*/) 
@@ -38,6 +38,7 @@ void DepthPrepassMeshProcessor::processMeshBatch(
     
     Gfx::PRenderCommand renderCommand = graphics->createRenderCommand();    
     renderCommand->setViewport(target);
+    Gfx::PPipelineLayout pipelineLayout = graphics->createPipelineLayout(baseLayout);
     pipelineLayout->addDescriptorLayout(DepthPrepass::INDEX_MATERIAL, material->getDescriptorLayout());
     pipelineLayout->create();
     Gfx::PDescriptorSet materialSet = material->createDescriptorSet();
@@ -61,10 +62,10 @@ void DepthPrepassMeshProcessor::processMeshBatch(
             collection->fragmentShader,
             true);
     }
-    std::unique_lock lock(commandLock);
+    std::scoped_lock lock(commandLock);
     renderCommands.add(renderCommand);
     //std::cout << "Finished depth job" << std::endl;
-    //co_return;
+    co_return;
 }
 
 DepthPrepass::DepthPrepass(Gfx::PGraphics graphics, Gfx::PViewport viewport, PCameraActor source) 
@@ -128,10 +129,9 @@ MainJob DepthPrepass::render()
     for (auto &&meshBatch : passData.staticDrawList)
     {
         //jobs.add(
-        processor->processMeshBatch(meshBatch, renderPass, depthPrepassLayout, primitiveLayout, descriptorSets);
+        co_await processor->processMeshBatch(meshBatch, renderPass, depthPrepassLayout, primitiveLayout, descriptorSets);
     }
     //co_await Job::all(jobs);
-    //std::cout << "Finished waiting depth jobs " << std::endl;
     graphics->executeCommands(processor->getRenderCommands());
     graphics->endRenderPass();
     co_return;

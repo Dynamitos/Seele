@@ -29,12 +29,12 @@ DEFINE_REF(DescriptorLayout)
 class PipelineLayout : public Gfx::PipelineLayout
 {
 public:
-    PipelineLayout(PGraphics graphics)
-        : graphics(graphics)
+    PipelineLayout(PGraphics graphics, Gfx::PPipelineLayout baseLayout)
+        : Gfx::PipelineLayout(baseLayout)
+        , graphics(graphics)
         , layoutHash(0)
         , layoutHandle(VK_NULL_HANDLE)
-    {
-    }
+    {}
     virtual ~PipelineLayout();
     virtual void create();
     virtual void reset();

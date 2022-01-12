@@ -13,8 +13,8 @@ public:
 	virtual ~View();
 	
 	// These are called from the view thread, and handle updating game data
-	virtual void beginUpdate() = 0;
-	virtual void update() = 0;
+	virtual Job beginUpdate() = 0;
+	virtual Job update() = 0;
 	// End frame is called with a lock, so it is safe to write to shared memory
 	virtual void commitUpdate() = 0;
 

@@ -13,8 +13,8 @@ class SceneView : public View
 public:
 	SceneView(Gfx::PGraphics graphics, PWindow owner, const ViewportCreateInfo &createInfo);
 	~SceneView();
-	virtual void beginUpdate() override;
-	virtual void update() override;
+	virtual Job beginUpdate() override;
+	virtual Job update() override;
 	virtual void commitUpdate() override;
 
 	virtual void prepareRender() override;

@@ -296,6 +296,8 @@ VkBufferMemoryBarrier init::BufferMemoryBarrier()
 	VkBufferMemoryBarrier bufferMemoryBarrier = {};
 	bufferMemoryBarrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
 	bufferMemoryBarrier.pNext = NULL;
+	bufferMemoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	bufferMemoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 	return bufferMemoryBarrier;
 }
 

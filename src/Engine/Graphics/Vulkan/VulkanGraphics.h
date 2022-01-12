@@ -11,6 +11,7 @@ DECLARE_REF(Allocator)
 DECLARE_REF(StagingManager)
 DECLARE_REF(CommandBufferManager)
 DECLARE_REF(Queue)
+DECLARE_REF(RenderPass)
 DECLARE_REF(Framebuffer)
 DECLARE_REF(RenderCommand)
 DECLARE_REF(PipelineCache)
@@ -63,7 +64,7 @@ public:
     virtual Gfx::PSamplerState createSamplerState(const SamplerCreateInfo& createInfo) override;
 
     virtual Gfx::PDescriptorLayout createDescriptorLayout(const std::string& name = "") override;
-    virtual Gfx::PPipelineLayout createPipelineLayout() override;
+    virtual Gfx::PPipelineLayout createPipelineLayout(Gfx::PPipelineLayout baseLayout = nullptr) override;
 
     virtual void copyTexture(Gfx::PTexture srcTexture, Gfx::PTexture dstTexture) override;
 protected:
@@ -82,10 +83,13 @@ protected:
     PQueue transferQueue;
     PQueue dedicatedTransferQueue;
     PPipelineCache pipelineCache;
-    Map<std::thread::id, PCommandBufferManager> graphicsCommands;
-    Map<std::thread::id, PCommandBufferManager> computeCommands;
-    Map<std::thread::id, PCommandBufferManager> transferCommands;
-    Map<std::thread::id, PCommandBufferManager> dedicatedTransferCommands;
+    std::mutex renderPassLock;
+    PRenderPass activeRenderPass;
+    PFramebuffer activeFramebuffer;
+    thread_local static PCommandBufferManager graphicsCommands;
+    thread_local static PCommandBufferManager computeCommands;
+    thread_local static PCommandBufferManager transferCommands;
+    thread_local static PCommandBufferManager dedicatedTransferCommands;
     VkPhysicalDeviceProperties props;
     VkPhysicalDeviceFeatures features;
     VkDebugReportCallbackEXT callback;

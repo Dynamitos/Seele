@@ -77,7 +77,7 @@
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceRoot}/bin/Debug/Seele_unit_tests.exe",
-            "args": [],
+            "args": ["--detect_memory_leaks=15533"],
             "stopAtEntry": false,
             "console": "internalConsole",
             "cwd": "${workspaceRoot}/bin/Debug",

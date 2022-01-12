@@ -74,7 +74,7 @@ Allocation::~Allocation()
 
 PSubAllocation Allocation::getSuballocation(VkDeviceSize requestedSize, VkDeviceSize alignment)
 {
-    std::unique_lock lck(lock);
+    std::scoped_lock lck(lock);
     if (isDedicated)
     {
         if (activeAllocations.empty() && requestedSize == bytesAllocated)
@@ -134,7 +134,7 @@ void Allocation::markFree(SubAllocation *allocation)
     PSubAllocation freeRangeToDelete;
 
     {
-        std::unique_lock lck(lock);
+        std::scoped_lock lck(lock);
         //Join lower bound
         for (auto freeRange : freeRanges)
         {
@@ -204,7 +204,7 @@ Allocator::Allocator(PGraphics graphics)
 
 Allocator::~Allocator()
 {
-    std::unique_lock lck(lock);
+    std::scoped_lock lck(lock);
     for (auto heap : heaps)
     {
         for (auto alloc : heap.allocations)
@@ -219,7 +219,7 @@ Allocator::~Allocator()
 
 PSubAllocation Allocator::allocate(const VkMemoryRequirements2 &memRequirements2, VkMemoryPropertyFlags properties, VkMemoryDedicatedAllocateInfo *dedicatedInfo)
 {
-    std::unique_lock lck(lock);
+    std::scoped_lock lck(lock);
     const VkMemoryRequirements &requirements = memRequirements2.memoryRequirements;
     uint8 memoryTypeIndex;
     VK_CHECK(findMemoryType(requirements.memoryTypeBits, properties, &memoryTypeIndex));
@@ -252,7 +252,7 @@ PSubAllocation Allocator::allocate(const VkMemoryRequirements2 &memRequirements2
 
 void Allocator::free(Allocation *allocation)
 {
-    std::unique_lock lck(lock);
+    std::scoped_lock lck(lock);
     for (auto heap : heaps)
     {
         for (uint32 i = 0; i < heap.allocations.size(); ++i)
@@ -307,7 +307,7 @@ void StagingManager::clearPending()
 
 PStagingBuffer StagingManager::allocateStagingBuffer(uint32 size, VkBufferUsageFlags usage, bool bCPURead)
 {
-    std::unique_lock l(lock);
+    std::scoped_lock l(lock);
     for (auto it = freeBuffers.begin(); it != freeBuffers.end(); ++it)
     {
         auto freeBuffer = *it;
@@ -323,6 +323,9 @@ PStagingBuffer StagingManager::allocateStagingBuffer(uint32 size, VkBufferUsageF
     PStagingBuffer stagingBuffer = new StagingBuffer();
     VkBufferCreateInfo stagingBufferCreateInfo = init::BufferCreateInfo(usage, size);
     stagingBufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    uint32 queueIndex = graphics->getFamilyMapping().getQueueTypeFamilyIndex(Gfx::QueueType::DEDICATED_TRANSFER);
+    stagingBufferCreateInfo.queueFamilyIndexCount = 1;
+    stagingBufferCreateInfo.pQueueFamilyIndices = &queueIndex;
     VkDevice vulkanDevice = graphics->getDevice();
 
     VK_CHECK(vkCreateBuffer(vulkanDevice, &stagingBufferCreateInfo, nullptr, &stagingBuffer->buffer));
@@ -355,7 +358,7 @@ PStagingBuffer StagingManager::allocateStagingBuffer(uint32 size, VkBufferUsageF
 
 void StagingManager::releaseStagingBuffer(PStagingBuffer buffer)
 {
-    std::unique_lock l(lock);
+    std::scoped_lock l(lock);
     freeBuffers.add(buffer);
     activeBuffers.remove(activeBuffers.find(buffer.getHandle()));
 }

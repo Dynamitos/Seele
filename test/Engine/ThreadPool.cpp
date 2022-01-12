@@ -23,13 +23,18 @@ Job basicThenThird()
     co_return;
 }
 
-BOOST_AUTO_TEST_CASE(basic_then)
+Job basicThenBase()
 {
-    basicThenFirst()
-        .then(basicThenSecond())
-        .then(basicThenThird());
+    co_await basicThenFirst();
+    co_await basicThenSecond();
+    co_await basicThenThird();
 }
 
+BOOST_AUTO_TEST_CASE(basic_then)
+{
+    basicThenBase();
+}
+/*
 uint64 basicAllState1 = 0;
 uint64 basicAllState2 = 0;
 Job basicAllFirst()
@@ -69,6 +74,6 @@ BOOST_AUTO_TEST_CASE(basic_callable)
             BOOST_REQUIRE_EQUAL(basicCallable, 10);
             co_return;
         });
-}
+}*/
 
 BOOST_AUTO_TEST_SUITE_END()

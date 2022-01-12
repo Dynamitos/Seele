@@ -34,7 +34,7 @@ public:
 };
 struct MeshBatch
 {
-    Array<MeshBatchElement> elements;
+    std::vector<MeshBatchElement> elements;
 
     uint8 useReverseCulling : 1;
     uint8 isBackfaceCullingDisabled : 1;
@@ -68,6 +68,10 @@ struct MeshBatch
     }
 
     MeshBatch();
+    MeshBatch(const MeshBatch& other) = default;
+    MeshBatch(MeshBatch&& other) = default;
+    MeshBatch& operator=(const MeshBatch& other) = default;
+    MeshBatch& operator=(MeshBatch&& other) = default;
 };
 DECLARE_REF(PrimitiveComponent)
 struct StaticMeshBatch : public MeshBatch

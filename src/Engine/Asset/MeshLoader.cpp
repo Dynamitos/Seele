@@ -122,7 +122,9 @@ VertexStreamComponent createVertexStream(uint32 size, aiVector3D* sourceData, Gf
     vbInfo.resourceData.data = (uint8 *)buffer.data();
     vbInfo.resourceData.owner = Gfx::QueueType::DEDICATED_TRANSFER;
     vbInfo.resourceData.size = sizeof(Vector) * (uint32)buffer.size();
-    return VertexStreamComponent(graphics->createVertexBuffer(vbInfo), 0, vbInfo.vertexSize, Gfx::SE_FORMAT_R32G32B32_SFLOAT);
+    Gfx::PVertexBuffer vertexBuffer = graphics->createVertexBuffer(vbInfo);
+    vertexBuffer->transferOwnership(Gfx::QueueType::GRAPHICS);
+    return VertexStreamComponent(vertexBuffer, 0, vbInfo.vertexSize, Gfx::SE_FORMAT_R32G32B32_SFLOAT);
 }
 VertexStreamComponent createVertexStream(uint32 size, aiVector2D* sourceData, Gfx::PGraphics graphics)
 {
@@ -137,7 +139,9 @@ VertexStreamComponent createVertexStream(uint32 size, aiVector2D* sourceData, Gf
     vbInfo.resourceData.data = (uint8 *)buffer.data();
     vbInfo.resourceData.owner = Gfx::QueueType::DEDICATED_TRANSFER;
     vbInfo.resourceData.size = sizeof(Vector2) * (uint32)buffer.size();
-    return VertexStreamComponent(graphics->createVertexBuffer(vbInfo), 0, vbInfo.vertexSize, Gfx::SE_FORMAT_R32G32_SFLOAT);
+    Gfx::PVertexBuffer vertexBuffer = graphics->createVertexBuffer(vbInfo);
+    vertexBuffer->transferOwnership(Gfx::QueueType::GRAPHICS);
+    return VertexStreamComponent(vertexBuffer, 0, vbInfo.vertexSize, Gfx::SE_FORMAT_R32G32_SFLOAT);
 }
 void MeshLoader::loadGlobalMeshes(const aiScene* scene, Array<PMesh>& globalMeshes, const Array<PMaterialAsset>& materials, Gfx::PGraphics graphics)
 {

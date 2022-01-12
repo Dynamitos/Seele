@@ -33,19 +33,39 @@ Scene::~Scene()
 {
 }
 
-void Scene::tick(double)
+void Scene::start() 
 {
+    for(auto actor : rootActors)
+    {
+        actor->launchStart();
+    }
+}
+
+Job Scene::beginUpdate(double deltaTime)
+{
+    for(auto actor : rootActors)
+    {
+        co_await Job::all(actor->launchTick(static_cast<float>(deltaTime)));
+    }
+}
+
+Job Scene::commitUpdate() 
+{
+    for(auto actor : rootActors)
+    {
+        co_await Job::all(actor->launchUpdate());
+    }
 }
 
 void Scene::addActor(PActor actor)
 {
-    rootActors.add(actor);
+    rootActors.push_back(actor);
     actor->notifySceneAttach(this);
 }
 
 void Scene::addPrimitiveComponent(PPrimitiveComponent comp)
 {
-    primitives.add(comp);
+    primitives.push_back(comp);
     for(auto& batch : comp->getStaticMeshes())
     {
         PrimitiveUniformBuffer data;
@@ -62,6 +82,6 @@ void Scene::addPrimitiveComponent(PPrimitiveComponent comp)
         {
             element.uniformBuffer = uniformBuffer;
         }
-        staticMeshes.add(batch);
+        staticMeshes.push_back(batch);
     }
 }

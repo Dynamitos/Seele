@@ -19,13 +19,14 @@ InspectorView::~InspectorView()
 {
 }
 
-void InspectorView::beginUpdate() 
+Job InspectorView::beginUpdate() 
 {
+    co_return;
 }
 
-void InspectorView::update() 
+Job InspectorView::update() 
 {
-    
+    co_return; 
 }
 
 void InspectorView::commitUpdate() 

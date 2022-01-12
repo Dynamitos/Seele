@@ -110,7 +110,7 @@ add_subdirectory(src/)
 
 if(MSVC)
   set(_CRT_SECURE_NO_WARNINGS)
-  target_compile_options(SeeleEngine PRIVATE /DEBUG:FASTLINK /Zi)
+  target_compile_options(SeeleEngine PRIVATE /Zi)
 else()
   target_compile_options(SeeleEngine PRIVATE -g -Wall -Wextra -Wno-delete-incomplete -pedantic -fcoroutines)
 endif()

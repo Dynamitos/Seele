@@ -28,12 +28,12 @@ public:
     std::string getExtension() const;
     inline Status getStatus() 
     {
-        std::unique_lock lck(lock);
+        std::scoped_lock lck(lock);
         return status;
     }
     inline void setStatus(Status status)
     {
-        std::unique_lock lck(lock);
+        std::scoped_lock lck(lock);
         this->status = status;
     }
 protected:

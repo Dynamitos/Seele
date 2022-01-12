@@ -15,11 +15,6 @@ public:
     PVertexShaderInput vertexInput;
     PMaterialAsset referencedMaterial;
 private:
-	friend class boost::serialization::access;
-	template<class Archive>
-	void serialize(Archive&, const unsigned int)
-	{
-    }
 };
 DEFINE_REF(Mesh)
 } // namespace Seele

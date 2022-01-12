@@ -144,6 +144,7 @@ public:
         VertexInputType* vertexInput,
         bool bPositionOnly);
 private:
+    std::mutex shadersLock;
     Array<ShaderCollection> shaders;
 };
 DEFINE_REF(ShaderMap)
@@ -242,7 +243,14 @@ DEFINE_REF(DescriptorLayout)
 class PipelineLayout
 {
 public:
-    PipelineLayout() {}
+    PipelineLayout(PPipelineLayout baseLayout)
+    {
+        if(baseLayout != nullptr)
+        {
+            descriptorSetLayouts = baseLayout->descriptorSetLayouts;
+            pushConstants = baseLayout->pushConstants;
+        }
+    }
     virtual ~PipelineLayout() {}
     virtual void create() = 0;
     virtual void reset() = 0;

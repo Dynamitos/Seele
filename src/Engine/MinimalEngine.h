@@ -49,7 +49,7 @@ public:
     ~RefObject()
     {
         {
-            std::unique_lock lock(registeredObjectsLock);
+            std::scoped_lock lock(registeredObjectsLock);
             registeredObjects.erase(handle);
         }
 //    #pragma warning( disable: 4150)
@@ -114,7 +114,7 @@ public:
     }
     RefPtr(T *ptr, Deleter deleter = Deleter())
     {
-        std::unique_lock l(registeredObjectsLock);
+        std::scoped_lock l(registeredObjectsLock);
         auto registeredObj = registeredObjects.find(ptr);
         // get here for thread safetly
         auto registeredEnd = registeredObjects.end();
@@ -248,6 +248,10 @@ public:
     inline const T *getHandle() const
     {
         return object->getHandle();
+    }
+    RefPtr<T, Deleter> clone()
+    {
+        return RefPtr<T, Deleter>(new T(*getHandle()));
     }
 
 private:

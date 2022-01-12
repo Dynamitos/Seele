@@ -54,7 +54,7 @@ PipelineLayout::~PipelineLayout()
 {
     if (layoutHandle != VK_NULL_HANDLE)
     {
-        vkDestroyPipelineLayout(graphics->getDevice(), layoutHandle, nullptr);
+        //vkDestroyPipelineLayout(graphics->getDevice(), layoutHandle, nullptr);
     }
 }
 

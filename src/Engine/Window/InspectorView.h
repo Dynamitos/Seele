@@ -13,8 +13,8 @@ public:
     InspectorView(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo &createInfo);
     virtual ~InspectorView();
 
-    virtual void beginUpdate() override;
-	virtual void update() override;
+    virtual Job beginUpdate() override;
+	virtual Job update() override;
 	virtual void commitUpdate() override;
     
     virtual void prepareRender() override;

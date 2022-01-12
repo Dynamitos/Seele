@@ -14,6 +14,11 @@
 
 using namespace Seele::Vulkan;
 
+thread_local PCommandBufferManager Seele::Vulkan::Graphics::graphicsCommands = nullptr;
+thread_local PCommandBufferManager Seele::Vulkan::Graphics::computeCommands = nullptr;
+thread_local PCommandBufferManager Seele::Vulkan::Graphics::transferCommands = nullptr;
+thread_local PCommandBufferManager Seele::Vulkan::Graphics::dedicatedTransferCommands = nullptr;
+
 Graphics::Graphics()
     : instance(VK_NULL_HANDLE)
     , handle(VK_NULL_HANDLE)
@@ -52,7 +57,7 @@ Gfx::PWindow Graphics::createWindow(const WindowCreateInfo &createInfo)
 Gfx::PViewport Graphics::createViewport(Gfx::PWindow owner, const ViewportCreateInfo &viewportInfo)
 {
     PViewport result = new Viewport(this, owner, viewportInfo);
-    std::unique_lock lock(viewportLock);
+    std::scoped_lock lock(viewportLock);
     viewports.add(result);
     return result;
 }
@@ -67,7 +72,7 @@ void Graphics::beginRenderPass(Gfx::PRenderPass renderPass)
     uint32 framebufferHash = rp->getFramebufferHash();
     PFramebuffer framebuffer;
     {
-        std::unique_lock lock(allocatedFrameBufferLock);
+        std::scoped_lock lock(allocatedFrameBufferLock);
         auto found = allocatedFramebuffers.find(framebufferHash);
         if (found == allocatedFramebuffers.end())
         {
@@ -80,12 +85,18 @@ void Graphics::beginRenderPass(Gfx::PRenderPass renderPass)
         }
     }
     getGraphicsCommands()->getCommands()->beginRenderPass(rp, framebuffer);
+    std::scoped_lock lock(renderPassLock);
+    activeRenderPass = rp;
+    activeFramebuffer = framebuffer;
 }
 
 void Graphics::endRenderPass()
 {
     getGraphicsCommands()->getCommands()->endRenderPass();
     getGraphicsCommands()->submitCommands();
+    std::scoped_lock lock(renderPassLock);
+    activeRenderPass = nullptr;
+    activeFramebuffer = nullptr;
 }
 
 void Graphics::executeCommands(const Array<Gfx::PRenderCommand>& commands)
@@ -128,7 +139,7 @@ Gfx::PIndexBuffer Graphics::createIndexBuffer(const IndexBufferCreateInfo &bulkD
 }
 Gfx::PRenderCommand Graphics::createRenderCommand(const std::string& name)
 {
-    PRenderCommand cmdBuffer = getGraphicsCommands()->createRenderCommand(name);
+    PRenderCommand cmdBuffer = getGraphicsCommands()->createRenderCommand(activeRenderPass, activeFramebuffer, name);
     return cmdBuffer;
 }
 
@@ -206,9 +217,9 @@ Gfx::PDescriptorLayout Graphics::createDescriptorLayout(const std::string& name)
     PDescriptorLayout layout = new DescriptorLayout(this, name);
     return layout;
 }
-Gfx::PPipelineLayout Graphics::createPipelineLayout()
+Gfx::PPipelineLayout Graphics::createPipelineLayout(Gfx::PPipelineLayout baseLayout)
 {
-    PPipelineLayout layout = new PipelineLayout(this);
+    PPipelineLayout layout = new PipelineLayout(this, baseLayout);
     return layout;
 }
 
@@ -295,49 +306,37 @@ PCommandBufferManager Graphics::getQueueCommands(Gfx::QueueType queueType)
         throw new std::logic_error("invalid queue type");
     }
 }
-std::mutex graphicsCommandLock;
 PCommandBufferManager Graphics::getGraphicsCommands()
 {
-    std::unique_lock lock(graphicsCommandLock);
-    auto id = std::this_thread::get_id();
-    if(graphicsCommands.find(id) == graphicsCommands.end())
+    if(graphicsCommands == nullptr)
     {
-        graphicsCommands[id] = new CommandBufferManager(this, graphicsQueue);
+        graphicsCommands = new CommandBufferManager(this, graphicsQueue);
     }
-    return graphicsCommands[id];
+    return graphicsCommands;
 }
-std::mutex computeCommandLock;
 PCommandBufferManager Graphics::getComputeCommands()
 {
-    std::unique_lock lock(computeCommandLock);
-    auto id = std::this_thread::get_id();
-    if(computeCommands.find(id) == computeCommands.end())
+    if(computeCommands == nullptr)
     {
-        computeCommands[id] = new CommandBufferManager(this, computeQueue);
+        computeCommands = new CommandBufferManager(this, computeQueue);
     }
-    return computeCommands[id];
+    return computeCommands;
 }
-std::mutex transferCommandLock;
 PCommandBufferManager Graphics::getTransferCommands()
 {
-    std::unique_lock lock(transferCommandLock);
-    auto id = std::this_thread::get_id();
-    if(transferCommands.find(id) == transferCommands.end())
+    if(transferCommands == nullptr)
     {
-        transferCommands[id] = new CommandBufferManager(this, transferQueue);
+        transferCommands = new CommandBufferManager(this, transferQueue);
     }
-    return transferCommands[id];
+    return transferCommands;
 }
-std::mutex dedicatedCommandLock;
 PCommandBufferManager Graphics::getDedicatedTransferCommands()
 {
-    std::unique_lock lock(dedicatedCommandLock);
-    auto id = std::this_thread::get_id();
-    if(dedicatedTransferCommands.find(id) == dedicatedTransferCommands.end())
+    if(dedicatedTransferCommands == dedicatedTransferCommands)
     {
-        dedicatedTransferCommands[id] = new CommandBufferManager(this, dedicatedTransferQueue);
+        dedicatedTransferCommands = new CommandBufferManager(this, dedicatedTransferQueue);
     }
-    return dedicatedTransferCommands[id];
+    return dedicatedTransferCommands;
 }
 PAllocator Graphics::getAllocator()
 {

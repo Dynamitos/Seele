@@ -26,7 +26,7 @@ PrimitiveComponent::PrimitiveComponent(PMeshAsset asset)
         batch.useReverseCulling = false;
         batch.useWireframe = false;
         batch.vertexInput = assetMeshes[i]->vertexInput;
-        auto& batchElement = batch.elements.add();
+        MeshBatchElement batchElement;
         batchElement.baseVertexIndex = 0;
         batchElement.firstIndex = 0;
         batchElement.indexBuffer = assetMeshes[i]->indexBuffer;
@@ -35,6 +35,7 @@ PrimitiveComponent::PrimitiveComponent(PMeshAsset asset)
         batchElement.isInstanced = false;
         batchElement.numInstances = 1;
         batchElement.numPrimitives = assetMeshes[i]->indexBuffer->getNumIndices() / 3; //TODO: hardcoded
+        batch.elements.push_back(batchElement);
     }
 }
 

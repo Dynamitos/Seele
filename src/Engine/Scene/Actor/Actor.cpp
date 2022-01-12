@@ -12,8 +12,36 @@ Actor::~Actor()
 {
 
 }
-void Actor::tick(float)
+
+void Actor::launchStart() 
 {
+    rootComponent->launchStart();
+    for(auto child : children)
+    {
+        child->launchStart();
+    }
+    start();
+}
+Array<Job> Actor::launchTick(float deltaTime) const
+{
+    Array<Job> result = rootComponent->launchTick(deltaTime);
+    for(auto child : children)
+    {
+        result.addAll(child->launchTick(deltaTime));
+    }
+    result.add(tick(deltaTime));
+    return result;
+}
+
+Array<Job> Actor::launchUpdate() 
+{
+    Array<Job> result = rootComponent->launchUpdate();
+    for(auto child : children)
+    {
+        result.addAll(child->launchUpdate());
+    }
+    result.add(update());
+    return result;
 }
 void Actor::notifySceneAttach(PScene scene)
 {

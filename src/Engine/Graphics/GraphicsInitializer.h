@@ -22,18 +22,11 @@ struct GraphicsInitializer
     GraphicsInitializer()
         : applicationName("SeeleEngine")
         , engineName("SeeleEngine")
+        , windowLayoutFile(nullptr)
         , layers{"VK_LAYER_KHRONOS_validation", "VK_LAYER_LUNARG_monitor"}
         , instanceExtensions{}
         , deviceExtensions{"VK_KHR_swapchain"}
         , windowHandle(nullptr)
-    {
-    }
-    GraphicsInitializer(const GraphicsInitializer &other)
-        : applicationName(other.applicationName)
-        , engineName(other.engineName)
-        , layers(other.layers)
-        , instanceExtensions(other.instanceExtensions)
-        , deviceExtensions(other.deviceExtensions)
     {
     }
 };

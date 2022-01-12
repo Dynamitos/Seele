@@ -32,7 +32,7 @@ MainJob Window::render()
         co_await windowView->updateFinished;
         windowView->updateFinished.reset();
         {
-            std::unique_lock lock(windowView->workerMutex);
+            std::scoped_lock lock(windowView->workerMutex);
             windowView->view->prepareRender();
         }
         windowView->view->render();
@@ -78,7 +78,7 @@ Job Window::viewWorker(size_t viewIndex)
     windowView->view->beginUpdate();
     windowView->view->update();
     {
-        std::unique_lock lock(windowView->workerMutex);
+        std::scoped_lock lock(windowView->workerMutex);
         windowView->view->commitUpdate();
     }
     //std::cout << "Update completed" << std::endl;

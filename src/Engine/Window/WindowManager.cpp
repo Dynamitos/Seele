@@ -41,7 +41,7 @@ void WindowManager::notifyWindowClosed(PWindow window)
     windows.remove(windows.find(window));
     if(windows.empty())
     {
-        std::unique_lock lock(windowsLock);
+        std::scoped_lock lock(windowsLock);
         windowsCV.notify_all();
     }
 }
