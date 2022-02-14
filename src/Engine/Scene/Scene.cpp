@@ -43,18 +43,30 @@ void Scene::start()
 
 Job Scene::beginUpdate(double deltaTime)
 {
+    //std::cout << "Scene::beginUpdate" << std::endl;
+    Array<Job> jobs;
     for(auto actor : rootActors)
     {
-        co_await Job::all(actor->launchTick(static_cast<float>(deltaTime)));
+        jobs.addAll(actor->launchTick(static_cast<float>(deltaTime)));
+    }
+    co_await Job::all(jobs);
+    //std::cout << "Scene::beginUpdate finished waiting" << std::endl;
+    for(auto job : jobs)
+    {
+        assert(job.done());
     }
 }
 
 Job Scene::commitUpdate() 
 {
+    //std::cout << "Scene::commitUpdate" << std::endl;
+    Array<Job> jobs;
     for(auto actor : rootActors)
     {
-        co_await Job::all(actor->launchUpdate());
+        jobs.addAll(actor->launchUpdate());
     }
+    co_await Job::all(jobs);
+    //std::cout << "Scene::commitUpdate finished waiting" << std::endl;
 }
 
 void Scene::addActor(PActor actor)

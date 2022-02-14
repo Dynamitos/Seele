@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <Type Name="Seele::Array&lt;*&gt;">
+    <DisplayString>{{ size={arraySize} }}</DisplayString>
+    <Expand>
+      <Item Name="[size]" ExcludeView="simple">arraySize</Item>
+      <Item Name="[allocated]" ExcludeView="simple">allocated</Item>
+      <ArrayItems>
+        <Size>arraySize</Size>
+        <ValuePointer>_data</ValuePointer>
+      </ArrayItems>
+    </Expand>
+  </Type>
+  <Type Name="Seele::List&lt;*&gt;">
+    <DisplayString>{{ size={_size} }}</DisplayString>
+    <Expand>
+      <Item Name="[size]" ExcludeView="simple">_size</Item>
+      <LinkedListItems>
+        <Size>_size</Size>
+        <HeadPointer>root</HeadPointer>
+        <NextPointer>next</NextPointer>
+        <ValueNode>data</ValueNode>
+      </LinkedListItems>
+    </Expand>
+  </Type>
+  <Type Name="Seele::Map&lt;*&gt;">
+    <DisplayString>{{size={_size}}</DisplayString>
+    <Expand>
+      <Item Name="[size]">_size</Item>
+      <Item Name="[comp]">comp</Item>
+      <ArrayItems>
+        <Size>nodeContainer.arraySize</Size>
+        <ValuePointer>nodeContainer._data</ValuePointer>
+      </ArrayItems>
+    </Expand>
+  </Type>
+  <Type Name="Seele::RefPtr&lt;*&gt;">
+    <DisplayString>RefPtr {*object->handle} {object->refCount.load()} references</DisplayString>
+    <Expand>
+      <ExpandedItem>object->handle</ExpandedItem>
+    </Expand>
+  </Type>
+</AutoVisualizer>

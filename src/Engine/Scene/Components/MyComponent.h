@@ -13,7 +13,7 @@ public:
     virtual Job update();
 private:
     Writable<PMyOtherComponent> otherComp;
-    Writable<uint32> writable = Writable<uint32>(0);
+    Writable<uint32> writable = 0;
     uint32 notWritable = 10;
 };
 DECLARE_REF(MyComponent);

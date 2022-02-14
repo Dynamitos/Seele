@@ -75,8 +75,8 @@ void Window::setFocused(PView view)
 Job Window::viewWorker(size_t viewIndex)
 {
     WindowView* windowView = views[viewIndex];
-    windowView->view->beginUpdate();
-    windowView->view->update();
+    co_await windowView->view->beginUpdate();
+    co_await windowView->view->update();
     {
         std::scoped_lock lock(windowView->workerMutex);
         windowView->view->commitUpdate();

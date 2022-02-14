@@ -6,7 +6,7 @@ using namespace Seele;
 std::atomic_uint64_t Seele::globalCounter;
 
 Event::Event()
-    : flag(std::make_shared<std::atomic_bool>())
+    : flag(std::make_shared<StateStore>())
 {
 }
 
@@ -17,23 +17,31 @@ Event::Event(nullptr_t)
 
 Event::Event(const std::string &name)
     : name(name)
-    , flag(std::make_shared<std::atomic_bool>())
+    , flag(std::make_shared<StateStore>())
 {
 }
 
 void Event::raise()
 {
-    flag->store(1);
+    std::scoped_lock lock(flag->lock);
+    flag->data = 1;
     getGlobalThreadPool().notify(*this);
 }
 void Event::reset()
 {
-    flag->store(0);
+    std::scoped_lock lock(flag->lock);
+    flag->data = 0;
 }
 
 bool Event::await_ready()
 {
-    return flag->load();
+    flag->lock.lock();
+    bool result = flag->data;
+    if(result)
+    {
+        flag->lock.unlock();
+    }
+    return result;
 }
 
 ThreadPool::ThreadPool(uint32 threadCount)
@@ -48,7 +56,15 @@ ThreadPool::ThreadPool(uint32 threadCount)
 
 ThreadPool::~ThreadPool()
 {
-    running.store(false);
+    cleanup();
+}
+
+void ThreadPool::cleanup()
+{
+    bool temp = true;
+    running.compare_exchange_strong(temp, false);
+    if(!temp)
+        return;
     {
         std::scoped_lock lock(jobQueueLock);
         jobQueueCV.notify_all();
@@ -71,6 +87,7 @@ void ThreadPool::enqueueWaiting(Event &event, Promise* job)
     std::scoped_lock lock(waitingLock);
     //std::cout << "Job " << job->finishedEvent.name << " waiting on event " << event.name << std::endl;
     waitingJobs[event].push_back(job);
+    job->addRef();
 }
 void ThreadPool::enqueueWaiting(Event &event, MainPromise* job)
 {
@@ -78,6 +95,7 @@ void ThreadPool::enqueueWaiting(Event &event, MainPromise* job)
     std::scoped_lock lock(waitingMainLock);
     //std::cout << job->finishedEvent.name << " waiting on event " << event.name << std::endl;
     waitingMainJobs[event].push_back(job);
+    job->addRef();
 }
 void ThreadPool::scheduleJob(Promise* job)
 {
@@ -86,6 +104,7 @@ void ThreadPool::scheduleJob(Promise* job)
     //std::cout << "Queueing job " << job->finishedEvent.name << std::endl;
     jobQueue.push_back(job);
     jobQueueCV.notify_one();
+    job->addRef();
 }
 void ThreadPool::scheduleJob(MainPromise* job)
 {
@@ -94,6 +113,7 @@ void ThreadPool::scheduleJob(MainPromise* job)
     //std::cout << "Queueing job " << job->finishedEvent.name << std::endl;
     mainJobs.push_back(job);
     mainJobCV.notify_one();
+    job->addRef();
 }
 void ThreadPool::notify(Event &event)
 {
@@ -149,10 +169,7 @@ void ThreadPool::threadLoop(const bool mainThread)
                 }
             }
             job->resume();
-            if (job->done())
-            {
-                job->finalize();
-            }
+            job->removeRef();
         }
         else
         {
@@ -175,14 +192,10 @@ void ThreadPool::threadLoop(const bool mainThread)
             }
             //std::cout << "Starting job " << job.id << std::endl;
             job->resume();
-            if(job->done())
-            {
-                job->finalize();
-            }
+            job->removeRef();
         }
     }
 }
-
 ThreadPool &Seele::getGlobalThreadPool()
 {
     static ThreadPool threadPool;

@@ -40,12 +40,15 @@ Seele::SceneView::SceneView(Gfx::PGraphics graphics, PWindow owner, const Viewpo
     plane->setWorldScale(Vector(100, 100, 100));
     scene->addPrimitiveComponent(plane);
 
-    PMyComponent myComp = new MyComponent();
-    PMyOtherComponent myOtherComp = new MyOtherComponent();
-    PActor actor = new Actor();
-    actor->setRootComponent(myComp);
-    myComp->addChildComponent(myOtherComp);
-    scene->addActor(actor);
+    for(uint32 i = 0; i < 1; ++i)
+    {
+        PMyComponent myComp = new MyComponent();
+        PMyOtherComponent myOtherComp = new MyOtherComponent();
+        PActor actor = new Actor();
+        actor->setRootComponent(myComp);
+        myComp->addChildComponent(myOtherComp);
+        scene->addActor(actor);
+    }
     scene->start();
     
     PRenderGraphResources resources = new RenderGraphResources();

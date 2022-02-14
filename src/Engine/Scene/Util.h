@@ -9,15 +9,15 @@ class Writable
 public:
     Writable()
     {}
-    explicit Writable(T initialData)
+    Writable(T initialData)
         : data(initialData)
         , toBeWritten(initialData)
     {}
     Writable(const Writable& other) = delete;
     Writable(Writable&& other) = default;
     ~Writable() = default;
-    Writable& operator=(const Writable& other) = delete;
-    Writable& operator=(Writable&& other) = default;
+    Writable& operator=(const Writable& other) const = delete;
+    Writable& operator=(Writable&& other) const = delete;
     const Writable& operator=(const T& other) const
     {
         deferWrite(other);
