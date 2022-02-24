@@ -26,7 +26,7 @@ public:
     static void modifyRenderPassMacros(Map<const char*, const char*>& defines);
 private:
     void setupFrustums();
-    static constexpr uint32 BLOCK_SIZE = 8;
+    static constexpr uint32 BLOCK_SIZE = 32;
     static constexpr uint32 INDEX_LIGHT_ENV = 1;
     struct DispatchParams
     {
@@ -39,9 +39,6 @@ private:
     {
         Vector n;
         float d;
-        Vector p0;
-        Vector p1;
-        Vector p2;
     };
     struct Frustum
     {

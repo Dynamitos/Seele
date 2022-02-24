@@ -332,7 +332,7 @@ PCommandBufferManager Graphics::getTransferCommands()
 }
 PCommandBufferManager Graphics::getDedicatedTransferCommands()
 {
-    if(dedicatedTransferCommands == dedicatedTransferCommands)
+    if(dedicatedTransferCommands == nullptr)
     {
         dedicatedTransferCommands = new CommandBufferManager(this, dedicatedTransferQueue);
     }

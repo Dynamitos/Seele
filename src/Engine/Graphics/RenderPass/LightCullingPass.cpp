@@ -75,7 +75,7 @@ MainJob LightCullingPass::beginFrame()
     lightEnvDescriptorSet->updateBuffer(2, pointLightBuffer);
     lightEnvDescriptorSet->updateBuffer(3, numPointLightBuffer);
     lightEnvDescriptorSet->writeChanges();
-    //std::cout << "Finished light culling beginFrame()" << std::endl;
+    //std::cout << "LightCulling beginFrame()" << std::endl;
     co_return;
 }
 
@@ -103,11 +103,13 @@ MainJob LightCullingPass::render()
     graphics->executeCommands(commands);
     depthAttachment->changeLayout(Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
     depthAttachment->transferOwnership(Gfx::QueueType::GRAPHICS);
+    //std::cout << "LightCulling render()" << std::endl;
     co_return;
 }
 
 MainJob LightCullingPass::endFrame() 
 {
+    //std::cout << "LightCulling endFrame()" << std::endl;
     co_return;
 }
 

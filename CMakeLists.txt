@@ -77,19 +77,19 @@ if(CMAKE_DEBUG_POSTFIX)
   add_compile_definitions(ENABLE_VALIDATION)
   add_compile_definitions(SEELE_DEBUG)
 endif()
-add_executable(SeeleEngine "")
-target_link_libraries(SeeleEngine ${Vulkan_LIBRARY})
-target_link_libraries(SeeleEngine ${Boost_LIBRARIES})
-target_link_libraries(SeeleEngine ${GLFW_LIBRARIES})
-target_link_libraries(SeeleEngine ${SLANG_LIBRARIES})
-target_link_libraries(SeeleEngine ${ASSIMP_LIBRARIES})
-target_link_libraries(SeeleEngine ${NSAM_LIBRARIES})
-target_link_libraries(SeeleEngine ${KTX_LIBRARIES})
+add_executable(Engine "")
+target_link_libraries(Engine ${Vulkan_LIBRARY})
+target_link_libraries(Engine ${Boost_LIBRARIES})
+target_link_libraries(Engine ${GLFW_LIBRARIES})
+target_link_libraries(Engine ${SLANG_LIBRARIES})
+target_link_libraries(Engine ${ASSIMP_LIBRARIES})
+target_link_libraries(Engine ${NSAM_LIBRARIES})
+target_link_libraries(Engine ${KTX_LIBRARIES})
 if(UNIX)
-  target_link_libraries(SeeleEngine Threads::Threads)
-  target_link_libraries(SeeleEngine dl)
+  target_link_libraries(Engine Threads::Threads)
+  target_link_libraries(Engine dl)
 endif()
-target_precompile_headers(SeeleEngine 
+target_precompile_headers(Engine 
   PRIVATE    
     <assert.h>
     <atomic>
@@ -111,9 +111,9 @@ add_subdirectory(src/)
 
 if(MSVC)
   set(_CRT_SECURE_NO_WARNINGS)
-  target_compile_options(SeeleEngine PRIVATE /Zi)
+  target_compile_options(Engine PRIVATE /Zi /MP)
 else()
-  target_compile_options(SeeleEngine PRIVATE -g -Wall -Wextra -Wno-delete-incomplete -pedantic -fcoroutines)
+  target_compile_options(Engine PRIVATE -g -Wall -Wextra -Wno-delete-incomplete -pedantic -fcoroutines)
 endif()
 
 add_executable(Seele_unit_tests "")
@@ -121,19 +121,19 @@ add_subdirectory(test/)
 
 if(WIN32)
   add_custom_target(copy-binaries ALL
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SLANG_BINARIES} $<TARGET_FILE_DIR:SeeleEngine>
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SLANG_GLSLANG} $<TARGET_FILE_DIR:SeeleEngine>
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${GLFW_BINARY} $<TARGET_FILE_DIR:SeeleEngine>
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${ASSIMP_BINARY} $<TARGET_FILE_DIR:SeeleEngine>
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${NSAM_BINARIES} $<TARGET_FILE_DIR:SeeleEngine>
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${NSAM_LLVM} $<TARGET_FILE_DIR:SeeleEngine>
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${KTX_BINARIES} $<TARGET_FILE_DIR:SeeleEngine>)
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SLANG_BINARIES} $<TARGET_FILE_DIR:Engine>
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SLANG_GLSLANG} $<TARGET_FILE_DIR:Engine>
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${GLFW_BINARY} $<TARGET_FILE_DIR:Engine>
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${ASSIMP_BINARY} $<TARGET_FILE_DIR:Engine>
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${NSAM_BINARIES} $<TARGET_FILE_DIR:Engine>
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${NSAM_LLVM} $<TARGET_FILE_DIR:Engine>
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${KTX_BINARIES} $<TARGET_FILE_DIR:Engine>)
 else()
   add_custom_target(copy-binaries ALL COMMAND "")
 endif()
 
-add_custom_target(copy-runtime-files ALL
-	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/res $<TARGET_FILE_DIR:SeeleEngine>
-	DEPENDS SeeleEngine copy-binaries)
+add_custom_target(SeeleEngine ALL
+	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/res $<TARGET_FILE_DIR:Engine>
+	DEPENDS Engine copy-binaries)
 
   

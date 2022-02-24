@@ -93,18 +93,15 @@ uint64 basicAllState2 = 0;
 Job basicAllFirst()
 {
     basicAllState1 = 10;
-    std::cout << "AllFirst" << std::endl;
     co_return;
 }
 Job basicAllSecond()
 {
     basicAllState2 = 10;
-    std::cout << "AllSecond" << std::endl;
     co_return;
 }
 Job basicAllThen()
 {
-    std::cout << "AllThen" << std::endl;
     BOOST_REQUIRE_EQUAL(basicAllState1, 10);
     BOOST_REQUIRE_EQUAL(basicAllState2, 10);
     co_return;
@@ -129,7 +126,6 @@ BOOST_AUTO_TEST_CASE(basic_callable)
         .then([=]() -> Job
         {
             BOOST_REQUIRE_EQUAL(basicCallable, 10);
-            std::cout << "callable" << std::endl;
             co_return;
         });
 }

@@ -23,21 +23,42 @@
       </LinkedListItems>
     </Expand>
   </Type>
+  <Type Name="Seele::Pair&lt;*,*&gt;">
+      <DisplayString>[{key}, {value}]</DisplayString>
+      <Expand>
+          <Item Name="[key]">key</Item>
+          <Item Name="[value]">value</Item>
+      </Expand>
+  </Type>
   <Type Name="Seele::Map&lt;*&gt;">
     <DisplayString>{{size={_size}}</DisplayString>
     <Expand>
       <Item Name="[size]">_size</Item>
       <Item Name="[comp]">comp</Item>
       <ArrayItems>
-        <Size>nodeContainer.arraySize</Size>
+        <Size>_size</Size>
         <ValuePointer>nodeContainer._data</ValuePointer>
       </ArrayItems>
     </Expand>
   </Type>
+  <Type Name="Seele::Map&lt;*&gt;::IteratorBase&lt;*&gt;">
+    <DisplayString Condition="nodeContainer.arraySize==0">empty</DisplayString>
+    <DisplayString>[{nodeContainer._data[node].pair}]</DisplayString>
+    <Expand>
+      <ExpandedItem>nodeContainer._data[node].pair</ExpandedItem>
+    </Expand>
+  </Type>
   <Type Name="Seele::RefPtr&lt;*&gt;">
-    <DisplayString>RefPtr {*object->handle} {object->refCount.load()} references</DisplayString>
+    <DisplayString Condition="object == nullptr">empty</DisplayString>
+    <DisplayString>RefPtr {*object->handle} {object->refCount} references</DisplayString>
     <Expand>
       <ExpandedItem>object->handle</ExpandedItem>
+    </Expand>
+  </Type>
+  <Type Name="Seele::UniquePtr&lt;*&gt;">
+    <DisplayString>UniquePtr {*handle}</DisplayString>
+    <Expand>
+      <ExpandedItem>handle</ExpandedItem>
     </Expand>
   </Type>
 </AutoVisualizer>

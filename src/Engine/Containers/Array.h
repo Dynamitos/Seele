@@ -320,7 +320,7 @@ public:
     {
         remove(it - beginIt, keepOrder);
     }
-    constexpr void remove(int index, bool keepOrder = true)
+    constexpr void remove(size_type index, bool keepOrder = true)
     {
         if (keepOrder)
         {
@@ -333,7 +333,7 @@ public:
         {
             _data[index] = std::move(_data[arraySize - 1]);
         }
-        arraySize--;
+        std::allocator_traits<allocator_type>::destroy(allocator, &_data[--arraySize]);
         markIteratorDirty();
     }
     constexpr void resize(size_type newSize)

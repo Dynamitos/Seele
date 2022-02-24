@@ -1,4 +1,4 @@
-target_sources(SeeleEngine
+target_sources(Engine
 	PRIVATE
         Util.h
         Scene.cpp

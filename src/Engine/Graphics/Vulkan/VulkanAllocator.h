@@ -146,7 +146,7 @@ public:
 private:
 	enum
 	{
-		MemoryBlockSize = 64 * 1024 * 1024 // 64MB
+		MemoryBlockSize = 16 * 1024 * 1024 // 16MB
 	};
 	struct HeapInfo
 	{

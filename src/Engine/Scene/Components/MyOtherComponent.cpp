@@ -4,7 +4,7 @@ using namespace Seele;
 
 Job MyOtherComponent::tick(float deltaTime) const
 {
-    std::cout << *data << std::endl;
+    //std::cout << *data << std::endl;
     co_return;
 }
 

@@ -19,7 +19,6 @@ struct DirectionalLight
 struct PointLight
 {
     Vector4 positionWS;
-    Vector4 positionVS;
     Vector4 colorRange;
 };
 
@@ -46,7 +45,7 @@ public:
 
     const std::vector<PPrimitiveComponent>& getPrimitives() const { return primitives; }
     const std::vector<StaticMeshBatch>& getStaticMeshes() const { return staticMeshes; }
-    const LightEnv& getLightBuffer() const { return lightEnv; }
+    LightEnv& getLightBuffer() { return lightEnv; }
 private:
     std::vector<StaticMeshBatch> staticMeshes;
     std::vector<PActor> rootActors;

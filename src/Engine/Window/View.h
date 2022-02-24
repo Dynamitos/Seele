@@ -24,15 +24,12 @@ public:
 	virtual MainJob render() = 0;
 	void applyArea(URect area);
 	void setFocused();
-	Event renderFinished() { return renderFinishedEvent; }
-	void resetRender() { renderFinishedEvent.reset(); }
 
 protected:
 	Gfx::PGraphics graphics;
 	Gfx::PViewport viewport;
 	PWindow owner;
 	std::string name;
-	Event renderFinishedEvent;
 	
 	virtual void keyCallback(KeyCode code, InputAction action, KeyModifier modifier) = 0;
 	virtual void mouseMoveCallback(double xPos, double yPos) = 0;

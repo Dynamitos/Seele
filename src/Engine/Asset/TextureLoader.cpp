@@ -38,7 +38,7 @@ PTextureAsset TextureLoader::getPlaceholderTexture()
     return placeholderAsset;
 }
 
-Job TextureLoader::import(std::filesystem::path path, PTextureAsset textureAsset)
+void TextureLoader::import(std::filesystem::path path, PTextureAsset textureAsset)
 {
     int x, y, n;
     unsigned char* data = stbi_load(path.string().c_str(), &x, &y, &n, 4);
@@ -70,5 +70,5 @@ Job TextureLoader::import(std::filesystem::path path, PTextureAsset textureAsset
 
     textureAsset->load();
     textureAsset->setStatus(Asset::Status::Ready);
-    co_return;
+    //co_return;
 }

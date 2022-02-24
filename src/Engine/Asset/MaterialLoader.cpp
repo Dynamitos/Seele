@@ -27,12 +27,12 @@ void MaterialLoader::importAsset(const std::filesystem::path& name)
     import(name, asset);
 }
 
-Job MaterialLoader::import(std::filesystem::path, PMaterialAsset asset)
+void MaterialLoader::import(std::filesystem::path, PMaterialAsset asset)
 {
     asset->load();
     graphics->getShaderCompiler()->registerMaterial(asset);
     AssetRegistry::get().registerMaterial(asset);
-    co_return;
+    //co_return;
 }
 
 PMaterialAsset MaterialLoader::getPlaceHolderMaterial() 

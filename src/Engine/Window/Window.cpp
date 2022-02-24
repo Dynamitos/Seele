@@ -27,21 +27,16 @@ void Window::addView(PView view)
 MainJob Window::render() 
 {
     gfxHandle->beginFrame();
+    Array<MainJob> jobs;
     for(auto& windowView : views)
     {
-        co_await windowView->updateFinished;
-        windowView->updateFinished.reset();
         {
             std::scoped_lock lock(windowView->workerMutex);
             windowView->view->prepareRender();
         }
-        windowView->view->render();
+        jobs.add(windowView->view->render());
     }
-    for(auto& windowView : views)
-    {
-        co_await windowView->view->renderFinished();
-        windowView->view->resetRender();
-    }
+    co_await MainJob::all(jobs);
     gfxHandle->endFrame();
     if(owner->isActive())
     {
@@ -82,8 +77,11 @@ Job Window::viewWorker(size_t viewIndex)
         windowView->view->commitUpdate();
     }
     //std::cout << "Update completed" << std::endl;
-    windowView->updateFinished.raise();
+    //windowView->updateFinished.raise();
     // enqueue next frame update
-    viewWorker(viewIndex);
+    if(owner->isActive())
+    {
+        viewWorker(viewIndex);
+    }
     co_return;
 }

@@ -18,7 +18,7 @@ public:
     void importAsset(const std::filesystem::path& name);
     PMaterialAsset getPlaceHolderMaterial();
 private:
-    Job import(std::filesystem::path filePath, PMaterialAsset asset);
+    void import(std::filesystem::path filePath, PMaterialAsset asset);
     Gfx::PGraphics graphics;
     List<std::future<void>> futures;
     PMaterialAsset placeholderMaterial;

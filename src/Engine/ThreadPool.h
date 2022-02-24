@@ -4,6 +4,7 @@
 #include "MinimalEngine.h"
 #include "Containers/List.h"
 #include "Concepts.h"
+#include <source_location>
 
 namespace Seele
 {
@@ -66,11 +67,11 @@ struct JobPromiseBase
         EXECUTING,
         DONE
     };
-    JobPromiseBase()
+    JobPromiseBase(const std::source_location& location = std::source_location::current())
     {
         handle = std::coroutine_handle<JobPromiseBase<MainJob>>::from_promise(*this);
         id = globalCounter++;
-        finishedEvent = Event(std::format("Job {}", id));
+        finishedEvent = Event(std::string(location.file_name()).append(": ").append(location.function_name()));
     }
     ~JobPromiseBase()
     {}
@@ -101,6 +102,7 @@ struct JobPromiseBase
         finishedEvent.raise();
         if(continuation)
         {
+            std::scoped_lock lock(continuation->promiseLock);
             getGlobalThreadPool().scheduleJob(continuation);
             continuation->removeRef();
         }
@@ -108,6 +110,7 @@ struct JobPromiseBase
     void setContinuation(JobPromiseBase* cont)
     {
         std::scoped_lock lock(promiseLock, cont->promiseLock);
+        assert(cont->ready());
         continuation = cont;
         cont->state = State::SCHEDULED;
         cont->addRef();
@@ -148,12 +151,12 @@ struct JobPromiseBase
     }
     void schedule()
     {
-        //dont lock here, as it is already locked from outside
         std::scoped_lock lock(promiseLock);
         if(!handle || done() || !ready())
         {
             return;
         }
+        state = State::SCHEDULED;
         getGlobalThreadPool().scheduleJob(this);
     }
     void addRef()
@@ -243,6 +246,7 @@ public:
     JobBase&& then(JobBase&& continuation)
     {
         promise->setContinuation(continuation.promise);
+        promise->schedule();
         return std::move(continuation);
     }
     bool done()
@@ -253,19 +257,12 @@ public:
     {
         promise->finalize();
     }
-    Event operator co_await()
+    Event operator co_await() const
     {
-        Event result = promise->finishedEvent;
-        // if we schedule the promise now, it might finish and self destruct
-        // but there is no way for us to know that
-        // but as the co_await operator keeps a reference to this, we it won't 
+        // the co_await operator keeps a reference to this, we it won't 
         // be scheduled from the destructor
         promise->schedule();
-        // so we reset the promise so we don't schedule it when this destructs
-        promise->removeRef();
-        promise = nullptr;
-        // but we still have to provide with the event, so we get that first
-        return result;
+        return promise->finishedEvent;
     }
     static JobBase all() = delete;
     template<iterable Iterable>

@@ -23,18 +23,25 @@ layout(set = INDEX_VIEW_PARAMS, binding = 3)
 StructuredBuffer<Frustum> frustums;
 
 layout(set = INDEX_VIEW_PARAMS, binding = 4)
-RWStructuredBuffer<uint> oLightIndexCounter;
+globallycoherent RWStructuredBuffer<uint> oLightIndexCounter;
 layout(set = INDEX_VIEW_PARAMS, binding = 5)
-RWStructuredBuffer<uint> tLightIndexCounter;
+globallycoherent RWStructuredBuffer<uint> tLightIndexCounter;
 
 layout(set = INDEX_VIEW_PARAMS, binding = 6)
 RWStructuredBuffer<uint> oLightIndexList;
 layout(set = INDEX_VIEW_PARAMS, binding = 7)
 RWStructuredBuffer<uint> tLightIndexList;
+
 layout(set = INDEX_VIEW_PARAMS, binding = 8)
 RWTexture2D<uint2> oLightGrid;
 layout(set = INDEX_VIEW_PARAMS, binding = 9)
 RWTexture2D<uint2> tLightGrid;
+
+// Debug
+//layout(set = INDEX_VIEW_PARAMS, binding = 10)
+//Texture2D lightCountHeatMap;
+//layout(set = INDEX_VIEW_PARAMS, binding = 11)
+//RWTexture2D<float4> debugTexture;
 
 groupshared uint uMinDepth;
 groupshared uint uMaxDepth;
@@ -74,8 +81,8 @@ void tAppendLight(uint lightIndex)
 [shader("compute")]
 void cullLights(ComputeShaderInput in)
 {
-    int3 texCoord = int3(in.dispatchThreadID.xy, 0);
-    float fDepth = depthTextureVS.Load(texCoord).r;
+    int2 texCoord = in.dispatchThreadID.xy;
+    float fDepth = depthTextureVS.Load(int3(texCoord, 0)).r;
 
     uint uDepth = asuint(fDepth);
     if(in.groupIndex == 0)
@@ -88,6 +95,7 @@ void cullLights(ComputeShaderInput in)
     }
 
     GroupMemoryBarrierWithGroupSync();
+
     InterlockedMin(uMinDepth, uDepth);
     InterlockedMax(uMaxDepth, uDepth);
 
@@ -120,22 +128,24 @@ void cullLights(ComputeShaderInput in)
 
     if(in.groupIndex == 0)
     {
-        InterlockedAdd(oLightIndexCounter[0], (uint)oLightCount, oLightIndexStartOffset);
+        InterlockedAdd(oLightIndexCounter[0], oLightCount, oLightIndexStartOffset);
         oLightGrid[in.groupID.xy] = uint2(oLightIndexStartOffset, oLightCount);
 
-        InterlockedAdd(tLightIndexCounter[0], (uint)tLightCount, tLightIndexStartOffset);
+        InterlockedAdd(tLightIndexCounter[0], tLightCount, tLightIndexStartOffset);
         tLightGrid[in.groupID.xy] = uint2(tLightIndexStartOffset, tLightCount);
     }
     GroupMemoryBarrierWithGroupSync();
 
-    for (uint j = in.groupIndex; j < (uint)oLightCount; j += BLOCK_SIZE * BLOCK_SIZE)
+    for (uint j = in.groupIndex; j < oLightCount; j += BLOCK_SIZE * BLOCK_SIZE)
     {
         oLightIndexList[oLightIndexStartOffset + j] = oLightList[j];
     }
     
     // For transparent geometry.
-    for ( uint k = in.groupIndex; k < (uint)tLightCount; k += BLOCK_SIZE * BLOCK_SIZE )
+    for ( uint k = in.groupIndex; k < tLightCount; k += BLOCK_SIZE * BLOCK_SIZE )
     {
         tLightIndexList[tLightIndexStartOffset + k] = tLightList[k];
     }
+
+    
 }

@@ -34,7 +34,7 @@ Seele::SceneView::SceneView(Gfx::PGraphics graphics, PWindow owner, const Viewpo
     PPrimitiveComponent ayaka = new PrimitiveComponent(AssetRegistry::findMesh("Ayaka"));
     ayaka->addWorldTranslation(Vector(0, 0, 0));
     ayaka->setWorldScale(Vector(10, 10, 10));
-    scene->addPrimitiveComponent(ayaka);
+    //scene->addPrimitiveComponent(ayaka);
 
     PPrimitiveComponent plane = new PrimitiveComponent(AssetRegistry::findMesh("plane"));
     plane->setWorldScale(Vector(100, 100, 100));
@@ -97,17 +97,19 @@ void SceneView::prepareRender()
 
 MainJob SceneView::render() 
 {
-    co_await depthPrepass.beginFrame();
-    co_await lightCullingPass.beginFrame();
-    co_await basePass.beginFrame();
-    co_await depthPrepass.render();
-    co_await lightCullingPass.render();
-    co_await basePass.render();
-    co_await depthPrepass.endFrame();
-    co_await lightCullingPass.endFrame();
-    co_await basePass.endFrame();
-    renderFinishedEvent.raise();
-    co_return;
+    return MainJob::all(
+            depthPrepass.beginFrame(),
+            lightCullingPass.beginFrame(),
+            basePass.beginFrame())
+        .then(depthPrepass.render())
+        .then(lightCullingPass.render())
+        .then(basePass.render())
+        .then(
+            MainJob::all(
+                depthPrepass.endFrame(),
+                lightCullingPass.endFrame(),
+                basePass.endFrame())
+        );
 }
 
 void SceneView::keyCallback(KeyCode code, InputAction action, KeyModifier)

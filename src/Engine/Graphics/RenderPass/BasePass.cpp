@@ -134,6 +134,7 @@ MainJob BasePass::beginFrame()
     descriptorSets[INDEX_VIEW_PARAMS] = viewLayout->allocateDescriptorSet();
     descriptorSets[INDEX_VIEW_PARAMS]->updateBuffer(0, viewParamBuffer);
     descriptorSets[INDEX_VIEW_PARAMS]->writeChanges();
+    //std::cout << "BasePass beginFrame()" << std::endl;
     co_return;
 }
 
@@ -163,11 +164,13 @@ MainJob BasePass::render()
     //co_await Job::all(jobs);
     graphics->executeCommands(processor->getRenderCommands());
     graphics->endRenderPass();
+    //std::cout << "BasePass render()" << std::endl;
     co_return;
 }
 
 MainJob BasePass::endFrame() 
 {
+    //std::cout << "BasePass endFrame()" << std::endl;
     co_return;
 }
 

@@ -19,7 +19,7 @@ public:
     void importAsset(const std::filesystem::path& filePath);
     PTextureAsset getPlaceholderTexture();
 private:
-    Job import(std::filesystem::path path, PTextureAsset asset);
+    void import(std::filesystem::path path, PTextureAsset asset);
     Gfx::PGraphics graphics;
     List<std::future<void>> futures;
     PTextureAsset placeholderAsset;

@@ -134,5 +134,6 @@
     },
     "git.ignoreSubmodules": true,
     "cmake.configureOnOpen": true,
+    "cmake.parallelJobs": 0,
     "C_Cpp.intelliSenseEngineFallback": "Enabled"
 }

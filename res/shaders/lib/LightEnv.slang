@@ -22,7 +22,6 @@ struct DirectionalLight : ILightEnv
 struct PointLight : ILightEnv
 {
     float4 positionWS;
-    float4 positionVS;
     float4 colorRange;
     
     float3 illuminate<B:IBRDF>(MaterialFragmentParameter input, B brdf, float3 viewDir)
@@ -36,14 +35,14 @@ struct PointLight : ILightEnv
 
 	bool insidePlane(Plane plane)
 	{
-        return dot(plane.n, positionVS.xyz) - plane.d < -colorRange.w;
+        return dot(plane.n, getViewPos().xyz) - plane.d < -colorRange.w;
 	}
 
 	bool insideFrustum(Frustum frustum, float zNear, float zFar)
 	{
         bool result = true;
 
-		if(positionVS.z - colorRange.w > zNear || positionVS.z + colorRange.w < zFar)
+		if(getViewPos().z - colorRange.w > zNear || getViewPos().z + colorRange.w < zFar)
 		{
 			result = false;
 		}
@@ -55,6 +54,10 @@ struct PointLight : ILightEnv
 			}
 		}
 		return result;
+	}
+	float3 getViewPos()
+	{
+		return mul(gViewParams.viewMatrix, positionWS).xyz;
 	}
 };
 

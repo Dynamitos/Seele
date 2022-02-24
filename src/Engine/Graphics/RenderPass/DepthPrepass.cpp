@@ -115,6 +115,7 @@ MainJob DepthPrepass::beginFrame()
     descriptorSets[INDEX_VIEW_PARAMS] = viewLayout->allocateDescriptorSet();
     descriptorSets[INDEX_VIEW_PARAMS]->updateBuffer(0, viewParamBuffer);
     descriptorSets[INDEX_VIEW_PARAMS]->writeChanges();
+    //std::cout << "DepthPrepass beginFrame()" << std::endl;
     co_return;
 }
 
@@ -134,11 +135,13 @@ MainJob DepthPrepass::render()
     //co_await Job::all(jobs);
     graphics->executeCommands(processor->getRenderCommands());
     graphics->endRenderPass();
+    //std::cout << "DepthPrepass render()" << std::endl;
     co_return;
 }
 
 MainJob DepthPrepass::endFrame() 
 {
+    //std::cout << "DepthPrepass endFrame()" << std::endl;
     co_return;
 }
 
