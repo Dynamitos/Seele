@@ -4,7 +4,7 @@
 using namespace Seele;
 
 Transform::Transform()
-    : position(Vector4(0, 0, 0, 0)), rotation(Quaternion(0, 0, 0, 0)), scale(Vector4(1, 1, 1, 0))
+    : position(Vector4(0, 0, 0, 0)), rotation(Quaternion(1, 0, 0, 0)), scale(Vector4(1, 1, 1, 0))
 {
 }
 
@@ -12,7 +12,7 @@ Transform::Transform(Transform &&other)
     : position(other.position), rotation(other.rotation), scale(other.scale)
 {
     other.position = Vector4(0, 0, 0, 0);
-    other.rotation = Quaternion(0, 0, 0, 0);
+    other.rotation = Quaternion(1, 0, 0, 0);
     other.scale = Vector4(0, 0, 0, 0);
 }
 
@@ -22,7 +22,7 @@ Transform::Transform(const Transform &other)
 }
 
 Transform::Transform(Vector position)
-    : position(Vector4(position, 0)), rotation(Quaternion(0, 0, 0, 0)), scale(Vector4(1, 1, 1, 0))
+    : position(Vector4(position, 0)), rotation(Quaternion(1, 0, 0, 0)), scale(Vector4(1, 1, 1, 0))
 {
 }
 Transform::Transform(Vector position, Quaternion rotation)
@@ -144,6 +144,19 @@ Vector Transform::getScale() const
     return Vector(scale);
 }
 
+Vector Transform::getForward() const
+{
+    return Vector(0, 0, 1) * rotation;
+}
+Vector Transform::getRight() const
+{
+    return Vector(1, 0, 0) * rotation;
+}
+Vector Transform::getUp() const
+{
+    return Vector(0, 1, 0) * rotation;
+}
+
 bool Transform::equals(const Transform &other, float tolerance)
 {
     if (abs(position - other.position).length() > tolerance)
@@ -174,6 +187,13 @@ void Transform::multiply(Transform *outTransform, const Transform *a, const Tran
     outTransform->position = b->rotation * (b->scale * a->position) + b->position;
     outTransform->scale = b->scale * a->scale;
 }
+void Transform::add(Transform *outTransform, const Transform *a, const Transform *b)
+{
+    outTransform->position = a->position + b->position;
+    outTransform->rotation = a->rotation + b->rotation;
+    outTransform->scale = a->scale + b->scale;
+}
+
 
 Transform &Transform::operator=(const Transform &other)
 {
@@ -189,9 +209,16 @@ Transform &Transform::operator=(Transform &&other)
     rotation = other.rotation;
     scale = other.scale;
     other.position = Vector4(0, 0, 0, 0);
-    other.rotation = Quaternion(0, 0, 0, 0);
+    other.rotation = Quaternion(1, 0, 0, 0);
     other.scale = Vector4(0, 0, 0, 0);
     return *this;
+}
+
+Transform Transform::operator+(const Transform & other) const
+{
+    Transform outTransform;
+    add(&outTransform, this, &other);
+    return outTransform;
 }
 
 Transform Transform::operator*(const Transform &other) const

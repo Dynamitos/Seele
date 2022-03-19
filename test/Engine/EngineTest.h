@@ -1,5 +1,5 @@
 #pragma once
-//#include <vld.h>
+#include <vld.h>
 #include "ThreadPool.h"
 
 namespace Seele
@@ -12,7 +12,7 @@ namespace Seele
         }
         ~GlobalFixture()
         {
-            getGlobalThreadPool().cleanup();
+            getGlobalThreadPool().waitIdle();
         }
         void setup()
         {

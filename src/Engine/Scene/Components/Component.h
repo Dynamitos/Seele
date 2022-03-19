@@ -28,27 +28,33 @@ public:
     void addChildComponent(PComponent component);
     virtual void notifySceneAttach(PScene scene);
 
-    void setWorldLocation(Vector location);
-    void setWorldRotation(Vector rotation);
-    void setWorldRotation(Quaternion rotation);
-    void setWorldScale(Vector scale);
+    //void setAbsoluteLocation(Vector location);
+    //void setAbsoluteRotation(Vector rotation);
+    //void setAbsoluteRotation(Quaternion rotation);
+    //void setWorldScale(Vector scale);
 
     void setRelativeLocation(Vector location);
     void setRelativeRotation(Vector rotation);
     void setRelativeRotation(Quaternion rotation);
     void setRelativeScale(Vector scale);
 
-    void addWorldTranslation(Vector translation);
-    void addWorldRotation(Vector rotation);
-    void addWorldRotation(Quaternion rotation);
+    //void addAbsoluteTranslation(Vector translation);
+    //void addAbsoluteRotation(Vector rotation);
+    //void addAbsoluteRotation(Quaternion rotation);
+
+    void addRelativeLocation(Vector translation);
+    void addRelativeRotation(Vector rotation);
+    void addRelativeRotation(Quaternion rotation);
 
     Transform getTransform() const;
+    Transform getAbsoluteTransform() const;
 
     template<typename ComponentType>
     RefPtr<ComponentType> getComponent()
     {
         return tryFindComponent<ComponentType>();
     }
+    
 private:
     template<typename ComponentType>
     RefPtr<ComponentType> tryFindComponent()
@@ -68,15 +74,6 @@ private:
         }
         return nullptr;
     }
-    void internalSetTransform(Vector newLocation, Quaternion newRotation);
-    void propagateTransformUpdate();
-    void updateComponentTransform(Quaternion relativeRotationQuat);
-    Quaternion getRelativeWorldRotation(Quaternion worldRotation);
-    void setRelativeLocationAndRotation(Vector newLocation, Quaternion newRotation);
-    uint8 bComponentTransformClean : 1;
-    Vector relativeLocation;
-    Vector relativeRotation;
-    Vector relativeScale;
     Transform transform;
     PScene owningScene;
     PActor owner;

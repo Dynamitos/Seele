@@ -106,11 +106,10 @@ void MaterialAsset::load()
                 std::string defaultString = defaultValue.value().get<std::string>();
                 p->data = AssetRegistry::findTexture(defaultString);
             }
-            else
+            if(p->data == nullptr)
             {
                 p->data = AssetRegistry::findTexture(""); // this will return placeholder texture
             }
-            assert(p->data != nullptr);
             parameters.add(p);
         }
         else if(type.compare("SamplerState") == 0)

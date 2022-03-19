@@ -81,7 +81,7 @@ void CmdBuffer::executeCommands(const Array<Gfx::PRenderCommand>& commands)
     assert(state == State::RenderPassActive);
     if(commands.size() == 0)
     {
-        std::cout << "No commands provided" << std::endl;
+        //std::cout << "No commands provided" << std::endl;
         return;
     }
     std::scoped_lock lock(handleLock);

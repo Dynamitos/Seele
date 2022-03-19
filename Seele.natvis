@@ -31,7 +31,7 @@
       </Expand>
   </Type>
   <Type Name="Seele::Map&lt;*&gt;">
-    <DisplayString>{{size={_size}}</DisplayString>
+    <DisplayString>{{ size={_size} }</DisplayString>
     <Expand>
       <Item Name="[size]">_size</Item>
       <Item Name="[comp]">comp</Item>

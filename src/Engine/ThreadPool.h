@@ -17,6 +17,7 @@ public:
     Event();
     Event(nullptr_t);
     Event(const std::string& name);
+    Event(const std::source_location& location);
     ~Event() = default;
     auto operator<=>(const Event& other) const
     {
@@ -36,6 +37,19 @@ public:
         return flag->data;
     }
     
+    friend std::ostream& operator<<(std::ostream& stream, const Event& event)
+    {
+        stream 
+            << event.flag->location.file_name() 
+            << "(" 
+            << event.flag->location.line() 
+            << ":" 
+            << event.flag->location.column() 
+            << "): " 
+            << event.flag->location.function_name();
+        return stream;
+    }
+
     void raise();
     void reset();
     bool await_ready();
@@ -43,17 +57,17 @@ public:
     constexpr void await_suspend(std::coroutine_handle<JobPromiseBase<MainJob>> h);
     constexpr void await_resume() {}
 private:
-    std::string name;
     struct StateStore
     {
         std::mutex lock;
+        std::string name;
+        std::source_location location;
         bool data;
     };
     std::shared_ptr<StateStore> flag;
     friend class ThreadPool;
 };
 
-extern std::atomic_uint64_t globalCounter;
 template<bool MainJob>      
 struct JobBase;
 template<bool MainJob>
@@ -70,8 +84,7 @@ struct JobPromiseBase
     JobPromiseBase(const std::source_location& location = std::source_location::current())
     {
         handle = std::coroutine_handle<JobPromiseBase<MainJob>>::from_promise(*this);
-        id = globalCounter++;
-        finishedEvent = Event(std::string(location.file_name()).append(": ").append(location.function_name()));
+        finishedEvent = Event(location);
     }
     ~JobPromiseBase()
     {}
@@ -81,9 +94,10 @@ struct JobPromiseBase
     inline auto final_suspend() noexcept;
 
     void return_void() noexcept {}
-    void unhandled_exception() noexcept {
-        std::cerr << "Unhandled exception! Exiting" << std::endl;
-        exit(1);
+    void unhandled_exception() {
+        std::exception_ptr exception = std::current_exception();
+        std::cerr << "Unhandled exception!" << std::endl;
+        throw exception;
     };
 
     void resume()
@@ -165,16 +179,22 @@ struct JobPromiseBase
     }
     void removeRef()
     {
-        if(--numRefs < 1 && done())
+        if(--numRefs < 1)
         {
-            handle.destroy();
-        }
+            if(done())
+            {
+                handle.destroy();
+            }
+            else
+            {
+                schedule();
+            }
+        } 
     }
 
     std::mutex promiseLock;
     std::coroutine_handle<JobPromiseBase> handle;
     JobPromiseBase* continuation = nullptr;
-    uint64 id;
     std::atomic_uint64_t numRefs = 0;
     Event finishedEvent;
     State state = State::READY;
@@ -210,7 +230,7 @@ public:
     {
         if(promise)
         {
-            promise->schedule();
+            //promise->schedule();
             promise->removeRef();
         }
     }
@@ -253,19 +273,25 @@ public:
     {
         return promise->done();
     }
-    void finalize()
-    {
-        promise->finalize();
-    }
     Event operator co_await() const
     {
-        // the co_await operator keeps a reference to this, we it won't 
+        // the co_await operator keeps a reference to this, it won't 
         // be scheduled from the destructor
         promise->schedule();
         return promise->finishedEvent;
     }
     static JobBase all() = delete;
-    template<iterable Iterable>
+    template<std::ranges::range Iterable>
+    requires std::same_as<std::ranges::range_value_t<Iterable>, JobBase>
+    static JobBase all(Iterable collection)
+    {
+        getGlobalThreadPool().scheduleBatch(collection);
+        for(auto it : collection)
+        {
+            co_await it;
+        }
+    }
+    template<std::ranges::range Iterable>
     static JobBase all(Iterable collection)
     {
         for(auto it : collection)
@@ -278,14 +304,17 @@ public:
     {
         return JobBase::all(Array{jobs...});
     }
-    template<std::invocable JobFunc, iterable IterableParams>
-    static JobBase launchJobs(JobFunc&& func, IterableParams params)
+    template<typename JobFunc, std::ranges::input_range Iterable>
+    requires std::invocable<JobFunc, std::ranges::range_reference_t<Iterable>>
+    static JobBase launchJobs(JobFunc&& func, Iterable params)
     {
-        List<JobBase> jobs;
+        Array<JobBase> jobs;
         for(auto&& param : params)
         {
-            jobs.add(func(param));
+            JobBase base = func(param);
+            jobs.add(base);
         }
+        getGlobalThreadPool().scheduleBatch(jobs);
         for(auto job : jobs)
         {
             co_await job;
@@ -293,6 +322,7 @@ public:
     }
 private:
     JobPromiseBase<MainJob>* promise;
+    friend class ThreadPool;
 };
 
 using MainJob = JobBase<true>;
@@ -305,32 +335,64 @@ class ThreadPool
 public:
     ThreadPool(uint32 threadCount = std::thread::hardware_concurrency());
     virtual ~ThreadPool();
-    void cleanup();
+    void waitIdle();
     // Adds a job to the waiting queue for event
     void enqueueWaiting(Event& event, Promise* job);
     // Adds a job to the waiting queue for event
     void enqueueWaiting(Event& event, MainPromise* job);
     void scheduleJob(Promise* job);
     void scheduleJob(MainPromise* job);
+    template<std::ranges::range Iterable>
+    requires std::same_as<std::ranges::range_value_t<Iterable>, MainJob>
+    void scheduleBatch(Iterable jobs)
+    {
+        std::scoped_lock lock(mainJobLock);
+        for(auto job : jobs)
+        {
+            job.promise->addRef();
+            job.promise->state = JobPromiseBase<true>::State::SCHEDULED;
+            mainJobs.add(job.promise);
+        }
+        mainJobCV.notify_one();
+    }
+    template<std::ranges::range Iterable>
+    requires std::same_as<std::ranges::range_value_t<Iterable>, Job>
+    void scheduleBatch(Iterable jobs)
+    {
+        std::scoped_lock lock(jobQueueLock);
+        for(auto job : jobs)
+        {
+            job.promise->addRef();
+            job.promise->state = JobPromiseBase<false>::State::SCHEDULED;
+            jobQueue.add(job.promise);
+        }
+        jobQueueCV.notify_all();
+    }
     void notify(Event& event);
-    void threadLoop(const bool isMainThread);
+    void mainLoop();
+    void threadLoop();
 private:
     std::atomic_bool running;
-    std::vector<std::thread> workers;
+    std::mutex numIdlingLock;
+    std::condition_variable numIdlingIncr;
+    uint32 numIdling;
+    Array<std::thread> workers;
 
-    std::list<MainPromise*> mainJobs;
+    List<MainPromise*> mainJobs;
     std::mutex mainJobLock;
     std::condition_variable mainJobCV;
     
-    std::list<Promise*> jobQueue;
+    List<Promise*> jobQueue;
     std::mutex jobQueueLock;
     std::condition_variable jobQueueCV;
     
-    std::map<Event, std::list<MainPromise*>> waitingMainJobs;
+    Map<Event, List<MainPromise*>> waitingMainJobs;
     std::mutex waitingMainLock;
 
-    std::map<Event, std::list<Promise*>> waitingJobs;
+    Map<Event, List<Promise*>> waitingJobs;
     std::mutex waitingLock;
+
+    uint32 maxLocalQueueSize = 50;
 };
 
 template<bool MainJob>
@@ -349,18 +411,6 @@ inline auto JobPromiseBase<MainJob>::initial_suspend() noexcept
 template<bool MainJob>
 inline auto JobPromiseBase<MainJob>::final_suspend() noexcept
 {
-    /*struct JobAwaitable
-    {
-        constexpr bool await_ready() const noexcept { return false; }
-        constexpr auto await_suspend(std::coroutine_handle<JobPromiseBase<MainJob>> h) const noexcept
-        {
-            auto continuation = h.promise().continuation;
-            h.destroy();
-
-        }
-        constexpr void await_resume() const noexcept {}
-    };
-    return JobAwaitable{};*/
     markDone();
     return std::suspend_always{};
 }

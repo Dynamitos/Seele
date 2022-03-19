@@ -19,12 +19,12 @@ Scene::Scene(Gfx::PGraphics graphics)
     lightEnv.directionalLights[0].intensity = Vector4(1, 1, 1, 1);
     lightEnv.numDirectionalLights = 1;
     srand((unsigned int)time(NULL));
-    for(uint32 i = 0; i < 256; ++i)
+    for(uint32 i = 0; i < 16; ++i)
     {
         lightEnv.pointLights[i].colorRange = Vector4(frand(), frand(), frand(), frand() * 300);
         lightEnv.pointLights[i].positionWS = Vector4(frand() * 100-50, frand(), frand() * 100-50, 1);
     }
-    lightEnv.numPointLights = 256;
+    lightEnv.numPointLights = 16;
     lightEnv.pointLights[0].colorRange = Vector4(1, 0, 1, 1000);
     lightEnv.pointLights[0].positionWS = Vector4(0, 10, 0, 1);
 }
@@ -41,19 +41,28 @@ void Scene::start()
     }
 }
 
+static float lastUpdate;
+static uint64 numUpdates;
+
 Job Scene::beginUpdate(double deltaTime)
 {
     //std::cout << "Scene::beginUpdate" << std::endl;
+    auto startTime = std::chrono::high_resolution_clock::now();
     Array<Job> jobs;
     for(auto actor : rootActors)
     {
         jobs.addAll(actor->launchTick(static_cast<float>(deltaTime)));
     }
     co_await Job::all(jobs);
-    //std::cout << "Scene::beginUpdate finished waiting" << std::endl;
-    for(auto job : jobs)
+    auto endTime = std::chrono::high_resolution_clock::now();
+    float delta = std::chrono::duration_cast<std::chrono::seconds>(endTime - startTime).count();
+    lastUpdate += delta;
+    numUpdates++;
+    if(lastUpdate > 1.0f)
     {
-        assert(job.done());
+        lastUpdate -= 1.0f;
+        std::cout << numUpdates << " updates per second" << std::endl;
+        numUpdates = 0;
     }
 }
 

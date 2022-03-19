@@ -19,6 +19,7 @@ struct DirectionalLight
 struct PointLight
 {
     Vector4 positionWS;
+    //Vector4 positionVS;
     Vector4 colorRange;
 };
 

@@ -50,5 +50,5 @@ void PrimitiveComponent::notifySceneAttach(PScene scene)
 
 Matrix4 PrimitiveComponent::getRenderMatrix()
 {
-    return getTransform().toMatrix();
+    return getAbsoluteTransform().toMatrix();
 }

@@ -34,9 +34,9 @@ int main()
 	//PInspectorView inspectorView = new InspectorView(windowManager->getGraphics(), window, inspectorViewInfo);
 	//window->addView(inspectorView);
 	sceneView->setFocused();
-	
+
 	window->render();
 	
-	getGlobalThreadPool().threadLoop(true);
+	getGlobalThreadPool().mainLoop();
 	return 0;
 }

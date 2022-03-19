@@ -6,9 +6,6 @@ using namespace Seele;
 
 Component::Component()
 {
-    relativeLocation = Vector(0);
-    relativeRotation = Vector(0);
-    relativeScale = Vector(1, 1, 1);
 }
 Component::~Component()
 {
@@ -89,162 +86,101 @@ void Component::notifySceneAttach(PScene scene)
         child->notifySceneAttach(scene);
     }
 }
-void Component::setWorldLocation(Vector location)
-{
-    Vector newRelLocation = location;
-    if (parent != nullptr)
-    {
-        Transform parentToWorld = getParent()->getTransform();
-        newRelLocation = parentToWorld.inverseTransformPosition(location);
-    }
-    setRelativeLocation(newRelLocation);
-}
-void Component::setWorldRotation(Vector rotation)
-{
-    Vector newRelRotator = rotation;
-    if (parent == nullptr)
-    {
-        setRelativeRotation(rotation);
-    }
-    else
-    {
-        setWorldRotation(toQuaternion(newRelRotator));
-    }
-}
-void Component::setWorldRotation(Quaternion rotation)
-{
-    Quaternion newRelRotation = getRelativeWorldRotation(rotation);
-    setRelativeRotation(newRelRotation);
-}
-void Component::setWorldScale(Vector scale)
-{
-    Vector newRelScale = scale;
-    if (parent != nullptr)
-    {
-        Transform parentToWorld = parent->getTransform();
-        newRelScale = scale * parentToWorld.getSafeScaleReciprocal(Vector4(parentToWorld.getScale(), 0));
-    }
-    setRelativeScale(newRelScale);
-}
+
+//void Component::setAbsoluteLocation(Vector location)
+//{
+//    Vector newRelLocation = location;
+//    if (parent != nullptr)
+//    {
+//        Transform parentToWorld = getParent()->getTransform();
+//        newRelLocation = parentToWorld.inverseTransformPosition(location);
+//    }
+//    setRelativeLocation(newRelLocation);
+//}
+//void Component::setAbsoluteRotation(Vector rotation)
+//{
+//    Vector newRelRotator = rotation;
+//    if (parent == nullptr)
+//    {
+//        setRelativeRotation(rotation);
+//    }
+//    else
+//    {
+//        setAbsoluteRotation(toQuaternion(newRelRotator));
+//    }
+//}
+//void Component::setAbsoluteRotation(Quaternion rotation)
+//{
+//    Quaternion newRelRotation = getRelativeWorldRotation(rotation);
+//    setRelativeRotation(newRelRotation);
+//}
+//void Component::setWorldScale(Vector scale)
+//{
+//    Vector newRelScale = scale;
+//    if (parent != nullptr)
+//    {
+//        Transform parentToWorld = parent->getTransform();
+//        newRelScale = scale * parentToWorld.getSafeScaleReciprocal(Vector4(parentToWorld.getScale(), 0));
+//    }
+//    setRelativeScale(newRelScale);
+//}
+
 void Component::setRelativeLocation(Vector location)
 {
-    setRelativeLocationAndRotation(location, relativeRotation);
+    transform = Transform(location, transform.getRotation(), transform.getScale());
 }
 void Component::setRelativeRotation(Vector rotation)
 {
-    setRelativeLocationAndRotation(relativeLocation, toQuaternion(rotation));
+    transform = Transform(transform.getPosition(), Quaternion(rotation), transform.getScale());
 }
 void Component::setRelativeRotation(Quaternion rotation)
 {
-    setRelativeLocationAndRotation(relativeLocation, rotation);
+    transform = Transform(transform.getPosition(), rotation, transform.getScale());
 }
 void Component::setRelativeScale(Vector scale)
 {
-    if (scale != relativeScale)
-    {
-        relativeScale = scale;
-        updateComponentTransform(relativeRotation);
-    }
+    transform = Transform(transform.getPosition(), transform.getRotation(), scale);
 }
-void Component::addWorldTranslation(Vector translation)
+
+//void Component::addAbsoluteTranslation(Vector translation)
+//{
+//    const Vector newWorldLocation = translation + getTransform().getPosition();
+//    setAbsoluteLocation(newWorldLocation);
+//}
+//void Component::addAbsoluteRotation(Vector rotation)
+//{
+//    const Quaternion newWorldRotation = toQuaternion(rotation) * getTransform().getRotation();
+//    setAbsoluteRotation(newWorldRotation);
+//}
+//void Component::addAbsoluteRotation(Quaternion rotation)
+//{
+//    const Quaternion newWorldRotation = rotation * getTransform().getRotation();
+//    setAbsoluteRotation(newWorldRotation);
+//}
+
+void Component::addRelativeLocation(Vector translation)
 {
-    const Vector newWorldLocation = translation + getTransform().getPosition();
-    setWorldLocation(newWorldLocation);
+    transform = Transform(transform.getPosition() + translation, transform.getRotation(), transform.getScale());
 }
-void Component::addWorldRotation(Vector rotation)
+void Component::addRelativeRotation(Vector rotation)
 {
-    const Quaternion newWorldRotation = toQuaternion(rotation) * getTransform().getRotation();
-    setWorldRotation(newWorldRotation);
+    transform = Transform(transform.getPosition(), transform.getRotation() + Quaternion(rotation), transform.getScale());
 }
-void Component::addWorldRotation(Quaternion rotation)
+void Component::addRelativeRotation(Quaternion rotation)
 {
-    const Quaternion newWorldRotation = rotation * getTransform().getRotation();
-    setWorldRotation(newWorldRotation);
+    transform = Transform(transform.getPosition(), transform.getRotation(), transform.getScale());
 }
+
 Transform Component::getTransform() const
 {
     return transform;
 }
 
-void Component::internalSetTransform(Vector newLocation, Quaternion newRotation)
+Transform Component::getAbsoluteTransform() const
 {
-    if (parent != nullptr)
-    {
-        Transform parentTransform = parent->getTransform();
-        newLocation = parentTransform.inverseTransformPosition(newLocation);
-        newRotation = glm::inverse(parentTransform.getRotation()) * newRotation;
-    }
-
-    const Vector newRelRotation = toRotator(newRotation);
-    if (newLocation != relativeLocation || newRelRotation != relativeLocation)
-    {
-        relativeLocation = newLocation;
-        relativeRotation = newRelRotation;
-        updateComponentTransform(newRelRotation);
-    }
-}
-
-void Component::propagateTransformUpdate()
-{
-    for (auto child : children)
-    {
-        child->updateComponentTransform(child->relativeRotation);
-    }
-}
-
-void Component::updateComponentTransform(Quaternion relativeRotationQuat)
-{
-    if (parent != nullptr && !parent->bComponentTransformClean)
-    {
-        parent->updateComponentTransform(parent->relativeRotation);
-
-        if (bComponentTransformClean)
-        {
-            return;
-        }
-    }
-    bComponentTransformClean = true;
-    Transform newTransform;
-    const Transform relTransform(relativeLocation, relativeRotationQuat, relativeScale);
     if(parent != nullptr)
     {
-        newTransform = relTransform * parent->getTransform();
+        return transform + parent->getAbsoluteTransform();
     }
-    else
-    {
-        newTransform = relTransform;
-    }
-    bool bHasChanged = !getTransform().equals(newTransform);
-    if (bHasChanged)
-    {
-        transform = newTransform;
-        propagateTransformUpdate();
-    }
-}
-
-Quaternion Component::getRelativeWorldRotation(Quaternion worldRotation)
-{
-    Quaternion newRelRotation = worldRotation;
-    if (parent != nullptr)
-    {
-        const Transform parentToWorld = parent->getTransform();
-
-        const Quaternion parentToWorldQuat = parentToWorld.getRotation();
-        const Quaternion newRelQuat = glm::inverse(parentToWorldQuat) * worldRotation;
-        newRelRotation = newRelQuat;
-    }
-    return newRelRotation;
-}
-
-void Component::setRelativeLocationAndRotation(Vector newLocation, Quaternion newRotation)
-{
-    if (!bComponentTransformClean)
-    {
-        updateComponentTransform(toQuaternion(relativeRotation));
-    }
-
-    const Transform desiredRelTransform(newLocation, newRotation);
-    const Transform desiredWorldTransform = desiredRelTransform; // Check for absolutes etc
-
-    internalSetTransform(desiredWorldTransform.getPosition(), desiredWorldTransform.getRotation());
+    return transform;
 }

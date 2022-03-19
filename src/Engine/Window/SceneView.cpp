@@ -32,15 +32,15 @@ Seele::SceneView::SceneView(Gfx::PGraphics graphics, PWindow owner, const Viewpo
     AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Plane\\plane.fbx");
  
     PPrimitiveComponent ayaka = new PrimitiveComponent(AssetRegistry::findMesh("Ayaka"));
-    ayaka->addWorldTranslation(Vector(0, 0, 0));
-    ayaka->setWorldScale(Vector(10, 10, 10));
+    ayaka->setRelativeLocation(Vector(0, 0, 0));
+    ayaka->setRelativeScale(Vector(10, 10, 10));
     //scene->addPrimitiveComponent(ayaka);
 
     PPrimitiveComponent plane = new PrimitiveComponent(AssetRegistry::findMesh("plane"));
-    plane->setWorldScale(Vector(100, 100, 100));
+    plane->setRelativeScale(Vector(100, 100, 100));
     scene->addPrimitiveComponent(plane);
 
-    for(uint32 i = 0; i < 1; ++i)
+    for(uint32 i = 0; i < 100000; ++i)
     {
         PMyComponent myComp = new MyComponent();
         PMyOtherComponent myOtherComp = new MyOtherComponent();
@@ -97,32 +97,46 @@ void SceneView::prepareRender()
 
 MainJob SceneView::render() 
 {
-    return MainJob::all(
-            depthPrepass.beginFrame(),
-            lightCullingPass.beginFrame(),
-            basePass.beginFrame())
+    return depthPrepass.beginFrame()
+        .then(lightCullingPass.beginFrame())
+        .then(basePass.beginFrame())
         .then(depthPrepass.render())
         .then(lightCullingPass.render())
         .then(basePass.render())
-        .then(
-            MainJob::all(
-                depthPrepass.endFrame(),
-                lightCullingPass.endFrame(),
-                basePass.endFrame())
-        );
+        .then(depthPrepass.endFrame())
+        .then(lightCullingPass.endFrame())
+        .then(basePass.endFrame());
 }
 
-void SceneView::keyCallback(KeyCode code, InputAction action, KeyModifier)
+static float cameraSpeed = 1;
+
+void SceneView::keyCallback(KeyCode code, InputAction action, KeyModifier mod)
 {
+    if((KeyModifierFlags)mod & (KeyModifierFlags)KeyModifier::MOD_SHIFT)
+    {
+        cameraSpeed = 5;
+    }
+    else
+    {
+        cameraSpeed = 1;
+    }
     if(action != InputAction::RELEASE)
     {
         if(code == KeyCode::KEY_W)
         {
-            activeCamera->getCameraComponent()->moveOrigin(1);
+            activeCamera->getCameraComponent()->moveX(1);
         }
         if(code == KeyCode::KEY_S)
         {
-            activeCamera->getCameraComponent()->moveOrigin(-1);
+            activeCamera->getCameraComponent()->moveX(-1);
+        }
+        if(code == KeyCode::KEY_A)
+        {
+            activeCamera->getCameraComponent()->moveY(1);
+        }
+        if(code == KeyCode::KEY_D)
+        {
+            activeCamera->getCameraComponent()->moveY(-1);
         }
     }
 }
@@ -144,7 +158,7 @@ void SceneView::mouseMoveCallback(double xPos, double yPos)
 
 void SceneView::mouseButtonCallback(MouseButton button, InputAction action, KeyModifier) 
 {
-    if(button == MouseButton::MOUSE_BUTTON_1 && action != InputAction::RELEASE)
+    if(button == MouseButton::MOUSE_BUTTON_2 && action != InputAction::RELEASE)
     {
         mouseDown = true;
     }

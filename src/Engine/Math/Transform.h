@@ -23,12 +23,17 @@ public:
     Vector getPosition() const;
     Quaternion getRotation() const;
     Vector getScale() const;
+    Vector getForward() const;
+    Vector getRight() const;
+    Vector getUp() const;
 
     bool equals(const Transform &other, float tolerance = 0.000000001f);
     static void multiply(Transform *outTransform, const Transform *a, const Transform *b);
+    static void add(Transform *outTransform, const Transform *a, const Transform *b);
 
     Transform &operator=(const Transform &other);
     Transform &operator=(Transform &&other);
+    Transform operator+(const Transform& other) const;
     Transform operator*(const Transform &other) const;
 
 private:

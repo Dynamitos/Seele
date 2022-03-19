@@ -3,7 +3,6 @@
 
 using namespace Seele;
 
-std::atomic_uint64_t Seele::globalCounter;
 
 Event::Event()
     : flag(std::make_shared<StateStore>())
@@ -16,10 +15,19 @@ Event::Event(nullptr_t)
 }
 
 Event::Event(const std::string &name)
-    : name(name)
-    , flag(std::make_shared<StateStore>())
+    : flag(std::make_shared<StateStore>())
 {
+    flag->name = name;
 }
+
+
+Event::Event(const std::source_location &location)
+    : flag(std::make_shared<StateStore>())
+{
+    flag->name = location.function_name();
+    flag->location = location;
+}
+
 
 void Event::raise()
 {
@@ -50,43 +58,34 @@ ThreadPool::ThreadPool(uint32 threadCount)
     running.store(true);
     for (uint32 i = 0; i < threadCount; ++i)
     {
-        workers[i] = std::thread(&ThreadPool::threadLoop, this, false);
+        workers[i] = std::thread(&ThreadPool::threadLoop, this);
+        workers[i].detach();
     }
 }
 
 ThreadPool::~ThreadPool()
 {
-    cleanup();
+    workers.clear();
 }
 
-void ThreadPool::cleanup()
+void ThreadPool::waitIdle()
 {
-    bool temp = true;
-    running.compare_exchange_strong(temp, false);
-    if(!temp)
-        return;
+    while(true)
     {
-        std::scoped_lock lock(jobQueueLock);
-        jobQueueCV.notify_all();
+        std::unique_lock lock(numIdlingLock);
+        numIdlingIncr.wait(lock);
+        if(numIdling == workers.size())
+        {
+            return;
+        }
     }
-    {
-        std::scoped_lock lock(mainJobLock);
-        mainJobCV.notify_all();
-    }
-    for (auto &thread : workers)
-    {
-        thread.join();
-    }
-    workers.clear();
-    waitingJobs.clear();
-    waitingMainJobs.clear();
 }
 void ThreadPool::enqueueWaiting(Event &event, Promise* job)
 {
     assert(!job->done());
     std::scoped_lock lock(waitingLock);
     //std::cout << "Job " << job->finishedEvent.name << " waiting on event " << event.name << std::endl;
-    waitingJobs[event].push_back(job);
+    waitingJobs[event].add(job);
     job->addRef();
 }
 void ThreadPool::enqueueWaiting(Event &event, MainPromise* job)
@@ -94,15 +93,15 @@ void ThreadPool::enqueueWaiting(Event &event, MainPromise* job)
     assert(!job->done());
     std::scoped_lock lock(waitingMainLock);
     //std::cout << job->finishedEvent.name << " waiting on event " << event.name << std::endl;
-    waitingMainJobs[event].push_back(job);
+    waitingMainJobs[event].add(job);
     job->addRef();
 }
 void ThreadPool::scheduleJob(Promise* job)
 {
     assert(!job->done());
     std::scoped_lock lock(jobQueueLock);
-    //std::cout << "Queueing job " << job->finishedEvent.name << std::endl;
-    jobQueue.push_back(job);
+    //std::cout << "Queueing job " << job->finishedEvent << std::endl;
+    jobQueue.add(job);
     jobQueueCV.notify_one();
     job->addRef();
 }
@@ -110,8 +109,8 @@ void ThreadPool::scheduleJob(MainPromise* job)
 {
     assert(!job->done());
     std::scoped_lock lock(mainJobLock);
-    //std::cout << "Queueing job " << job->finishedEvent.name << std::endl;
-    mainJobs.push_back(job);
+    //std::cout << "Queueing job " << job->finishedEvent << std::endl;
+    mainJobs.add(job);
     mainJobCV.notify_one();
     job->addRef();
 }
@@ -120,79 +119,86 @@ void ThreadPool::notify(Event &event)
     //std::cout << "Event " << event.name << " raised" << std::endl;
     {
         std::scoped_lock lock(jobQueueLock, waitingLock);
-        std::list<Promise*> jobs = std::move(waitingJobs[event]);
+        List<Promise*> jobs = std::move(waitingJobs[event]);
         waitingJobs.erase(event);
         for (auto &job : jobs)
         {
             //assert(job.id != -1ull);
             //std::cout << "Waking up " << job->finishedEvent.name << std::endl;
             job->state = Promise::State::SCHEDULED;
-            jobQueue.push_back(job);
+            jobQueue.add(job);
             jobQueueCV.notify_one();
         }
     }
     {
         std::scoped_lock lock(mainJobLock, waitingMainLock);
-        std::list<MainPromise*> jobs = std::move(waitingMainJobs[event]);
+        List<MainPromise*> jobs = std::move(waitingMainJobs[event]);
         waitingMainJobs.erase(event);
         for (auto &job : jobs)
         {
             //assert(job.id != -1ull);
             //std::cout << "Waking up main " << job->finishedEvent.name << std::endl;
             job->state = MainPromise::State::SCHEDULED;
-            mainJobs.push_back(job);
+            mainJobs.add(job);
             mainJobCV.notify_one();
         }
     }
 }
-void ThreadPool::threadLoop(const bool mainThread)
+
+void ThreadPool::mainLoop()
 {
-    while (running.load())
+    while(true)
     {
-        if (mainThread)
+        MainPromise* job;
         {
-            MainPromise* job;
+            std::unique_lock lock(mainJobLock);
+            if(mainJobs.empty())
             {
-                std::unique_lock lock(mainJobLock);
-                if(mainJobs.empty())
-                {
-                    mainJobCV.wait(lock);
-                }
-                if (!mainJobs.empty())
-                {
-                    job = mainJobs.front();
-                    mainJobs.pop_front();
-                }
-                else
-                {
-                    continue;
-                }
+                mainJobCV.wait(lock);
             }
+            job = mainJobs.front();
+            mainJobs.popFront();
+        }
+        job->resume();
+        job->removeRef();
+    }
+}
+
+void ThreadPool::threadLoop()
+{
+    List<Promise*> localQueue;
+    while (true)
+    {
+        [[likely]]
+        if(!localQueue.empty())
+        {
+            Promise* job = localQueue.retrieve();
             job->resume();
             job->removeRef();
         }
         else
         {
-            Promise* job;
+            std::unique_lock lock(jobQueueLock);
+            if (jobQueue.empty())
             {
-                std::unique_lock lock(jobQueueLock);
-                if (jobQueue.empty())
                 {
-                    jobQueueCV.wait(lock);
+                    std::unique_lock lock2(numIdlingLock);
+                    numIdling++;
+                    numIdlingIncr.notify_one();
                 }
-                if (!jobQueue.empty())
+                jobQueueCV.wait(lock);
                 {
-                    job = jobQueue.front();
-                    jobQueue.pop_front();
-                }
-                else
-                {
-                    continue;
+                    std::unique_lock lock2(numIdlingLock);
+                    numIdling--;
                 }
             }
-            //std::cout << "Starting job " << job.id << std::endl;
-            job->resume();
-            job->removeRef();
+            // take 1/numThreads jobs, maybe make this a parameter that
+            // adjusts based on past workload
+            uint32 numTaken = std::max(jobQueue.size() / workers.size(), 1ull);
+            while (!jobQueue.empty() && localQueue.size() < numTaken)
+            {
+                localQueue.add(jobQueue.retrieve());
+            }
         }
     }
 }

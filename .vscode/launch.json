@@ -55,6 +55,7 @@
             "environment": [],
             "symbolSearchPath": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.25.28610\\lib\\x64",
             "requireExactSource": false,
+            "visualizerFile": "${workspaceRoot}/Seele.natvis",
             "logging": {
                 "moduleLoad": false,
                 "exceptions": true,
@@ -82,6 +83,7 @@
             "stopAtEntry": false,
             "console": "internalConsole",
             "cwd": "${workspaceRoot}/bin/Debug",
+            "visualizerFile": "${workspaceRoot}/Seele.natvis",
             "environment": [],
         },
     ]

@@ -1,6 +1,7 @@
 struct MaterialVertexParameter
 {
     float3 worldPosition;
+    float3 viewPosition;
     float3x3 tangentToWorld;
 #if NUM_MATERIAL_TEXCOORDS
     float2 texCoords[NUM_MATERIAL_TEXCOORDS];

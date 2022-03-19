@@ -20,7 +20,7 @@ BasePassMeshProcessor::~BasePassMeshProcessor()
 { 
 }
 
-Job BasePassMeshProcessor::processMeshBatch(
+MainJob BasePassMeshProcessor::processMeshBatch(
     const MeshBatch& batch, 
 //    const PPrimitiveComponent primitiveComponent,
     const Gfx::PRenderPass& renderPass,

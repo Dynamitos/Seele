@@ -148,7 +148,7 @@ enum class InputAction
     REPEAT                 = 2
 };
 
-enum class KeyModifier
+enum class KeyModifier : uint32
 {
     MOD_SHIFT         = 0x0001,
     MOD_CONTROL       = 0x0002,

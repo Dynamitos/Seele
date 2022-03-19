@@ -27,7 +27,8 @@ void AssetRegistry::importFile(const std::string &filePath)
     std::filesystem::path fsPath = std::filesystem::path(filePath);
     std::string extension = fsPath.extension().string();
     if (extension.compare(".fbx") == 0 
-     || extension.compare(".obj") == 0)
+     || extension.compare(".obj") == 0
+     || extension.compare(".blend") == 0)
     {
         get().importMesh(fsPath);
     }

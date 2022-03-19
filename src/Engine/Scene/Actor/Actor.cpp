@@ -74,23 +74,23 @@ void Actor::detachChild(PActor child)
     child->setParent(nullptr);
     child->notifySceneAttach(nullptr);
 }
-void Actor::setWorldLocation(Vector location)
-{
-    rootComponent->setWorldLocation(location);
-}
-
-void Actor::setWorldRotation(Quaternion rotation) 
-{
-    rootComponent->setWorldRotation(rotation);
-}
-void Actor::setWorldRotation(Vector rotation)
-{
-    rootComponent->setWorldRotation(rotation);
-}
-void Actor::setWorldScale(Vector scale)
-{
-    rootComponent->setWorldScale(scale);
-}
+//void Actor::setAbsoluteLocation(Vector location)
+//{
+//    rootComponent->setWorldLocation(location);
+//}
+//
+//void Actor::setAbsoluteRotation(Quaternion rotation) 
+//{
+//    rootComponent->setAbsoluteRotation(rotation);
+//}
+//void Actor::setAbsoluteRotation(Vector rotation)
+//{
+//    rootComponent->setAbsoluteRotation(rotation);
+//}
+//void Actor::setWorldScale(Vector scale)
+//{
+//    rootComponent->setWorldScale(scale);
+//}
 void Actor::setRelativeLocation(Vector location)
 {
     rootComponent->setRelativeLocation(location);
@@ -107,17 +107,29 @@ void Actor::setRelativeScale(Vector scale)
 {
     rootComponent->setRelativeScale(scale);
 }
-void Actor::addWorldTranslation(Vector translation)
+//void Actor::addAbsoluteTranslation(Vector translation)
+//{
+//    rootComponent->addAbsoluteTranslation(translation);
+//}
+//void Actor::addAbsoluteRotation(Quaternion rotation)
+//{
+//    rootComponent->addAbsoluteRotation(rotation);
+//}
+//void Actor::addAbsoluteRotation(Vector rotation)
+//{
+//    rootComponent->addAbsoluteRotation(rotation);
+//}
+void Actor::addRelativeLocation(Vector translation)
 {
-    rootComponent->addWorldTranslation(translation);
+    rootComponent->addRelativeLocation(translation);
 }
-void Actor::addWorldRotation(Quaternion rotation)
+void Actor::addRelativeRotation(Quaternion rotation)
 {
-    rootComponent->addWorldRotation(rotation);
+    rootComponent->addRelativeRotation(rotation);
 }
-void Actor::addWorldRotation(Vector rotation)
+void Actor::addRelativeRotation(Vector rotation)
 {
-    rootComponent->addWorldRotation(rotation);
+    rootComponent->addRelativeRotation(rotation);
 }
 PComponent Actor::getRootComponent()
 {

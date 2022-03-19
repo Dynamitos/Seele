@@ -123,7 +123,7 @@ public:
     void update()
     {
         // lock should not be necessary, but lets keep it for now
-        std::scoped_lock lock(dataLock);
+        //std::scoped_lock lock(dataLock);
         data = toBeWritten;
         dirty = false;
     }

@@ -45,6 +45,7 @@ struct VertexValueCache
 struct ShaderAttributeInterpolation
 {
     float3 worldPosition;
+    float3 viewPosition;
     float3 normal;
     float3 tangent;
     float3 biTangent;
@@ -158,10 +159,11 @@ struct VertexShaderInput
         return cache;
     }
 
-    MaterialVertexParameter getMaterialVertexParameters(VertexValueCache cache, float3 worldPosition, float3x3 tangentToLocal)
+    MaterialVertexParameter getMaterialVertexParameters(VertexValueCache cache, float3 worldPosition, float3 viewPosition, float3x3 tangentToLocal)
     {
         MaterialVertexParameter result;
         result.worldPosition = worldPosition;
+        result.viewPosition = viewPosition;
         result.vertexColor = cache.color;
         result.tangentToWorld = cache.getTangentToWorld();
         // TODO instancing
@@ -186,6 +188,7 @@ struct VertexShaderInput
         result.biTangent = mul(gSceneData.localToWorld, float4(biTangent, 0.0f)).xyz;
         result.color = color;
         result.worldPosition = vertexParams.worldPosition;
+        result.viewPosition = vertexParams.viewPosition;
         for(int i = 0; i < NUM_MATERIAL_TEXCOORDS; ++i)
         {
             if(i % 2)

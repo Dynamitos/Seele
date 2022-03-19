@@ -18,7 +18,7 @@ DepthPrepassMeshProcessor::~DepthPrepassMeshProcessor()
 { 
 }
 
-Job DepthPrepassMeshProcessor::processMeshBatch(
+MainJob DepthPrepassMeshProcessor::processMeshBatch(
     const MeshBatch& batch, 
 //    const PPrimitiveComponent primitiveComponent,
     const Gfx::PRenderPass& renderPass,

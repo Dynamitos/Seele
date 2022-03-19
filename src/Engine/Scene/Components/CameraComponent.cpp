@@ -6,19 +6,16 @@
 using namespace Seele;
 
 CameraComponent::CameraComponent()
-	: aspectRatio(0)
-	, fieldOfView(0)
+    : aspectRatio(0)
+    , fieldOfView(0)
     , bNeedsViewBuild(true)
     , bNeedsProjectionBuild(true)
-    , originPoint(0, 0, 0)
-    , cameraPosition(0, 0, 50)
-	, eye(Vector())
-	, projectionMatrix(Matrix4())
-	, viewMatrix(Matrix4())
+    , projectionMatrix(Matrix4())
+    , viewMatrix(Matrix4())
 {
-    distance = 50;
     rotationX = 0;
-    rotationY = -1.f;
+    rotationY = 0;
+    setRelativeLocation(Vector(0, 10, -50));
 }
 
 CameraComponent::~CameraComponent()
@@ -27,54 +24,52 @@ CameraComponent::~CameraComponent()
 
 void CameraComponent::mouseMove(float deltaX, float deltaY) 
 {
-    //0.01 mouse sensitivity
-	rotationX += deltaX/500.f;
-	rotationY += deltaY/500.f;
-	rotationY = std::clamp(rotationY, -1.5f, 1.5f);
-	getParent()->setWorldRotation(glm::rotate(glm::quat(), rotationX, Vector(0, 1, 0)));
-	getParent()->setWorldRotation(glm::rotate(glm::quat(), rotationY, Vector(1, 0, 0)));
-	bNeedsViewBuild = true;
+    rotationX -= deltaX / 1000.f;
+    rotationY += deltaY / 1000.f;
+    //std::cout << "X:" << rotationX << " Y: " << rotationY << std::endl;
+    setRelativeRotation(Vector(rotationY, rotationX, 0));
+    bNeedsViewBuild = true;
 }
 
-void CameraComponent::mouseScroll(double x) 
+void CameraComponent::mouseScroll(float x) 
 {
-    distance -= static_cast<float>(x);
-	distance = std::max(distance, 1.f);
-	getParent()->addWorldTranslation(Vector(0, 0, x));
-	bNeedsViewBuild = true;
+    addRelativeLocation(getTransform().getForward()*x);
+    bNeedsViewBuild = true;
 }
 
-void CameraComponent::moveOrigin(float up) 
+void CameraComponent::moveX(float amount)
 {
-	originPoint.y += up;
-	getParent()->addWorldTranslation(Vector(0, up, 0));
-	bNeedsViewBuild = true;
+    addRelativeLocation(getTransform().getForward()*amount);
+    bNeedsViewBuild = true;
+}
+
+void CameraComponent::moveY(float amount)
+{
+    addRelativeLocation(getTransform().getRight()*amount);
+    bNeedsViewBuild = true;
 }
 
 void CameraComponent::buildViewMatrix() 
 {
-    Matrix4 rotation = glm::rotate(Matrix4(1.0f), rotationX, Vector(0, 1, 0));
-	rotation = glm::rotate(rotation, rotationY, Vector(1, 0, 0));
-	Vector4 translation(0, 0, distance, 1);
-	translation = rotation * translation;
+    Vector eyePos = getTransform().getPosition();
+    Vector lookAt = eyePos + getTransform().getForward();
+    std::cout << "Eye: " << eyePos << " lookAt: " << lookAt << std::endl;
+    viewMatrix = glm::lookAt(eyePos, lookAt, Vector(0, 1, 0));
 
-	cameraPosition = originPoint + Vector(translation);
-	viewMatrix = glm::lookAt(cameraPosition, originPoint, Vector(0, 1, 0));
-
-	bNeedsViewBuild = false;
+    bNeedsViewBuild = false;
 }
 
 void CameraComponent::buildProjectionMatrix() 
 {
     projectionMatrix = glm::perspective(fieldOfView, aspectRatio, 1.0f, 1000.f);
-	static Matrix4 correctionMatrix =
-		Matrix4(
-			Vector4(1, 0, 0, 0),
-			Vector4(0, 1, 0, 0),
-			Vector4(0, 0, 0.5f, 0),
-			Vector4(0, 0, 0.5f, 1));
-	projectionMatrix = correctionMatrix * projectionMatrix;
-	bNeedsProjectionBuild = false;
+    static Matrix4 correctionMatrix =
+        Matrix4(
+            Vector4(1, 0, 0, 0),
+            Vector4(0, 1, 0, 0),
+            Vector4(0, 0, 0.5f, 0),
+            Vector4(0, 0, 0.5f, 1));
+    projectionMatrix = correctionMatrix * projectionMatrix;
+    bNeedsProjectionBuild = false;
 }
 
 

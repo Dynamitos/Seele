@@ -27,16 +27,14 @@ void Window::addView(PView view)
 MainJob Window::render() 
 {
     gfxHandle->beginFrame();
-    Array<MainJob> jobs;
     for(auto& windowView : views)
     {
         {
             std::scoped_lock lock(windowView->workerMutex);
             windowView->view->prepareRender();
         }
-        jobs.add(windowView->view->render());
+        co_await windowView->view->render();
     }
-    co_await MainJob::all(jobs);
     gfxHandle->endFrame();
     if(owner->isActive())
     {

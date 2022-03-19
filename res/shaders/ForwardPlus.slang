@@ -32,9 +32,9 @@ VertexStageOutput vertexMain(
     float4 clipSpacePosition;
     
     float3x3 tangentToLocal = cache.getTangentToLocal();
-    MaterialVertexParameter vertexParams = input.getMaterialVertexParameters(cache, worldPosition, tangentToLocal);
-
     float4 viewSpacePosition = mul(gViewParams.viewMatrix, float4(worldPosition, 1));
+    MaterialVertexParameter vertexParams = input.getMaterialVertexParameters(cache, worldPosition, viewSpacePosition.xyz, tangentToLocal);
+
     clipSpacePosition = mul(gViewParams.projectionMatrix, viewSpacePosition);
     output.position = clipSpacePosition;
     output.shaderAttributeInterpolation = input.getInterpolants(cache, vertexParams);
@@ -66,12 +66,13 @@ float4 fragmentMain(
     uint startOffset = gridValue.x;
     uint lightCount = gridValue.y;
 
-    for (int j = 0; j < lightCount; ++j)
+    for (int j = 0; j < numPointLights; ++j)
     {
-        uint lightIndex = lightIndexList[startOffset + j];
-        PointLight pointLight = pointLights[lightIndex];
+        //uint lightIndex = lightIndexList[startOffset + j];
+        PointLight pointLight = pointLights[j];
+        if(pointLight.colorRange.w < length(pointLight.getViewPos() - input.viewPosition)) continue;
         result += pointLight.illuminate(materialParams, brdf, viewDir);
     }
-    return float4(result, 0.1f);
+    return float4(result, 1.0f);
 }
 
