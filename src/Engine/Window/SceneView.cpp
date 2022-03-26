@@ -35,9 +35,9 @@ Seele::SceneView::SceneView(Gfx::PGraphics graphics, PWindow owner, const Viewpo
     //AssetRegistry::importFile("D:\\Private\\Programming\\Unreal Engine\\Assets\\Ely\\Ely.fbx");
     //AssetRegistry::importFile("D:\\Private\\Programming\\Unreal Engine\\Assets\\Cube\\cube.obj");
     //AssetRegistry::importFile("D:\\Private\\Programming\\Unreal Engine\\Assets\\Plane\\plane.fbx");
-    PPrimitiveComponent plane = new PrimitiveComponent(AssetRegistry::findMesh("plane"));
-    plane->setRelativeScale(Vector(100, 100, 100));
-    scene->addPrimitiveComponent(plane);
+    //PPrimitiveComponent plane = new PrimitiveComponent(AssetRegistry::findMesh("plane"));
+    //plane->setRelativeScale(Vector(100, 100, 100));
+    //scene->addPrimitiveComponent(plane);
 
     for(uint32 i = 0; i < 100000; ++i)
     {

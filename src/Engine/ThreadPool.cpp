@@ -6,27 +6,42 @@ using namespace Seele;
 std::mutex Seele::promisesLock;
 List<Promise*> Seele::promises;
 
-Event::Event(nullptr_t)
-{
-}
+//Event::Event(nullptr_t)
+//{
+//}
 
 Event::Event(const std::string &name, const std::source_location &location)
     : name(name)
     , location(location)
-    , eventLock(std::make_unique<std::mutex>())
 {
 }
 
 Event::Event(const std::source_location &location)
     : name(location.function_name())
     , location(location)
-    , eventLock(std::make_unique<std::mutex>())
 {
+}
+
+Event::Event(Event&& other)
+    : name(std::move(other.name))
+    , location(std::move(other.location))
+{
+}
+
+Event& Event::operator=(Event&& other)
+{
+    if(this != &other)
+    {
+        std::scoped_lock lock(eventLock, other.eventLock);
+        name = std::move(other.name);
+        location = std::move(other.location);
+    }
+    return *this;
 }
 
 void Event::raise()
 {
-    std::scoped_lock lock(*eventLock);
+    std::scoped_lock lock(eventLock);
     data = true;
     if(waitingJobs.size() > 0)
     {
@@ -39,17 +54,17 @@ void Event::raise()
 }
 void Event::reset()
 {
-    std::scoped_lock lock(*eventLock);
+    std::scoped_lock lock(eventLock);
     data = false;
 }
 
 bool Event::await_ready()
 {
-    eventLock->lock();
+    eventLock.lock();
     bool result = data;
     if(result)
     {
-        eventLock->unlock();
+        eventLock.unlock();
     }
     return result;
 }
@@ -58,14 +73,14 @@ void Event::await_suspend(std::coroutine_handle<JobPromiseBase<false>> h)
 {
     //h.promise().enqueue(this);
     waitingJobs.add(JobBase<false>(&h.promise()));
-    eventLock->unlock();
+    eventLock.unlock();
 }
 
 void Event::await_suspend(std::coroutine_handle<JobPromiseBase<true>> h)
 {
     //h.promise().enqueue(this);
     waitingMainJobs.add(JobBase<true>(&h.promise()));
-    eventLock->unlock();
+    eventLock.unlock();
 }
 
 ThreadPool::ThreadPool(uint32 threadCount)

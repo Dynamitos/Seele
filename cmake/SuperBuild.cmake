@@ -38,6 +38,7 @@ list (APPEND EXTRA_CMAKE_ARGS
 list(APPEND DEPENDENCIES ktx)
 
 find_program(BASH_EXECUTABLE git-bash)
+set(KTX_FEATURE_TESTS off)
 
 add_subdirectory(${KTX_ROOT} ${KTX_ROOT})
 
@@ -73,8 +74,8 @@ ExternalProject_Add(slang
 elseif(UNIX)
 ExternalProject_Add(slang
 	SOURCE_DIR ${SLANG_ROOT}
-	BINARY_DIR ${SLANG_ROOT}/lib
-	CONFIGURE_COMMAND ${CMAKE_SOURCE_DIR}/premake5 --file=${CMAKE_SOURCE_DIR}/external/slang/premake5.lua gmake2 --build-location=build/linux
+	BINARY_DIR ${SLANG_ROOT}
+	CONFIGURE_COMMAND ${CMAKE_SOURCE_DIR}/premake5 --file=${CMAKE_SOURCE_DIR}/external/slang/premake5.lua gmake --arch=${CMAKE_PLATFORM} --deps=true --build-location=build/linux
 	BUILD_COMMAND make -C ${CMAKE_SOURCE_DIR}/external/slang/build/linux config=${SLANG_CONFIG}
 	INSTALL_COMMAND "")
 endif()

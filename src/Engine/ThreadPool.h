@@ -16,14 +16,14 @@ struct JobPromiseBase;
 struct Event
 {
 public:
-    Event(nullptr_t);
+    //Event(nullptr_t);
     Event(const std::string& name, const std::source_location& location = std::source_location::current());
     Event(const std::source_location& location = std::source_location::current());
     Event(const Event& other) = delete;
-    Event(Event&& other) = default;
+    Event(Event&& other);
     ~Event() = default;
     Event& operator=(const Event& other) = delete;
-    Event& operator=(Event&& other) = default;
+    Event& operator=(Event&& other);
     auto operator<=>(const Event& other) const
     {
         return name <=> other.name;
@@ -34,7 +34,7 @@ public:
     }
     operator bool()
     {
-        std::scoped_lock lock(*eventLock);
+        std::scoped_lock lock(eventLock);
         return data;
     }
     
@@ -60,7 +60,7 @@ public:
 private:
     std::string name;
     std::source_location location;
-    std::unique_ptr<std::mutex> eventLock;
+    std::mutex eventLock;
     bool data = false;
     Array<JobBase<false>> waitingJobs;
     Array<JobBase<true>> waitingMainJobs;
@@ -81,8 +81,14 @@ struct JobPromiseBase
         DONE
     };
     JobPromiseBase(const std::source_location& location = std::source_location::current())
-        : handle(std::coroutine_handle<JobPromiseBase<MainJob>>::from_promise(*this))
-        , finishedEvent(Event(location))
+        : pad0(0x7472617453)
+        , handle(std::coroutine_handle<JobPromiseBase<MainJob>>::from_promise(*this))
+        , waitingFor(nullptr)
+        , continuation(nullptr)
+        , numRefs(0)
+        , finishedEvent(location)
+        , state(State::READY)
+        , pad1(0x646E45)
     {
         if constexpr(!MainJob)
         {
@@ -165,14 +171,14 @@ struct JobPromiseBase
             }
         } 
     }
-    uint64 pad0 = 0x7472617453;
+    uint64 pad0;
     std::coroutine_handle<JobPromiseBase> handle;
-    Event* waitingFor = nullptr;
-    JobPromiseBase* continuation = nullptr;
-    uint64 numRefs = 0;
+    Event* waitingFor;
+    JobPromiseBase* continuation;
+    uint64 numRefs;
     Event finishedEvent;
-    State state = State::READY;
-    uint64 pad1 = 0x646E45;
+    State state;
+    uint64 pad1;
 };
 
 template<bool MainJob = false>

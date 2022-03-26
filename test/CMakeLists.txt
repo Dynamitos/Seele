@@ -7,6 +7,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 
 add_subdirectory(Engine/)
 target_link_libraries(Seele_unit_tests ${Boost_LIBRARIES})
+target_compile_definitions(Seele_unit_tests PRIVATE -DBOOST_TEST_DYN_LINK)
 
 target_precompile_headers(Seele_unit_tests 
   PRIVATE    

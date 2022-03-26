@@ -21,6 +21,11 @@
                     "description": "Enable break on all exceptions",
                     "text": "catch throw",
                     "ignoreFailures": true
+                },
+                {
+                    "description": "Connect to valgrind",
+                    "text": "${command:valgrind-task-integration.valgrindGdbArg}",
+                    "ignoreFailures": true
                 }
             ]
         },
@@ -74,7 +79,19 @@
             "console": "integratedTerminal",
             "cwd": "${workspaceRoot}/bin/Debug",
             "environment": [],
-            "visualizerFile": "${workspaceRoot}/Seele.natvis"
+            "visualizerFile": "${workspaceRoot}/Seele.natvis",
+            "setupCommands": [
+                {
+                    "description": "Enable break on all exceptions",
+                    "text": "catch throw",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Connect to valgrind",
+                    "text": "${command:valgrind-task-integration.valgrindGdbArg}",
+                    "ignoreFailures": true
+                }
+            ]
         },
         {
             "name": "Test",
