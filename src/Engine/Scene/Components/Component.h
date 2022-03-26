@@ -74,7 +74,9 @@ private:
         }
         return nullptr;
     }
+    void propagateTransformUpdate();
     Transform transform;
+    Transform absoluteTransform;
     PScene owningScene;
     PActor owner;
     PComponent parent;

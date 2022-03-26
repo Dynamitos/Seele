@@ -33,13 +33,6 @@
                 "settings": {
                     "CMAKE_PLATFORM": "x64"
                 }
-            },
-            "x86": {
-                "short": "x86",
-                "long": "x86 platform",
-                "settings": {
-                    "CMAKE_PLATFORM": "x86"
-                }
             }
         }
     },

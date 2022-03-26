@@ -128,18 +128,22 @@ void Component::notifySceneAttach(PScene scene)
 void Component::setRelativeLocation(Vector location)
 {
     transform = Transform(location, transform.getRotation(), transform.getScale());
+    propagateTransformUpdate();
 }
 void Component::setRelativeRotation(Vector rotation)
 {
     transform = Transform(transform.getPosition(), Quaternion(rotation), transform.getScale());
+    propagateTransformUpdate();
 }
 void Component::setRelativeRotation(Quaternion rotation)
 {
     transform = Transform(transform.getPosition(), rotation, transform.getScale());
+    propagateTransformUpdate();
 }
 void Component::setRelativeScale(Vector scale)
 {
     transform = Transform(transform.getPosition(), transform.getRotation(), scale);
+    propagateTransformUpdate();
 }
 
 //void Component::addAbsoluteTranslation(Vector translation)
@@ -161,14 +165,17 @@ void Component::setRelativeScale(Vector scale)
 void Component::addRelativeLocation(Vector translation)
 {
     transform = Transform(transform.getPosition() + translation, transform.getRotation(), transform.getScale());
+    propagateTransformUpdate();
 }
 void Component::addRelativeRotation(Vector rotation)
 {
-    transform = Transform(transform.getPosition(), transform.getRotation() + Quaternion(rotation), transform.getScale());
+    transform = Transform(transform.getPosition(), transform.getRotation() * Quaternion(rotation), transform.getScale());
+    propagateTransformUpdate();
 }
 void Component::addRelativeRotation(Quaternion rotation)
 {
-    transform = Transform(transform.getPosition(), transform.getRotation(), transform.getScale());
+    transform = Transform(transform.getPosition(), transform.getRotation() * rotation, transform.getScale());
+    propagateTransformUpdate();
 }
 
 Transform Component::getTransform() const
@@ -178,9 +185,21 @@ Transform Component::getTransform() const
 
 Transform Component::getAbsoluteTransform() const
 {
+    return absoluteTransform;
+}
+
+void Component::propagateTransformUpdate()
+{
     if(parent != nullptr)
     {
-        return transform + parent->getAbsoluteTransform();
+        absoluteTransform = transform + parent->getAbsoluteTransform();
     }
-    return transform;
+    else
+    {
+        absoluteTransform = transform;
+    }
+    for(auto child : children)
+    {
+        child->propagateTransformUpdate();
+    }
 }

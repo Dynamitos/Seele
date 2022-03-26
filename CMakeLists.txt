@@ -111,7 +111,7 @@ add_subdirectory(src/)
 
 if(MSVC)
   set(_CRT_SECURE_NO_WARNINGS)
-  target_compile_options(Engine PRIVATE /Zi /MP)
+  target_compile_options(Engine PRIVATE /Zi /MP /DEBUG:FASTLINK)
 else()
   target_compile_options(Engine PRIVATE -g -Wall -Wextra -Wno-delete-incomplete -pedantic -fcoroutines)
 endif()

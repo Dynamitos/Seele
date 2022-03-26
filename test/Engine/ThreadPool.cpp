@@ -42,6 +42,7 @@ Job basicAwaitBase()
     basicAwaitState = 25;
     co_await basicAwaitThird();
     BOOST_REQUIRE_EQUAL(basicAwaitState, 30);
+    co_return;
 }
 
 BOOST_AUTO_TEST_CASE(basic_coawait)
@@ -211,7 +212,7 @@ Job launchStressTest()
 
 BOOST_AUTO_TEST_CASE(stress_test)
 {
-    //launchStressTest();
+    launchStressTest();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

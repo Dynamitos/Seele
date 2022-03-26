@@ -9,67 +9,66 @@
 namespace Seele
 {
 extern class ThreadPool& getGlobalThreadPool();
+template<bool MainJob>      
+struct JobBase;
 template<bool MainJob>
 struct JobPromiseBase;
 struct Event
 {
 public:
-    Event();
     Event(nullptr_t);
-    Event(const std::string& name);
-    Event(const std::source_location& location);
+    Event(const std::string& name, const std::source_location& location = std::source_location::current());
+    Event(const std::source_location& location = std::source_location::current());
+    Event(const Event& other) = delete;
+    Event(Event&& other) = default;
     ~Event() = default;
+    Event& operator=(const Event& other) = delete;
+    Event& operator=(Event&& other) = default;
     auto operator<=>(const Event& other) const
     {
-        return flag <=> other.flag;
+        return name <=> other.name;
     }
     bool operator==(const Event& other) const
     {
-        return flag == other.flag;
-    }
-    Event operator co_await()
-    {
-        return *this;
+        return name == other.name;
     }
     operator bool()
     {
-        std::scoped_lock lock(flag->lock);
-        return flag->data;
+        std::scoped_lock lock(eventLock);
+        return data;
     }
     
     friend std::ostream& operator<<(std::ostream& stream, const Event& event)
     {
         stream 
-            << event.flag->location.file_name() 
+            << event.location.file_name() 
             << "(" 
-            << event.flag->location.line() 
+            << event.location.line() 
             << ":" 
-            << event.flag->location.column() 
+            << event.location.column() 
             << "): " 
-            << event.flag->location.function_name();
+            << event.location.function_name();
         return stream;
     }
 
     void raise();
     void reset();
     bool await_ready();
-    template<bool MainJob>
-    constexpr void await_suspend(std::coroutine_handle<JobPromiseBase<MainJob>> h);
+    void await_suspend(std::coroutine_handle<JobPromiseBase<false>> h);
+    void await_suspend(std::coroutine_handle<JobPromiseBase<true>> h);
     constexpr void await_resume() {}
 private:
-    struct StateStore
-    {
-        std::mutex lock;
-        std::string name;
-        std::source_location location;
-        bool data;
-    };
-    std::shared_ptr<StateStore> flag;
+    std::mutex eventLock;
+    std::string name;
+    std::source_location location;
+    bool data = false;
+    Array<JobBase<false>> waitingJobs;
+    Array<JobBase<true>> waitingMainJobs;
     friend class ThreadPool;
 };
 
-template<bool MainJob>      
-struct JobBase;
+extern std::mutex promisesLock;
+extern List<JobPromiseBase<false>*> promises;
 template<bool MainJob>
 struct JobPromiseBase
 {
@@ -82,12 +81,24 @@ struct JobPromiseBase
         DONE
     };
     JobPromiseBase(const std::source_location& location = std::source_location::current())
+        : handle(std::coroutine_handle<JobPromiseBase<MainJob>>::from_promise(*this))
+        , finishedEvent(Event(location))
     {
-        handle = std::coroutine_handle<JobPromiseBase<MainJob>>::from_promise(*this);
-        finishedEvent = Event(location);
+        if constexpr(!MainJob)
+        {
+            std::scoped_lock lock(promisesLock);
+            promises.add(this);
+        }
     }
     ~JobPromiseBase()
-    {}
+    {
+        if constexpr (!MainJob)
+        {
+            std::scoped_lock lock(promisesLock);
+            promises.remove(promises.find(this));
+        }
+    }
+
     JobBase<MainJob> get_return_object() noexcept;
 
     inline auto initial_suspend() noexcept;
@@ -102,7 +113,6 @@ struct JobPromiseBase
 
     void resume()
     {
-        std::scoped_lock lock(promiseLock);
         if(!handle || handle.done() || executing())
         {
             return;
@@ -116,17 +126,16 @@ struct JobPromiseBase
         finishedEvent.raise();
         if(continuation)
         {
-            std::scoped_lock lock(continuation->promiseLock);
-            getGlobalThreadPool().scheduleJob(continuation);
+            getGlobalThreadPool().scheduleJob(JobBase<MainJob>(continuation));
             continuation->removeRef();
         }
     }
     void setContinuation(JobPromiseBase* cont)
     {
-        std::scoped_lock lock(promiseLock, cont->promiseLock);
         assert(cont->ready());
         continuation = cont;
         cont->state = State::SCHEDULED;
+        cont->waitingFor = &finishedEvent;
         cont->addRef();
     }
     bool done()
@@ -149,29 +158,25 @@ struct JobPromiseBase
     {
         return state == State::READY;
     }
-    void reset()
-    {
-        std::scoped_lock lock(promiseLock);
-        finishedEvent.reset();
-    }
-    void enqueue(Event& event)
+    void enqueue(Event* event)
     {
         if(!handle || handle.done() || waiting() || scheduled())
         {
             return;
         }
         state = State::WAITING;
-        getGlobalThreadPool().enqueueWaiting(event, this);
+        waitingFor = event;
+        getGlobalThreadPool().enqueueWaiting(event, std::move(JobBase<MainJob>(this)));
     }
-    void schedule()
+    bool schedule()
     {
-        std::scoped_lock lock(promiseLock);
         if(!handle || done() || !ready())
         {
-            return;
+            return false;
         }
         state = State::SCHEDULED;
-        getGlobalThreadPool().scheduleJob(this);
+        getGlobalThreadPool().scheduleJob(std::move(JobBase<MainJob>(this)));
+        return true;
     }
     void addRef()
     {
@@ -179,25 +184,23 @@ struct JobPromiseBase
     }
     void removeRef()
     {
-        if(--numRefs < 1)
+        numRefs--;
+        if(numRefs == 0)
         {
-            if(done())
+            if(!schedule())
             {
                 handle.destroy();
             }
-            else
-            {
-                schedule();
-            }
         } 
     }
-
-    std::mutex promiseLock;
+    uint64 pad0 = 0x7472617453;
     std::coroutine_handle<JobPromiseBase> handle;
+    Event* waitingFor = nullptr;
     JobPromiseBase* continuation = nullptr;
-    std::atomic_uint64_t numRefs = 0;
+    uint64 numRefs = 0;
     Event finishedEvent;
     State state = State::READY;
+    uint64 pad1 = 0x646E45;
 };
 
 template<bool MainJob = false>
@@ -213,16 +216,15 @@ public:
     explicit JobBase(JobPromiseBase<MainJob>* promise)
         : promise(promise)
     {
+        promise->addRef();
     }
     JobBase(const JobBase& other)
     {
-        std::scoped_lock lock(other.promise->promiseLock);
         promise = other.promise;
         promise->addRef();
     }
     JobBase(JobBase&& other)
     {
-        std::scoped_lock lock(other.promise->promiseLock);
         promise = other.promise;
         other.promise = nullptr;
     }
@@ -238,7 +240,10 @@ public:
     {
         if(this != &other)
         {
-            std::scoped_lock lock(other.promise->promiseLock);
+            if(promise != nullptr)
+            {
+                promise->removeRef();
+            }
             promise = other.promise;
             promise->addRef();
         }
@@ -248,7 +253,10 @@ public:
     {
         if(this != &other)
         {
-            std::scoped_lock lock(other.promise->promiseLock);
+            if(promise != nullptr)
+            {
+                promise->removeRef();
+            }
             promise = other.promise;
             other.promise = nullptr;
         }
@@ -273,7 +281,7 @@ public:
     {
         return promise->done();
     }
-    Event operator co_await() const
+    Event& operator co_await()
     {
         // the co_await operator keeps a reference to this, it won't 
         // be scheduled from the destructor
@@ -311,8 +319,7 @@ public:
         Array<JobBase> jobs;
         for(auto&& param : params)
         {
-            JobBase base = func(param);
-            jobs.add(base);
+            jobs.add(func(param));
         }
         getGlobalThreadPool().scheduleBatch(jobs);
         for(auto job : jobs)
@@ -333,15 +340,11 @@ using Promise = JobPromiseBase<false>;
 class ThreadPool
 {
 public:
-    ThreadPool(uint32 threadCount = std::thread::hardware_concurrency());
+    ThreadPool(uint32 threadCount = 1);//std::thread::hardware_concurrency());
     virtual ~ThreadPool();
     void waitIdle();
-    // Adds a job to the waiting queue for event
-    void enqueueWaiting(Event& event, Promise* job);
-    // Adds a job to the waiting queue for event
-    void enqueueWaiting(Event& event, MainPromise* job);
-    void scheduleJob(Promise* job);
-    void scheduleJob(MainPromise* job);
+    void scheduleJob(Job job);
+    void scheduleJob(MainJob job);
     template<std::ranges::range Iterable>
     requires std::same_as<std::ranges::range_value_t<Iterable>, MainJob>
     void scheduleBatch(Iterable jobs)
@@ -349,9 +352,9 @@ public:
         std::scoped_lock lock(mainJobLock);
         for(auto job : jobs)
         {
-            job.promise->addRef();
+            //job.promise->addRef();
             job.promise->state = JobPromiseBase<true>::State::SCHEDULED;
-            mainJobs.add(job.promise);
+            mainJobs.add(job);
         }
         mainJobCV.notify_one();
     }
@@ -362,13 +365,13 @@ public:
         std::scoped_lock lock(jobQueueLock);
         for(auto job : jobs)
         {
-            job.promise->addRef();
+            //job.promise->addRef();
             job.promise->state = JobPromiseBase<false>::State::SCHEDULED;
-            jobQueue.add(job.promise);
+            jobQueue.add(job);
         }
         jobQueueCV.notify_all();
     }
-    void notify(Event& event);
+    void notify(Event* event);
     void mainLoop();
     void threadLoop();
 private:
@@ -378,27 +381,20 @@ private:
     uint32 numIdling;
     Array<std::thread> workers;
 
-    List<MainPromise*> mainJobs;
+    List<MainJob> mainJobs;
     std::mutex mainJobLock;
     std::condition_variable mainJobCV;
     
-    List<Promise*> jobQueue;
+    List<Job> jobQueue;
     std::mutex jobQueueLock;
     std::condition_variable jobQueueCV;
-    
-    Map<Event, List<MainPromise*>> waitingMainJobs;
-    std::mutex waitingMainLock;
 
-    Map<Event, List<Promise*>> waitingJobs;
-    std::mutex waitingLock;
-
-    uint32 maxLocalQueueSize = 50;
+    uint32 localQueueSize = 50;
 };
 
 template<bool MainJob>
 inline JobBase<MainJob> JobPromiseBase<MainJob>::get_return_object() noexcept 
 {
-    numRefs++;
     return JobBase<MainJob>(this);
 }
 
@@ -413,13 +409,6 @@ inline auto JobPromiseBase<MainJob>::final_suspend() noexcept
 {
     markDone();
     return std::suspend_always{};
-}
-
-template<bool MainJob>
-inline constexpr void Event::await_suspend(std::coroutine_handle<JobPromiseBase<MainJob>> h)
-{
-    h.promise().enqueue(*this);
-    flag->lock.unlock();
 }
 
 } // namespace Seele

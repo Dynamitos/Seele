@@ -1,6 +1,5 @@
 #pragma once
 #include <vld.h>
-#include "ThreadPool.h"
 
 namespace Seele
 {
@@ -10,10 +9,7 @@ namespace Seele
         {
             //_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
         }
-        ~GlobalFixture()
-        {
-            getGlobalThreadPool().waitIdle();
-        }
+        ~GlobalFixture();
         void setup()
         {
             //Fibers::JobQueue::initJobQueues();

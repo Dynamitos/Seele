@@ -13,8 +13,8 @@ CameraComponent::CameraComponent()
     , projectionMatrix(Matrix4())
     , viewMatrix(Matrix4())
 {
-    rotationX = 0;
-    rotationY = 0;
+    yaw = 0;
+    pitch = 0;
     setRelativeLocation(Vector(0, 10, -50));
 }
 
@@ -22,12 +22,16 @@ CameraComponent::~CameraComponent()
 {
 }
 
-void CameraComponent::mouseMove(float deltaX, float deltaY) 
+void CameraComponent::mouseMove(float deltaYaw, float deltaPitch) 
 {
-    rotationX -= deltaX / 1000.f;
-    rotationY += deltaY / 1000.f;
-    //std::cout << "X:" << rotationX << " Y: " << rotationY << std::endl;
-    setRelativeRotation(Vector(rotationY, rotationX, 0));
+    yaw -= deltaYaw / 500.f;
+    pitch += deltaPitch / 500.f;
+    //std::cout << "Yaw: " << yaw << " Pitch: " << pitch << std::endl;
+    Vector cameraDirection = glm::normalize(Vector(cos(yaw) * cos(pitch), sin(pitch), sin(yaw) * cos(pitch)));
+    Vector xyz = glm::cross(cameraDirection, Vector(0, 0, 1));
+    Quaternion result = Quaternion(glm::dot(cameraDirection, Vector(0, 0, 1)) + 1, xyz.x, xyz.y, xyz.z);
+    //std::cout << "Result " << Vector(0, 0, 1) * glm::normalize(result) << " cameraDirection: " << cameraDirection << std::endl;
+    setRelativeRotation(result);
     bNeedsViewBuild = true;
 }
 
@@ -51,9 +55,9 @@ void CameraComponent::moveY(float amount)
 
 void CameraComponent::buildViewMatrix() 
 {
-    Vector eyePos = getTransform().getPosition();
-    Vector lookAt = eyePos + getTransform().getForward();
-    std::cout << "Eye: " << eyePos << " lookAt: " << lookAt << std::endl;
+    Vector eyePos = getAbsoluteTransform().getPosition();
+    Vector lookAt = eyePos + glm::normalize(Vector(cos(yaw) * cos(pitch), sin(pitch), sin(yaw) * cos(pitch)));
+    //std::cout << "Eye: " << eyePos << " lookAt: " << lookAt << std::endl;
     viewMatrix = glm::lookAt(eyePos, lookAt, Vector(0, 1, 0));
 
     bNeedsViewBuild = false;

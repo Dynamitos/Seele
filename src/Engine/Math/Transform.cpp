@@ -146,15 +146,15 @@ Vector Transform::getScale() const
 
 Vector Transform::getForward() const
 {
-    return Vector(0, 0, 1) * rotation;
+    return glm::normalize(Vector(0, 0, 1) * rotation);
 }
 Vector Transform::getRight() const
 {
-    return Vector(1, 0, 0) * rotation;
+    return glm::normalize(Vector(1, 0, 0) * rotation);
 }
 Vector Transform::getUp() const
 {
-    return Vector(0, 1, 0) * rotation;
+    return glm::normalize(Vector(0, 1, 0) * rotation);
 }
 
 bool Transform::equals(const Transform &other, float tolerance)

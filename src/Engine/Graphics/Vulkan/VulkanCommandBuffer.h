@@ -32,7 +32,10 @@ public:
 	void addWaitSemaphore(VkPipelineStageFlags stages, PSemaphore waitSemaphore);
 	void refreshFence();
 	void waitForCommand(uint32 timeToWait = 1000000u);
-	Event asyncWait() const;
+	Fence* operator co_await()
+	{
+		return fence.getHandle();
+	}
 	PFence getFence();
 	PCommandBufferManager getManager();
 	enum State

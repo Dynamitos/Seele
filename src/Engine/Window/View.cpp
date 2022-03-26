@@ -25,3 +25,8 @@ void View::setFocused()
 {
 	owner->setFocused(this);	
 }
+
+const std::string& View::getName()
+{
+	return name;
+}

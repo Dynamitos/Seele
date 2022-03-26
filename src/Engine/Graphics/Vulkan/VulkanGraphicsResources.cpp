@@ -80,11 +80,6 @@ void Fence::wait(uint32 timeout)
         break;
     }
 }
-Event Fence::asyncWait() const
-{
-    return signaled;
-}
-
 
 VertexDeclaration::VertexDeclaration(const Array<Gfx::VertexElement>& elementList) 
     : elementList(elementList)

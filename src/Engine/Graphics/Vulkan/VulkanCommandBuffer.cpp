@@ -171,12 +171,6 @@ void CmdBuffer::waitForCommand(uint32 timeout)
     refreshFence();
 }
 
-Event CmdBuffer::asyncWait() const
-{
-    return fence->asyncWait();
-}
-
-
 PFence CmdBuffer::getFence()
 {
     return fence;

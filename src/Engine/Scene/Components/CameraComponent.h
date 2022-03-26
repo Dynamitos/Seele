@@ -45,8 +45,8 @@ private:
     //Transforms relative to actor
     Matrix4 viewMatrix;
     Matrix4 projectionMatrix;
-    float rotationX;
-    float rotationY;
+    float yaw;
+    float pitch;
 };
 DEFINE_REF(CameraComponent)
 } // namespace Seele

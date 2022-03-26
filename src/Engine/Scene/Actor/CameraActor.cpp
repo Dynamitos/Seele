@@ -14,6 +14,7 @@ CameraActor::CameraActor()
     cameraComponent->aspectRatio = 1.777778f;
     cameraComponent->setParent(sceneComponent);
     cameraComponent->setOwner(this);
+    sceneComponent->addChildComponent(cameraComponent);
 }
 
 CameraActor::~CameraActor()

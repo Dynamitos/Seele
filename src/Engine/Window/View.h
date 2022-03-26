@@ -25,6 +25,8 @@ public:
 	void applyArea(URect area);
 	void setFocused();
 
+	const std::string& getName();
+
 protected:
 	Gfx::PGraphics graphics;
 	Gfx::PViewport viewport;

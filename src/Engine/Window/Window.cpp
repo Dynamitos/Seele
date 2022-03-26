@@ -16,9 +16,7 @@ Window::~Window()
 
 void Window::addView(PView view)
 {
-    WindowView* windowView = new WindowView();
-    windowView->view = view;
-    windowView->updateFinished = Event(view->name);
+    WindowView* windowView = new WindowView(view);
     //windowView->worker = std::thread(&Window::viewWorker, this, windowView);
     views.add(windowView);
     viewWorker(views.size() - 1);

@@ -43,7 +43,10 @@ public:
         return fence;
     }
     void wait(uint32 timeout);
-    Event asyncWait() const;
+    Event& operator co_await()
+    {
+        return signaled;
+    }
     bool operator<(const Fence &other) const
     {
         return fence < other.fence;
