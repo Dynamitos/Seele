@@ -20,22 +20,21 @@ Seele::SceneView::SceneView(Gfx::PGraphics graphics, PWindow owner, const Viewpo
 {
     scene = new Scene(graphics);
     scene->addActor(activeCamera);
-    AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Ayaka\\Avatar_Girl_Sword_Ayaka_Tex_Body_Diffuse.png");
-    AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Ayaka\\Avatar_Girl_Sword_Ayaka_Tex_Body_Lightmap.png");
-    AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Ayaka\\Avatar_Girl_Sword_Ayaka_Tex_Face_Diffuse.png");
-    AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Ayaka\\Avatar_Girl_Sword_Ayaka_Tex_Hair_Diffuse.png");
-    AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Ayaka\\Avatar_Girl_Sword_Ayaka_Tex_Hair_Lightmap.png");
-    AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Ayaka\\Avatar_Girl_Tex_FaceLightmap.png");
-    AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Ayaka\\Ayaka.fbx");
-    AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Ely\\Ely.fbx");
-    AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Cube\\cube.obj");
-    AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Plane\\plane.fbx");
- 
+    AssetRegistry::importFile("/home/dynamitos/TestSeeleProject/Assets/Ayaka/Avatar_Girl_Sword_Ayaka_Tex_Body_Diffuse.png");
+    AssetRegistry::importFile("/home/dynamitos/TestSeeleProject/Assets/Ayaka/Avatar_Girl_Sword_Ayaka_Tex_Body_Lightmap.png");
+    AssetRegistry::importFile("/home/dynamitos/TestSeeleProject/Assets/Ayaka/Avatar_Girl_Sword_Ayaka_Tex_Face_Diffuse.png");
+    AssetRegistry::importFile("/home/dynamitos/TestSeeleProject/Assets/Ayaka/Avatar_Girl_Sword_Ayaka_Tex_Hair_Diffuse.png");
+    AssetRegistry::importFile("/home/dynamitos/TestSeeleProject/Assets/Ayaka/Avatar_Girl_Sword_Ayaka_Tex_Hair_Lightmap.png");
+    AssetRegistry::importFile("/home/dynamitos/TestSeeleProject/Assets/Ayaka/Avatar_Girl_Tex_FaceLightmap.png");
+    AssetRegistry::importFile("/home/dynamitos/TestSeeleProject/Assets/Ayaka/Ayaka.fbx");
     PPrimitiveComponent ayaka = new PrimitiveComponent(AssetRegistry::findMesh("Ayaka"));
-    ayaka->setRelativeLocation(Vector(0, 0, 0));
-    ayaka->setRelativeScale(Vector(10, 10, 10));
-    //scene->addPrimitiveComponent(ayaka);
+    ayaka->addWorldTranslation(Vector(0, 0, 0));
+    ayaka->setWorldScale(Vector(10, 10, 10));
+    scene->addPrimitiveComponent(ayaka);
 
+    //AssetRegistry::importFile("D:\\Private\\Programming\\Unreal Engine\\Assets\\Ely\\Ely.fbx");
+    //AssetRegistry::importFile("D:\\Private\\Programming\\Unreal Engine\\Assets\\Cube\\cube.obj");
+    //AssetRegistry::importFile("D:\\Private\\Programming\\Unreal Engine\\Assets\\Plane\\plane.fbx");
     PPrimitiveComponent plane = new PrimitiveComponent(AssetRegistry::findMesh("plane"));
     plane->setRelativeScale(Vector(100, 100, 100));
     scene->addPrimitiveComponent(plane);
