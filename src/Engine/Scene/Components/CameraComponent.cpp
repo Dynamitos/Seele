@@ -10,8 +10,8 @@ CameraComponent::CameraComponent()
     , fieldOfView(0)
     , bNeedsViewBuild(true)
     , bNeedsProjectionBuild(true)
-    , projectionMatrix(Matrix4())
     , viewMatrix(Matrix4())
+    , projectionMatrix(Matrix4())
 {
     yaw = 0;
     pitch = 0;

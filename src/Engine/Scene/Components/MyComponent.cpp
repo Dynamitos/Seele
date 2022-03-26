@@ -12,7 +12,7 @@ void MyComponent::start()
     otherComp.update();
 }
 
-Job MyComponent::tick(float deltatime) const
+Job MyComponent::tick(float) const
 {
     //std::cout << "MyComponent::tick" << std::endl;
     ++writable;

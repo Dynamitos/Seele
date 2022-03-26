@@ -13,6 +13,7 @@
             "stopAtEntry": false,
             "cwd": "${workspaceRoot}/bin/Debug",
             "console": "integratedTerminal",
+            "visualizerFile": "${workspaceRoot}/Seele.natvis",
             "environment": [],
             "externalConsole": false,
             "setupCommands": [
@@ -73,6 +74,7 @@
             "console": "integratedTerminal",
             "cwd": "${workspaceRoot}/bin/Debug",
             "environment": [],
+            "visualizerFile": "${workspaceRoot}/Seele.natvis"
         },
         {
             "name": "Test",

@@ -17,7 +17,7 @@ public:
     void launchStart();
     virtual void start() {};
     Array<Job> launchTick(float deltaTime) const;
-    virtual Job tick(float deltaTime) const { co_return; }
+    virtual Job tick(float) const { co_return; }
     Array<Job> launchUpdate();
     virtual Job update() { co_return; }
     PComponent getParent();

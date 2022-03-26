@@ -17,13 +17,13 @@ MeshBatchElement::MeshBatchElement()
     , indirectArgsBuffer(nullptr)
 {}
 MeshBatch::MeshBatch()
-    : useReverseCulling(false)
+    : elements()
+    , useReverseCulling(false)
     , isBackfaceCullingDisabled(false)
     , isCastingShadow(true)
     , useWireframe(false)
     , topology(Gfx::SE_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
     , vertexInput(nullptr)
     , material(nullptr)
-    , elements()
 {
 }

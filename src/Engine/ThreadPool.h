@@ -34,7 +34,7 @@ public:
     }
     operator bool()
     {
-        std::scoped_lock lock(eventLock);
+        std::scoped_lock lock(*eventLock);
         return data;
     }
     
@@ -58,9 +58,9 @@ public:
     void await_suspend(std::coroutine_handle<JobPromiseBase<true>> h);
     constexpr void await_resume() {}
 private:
-    std::mutex eventLock;
     std::string name;
     std::source_location location;
+    std::unique_ptr<std::mutex> eventLock;
     bool data = false;
     Array<JobBase<false>> waitingJobs;
     Array<JobBase<true>> waitingMainJobs;
@@ -120,16 +120,6 @@ struct JobPromiseBase
         state = State::EXECUTING;
         handle.resume();
     }
-    void markDone() 
-    {
-        state = State::DONE;
-        finishedEvent.raise();
-        if(continuation)
-        {
-            getGlobalThreadPool().scheduleJob(JobBase<MainJob>(continuation));
-            continuation->removeRef();
-        }
-    }
     void setContinuation(JobPromiseBase* cont)
     {
         assert(cont->ready());
@@ -158,26 +148,8 @@ struct JobPromiseBase
     {
         return state == State::READY;
     }
-    void enqueue(Event* event)
-    {
-        if(!handle || handle.done() || waiting() || scheduled())
-        {
-            return;
-        }
-        state = State::WAITING;
-        waitingFor = event;
-        getGlobalThreadPool().enqueueWaiting(event, std::move(JobBase<MainJob>(this)));
-    }
-    bool schedule()
-    {
-        if(!handle || done() || !ready())
-        {
-            return false;
-        }
-        state = State::SCHEDULED;
-        getGlobalThreadPool().scheduleJob(std::move(JobBase<MainJob>(this)));
-        return true;
-    }
+    void enqueue(Event* event);
+    bool schedule();
     void addRef()
     {
         numRefs++;
@@ -290,15 +262,8 @@ public:
     }
     static JobBase all() = delete;
     template<std::ranges::range Iterable>
-    requires std::same_as<std::ranges::range_value_t<Iterable>, JobBase>
-    static JobBase all(Iterable collection)
-    {
-        getGlobalThreadPool().scheduleBatch(collection);
-        for(auto it : collection)
-        {
-            co_await it;
-        }
-    }
+    requires std::same_as<std::ranges::range_value_t<Iterable>, JobBase<MainJob>>
+    static JobBase<MainJob> all(Iterable collection);
     template<std::ranges::range Iterable>
     static JobBase all(Iterable collection)
     {
@@ -314,19 +279,7 @@ public:
     }
     template<typename JobFunc, std::ranges::input_range Iterable>
     requires std::invocable<JobFunc, std::ranges::range_reference_t<Iterable>>
-    static JobBase launchJobs(JobFunc&& func, Iterable params)
-    {
-        Array<JobBase> jobs;
-        for(auto&& param : params)
-        {
-            jobs.add(func(param));
-        }
-        getGlobalThreadPool().scheduleBatch(jobs);
-        for(auto job : jobs)
-        {
-            co_await job;
-        }
-    }
+    static JobBase launchJobs(JobFunc&& func, Iterable params);
 private:
     JobPromiseBase<MainJob>* promise;
     friend class ThreadPool;
@@ -407,8 +360,62 @@ inline auto JobPromiseBase<MainJob>::initial_suspend() noexcept
 template<bool MainJob>
 inline auto JobPromiseBase<MainJob>::final_suspend() noexcept
 {
-    markDone();
+    state = State::DONE;
+    finishedEvent.raise();
+    if(continuation)
+    {
+        getGlobalThreadPool().scheduleJob(JobBase<MainJob>(continuation));
+        continuation->removeRef();
+    }
     return std::suspend_always{};
 }
-
+//template<bool MainJob>
+//inline void JobPromiseBase<MainJob>::enqueue(Event* event)
+//{
+//    if(!handle || handle.done() || waiting() || scheduled())
+//    {
+//        return;
+//    }
+//    state = State::WAITING;
+//    waitingFor = event;
+//    getGlobalThreadPool().enqueueWaiting(event, std::move(JobBase<MainJob>(this)));
+//}
+template<bool MainJob>
+inline bool JobPromiseBase<MainJob>::schedule()
+{
+    if(!handle || done() || !ready())
+    {
+        return false;
+    }
+    state = State::SCHEDULED;
+    getGlobalThreadPool().scheduleJob(std::move(JobBase<MainJob>(this)));
+    return true;
+}
+template<bool MainJob>
+template<std::ranges::range Iterable>
+requires std::same_as<std::ranges::range_value_t<Iterable>, JobBase<MainJob>>
+inline JobBase<MainJob> JobBase<MainJob>::all(Iterable collection)
+{
+    getGlobalThreadPool().scheduleBatch(collection);
+    for(auto it : collection)
+    {
+        co_await it;
+    }
+}
+template<bool MainJob>
+template<typename JobFunc, std::ranges::input_range Iterable>
+requires std::invocable<JobFunc, std::ranges::range_reference_t<Iterable>>
+inline JobBase<MainJob> JobBase<MainJob>::launchJobs(JobFunc&& func, Iterable params)
+{
+    Array<JobBase<MainJob>> jobs;
+    for(auto&& param : params)
+    {
+        jobs.add(func(param));
+    }
+    getGlobalThreadPool().scheduleBatch(jobs);
+    for(auto job : jobs)
+    {
+        co_await job;
+    }
+}
 } // namespace Seele

@@ -28,8 +28,8 @@ Seele::SceneView::SceneView(Gfx::PGraphics graphics, PWindow owner, const Viewpo
     AssetRegistry::importFile("/home/dynamitos/TestSeeleProject/Assets/Ayaka/Avatar_Girl_Tex_FaceLightmap.png");
     AssetRegistry::importFile("/home/dynamitos/TestSeeleProject/Assets/Ayaka/Ayaka.fbx");
     PPrimitiveComponent ayaka = new PrimitiveComponent(AssetRegistry::findMesh("Ayaka"));
-    ayaka->addWorldTranslation(Vector(0, 0, 0));
-    ayaka->setWorldScale(Vector(10, 10, 10));
+    ayaka->setRelativeLocation(Vector(0, 0, 0));
+    ayaka->setRelativeScale(Vector(10, 10, 10));
     scene->addPrimitiveComponent(ayaka);
 
     //AssetRegistry::importFile("D:\\Private\\Programming\\Unreal Engine\\Assets\\Ely\\Ely.fbx");

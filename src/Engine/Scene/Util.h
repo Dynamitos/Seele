@@ -10,8 +10,8 @@ public:
     Writable()
     {}
     Writable(T initialData)
-        : data(initialData)
-        , toBeWritten(initialData)
+        : toBeWritten(initialData)
+        , data(initialData)
     {}
     Writable(const Writable& other) = delete;
     Writable(Writable&& other) = default;
