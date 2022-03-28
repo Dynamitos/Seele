@@ -11,30 +11,46 @@ List<Promise*> Seele::promises;
 //}
 
 Event::Event(const std::string &name, const std::source_location &location)
-    : name(name)
-    , location(location)
+    : state(std::make_shared<EventState>())
 {
+    state->name = name;
+    state->location = location;
 }
 
 Event::Event(const std::source_location &location)
-    : name(location.function_name())
-    , location(location)
+    : state(std::make_shared<EventState>())
 {
+    state->name = location.function_name();
+    state->location = location;
+}
+
+Event::Event(const Event& other)
+{
+    std::scoped_lock lock(other.eventLock);
+    state = other.state;
 }
 
 Event::Event(Event&& other)
-    : name(std::move(other.name))
-    , location(std::move(other.location))
 {
+    std::scoped_lock lock(other.eventLock);
+    state = std::move(other.state);
 }
 
+Event& Event::operator=(const Event& other)
+{
+    if(this != &other)
+    {
+        std::scoped_lock lock(eventLock, other.eventLock);
+        state = other.state;
+    }
+    return *this;
+}
 Event& Event::operator=(Event&& other)
 {
     if(this != &other)
     {
         std::scoped_lock lock(eventLock, other.eventLock);
-        name = std::move(other.name);
-        location = std::move(other.location);
+        state = std::move(other.state);
     }
     return *this;
 }
@@ -42,26 +58,26 @@ Event& Event::operator=(Event&& other)
 void Event::raise()
 {
     std::scoped_lock lock(eventLock);
-    data = true;
-    if(waitingJobs.size() > 0)
+    state->data = true;
+    if(state->waitingJobs.size() > 0)
     {
-        getGlobalThreadPool().scheduleBatch(waitingJobs);
+        getGlobalThreadPool().scheduleBatch(state->waitingJobs);
     }
-    if(waitingMainJobs.size() > 0)
+    if(state->waitingMainJobs.size() > 0)
     {
-        getGlobalThreadPool().scheduleBatch(waitingMainJobs);
+        getGlobalThreadPool().scheduleBatch(state->waitingMainJobs);
     }
 }
 void Event::reset()
 {
     std::scoped_lock lock(eventLock);
-    data = false;
+    state->data = false;
 }
 
 bool Event::await_ready()
 {
     eventLock.lock();
-    bool result = data;
+    bool result = state->data;
     if(result)
     {
         eventLock.unlock();
@@ -72,14 +88,14 @@ bool Event::await_ready()
 void Event::await_suspend(std::coroutine_handle<JobPromiseBase<false>> h)
 {
     //h.promise().enqueue(this);
-    waitingJobs.add(JobBase<false>(&h.promise()));
+    state->waitingJobs.add(JobBase<false>(&h.promise()));
     eventLock.unlock();
 }
 
 void Event::await_suspend(std::coroutine_handle<JobPromiseBase<true>> h)
 {
     //h.promise().enqueue(this);
-    waitingMainJobs.add(JobBase<true>(&h.promise()));
+    state->waitingMainJobs.add(JobBase<true>(&h.promise()));
     eventLock.unlock();
 }
 
@@ -117,6 +133,7 @@ void ThreadPool::waitIdle()
         std::unique_lock lock(numIdlingLock);
         if(numIdling == workers.size())
         {
+            assert(promises.size() == 0);
             return;
         }
         numIdlingIncr.wait(lock);

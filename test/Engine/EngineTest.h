@@ -1,5 +1,5 @@
 #pragma once
-//#include <vld.h>
+#include <vld.h>
 
 namespace Seele
 {
@@ -7,16 +7,14 @@ namespace Seele
     {
         GlobalFixture()
         {
-            //_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+            _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
         }
         ~GlobalFixture();
         void setup()
         {
-            //Fibers::JobQueue::initJobQueues();
         }
         void teardown()
         {
-            //Fibers::JobQueue::cleanupJobQueues();
         }
     };
 };

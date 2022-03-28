@@ -19,35 +19,35 @@ public:
     //Event(nullptr_t);
     Event(const std::string& name, const std::source_location& location = std::source_location::current());
     Event(const std::source_location& location = std::source_location::current());
-    Event(const Event& other) = delete;
+    Event(const Event& other);
     Event(Event&& other);
     ~Event() = default;
-    Event& operator=(const Event& other) = delete;
+    Event& operator=(const Event& other);
     Event& operator=(Event&& other);
     auto operator<=>(const Event& other) const
     {
-        return name <=> other.name;
+        return state->name <=> other.state->name;
     }
     bool operator==(const Event& other) const
     {
-        return name == other.name;
+        return state->name == other.state->name;
     }
     operator bool()
     {
         std::scoped_lock lock(eventLock);
-        return data;
+        return state->data;
     }
     
     friend std::ostream& operator<<(std::ostream& stream, const Event& event)
     {
         stream 
-            << event.location.file_name() 
+            << event.state->location.file_name() 
             << "(" 
-            << event.location.line() 
+            << event.state->location.line() 
             << ":" 
-            << event.location.column() 
+            << event.state->location.column() 
             << "): " 
-            << event.location.function_name();
+            << event.state->location.function_name();
         return stream;
     }
 
@@ -58,12 +58,16 @@ public:
     void await_suspend(std::coroutine_handle<JobPromiseBase<true>> h);
     constexpr void await_resume() {}
 private:
-    std::string name;
-    std::source_location location;
-    std::mutex eventLock;
-    bool data = false;
-    Array<JobBase<false>> waitingJobs;
-    Array<JobBase<true>> waitingMainJobs;
+    mutable std::mutex eventLock;
+    struct EventState
+    {
+        std::string name;
+        std::source_location location;
+        bool data = false;
+        Array<JobBase<false>> waitingJobs;
+        Array<JobBase<true>> waitingMainJobs;
+    };
+    std::shared_ptr<EventState> state;
     friend class ThreadPool;
 };
 
@@ -81,14 +85,14 @@ struct JobPromiseBase
         DONE
     };
     JobPromiseBase(const std::source_location& location = std::source_location::current())
-        : pad0(0x7472617453)
+        : pad0(12345)//0x7472617453)
         , handle(std::coroutine_handle<JobPromiseBase<MainJob>>::from_promise(*this))
         , waitingFor(nullptr)
         , continuation(nullptr)
         , numRefs(0)
         , finishedEvent(location)
         , state(State::READY)
-        , pad1(0x646E45)
+        , pad1(12345)//0x646E45)
     {
         if constexpr(!MainJob)
         {
@@ -119,6 +123,7 @@ struct JobPromiseBase
 
     void resume()
     {
+        validate();
         if(!handle || handle.done() || executing())
         {
             return;
@@ -128,6 +133,7 @@ struct JobPromiseBase
     }
     void setContinuation(JobPromiseBase* cont)
     {
+        validate();
         assert(cont->ready());
         continuation = cont;
         cont->state = State::SCHEDULED;
@@ -136,32 +142,39 @@ struct JobPromiseBase
     }
     bool done()
     {
+        validate();
         return state == State::DONE;
     }
     bool scheduled()
     {
+        validate();
         return state == State::SCHEDULED;
     }
     bool waiting()
     {
+        validate();
         return state == State::WAITING;
     }
     bool executing()
     {
+        validate();
         return state == State::EXECUTING;
     }
     bool ready()
     {
+        validate();
         return state == State::READY;
     }
     void enqueue(Event* event);
     bool schedule();
     void addRef()
     {
+        validate();
         numRefs++;
     }
     void removeRef()
     {
+        validate();
         numRefs--;
         if(numRefs == 0)
         {
@@ -170,6 +183,11 @@ struct JobPromiseBase
                 handle.destroy();
             }
         } 
+    }
+    void validate()
+    {
+        assert(pad0 == 12345);
+        assert(pad1 == 12345);
     }
     uint64 pad0;
     std::coroutine_handle<JobPromiseBase> handle;
@@ -199,7 +217,10 @@ public:
     JobBase(const JobBase& other)
     {
         promise = other.promise;
-        promise->addRef();
+        if(promise != nullptr)
+        {
+            promise->addRef();
+        }
     }
     JobBase(JobBase&& other)
     {
@@ -223,7 +244,10 @@ public:
                 promise->removeRef();
             }
             promise = other.promise;
-            promise->addRef();
+            if(promise != nullptr)
+            {
+                promise->addRef();
+            }
         }
         return *this;
     }
@@ -245,15 +269,15 @@ public:
         promise->resume();
     }
     template<std::invocable Callable>
-    inline JobBase&& then(Callable callable)
+    inline JobBase then(Callable callable)
     {
         return then(callable());
     }
-    JobBase&& then(JobBase&& continuation)
+    JobBase then(JobBase continuation)
     {
         promise->setContinuation(continuation.promise);
-        promise->schedule();
-        return std::move(continuation);
+        continuation.promise->state = JobPromiseBase<MainJob>::State::SCHEDULED;
+        return continuation;
     }
     bool done()
     {
@@ -267,9 +291,11 @@ public:
         return promise->finishedEvent;
     }
     static JobBase all() = delete;
+    
     template<std::ranges::range Iterable>
     requires std::same_as<std::ranges::range_value_t<Iterable>, JobBase<MainJob>>
     static JobBase<MainJob> all(Iterable collection);
+    
     template<std::ranges::range Iterable>
     static JobBase all(Iterable collection)
     {
@@ -278,10 +304,11 @@ public:
             co_await it;
         }
     }
+    
     template<typename... Awaitable>
-    static JobBase all(Awaitable&&... jobs)
+    static JobBase all(Awaitable... jobs)
     {
-        return JobBase::all(Array{jobs...});
+        return JobBase::all(std::initializer_list{jobs...});
     }
     template<typename JobFunc, std::ranges::input_range Iterable>
     requires std::invocable<JobFunc, std::ranges::range_reference_t<Iterable>>
@@ -299,7 +326,7 @@ using Promise = JobPromiseBase<false>;
 class ThreadPool
 {
 public:
-    ThreadPool(uint32 threadCount = 1);//std::thread::hardware_concurrency());
+    ThreadPool(uint32 threadCount = std::thread::hardware_concurrency());
     virtual ~ThreadPool();
     void waitIdle();
     void scheduleJob(Job job);
@@ -313,7 +340,7 @@ public:
         {
             //job.promise->addRef();
             job.promise->state = JobPromiseBase<true>::State::SCHEDULED;
-            mainJobs.add(job);
+            mainJobs.add(std::move(job));
         }
         mainJobCV.notify_one();
     }
@@ -326,7 +353,7 @@ public:
         {
             //job.promise->addRef();
             job.promise->state = JobPromiseBase<false>::State::SCHEDULED;
-            jobQueue.add(job);
+            jobQueue.add(std::move(job));
         }
         jobQueueCV.notify_all();
     }
@@ -360,12 +387,14 @@ inline JobBase<MainJob> JobPromiseBase<MainJob>::get_return_object() noexcept
 template<bool MainJob>
 inline auto JobPromiseBase<MainJob>::initial_suspend() noexcept
 {
+    validate();
     return std::suspend_always{};
 }
 
 template<bool MainJob>
 inline auto JobPromiseBase<MainJob>::final_suspend() noexcept
 {
+    validate();
     state = State::DONE;
     finishedEvent.raise();
     if(continuation)
@@ -375,20 +404,10 @@ inline auto JobPromiseBase<MainJob>::final_suspend() noexcept
     }
     return std::suspend_always{};
 }
-//template<bool MainJob>
-//inline void JobPromiseBase<MainJob>::enqueue(Event* event)
-//{
-//    if(!handle || handle.done() || waiting() || scheduled())
-//    {
-//        return;
-//    }
-//    state = State::WAITING;
-//    waitingFor = event;
-//    getGlobalThreadPool().enqueueWaiting(event, std::move(JobBase<MainJob>(this)));
-//}
 template<bool MainJob>
 inline bool JobPromiseBase<MainJob>::schedule()
 {
+    validate();
     if(!handle || done() || !ready())
     {
         return false;
