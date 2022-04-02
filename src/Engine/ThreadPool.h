@@ -308,7 +308,8 @@ public:
     template<typename... Awaitable>
     static JobBase all(Awaitable... jobs)
     {
-        return JobBase::all(std::initializer_list{jobs...});
+        std::vector vec{jobs...};
+        return std::move(JobBase::all(std::move(vec)));
     }
     template<typename JobFunc, std::ranges::input_range Iterable>
     requires std::invocable<JobFunc, std::ranges::range_reference_t<Iterable>>
@@ -338,9 +339,9 @@ public:
         std::scoped_lock lock(mainJobLock);
         for(auto job : jobs)
         {
-            //job.promise->addRef();
+            job.promise->validate();
             job.promise->state = JobPromiseBase<true>::State::SCHEDULED;
-            mainJobs.add(std::move(job));
+            mainJobs.add(job);
         }
         mainJobCV.notify_one();
     }
@@ -351,9 +352,9 @@ public:
         std::scoped_lock lock(jobQueueLock);
         for(auto job : jobs)
         {
-            //job.promise->addRef();
+            job.promise->validate();
             job.promise->state = JobPromiseBase<false>::State::SCHEDULED;
-            jobQueue.add(std::move(job));
+            jobQueue.add(job);
         }
         jobQueueCV.notify_all();
     }
@@ -426,6 +427,7 @@ inline JobBase<MainJob> JobBase<MainJob>::all(Iterable collection)
     {
         co_await it;
     }
+    collection.clear();
 }
 template<bool MainJob>
 template<typename JobFunc, std::ranges::input_range Iterable>

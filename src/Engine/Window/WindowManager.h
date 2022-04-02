@@ -11,7 +11,6 @@ class WindowManager
 public:
 	WindowManager();
 	~WindowManager();
-	Job init();
 	PWindow addWindow(const WindowCreateInfo &createInfo);
 	void notifyWindowClosed(PWindow window);
 	static Gfx::PGraphics getGraphics()

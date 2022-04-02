@@ -62,10 +62,12 @@ void Event::raise()
     if(state->waitingJobs.size() > 0)
     {
         getGlobalThreadPool().scheduleBatch(state->waitingJobs);
+        state->waitingJobs.clear();
     }
     if(state->waitingMainJobs.size() > 0)
     {
         getGlobalThreadPool().scheduleBatch(state->waitingMainJobs);
+        state->waitingMainJobs.clear();
     }
 }
 void Event::reset()
@@ -87,14 +89,12 @@ bool Event::await_ready()
 
 void Event::await_suspend(std::coroutine_handle<JobPromiseBase<false>> h)
 {
-    //h.promise().enqueue(this);
     state->waitingJobs.add(JobBase<false>(&h.promise()));
     eventLock.unlock();
 }
 
 void Event::await_suspend(std::coroutine_handle<JobPromiseBase<true>> h)
 {
-    //h.promise().enqueue(this);
     state->waitingMainJobs.add(JobBase<true>(&h.promise()));
     eventLock.unlock();
 }

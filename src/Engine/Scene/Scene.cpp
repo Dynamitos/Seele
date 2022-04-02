@@ -48,19 +48,19 @@ Job Scene::beginUpdate(double deltaTime)
 {
     //std::cout << "Scene::beginUpdate" << std::endl;
     auto startTime = std::chrono::high_resolution_clock::now();
-    Array<Job> jobs;
+    //Array<Job> jobs;
     for(auto actor : rootActors)
     {
-        jobs.addAll(actor->launchTick(static_cast<float>(deltaTime)));
+        co_await Job::all(actor->launchTick(static_cast<float>(deltaTime)));
     }
-    co_await Job::all(jobs);
+    //co_await Job::all(std::move(jobs));
     auto endTime = std::chrono::high_resolution_clock::now();
-    float delta = std::chrono::duration_cast<std::chrono::seconds>(endTime - startTime).count();
+    float delta = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
     lastUpdate += delta;
     numUpdates++;
-    if(lastUpdate > 1.0f)
+    if(lastUpdate > 1000.0f)
     {
-        lastUpdate -= 1.0f;
+        lastUpdate -= 1000.0f;
         std::cout << numUpdates << " updates per second" << std::endl;
         numUpdates = 0;
     }
@@ -69,12 +69,12 @@ Job Scene::beginUpdate(double deltaTime)
 Job Scene::commitUpdate() 
 {
     //std::cout << "Scene::commitUpdate" << std::endl;
-    Array<Job> jobs;
+    //std::vector<Job> jobs;
     for(auto actor : rootActors)
     {
-        jobs.addAll(actor->launchUpdate());
+        co_await Job::all(actor->launchUpdate());
     }
-    co_await Job::all(jobs);
+    //co_await Job::all(std::move(jobs));
     //std::cout << "Scene::commitUpdate finished waiting" << std::endl;
 }
 

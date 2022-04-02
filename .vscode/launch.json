@@ -98,7 +98,7 @@
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceRoot}/bin/Debug/Seele_unit_tests.exe",
-            "args": ["--detect_memory_leaks=15533"],
+            "args": ["--detect_memory_leaks"],
             "stopAtEntry": false,
             "console": "integratedTerminal",
             "cwd": "${workspaceRoot}/bin/Debug",

@@ -7,6 +7,7 @@ using namespace std::chrono_literals;
 
 BOOST_AUTO_TEST_SUITE(ThreadPool)
 
+/*
 uint64 basicAwaitState = 0;
 
 Job basicAwaitFirst()
@@ -99,7 +100,7 @@ BOOST_AUTO_TEST_CASE(basic_thenchain)
             co_return;
         });
 }
-
+*/
 uint64 basicAllState1 = 0;
 uint64 basicAllState2 = 0;
 Job basicAllFirst()
@@ -123,9 +124,10 @@ Job basicAllThen()
 
 BOOST_AUTO_TEST_CASE(basic_all)
 {
-    Job::all(basicAllFirst(), basicAllSecond()).then(basicAllThen());
+    Job allJob = Job::all(basicAllFirst(), basicAllSecond());
+    allJob.then(basicAllThen());
 }
-
+/*
 uint64 allThenState = 0;
 
 Job allThenInitial()
@@ -213,6 +215,6 @@ Job launchStressTest()
 BOOST_AUTO_TEST_CASE(stress_test)
 {
     launchStressTest();
-}
+}*/
 
 BOOST_AUTO_TEST_SUITE_END()
