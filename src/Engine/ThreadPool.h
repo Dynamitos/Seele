@@ -123,6 +123,7 @@ struct JobPromiseBase
 
     void resume()
     {
+        std::scoped_lock lock(promiseLock);
         validate();
         if(!handle || handle.done() || executing())
         {
@@ -133,6 +134,7 @@ struct JobPromiseBase
     }
     void setContinuation(JobPromiseBase* cont)
     {
+        std::scoped_lock lock(promiseLock, cont->promiseLock);
         validate();
         assert(cont->ready());
         continuation = cont;
@@ -174,15 +176,20 @@ struct JobPromiseBase
     }
     void removeRef()
     {
-        validate();
-        numRefs--;
-        if(numRefs == 0)
         {
-            if(!schedule())
+            std::scoped_lock lock(promiseLock);
+            validate();
+            numRefs--;
+            if(numRefs != 0)
             {
-                handle.destroy();
+                return;
             }
-        } 
+            if(schedule())
+            {
+                return;
+            }
+        }
+        handle.destroy();
     }
     void validate()
     {
@@ -190,10 +197,11 @@ struct JobPromiseBase
         assert(pad1 == 12345);
     }
     uint64 pad0;
+    std::mutex promiseLock;
     std::coroutine_handle<JobPromiseBase> handle;
     Event* waitingFor;
     JobPromiseBase* continuation;
-    uint64 numRefs;
+    std::atomic_uint64_t numRefs;
     Event finishedEvent;
     State state;
     uint64 pad1;
@@ -287,6 +295,7 @@ public:
     {
         // the co_await operator keeps a reference to this, it won't 
         // be scheduled from the destructor
+        std::scoped_lock lock(promise->promiseLock);
         promise->schedule();
         return promise->finishedEvent;
     }
@@ -339,6 +348,7 @@ public:
         std::scoped_lock lock(mainJobLock);
         for(auto job : jobs)
         {
+            std::scoped_lock lock(job.promise->promiseLock);
             job.promise->validate();
             job.promise->state = JobPromiseBase<true>::State::SCHEDULED;
             mainJobs.add(job);
@@ -352,6 +362,7 @@ public:
         std::scoped_lock lock(jobQueueLock);
         for(auto job : jobs)
         {
+            std::scoped_lock lock(job.promise->promiseLock);
             job.promise->validate();
             job.promise->state = JobPromiseBase<false>::State::SCHEDULED;
             jobQueue.add(job);
