@@ -41,7 +41,7 @@ void Scene::start()
     }
 }
 
-static float lastUpdate;
+static int64 lastUpdate;
 static uint64 numUpdates;
 
 Job Scene::beginUpdate(double deltaTime)
@@ -55,12 +55,12 @@ Job Scene::beginUpdate(double deltaTime)
     }
     //co_await Job::all(std::move(jobs));
     auto endTime = std::chrono::high_resolution_clock::now();
-    float delta = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+    int64 delta = (endTime - startTime).count();
     lastUpdate += delta;
     numUpdates++;
-    if(lastUpdate > 1000.0f)
+    if(lastUpdate > 1000)
     {
-        lastUpdate -= 1000.0f;
+        lastUpdate -= 1000;
         std::cout << numUpdates << " updates per second" << std::endl;
         numUpdates = 0;
     }

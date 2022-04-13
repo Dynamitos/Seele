@@ -4,6 +4,7 @@
 #include <iterator>
 #include <assert.h>
 #include <memory_resource>
+#include <algorithm>
 #include <boost/serialization/serialization.hpp>
 
 #ifndef DEFAULT_ALLOC_SIZE
@@ -103,7 +104,7 @@ public:
         markIteratorDirty();
     }
 
-    constexpr explicit Array(const allocator_type& alloc)
+    constexpr explicit Array(const allocator_type& alloc) noexcept
         : arraySize(0)
         , allocated(DEFAULT_ALLOC_SIZE)
         , allocator(alloc)
@@ -169,7 +170,7 @@ public:
         other.arraySize = 0;
         markIteratorDirty();
     }
-    Array &operator=(const Array &other) noexcept
+    Array &operator=(const Array &other)
     {
         if (this != &other)
         {
@@ -197,7 +198,8 @@ public:
         }
         return *this;
     }
-    Array &operator=(Array &&other) noexcept
+    Array &operator=(Array &&other) noexcept(std::allocator_traits<Allocator>::propagate_on_container_move_assignment::value
+        || std::allocator_traits<Allocator>::is_always_equal::value)
     {
         if (this != &other)
         {
@@ -217,24 +219,14 @@ public:
         }
         return *this;
     }
-    ~Array()
+    constexpr ~Array()
     {
         clear();
     }
-
-    constexpr bool operator==(const Array &other)
+    [[nodiscard]]
+    constexpr iterator find(const value_type &item) noexcept
     {
-        return _data == other._data;
-    }
-
-    constexpr bool operator!=(const Array &other)
-    {
-        return !(*this == other);
-    }
-
-    constexpr iterator find(const value_type &item)
-    {
-        for (uint32 i = 0; i < arraySize; ++i)
+        for (size_type i = 0; i < arraySize; ++i)
         {
             if (_data[i] == item)
             {
@@ -243,9 +235,10 @@ public:
         }
         return endIt;
     }
-    constexpr iterator find(value_type&& item)
+    [[nodiscard]]
+    constexpr iterator find(value_type&& item) noexcept
     {
-        for (uint32 i = 0; i < arraySize; ++i)
+        for (size_type i = 0; i < arraySize; ++i)
         {
             if (_data[i] == item)
             {
@@ -254,23 +247,36 @@ public:
         }
         return endIt;	
     }
-    constexpr allocator_type get_allocator() const
+    //template<class F, class... Args, std::predicate<F, Args...> Pred>
+    template<class Pred>
+    constexpr iterator find(Pred pred) const noexcept
+    {
+        for (size_type i = 0; i < arraySize; ++i)
+        {
+            if(pred(_data[i]))
+            {
+                return iterator(&_data[i]);
+            }
+        }
+        return endIt;
+    }
+    constexpr allocator_type get_allocator() const noexcept
     {
         return allocator;
     }
-    constexpr iterator begin() const
+    constexpr iterator begin() const noexcept
     {
         return beginIt;
     }
-    constexpr iterator end() const
+    constexpr iterator end() const noexcept
     {
         return endIt;
     }
-    constexpr const_iterator cbegin() const
+    constexpr const_iterator cbegin() const noexcept
     {
         return beginIt;
     }
-    constexpr const_iterator cend() const
+    constexpr const_iterator cend() const noexcept
     {
         return endIt;
     }
@@ -316,6 +322,19 @@ public:
         markIteratorDirty();
         return _data[arraySize - 1];
     }
+    template<std::predicate Pred>
+    constexpr void remove_if(Pred pred, bool keepOrder = true)
+    {
+        remove(find(pred), keepOrder);
+    }
+    constexpr void remove(const value_type& element, bool keepOrder = true)
+    {
+        remove(find(element), keepOrder);
+    }
+    constexpr void remove(value_type&& element, bool keepOrder = true)
+    {
+        remove(find(element), keepOrder);
+    }
     constexpr void remove(iterator it, bool keepOrder = true)
     {
         remove(it - beginIt, keepOrder);
@@ -324,7 +343,7 @@ public:
     {
         if (keepOrder)
         {
-            for(uint32 i = index; i < arraySize-1; ++i)
+            for(size_type i = index; i < arraySize-1; ++i)
             {
                 _data[i] = std::move(_data[i+1]);
             }
@@ -344,7 +363,7 @@ public:
     {
         resizeInternal(newSize, value);
     }
-    constexpr void clear()
+    constexpr void clear() noexcept
     {
         if(_data == nullptr)
         {
@@ -360,59 +379,71 @@ public:
         allocated = 0;
         markIteratorDirty();
     }
-    inline size_type indexOf(iterator iterator)
+    constexpr size_type indexOf(iterator iterator)
     {
         return iterator - beginIt;
     }
-    inline size_type indexOf(const_iterator iterator) const
+    constexpr size_type indexOf(const_iterator iterator) const
     {
         return iterator.p - beginIt.p;
     }
-    inline size_type indexOf(T& t)
+    constexpr size_type indexOf(T& t)
     {
         return indexOf(find(t));
     }
-    inline size_type indexOf(const T& t) const
+    constexpr size_type indexOf(const T& t) const
     {
         return indexOf(find(t));
     }
-    inline size_type size() const
+    constexpr size_type size() const noexcept
     {
         return arraySize;
     }
-    inline size_type empty() const
+    [[nodiscard]]
+    constexpr bool empty() const noexcept
     {
         return arraySize == 0;
     }
-    inline size_type capacity() const
+    constexpr void reserve(size_type new_cap)
+    {
+        if(new_cap > allocated)
+        {
+            T* temp = allocateArray(new_cap);
+            std::uninitialized_move_n(beginIt, arraySize, temp);
+            _data = temp;
+            markIteratorDirty();
+        }
+        allocated = new_cap;
+    }
+    constexpr size_type capacity() const noexcept
     {
         return allocated;
     }
-    inline pointer data() const
+    constexpr pointer data() const noexcept
     {
         return _data;
     }
-    inline reference front() const
+    constexpr reference front() const
     {
         assert(arraySize > 0);
         return _data[0];
     }
-    inline reference back() const
+    constexpr reference back() const
     {
         assert(arraySize > 0);
         return _data[arraySize - 1];
     }
-    void pop()
+    constexpr void pop()
     {
         std::allocator_traits<allocator_type>::destroy(allocator, &_data[--arraySize]);
         markIteratorDirty();
     }
-    constexpr inline reference operator[](size_type index)
+    constexpr reference operator[](size_type index)
     {
         assert(index < arraySize);
         return _data[index];
     }
-    constexpr inline const reference operator[](size_type index) const
+    constexpr const reference operator[](size_type index) const
     {
         assert(index < arraySize);
         return _data[index];
@@ -441,6 +472,7 @@ private:
         beginIt = Iterator(_data);
         endIt = Iterator(_data + arraySize);
     }
+    [[nodiscard]]
     T* allocateArray(size_type size)
     {
         T* result = allocator.allocate(size);
@@ -452,7 +484,7 @@ private:
         allocator.deallocate(ptr, size);
     }
     template<typename Type>
-    T& addInternal(Type&& t)
+    T& addInternal(Type&& t) noexcept
     {
         if (arraySize == allocated)
         {
@@ -471,7 +503,7 @@ private:
         return _data[arraySize - 1];
     }
     template<typename Type>
-    void resizeInternal(size_type newSize, Type&& value)
+    void resizeInternal(size_type newSize, Type&& value) noexcept
     {
         if (newSize <= allocated)
         {
@@ -533,6 +565,30 @@ private:
     T *_data = nullptr;
     allocator_type allocator;
 };
+
+
+template<class Type, class Alloc>
+constexpr bool operator==(const Array<Type, Alloc> &lhs, const Array<Type, Alloc>& rhs)
+{
+    if(lhs.size() != rhs.size())
+    {
+        return false;
+    }
+    for(auto it1 = lhs.begin(), it2 = rhs.begin(); it1 != lhs.end() && it2 != rhs.end(); ++it1, ++it2)
+    {
+        if(*it1 != *it2)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+template<class Type, class Alloc>
+constexpr auto operator<=>(const Array<Type, Alloc>& lhs, const Array<Type, Alloc>& rhs)
+{
+    return std::lexicographical_compare_three_way(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
+}
 
 template <typename T, size_t N>
 struct StaticArray

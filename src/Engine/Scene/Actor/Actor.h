@@ -24,7 +24,7 @@ public:
 
     PActor getParent();
     void addChild(PActor child);
-    void detachChild(PActor child);
+    void removeChild(PActor child);
     Array<PActor> getChildren();
     //void setAbsoluteLocation(Vector location);
     //void setAbsoluteRotation(Quaternion rotation);

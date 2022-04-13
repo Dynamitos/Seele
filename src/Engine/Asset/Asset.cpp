@@ -40,24 +40,14 @@ Asset::~Asset()
 {
 }
 
-std::ifstream &Asset::getReadStream()
+std::ifstream Asset::getReadStream() const
 {
-    if(inStream.is_open())
-    {
-        return inStream;
-    }
-    inStream.open(fullPath);
-    return inStream;
+    return std::ifstream(fullPath);
 }
 
-std::ofstream &Asset::getWriteStream()
+std::ofstream Asset::getWriteStream() const
 {
-    if(outStream.is_open())
-    {
-        return outStream;
-    }
-    outStream.open(fullPath);
-    return outStream;
+    return std::ofstream(fullPath);
 }
 
 std::string Asset::getFileName() const

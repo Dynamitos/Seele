@@ -2,8 +2,6 @@
 #include "MinimalEngine.h"
 #include "Containers/List.h"
 #include "ThreadPool.h"
-#include <thread>
-#include <future>
 #include <filesystem>
 
 namespace Seele
@@ -20,7 +18,6 @@ public:
 private:
     void import(std::filesystem::path filePath, PMaterialAsset asset);
     Gfx::PGraphics graphics;
-    List<std::future<void>> futures;
     PMaterialAsset placeholderMaterial;
 };
 DEFINE_REF(MaterialLoader)

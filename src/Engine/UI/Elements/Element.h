@@ -16,9 +16,9 @@ public:
     void setParent(PElement element);
     PElement getParent() const;
     void addChild(PElement element);
+    void removeChild(PElement element);
     const Array<PElement> getChildren();
     void clear();
-    void remove(PElement element);
     void setEnabled(bool newEnabled);
     bool isEnabled() const;
     // maybe not the healthiest inteface

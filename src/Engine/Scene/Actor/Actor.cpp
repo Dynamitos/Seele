@@ -60,6 +60,10 @@ PScene Actor::getScene()
 
 void Actor::setParent(PActor newParent)
 {
+    if(parent != nullptr)
+    {
+        parent->removeChild(this);
+    }
     parent = newParent;
 }
 void Actor::addChild(PActor child)
@@ -68,7 +72,7 @@ void Actor::addChild(PActor child)
     child->setParent(this);
     child->notifySceneAttach(owningScene);
 }
-void Actor::detachChild(PActor child)
+void Actor::removeChild(PActor child)
 {
     children.remove(children.find(child), false);
     child->setParent(nullptr);

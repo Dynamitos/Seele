@@ -4,6 +4,10 @@ target_sources(Engine
         Asset.cpp
         AssetRegistry.h
         AssetRegistry.cpp
+        FontAsset.h
+        FontAsset.cpp
+        FontLoader.h
+        FontLoader.cpp
         MaterialLoader.h
         MaterialLoader.cpp
         MeshAsset.h

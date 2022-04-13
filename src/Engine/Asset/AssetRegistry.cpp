@@ -1,6 +1,8 @@
 #include "AssetRegistry.h"
 #include "MeshAsset.h"
+#include "FontAsset.h"
 #include "TextureAsset.h"
+#include "FontLoader.h"
 #include "TextureLoader.h"
 #include "MaterialLoader.h"
 #include "MeshLoader.h"
@@ -37,6 +39,10 @@ void AssetRegistry::importFile(const std::string &filePath)
     {
         get().importTexture(fsPath);
     }
+    if(extension.compare(".ttf") == 0)
+    {
+        get().importFont(fsPath);
+    }
     if (extension.compare(".asset") == 0)
     {
         get().importMaterial(fsPath);
@@ -53,6 +59,11 @@ PMeshAsset AssetRegistry::findMesh(const std::string &filePath)
 PTextureAsset AssetRegistry::findTexture(const std::string &filePath)
 {
     return get().textures[filePath];
+}
+
+PFontAsset AssetRegistry::findFont(const std::string& name)
+{
+    return get().fonts[name];
 }
 
 PMaterialAsset AssetRegistry::findMaterial(const std::string &filePath)
@@ -84,6 +95,7 @@ void AssetRegistry::init(const std::filesystem::path &rootFolder, Gfx::PGraphics
 {
     AssetRegistry &reg = get();
     reg.rootFolder = rootFolder;
+    reg.fontLoader = new FontLoader(graphics);
     reg.meshLoader = new MeshLoader(graphics);
     reg.textureLoader = new TextureLoader(graphics);
     reg.materialLoader = new MaterialLoader(graphics);
@@ -102,6 +114,11 @@ void AssetRegistry::importMesh(const std::filesystem::path &filePath)
 void AssetRegistry::importTexture(const std::filesystem::path &filePath)
 {
     textureLoader->importAsset(filePath);
+}
+
+void AssetRegistry::importFont(const std::filesystem::path& filePath)
+{
+    fontLoader->importAsset(filePath);
 }
 
 void AssetRegistry::importMaterial(const std::filesystem::path &filePath)
@@ -129,6 +146,11 @@ void AssetRegistry::registerMesh(PMeshAsset mesh)
 void AssetRegistry::registerTexture(PTextureAsset texture) 
 {
     textures[texture->getFileName()] = texture;
+}
+
+void AssetRegistry::registerFont(PFontAsset font)
+{
+    fonts[font->getFileName()] = font;
 }
 
 void AssetRegistry::registerMaterial(PMaterialAsset material)

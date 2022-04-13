@@ -104,15 +104,15 @@ template <typename T, typename Deleter = std::default_delete<T>>
 class RefPtr
 {
 public:
-    RefPtr()
+    constexpr RefPtr() noexcept
     {
         object = nullptr;
     }
-    RefPtr(nullptr_t)
+    constexpr RefPtr(nullptr_t) noexcept
     {
         object = nullptr;
     }
-    RefPtr(T *ptr, Deleter deleter = Deleter())
+    constexpr RefPtr(T *ptr, Deleter deleter = Deleter())
     {
         std::scoped_lock l(registeredObjectsLock);
         auto registeredObj = registeredObjects.find(ptr);
@@ -129,12 +129,15 @@ public:
             object->addRef();
         }
     }
-    explicit RefPtr(RefObject<T, Deleter> *other)
+    constexpr explicit RefPtr(RefObject<T, Deleter> *other) noexcept
         : object(other)
     {
-        object->addRef();
+        if(object != nullptr)
+        {
+            object->addRef();
+        }
     }
-    inline RefPtr(const RefPtr &other)
+    constexpr RefPtr(const RefPtr &other) noexcept
         : object(other.object)
     {
         if (object != nullptr)
@@ -142,14 +145,14 @@ public:
             object->addRef();
         }
     }
-    RefPtr(RefPtr &&rhs)
+    constexpr RefPtr(RefPtr &&rhs) noexcept
         : object(std::move(rhs.object))
     {
         rhs.object = nullptr;
         //Dont change references, they stay the same
     }
     template <typename F>
-    RefPtr(const RefPtr<F> &other)
+    constexpr RefPtr(const RefPtr<F> &other)
     {
         F *f = other.getObject()->getHandle();
         assert(static_cast<T *>(f));
@@ -158,7 +161,7 @@ public:
     }
 
     template <typename F, typename DeleterF = std::default_delete<F>>
-    RefPtr<F, DeleterF> cast()
+    constexpr RefPtr<F, DeleterF> cast()
     {
         T *t = object->getHandle();
         F *f = dynamic_cast<F *>(t);
@@ -171,7 +174,7 @@ public:
     }
 
     template <typename F, typename DeleterF = std::default_delete<F>>
-    const RefPtr<F, DeleterF> cast() const
+    constexpr const RefPtr<F, DeleterF> cast() const
     {
         T *t = object->getHandle();
         F *f = dynamic_cast<F *>(t);
@@ -183,7 +186,7 @@ public:
         return RefPtr<F, DeleterF>(newObject);
     }
 
-    RefPtr &operator=(const RefPtr &other)
+    constexpr RefPtr &operator=(const RefPtr &other)
     {
         if (this != &other)
         {
@@ -199,7 +202,7 @@ public:
         }
         return *this;
     }
-    RefPtr &operator=(RefPtr &&rhs)
+    constexpr RefPtr &operator=(RefPtr &&rhs)
     {
         if (this != &rhs)
         {
@@ -212,44 +215,44 @@ public:
         }
         return *this;
     }
-    ~RefPtr()
+    constexpr ~RefPtr()
     {
         if (object != nullptr)
         {
             object->removeRef();
         }
     }
-    bool operator==(const RefPtr& rhs) const
+    constexpr bool operator==(const RefPtr& rhs) const noexcept
     {
         return object == rhs.object;
     }
-    auto operator<=>(const RefPtr &rhs) const
+    constexpr auto operator<=>(const RefPtr &rhs) const noexcept
     {
         return object <=> rhs.object;
     }
-    inline T *operator->()
+    constexpr T *operator->()
     {
         assert(object != nullptr);
         return object->handle;
     }
-    inline const T *operator->() const
+    constexpr const T *operator->() const
     {
         assert(object != nullptr);
         return object->handle;
     }
-    RefObject<T, Deleter> *getObject() const
+    constexpr RefObject<T, Deleter> *getObject() const noexcept
     {
         return object;
     }
-    inline T *getHandle()
+    constexpr T *getHandle()
     {
         return object->getHandle();
     }
-    inline const T *getHandle() const
+    constexpr const T *getHandle() const
     {
         return object->getHandle();
     }
-    RefPtr<T, Deleter> clone()
+    constexpr RefPtr<T, Deleter> clone()
     {
         return RefPtr<T, Deleter>(new T(*getHandle()));
     }

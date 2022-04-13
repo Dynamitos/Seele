@@ -5,18 +5,26 @@ using namespace Seele::UI;
 
 void AddElementRenderHierarchyUpdate::apply(Array<RenderElement>& elements) 
 {
-    for(auto element : elements)
-    {
-        if(element.parent == parent)
-        {
-            
-        }
-    }
+    auto parentIt = elements.find([this](RenderElement e){return e.parent == parent;});
+    parentIt->referencedElement->addChild(addedElement);
+    addedElement->setParent(parentIt->referencedElement);
+
+    elements.emplace(parentIt->referencedElement, addedElement);
 }
 
 void RemoveElementRenderHierarchyUpdate::apply(Array<RenderElement>& elements) 
 {
-    
+    auto elementIt = elements.find([this](RenderElement e){return e.referencedElement == element;});
+    if(!removeChildren)
+    {
+        for(auto child : elementIt->referencedElement->getChildren())
+        {
+            child->setParent(elementIt->referencedElement->getParent());
+        }
+    }
+    elementIt->referencedElement->setParent(nullptr);
+
+    elements.remove(elementIt);
 }
 
 RenderHierarchy::RenderHierarchy() 

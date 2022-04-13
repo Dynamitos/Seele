@@ -61,6 +61,11 @@ set(GLFW_VULKAN_STATIC OFF CACHE BOOL "GLFW vulkan static")
 
 add_subdirectory(${GLFW_ROOT} ${GLFW_ROOT})
 
+#--------------FreeType------------------------------
+#list(APPEND DEPENDENCIES freetype)
+
+#add_subdirectory(${FREETYPE_ROOT} ${FREETYPE_ROOT})
+
 #--------------SLang------------------------------
 list(APPEND DEPENDENCIES slang)
 string(TOLOWER release_${CMAKE_PLATFORM} SLANG_CONFIG)

@@ -20,6 +20,7 @@ Seele::SceneView::SceneView(Gfx::PGraphics graphics, PWindow owner, const Viewpo
 {
     scene = new Scene(graphics);
     scene->addActor(activeCamera);
+    AssetRegistry::importFile("./fonts/GLSNECB.ttf");
     AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Ayaka\\Avatar_Girl_Sword_Ayaka_Tex_Body_Diffuse.png");
     AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Ayaka\\Avatar_Girl_Sword_Ayaka_Tex_Body_Lightmap.png");
     AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Ayaka\\Avatar_Girl_Sword_Ayaka_Tex_Face_Diffuse.png");
@@ -169,7 +170,7 @@ void SceneView::mouseButtonCallback(MouseButton button, InputAction action, KeyM
 
 void SceneView::scrollCallback(double, double yOffset) 
 {
-    activeCamera->getCameraComponent()->mouseScroll(yOffset);
+    activeCamera->getCameraComponent()->mouseScroll(static_cast<float>(yOffset));
 }
 
 void SceneView::fileCallback(int, const char**) 

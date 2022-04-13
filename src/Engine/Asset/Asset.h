@@ -38,8 +38,8 @@ public:
     }
 protected:
     std::mutex lock;
-    std::ifstream& getReadStream();
-    std::ofstream& getWriteStream();
+    std::ifstream getReadStream() const;
+    std::ofstream getWriteStream() const;
 private:
     // Path relative to the project root
     std::filesystem::path fullPath;
@@ -48,8 +48,6 @@ private:
     std::filesystem::path extension;
     Status status;
     uint32 byteSize;
-    std::ifstream inStream;
-    std::ofstream outStream;
 };
 DEFINE_REF(Asset)
 } // namespace Seele

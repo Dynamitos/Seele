@@ -2,8 +2,6 @@
 #include "MinimalEngine.h"
 #include "Containers/List.h"
 #include "ThreadPool.h"
-#include <thread>
-#include <future>
 #include <filesystem>
 
 struct aiScene;
@@ -27,7 +25,6 @@ private:
     void convertAssimpARGB(unsigned char* dst, aiTexel* src, uint32 numPixels);
 
     void import(std::filesystem::path path, PMeshAsset meshAsset);
-    List<std::future<void>> futures;
     Gfx::PGraphics graphics;
 };
 DEFINE_REF(MeshLoader)

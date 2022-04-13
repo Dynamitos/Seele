@@ -42,7 +42,7 @@ void MaterialAsset::save()
 void MaterialAsset::load()
 {
     setStatus(Status::Loading);
-    auto& stream = getReadStream();
+    auto stream = getReadStream();
     json j;
     stream >> j;
     materialName = j["name"].get<std::string>();

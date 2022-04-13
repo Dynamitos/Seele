@@ -14,6 +14,15 @@ Element::~Element()
 {
 }
 
+void Element::setParent(PElement element)
+{
+    if(parent != nullptr)
+    {
+        parent->removeChild(this);
+    }
+    parent = element;
+}
+
 PElement Element::getParent() const
 {
     return parent;
@@ -24,6 +33,11 @@ void Element::addChild(PElement element)
     children.add(element);
 }
 
+void Element::removeChild(PElement element)
+{
+    children.remove(element, false);
+}
+
 const Array<PElement> Element::getChildren()
 {
     return children;
@@ -32,11 +46,6 @@ const Array<PElement> Element::getChildren()
 void Element::clear() 
 {
     children.clear();
-}
-
-void Element::remove(PElement element) 
-{
-    children.remove(children.find(element));
 }
 
 void Element::setEnabled(bool newEnabled) 
