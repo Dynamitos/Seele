@@ -139,9 +139,9 @@ void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PUniformBuffer uniformBu
     cachedData[binding] = new UniformBuffer(*vulkanBuffer.getHandle());
 }
 
-void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PStructuredBuffer uniformBuffer)
+void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PStructuredBuffer structuredBuffer)
 {
-    PStructuredBuffer vulkanBuffer = uniformBuffer.cast<StructuredBuffer>();
+    PStructuredBuffer vulkanBuffer = structuredBuffer.cast<StructuredBuffer>();
     StructuredBuffer* cachedBuffer = reinterpret_cast<StructuredBuffer*>(cachedData[binding]);
     if(vulkanBuffer.getHandle() == cachedBuffer)
     {
@@ -330,7 +330,7 @@ void DescriptorAllocator::allocateDescriptorSet(Gfx::PDescriptorSet &descriptorS
     uint32 counts = 0;
     for(const auto& binding : layout.bindings)
     {
-        if(binding.binding & Gfx::SE_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT)
+        if(binding.descriptorCount > 0)
         {
             counts = binding.descriptorCount;
         }

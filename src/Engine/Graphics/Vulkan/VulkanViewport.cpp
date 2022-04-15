@@ -50,7 +50,6 @@ Window::Window(PGraphics graphics, const WindowCreateInfo &createInfo)
     , instance(graphics->getInstance())
     , swapchain(VK_NULL_HANDLE)
     , numSamples(createInfo.numSamples)
-    , pixelFormat(cast(createInfo.pixelFormat))
 {
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     GLFWwindow *handle = glfwCreateWindow(createInfo.width, createInfo.height, createInfo.title, createInfo.bFullscreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
@@ -194,11 +193,7 @@ void Window::advanceBackBuffer()
 void Window::recreateSwapchain(const WindowCreateInfo &windowInfo)
 {
     destroySwapchain();
-    sizeX = windowInfo.width;
-    sizeY = windowInfo.height;
-    pixelFormat = cast(windowInfo.pixelFormat);
-    bFullscreen = windowInfo.bFullscreen;
-
+    windowState = windowInfo;
     uint32_t numFormats;
     VK_CHECK(vkGetPhysicalDeviceSurfaceFormatsKHR(graphics->getPhysicalDevice(), surface, &numFormats, nullptr));
     Array<VkSurfaceFormatKHR> formats(numFormats);
@@ -234,6 +229,10 @@ void Window::present()
     while (presentResult != VK_SUCCESS)
     {
         presentResult = vkQueuePresentKHR(graphics->getGraphicsCommands()->getQueue()->getHandle(), &info);
+        if(presentResult == VK_ERROR_OUT_OF_DATE_KHR)
+        {
+            recreateSwapchain(windowState);
+        }
     }
     Gfx::currentFrameIndex = (Gfx::currentFrameIndex + 1)%Gfx::numFramesBuffered;
     static double lastFrameTime = 0.f;
@@ -259,8 +258,8 @@ void Window::createSwapchain()
     }
 
     VkExtent2D extent;
-    extent.width = sizeX;
-    extent.height = sizeY;
+    extent.width = getSizeX();
+    extent.height = getSizeY();
     VkSwapchainCreateInfoKHR swapchainInfo =
         init::SwapchainCreateInfo(
             surface,
@@ -283,8 +282,8 @@ void Window::createSwapchain()
 
 
     TextureCreateInfo backBufferCreateInfo;
-    backBufferCreateInfo.width = sizeX;
-    backBufferCreateInfo.height = sizeY;
+    backBufferCreateInfo.width = getSizeX();
+    backBufferCreateInfo.height = getSizeY();
     backBufferCreateInfo.usage = Gfx::SE_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
     backBufferCreateInfo.resourceData.owner = Gfx::QueueType::GRAPHICS;
     backBufferCreateInfo.format = cast(surfaceFormat.format);

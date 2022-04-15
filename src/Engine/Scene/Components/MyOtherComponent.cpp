@@ -2,14 +2,14 @@
 
 using namespace Seele;
 
-Job MyOtherComponent::tick(float) const
+void MyOtherComponent::tick(float) const
 {
     //std::cout << *data << std::endl;
-    co_return;
+    //co_return;
 }
 
-Job MyOtherComponent::update() 
+void MyOtherComponent::update() 
 {
     data.update();
-    co_return;
+    //co_return;
 }

@@ -90,10 +90,9 @@ PSubAllocation Allocation::getSuballocation(VkDeviceSize requestedSize, VkDevice
             return nullptr;
         }
     }
-    for (auto it : freeRanges)
+    for (auto& [allocatedOffset, freeAllocation] : freeRanges)
     {
-        PSubAllocation freeAllocation = it.value;
-        VkDeviceSize allocatedOffset = freeAllocation->allocatedOffset;
+        assert(allocatedOffset == freeAllocation->allocatedOffset);
         VkDeviceSize alignedOffset = align(allocatedOffset, alignment);
         VkDeviceSize alignmentAdjustment = alignedOffset - allocatedOffset;
         VkDeviceSize size = alignmentAdjustment + requestedSize;
@@ -112,8 +111,8 @@ PSubAllocation Allocation::getSuballocation(VkDeviceSize requestedSize, VkDevice
             freeAllocation->alignedOffset += size;
             PSubAllocation subAlloc = new SubAllocation(this, allocatedOffset, size, alignedOffset, size);
             activeAllocations[allocatedOffset] = subAlloc.getHandle();
-            freeRanges.erase(allocatedOffset);
             freeRanges[freeAllocation->allocatedOffset] = freeAllocation;
+            freeRanges.erase(allocatedOffset);
             bytesUsed += size;
             return subAlloc;
         }
@@ -136,9 +135,8 @@ void Allocation::markFree(SubAllocation *allocation)
     {
         std::scoped_lock lck(lock);
         //Join lower bound
-        for (auto freeRange : freeRanges)
+        for (auto& [allocatedOffset, freeAlloc] : freeRanges)
         {
-            PSubAllocation freeAlloc = freeRange.value;
             if (freeAlloc->allocatedOffset <= lowerBound
             && freeAlloc->allocatedOffset + freeAlloc->allocatedSize >= upperBound)
             {
@@ -157,24 +155,24 @@ void Allocation::markFree(SubAllocation *allocation)
         auto foundAlloc = freeRanges.find(upperBound);
         if (foundAlloc != freeRanges.end())
         {
-            freeRangeToDelete = foundAlloc->value;
+            freeRangeToDelete = foundAlloc->second;
             // There is a free allocation ending where the new free one ends
             if (allocHandle != nullptr)
             {
                 // extend allocHandle by another foundAlloc->allocatedSize bytes
-                allocHandle->allocatedSize += foundAlloc->value->allocatedSize;
-                freeRanges.erase(foundAlloc->key);
+                allocHandle->allocatedSize += foundAlloc->second->allocatedSize;
+                freeRanges.erase(foundAlloc->first);
             }
             else
             {
                 // set foundAlloc back by size amount
-                allocHandle = foundAlloc->value;
+                allocHandle = foundAlloc->second;
                 allocHandle->allocatedOffset -= allocation->allocatedSize;
                 allocHandle->alignedOffset -= allocation->allocatedSize;
                 // place back at correct offset
                 freeRanges[allocHandle->allocatedOffset] = allocHandle;
                 // remove from offset map since key changes
-                freeRanges.erase(foundAlloc->key);
+                freeRanges.erase(foundAlloc->first);
             }
         }
         
@@ -259,7 +257,7 @@ void Allocator::free(Allocation *allocation)
         {
             if (heap.allocations[i] == allocation)
             {
-                heap.allocations.remove(i, false);
+                heap.allocations.removeAt(i, false);
                 return;
             }
         }

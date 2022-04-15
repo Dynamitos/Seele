@@ -12,19 +12,19 @@ void MyComponent::start()
     otherComp.update();
 }
 
-Job MyComponent::tick(float) const
+void MyComponent::tick(float) const
 {
     //std::cout << "MyComponent::tick" << std::endl;
     ++writable;
     //std::cout << "MyComponent::tick finished" << std::endl;
     otherComp->data = *writable;
-    co_return;
+    //co_return;
 }
 
-Job MyComponent::update() 
+void MyComponent::update() 
 {
     //std::cout << "MyComponent::update" << std::endl;
     writable.update();
     //std::cout << "MyComponent::update finished" << std::endl;
-    co_return;
+    //co_return;
 }

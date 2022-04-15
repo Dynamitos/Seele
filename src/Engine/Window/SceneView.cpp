@@ -68,16 +68,16 @@ Seele::SceneView::~SceneView()
 {
 }
 
-Job SceneView::beginUpdate() 
+void SceneView::beginUpdate() 
 {
-    co_await scene->beginUpdate(Gfx::currentFrameDelta);
-    co_return;
+    scene->beginUpdate(Gfx::currentFrameDelta);
+    //co_return;
 }
 
-Job SceneView::update() 
+void SceneView::update() 
 {
-    co_await scene->commitUpdate();
-    co_return;
+    scene->commitUpdate();
+    //co_return;
 }
 
 void SceneView::commitUpdate() 
@@ -94,17 +94,17 @@ void SceneView::prepareRender()
     basePass.updateViewFrame(basePassData);
 }
 
-MainJob SceneView::render() 
+void SceneView::render() 
 {
-    return depthPrepass.beginFrame()
-        .then(lightCullingPass.beginFrame())
-        .then(basePass.beginFrame())
-        .then(depthPrepass.render())
-        .then(lightCullingPass.render())
-        .then(basePass.render())
-        .then(depthPrepass.endFrame())
-        .then(lightCullingPass.endFrame())
-        .then(basePass.endFrame());
+    depthPrepass.beginFrame();
+    lightCullingPass.beginFrame();
+    basePass.beginFrame();
+    depthPrepass.render();
+    lightCullingPass.render();
+    basePass.render();
+    depthPrepass.endFrame();
+    lightCullingPass.endFrame();
+    basePass.endFrame();
 }
 
 static float cameraSpeed = 1;

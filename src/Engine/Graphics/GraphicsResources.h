@@ -387,11 +387,11 @@ class IndexBuffer : public Buffer
 public:
     IndexBuffer(QueueFamilyMapping mapping, uint32 size, Gfx::SeIndexType index, QueueType startQueueType);
     virtual ~IndexBuffer();
-    inline uint32 getNumIndices() const
+    constexpr uint32 getNumIndices() const
     {
         return numIndices;
     }
-    inline Gfx::SeIndexType getIndexType() const
+    constexpr Gfx::SeIndexType getIndexType() const
     {
         return indexType;
     }
@@ -409,7 +409,7 @@ DEFINE_REF(IndexBuffer)
 class StructuredBuffer : public Buffer
 {
 public:
-    StructuredBuffer(QueueFamilyMapping mapping, const BulkResourceData& bulkResourceData);
+    StructuredBuffer(QueueFamilyMapping mapping, uint32 stride, const BulkResourceData& bulkResourceData);
     virtual ~StructuredBuffer();
     virtual bool updateContents(const BulkResourceData& resourceData);
     bool isDataEquals(StructuredBuffer* other)
@@ -428,12 +428,18 @@ public:
         }
         return true;
     }
+    constexpr uint32 getStride() const
+    {
+        return stride;
+    }
 protected:
-    Array<uint8> contents;
     // Inherited via QueueOwnedResource
     virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
     virtual void executePipelineBarrier(SeAccessFlags srcAccess, SePipelineStageFlags srcStage, 
         SeAccessFlags dstAccess, SePipelineStageFlags dstStage) = 0;
+    
+    Array<uint8> contents;
+    uint32 stride;
 };
 DEFINE_REF(StructuredBuffer)
 
@@ -590,28 +596,23 @@ public:
     virtual void setCloseCallback(std::function<void()> callback) = 0;
     SeFormat getSwapchainFormat() const
     {
-        return pixelFormat;
+        return windowState.pixelFormat;
     }
     SeSampleCountFlags getNumSamples() const
     {
-        return samples;
+        return windowState.numSamples;
     }
     uint32 getSizeX() const
     {
-        return sizeX;
+        return windowState.width;
     }
     uint32 getSizeY() const
     {
-        return sizeY;
+        return windowState.height;
     }
 
 protected:
-    uint32 sizeX;
-    uint32 sizeY;
-    bool bFullscreen;
-    const char *title;
-    SeFormat pixelFormat;
-    uint32 samples;
+    WindowCreateInfo windowState;
 };
 DEFINE_REF(Window)
 

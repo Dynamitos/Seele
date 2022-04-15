@@ -1,7 +1,6 @@
 #pragma once
 #include "MinimalEngine.h"
 #include "Containers/List.h"
-#include "ThreadPool.h"
 #include <filesystem>
 
 struct aiScene;

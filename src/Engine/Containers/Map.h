@@ -232,16 +232,16 @@ public:
         , root(other.root)
         , _size(other._size)
         , comp(other.comp)
+        , iteratorsDirty(true)
     {
-        markIteratorsDirty();
     }
     constexpr Map(Map&& other) noexcept
         : nodeContainer(std::move(other.nodeContainer))
         , root(std::move(other.root))
         , _size(std::move(other._size))
         , comp(std::move(other.comp))
+        , iteratorsDirty(true)
     {
-        markIteratorsDirty();
     }
     constexpr ~Map() noexcept
     {

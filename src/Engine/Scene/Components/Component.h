@@ -2,7 +2,6 @@
 #include "MinimalEngine.h"
 #include "Math/Transform.h"
 #include "Scene/Util.h"
-#include "ThreadPool.h"
 
 namespace Seele
 {
@@ -16,10 +15,10 @@ public:
     virtual ~Component();
     void launchStart();
     virtual void start() {};
-    Array<Job> launchTick(float deltaTime) const;
-    virtual Job tick(float) const { co_return; }
-    Array<Job> launchUpdate();
-    virtual Job update() { co_return; }
+    void launchTick(float deltaTime) const;
+    virtual void tick(float) const { }//co_return; }
+    void launchUpdate();
+    virtual void update() { }//co_return; }
     PComponent getParent();
     PActor getOwner();
     const Array<PComponent>& getChildComponents();

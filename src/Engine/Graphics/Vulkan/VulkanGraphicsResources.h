@@ -3,7 +3,6 @@
 #include <functional>
 #include "Graphics/GraphicsResources.h"
 #include "VulkanAllocator.h"
-#include "ThreadPool.h"
 
 namespace Seele
 {
@@ -43,10 +42,10 @@ public:
         return fence;
     }
     void wait(uint32 timeout);
-    Event& operator co_await()
+    /*Event& operator co_await()
     {
         return signaled;
-    }
+    }*/
     bool operator<(const Fence &other) const
     {
         return fence < other.fence;
@@ -54,7 +53,7 @@ public:
 
 private:
     PGraphics graphics;
-    Event signaled;
+    bool signaled;
     VkFence fence;
 };
 DEFINE_REF(Fence)
@@ -357,6 +356,11 @@ public:
     virtual void setFileCallback(std::function<void(int, const char**)> callback) override;
     virtual void setCloseCallback(std::function<void()> callback);
 
+    VkFormat getPixelFormat() const
+    {
+        return cast(windowState.pixelFormat);
+    }
+
     std::function<void(KeyCode, InputAction, KeyModifier)> keyCallback;
     std::function<void(double, double)> mouseMoveCallback;
     std::function<void(MouseButton, InputAction, KeyModifier)> mouseButtonCallback;
@@ -381,7 +385,6 @@ protected:
     VkInstance instance;
     VkSwapchainKHR swapchain;
     VkSampleCountFlags numSamples;
-    VkFormat pixelFormat;
     VkPresentModeKHR presentMode;
     VkSurfaceKHR surface;
     VkSurfaceFormatKHR surfaceFormat;

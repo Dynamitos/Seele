@@ -23,7 +23,7 @@ struct GraphicsInitializer
         : applicationName("SeeleEngine")
         , engineName("SeeleEngine")
         , windowLayoutFile(nullptr)
-        , layers{}
+        , layers{"VK_LAYER_KHRONOS_validation"}
         , instanceExtensions{}
         , deviceExtensions{"VK_KHR_swapchain"}
         , windowHandle(nullptr)
@@ -101,12 +101,13 @@ struct IndexBufferCreateInfo
 struct UniformBufferCreateInfo
 {
     BulkResourceData resourceData = BulkResourceData();
-    uint8 bDynamic : 1 = 0;
+    uint8 bDynamic = 0;
 };
 struct StructuredBufferCreateInfo
 {
     BulkResourceData resourceData;
-    uint8 bDynamic: 1;
+    uint32 stride;
+    uint8 bDynamic = 0;
 };
 struct ShaderCreateInfo
 {

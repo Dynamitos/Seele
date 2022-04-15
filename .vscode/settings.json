@@ -135,5 +135,5 @@
     },
     "git.ignoreSubmodules": true,
     "cmake.configureOnOpen": true,
-    "cmake.parallelJobs": 15
+    "cmake.parallelJobs": 0
 }

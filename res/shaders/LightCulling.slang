@@ -19,23 +19,24 @@ cbuffer DispatchParams
 
 layout(set = INDEX_VIEW_PARAMS, binding = 2)
 Texture2D depthTextureVS;
-layout(set = INDEX_VIEW_PARAMS, binding = 3)
-StructuredBuffer<Frustum> frustums;
 
-layout(set = INDEX_VIEW_PARAMS, binding = 4)
+layout(set = INDEX_VIEW_PARAMS, binding = 3)
 globallycoherent RWStructuredBuffer<uint> oLightIndexCounter;
-layout(set = INDEX_VIEW_PARAMS, binding = 5)
+layout(set = INDEX_VIEW_PARAMS, binding = 4)
 globallycoherent RWStructuredBuffer<uint> tLightIndexCounter;
 
-layout(set = INDEX_VIEW_PARAMS, binding = 6)
+layout(set = INDEX_VIEW_PARAMS, binding = 5)
 RWStructuredBuffer<uint> oLightIndexList;
-layout(set = INDEX_VIEW_PARAMS, binding = 7)
+layout(set = INDEX_VIEW_PARAMS, binding = 6)
 RWStructuredBuffer<uint> tLightIndexList;
 
-layout(set = INDEX_VIEW_PARAMS, binding = 8)
+layout(set = INDEX_VIEW_PARAMS, binding = 7)
 RWTexture2D<uint2> oLightGrid;
-layout(set = INDEX_VIEW_PARAMS, binding = 9)
+layout(set = INDEX_VIEW_PARAMS, binding = 8)
 RWTexture2D<uint2> tLightGrid;
+
+layout(set = INDEX_VIEW_PARAMS, binding = 9)
+StructuredBuffer<Frustum> frustums;
 
 // Debug
 //layout(set = INDEX_VIEW_PARAMS, binding = 10)

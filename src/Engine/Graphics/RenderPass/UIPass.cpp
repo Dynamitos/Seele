@@ -15,12 +15,12 @@ UIPass::~UIPass()
     
 }
 
-MainJob UIPass::beginFrame() 
+void UIPass::beginFrame() 
 {
-    co_return;
+    //co_return;
 }
 
-MainJob UIPass::render() 
+void UIPass::render() 
 {
     graphics->beginRenderPass(renderPass);
     Gfx::PRenderCommand command = graphics->createRenderCommand("UIPassCommand");
@@ -29,12 +29,12 @@ MainJob UIPass::render()
     command->draw(4, 1, 0, 0);
     graphics->executeCommands(Array<Gfx::PRenderCommand>({command}));
     graphics->endRenderPass();
-    co_return;
+    //co_return;
 }
 
-MainJob UIPass::endFrame() 
+void UIPass::endFrame() 
 {
-    co_return;
+    //co_return;
 }
 
 void UIPass::publishOutputs() 

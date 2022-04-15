@@ -99,8 +99,8 @@ private:
 	VkDeviceSize bytesAllocated;
 	VkDeviceSize bytesUsed;
 	VkDeviceMemory allocatedMemory;
-	Map<VkDeviceSize, SubAllocation *> activeAllocations;
-	Map<VkDeviceSize, PSubAllocation> freeRanges;
+	std::map<VkDeviceSize, SubAllocation *> activeAllocations;
+	std::map<VkDeviceSize, PSubAllocation> freeRanges;
 	std::mutex lock;
 	void *mappedPointer;
 	uint8 isDedicated : 1;

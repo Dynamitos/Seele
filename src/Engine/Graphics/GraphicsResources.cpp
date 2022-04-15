@@ -194,9 +194,10 @@ bool UniformBuffer::updateContents(const BulkResourceData& resourceData)
 	return true;
 }
 
-StructuredBuffer::StructuredBuffer(QueueFamilyMapping mapping, const BulkResourceData& resourceData)
+StructuredBuffer::StructuredBuffer(QueueFamilyMapping mapping, uint32 stride, const BulkResourceData& resourceData)
 	: Buffer(mapping, resourceData.owner)
 	, contents(resourceData.size)
+	, stride(stride)
 {
 }
 StructuredBuffer::~StructuredBuffer()
@@ -366,12 +367,7 @@ RenderTargetLayout::RenderTargetLayout(Array<PRenderTargetAttachment> inputAttac
 }
 
 Window::Window(const WindowCreateInfo &createInfo)
-	: sizeX(createInfo.width)
-	, sizeY(createInfo.height)
-	, bFullscreen(createInfo.bFullscreen)
-	, title(createInfo.title)
-	, pixelFormat(createInfo.pixelFormat)
-	, samples(createInfo.numSamples)
+	: windowState(createInfo)
 {
 }
 

@@ -57,6 +57,17 @@ BOOST_AUTO_TEST_CASE(remove_keeporder)
     BOOST_CHECK_EQUAL(array.size(), 4);
 }
 
+BOOST_AUTO_TEST_CASE(find)
+{
+    Array<uint8> array;
+    for(uint32 i = 0; i < 100; ++i)
+    {
+        array.add(i);
+    }
+    auto it = array.find([](uint8 elem){ return elem / 9 == 9; });
+    BOOST_CHECK_EQUAL(*it, 81);
+}
+
 BOOST_AUTO_TEST_CASE(remove_swap)
 {
     Array<uint8> array;
@@ -65,7 +76,7 @@ BOOST_AUTO_TEST_CASE(remove_swap)
     array.add(3);
     array.add(4);
     array.add(5);
-    array.remove(1, false);
+    array.removeAt(1, false);
     BOOST_CHECK_EQUAL(array[1], 5);
     BOOST_CHECK_EQUAL(array[2], 3);
     BOOST_CHECK_EQUAL(array[3], 4);

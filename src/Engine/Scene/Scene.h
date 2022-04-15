@@ -39,8 +39,8 @@ public:
     Scene(Gfx::PGraphics graphics);
     ~Scene();
     void start();
-    Job beginUpdate(double deltaTime);
-    Job commitUpdate();
+    void beginUpdate(double deltaTime);
+    void commitUpdate();
     void addActor(PActor actor);
     void addPrimitiveComponent(PPrimitiveComponent comp);
 

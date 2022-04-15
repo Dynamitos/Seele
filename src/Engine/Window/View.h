@@ -1,6 +1,5 @@
 #pragma once
 #include "Graphics/RenderPass/RenderGraph.h"
-#include "ThreadPool.h"
 
 namespace Seele
 {
@@ -13,15 +12,15 @@ public:
 	virtual ~View();
 	
 	// These are called from the view thread, and handle updating game data
-	virtual Job beginUpdate() = 0;
-	virtual Job update() = 0;
+	virtual void beginUpdate() = 0;
+	virtual void update() = 0;
 	// End frame is called with a lock, so it is safe to write to shared memory
 	virtual void commitUpdate() = 0;
 
 	// These are called from the render thread
 	// prepare render is also locked, so reading from shared memory is also safe
 	virtual void prepareRender() = 0;
-	virtual MainJob render() = 0;
+	virtual void render() = 0;
 	void applyArea(URect area);
 	void setFocused();
 

@@ -20,26 +20,22 @@ void Component::launchStart()
     start();
 }
 
-Array<Job> Component::launchTick(float deltaTime) const
+void Component::launchTick(float deltaTime) const
 {
-    Array<Job> result;
     for(auto child : children)
     {
-        result.addAll(child->launchTick(deltaTime));
+        child->launchTick(deltaTime);
     }
-    result.add(tick(deltaTime));
-    return result;
+    tick(deltaTime);
 }
 
-Array<Job> Component::launchUpdate()
+void Component::launchUpdate()
 {
-    Array<Job> result;
     for(auto child : children)
     {
-        result.addAll(child->launchUpdate());
+        child->launchUpdate();
     }
-    result.add(update());
-    return result;
+    update();
 }
 
 PComponent Component::getParent()

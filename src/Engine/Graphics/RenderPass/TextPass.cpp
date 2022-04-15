@@ -16,7 +16,7 @@ TextPass::~TextPass()
     
 }
 
-MainJob TextPass::beginFrame() 
+void TextPass::beginFrame() 
 {
     for(TextRender& render : passData.texts)
     {
@@ -37,25 +37,18 @@ MainJob TextPass::beginFrame()
         vbInfo.numVertices = static_cast<uint32>(instanceData.size());
         vbInfo.vertexSize = sizeof(GlyphInstanceData);
         vbInfo.resourceData.data = reinterpret_cast<uint8*>(instanceData.data());
-        vbInfo.resourceData.size = static_cast<uint32>(instanceData.size());
+        vbInfo.resourceData.size = static_cast<uint32>(instanceData.size() * sizeof(GlyphInstanceData));
         resources.vertexBuffer = graphics->createVertexBuffer(vbInfo);
 
-        resources.descriptorSet = descriptorLayout->allocateDescriptorSet();
-        resources.descriptorSet->updateBuffer(0, projectionBuffer);
-        resources.descriptorSet->updateSampler(1, glyphSampler);
-        resources.descriptorSet->updateBuffer(2, fontData.structuredBuffer);
-        resources.descriptorSet->writeChanges();
+        resources.glyphDataSet = fontData.glyphDataSet;
+        resources.textureArraySet = fontData.textureArraySet;
 
-        resources.textureArraySet = descriptorLayout->allocateDescriptorSet();
-        resources.textureArraySet->updateTextureArray(0, fontData.textures);
-        
-        resources.textureArraySet->writeChanges();
         resources.scale = render.scale;
     }
-    co_return;
+    //co_return;
 }
 
-MainJob TextPass::render() 
+void TextPass::render() 
 {
     graphics->beginRenderPass(renderPass);
     Array<Gfx::PRenderCommand> commands;
@@ -64,7 +57,7 @@ MainJob TextPass::render()
         Gfx::PRenderCommand command = graphics->createRenderCommand("TextPassCommand");
         command->setViewport(viewport);
         command->bindPipeline(pipeline);
-        
+        command->bindDescriptor({generalSet, resources.glyphDataSet, resources.textureArraySet});
         command->bindVertexBuffer({VertexInputStream(0, 0, resources.vertexBuffer)});
         
         command->pushConstants(pipelineLayout, Gfx::SE_SHADER_STAGE_VERTEX_BIT, 0, sizeof(float), &resources.scale);
@@ -73,12 +66,13 @@ MainJob TextPass::render()
     }
     graphics->executeCommands(commands);
     graphics->endRenderPass();
-    co_return;
+    textResources.clear();
+    //co_return;
 }
 
-MainJob TextPass::endFrame() 
+void TextPass::endFrame() 
 {
-    co_return;
+    //co_return;
 }
 
 void TextPass::publishOutputs() 
@@ -123,15 +117,19 @@ void TextPass::createRenderPass()
     });
     declaration = graphics->createVertexDeclaration(elements);
 
-    descriptorLayout = graphics->createDescriptorLayout("TextDescriptor");
-    descriptorLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-    descriptorLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_SAMPLER);
-    descriptorLayout->addDescriptorBinding(2, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER, 128, Gfx::SE_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT);
-    descriptorLayout->create();
+    generalLayout = graphics->createDescriptorLayout("TextGeneral");
+    generalLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+    generalLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_SAMPLER);
+    generalLayout->create();
+    
+    glyphDataLayout = graphics->createDescriptorLayout("TextGlyphData");
+    glyphDataLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    glyphDataLayout->create();
 
-    textureArrayLayout = graphics->createDescriptorLayout("TextureArray");
+    textureArrayLayout = graphics->createDescriptorLayout("TextTextureArray");
     textureArrayLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 128, Gfx::SE_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT);
     textureArrayLayout->create();
+
 
     Matrix4 projectionMatrix = glm::ortho(0.f, (float)viewport->getSizeX(), 0.f, (float)viewport->getSizeY());
     projectionBuffer = graphics->createUniformBuffer({
@@ -146,12 +144,18 @@ void TextPass::createRenderPass()
         .magFilter = Gfx::SE_FILTER_LINEAR,
         .minFilter = Gfx::SE_FILTER_LINEAR,
         .addressModeU = Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
-        .addressModeV = Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE
+        .addressModeV = Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
     });
 
+    generalSet = generalLayout->allocateDescriptorSet();
+    generalSet->updateBuffer(0, projectionBuffer);
+    generalSet->updateSampler(1, glyphSampler);
+    generalSet->writeChanges();
+    
     pipelineLayout = graphics->createPipelineLayout();
-    pipelineLayout->addDescriptorLayout(0, descriptorLayout);
-    pipelineLayout->addDescriptorLayout(1, textureArrayLayout);
+    pipelineLayout->addDescriptorLayout(0, generalLayout);
+    pipelineLayout->addDescriptorLayout(1, glyphDataLayout);
+    pipelineLayout->addDescriptorLayout(2, textureArrayLayout);
     pipelineLayout->addPushConstants({
         .stageFlags = Gfx::SE_SHADER_STAGE_VERTEX_BIT, 
         .offset = 0, 
@@ -168,6 +172,15 @@ void TextPass::createRenderPass()
     pipelineInfo.renderPass = renderPass;
     pipelineInfo.pipelineLayout = pipelineLayout;
     pipelineInfo.rasterizationState.cullMode = Gfx::SE_CULL_MODE_NONE;
+    pipelineInfo.colorBlend.attachmentCount = 1;
+    pipelineInfo.colorBlend.blendAttachments[0].blendEnable = true;
+    pipelineInfo.colorBlend.blendAttachments[0].colorWriteMask = Gfx::SE_COLOR_COMPONENT_R_BIT | Gfx::SE_COLOR_COMPONENT_G_BIT | Gfx::SE_COLOR_COMPONENT_B_BIT | Gfx::SE_COLOR_COMPONENT_A_BIT;
+    pipelineInfo.colorBlend.blendAttachments[0].srcColorBlendFactor = Gfx::SE_BLEND_FACTOR_SRC_ALPHA;
+    pipelineInfo.colorBlend.blendAttachments[0].dstColorBlendFactor = Gfx::SE_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+    pipelineInfo.colorBlend.blendAttachments[0].alphaBlendOp = Gfx::SE_BLEND_OP_ADD;
+    pipelineInfo.colorBlend.blendAttachments[0].srcAlphaBlendFactor = Gfx::SE_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+    pipelineInfo.colorBlend.blendAttachments[0].dstAlphaBlendFactor = Gfx::SE_BLEND_FACTOR_ZERO;
+    pipelineInfo.colorBlend.blendAttachments[0].alphaBlendOp = Gfx::SE_BLEND_OP_ADD;
     pipelineInfo.topology = Gfx::SE_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
 
     pipeline = graphics->createGraphicsPipeline(pipelineInfo);
@@ -181,20 +194,33 @@ TextPass::FontData& TextPass::getFontData(PFontAsset font)
     const Map<uint32, FontAsset::Glyph>& fontGlyphs = font->getGlyphData();
     FontData& fd = fontData[font];
     Array<GlyphData> buffer;
+    Array<Gfx::PTexture> textures;
     buffer.reserve(fontGlyphs.size());
     for(const auto& [key, value] : fontGlyphs)
     {
         fd.characterToGlyphIndex[key] = static_cast<uint32>(buffer.size());
         fd.characterAdvance[key] = value.advance;
-        fd.textures.add(value.texture);
         GlyphData& gd = buffer.add();
         gd.bearing = value.bearing;
         gd.size = value.size;
+        textures.add(value.texture);
     }
-    StructuredBufferCreateInfo bufferInfo;
-    bufferInfo.bDynamic = false;
-    bufferInfo.resourceData.data = reinterpret_cast<uint8*>(buffer.data());
-    bufferInfo.resourceData.size = static_cast<uint32>(buffer.size());
-    fd.structuredBuffer = graphics->createStructuredBuffer(bufferInfo);
+    StructuredBufferCreateInfo bufferInfo = {
+        .resourceData = {
+            .size = static_cast<uint32>(buffer.size() * sizeof(GlyphData)),
+            .data = reinterpret_cast<uint8*>(buffer.data()),
+            },
+        .stride = sizeof(GlyphData),
+        .bDynamic = false,
+    };
+
+    Gfx::PStructuredBuffer glyphBuffer = graphics->createStructuredBuffer(bufferInfo);
+    fd.glyphDataSet = glyphDataLayout->allocateDescriptorSet();
+    fd.glyphDataSet->updateBuffer(0, glyphBuffer);
+    fd.glyphDataSet->writeChanges();
+    
+    fd.textureArraySet = textureArrayLayout->allocateDescriptorSet();
+    fd.textureArraySet->updateTextureArray(0, textures);
+    fd.textureArraySet->writeChanges();
     return fontData[font];
 }

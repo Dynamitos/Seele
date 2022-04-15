@@ -1,6 +1,6 @@
 #include "GraphicsEnums.h"
 
-using namespace Gfx;
+using namespace Seele;
 
 uint32 Gfx::currentFrameIndex = 0;
 double Gfx::currentFrameDelta = 0;

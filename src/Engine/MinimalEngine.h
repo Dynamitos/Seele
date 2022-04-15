@@ -154,6 +154,10 @@ public:
     template <typename F>
     constexpr RefPtr(const RefPtr<F> &other)
     {
+        if(other == nullptr)
+        {
+            return;
+        }
         F *f = other.getObject()->getHandle();
         assert(static_cast<T *>(f));
         object = (RefObject<T, Deleter> *)other.getObject();
@@ -357,5 +361,3 @@ private:
     RefPtr<T> pointer;
 };
 } // namespace Seele
-
-using namespace Seele;

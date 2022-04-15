@@ -1,5 +1,6 @@
 #include "VulkanGraphicsEnums.h"
 
+using namespace Seele;
 using namespace Seele::Vulkan;
 using namespace Seele::Gfx;
 

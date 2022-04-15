@@ -36,7 +36,5 @@ int main()
     sceneView->setFocused();
 
     window->render();
-    
-    getGlobalThreadPool().mainLoop();
     return 0;
 }

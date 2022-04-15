@@ -3,7 +3,6 @@
 #include "VulkanGraphics.h"
 #include "VulkanCommandBuffer.h"
 #include "VulkanAllocator.h"
-#include "ThreadPool.h"
 
 using namespace Seele;
 using namespace Seele::Vulkan;
@@ -65,11 +64,11 @@ ShaderBuffer::~ShaderBuffer()
 {
     PCmdBuffer cmdBuffer = graphics->getQueueCommands(owner)->getCommands();
     VkDevice device = graphics->getDevice();
-    auto deletionLambda = [cmdBuffer, device](VkBuffer buffer) -> Job 
+    auto deletionLambda = [cmdBuffer, device](VkBuffer buffer) -> void 
     {
         //co_await cmdBuffer->asyncWait();
         //vkDestroyBuffer(device, buffer, nullptr);
-        co_return;
+        //co_return;
     };
     for (uint32 i = 0; i < numBuffers; ++i)
     {
@@ -355,7 +354,7 @@ VkAccessFlags UniformBuffer::getDestAccessMask()
 }
 
 StructuredBuffer::StructuredBuffer(PGraphics graphics, const StructuredBufferCreateInfo &resourceData)
-    : Gfx::StructuredBuffer(graphics->getFamilyMapping(), resourceData.resourceData)
+    : Gfx::StructuredBuffer(graphics->getFamilyMapping(), resourceData.stride, resourceData.resourceData)
     , Vulkan::ShaderBuffer(graphics, resourceData.resourceData.size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, currentOwner, resourceData.bDynamic)
 {
     if (resourceData.resourceData.data != nullptr)

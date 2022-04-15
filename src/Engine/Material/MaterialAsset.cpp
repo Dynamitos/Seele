@@ -7,10 +7,11 @@
 #include <sstream>
 #include <iostream>
 
-Gfx::ShaderMap MaterialAsset::shaderMap;
+using namespace Seele;
+
+Seele::Gfx::ShaderMap MaterialAsset::shaderMap;
 std::mutex MaterialAsset::shaderMapLock;
 
-using namespace Seele;
 using json = nlohmann::json;
 
 using namespace Seele;

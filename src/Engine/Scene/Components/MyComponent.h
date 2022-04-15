@@ -9,8 +9,8 @@ class MyComponent : public Component
 public:
     MyComponent();
     virtual void start();
-    virtual Job tick(float deltatime) const;
-    virtual Job update();
+    virtual void tick(float deltatime) const;
+    virtual void update();
 private:
     Writable<PMyOtherComponent> otherComp;
     Writable<uint32> writable = 0;

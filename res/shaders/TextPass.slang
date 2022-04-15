@@ -12,12 +12,12 @@ layout(set = 0, binding = 0)
 ConstantBuffer<ViewData> viewData;
 layout(set = 0, binding = 1)
 SamplerState glyphSampler;
-layout(set = 0, binding = 2)
-StructuredBuffer<GlyphData> glyphData;
 layout(set = 1)
-Texture2D glyphTextures[];
+RWStructuredBuffer<GlyphData> glyphData;
+layout(set = 2)
+Texture2D<uint> glyphTextures[];
 layout(push_constant)
-float scale;
+ConstantBuffer<float> scale;
 
 struct VertexStageInput
 {
@@ -45,10 +45,10 @@ VertexStageOutput vertexMain(VertexStageInput input)
     float h = glyph.size.y * scale;
     
     float4 coordinates[4] = {
-        float4(xpos,     ypos + h, 0, 0),
         float4(xpos,     ypos,     0, 1),
-        float4(xpos + w, ypos,     1, 0),
-        float4(xpos + w, ypos + h, 1, 1)
+        float4(xpos,     ypos + h, 0, 0),
+        float4(xpos + w, ypos,     1, 1),
+        float4(xpos + w, ypos + h, 1, 0)
     };
     float4 vertex = coordinates[input.vertexId];
     VertexStageOutput output;

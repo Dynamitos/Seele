@@ -13,12 +13,12 @@ class SceneView : public View
 public:
 	SceneView(Gfx::PGraphics graphics, PWindow owner, const ViewportCreateInfo &createInfo);
 	~SceneView();
-	virtual Job beginUpdate() override;
-	virtual Job update() override;
+	virtual void beginUpdate() override;
+	virtual void update() override;
 	virtual void commitUpdate() override;
 
 	virtual void prepareRender() override;
-	virtual MainJob render() override;
+	virtual void render() override;
 
 	PScene getScene() const { return scene; }
 private:

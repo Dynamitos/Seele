@@ -3,8 +3,8 @@ target_sources(Seele_unit_tests
 		../../src/Engine/MinimalEngine.cpp
 		../../src/Engine/ThreadPool.cpp
 		EngineTest.h
-		EngineTest.cpp
-		ThreadPool.cpp)
+		EngineTest.cpp)
+		#ThreadPool.cpp)
 target_include_directories(Seele_unit_tests PUBLIC ./)
 add_subdirectory(Containers/)
 add_subdirectory(Graphics/)

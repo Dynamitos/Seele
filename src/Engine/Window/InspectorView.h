@@ -14,12 +14,12 @@ public:
     InspectorView(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo &createInfo);
     virtual ~InspectorView();
 
-    virtual Job beginUpdate() override;
-	virtual Job update() override;
+    virtual void beginUpdate() override;
+	virtual void update() override;
 	virtual void commitUpdate() override;
     
     virtual void prepareRender() override;
-    virtual MainJob render() override;
+    virtual void render() override;
     void selectActor();
 protected:
     UIPass uiPass;

@@ -20,7 +20,7 @@ BasePassMeshProcessor::~BasePassMeshProcessor()
 { 
 }
 
-MainJob BasePassMeshProcessor::processMeshBatch(
+void BasePassMeshProcessor::processMeshBatch(
     const MeshBatch& batch, 
 //    const PPrimitiveComponent primitiveComponent,
     const Gfx::PRenderPass& renderPass,
@@ -66,7 +66,7 @@ MainJob BasePassMeshProcessor::processMeshBatch(
     }
     std::scoped_lock lock(commandLock);
     renderCommands.add(renderCommand);
-    co_return;
+    //co_return;
 }
 
 BasePass::BasePass(Gfx::PGraphics graphics, Gfx::PViewport viewport, PCameraActor source) 
@@ -114,7 +114,7 @@ BasePass::~BasePass()
 {   
 }
 
-MainJob BasePass::beginFrame() 
+void BasePass::beginFrame() 
 {
     processor->clearCommands();
     primitiveLayout->reset();
@@ -135,10 +135,10 @@ MainJob BasePass::beginFrame()
     descriptorSets[INDEX_VIEW_PARAMS]->updateBuffer(0, viewParamBuffer);
     descriptorSets[INDEX_VIEW_PARAMS]->writeChanges();
     //std::cout << "BasePass beginFrame()" << std::endl;
-    co_return;
+    //co_return;
 }
 
-MainJob BasePass::render() 
+void BasePass::render() 
 {
     oLightIndexList->pipelineBarrier( 
 		Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
@@ -155,23 +155,20 @@ MainJob BasePass::render()
     descriptorSets[INDEX_LIGHT_ENV]->updateTexture(5, oLightGrid);
     descriptorSets[INDEX_LIGHT_ENV]->writeChanges();
     graphics->beginRenderPass(renderPass);
-    List<Job> jobs;
     for (auto &&meshBatch : passData.staticDrawList)
     {
-        //jobs.add(
-        co_await processor->processMeshBatch(meshBatch, renderPass, basePassLayout, primitiveLayout, descriptorSets);
+        processor->processMeshBatch(meshBatch, renderPass, basePassLayout, primitiveLayout, descriptorSets);
     }
-    //co_await Job::all(jobs);
     graphics->executeCommands(processor->getRenderCommands());
     graphics->endRenderPass();
     //std::cout << "BasePass render()" << std::endl;
-    co_return;
+    //co_return;
 }
 
-MainJob BasePass::endFrame() 
+void BasePass::endFrame() 
 {
     //std::cout << "BasePass endFrame()" << std::endl;
-    co_return;
+    //co_return;
 }
 
 void BasePass::publishOutputs() 

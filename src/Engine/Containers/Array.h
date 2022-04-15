@@ -247,8 +247,8 @@ public:
         }
         return endIt;	
     }
-    //template<class F, class... Args, std::predicate<F, Args...> Pred>
     template<class Pred>
+    requires std::predicate<Pred, value_type>
     constexpr iterator find(Pred pred) const noexcept
     {
         for (size_type i = 0; i < arraySize; ++i)
@@ -337,9 +337,9 @@ public:
     }
     constexpr void remove(iterator it, bool keepOrder = true)
     {
-        remove(it - beginIt, keepOrder);
+        removeAt(it - beginIt, keepOrder);
     }
-    constexpr void remove(size_type index, bool keepOrder = true)
+    constexpr void removeAt(size_type index, bool keepOrder = true)
     {
         if (keepOrder)
         {

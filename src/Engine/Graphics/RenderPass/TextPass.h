@@ -27,9 +27,9 @@ class TextPass : public RenderPass<TextPassData>
 public:
     TextPass(Gfx::PGraphics graphics, Gfx::PViewport viewport, Gfx::PRenderTargetAttachment renderTarget);
     virtual ~TextPass();
-    virtual MainJob beginFrame() override;
-    virtual MainJob render() override;
-    virtual MainJob endFrame() override;
+    virtual void beginFrame() override;
+    virtual void render() override;
+    virtual void endFrame() override;
     virtual void publishOutputs() override;
     virtual void createRenderPass() override;
 private:
@@ -45,8 +45,8 @@ private:
     };
     struct FontData
     {
-        Gfx::PStructuredBuffer structuredBuffer;
-        Array<Gfx::PTexture> textures;
+        Gfx::PDescriptorSet glyphDataSet;
+        Gfx::PDescriptorSet textureArraySet;
         Map<uint32, uint32> characterToGlyphIndex;
         // Logically this should be part of GlyphData,
         // but because GlyphData mirrors shader data and we need
@@ -58,9 +58,9 @@ private:
 
     struct TextResources
     {
-        Gfx::PDescriptorSet descriptorSet;
-        Gfx::PDescriptorSet textureArraySet;
         Gfx::PVertexBuffer vertexBuffer;
+        Gfx::PDescriptorSet glyphDataSet;
+        Gfx::PDescriptorSet textureArraySet;
         float scale;
     };
     Array<TextResources> textResources;
@@ -69,8 +69,11 @@ private:
     Gfx::PRenderTargetAttachment depthAttachment;
     Gfx::PTexture2D depthBuffer;
 
-    Gfx::PDescriptorLayout descriptorLayout;
+    Gfx::PDescriptorLayout generalLayout;
+    Gfx::PDescriptorLayout glyphDataLayout;
     Gfx::PDescriptorLayout textureArrayLayout;
+
+    Gfx::PDescriptorSet generalSet;
 
     Gfx::PUniformBuffer projectionBuffer;
     Gfx::PSamplerState glyphSampler;

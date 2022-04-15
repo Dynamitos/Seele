@@ -250,6 +250,7 @@ void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet)
 {
     assert(threadId == std::this_thread::get_id());
     auto descriptor = descriptorSet.cast<DescriptorSet>();
+    assert(descriptor->writeDescriptors.size() == 0);
     boundDescriptors.add(descriptor.getHandle());
     descriptor->bind();
 
@@ -263,6 +264,7 @@ void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorS
     for(uint32 i = 0; i < descriptorSets.size(); ++i)
     {
         auto descriptorSet = descriptorSets[i].cast<DescriptorSet>();
+        assert(descriptorSet->writeDescriptors.size() == 0);
         descriptorSet->bind();
 
         boundDescriptors.add(descriptorSet.getHandle());
@@ -370,6 +372,7 @@ void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet)
 {
     assert(threadId == std::this_thread::get_id());
     auto descriptor = descriptorSet.cast<DescriptorSet>();
+    assert(descriptor->writeDescriptors.size() == 0);
     boundDescriptors.add(descriptor.getHandle());
     descriptor->bind();
     
@@ -384,9 +387,11 @@ void ComputeCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptor
     for(uint32 i = 0; i < descriptorSets.size(); ++i)
     {
         auto descriptorSet = descriptorSets[i].cast<DescriptorSet>();
-        boundDescriptors.add(descriptorSet.getHandle());
+        assert(descriptorSet->writeDescriptors.size() == 0);
         descriptorSet->bind();
+
         //std::cout << "Binding descriptor " << descriptorSet->getHandle() << " to cmd " << handle << std::endl;
+        boundDescriptors.add(descriptorSet.getHandle());
         sets[descriptorSet->getSetIndex()] = descriptorSet->getHandle();
     }
     vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->getLayout(), 0, (uint32)descriptorSets.size(), sets, 0, nullptr);

@@ -16,29 +16,32 @@ Window::~Window()
 
 void Window::addView(PView view)
 {
-    WindowView* windowView = new WindowView(view);
+    //WindowView* windowView = new WindowView(view);
     //windowView->worker = std::thread(&Window::viewWorker, this, windowView);
-    views.add(windowView);
-    viewWorker(views.size() - 1);
+    views.add(view);
+    //viewWorker(views.size() - 1);
 }
 
-MainJob Window::render() 
+void Window::render() 
 {
-    gfxHandle->beginFrame();
-    for(auto& windowView : views)
+    while(owner->isActive())
     {
+        gfxHandle->beginFrame();
+        for(auto& view : views)
         {
-            std::scoped_lock lock(windowView->workerMutex);
-            windowView->view->prepareRender();
+            view->beginUpdate();
+            view->update();
+            view->commitUpdate();
+            view->prepareRender();
+            view->render();
         }
-        co_await windowView->view->render();
+        gfxHandle->endFrame();
+        if(owner->isActive())
+        {
+            render();
+        }
     }
-    gfxHandle->endFrame();
-    if(owner->isActive())
-    {
-        render();
-    }
-    co_return;
+    //co_return;
 }
 
 Gfx::PWindow Window::getGfxHandle()
@@ -63,7 +66,7 @@ void Window::setFocused(PView view)
     });
 }
 
-Job Window::viewWorker(size_t viewIndex)
+/*void Window::viewWorker(size_t viewIndex)
 {
     WindowView* windowView = views[viewIndex];
     co_await windowView->view->beginUpdate();
@@ -79,5 +82,5 @@ Job Window::viewWorker(size_t viewIndex)
     {
         viewWorker(viewIndex);
     }
-    co_return;
-}
+    //co_return;
+}*/

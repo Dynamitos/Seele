@@ -23,7 +23,7 @@ Semaphore::~Semaphore()
 
 Fence::Fence(PGraphics graphics)
     : graphics(graphics)
-    , signaled("Fence")
+    , signaled(false)
 {
     VkFenceCreateInfo info =
         init::FenceCreateInfo(0);
@@ -45,8 +45,8 @@ bool Fence::isSignaled()
     switch (res)
     {
     case VK_SUCCESS:
-        signaled.raise();
-        return true;
+        signaled = true;
+        return signaled;
     case VK_NOT_READY:
         break;
     default:
@@ -60,7 +60,7 @@ void Fence::reset()
     if (signaled)
     {
         vkResetFences(graphics->getDevice(), 1, &fence);
-        signaled.reset();
+        signaled = false;
     }
 }
 
@@ -71,7 +71,7 @@ void Fence::wait(uint32 timeout)
     switch (r)
     {
     case VK_SUCCESS:
-        signaled.raise();
+        signaled = true;
         break;
     case VK_TIMEOUT:
         break;

@@ -119,6 +119,8 @@ private:
     bool currentlyInUse;
     friend class DescriptorAllocator;
     friend class CmdBuffer;
+    friend class RenderCommand;
+    friend class ComputeCommand;
 };
 DEFINE_REF(DescriptorSet)
 

@@ -11,7 +11,7 @@ public:
     BasePassMeshProcessor(Gfx::PViewport viewport, Gfx::PGraphics graphics, uint8 translucentBasePass);
     virtual ~BasePassMeshProcessor();
 
-    virtual MainJob processMeshBatch(
+    virtual void processMeshBatch(
         const MeshBatch& batch, 
 //        const PPrimitiveComponent primitiveComponent,
         const Gfx::PRenderPass& renderPass,
@@ -37,9 +37,9 @@ class BasePass : public RenderPass<BasePassData>
 public:
     BasePass(Gfx::PGraphics graphics, Gfx::PViewport viewport, PCameraActor source);
     virtual ~BasePass();
-    virtual MainJob beginFrame() override;
-    virtual MainJob render() override;
-    virtual MainJob endFrame() override;
+    virtual void beginFrame() override;
+    virtual void render() override;
+    virtual void endFrame() override;
     virtual void publishOutputs() override;
     virtual void createRenderPass() override;
     static void modifyRenderPassMacros(Map<const char*, const char*>& defines);

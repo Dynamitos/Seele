@@ -1,8 +1,8 @@
 #pragma once
 #include "MinimalEngine.h"
+
 namespace Seele
 {
-
 enum class KeyCode
 {
     /* Printable keys */

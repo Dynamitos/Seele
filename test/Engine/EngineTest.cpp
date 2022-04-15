@@ -1,6 +1,5 @@
 #include "EngineTest.h"
 #include "MinimalEngine.h"
-#include "ThreadPool.h"
 #define BOOST_TEST_MODULE SeeleEngine
 #include <boost/test/unit_test.hpp>
 //#include <vld.h>
@@ -9,7 +8,7 @@ using namespace Seele;
 
 Seele::GlobalFixture::~GlobalFixture()
 {
-    getGlobalThreadPool().waitIdle();
+    //getGlobalThreadPool().waitIdle();
 }
 
 BOOST_TEST_GLOBAL_FIXTURE(GlobalFixture);

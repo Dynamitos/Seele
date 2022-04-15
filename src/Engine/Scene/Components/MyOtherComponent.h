@@ -6,8 +6,8 @@ namespace Seele
 class MyOtherComponent : public Component
 {
 public:
-    virtual Job tick(float deltaTime) const;
-    virtual Job update();
+    virtual void tick(float deltaTime) const;
+    virtual void update();
     Writable<uint32> data = Writable<uint32>(0);
 private:
 };
