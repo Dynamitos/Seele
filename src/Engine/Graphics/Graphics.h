@@ -4,7 +4,6 @@
 #include "Containers/Array.h"
 #include "VertexShaderInput.h"
 #include "ShaderCompiler.h"
-#include "ktx.h"
 
 namespace Seele
 {

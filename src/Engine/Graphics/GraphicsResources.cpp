@@ -93,17 +93,17 @@ ShaderCollection& ShaderMap::createShaders(
 
 	return collection;
 }
-void DescriptorLayout::addDescriptorBinding(uint32 bindingIndex, SeDescriptorType type, uint32 arrayCount)
+void DescriptorLayout::addDescriptorBinding(uint32 bindingIndex, SeDescriptorType type, uint32 arrayCount, SeDescriptorBindingFlags bindingFlags)
 {
 	if (descriptorBindings.size() <= bindingIndex)
 	{
 		descriptorBindings.resize(bindingIndex + 1);
 	}
-	DescriptorBinding binding;
+	DescriptorBinding& binding = descriptorBindings[bindingIndex];
 	binding.binding = bindingIndex;
 	binding.descriptorType = type;
 	binding.descriptorCount = arrayCount;
-	descriptorBindings[bindingIndex] = binding;
+	binding.bindingFlags = bindingFlags;
 }
 
 PDescriptorSet DescriptorLayout::allocateDescriptorSet()

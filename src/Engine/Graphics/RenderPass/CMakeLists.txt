@@ -11,5 +11,7 @@ target_sources(Engine
         RenderGraph.h
         RenderGraph.cpp
         RenderPass.h
+        TextPass.h
+        TextPass.cpp
         UIPass.h
         UIPass.cpp)

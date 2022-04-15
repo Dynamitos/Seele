@@ -12,11 +12,10 @@ public:
     DescriptorLayout(PGraphics graphics, const std::string& name);
     virtual ~DescriptorLayout();
     virtual void create();
-    inline VkDescriptorSetLayout getHandle() const
+    constexpr VkDescriptorSetLayout getHandle() const
     {
         return layoutHandle;
     }
-
 private:
     uint32 hash;
     PGraphics graphics;
@@ -72,6 +71,7 @@ public:
     virtual void updateBuffer(uint32_t binding, Gfx::PStructuredBuffer uniformBuffer);
     virtual void updateSampler(uint32_t binding, Gfx::PSamplerState samplerState);
     virtual void updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::PSamplerState sampler = nullptr);
+    virtual void updateTextureArray(uint32_t binding, Array<Gfx::PTexture> texture);
     virtual bool operator<(Gfx::PDescriptorSet other);
     
     inline bool isCurrentlyBound() const

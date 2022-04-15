@@ -13,18 +13,16 @@ public:
     virtual ~FontAsset();
     virtual void save() override;
     virtual void load() override;
-private:
+
     struct Glyph
     {
-        int16 index;
-        int16 numContours;
-        uint16 advance;
-        int16 leftSideBearing;
-        int16 boundingBox[4];
-        Vector2 center;
-        Gfx::PTexture2D curveTexture;
-        Gfx::PTexture2D bandTexture;
+        Gfx::PTexture2D texture;
+        IVector2 size;
+        IVector2 bearing;
+        uint32 advance;
     };
+    const Map<uint32, Glyph> getGlyphData() const { return glyphs; }
+private:
     Map<uint32, Glyph> glyphs;
 };
 DECLARE_REF(FontAsset)

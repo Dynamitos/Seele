@@ -28,3 +28,6 @@
 [submodule "external/ttf-parser"]
 	path = external/ttf-parser
 	url = git@github.com:kv01/ttf-parser.git
+[submodule "external/freetype"]
+	path = external/freetype
+	url = https://gitlab.freedesktop.org/freetype/freetype.git

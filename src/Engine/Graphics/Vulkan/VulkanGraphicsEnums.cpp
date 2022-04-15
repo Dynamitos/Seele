@@ -1421,3 +1421,134 @@ Gfx::SeClearValue Seele::Vulkan::cast(const VkClearValue& clear)
     }
     return result;
 }
+
+VkSamplerAddressMode Seele::Vulkan::cast(const Gfx::SeSamplerAddressMode &mode)
+{
+    switch(mode)
+    {
+    case SE_SAMPLER_ADDRESS_MODE_REPEAT: 
+        return VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    case SE_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT: 
+        return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+    case SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE: 
+        return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    case SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER: 
+        return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+    case SE_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE: 
+        return VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE;
+    default:
+        return VK_SAMPLER_ADDRESS_MODE_MAX_ENUM;
+    }
+}
+Gfx::SeSamplerAddressMode Seele::Vulkan::cast(const VkSamplerAddressMode &mode)
+{
+    switch(mode)
+    {
+    case VK_SAMPLER_ADDRESS_MODE_REPEAT: 
+        return SE_SAMPLER_ADDRESS_MODE_REPEAT;
+    case VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT: 
+        return SE_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+    case VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE: 
+        return SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    case VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER: 
+        return SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+    case VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE: 
+        return SE_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE;
+    default:
+        return SE_SAMPLER_ADDRESS_MODE_MAX_ENUM;
+    }
+}
+VkBorderColor Seele::Vulkan::cast(const Gfx::SeBorderColor &color)
+{
+    switch(color)
+    {
+    case SE_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK: 
+        return VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
+    case SE_BORDER_COLOR_INT_TRANSPARENT_BLACK: 
+        return VK_BORDER_COLOR_INT_TRANSPARENT_BLACK;
+    case SE_BORDER_COLOR_FLOAT_OPAQUE_BLACK: 
+        return VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
+    case SE_BORDER_COLOR_INT_OPAQUE_BLACK: 
+        return VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+    case SE_BORDER_COLOR_FLOAT_OPAQUE_WHITE: 
+        return VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+    case SE_BORDER_COLOR_INT_OPAQUE_WHITE: 
+        return VK_BORDER_COLOR_INT_OPAQUE_WHITE;
+    default:
+        return VK_BORDER_COLOR_MAX_ENUM;
+    }
+}
+Gfx::SeBorderColor Seele::Vulkan::cast(const VkBorderColor &color)
+{
+    switch(color)
+    {
+        case VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK: 
+            return SE_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
+        case VK_BORDER_COLOR_INT_TRANSPARENT_BLACK: 
+            return SE_BORDER_COLOR_INT_TRANSPARENT_BLACK;
+        case VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK: 
+            return SE_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
+        case VK_BORDER_COLOR_INT_OPAQUE_BLACK: 
+            return SE_BORDER_COLOR_INT_OPAQUE_BLACK;
+        case VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE: 
+            return SE_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+        case VK_BORDER_COLOR_INT_OPAQUE_WHITE: 
+            return SE_BORDER_COLOR_INT_OPAQUE_WHITE;
+        default:
+            return SE_BORDER_COLOR_MAX_ENUM;
+    }
+}
+
+VkFilter Seele::Vulkan::cast(const Gfx::SeFilter &filter)
+{
+    switch(filter)
+    {
+    case SE_FILTER_NEAREST: 
+        return VK_FILTER_NEAREST;
+    case SE_FILTER_LINEAR: 
+        return VK_FILTER_LINEAR;
+    case SE_FILTER_CUBIC_IMG: 
+        return VK_FILTER_CUBIC_IMG;
+    default:
+        return VK_FILTER_MAX_ENUM;
+    }
+}
+Gfx::SeFilter Seele::Vulkan::cast(const VkFilter &filter)
+{
+    switch(filter)
+    {
+    case VK_FILTER_NEAREST: 
+        return SE_FILTER_NEAREST;
+    case VK_FILTER_LINEAR: 
+        return SE_FILTER_LINEAR;
+    case VK_FILTER_CUBIC_IMG: 
+        return SE_FILTER_CUBIC_IMG;
+    default:
+        return SE_FILTER_MAX_ENUM;
+    }
+}
+
+VkSamplerMipmapMode Seele::Vulkan::cast(const Gfx::SeSamplerMipmapMode &filter)
+{
+    switch(filter)
+    {
+    case SE_SAMPLER_MIPMAP_MODE_NEAREST:
+        return VK_SAMPLER_MIPMAP_MODE_NEAREST;
+    case SE_SAMPLER_MIPMAP_MODE_LINEAR:
+        return VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    default:
+        return VK_SAMPLER_MIPMAP_MODE_MAX_ENUM;
+    }
+}
+Gfx::SeSamplerMipmapMode Seele::Vulkan::cast(const VkSamplerMipmapMode &filter)
+{
+    switch(filter)
+    {
+    case VK_SAMPLER_MIPMAP_MODE_NEAREST:
+        return SE_SAMPLER_MIPMAP_MODE_NEAREST;
+    case VK_SAMPLER_MIPMAP_MODE_LINEAR:
+        return SE_SAMPLER_MIPMAP_MODE_LINEAR;
+    default:
+        return SE_SAMPLER_MIPMAP_MODE_MAX_ENUM;
+    }
+}

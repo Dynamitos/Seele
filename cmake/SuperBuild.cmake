@@ -62,9 +62,9 @@ set(GLFW_VULKAN_STATIC OFF CACHE BOOL "GLFW vulkan static")
 add_subdirectory(${GLFW_ROOT} ${GLFW_ROOT})
 
 #--------------FreeType------------------------------
-#list(APPEND DEPENDENCIES freetype)
+list(APPEND DEPENDENCIES freetype)
 
-#add_subdirectory(${FREETYPE_ROOT} ${FREETYPE_ROOT})
+add_subdirectory(${FREETYPE_ROOT} ${FREETYPE_ROOT})
 
 #--------------SLang------------------------------
 list(APPEND DEPENDENCIES slang)
@@ -73,7 +73,7 @@ if(WIN32)
 ExternalProject_Add(slang
 	SOURCE_DIR ${SLANG_ROOT}
 	BINARY_DIR ${SLANG_ROOT}
-	CONFIGURE_COMMAND ""
+	CONFIGURE_COMMAND premake.bat vs2019 --file=${CMAKE_SOURCE_DIR}/external/slang/premake5.lua gmake --arch=${CMAKE_PLATFORM} --deps=true
 	BUILD_COMMAND msbuild slang.sln -p:Configuration=Release -p:Platform=${CMAKE_PLATFORM}
 	INSTALL_COMMAND "")
 elseif(UNIX)

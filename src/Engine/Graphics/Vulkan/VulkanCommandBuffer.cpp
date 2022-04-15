@@ -290,6 +290,13 @@ void RenderCommand::bindIndexBuffer(Gfx::PIndexBuffer indexBuffer)
     PIndexBuffer buf = indexBuffer.cast<IndexBuffer>();
     vkCmdBindIndexBuffer(handle, buf->getHandle(), 0, cast(buf->getIndexType()));
 }
+
+void RenderCommand::pushConstants(Gfx::PPipelineLayout layout, Gfx::SeShaderStageFlags stage, uint32 offset, uint32 size, const void* data)
+{
+    assert(threadId == std::this_thread::get_id());
+    vkCmdPushConstants(handle, layout.cast<PipelineLayout>()->getHandle(), stage, offset, size, data);
+}
+
 void RenderCommand::draw(const MeshBatchElement& data) 
 {
     assert(threadId == std::this_thread::get_id());
@@ -384,6 +391,12 @@ void ComputeCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptor
     }
     vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->getLayout(), 0, (uint32)descriptorSets.size(), sets, 0, nullptr);
     delete[] sets;
+}
+
+void ComputeCommand::pushConstants(Gfx::PPipelineLayout layout, Gfx::SeShaderStageFlags stage, uint32 offset, uint32 size, const void* data)
+{
+    assert(threadId == std::this_thread::get_id());
+    vkCmdPushConstants(handle, layout.cast<PipelineLayout>()->getHandle(), stage, offset, size, data);
 }
 
 void ComputeCommand::dispatch(uint32 threadX, uint32 threadY, uint32 threadZ) 

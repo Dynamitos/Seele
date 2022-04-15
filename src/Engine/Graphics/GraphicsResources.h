@@ -160,16 +160,10 @@ public:
         : binding(other.binding), descriptorType(other.descriptorType), descriptorCount(other.descriptorCount), shaderStages(other.shaderStages)
     {
     }
-    void operator=(const DescriptorBinding &other)
-    {
-        binding = other.binding;
-        descriptorType = other.descriptorType;
-        descriptorCount = other.descriptorCount;
-        shaderStages = other.shaderStages;
-    }
     uint32_t binding;
     SeDescriptorType descriptorType;
     uint32_t descriptorCount;
+    SeDescriptorBindingFlags bindingFlags = 0;
     SeShaderStageFlags shaderStages;
 };
 DEFINE_REF(DescriptorBinding)
@@ -196,6 +190,7 @@ public:
     virtual void updateBuffer(uint32 binding, PStructuredBuffer structuredBuffer) = 0;
     virtual void updateSampler(uint32 binding, PSamplerState samplerState) = 0;
     virtual void updateTexture(uint32 binding, PTexture texture, PSamplerState samplerState = nullptr) = 0;
+    virtual void updateTextureArray(uint32_t binding, Array<PTexture> texture) = 0;
     virtual bool operator<(PDescriptorSet other) = 0;
 
     virtual uint32 getSetIndex() const = 0;
@@ -224,7 +219,7 @@ public:
         return *this;
     }
     virtual void create() = 0;
-    virtual void addDescriptorBinding(uint32 binding, SeDescriptorType type, uint32 arrayCount = 1);
+    virtual void addDescriptorBinding(uint32 binding, SeDescriptorType type, uint32 arrayCount = 1, SeDescriptorBindingFlags bindingFlags = 0);
     virtual void reset();
     virtual PDescriptorSet allocateDescriptorSet();
     const Array<DescriptorBinding> &getBindings() const { return descriptorBindings; }
@@ -557,6 +552,7 @@ public:
     virtual void bindDescriptor(const Array<Gfx::PDescriptorSet>& sets) = 0;
     virtual void bindVertexBuffer(const Array<VertexInputStream>& streams) = 0;
     virtual void bindIndexBuffer(Gfx::PIndexBuffer indexBuffer) = 0;
+    virtual void pushConstants(Gfx::PPipelineLayout layout, Gfx::SeShaderStageFlags stage, uint32 offset, uint32 size, const void* data) = 0;
     virtual void draw(const MeshBatchElement& data) = 0;
     virtual void draw(uint32 vertexCount, uint32 instanceCount, int32 firstVertex, uint32 firstInstance) = 0;
     std::string name;
@@ -571,6 +567,7 @@ public:
     virtual void bindPipeline(Gfx::PComputePipeline pipeline) = 0;
     virtual void bindDescriptor(Gfx::PDescriptorSet set) = 0;
     virtual void bindDescriptor(const Array<Gfx::PDescriptorSet>& sets) = 0;
+    virtual void pushConstants(Gfx::PPipelineLayout layout, Gfx::SeShaderStageFlags stage, uint32 offset, uint32 size, const void* data) = 0;
     virtual void dispatch(uint32 threadX, uint32 threadY, uint32 threadZ) = 0;
     std::string name;
 };

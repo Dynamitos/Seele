@@ -198,7 +198,7 @@ public:
     using reverse_iterator = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
     
-    Map()
+    constexpr Map() noexcept
         : root(-1)
         , beginIt(-1)
         , endIt(-1)
@@ -207,8 +207,7 @@ public:
         , comp(Compare())
     {
     }
-    explicit Map(const Compare& comp,
-        const Allocator& alloc = Allocator())
+    constexpr explicit Map(const Compare& comp, const Allocator& alloc = Allocator()) noexcept(noexcept(Allocator()))
         : nodeContainer(alloc)
         , root(-1)
         , beginIt(-1)
@@ -218,7 +217,7 @@ public:
         , comp(comp)
     {
     }
-    explicit Map(const Allocator& alloc)
+    constexpr explicit Map(const Allocator& alloc) noexcept(noexcept(Compare))
         : nodeContainer(alloc)
         , root(-1)
         , beginIt(-1)
@@ -228,7 +227,7 @@ public:
         , comp(Compare())
     {
     }
-    Map(const Map& other)
+    constexpr Map(const Map& other)
         : nodeContainer(other.nodeContainer)
         , root(other.root)
         , _size(other._size)
@@ -236,18 +235,18 @@ public:
     {
         markIteratorsDirty();
     }
-    Map(Map&& other)
-        : nodeContainer(other.nodeContainer)
+    constexpr Map(Map&& other) noexcept
+        : nodeContainer(std::move(other.nodeContainer))
         , root(std::move(other.root))
         , _size(std::move(other._size))
         , comp(std::move(other.comp))
     {
         markIteratorsDirty();
     }
-    ~Map()
+    constexpr ~Map() noexcept
     {
     }
-    Map& operator=(const Map& other)
+    constexpr Map& operator=(const Map& other)
     {
         if(this != &other)
         {
@@ -259,7 +258,7 @@ public:
         }
         return *this;
     }
-    Map& operator=(Map&& other)
+    constexpr Map& operator=(Map&& other)
     {
         if(this != &other)
         {
@@ -271,7 +270,7 @@ public:
         }
         return *this;
     }
-    inline mapped_type& operator[](const key_type& key)
+    constexpr mapped_type& operator[](const key_type& key)
     {
         root = splay(root, key);
         if (!isValid(root) 
@@ -284,7 +283,7 @@ public:
         markIteratorsDirty();
         return getNode(root)->pair.value;
     }
-    inline mapped_type& operator[](key_type&& key)
+    constexpr mapped_type& operator[](key_type&& key)
     {
         root = splay(root, std::move(key));
         if (!isValid(root)
@@ -297,7 +296,7 @@ public:
         markIteratorsDirty();
         return getNode(root)->pair.value;
     }
-    iterator find(const key_type& key)
+    constexpr iterator find(const key_type& key)
     {
         root = splay(root, key);
         refreshIterators();
@@ -309,7 +308,7 @@ public:
         }
         return iterator(root, &nodeContainer);
     }
-    iterator find(key_type&& key)
+    constexpr iterator find(key_type&& key)
     {
         root = splay(root, std::move(key));
         refreshIterators();
@@ -321,30 +320,34 @@ public:
         }
         return iterator(root, &nodeContainer);
     }
-    iterator erase(const key_type& key)
+    constexpr iterator erase(const key_type& key)
     {
         root = remove(root, key);
         refreshIterators();
         return iterator(root, &nodeContainer);	
     }
-    iterator erase(K&& key)
+    constexpr iterator erase(key_type&& key)
     {
         root = remove(root, std::move(key));
         refreshIterators();
         return iterator(root, &nodeContainer);
     }
-    void clear()
+    constexpr void clear()
     {
         nodeContainer.clear();
         root = -1;
         _size = 0;
         markIteratorsDirty();
     }
-    bool exists(key_type&& key)
+    constexpr bool exists(const key_type& key)
     {
-        return find(std::forward<K>(key)) != endIt;
+        return find(key) != endIt;
     }
-    iterator begin()
+    constexpr bool exists(key_type&& key)
+    {
+        return find(std::move(key)) != endIt;
+    }
+    constexpr iterator begin()
     {
         if(iteratorsDirty)
         {
@@ -352,7 +355,7 @@ public:
         }
         return beginIt;
     }
-    iterator end()
+    constexpr iterator end()
     {
         if(iteratorsDirty)
         {
@@ -360,7 +363,7 @@ public:
         }
         return endIt;
     }
-    iterator begin() const
+    constexpr iterator begin() const
     {
         if(iteratorsDirty)
         {
@@ -368,7 +371,7 @@ public:
         }
         return beginIt;
     }
-    iterator end() const
+    constexpr iterator end() const
     {
         if(iteratorsDirty)
         {
@@ -376,11 +379,11 @@ public:
         }
         return endIt;
     }
-    bool empty() const
+    constexpr bool empty() const
     {
         return nodeContainer.empty();
     }
-    size_type size() const
+    constexpr size_type size() const
     {
         return _size;
     }

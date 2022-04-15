@@ -2,6 +2,7 @@
 #include "View.h"
 #include "Graphics/RenderPass/RenderGraph.h"
 #include "Graphics/RenderPass/UIPass.h"
+#include "Graphics/RenderPass/TextPass.h"
 #include "UI/Elements/Panel.h"
 
 namespace Seele
@@ -22,8 +23,10 @@ public:
     void selectActor();
 protected:
     UIPass uiPass;
+    TextPass textPass;
     
     UIPassData uiPassData;
+    TextPassData textPassData;
 
     UI::PPanel rootPanel;
     PActor selectedActor;

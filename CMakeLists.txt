@@ -18,6 +18,7 @@ set(JSON_ROOT ${EXTERNAL_ROOT}/json)
 set(KTX_ROOT ${EXTERNAL_ROOT}/ktx)
 set(STB_ROOT ${EXTERNAL_ROOT}/stb)
 set(TTFPARSER_ROOT ${EXTERNAL_ROOT}/ttf-parser)
+set(FREETYPE_ROOT ${EXTERNAL_ROOT}/freetype)
 set(SPIRV_ROOT ${EXTERNAL_ROOT}/SPIRV-Cross)
 set(NSAM_ROOT ${EXTERNAL_ROOT}/aftermath)
 
@@ -50,6 +51,7 @@ find_package(Threads REQUIRED)
 find_package(Assimp REQUIRED)
 find_package(JSON REQUIRED)
 find_package(GLFW REQUIRED)
+find_package(FreeType REQUIRED)
 find_package(TTFParser REQUIRED)
 find_package(GLM REQUIRED)
 find_package(KTX REQUIRED)
@@ -130,6 +132,7 @@ if(WIN32)
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SLANG_BINARIES} $<TARGET_FILE_DIR:Engine>
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SLANG_GLSLANG} $<TARGET_FILE_DIR:Engine>
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${GLFW_BINARY} $<TARGET_FILE_DIR:Engine>
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${FREETYPE_BINARY} $<TARGET_FILE_DIR:Engine>
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${ASSIMP_BINARY} $<TARGET_FILE_DIR:Engine>
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${NSAM_BINARIES} $<TARGET_FILE_DIR:Engine>
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${NSAM_LLVM} $<TARGET_FILE_DIR:Engine>

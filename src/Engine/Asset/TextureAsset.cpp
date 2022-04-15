@@ -3,6 +3,8 @@
 #include "Graphics/Graphics.h"
 #include "Window/WindowManager.h"
 #include "Graphics/Vulkan/VulkanGraphicsEnums.h"
+#include "ktx.h"
+
 using namespace Seele;
 
 

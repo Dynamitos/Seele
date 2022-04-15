@@ -54,5 +54,13 @@ VkCompareOp cast(const Gfx::SeCompareOp &op);
 Gfx::SeCompareOp cast(const VkCompareOp &op);
 VkClearValue cast(const Gfx::SeClearValue &clear);
 Gfx::SeClearValue cast(const VkClearValue &clear);
+VkSamplerAddressMode cast(const Gfx::SeSamplerAddressMode &mode);
+Gfx::SeSamplerAddressMode cast(const VkSamplerAddressMode &mode);
+VkBorderColor cast(const Gfx::SeBorderColor &color);
+Gfx::SeBorderColor cast(const VkBorderColor &color);
+VkFilter cast(const Gfx::SeFilter &filter);
+Gfx::SeFilter cast(const VkFilter &filter);
+VkSamplerMipmapMode cast(const Gfx::SeSamplerMipmapMode &filter);
+Gfx::SeSamplerMipmapMode cast(const VkSamplerMipmapMode &filter);
 } // namespace Vulkan
 } // namespace Seele

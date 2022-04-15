@@ -29,6 +29,7 @@ void DescriptorLayout::create()
         return;
     }
     bindings.resize(descriptorBindings.size());
+    Array<VkDescriptorBindingFlags> bindingFlags(descriptorBindings.size());
     for (size_t i = 0; i < descriptorBindings.size(); ++i)
     {
         VkDescriptorSetLayoutBinding &binding = bindings[i];
@@ -38,9 +39,16 @@ void DescriptorLayout::create()
         binding.descriptorType = cast(rhiBinding.descriptorType);
         binding.stageFlags = rhiBinding.shaderStages;
         binding.pImmutableSamplers = nullptr;
+        bindingFlags[i] = rhiBinding.bindingFlags;
     }
     VkDescriptorSetLayoutCreateInfo createInfo =
         init::DescriptorSetLayoutCreateInfo(bindings.data(), (uint32)bindings.size());
+    VkDescriptorSetLayoutBindingFlagsCreateInfo bindingFlagsInfo = {};
+    bindingFlagsInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO;
+    bindingFlagsInfo.pNext = nullptr;
+    bindingFlagsInfo.bindingCount = static_cast<uint32>(bindingFlags.size());
+    bindingFlagsInfo.pBindingFlags = bindingFlags.data();
+    createInfo.pNext = &bindingFlagsInfo;
     VK_CHECK(vkCreateDescriptorSetLayout(graphics->getDevice(), &createInfo, nullptr, &layoutHandle));
 
     allocator = new DescriptorAllocator(graphics, *this);
@@ -188,19 +196,53 @@ void DescriptorSet::updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::
         imageInfo.sampler = vulkanSampler->sampler;
     }
     imageInfos.add(imageInfo);
+    VkDescriptorType descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+    if(samplerState != nullptr)
+    {
+        descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    }
+    else if (vulkanTexture->getUsage() & VK_IMAGE_USAGE_STORAGE_BIT)
+    {
+        descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+    }
     VkWriteDescriptorSet writeDescriptor = 
         init::WriteDescriptorSet(
             setHandle, 
-            samplerState != nullptr ? VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER : VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 
+            descriptorType, 
             binding, 
             &imageInfos.back());
-    if (vulkanTexture->getUsage() & VK_IMAGE_USAGE_STORAGE_BIT)
-    {
-        writeDescriptor.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-    }
+    
     writeDescriptors.add(writeDescriptor);
 
     cachedData[binding] = vulkanTexture;
+}
+void DescriptorSet::updateTextureArray(uint32_t binding, Array<Gfx::PTexture> textures)
+{
+    // maybe make this a parameter?
+    uint32 arrayElement = 0;
+    for(const auto& gfxTexture : textures)
+    {
+        TextureHandle* vulkanTexture = TextureBase::cast(gfxTexture);
+        imageInfos.add(
+            init::DescriptorImageInfo(
+                VK_NULL_HANDLE,
+                vulkanTexture->getView(),
+                cast(vulkanTexture->getLayout())));
+
+        VkDescriptorType descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+        if (vulkanTexture->getUsage() & VK_IMAGE_USAGE_STORAGE_BIT)
+        {
+            descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+        }
+        VkWriteDescriptorSet& write = writeDescriptors.add(
+            init::WriteDescriptorSet(
+                setHandle,
+                descriptorType,
+                binding,
+                &imageInfos.back()
+            ));
+        write.dstArrayElement = arrayElement++;
+    }
 }
 
 bool DescriptorSet::operator<(Gfx::PDescriptorSet other)
@@ -281,6 +323,20 @@ void DescriptorAllocator::allocateDescriptorSet(Gfx::PDescriptorSet &descriptorS
     VkDescriptorSetLayout layoutHandle = layout.getHandle();
     VkDescriptorSetAllocateInfo allocInfo =
         init::DescriptorSetAllocateInfo(poolHandle, &layoutHandle, 1);
+    VkDescriptorSetVariableDescriptorCountAllocateInfo setCounts = {};
+    setCounts.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO;
+    setCounts.pNext = nullptr;
+    setCounts.descriptorSetCount = 1;
+    uint32 counts = 0;
+    for(const auto& binding : layout.bindings)
+    {
+        if(binding.binding & Gfx::SE_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT)
+        {
+            counts = binding.descriptorCount;
+        }
+    }
+    setCounts.pDescriptorCounts = &counts;
+    allocInfo.pNext = &setCounts;
 
     for(uint32 setIndex = 0; setIndex < cachedHandles.size(); ++setIndex)
     {

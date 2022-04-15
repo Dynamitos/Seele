@@ -1,2 +1,2 @@
-slangc ForwardPlus.slang -target spirv -entry vertexMain -profile vs_6_0 -o vertex.spv -I lib/ -D USE_INSTANCING=0 -D NUM_MATERIAL_TEXCOORDS=1
-slangc ForwardPlus.slang -target spirv -entry fragmentMain -profile ps_6_0 -o fragment.spv -I lib/ -D USE_INSTANCING=0 -D NUM_MATERIAL_TEXCOORDS=1
+slangc TextPass.slang -target glsl -entry vertexMain -profile vs_6_0 -o vertex.glsl -I lib/ -D INDEX_VIEW_PARAMS=0
+slangc TextPass.slang -target glsl -entry fragmentMain -profile ps_6_0 -o fragment.glsl -I lib/ -D INDEX_VIEW_PARAMS=0

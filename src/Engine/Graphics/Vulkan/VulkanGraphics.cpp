@@ -204,11 +204,27 @@ Gfx::PComputePipeline Graphics::createComputePipeline(const ComputePipelineCreat
     return pipeline;
 }
 
-Gfx::PSamplerState Graphics::createSamplerState(const SamplerCreateInfo&) 
+Gfx::PSamplerState Graphics::createSamplerState(const SamplerCreateInfo& createInfo) 
 {
-    PSamplerState sampler = new SamplerState(); // TODO: proper sampler creation
+    PSamplerState sampler = new SamplerState();
     VkSamplerCreateInfo vkInfo = 
         init::SamplerCreateInfo();
+    vkInfo.addressModeU = cast(createInfo.addressModeU);
+    vkInfo.addressModeV = cast(createInfo.addressModeV);
+    vkInfo.addressModeW = cast(createInfo.addressModeW);
+    vkInfo.anisotropyEnable = createInfo.anisotropyEnable;
+    vkInfo.borderColor = cast(createInfo.borderColor);
+    vkInfo.compareEnable = createInfo.compareEnable;
+    vkInfo.compareOp = cast(createInfo.compareOp);
+    vkInfo.flags = createInfo.flags;
+    vkInfo.magFilter = cast(createInfo.magFilter);
+    vkInfo.maxAnisotropy = createInfo.maxAnisotropy;
+    vkInfo.maxLod = createInfo.maxLod;
+    vkInfo.minFilter = cast(createInfo.minFilter);
+    vkInfo.minLod = createInfo.minLod;
+    vkInfo.mipLodBias = createInfo.mipLodBias;
+    vkInfo.mipmapMode = cast(createInfo.mipmapMode);
+    vkInfo.unnormalizedCoordinates = createInfo.unnormalizedCoordinates;
     VK_CHECK(vkCreateSampler(handle, &vkInfo, nullptr, &sampler->sampler));
     return sampler;
 }
@@ -537,6 +553,15 @@ void Graphics::createDevice(GraphicsInitializer initializer)
         queueInfos.data(),
         (uint32)queueInfos.size(),
         &features);
+
+    VkPhysicalDeviceDescriptorIndexingFeatures descriptorIndexing = {};
+    std::memset(&descriptorIndexing, 0, sizeof(descriptorIndexing));
+    descriptorIndexing.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
+    descriptorIndexing.shaderSampledImageArrayNonUniformIndexing = VK_TRUE;
+    descriptorIndexing.runtimeDescriptorArray = VK_TRUE;
+    descriptorIndexing.descriptorBindingVariableDescriptorCount = VK_TRUE;
+    descriptorIndexing.descriptorBindingPartiallyBound = VK_TRUE;
+    deviceInfo.pNext = &descriptorIndexing;
 #if ENABLE_VALIDATION
     VkDeviceDiagnosticsConfigCreateInfoNV crashDiagInfo;
     crashDiagInfo.sType = VK_STRUCTURE_TYPE_DEVICE_DIAGNOSTICS_CONFIG_CREATE_INFO_NV;

@@ -1,7 +1,8 @@
 #include "FontAsset.h"
 #include "Graphics/GraphicsResources.h"
-#define TTF_FONT_PARSER_IMPLEMENTATION
-#include "ttfParser.h"
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include "Window/WindowManager.h"
 
 using namespace Seele;
 
@@ -31,20 +32,30 @@ void FontAsset::save()
 
 void FontAsset::load()
 {
-    TTFFontParser::FontData font_data;
-    int8_t error = TTFFontParser::parse_file(getFullPath().c_str(), &font_data, [](void*, void*, int){}, nullptr);
-    assert(!error);
-    for(auto pair : font_data.glyphs)
+    FT_Library ft;
+    assert(!FT_Init_FreeType(&ft));
+    FT_Face face;
+    assert(!FT_New_Face(ft, getFullPath().c_str(), 0, &face));
+    FT_Set_Pixel_Sizes(face, 0, 48);
+    for(uint8 c = 0; c < 128; ++c)
     {
-        const TTFFontParser::Glyph& glyphData = pair.second;
-        Glyph& glyph = glyphs[pair.first];
-        glyph.advance = glyphData.advance_width;
-        std::memcpy(glyph.boundingBox, glyphData.bounding_box, sizeof(glyphData.bounding_box));
-        glyph.center = Vector2(glyphData.glyph_center.x, glyphData.glyph_center.y);
-        glyph.index = glyphData.glyph_index;
-        glyph.leftSideBearing = glyphData.left_side_bearing;
-        glyph.numContours = glyphData.num_contours;
-        Array<float> curveTextureData;
-        
+        Gfx::PGraphics graphics = WindowManager::getGraphics();
+        if(FT_Load_Char(face, c, FT_LOAD_RENDER))
+        {
+            std::cout << "error loading " << (char)c << std::endl;
+        }
+        TextureCreateInfo imageData;
+        imageData.format = Gfx::SE_FORMAT_R8_UINT;
+        imageData.width = face->glyph->bitmap.width;
+        imageData.height = face->glyph->bitmap.rows;
+        imageData.resourceData.data = face->glyph->bitmap.buffer;
+        imageData.resourceData.size = imageData.width * imageData.height;
+        Glyph& glyph = glyphs[c];
+        glyph.texture = graphics->createTexture2D(imageData);
+        glyph.size = IVector2(face->glyph->bitmap.width, face->glyph->bitmap.rows);
+        glyph.bearing = IVector2(face->glyph->bitmap_left, face->glyph->bitmap_top);
+        glyph.advance = face->glyph->advance.x;
     }
+    FT_Done_Face(face);
+    FT_Done_FreeType(ft);
 }

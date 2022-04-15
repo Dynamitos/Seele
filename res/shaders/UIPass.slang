@@ -17,7 +17,6 @@ VertexStageOutput vertexMain(uint vertexId : SV_VertexID)
     VertexStageOutput output;
     output.uvCoords = coordinates[vertexId];
     output.position = float4(output.uvCoords * 2 - 1, 1, 1);
-    output.position.y = -output.position.y;
     return output;
 }
 

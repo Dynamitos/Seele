@@ -50,73 +50,63 @@ struct ViewportCreateInfo
 // doesnt own the data, only proxy it
 struct BulkResourceData
 {
-    uint32 size;
-    uint8 *data;
+    uint32 size = 0;
+    uint8 *data = nullptr;
     Gfx::QueueType owner = Gfx::QueueType::GRAPHICS;
-    BulkResourceData()
-        : size(0), data(nullptr), owner(Gfx::QueueType::GRAPHICS)
-    {
-    }
 };
 struct TextureCreateInfo
 {
-    BulkResourceData resourceData;
-    uint32 width;
-    uint32 height;
-    uint32 depth;
-    bool bArray;
-    uint32 arrayLayers;
-    uint32 mipLevels;
-    uint32 samples;
-    Gfx::SeFormat format;
-    Gfx::SeImageUsageFlagBits usage;
-    TextureCreateInfo()
-        : resourceData(), width(1), height(1), depth(1), bArray(false), arrayLayers(1)
-        , mipLevels(1), samples(1), format(Gfx::SE_FORMAT_R32G32B32A32_SFLOAT)
-        , usage(Gfx::SE_IMAGE_USAGE_SAMPLED_BIT)
-    {
-    }
+    BulkResourceData resourceData = BulkResourceData();
+    uint32 width = 1;
+    uint32 height = 1;
+    uint32 depth = 1;
+    bool bArray = false;
+    uint32 arrayLayers = 1;
+    uint32 mipLevels = 1;
+    uint32 samples = 1;
+    Gfx::SeFormat format = Gfx::SE_FORMAT_R32G32B32A32_SFLOAT;
+    Gfx::SeImageUsageFlagBits usage = Gfx::SE_IMAGE_USAGE_SAMPLED_BIT;
 };
 struct SamplerCreateInfo
 {
+    Gfx::SeSamplerCreateFlags flags;
+    Gfx::SeFilter             magFilter;
+    Gfx::SeFilter             minFilter;
+    Gfx::SeSamplerMipmapMode  mipmapMode;
+    Gfx::SeSamplerAddressMode addressModeU;
+    Gfx::SeSamplerAddressMode addressModeV;
+    Gfx::SeSamplerAddressMode addressModeW;
+    float                     mipLodBias;
+    uint32                    anisotropyEnable;
+    float                     maxAnisotropy;
+    uint32                    compareEnable;
+    Gfx::SeCompareOp          compareOp;
+    float                     minLod;
+    float                     maxLod;
+    Gfx::SeBorderColor        borderColor;
+    uint32                    unnormalizedCoordinates;
 };
 struct VertexBufferCreateInfo
 {
-    BulkResourceData resourceData;
+    BulkResourceData resourceData = BulkResourceData();
     // bytes per vertex
-    uint32 vertexSize;
-    uint32 numVertices;
-    VertexBufferCreateInfo()
-        : resourceData(), vertexSize(0), numVertices(0)
-    {
-    }
+    uint32 vertexSize = 0;
+    uint32 numVertices = 0;
 };
 struct IndexBufferCreateInfo
 {
-    BulkResourceData resourceData;
-    Gfx::SeIndexType indexType;
-    IndexBufferCreateInfo()
-        : resourceData(), indexType(Gfx::SeIndexType::SE_INDEX_TYPE_UINT16)
-    {
-    }
+    BulkResourceData resourceData = BulkResourceData();
+    Gfx::SeIndexType indexType = Gfx::SeIndexType::SE_INDEX_TYPE_UINT16;
 };
 struct UniformBufferCreateInfo
 {
-    BulkResourceData resourceData;
-    uint8 bDynamic : 1;
-    UniformBufferCreateInfo()
-        : resourceData(), bDynamic(0)
-    {
-    }
+    BulkResourceData resourceData = BulkResourceData();
+    uint8 bDynamic : 1 = 0;
 };
 struct StructuredBufferCreateInfo
 {
     BulkResourceData resourceData;
     uint8 bDynamic: 1;
-    StructuredBufferCreateInfo()
-        : resourceData(), bDynamic(0)
-    {
-    }
 };
 struct ShaderCreateInfo
 {
@@ -138,13 +128,6 @@ struct SePushConstantRange
 };
 struct VertexElement
 {
-    VertexElement(){}
-    //VertexElement(uint8 attributeIndex, SeFormat vertexFormat, uint8 offset)
-    //    : attributeIndex(attributeIndex), vertexFormat(vertexFormat), offset(offset)
-    //{}
-    VertexElement(uint8 streamIndex, uint8 offset, SeFormat vertexFormat, uint8 attributeIndex, uint8 stride)
-        : streamIndex(streamIndex), offset(offset), vertexFormat(vertexFormat), attributeIndex(attributeIndex), stride(stride)
-    {}
     uint8 streamIndex;
     uint8 offset;
     SeFormat vertexFormat;
@@ -152,6 +135,7 @@ struct VertexElement
     uint8 stride;
     uint8 bInstanced = 0;
 };
+static_assert(std::is_aggregate_v<VertexElement>);
 struct RasterizationState
 {
     uint8 depthClampEnable : 1;

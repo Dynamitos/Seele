@@ -116,8 +116,7 @@ void MaterialAsset::load()
         {
             PSamplerParameter p = new SamplerParameter(param.key(), 0, bindingCounter);
             layout->addDescriptorBinding(bindingCounter++, Gfx::SE_DESCRIPTOR_TYPE_SAMPLER);
-            SamplerCreateInfo createInfo;
-            p->data = WindowManager::getGraphics()->createSamplerState(createInfo);
+            p->data = WindowManager::getGraphics()->createSamplerState({});
             parameters.add(p);
         }
         else

@@ -89,6 +89,7 @@ public:
 	virtual void bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorSets) override;
 	virtual void bindVertexBuffer(const Array<VertexInputStream>& streams) override;
 	virtual void bindIndexBuffer(Gfx::PIndexBuffer indexBuffer) override;
+	virtual void pushConstants(Gfx::PPipelineLayout layout, Gfx::SeShaderStageFlags stage, uint32 offset, uint32 size, const void* data) override;
 	virtual void draw(const MeshBatchElement& data) override;
 	virtual void draw(uint32 vertexCount, uint32 instanceCount, int32 firstVertex, uint32 firstInstance) override;
 private:
@@ -121,6 +122,7 @@ public:
 	virtual void bindPipeline(Gfx::PComputePipeline pipeline) override;
 	virtual void bindDescriptor(Gfx::PDescriptorSet set) override;
 	virtual void bindDescriptor(const Array<Gfx::PDescriptorSet>& sets) override;
+	virtual void pushConstants(Gfx::PPipelineLayout layout, Gfx::SeShaderStageFlags stage, uint32 offset, uint32 size, const void* data) override;
 	virtual void dispatch(uint32 threadX, uint32 threadY, uint32 threadZ) override;
 private:
 	PComputePipeline pipeline;
