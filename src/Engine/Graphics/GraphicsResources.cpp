@@ -199,6 +199,10 @@ StructuredBuffer::StructuredBuffer(QueueFamilyMapping mapping, uint32 stride, co
 	, contents(resourceData.size)
 	, stride(stride)
 {
+	if(resourceData.data != nullptr)
+	{
+		std::memcpy(contents.data(), resourceData.data, resourceData.size);
+	}
 }
 StructuredBuffer::~StructuredBuffer()
 {

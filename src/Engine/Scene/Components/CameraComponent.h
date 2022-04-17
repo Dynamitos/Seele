@@ -1,6 +1,7 @@
 #pragma once
 #include "Component.h"
 #include "Math/Matrix.h"
+#include "Graphics/GraphicsResources.h"
 
 namespace Seele
 {
@@ -30,6 +31,7 @@ public:
     {
         return getTransform().getPosition();
     }
+    void setViewport(Gfx::PViewport viewport);
     void mouseMove(float deltaX, float deltaY);
     void mouseScroll(float x);
     void moveX(float amount);
@@ -41,6 +43,8 @@ private:
     bool bNeedsProjectionBuild;
     void buildViewMatrix();
     void buildProjectionMatrix();
+
+    Gfx::PViewport viewport;
 
     //Transforms relative to actor
     Matrix4 viewMatrix;

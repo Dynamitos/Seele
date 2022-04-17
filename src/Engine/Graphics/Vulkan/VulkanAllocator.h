@@ -142,7 +142,7 @@ public:
 	}
 
 	void free(Allocation *allocation);
-
+	void notifyUsageChanged(int64 usageChange);
 private:
 	enum
 	{
@@ -151,6 +151,7 @@ private:
 	struct HeapInfo
 	{
 		VkDeviceSize maxSize = 0;
+		VkDeviceSize inUse = 0;
 		Array<PAllocation> allocations;
 	};
 	Array<HeapInfo> heaps;

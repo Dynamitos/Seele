@@ -11,7 +11,6 @@ CameraActor::CameraActor()
 
     cameraComponent = new CameraComponent();
     cameraComponent->fieldOfView = 70.0f;
-    cameraComponent->aspectRatio = 1.777778f;
     cameraComponent->setParent(sceneComponent);
     cameraComponent->setOwner(this);
     sceneComponent->addChildComponent(cameraComponent);

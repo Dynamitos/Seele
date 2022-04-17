@@ -14,7 +14,7 @@ struct PendingBuffer
     bool bWriteOnly;
 };
 
-static Map<ShaderBuffer *, PendingBuffer> pendingBuffers;
+static std::map<ShaderBuffer *, PendingBuffer> pendingBuffers;
 
 ShaderBuffer::ShaderBuffer(PGraphics graphics, uint32 size, VkBufferUsageFlags usage, Gfx::QueueType& queueType, bool bDynamic)
     : graphics(graphics)
@@ -54,8 +54,7 @@ ShaderBuffer::ShaderBuffer(PGraphics graphics, uint32 size, VkBufferUsageFlags u
         VK_CHECK(vkCreateBuffer(graphics->getDevice(), &info, nullptr, &buffers[i].buffer));
         bufferReqInfo.buffer = buffers[i].buffer;
         vkGetBufferMemoryRequirements2(graphics->getDevice(), &bufferReqInfo, &memRequirements);
-        auto temp = graphics->getAllocator()->allocate(memRequirements, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, buffers[i].buffer);
-        buffers[i].allocation = temp;
+        buffers[i].allocation = graphics->getAllocator()->allocate(memRequirements, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, buffers[i].buffer);
         vkBindBufferMemory(graphics->getDevice(), buffers[i].buffer, buffers[i].allocation->getHandle(), buffers[i].allocation->getOffset());
     }
 }
@@ -245,7 +244,7 @@ void ShaderBuffer::unlock()
     auto found = pendingBuffers.find(this);
     if (found != pendingBuffers.end())
     {
-        PendingBuffer pending = found->value;
+        PendingBuffer pending = found->second;
         pending.stagingBuffer->flushMappedMemory();
         pendingBuffers.erase(this);
         if (pending.bWriteOnly)

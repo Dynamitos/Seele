@@ -1,48 +1,51 @@
 
 struct GlyphData
 {
-    float2 bearing;
-    float2 size;
+    float4 bearingSize;
 };
 struct ViewData
 {
     float4x4 projectionMatrix;
 }
+struct TextData
+{
+    float4 textColor;
+    float scale;
+}
 layout(set = 0, binding = 0)
 ConstantBuffer<ViewData> viewData;
 layout(set = 0, binding = 1)
 SamplerState glyphSampler;
+//layout(set = 1)
+//StructuredBuffer<GlyphData> glyphData;
 layout(set = 1)
-RWStructuredBuffer<GlyphData> glyphData;
-layout(set = 2)
 Texture2D<uint> glyphTextures[];
 layout(push_constant)
-ConstantBuffer<float> scale;
+ConstantBuffer<TextData> textData;
 
 struct VertexStageInput
 {
-    uint glyphIndex;
     float2 position;
+    float2 widthHeight;
+    uint glyphIndex;
     uint vertexId : SV_VertexID;
 };
 
 struct VertexStageOutput
 {
     float4 position : SV_Position;
-    float2 uvCoords : TEXCOORD;
+    float2 texCoords : TEXCOORD;
     uint glyphIndex : GLYPHINDEX;
 };
 
 [shader("vertex")]
 VertexStageOutput vertexMain(VertexStageInput input)
 {
-    GlyphData glyph = glyphData[input.glyphIndex];
+    float xpos = input.position.x;
+    float ypos = input.position.y;
     
-    float xpos = input.position.x + glyph.bearing.x * scale;
-    float ypos = input.position.y - (glyph.size.y - glyph.bearing.y) * scale;
-    
-    float w = glyph.size.x * scale;
-    float h = glyph.size.y * scale;
+    float w = input.widthHeight.x;
+    float h = input.widthHeight.y;
     
     float4 coordinates[4] = {
         float4(xpos,     ypos,     0, 1),
@@ -52,7 +55,7 @@ VertexStageOutput vertexMain(VertexStageInput input)
     };
     float4 vertex = coordinates[input.vertexId];
     VertexStageOutput output;
-    output.uvCoords = vertex.zw;
+    output.texCoords = vertex.zw;
     output.position = mul(viewData.projectionMatrix, float4(vertex.xy, 0, 1));
     output.glyphIndex = input.glyphIndex;
     return output;
@@ -61,9 +64,9 @@ VertexStageOutput vertexMain(VertexStageInput input)
 [shader("fragment")]
 float4 fragmentMain(
     float4 position : SV_Position,
-    float2 uvCoords : TEXCOORD,
+    float2 texCoords : TEXCOORD,
     uint glyphIndex : GLYPHINDEX
 ) : SV_Target
 {
-    return glyphTextures[glyphIndex].Sample(glyphSampler, uvCoords);
+    return textData.textColor * glyphTextures[glyphIndex].Sample(glyphSampler, texCoords);
 }

@@ -53,6 +53,14 @@ void CameraComponent::moveY(float amount)
     bNeedsViewBuild = true;
 }
 
+void CameraComponent::setViewport(Gfx::PViewport newViewport)
+{
+    viewport = newViewport;
+    aspectRatio = viewport->getSizeX() / (float)viewport->getSizeY();
+
+    bNeedsProjectionBuild = true;
+}
+
 void CameraComponent::buildViewMatrix() 
 {
     Vector eyePos = getAbsoluteTransform().getPosition();

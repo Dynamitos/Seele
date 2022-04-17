@@ -229,10 +229,6 @@ void Window::present()
     while (presentResult != VK_SUCCESS)
     {
         presentResult = vkQueuePresentKHR(graphics->getGraphicsCommands()->getQueue()->getHandle(), &info);
-        if(presentResult == VK_ERROR_OUT_OF_DATE_KHR)
-        {
-            recreateSwapchain(windowState);
-        }
     }
     Gfx::currentFrameIndex = (Gfx::currentFrameIndex + 1)%Gfx::numFramesBuffered;
     static double lastFrameTime = 0.f;

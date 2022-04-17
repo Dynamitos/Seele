@@ -37,21 +37,24 @@ private:
     {
         Vector2 bearing;
         Vector2 size;
+        uint32 advance;
     };
     struct GlyphInstanceData
     {
-        uint32 glyphIndex;
         Vector2 position;
+        Vector2 widthHeight;
+        uint32 glyphIndex;
+    };
+    struct TextData
+    {
+        Vector4 textColor;
+        float scale;
     };
     struct FontData
     {
-        Gfx::PDescriptorSet glyphDataSet;
         Gfx::PDescriptorSet textureArraySet;
+        Array<GlyphData> glyphDataSet;
         Map<uint32, uint32> characterToGlyphIndex;
-        // Logically this should be part of GlyphData,
-        // but because GlyphData mirrors shader data and we need
-        // the advance on the CPU, we need this in a separate structure
-        Map<uint32, uint32> characterAdvance;
     };
     FontData& getFontData(PFontAsset font);
     Map<PFontAsset, FontData> fontData;
@@ -59,9 +62,8 @@ private:
     struct TextResources
     {
         Gfx::PVertexBuffer vertexBuffer;
-        Gfx::PDescriptorSet glyphDataSet;
         Gfx::PDescriptorSet textureArraySet;
-        float scale;
+        TextData textData;
     };
     Array<TextResources> textResources;
 
@@ -70,7 +72,6 @@ private:
     Gfx::PTexture2D depthBuffer;
 
     Gfx::PDescriptorLayout generalLayout;
-    Gfx::PDescriptorLayout glyphDataLayout;
     Gfx::PDescriptorLayout textureArrayLayout;
 
     Gfx::PDescriptorSet generalSet;

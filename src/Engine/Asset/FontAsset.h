@@ -21,9 +21,9 @@ public:
         IVector2 bearing;
         uint32 advance;
     };
-    const Map<uint32, Glyph> getGlyphData() const { return glyphs; }
+    const std::map<uint32, Glyph> getGlyphData() const { return glyphs; }
 private:
-    Map<uint32, Glyph> glyphs;
+    std::map<uint32, Glyph> glyphs;
 };
 DECLARE_REF(FontAsset)
 } // namespace Seele

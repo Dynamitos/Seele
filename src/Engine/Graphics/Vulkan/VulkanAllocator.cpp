@@ -90,16 +90,18 @@ PSubAllocation Allocation::getSuballocation(VkDeviceSize requestedSize, VkDevice
             return nullptr;
         }
     }
-    for (auto& [allocatedOffset, freeAllocation] : freeRanges)
+    for (auto& it : freeRanges)
     {
+        VkDeviceSize allocatedOffset = it.first;
+        PSubAllocation freeAllocation = it.second;
         assert(allocatedOffset == freeAllocation->allocatedOffset);
         VkDeviceSize alignedOffset = align(allocatedOffset, alignment);
         VkDeviceSize alignmentAdjustment = alignedOffset - allocatedOffset;
         VkDeviceSize size = alignmentAdjustment + requestedSize;
         if (freeAllocation->size == size)
         {
-            freeRanges.erase(allocatedOffset);
             activeAllocations[allocatedOffset] = freeAllocation.getHandle();
+            freeRanges.erase(allocatedOffset);
             bytesUsed += size;
             return freeAllocation;
         }
@@ -184,7 +186,10 @@ void Allocation::markFree(SubAllocation *allocation)
         activeAllocations.erase(allocation->allocatedOffset);
     }
     bytesUsed -= allocation->allocatedSize;
-    // TODO: delete allocation when bytesUsed == 0
+    if(bytesUsed == 0)
+    {
+        allocator->free(this);
+    }
 }
 
 Allocator::Allocator(PGraphics graphics)
@@ -230,6 +235,7 @@ PSubAllocation Allocator::allocate(const VkMemoryRequirements2 &memRequirements2
         {
             PAllocation newAllocation = new Allocation(graphics, this, requirements.size, memoryTypeIndex, properties, dedicatedInfo);
             heaps[heapIndex].allocations.add(newAllocation);
+            heaps[heapIndex].inUse += newAllocation->bytesAllocated;
             return newAllocation->getSuballocation(requirements.size, requirements.alignment);
         } 
     }
@@ -245,6 +251,7 @@ PSubAllocation Allocator::allocate(const VkMemoryRequirements2 &memRequirements2
     // no suitable allocations found, allocate new block
     PAllocation newAllocation = new Allocation(graphics, this, (requirements.size > MemoryBlockSize) ? requirements.size : (VkDeviceSize)MemoryBlockSize, memoryTypeIndex, properties, nullptr);
     heaps[heapIndex].allocations.add(newAllocation);
+    heaps[heapIndex].inUse += newAllocation->bytesAllocated;
     return newAllocation->getSuballocation(requirements.size, requirements.alignment);
 }
 
@@ -257,13 +264,13 @@ void Allocator::free(Allocation *allocation)
         {
             if (heap.allocations[i] == allocation)
             {
+                heap.inUse -= allocation->bytesAllocated;
                 heap.allocations.removeAt(i, false);
                 return;
             }
         }
     }
 }
-
 VkResult Allocator::findMemoryType(uint32 typeBits, VkMemoryPropertyFlags properties, uint8 *typeIndex)
 {
     for (uint8 memoryIndex = 0; memoryIndex < memProperties.memoryTypeCount && typeBits; ++memoryIndex)

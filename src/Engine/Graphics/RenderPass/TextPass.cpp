@@ -27,23 +27,38 @@ void TextPass::beginFrame()
         float y = render.position.y;
         for(uint32 c : render.text)
         {
+            const GlyphData& glyph = fontData.glyphDataSet[fontData.characterToGlyphIndex[c]];
+            Vector2 bearing = glyph.bearing;
+            Vector2 size = glyph.size;
+            float xpos = x + bearing.x * render.scale;
+            float ypos = y - (size.y - bearing.y) * render.scale;
+            
+            float w = size.x * render.scale;
+            float h = size.y * render.scale;
+
             instanceData.add(GlyphInstanceData{
+                .position = Vector2(xpos, ypos),
+                .widthHeight = Vector2(w, h),
                 .glyphIndex = fontData.characterToGlyphIndex[c],
-                .position = Vector2(x, y)
             });
-            x += (fontData.characterAdvance[c] >> 6) * render.scale;
+            x += (glyph.advance >> 6) * render.scale;
         }
-        VertexBufferCreateInfo vbInfo;
-        vbInfo.numVertices = static_cast<uint32>(instanceData.size());
-        vbInfo.vertexSize = sizeof(GlyphInstanceData);
-        vbInfo.resourceData.data = reinterpret_cast<uint8*>(instanceData.data());
-        vbInfo.resourceData.size = static_cast<uint32>(instanceData.size() * sizeof(GlyphInstanceData));
+        VertexBufferCreateInfo vbInfo = {
+            .resourceData = {
+                .size = static_cast<uint32>(instanceData.size() * sizeof(GlyphInstanceData)),
+                .data = reinterpret_cast<uint8*>(instanceData.data()),
+                },
+            .vertexSize = sizeof(GlyphInstanceData),
+            .numVertices = static_cast<uint32>(instanceData.size()),
+        };
         resources.vertexBuffer = graphics->createVertexBuffer(vbInfo);
 
-        resources.glyphDataSet = fontData.glyphDataSet;
         resources.textureArraySet = fontData.textureArraySet;
 
-        resources.scale = render.scale;
+        resources.textData = {
+            .textColor = render.textColor,
+            .scale = render.scale,
+        };
     }
     //co_return;
 }
@@ -57,10 +72,10 @@ void TextPass::render()
         Gfx::PRenderCommand command = graphics->createRenderCommand("TextPassCommand");
         command->setViewport(viewport);
         command->bindPipeline(pipeline);
-        command->bindDescriptor({generalSet, resources.glyphDataSet, resources.textureArraySet});
+        command->bindDescriptor({generalSet, resources.textureArraySet});
         command->bindVertexBuffer({VertexInputStream(0, 0, resources.vertexBuffer)});
         
-        command->pushConstants(pipelineLayout, Gfx::SE_SHADER_STAGE_VERTEX_BIT, 0, sizeof(float), &resources.scale);
+        command->pushConstants(pipelineLayout, Gfx::SE_SHADER_STAGE_VERTEX_BIT | Gfx::SE_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(TextData), &resources.textData);
         command->draw(4, static_cast<uint32>(resources.vertexBuffer->getNumVertices()), 0, 0);
         commands.add(command);
     }
@@ -101,18 +116,26 @@ void TextPass::createRenderPass()
     Array<Gfx::VertexElement> elements;
     elements.add({
         .streamIndex = 0, 
-        .offset = offsetof(GlyphInstanceData, glyphIndex), 
-        .vertexFormat = Gfx::SE_FORMAT_R32_UINT, 
+        .offset = offsetof(GlyphInstanceData, position), 
+        .vertexFormat = Gfx::SE_FORMAT_R32G32_SFLOAT, 
         .attributeIndex = 0, 
         .stride = sizeof(GlyphInstanceData), 
         .bInstanced = 1
     });
     elements.add({
         .streamIndex = 0, 
-        .offset = offsetof(GlyphInstanceData, position), 
+        .offset = offsetof(GlyphInstanceData, widthHeight), 
         .vertexFormat = Gfx::SE_FORMAT_R32G32_SFLOAT, 
         .attributeIndex = 1,
         .stride = sizeof(GlyphInstanceData), 
+        .bInstanced = 1
+    });
+    elements.add({
+        .streamIndex = 0,
+        .offset = offsetof(GlyphInstanceData, glyphIndex),
+        .vertexFormat = Gfx::SE_FORMAT_R32_UINT,
+        .attributeIndex = 2,
+        .stride = sizeof(GlyphInstanceData),
         .bInstanced = 1
     });
     declaration = graphics->createVertexDeclaration(elements);
@@ -121,15 +144,10 @@ void TextPass::createRenderPass()
     generalLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
     generalLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_SAMPLER);
     generalLayout->create();
-    
-    glyphDataLayout = graphics->createDescriptorLayout("TextGlyphData");
-    glyphDataLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
-    glyphDataLayout->create();
 
     textureArrayLayout = graphics->createDescriptorLayout("TextTextureArray");
-    textureArrayLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 128, Gfx::SE_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT);
+    textureArrayLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 256, Gfx::SE_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT);
     textureArrayLayout->create();
-
 
     Matrix4 projectionMatrix = glm::ortho(0.f, (float)viewport->getSizeX(), 0.f, (float)viewport->getSizeY());
     projectionBuffer = graphics->createUniformBuffer({
@@ -154,12 +172,11 @@ void TextPass::createRenderPass()
     
     pipelineLayout = graphics->createPipelineLayout();
     pipelineLayout->addDescriptorLayout(0, generalLayout);
-    pipelineLayout->addDescriptorLayout(1, glyphDataLayout);
-    pipelineLayout->addDescriptorLayout(2, textureArrayLayout);
+    pipelineLayout->addDescriptorLayout(1, textureArrayLayout);
     pipelineLayout->addPushConstants({
-        .stageFlags = Gfx::SE_SHADER_STAGE_VERTEX_BIT, 
+        .stageFlags = Gfx::SE_SHADER_STAGE_VERTEX_BIT | Gfx::SE_SHADER_STAGE_FRAGMENT_BIT, 
         .offset = 0, 
-        .size = sizeof(float)});
+        .size = sizeof(TextData)});
     pipelineLayout->create();
 
     Gfx::PRenderTargetLayout layout = new Gfx::RenderTargetLayout(renderTarget, depthAttachment);
@@ -190,34 +207,22 @@ TextPass::FontData& TextPass::getFontData(PFontAsset font)
     if(fontData.exists(font))
     {
         return fontData[font];
-    }
-    const Map<uint32, FontAsset::Glyph>& fontGlyphs = font->getGlyphData();
+    } 
+    const auto& fontGlyphs = font->getGlyphData();
     FontData& fd = fontData[font];
-    Array<GlyphData> buffer;
+    Array<GlyphData> glyphData;
     Array<Gfx::PTexture> textures;
-    buffer.reserve(fontGlyphs.size());
+    glyphData.reserve(fontGlyphs.size());
     for(const auto& [key, value] : fontGlyphs)
     {
-        fd.characterToGlyphIndex[key] = static_cast<uint32>(buffer.size());
-        fd.characterAdvance[key] = value.advance;
-        GlyphData& gd = buffer.add();
+        fd.characterToGlyphIndex[key] = static_cast<uint32>(glyphData.size());
+        GlyphData& gd = glyphData.add();
         gd.bearing = value.bearing;
         gd.size = value.size;
+        gd.advance = value.advance;
         textures.add(value.texture);
     }
-    StructuredBufferCreateInfo bufferInfo = {
-        .resourceData = {
-            .size = static_cast<uint32>(buffer.size() * sizeof(GlyphData)),
-            .data = reinterpret_cast<uint8*>(buffer.data()),
-            },
-        .stride = sizeof(GlyphData),
-        .bDynamic = false,
-    };
-
-    Gfx::PStructuredBuffer glyphBuffer = graphics->createStructuredBuffer(bufferInfo);
-    fd.glyphDataSet = glyphDataLayout->allocateDescriptorSet();
-    fd.glyphDataSet->updateBuffer(0, glyphBuffer);
-    fd.glyphDataSet->writeChanges();
+    fd.glyphDataSet = glyphData;
     
     fd.textureArraySet = textureArrayLayout->allocateDescriptorSet();
     fd.textureArraySet->updateTextureArray(0, textures);

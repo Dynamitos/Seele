@@ -27,19 +27,10 @@ public:
     void addChildComponent(PComponent component);
     virtual void notifySceneAttach(PScene scene);
 
-    //void setAbsoluteLocation(Vector location);
-    //void setAbsoluteRotation(Vector rotation);
-    //void setAbsoluteRotation(Quaternion rotation);
-    //void setWorldScale(Vector scale);
-
     void setRelativeLocation(Vector location);
     void setRelativeRotation(Vector rotation);
     void setRelativeRotation(Quaternion rotation);
     void setRelativeScale(Vector scale);
-
-    //void addAbsoluteTranslation(Vector translation);
-    //void addAbsoluteRotation(Vector rotation);
-    //void addAbsoluteRotation(Quaternion rotation);
 
     void addRelativeLocation(Vector translation);
     void addRelativeRotation(Vector rotation);

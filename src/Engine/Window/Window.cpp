@@ -36,10 +36,6 @@ void Window::render()
             view->render();
         }
         gfxHandle->endFrame();
-        if(owner->isActive())
-        {
-            render();
-        }
     }
     //co_return;
 }

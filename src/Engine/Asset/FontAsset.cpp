@@ -37,11 +37,13 @@ uint8 transparentPixel = 0;
 void FontAsset::load()
 {
     FT_Library ft;
-    assert(!FT_Init_FreeType(&ft));
+    FT_Error error = FT_Init_FreeType(&ft);
+    assert(!error);
     FT_Face face;
-    assert(!FT_New_Face(ft, getFullPath().c_str(), 0, &face));
+    error = FT_New_Face(ft, getFullPath().c_str(), 0, &face);
+    assert(!error);
     FT_Set_Pixel_Sizes(face, 0, 48);
-    for(uint8 c = 0; c < 128; ++c)
+    for(uint32 c = 0; c < 256; ++c)
     {
         Gfx::PGraphics graphics = WindowManager::getGraphics();
         if(FT_Load_Char(face, c, FT_LOAD_RENDER))
@@ -61,6 +63,10 @@ void FontAsset::load()
         imageData.resourceData.size = imageData.width * imageData.height;
         if(imageData.width == 0 || imageData.width == 0)
         {
+            glyph.size.x = 1;
+            glyph.size.y = 1;
+            glyph.bearing.x = 0;
+            glyph.bearing.y = 0;
             imageData.width = 1;
             imageData.height = 1;
             imageData.resourceData.size = sizeof(uint8);

@@ -18,6 +18,7 @@ Seele::SceneView::SceneView(Gfx::PGraphics graphics, PWindow owner, const Viewpo
     , lightCullingPass(LightCullingPass(graphics, viewport, activeCamera))
     , basePass(BasePass(graphics, viewport, activeCamera))
 {
+    activeCamera->getCameraComponent()->setViewport(viewport);
     scene = new Scene(graphics);
     scene->addActor(activeCamera);
     AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Ayaka\\Avatar_Girl_Sword_Ayaka_Tex_Body_Diffuse.png");
