@@ -1,30 +1,76 @@
-struct VertexStageOutput
+struct RenderElementStyle
 {
-    float4 position : SV_Position;
-    float2 uvCoords : TEXCOORD;
+    float3 position;
+    uint backgroundImageIndex;
+    float3 backgroundColor;
+    float opacity;
+    //float4 borderBottomColor;
+    //float4 borderLeftColor;
+    //float4 borderRightColor;
+    //float4 borderTopColor;
+    //float borderBottomLeftRadius;
+    //float borderBottomRightRadius;
+    //float borderTopLeftRadius;
+    //float borderTopRightRadius;
+    float2 dimensions;
 };
 
+struct ViewData
+{
+    float4x4 projectionMatrix;
+};
+
+layout(set = 0, binding = 0)
+ConstantBuffer<ViewData> viewData;
+
+layout(set = 0, binding = 1)
+SamplerState backgroundSampler;
+
+layout(set = 0, binding = 2)
+ConstantBuffer<uint> numBackgroundTextures;
+
+layout(set = 0, binding = 3)
+Texture2D<float4> backgroundTextures[];
+
+struct VertexStageOutput
+{
+    float4 position  : SV_Position;
+    float2 texCoords : TEXCOORD;
+    RenderElementStyle style : RENDER_STYLE;
+};
 
 [shader("vertex")]
-VertexStageOutput vertexMain(uint vertexId : SV_VertexID)
+VertexStageOutput vertexMain(uint vertexId : SV_VertexID, RenderElementStyle style)
 {
-    float2 coordinates[4] = {
-        float2(0, 0),
-        float2(0, 1),
-        float2(1, 0),
-        float2(1, 1)
+    float xMin = style.position.x;
+    float xMax = xMin + style.dimensions.x;
+    float yMin = style.position.y;
+    float yMax = yMin + style.dimensions.y;
+    float4 coordinates[] = {
+        float4(xMin, yMin, 0, 0),
+        float4(xMin, yMax, 0, 1),
+        float4(xMax, yMin, 1, 0),
+        float4(xMax, yMax, 1, 1)
     };
     VertexStageOutput output;
-    output.uvCoords = coordinates[vertexId];
-    output.position = float4(output.uvCoords * 2 - 1, 1, 1);
+    output.position = mul(viewData.projectionMatrix, float4(coordinates[vertexId].xy, style.position.z, 1));
+    output.texCoords = coordinates[vertexId].zw;
+    output.style = style;
     return output;
 }
 
 [shader("fragment")]
 float4 fragmentMain(
     float4 position : SV_Position,
-    float2 uvCoords : TEXCOORD
+    float2 texCoords : TEXCOORD,
+    RenderElementStyle style : RENDER_STYLE
 ) : SV_Target
 {
-    return float4(0, 1, 0, 1);
+    float4 bgTextureColor = float4(1, 1, 1, 1);
+    uint imageIndex = style.backgroundImageIndex;
+    if(imageIndex < numBackgroundTextures)
+    {
+        bgTextureColor = backgroundTextures[imageIndex].Sample(backgroundSampler, texCoords);
+    }
+    return float4(style.backgroundColor, style.opacity) * bgTextureColor;
 }

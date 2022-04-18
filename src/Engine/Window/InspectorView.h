@@ -28,7 +28,7 @@ protected:
     UIPassData uiPassData;
     TextPassData textPassData;
 
-    UI::PPanel rootPanel;
+    UI::PSystem uiSystem;
     PActor selectedActor;
     
 	virtual void keyCallback(KeyCode code, InputAction action, KeyModifier modifier) override;

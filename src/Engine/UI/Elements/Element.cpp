@@ -1,5 +1,6 @@
 #include "Element.h"
 #include "UI/System.h"
+#include "Graphics/Graphics.h"
 
 using namespace Seele;
 using namespace Seele::UI;

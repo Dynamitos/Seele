@@ -65,7 +65,7 @@ private:
         Gfx::PDescriptorSet textureArraySet;
         TextData textData;
     };
-    Array<TextResources> textResources;
+    std::map<PFontAsset, Array<TextResources>> textResources;
 
     Gfx::PRenderTargetAttachment renderTarget;
     Gfx::PRenderTargetAttachment depthAttachment;

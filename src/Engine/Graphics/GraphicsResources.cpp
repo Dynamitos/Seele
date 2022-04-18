@@ -210,12 +210,12 @@ StructuredBuffer::~StructuredBuffer()
 
 bool StructuredBuffer::updateContents(const BulkResourceData& resourceData) 
 {
-	assert(contents.size() == resourceData.size);
-	if(std::memcmp(contents.data(), resourceData.data, contents.size()) == 0)
+	assert(contents.size() >= resourceData.size);
+	if(std::memcmp(contents.data(), resourceData.data, resourceData.size) == 0)
 	{
 		return false;
 	}
-	std::memcpy(contents.data(), resourceData.data, contents.size());
+	std::memcpy(contents.data(), resourceData.data, resourceData.size);
 	return true;
 }
 VertexBuffer::VertexBuffer(QueueFamilyMapping mapping, uint32 numVertices, uint32 vertexSize, QueueType startQueueType)

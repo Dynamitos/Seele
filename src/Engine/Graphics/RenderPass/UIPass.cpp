@@ -17,6 +17,23 @@ UIPass::~UIPass()
 
 void UIPass::beginFrame() 
 {
+    VertexBufferCreateInfo info = {
+        .resourceData = {
+            .size = (uint32)(sizeof(UI::RenderElementStyle) * passData.renderElements.size()),
+            .data = (uint8*)passData.renderElements.data()
+        },
+        .vertexSize = sizeof(UI::RenderElementStyle),
+        .numVertices = (uint32)passData.renderElements.size(),
+    };
+    elementBuffer = graphics->createVertexBuffer(info);
+    uint32 numTextures = passData.usedTextures.size();
+    numTexturesBuffer->updateContents({
+        .size = sizeof(uint32),
+        .data = (uint8*)&numTextures,
+    });
+    descriptorSet->updateBuffer(2, numTexturesBuffer);
+    descriptorSet->updateTextureArray(3, passData.usedTextures);
+    descriptorSet->writeChanges();
     //co_return;
 }
 
@@ -26,7 +43,9 @@ void UIPass::render()
     Gfx::PRenderCommand command = graphics->createRenderCommand("UIPassCommand");
     command->setViewport(viewport);
     command->bindPipeline(pipeline);
-    command->draw(4, 1, 0, 0);
+    command->bindVertexBuffer({VertexInputStream(0, 0, elementBuffer)});
+    command->bindDescriptor(descriptorSet);
+    command->draw(4, passData.renderElements.size(), 0, 0);
     graphics->executeCommands(Array<Gfx::PRenderCommand>({command}));
     graphics->endRenderPass();
     //co_return;
@@ -72,8 +91,84 @@ void UIPass::createRenderPass()
     createInfo.name = "UIFragment";
     createInfo.entryPoint =  "fragmentMain";
     fragmentShader = graphics->createFragmentShader(createInfo);
-    declaration = graphics->createVertexDeclaration({});
+    Array<Gfx::VertexElement> decl;
+    decl.add({
+        .streamIndex = 0,
+        .offset = offsetof(UI::RenderElementStyle, position),
+        .vertexFormat = Gfx::SE_FORMAT_R32G32B32_SFLOAT,
+        .attributeIndex = 0,
+        .stride = sizeof(UI::RenderElementStyle),
+        .bInstanced = 1
+    });
+    decl.add({
+        .streamIndex = 0,
+        .offset = offsetof(UI::RenderElementStyle, backgroundImageIndex),
+        .vertexFormat = Gfx::SE_FORMAT_R32_UINT,
+        .attributeIndex = 1,
+        .stride = sizeof(UI::RenderElementStyle),
+        .bInstanced = 1
+    });
+    decl.add({
+        .streamIndex = 0,
+        .offset = offsetof(UI::RenderElementStyle, backgroundColor),
+        .vertexFormat = Gfx::SE_FORMAT_R32G32B32_SFLOAT,
+        .attributeIndex = 2,
+        .stride = sizeof(UI::RenderElementStyle),
+        .bInstanced = 1
+    });
+    decl.add({
+        .streamIndex = 0,
+        .offset = offsetof(UI::RenderElementStyle, opacity),
+        .vertexFormat = Gfx::SE_FORMAT_R32_SFLOAT,
+        .attributeIndex = 3,
+        .stride = sizeof(UI::RenderElementStyle),
+        .bInstanced = 1
+    });
+    decl.add({
+        .streamIndex = 0,
+        .offset = offsetof(UI::RenderElementStyle, dimensions),
+        .vertexFormat = Gfx::SE_FORMAT_R32G32_SFLOAT,
+        .attributeIndex = 4,
+        .stride = sizeof(UI::RenderElementStyle),
+        .bInstanced = 1
+    });
+    declaration = graphics->createVertexDeclaration(decl);
+
+    descriptorLayout = graphics->createDescriptorLayout("UIDescriptorLayout");
+    descriptorLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+    descriptorLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_SAMPLER);
+    descriptorLayout->addDescriptorBinding(2, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+    descriptorLayout->addDescriptorBinding(3, Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 256, Gfx::SE_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT | Gfx::SE_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT);
+    descriptorLayout->create();
+
+    Matrix4 projectionMatrix = glm::ortho(0, 1, 1, 0);
+    UniformBufferCreateInfo info = {
+        .resourceData = {
+            .size = sizeof(Matrix4),
+            .data = (uint8*)&projectionMatrix,
+        },
+        .bDynamic = false,
+    };
+    Gfx::PUniformBuffer uniformBuffer = graphics->createUniformBuffer(info);
+    Gfx::PSamplerState backgroundSampler = graphics->createSamplerState({});
+
+    info = {
+        .resourceData = {
+            .size = sizeof(uint32),
+            .data = nullptr
+        },
+        .bDynamic = true,
+    };
+
+    numTexturesBuffer = graphics->createUniformBuffer(info);
+
+    descriptorSet = descriptorLayout->allocateDescriptorSet();
+    descriptorSet->updateBuffer(0, uniformBuffer);
+    descriptorSet->updateSampler(1, backgroundSampler);
+    descriptorSet->writeChanges();
+
     pipelineLayout = graphics->createPipelineLayout();
+    pipelineLayout->addDescriptorLayout(0, descriptorLayout);
     pipelineLayout->create();
 
     Gfx::PRenderTargetLayout layout = new Gfx::RenderTargetLayout(renderTarget, depthAttachment);

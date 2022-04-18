@@ -36,7 +36,6 @@ protected:
     PSystem system;
     PElement parent;
     Array<PElement> children;
-    friend class Layout;
     friend class RenderElement;
 };
 DEFINE_REF(Element)

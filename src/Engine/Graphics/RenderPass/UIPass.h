@@ -9,7 +9,8 @@ DECLARE_NAME_REF(Gfx, Texture2D)
 DECLARE_NAME_REF(Gfx, RenderTargetAttachment)
 struct UIPassData
 {
-    const UI::RenderHierarchy hierarchy;
+    Array<UI::RenderElementStyle> renderElements;
+    Array<Gfx::PTexture> usedTextures;
 };
 class UIPass : public RenderPass<UIPassData>
 {
@@ -25,6 +26,12 @@ private:
     Gfx::PRenderTargetAttachment renderTarget;
     Gfx::PRenderTargetAttachment depthAttachment;
     Gfx::PTexture2D depthBuffer;
+
+    Gfx::PDescriptorLayout descriptorLayout;
+    Gfx::PDescriptorSet descriptorSet;
+
+    Gfx::PUniformBuffer numTexturesBuffer;
+    Gfx::PVertexBuffer elementBuffer;
 
     Gfx::PVertexDeclaration declaration;
     Gfx::PVertexShader vertexShader;

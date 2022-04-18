@@ -21,7 +21,7 @@ void TextPass::beginFrame()
     for(TextRender& render : passData.texts)
     {
         FontData& fontData = getFontData(render.font);
-        TextResources& resources = textResources.add();
+        TextResources& resources = textResources[render.font].add();
         Array<GlyphInstanceData> instanceData;
         float x = render.position.x;
         float y = render.position.y;
@@ -67,16 +67,19 @@ void TextPass::render()
 {
     graphics->beginRenderPass(renderPass);
     Array<Gfx::PRenderCommand> commands;
-    for(TextResources& resources : textResources)
+    for(const auto& [fontAsset, resources] : textResources)
     {
         Gfx::PRenderCommand command = graphics->createRenderCommand("TextPassCommand");
         command->setViewport(viewport);
         command->bindPipeline(pipeline);
-        command->bindDescriptor({generalSet, resources.textureArraySet});
-        command->bindVertexBuffer({VertexInputStream(0, 0, resources.vertexBuffer)});
-        
-        command->pushConstants(pipelineLayout, Gfx::SE_SHADER_STAGE_VERTEX_BIT | Gfx::SE_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(TextData), &resources.textData);
-        command->draw(4, static_cast<uint32>(resources.vertexBuffer->getNumVertices()), 0, 0);
+        for(const auto& resource : resources)
+        {
+            command->bindDescriptor({generalSet, resource.textureArraySet});
+            command->bindVertexBuffer({VertexInputStream(0, 0, resource.vertexBuffer)});
+            
+            command->pushConstants(pipelineLayout, Gfx::SE_SHADER_STAGE_VERTEX_BIT | Gfx::SE_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(TextData), &resource.textData);
+            command->draw(4, static_cast<uint32>(resource.vertexBuffer->getNumVertices()), 0, 0);
+        }
         commands.add(command);
     }
     graphics->executeCommands(commands);

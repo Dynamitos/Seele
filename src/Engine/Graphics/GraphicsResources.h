@@ -362,12 +362,12 @@ class VertexBuffer : public Buffer
 public:
     VertexBuffer(QueueFamilyMapping mapping, uint32 numVertices, uint32 vertexSize, QueueType startQueueType);
     virtual ~VertexBuffer();
-    inline uint32 getNumVertices()
+    constexpr uint32 getNumVertices() const
     {
         return numVertices;
     }
     // Size of one vertex in bytes
-    inline uint32 getVertexSize()
+    constexpr uint32 getVertexSize() const
     {
         return vertexSize;
     }

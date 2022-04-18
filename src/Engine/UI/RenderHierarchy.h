@@ -9,23 +9,20 @@ namespace UI
 {
 struct RenderElementStyle
 {
-    Vector2 position;
-    Vector2 dimensions;
-    Vector backgroundColor;
-    uint32 backgroundImageIndex;
-    Vector4 borderBottomColor;
-    Vector4 borderLeftColor;
-    Vector4 borderRightColor;
-    Vector4 borderTopColor;
-    float borderBottomLeftRadius;
-    float borderBottomRightRadius;
-    float borderTopLeftRadius;
-    float borderTopRightRadius;
-    Vector4 fontColor;
-    float fontSize;
-    float opacity;
+    Vector position = Vector(0, 0, 0);
+    uint32 backgroundImageIndex = -1;
+    Vector backgroundColor = Vector(1, 1, 1);
+    float opacity = 1.0f;
+    //Vector4 borderBottomColor = Vector4(1, 1, 1, 1);
+    //Vector4 borderLeftColor = Vector4(1, 1, 1, 1);
+    //Vector4 borderRightColor = Vector4(1, 1, 1, 1);
+    //Vector4 borderTopColor = Vector4(1, 1, 1, 1);
+    //float borderBottomLeftRadius = 0;
+    //float borderBottomRightRadius = 0;
+    //float borderTopLeftRadius = 0;
+    //float borderTopRightRadius = 0;
+    Vector2 dimensions = Vector2(1, 1);
 };
-static_assert(sizeof(RenderElementStyle) == 34*4);
 class RenderElement
 {
 public:

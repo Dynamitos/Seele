@@ -1,10 +1,11 @@
 #pragma once
-#include "Elements/Element.h"
+#include "MinimalEngine.h"
 
 namespace Seele
 {
 namespace UI
 {
+DECLARE_REF(Element);
 class Layout
 {
 public:
