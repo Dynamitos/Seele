@@ -1,6 +1,10 @@
 target_sources(Engine
     PRIVATE
+        Button.h
+        Button.cpp
         Element.h
         Element.cpp
+        Label.h
+        Label.cpp
         Panel.h
         Panel.cpp)

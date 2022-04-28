@@ -61,6 +61,11 @@ set(GLFW_VULKAN_STATIC OFF CACHE BOOL "GLFW vulkan static")
 
 add_subdirectory(${GLFW_ROOT} ${GLFW_ROOT})
 
+#--------------EnTT------------------------------
+list(APPEND DEPENDENCIES EnTT)
+
+add_subdirectory(${ENTT_ROOT} ${ENTT_ROOT})
+
 #--------------FreeType------------------------------
 list(APPEND DEPENDENCIES freetype)
 
