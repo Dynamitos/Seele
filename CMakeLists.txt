@@ -1,5 +1,8 @@
-cmake_minimum_required(VERSION 3.19)
+cmake_minimum_required(VERSION 3.7...3.23)
 
+if(${CMAKE_VERSION} VERSION_LESS 3.12)
+    cmake_policy(VERSION ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION})
+endif()
 set(CMAKE_CXX_STANDARD 20)
 
 # Handle superbuild first
@@ -26,15 +29,9 @@ set(NSAM_ROOT ${EXTERNAL_ROOT}/aftermath)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/)
 set(Boost_NO_WARN_NEW_VERSIONS 1)
 
-if (USE_SUPERBUILD)
-  project (SUPERBUILD NONE)
-  # execute the superbuild (this script will be invoked again without the
-  # USE_SUPERBUILD option this time)
-  include (cmake/SuperBuild.cmake)
-  return()                      # stop processing this file further
-else()
-  project (Seele)
-endif()
+project (Seele)
+
+include(cmake/Superbuild.cmake)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE})
 #Workaround for vs, because it places artifacts into an additional subfolder
@@ -48,21 +45,7 @@ endif()
 
 find_package(Vulkan REQUIRED)
 find_package(Boost REQUIRED COMPONENTS serialization)
-find_package(Threads REQUIRED)
-find_package(Assimp REQUIRED)
-find_package(JSON REQUIRED)
-find_package(GLFW REQUIRED)
-find_package(FreeType REQUIRED)
-find_package(TTFParser REQUIRED)
-find_package(GLM REQUIRED)
-find_package(KTX REQUIRED)
-find_package(STB REQUIRED)
-find_package(SLANG REQUIRED)
-find_package(Aftermath REQUIRED)
 
-add_definitions(${Vulkan_DEFINITIONS})
-add_definitions(${Boost_DEFINITIONS})
-add_compile_definitions(GLFW_WINDOWS)
 if(WIN32)
   add_compile_definitions(USE_EXTENSIONS)
 endif()
@@ -71,29 +54,21 @@ if(CMAKE_DEBUG_POSTFIX)
   add_compile_definitions(SEELE_DEBUG)
 endif()
 add_executable(Engine "")
-target_include_directories(Engine PRIVATE ${GLM_INCLUDE_DIRS})
-target_include_directories(Engine PRIVATE ${KTX_INCLUDE_DIRS})
-target_include_directories(Engine PRIVATE ${STB_INCLUDE_DIRS})
-target_include_directories(Engine PRIVATE ${Vulkan_INCLUDE_DIR})
-target_include_directories(Engine PRIVATE ${Boost_INCLUDE_DIRS})
-target_include_directories(Engine PRIVATE ${GLFW_INCLUDE_DIRS})
-target_include_directories(Engine PRIVATE ${FREETYPE_INCLUDE_DIRS})
-target_include_directories(Engine PRIVATE ${SLANG_INCLUDE_DIRS})
-target_include_directories(Engine PRIVATE ${ASSIMP_INCLUDE_DIRS})
-target_include_directories(Engine PRIVATE ${JSON_INCLUDE_DIRS})
-target_include_directories(Engine PRIVATE ${NSAM_INCLUDE_DIRS})
-target_include_directories(Engine PRIVATE ${TTFPARSER_INCLUDE_DIRS})
-target_include_directories(Engine PRIVATE ${ENGINE_ROOT})
-target_include_directories(Engine PRIVATE src/Engine)
-
-target_link_libraries(Engine ${Vulkan_LIBRARY})
-target_link_libraries(Engine ${Boost_LIBRARIES})
-target_link_libraries(Engine ${GLFW_LIBRARIES})
-target_link_libraries(Engine ${FREETYPE_LIBRARIES})
-target_link_libraries(Engine ${SLANG_LIBRARIES})
-target_link_libraries(Engine ${ASSIMP_LIBRARIES})
-target_link_libraries(Engine ${NSAM_LIBRARIES})
-target_link_libraries(Engine ${KTX_LIBRARIES})
+target_compile_definitions(Engine PUBLIC GLFW_WINDOWS)
+target_include_directories(Engine PUBLIC src/Engine)
+target_link_libraries(Engine PUBLIC Vulkan::Vulkan)
+target_link_libraries(Engine PUBLIC Boost::headers)
+target_link_libraries(Engine PUBLIC Boost::serialization)
+target_link_libraries(Engine PUBLIC EnTT::EnTT)
+target_link_libraries(Engine PUBLIC glfw)
+target_link_libraries(Engine PUBLIC glm::glm)
+target_link_libraries(Engine PUBLIC freetype)
+target_link_libraries(Engine PUBLIC slang)
+target_link_libraries(Engine PUBLIC assimp)
+target_link_libraries(Engine PUBLIC nsam)
+target_link_libraries(Engine PUBLIC ktx)
+target_link_libraries(Engine PUBLIC stb)
+target_link_libraries(Engine PUBLIC nlohmann_json::nlohmann_json)
 if(UNIX)
   target_link_libraries(Engine Threads::Threads)
   target_link_libraries(Engine dl)
@@ -128,22 +103,13 @@ endif()
 add_executable(Seele_unit_tests "")
 add_subdirectory(test/)
 
-if(WIN32)
-  add_custom_target(copy-binaries ALL
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SLANG_BINARIES} $<TARGET_FILE_DIR:Engine>
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SLANG_GLSLANG} $<TARGET_FILE_DIR:Engine>
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${GLFW_BINARY} $<TARGET_FILE_DIR:Engine>
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${FREETYPE_BINARY} $<TARGET_FILE_DIR:Engine>
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${ASSIMP_BINARY} $<TARGET_FILE_DIR:Engine>
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${NSAM_BINARIES} $<TARGET_FILE_DIR:Engine>
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${NSAM_LLVM} $<TARGET_FILE_DIR:Engine>
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${KTX_BINARIES} $<TARGET_FILE_DIR:Engine>)
-else()
-  add_custom_target(copy-binaries ALL COMMAND "")
-endif()
-
 add_custom_target(SeeleEngine ALL
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/res $<TARGET_FILE_DIR:Engine>
-	DEPENDS Engine copy-binaries)
+  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:Engine> $<TARGET_FILE_DIR:Engine>
+  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_PROPERTY:slang,SLANG_BINARY> $<TARGET_FILE_DIR:Engine>
+  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_PROPERTY:slang,GLSLANG_BINARY> $<TARGET_FILE_DIR:Engine>
+  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_PROPERTY:nsam,NSAM_BINARY> $<TARGET_FILE_DIR:Engine>
+  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_PROPERTY:nsam,LLVM_BINARY> $<TARGET_FILE_DIR:Engine>
+  COMMAND_EXPAND_LISTS
+	DEPENDS Engine slang-build)
 
-  

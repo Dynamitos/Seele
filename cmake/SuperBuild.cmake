@@ -1,57 +1,39 @@
 include (ExternalProject)
 
-set(DEPENDENCIES)
-set(EXTRA_CMAKE_ARGS)
 #------------ASSIMP---------------
-list(APPEND DEPENDENCIES assimp)
 set(ASSIMP_BUILD_TESTS OFF CACHE INTERNAL "")
 set(ASSIMP_BUILD_SAMPLES OFF CACHE INTERNAL "")
 set(ASSIMP_BUILD_OVERALLS OFF CACHE INTERNAL "")
 set(BUILD_SHARED_LIBS ON CACHE INTERNAL "")
 
-add_subdirectory(${ASSIMP_ROOT} ${ASSIMP_ROOT})
+add_subdirectory(${ASSIMP_ROOT})
 target_compile_definitions(assimp PRIVATE _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
 if(WIN32)
-	target_compile_options(assimp PRIVATE /WX-)
+    target_compile_options(assimp PRIVATE /WX-)
 else()
-	target_compile_options(assimp PRIVATE -Wno-error -fPIC)
-	target_compile_options(IrrXML PRIVATE -fPIC)
+    target_compile_options(assimp PRIVATE -Wno-error -fPIC)
+    target_compile_options(IrrXML PRIVATE -fPIC)
 endif()
 #-------------BOOST----------------
-list(APPEND DEPENDENCIES boost)
-if(WIN32)
-	set(BOOTSTRAP_EXTENSION bat)
-else()
-	set(BOOTSTRAP_EXTENSION sh)
-endif()
-ExternalProject_Add(boost
-	SOURCE_DIR ${BOOST_ROOT}
-	CONFIGURE_COMMAND ./bootstrap.${BOOTSTRAP_EXTENSION} --with-libraries=serialization,test
-	BUILD_COMMAND ./b2 -d0 -link=shared
-	BUILD_IN_SOURCE 1
-	INSTALL_COMMAND "")
-
-list (APPEND EXTRA_CMAKE_ARGS
-	-DBoost_NO_SYSTEM_PATHS=ON)
+add_subdirectory(${BOOST_ROOT})
 
 #-----------------KTX----------------------------
-list(APPEND DEPENDENCIES ktx)
-
 find_program(BASH_EXECUTABLE git-bash)
 set(KTX_FEATURE_TESTS off)
 
 add_subdirectory(${KTX_ROOT} ${KTX_ROOT})
 
 #--------------------JSON------------------
-list(APPEND DEPENDENCIES nlohmann_json)
 set(JSON_MultipleHeaders ON CACHE INTERNAL "")
 set(JSON_BuildTests OFF CACHE INTERNAL "")
 set(JSON_Install OFF CACHE INTERNAL "")
 
-add_subdirectory(${JSON_ROOT} ${JSON_ROOT})
+add_subdirectory(${JSON_ROOT})
+
+#--------------GLM------------------------------
+add_subdirectory(${GLM_ROOT})
 
 #--------------GLFW------------------------------
-list(APPEND DEPENDENCIES glfw)
 set(ENKITS_BUILD_EXAMPLES OFF CACHE BOOL "Build basic example applications" )
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL  "GLFW lib only" )
 set(GLFW_BUILD_TESTS OFF CACHE BOOL  "GLFW lib only" )
@@ -59,43 +41,50 @@ set(GLFW_BUILD_DOCS OFF CACHE BOOL  "GLFW lib only" )
 set(GLFW_BUILD_INSTALL OFF CACHE BOOL  "GLFW lib only" )
 set(GLFW_VULKAN_STATIC OFF CACHE BOOL "GLFW vulkan static")
 
-add_subdirectory(${GLFW_ROOT} ${GLFW_ROOT})
+add_subdirectory(${GLFW_ROOT})
 
 #--------------EnTT------------------------------
-list(APPEND DEPENDENCIES EnTT)
-
-add_subdirectory(${ENTT_ROOT} ${ENTT_ROOT})
+add_subdirectory(${ENTT_ROOT})
 
 #--------------FreeType------------------------------
-list(APPEND DEPENDENCIES freetype)
+add_subdirectory(${FREETYPE_ROOT})
 
-add_subdirectory(${FREETYPE_ROOT} ${FREETYPE_ROOT})
+#--------------STB-----------------------------------
+add_library(stb INTERFACE)
+
+target_include_directories(stb INTERFACE ${STB_ROOT})
+
+#--------------Aftermath------------------------------
+add_library(nsam INTERFACE)
+
+target_include_directories(nsam INTERFACE ${NSAM_ROOT}/include)
+target_link_libraries(nsam INTERFACE ${NSAM_ROOT}/lib/${CMAKE_PLATFORM}/*.lib)
+set_target_properties(nsam PROPERTIES NSAM_BINARY ${NSAM_ROOT}/lib/${CMAKE_PLATFORM}/GFSDK_Aftermath_Lib.${CMAKE_PLATFORM}.dll)
+set_target_properties(nsam PROPERTIES LLVM_BINARY ${NSAM_ROOT}/lib/${CMAKE_PLATFORM}/llvm_7_0_1.dll)
+
 
 #--------------SLang------------------------------
-list(APPEND DEPENDENCIES slang)
 string(TOLOWER release_${CMAKE_PLATFORM} SLANG_CONFIG)
 if(WIN32)
-ExternalProject_Add(slang
-	SOURCE_DIR ${SLANG_ROOT}
-	BINARY_DIR ${SLANG_ROOT}
-	CONFIGURE_COMMAND premake.bat vs2019 --file=${CMAKE_SOURCE_DIR}/external/slang/premake5.lua gmake --arch=${CMAKE_PLATFORM} --deps=true
-	BUILD_COMMAND msbuild slang.sln -p:Configuration=Release -p:Platform=${CMAKE_PLATFORM}
-	INSTALL_COMMAND "")
+string(TOLOWER ${SLANG_ROOT}/bin/windows-${CMAKE_PLATFORM}/release SLANG_BINARY_DIR)
+ExternalProject_Add(slang-build
+    SOURCE_DIR ${SLANG_ROOT}
+    BINARY_DIR ${SLANG_ROOT}
+    CONFIGURE_COMMAND ${SLANG_ROOT}/premake.bat vs2019 --file=${CMAKE_SOURCE_DIR}/external/slang/premake5.lua gmake --arch=${CMAKE_PLATFORM} --deps=true
+    BUILD_COMMAND msbuild slang.sln -p:Configuration=Release -p:Platform=${CMAKE_PLATFORM}
+    INSTALL_COMMAND "")
 elseif(UNIX)
-ExternalProject_Add(slang
-	SOURCE_DIR ${SLANG_ROOT}
-	BINARY_DIR ${SLANG_ROOT}
-	CONFIGURE_COMMAND ${CMAKE_SOURCE_DIR}/premake5 --file=${CMAKE_SOURCE_DIR}/external/slang/premake5.lua gmake --arch=${CMAKE_PLATFORM} --deps=true --build-location=build/linux
-	BUILD_COMMAND make -C ${CMAKE_SOURCE_DIR}/external/slang/build/linux config=${SLANG_CONFIG}
-	INSTALL_COMMAND "")
+ExternalProject_Add(slang-build
+    SOURCE_DIR ${SLANG_ROOT}
+    BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}
+    CONFIGURE_COMMAND ${CMAKE_SOURCE_DIR}/premake5 --file=${CMAKE_SOURCE_DIR}/external/slang/premake5.lua gmake --arch=${CMAKE_PLATFORM} --deps=true --build-location=build/linux
+    BUILD_COMMAND make -C ${CMAKE_SOURCE_DIR}/external/slang/build/linux config=${SLANG_CONFIG}
+    INSTALL_COMMAND "")
 endif()
 
+add_library(slang INTERFACE)
 
-#-----------------SeeleEngine--------------------
-ExternalProject_Add(SeeleEngine
-	DEPENDS ${DEPENDENCIES}
-	SOURCE_DIR ${PROJECT_SOURCE_DIR}
-	PREFIX ${CMAKE_BINARY_DIR}
-	BINARY_DIR ${CMAKE_BINARY_DIR}
-	CMAKE_ARGS -DUSE_SUPERBUILD=OFF ${EXTRA_CMAKE_ARGS}
-	INSTALL_COMMAND "")
+target_include_directories(slang INTERFACE ${SLANG_ROOT})
+target_link_libraries(slang INTERFACE ${SLANG_BINARY_DIR}/*.lib)
+set_target_properties(slang PROPERTIES SLANG_BINARY ${SLANG_BINARY_DIR}/slang.dll)
+set_target_properties(slang PROPERTIES GLSLANG_BINARY ${SLANG_BINARY_DIR}/slang-glslang.dll)
