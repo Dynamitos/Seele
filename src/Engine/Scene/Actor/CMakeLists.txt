@@ -1,5 +1,5 @@
 target_sources(Engine
-    PRIVATE
+    PUBLIC
         Actor.cpp
         Actor.h
         CameraActor.cpp

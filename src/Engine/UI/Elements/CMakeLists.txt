@@ -1,5 +1,5 @@
 target_sources(Engine
-    PRIVATE
+    PUBLIC
         Button.h
         Button.cpp
         Element.h

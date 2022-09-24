@@ -30,14 +30,14 @@
             ]
         },
         {
-            "name": "Engine Debug",
+            "name": "Editor Debug",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceRoot}/bin/Debug/Engine.exe",
+            "program": "${workspaceRoot}/bin/Debug/Editor.exe",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceRoot}/bin/Debug",
-            "console": "integratedTerminal",
+            "console": "internalConsole",
             "environment": [],
             "symbolSearchPath": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.25.28610\\lib\\x64",
             "requireExactSource": false,
@@ -50,10 +50,10 @@
             }
         },
         {
-            "name": "Engine Release",
+            "name": "Editor Release",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceRoot}/bin/Release/Engine.exe",
+            "program": "${workspaceRoot}/bin/Release/Editor.exe",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceRoot}/bin/Release",

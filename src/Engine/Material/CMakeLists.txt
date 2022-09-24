@@ -1,5 +1,5 @@
 target_sources(Engine
-    PRIVATE
+    PUBLIC
         BRDF.h
         BRDF.cpp
         MaterialAsset.h

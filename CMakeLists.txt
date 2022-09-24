@@ -53,7 +53,8 @@ if(CMAKE_DEBUG_POSTFIX)
   add_compile_definitions(ENABLE_VALIDATION)
   add_compile_definitions(SEELE_DEBUG)
 endif()
-add_executable(Engine "")
+add_library(Engine "")
+add_executable(Editor "")
 target_compile_definitions(Engine PUBLIC GLFW_WINDOWS)
 target_include_directories(Engine PUBLIC src/Engine)
 target_link_libraries(Engine PUBLIC Vulkan::Vulkan)
@@ -70,11 +71,11 @@ target_link_libraries(Engine PUBLIC ktx)
 target_link_libraries(Engine PUBLIC stb)
 target_link_libraries(Engine PUBLIC nlohmann_json::nlohmann_json)
 if(UNIX)
-  target_link_libraries(Engine Threads::Threads)
-  target_link_libraries(Engine dl)
+target_link_libraries(Engine Threads::Threads)
+target_link_libraries(Engine dl)
 endif()
 target_precompile_headers(Engine 
-  PRIVATE    
+  PUBLIC    
     <assert.h>
     <atomic>
     <condition_variable>
@@ -91,13 +92,15 @@ target_precompile_headers(Engine
     <boost/serialization/serialization.hpp>
     <boost/crc.hpp>)
 
+target_link_libraries(Editor PRIVATE Engine)
+
 add_subdirectory(src/)
 
 if(MSVC)
   set(_CRT_SECURE_NO_WARNINGS)
-  target_compile_options(Engine PRIVATE -Zi -MP -DEBUG)
+  target_compile_options(Engine PUBLIC -Zi -MP -DEBUG)
 else()
-  target_compile_options(Engine PRIVATE -g -Wall -Wextra -Wno-delete-incomplete -pedantic -fcoroutines)
+  target_compile_options(Engine PUBLIC -g -Wall -Wextra -Wno-delete-incomplete -pedantic -fcoroutines)
 endif()
 
 add_executable(Seele_unit_tests "")
@@ -111,5 +114,5 @@ add_custom_target(SeeleEngine ALL
   COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_PROPERTY:nsam,NSAM_BINARY> $<TARGET_FILE_DIR:Engine>
   COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_PROPERTY:nsam,LLVM_BINARY> $<TARGET_FILE_DIR:Engine>
   COMMAND_EXPAND_LISTS
-	DEPENDS Engine slang-build)
+	DEPENDS Editor slang-build)
 

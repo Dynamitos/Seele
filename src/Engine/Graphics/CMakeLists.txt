@@ -1,5 +1,5 @@
 target_sources(Engine
-    PRIVATE
+    PUBLIC
         GraphicsResources.h
         GraphicsResources.cpp
         GraphicsInitializer.h

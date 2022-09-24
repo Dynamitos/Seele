@@ -27,4 +27,10 @@ private:
     friend class Scene;
 };
 DEFINE_REF(PrimitiveComponent)
+struct PrimitiveUniformBuffer
+{
+    Matrix4 localToWorld;
+    Matrix4 worldToLocal;
+    Vector4 actorWorldPosition;
+};
 } // namespace Seele

@@ -1,5 +1,5 @@
 target_sources(Engine
-    PRIVATE
+    PUBLIC
         BasePass.h
         BasePass.cpp
         DepthPrepass.h

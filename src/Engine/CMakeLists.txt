@@ -1,9 +1,8 @@
 target_sources(Engine
-    PRIVATE
+    PUBLIC
         EngineTypes.h
         MinimalEngine.h
-        MinimalEngine.cpp
-        main.cpp)
+        MinimalEngine.cpp)
 
 add_subdirectory(Asset/)
 add_subdirectory(Containers/)

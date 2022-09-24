@@ -1,5 +1,5 @@
 target_sources(Engine
-    PRIVATE
+    PUBLIC
         CameraComponent.h
         CameraComponent.cpp
         Component.h
@@ -9,5 +9,4 @@ target_sources(Engine
         MyOtherComponent.h
         MyOtherComponent.cpp
         PrimitiveComponent.cpp
-        PrimitiveComponent.h
-        PrimitiveUniformBufferLayout.h)
+        PrimitiveComponent.h)

@@ -18,7 +18,6 @@ endif()
 add_subdirectory(${BOOST_ROOT})
 
 #-----------------KTX----------------------------
-find_program(BASH_EXECUTABLE git-bash)
 set(KTX_FEATURE_TESTS off)
 
 add_subdirectory(${KTX_ROOT} ${KTX_ROOT})

@@ -1,5 +1,5 @@
 target_sources(Engine
-    PRIVATE
+    PUBLIC
         InspectorView.h
         InspectorView.cpp
         SceneView.h

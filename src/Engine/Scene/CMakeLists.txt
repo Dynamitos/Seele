@@ -1,5 +1,5 @@
 target_sources(Engine
-	PRIVATE
+	PUBLIC
         Util.h
         Scene.cpp
         Scene.h)
