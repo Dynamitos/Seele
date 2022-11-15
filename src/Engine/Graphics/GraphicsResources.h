@@ -3,7 +3,10 @@
 #include "Containers/Array.h"
 #include "Containers/List.h"
 #include "GraphicsInitializer.h"
+#pragma warning(push)
+#pragma warning(disable: 4701)
 #include <boost/crc.hpp>
+#pragma warning(pop)
 #include <functional>
 
 
@@ -372,6 +375,8 @@ public:
         return vertexSize;
     }
 
+    virtual void updateRegion(BulkResourceData update) = 0;
+
 protected:
     // Inherited via QueueOwnedResource
     virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
@@ -385,9 +390,9 @@ DEFINE_REF(VertexBuffer)
 class IndexBuffer : public Buffer
 {
 public:
-    IndexBuffer(QueueFamilyMapping mapping, uint32 size, Gfx::SeIndexType index, QueueType startQueueType);
+    IndexBuffer(QueueFamilyMapping mapping, uint64 size, Gfx::SeIndexType index, QueueType startQueueType);
     virtual ~IndexBuffer();
-    constexpr uint32 getNumIndices() const
+    constexpr uint64 getNumIndices() const
     {
         return numIndices;
     }
@@ -402,7 +407,7 @@ protected:
     virtual void executePipelineBarrier(SeAccessFlags srcAccess, SePipelineStageFlags srcStage, 
         SeAccessFlags dstAccess, SePipelineStageFlags dstStage) = 0;
     Gfx::SeIndexType indexType;
-    uint32 numIndices;
+    uint64 numIndices;
 };
 DEFINE_REF(IndexBuffer)
 
@@ -442,7 +447,6 @@ protected:
     uint32 stride;
 };
 DEFINE_REF(StructuredBuffer)
-
 class VertexStream
 {
 public:
@@ -459,6 +463,34 @@ public:
     uint8 instanced;
 };
 DEFINE_REF(VertexStream)
+
+struct VertexDataAllocation
+{
+    uint64 size;
+    uint64 offset;
+};
+
+class VertexDataManager
+{
+public:
+    VertexDataManager(PGraphics graphics);
+    virtual ~VertexDataManager();
+
+    VertexDataAllocation createVertexBuffer(const VertexBufferCreateInfo& vbInfo);
+    void freeAllocation(VertexDataAllocation alloc);
+
+    PVertexBuffer getVertexBuffer() const { return buffer; }
+private:
+    VertexDataAllocation allocateData(uint64 size);
+    Map<uint64, VertexDataAllocation> freeRanges;
+    Map<uint64, VertexDataAllocation> activeAllocations;
+    uint64 currentSize;
+    uint64 inUse;
+    PVertexBuffer buffer;
+    PGraphics graphics;
+};
+DEFINE_REF(VertexDataManager)
+
 class VertexDeclaration
 {
 public:

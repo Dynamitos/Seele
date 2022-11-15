@@ -1,10 +1,11 @@
 #include "DepthPrepass.h"
 #include "Graphics/Graphics.h"
 #include "Window/Window.h"
-#include "Scene/Components/CameraComponent.h"
+#include "Scene/Component/Camera.h"
 #include "Scene/Actor/CameraActor.h"
 #include "Math/Vector.h"
 #include "RenderGraph.h"
+#include "Material/MaterialAsset.h"
 
 using namespace Seele;
 
@@ -72,7 +73,7 @@ DepthPrepass::DepthPrepass(Gfx::PGraphics graphics, Gfx::PViewport viewport, PCa
     : RenderPass(graphics, viewport)
     , processor(new DepthPrepassMeshProcessor(viewport, graphics))
     , descriptorSets(3)
-    , source(source->getCameraComponent())
+    , source(source)
 {
     UniformBufferCreateInfo uniformInitializer;
 
@@ -103,11 +104,11 @@ void DepthPrepass::beginFrame()
     primitiveLayout->reset();
     BulkResourceData uniformUpdate;
 
-    viewParams.viewMatrix = source->getViewMatrix();
-    viewParams.projectionMatrix = source->getProjectionMatrix();
-    viewParams.cameraPosition = Vector4(source->getCameraPosition(), 0);
+    viewParams.viewMatrix = source->getCameraComponent().getViewMatrix();
+    viewParams.projectionMatrix = source->getCameraComponent().getProjectionMatrix();
+    viewParams.cameraPosition = Math::Vector4(source->getCameraComponent().getCameraPosition(), 0);
     viewParams.inverseProjectionMatrix = glm::inverse(viewParams.projectionMatrix);
-    viewParams.screenDimensions = Vector2(static_cast<float>(viewport->getSizeX()), static_cast<float>(viewport->getSizeY()));
+    viewParams.screenDimensions = Math::Vector2(static_cast<float>(viewport->getSizeX()), static_cast<float>(viewport->getSizeY()));
     uniformUpdate.size = sizeof(ViewParameter);
     uniformUpdate.data = (uint8*)&viewParams;
     viewParamBuffer->updateContents(uniformUpdate);

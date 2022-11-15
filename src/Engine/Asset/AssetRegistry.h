@@ -1,6 +1,7 @@
 #pragma once
 #include "MinimalEngine.h"
 #include "Asset.h"
+#include "Material/MaterialAsset.h"
 #include <string>
 #include <map>
 

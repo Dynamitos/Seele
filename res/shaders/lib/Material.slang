@@ -17,6 +17,5 @@ interface IMaterial
 	float getSheen(MaterialFragmentParameter input);
 };
 
-type_param TMaterial : IMaterial;
 layout(set = INDEX_MATERIAL, binding = 0, std430)
-ParameterBlock<TMaterial> gMaterial;
+ParameterBlock<IMaterial> gMaterial;

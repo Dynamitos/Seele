@@ -63,7 +63,7 @@ struct ShaderAttributeInterpolation
 #if NUM_MATERIAL_TEXCOORDS
         for(int i = 0; i < NUM_MATERIAL_TEXCOORDS; ++i)
         {
-            if(i % 2)
+            if(i % 2 == 1)
             {
                 result.texCoords[i] = packedTexCoords[i / 2].zw;
             }
@@ -191,7 +191,7 @@ struct VertexShaderInput
         result.viewPosition = vertexParams.viewPosition;
         for(int i = 0; i < NUM_MATERIAL_TEXCOORDS; ++i)
         {
-            if(i % 2)
+            if(i % 2 == 1)
             {
                 result.packedTexCoords[i / 2].zw = vertexParams.texCoords[i];
             }

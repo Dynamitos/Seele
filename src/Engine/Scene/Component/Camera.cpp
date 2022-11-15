@@ -1,13 +1,15 @@
-#include "CameraComponent.h"
+#include "Camera.h"
 #include "Scene/Actor/Actor.h"
 #include <algorithm>
 #include <iostream>
 
 using namespace Seele;
+using namespace Seele::Component;
+using namespace Seele::Math;
 
-CameraComponent::CameraComponent()
+Camera::Camera()
     : aspectRatio(0)
-    , fieldOfView(0)
+    , fieldOfView(glm::radians(70.f))
     , bNeedsViewBuild(true)
     , bNeedsProjectionBuild(true)
     , viewMatrix(Matrix4())
@@ -15,14 +17,13 @@ CameraComponent::CameraComponent()
 {
     yaw = 0;
     pitch = 0;
-    setRelativeLocation(Vector(0, 10, -50));
 }
 
-CameraComponent::~CameraComponent()
+Camera::~Camera()
 {
 }
 
-void CameraComponent::mouseMove(float deltaYaw, float deltaPitch) 
+void Camera::mouseMove(float deltaYaw, float deltaPitch) 
 {
     yaw -= deltaYaw / 500.f;
     pitch += deltaPitch / 500.f;
@@ -31,29 +32,29 @@ void CameraComponent::mouseMove(float deltaYaw, float deltaPitch)
     Vector xyz = glm::cross(cameraDirection, Vector(0, 0, 1));
     Quaternion result = Quaternion(glm::dot(cameraDirection, Vector(0, 0, 1)) + 1, xyz.x, xyz.y, xyz.z);
     //std::cout << "Result " << Vector(0, 0, 1) * glm::normalize(result) << " cameraDirection: " << cameraDirection << std::endl;
-    setRelativeRotation(result);
+    getTransform().setRelativeRotation(result);
     bNeedsViewBuild = true;
 }
 
-void CameraComponent::mouseScroll(float x) 
+void Camera::mouseScroll(float x) 
 {
-    addRelativeLocation(getTransform().getForward()*x);
+    getTransform().addRelativeLocation(getTransform().getForward()*x);
     bNeedsViewBuild = true;
 }
 
-void CameraComponent::moveX(float amount)
+void Camera::moveX(float amount)
 {
-    addRelativeLocation(getTransform().getForward()*amount);
+    getTransform().addRelativeLocation(getTransform().getForward()*amount);
     bNeedsViewBuild = true;
 }
 
-void CameraComponent::moveY(float amount)
+void Camera::moveY(float amount)
 {
-    addRelativeLocation(getTransform().getRight()*amount);
+    getTransform().addRelativeLocation(getTransform().getRight()*amount);
     bNeedsViewBuild = true;
 }
 
-void CameraComponent::setViewport(Gfx::PViewport newViewport)
+void Camera::setViewport(Gfx::PViewport newViewport)
 {
     viewport = newViewport;
     aspectRatio = viewport->getSizeX() / (float)viewport->getSizeY();
@@ -61,17 +62,17 @@ void CameraComponent::setViewport(Gfx::PViewport newViewport)
     bNeedsProjectionBuild = true;
 }
 
-void CameraComponent::buildViewMatrix() 
+void Camera::buildViewMatrix() 
 {
-    Vector eyePos = getAbsoluteTransform().getPosition();
-    Vector lookAt = eyePos + glm::normalize(Vector(cos(yaw) * cos(pitch), sin(pitch), sin(yaw) * cos(pitch)));
+    Vector eyePos = getTransform().getPosition();//getAbsoluteTransform().getPosition();
+    Vector lookAt = Vector(0, 0, 0);//eyePos + glm::normalize(Vector(cos(yaw) * cos(pitch), sin(pitch), sin(yaw) * cos(pitch)));
     //std::cout << "Eye: " << eyePos << " lookAt: " << lookAt << std::endl;
     viewMatrix = glm::lookAt(eyePos, lookAt, Vector(0, 1, 0));
 
     bNeedsViewBuild = false;
 }
 
-void CameraComponent::buildProjectionMatrix() 
+void Camera::buildProjectionMatrix() 
 {
     projectionMatrix = glm::perspective(fieldOfView, aspectRatio, 1.0f, 1000.f);
     static Matrix4 correctionMatrix =

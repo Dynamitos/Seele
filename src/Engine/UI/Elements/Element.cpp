@@ -59,12 +59,12 @@ bool Element::isEnabled() const
     return enabled;
 }
 
-Rect& Element::getBoundingBox() 
+Math::Rect& Element::getBoundingBox() 
 {
     return boundingBox;
 }
 
-const Rect Element::getBoundingBox() const
+const Math::Rect Element::getBoundingBox() const
 {
     return boundingBox;
 }

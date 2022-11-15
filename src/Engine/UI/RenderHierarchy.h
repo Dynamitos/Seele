@@ -9,9 +9,9 @@ namespace UI
 {
 struct RenderElementStyle
 {
-    Vector position = Vector(0, 0, 0);
-    uint32 backgroundImageIndex = -1;
-    Vector backgroundColor = Vector(1, 1, 1);
+    Math::Vector position = Math::Vector(0, 0, 0);
+    uint32 backgroundImageIndex = UINT32_MAX;
+    Math::Vector backgroundColor = Math::Vector(1, 1, 1);
     float opacity = 1.0f;
     //Vector4 borderBottomColor = Vector4(1, 1, 1, 1);
     //Vector4 borderLeftColor = Vector4(1, 1, 1, 1);
@@ -21,7 +21,7 @@ struct RenderElementStyle
     //float borderBottomRightRadius = 0;
     //float borderTopLeftRadius = 0;
     //float borderTopRightRadius = 0;
-    Vector2 dimensions = Vector2(1, 1);
+    Math::Vector2 dimensions = Math::Vector2(1, 1);
 };
 class RenderElement
 {

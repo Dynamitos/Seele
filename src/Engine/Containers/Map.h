@@ -40,8 +40,8 @@ private:
         size_t rightChild;
         Pair<K, V> pair;
         Node()
-            : leftChild(-1)
-            , rightChild(-1)
+            : leftChild(SIZE_MAX)
+            , rightChild(SIZE_MAX)
             , pair()
         {
         }
@@ -50,8 +50,8 @@ private:
         Node& operator=(const Node& other) = default;
         Node& operator=(Node&& other) = default;
         Node(K key)
-            : leftChild(-1)
-            , rightChild(-1)
+            : leftChild(SIZE_MAX)
+            , rightChild(SIZE_MAX)
             , pair(std::move(key))
         {
         }
@@ -71,7 +71,7 @@ public:
         using reference = PairType&;
         using pointer = PairType*;
 
-        IteratorBase(size_t x = -1)
+        IteratorBase(size_t x = SIZE_MAX)
             : node(x)
         {
         }
@@ -199,9 +199,9 @@ public:
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
     
     constexpr Map() noexcept
-        : root(-1)
-        , beginIt(-1)
-        , endIt(-1)
+        : root(SIZE_MAX)
+        , beginIt(SIZE_MAX)
+        , endIt(SIZE_MAX)
         , iteratorsDirty(true)
         , _size(0)
         , comp(Compare())
@@ -209,9 +209,9 @@ public:
     }
     constexpr explicit Map(const Compare& comp, const Allocator& alloc = Allocator()) noexcept(noexcept(Allocator()))
         : nodeContainer(alloc)
-        , root(-1)
-        , beginIt(-1)
-        , endIt(-1)
+        , root(SIZE_MAX)
+        , beginIt(SIZE_MAX)
+        , endIt(SIZE_MAX)
         , iteratorsDirty(true)
         , _size(0)
         , comp(comp)
@@ -219,9 +219,9 @@ public:
     }
     constexpr explicit Map(const Allocator& alloc) noexcept(noexcept(Compare))
         : nodeContainer(alloc)
-        , root(-1)
-        , beginIt(-1)
-        , endIt(-1)
+        , root(SIZE_MAX)
+        , beginIt(SIZE_MAX)
+        , endIt(SIZE_MAX)
         , iteratorsDirty(true)
         , _size(0)
         , comp(Compare())
@@ -335,7 +335,7 @@ public:
     constexpr void clear()
     {
         nodeContainer.clear();
-        root = -1;
+        root = SIZE_MAX;
         _size = 0;
         markIteratorsDirty();
     }
@@ -510,13 +510,13 @@ private:
         {
             newNode->rightChild = r;
             newNode->leftChild = node->leftChild;
-            node->leftChild = -1;
+            node->leftChild = SIZE_MAX;
         }
         else
         {
             newNode->leftChild = r;
             newNode->rightChild = node->rightChild;
-            node->rightChild = -1;
+            node->rightChild = SIZE_MAX;
         }
         return nodeContainer.size() - 1;
     }
@@ -525,7 +525,7 @@ private:
     {
         size_t temp;
         if (!isValid(r))
-            return -1;
+            return SIZE_MAX;
 
         r = splay(r, key);
         Node* node = getNode(r);

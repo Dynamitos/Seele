@@ -13,8 +13,8 @@ struct TextRender
 {
     std::string text;
     PFontAsset font;
-    Vector4 textColor;
-    Vector2 position;
+    Math::Vector4 textColor;
+    Math::Vector2 position;
     float scale;
 };
 struct TextPassData
@@ -35,19 +35,19 @@ public:
 private:
     struct GlyphData
     {
-        Vector2 bearing;
-        Vector2 size;
+        Math::Vector2 bearing;
+        Math::Vector2 size;
         uint32 advance;
     };
     struct GlyphInstanceData
     {
-        Vector2 position;
-        Vector2 widthHeight;
+        Math::Vector2 position;
+        Math::Vector2 widthHeight;
         uint32 glyphIndex;
     };
     struct TextData
     {
-        Vector4 textColor;
+        Math::Vector4 textColor;
         float scale;
     };
     struct FontData

@@ -95,7 +95,7 @@ PSubAllocation Allocation::getSuballocation(VkDeviceSize requestedSize, VkDevice
         VkDeviceSize allocatedOffset = it.first;
         PSubAllocation freeAllocation = it.second;
         assert(allocatedOffset == freeAllocation->allocatedOffset);
-        VkDeviceSize alignedOffset = align(allocatedOffset, alignment);
+        VkDeviceSize alignedOffset = Math::align(allocatedOffset, alignment);
         VkDeviceSize alignmentAdjustment = alignedOffset - allocatedOffset;
         VkDeviceSize size = alignmentAdjustment + requestedSize;
         if (freeAllocation->size == size)
@@ -171,6 +171,8 @@ void Allocation::markFree(SubAllocation *allocation)
                 allocHandle = foundAlloc->second;
                 allocHandle->allocatedOffset -= allocation->allocatedSize;
                 allocHandle->alignedOffset -= allocation->allocatedSize;
+                allocHandle->size += allocation->allocatedSize;
+                allocHandle->allocatedSize += allocation->allocatedSize;
                 // place back at correct offset
                 freeRanges[allocHandle->allocatedOffset] = allocHandle;
                 // remove from offset map since key changes
@@ -310,7 +312,7 @@ void StagingManager::clearPending()
 {
 }
 
-PStagingBuffer StagingManager::allocateStagingBuffer(uint32 size, VkBufferUsageFlags usage, bool bCPURead)
+PStagingBuffer StagingManager::allocateStagingBuffer(uint64 size, VkBufferUsageFlags usage, bool bCPURead)
 {
     std::scoped_lock l(lock);
     for (auto it = freeBuffers.begin(); it != freeBuffers.end(); ++it)

@@ -67,6 +67,7 @@ public:
     virtual Gfx::PPipelineLayout createPipelineLayout(Gfx::PPipelineLayout baseLayout = nullptr) override;
 
     virtual void copyTexture(Gfx::PTexture srcTexture, Gfx::PTexture dstTexture) override;
+
 protected:
     Array<const char *> getRequiredExtensions();
     void initInstance(GraphicsInitializer initInfo);

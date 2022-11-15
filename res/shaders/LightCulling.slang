@@ -82,7 +82,7 @@ void tAppendLight(uint lightIndex)
 [shader("compute")]
 void cullLights(ComputeShaderInput in)
 {
-    int2 texCoord = in.dispatchThreadID.xy;
+    int2 texCoord = int2(in.dispatchThreadID.xy);
     float fDepth = depthTextureVS.Load(int3(texCoord, 0)).r;
 
     uint uDepth = asuint(fDepth);

@@ -34,7 +34,7 @@ public:
 };
 struct MeshBatch
 {
-    std::vector<MeshBatchElement> elements;
+    Array<MeshBatchElement> elements;
 
     uint8 useReverseCulling : 1;
     uint8 isBackfaceCullingDisabled : 1;
@@ -73,10 +73,8 @@ struct MeshBatch
     MeshBatch& operator=(const MeshBatch& other) = default;
     MeshBatch& operator=(MeshBatch&& other) = default;
 };
-DECLARE_REF(PrimitiveComponent)
 struct StaticMeshBatch : public MeshBatch
 {
     uint32 index;
-    PPrimitiveComponent primitiveComponent;
 };
 } // namespace Seele

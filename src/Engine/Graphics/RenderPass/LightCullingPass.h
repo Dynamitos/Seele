@@ -6,7 +6,6 @@
 namespace Seele
 {
 DECLARE_REF(CameraActor)
-DECLARE_REF(CameraComponent)
 DECLARE_REF(Scene)
 DECLARE_REF(Viewport)
 struct LightCullingPassData
@@ -37,7 +36,7 @@ private:
     } dispatchParams;
     struct Plane
     {
-        Vector n;
+        Math::Vector n;
         float d;
     };
     struct Frustum
@@ -72,7 +71,7 @@ private:
     Gfx::PComputeShader cullingShader;
     Gfx::PPipelineLayout cullingLayout;
     Gfx::PComputePipeline cullingPipeline;
-    PCameraComponent source;
+    PCameraActor source;
 };
 DEFINE_REF(LightCullingPass)
 } // namespace Seele

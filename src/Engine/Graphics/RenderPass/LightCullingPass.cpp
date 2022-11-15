@@ -2,14 +2,14 @@
 #include "Graphics/Graphics.h"
 #include "Scene/Scene.h"
 #include "Scene/Actor/CameraActor.h"
-#include "Scene/Components/CameraComponent.h"
+#include "Scene/Component/Camera.h"
 #include "RenderGraph.h"
 
 using namespace Seele;
 
 LightCullingPass::LightCullingPass(Gfx::PGraphics graphics, Gfx::PViewport viewport, PCameraActor camera)
     : RenderPass(graphics, viewport)
-    , source(camera->getCameraComponent())
+    , source(camera)
 {
 }
 
@@ -24,11 +24,11 @@ void LightCullingPass::beginFrame()
     uint32_t viewportHeight = viewport->getSizeY();
 
     BulkResourceData uniformUpdate;
-    viewParams.viewMatrix = source->getViewMatrix();
-    viewParams.projectionMatrix = source->getProjectionMatrix();
-    viewParams.cameraPosition = Vector4(source->getCameraPosition(), 0);
+    viewParams.viewMatrix = source->getCameraComponent().getViewMatrix();
+    viewParams.projectionMatrix = source->getCameraComponent().getProjectionMatrix();
+    viewParams.cameraPosition = Math::Vector4(source->getCameraComponent().getCameraPosition(), 0);
     viewParams.inverseProjectionMatrix = glm::inverse(viewParams.projectionMatrix);
-    viewParams.screenDimensions = Vector2(static_cast<float>(viewportWidth), static_cast<float>(viewportHeight));
+    viewParams.screenDimensions = Math::Vector2(static_cast<float>(viewportWidth), static_cast<float>(viewportHeight));
     uniformUpdate.size = sizeof(ViewParameter);
     uniformUpdate.data = (uint8*)&viewParams;
     viewParamsBuffer->updateContents(uniformUpdate);
@@ -162,13 +162,7 @@ void LightCullingPass::publishOutputs()
     ShaderCreateInfo createInfo;
     createInfo.name = "Culling";
     
-    std::ifstream codeStream("./shaders/LightCulling.slang", std::ios::ate);
-    auto fileSize = codeStream.tellg();
-    codeStream.seekg(0);
-    Array<char> buffer(static_cast<uint32>(fileSize));
-    codeStream.read(buffer.data(), fileSize);
-
-    createInfo.shaderCode.add(std::string(buffer.data()));
+    createInfo.mainModule = "LightCulling";
     createInfo.entryPoint = "cullLights";
     createInfo.defines["INDEX_VIEW_PARAMS"] = "0";
     createInfo.defines["INDEX_LIGHT_ENV"] = "1";
@@ -269,10 +263,10 @@ void LightCullingPass::setupFrustums()
     glm::uvec3 numThreadGroups = glm::ceil(glm::vec3(numThreads.x / (float)BLOCK_SIZE, numThreads.y / (float)BLOCK_SIZE, 1));
     
     viewParams = {
-        .viewMatrix = source->getViewMatrix(),
-        .projectionMatrix = source->getProjectionMatrix(),
-        .inverseProjectionMatrix = glm::inverse(source->getProjectionMatrix()),
-        .cameraPosition = Vector4(source->getCameraPosition(), 0),
+        .viewMatrix = source->getCameraComponent().getViewMatrix(),
+        .projectionMatrix = source->getCameraComponent().getProjectionMatrix(),
+        .inverseProjectionMatrix = glm::inverse(source->getCameraComponent().getProjectionMatrix()),
+        .cameraPosition = Math::Vector4(source->getTransform().getPosition(), 0),
         .screenDimensions = glm::vec2(viewportWidth, viewportHeight),
     };
     dispatchParams.numThreads = numThreads;
@@ -288,13 +282,7 @@ void LightCullingPass::setupFrustums()
     ShaderCreateInfo createInfo;
     createInfo.name = "Frustum";
     
-    std::ifstream codeStream("./shaders/ComputeFrustums.slang", std::ios::ate);
-    auto fileSize = codeStream.tellg();
-    codeStream.seekg(0);
-    Array<char> buffer(static_cast<uint32>(fileSize));
-    codeStream.read(buffer.data(), fileSize);
-
-    createInfo.shaderCode.add(std::string(buffer.data()));
+    createInfo.mainModule = "ComputeFrustums";
     createInfo.entryPoint = "computeFrustums";
     createInfo.defines["INDEX_VIEW_PARAMS"] = "0";
     frustumShader = graphics->createComputeShader(createInfo);

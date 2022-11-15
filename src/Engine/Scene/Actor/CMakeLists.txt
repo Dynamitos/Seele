@@ -3,4 +3,6 @@ target_sources(Engine
         Actor.cpp
         Actor.h
         CameraActor.cpp
-        CameraActor.h)
+        CameraActor.h
+        Entity.cpp
+        Entity.h)

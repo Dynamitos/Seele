@@ -9,6 +9,8 @@ using namespace Seele::Vulkan;
 
 struct PendingBuffer
 {
+    uint64 offset;
+    uint64 size;
     PStagingBuffer stagingBuffer;
     Gfx::QueueType prevQueue;
     bool bWriteOnly;
@@ -16,7 +18,7 @@ struct PendingBuffer
 
 static std::map<ShaderBuffer *, PendingBuffer> pendingBuffers;
 
-ShaderBuffer::ShaderBuffer(PGraphics graphics, uint32 size, VkBufferUsageFlags usage, Gfx::QueueType& queueType, bool bDynamic)
+ShaderBuffer::ShaderBuffer(PGraphics graphics, uint64 size, VkBufferUsageFlags usage, Gfx::QueueType& queueType, bool bDynamic)
     : graphics(graphics)
     , currentBuffer(0)
     , size(size)
@@ -63,7 +65,7 @@ ShaderBuffer::~ShaderBuffer()
 {
     PCmdBuffer cmdBuffer = graphics->getQueueCommands(owner)->getCommands();
     VkDevice device = graphics->getDevice();
-    auto deletionLambda = [cmdBuffer, device](VkBuffer buffer) -> void 
+    auto deletionLambda = [cmdBuffer, device](VkBuffer) -> void 
     {
         //co_await cmdBuffer->asyncWait();
         //vkDestroyBuffer(device, buffer, nullptr);
@@ -170,6 +172,11 @@ void ShaderBuffer::executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineSta
 
 void *ShaderBuffer::lock(bool bWriteOnly)
 {
+    return lockRegion(0, size, bWriteOnly);
+}
+
+void *ShaderBuffer::lockRegion(uint64 regionOffset, uint64 regionSize, bool bWriteOnly)
+{
     void *data = nullptr;
 
     /*if (bVolatile)
@@ -189,10 +196,12 @@ void *ShaderBuffer::lock(bool bWriteOnly)
     PendingBuffer pending;
     pending.bWriteOnly = bWriteOnly;
     pending.prevQueue = owner;
+    pending.offset = regionOffset;
+    pending.size = regionSize;
     if (bWriteOnly)
     {
         //requestOwnershipTransfer(Gfx::QueueType::DEDICATED_TRANSFER);
-        PStagingBuffer stagingBuffer = graphics->getStagingManager()->allocateStagingBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+        PStagingBuffer stagingBuffer = graphics->getStagingManager()->allocateStagingBuffer(regionSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
         data = stagingBuffer->getMappedPointer();
         pending.stagingBuffer = stagingBuffer;
     }
@@ -255,7 +264,8 @@ void ShaderBuffer::unlock()
 
             VkBufferCopy region;
             std::memset(&region, 0, sizeof(VkBufferCopy));
-            region.size = size;
+            region.size = pending.size;
+            region.dstOffset = pending.offset;
             vkCmdCopyBuffer(cmdHandle, stagingBuffer->getHandle(), buffers[currentBuffer].buffer, 1, &region);
             graphics->getQueueCommands(owner)->submitCommands();
         }
@@ -447,6 +457,14 @@ VertexBuffer::VertexBuffer(PGraphics graphics, const VertexBufferCreateInfo &res
 VertexBuffer::~VertexBuffer()
 {
 }
+
+void VertexBuffer::updateRegion(BulkResourceData update)
+{
+    void* data = lockRegion(update.offset, update.size);
+    std::memcpy(data, update.data, update.size);
+    unlock();
+}
+
 
 void VertexBuffer::requestOwnershipTransfer(Gfx::QueueType newOwner)
 {

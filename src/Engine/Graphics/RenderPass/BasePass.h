@@ -27,10 +27,9 @@ private:
 };
 DEFINE_REF(BasePassMeshProcessor)
 DECLARE_REF(CameraActor)
-DECLARE_REF(CameraComponent)
 struct BasePassData
 {
-    std::vector<StaticMeshBatch> staticDrawList;
+    Array<StaticMeshBatch> staticDrawList;
 };
 class BasePass : public RenderPass<BasePassData>
 {
@@ -49,7 +48,7 @@ private:
     UPBasePassMeshProcessor processor;
     
     Array<Gfx::PDescriptorSet> descriptorSets;
-    PCameraComponent source;
+    PCameraActor source;
     Gfx::PPipelineLayout basePassLayout;
     // Set 0: Light environment
     static constexpr uint32 INDEX_LIGHT_ENV = 0;

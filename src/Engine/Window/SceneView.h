@@ -1,8 +1,10 @@
 #pragma once
+#include <thread_pool/thread_pool.h>
 #include "View.h"
 #include "Graphics/RenderPass/DepthPrepass.h"
 #include "Graphics/RenderPass/LightCullingPass.h"
 #include "Graphics/RenderPass/BasePass.h"
+#include "Scene/System/CameraSystem.h"
 namespace Seele
 {
 DECLARE_REF(Scene)
@@ -32,6 +34,9 @@ private:
 	DepthPrepassData depthPrepassData;
 	LightCullingPassData lightCullingPassData;
 	BasePassData basePassData;
+
+	dp::thread_pool<> pool;
+	System::CameraSystem cameraSystem;
 
 	virtual void keyCallback(KeyCode code, InputAction action, KeyModifier modifier) override;
 	virtual void mouseMoveCallback(double xPos, double yPos) override;

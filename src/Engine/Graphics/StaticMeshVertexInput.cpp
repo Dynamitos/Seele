@@ -54,16 +54,16 @@ void StaticMeshVertexInput::init(Gfx::PGraphics graphics)
         {
             elements.add(accessStreamComponent(
                 data.textureCoordinates[coordinateIndex],
-                baseTexCoordAttribute + coordinateIndex
+                static_cast<uint8>(baseTexCoordAttribute + coordinateIndex)
             ));
         }
     }
     initDeclaration(graphics, elements);
 }
 
-void StaticMeshVertexInput::setData(StaticMeshDataType&& data) 
+void StaticMeshVertexInput::setData(StaticMeshDataType&& _data) 
 {
-    this->data = std::move(data);
+    data = std::move(_data);
 }
 
 IMPLEMENT_VERTEX_INPUT_TYPE(StaticMeshVertexInput, "StaticMeshVertexInput")

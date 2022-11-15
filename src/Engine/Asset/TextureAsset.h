@@ -12,10 +12,10 @@ public:
     virtual ~TextureAsset();
     virtual void save() override;
     virtual void load() override;
-    void setTexture(Gfx::PTexture texture)
+    void setTexture(Gfx::PTexture _texture)
     {
         std::scoped_lock lck(lock);
-        this->texture = texture;
+        texture = _texture;
     }
     Gfx::PTexture getTexture()
     {

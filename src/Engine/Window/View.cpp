@@ -16,7 +16,7 @@ View::~View()
 {
 }
 
-void View::applyArea(URect)
+void View::applyArea(Math::URect)
 {
 
 }

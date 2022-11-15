@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD 20)
 option (USE_SUPERBUILD "Whether or not a superbuild should be invoked" ON)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_COMPILE_WARNING_AS_ERROR OFF)
 
 set(ENGINE_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/src/Engine)
 set(EXTERNAL_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/external)
@@ -25,6 +26,7 @@ set(FREETYPE_ROOT ${EXTERNAL_ROOT}/freetype)
 set(SPIRV_ROOT ${EXTERNAL_ROOT}/SPIRV-Cross)
 set(ENTT_ROOT ${EXTERNAL_ROOT}/entt)
 set(NSAM_ROOT ${EXTERNAL_ROOT}/aftermath)
+set(THREADPOOL_ROOT ${EXTERNAL_ROOT}/thread-pool)
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/)
 set(Boost_NO_WARN_NEW_VERSIONS 1)
@@ -53,7 +55,8 @@ if(CMAKE_DEBUG_POSTFIX)
   add_compile_definitions(ENABLE_VALIDATION)
   add_compile_definitions(SEELE_DEBUG)
 endif()
-add_library(Engine "")
+
+add_library(Engine SHARED "")
 add_executable(Editor "")
 target_compile_definitions(Engine PUBLIC GLFW_WINDOWS)
 target_include_directories(Engine PUBLIC src/Engine)
@@ -70,9 +73,10 @@ target_link_libraries(Engine PUBLIC nsam)
 target_link_libraries(Engine PUBLIC ktx)
 target_link_libraries(Engine PUBLIC stb)
 target_link_libraries(Engine PUBLIC nlohmann_json::nlohmann_json)
+target_link_libraries(Engine PUBLIC dp::thread-pool)
 if(UNIX)
-target_link_libraries(Engine Threads::Threads)
-target_link_libraries(Engine dl)
+  target_link_libraries(Engine Threads::Threads)
+  target_link_libraries(Engine dl)
 endif()
 target_precompile_headers(Engine 
   PUBLIC    
@@ -89,19 +93,18 @@ target_precompile_headers(Engine
     <mutex>
     <string>
     <thread>
-    <boost/serialization/serialization.hpp>
-    <boost/crc.hpp>)
-
-target_link_libraries(Editor PRIVATE Engine)
-
-add_subdirectory(src/)
-
+    <boost/serialization/serialization.hpp>)
+    
 if(MSVC)
   set(_CRT_SECURE_NO_WARNINGS)
-  target_compile_options(Engine PUBLIC -Zi -MP -DEBUG)
+  target_compile_options(Engine PUBLIC /Zi /MP /W4 /DEBUG "/WX-")
 else()
   target_compile_options(Engine PUBLIC -g -Wall -Wextra -Wno-delete-incomplete -pedantic -fcoroutines)
 endif()
+
+target_link_libraries(Editor PUBLIC Engine)
+
+add_subdirectory(src/)
 
 add_executable(Seele_unit_tests "")
 add_subdirectory(test/)

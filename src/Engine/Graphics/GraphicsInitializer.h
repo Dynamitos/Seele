@@ -50,7 +50,8 @@ struct ViewportCreateInfo
 // doesnt own the data, only proxy it
 struct BulkResourceData
 {
-    uint32 size = 0;
+    uint64 size = 0;
+    uint64 offset = 0;
     uint8 *data = nullptr;
     Gfx::QueueType owner = Gfx::QueueType::GRAPHICS;
 };
@@ -111,8 +112,9 @@ struct StructuredBufferCreateInfo
 };
 struct ShaderCreateInfo
 {
+    std::string mainModule;
     //It's possible to input multiple source files for materials or vertexFactories
-    Array<std::string> shaderCode;
+    Array<std::string> additionalModules;
     std::string name; // Debug info
     std::string entryPoint;
     Array<const char*> typeParameter;

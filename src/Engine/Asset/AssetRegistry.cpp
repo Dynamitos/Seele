@@ -91,10 +91,10 @@ AssetRegistry::AssetRegistry()
 {
 }
 
-void AssetRegistry::init(const std::filesystem::path &rootFolder, Gfx::PGraphics graphics)
+void AssetRegistry::init(const std::filesystem::path &_rootFolder, Gfx::PGraphics graphics)
 {
     AssetRegistry &reg = get();
-    reg.rootFolder = rootFolder;
+    reg.rootFolder = _rootFolder;
     reg.fontLoader = new FontLoader(graphics);
     reg.meshLoader = new MeshLoader(graphics);
     reg.textureLoader = new TextureLoader(graphics);

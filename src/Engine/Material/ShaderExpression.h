@@ -36,7 +36,7 @@ struct FloatParameter : public ShaderParameter
 DEFINE_REF(FloatParameter)
 struct VectorParameter : public ShaderParameter
 {
-    Vector data;
+    Math::Vector data;
     VectorParameter(std::string name, uint32 byteOffset, uint32 binding);
     virtual ~VectorParameter();
     virtual void updateDescriptorSet(Gfx::PDescriptorSet descriptorSet, uint8* dst) override;

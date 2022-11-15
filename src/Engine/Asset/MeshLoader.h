@@ -18,9 +18,9 @@ public:
     ~MeshLoader();
     void importAsset(const std::filesystem::path& filePath);
 private:
-    void loadMaterials(const aiScene* scene, Array<PMaterialAsset>& globalMaterials, Gfx::PGraphics graphics);
+    void loadMaterials(const aiScene* scene, Array<PMaterialAsset>& globalMaterials);
     void loadTextures(const aiScene* scene, const std::filesystem::path& meshPath);
-    void loadGlobalMeshes(const aiScene* scene, Array<PMesh>& globalMeshes, const Array<PMaterialAsset>& materials, Gfx::PGraphics graphics);
+    void loadGlobalMeshes(const aiScene* scene, Array<PMesh>& globalMeshes, const Array<PMaterialAsset>& materials);
     void convertAssimpARGB(unsigned char* dst, aiTexel* src, uint32 numPixels);
 
     void import(std::filesystem::path path, PMeshAsset meshAsset);

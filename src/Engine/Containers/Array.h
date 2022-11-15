@@ -679,6 +679,16 @@ public:
         beginIt = iterator(_data);
         endIt = iterator(_data + N);
     }
+    StaticArray(std::initializer_list<T> init)
+    {
+        assert(init.size() == N);
+        auto beg = init.begin();
+        for (int i = 0; i < N; ++i)
+        {
+            _data[i] = *beg;
+            beg++;
+        }
+    }
     ~StaticArray()
     {
     }

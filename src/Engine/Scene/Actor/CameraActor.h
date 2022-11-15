@@ -1,21 +1,17 @@
 #pragma once
 #include "Actor.h"
+#include "Scene/Component/Camera.h"
 
 namespace Seele
 {
-DECLARE_REF(CameraComponent)
 class CameraActor : public Actor
 {
 public:
-    CameraActor();
+    CameraActor(PScene scene);
     virtual ~CameraActor();
-    PCameraComponent getCameraComponent() const
-    {
-        return cameraComponent;
-    }
+    Component::Camera& getCameraComponent();
+    const Component::Camera& getCameraComponent() const;
 private:
-    PCameraComponent cameraComponent;
-    PComponent sceneComponent; // This will be the root, camera will be the child
 };
 DEFINE_REF(CameraActor)
 } // namespace Seele

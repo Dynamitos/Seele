@@ -2,9 +2,9 @@
 #include "VulkanGraphics.h"
 #include "VulkanDescriptorSets.h"
 #include "slang.h"
+#include "slang-com-ptr.h"
 #include "stdlib.h"
 
-using namespace slang;
 using namespace Seele;
 using namespace Seele::Vulkan;
 
@@ -33,85 +33,130 @@ uint32 Seele::Vulkan::Shader::getShaderHash() const
     return hash;
 }
 
-static SlangStage getStageFromShaderType(ShaderType type)
-{
-    switch (type)
-    {
-    case ShaderType::VERTEX:
-        return SLANG_STAGE_VERTEX;
-    case ShaderType::CONTROL:
-        return SLANG_STAGE_HULL;
-    case ShaderType::EVALUATION:
-        return SLANG_STAGE_DOMAIN;
-    case ShaderType::GEOMETRY:
-        return SLANG_STAGE_GEOMETRY;
-    case ShaderType::FRAGMENT:
-        return SLANG_STAGE_PIXEL;
-    default:
-        return SLANG_STAGE_NONE;
-    }
-}
-
 void Shader::create(const ShaderCreateInfo& createInfo)
 {
     entryPointName = createInfo.entryPoint;
-    static SlangSession* session = spCreateSession(nullptr);
-
-    SlangCompileRequest* request = spCreateCompileRequest(session);
-    int targetIndex = spAddCodeGenTarget(request, SLANG_SPIRV);
-    spSetTargetProfile(request, targetIndex, spFindProfile(session, "glsl_vk"));
-    spSetDumpIntermediates(request, true);
-    int translationUnitIndex = spAddTranslationUnit(request, SLANG_SOURCE_LANGUAGE_SLANG, "");
-
-    for(auto code : createInfo.shaderCode)
+    thread_local Slang::ComPtr<slang::IGlobalSession> globalSession;
+    if(!globalSession)
     {
-        spAddTranslationUnitSourceString(
-            request,
-            translationUnitIndex,
-            entryPointName.c_str(),
-            code.data()
-        );
+        slang::createGlobalSession(globalSession.writeRef());
     }
+    slang::SessionDesc sessionDesc;
+    sessionDesc.flags = 0;
+    sessionDesc.defaultMatrixLayoutMode = SLANG_MATRIX_LAYOUT_COLUMN_MAJOR;
+    Array<slang::PreprocessorMacroDesc> macros;
     for(auto define : createInfo.defines)
     {
-        spAddPreprocessorDefine(request, define.key, define.value);
+        macros.add(slang::PreprocessorMacroDesc{
+            .name = define.key,
+            .value = define.value
+        });
     }
-    spAddSearchPath(request, "shaders/lib/");
-    spAddSearchPath(request, "shaders/generated/");
+    sessionDesc.preprocessorMacroCount = macros.size();
+    sessionDesc.preprocessorMacros = macros.data();
+    slang::TargetDesc vulkan;
+    vulkan.profile = globalSession->findProfile("glsl_vk");
+    vulkan.format = SLANG_SPIRV;
+    sessionDesc.targetCount = 1;
+    sessionDesc.targets = &vulkan;
+    StaticArray<const char*, 3> searchPaths = {"shaders/", "shaders/lib/", "shaders/generated/"};
+    sessionDesc.searchPaths = searchPaths.data();
+    sessionDesc.searchPathCount = searchPaths.size();
 
-    spSetGlobalGenericArgs(request, (int)createInfo.typeParameter.size(), createInfo.typeParameter.data());
+    Slang::ComPtr<slang::ISession> session;
+    globalSession->createSession(sessionDesc, session.writeRef());
+
+    Slang::ComPtr<slang::IBlob> diagnostics;
+    Array<slang::IComponentType*> modules;
+    Slang::ComPtr<slang::IEntryPoint> entrypoint;
     
-    int entryPointIndex = spAddEntryPoint(request, translationUnitIndex, entryPointName.c_str(), getStageFromShaderType(type));
-    if(spCompile(request))
+    for (auto moduleName : createInfo.additionalModules)
     {
-        char const* diagnostics = spGetDiagnosticOutput(request);
-        std::cout << "Compile error for shader " << createInfo.name << std::endl;
-        std::cout << diagnostics << std::endl;
-        std::cout << "Defines: " << std::endl;
-        for(auto define : createInfo.defines)
+        modules.add(session->loadModule(moduleName.c_str(), diagnostics.writeRef()));
+        if(diagnostics)
         {
-            std::cout << define.key << ": " << define.value << std::endl;
+            std::cout << (const char*)diagnostics->getBufferPointer() << std::endl;
         }
-        std::cout << "For shader code: " << std::endl;
-        for(auto code : createInfo.shaderCode)
-        {
-            std::cout << code << std::endl;
-        }
-        return;
     }
-    size_t dataSize = 0;
-    const uint32* data = reinterpret_cast<const uint32*>(spGetEntryPointCode(request, entryPointIndex, &dataSize));
+    slang::IModule* mainModule = session->loadModule(createInfo.mainModule.c_str(), diagnostics.writeRef());
+    modules.add(mainModule);
+
+    if(diagnostics)
+    {
+        std::cout << (const char*)diagnostics->getBufferPointer() << std::endl;
+    }
+
+    mainModule->findEntryPointByName(createInfo.entryPoint.c_str(), entrypoint.writeRef());
+    modules.add(entrypoint);
+
+    slang::IComponentType* moduleComposition;
+    session->createCompositeComponentType(modules.data(), modules.size(), &moduleComposition, diagnostics.writeRef());
+
+    if(diagnostics)
+    {
+        std::cout << (const char*)diagnostics->getBufferPointer() << std::endl;
+    }
+
+    /*for(auto typeParam : createInfo.typeParameter)
+    {
+        Slang::ComPtr<slang::ITypeConformance> typeConformance;
+        session->createTypeConformanceComponentType(moduleComposition->getLayout()->findTypeByName(typeParam), moduleComposition->getLayout()->findTypeByName("IMaterial"), typeConformance.writeRef(), -1, diagnostics.writeRef());
+        modules.add(typeConformance);
+        if(diagnostics)
+        {
+            std::cout << (const char*)diagnostics->getBufferPointer() << std::endl;
+        }
+    }
+
+    Slang::ComPtr<slang::IComponentType> conformingModule;
+    session->createCompositeComponentType(modules.data(), modules.size(), conformingModule.writeRef(), diagnostics.writeRef());
+*/
+    Slang::ComPtr<slang::IComponentType> linkedProgram;
+    moduleComposition->link(linkedProgram.writeRef(), diagnostics.writeRef());
+    if(diagnostics)
+    {
+        std::cout << (const char*)diagnostics->getBufferPointer() << std::endl;
+    }
+
+    slang::ProgramLayout* reflection = linkedProgram->getLayout(0, diagnostics.writeRef());
+    if(diagnostics)
+    {
+        std::cout << (const char*)diagnostics->getBufferPointer() << std::endl;
+    }
+
+    Array<slang::SpecializationArg> specialization;
+    for(auto typeArg : createInfo.typeParameter)
+    {
+        specialization.add(slang::SpecializationArg::fromType(reflection->findTypeByName(typeArg)));
+    }
+    Slang::ComPtr<slang::IComponentType> specializedComponent;
+    linkedProgram->specialize(specialization.data(), specialization.size(), specializedComponent.writeRef(), diagnostics.writeRef());
+    if(diagnostics)
+    {
+        std::cout << (const char*)diagnostics->getBufferPointer() << std::endl;
+    }
+    Slang::ComPtr<slang::IBlob> kernelBlob;
+    specializedComponent->getEntryPointCode(
+        0,
+        0,
+        kernelBlob.writeRef(),
+        diagnostics.writeRef()
+    );
+    if(diagnostics)
+    {
+        std::cout << (const char*)diagnostics->getBufferPointer() << std::endl;
+    }
 
     VkShaderModuleCreateInfo moduleInfo;
 	moduleInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
 	moduleInfo.pNext = nullptr;
 	moduleInfo.flags = 0;
-	moduleInfo.codeSize = dataSize;
-	moduleInfo.pCode = data;
+	moduleInfo.codeSize = kernelBlob->getBufferSize();
+	moduleInfo.pCode = (uint32_t*)kernelBlob->getBufferPointer();
 	VK_CHECK(vkCreateShaderModule(graphics->getDevice(), &moduleInfo, nullptr, &module));
 
     boost::crc_32_type result;
     result.process_bytes(entryPointName.data(), entryPointName.size());
-    result.process_bytes(data, dataSize);
+    result.process_bytes(kernelBlob->getBufferPointer(), kernelBlob->getBufferSize());
     hash = result.checksum();
 }

@@ -5,4 +5,5 @@ target_sources(Engine
         Scene.h)
 
 add_subdirectory(Actor/)
-add_subdirectory(Components/)
+add_subdirectory(Component/)
+add_subdirectory(System/)

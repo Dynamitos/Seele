@@ -2,9 +2,8 @@ import Common;
 import LightEnv;
 import BRDF;
 import Material;
+import StaticMeshVertexInput;
 
-import VERTEX_INPUT_IMPORT;
-import MATERIAL_IMPORT;
 import PrimitiveSceneData;
 import MaterialParameter;
 
@@ -12,7 +11,6 @@ layout(set = INDEX_LIGHT_ENV, binding = 4)
 StructuredBuffer<uint> lightIndexList;
 layout(set = INDEX_LIGHT_ENV, binding = 5)
 RWTexture2D<uint2> lightGrid;
-
 
 struct VertexStageOutput
 {
@@ -50,7 +48,7 @@ float4 fragmentMain(
     ) : SV_Target
 {
     MaterialFragmentParameter materialParams = input.getMaterialParameter(position);
-    TMaterial.BRDF brdf = gMaterial.prepare(materialParams);
+    let brdf = gMaterial.prepare(materialParams);
     
     float3 viewDir = normalize(materialParams.viewDir);
     

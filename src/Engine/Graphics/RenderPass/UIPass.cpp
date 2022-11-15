@@ -26,7 +26,7 @@ void UIPass::beginFrame()
         .numVertices = (uint32)passData.renderElements.size(),
     };
     elementBuffer = graphics->createVertexBuffer(info);
-    uint32 numTextures = passData.usedTextures.size();
+    uint32 numTextures = static_cast<uint32>(passData.usedTextures.size());
     numTexturesBuffer->updateContents({
         .size = sizeof(uint32),
         .data = (uint8*)&numTextures,
@@ -45,7 +45,7 @@ void UIPass::render()
     command->bindPipeline(pipeline);
     command->bindVertexBuffer({VertexInputStream(0, 0, elementBuffer)});
     command->bindDescriptor(descriptorSet);
-    command->draw(4, passData.renderElements.size(), 0, 0);
+    command->draw(4, static_cast<uint32>(passData.renderElements.size()), 0, 0);
     graphics->executeCommands(Array<Gfx::PRenderCommand>({command}));
     graphics->endRenderPass();
     //co_return;
@@ -76,14 +76,8 @@ void UIPass::publishOutputs()
 
 void UIPass::createRenderPass() 
 {
-    std::ifstream codeStream("./shaders/UIPass.slang", std::ios::ate);
-    auto fileSize = codeStream.tellg();
-    codeStream.seekg(0);
-    Array<char> buffer(static_cast<uint32>(fileSize));
-    codeStream.read(buffer.data(), fileSize);
-
     ShaderCreateInfo createInfo;
-    createInfo.shaderCode.add(std::string(buffer.data()));
+    createInfo.mainModule = "UIPass";
     createInfo.name = "UIVertex";
     createInfo.entryPoint = "vertexMain";
     vertexShader = graphics->createVertexShader(createInfo);
@@ -141,10 +135,10 @@ void UIPass::createRenderPass()
     descriptorLayout->addDescriptorBinding(3, Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 256, Gfx::SE_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT | Gfx::SE_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT);
     descriptorLayout->create();
 
-    Matrix4 projectionMatrix = glm::ortho(0, 1, 1, 0);
+    Math::Matrix4 projectionMatrix = glm::ortho(0, 1, 1, 0);
     UniformBufferCreateInfo info = {
         .resourceData = {
-            .size = sizeof(Matrix4),
+            .size = sizeof(Math::Matrix4),
             .data = (uint8*)&projectionMatrix,
         },
         .bDynamic = false,

@@ -1,26 +1,26 @@
 #include "SceneView.h"
 #include "Scene/Scene.h"
 #include "Window.h"
+#include "Graphics/Mesh.h"
 #include "Graphics/Graphics.h"
 #include "Asset/MeshAsset.h"
 #include "Asset/AssetRegistry.h"
 #include "Scene/Actor/CameraActor.h"
-#include "Scene/Components/CameraComponent.h"
-#include "Scene/Components/MyComponent.h"
-#include "Scene/Components/MyOtherComponent.h"
+#include "Scene/Component/Camera.h"
+#include "Scene/Component/StaticMesh.h"
 
 using namespace Seele;
 
 Seele::SceneView::SceneView(Gfx::PGraphics graphics, PWindow owner, const ViewportCreateInfo &createInfo)
     : View(graphics, owner, createInfo, "SceneView")
-    , activeCamera(new CameraActor())
+    , scene(new Scene(graphics))
+    , activeCamera(new CameraActor(scene))
     , depthPrepass(DepthPrepass(graphics, viewport, activeCamera))
     , lightCullingPass(LightCullingPass(graphics, viewport, activeCamera))
     , basePass(BasePass(graphics, viewport, activeCamera))
+    , cameraSystem(scene->registry)
 {
-    activeCamera->getCameraComponent()->setViewport(viewport);
-    scene = new Scene(graphics);
-    scene->addActor(activeCamera);
+    activeCamera->getCameraComponent().setViewport(viewport);
     AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Ayaka\\Avatar_Girl_Sword_Ayaka_Tex_Body_Diffuse.png");
     AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Ayaka\\Avatar_Girl_Sword_Ayaka_Tex_Body_Lightmap.png");
     AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Ayaka\\Avatar_Girl_Sword_Ayaka_Tex_Face_Diffuse.png");
@@ -28,28 +28,18 @@ Seele::SceneView::SceneView(Gfx::PGraphics graphics, PWindow owner, const Viewpo
     AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Ayaka\\Avatar_Girl_Sword_Ayaka_Tex_Hair_Lightmap.png");
     AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Ayaka\\Avatar_Girl_Tex_FaceLightmap.png");
     AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Ayaka\\Ayaka.fbx");
-    PPrimitiveComponent ayaka = new PrimitiveComponent(AssetRegistry::findMesh("Ayaka"));
-    ayaka->setRelativeLocation(Vector(0, 0, 0));
-    ayaka->setRelativeScale(Vector(10, 10, 10));
-    scene->addPrimitiveComponent(ayaka);
+    auto meshAsset = AssetRegistry::findMesh("Ayaka");
+    for(auto mesh : meshAsset->getMeshes())
+    {
+        PActor actor = new Actor(scene);
+        actor->attachComponent<Component::StaticMesh>(mesh->vertexInput, mesh->indexBuffer, mesh->referencedMaterial);
+    }
 
     //AssetRegistry::importFile("D:\\Private\\Programming\\Unreal Engine\\Assets\\Ely\\Ely.fbx");
     //AssetRegistry::importFile("D:\\Private\\Programming\\Unreal Engine\\Assets\\Cube\\cube.obj");
     AssetRegistry::importFile("D:\\Private\\Programming\\Unreal Engine\\Assets\\Plane\\plane.fbx");
-    PPrimitiveComponent plane = new PrimitiveComponent(AssetRegistry::findMesh("plane"));
-    plane->setRelativeScale(Vector(100, 100, 100));
-    scene->addPrimitiveComponent(plane);
-
-    for(uint32 i = 0; i < 10; ++i)
-    {
-        PMyComponent myComp = new MyComponent();
-        PMyOtherComponent myOtherComp = new MyOtherComponent();
-        PActor actor = new Actor();
-        actor->setRootComponent(myComp);
-        myComp->addChildComponent(myOtherComp);
-        scene->addActor(actor);
-    }
-    scene->start();
+    
+    cameraSystem.run(pool);
     
     PRenderGraphResources resources = new RenderGraphResources();
     depthPrepass.setResources(resources);
@@ -97,6 +87,7 @@ void SceneView::prepareRender()
 
 void SceneView::render() 
 {
+    cameraSystem.run(pool);
     depthPrepass.beginFrame();
     lightCullingPass.beginFrame();
     basePass.beginFrame();
@@ -124,19 +115,19 @@ void SceneView::keyCallback(KeyCode code, InputAction action, KeyModifier mod)
     {
         if(code == KeyCode::KEY_W)
         {
-            activeCamera->getCameraComponent()->moveX(1);
+            activeCamera->getCameraComponent().moveX(1);
         }
         if(code == KeyCode::KEY_S)
         {
-            activeCamera->getCameraComponent()->moveX(-1);
+            activeCamera->getCameraComponent().moveX(-1);
         }
         if(code == KeyCode::KEY_A)
         {
-            activeCamera->getCameraComponent()->moveY(1);
+            activeCamera->getCameraComponent().moveY(1);
         }
         if(code == KeyCode::KEY_D)
         {
-            activeCamera->getCameraComponent()->moveY(-1);
+            activeCamera->getCameraComponent().moveY(-1);
         }
     }
 }
@@ -152,7 +143,7 @@ void SceneView::mouseMoveCallback(double xPos, double yPos)
     prevYPos = yPos;
     if(mouseDown)
     {
-        activeCamera->getCameraComponent()->mouseMove((float)deltaX, (float)deltaY);
+        activeCamera->getCameraComponent().mouseMove((float)deltaX, (float)deltaY);
     }
 }
 
@@ -170,7 +161,7 @@ void SceneView::mouseButtonCallback(MouseButton button, InputAction action, KeyM
 
 void SceneView::scrollCallback(double, double yOffset) 
 {
-    activeCamera->getCameraComponent()->mouseScroll(static_cast<float>(yOffset));
+    activeCamera->getCameraComponent().mouseScroll(static_cast<float>(yOffset));
 }
 
 void SceneView::fileCallback(int, const char**) 

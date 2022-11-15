@@ -2,32 +2,30 @@
 #include "Component.h"
 #include "Math/Matrix.h"
 #include "Graphics/GraphicsResources.h"
+#include "Transform.h"
 
 namespace Seele
 {
-class CameraComponent : public Component
+namespace Component
 {
-public:
-    CameraComponent();
-    virtual ~CameraComponent();
+struct Camera
+{
+    REQUIRE_COMPONENT(Transform)
+    
+    Camera();
+    ~Camera();
 
-    Matrix4 getViewMatrix()
+    Math::Matrix4 getViewMatrix()
     {
-        if (bNeedsViewBuild)
-        {
-            buildViewMatrix();
-        }
+        assert (!bNeedsViewBuild);
         return viewMatrix;
     }
-    Matrix4 getProjectionMatrix()
+    Math::Matrix4 getProjectionMatrix()
     {
-        if (bNeedsProjectionBuild)
-        {
-            buildProjectionMatrix();
-        }
+        assert (!bNeedsProjectionBuild);
         return projectionMatrix;
     }
-    Vector getCameraPosition()
+    Math::Vector getCameraPosition()
     {
         return getTransform().getPosition();
     }
@@ -38,19 +36,19 @@ public:
     void moveY(float amount);
     float aspectRatio;
     float fieldOfView;
+    void buildViewMatrix();
+    void buildProjectionMatrix();
 private:
     bool bNeedsViewBuild;
     bool bNeedsProjectionBuild;
-    void buildViewMatrix();
-    void buildProjectionMatrix();
 
     Gfx::PViewport viewport;
 
     //Transforms relative to actor
-    Matrix4 viewMatrix;
-    Matrix4 projectionMatrix;
+    Math::Matrix4 viewMatrix;
+    Math::Matrix4 projectionMatrix;
     float yaw;
     float pitch;
 };
-DEFINE_REF(CameraComponent)
+} // namespace Component
 } // namespace Seele

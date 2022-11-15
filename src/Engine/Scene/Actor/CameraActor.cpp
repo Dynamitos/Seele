@@ -1,21 +1,25 @@
 #include "CameraActor.h"
-#include "Scene/Components/Component.h"
-#include "Scene/Components/CameraComponent.h"
+#include "Scene/Scene.h"
 
 using namespace Seele;
 
-CameraActor::CameraActor()
+CameraActor::CameraActor(PScene scene)
+    : Actor(scene)
 {
-    sceneComponent = new Component();
-    setRootComponent(sceneComponent);
-
-    cameraComponent = new CameraComponent();
-    cameraComponent->fieldOfView = 70.0f;
-    cameraComponent->setParent(sceneComponent);
-    cameraComponent->setOwner(this);
-    sceneComponent->addChildComponent(cameraComponent);
+    scene->attachComponent<Component::Camera>(identifier);
+    scene->accessComponent<Component::Transform>(identifier).setRelativeLocation(Math::Vector(10, 5, 14));
 }
 
 CameraActor::~CameraActor()
 {
+}
+
+Component::Camera& CameraActor::getCameraComponent()
+{
+    return scene->accessComponent<Component::Camera>(identifier);
+}
+
+const Component::Camera& CameraActor::getCameraComponent() const
+{
+    return scene->accessComponent<Component::Camera>(identifier);
 }

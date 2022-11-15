@@ -52,8 +52,8 @@ void FontAsset::load()
             continue;
         }
         Glyph& glyph = glyphs[c];
-        glyph.size = IVector2(face->glyph->bitmap.width, face->glyph->bitmap.rows);
-        glyph.bearing = IVector2(face->glyph->bitmap_left, face->glyph->bitmap_top);
+        glyph.size = Math::IVector2(face->glyph->bitmap.width, face->glyph->bitmap.rows);
+        glyph.bearing = Math::IVector2(face->glyph->bitmap_left, face->glyph->bitmap_top);
         glyph.advance = face->glyph->advance.x;
         TextureCreateInfo imageData;
         imageData.format = Gfx::SE_FORMAT_R8_UINT;

@@ -2,6 +2,7 @@
 #include <glm/gtx/quaternion.hpp>
 
 using namespace Seele;
+using namespace Seele::Math;
 
 Transform::Transform()
     : position(Vector4(0, 0, 0, 0)), rotation(Quaternion(1, 0, 0, 0)), scale(Vector4(1, 1, 1, 0))
@@ -44,7 +45,7 @@ Vector Transform::inverseTransformPosition(const Vector &v) const
 {
     return (unrotateVector(rotation, v - Vector(position))) * getSafeScaleReciprocal(scale);
 }
-Matrix4 Transform::toMatrix()
+Matrix4 Transform::toMatrix() const
 {
     Matrix4 mat;
 
@@ -197,20 +198,26 @@ void Transform::add(Transform *outTransform, const Transform *a, const Transform
 
 Transform &Transform::operator=(const Transform &other)
 {
-    position = other.position;
-    rotation = other.rotation;
-    scale = other.scale;
+    if(&other != this)
+    {
+        position = other.position;
+        rotation = other.rotation;
+        scale = other.scale;
+    }
     return *this;
 }
 
 Transform &Transform::operator=(Transform &&other)
 {
-    position = other.position;
-    rotation = other.rotation;
-    scale = other.scale;
-    other.position = Vector4(0, 0, 0, 0);
-    other.rotation = Quaternion(1, 0, 0, 0);
-    other.scale = Vector4(0, 0, 0, 0);
+    if(&other != this)
+    {
+        position = other.position;
+        rotation = other.rotation;
+        scale = other.scale;
+        other.position = Vector4(0, 0, 0, 0);
+        other.rotation = Quaternion(1, 0, 0, 0);
+        other.scale = Vector4(0, 0, 0, 0);
+    }
     return *this;
 }
 

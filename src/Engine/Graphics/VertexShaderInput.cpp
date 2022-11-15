@@ -43,7 +43,7 @@ const char* VertexInputType::getName()
     return name;
 }
 
-const char* VertexInputType::getShaderFilename() 
+std::string VertexInputType::getShaderFilename() 
 {
     return shaderFilename;
 }
@@ -90,20 +90,22 @@ Gfx::VertexElement VertexShaderInput::accessStreamComponent(const VertexStreamCo
 {
     VertexStream vertexStream;
     vertexStream.vertexBuffer = component.vertexBuffer;
-    vertexStream.stride = component.stride;
-    vertexStream.offset = component.offset;
+    assert(component.stride < UINT8_MAX && component.offset < UINT8_MAX && component.offset < UINT8_MAX);
+    vertexStream.stride = static_cast<uint8>(component.stride);
+    vertexStream.offset = static_cast<uint8>(component.offset);
     
-    return Gfx::VertexElement((uint8)streams.indexOf(streams.addUnique(vertexStream)), component.offset, component.type, attributeIndex, vertexStream.stride);
+    return Gfx::VertexElement((uint8)streams.indexOf(streams.addUnique(vertexStream)), static_cast<uint8>(component.offset), component.type, attributeIndex, vertexStream.stride);
 }
 
 Gfx::VertexElement VertexShaderInput::accessPositionStreamComponent(const VertexStreamComponent& component, uint8 attributeIndex) 
 {
     VertexStream vertexStream;
     vertexStream.vertexBuffer = component.vertexBuffer;
-    vertexStream.stride = component.stride;
-    vertexStream.offset = component.offset;
+    assert(component.stride < UINT8_MAX && component.offset < UINT8_MAX && component.offset < UINT8_MAX);
+    vertexStream.stride = static_cast<uint8>(component.stride);
+    vertexStream.offset = static_cast<uint8>(component.offset);
     
-    return Gfx::VertexElement((uint8)positionStreams.indexOf(positionStreams.addUnique(vertexStream)), component.offset, component.type, attributeIndex, vertexStream.stride);
+    return Gfx::VertexElement((uint8)positionStreams.indexOf(positionStreams.addUnique(vertexStream)), static_cast<uint8>(component.offset), component.type, attributeIndex, vertexStream.stride);
 }
 
 void VertexShaderInput::initDeclaration(Gfx::PGraphics graphics, Array<Gfx::VertexElement>& elements) 

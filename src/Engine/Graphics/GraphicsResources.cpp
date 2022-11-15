@@ -2,6 +2,7 @@
 #include "Graphics.h"
 #include "RenderPass/DepthPrepass.h"
 #include "RenderPass/BasePass.h"
+#include "Material/MaterialAsset.h"
 
 using namespace Seele;
 using namespace Seele::Gfx;
@@ -11,9 +12,9 @@ std::string getShaderNameFromRenderPassType(Gfx::RenderPassType type)
 	switch (type)
 	{
 	case Gfx::RenderPassType::DepthPrepass:
-		return "DepthPrepass.slang";
+		return "DepthPrepass";
 	case Gfx::RenderPassType::BasePass:
-		return "ForwardPlus.slang";
+		return "ForwardPlus";
 	default:
 		return "";
 	}
@@ -64,8 +65,6 @@ ShaderCollection& ShaderMap::createShaders(
 	ShaderCreateInfo createInfo;
 	createInfo.entryPoint = "vertexMain";
 	createInfo.typeParameter = {material->getName().c_str()};
-	createInfo.defines["VERTEX_INPUT_IMPORT"] = vertexInput->getShaderFilename();
-	createInfo.defines["MATERIAL_IMPORT"] = material->getName().c_str();
 	createInfo.defines["NUM_MATERIAL_TEXCOORDS"] = "1";
 	createInfo.defines["USE_INSTANCING"] = "0";
 	modifyRenderPassMacros(renderPass, createInfo.defines);
@@ -73,7 +72,9 @@ ShaderCollection& ShaderMap::createShaders(
 	
     std::ifstream codeStream("./shaders/" + getShaderNameFromRenderPassType(renderPass));
     
-	createInfo.shaderCode.add(std::string(std::istreambuf_iterator<char>{codeStream}, {}));
+	createInfo.mainModule = getShaderNameFromRenderPassType(renderPass);
+	createInfo.additionalModules.add(vertexInput->getShaderFilename());
+	createInfo.additionalModules.add(material->getName());
 
 	collection.vertexShader = graphics->createVertexShader(createInfo);
 
@@ -227,7 +228,7 @@ VertexBuffer::VertexBuffer(QueueFamilyMapping mapping, uint32 numVertices, uint3
 VertexBuffer::~VertexBuffer()
 {
 }
-IndexBuffer::IndexBuffer(QueueFamilyMapping mapping, uint32 size, Gfx::SeIndexType indexType, QueueType startQueueType)
+IndexBuffer::IndexBuffer(QueueFamilyMapping mapping, uint64 size, Gfx::SeIndexType indexType, QueueType startQueueType)
 	: Buffer(mapping, startQueueType)
 	, indexType(indexType)
 {
@@ -264,6 +265,129 @@ const Array<VertexElement> VertexStream::getVertexDescriptions() const
 {
 	return vertexDescription;
 }
+
+VertexDataManager::VertexDataManager(PGraphics graphics)
+	: currentSize(8 * 1024 * 1024)
+	, inUse(0)
+	, graphics(graphics)
+{
+	VertexBufferCreateInfo defaultInfo = {
+		.resourceData = {
+			.size = currentSize,
+			.data = nullptr,
+		}
+	};
+	buffer = graphics->createVertexBuffer(defaultInfo);
+}
+
+VertexDataManager::~VertexDataManager()
+{
+
+}
+
+VertexDataAllocation VertexDataManager::createVertexBuffer(const VertexBufferCreateInfo& vbInfo)
+{
+	VertexDataAllocation data = allocateData(vbInfo.resourceData.size);
+	
+	buffer->updateRegion(BulkResourceData{
+		.size = data.size,
+		.offset = data.offset,
+		.data = vbInfo.resourceData.data
+	});
+
+	activeAllocations[data.offset] = data;
+
+	return data;
+}
+
+void VertexDataManager::freeAllocation(VertexDataAllocation alloc)
+{
+    uint64 lowerBound = alloc.offset;
+    uint64 upperBound = alloc.offset + alloc.size;
+	bool joinedLower = false;
+	uint64 lowerOffset = 0;
+
+	//Join lower bound
+	for (auto& [offset, freeAlloc] : freeRanges)
+	{
+		if (freeAlloc.offset <= lowerBound
+		&& freeAlloc.offset + freeAlloc.size >= upperBound)
+		{
+			// allocation is already in a free region
+			return;
+		}
+		if (freeAlloc.offset + freeAlloc.size == lowerBound)
+		{
+			//extend freeAlloc by the allocatedSize
+			freeAlloc.size += alloc.size;
+			joinedLower = true;
+			lowerOffset = freeAlloc.offset;
+			break;
+		}
+	}
+	//Join upper bound
+	auto foundAlloc = freeRanges.find(upperBound);
+	if (foundAlloc != freeRanges.end())
+	{
+		// There is a free allocation ending where the new free one ends
+		if (joinedLower)
+		{
+			// extend allocHandle by another foundAlloc->allocatedSize bytes
+			freeRanges[lowerOffset].size += foundAlloc->value.size;
+			freeRanges.erase(upperBound);
+		}
+		else
+		{
+			// set foundAlloc back by size amount
+			freeRanges[upperBound].offset -= alloc.size;
+			freeRanges[upperBound].size += alloc.size;
+			// place back at correct offset
+			freeRanges[freeRanges[upperBound].offset] = freeRanges[upperBound];
+			// remove from offset map since key changes
+			freeRanges.erase(upperBound);
+		}
+    }
+	else
+	{
+		// No matching upper bound found
+		if(!joinedLower)
+		{
+			// Lower bound also not joined, create new range
+			freeRanges[alloc.offset] = alloc;
+		}
+	}
+	activeAllocations.erase(alloc.offset);
+    inUse -= alloc.size;
+}
+
+
+VertexDataAllocation VertexDataManager::allocateData(uint64 size)
+{
+	for (auto& [offset, freeAllocation] : freeRanges)
+    {
+        assert(offset == freeAllocation.offset);
+        if (freeAllocation.size == size)
+        {
+            activeAllocations[offset] = freeAllocation;
+            freeRanges.erase(offset);
+            inUse += size;
+            return freeAllocation;
+        }
+        else if (size < freeAllocation.size)
+        {
+            freeAllocation.size -= size;
+            freeAllocation.offset += size;
+            VertexDataAllocation subAlloc = VertexDataAllocation(size, offset);
+            activeAllocations[offset] = subAlloc;
+            freeRanges[freeAllocation.offset] = freeAllocation;
+            freeRanges.erase(offset);
+            inUse += size;
+            return subAlloc;
+        }
+    }
+	throw std::logic_error("TODO: expand buffer");
+}
+
 VertexDeclaration::VertexDeclaration()
 {
 }

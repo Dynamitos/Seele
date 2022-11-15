@@ -1,8 +1,10 @@
 #pragma once
-#include "Vector.h"
-#include "Matrix.h"
+#include "Math/Vector.h"
+#include "Math/Matrix.h"
 
 namespace Seele
+{
+namespace Math
 {
 class Transform
 {
@@ -16,7 +18,7 @@ public:
     Transform(Quaternion rotation, Vector scale);
     ~Transform();
     Vector inverseTransformPosition(const Vector &v) const;
-    Matrix4 toMatrix();
+    Matrix4 toMatrix() const;
     static Vector getSafeScaleReciprocal(const Vector4 &inScale, float tolerance = 0.000000001f);
     Vector transformPosition(const Vector &v) const;
 
@@ -41,4 +43,5 @@ private:
     Quaternion rotation;
     Vector4 scale;
 };
+} // namespace Math
 } // namespace Seele

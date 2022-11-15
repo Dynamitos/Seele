@@ -1,8 +1,7 @@
 import Common;
 import Material;
-import VERTEX_INPUT_IMPORT;
-import MATERIAL_IMPORT;
 import PrimitiveSceneData;
+import StaticMeshVertexInput;
 
 
 struct VertexStageOutput

@@ -91,7 +91,7 @@ public:
     virtual ~VertexInputType();
 
     const char* getName();
-    const char* getShaderFilename();
+    std::string getShaderFilename();
 private:
     const char* name;
     const char* shaderFilename;

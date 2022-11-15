@@ -302,7 +302,7 @@ void RenderCommand::pushConstants(Gfx::PPipelineLayout layout, Gfx::SeShaderStag
 void RenderCommand::draw(const MeshBatchElement& data) 
 {
     assert(threadId == std::this_thread::get_id());
-    vkCmdDrawIndexed(handle, data.indexBuffer->getNumIndices(), data.numInstances, data.minVertexIndex, data.baseVertexIndex, 0);
+    vkCmdDrawIndexed(handle, static_cast<uint32>(data.indexBuffer->getNumIndices()), data.numInstances, data.minVertexIndex, data.baseVertexIndex, 0);
 }
 
 void RenderCommand::draw(uint32 vertexCount, uint32 instanceCount, int32 firstVertex, uint32 firstInstance) 

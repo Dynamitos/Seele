@@ -24,10 +24,9 @@ private:
 };
 DEFINE_REF(DepthPrepassMeshProcessor)
 DECLARE_REF(CameraActor)
-DECLARE_REF(CameraComponent)
 struct DepthPrepassData
 {
-    std::vector<StaticMeshBatch> staticDrawList;
+    Array<StaticMeshBatch> staticDrawList;
 };
 class DepthPrepass : public RenderPass<DepthPrepassData>
 {
@@ -46,7 +45,7 @@ private:
     UPDepthPrepassMeshProcessor processor;
     
     Array<Gfx::PDescriptorSet> descriptorSets;
-    PCameraComponent source;
+    PCameraActor source;
     Gfx::PPipelineLayout depthPrepassLayout;
     // Set 0: viewParameter
     static constexpr uint32 INDEX_VIEW_PARAMS = 0;

@@ -31,6 +31,7 @@ add_subdirectory(${JSON_ROOT})
 
 #--------------GLM------------------------------
 add_subdirectory(${GLM_ROOT})
+target_compile_options(glm_shared INTERFACE /W0)
 
 #--------------GLFW------------------------------
 set(ENKITS_BUILD_EXAMPLES OFF CACHE BOOL "Build basic example applications" )
@@ -61,6 +62,10 @@ target_link_libraries(nsam INTERFACE ${NSAM_ROOT}/lib/${CMAKE_PLATFORM}/*.lib)
 set_target_properties(nsam PROPERTIES NSAM_BINARY ${NSAM_ROOT}/lib/${CMAKE_PLATFORM}/GFSDK_Aftermath_Lib.${CMAKE_PLATFORM}.dll)
 set_target_properties(nsam PROPERTIES LLVM_BINARY ${NSAM_ROOT}/lib/${CMAKE_PLATFORM}/llvm_7_0_1.dll)
 
+#--------------thread-pool------------------------------
+add_subdirectory(${THREADPOOL_ROOT})
+
+target_compile_options(ThreadPool INTERFACE "/WX-")
 
 #--------------SLang------------------------------
 string(TOLOWER release_${CMAKE_PLATFORM} SLANG_CONFIG)

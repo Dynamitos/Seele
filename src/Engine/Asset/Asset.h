@@ -31,10 +31,10 @@ public:
         std::scoped_lock lck(lock);
         return status;
     }
-    inline void setStatus(Status status)
+    inline void setStatus(Status _status)
     {
         std::scoped_lock lck(lock);
-        this->status = status;
+        status = _status;
     }
 protected:
     std::mutex lock;

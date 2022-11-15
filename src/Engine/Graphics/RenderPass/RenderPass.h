@@ -26,15 +26,16 @@ public:
     virtual void endFrame() = 0;
     virtual void publishOutputs() = 0;
     virtual void createRenderPass() = 0;
-    void setResources(PRenderGraphResources resources) { this->resources = resources; }
+    void setResources(PRenderGraphResources _resources) { resources = _resources; }
 protected:
     struct ViewParameter
     {
-        Matrix4 viewMatrix;
-        Matrix4 projectionMatrix;
-        Matrix4 inverseProjectionMatrix;
-        Vector4 cameraPosition;
-        Vector2 screenDimensions;
+        Math::Matrix4 viewMatrix;
+        Math::Matrix4 projectionMatrix;
+        Math::Matrix4 inverseProjectionMatrix;
+        Math::Vector4 cameraPosition;
+        Math::Vector2 screenDimensions;
+        Math::Vector2 pad0;
     } viewParams;
     PRenderGraphResources resources;
     RenderPassDataType passData;

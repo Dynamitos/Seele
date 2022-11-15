@@ -72,13 +72,13 @@ DEFINE_REF(VertexDeclaration)
 class ShaderBuffer
 {
 public:
-    ShaderBuffer(PGraphics graphics, uint32 size, VkBufferUsageFlags usage, Gfx::QueueType& queueType, bool bDynamic = false);
+    ShaderBuffer(PGraphics graphics, uint64 size, VkBufferUsageFlags usage, Gfx::QueueType& queueType, bool bDynamic = false);
     virtual ~ShaderBuffer();
     VkBuffer getHandle() const
     {
         return buffers[currentBuffer].buffer;
     }
-    uint32 getSize() const
+    uint64 getSize() const
     {
         return size;
     }
@@ -88,6 +88,7 @@ public:
         currentBuffer = (currentBuffer + 1) % numBuffers;
     }
     virtual void *lock(bool bWriteOnly = true);
+    virtual void *lockRegion(uint64 regionOffset, uint64 regionSize, bool bWriteOnly = true);
     virtual void unlock();
 
 protected:
@@ -98,7 +99,7 @@ protected:
     };
     PGraphics graphics;
     uint32 currentBuffer;
-    uint32 size;
+    uint64 size;
     Gfx::QueueType& owner;
     BufferAllocation buffers[Gfx::numFramesBuffered];
     uint32 numBuffers;
@@ -167,6 +168,8 @@ class VertexBuffer : public Gfx::VertexBuffer, public ShaderBuffer
 public:
     VertexBuffer(PGraphics graphics, const VertexBufferCreateInfo &resourceData);
     virtual ~VertexBuffer();
+
+    virtual void updateRegion(BulkResourceData update) override;
 
 protected:
     // Inherited via Vulkan::Buffer

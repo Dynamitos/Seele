@@ -34,3 +34,6 @@
 [submodule "external/entt"]
 	path = external/entt
 	url = git@github.com:skypjack/entt.git
+[submodule "external/thread-pool"]
+	path = external/thread-pool
+	url = https://github.com/DeveloperPaul123/thread-pool.git

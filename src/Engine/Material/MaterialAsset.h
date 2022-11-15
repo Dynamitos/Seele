@@ -40,6 +40,8 @@ private:
     uint8* uniformData;
     int32 uniformBinding;
     std::string materialName;
+    // With draw-indirect, we batch vertex data into big vertex buffers
+    // Gfx::PVertexDataManager vertexData;
 };
 DEFINE_REF(MaterialAsset)
 } // namespace Seele

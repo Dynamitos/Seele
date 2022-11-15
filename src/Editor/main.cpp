@@ -1,5 +1,4 @@
 #include "Window/WindowManager.h"
-#include "Scene/Components/PrimitiveComponent.h"
 #include "Window/SceneView.h"
 #include "Window/InspectorView.h"
 #include "Asset/AssetRegistry.h"

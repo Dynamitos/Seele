@@ -20,16 +20,16 @@ void TextPass::beginFrame()
 {
     for(TextRender& render : passData.texts)
     {
-        FontData& fontData = getFontData(render.font);
-        TextResources& resources = textResources[render.font].add();
+        FontData& fd = getFontData(render.font);
+        TextResources& res = textResources[render.font].add();
         Array<GlyphInstanceData> instanceData;
         float x = render.position.x;
         float y = render.position.y;
         for(uint32 c : render.text)
         {
-            const GlyphData& glyph = fontData.glyphDataSet[fontData.characterToGlyphIndex[c]];
-            Vector2 bearing = glyph.bearing;
-            Vector2 size = glyph.size;
+            const GlyphData& glyph = fd.glyphDataSet[fd.characterToGlyphIndex[c]];
+            Math::Vector2 bearing = glyph.bearing;
+            Math::Vector2 size = glyph.size;
             float xpos = x + bearing.x * render.scale;
             float ypos = y - (size.y - bearing.y) * render.scale;
             
@@ -37,9 +37,9 @@ void TextPass::beginFrame()
             float h = size.y * render.scale;
 
             instanceData.add(GlyphInstanceData{
-                .position = Vector2(xpos, ypos),
-                .widthHeight = Vector2(w, h),
-                .glyphIndex = fontData.characterToGlyphIndex[c],
+                .position = Math::Vector2(xpos, ypos),
+                .widthHeight = Math::Vector2(w, h),
+                .glyphIndex = fd.characterToGlyphIndex[c],
             });
             x += (glyph.advance >> 6) * render.scale;
         }
@@ -51,11 +51,11 @@ void TextPass::beginFrame()
             .vertexSize = sizeof(GlyphInstanceData),
             .numVertices = static_cast<uint32>(instanceData.size()),
         };
-        resources.vertexBuffer = graphics->createVertexBuffer(vbInfo);
+        res.vertexBuffer = graphics->createVertexBuffer(vbInfo);
 
-        resources.textureArraySet = fontData.textureArraySet;
+        res.textureArraySet = fd.textureArraySet;
 
-        resources.textData = {
+        res.textData = {
             .textColor = render.textColor,
             .scale = render.scale,
         };
@@ -67,12 +67,12 @@ void TextPass::render()
 {
     graphics->beginRenderPass(renderPass);
     Array<Gfx::PRenderCommand> commands;
-    for(const auto& [fontAsset, resources] : textResources)
+    for(const auto& [fontAsset, res] : textResources)
     {
         Gfx::PRenderCommand command = graphics->createRenderCommand("TextPassCommand");
         command->setViewport(viewport);
         command->bindPipeline(pipeline);
-        for(const auto& resource : resources)
+        for(const auto& resource : res)
         {
             command->bindDescriptor({generalSet, resource.textureArraySet});
             command->bindVertexBuffer({VertexInputStream(0, 0, resource.vertexBuffer)});
@@ -100,14 +100,8 @@ void TextPass::publishOutputs()
 void TextPass::createRenderPass() 
 {
     depthAttachment = resources->requestRenderTarget("UIPASS_DEPTH");
-    std::ifstream codeStream("./shaders/TextPass.slang", std::ios::ate);
-    auto fileSize = codeStream.tellg();
-    codeStream.seekg(0);
-    Array<char> buffer(static_cast<uint32>(fileSize));
-    codeStream.read(buffer.data(), fileSize);
-
     ShaderCreateInfo createInfo;
-    createInfo.shaderCode.add(std::string(buffer.data()));
+    createInfo.mainModule = "TextPass";
     createInfo.defines["INDEX_VIEW_PARAMS"] = "0";
     createInfo.name = "TextVertex";
     createInfo.entryPoint = "vertexMain";
@@ -152,10 +146,10 @@ void TextPass::createRenderPass()
     textureArrayLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 256, Gfx::SE_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT);
     textureArrayLayout->create();
 
-    Matrix4 projectionMatrix = glm::ortho(0.f, (float)viewport->getSizeX(), 0.f, (float)viewport->getSizeY());
+    Math::Matrix4 projectionMatrix = glm::ortho(0.f, (float)viewport->getSizeX(), 0.f, (float)viewport->getSizeY());
     projectionBuffer = graphics->createUniformBuffer({
         .resourceData = {
-            .size = sizeof(Matrix4),
+            .size = sizeof(Math::Matrix4),
             .data = (uint8*)&projectionMatrix,
         },
         .bDynamic = false,

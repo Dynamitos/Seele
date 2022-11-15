@@ -1,10 +1,15 @@
 #pragma once
+#pragma warning(push)
+#pragma warning(disable: 4201)
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 
 #include <glm/gtc/quaternion.hpp>
+#pragma warning(pop)
 namespace Seele
+{
+namespace Math
 {
 typedef glm::vec2 Vector2;
 typedef glm::vec3 Vector;
@@ -95,4 +100,5 @@ static inline Vector toRotator(const Quaternion &other)
 	}
 	return rotatorFromQuat;
 }
+} // namespace Math
 } // namespace Seele

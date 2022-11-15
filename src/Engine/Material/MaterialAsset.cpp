@@ -53,7 +53,6 @@ void MaterialAsset::load()
     std::ofstream codeStream("./shaders/generated/"+materialName+".slang");
     std::string profile = j["profile"].get<std::string>();
 
-    codeStream << "import VERTEX_INPUT_IMPORT;" << std::endl;
     codeStream << "import Material;" << std::endl;
     codeStream << "import BRDF;" << std::endl;
     codeStream << "import MaterialParameter;" << std::endl << std::endl;
@@ -94,7 +93,7 @@ void MaterialAsset::load()
             uniformBufferOffset += 12;
             if(defaultValue != param.value().end())
             {
-                p->data = parseVector(defaultValue.value().get<std::string>().c_str());
+                p->data = Math::parseVector(defaultValue.value().get<std::string>().c_str());
             }
             parameters.add(p);
         }
@@ -184,6 +183,6 @@ const Gfx::ShaderCollection* MaterialAsset::getShaders(Gfx::RenderPassType rende
 
 Gfx::ShaderCollection& MaterialAsset::createShaders(Gfx::PGraphics graphics, Gfx::RenderPassType renderPass, VertexInputType* vertexInput) 
 {
-    std::scoped_lock lock(shaderMapLock);
+    std::scoped_lock l(shaderMapLock);
     return shaderMap.createShaders(graphics, renderPass, this, vertexInput, false);
 }

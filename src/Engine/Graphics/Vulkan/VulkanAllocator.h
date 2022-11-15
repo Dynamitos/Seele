@@ -191,7 +191,7 @@ public:
 	{
 		return allocation->getOffset();
 	}
-	uint32 getSize() const
+	uint64 getSize() const
 	{
 		return size;
 	}
@@ -203,7 +203,7 @@ public:
 private:
 	PSubAllocation allocation;
 	VkBuffer buffer;
-	uint32 size;
+	uint64 size;
 	VkBufferUsageFlags usage;
 	uint8 bReadable;
 	friend class StagingManager;
@@ -215,7 +215,7 @@ class StagingManager
 public:
 	StagingManager(PGraphics graphics, PAllocator allocator);
 	~StagingManager();
-	PStagingBuffer allocateStagingBuffer(uint32 size, VkBufferUsageFlags usageFlags = VK_BUFFER_USAGE_TRANSFER_SRC_BIT, bool bCPURead = false);
+	PStagingBuffer allocateStagingBuffer(uint64 size, VkBufferUsageFlags usageFlags = VK_BUFFER_USAGE_TRANSFER_SRC_BIT, bool bCPURead = false);
 	void releaseStagingBuffer(PStagingBuffer buffer);
 	void clearPending();
 

@@ -23,13 +23,13 @@ public:
     bool isEnabled() const;
     // maybe not the healthiest inteface
     // non-const version
-    Rect& getBoundingBox();
+    Math::Rect& getBoundingBox();
     // The bounding box describes the relative size of any Element
     // relative to the total view, meaning a bounding box of (0,0), (1,1)
     // would take up the entire view
-    const Rect getBoundingBox() const;
+    const Math::Rect getBoundingBox() const;
 protected:
-    Rect boundingBox;
+    Math::Rect boundingBox;
     bool dirty;
     
     bool enabled;

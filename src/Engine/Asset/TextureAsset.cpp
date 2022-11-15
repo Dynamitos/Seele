@@ -50,10 +50,10 @@ void TextureAsset::load()
     createInfo.mipLevels = kTexture->numLevels;
     createInfo.usage = Gfx::SE_IMAGE_USAGE_SAMPLED_BIT;
     createInfo.resourceData.data = ktxTexture_GetData(ktxTexture(kTexture));
-    createInfo.resourceData.size = (uint32)ktxTexture_GetDataSize(ktxTexture(kTexture));
+    createInfo.resourceData.size = ktxTexture_GetDataSize(ktxTexture(kTexture));
     createInfo.resourceData.owner = Gfx::QueueType::DEDICATED_TRANSFER;
-    Gfx::PTexture2D texture = WindowManager::getGraphics()->createTexture2D(createInfo);
-    texture->transferOwnership(Gfx::QueueType::GRAPHICS);
-    setTexture(texture);
+    Gfx::PTexture2D tex = WindowManager::getGraphics()->createTexture2D(createInfo);
+    tex->transferOwnership(Gfx::QueueType::GRAPHICS);
+    setTexture(tex);
     setStatus(Asset::Status::Ready);
 }

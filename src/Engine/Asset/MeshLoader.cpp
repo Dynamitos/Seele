@@ -36,7 +36,7 @@ void MeshLoader::importAsset(const std::filesystem::path &path)
     import(path, asset);
 }
 
-void MeshLoader::loadMaterials(const aiScene* scene, Array<PMaterialAsset>& globalMaterials, Gfx::PGraphics graphics)
+void MeshLoader::loadMaterials(const aiScene* scene, Array<PMaterialAsset>& globalMaterials)
 {
     using json = nlohmann::json;
     for(uint32 i = 0; i < scene->mNumMaterials; ++i)
@@ -111,44 +111,44 @@ void findMeshRoots(aiNode *node, List<aiNode *> &meshNodes)
 }
 VertexStreamComponent createVertexStream(uint32 size, aiVector3D* sourceData, Gfx::PGraphics graphics)
 {
-    Array<Vector> buffer(size);
+    Array<Math::Vector> buffer(size);
     for(uint32 i = 0; i < size; ++i)
     {
-        buffer[i] = Vector(sourceData[i].x, sourceData[i].y, sourceData[i].z);
+        buffer[i] = Math::Vector(sourceData[i].x, sourceData[i].y, sourceData[i].z);
     }    
     VertexBufferCreateInfo vbInfo;
     vbInfo.numVertices = size;
-    vbInfo.vertexSize = sizeof(Vector);
+    vbInfo.vertexSize = sizeof(Math::Vector);
     vbInfo.resourceData.data = (uint8 *)buffer.data();
     vbInfo.resourceData.owner = Gfx::QueueType::DEDICATED_TRANSFER;
-    vbInfo.resourceData.size = sizeof(Vector) * (uint32)buffer.size();
+    vbInfo.resourceData.size = sizeof(Math::Vector) * buffer.size();
     Gfx::PVertexBuffer vertexBuffer = graphics->createVertexBuffer(vbInfo);
     vertexBuffer->transferOwnership(Gfx::QueueType::GRAPHICS);
     return VertexStreamComponent(vertexBuffer, 0, vbInfo.vertexSize, Gfx::SE_FORMAT_R32G32B32_SFLOAT);
 }
 VertexStreamComponent createVertexStream(uint32 size, aiVector2D* sourceData, Gfx::PGraphics graphics)
 {
-    Array<Vector2> buffer(size);
+    Array<Math::Vector2> buffer(size);
     for(uint32 i = 0; i < size; ++i)
     {
-        buffer[i] = Vector2(sourceData[i].x, sourceData[i].y);
+        buffer[i] = Math::Vector2(sourceData[i].x, sourceData[i].y);
     }    
     VertexBufferCreateInfo vbInfo;
     vbInfo.numVertices = size;
-    vbInfo.vertexSize = sizeof(Vector2);
+    vbInfo.vertexSize = sizeof(Math::Vector2);
     vbInfo.resourceData.data = (uint8 *)buffer.data();
     vbInfo.resourceData.owner = Gfx::QueueType::DEDICATED_TRANSFER;
-    vbInfo.resourceData.size = sizeof(Vector2) * (uint32)buffer.size();
+    vbInfo.resourceData.size = sizeof(Math::Vector2) * buffer.size();
     Gfx::PVertexBuffer vertexBuffer = graphics->createVertexBuffer(vbInfo);
     vertexBuffer->transferOwnership(Gfx::QueueType::GRAPHICS);
     return VertexStreamComponent(vertexBuffer, 0, vbInfo.vertexSize, Gfx::SE_FORMAT_R32G32_SFLOAT);
 }
-void MeshLoader::loadGlobalMeshes(const aiScene* scene, Array<PMesh>& globalMeshes, const Array<PMaterialAsset>& materials, Gfx::PGraphics graphics)
+void MeshLoader::loadGlobalMeshes(const aiScene* scene, Array<PMesh>& globalMeshes, const Array<PMaterialAsset>& materials)
 {
     for (uint32 meshIndex = 0; meshIndex < scene->mNumMeshes; ++meshIndex)
     {
         aiMesh *mesh = scene->mMeshes[meshIndex];
-
+        PMaterialAsset material = materials[mesh->mMaterialIndex];
         PStaticMeshVertexInput vertexShaderInput = new StaticMeshVertexInput(std::string(mesh->mName.C_Str()));
         StaticMeshDataType data;
         data.positionStream = createVertexStream(mesh->mNumVertices, mesh->mVertices, graphics);
@@ -188,7 +188,7 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, Array<PMesh>& globalMesh
         idxInfo.indexType = Gfx::SE_INDEX_TYPE_UINT32;
         idxInfo.resourceData.data = (uint8 *)indices.data();
         idxInfo.resourceData.owner = Gfx::QueueType::DEDICATED_TRANSFER;
-        idxInfo.resourceData.size = sizeof(uint32) * (uint32)indices.size();
+        idxInfo.resourceData.size = sizeof(uint32) * indices.size();
         Gfx::PIndexBuffer indexBuffer = graphics->createIndexBuffer(idxInfo);
         indexBuffer->transferOwnership(Gfx::QueueType::GRAPHICS);
 
@@ -249,10 +249,10 @@ void MeshLoader::import(std::filesystem::path path, PMeshAsset meshAsset)
     
     Array<PMaterialAsset> globalMaterials(scene->mNumMaterials);
     loadTextures(scene, path.parent_path());
-    loadMaterials(scene, globalMaterials, graphics);
+    loadMaterials(scene, globalMaterials);
     
     Array<PMesh> globalMeshes(scene->mNumMeshes);
-    loadGlobalMeshes(scene, globalMeshes, globalMaterials, graphics);
+    loadGlobalMeshes(scene, globalMeshes, globalMaterials);
 
 
     List<aiNode *> meshNodes;
