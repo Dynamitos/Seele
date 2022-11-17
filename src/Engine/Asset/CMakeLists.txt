@@ -1,5 +1,5 @@
 target_sources(Engine
-    PUBLIC
+    PRIVATE
         Asset.h
         Asset.cpp
         AssetRegistry.h

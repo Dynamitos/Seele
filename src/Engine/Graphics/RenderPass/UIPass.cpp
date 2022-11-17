@@ -4,9 +4,8 @@
 
 using namespace Seele;
 
-UIPass::UIPass(Gfx::PGraphics graphics, Gfx::PViewport viewport, Gfx::PRenderTargetAttachment attachment) 
-    : RenderPass(graphics, viewport)
-    , renderTarget(attachment)
+UIPass::UIPass(Gfx::PGraphics graphics) 
+    : RenderPass(graphics)
 {
 }
 
@@ -15,7 +14,7 @@ UIPass::~UIPass()
     
 }
 
-void UIPass::beginFrame() 
+void UIPass::beginFrame(const Component::Camera&) 
 {
     VertexBufferCreateInfo info = {
         .resourceData = {
@@ -58,20 +57,30 @@ void UIPass::endFrame()
 
 void UIPass::publishOutputs() 
 {
-    TextureCreateInfo depthBufferInfo;
-    // Even if we only render to part of an image, we need to make sure
-    // that the depthbuffer is the same size or they can't be used in the same 
-    // framebuffer
-    depthBufferInfo.width = viewport->getOwner()->getSizeX();
-    depthBufferInfo.height = viewport->getOwner()->getSizeY();
-    depthBufferInfo.format = Gfx::SE_FORMAT_D32_SFLOAT;
-    depthBufferInfo.usage = Gfx::SE_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+    TextureCreateInfo depthBufferInfo = {
+        .width = viewport->getSizeX(),
+        .height = viewport->getSizeY(),
+        .format = Gfx::SE_FORMAT_D32_SFLOAT,
+        .usage = Gfx::SE_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+    };
 
     depthBuffer = graphics->createTexture2D(depthBufferInfo);
     depthAttachment = 
         new Gfx::RenderTargetAttachment(depthBuffer, Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
-        depthAttachment->clear.depthStencil.depth = 1.0f;
+    depthAttachment->clear.depthStencil.depth = 1.0f;
     resources->registerRenderPassOutput("UIPASS_DEPTH", depthAttachment);
+
+    TextureCreateInfo colorBufferInfo = {
+        .width = viewport->getSizeX(),
+        .height = viewport->getSizeY(),
+        .format = Gfx::SE_FORMAT_R16G16B16A16_SFLOAT,
+        .usage = Gfx::SE_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+    };
+    colorBuffer = graphics->createTexture2D(colorBufferInfo);
+    renderTarget =
+        new Gfx::RenderTargetAttachment(colorBuffer, Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
+    renderTarget->clear.color = { 0.0f, 0.0f, 0.0f, 1.0f };
+    resources->registerRenderPassOutput("UIPASS_COLOR", renderTarget);
 }
 
 void UIPass::createRenderPass() 

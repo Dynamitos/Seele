@@ -1,5 +1,5 @@
 target_sources(Engine
-	PUBLIC
+	PRIVATE
 		NsightAftermathGpuCrashTracker.h
 		NsightAftermathGpuCrashTracker.cpp
 		NsightAftermathHelpers.h

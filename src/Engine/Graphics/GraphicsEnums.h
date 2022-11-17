@@ -3,7 +3,7 @@
 
 namespace Seele
 {
-enum class KeyCode
+enum class KeyCode : size_t
 {
     /* Printable keys */
     KEY_SPACE              = 32,
@@ -127,6 +127,7 @@ enum class KeyCode
     KEY_RIGHT_ALT          = 346,
     KEY_RIGHT_SUPER        = 347,
     KEY_MENU               = 348,
+    KEY_LAST               = KEY_MENU
 };
 
 enum class MouseButton

@@ -1,5 +1,5 @@
 target_sources(Engine
-    PUBLIC
+    PRIVATE
         HorizontalLayout.h
         HorizontalLayout.cpp
         Layout.h

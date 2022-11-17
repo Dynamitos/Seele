@@ -22,6 +22,11 @@ void System::update()
     
 }
 
+void System::updateViewport(Gfx::PViewport viewport)
+{
+    virtualCamera.projectionMatrix = glm::ortho<float>(0.0f, static_cast<float>(viewport->getSizeX()), 0.0f, static_cast<float>(viewport->getSizeY()));
+}
+
 UIPassData System::getUIPassData()
 {
     UIPassData uiPassData;
@@ -45,4 +50,9 @@ TextPassData System::getTextPassData()
     render.scale = 0.1f;
     render.textColor = Math::Vector4(1, 0, 0, 1);
     return textPassData;
+}
+
+Component::Camera System::getVirtualCamera() const
+{
+    return virtualCamera;
 }

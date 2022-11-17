@@ -504,10 +504,10 @@ Window::~Window()
 }
 
 Viewport::Viewport(PWindow owner, const ViewportCreateInfo &viewportInfo)
-	: sizeX(viewportInfo.sizeX)
-	, sizeY(viewportInfo.sizeY)
-	, offsetX(viewportInfo.offsetX)
-	, offsetY(viewportInfo.offsetY)
+	: sizeX(viewportInfo.dimensions.size.x)
+	, sizeY(viewportInfo.dimensions.size.y)
+	, offsetX(viewportInfo.dimensions.offset.x)
+	, offsetY(viewportInfo.dimensions.offset.y)
 	, owner(owner)
 {
 }

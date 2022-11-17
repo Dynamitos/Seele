@@ -15,9 +15,9 @@ struct LightCullingPassData
 class LightCullingPass : public RenderPass<LightCullingPassData>
 {
 public:
-    LightCullingPass(Gfx::PGraphics graphics, Gfx::PViewport viewport, PCameraActor camera);
+    LightCullingPass(Gfx::PGraphics graphics);
     virtual ~LightCullingPass();
-    virtual void beginFrame() override;
+    virtual void beginFrame(const Component::Camera& cam) override;
     virtual void render() override;
     virtual void endFrame() override;
     virtual void publishOutputs() override;
@@ -71,7 +71,6 @@ private:
     Gfx::PComputeShader cullingShader;
     Gfx::PPipelineLayout cullingLayout;
     Gfx::PComputePipeline cullingPipeline;
-    PCameraActor source;
 };
 DEFINE_REF(LightCullingPass)
 } // namespace Seele

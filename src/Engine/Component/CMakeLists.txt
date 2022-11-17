@@ -1,8 +1,8 @@
 target_sources(Engine
-    PUBLIC
-        Component.h
+    PRIVATE
         Camera.h
         Camera.cpp
+        Component.h
         StaticMesh.h
 		Transform.h
 		Transform.cpp)

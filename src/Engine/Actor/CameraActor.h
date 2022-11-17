@@ -1,6 +1,6 @@
 #pragma once
 #include "Actor.h"
-#include "Scene/Component/Camera.h"
+#include "Component/Camera.h"
 
 namespace Seele
 {

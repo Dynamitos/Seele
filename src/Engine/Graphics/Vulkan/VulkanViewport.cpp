@@ -355,10 +355,10 @@ void Window::choosePresentMode(const Array<VkPresentModeKHR> &modes)
 Viewport::Viewport(PGraphics graphics, PWindow owner, const ViewportCreateInfo &viewportInfo)
     : Gfx::Viewport(owner, viewportInfo), graphics(graphics)
 {
-    handle.width = static_cast<float>(viewportInfo.sizeX);
-    handle.height = static_cast<float>(viewportInfo.sizeY);
-    handle.x = static_cast<float>(viewportInfo.offsetX);
-    handle.y = static_cast<float>(viewportInfo.offsetY) + handle.height;
+    handle.width = static_cast<float>(viewportInfo.dimensions.size.x);
+    handle.height = static_cast<float>(viewportInfo.dimensions.size.y);
+    handle.x = static_cast<float>(viewportInfo.dimensions.offset.x);
+    handle.y = static_cast<float>(viewportInfo.dimensions.offset.y) + handle.height;
     handle.height = -handle.height;
     handle.minDepth =  0.f;
     handle.maxDepth =  1.f;

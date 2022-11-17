@@ -10,6 +10,7 @@ option (USE_SUPERBUILD "Whether or not a superbuild should be invoked" ON)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_COMPILE_WARNING_AS_ERROR OFF)
+set(BUILD_SHARED_LIBS OFF)
 
 set(ENGINE_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/src/Engine)
 set(EXTERNAL_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/external)
@@ -56,8 +57,7 @@ if(CMAKE_DEBUG_POSTFIX)
   add_compile_definitions(SEELE_DEBUG)
 endif()
 
-add_library(Engine SHARED "")
-add_executable(Editor "")
+add_library(Engine STATIC "")
 target_compile_definitions(Engine PUBLIC GLFW_WINDOWS)
 target_include_directories(Engine PUBLIC src/Engine)
 target_link_libraries(Engine PUBLIC Vulkan::Vulkan)
@@ -75,8 +75,8 @@ target_link_libraries(Engine PUBLIC stb)
 target_link_libraries(Engine PUBLIC nlohmann_json::nlohmann_json)
 target_link_libraries(Engine PUBLIC dp::thread-pool)
 if(UNIX)
-  target_link_libraries(Engine Threads::Threads)
-  target_link_libraries(Engine dl)
+  target_link_libraries(Engine PUBLIC Threads::Threads)
+  target_link_libraries(Engine PUBLIC dl)
 endif()
 target_precompile_headers(Engine 
   PUBLIC    
@@ -97,10 +97,14 @@ target_precompile_headers(Engine
     
 if(MSVC)
   set(_CRT_SECURE_NO_WARNINGS)
-  target_compile_options(Engine PUBLIC /Zi /MP /W4 /DEBUG "/WX-")
+  target_compile_options(Engine PUBLIC /Zi /MP15 /W4 /DEBUG "/WX-")
 else()
   target_compile_options(Engine PUBLIC -g -Wall -Wextra -Wno-delete-incomplete -pedantic -fcoroutines)
 endif()
+
+add_executable(Editor "")
+
+target_include_directories(Editor PRIVATE src/Editor)
 
 target_link_libraries(Editor PUBLIC Engine)
 
@@ -110,12 +114,12 @@ add_executable(Seele_unit_tests "")
 add_subdirectory(test/)
 
 add_custom_target(SeeleEngine ALL
-	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/res $<TARGET_FILE_DIR:Engine>
-  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:Engine> $<TARGET_FILE_DIR:Engine>
-  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_PROPERTY:slang,SLANG_BINARY> $<TARGET_FILE_DIR:Engine>
-  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_PROPERTY:slang,GLSLANG_BINARY> $<TARGET_FILE_DIR:Engine>
-  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_PROPERTY:nsam,NSAM_BINARY> $<TARGET_FILE_DIR:Engine>
-  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_PROPERTY:nsam,LLVM_BINARY> $<TARGET_FILE_DIR:Engine>
+	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/res $<TARGET_FILE_DIR:Editor>
+  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:Editor> $<TARGET_FILE_DIR:Editor>
+  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_PROPERTY:slang,SLANG_BINARY> $<TARGET_FILE_DIR:Editor>
+  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_PROPERTY:slang,GLSLANG_BINARY> $<TARGET_FILE_DIR:Editor>
+  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_PROPERTY:nsam,NSAM_BINARY> $<TARGET_FILE_DIR:Editor>
+  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_PROPERTY:nsam,LLVM_BINARY> $<TARGET_FILE_DIR:Editor>
   COMMAND_EXPAND_LISTS
 	DEPENDS Editor slang-build)
 

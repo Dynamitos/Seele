@@ -1,5 +1,5 @@
 target_sources(Engine
-	PUBLIC
+	PRIVATE
 		Array.h
 		Map.h
 		List.h)

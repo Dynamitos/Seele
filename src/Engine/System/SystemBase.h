@@ -1,7 +1,7 @@
 #pragma once
 #include <entt/entt.hpp>
 #include <thread_pool/thread_pool.h>
-#include "Scene/Component/Component.h"
+#include "Component/Component.h"
 
 namespace Seele
 {

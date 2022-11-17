@@ -1,5 +1,5 @@
 #pragma once
-#include "View.h"
+#include "Window/View.h"
 #include "Graphics/RenderPass/RenderGraph.h"
 #include "Graphics/RenderPass/UIPass.h"
 #include "Graphics/RenderPass/TextPass.h"
@@ -22,8 +22,9 @@ public:
     virtual void render() override;
     void selectActor();
 protected:
-    UIPass uiPass;
-    TextPass textPass;
+    RenderGraph<
+        UIPass,
+        TextPass> renderGraph;
     
     UIPassData uiPassData;
     TextPassData textPassData;

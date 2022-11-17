@@ -1,17 +1,16 @@
 #include "DepthPrepass.h"
 #include "Graphics/Graphics.h"
 #include "Window/Window.h"
-#include "Scene/Component/Camera.h"
-#include "Scene/Actor/CameraActor.h"
+#include "Component/Camera.h"
+#include "Actor/CameraActor.h"
 #include "Math/Vector.h"
 #include "RenderGraph.h"
 #include "Material/MaterialAsset.h"
 
 using namespace Seele;
 
-DepthPrepassMeshProcessor::DepthPrepassMeshProcessor(Gfx::PViewport viewport, Gfx::PGraphics graphics) 
+DepthPrepassMeshProcessor::DepthPrepassMeshProcessor(Gfx::PGraphics graphics) 
     : MeshProcessor(graphics)
-    , target(viewport)
 {
 }
 
@@ -21,8 +20,8 @@ DepthPrepassMeshProcessor::~DepthPrepassMeshProcessor()
 
 void DepthPrepassMeshProcessor::processMeshBatch(
     const MeshBatch& batch, 
-//    const PPrimitiveComponent primitiveComponent,
-    const Gfx::PRenderPass& renderPass,
+    Gfx::PViewport target,
+    Gfx::PRenderPass renderPass,
     Gfx::PPipelineLayout baseLayout,
     Gfx::PDescriptorLayout primitiveLayout,
     Array<Gfx::PDescriptorSet> descriptorSets,
@@ -69,11 +68,10 @@ void DepthPrepassMeshProcessor::processMeshBatch(
     //co_return;
 }
 
-DepthPrepass::DepthPrepass(Gfx::PGraphics graphics, Gfx::PViewport viewport, PCameraActor source) 
-    : RenderPass(graphics, viewport)
-    , processor(new DepthPrepassMeshProcessor(viewport, graphics))
+DepthPrepass::DepthPrepass(Gfx::PGraphics graphics) 
+    : RenderPass(graphics)
+    , processor(new DepthPrepassMeshProcessor(graphics))
     , descriptorSets(3)
-    , source(source)
 {
     UniformBufferCreateInfo uniformInitializer;
 
@@ -98,16 +96,15 @@ DepthPrepass::~DepthPrepass()
 {   
 }
 
-void DepthPrepass::beginFrame() 
+void DepthPrepass::beginFrame(const Component::Camera& cam) 
 {
     processor->clearCommands();
     primitiveLayout->reset();
     BulkResourceData uniformUpdate;
 
-    viewParams.viewMatrix = source->getCameraComponent().getViewMatrix();
-    viewParams.projectionMatrix = source->getCameraComponent().getProjectionMatrix();
-    viewParams.cameraPosition = Math::Vector4(source->getCameraComponent().getCameraPosition(), 0);
-    viewParams.inverseProjectionMatrix = glm::inverse(viewParams.projectionMatrix);
+    viewParams.viewMatrix = cam.getViewMatrix();
+    viewParams.projectionMatrix = cam.getProjectionMatrix();
+    viewParams.cameraPosition = Math::Vector4(cam.getCameraPosition(), 0);
     viewParams.screenDimensions = Math::Vector2(static_cast<float>(viewport->getSizeX()), static_cast<float>(viewport->getSizeY()));
     uniformUpdate.size = sizeof(ViewParameter);
     uniformUpdate.data = (uint8*)&viewParams;
@@ -129,7 +126,7 @@ void DepthPrepass::render()
     graphics->beginRenderPass(renderPass);
     for (auto &&meshBatch : passData.staticDrawList)
     {
-        processor->processMeshBatch(meshBatch, renderPass, depthPrepassLayout, primitiveLayout, descriptorSets);
+        processor->processMeshBatch(meshBatch, viewport, renderPass, depthPrepassLayout, primitiveLayout, descriptorSets);
     }
     graphics->executeCommands(processor->getRenderCommands());
     graphics->endRenderPass();

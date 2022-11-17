@@ -1,17 +1,16 @@
 #include "BasePass.h"
 #include "Graphics/Graphics.h"
 #include "Window/Window.h"
-#include "Scene/Component/Camera.h"
-#include "Scene/Actor/CameraActor.h"
+#include "Component/Camera.h"
+#include "Actor/CameraActor.h"
 #include "Math/Vector.h"
 #include "RenderGraph.h"
 #include "Material/MaterialAsset.h"
 
 using namespace Seele;
 
-BasePassMeshProcessor::BasePassMeshProcessor(Gfx::PViewport viewport, Gfx::PGraphics graphics, uint8 translucentBasePass) 
+BasePassMeshProcessor::BasePassMeshProcessor(Gfx::PGraphics graphics, uint8 translucentBasePass) 
     : MeshProcessor(graphics)
-    , target(viewport)
     , translucentBasePass(translucentBasePass)
     //, cachedPrimitiveIndex(0)
 {
@@ -23,8 +22,8 @@ BasePassMeshProcessor::~BasePassMeshProcessor()
 
 void BasePassMeshProcessor::processMeshBatch(
     const MeshBatch& batch, 
-//    const PPrimitiveComponent primitiveComponent,
-    const Gfx::PRenderPass& renderPass,
+    Gfx::PViewport target,
+    Gfx::PRenderPass renderPass,
     Gfx::PPipelineLayout baseLayout,
     Gfx::PDescriptorLayout primitiveLayout,
     Array<Gfx::PDescriptorSet> descriptorSets,
@@ -70,11 +69,10 @@ void BasePassMeshProcessor::processMeshBatch(
     //co_return;
 }
 
-BasePass::BasePass(Gfx::PGraphics graphics, Gfx::PViewport viewport, PCameraActor source) 
-    : RenderPass(graphics, viewport)
-    , processor(new BasePassMeshProcessor(viewport, graphics, false))
+BasePass::BasePass(Gfx::PGraphics graphics) 
+    : RenderPass(graphics)
+    , processor(new BasePassMeshProcessor(graphics, false))
     , descriptorSets(4)
-    , source(source)
 {
     UniformBufferCreateInfo uniformInitializer;
     basePassLayout = graphics->createPipelineLayout();
@@ -115,16 +113,15 @@ BasePass::~BasePass()
 {   
 }
 
-void BasePass::beginFrame() 
+void BasePass::beginFrame(const Component::Camera& cam) 
 {
     processor->clearCommands();
     primitiveLayout->reset();
     BulkResourceData uniformUpdate;
 
-    viewParams.viewMatrix = source->getCameraComponent().getViewMatrix();
-    viewParams.projectionMatrix = source->getCameraComponent().getProjectionMatrix();
-    viewParams.cameraPosition = Math::Vector4(source->getCameraComponent().getCameraPosition(), 0);
-    viewParams.inverseProjectionMatrix = glm::inverse(viewParams.projectionMatrix);
+    viewParams.viewMatrix = cam.getViewMatrix();
+    viewParams.projectionMatrix = cam.getProjectionMatrix();
+    viewParams.cameraPosition = Math::Vector4(cam.getCameraPosition(), 0);
     viewParams.screenDimensions = Math::Vector2(static_cast<float>(viewport->getSizeX()), static_cast<float>(viewport->getSizeY()));
     uniformUpdate.size = sizeof(ViewParameter);
     uniformUpdate.data = (uint8*)&viewParams;
@@ -158,7 +155,7 @@ void BasePass::render()
     graphics->beginRenderPass(renderPass);
     for (auto &&meshBatch : passData.staticDrawList)
     {
-        processor->processMeshBatch(meshBatch, renderPass, basePassLayout, primitiveLayout, descriptorSets);
+        processor->processMeshBatch(meshBatch, viewport, renderPass, basePassLayout, primitiveLayout, descriptorSets);
     }
     graphics->executeCommands(processor->getRenderCommands());
     graphics->endRenderPass();
@@ -186,6 +183,8 @@ void BasePass::createRenderPass()
 	numPointLightBuffer = resources->requestUniform("NUM_POINT_LIGHTS");
     Gfx::PRenderTargetAttachment depthAttachment = resources->requestRenderTarget("DEPTHPREPASS_DEPTH");
     depthAttachment->loadOp = Gfx::SE_ATTACHMENT_LOAD_OP_LOAD;
+    colorAttachment->loadOp = Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR;
+    colorAttachment->storeOp = Gfx::SE_ATTACHMENT_STORE_OP_STORE;
     Gfx::PRenderTargetLayout layout = new Gfx::RenderTargetLayout(colorAttachment, depthAttachment);
     renderPass = graphics->createRenderPass(layout, viewport);
     oLightIndexList = resources->requestBuffer("LIGHTCULLING_OLIGHTLIST");

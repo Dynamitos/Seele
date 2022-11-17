@@ -15,9 +15,12 @@ public:
     System();
     virtual ~System();
     void update();
+    void updateViewport(Gfx::PViewport viewport);
     UIPassData getUIPassData();
     TextPassData getTextPassData();
+    Component::Camera getVirtualCamera() const;
 private:
+    Component::Camera virtualCamera;
     PPanel rootPanel;
     RenderHierarchy hierarchy;
 };

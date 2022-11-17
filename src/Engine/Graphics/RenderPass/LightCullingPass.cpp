@@ -1,15 +1,14 @@
 #include "LightCullingPass.h"
 #include "Graphics/Graphics.h"
 #include "Scene/Scene.h"
-#include "Scene/Actor/CameraActor.h"
-#include "Scene/Component/Camera.h"
+#include "Actor/CameraActor.h"
+#include "Component/Camera.h"
 #include "RenderGraph.h"
 
 using namespace Seele;
 
-LightCullingPass::LightCullingPass(Gfx::PGraphics graphics, Gfx::PViewport viewport, PCameraActor camera)
-    : RenderPass(graphics, viewport)
-    , source(camera)
+LightCullingPass::LightCullingPass(Gfx::PGraphics graphics)
+    : RenderPass(graphics)
 {
 }
 
@@ -18,16 +17,15 @@ LightCullingPass::~LightCullingPass()
     
 }
 
-void LightCullingPass::beginFrame() 
+void LightCullingPass::beginFrame(const Component::Camera& cam) 
 {
     uint32_t viewportWidth = viewport->getSizeX();
     uint32_t viewportHeight = viewport->getSizeY();
 
     BulkResourceData uniformUpdate;
-    viewParams.viewMatrix = source->getCameraComponent().getViewMatrix();
-    viewParams.projectionMatrix = source->getCameraComponent().getProjectionMatrix();
-    viewParams.cameraPosition = Math::Vector4(source->getCameraComponent().getCameraPosition(), 0);
-    viewParams.inverseProjectionMatrix = glm::inverse(viewParams.projectionMatrix);
+    viewParams.viewMatrix = cam.getViewMatrix();
+    viewParams.projectionMatrix = cam.getProjectionMatrix();
+    viewParams.cameraPosition = Math::Vector4(cam.getCameraPosition(), 0);
     viewParams.screenDimensions = Math::Vector2(static_cast<float>(viewportWidth), static_cast<float>(viewportHeight));
     uniformUpdate.size = sizeof(ViewParameter);
     uniformUpdate.data = (uint8*)&viewParams;
@@ -263,10 +261,9 @@ void LightCullingPass::setupFrustums()
     glm::uvec3 numThreadGroups = glm::ceil(glm::vec3(numThreads.x / (float)BLOCK_SIZE, numThreads.y / (float)BLOCK_SIZE, 1));
     
     viewParams = {
-        .viewMatrix = source->getCameraComponent().getViewMatrix(),
-        .projectionMatrix = source->getCameraComponent().getProjectionMatrix(),
-        .inverseProjectionMatrix = glm::inverse(source->getCameraComponent().getProjectionMatrix()),
-        .cameraPosition = Math::Vector4(source->getTransform().getPosition(), 0),
+        .viewMatrix = Math::Matrix4(),
+        .projectionMatrix = Math::Matrix4(),
+        .cameraPosition = Math::Vector4(),
         .screenDimensions = glm::vec2(viewportWidth, viewportHeight),
     };
     dispatchParams.numThreads = numThreads;

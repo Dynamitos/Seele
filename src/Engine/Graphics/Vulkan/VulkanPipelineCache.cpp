@@ -283,7 +283,7 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
         blendAttachment.alphaBlendOp = (VkBlendOp)attachment.alphaBlendOp;
         blendAttachment.blendEnable = attachment.blendEnable;
         blendAttachment.colorBlendOp = (VkBlendOp)attachment.colorBlendOp;
-        blendAttachment.colorWriteMask = colorAttachments[i]->componentFlags;
+        blendAttachment.colorWriteMask = attachment.colorWriteMask;
         blendAttachment.dstAlphaBlendFactor = (VkBlendFactor)attachment.dstAlphaBlendFactor;
         blendAttachment.srcAlphaBlendFactor = (VkBlendFactor)attachment.srcAlphaBlendFactor;
         blendAttachment.dstColorBlendFactor = (VkBlendFactor)attachment.dstColorBlendFactor;

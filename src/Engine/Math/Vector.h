@@ -27,10 +27,6 @@ typedef glm::quat Quaternion;
 
 Vector parseVector(const char*);
 
-std::ostream& operator<<(std::ostream& stream, const Vector2& vector);
-std::ostream& operator<<(std::ostream& stream, const Vector& vector);
-std::ostream& operator<<(std::ostream& stream, const Vector4& vector);
-
 static inline float square(float x)
 {
 	return x * x;
@@ -102,3 +98,8 @@ static inline Vector toRotator(const Quaternion &other)
 }
 } // namespace Math
 } // namespace Seele
+
+
+std::ostream& operator<<(std::ostream& stream, const Seele::Math::Vector2& vector);
+std::ostream& operator<<(std::ostream& stream, const Seele::Math::Vector& vector);
+std::ostream& operator<<(std::ostream& stream, const Seele::Math::Vector4& vector);

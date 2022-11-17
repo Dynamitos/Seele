@@ -1,11 +1,14 @@
 include (ExternalProject)
 
+#--------------FreeType------------------------------
+set(FT_DISABLE_ZLIB ON)
+
+add_subdirectory(${FREETYPE_ROOT})
+
 #------------ASSIMP---------------
 set(ASSIMP_BUILD_TESTS OFF CACHE INTERNAL "")
 set(ASSIMP_BUILD_SAMPLES OFF CACHE INTERNAL "")
 set(ASSIMP_BUILD_OVERALLS OFF CACHE INTERNAL "")
-set(BUILD_SHARED_LIBS ON CACHE INTERNAL "")
-
 add_subdirectory(${ASSIMP_ROOT})
 target_compile_definitions(assimp PRIVATE _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
 if(WIN32)
@@ -31,7 +34,7 @@ add_subdirectory(${JSON_ROOT})
 
 #--------------GLM------------------------------
 add_subdirectory(${GLM_ROOT})
-target_compile_options(glm_shared INTERFACE /W0)
+target_compile_options(glm INTERFACE /W0)
 
 #--------------GLFW------------------------------
 set(ENKITS_BUILD_EXAMPLES OFF CACHE BOOL "Build basic example applications" )
@@ -45,9 +48,6 @@ add_subdirectory(${GLFW_ROOT})
 
 #--------------EnTT------------------------------
 add_subdirectory(${ENTT_ROOT})
-
-#--------------FreeType------------------------------
-add_subdirectory(${FREETYPE_ROOT})
 
 #--------------STB-----------------------------------
 add_library(stb INTERFACE)
@@ -92,3 +92,4 @@ target_include_directories(slang INTERFACE ${SLANG_ROOT})
 target_link_libraries(slang INTERFACE ${SLANG_BINARY_DIR}/*.lib)
 set_target_properties(slang PROPERTIES SLANG_BINARY ${SLANG_BINARY_DIR}/slang.dll)
 set_target_properties(slang PROPERTIES GLSLANG_BINARY ${SLANG_BINARY_DIR}/slang-glslang.dll)
+

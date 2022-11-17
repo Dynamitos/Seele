@@ -1,7 +1,5 @@
 target_sources(Engine
-    PUBLIC
+    PRIVATE
         Executor.h
         Executor.cpp
-        CameraSystem.h
-        CameraSystem.cpp
         SystemBase.h)

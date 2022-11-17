@@ -18,8 +18,8 @@ protected:
     Gfx::PGraphics graphics;
     virtual void processMeshBatch(
         const MeshBatch& batch, 
-//        const PPrimitiveComponent primitiveComponent,
-        const Gfx::PRenderPass& renderPass,
+        Gfx::PViewport target,
+        Gfx::PRenderPass renderPass,
         Gfx::PPipelineLayout pipelineLayout,
         Gfx::PDescriptorLayout primitiveLayout,
         Array<Gfx::PDescriptorSet> descriptorSets,

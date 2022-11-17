@@ -1,6 +1,6 @@
 #pragma once
 #include "Entity.h"
-#include "Scene/Component/Transform.h"
+#include "Component/Transform.h"
 
 namespace Seele
 {

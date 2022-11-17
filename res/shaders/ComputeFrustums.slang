@@ -38,7 +38,7 @@ void computeFrustums(ComputeShaderInput in)
 	
 	for(int i = 0; i < 4; i++)
 	{
-		viewSpace[i] = screenToView(screenSpace[i]).xyz;
+		viewSpace[i] = screenToClip(screenSpace[i]).xyz;
 	}
 
 	//Compute frustum

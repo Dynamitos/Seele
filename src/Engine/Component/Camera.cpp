@@ -1,5 +1,5 @@
 #include "Camera.h"
-#include "Scene/Actor/Actor.h"
+#include "Actor/Actor.h"
 #include <algorithm>
 #include <iostream>
 
@@ -10,8 +10,8 @@ using namespace Seele::Math;
 Camera::Camera()
     : aspectRatio(0)
     , fieldOfView(glm::radians(70.f))
-    , bNeedsViewBuild(true)
-    , bNeedsProjectionBuild(true)
+    , bNeedsViewBuild(false)
+    , bNeedsProjectionBuild(false)
     , viewMatrix(Matrix4())
     , projectionMatrix(Matrix4())
 {
@@ -65,7 +65,7 @@ void Camera::setViewport(Gfx::PViewport newViewport)
 void Camera::buildViewMatrix() 
 {
     Vector eyePos = getTransform().getPosition();//getAbsoluteTransform().getPosition();
-    Vector lookAt = Vector(0, 0, 0);//eyePos + glm::normalize(Vector(cos(yaw) * cos(pitch), sin(pitch), sin(yaw) * cos(pitch)));
+    Vector lookAt = eyePos + glm::normalize(Vector(cos(yaw) * cos(pitch), sin(pitch), sin(yaw) * cos(pitch)));
     //std::cout << "Eye: " << eyePos << " lookAt: " << lookAt << std::endl;
     viewMatrix = glm::lookAt(eyePos, lookAt, Vector(0, 1, 0));
 

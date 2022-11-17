@@ -1,5 +1,5 @@
 target_sources(Engine
-    PUBLIC
+    PRIVATE
         BasePass.h
         BasePass.cpp
         DepthPrepass.h
@@ -9,7 +9,8 @@ target_sources(Engine
         MeshProcessor.h
         MeshProcessor.cpp
         RenderGraph.h
-        RenderGraph.cpp
+        RenderGraphResources.h
+        RenderGraphResources.cpp
         RenderPass.h
         TextPass.h
         TextPass.cpp

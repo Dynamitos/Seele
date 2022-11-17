@@ -105,9 +105,9 @@ void cullLights(ComputeShaderInput in)
     float fMinDepth = asfloat(uMinDepth);
     float fMaxDepth = asfloat(uMaxDepth);
 
-    float minDepthVS = clipToView(float4(0, 0, fMinDepth, 1)).z;
-    float maxDepthVS = clipToView(float4(0, 0, fMaxDepth, 1)).z;
-    float nearClipVS = clipToView(float4(0, 0, 0, 1.0f)).z;
+    float minDepthVS = fMinDepth;
+    float maxDepthVS = fMaxDepth;
+    float nearClipVS = 0.1f;
 
     Plane minPlane = {float3(0, 0, -1), -minDepthVS};
 

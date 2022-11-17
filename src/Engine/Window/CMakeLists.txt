@@ -1,9 +1,5 @@
 target_sources(Engine
-    PUBLIC
-        InspectorView.h
-        InspectorView.cpp
-        SceneView.h
-        SceneView.cpp
+    PRIVATE
         View.h
         View.cpp
         Window.cpp

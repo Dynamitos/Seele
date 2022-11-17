@@ -15,19 +15,19 @@ struct Camera
     Camera();
     ~Camera();
 
-    Math::Matrix4 getViewMatrix()
+    Math::Matrix4 getViewMatrix() const
     {
         assert (!bNeedsViewBuild);
         return viewMatrix;
     }
-    Math::Matrix4 getProjectionMatrix()
+    Math::Matrix4 getProjectionMatrix() const
     {
         assert (!bNeedsProjectionBuild);
         return projectionMatrix;
     }
-    Math::Vector getCameraPosition()
+    Math::Vector getCameraPosition() const
     {
-        return getTransform().getPosition();
+        return Math::Vector(viewMatrix[3]);
     }
     void setViewport(Gfx::PViewport viewport);
     void mouseMove(float deltaX, float deltaY);
@@ -38,6 +38,8 @@ struct Camera
     float fieldOfView;
     void buildViewMatrix();
     void buildProjectionMatrix();
+    Math::Matrix4 viewMatrix;
+    Math::Matrix4 projectionMatrix;
 private:
     bool bNeedsViewBuild;
     bool bNeedsProjectionBuild;
@@ -45,8 +47,6 @@ private:
     Gfx::PViewport viewport;
 
     //Transforms relative to actor
-    Math::Matrix4 viewMatrix;
-    Math::Matrix4 projectionMatrix;
     float yaw;
     float pitch;
 };

@@ -15,15 +15,16 @@ struct UIPassData
 class UIPass : public RenderPass<UIPassData>
 {
 public:
-    UIPass(Gfx::PGraphics graphics, Gfx::PViewport viewport, Gfx::PRenderTargetAttachment renderTarget);
+    UIPass(Gfx::PGraphics graphics);
     virtual ~UIPass();
-    virtual void beginFrame() override;
+    virtual void beginFrame(const Component::Camera& cam) override;
     virtual void render() override;
     virtual void endFrame() override;
     virtual void publishOutputs() override;
     virtual void createRenderPass() override;
 private:
     Gfx::PRenderTargetAttachment renderTarget;
+    Gfx::PTexture2D colorBuffer;
     Gfx::PRenderTargetAttachment depthAttachment;
     Gfx::PTexture2D depthBuffer;
 

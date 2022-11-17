@@ -1,7 +1,7 @@
 #include "InspectorView.h"
 #include "Graphics/Graphics.h"
-#include "Scene/Actor/Actor.h"
-#include "Window.h"
+#include "Actor/Actor.h"
+#include "Window/Window.h"
 #include "Asset/AssetRegistry.h"
 #include "UI/System.h"
 
@@ -9,18 +9,15 @@ using namespace Seele;
 
 InspectorView::InspectorView(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo &createInfo) 
     : View(graphics, window, createInfo, "InspectorView")
-    , uiPass(UIPass(graphics, viewport, new Gfx::SwapchainAttachment(window->getGfxHandle())))
-    , textPass(TextPass(graphics, viewport, new Gfx::SwapchainAttachment(window->getGfxHandle())))
+    , renderGraph(RenderGraphBuilder::build(
+        UIPass(graphics),
+        TextPass(graphics)
+    ))
     , uiSystem(new UI::System())
 {
     AssetRegistry::importFile("./fonts/Calibri.ttf");
-    PRenderGraphResources resources = new RenderGraphResources();
-    uiPass.setResources(resources);
-    textPass.setResources(resources);
-    uiPass.publishOutputs();
-    textPass.publishOutputs();
-    uiPass.createRenderPass();
-    textPass.createRenderPass();
+    renderGraph.updateViewport(viewport);
+    uiSystem->updateViewport(viewport);
 }
 
 InspectorView::~InspectorView() 
@@ -43,18 +40,15 @@ void InspectorView::commitUpdate()
 
 void InspectorView::prepareRender() 
 {
-    uiPass.updateViewFrame(uiSystem->getUIPassData());
-    textPass.updateViewFrame(uiSystem->getTextPassData());
+    renderGraph.updatePassData(
+        uiSystem->getUIPassData(),
+        uiSystem->getTextPassData()
+    );
 }
 
 void InspectorView::render() 
 {
-    uiPass.beginFrame();
-    textPass.beginFrame();
-    uiPass.render();
-    textPass.render();
-    uiPass.endFrame();
-    textPass.endFrame();
+    renderGraph.render(uiSystem->getVirtualCamera());
 }
 
 void InspectorView::keyCallback(KeyCode, InputAction, KeyModifier) 

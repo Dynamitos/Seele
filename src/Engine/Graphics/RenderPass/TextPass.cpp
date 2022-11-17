@@ -5,9 +5,8 @@
 
 using namespace Seele;
 
-TextPass::TextPass(Gfx::PGraphics graphics, Gfx::PViewport viewport, Gfx::PRenderTargetAttachment attachment) 
-    : RenderPass(graphics, viewport)
-    , renderTarget(attachment)
+TextPass::TextPass(Gfx::PGraphics graphics) 
+    : RenderPass(graphics)
 {
 }
 
@@ -16,7 +15,7 @@ TextPass::~TextPass()
     
 }
 
-void TextPass::beginFrame() 
+void TextPass::beginFrame(const Component::Camera& cam) 
 {
     for(TextRender& render : passData.texts)
     {
@@ -60,6 +59,13 @@ void TextPass::beginFrame()
             .scale = render.scale,
         };
     }
+    BulkResourceData projectionUpdate = {
+        .size = sizeof(Math::Matrix4),
+        .data = (uint8*)&cam.projectionMatrix,
+    };
+    projectionBuffer->updateContents(projectionUpdate);
+    generalSet->updateBuffer(1, projectionBuffer);
+    generalSet->writeChanges();
     //co_return;
 }
 
@@ -99,7 +105,9 @@ void TextPass::publishOutputs()
 
 void TextPass::createRenderPass() 
 {
+    renderTarget = resources->requestRenderTarget("UIPASS_COLOR");
     depthAttachment = resources->requestRenderTarget("UIPASS_DEPTH");
+    
     ShaderCreateInfo createInfo;
     createInfo.mainModule = "TextPass";
     createInfo.defines["INDEX_VIEW_PARAMS"] = "0";
@@ -146,13 +154,12 @@ void TextPass::createRenderPass()
     textureArrayLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 256, Gfx::SE_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT);
     textureArrayLayout->create();
 
-    Math::Matrix4 projectionMatrix = glm::ortho(0.f, (float)viewport->getSizeX(), 0.f, (float)viewport->getSizeY());
     projectionBuffer = graphics->createUniformBuffer({
         .resourceData = {
             .size = sizeof(Math::Matrix4),
-            .data = (uint8*)&projectionMatrix,
+            .data = nullptr,
         },
-        .bDynamic = false,
+        .bDynamic = true,
     });
 
     glyphSampler = graphics->createSamplerState({

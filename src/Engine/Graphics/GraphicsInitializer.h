@@ -42,10 +42,7 @@ struct WindowCreateInfo
 };
 struct ViewportCreateInfo
 {
-    uint32 sizeX;
-    uint32 sizeY;
-    uint32 offsetX;
-    uint32 offsetY;
+    Math::URect dimensions;
 };
 // doesnt own the data, only proxy it
 struct BulkResourceData
@@ -235,6 +232,11 @@ struct GraphicsPipelineCreateInfo
         colorBlend.blendConstants[1] = 1.0f;
         colorBlend.blendConstants[2] = 1.0f;
         colorBlend.blendConstants[3] = 1.0f;
+        colorBlend.blendAttachments[0].colorWriteMask = 
+            Gfx::SE_COLOR_COMPONENT_R_BIT | 
+            Gfx::SE_COLOR_COMPONENT_G_BIT | 
+            Gfx::SE_COLOR_COMPONENT_B_BIT | 
+            Gfx::SE_COLOR_COMPONENT_A_BIT;
 	}
 };
 struct ComputePipelineCreateInfo

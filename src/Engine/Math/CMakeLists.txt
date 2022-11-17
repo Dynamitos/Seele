@@ -1,5 +1,5 @@
 target_sources(Engine
-	PUBLIC
+	PRIVATE
 		Math.h
 		Matrix.h
 		Transform.h

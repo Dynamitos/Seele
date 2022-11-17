@@ -25,9 +25,9 @@ struct TextPassData
 class TextPass : public RenderPass<TextPassData>
 {
 public:
-    TextPass(Gfx::PGraphics graphics, Gfx::PViewport viewport, Gfx::PRenderTargetAttachment renderTarget);
+    TextPass(Gfx::PGraphics graphics);
     virtual ~TextPass();
-    virtual void beginFrame() override;
+    virtual void beginFrame(const Component::Camera& cam) override;
     virtual void render() override;
     virtual void endFrame() override;
     virtual void publishOutputs() override;
@@ -69,7 +69,6 @@ private:
 
     Gfx::PRenderTargetAttachment renderTarget;
     Gfx::PRenderTargetAttachment depthAttachment;
-    Gfx::PTexture2D depthBuffer;
 
     Gfx::PDescriptorLayout generalLayout;
     Gfx::PDescriptorLayout textureArrayLayout;

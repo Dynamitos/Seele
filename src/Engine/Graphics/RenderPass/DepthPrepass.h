@@ -8,22 +8,21 @@ namespace Seele
 class DepthPrepassMeshProcessor : public MeshProcessor
 {
 public:
-    DepthPrepassMeshProcessor(Gfx::PViewport viewport, Gfx::PGraphics graphics);
+    DepthPrepassMeshProcessor(Gfx::PGraphics graphics);
     virtual ~DepthPrepassMeshProcessor();
     
     virtual void processMeshBatch(
         const MeshBatch& batch,
-        const Gfx::PRenderPass& renderPass,
+        Gfx::PViewport target,
+        Gfx::PRenderPass renderPass,
         Gfx::PPipelineLayout pipelineLayout,
         Gfx::PDescriptorLayout primitiveLayout,
         Array<Gfx::PDescriptorSet> descriptorSets,
         int32 staticMeshId = -1) override;
 
 private:
-    Gfx::PViewport target;
 };
 DEFINE_REF(DepthPrepassMeshProcessor)
-DECLARE_REF(CameraActor)
 struct DepthPrepassData
 {
     Array<StaticMeshBatch> staticDrawList;
@@ -31,9 +30,11 @@ struct DepthPrepassData
 class DepthPrepass : public RenderPass<DepthPrepassData>
 {
 public:
-    DepthPrepass(Gfx::PGraphics graphics, Gfx::PViewport viewport, PCameraActor source);
+    DepthPrepass(Gfx::PGraphics graphics);
+    DepthPrepass(DepthPrepass&& other) = default;
     ~DepthPrepass();
-    virtual void beginFrame() override;
+    DepthPrepass& operator=(DepthPrepass& other) = default;
+    virtual void beginFrame(const Component::Camera& cam) override;
     virtual void render() override;
     virtual void endFrame() override;
     virtual void publishOutputs() override;
@@ -45,7 +46,6 @@ private:
     UPDepthPrepassMeshProcessor processor;
     
     Array<Gfx::PDescriptorSet> descriptorSets;
-    PCameraActor source;
     Gfx::PPipelineLayout depthPrepassLayout;
     // Set 0: viewParameter
     static constexpr uint32 INDEX_VIEW_PARAMS = 0;

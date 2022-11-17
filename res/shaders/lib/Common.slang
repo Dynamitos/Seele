@@ -6,34 +6,21 @@ struct ViewParameter
 {
     float4x4 viewMatrix;
     float4x4 projectionMatrix;
-    float4x4 inverseProjection;
     float4 cameraPos_WS;
     float2 screenDimensions;
 }
 layout(set = INDEX_VIEW_PARAMS, binding = 0, std430)
 ConstantBuffer<ViewParameter> gViewParams;
 
-// Convert clip space coordinates to view space
-float4 clipToView( float4 clip )
-{
-    // View space position.
-    float4 view = mul( gViewParams.inverseProjection, clip );
-    // Perspective projection.
-    view = view / view.w;
- 
-    return view;
-}
  
 // Convert screen space coordinates to view space.
-float4 screenToView( float4 screen )
+float4 screenToClip( float4 screen )
 {
     // Convert to normalized texture coordinates
     float2 texCoord = screen.xy / gViewParams.screenDimensions;
  
-    // Convert to clip space
-    float4 clip = float4( float2( texCoord.x, 1.0f-texCoord.y ) * 2.0f - 1.0f, screen.z, screen.w );
- 
-    return clipToView( clip );
+    // Convert to clip space 
+    return float4( float2( texCoord.x, 1.0f-texCoord.y ) * 2.0f - 1.0f, screen.z, screen.w );
 }
 
 struct Plane

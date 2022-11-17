@@ -1,29 +1,95 @@
 #pragma once
-#include "MinimalEngine.h"
-#include "Graphics/GraphicsResources.h"
+#include "RenderPass.h"
 
 namespace Seele
 {
-DECLARE_REF(ViewFrame)
+template<typename... RenderPasses>
+class RenderGraph;
 
-class RenderGraphResources
+template<>
+class RenderGraph<>
 {
 public:
-    RenderGraphResources();
-    ~RenderGraphResources();
-    Gfx::PRenderTargetAttachment requestRenderTarget(const std::string& outputName);
-    Gfx::PTexture requestTexture(const std::string& outputName);
-    Gfx::PStructuredBuffer requestBuffer(const std::string& outputName);
-    Gfx::PUniformBuffer requestUniform(const std::string& outputName);
-    void registerRenderPassOutput(const std::string& outputName, Gfx::PRenderTargetAttachment attachment);
-    void registerTextureOutput(const std::string& outputName, Gfx::PTexture buffer);
-    void registerBufferOutput(const std::string& outputName, Gfx::PStructuredBuffer buffer);
-    void registerUniformOutput(const std::string& outputName, Gfx::PUniformBuffer buffer);
+    RenderGraph(PRenderGraphResources) {}
+    void updatePassData() {}
 protected:
-    Map<std::string, Gfx::PRenderTargetAttachment> registeredAttachments;
-    Map<std::string, Gfx::PTexture> registeredTextures;
-    Map<std::string, Gfx::PStructuredBuffer> registeredBuffers;
-    Map<std::string, Gfx::PUniformBuffer> registeredUniforms;
+    void setViewport(Gfx::PViewport) {}
+    void createRenderPass() {}
+    void beginFrame(const Component::Camera&) {}
+    void render() {}
+    void endFrame() {}
 };
-DEFINE_REF(RenderGraphResources)
+
+template<typename This, typename... Rest>
+class RenderGraph<This, Rest...> : private RenderGraph<Rest...>
+{
+public:
+    RenderGraph(PRenderGraphResources resources, This&& pass, Rest&&... rest)
+        : RenderGraph<Rest...>(resources, std::move(rest)...)
+        , resources(resources)
+        , rp(std::move(pass))
+    {
+        rp.setResources(resources);
+    }
+    template<typename PassData, typename... OtherData>
+    void updatePassData(PassData passData, OtherData... otherData)
+    {
+        rp.updateViewFrame(std::move(passData));
+        RenderGraph<Rest...>::updatePassData(otherData...);
+    }
+    void updateViewport(Gfx::PViewport viewport)
+    {
+        setViewport(viewport);
+        createRenderPass();
+    }
+    void render(const Component::Camera& cam)
+    {
+        beginFrame(cam);
+        render();
+        endFrame();
+    }
+protected:
+    void setViewport(Gfx::PViewport viewport)
+    {
+        rp.setViewport(viewport);
+        RenderGraph<Rest...>::setViewport(viewport);
+    }
+    void createRenderPass()
+    {
+        rp.createRenderPass();
+        RenderGraph<Rest...>::createRenderPass();
+    }
+    void beginFrame(const Component::Camera& cam)
+    {
+        rp.beginFrame(cam);
+        RenderGraph<Rest...>::beginFrame(cam);
+    }
+    void render()
+    {
+        rp.render();
+        RenderGraph<Rest...>::render();
+    }
+    void endFrame()
+    {
+        rp.endFrame();
+        RenderGraph<Rest...>::endFrame();
+    }
+private:
+    PRenderGraphResources resources;
+    This rp;
+};
+
+class RenderGraphBuilder
+{
+public:
+    template<typename... RenderPasses>
+    static RenderGraph<RenderPasses...> build(RenderPasses&&... renderPasses)
+    {
+        PRenderGraphResources resources = new RenderGraphResources();
+        return RenderGraph<RenderPasses...>(resources, std::move(renderPasses)...);
+    }
+private:
+    RenderGraphBuilder() = delete;
+};
+
 } // namespace Seele

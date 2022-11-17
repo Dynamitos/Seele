@@ -705,6 +705,16 @@ public:
     {
         return _data;
     }
+    template<typename I>
+    constexpr reference operator[](I index) noexcept
+    {
+        return operator[](static_cast<size_t>(index));
+    }
+    template<typename I>
+    constexpr const_reference operator[](I index) const noexcept
+    {
+        return operator[](static_cast<size_t>(index));
+    }
     constexpr reference operator[](size_type index) noexcept
     {
         assert(index < N);
