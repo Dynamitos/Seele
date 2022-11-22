@@ -417,8 +417,6 @@ void Graphics::setupDebugCallback()
             VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT);
 
     VK_CHECK(CreateDebugReportCallbackEXT(instance, &createInfo, nullptr, &callback));
-
-    crashTracker.Initialize();
 }
 
 void Graphics::pickPhysicalDevice()

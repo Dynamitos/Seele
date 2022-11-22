@@ -6,3 +6,10 @@ target_sources(Engine
         CameraActor.h
         Entity.cpp
         Entity.h)
+
+target_sources(Engine
+    PUBLIC FILE_SET HEADERS
+        FILES
+            Actor.h
+            CameraActor.h
+            Entity.h)

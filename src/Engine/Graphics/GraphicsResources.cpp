@@ -401,9 +401,7 @@ static Map<uint32, PVertexDeclaration> vertexDeclarationCache;
 PVertexDeclaration VertexDeclaration::createDeclaration(PGraphics graphics, const Array<VertexElement>& elementList)
 {
 	std::scoped_lock lock(vertexDeclarationLock);
-	boost::crc_32_type result;
-	result.process_bytes(&elementList, sizeof(VertexElement) * elementList.size());
-	uint32 key = result.checksum();
+	uint32 key = CRC::Calculate(&elementList, sizeof(VertexElement) * elementList.size(), CRC::CRC_32());
 
 	auto found = vertexDeclarationCache[key];
 	if(found == nullptr)

@@ -19,6 +19,7 @@ set(BOOST_ROOT ${EXTERNAL_ROOT}/boost)
 set(SLANG_ROOT ${EXTERNAL_ROOT}/slang)
 set(GLM_ROOT ${EXTERNAL_ROOT}/glm)
 set(GLFW_ROOT ${EXTERNAL_ROOT}/glfw)
+set(CRCPP_ROOT ${EXTERNAL_ROOT}/crcpp)
 set(JSON_ROOT ${EXTERNAL_ROOT}/json)
 set(KTX_ROOT ${EXTERNAL_ROOT}/ktx)
 set(STB_ROOT ${EXTERNAL_ROOT}/stb)
@@ -28,6 +29,7 @@ set(SPIRV_ROOT ${EXTERNAL_ROOT}/SPIRV-Cross)
 set(ENTT_ROOT ${EXTERNAL_ROOT}/entt)
 set(NSAM_ROOT ${EXTERNAL_ROOT}/aftermath)
 set(THREADPOOL_ROOT ${EXTERNAL_ROOT}/thread-pool)
+set(ZLIB_ROOT ${EXTERNAL_ROOT}/zlib)
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/)
 set(Boost_NO_WARN_NEW_VERSIONS 1)
@@ -36,48 +38,50 @@ project (Seele)
 
 include(cmake/Superbuild.cmake)
 
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE})
 #Workaround for vs, because it places artifacts into an additional subfolder
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_SOURCE_DIR}/bin/Debug)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${CMAKE_CURRENT_SOURCE_DIR}/bin/Release)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_SOURCE_DIR}/bin/Debug)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_CURRENT_SOURCE_DIR}/bin/Release)
 
 set(Boost_USE_STATIC_LIBS OFF)
 if(WIN32)
-  set(Boost_LIB_PREFIX lib)
+    set(Boost_LIB_PREFIX lib)
 endif()
 
 find_package(Vulkan REQUIRED)
-find_package(Boost REQUIRED COMPONENTS serialization)
+find_package(Boost REQUIRED serialization)
 
 if(WIN32)
-  add_compile_definitions(USE_EXTENSIONS)
+    add_compile_definitions(USE_EXTENSIONS)
 endif()
 if(CMAKE_DEBUG_POSTFIX)
-  add_compile_definitions(ENABLE_VALIDATION)
-  add_compile_definitions(SEELE_DEBUG)
+    add_compile_definitions(ENABLE_VALIDATION)
+    add_compile_definitions(SEELE_DEBUG)
 endif()
 
 add_library(Engine STATIC "")
-target_compile_definitions(Engine PUBLIC GLFW_WINDOWS)
-target_include_directories(Engine PUBLIC src/Engine)
+target_compile_definitions(Engine PRIVATE GLFW_WINDOWS)
+target_include_directories(Engine PRIVATE src/Engine)
 target_link_libraries(Engine PUBLIC Vulkan::Vulkan)
-target_link_libraries(Engine PUBLIC Boost::headers)
-target_link_libraries(Engine PUBLIC Boost::serialization)
 target_link_libraries(Engine PUBLIC EnTT::EnTT)
 target_link_libraries(Engine PUBLIC glfw)
-target_link_libraries(Engine PUBLIC glm::glm)
+target_link_libraries(Engine PUBLIC glm)
 target_link_libraries(Engine PUBLIC freetype)
 target_link_libraries(Engine PUBLIC slang)
 target_link_libraries(Engine PUBLIC assimp)
-target_link_libraries(Engine PUBLIC nsam)
 target_link_libraries(Engine PUBLIC ktx)
 target_link_libraries(Engine PUBLIC stb)
 target_link_libraries(Engine PUBLIC nlohmann_json::nlohmann_json)
 target_link_libraries(Engine PUBLIC dp::thread-pool)
+target_link_libraries(Engine PUBLIC crcpp)
 if(UNIX)
-  target_link_libraries(Engine PUBLIC Threads::Threads)
-  target_link_libraries(Engine PUBLIC dl)
+    target_link_libraries(Engine PUBLIC Threads::Threads)
+    target_link_libraries(Engine PUBLIC dl)
 endif()
+
 target_precompile_headers(Engine 
   PUBLIC    
     <assert.h>
@@ -92,21 +96,14 @@ target_precompile_headers(Engine
     <memory>
     <mutex>
     <string>
-    <thread>
-    <boost/serialization/serialization.hpp>)
+    <thread>)
     
 if(MSVC)
-  set(_CRT_SECURE_NO_WARNINGS)
-  target_compile_options(Engine PUBLIC /Zi /MP15 /W4 /DEBUG "/WX-")
+    set(_CRT_SECURE_NO_WARNINGS)
+    target_compile_options(Engine PUBLIC /Zi /MP14 /W4 /DEBUG "/WX-")
 else()
-  target_compile_options(Engine PUBLIC -g -Wall -Wextra -Wno-delete-incomplete -pedantic -fcoroutines)
+    target_compile_options(Engine PUBLIC -g -Wall -Wextra -Wno-delete-incomplete -pedantic -fcoroutines)
 endif()
-
-add_executable(Editor "")
-
-target_include_directories(Editor PRIVATE src/Editor)
-
-target_link_libraries(Editor PUBLIC Engine)
 
 add_subdirectory(src/)
 
@@ -114,12 +111,55 @@ add_executable(Seele_unit_tests "")
 add_subdirectory(test/)
 
 add_custom_target(SeeleEngine ALL
-	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/res $<TARGET_FILE_DIR:Editor>
-  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:Editor> $<TARGET_FILE_DIR:Editor>
-  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_PROPERTY:slang,SLANG_BINARY> $<TARGET_FILE_DIR:Editor>
-  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_PROPERTY:slang,GLSLANG_BINARY> $<TARGET_FILE_DIR:Editor>
-  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_PROPERTY:nsam,NSAM_BINARY> $<TARGET_FILE_DIR:Editor>
-  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_PROPERTY:nsam,LLVM_BINARY> $<TARGET_FILE_DIR:Editor>
-  COMMAND_EXPAND_LISTS
+	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/res $<TARGET_FILE_DIR:Engine>
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_PROPERTY:slang,SLANG_BINARY> $<TARGET_FILE_DIR:Engine>
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_PROPERTY:slang,GLSLANG_BINARY> $<TARGET_FILE_DIR:Engine>
+    COMMAND_EXPAND_LISTS
 	DEPENDS Editor slang-build)
 
+install(
+    TARGETS 
+        Engine
+        EnTT
+        glfw
+        glm
+        freetype
+        slang
+        assimp
+        ktx
+        stb
+        crcpp
+        nlohmann_json
+        ThreadPool
+        zlib
+        zlibstatic
+    EXPORT 
+        EngineTargets
+    FILE_SET HEADERS
+    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
+
+export(EXPORT EngineTargets
+    FILE "${CMAKE_BINARY_DIR}/EngineTargets.cmake"
+    NAMESPACE Seele::)
+
+include(CMakePackageConfigHelpers)
+
+configure_package_config_file(cmake/EngineConfig.cmake.in
+    "SeeleConfig.cmake"
+    INSTALL_DESTINATION ${CMAKE_BINARY_DIR})
+
+install(EXPORT EngineTargets
+    FILE
+        EngineTargets.cmake
+    NAMESPACE
+        Seele::
+    DESTINATION
+        ${CMAKE_INSTALL_PREFIX}
+)
+
+install(
+    FILES
+        ${CMAKE_BINARY_DIR}/SeeleConfig.cmake
+    DESTINATION
+        ${CMAKE_INSTALL_PREFIX}
+)

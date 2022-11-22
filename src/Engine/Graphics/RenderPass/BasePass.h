@@ -8,7 +8,7 @@ namespace Seele
 class BasePassMeshProcessor : public MeshProcessor
 {
 public:
-    BasePassMeshProcessor(Gfx::PGraphics graphics, uint8 translucentBasePass);
+    BasePassMeshProcessor(Gfx::PGraphics graphics);
     virtual ~BasePassMeshProcessor();
 
     virtual void processMeshBatch(
@@ -21,8 +21,7 @@ public:
         int32 staticMeshId = -1) override;
 private:
     //Array<Gfx::PDescriptorSet> cachedPrimitiveSets;
-    Gfx::PViewport target;
-    uint8 translucentBasePass;
+    //uint8 translucentBasePass;
     //uint32 cachedPrimitiveIndex;
 };
 DEFINE_REF(BasePassMeshProcessor)

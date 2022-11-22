@@ -155,8 +155,6 @@ void Shader::create(const ShaderCreateInfo& createInfo)
 	moduleInfo.pCode = (uint32_t*)kernelBlob->getBufferPointer();
 	VK_CHECK(vkCreateShaderModule(graphics->getDevice(), &moduleInfo, nullptr, &module));
 
-    boost::crc_32_type result;
-    result.process_bytes(entryPointName.data(), entryPointName.size());
-    result.process_bytes(kernelBlob->getBufferPointer(), kernelBlob->getBufferSize());
-    hash = result.checksum();
+    hash = CRC::Calculate(entryPointName.data(), entryPointName.size(), CRC::CRC_32());
+    hash = CRC::Calculate(kernelBlob->getBufferPointer(), kernelBlob->getBufferSize(), CRC::CRC_32(), hash);
 }

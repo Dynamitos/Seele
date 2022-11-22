@@ -4,6 +4,12 @@ target_sources(Engine
         MinimalEngine.h
         MinimalEngine.cpp)
 
+target_sources(Engine
+    PUBLIC FILE_SET HEADERS
+        FILES
+            EngineTypes.h
+            MinimalEngine.h)
+
 add_subdirectory(Actor/)
 add_subdirectory(Asset/)
 add_subdirectory(Component/)

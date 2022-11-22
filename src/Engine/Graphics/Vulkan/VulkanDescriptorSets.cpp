@@ -53,9 +53,7 @@ void DescriptorLayout::create()
 
     allocator = new DescriptorAllocator(graphics, *this);
 
-    boost::crc_32_type result;
-    result.process_bytes(bindings.data(), sizeof(VkDescriptorSetLayoutBinding) * bindings.size());
-    hash = result.checksum();
+    hash = CRC::Calculate(bindings.data(), sizeof(VkDescriptorSetLayoutBinding) * bindings.size(), CRC::CRC_32());
 }
 
 PipelineLayout::~PipelineLayout()
@@ -96,10 +94,8 @@ void PipelineLayout::create()
     createInfo.pushConstantRangeCount = (uint32)vkPushConstants.size();
     createInfo.pPushConstantRanges = vkPushConstants.data();
 
-    boost::crc_32_type result;
-    result.process_bytes(createInfo.pPushConstantRanges, sizeof(VkPushConstantRange) * createInfo.pushConstantRangeCount);
-    result.process_bytes(createInfo.pSetLayouts, sizeof(VkDescriptorSetLayout) * createInfo.setLayoutCount);
-    layoutHash = result.checksum();
+    layoutHash = CRC::Calculate(createInfo.pPushConstantRanges, sizeof(VkPushConstantRange) * createInfo.pushConstantRangeCount, CRC::CRC_32());
+    layoutHash = CRC::Calculate(createInfo.pSetLayouts, sizeof(VkDescriptorSetLayout) * createInfo.setLayoutCount, CRC::CRC_32(), layoutHash);
 
     if(layoutCache[layoutHash] != VK_NULL_HANDLE)
     {

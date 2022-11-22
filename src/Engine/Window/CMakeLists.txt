@@ -6,3 +6,10 @@ target_sources(Engine
         Window.h
         WindowManager.h
         WindowManager.cpp)
+
+target_sources(Engine
+    PUBLIC FILE_SET HEADERS
+        FILES
+            View.h
+            Window.h
+            WindowManager.h)

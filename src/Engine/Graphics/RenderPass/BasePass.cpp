@@ -9,9 +9,9 @@
 
 using namespace Seele;
 
-BasePassMeshProcessor::BasePassMeshProcessor(Gfx::PGraphics graphics, uint8 translucentBasePass) 
+BasePassMeshProcessor::BasePassMeshProcessor(Gfx::PGraphics graphics) 
     : MeshProcessor(graphics)
-    , translucentBasePass(translucentBasePass)
+//    , translucentBasePass(translucentBasePass)
     //, cachedPrimitiveIndex(0)
 {
 }
@@ -71,7 +71,7 @@ void BasePassMeshProcessor::processMeshBatch(
 
 BasePass::BasePass(Gfx::PGraphics graphics) 
     : RenderPass(graphics)
-    , processor(new BasePassMeshProcessor(graphics, false))
+    , processor(new BasePassMeshProcessor(graphics))
     , descriptorSets(4)
 {
     UniformBufferCreateInfo uniformInitializer;

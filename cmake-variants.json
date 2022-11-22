@@ -35,25 +35,5 @@
                 }
             }
         }
-    },
-    "superbuild": {
-        "default": "off",
-        "description": "Use Superbuild",
-        "choices": {
-            "off": {
-                "short": "off",
-                "long": "Don't rebuild superbuild",
-                "settings": {
-                    "USE_SUPERBUILD": "OFF"
-                }
-            },
-            "on": {
-                "short": "on",
-                "long": "Rebuild dependencies",
-                "settings": {
-                    "USE_SUPERBUILD": "ON"
-                }
-            }
-        }
     }
 }

@@ -18,3 +18,16 @@ target_sources(Engine
         TextureAsset.cpp
         TextureLoader.h
         TextureLoader.cpp)
+
+target_sources(Engine
+    PUBLIC FILE_SET HEADERS
+        FILES
+            Asset.h
+            AssetRegistry.h
+            FontAsset.h
+            FontLoader.h
+            MaterialLoader.h
+            MeshAsset.h
+            MeshLoader.h
+            TextureAsset.h
+            TextureLoader.h)

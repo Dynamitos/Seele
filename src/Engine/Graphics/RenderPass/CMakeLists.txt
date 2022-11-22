@@ -16,3 +16,16 @@ target_sources(Engine
         TextPass.cpp
         UIPass.h
         UIPass.cpp)
+
+target_sources(Engine
+    PUBLIC FILE_SET HEADERS
+        FILES
+            BasePass.h
+            DepthPrepass.h
+            LightCullingPass.h
+            MeshProcessor.h
+            RenderGraph.h
+            RenderGraphResources.h
+            RenderPass.h
+            TextPass.h
+            UIPass.h)

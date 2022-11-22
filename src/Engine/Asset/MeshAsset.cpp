@@ -1,11 +1,8 @@
 #include "MeshAsset.h"
 #include "Graphics/Mesh.h"
 #include "Graphics/VertexShaderInput.h"
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
 
 using namespace Seele;
-
 
 MeshAsset::MeshAsset()
 {

@@ -3,6 +3,7 @@
 #include <boost/test/unit_test.hpp>
 
 using namespace Seele;
+using namespace Seele::Math;
 
 BOOST_AUTO_TEST_SUITE(VectorParse)
 

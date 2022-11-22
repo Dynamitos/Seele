@@ -5,7 +5,6 @@
 #include <assert.h>
 #include <memory_resource>
 #include <algorithm>
-#include <boost/serialization/serialization.hpp>
 
 #ifndef DEFAULT_ALLOC_SIZE
 #define DEFAULT_ALLOC_SIZE 16
@@ -548,16 +547,6 @@ private:
         }
         markIteratorDirty();
     }
-    friend class boost::serialization::access;
-    template<class Archive>
-    void serialize(Archive& ar, const unsigned int)
-    {
-        ar & arraySize;
-        resize(arraySize);
-        for(size_type i = 0; i < arraySize; ++i)
-            ar & _data[i];
-        markIteratorDirty();
-    }
     size_type arraySize = 0;
     size_type allocated = 0;
     Iterator beginIt;
@@ -745,13 +734,5 @@ private:
     T _data[N];
     iterator beginIt;
     iterator endIt;
-    friend class boost::serialization::access;
-    template<class Archive>
-    void serialize(Archive& ar, const unsigned int version)
-    {
-        ar & version;
-        ar & N;
-        ar & _data;
-    }
 };
 } // namespace Seele

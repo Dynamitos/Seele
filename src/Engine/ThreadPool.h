@@ -348,7 +348,7 @@ public:
         std::scoped_lock lock(mainJobLock);
         for(auto job : jobs)
         {
-            std::scoped_lock lock(job.promise->promiseLock);
+            std::scoped_lock l(job.promise->promiseLock);
             job.promise->validate();
             job.promise->state = JobPromiseBase<true>::State::SCHEDULED;
             mainJobs.add(job);
@@ -362,7 +362,7 @@ public:
         std::scoped_lock lock(jobQueueLock);
         for(auto job : jobs)
         {
-            std::scoped_lock lock(job.promise->promiseLock);
+            std::scoped_lock l(job.promise->promiseLock);
             job.promise->validate();
             job.promise->state = JobPromiseBase<false>::State::SCHEDULED;
             jobQueue.add(job);

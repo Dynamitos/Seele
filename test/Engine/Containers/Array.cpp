@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(remove_keeporder)
 BOOST_AUTO_TEST_CASE(find)
 {
     Array<uint8> array;
-    for(uint32 i = 0; i < 100; ++i)
+    for(uint8 i = 0; i < 100; ++i)
     {
         array.add(i);
     }

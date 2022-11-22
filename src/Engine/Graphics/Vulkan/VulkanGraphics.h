@@ -1,7 +1,6 @@
 #pragma once
 #include "VulkanGraphicsResources.h"
 #include "Graphics/Graphics.h"
-#include "NsightAftermathGpuCrashTracker.h"
 
 namespace Seele
 {
@@ -100,7 +99,6 @@ protected:
     Map<uint32, PFramebuffer> allocatedFramebuffers;
     PAllocator allocator;
     PStagingManager stagingManager;
-    GpuCrashTracker crashTracker;
 
     friend class Window;
 };

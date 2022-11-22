@@ -318,9 +318,7 @@ PGraphicsPipeline PipelineCache::createPipeline(const GraphicsPipelineCreateInfo
     PPipelineLayout layout = gfxInfo.pipelineLayout.cast<PipelineLayout>();
     hashStruct.pipelineLayoutHash = layout->getHash();
 
-    boost::crc_32_type crc;
-    crc.process_bytes(&hashStruct, sizeof(PipelineCreateHashStruct));
-    uint32 hash = crc.checksum();
+    uint32 hash = CRC::Calculate(&hashStruct, sizeof(PipelineCreateHashStruct), CRC::CRC_32());
     VkPipeline pipelineHandle;
 
     std::scoped_lock lock(createdPipelinesLock);

@@ -52,9 +52,7 @@ Framebuffer::Framebuffer(PGraphics graphics, PRenderPass renderPass, Gfx::PRende
     
     VK_CHECK(vkCreateFramebuffer(graphics->getDevice(), &createInfo, nullptr, &handle));
 
-    boost::crc_32_type result;
-    result.process_bytes(&description, sizeof(FramebufferDescription));
-    hash = result.checksum();
+    hash = CRC::Calculate(&description, sizeof(FramebufferDescription), CRC::CRC_32());
 }
 
 Framebuffer::~Framebuffer()

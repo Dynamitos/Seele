@@ -7,9 +7,8 @@ add_subdirectory(Engine/)
 
 target_include_directories(Seele_unit_tests PRIVATE ${ENGINE_ROOT})
 
+target_link_libraries(Seele_unit_tests PRIVATE Engine)
 target_link_libraries(Seele_unit_tests PRIVATE Boost::unit_test_framework)
-target_link_libraries(Seele_unit_tests PRIVATE Vulkan::Vulkan)
-target_link_libraries(Seele_unit_tests PRIVATE nsam)
 if(UNIX)
   target_compile_definitions(Seele_unit_tests PRIVATE -DBOOST_TEST_DYN_LINK)
 endif()

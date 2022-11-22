@@ -1,10 +1,5 @@
 target_sources(Engine
 	PRIVATE
-		NsightAftermathGpuCrashTracker.h
-		NsightAftermathGpuCrashTracker.cpp
-		NsightAftermathHelpers.h
-		NsightAftermathShaderDatabase.h
-		NsightAftermathShaderDatabase.cpp
 		VulkanAllocator.h
 		VulkanAllocator.cpp
 		VulkanBuffer.cpp
@@ -34,3 +29,22 @@ target_sources(Engine
 		VulkanQueue.h
 		VulkanQueue.cpp
 		VulkanViewport.cpp)
+		
+target_sources(Engine
+	PUBLIC FILE_SET HEADERS
+		FILES
+			VulkanAllocator.h
+			VulkanBuffer.cpp
+			VulkanCommandBuffer.h
+			VulkanFramebuffer.h
+			VulkanGraphics.h
+			VulkanGraphicsResources.h
+			VulkanDescriptorSets.h
+			VulkanGraphicsEnums.h
+			VulkanInitializer.h
+			VulkanRenderPass.h
+			VulkanPipeline.h
+			VulkanPipelineCache.h
+			VulkanShader.h
+			VulkanQueue.h)
+	

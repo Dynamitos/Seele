@@ -6,3 +6,11 @@ target_sources(Engine
         StaticMesh.h
 		Transform.h
 		Transform.cpp)
+
+target_sources(Engine
+    PUBLIC FILE_SET HEADERS
+        FILES
+            Camera.h
+            Component.h
+            StaticMesh.h
+            Transform.h)

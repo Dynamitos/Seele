@@ -3,10 +3,7 @@
 #include "Containers/Array.h"
 #include "Containers/List.h"
 #include "GraphicsInitializer.h"
-#pragma warning(push)
-#pragma warning(disable: 4701)
-#include <boost/crc.hpp>
-#pragma warning(pop)
+#include "CRC.h"
 #include <functional>
 
 
@@ -103,9 +100,7 @@ struct PermutationId
     {}
     PermutationId(ShaderPermutation permutation)
     {
-        boost::crc_32_type result;
-        result.process_bytes(&permutation, sizeof(ShaderPermutation));
-        hash = result.checksum();
+        hash = CRC::Calculate(&permutation, sizeof(ShaderPermutation), CRC::CRC_32());
     }
     friend inline bool operator==(const PermutationId& lhs, const PermutationId& rhs)
     {

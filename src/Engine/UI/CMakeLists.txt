@@ -11,4 +11,14 @@ target_sources(Engine
         VerticalLayout.h
         VerticalLayout.cpp)
 
+target_sources(Engine
+    PUBLIC FILE_SET HEADERS
+        FILES
+            HorizontalLayout.h
+            Layout.h
+            RenderHierarchy.h
+            System.h
+            VerticalLayout.h)
+
+
 add_subdirectory(Elements/)

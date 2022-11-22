@@ -8,3 +8,11 @@ target_sources(Engine
         Label.cpp
         Panel.h
         Panel.cpp)
+
+target_sources(Engine
+    PUBLIC FILE_SET HEADERS
+        FILES
+            Button.h
+            Element.h
+            Label.h
+            Panel.h)

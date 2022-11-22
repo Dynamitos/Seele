@@ -34,3 +34,9 @@
 [submodule "external/thread-pool"]
 	path = external/thread-pool
 	url = https://github.com/DeveloperPaul123/thread-pool.git
+[submodule "external/zlib"]
+	path = external/zlib
+	url = https://github.com/madler/zlib.git
+[submodule "external/CRCpp"]
+	path = external/CRCpp
+	url = https://github.com/d-bahr/CRCpp.git
