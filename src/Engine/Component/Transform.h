@@ -8,23 +8,6 @@ namespace Component
 {
 struct Transform
 {
-    Transform() {}
-    Transform(const Transform& other) : transform(other.transform) {}
-    Transform(Transform&& other) : transform(other.transform) {}
-    Transform& operator=(const Transform& other) {
-        if (&other != this)
-        {
-            transform = other.transform;
-        }
-        return *this;
-    }
-    Transform& operator=(Transform&& other) {
-        if(&other != this)
-        {
-            transform = std::move(other.transform);
-        }
-        return *this;
-    }
     Math::Vector getPosition() const { return transform.getPosition(); }
     Math::Quaternion getRotation() const { return transform.getRotation(); }
     Math::Vector getScale() const { return transform.getScale(); }
@@ -35,6 +18,13 @@ struct Transform
 
     Math::Matrix4 toMatrix() const { return transform.toMatrix(); }
 
+    bool isDirty() const { return dirty; }
+    void clean() { dirty = false; }
+
+    void setPosition(Math::Vector pos);
+    void setRotation(Math::Quaternion quat);
+    void setScale(Math::Vector scale);
+
     void setRelativeLocation(Math::Vector location);
     void setRelativeRotation(Math::Quaternion rotation);
     void setRelativeRotation(Math::Vector rotation);
@@ -44,6 +34,7 @@ struct Transform
     void addRelativeRotation(Math::Quaternion rotation);
     void addRelativeRotation(Math::Vector rotation);
 private:
+    bool dirty = true;
     Math::Transform transform;
 };
 DECLARE_COMPONENT(Transform)

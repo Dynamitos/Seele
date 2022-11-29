@@ -25,6 +25,11 @@ public:
     Vector getPosition() const;
     Quaternion getRotation() const;
     Vector getScale() const;
+
+    void setPosition(Math::Vector pos);
+    void setRotation(Math::Quaternion quat);
+    void setScale(Math::Vector scale);
+
     Vector getForward() const;
     Vector getRight() const;
     Vector getUp() const;

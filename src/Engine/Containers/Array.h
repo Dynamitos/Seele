@@ -26,53 +26,66 @@ public:
         using reference = X&;
         using pointer = X*;
 
-        IteratorBase(X *x = nullptr)
+        constexpr IteratorBase(X *x = nullptr)
             : p(x)
         {
         }
-        reference operator*() const
+        constexpr reference operator*() const
         {
             return *p;
         }
-        pointer operator->() const
+        constexpr pointer operator->() const
         {
             return p;
         }
-        inline bool operator!=(const IteratorBase &other) const
+        constexpr bool operator!=(const IteratorBase &other) const
         {
             return p != other.p;
         }
-        inline bool operator==(const IteratorBase &other) const
+        constexpr bool operator==(const IteratorBase &other) const
         {
             return p == other.p;
         }
-        inline int operator-(const IteratorBase &other) const
+        constexpr IteratorBase operator+(size_t other) const
+        {
+            IteratorBase tmp(*this);
+            tmp.p += other;
+            return tmp;
+        }
+        constexpr int operator-(const IteratorBase &other) const
         {
             return (int)(p - other.p);
         }
-        IteratorBase &operator++()
+        constexpr bool operator<(const IteratorBase& other) const
+        {
+            return p < other.p;
+        }
+        constexpr IteratorBase operator-(difference_type diff) const
+        {
+            return IteratorBase(p - diff);
+        }
+        constexpr IteratorBase &operator++()
         {
             p++;
             return *this;
         }
-        IteratorBase &operator--()
+        constexpr IteratorBase &operator--()
         {
             p--;
             return *this;
         }
-        IteratorBase operator++(int)
+        constexpr IteratorBase operator++(int)
         {
             IteratorBase tmp(*this);
             ++*this;
             return tmp;
         }
-        IteratorBase operator--(int)
+        constexpr IteratorBase operator--(int)
         {
             IteratorBase tmp(*this);
             --*this;
             return tmp;
         }
-
     private:
         X *p;
     };
@@ -100,7 +113,6 @@ public:
     {
         _data = allocateArray(DEFAULT_ALLOC_SIZE);
         assert(_data != nullptr);
-        markIteratorDirty();
     }
 
     constexpr explicit Array(const allocator_type& alloc) noexcept
@@ -110,7 +122,6 @@ public:
     {
         _data = allocateArray(DEFAULT_ALLOC_SIZE);
         assert(_data != nullptr);
-        markIteratorDirty();
     }
     constexpr Array(size_type size, const value_type& value, const allocator_type& alloc = allocator_type())
         : arraySize(size)
@@ -123,7 +134,6 @@ public:
         {
             _data[i] = value;
         }
-        markIteratorDirty();
     }
     constexpr explicit Array(size_type size, const allocator_type& alloc = allocator_type())
         : arraySize(size)
@@ -136,7 +146,6 @@ public:
         {
             std::allocator_traits<allocator_type>::construct(allocator, &_data[i]);
         }
-        markIteratorDirty();
     }
     constexpr Array(std::initializer_list<T> init, const allocator_type& alloc = allocator_type())
         : arraySize(init.size())
@@ -145,7 +154,6 @@ public:
     {
         _data = allocateArray(init.size());
         assert(_data != nullptr);
-        markIteratorDirty();
         std::uninitialized_copy(init.begin(), init.end(), begin());
     }
     Array(const Array &other)
@@ -155,7 +163,6 @@ public:
     {
         _data = allocateArray(other.allocated);
         assert(_data != nullptr);
-        markIteratorDirty();
         std::uninitialized_copy(other.begin(), other.end(), begin());
     }
     Array(Array &&other) noexcept
@@ -167,7 +174,6 @@ public:
         other._data = nullptr;
         other.allocated = 0;
         other.arraySize = 0;
-        markIteratorDirty();
     }
     Array &operator=(const Array &other)
     {
@@ -192,7 +198,6 @@ public:
                 allocated = other.allocated;
             }
             arraySize = other.arraySize;
-            markIteratorDirty();
             std::uninitialized_copy(other.begin(), other.end(), begin());
         }
         return *this;
@@ -214,7 +219,6 @@ public:
             arraySize = std::move(other.arraySize);
             _data = other._data;
             other._data = nullptr;
-            markIteratorDirty();
         }
         return *this;
     }
@@ -222,6 +226,7 @@ public:
     {
         clear();
     }
+    
     [[nodiscard]]
     constexpr iterator find(const value_type &item) noexcept
     {
@@ -232,7 +237,7 @@ public:
                 return iterator(&_data[i]);
             }
         }
-        return endIt;
+        return end();
     }
     [[nodiscard]]
     constexpr iterator find(value_type&& item) noexcept
@@ -244,40 +249,72 @@ public:
                 return iterator(&_data[i]);
             }
         }
-        return endIt;	
+        return end();	
+    }
+    [[nodiscard]]
+    constexpr const_iterator find(const value_type &item) const noexcept
+    {
+        for (size_type i = 0; i < arraySize; ++i)
+        {
+            if (_data[i] == item)
+            {
+                return const_iterator(&_data[i]);
+            }
+        }
+        return end();
+    }
+    [[nodiscard]]
+    constexpr const_iterator find(value_type&& item) const noexcept
+    {
+        for (size_type i = 0; i < arraySize; ++i)
+        {
+            if (_data[i] == item)
+            {
+                return const_iterator(&_data[i]);
+            }
+        }
+        return end();	
     }
     template<class Pred>
     requires std::predicate<Pred, value_type>
-    constexpr iterator find(Pred pred) const noexcept
+    constexpr const_iterator find(Pred pred) const noexcept
     {
         for (size_type i = 0; i < arraySize; ++i)
         {
             if(pred(_data[i]))
             {
-                return iterator(&_data[i]);
+                return const_iterator(&_data[i]);
             }
         }
-        return endIt;
+        return end();
     }
     constexpr allocator_type get_allocator() const noexcept
     {
         return allocator;
     }
-    constexpr iterator begin() const noexcept
+    constexpr iterator begin() noexcept
     {
-        return beginIt;
+        return iterator(_data);
     }
-    constexpr iterator end() const noexcept
+    constexpr iterator end() noexcept
     {
-        return endIt;
+        return iterator(_data + arraySize);
+    }
+    constexpr const_iterator begin() const noexcept
+    {
+        return const_iterator(_data);
+    }
+    constexpr const_iterator end() const noexcept
+    {
+        return const_iterator(_data + arraySize);
     }
     constexpr const_iterator cbegin() const noexcept
     {
-        return beginIt;
+        return const_iterator(_data);
     }
     constexpr const_iterator cend() const noexcept
     {
-        return endIt;
+        return const_iterator(_data + arraySize);
     }
     constexpr reference add(const value_type &item = value_type())
     {
@@ -297,7 +334,7 @@ public:
     constexpr reference addUnique(const value_type &item = value_type())
     {
         iterator it;
-        if((it = std::move(find(item))) != endIt)
+        if((it = std::move(find(item))) != end())
         {
             return *it;
         }
@@ -318,7 +355,6 @@ public:
             _data = tempArray;
         }
         std::allocator_traits<allocator_type>::construct(allocator, &_data[arraySize++], arguments...);
-        markIteratorDirty();
         return _data[arraySize - 1];
     }
     template<std::predicate Pred>
@@ -336,7 +372,11 @@ public:
     }
     constexpr void remove(iterator it, bool keepOrder = true)
     {
-        removeAt(it - beginIt, keepOrder);
+        removeAt(it - begin(), keepOrder);
+    }
+    constexpr void remove(const_iterator it, bool keepOrder = true)
+    {
+        removeAt(it - cbegin(), keepOrder);
     }
     constexpr void removeAt(size_type index, bool keepOrder = true)
     {
@@ -352,7 +392,6 @@ public:
             _data[index] = std::move(_data[arraySize - 1]);
         }
         std::allocator_traits<allocator_type>::destroy(allocator, &_data[--arraySize]);
-        markIteratorDirty();
     }
     constexpr void resize(size_type newSize)
     {
@@ -376,15 +415,14 @@ public:
         _data = nullptr;
         arraySize = 0;
         allocated = 0;
-        markIteratorDirty();
     }
     constexpr size_type indexOf(iterator iterator)
     {
-        return iterator - beginIt;
+        return iterator - begin();
     }
     constexpr size_type indexOf(const_iterator iterator) const
     {
-        return iterator.p - beginIt.p;
+        return iterator.p - begin().p;
     }
     constexpr size_type indexOf(T& t)
     {
@@ -408,9 +446,8 @@ public:
         if(new_cap > allocated)
         {
             T* temp = allocateArray(new_cap);
-            std::uninitialized_move_n(beginIt, arraySize, temp);
+            std::uninitialized_move_n(begin(), arraySize, temp);
             _data = temp;
-            markIteratorDirty();
         }
         allocated = new_cap;
     }
@@ -435,7 +472,6 @@ public:
     constexpr void pop()
     {
         std::allocator_traits<allocator_type>::destroy(allocator, &_data[--arraySize]);
-        markIteratorDirty();
     }
     constexpr reference operator[](size_type index)
     {
@@ -466,11 +502,6 @@ private:
 
         return geometric; // geometric growth is sufficient
     }
-    void markIteratorDirty()
-    {
-        beginIt = Iterator(_data);
-        endIt = Iterator(_data + arraySize);
-    }
     [[nodiscard]]
     T* allocateArray(size_type size)
     {
@@ -498,7 +529,6 @@ private:
             _data = tempArray;
         }
         std::allocator_traits<allocator_type>::construct(allocator, &_data[arraySize++], std::forward<Type>(t));
-        markIteratorDirty();
         return _data[arraySize - 1];
     }
     template<typename Type>
@@ -545,12 +575,9 @@ private:
             allocated = newSize;
             _data = newData;
         }
-        markIteratorDirty();
     }
     size_type arraySize = 0;
     size_type allocated = 0;
-    Iterator beginIt;
-    Iterator endIt;
     T *_data = nullptr;
     allocator_type allocator;
 };

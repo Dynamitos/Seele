@@ -1,0 +1,22 @@
+#pragma once
+#include "AABB.h"
+#include "ShapeBase.h"
+
+namespace Seele
+{
+namespace Component
+{
+enum class ColliderType
+{
+    STATIC,
+    DYNAMIC,
+};
+struct Collider
+{
+    ColliderType type;
+    AABB boundingbox;
+    ShapeBase physicsMesh;
+    Collider transform(const Transform& transform) const;
+};
+} // namespace Component
+} // namespace Seele

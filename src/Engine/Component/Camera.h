@@ -40,15 +40,15 @@ struct Camera
     void buildProjectionMatrix();
     Math::Matrix4 viewMatrix;
     Math::Matrix4 projectionMatrix;
+    //Transforms relative to actor
+    float yaw;
+    float pitch;
 private:
     bool bNeedsViewBuild;
     bool bNeedsProjectionBuild;
 
     Gfx::PViewport viewport;
 
-    //Transforms relative to actor
-    float yaw;
-    float pitch;
 };
 } // namespace Component
 } // namespace Seele

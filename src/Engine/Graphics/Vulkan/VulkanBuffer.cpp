@@ -63,19 +63,19 @@ ShaderBuffer::ShaderBuffer(PGraphics graphics, uint64 size, VkBufferUsageFlags u
 
 ShaderBuffer::~ShaderBuffer()
 {
-    PCmdBuffer cmdBuffer = graphics->getQueueCommands(owner)->getCommands();
-    VkDevice device = graphics->getDevice();
-    auto deletionLambda = [cmdBuffer, device](VkBuffer) -> void 
-    {
-        //co_await cmdBuffer->asyncWait();
-        //vkDestroyBuffer(device, buffer, nullptr);
-        //co_return;
-    };
-    for (uint32 i = 0; i < numBuffers; ++i)
-    {
-        deletionLambda(buffers[i].buffer);
-        buffers[i].allocation = nullptr;
-    }
+    //PCmdBuffer cmdBuffer = graphics->getQueueCommands(owner)->getCommands();
+    //VkDevice device = graphics->getDevice();
+    //auto deletionLambda = [cmdBuffer, device](VkBuffer) -> void 
+    //{
+    //    //co_await cmdBuffer->asyncWait();
+    //    //vkDestroyBuffer(device, buffer, nullptr);
+    //    //co_return;
+    //};
+    //for (uint32 i = 0; i < numBuffers; ++i)
+    //{
+    //    deletionLambda(buffers[i].buffer);
+    //    buffers[i].allocation = nullptr;
+    //}
     graphics = nullptr;
 }
 

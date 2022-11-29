@@ -5,15 +5,15 @@
 #include <map>
 
 #define DEFINE_REF(x)           \
-    typedef RefPtr<x> P##x;     \
-    typedef UniquePtr<x> UP##x; \
-    typedef WeakPtr<x> W##x;
+    typedef ::Seele::RefPtr<x> P##x;     \
+    typedef ::Seele::UniquePtr<x> UP##x; \
+    typedef ::Seele::WeakPtr<x> W##x;
 
 #define DECLARE_REF(x)          \
     class x;                    \
-    typedef RefPtr<x> P##x;     \
-    typedef UniquePtr<x> UP##x; \
-    typedef WeakPtr<x> W##x;
+    typedef ::Seele::RefPtr<x> P##x;     \
+    typedef ::Seele::UniquePtr<x> UP##x; \
+    typedef ::Seele::WeakPtr<x> W##x;
 
 
 #define DECLARE_NAME_REF(nmsp, x)   \

@@ -34,7 +34,6 @@ target_sources(Engine
 	PUBLIC FILE_SET HEADERS
 		FILES
 			VulkanAllocator.h
-			VulkanBuffer.cpp
 			VulkanCommandBuffer.h
 			VulkanFramebuffer.h
 			VulkanGraphics.h

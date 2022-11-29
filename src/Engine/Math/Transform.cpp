@@ -145,14 +145,31 @@ Vector Transform::getScale() const
     return Vector(scale);
 }
 
+void Transform::setPosition(Math::Vector pos)
+{
+    position = Vector4(pos, 0);
+}
+
+void Transform::setRotation(Math::Quaternion quat)
+{
+    rotation = quat;
+}
+
+void Transform::setScale(Math::Vector s)
+{
+    scale = Vector4(s, 0);
+}
+
 Vector Transform::getForward() const
 {
     return glm::normalize(Vector(0, 0, 1) * rotation);
 }
+
 Vector Transform::getRight() const
 {
     return glm::normalize(Vector(1, 0, 0) * rotation);
 }
+
 Vector Transform::getUp() const
 {
     return glm::normalize(Vector(0, 1, 0) * rotation);

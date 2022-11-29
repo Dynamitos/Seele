@@ -10,6 +10,7 @@ add_subdirectory(${FREETYPE_ROOT})
 set(ASSIMP_BUILD_TESTS OFF CACHE INTERNAL "")
 set(ASSIMP_BUILD_SAMPLES OFF CACHE INTERNAL "")
 set(ASSIMP_BUILD_OVERALLS OFF CACHE INTERNAL "")
+set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE INTERNAL "")
 add_subdirectory(${ASSIMP_ROOT})
 target_compile_definitions(assimp PRIVATE _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
 if(WIN32)
@@ -21,6 +22,7 @@ endif()
 
 #-----------------KTX----------------------------
 set(KTX_FEATURE_TESTS off)
+set(KTX_FEATURE_TOOLS off)
 
 add_subdirectory(${KTX_ROOT} ${KTX_ROOT})
 
@@ -71,20 +73,55 @@ ExternalProject_Add(slang-build
 )
 endif()
 
+add_library(slang-llvm INTERFACE)
+target_link_libraries(slang-llvm INTERFACE 
+    $<BUILD_INTERFACE:${SLANG_BINARY_DIR}/slang.lib>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/lib/slang.lib>
+)
+set_target_properties(slang-llvm PROPERTIES IMPORTED_IMPLIB ${SLANG_BINARY_DIR}/slang.lib)
+set_target_properties(slang-llvm PROPERTIES IMPORTED_LOCATION ${SLANG_BINARY_DIR}/slang-llvm.dll)
+
+add_library(slang-glslang INTERFACE)
+target_link_libraries(slang-glslang INTERFACE 
+    $<BUILD_INTERFACE:${SLANG_BINARY_DIR}/slang.lib>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/lib/slang.lib>
+)
+set_target_properties(slang-glslang PROPERTIES IMPORTED_IMPLIB ${SLANG_BINARY_DIR}/slang.lib)
+set_target_properties(slang-glslang PROPERTIES IMPORTED_LOCATION ${SLANG_BINARY_DIR}/slang-glslang.dll)
+
 add_library(slang INTERFACE)
 
 target_include_directories(slang INTERFACE 
     $<BUILD_INTERFACE:${SLANG_ROOT}/>
     $<INSTALL_INTERFACE:include>
 )
-target_link_libraries(slang INTERFACE ${SLANG_BINARY_DIR}/*.lib)
-set_target_properties(slang PROPERTIES SLANG_BINARY ${SLANG_BINARY_DIR}/slang.dll)
-set_target_properties(slang PROPERTIES GLSLANG_BINARY ${SLANG_BINARY_DIR}/slang-glslang.dll)
+target_link_libraries(slang INTERFACE 
+    $<BUILD_INTERFACE:${SLANG_BINARY_DIR}/slang.lib>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/lib/slang.lib>
+)
+target_link_libraries(slang INTERFACE slang-glslang)
+target_link_libraries(slang INTERFACE slang-llvm)
+set_target_properties(slang PROPERTIES IMPORTED_IMPLIB ${SLANG_BINARY_DIR}/slang.lib)
+set_target_properties(slang PROPERTIES IMPORTED_LOCATION ${SLANG_BINARY_DIR}/slang.dll)
 
 install(DIRECTORY
     ${SLANG_ROOT}
     DESTINATION ${CMAKE_INSTALL_PREFIX}/include
     FILES_MATCHING PATTERN "*.h"
+)
+
+install(FILES
+    $<TARGET_PROPERTY:slang,IMPORTED_IMPLIB>
+    $<TARGET_PROPERTY:slang-glslang,IMPORTED_IMPLIB>
+    $<TARGET_PROPERTY:slang-llvm,IMPORTED_IMPLIB>
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+)
+    
+install(FILES
+    $<TARGET_PROPERTY:slang,IMPORTED_LOCATION>
+    $<TARGET_PROPERTY:slang-glslang,IMPORTED_LOCATION>
+    $<TARGET_PROPERTY:slang-llvm,IMPORTED_LOCATION>
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
 )
 
 #--------------CRC++------------------------------
@@ -128,8 +165,21 @@ target_include_directories(stb INTERFACE
 )
 
 install(DIRECTORY
-    ${STB_HEADERS}
+    ${STB_ROOT}
     DESTINATION ${CMAKE_INSTALL_PREFIX}/include
     FILES_MATCHING PATTERN "*.h"
 )
 
+#--------------ODEINT-----------------------------------
+add_library(odeint INTERFACE)
+
+target_include_directories(odeint INTERFACE 
+    $<BUILD_INTERFACE:${ODEINT_ROOT}>
+    $<INSTALL_INTERFACE:include>
+)
+
+install(DIRECTORY
+    ${ODEINT_ROOT}
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/include
+    FILES_MATCHING PATTERN "*.hpp"
+)

@@ -46,7 +46,7 @@ void MaterialAsset::load()
     auto stream = getReadStream();
     json j;
     stream >> j;
-    materialName = j["name"].get<std::string>();
+    materialName = j["name"].get<std::string>() + "Material";
     layout = WindowManager::getGraphics()->createDescriptorLayout(materialName + "Layout");
     //Shader file needs to conform to the slang standard, which prohibits _
     materialName.erase(std::remove(materialName.begin(), materialName.end(), '_'), materialName.end());

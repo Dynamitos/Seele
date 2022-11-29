@@ -14,10 +14,15 @@ class SystemBase
 public:
     SystemBase(entt::registry& registry) : registry(registry) {}
     virtual ~SystemBase() {}
-    template<typename Comp>
+    template<is_component Comp>
     auto getDependencies()
     {
         return Comp::dependencies;
+    }
+    template<typename Comp>
+    Dependencies<> getDependencies()
+    {
+        return Dependencies<>();
     }
     template<typename... Dep>
     auto mergeDependencies(Dep... deps)
@@ -29,17 +34,28 @@ public:
     {
         registry.view<Components..., Deps...>().each([&](Components&... comp, Deps&... deps){
             //pool.enqueue_detach([&](){
-                int ret = (accessComponent(deps) + ...);
-                assert(ret == 0);
+                (accessComponent(deps) + ...);
                 update((comp,...));
             //});
         });
     }
-    void run(dp::thread_pool<>& pool)
+    template<>
+    void setupView(Dependencies<>, dp::thread_pool<>&)
     {
+        registry.view<Components...>().each([&](Components&... comp){
+            //pool.enqueue_detach([&](){
+                update(comp...);
+            //});
+        });
+    }
+    void run(dp::thread_pool<>& pool, double delta)
+    {
+        deltaTime = delta;
         setupView(mergeDependencies((getDependencies<Components>(),...)), pool);
     }
     virtual void update(Components&... components) = 0;
+protected:
+    double deltaTime;
 private:
     entt::registry& registry;
 };

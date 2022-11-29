@@ -1,8 +1,17 @@
 target_sources(Engine
     PRIVATE
+        AABB.h
+        BoxCollider.h
         Camera.h
         Camera.cpp
         Component.h
+        Collider.h
+        Collider.cpp
+        MeshCollider.h
+        RigidBody.h
+        ShapeBase.h
+        ShapeBase.cpp
+        SphereCollider.h
         StaticMesh.h
 		Transform.h
 		Transform.cpp)
@@ -10,7 +19,14 @@ target_sources(Engine
 target_sources(Engine
     PUBLIC FILE_SET HEADERS
         FILES
+            AABB.h
+            BoxCollider.h
             Camera.h
             Component.h
+            Collider.h
+            MeshCollider.h
+            RigidBody.h
+            ShapeBase.h
+            SphereCollider.h
             StaticMesh.h
             Transform.h)

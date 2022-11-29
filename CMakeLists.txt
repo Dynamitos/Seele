@@ -10,6 +10,7 @@ option (USE_SUPERBUILD "Whether or not a superbuild should be invoked" ON)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_COMPILE_WARNING_AS_ERROR OFF)
+set(CMAKE_INSTALL_MESSAGE LAZY)
 set(BUILD_SHARED_LIBS OFF)
 
 set(ENGINE_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/src/Engine)
@@ -27,7 +28,8 @@ set(TTFPARSER_ROOT ${EXTERNAL_ROOT}/ttf-parser)
 set(FREETYPE_ROOT ${EXTERNAL_ROOT}/freetype)
 set(SPIRV_ROOT ${EXTERNAL_ROOT}/SPIRV-Cross)
 set(ENTT_ROOT ${EXTERNAL_ROOT}/entt)
-set(NSAM_ROOT ${EXTERNAL_ROOT}/aftermath)
+set(NLOPT_ROOT ${EXTERNAL_ROOT}/nlopt)
+set(ODEINT_ROOT ${EXTERNAL_ROOT}/odeint)
 set(THREADPOOL_ROOT ${EXTERNAL_ROOT}/thread-pool)
 set(ZLIB_ROOT ${EXTERNAL_ROOT}/zlib)
 
@@ -52,7 +54,6 @@ if(WIN32)
 endif()
 
 find_package(Vulkan REQUIRED)
-find_package(Boost REQUIRED serialization)
 
 if(WIN32)
     add_compile_definitions(USE_EXTENSIONS)
@@ -77,6 +78,7 @@ target_link_libraries(Engine PUBLIC stb)
 target_link_libraries(Engine PUBLIC nlohmann_json::nlohmann_json)
 target_link_libraries(Engine PUBLIC dp::thread-pool)
 target_link_libraries(Engine PUBLIC crcpp)
+target_link_libraries(Engine PUBLIC odeint)
 if(UNIX)
     target_link_libraries(Engine PUBLIC Threads::Threads)
     target_link_libraries(Engine PUBLIC dl)
@@ -101,19 +103,24 @@ target_precompile_headers(Engine
 if(MSVC)
     set(_CRT_SECURE_NO_WARNINGS)
     target_compile_options(Engine PUBLIC /Zi /MP14 /W4 /DEBUG "/WX-")
+    target_sources(Engine INTERFACE   
+        $<BUILD_INTERFACE:Seele.natvis>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/Seele.natvis>
+    )
+    install(FILES
+        Seele.natvis
+        DESTINATION .)
 else()
     target_compile_options(Engine PUBLIC -g -Wall -Wextra -Wno-delete-incomplete -pedantic -fcoroutines)
 endif()
 
 add_subdirectory(src/)
 
-add_executable(Seele_unit_tests "")
-add_subdirectory(test/)
+#add_executable(Seele_unit_tests "")
+#add_subdirectory(test/)
 
 add_custom_target(SeeleEngine ALL
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/res $<TARGET_FILE_DIR:Engine>
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_PROPERTY:slang,SLANG_BINARY> $<TARGET_FILE_DIR:Engine>
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_PROPERTY:slang,GLSLANG_BINARY> $<TARGET_FILE_DIR:Engine>
     COMMAND_EXPAND_LISTS
 	DEPENDS Editor slang-build)
 
@@ -124,7 +131,6 @@ install(
         glfw
         glm
         freetype
-        slang
         assimp
         ktx
         stb
@@ -132,7 +138,12 @@ install(
         nlohmann_json
         ThreadPool
         zlib
+        slang
+        slang-glslang
+        slang-llvm
         zlibstatic
+        IrrXML
+        odeint
     EXPORT 
         EngineTargets
     FILE_SET HEADERS
