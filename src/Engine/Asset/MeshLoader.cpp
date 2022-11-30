@@ -61,6 +61,10 @@ void MeshLoader::loadMaterials(const aiScene* scene, Array<PMaterialAsset>& glob
                 };
             matCode["code"]["baseColor"] = "return diffuseTexture.Sample(textureSampler, input.texCoords[0]).xyz;";
         }
+        else
+        {
+            matCode["code"]["baseColor"] = "return input.vertexColor.xyz;";
+        }
         if(material->GetTexture(aiTextureType_SPECULAR, 0, &texPath) == AI_SUCCESS)
         {
             std::string texFilename = std::filesystem::path(texPath.C_Str()).replace_extension("asset").stem().string();
@@ -143,6 +147,23 @@ VertexStreamComponent createVertexStream(uint32 size, aiVector2D* sourceData, Gf
     vertexBuffer->transferOwnership(Gfx::QueueType::GRAPHICS);
     return VertexStreamComponent(vertexBuffer, 0, vbInfo.vertexSize, Gfx::SE_FORMAT_R32G32_SFLOAT);
 }
+VertexStreamComponent createVertexStream(uint32 size, aiColor4D* sourceData, Gfx::PGraphics graphics)
+{
+    Array<Math::Vector4> buffer(size);
+    for(uint32 i = 0; i < size; ++i)
+    {
+        buffer[i] = Math::Vector4(sourceData[i].r, sourceData[i].g, sourceData[i].b, sourceData[i].a);
+    }    
+    VertexBufferCreateInfo vbInfo;
+    vbInfo.numVertices = size;
+    vbInfo.vertexSize = sizeof(Math::Vector4);
+    vbInfo.resourceData.data = (uint8 *)buffer.data();
+    vbInfo.resourceData.owner = Gfx::QueueType::DEDICATED_TRANSFER;
+    vbInfo.resourceData.size = sizeof(Math::Vector4) * buffer.size();
+    Gfx::PVertexBuffer vertexBuffer = graphics->createVertexBuffer(vbInfo);
+    vertexBuffer->transferOwnership(Gfx::QueueType::GRAPHICS);
+    return VertexStreamComponent(vertexBuffer, 0, vbInfo.vertexSize, Gfx::SE_FORMAT_R32G32_SFLOAT);
+}
 void MeshLoader::loadGlobalMeshes(const aiScene* scene, Array<PMesh>& globalMeshes, const Array<PMaterialAsset>& materials)
 {
     for (uint32 meshIndex = 0; meshIndex < scene->mNumMeshes; ++meshIndex)
@@ -172,7 +193,7 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, Array<PMesh>& globalMesh
         }
         if(mesh->HasVertexColors(0))
         {
-            //data.colorComponent = createVertexStream(mesh->mNumVertices, mesh->mColors[0], graphics);
+            data.colorComponent = createVertexStream(mesh->mNumVertices, mesh->mColors[0], graphics);
         }
         vertexShaderInput->setData(std::move(data));
         vertexShaderInput->init(graphics);

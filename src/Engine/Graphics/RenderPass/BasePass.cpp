@@ -120,7 +120,7 @@ void BasePass::beginFrame(const Component::Camera& cam)
     BulkResourceData uniformUpdate;
 
     viewParams.viewMatrix = cam.getViewMatrix();
-    viewParams.projectionMatrix = cam.getProjectionMatrix();
+    viewParams.projectionMatrix = viewport->getProjectionMatrix();
     viewParams.cameraPosition = Math::Vector4(cam.getCameraPosition(), 0);
     viewParams.screenDimensions = Math::Vector2(static_cast<float>(viewport->getSizeX()), static_cast<float>(viewport->getSizeY()));
     uniformUpdate.size = sizeof(ViewParameter);

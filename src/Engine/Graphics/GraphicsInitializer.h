@@ -43,6 +43,7 @@ struct WindowCreateInfo
 struct ViewportCreateInfo
 {
     Math::URect dimensions;
+    float fieldOfView = 1.222f; // 70 deg
 };
 // doesnt own the data, only proxy it
 struct BulkResourceData

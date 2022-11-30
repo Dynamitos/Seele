@@ -8,12 +8,8 @@ using namespace Seele::Component;
 using namespace Seele::Math;
 
 Camera::Camera()
-    : aspectRatio(0)
-    , fieldOfView(glm::radians(70.f))
-    , bNeedsViewBuild(false)
-    , bNeedsProjectionBuild(false)
+    : bNeedsViewBuild(false)
     , viewMatrix(Matrix4())
-    , projectionMatrix(Matrix4())
 {
     yaw = 0;
     pitch = 0;
@@ -54,14 +50,6 @@ void Camera::moveY(float amount)
     bNeedsViewBuild = true;
 }
 
-void Camera::setViewport(Gfx::PViewport newViewport)
-{
-    viewport = newViewport;
-    aspectRatio = viewport->getSizeX() / (float)viewport->getSizeY();
-
-    bNeedsProjectionBuild = true;
-}
-
 void Camera::buildViewMatrix() 
 {
     Vector eyePos = getTransform().getPosition();//getAbsoluteTransform().getPosition();
@@ -71,18 +59,3 @@ void Camera::buildViewMatrix()
 
     bNeedsViewBuild = false;
 }
-
-void Camera::buildProjectionMatrix() 
-{
-    projectionMatrix = glm::perspective(fieldOfView, aspectRatio, 1.0f, 1000.f);
-    static Matrix4 correctionMatrix =
-        Matrix4(
-            Vector4(1, 0, 0, 0),
-            Vector4(0, 1, 0, 0),
-            Vector4(0, 0, 0.5f, 0),
-            Vector4(0, 0, 0.5f, 1));
-    projectionMatrix = correctionMatrix * projectionMatrix;
-    bNeedsProjectionBuild = false;
-}
-
-

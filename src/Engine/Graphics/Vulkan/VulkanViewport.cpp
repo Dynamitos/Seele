@@ -8,7 +8,7 @@
 using namespace Seele;
 using namespace Seele::Vulkan;
 
-void glfwKeyCallback(GLFWwindow* handle, int key, int action, int, int modifier)
+void glfwKeyCallback(GLFWwindow* handle, int key, int, int action, int modifier)
 {
     Window* window = (Window*)glfwGetWindowUserPointer(handle);
     window->keyCallback((KeyCode)key, (InputAction)action, (KeyModifier)modifier);

@@ -20,11 +20,6 @@ struct Camera
         assert (!bNeedsViewBuild);
         return viewMatrix;
     }
-    Math::Matrix4 getProjectionMatrix() const
-    {
-        assert (!bNeedsProjectionBuild);
-        return projectionMatrix;
-    }
     Math::Vector getCameraPosition() const
     {
         return Math::Vector(viewMatrix[3]);
@@ -34,21 +29,13 @@ struct Camera
     void mouseScroll(float x);
     void moveX(float amount);
     void moveY(float amount);
-    float aspectRatio;
-    float fieldOfView;
     void buildViewMatrix();
-    void buildProjectionMatrix();
     Math::Matrix4 viewMatrix;
-    Math::Matrix4 projectionMatrix;
     //Transforms relative to actor
     float yaw;
     float pitch;
 private:
     bool bNeedsViewBuild;
-    bool bNeedsProjectionBuild;
-
-    Gfx::PViewport viewport;
-
 };
 } // namespace Component
 } // namespace Seele

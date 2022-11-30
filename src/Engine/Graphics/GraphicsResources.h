@@ -650,16 +650,18 @@ public:
     virtual ~Viewport();
     virtual void resize(uint32 newX, uint32 newY) = 0;
     virtual void move(uint32 newOffsetX, uint32 newOffsetY) = 0;
-    inline PWindow getOwner() const {return owner;}
-    inline uint32 getSizeX() const {return sizeX;}
-    inline uint32 getSizeY() const {return sizeY;}
-    inline uint32 getOffsetX() const {return offsetX;}
-    inline uint32 getOffsetY() const {return offsetY;}
+    constexpr PWindow getOwner() const {return owner;}
+    constexpr uint32 getSizeX() const {return sizeX;}
+    constexpr uint32 getSizeY() const {return sizeY;}
+    constexpr uint32 getOffsetX() const {return offsetX;}
+    constexpr uint32 getOffsetY() const {return offsetY;}
+    Math::Matrix4 getProjectionMatrix() const;
 protected:
     uint32 sizeX;
     uint32 sizeY;
     uint32 offsetX;
     uint32 offsetY;
+    float fieldOfView;
     PWindow owner;
 };
 DEFINE_REF(Viewport)

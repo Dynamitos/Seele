@@ -15,7 +15,7 @@ TextPass::~TextPass()
     
 }
 
-void TextPass::beginFrame(const Component::Camera& cam) 
+void TextPass::beginFrame(const Component::Camera&) 
 {
     for(TextRender& render : passData.texts)
     {
@@ -59,9 +59,10 @@ void TextPass::beginFrame(const Component::Camera& cam)
             .scale = render.scale,
         };
     }
+    auto proj = viewport->getProjectionMatrix();
     BulkResourceData projectionUpdate = {
         .size = sizeof(Math::Matrix4),
-        .data = (uint8*)&cam.projectionMatrix,
+        .data = (uint8*)&proj,
     };
     projectionBuffer->updateContents(projectionUpdate);
     generalSet->updateBuffer(1, projectionBuffer);

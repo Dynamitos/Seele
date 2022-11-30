@@ -1,5 +1,5 @@
 #pragma once
-#include "Graphics/GraphicsResources.h"
+#include "Asset/MeshAsset.h"
 
 namespace Seele
 {
@@ -7,9 +7,7 @@ namespace Component
 {
 struct StaticMesh
 {
-    PVertexShaderInput vertexBuffer;
-    Gfx::PIndexBuffer indexBuffer;
-    PMaterialAsset material;
+    PMeshAsset mesh;
 };
 } // namespace Component
 } // namespace Seele

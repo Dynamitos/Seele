@@ -50,6 +50,7 @@ void MaterialAsset::load()
     layout = WindowManager::getGraphics()->createDescriptorLayout(materialName + "Layout");
     //Shader file needs to conform to the slang standard, which prohibits _
     materialName.erase(std::remove(materialName.begin(), materialName.end(), '_'), materialName.end());
+    materialName.erase(std::remove(materialName.begin(), materialName.end(), '.'), materialName.end());
     std::ofstream codeStream("./shaders/generated/"+materialName+".slang");
     std::string profile = j["profile"].get<std::string>();
 

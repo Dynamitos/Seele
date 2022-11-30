@@ -13,9 +13,9 @@ public:
     virtual ~Entity();
 
     template<typename Component, typename... Args>
-    void attachComponent(Args... args)
+    Component& attachComponent(Args... args)
     {
-        scene->attachComponent<Component>(identifier, args...);
+        return scene->attachComponent<Component>(identifier, args...);
     }
 protected:
     PScene scene;

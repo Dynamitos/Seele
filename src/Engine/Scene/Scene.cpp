@@ -1,6 +1,7 @@
 #include "Scene.h"
 #include "Material/MaterialAsset.h"
 #include "Graphics/Graphics.h"
+#include "Graphics/Mesh.h"
 #include "Component/StaticMesh.h"
 #include "Component/Transform.h"
 
@@ -82,25 +83,29 @@ Array<StaticMeshBatch> Scene::getStaticMeshes()
             }
         };
         Gfx::PUniformBuffer transformBuf = graphics->createUniformBuffer(info);
-        auto& batch = result.add();
-        batch.material = mesh.material;
-        batch.isBackfaceCullingDisabled = false;
-        batch.isCastingShadow = true;
-        batch.topology = Gfx::SE_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-        batch.useReverseCulling = false;
-        batch.useWireframe = false;
-        batch.vertexInput = mesh.vertexBuffer;
-        MeshBatchElement batchElement;
-        batchElement.baseVertexIndex = 0;
-        batchElement.firstIndex = 0;
-        batchElement.indexBuffer = mesh.indexBuffer;
-        batchElement.indirectArgsBuffer = nullptr;
-        batchElement.instanceRuns = nullptr;
-        batchElement.isInstanced = false;
-        batchElement.numInstances = 1;
-        batchElement.uniformBuffer = transformBuf;
-        batchElement.numPrimitives = static_cast<uint32>(mesh.indexBuffer->getNumIndices() / 3); //TODO: hardcoded
-        batch.elements.add(batchElement);
+        // TODO
+        for(auto& m : mesh.mesh->meshes)
+        {
+            auto& batch = result.add();
+            batch.material = m->referencedMaterial;
+            batch.isBackfaceCullingDisabled = false;
+            batch.isCastingShadow = true;
+            batch.topology = Gfx::SE_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+            batch.useReverseCulling = false;
+            batch.useWireframe = false;
+            batch.vertexInput = m->vertexInput;
+            MeshBatchElement batchElement;
+            batchElement.baseVertexIndex = 0;
+            batchElement.firstIndex = 0;
+            batchElement.indexBuffer = m->indexBuffer;
+            batchElement.indirectArgsBuffer = nullptr;
+            batchElement.instanceRuns = nullptr;
+            batchElement.isInstanced = false;
+            batchElement.numInstances = 1;
+            batchElement.uniformBuffer = transformBuf;
+            batchElement.numPrimitives = static_cast<uint32>(m->indexBuffer->getNumIndices() / 3); //TODO: hardcoded
+            batch.elements.add(batchElement);
+        }
     }
     return result;
 }

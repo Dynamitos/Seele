@@ -30,11 +30,11 @@ void MeshAsset::load()
 void MeshAsset::addMesh(PMesh mesh) 
 {
     std::scoped_lock lck(lock);
-    meshes.push_back(mesh);
-    referencedMaterials.push_back(mesh->referencedMaterial);   
+    meshes.add(mesh);
+    referencedMaterials.add(mesh->referencedMaterial);   
 }
 
-const std::vector<PMesh> MeshAsset::getMeshes()
+const Array<PMesh> MeshAsset::getMeshes()
 {
     std::scoped_lock lck(lock);
     return meshes;
