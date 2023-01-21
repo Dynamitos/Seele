@@ -35,11 +35,11 @@ public:
 protected:
     struct ViewParameter
     {
-        Math::Matrix4 viewMatrix;
-        Math::Matrix4 projectionMatrix;
-        Math::Vector4 cameraPosition;
-        Math::Vector2 screenDimensions;
-        Math::Vector2 pad0;
+        Matrix4 viewMatrix;
+        Matrix4 projectionMatrix;
+        Vector4 cameraPosition;
+        Vector2 screenDimensions;
+        Vector2 pad0;
     } viewParams;
     PRenderGraphResources resources;
     RenderPassDataType passData;

@@ -6,4 +6,12 @@ struct PrimitiveSceneData
 };
 
 layout(set = INDEX_SCENE_DATA, binding = 0, std430)
-ConstantBuffer<PrimitiveSceneData> gSceneData;
+StructuredBuffer<PrimitiveSceneData> gSceneData;
+
+[[vk::push_constant]]
+ConstantBuffer<uint> gSceneDataIndex;
+
+PrimitiveSceneData getSceneData()
+{
+    return gSceneData[gSceneDataIndex];
+}

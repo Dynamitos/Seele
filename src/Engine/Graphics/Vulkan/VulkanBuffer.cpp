@@ -363,7 +363,7 @@ VkAccessFlags UniformBuffer::getDestAccessMask()
 }
 
 StructuredBuffer::StructuredBuffer(PGraphics graphics, const StructuredBufferCreateInfo &resourceData)
-    : Gfx::StructuredBuffer(graphics->getFamilyMapping(), resourceData.stride, resourceData.resourceData)
+    : Gfx::StructuredBuffer(graphics->getFamilyMapping(), resourceData.stride, resourceData.resourceData.size / resourceData.stride, resourceData.resourceData)
     , Vulkan::ShaderBuffer(graphics, resourceData.resourceData.size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, currentOwner, resourceData.bDynamic)
 {
     if (resourceData.resourceData.data != nullptr)
@@ -380,6 +380,7 @@ StructuredBuffer::~StructuredBuffer()
 
 bool StructuredBuffer::updateContents(const BulkResourceData &resourceData) 
 {
+    assert(resourceData.size <= getSize());
     Gfx::StructuredBuffer::updateContents(resourceData);
     //We always want to update, as the contents could be different on the GPU
     void* data = lock();

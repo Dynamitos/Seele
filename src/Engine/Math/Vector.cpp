@@ -1,7 +1,30 @@
 #include "Vector.h"
 #include <regex>
+#include <format>
+#include <nlohmann/json.hpp>
 
-using namespace Seele::Math;
+using namespace Seele;
+
+void to_json(nlohmann::json& j, const Vector& vec)
+{
+    j = nlohmann::json{std::format("({}, {}, {})", vec.x, vec.y, vec.z)};
+}
+
+void from_json(const nlohmann::json& j, Vector& vec)
+{
+    std::string str;
+    j.get_to(str);
+    auto newEnd = std::remove(str.begin(), str.end(), ' ');
+    str.erase(newEnd);
+    std::stringstream stream(str);
+    std::string temp;
+    std::getline(stream, temp, ',');
+    vec.x = std::stof(temp);
+    std::getline(stream, temp, ',');
+    vec.y = std::stof(temp);
+    std::getline(stream, temp, ',');
+    vec.z = std::stof(temp);
+}
 
 std::ostream& operator<<(std::ostream& stream, const Vector2& vector)
 {
@@ -19,7 +42,7 @@ std::ostream& operator<<(std::ostream& stream, const Vector4& vector)
     return stream;
 }
 
-Vector Seele::Math::parseVector(const char* str)
+Vector Seele::parseVector(const char* str)
 {
     //regex pattern consisting of 'float3(xComp, yComp, zComp)', more also matches for invalid floats, but that will throw later
     std::regex pattern("float3\\(\\s*([0-9.]+f?)\\s*,\\s*([0-9.]+f?)\\s*,\\s*([0-9.]+f?)\\s*\\)");

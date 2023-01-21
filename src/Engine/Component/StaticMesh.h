@@ -7,6 +7,8 @@ namespace Component
 {
 struct StaticMesh
 {
+    StaticMesh() {}
+    StaticMesh(PMeshAsset mesh) : mesh(mesh) {}
     PMeshAsset mesh;
 };
 } // namespace Component

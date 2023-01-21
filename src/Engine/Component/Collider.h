@@ -13,7 +13,7 @@ enum class ColliderType
 };
 struct Collider
 {
-    ColliderType type;
+    ColliderType type = ColliderType::STATIC;
     AABB boundingbox;
     ShapeBase physicsMesh;
     Collider transform(const Transform& transform) const;

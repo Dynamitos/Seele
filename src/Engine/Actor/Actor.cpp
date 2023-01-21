@@ -6,7 +6,7 @@ using namespace Seele;
 Actor::Actor(PScene scene)
     : Entity(scene)
 {
-    scene->attachComponent<Component::Transform>(identifier);
+    attachComponent<Component::Transform>();
 }
 
 Actor::~Actor()
@@ -32,13 +32,9 @@ void Actor::removeChild(PActor child)
     children.remove(children.find(child), false);
     child->setParent(nullptr);
 }
-const Component::Transform& Actor::getTransform() const
-{
-    return scene->accessComponent<Component::Transform>(identifier);
-}
 
-//Component::Transform& Actor::getTransform()
-//{
-//    return scene->accessComponent<Component::Transform>(identifier);
-//}
+Component::Transform& Actor::getTransform()
+{
+    return accessComponent<Component::Transform>();
+}
 

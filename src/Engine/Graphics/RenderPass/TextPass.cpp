@@ -27,8 +27,8 @@ void TextPass::beginFrame(const Component::Camera&)
         for(uint32 c : render.text)
         {
             const GlyphData& glyph = fd.glyphDataSet[fd.characterToGlyphIndex[c]];
-            Math::Vector2 bearing = glyph.bearing;
-            Math::Vector2 size = glyph.size;
+            Vector2 bearing = glyph.bearing;
+            Vector2 size = glyph.size;
             float xpos = x + bearing.x * render.scale;
             float ypos = y - (size.y - bearing.y) * render.scale;
             
@@ -36,8 +36,8 @@ void TextPass::beginFrame(const Component::Camera&)
             float h = size.y * render.scale;
 
             instanceData.add(GlyphInstanceData{
-                .position = Math::Vector2(xpos, ypos),
-                .widthHeight = Math::Vector2(w, h),
+                .position = Vector2(xpos, ypos),
+                .widthHeight = Vector2(w, h),
                 .glyphIndex = fd.characterToGlyphIndex[c],
             });
             x += (glyph.advance >> 6) * render.scale;
@@ -61,7 +61,7 @@ void TextPass::beginFrame(const Component::Camera&)
     }
     auto proj = viewport->getProjectionMatrix();
     BulkResourceData projectionUpdate = {
-        .size = sizeof(Math::Matrix4),
+        .size = sizeof(Matrix4),
         .data = (uint8*)&proj,
     };
     projectionBuffer->updateContents(projectionUpdate);
@@ -157,7 +157,7 @@ void TextPass::createRenderPass()
 
     projectionBuffer = graphics->createUniformBuffer({
         .resourceData = {
-            .size = sizeof(Math::Matrix4),
+            .size = sizeof(Matrix4),
             .data = nullptr,
         },
         .bDynamic = true,

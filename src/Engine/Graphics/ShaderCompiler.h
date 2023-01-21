@@ -1,4 +1,5 @@
 #pragma once
+#include "Material/Material.h"
 #include "GraphicsResources.h"
 
 namespace Seele
@@ -11,9 +12,9 @@ class ShaderCompiler
 public:
     ShaderCompiler(PGraphics graphics);
     ~ShaderCompiler();
-    void registerMaterial(PMaterialAsset material);
+    void registerMaterial(PMaterial material);
 private:
-    Array<PMaterialAsset> pendingCompiles;
+    Array<PMaterial> pendingCompiles;
     PGraphics graphics;
 };
 DEFINE_REF(ShaderCompiler)

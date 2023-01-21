@@ -11,35 +11,35 @@ namespace Seele
 class PhysicsSystem
 {
 public:
-    PhysicsSystem();
+    PhysicsSystem(entt::registry& registry);
     ~PhysicsSystem();
-    void update(entt::registry& registry, float deltaTime);
+    void update(float deltaTime);
 private:
     struct Body
     {
         entt::entity id;
         float inverseMass;
-        Math::Vector centerOfMass;
-        Math::Matrix3 iBody, iBodyInv;
-        Math::Vector scale;
+        Vector centerOfMass;
+        Matrix3 iBody, iBodyInv;
+        Vector scale;
 
-        Math::Vector x;
-        Math::Quaternion q;
-        Math::Vector P;
-        Math::Vector L;
+        Vector x;
+        Quaternion q;
+        Vector P;
+        Vector L;
 
-        Math::Matrix3 iInv;
-        Math::Matrix3 R;
-        Math::Vector v;
-        Math::Vector omega;
-        Math::Vector force;
-        Math::Vector torque;
-        Math::Matrix4 matrix;
-        Math::Vector ptVelocity(Math::Vector p) const {return v + glm::cross(omega, p - x + centerOfMass);}
+        Matrix3 iInv;
+        Matrix3 R;
+        Vector v;
+        Vector omega;
+        Vector force;
+        Vector torque;
+        Matrix4 matrix;
+        Vector ptVelocity(Vector p) const {return v + glm::cross(omega, p - x + centerOfMass);}
         void updateMatrix() {
-            Math::Matrix4 scaleMatrix = glm::scale(Math::Matrix4(1), scale);
-            Math::Matrix4 rotationMatrix = glm::mat4_cast(q);
-            Math::Matrix4 translationMatrix = glm::translate(Math::Matrix4(1), x);
+            Matrix4 scaleMatrix = glm::scale(Matrix4(1), scale);
+            Matrix4 rotationMatrix = glm::mat4_cast(q);
+            Matrix4 translationMatrix = glm::translate(Matrix4(1), x);
             matrix = translationMatrix * rotationMatrix * scaleMatrix;
         }
         Body()
@@ -57,8 +57,8 @@ private:
             , L(physics.angularMomentum)
             , iInv(glm::mat3())
             , R(glm::mat3())
-            , v(Math::Vector())
-            , omega(Math::Vector())
+            , v(Vector())
+            , omega(Vector())
             , force(physics.force)
             , torque(physics.torque)
         {
@@ -76,14 +76,14 @@ private:
             , scale(transform.getScale())
             , x(transform.getPosition())
             , q(transform.getRotation())
-            , P(Math::Vector(0))
-            , L(Math::Vector(0))
+            , P(Vector(0))
+            , L(Vector(0))
             , iInv(glm::mat3())
             , R(glm::mat3())
-            , v(Math::Vector())
-            , omega(Math::Vector())
-            , force(Math::Vector(0))
-            , torque(Math::Vector(0))
+            , v(Vector())
+            , omega(Vector())
+            , force(Vector(0))
+            , torque(Vector(0))
         {
             R = glm::mat3_cast(glm::normalize(q));
             iInv = R * iBodyInv * glm::transpose(R);
@@ -99,9 +99,10 @@ private:
         glm::vec3 eb;
         bool vf;
     };
-    static constexpr size_t FLOATS_PER_RB = sizeof(Body) / sizeof(float);
-    
+    static constexpr size_t FLOATS_PER_RB = 13;
+    entt::registry& registry;
     CollisionSystem collisionSystem;
+    bool pause = false;
 
     void serializeRB(const Body& rb, float* y) const;
     
@@ -111,30 +112,32 @@ private:
     
     void deserializeArray(Array<Body>& bodies, const Array<float>& x) const;
     
-    void readRigidBodies(Array<Body>& bodies, entt::registry& registry) const;
+    void readRigidBodies(Array<Body>& bodies) const;
     
-    void writeRigidBodies(const Array<Body>& bodies, entt::registry& registry) const;
+    void writeRigidBodies(const Array<Body>& bodies) const;
     
-    Body readRigidBody(entt::entity entity, entt::registry& regsitry) const;
+    Body readRigidBody(entt::entity entity) const;
     
-    void writeRigidBody(const Body& body, entt::registry& registry) const;
+    void writeRigidBody(const Body& body) const;
     
     Array<Body> integratePhysics(const Array<Body>& bodies, const float t0, const float tdelta) const;
     
-    void rewindCollisions(const Array<Body>& t0Bodies, entt::registry& registry, const float t0, const float t1, size_t remainingDepth);
+    void rewindCollisions(const Array<Body>& t0Bodies, const float t0, const float t1, size_t remainingDepth);
     
     void calculateContacts(entt::entity id1, const Component::ShapeBase& shape1, entt::entity id2, const Component::ShapeBase& shape2, Array<Contact>& contacts) const;
 
-    void resolveRestingContacts(const Array<Contact>& contacts, entt::registry& registry) const;
+    void resolveRestingContacts(const Array<Contact>& contacts) const;
 
     void resolvePenetratingContact(const Contact& c, Body& a, Body& b) const;
 
-    Math::Vector computeNdot(const Contact& c, const Body& a, const Body& b) const;
+    Vector computeNdot(const Contact& c, const Body& a, const Body& b) const;
 
-    float computeAij(const Contact& ci, const Contact& cj, entt::registry& registry) const;
+    float computeAij(const Contact& ci, const Contact& cj) const;
 
-    void computeAMatrix(const Array<Contact>& contacts, Array<Array<float>>& amat, entt::registry& registry) const;
+    void computeAMatrix(const Array<Contact>& contacts, Array<Array<float>>& amat) const;
 
-    void computeBVector(const Array<Contact>& contacts, Array<float>& avec, entt::registry& registry) const;
+    void computeBVector(const Array<Contact>& contacts, Array<float>& avec) const;
+
+    void solveQP(const Array<Array<float>>& A, const Array<float>& b, Array<float>& f) const;
 };
 } // namespace Seele

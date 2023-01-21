@@ -1,7 +1,6 @@
 #pragma once
 #include "MinimalEngine.h"
 #include "Asset.h"
-#include "Material/MaterialAsset.h"
 #include <string>
 #include <map>
 
@@ -25,6 +24,7 @@ public:
     static std::string getRootFolder();
 
     static void importFile(const std::string& filePath);
+    static void importFile(const std::string& filePath, const std::string& importPath);
     
     static PMeshAsset findMesh(const std::string& filePath);
     static PTextureAsset findTexture(const std::string& filePath);
@@ -34,30 +34,38 @@ public:
     static std::ofstream createWriteStream(const std::string& relativePath, std::ios_base::openmode openmode = std::ios::out);
     static std::ifstream createReadStream(const std::string& relativePath, std::ios_base::openmode openmode = std::ios::in);
 private:
+    struct AssetFolder
+    {
+        std::map<std::string, AssetFolder> children;
+        //Todo: Seele::Map doesn't really work with strings for some reason, so just use std::map for now
+        std::map<std::string, PTextureAsset> textures;
+        std::map<std::string, PFontAsset> fonts;
+        std::map<std::string, PMeshAsset> meshes;
+        std::map<std::string, PMaterialAsset> materials;
+    };
+
     static AssetRegistry& get();
 
     AssetRegistry();
     void init(const std::filesystem::path& rootFolder, Gfx::PGraphics graphics);
 
-    void importMesh(const std::filesystem::path& filePath);
-    void importTexture(const std::filesystem::path& filePath);
-    void importFont(const std::filesystem::path& filePath);
-    void importMaterial(const std::filesystem::path& filePath);
+    void importMesh(const std::filesystem::path& filePath, const std::string& importPath);
+    void importTexture(const std::filesystem::path& filePath, const std::string& importPath);
+    void importFont(const std::filesystem::path& filePath, const std::string& importPath);
+    void importMaterial(const std::filesystem::path& filePath, const std::string& importPath);
 
-    void registerMesh(PMeshAsset mesh);
-    void registerTexture(PTextureAsset texture);
-    void registerFont(PFontAsset font);
-    void registerMaterial(PMaterialAsset material);
+    void registerMesh(PMeshAsset mesh, const std::string& importPath);
+    void registerTexture(PTextureAsset texture, const std::string& importPath);
+    void registerFont(PFontAsset font, const std::string& importPath);
+    void registerMaterial(PMaterialAsset material, const std::string& importPath);
+
+    AssetFolder& getOrCreateFolder(std::string foldername);
 
     std::ofstream internalCreateWriteStream(const std::string& relativePath, std::ios_base::openmode openmode = std::ios::out);
     std::ifstream internalCreateReadStream(const std::string& relaitvePath, std::ios_base::openmode openmode = std::ios::in);
 
     std::filesystem::path rootFolder;
-    //Todo: Seele::Map doesn't really work with strings for some reason, so just use std::map for now
-    std::map<std::string, PTextureAsset> textures;
-    std::map<std::string, PFontAsset> fonts;
-    std::map<std::string, PMeshAsset> meshes;
-    std::map<std::string, PMaterialAsset> materials;
+    AssetFolder assetRoot;
     UPTextureLoader textureLoader;
     UPFontLoader fontLoader;
     UPMeshLoader meshLoader;

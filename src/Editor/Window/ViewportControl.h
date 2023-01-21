@@ -8,16 +8,16 @@ namespace Seele
 class ViewportControl
 {
 public:
-    ViewportControl(const Math::URect& viewportDimensions, Math::Vector initialPos /*TODO: configurable initial rotations*/);
+    ViewportControl(const URect& viewportDimensions, Vector initialPos /*TODO: configurable initial rotations*/);
     ~ViewportControl();
     void update(Component::Camera& camera, float deltaTime);
     void keyCallback(KeyCode key, InputAction action);
     void mouseMoveCallback(double xPos, double yPos);
     void mouseButtonCallback(MouseButton button, InputAction action);
-    void viewportResize(Math::URect dimensions);
+    void viewportResize(URect dimensions);
 private:
-    Math::Vector position;
-    Math::Vector springArm;
+    Vector position;
+    Vector springArm;
     float fieldOfView;
     float aspectRatio;
     StaticArray<bool, static_cast<size_t>(KeyCode::KEY_LAST)> keys;

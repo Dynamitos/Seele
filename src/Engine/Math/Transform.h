@@ -26,9 +26,9 @@ public:
     Quaternion getRotation() const;
     Vector getScale() const;
 
-    void setPosition(Math::Vector pos);
-    void setRotation(Math::Quaternion quat);
-    void setScale(Math::Vector scale);
+    void setPosition(Vector pos);
+    void setRotation(Quaternion quat);
+    void setScale(Vector scale);
 
     Vector getForward() const;
     Vector getRight() const;

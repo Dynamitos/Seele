@@ -5,7 +5,7 @@
 #include "Actor/CameraActor.h"
 #include "Math/Vector.h"
 #include "RenderGraph.h"
-#include "Material/MaterialAsset.h"
+#include "Material/MaterialInterface.h"
 
 using namespace Seele;
 
@@ -28,7 +28,7 @@ void DepthPrepassMeshProcessor::processMeshBatch(
     int32 /*staticMeshId*/) 
 {
     //std::cout << "Depth void started" << std::endl;
-    PMaterialAsset material = batch.material;
+    PMaterialInterface material = batch.material;
     //const Gfx::MaterialShadingModel shadingModel = material->getShadingModel();
 
     const PVertexShaderInput vertexInput = batch.vertexInput;
@@ -44,11 +44,7 @@ void DepthPrepassMeshProcessor::processMeshBatch(
     Gfx::PDescriptorSet materialSet = material->createDescriptorSet();
     descriptorSets[DepthPrepass::INDEX_MATERIAL] = materialSet;
     for(uint32 i = 0; i < batch.elements.size(); ++i)
-    {   
-        Gfx::PDescriptorSet descriptorSet = primitiveLayout->allocateDescriptorSet();
-        descriptorSet->updateBuffer(0, batch.elements[i].uniformBuffer);
-        descriptorSet->writeChanges();
-        descriptorSets[DepthPrepass::INDEX_SCENE_DATA] = descriptorSet;
+    {
         buildMeshDrawCommand(batch, 
 //            primitiveComponent, 
             renderPass,
@@ -87,9 +83,14 @@ DepthPrepass::DepthPrepass(Gfx::PGraphics graphics)
     depthPrepassLayout->addDescriptorLayout(INDEX_VIEW_PARAMS, viewLayout);
 
     primitiveLayout = graphics->createDescriptorLayout("PrimitiveLayout");
-    primitiveLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+    primitiveLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
     primitiveLayout->create();
     depthPrepassLayout->addDescriptorLayout(INDEX_SCENE_DATA, primitiveLayout);
+    depthPrepassLayout->addPushConstants(Gfx::SePushConstantRange{
+        .stageFlags = (Gfx::SE_SHADER_STAGE_VERTEX_BIT | Gfx::SE_SHADER_STAGE_FRAGMENT_BIT),
+        .offset = 0,
+        .size = sizeof(uint32),
+    });
 }
 
 DepthPrepass::~DepthPrepass()
@@ -104,12 +105,15 @@ void DepthPrepass::beginFrame(const Component::Camera& cam)
 
     viewParams.viewMatrix = cam.getViewMatrix();
     viewParams.projectionMatrix = viewport->getProjectionMatrix();
-    viewParams.cameraPosition = Math::Vector4(cam.getCameraPosition(), 0);
-    viewParams.screenDimensions = Math::Vector2(static_cast<float>(viewport->getSizeX()), static_cast<float>(viewport->getSizeY()));
+    viewParams.cameraPosition = Vector4(cam.getCameraPosition(), 0);
+    viewParams.screenDimensions = Vector2(static_cast<float>(viewport->getSizeX()), static_cast<float>(viewport->getSizeY()));
     uniformUpdate.size = sizeof(ViewParameter);
     uniformUpdate.data = (uint8*)&viewParams;
     viewParamBuffer->updateContents(uniformUpdate);
     viewLayout->reset();
+    descriptorSets[INDEX_SCENE_DATA] = primitiveLayout->allocateDescriptorSet();
+    descriptorSets[INDEX_SCENE_DATA]->updateBuffer(0, passData.sceneDataBuffer);
+    descriptorSets[INDEX_SCENE_DATA]->writeChanges();
     descriptorSets[INDEX_VIEW_PARAMS] = viewLayout->allocateDescriptorSet();
     descriptorSets[INDEX_VIEW_PARAMS]->updateBuffer(0, viewParamBuffer);
     descriptorSets[INDEX_VIEW_PARAMS]->writeChanges();

@@ -5,8 +5,6 @@
 
 namespace Seele
 {
-namespace Math
-{
 struct Rect
 {
 	Rect()
@@ -60,5 +58,4 @@ inline constexpr T align(const T ptr, int64_t alignment)
 {
 	return (T)(((uint64_t)ptr + alignment - 1) & ~(alignment - 1));
 }
-} // namespace Math
 } // namespace Seele

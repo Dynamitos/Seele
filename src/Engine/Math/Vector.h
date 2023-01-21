@@ -7,9 +7,8 @@
 
 #include <glm/gtc/quaternion.hpp>
 #pragma warning(pop)
+#include <nlohmann/json_fwd.hpp>
 namespace Seele
-{
-namespace Math
 {
 typedef glm::vec2 Vector2;
 typedef glm::vec3 Vector;
@@ -96,10 +95,10 @@ static inline Vector toRotator(const Quaternion &other)
 	}
 	return rotatorFromQuat;
 }
-} // namespace Math
+void to_json(nlohmann::json& j, const Vector& vec);
+void from_json(nlohmann::json& j, Vector& vec);
 } // namespace Seele
 
-
-std::ostream& operator<<(std::ostream& stream, const Seele::Math::Vector2& vector);
-std::ostream& operator<<(std::ostream& stream, const Seele::Math::Vector& vector);
-std::ostream& operator<<(std::ostream& stream, const Seele::Math::Vector4& vector);
+std::ostream& operator<<(std::ostream& stream, const Seele::Vector2& vector);
+std::ostream& operator<<(std::ostream& stream, const Seele::Vector& vector);
+std::ostream& operator<<(std::ostream& stream, const Seele::Vector4& vector);

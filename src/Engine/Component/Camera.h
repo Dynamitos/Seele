@@ -15,14 +15,14 @@ struct Camera
     Camera();
     ~Camera();
 
-    Math::Matrix4 getViewMatrix() const
+    Matrix4 getViewMatrix() const
     {
         assert (!bNeedsViewBuild);
         return viewMatrix;
     }
-    Math::Vector getCameraPosition() const
+    Vector getCameraPosition() const
     {
-        return Math::Vector(viewMatrix[3]);
+        return Vector(viewMatrix[3]);
     }
     void setViewport(Gfx::PViewport viewport);
     void mouseMove(float deltaX, float deltaY);
@@ -30,7 +30,7 @@ struct Camera
     void moveX(float amount);
     void moveY(float amount);
     void buildViewMatrix();
-    Math::Matrix4 viewMatrix;
+    Matrix4 viewMatrix;
     //Transforms relative to actor
     float yaw;
     float pitch;

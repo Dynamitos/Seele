@@ -20,7 +20,7 @@ SceneView::SceneView(Gfx::PGraphics graphics, PWindow owner, const ViewportCreat
         LightCullingPass(graphics),
         BasePass(graphics)
     ))
-    , cameraSystem(createInfo.dimensions, Math::Vector(0, 0, 10))
+    , cameraSystem(createInfo.dimensions, Vector(0, 0, 10))
 {
     AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Ayaka\\Avatar_Girl_Sword_Ayaka_Tex_Body_Diffuse.png");
     AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Ayaka\\Avatar_Girl_Sword_Ayaka_Tex_Body_Lightmap.png");

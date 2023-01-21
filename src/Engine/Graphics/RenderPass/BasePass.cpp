@@ -5,7 +5,7 @@
 #include "Actor/CameraActor.h"
 #include "Math/Vector.h"
 #include "RenderGraph.h"
-#include "Material/MaterialAsset.h"
+#include "Material/MaterialInstance.h"
 
 using namespace Seele;
 
@@ -29,7 +29,7 @@ void BasePassMeshProcessor::processMeshBatch(
     Array<Gfx::PDescriptorSet> descriptorSets,
     int32 /*staticMeshId*/) 
 {
-    PMaterialAsset material = batch.material;
+    PMaterialInterface material = batch.material;
     //const Gfx::MaterialShadingModel shadingModel = material->getShadingModel();
 
     const PVertexShaderInput vertexInput = batch.vertexInput;
@@ -47,12 +47,7 @@ void BasePassMeshProcessor::processMeshBatch(
     descriptorSets[BasePass::INDEX_MATERIAL] = materialSet;
     for(uint32 i = 0; i < batch.elements.size(); ++i)
     {
-        Gfx::PDescriptorSet descriptorSet = primitiveLayout->allocateDescriptorSet();
-        descriptorSet->updateBuffer(0, batch.elements[i].uniformBuffer);
-        descriptorSet->writeChanges();
-        descriptorSets[BasePass::INDEX_SCENE_DATA] = descriptorSet;
         buildMeshDrawCommand(batch, 
-//            primitiveComponent, 
             renderPass,
             pipelineLayout,
             renderCommand,
@@ -104,9 +99,14 @@ BasePass::BasePass(Gfx::PGraphics graphics)
     descriptorSets[INDEX_VIEW_PARAMS] = viewLayout->allocateDescriptorSet();
 
     primitiveLayout = graphics->createDescriptorLayout("PrimitiveLayout");
-    primitiveLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+    primitiveLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
     primitiveLayout->create();
     basePassLayout->addDescriptorLayout(INDEX_SCENE_DATA, primitiveLayout);
+    basePassLayout->addPushConstants(Gfx::SePushConstantRange{
+        .stageFlags = (Gfx::SE_SHADER_STAGE_VERTEX_BIT | Gfx::SE_SHADER_STAGE_FRAGMENT_BIT),
+        .offset = 0,
+        .size = sizeof(uint32),
+    });
 }
 
 BasePass::~BasePass()
@@ -121,13 +121,17 @@ void BasePass::beginFrame(const Component::Camera& cam)
 
     viewParams.viewMatrix = cam.getViewMatrix();
     viewParams.projectionMatrix = viewport->getProjectionMatrix();
-    viewParams.cameraPosition = Math::Vector4(cam.getCameraPosition(), 0);
-    viewParams.screenDimensions = Math::Vector2(static_cast<float>(viewport->getSizeX()), static_cast<float>(viewport->getSizeY()));
+    viewParams.cameraPosition = Vector4(cam.getCameraPosition(), 0);
+    viewParams.screenDimensions = Vector2(static_cast<float>(viewport->getSizeX()), static_cast<float>(viewport->getSizeY()));
     uniformUpdate.size = sizeof(ViewParameter);
     uniformUpdate.data = (uint8*)&viewParams;
     viewParamBuffer->updateContents(uniformUpdate);
     viewLayout->reset();
     lightLayout->reset();
+
+    descriptorSets[INDEX_SCENE_DATA] = primitiveLayout->allocateDescriptorSet();
+    descriptorSets[INDEX_SCENE_DATA]->updateBuffer(0, passData.sceneDataBuffer);
+    descriptorSets[INDEX_SCENE_DATA]->writeChanges();
     descriptorSets[INDEX_LIGHT_ENV] = lightLayout->allocateDescriptorSet();
     descriptorSets[INDEX_VIEW_PARAMS] = viewLayout->allocateDescriptorSet();
     descriptorSets[INDEX_VIEW_PARAMS]->updateBuffer(0, viewParamBuffer);
@@ -152,6 +156,7 @@ void BasePass::render()
     descriptorSets[INDEX_LIGHT_ENV]->updateBuffer(4, oLightIndexList);
     descriptorSets[INDEX_LIGHT_ENV]->updateTexture(5, oLightGrid);
     descriptorSets[INDEX_LIGHT_ENV]->writeChanges();
+
     graphics->beginRenderPass(renderPass);
     for (auto &&meshBatch : passData.staticDrawList)
     {

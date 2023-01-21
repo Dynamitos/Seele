@@ -17,7 +17,7 @@ struct VertexInputStream;
 struct VertexStreamComponent;
 class VertexInputType;
 struct MeshBatchElement;
-DECLARE_REF(MaterialAsset)
+DECLARE_REF(Material)
 namespace Gfx
 {
 DECLARE_REF(Graphics)
@@ -97,11 +97,11 @@ struct PermutationId
 {
     uint32 hash;
     PermutationId()
+        : hash(0)
     {}
     PermutationId(ShaderPermutation permutation)
-    {
-        hash = CRC::Calculate(&permutation, sizeof(ShaderPermutation), CRC::CRC_32());
-    }
+        : hash(CRC::Calculate(&permutation, sizeof(ShaderPermutation), CRC::CRC_32()))
+    {}
     friend inline bool operator==(const PermutationId& lhs, const PermutationId& rhs)
     {
         return lhs.hash == rhs.hash;
@@ -138,7 +138,7 @@ public:
     ShaderCollection& createShaders(
         PGraphics graphics, 
         RenderPassType passName, 
-        PMaterialAsset material, 
+        PMaterial material, 
         VertexInputType* vertexInput,
         bool bPositionOnly);
 private:
@@ -409,7 +409,7 @@ DEFINE_REF(IndexBuffer)
 class StructuredBuffer : public Buffer
 {
 public:
-    StructuredBuffer(QueueFamilyMapping mapping, uint32 stride, const BulkResourceData& bulkResourceData);
+    StructuredBuffer(QueueFamilyMapping mapping, uint32 stride, uint32 numElements, const BulkResourceData& bulkResourceData);
     virtual ~StructuredBuffer();
     virtual bool updateContents(const BulkResourceData& resourceData);
     bool isDataEquals(StructuredBuffer* other)
@@ -428,6 +428,10 @@ public:
         }
         return true;
     }
+    constexpr uint32 getNumElements() const
+    {
+        return numElements;
+    }
     constexpr uint32 getStride() const
     {
         return stride;
@@ -439,6 +443,7 @@ protected:
         SeAccessFlags dstAccess, SePipelineStageFlags dstStage) = 0;
     
     Array<uint8> contents;
+    uint32 numElements;
     uint32 stride;
 };
 DEFINE_REF(StructuredBuffer)
@@ -655,7 +660,7 @@ public:
     constexpr uint32 getSizeY() const {return sizeY;}
     constexpr uint32 getOffsetX() const {return offsetX;}
     constexpr uint32 getOffsetY() const {return offsetY;}
-    Math::Matrix4 getProjectionMatrix() const;
+    Matrix4 getProjectionMatrix() const;
 protected:
     uint32 sizeX;
     uint32 sizeY;

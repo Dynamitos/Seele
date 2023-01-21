@@ -3,9 +3,10 @@
 using namespace Seele;
 using namespace Seele::Component;
 
-CollisionSystem::CollisionSystem()
+CollisionSystem::CollisionSystem(entt::registry& registry)
+    : registry(registry)
 {
-    
+    registry.on_construct<Component::Collider>().connect<&BVH::colliderCallback>(bvh);
 }
 
 CollisionSystem::~CollisionSystem()
@@ -13,22 +14,24 @@ CollisionSystem::~CollisionSystem()
     
 }
 
-void CollisionSystem::detectCollisions(const entt::registry& registry, Array<Collision>& collisions)
+void CollisionSystem::detectCollisions(Array<Collision>& collisions)
 {
     collisions.clear();
     auto view = registry.view<Collider, Transform>();
     for(auto && [entity, collider, transform] : view.each())
     {
-        if(collider.type == ColliderType::DYNAMIC && transform.isDirty())
+        if(collider.type == ColliderType::DYNAMIC)
         {
             bvh.updateDynamicCollider(entity, collider.boundingbox.getTransformedBox(transform.toMatrix()));
         }
+        collider.physicsMesh.transform(transform).visualize();
     }
+    bvh.visualize();
     Array<Pair<entt::entity, entt::entity>> overlaps;
     bvh.findOverlaps(overlaps);
     for(auto pair : overlaps)
     {
-        if(checkCollision(registry, pair))
+        if(checkCollision(pair))
         {
             collisions.add(Collision {
                 .a = pair.key,
@@ -38,7 +41,7 @@ void CollisionSystem::detectCollisions(const entt::registry& registry, Array<Col
     }
 }
 
-bool CollisionSystem::checkCollision(const entt::registry& registry, Pair<entt::entity, entt::entity> pair)
+bool CollisionSystem::checkCollision(Pair<entt::entity, entt::entity> pair)
 {
     const auto&[collider1, transform1] = registry.get<Collider, Transform>(pair.key);
     const auto&[collider2, transform2] = registry.get<Collider, Transform>(pair.value);
@@ -63,7 +66,6 @@ void CollisionSystem::updateWitness(Witness& result, const glm::vec3& point, con
     result.n = faceNormal;
     result.p = point;
 }
-
 
 bool CollisionSystem::createWitness(Witness& result, const ShapeBase& source, const ShapeBase& other)
 {

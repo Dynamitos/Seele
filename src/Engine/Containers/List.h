@@ -124,10 +124,46 @@ public:
         , beginIt(Iterator(root))
         , endIt(Iterator(tail))
         , _size(0)
-        , allocator(NodeAllocator())
+        , allocator(Allocator())
     {
     }
+    explicit List(const Allocator& alloc)
+        : root(nullptr)
+        , tail(nullptr)
+        , beginIt(Iterator(root))
+        , endIt(Iterator(tail))
+        , _size(0)
+        , allocator(alloc)
+    {
+    }
+    List(size_type count, const T& value = T(), const Allocator& alloc = Allocator())
+        : List(alloc)
+    {
+        for(size_type i = 0; i < count; ++i)
+        {
+            add(value);
+        }
+    }
+    List(size_type count, const Allocator& alloc = Allocator())
+        : List(alloc)
+    {
+        for(size_type i = 0; i < count; ++i)
+        {
+            add(T());
+        }
+    }
     List(const List& other)
+        : List(std::allocator_traits<allocator_type>::select_on_container_copy_construction(other.allocator))
+    {
+        //TODO: improve
+        for(const auto& it : other)
+        {
+            add(it);
+        }
+    }
+    
+    List(const List& other, const Allocator& alloc)
+        : List(alloc)
     {
         //TODO: improve
         for(const auto& it : other)
@@ -141,8 +177,19 @@ public:
         , beginIt(std::move(other.beginIt))
         , endIt(std::move(other.endIt))
         , _size(std::move(other._size))
+        , allocator(std::move(other.allocator))
     {
-        other._size = 0;
+        other.clear();
+    }
+    List(List&& other, const Allocator& alloc)
+        : root(std::move(other.root))
+        , tail(std::move(other.tail))
+        , beginIt(std::move(other.beginIt))
+        , endIt(std::move(other.endIt))
+        , _size(std::move(other._size))
+        , allocator(allocator)
+    {
+        other.clear();
     }
     ~List()
     {
@@ -153,6 +200,15 @@ public:
         if(this != &other)
         {
             clear();
+            if constexpr (std::allocator_traits<allocator_type>::propagate_on_container_copy_assignment::value )
+            {
+                if (!std::allocator_traits<allocator_type>::is_always_equal::value
+                    && allocator != other.allocator)
+                {
+                    clear();
+                }
+                allocator = other.allocator;
+            }
             for(const auto& it : other)
             {
                 add(it);
@@ -166,6 +222,10 @@ public:
         if(this != &other)
         {
             clear();
+            if constexpr (std::allocator_traits<allocator_type>::propagate_on_container_move_assignment::value)
+            {
+                allocator = std::move(other.allocator);
+            }
             root = other.root;
             tail = other.tail;
             beginIt = other.beginIt;
@@ -214,7 +274,7 @@ public:
     }
     // takes all elements from other and move-inserts them into
     // this, clearing other in the process
-    void moveElements(List& other)
+    void moveElements(List&& other)
     {
         tail->prev->next = other.root;
         other.root->prev = tail->prev;

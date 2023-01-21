@@ -1,5 +1,4 @@
 #include "ShaderCompiler.h"
-#include "Material/MaterialAsset.h"
 #include "VertexShaderInput.h"
 #include "Graphics.h"
 
@@ -17,7 +16,7 @@ ShaderCompiler::~ShaderCompiler()
     
 }
 
-void ShaderCompiler::registerMaterial(PMaterialAsset material) 
+void ShaderCompiler::registerMaterial(PMaterial material) 
 {
     for(auto& type : VertexInputType::getTypeList())
     {

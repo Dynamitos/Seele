@@ -1,0 +1,160 @@
+
+SDPA-C 7.3.X Install Manual
+
+[Copyright (C) 2004-2013 SDPA Project]
+
+This text explains how to install SDPA-C.
+If you have questions on the installation,
+please contact us from
+http://sdpa.sourceforge.net/contact.html
+
+The user-manual of SDPA is available for SDPA-C, and can be downloaded at
+https://sourceforge.net/projects/sdpa/files/sdpa/sdpa.7.1.1.manual.20080618.pdf/download
+
+--- index ------------------------------------
+
+1. Install the SDPA-C
+2. Compile callable-library example  [optional]
+3. Compile Matlab Interface          [optional]
+4. Difference from SDPA
+5. If you have some trouble
+
+----------------------------------------------
+
+
+1. Install the SDPA-C
+
+(1) Check your environment
+
+Requirement: wget, git
+Recommendation: gcc (>= 4.2), g++ (>= 4.2), gfortran (>=4.2)
+
+We have checked the compilation on RedHat Linux (version 6)
+and Debian (wheezy).
+Other C/C++/Fortran compilers than gcc/g++/gfortran may be
+available, but we have not tested them.
+
+(2) Download the SDPA from the SDPA Homepage
+
+http://sdpa.sourceforge.net/download.html
+
+You can get the sdpa-c_7.3.X.tar.gz, then unpack the file
+$ tar xzf sdpa-c_7.3.X.tar.gz
+You will find the directory 'sdpa-c'.
+$ cd sdpa-c
+
+(3) Edit make.inc
+
+At least you should check 'sdpac_dir'.
+In the default setting, sdpac_dir is $(HOME)/sdpa-c.
+In other words, the default setting assumes
+you unpacked the downloaded file in your home directory.
+
+(4) Compile SDPA-C
+
+$ make all
+will compile SuiteSparse, MUMPS, OpenBLAS, then SDPA-C.
+
+If you want compile them step by step,
+$ make SuiteSparse
+$ make MUMPS
+$ make OpenBLAS
+$ make sdpa-c
+
+
+(5) Test SDPA-C
+Try the following command to execute sdpa
+   $ cd $HOME/sdpa-c
+   $ ./sdpa-c
+Then you will see message from SDPA and can check command line options.
+To solve input dat-s and write its result,
+   $ ./sdpa example1.dat-s example1.result
+
+If you specify the number of threads with the SDPA-C,
+set OMP_NUM_THREADS environment variable(ex. export OMP_NUM_THREADS=4).
+
+----------------------------------------------    
+2. Compile callable-library example (optional)
+
+To compile callable-library example, use 'make' command 
+in 'libexample' directory
+   $ cd $HOME/sdpa-c/libexample
+   $ make
+
+The details of callable-library can be found in SDPA user manual.
+
+----------------------------------------------    
+3. Compile Matlab Interface (optional)
+
+To compile the Matlab interface, use 'make matlab' command.
+   $ cd $HOME/sdpa-c
+   $ make matlab
+
+If you use Octave instead of Matlab, then
+   $ cd $HOME/sdpa-c
+   $ make octave
+
+Since the usage of this Matlab Interface as SDPA-M 6.2.0,
+SDPA-M 6.2.0 manual is very useful.
+(https://sourceforge.net/projects/sdpa/files/sdpa-m/sdpamManual.pdf/download)
+In addition, the file 'mex/CommandList.txt' summarizes
+each command.
+
+	
+When you have trouble with SDPA-M(Matlab environment),
+the following command will display useful messages.
+
+$ matlab -Dgdb
+[On gdb environment]
+(gdb) run -nodisplay
+[On Matlab environment]
+>> (Call SDPA-M by sdpam or sedumiwrap)
+If Matlab aborts, try the following command in gdb environment.
+(gdb) where
+The command 'where' will display what happened.
+To exit gdb environment,
+(gdb) quit
+
+In some case, the segmentation fault may be avoided by
+$ export LD_PRELOAD=/usr/lib/gcc/x86_64-linux-gnu/4.4/libgfortran.so:$LD_PRELOAD
+$ export LD_PRELOAD=/usr/lib/gcc/x86_64-linux-gnu/4.4/libstdc++.so:$LD_PRELOAD
+$ export LD_PRELOAD=/usr/lib/gcc/x86_64-linux-gnu/4.4/libgcc_s.so:$LD_PRELOAD
+$ matlab
+In particular, when the gcc version is higher than the version Matlab
+assumes, Matlab sometimes can not load appropriate shared libraries.
+The command above load the libraries before Matlab launches.
+
+-------------------------------------------------------
+4. Deference from SDPA
+
+(1) Since SDPA-C employs the completion method, which extensively
+uses the structural sparsity, the SDPA dense format is not acceptable.
+More precisely, example1.dat-s is available while example1.dat is not.
+
+(2) In the callable library, some function mainly related to the dense
+input file are not available.
+In addition, the function SDPA::terminate() is renamed as
+SDPA::finalize().
+In libexample directory, the difference in example1,2,5.cpp from SDPA
+is only terminate() to finalize().
+However, the example3,4,6.cpp in SDPA contained the functions
+which are not available in SDPA-C. We removed these examples
+from the SDPA-C package.
+
+(3) param.sdpa is renamed as param.sdpaC.
+
+(4) The matlab interface only contains the mex functions of SDPA-C.
+If you want to read the SDPA sparse format, you should employ
+such routines from SDPA. We suggest you add the paths of both SDPA
+and SDPA-C to the Matlab search path.
+
+-------------------------------------------------------
+5. If you have some trouble
+
+If some bugs are found or you encounter some trouble
+when you are compiling SDPA, please let us know from
+http://sdpa.sourceforge.net/contact.html
+
+In particular, attaching error messages and/or 'config.log' file
+is very useful to let us understand your situation.
+

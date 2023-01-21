@@ -8,10 +8,10 @@ namespace Component
 struct RigidBody
 {
     float mass = 1.0f;
-    Math::Vector force;
-    Math::Vector torque;
-    Math::Vector linearMomentum;
-    Math::Vector angularMomentum;
+    Vector force;
+    Vector torque;
+    Vector linearMomentum;
+    Vector angularMomentum;
 };
 } // namespace Component
 } // namespace Seele

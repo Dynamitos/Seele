@@ -25,8 +25,8 @@ void LightCullingPass::beginFrame(const Component::Camera& cam)
     BulkResourceData uniformUpdate;
     viewParams.viewMatrix = cam.getViewMatrix();
     viewParams.projectionMatrix = viewport->getProjectionMatrix();
-    viewParams.cameraPosition = Math::Vector4(cam.getCameraPosition(), 0);
-    viewParams.screenDimensions = Math::Vector2(static_cast<float>(viewportWidth), static_cast<float>(viewportHeight));
+    viewParams.cameraPosition = Vector4(cam.getCameraPosition(), 0);
+    viewParams.screenDimensions = Vector2(static_cast<float>(viewportWidth), static_cast<float>(viewportHeight));
     uniformUpdate.size = sizeof(ViewParameter);
     uniformUpdate.data = (uint8*)&viewParams;
     viewParamsBuffer->updateContents(uniformUpdate);
@@ -261,9 +261,9 @@ void LightCullingPass::setupFrustums()
     glm::uvec3 numThreadGroups = glm::ceil(glm::vec3(numThreads.x / (float)BLOCK_SIZE, numThreads.y / (float)BLOCK_SIZE, 1));
     
     viewParams = {
-        .viewMatrix = Math::Matrix4(),
-        .projectionMatrix = Math::Matrix4(),
-        .cameraPosition = Math::Vector4(),
+        .viewMatrix = Matrix4(),
+        .projectionMatrix = Matrix4(),
+        .cameraPosition = Vector4(),
         .screenDimensions = glm::vec2(viewportWidth, viewportHeight),
     };
     dispatchParams.numThreads = numThreads;

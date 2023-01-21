@@ -18,8 +18,7 @@ public:
     void removeChild(PActor child);
     Array<PActor> getChildren();
     
-    // Returns a read-only copy of the actors transform
-    const Component::Transform& getTransform() const;
+    Component::Transform& getTransform();
 
 protected:
     //Component::Transform& getTransform();

@@ -17,8 +17,8 @@ public:
     struct Glyph
     {
         Gfx::PTexture2D texture;
-        Math::IVector2 size;
-        Math::IVector2 bearing;
+        IVector2 size;
+        IVector2 bearing;
         uint32 advance;
     };
     const std::map<uint32, Glyph> getGlyphData() const { return glyphs; }

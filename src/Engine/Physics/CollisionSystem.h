@@ -15,14 +15,14 @@ struct Collision
 class CollisionSystem
 {
 public:
-    CollisionSystem();
+    CollisionSystem(entt::registry& registry);
     virtual ~CollisionSystem();
-    void detectCollisions(const entt::registry& registry, Array<Collision>& collisions);
+    void detectCollisions(Array<Collision>& collisions);
 private:
     struct Witness
     {
-        Math::Vector p;
-        Math::Vector n;
+        Vector p;
+        Vector n;
         // for finding p
         uint32_t point1Index;
         // and the face where the plane lies on
@@ -33,11 +33,12 @@ private:
         entt::entity other;
     };
     BVH bvh;
+    entt::registry& registry;
     Map<Pair<entt::entity, entt::entity>, Witness> cachedWitness;
 
-    bool checkCollision(const entt::registry& registry, Pair<entt::entity, entt::entity> pair);
+    bool checkCollision(Pair<entt::entity, entt::entity> pair);
 
-    void updateWitness(Witness& witness, const Math::Vector& point, const Math::Vector& v1, const Math::Vector& v2);
+    void updateWitness(Witness& witness, const Vector& point, const Vector& v1, const Vector& v2);
 
     // returns true if a collision was found
     bool createWitness(Witness& witness, const Component::ShapeBase& source, const Component::ShapeBase& other);

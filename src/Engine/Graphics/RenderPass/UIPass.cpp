@@ -144,10 +144,10 @@ void UIPass::createRenderPass()
     descriptorLayout->addDescriptorBinding(3, Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 256, Gfx::SE_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT | Gfx::SE_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT);
     descriptorLayout->create();
 
-    Math::Matrix4 projectionMatrix = glm::ortho(0, 1, 1, 0);
+    Matrix4 projectionMatrix = glm::ortho(0, 1, 1, 0);
     UniformBufferCreateInfo info = {
         .resourceData = {
-            .size = sizeof(Math::Matrix4),
+            .size = sizeof(Matrix4),
             .data = (uint8*)&projectionMatrix,
         },
         .bDynamic = false,

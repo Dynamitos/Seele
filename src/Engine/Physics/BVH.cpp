@@ -7,6 +7,10 @@ void BVH::findOverlaps(Array<Pair<entt::entity, entt::entity>>& overlaps)
     overlaps.clear();
     for(const auto& node : dynamicNodes)
     {
+        if(!node.isLeaf)
+        {
+            continue;
+        }
         traverseStaticTree(node.box, node.owner, staticRoot, overlaps);
         traverseDynamicTree(node.box, node.owner, dynamicRoot, overlaps);
     }
@@ -14,39 +18,48 @@ void BVH::findOverlaps(Array<Pair<entt::entity, entt::entity>>& overlaps)
 
 void BVH::updateDynamicCollider(entt::entity entity, AABB aabb)
 {
-    for(auto& aabbcenter : dynamicCollider)
+    
+    for(auto& node : dynamicNodes)
     {
-        if(aabbcenter.id == entity)
+        if(node.owner == entity)
         {
-            if(!aabbcenter.bb.contains(aabb))
+            if(!node.box.contains(aabb))
             {
                 // moved out of extended bounds
                 reinsertCollider(entity, aabb);
+                
             }
             return;
         }
     }
     // new collider
     addDynamicCollider(entity, aabb);
+    
+}
+
+void BVH::colliderCallback(entt::registry& registry, entt::entity entity)
+{
+    Component::Collider& collider = registry.get<Component::Collider>(entity);
+    Component::Transform& transform = registry.get<Component::Transform>(entity);
+    if(collider.type == Component::ColliderType::STATIC)
+    {
+        addStaticCollider(entity, collider.boundingbox.getTransformedBox(transform.toMatrix()));
+    }
+}
+
+void BVH::visualize()
+{
+    for(const auto& node : staticNodes)
+    {
+        node.box.visualize(gDebugVertices);
+    }
+    for(const auto& node : dynamicNodes)
+    {
+        node.box.visualize(gDebugVertices);
+    }
 }
 
 void BVH::traverseStaticTree(const AABB& aabb, entt::entity source, int32 nodeIndex, Array<Pair<entt::entity, entt::entity>>& overlaps)
-{
-    const Node& node = staticNodes[nodeIndex];
-    if(!aabb.intersects(node.box))
-    {
-        return;
-    }
-    if(node.isLeaf)
-    {
-        overlaps.add(Pair<entt::entity, entt::entity>(source, node.owner));
-        return;
-    }
-    traverseStaticTree(aabb, source, node.left, overlaps);
-    traverseStaticTree(aabb, source, node.right, overlaps);
-}
-
-void BVH::traverseDynamicTree(const AABB& aabb, entt::entity source, int32 nodeIndex, Array<Pair<entt::entity, entt::entity>>& overlaps)
 {
     const Node& node = staticNodes[nodeIndex];
     if(!aabb.intersects(node.box))
@@ -62,7 +75,36 @@ void BVH::traverseDynamicTree(const AABB& aabb, entt::entity source, int32 nodeI
     traverseStaticTree(aabb, source, node.right, overlaps);
 }
 
+void BVH::traverseDynamicTree(const AABB& aabb, entt::entity source, int32 nodeIndex, Array<Pair<entt::entity, entt::entity>>& overlaps)
+{
+    if(nodeIndex == -1)
+    {
+        return;
+    }
+    const Node& node = dynamicNodes[nodeIndex];
+    if(!aabb.intersects(node.box))
+    {
+        return;
+    }
+    if(node.isLeaf && node.owner != source)
+    {
+        overlaps.add(Pair<entt::entity, entt::entity>(source, node.owner));
+        return;
+    }
+    traverseDynamicTree(aabb, source, node.left, overlaps);
+    traverseDynamicTree(aabb, source, node.right, overlaps);
+}
+
 void BVH::reinsertCollider(entt::entity entity, AABB aabb)
+{
+    
+    removeCollider(entity);
+    
+    addDynamicCollider(entity, aabb);
+    
+}
+
+void BVH::removeCollider(entt::entity entity)
 {
     int32 nodeIndex = -1;
     for (int32 i = 0; i < dynamicNodes.size(); i++)
@@ -75,11 +117,21 @@ void BVH::reinsertCollider(entt::entity entity, AABB aabb)
     }
     if(nodeIndex == -1)
     {
+        
         return;
     }
     int32 parentIndex = dynamicNodes[nodeIndex].parentIndex;
+    if(parentIndex == -1)
+    {
+        // its the root node
+        dynamicRoot = -1;
+        freeNode(nodeIndex);
+        
+        return;
+    }
     const Node& parent = dynamicNodes[parentIndex];
     int32 siblingIndex;
+    
     if(parent.left == nodeIndex)
     {
         siblingIndex = parent.right;
@@ -88,21 +140,34 @@ void BVH::reinsertCollider(entt::entity entity, AABB aabb)
     {
         siblingIndex = parent.left;
     }
+    
     // the node to remove and their sibling share a parent
     // now that the node is removed, the parent is also useless
-    // so the grandparent should point32 to the sibling directly instead of the parent
-    Node& grandParent = dynamicNodes[parent.parentIndex];
-    if(grandParent.left == parentIndex)
+    // so the grandparent should point to the sibling directly instead of the parent
+    if(parent.parentIndex != -1)
     {
-        grandParent.left = siblingIndex;
+        Node& grandParent = dynamicNodes[parent.parentIndex];
+        if(grandParent.left == parentIndex)
+        {
+            grandParent.left = siblingIndex;
+        }
+        else
+        {
+            grandParent.right = siblingIndex;
+        }
+        dynamicNodes[siblingIndex].parentIndex = parent.parentIndex;
     }
     else
     {
-        grandParent.right = siblingIndex;
+        // if the shared parent was the root, we need a new root, which is the remaining sibling
+        dynamicRoot = siblingIndex;
+        dynamicNodes[siblingIndex].parentIndex = -1;
     }
-    freeNode(parentIndex);
+    
     freeNode(nodeIndex);
-    addDynamicCollider(entity, aabb);
+    
+    freeNode(parentIndex);
+    
 }
 
 void BVH::addDynamicCollider(entt::entity entity, AABB aabb)
@@ -113,18 +178,15 @@ void BVH::addDynamicCollider(entt::entity entity, AABB aabb)
         .min = center + (aabb.min - center) * 1.1f,
         .max = center + (aabb.max - center) * 1.1f,
     };
-    dynamicCollider.add(AABBCenter {
-        .bb = aabb,
-        .center = center,
-        .id = entity
-    });
     int32 leafIndex = allocateNode();
     Node newNode = Node {
         .box = aabb,
         .isLeaf = true,
+        .isValid = true,
         .owner = entity,
     };
     dynamicNodes[leafIndex] = newNode;
+    
 
     if (dynamicRoot == -1)
     {
@@ -135,6 +197,7 @@ void BVH::addDynamicCollider(entt::entity entity, AABB aabb)
     int32 bestSibling;
     float bestCost = std::numeric_limits<float>::max();
     findSibling(newNode, dynamicRoot, bestCost, bestSibling);
+    
 
     int32 oldParent = dynamicNodes[bestSibling].parentIndex;
     int32 newParent = allocateNode();
@@ -142,7 +205,9 @@ void BVH::addDynamicCollider(entt::entity entity, AABB aabb)
         .box = aabb.combine(dynamicNodes[bestSibling].box),
         .parentIndex = oldParent,
         .isLeaf = false,
+        .isValid = true,
     };
+    
 
     if(oldParent != -1)
     {
@@ -158,6 +223,7 @@ void BVH::addDynamicCollider(entt::entity entity, AABB aabb)
         dynamicNodes[newParent].right = leafIndex;
         dynamicNodes[bestSibling].parentIndex = newParent;
         dynamicNodes[leafIndex].parentIndex = newParent;
+        
     }
     else
     {
@@ -166,6 +232,7 @@ void BVH::addDynamicCollider(entt::entity entity, AABB aabb)
         dynamicNodes[bestSibling].parentIndex = newParent;
         dynamicNodes[leafIndex].parentIndex = newParent;
         dynamicRoot = newParent;
+        
     }
     int32 index = dynamicNodes[leafIndex].parentIndex;
     while(index != -1)
@@ -186,6 +253,7 @@ void BVH::addStaticCollider(entt::entity entity, AABB boundingBox)
         .id = entity,
     });
     staticNodes.clear();
+    staticRoot = splitNode(staticCollider);
 }
 
 void BVH::findSibling(Node newNode, int32 nodeIndex, float& bestCost, int32& result)
@@ -218,6 +286,7 @@ float BVH::siblingCost(Node newNode, int32 siblingIndex)
     {
         AABB parentBox = dynamicNodes[parentIndex].box;
         cost += parentBox.combine(newBox).surfaceArea() - parentBox.surfaceArea();
+        parentIndex = dynamicNodes[parentIndex].parentIndex;
     }
     return cost;
 }
@@ -240,6 +309,7 @@ int32 BVH::splitNode(Array<AABBCenter> aabbs)
     {
         int32 leafIndex = static_cast<int32>(staticNodes.size());
         Node& leaf = staticNodes.add();
+        leaf.isLeaf = true;
         leaf.box = aabbs[0].bb;
         leaf.left = -1;
         leaf.right = -1;
@@ -296,5 +366,25 @@ int32 BVH::allocateNode()
 void BVH::freeNode(int32 nodeIndex)
 {
     dynamicNodes[nodeIndex].isValid = false;
+    dynamicNodes[nodeIndex].parentIndex = -1;
 }
-    
+
+void BVH::validateBVH() const
+{
+    if(dynamicRoot != -1)
+    {
+        assert(dynamicNodes[dynamicRoot].parentIndex == -1);
+    }
+    for(int32 i = 0; i < dynamicNodes.size(); ++i)
+    {
+        int32 nodeIdx = i;
+        size_t counter = dynamicNodes.size();
+        if(!dynamicNodes[nodeIdx].isValid)
+            continue;
+        while(dynamicNodes[nodeIdx].parentIndex != -1)
+        {
+            nodeIdx = dynamicNodes[nodeIdx].parentIndex;
+            assert(counter-- > 0 && dynamicNodes[nodeIdx].isValid);
+        }
+    }
+}

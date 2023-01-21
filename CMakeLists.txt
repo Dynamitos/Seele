@@ -28,7 +28,6 @@ set(TTFPARSER_ROOT ${EXTERNAL_ROOT}/ttf-parser)
 set(FREETYPE_ROOT ${EXTERNAL_ROOT}/freetype)
 set(SPIRV_ROOT ${EXTERNAL_ROOT}/SPIRV-Cross)
 set(ENTT_ROOT ${EXTERNAL_ROOT}/entt)
-set(NLOPT_ROOT ${EXTERNAL_ROOT}/nlopt)
 set(ODEINT_ROOT ${EXTERNAL_ROOT}/odeint)
 set(THREADPOOL_ROOT ${EXTERNAL_ROOT}/thread-pool)
 set(ZLIB_ROOT ${EXTERNAL_ROOT}/zlib)
@@ -105,6 +104,7 @@ if(MSVC)
     target_compile_options(Engine PUBLIC /Zi /MP14 /W4 /DEBUG "/WX-")
     target_sources(Engine INTERFACE   
         $<BUILD_INTERFACE:Seele.natvis>
+        $<BUILD_INTERFACE:${Seele_DIR}/Seele.natvis>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/Seele.natvis>
     )
     install(FILES
@@ -171,6 +171,13 @@ install(EXPORT EngineTargets
 install(
     FILES
         ${CMAKE_BINARY_DIR}/SeeleConfig.cmake
+    DESTINATION
+        ${CMAKE_INSTALL_PREFIX}
+)
+
+install(
+    DIRECTORY
+        ${CMAKE_SOURCE_DIR}/res
     DESTINATION
         ${CMAKE_INSTALL_PREFIX}
 )

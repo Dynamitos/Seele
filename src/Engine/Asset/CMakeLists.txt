@@ -8,6 +8,10 @@ target_sources(Engine
         FontAsset.cpp
         FontLoader.h
         FontLoader.cpp
+        MaterialAsset.h
+        MaterialAsset.cpp
+        MaterialInstanceAsset.h
+        MaterialInstanceAsset.cpp
         MaterialLoader.h
         MaterialLoader.cpp
         MeshAsset.h
@@ -26,6 +30,8 @@ target_sources(Engine
             AssetRegistry.h
             FontAsset.h
             FontLoader.h
+            MaterialAsset.h
+            MaterialInstanceAsset.h
             MaterialLoader.h
             MeshAsset.h
             MeshLoader.h

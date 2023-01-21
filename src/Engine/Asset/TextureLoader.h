@@ -13,7 +13,7 @@ class TextureLoader
 public:
     TextureLoader(Gfx::PGraphics graphic);
     ~TextureLoader();
-    void importAsset(const std::filesystem::path& filePath);
+    void importAsset(const std::filesystem::path& filePath, const std::string& importPath);
     PTextureAsset getPlaceholderTexture();
 private:
     void import(std::filesystem::path path, PTextureAsset asset);

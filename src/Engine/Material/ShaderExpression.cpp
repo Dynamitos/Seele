@@ -40,7 +40,7 @@ VectorParameter::~VectorParameter()
 
 void VectorParameter::updateDescriptorSet(Gfx::PDescriptorSet, uint8* dst) 
 {
-    std::memcpy(dst + byteOffset, &data, sizeof(Math::Vector));
+    std::memcpy(dst + byteOffset, &data, sizeof(Vector));
 }
 
 TextureParameter::TextureParameter(std::string name, uint32 byteOffset, uint32 binding) 

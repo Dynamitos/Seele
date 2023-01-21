@@ -5,6 +5,7 @@
 #include "Graphics/Mesh.h"
 #include "Graphics/StaticMeshVertexInput.h"
 #include "AssetRegistry.h"
+#include "MaterialAsset.h"
 #include <fstream>
 #include <iostream>
 #include <nlohmann/json.hpp>
@@ -26,17 +27,17 @@ MeshLoader::~MeshLoader()
 {
 }
 
-void MeshLoader::importAsset(const std::filesystem::path &path)
+void MeshLoader::importAsset(const std::filesystem::path &path, const std::string& importPath)
 {
     std::filesystem::path assetPath = path.filename();
     assetPath.replace_extension("asset");
     PMeshAsset asset = new MeshAsset(assetPath.generic_string());
     asset->setStatus(Asset::Status::Loading);
-    AssetRegistry::get().registerMesh(asset);
+    AssetRegistry::get().registerMesh(asset, importPath);
     import(path, asset);
 }
 
-void MeshLoader::loadMaterials(const aiScene* scene, Array<PMaterialAsset>& globalMaterials)
+void MeshLoader::loadMaterials(const aiScene* scene, Array<PMaterial>& globalMaterials)
 {
     using json = nlohmann::json;
     for(uint32 i = 0; i < scene->mNumMaterials; ++i)
@@ -92,14 +93,12 @@ void MeshLoader::loadMaterials(const aiScene* scene, Array<PMaterialAsset>& glob
         outMatFile.close();
 
         std::cout << "writing json to " << outMatFilename << std::endl;
-        PMaterialAsset result = new MaterialAsset(outMatFilename);
-        result->load();
-        graphics->getShaderCompiler()->registerMaterial(result);
-        AssetRegistry::get().registerMaterial(result);
-        PMaterialAsset asset = AssetRegistry::findMaterial(result->getFileName());
-        globalMaterials[i] = asset;
+        AssetRegistry::importFile(AssetRegistry::getRootFolder() + "/" + outMatFilename);
+        PMaterialAsset asset = AssetRegistry::findMaterial(matCode["name"].get<std::string>());
+        globalMaterials[i] = asset->getMaterial();
     }
 }
+
 
 void findMeshRoots(aiNode *node, List<aiNode *> &meshNodes)
 {
@@ -115,61 +114,70 @@ void findMeshRoots(aiNode *node, List<aiNode *> &meshNodes)
 }
 VertexStreamComponent createVertexStream(uint32 size, aiVector3D* sourceData, Gfx::PGraphics graphics)
 {
-    Array<Math::Vector> buffer(size);
+    Array<Vector> buffer(size);
     for(uint32 i = 0; i < size; ++i)
     {
-        buffer[i] = Math::Vector(sourceData[i].x, sourceData[i].y, sourceData[i].z);
-    }    
+        buffer[i] = Vector(sourceData[i].x, sourceData[i].y, sourceData[i].z);
+    }
     VertexBufferCreateInfo vbInfo;
     vbInfo.numVertices = size;
-    vbInfo.vertexSize = sizeof(Math::Vector);
+    vbInfo.vertexSize = sizeof(Vector);
     vbInfo.resourceData.data = (uint8 *)buffer.data();
     vbInfo.resourceData.owner = Gfx::QueueType::DEDICATED_TRANSFER;
-    vbInfo.resourceData.size = sizeof(Math::Vector) * buffer.size();
+    vbInfo.resourceData.size = sizeof(Vector) * buffer.size();
     Gfx::PVertexBuffer vertexBuffer = graphics->createVertexBuffer(vbInfo);
     vertexBuffer->transferOwnership(Gfx::QueueType::GRAPHICS);
     return VertexStreamComponent(vertexBuffer, 0, vbInfo.vertexSize, Gfx::SE_FORMAT_R32G32B32_SFLOAT);
 }
 VertexStreamComponent createVertexStream(uint32 size, aiVector2D* sourceData, Gfx::PGraphics graphics)
 {
-    Array<Math::Vector2> buffer(size);
+    Array<Vector2> buffer(size);
     for(uint32 i = 0; i < size; ++i)
     {
-        buffer[i] = Math::Vector2(sourceData[i].x, sourceData[i].y);
+        buffer[i] = Vector2(sourceData[i].x, sourceData[i].y);
     }    
     VertexBufferCreateInfo vbInfo;
     vbInfo.numVertices = size;
-    vbInfo.vertexSize = sizeof(Math::Vector2);
+    vbInfo.vertexSize = sizeof(Vector2);
     vbInfo.resourceData.data = (uint8 *)buffer.data();
     vbInfo.resourceData.owner = Gfx::QueueType::DEDICATED_TRANSFER;
-    vbInfo.resourceData.size = sizeof(Math::Vector2) * buffer.size();
+    vbInfo.resourceData.size = sizeof(Vector2) * buffer.size();
     Gfx::PVertexBuffer vertexBuffer = graphics->createVertexBuffer(vbInfo);
     vertexBuffer->transferOwnership(Gfx::QueueType::GRAPHICS);
     return VertexStreamComponent(vertexBuffer, 0, vbInfo.vertexSize, Gfx::SE_FORMAT_R32G32_SFLOAT);
 }
 VertexStreamComponent createVertexStream(uint32 size, aiColor4D* sourceData, Gfx::PGraphics graphics)
 {
-    Array<Math::Vector4> buffer(size);
+    Array<Vector4> buffer(size);
     for(uint32 i = 0; i < size; ++i)
     {
-        buffer[i] = Math::Vector4(sourceData[i].r, sourceData[i].g, sourceData[i].b, sourceData[i].a);
+        buffer[i] = Vector4(sourceData[i].r, sourceData[i].g, sourceData[i].b, sourceData[i].a);
     }    
     VertexBufferCreateInfo vbInfo;
     vbInfo.numVertices = size;
-    vbInfo.vertexSize = sizeof(Math::Vector4);
+    vbInfo.vertexSize = sizeof(Vector4);
     vbInfo.resourceData.data = (uint8 *)buffer.data();
     vbInfo.resourceData.owner = Gfx::QueueType::DEDICATED_TRANSFER;
-    vbInfo.resourceData.size = sizeof(Math::Vector4) * buffer.size();
+    vbInfo.resourceData.size = sizeof(Vector4) * buffer.size();
     Gfx::PVertexBuffer vertexBuffer = graphics->createVertexBuffer(vbInfo);
     vertexBuffer->transferOwnership(Gfx::QueueType::GRAPHICS);
-    return VertexStreamComponent(vertexBuffer, 0, vbInfo.vertexSize, Gfx::SE_FORMAT_R32G32_SFLOAT);
+    return VertexStreamComponent(vertexBuffer, 0, vbInfo.vertexSize, Gfx::SE_FORMAT_R32G32B32A32_SFLOAT);
 }
-void MeshLoader::loadGlobalMeshes(const aiScene* scene, Array<PMesh>& globalMeshes, const Array<PMaterialAsset>& materials)
+void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterial>& materials, Array<PMesh>& globalMeshes, Component::Collider& collider)
 {
     for (uint32 meshIndex = 0; meshIndex < scene->mNumMeshes; ++meshIndex)
     {
         aiMesh *mesh = scene->mMeshes[meshIndex];
-        PMaterialAsset material = materials[mesh->mMaterialIndex];
+        collider.boundingbox.adjust(Vector(mesh->mAABB.mMin.x, mesh->mAABB.mMin.y, mesh->mAABB.mMin.z));
+        collider.boundingbox.adjust(Vector(mesh->mAABB.mMax.x, mesh->mAABB.mMax.y, mesh->mAABB.mMax.z));
+
+        //! \todo duplicate from createVertexStream, clean up
+        Array<Vector> vertices(mesh->mNumVertices);
+        for(uint32 i = 0; i < mesh->mNumVertices; ++i)
+        {
+            vertices[i] = Vector(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
+        }
+
         PStaticMeshVertexInput vertexShaderInput = new StaticMeshVertexInput(std::string(mesh->mName.C_Str()));
         StaticMeshDataType data;
         data.positionStream = createVertexStream(mesh->mNumVertices, mesh->mVertices, graphics);
@@ -205,6 +213,9 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, Array<PMesh>& globalMesh
             indices[faceIndex * 3 + 1] = mesh->mFaces[faceIndex].mIndices[1];
             indices[faceIndex * 3 + 2] = mesh->mFaces[faceIndex].mIndices[2];
         }
+
+        collider.physicsMesh.addCollider(vertices, indices, Matrix4(1.0f));
+
         IndexBufferCreateInfo idxInfo;
         idxInfo.indexType = Gfx::SE_INDEX_TYPE_UINT32;
         idxInfo.resourceData.data = (uint8 *)indices.data();
@@ -259,22 +270,23 @@ void MeshLoader::import(std::filesystem::path path, PMeshAsset meshAsset)
     std::cout << "Starting to import "<<path << std::endl;
     meshAsset->setStatus(Asset::Status::Loading);
     Assimp::Importer importer;
-    importer.ReadFile(path.string().c_str(),
+    importer.ReadFile(path.string().c_str(), (uint32)(
         aiProcess_FlipUVs |
         aiProcess_Triangulate |
         aiProcess_SortByPType |
+        aiProcess_GenBoundingBoxes |
         aiProcess_GenSmoothNormals |
         aiProcess_GenUVCoords |
-        aiProcess_FindDegenerates);
+        aiProcess_FindDegenerates));
     const aiScene *scene = importer.ApplyPostProcessing(aiProcess_CalcTangentSpace);
     
-    Array<PMaterialAsset> globalMaterials(scene->mNumMaterials);
+    Array<PMaterial> globalMaterials(scene->mNumMaterials);
     loadTextures(scene, path.parent_path());
     loadMaterials(scene, globalMaterials);
     
     Array<PMesh> globalMeshes(scene->mNumMeshes);
-    loadGlobalMeshes(scene, globalMeshes, globalMaterials);
-
+    Component::Collider collider;
+    loadGlobalMeshes(scene, globalMaterials, globalMeshes, collider);
 
     List<aiNode *> meshNodes;
     findMeshRoots(scene->mRootNode, meshNodes);
@@ -286,6 +298,7 @@ void MeshLoader::import(std::filesystem::path path, PMeshAsset meshAsset)
             meshAsset->addMesh(globalMeshes[meshNode->mMeshes[i]]);
         }
     }
+    meshAsset->physicsMesh = std::move(collider);
     meshAsset->setStatus(Asset::Status::Ready);
     meshAsset->save();
     std::cout << "Finished loading " << path << std::endl;

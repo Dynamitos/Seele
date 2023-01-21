@@ -1,5 +1,6 @@
 target_sources(Engine
     PRIVATE
+        DebugVertex.h
         GraphicsResources.h
         GraphicsResources.cpp
         GraphicsInitializer.h
@@ -23,6 +24,7 @@ target_sources(Engine
 target_sources(Engine
     PUBLIC FILE_SET HEADERS
         FILES
+            DebugVertex.h
             GraphicsResources.h
             GraphicsInitializer.h
             GraphicsEnums.h

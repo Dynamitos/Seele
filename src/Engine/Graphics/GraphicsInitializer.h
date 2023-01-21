@@ -42,7 +42,7 @@ struct WindowCreateInfo
 };
 struct ViewportCreateInfo
 {
-    Math::URect dimensions;
+    URect dimensions;
     float fieldOfView = 1.222f; // 70 deg
 };
 // doesnt own the data, only proxy it

@@ -12,7 +12,7 @@ class MaterialLoader
 public:
     MaterialLoader(Gfx::PGraphics graphic);
     ~MaterialLoader();
-    void importAsset(const std::filesystem::path& name);
+    void importAsset(const std::filesystem::path& name, const std::string& importPath);
     PMaterialAsset getPlaceHolderMaterial();
 private:
     void import(std::filesystem::path filePath, PMaterialAsset asset);

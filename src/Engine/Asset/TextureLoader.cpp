@@ -16,21 +16,21 @@ TextureLoader::TextureLoader(Gfx::PGraphics graphics)
 {
     placeholderAsset = new TextureAsset(std::filesystem::absolute("./textures/placeholder.ktx"));
     placeholderAsset->load();
-    AssetRegistry::get().textures[""] = placeholderAsset;
+    AssetRegistry::get().assetRoot.textures[""] = placeholderAsset;
 }
 
 TextureLoader::~TextureLoader()
 {
 }
 
-void TextureLoader::importAsset(const std::filesystem::path& path)
+void TextureLoader::importAsset(const std::filesystem::path& path, const std::string& importPath)
 {
     std::filesystem::path assetPath = path.filename();
     assetPath.replace_extension("asset");
     PTextureAsset asset = new TextureAsset(assetPath.generic_string());
     asset->setStatus(Asset::Status::Loading);
     asset->setTexture(placeholderAsset->getTexture());
-    AssetRegistry::get().registerTexture(asset);
+    AssetRegistry::get().registerTexture(asset, importPath);
     import(path, asset);
 }
 

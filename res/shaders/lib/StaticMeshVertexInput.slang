@@ -131,9 +131,10 @@ struct VertexShaderInput
     
     float3 getWorldPosition()
     {
-        float4x4 localToWorld = gSceneData.localToWorld;
+        float4x4 localToWorld = getSceneData().localToWorld;
         float3 rotatedPosition = localToWorld[0].xyz * position.xxx + localToWorld[1].xyz * position.yyy + localToWorld[2].xyz * position.zzz;
-        return rotatedPosition + localToWorld[3].xyz;
+        return mul(getSceneData().localToWorld, position).xyz;
+        //rotatedPosition + float3(localToWorld[0].w, localToWorld[1].w, localToWorld[2].w);
     }
 
     VertexValueCache getVertexCache()
@@ -152,9 +153,9 @@ struct VertexShaderInput
         cache.tangentToLocal[1] = tangentToLocal[1];
         cache.tangentToLocal[2] = tangentToLocal[2];
 
-        cache.tangentToWorld[0] = mul(gSceneData.localToWorld, float4(tangentToLocal[0], 0.0f)).xyz;
-        cache.tangentToWorld[1] = mul(gSceneData.localToWorld, float4(tangentToLocal[1], 0.0f)).xyz;
-        cache.tangentToWorld[2] = mul(gSceneData.localToWorld, float4(tangentToLocal[2], 0.0f)).xyz;
+        cache.tangentToWorld[0] = mul(getSceneData().localToWorld, float4(tangentToLocal[0], 0.0f)).xyz;
+        cache.tangentToWorld[1] = mul(getSceneData().localToWorld, float4(tangentToLocal[1], 0.0f)).xyz;
+        cache.tangentToWorld[2] = mul(getSceneData().localToWorld, float4(tangentToLocal[2], 0.0f)).xyz;
 
         return cache;
     }
@@ -183,9 +184,9 @@ struct VertexShaderInput
     {
         ShaderAttributeInterpolation result = (ShaderAttributeInterpolation)0;
         float3x3 tangentToWorld = cache.getTangentToWorld();
-        result.normal = mul(gSceneData.localToWorld, float4(normal, 0.0f)).xyz;
-        result.tangent = mul(gSceneData.localToWorld, float4(tangent, 0.0f)).xyz;
-        result.biTangent = mul(gSceneData.localToWorld, float4(biTangent, 0.0f)).xyz;
+        result.normal = mul(getSceneData().localToWorld, float4(normal, 0.0f)).xyz;
+        result.tangent = mul(getSceneData().localToWorld, float4(tangent, 0.0f)).xyz;
+        result.biTangent = mul(getSceneData().localToWorld, float4(biTangent, 0.0f)).xyz;
         result.color = color;
         result.worldPosition = vertexParams.worldPosition;
         result.viewPosition = vertexParams.viewPosition;
@@ -215,8 +216,9 @@ struct PositionOnlyVertexShaderInput
 #endif // USE_INSTANCING
     float3 getWorldPosition()
     {
-        float4x4 localToWorld = gSceneData.localToWorld;
+        float4x4 localToWorld = getSceneData().localToWorld;
         float3 rotatedPosition = localToWorld[0].xyz * position.xxx + localToWorld[1].xyz * position.yyy + localToWorld[2].xyz * position.zzz;
-        return rotatedPosition + localToWorld[3].xyz;
+        return mul(getSceneData().localToWorld, position).xyz;
+        //rotatedPosition + float3(localToWorld[0].w, localToWorld[1].w, localToWorld[2].w);
     }
 };

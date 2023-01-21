@@ -36,7 +36,7 @@ private:
     } dispatchParams;
     struct Plane
     {
-        Math::Vector n;
+        Vector n;
         float d;
     };
     struct Frustum

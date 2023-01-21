@@ -1,6 +1,7 @@
 #include "MeshAsset.h"
 #include "Graphics/Mesh.h"
 #include "Graphics/VertexShaderInput.h"
+#include "Material/MaterialInterface.h"
 
 using namespace Seele;
 

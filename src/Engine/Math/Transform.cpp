@@ -145,17 +145,17 @@ Vector Transform::getScale() const
     return Vector(scale);
 }
 
-void Transform::setPosition(Math::Vector pos)
+void Transform::setPosition(Vector pos)
 {
     position = Vector4(pos, 0);
 }
 
-void Transform::setRotation(Math::Quaternion quat)
+void Transform::setRotation(Quaternion quat)
 {
     rotation = quat;
 }
 
-void Transform::setScale(Math::Vector s)
+void Transform::setScale(Vector s)
 {
     scale = Vector4(s, 0);
 }

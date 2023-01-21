@@ -56,10 +56,18 @@ void MeshProcessor::buildMeshDrawCommand(
     drawCommand->bindPipeline(pipeline);
     drawCommand->bindVertexBuffer(vertexStreams);
     drawCommand->bindDescriptor(descriptors);
-    for(auto element : meshBatch.elements)
+    for(const auto& element : meshBatch.elements)
     {
-        drawCommand->bindIndexBuffer(element.indexBuffer);
-        drawCommand->draw(element);
+        drawCommand->pushConstants(pipelineLayout, Gfx::SE_SHADER_STAGE_VERTEX_BIT | Gfx::SE_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(uint32), &element.sceneDataIndex);
+        if(element.indexBuffer != nullptr)
+        {
+            drawCommand->bindIndexBuffer(element.indexBuffer);
+            drawCommand->draw(element);
+        }
+        else
+        {
+            drawCommand->draw(vertexStreams[0].vertexBuffer->getNumVertices(), 1, 0, 0);
+        }
     }
 }
 

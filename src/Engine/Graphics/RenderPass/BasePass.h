@@ -29,6 +29,7 @@ DECLARE_REF(CameraActor)
 struct BasePassData
 {
     Array<StaticMeshBatch> staticDrawList;
+    Gfx::PStructuredBuffer sceneDataBuffer;
 };
 class BasePass : public RenderPass<BasePassData>
 {

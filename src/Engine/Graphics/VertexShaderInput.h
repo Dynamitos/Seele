@@ -95,8 +95,6 @@ public:
 private:
     const char* name;
     const char* shaderFilename;
-
-    static List<VertexInputType*> globalTypeList;
 };
 
 #define DECLARE_VERTEX_INPUT_TYPE(inputClass) \

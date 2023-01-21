@@ -6,8 +6,8 @@ using namespace Seele;
 CameraActor::CameraActor(PScene scene)
     : Actor(scene)
 {
-    scene->attachComponent<Component::Camera>(identifier);
-    scene->accessComponent<Component::Transform>(identifier).setRelativeLocation(Math::Vector(10, 5, 14));
+    attachComponent<Component::Camera>();
+    attachComponent<Component::Transform>().setRelativeLocation(Vector(10, 5, 14));
 }
 
 CameraActor::~CameraActor()
@@ -16,10 +16,10 @@ CameraActor::~CameraActor()
 
 Component::Camera& CameraActor::getCameraComponent()
 {
-    return scene->accessComponent<Component::Camera>(identifier);
+    return accessComponent<Component::Camera>();
 }
 
 const Component::Camera& CameraActor::getCameraComponent() const
 {
-    return scene->accessComponent<Component::Camera>(identifier);
+    return accessComponent<Component::Camera>();
 }

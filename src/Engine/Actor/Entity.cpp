@@ -11,5 +11,5 @@ Entity::Entity(PScene scene)
 
 Entity::~Entity()
 {
-    
+    scene->destroyEntity(identifier);
 }

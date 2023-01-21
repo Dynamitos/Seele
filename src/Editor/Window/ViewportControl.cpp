@@ -3,7 +3,7 @@
 
 using namespace Seele;
 
-ViewportControl::ViewportControl(const Math::URect& viewportDimensions, Math::Vector initialPos)
+ViewportControl::ViewportControl(const URect& viewportDimensions, Vector initialPos)
     : position(initialPos)
     , fieldOfView(glm::radians(70.f))
     , aspectRatio(static_cast<float>(viewportDimensions.size.x) / viewportDimensions.size.y)
@@ -25,9 +25,9 @@ void ViewportControl::update(Component::Camera& camera, float deltaTime)
     {
         cameraMove *= 4;
     }
-    Math::Vector moveVector = Math::Vector();
-    Math::Vector forward = glm::normalize(springArm);
-    Math::Vector side = glm::cross(Math::Vector(0, 1, 0), forward);
+    Vector moveVector = Vector();
+    Vector forward = glm::normalize(springArm);
+    Vector side = glm::cross(Vector(0, 1, 0), forward);
     if(keys[KeyCode::KEY_W])
     {
         moveVector += forward * cameraMove;
@@ -64,11 +64,11 @@ void ViewportControl::update(Component::Camera& camera, float deltaTime)
     lastX = mouseX;
     lastY = mouseY;
     springArm = glm::normalize(
-        Math::Vector(
+        Vector(
             cos(yaw) * cos(pitch),
             sin(pitch),
             sin(yaw) * cos(pitch)));
-    camera.viewMatrix = glm::lookAt(position, position + springArm, Math::Vector(0, 1, 0));
+    camera.viewMatrix = glm::lookAt(position, position + springArm, Vector(0, 1, 0));
     camera.projectionMatrix = glm::perspective(fieldOfView, aspectRatio, 0.1f, 1000.0f);
     std::cout << yaw << " " << pitch << std::endl;
 }
@@ -96,7 +96,7 @@ void ViewportControl::mouseButtonCallback(MouseButton button, InputAction action
     }
 }
 
-void ViewportControl::viewportResize(Math::URect dimensions)
+void ViewportControl::viewportResize(URect dimensions)
 {
     aspectRatio = static_cast<float>(dimensions.size.x) / dimensions.size.y;
 }

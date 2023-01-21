@@ -21,7 +21,7 @@ public:
 	// prepare render is also locked, so reading from shared memory is also safe
 	virtual void prepareRender() = 0;
 	virtual void render() = 0;
-	void applyArea(Math::URect area);
+	void applyArea(URect area);
 	void setFocused();
 
 	const std::string& getName();

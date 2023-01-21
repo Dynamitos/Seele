@@ -50,7 +50,7 @@ add_subdirectory(${ENTT_ROOT})
 #--------------thread-pool------------------------------
 add_subdirectory(${THREADPOOL_ROOT})
 
-target_compile_options(ThreadPool INTERFACE "/WX-")
+target_compile_options(ThreadPool INTERFACE "/W0")
 
 #--------------SLang------------------------------
 string(TOLOWER release_${CMAKE_PLATFORM} SLANG_CONFIG)

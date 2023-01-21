@@ -6,16 +6,16 @@
 
 using namespace Seele;
 
-List<VertexInputType*> VertexInputType::globalTypeList;
 
 List<VertexInputType*>& VertexInputType::getTypeList()
 {
+    static List<VertexInputType*> globalTypeList;
     return globalTypeList;
 }
 
 VertexInputType* VertexInputType::getVertexInputByName(const std::string& name)
 {
-    for(auto type : globalTypeList)
+    for(auto type : getTypeList())
     {
         if(name.compare(type->getName()) == 0)
         {
@@ -30,12 +30,12 @@ VertexInputType::VertexInputType(const char* name,
     : name(name)
     , shaderFilename(shaderFilename)
 {
-    globalTypeList.add(this);
+    getTypeList().add(this);
 }
 
 VertexInputType::~VertexInputType() 
 {
-    globalTypeList.remove(globalTypeList.find(this));
+    getTypeList().remove(getTypeList().find(this));
 }
 
 const char* VertexInputType::getName() 

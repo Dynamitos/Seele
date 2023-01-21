@@ -2,6 +2,8 @@ target_sources(Engine
     PRIVATE
         BasePass.h
         BasePass.cpp
+        DebugPass.h
+        DebugPass.cpp
         DepthPrepass.h
         DepthPrepass.cpp
         LightCullingPass.h
@@ -21,6 +23,7 @@ target_sources(Engine
     PUBLIC FILE_SET HEADERS
         FILES
             BasePass.h
+            DebugPass.h
             DepthPrepass.h
             LightCullingPass.h
             MeshProcessor.h

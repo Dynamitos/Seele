@@ -156,7 +156,8 @@ public:
         assert(_data != nullptr);
         std::uninitialized_copy(init.begin(), init.end(), begin());
     }
-    Array(const Array &other)
+    
+    constexpr Array(const Array &other)
         : arraySize(other.arraySize)
         , allocated(other.allocated)
         , allocator(std::allocator_traits<allocator_type>::select_on_container_copy_construction(other.allocator))
@@ -165,7 +166,16 @@ public:
         assert(_data != nullptr);
         std::uninitialized_copy(other.begin(), other.end(), begin());
     }
-    Array(Array &&other) noexcept
+    constexpr Array(const Array& other, const Allocator& alloc)
+        : arraySize(other.arraySize)
+        , allocated(other.allocated)
+        , allocator(alloc)
+    {
+        _data = allocateArray(other.allocated);
+        assert(_data != nullptr);
+        std::uninitialized_copy(other.begin(), other.end(), begin());
+    }
+    constexpr Array(Array &&other) noexcept
         : arraySize(std::move(other.arraySize))
         , allocated(std::move(other.allocated))
         , allocator(std::move(other.allocator))
@@ -175,10 +185,26 @@ public:
         other.allocated = 0;
         other.arraySize = 0;
     }
+    constexpr Array(Array &&other, const Allocator& alloc) noexcept
+        : arraySize(std::move(other.arraySize))
+        , allocated(std::move(other.allocated))
+        , allocator(alloc)
+    {
+        _data = allocateArray(other.allocated);
+        std::uninitialized_move(other.begin(), other.end(), begin());
+        other.deallocateArray(other._data, other.allocated);
+        other._data = nullptr;
+        other.allocated = 0;
+        other.arraySize = 0;
+    }
     Array &operator=(const Array &other)
     {
         if (this != &other)
         {
+            if (other.arraySize > allocated)
+            {
+                clear();
+            }
             if constexpr (std::allocator_traits<allocator_type>::propagate_on_container_copy_assignment::value )
             {
                 if (!std::allocator_traits<allocator_type>::is_always_equal::value
@@ -187,10 +213,6 @@ public:
                     clear();
                 }
                 allocator = other.allocator;
-            }
-            if (other.arraySize > allocated)
-            {
-                clear();
             }
             if(_data == nullptr)
             {
@@ -207,13 +229,13 @@ public:
     {
         if (this != &other)
         {
-            if constexpr (std::allocator_traits<allocator_type>::propagate_on_container_move_assignment::value)
-            {
-                allocator = std::move(other.allocator);
-            }
             if (_data != nullptr)
             {
                 clear();
+            }
+            if constexpr (std::allocator_traits<allocator_type>::propagate_on_container_move_assignment::value)
+            {
+                allocator = std::move(other.allocator);
             }
             allocated = std::move(other.allocated);
             arraySize = std::move(other.arraySize);
@@ -395,7 +417,7 @@ public:
     }
     constexpr void resize(size_type newSize)
     {
-        resizeInternal(newSize, std::move(T()));
+        resizeInternal(newSize, T());
     }
     constexpr void resize(size_type newSize, const value_type& value)
     {
@@ -532,7 +554,7 @@ private:
         return _data[arraySize - 1];
     }
     template<typename Type>
-    void resizeInternal(size_type newSize, Type&& value) noexcept
+    void resizeInternal(size_type newSize, const Type& value) noexcept
     {
         if (newSize <= allocated)
         {
@@ -550,7 +572,7 @@ private:
                 // Or construct the new elements by default
                 for(size_type i = arraySize; i < newSize; ++i)
                 {
-                    std::allocator_traits<allocator_type>::construct(allocator, &_data[i], std::move(value));
+                    std::allocator_traits<allocator_type>::construct(allocator, &_data[i], value);
                 }
             }
             arraySize = newSize;
@@ -568,7 +590,7 @@ private:
             // As well as default initialize the others
             for(size_type i = arraySize; i < newSize; ++i)
             {
-                std::allocator_traits<allocator_type>::construct(allocator, &newData[i], std::move(value));
+                std::allocator_traits<allocator_type>::construct(allocator, &newData[i], value);
             }
             deallocateArray(_data, allocated);
             arraySize = newSize;

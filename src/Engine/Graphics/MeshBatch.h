@@ -4,22 +4,16 @@
 namespace Seele
 {
 DECLARE_REF(VertexShaderInput)
-DECLARE_REF(MaterialAsset)
+DECLARE_REF(MaterialInterface)
 DECLARE_NAME_REF(Gfx, VertexBuffer)
 DECLARE_NAME_REF(Gfx, IndexBuffer)
 DECLARE_NAME_REF(Gfx, UniformBuffer)
 struct MeshBatchElement
 {
 public:
-    Gfx::PUniformBuffer uniformBuffer;
     Gfx::PIndexBuffer indexBuffer;
-
-    union
-    {   
-        uint32* instanceRuns;
-    };
     
-
+    uint32 sceneDataIndex;
     uint32 firstIndex;
     uint32 numPrimitives;
 
@@ -45,27 +39,7 @@ struct MeshBatch
 
     PVertexShaderInput vertexInput;
 
-    PMaterialAsset material;
-
-    inline int32 getNumPrimitives() const
-    {
-        int32 count = 0;
-        for(uint32 index = 0; index < elements.size(); ++index)
-        {
-            if(elements[index].isInstanced && elements[index].instanceRuns)
-            {
-                for(uint32 run = 0; run < elements[index].numInstances; ++run)
-                {
-                    count += elements[index].numPrimitives * (elements[index].instanceRuns[run * 2 + 1] - elements[index].instanceRuns[run * 2] - 1);
-                }
-            }
-            else
-            {
-                count += elements[index].numPrimitives * elements[index].numInstances;
-            }
-        }
-        return count;
-    }
+    PMaterialInterface material;
 
     MeshBatch();
     MeshBatch(const MeshBatch& other) = default;

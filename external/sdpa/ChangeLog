@@ -1,0 +1,10 @@
+SDPA-C 7.3.8 from SDPA-C 6 / 2013-10-21 Makoto Yamashita
+	* Based on SDPA 7.3.8
+	* Employ CHOLMOD for sparse Cholesky factoization
+	  to the variable matrices
+	* Efficient computation for the Schur complement matrix
+	* New callable library
+	* New Matlab/Octave interface
+	* Multiple-threaded computation
+	
+

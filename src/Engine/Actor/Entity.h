@@ -13,9 +13,19 @@ public:
     virtual ~Entity();
 
     template<typename Component, typename... Args>
-    Component& attachComponent(Args... args)
+    Component& attachComponent(Args&&... args)
     {
-        return scene->attachComponent<Component>(identifier, args...);
+        return scene->attachComponent<Component>(identifier, std::forward<Args>(args)...);
+    }
+    template<typename Component>
+    Component& accessComponent()
+    {
+        return scene->accessComponent<Component>(identifier);
+    }
+    template<typename Component>
+    const Component& accessComponent() const
+    {
+        return scene->accessComponent<Component>(identifier);
     }
 protected:
     PScene scene;

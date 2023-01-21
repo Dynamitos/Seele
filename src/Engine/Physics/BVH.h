@@ -12,11 +12,13 @@ class BVH
 public:
     void findOverlaps(Array<Pair<entt::entity, entt::entity>>& overlaps);
     void updateDynamicCollider(entt::entity entity, AABB aabb);
+    void colliderCallback(entt::registry& registry, entt::entity entity);
+    void visualize();
 private:
     struct AABBCenter
     {
         AABB bb;
-        Math::Vector center;
+        Vector center;
         entt::entity id;
     };
     struct Node
@@ -41,9 +43,9 @@ private:
     int32 splitNode(Array<AABBCenter> aabbs);
     int32 allocateNode();
     void freeNode(int32 nodeIndex);
+    void validateBVH() const;
     Array<Node> dynamicNodes;
     Array<Node> staticNodes;
-    Array<AABBCenter> dynamicCollider;
     Array<AABBCenter> staticCollider;
     int32 staticRoot = -1;
     int32 dynamicRoot = -1;

@@ -26,6 +26,7 @@ DEFINE_REF(DepthPrepassMeshProcessor)
 struct DepthPrepassData
 {
     Array<StaticMeshBatch> staticDrawList;
+    Gfx::PStructuredBuffer sceneDataBuffer;
 };
 class DepthPrepass : public RenderPass<DepthPrepassData>
 {

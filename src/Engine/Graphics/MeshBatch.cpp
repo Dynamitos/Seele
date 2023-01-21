@@ -1,13 +1,12 @@
 #include "MeshBatch.h"
 #include "GraphicsResources.h"
 #include "VertexShaderInput.h"
-#include "Material/MaterialAsset.h"
+#include "Material/MaterialInterface.h"
 
 using namespace Seele;
 
 MeshBatchElement::MeshBatchElement()
-    : uniformBuffer(nullptr)
-    , indexBuffer(nullptr)
+    : indexBuffer(nullptr)
     , firstIndex(0)
     , numPrimitives(0)
     , numInstances(1)

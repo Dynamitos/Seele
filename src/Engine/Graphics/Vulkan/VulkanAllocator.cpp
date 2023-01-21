@@ -95,7 +95,7 @@ PSubAllocation Allocation::getSuballocation(VkDeviceSize requestedSize, VkDevice
         VkDeviceSize allocatedOffset = it.first;
         PSubAllocation freeAllocation = it.second;
         assert(allocatedOffset == freeAllocation->allocatedOffset);
-        VkDeviceSize alignedOffset = Math::align(allocatedOffset, alignment);
+        VkDeviceSize alignedOffset = align(allocatedOffset, alignment);
         VkDeviceSize alignmentAdjustment = alignedOffset - allocatedOffset;
         VkDeviceSize size = alignmentAdjustment + requestedSize;
         if (freeAllocation->size == size)
@@ -113,8 +113,8 @@ PSubAllocation Allocation::getSuballocation(VkDeviceSize requestedSize, VkDevice
             freeAllocation->alignedOffset += size;
             PSubAllocation subAlloc = new SubAllocation(this, allocatedOffset, size, alignedOffset, size);
             activeAllocations[allocatedOffset] = subAlloc.getHandle();
-            freeRanges[freeAllocation->allocatedOffset] = freeAllocation;
             freeRanges.erase(allocatedOffset);
+            freeRanges[freeAllocation->allocatedOffset] = freeAllocation;
             bytesUsed += size;
             return subAlloc;
         }

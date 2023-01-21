@@ -1,10 +1,11 @@
 #pragma once
 #include "Asset.h"
+#include "Component/Collider.h"
 
 namespace Seele
 {
 DECLARE_REF(Mesh)
-DECLARE_REF(MaterialAsset)
+DECLARE_REF(MaterialInterface)
 class MeshAsset : public Asset
 {
 public:
@@ -17,8 +18,9 @@ public:
     void addMesh(PMesh mesh);
     const Array<PMesh> getMeshes();
     //Workaround while no editor
-    Array<PMaterialAsset> referencedMaterials;
+    Array<PMaterialInterface> referencedMaterials;
     Array<PMesh> meshes;
+    Component::Collider physicsMesh;
 };
 DEFINE_REF(MeshAsset)
 } // namespace Seele

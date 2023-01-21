@@ -2,7 +2,7 @@
 #include "Graphics.h"
 #include "RenderPass/DepthPrepass.h"
 #include "RenderPass/BasePass.h"
-#include "Material/MaterialAsset.h"
+#include "Material/Material.h"
 
 using namespace Seele;
 using namespace Seele::Gfx;
@@ -54,7 +54,7 @@ const ShaderCollection* ShaderMap::findShaders(PermutationId&& id) const
 ShaderCollection& ShaderMap::createShaders(
 	PGraphics graphics,
 	RenderPassType renderPass, 
-	PMaterialAsset material, 
+	PMaterial material, 
 	VertexInputType* vertexInput,
 	bool /*bPositionOnly*/)
 {
@@ -195,10 +195,11 @@ bool UniformBuffer::updateContents(const BulkResourceData& resourceData)
 	return true;
 }
 
-StructuredBuffer::StructuredBuffer(QueueFamilyMapping mapping, uint32 stride, const BulkResourceData& resourceData)
+StructuredBuffer::StructuredBuffer(QueueFamilyMapping mapping, uint32 stride, uint32 numElements, const BulkResourceData& resourceData)
 	: Buffer(mapping, resourceData.owner)
 	, contents(resourceData.size)
 	, stride(stride)
+	, numElements(numElements)
 {
 	if(resourceData.data != nullptr)
 	{
@@ -515,7 +516,7 @@ Viewport::~Viewport()
 {
 }
 
-Math::Matrix4 Viewport::getProjectionMatrix() const
+Matrix4 Viewport::getProjectionMatrix() const
 {
 	if(fieldOfView > 0.0f)
 	{

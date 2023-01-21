@@ -15,7 +15,7 @@ FontLoader::~FontLoader()
 {
 }
 
-void FontLoader::importAsset(const std::filesystem::path& filePath)
+void FontLoader::importAsset(const std::filesystem::path& filePath, const std::string& importPath)
 {
     std::filesystem::path assetPath = filePath.filename();
     assetPath.replace_extension("asset");
@@ -23,12 +23,11 @@ void FontLoader::importAsset(const std::filesystem::path& filePath)
     std::error_code code;
     std::filesystem::copy_file(filePath, asset->getFullPath(), code);
     asset->setStatus(Asset::Status::Loading);
-    AssetRegistry::get().registerFont(asset);
+    AssetRegistry::get().registerFont(asset, importPath);
     import(filePath, asset);
 }
 
 void FontLoader::import(std::filesystem::path path, PFontAsset asset)
 {
     asset->load();
-    AssetRegistry::get().registerFont(asset);
 }

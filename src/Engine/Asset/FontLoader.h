@@ -12,7 +12,7 @@ class FontLoader
 public:
     FontLoader(Gfx::PGraphics graphic);
     ~FontLoader();
-    void importAsset(const std::filesystem::path& filePath);
+    void importAsset(const std::filesystem::path& filePath, const std::string& importPath);
 private:
     void import(std::filesystem::path path, PFontAsset asset);
     Gfx::PGraphics graphics;
