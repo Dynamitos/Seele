@@ -19,7 +19,7 @@ class AssetRegistry
 {
 public:
     ~AssetRegistry();
-    static void init(const std::string& rootFolder);
+    static void init(const std::string& rootFolder, Gfx::PGraphics graphics);
 
     static std::string getRootFolder();
 
@@ -47,7 +47,7 @@ private:
     static AssetRegistry& get();
 
     AssetRegistry();
-    void init(const std::filesystem::path& rootFolder, Gfx::PGraphics graphics);
+    void initialize(const std::filesystem::path& rootFolder, Gfx::PGraphics graphics);
 
     void importMesh(const std::filesystem::path& filePath, const std::string& importPath);
     void importTexture(const std::filesystem::path& filePath, const std::string& importPath);
@@ -66,6 +66,7 @@ private:
 
     std::filesystem::path rootFolder;
     AssetFolder assetRoot;
+    Gfx::PGraphics graphics;
     UPTextureLoader textureLoader;
     UPFontLoader fontLoader;
     UPMeshLoader meshLoader;

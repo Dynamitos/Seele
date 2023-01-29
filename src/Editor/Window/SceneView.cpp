@@ -22,19 +22,6 @@ SceneView::SceneView(Gfx::PGraphics graphics, PWindow owner, const ViewportCreat
     ))
     , cameraSystem(createInfo.dimensions, Vector(0, 0, 10))
 {
-    AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Ayaka\\Avatar_Girl_Sword_Ayaka_Tex_Body_Diffuse.png");
-    AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Ayaka\\Avatar_Girl_Sword_Ayaka_Tex_Body_Lightmap.png");
-    AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Ayaka\\Avatar_Girl_Sword_Ayaka_Tex_Face_Diffuse.png");
-    AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Ayaka\\Avatar_Girl_Sword_Ayaka_Tex_Hair_Diffuse.png");
-    AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Ayaka\\Avatar_Girl_Sword_Ayaka_Tex_Hair_Lightmap.png");
-    AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Ayaka\\Avatar_Girl_Tex_FaceLightmap.png");
-    AssetRegistry::importFile("C:\\Users\\Dynamitos\\TestSeeleProject\\Assets\\Ayaka\\Ayaka.fbx");
-    auto meshAsset = AssetRegistry::findMesh("Ayaka");
-    for(auto mesh : meshAsset->getMeshes())
-    {
-        PActor actor = new Actor(scene);
-        actor->attachComponent<Component::StaticMesh>(mesh->vertexInput, mesh->indexBuffer, mesh->referencedMaterial);
-    }
 
     //AssetRegistry::importFile("D:\\Private\\Programming\\Unreal Engine\\Assets\\Ely\\Ely.fbx");
     //AssetRegistry::importFile("D:\\Private\\Programming\\Unreal Engine\\Assets\\Cube\\cube.obj");
@@ -51,14 +38,12 @@ SceneView::~SceneView()
 
 void SceneView::beginUpdate() 
 {
-    scene->beginUpdate(Gfx::currentFrameDelta);
     //co_return;
 }
 
 void SceneView::update() 
 {
     cameraSystem.update(viewportCamera, static_cast<float>(Gfx::currentFrameDelta));
-    scene->commitUpdate();
     //co_return;
 }
 

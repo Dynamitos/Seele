@@ -7,7 +7,7 @@ DECLARE_REF(MaterialInstance)
 class Material : public MaterialInterface
 {
 public:
-    Material(Array<PShaderParameter> parameter, Gfx::PDescriptorLayout layout, uint32 uniformDataSize, uint32 uniformBinding, std::string materialName);
+    Material(Gfx::PGraphics graphics, Array<PShaderParameter> parameter, Gfx::PDescriptorLayout layout, uint32 uniformDataSize, uint32 uniformBinding, std::string materialName);
     virtual ~Material();
     virtual Gfx::PDescriptorSet createDescriptorSet();
     virtual Gfx::PDescriptorLayout getDescriptorLayout() const { return layout; }

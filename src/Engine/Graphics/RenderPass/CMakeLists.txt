@@ -14,6 +14,8 @@ target_sources(Engine
         RenderGraphResources.h
         RenderGraphResources.cpp
         RenderPass.h
+        SkyboxRenderPass.h
+        SkyboxRenderPass.cpp
         TextPass.h
         TextPass.cpp
         UIPass.h
@@ -30,5 +32,6 @@ target_sources(Engine
             RenderGraph.h
             RenderGraphResources.h
             RenderPass.h
+            SkyboxRenderPass.h
             TextPass.h
             UIPass.h)

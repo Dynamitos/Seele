@@ -69,7 +69,6 @@ void ViewportControl::update(Component::Camera& camera, float deltaTime)
             sin(pitch),
             sin(yaw) * cos(pitch)));
     camera.viewMatrix = glm::lookAt(position, position + springArm, Vector(0, 1, 0));
-    camera.projectionMatrix = glm::perspective(fieldOfView, aspectRatio, 0.1f, 1000.0f);
     std::cout << yaw << " " << pitch << std::endl;
 }
 

@@ -434,6 +434,24 @@ Texture2D::~Texture2D()
 {
 }
 
+Texture3D::Texture3D(QueueFamilyMapping mapping, Gfx::QueueType startQueueType)
+	: Texture(mapping, startQueueType)
+{	
+}
+
+Texture3D::~Texture3D()
+{
+}
+
+TextureCube::TextureCube(QueueFamilyMapping mapping, Gfx::QueueType startQueueType)
+	: Texture(mapping, startQueueType)
+{	
+}
+
+TextureCube::~TextureCube()
+{
+}
+
 RenderCommand::RenderCommand()
 {
 }

@@ -1,0 +1,28 @@
+#include "Window/WindowManager.h"
+#include "Asset/AssetRegistry.h"
+
+int main()
+{
+    PWindowManager windowManager = new WindowManager();
+    AssetRegistry::load("registry");
+    WindowCreateInfo gameWindowInfo = {
+        .title = ${GAME_TITLE},
+        .width = 1280,
+        .height = 720,
+        .bFullscreen = false,
+        .numSamples = 1,
+        .pixelFormat = Gfx::SE_FORMAT_B8G8R8A8_UNORM,
+    };
+    auto window = windowManager->addWindow(gameWindowInfo);
+    ViewportCreateInfo gameViewinfo = {
+        .dimensions = {
+            .size = {
+                .x = 1280,
+                .y = 720,
+            },
+        },
+    };
+    new GameView(windowManager->getGraphics(), window, gameViewInfo);
+    window->render();
+    return 0;
+}

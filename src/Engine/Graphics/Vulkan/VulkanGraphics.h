@@ -45,6 +45,8 @@ public:
     virtual void executeCommands(const Array<Gfx::PComputeCommand>& commands) override;
 
     virtual Gfx::PTexture2D createTexture2D(const TextureCreateInfo &createInfo) override;
+    virtual Gfx::PTexture3D createTexture3D(const TextureCreateInfo &createInfo) override;
+    virtual Gfx::PTextureCube createTextureCube(const TextureCreateInfo &createInfo) override;
     virtual Gfx::PUniformBuffer createUniformBuffer(const UniformBufferCreateInfo &bulkData) override;
     virtual Gfx::PStructuredBuffer createStructuredBuffer(const StructuredBufferCreateInfo &bulkData) override;
     virtual Gfx::PVertexBuffer createVertexBuffer(const VertexBufferCreateInfo &bulkData) override;

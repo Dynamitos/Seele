@@ -135,5 +135,12 @@
     },
     "git.ignoreSubmodules": true,
     "cmake.configureOnOpen": true,
-    "cmake.parallelJobs": 0
+    "cmake.parallelJobs": 0,
+    "C_Cpp.files.exclude": {
+        "**/.vs": true,
+        "**/.vscode": true,
+        "**/bin": true,
+        "**/external": true,
+        "**/res": true,
+    },
 }

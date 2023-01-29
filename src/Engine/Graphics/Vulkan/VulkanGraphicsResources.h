@@ -268,6 +268,8 @@ private:
     Gfx::SeImageLayout layout;
     friend class TextureBase;
     friend class Texture2D;
+    friend class Texture3D;
+    friend class TextureCube;
     friend class Graphics;
 };
 
@@ -335,6 +337,116 @@ protected:
 
 };
 DEFINE_REF(Texture2D)
+
+class Texture3D : public Gfx::Texture3D, public TextureBase
+{
+public:
+    Texture3D(PGraphics graphics, const TextureCreateInfo& createInfo, VkImage existingImage = VK_NULL_HANDLE);
+    virtual ~Texture3D();
+    virtual uint32 getSizeX() const override
+    {
+        return textureHandle->sizeX;
+    }
+    virtual uint32 getSizeY() const override
+    {
+        return textureHandle->sizeY;
+    }
+    virtual uint32 getSizeZ() const override
+    {
+        return textureHandle->sizeZ;
+    }
+    virtual Gfx::SeFormat getFormat() const override
+    {
+        return textureHandle->format;
+    }
+    virtual Gfx::SeSampleCountFlags getNumSamples() const override
+    {
+        return textureHandle->getNumSamples();
+    }
+    virtual uint32 getMipLevels() const override
+    {
+        return textureHandle->getMipLevels();
+    }
+    virtual void changeLayout(Gfx::SeImageLayout newLayout) override;
+    virtual void* getNativeHandle() override
+    {
+        return textureHandle;
+    }
+    inline VkImage getHandle() const
+    {
+        return textureHandle->image;
+    }
+    inline VkImageView getView() const
+    {
+        return textureHandle->defaultView;
+    }
+    inline bool isDepthStencil() const
+    {
+        return textureHandle->isDepthStencil();
+    }
+protected:
+    // Inherited via QueueOwnedResource
+    virtual void executeOwnershipBarrier(Gfx::QueueType newOwner);
+    virtual void executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, 
+        VkAccessFlags dstAccess, VkPipelineStageFlags dstStage);
+
+};
+DEFINE_REF(Texture3D)
+
+class TextureCube : public Gfx::TextureCube, public TextureBase
+{
+public:
+    TextureCube(PGraphics graphics, const TextureCreateInfo& createInfo, VkImage existingImage = VK_NULL_HANDLE);
+    virtual ~TextureCube();
+    virtual uint32 getSizeX() const override
+    {
+        return textureHandle->sizeX;
+    }
+    virtual uint32 getSizeY() const override
+    {
+        return textureHandle->sizeY;
+    }
+    virtual uint32 getSizeZ() const override
+    {
+        return textureHandle->sizeZ;
+    }
+    virtual Gfx::SeFormat getFormat() const override
+    {
+        return textureHandle->format;
+    }
+    virtual Gfx::SeSampleCountFlags getNumSamples() const override
+    {
+        return textureHandle->getNumSamples();
+    }
+    virtual uint32 getMipLevels() const override
+    {
+        return textureHandle->getMipLevels();
+    }
+    virtual void changeLayout(Gfx::SeImageLayout newLayout) override;
+    virtual void* getNativeHandle() override
+    {
+        return textureHandle;
+    }
+    inline VkImage getHandle() const
+    {
+        return textureHandle->image;
+    }
+    inline VkImageView getView() const
+    {
+        return textureHandle->defaultView;
+    }
+    inline bool isDepthStencil() const
+    {
+        return textureHandle->isDepthStencil();
+    }
+protected:
+    // Inherited via QueueOwnedResource
+    virtual void executeOwnershipBarrier(Gfx::QueueType newOwner);
+    virtual void executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, 
+        VkAccessFlags dstAccess, VkPipelineStageFlags dstStage);
+
+};
+DEFINE_REF(TextureCube)
 
 class SamplerState : public Gfx::SamplerState
 {

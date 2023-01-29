@@ -306,3 +306,57 @@ void Texture2D::executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageF
 {
     textureHandle->executePipelineBarrier(srcAccess, srcStage, dstAccess, dstStage);
 }
+
+Texture3D::Texture3D(PGraphics graphics, const TextureCreateInfo& createInfo, VkImage existingImage)
+    : Gfx::Texture3D(graphics->getFamilyMapping(), createInfo.resourceData.owner)
+{
+    textureHandle = new TextureHandle(graphics, VK_IMAGE_VIEW_TYPE_3D, 
+        createInfo, currentOwner, existingImage);
+}
+
+Texture3D::~Texture3D()
+{
+}
+
+void Texture3D::changeLayout(Gfx::SeImageLayout newLayout) 
+{
+    textureHandle->changeLayout(newLayout);
+}
+
+void Texture3D::executeOwnershipBarrier(Gfx::QueueType newOwner)
+{
+    textureHandle->executeOwnershipBarrier(newOwner);
+}
+
+void Texture3D::executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, 
+        VkAccessFlags dstAccess, VkPipelineStageFlags dstStage) 
+{
+    textureHandle->executePipelineBarrier(srcAccess, srcStage, dstAccess, dstStage);
+}
+
+TextureCube::TextureCube(PGraphics graphics, const TextureCreateInfo& createInfo, VkImage existingImage)
+    : Gfx::TextureCube(graphics->getFamilyMapping(), createInfo.resourceData.owner)
+{
+    textureHandle = new TextureHandle(graphics, createInfo.bArray ? VK_IMAGE_VIEW_TYPE_CUBE_ARRAY : VK_IMAGE_VIEW_TYPE_CUBE, 
+        createInfo, currentOwner, existingImage);
+}
+
+TextureCube::~TextureCube()
+{
+}
+
+void TextureCube::changeLayout(Gfx::SeImageLayout newLayout) 
+{
+    textureHandle->changeLayout(newLayout);
+}
+
+void TextureCube::executeOwnershipBarrier(Gfx::QueueType newOwner)
+{
+    textureHandle->executeOwnershipBarrier(newOwner);
+}
+
+void TextureCube::executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, 
+        VkAccessFlags dstAccess, VkPipelineStageFlags dstStage) 
+{
+    textureHandle->executePipelineBarrier(srcAccess, srcStage, dstAccess, dstStage);
+}

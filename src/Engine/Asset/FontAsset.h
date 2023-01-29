@@ -11,8 +11,8 @@ public:
     FontAsset(const std::string& directory, const std::string& name);
     FontAsset(const std::filesystem::path& fullPath);
     virtual ~FontAsset();
-    virtual void save() override;
-    virtual void load() override;
+    virtual void save(Gfx::PGraphics graphics) override;
+    virtual void load(Gfx::PGraphics graphics) override;
 
     struct Glyph
     {
@@ -24,6 +24,7 @@ public:
     const std::map<uint32, Glyph> getGlyphData() const { return glyphs; }
 private:
     std::map<uint32, Glyph> glyphs;
+    friend class FontLoader;
 };
 DECLARE_REF(FontAsset)
 } // namespace Seele

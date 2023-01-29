@@ -10,6 +10,8 @@ View::View(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo &vi
 	, name(name)
 {
 	viewport = graphics->createViewport(owner->getGfxHandle(), viewportInfo);
+	owner->addView(this);
+	setFocused();
 }
 
 View::~View()

@@ -1,4 +1,4 @@
-add_subdirectory(System/)
+add_subdirectory(Platform/)
 add_subdirectory(Window/)
 
 target_sources(Editor

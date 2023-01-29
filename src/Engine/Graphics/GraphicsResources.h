@@ -45,7 +45,7 @@ DEFINE_REF(VertexShader)
 class ControlShader
 {
 public:
-    ControlShader() {}
+    ControlShader() : numPatchPoints(0) {}
     virtual ~ControlShader() {}
     uint32 getNumPatches() const { return numPatchPoints; }
 
@@ -555,6 +555,7 @@ protected:
         SeAccessFlags dstAccess, SePipelineStageFlags dstStage) = 0;
 };
 DEFINE_REF(Texture)
+
 class Texture2D : public Texture
 {
 public:
@@ -576,6 +577,50 @@ protected:
         SeAccessFlags dstAccess, SePipelineStageFlags dstStage) = 0;
 };
 DEFINE_REF(Texture2D)
+
+class Texture3D : public Texture
+{
+public:
+    Texture3D(QueueFamilyMapping mapping, QueueType startQueueType);
+    virtual ~Texture3D();
+
+    virtual SeFormat getFormat() const = 0;
+    virtual uint32 getSizeX() const = 0;
+    virtual uint32 getSizeY() const = 0;
+    virtual uint32 getSizeZ() const = 0;
+    virtual SeSampleCountFlags getNumSamples() const = 0;
+    virtual uint32 getMipLevels() const = 0;
+    virtual void changeLayout(SeImageLayout newLayout) = 0;
+    virtual class Texture3D* getTexture3D() { return this; }
+protected:
+    //Inherited via QueueOwnedResource
+    virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
+    virtual void executePipelineBarrier(SeAccessFlags srcAccess, SePipelineStageFlags srcStage, 
+        SeAccessFlags dstAccess, SePipelineStageFlags dstStage) = 0;
+};
+DEFINE_REF(Texture3D)
+
+class TextureCube : public Texture
+{
+public:
+    TextureCube(QueueFamilyMapping mapping, QueueType startQueueType);
+    virtual ~TextureCube();
+
+    virtual SeFormat getFormat() const = 0;
+    virtual uint32 getSizeX() const = 0;
+    virtual uint32 getSizeY() const = 0;
+    virtual uint32 getSizeZ() const = 0;
+    virtual SeSampleCountFlags getNumSamples() const = 0;
+    virtual uint32 getMipLevels() const = 0;
+    virtual void changeLayout(SeImageLayout newLayout) = 0;
+    virtual class TextureCube* getTextureCube() { return this; }
+protected:
+    //Inherited via QueueOwnedResource
+    virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
+    virtual void executePipelineBarrier(SeAccessFlags srcAccess, SePipelineStageFlags srcStage, 
+        SeAccessFlags dstAccess, SePipelineStageFlags dstStage) = 0;
+};
+DEFINE_REF(TextureCube)
 
 DECLARE_REF(Viewport)
 class RenderCommand
@@ -684,6 +729,8 @@ public:
         , stencilLoadOp(stencilLoadOp)
         , stencilStoreOp(stencilStoreOp)
         , texture(texture)
+        , clear()
+        , componentFlags(0)
     {
     }
     virtual ~RenderTargetAttachment()

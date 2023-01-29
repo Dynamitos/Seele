@@ -4,13 +4,15 @@ target_sources(Engine
         BoxCollider.h
         Camera.h
         Camera.cpp
-        Component.h
         Collider.h
         Collider.cpp
+        Component.h
+        KeyboardInput.h
         MeshCollider.h
         RigidBody.h
         ShapeBase.h
         ShapeBase.cpp
+        Skybox.h
         SphereCollider.h
         StaticMesh.h
 		Transform.h
@@ -22,11 +24,13 @@ target_sources(Engine
             AABB.h
             BoxCollider.h
             Camera.h
-            Component.h
             Collider.h
+            Component.h
+            KeyboardInput.h
             MeshCollider.h
             RigidBody.h
             ShapeBase.h
+            Skybox.h
             SphereCollider.h
             StaticMesh.h
             Transform.h)

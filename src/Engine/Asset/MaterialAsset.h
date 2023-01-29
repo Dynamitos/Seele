@@ -11,10 +11,8 @@ public:
     MaterialAsset(const std::string &directory, const std::string &name);
     MaterialAsset(const std::filesystem::path &fullPath);
     virtual ~MaterialAsset();
-    virtual void beginFrame();
-    virtual void endFrame();
-    virtual void save() override;
-    virtual void load() override;
+    virtual void save(Gfx::PGraphics graphics) override;
+    virtual void load(Gfx::PGraphics graphics) override;
     PMaterial getMaterial() const { return material; }
 private:
     PMaterial material;

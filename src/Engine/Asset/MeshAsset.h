@@ -13,8 +13,8 @@ public:
     MeshAsset(const std::string& directory, const std::string& name);
     MeshAsset(const std::filesystem::path& fullPath);
     virtual ~MeshAsset();
-    virtual void save() override;
-    virtual void load() override;
+    virtual void save(Gfx::PGraphics graphics) override;
+    virtual void load(Gfx::PGraphics graphics) override;
     void addMesh(PMesh mesh);
     const Array<PMesh> getMeshes();
     //Workaround while no editor

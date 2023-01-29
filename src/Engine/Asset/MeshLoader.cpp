@@ -259,7 +259,7 @@ void MeshLoader::loadTextures(const aiScene* scene, const std::filesystem::path&
             unsigned char* texData = new unsigned char[tex->mWidth * tex->mHeight * 4];
             convertAssimpARGB(texData, tex->pcData, tex->mWidth * tex->mHeight);
             stbi_write_png(texPngPath.string().c_str(), tex->mWidth, tex->mHeight, 4, tex->pcData, tex->mWidth * 32);
-            delete texData;
+            delete[] texData;
         }
         std::cout << "Loading model texture " << texPngPath.string() << std::endl;
         AssetRegistry::importFile(texPngPath.string());
@@ -300,6 +300,5 @@ void MeshLoader::import(std::filesystem::path path, PMeshAsset meshAsset)
     }
     meshAsset->physicsMesh = std::move(collider);
     meshAsset->setStatus(Asset::Status::Ready);
-    meshAsset->save();
     std::cout << "Finished loading " << path << std::endl;
 }

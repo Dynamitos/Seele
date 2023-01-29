@@ -1,11 +1,25 @@
 ﻿{
-  "configurations": [
-    {
-      "name": "Debug",
-      "cmakeCommandArgs": "-DUSE_SUPERBUILD=OFF",
-      "buildCommandArgs": "",
-      "ctestCommandArgs": "",
-      "inheritEnvironments": []
-    }
-  ]
+    "configurations": [
+        {
+            "name": "Debug",
+            "buildCommandArgs": "",
+            "ctestCommandArgs": "",
+            "configurationType": "Debug",
+            "generator": "Visual Studio 17 2022 Win64",
+            "intelliSenseMode": "windows-msvc-x64",
+            "cmakeExecutable": "D:/Programms/CMake/bin/cmake.exe",
+            "inheritEnvironments": [],
+            "cmakeCommandArgs": "-DCMAKE_DEBUG_POSTFIX=d -DCMAKE_PLATFORM=x64 -DCMAKE_BUILD_TYPE=Debug",
+            "buildRoot": "bin/Debug"
+        },
+        {
+            "name": "Release",
+            "configurationType": "Release",
+            "buildCommandArgs": "",
+            "ctestCommandArgs": "",
+            "generator": "Visual Studio 17 2022 Win64",
+            "intelliSenseMode": "windows-msvc-x64",
+            "inheritEnvironments": []
+        }
+    ]
 }

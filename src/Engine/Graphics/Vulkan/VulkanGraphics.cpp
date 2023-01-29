@@ -116,6 +116,18 @@ Gfx::PTexture2D Graphics::createTexture2D(const TextureCreateInfo &createInfo)
     return result;
 }
 
+Gfx::PTexture3D Graphics::createTexture3D(const TextureCreateInfo &createInfo)
+{
+    PTexture3D result = new Texture3D(this, createInfo);
+    return result;
+}
+
+Gfx::PTextureCube Graphics::createTextureCube(const TextureCreateInfo &createInfo)
+{
+    PTextureCube result = new TextureCube(this, createInfo);
+    return result;
+}
+
 Gfx::PUniformBuffer Graphics::createUniformBuffer(const UniformBufferCreateInfo &bulkData)
 {
     PUniformBuffer uniformBuffer = new UniformBuffer(this, bulkData);

@@ -9,7 +9,7 @@ DECLARE_NAME_REF(Gfx, UniformBuffer)
 class MaterialInterface
 {
 public:
-    MaterialInterface(Array<PShaderParameter> parameter, uint32 uniformDataSize, uint32 uniformBinding);
+    MaterialInterface(Gfx::PGraphics graphics, Array<PShaderParameter> parameter, uint32 uniformDataSize, uint32 uniformBinding);
     virtual ~MaterialInterface();
     PShaderParameter getParameter(const std::string& name);
     virtual Gfx::PDescriptorSet createDescriptorSet() = 0;
@@ -20,6 +20,7 @@ public:
     virtual const Gfx::ShaderCollection* getShaders(Gfx::RenderPassType renderPass, VertexInputType* vertexInput) const = 0;
     virtual Gfx::ShaderCollection& createShaders(Gfx::PGraphics graphics, Gfx::RenderPassType renderPass, VertexInputType* vertexInput) = 0;
 protected:
+    Gfx::PGraphics graphics;
     //For now its simply the collection of parameters, since there is no point for expressions
     Array<PShaderParameter> parameters;
     Gfx::PUniformBuffer uniformBuffer;

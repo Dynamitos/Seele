@@ -63,6 +63,7 @@ if(CMAKE_DEBUG_POSTFIX)
 endif()
 
 add_library(Engine STATIC "")
+
 target_compile_definitions(Engine PRIVATE GLFW_WINDOWS)
 target_include_directories(Engine PRIVATE src/Engine)
 target_link_libraries(Engine PUBLIC Vulkan::Vulkan)
@@ -78,10 +79,16 @@ target_link_libraries(Engine PUBLIC nlohmann_json::nlohmann_json)
 target_link_libraries(Engine PUBLIC dp::thread-pool)
 target_link_libraries(Engine PUBLIC crcpp)
 target_link_libraries(Engine PUBLIC odeint)
+target_link_libraries(Engine PUBLIC zlib)
 if(UNIX)
-    target_link_libraries(Engine PUBLIC Threads::Threads)
-    target_link_libraries(Engine PUBLIC dl)
+target_link_libraries(Engine PUBLIC Threads::Threads)
+target_link_libraries(Engine PUBLIC dl)
 endif()
+
+add_executable(Editor "")
+target_link_libraries(Editor PRIVATE Engine)
+target_include_directories(Editor PRIVATE src/Editor)
+target_compile_definitions(Editor PRIVATE EDITOR)
 
 target_precompile_headers(Engine 
   PUBLIC    
@@ -103,8 +110,7 @@ if(MSVC)
     set(_CRT_SECURE_NO_WARNINGS)
     target_compile_options(Engine PUBLIC /Zi /MP14 /W4 /DEBUG "/WX-")
     target_sources(Engine INTERFACE   
-        $<BUILD_INTERFACE:Seele.natvis>
-        $<BUILD_INTERFACE:${Seele_DIR}/Seele.natvis>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Seele.natvis>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/Seele.natvis>
     )
     install(FILES
@@ -125,7 +131,8 @@ add_custom_target(SeeleEngine ALL
 	DEPENDS Editor slang-build)
 
 install(
-    TARGETS 
+    TARGETS
+        Editor
         Engine
         EnTT
         glfw

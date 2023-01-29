@@ -38,7 +38,7 @@ void MaterialLoader::import(std::filesystem::path name, PMaterialAsset asset)
     json j;
     stream >> j;
     std::string materialName = j["name"].get<std::string>() + "Material";
-    Gfx::PDescriptorLayout layout = WindowManager::getGraphics()->createDescriptorLayout(materialName + "Layout");
+    Gfx::PDescriptorLayout layout = graphics->createDescriptorLayout(materialName + "Layout");
     //Shader file needs to conform to the slang standard, which prohibits _
     materialName.erase(std::remove(materialName.begin(), materialName.end(), '_'), materialName.end());
     materialName.erase(std::remove(materialName.begin(), materialName.end(), '.'), materialName.end());
@@ -111,7 +111,7 @@ void MaterialLoader::import(std::filesystem::path name, PMaterialAsset asset)
         {
             PSamplerParameter p = new SamplerParameter(param.key(), 0, bindingCounter);
             layout->addDescriptorBinding(bindingCounter++, Gfx::SE_DESCRIPTOR_TYPE_SAMPLER);
-            p->data = WindowManager::getGraphics()->createSamplerState({});
+            p->data = graphics->createSamplerState({});
             parameters.add(p);
         }
         else
@@ -128,6 +128,7 @@ void MaterialLoader::import(std::filesystem::path name, PMaterialAsset asset)
     codeStream.close();
     layout->create();
     asset->material = new Material(
+        graphics,
         std::move(parameters),
         std::move(layout),
         uniformDataSize,

@@ -11,8 +11,8 @@ public:
     TextureAsset(const std::string& directory, const std::string& name);
     TextureAsset(const std::filesystem::path& fullPath);
     virtual ~TextureAsset();
-    virtual void save() override;
-    virtual void load() override;
+    virtual void save(Gfx::PGraphics graphics) override;
+    virtual void load(Gfx::PGraphics graphics) override;
     void setTexture(Gfx::PTexture _texture)
     {
         std::scoped_lock lck(lock);

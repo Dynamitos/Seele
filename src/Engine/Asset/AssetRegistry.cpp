@@ -21,9 +21,9 @@ AssetRegistry::~AssetRegistry()
 {
 }
 
-void AssetRegistry::init(const std::string& rootFolder)
+void AssetRegistry::init(const std::string& rootFolder, Gfx::PGraphics graphics)
 {
-    get().init(rootFolder, WindowManager::getGraphics());
+    get().initialize(rootFolder, graphics);
 }
 
 void AssetRegistry::importFile(const std::string &filePath)
@@ -133,14 +133,14 @@ AssetRegistry::AssetRegistry()
 {
 }
 
-void AssetRegistry::init(const std::filesystem::path &_rootFolder, Gfx::PGraphics graphics)
+void AssetRegistry::initialize(const std::filesystem::path &_rootFolder, Gfx::PGraphics _graphics)
 {
-    AssetRegistry &reg = get();
-    reg.rootFolder = _rootFolder;
-    reg.fontLoader = new FontLoader(graphics);
-    reg.meshLoader = new MeshLoader(graphics);
-    reg.textureLoader = new TextureLoader(graphics);
-    reg.materialLoader = new MaterialLoader(graphics);
+    this->graphics = _graphics;
+    this->rootFolder = _rootFolder;
+    this->fontLoader = new FontLoader(graphics);
+    this->meshLoader = new MeshLoader(graphics);
+    this->textureLoader = new TextureLoader(graphics);
+    this->materialLoader = new MaterialLoader(graphics);
 }
 
 std::string AssetRegistry::getRootFolder()

@@ -4,8 +4,9 @@
 
 using namespace Seele;
 
-MaterialInterface::MaterialInterface(Array<PShaderParameter> parameter, uint32 uniformDataSize, uint32 uniformBinding)
-    : parameters(parameter)
+MaterialInterface::MaterialInterface(Gfx::PGraphics graphics, Array<PShaderParameter> parameter, uint32 uniformDataSize, uint32 uniformBinding)
+    : graphics(graphics)
+    , parameters(parameter)
     , uniformDataSize(uniformDataSize)
     , uniformBinding(uniformBinding)
 {
@@ -18,7 +19,7 @@ MaterialInterface::MaterialInterface(Array<PShaderParameter> parameter, uint32 u
                 .data = nullptr,
             }
         };
-        uniformBuffer = WindowManager::getGraphics()->createUniformBuffer(uniformInitializer);
+        uniformBuffer = graphics->createUniformBuffer(uniformInitializer);
     }
 }
 

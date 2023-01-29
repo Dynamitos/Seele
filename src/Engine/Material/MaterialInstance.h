@@ -7,7 +7,7 @@ DECLARE_REF(Material)
 class MaterialInstance : public MaterialInterface
 {
 public:
-    MaterialInstance(PMaterial baseMaterial);
+    MaterialInstance(Gfx::PGraphics graphics, PMaterial baseMaterial);
     virtual ~MaterialInstance();
     virtual Gfx::PDescriptorSet createDescriptorSet();
     virtual Gfx::PDescriptorLayout getDescriptorLayout() const;

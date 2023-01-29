@@ -11,10 +11,8 @@ public:
     MaterialInstanceAsset(const std::string &directory, const std::string &name);
     MaterialInstanceAsset(const std::filesystem::path &fullPath);
     virtual ~MaterialInstanceAsset();
-    virtual void beginFrame();
-    virtual void endFrame();
-    virtual void save() override;
-    virtual void load() override;
+    virtual void save(Gfx::PGraphics graphics) override;
+    virtual void load(Gfx::PGraphics graphics) override;
 private:
     PMaterialInstance material;
 };

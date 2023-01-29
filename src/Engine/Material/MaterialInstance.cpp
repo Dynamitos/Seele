@@ -4,8 +4,8 @@
 
 using namespace Seele;
 
-MaterialInstance::MaterialInstance(PMaterial baseMaterial)
-    : MaterialInterface(baseMaterial->parameters, baseMaterial->uniformDataSize, baseMaterial->uniformBinding)
+MaterialInstance::MaterialInstance(Gfx::PGraphics graphics, PMaterial baseMaterial)
+    : MaterialInterface(graphics, baseMaterial->parameters, baseMaterial->uniformDataSize, baseMaterial->uniformBinding)
     , baseMaterial(baseMaterial)
 {
 }

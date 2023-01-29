@@ -3,6 +3,7 @@
 
 namespace Seele
 {
+DECLARE_NAME_REF(Gfx, Graphics)
 class Asset
 {
 public:
@@ -17,8 +18,8 @@ public:
     Asset(const std::filesystem::path& path);
     virtual ~Asset();
 
-    virtual void save() = 0;
-    virtual void load() = 0;
+    virtual void save(Gfx::PGraphics graphics) = 0;
+    virtual void load(Gfx::PGraphics graphics) = 0;
     
     // returns the name of the file, without extension
     std::string getFileName() const;

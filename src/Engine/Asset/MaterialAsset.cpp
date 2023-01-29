@@ -1,5 +1,6 @@
 #include "MaterialAsset.h"
 #include "Material/Material.h"
+#include "Graphics/Graphics.h"
 
 using namespace Seele;
 
@@ -22,20 +23,12 @@ MaterialAsset::~MaterialAsset()
 }
 
 
-void MaterialAsset::save()
+void MaterialAsset::save(Gfx::PGraphics graphics)
 {
 }
 
-void MaterialAsset::load()
+void MaterialAsset::load(Gfx::PGraphics graphics)
 {
     
 }
 
-
-void MaterialAsset::beginFrame() 
-{
-}
-
-void MaterialAsset::endFrame() 
-{
-}

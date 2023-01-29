@@ -1,7 +1,7 @@
 #pragma once
 #include <entt/entt.hpp>
 #include "MinimalEngine.h"
-#include "Graphics/GraphicsResources.h"
+#include "Graphics/Graphics.h"
 #include "Graphics/MeshBatch.h"
 #include "Physics/PhysicsSystem.h"
 
@@ -63,10 +63,15 @@ public:
     {
         return registry.get<Component>(entity);
     }
+    template<typename Component, typename Func>
+    void view(Func func) requires std::is_invocable_v<Func, Component&>
+    {
+        registry.view<Component>().each(func);
+    }
     Array<StaticMeshBatch> getStaticMeshes();
     LightEnv getLightBuffer() const;
     Gfx::PStructuredBuffer getSceneDataBuffer() const { return sceneDataBuffer;  }
-    
+    Gfx::PGraphics getGraphics() const { return graphics; }
     entt::registry registry;
 private:
     struct PrimitiveSceneData

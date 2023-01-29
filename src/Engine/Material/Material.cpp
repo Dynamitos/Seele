@@ -1,14 +1,16 @@
 #include "Material.h"
 #include "Window/WindowManager.h"
 #include "MaterialInstance.h"
+#include "Graphics/VertexShaderInput.h"
+#include "Graphics/Graphics.h"
 
 using namespace Seele;
 
 Gfx::ShaderMap Material::shaderMap;
 std::mutex Material::shaderMapLock;
 
-Material::Material(Array<PShaderParameter> parameter, Gfx::PDescriptorLayout layout, uint32 uniformDataSize, uint32 uniformBinding, std::string materialName)
-    : MaterialInterface(parameter, uniformDataSize, uniformBinding)
+Material::Material(Gfx::PGraphics graphics, Array<PShaderParameter> parameter, Gfx::PDescriptorLayout layout, uint32 uniformDataSize, uint32 uniformBinding, std::string materialName)
+    : MaterialInterface(graphics, parameter, uniformDataSize, uniformBinding)
     , layout(layout)
     , materialName(materialName)
 {
@@ -40,7 +42,7 @@ Gfx::PDescriptorSet Material::createDescriptorSet()
 
 PMaterialInstance Material::instantiate()
 {
-    return new MaterialInstance(this);
+    return new MaterialInstance(graphics, this);
 }
 
 const Gfx::ShaderCollection* Material::getShaders(Gfx::RenderPassType renderPass, VertexInputType* vertexInput) const

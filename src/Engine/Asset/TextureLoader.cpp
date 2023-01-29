@@ -15,7 +15,7 @@ TextureLoader::TextureLoader(Gfx::PGraphics graphics)
     : graphics(graphics)
 {
     placeholderAsset = new TextureAsset(std::filesystem::absolute("./textures/placeholder.ktx"));
-    placeholderAsset->load();
+    placeholderAsset->load(graphics);
     AssetRegistry::get().assetRoot.textures[""] = placeholderAsset;
 }
 
@@ -41,35 +41,80 @@ PTextureAsset TextureLoader::getPlaceholderTexture()
 
 void TextureLoader::import(std::filesystem::path path, PTextureAsset textureAsset)
 {
-    int x, y, n;
-    unsigned char* data = stbi_load(path.string().c_str(), &x, &y, &n, 4);
+    int totalWidth, totalHeight, n;
+    unsigned char* data = stbi_load(path.string().c_str(), &totalWidth, &totalHeight, &n, 4);
     ktxTexture2* kTexture;
     ktxTextureCreateInfo createInfo;
 
-    createInfo.vkFormat = VK_FORMAT_R8G8B8A8_SRGB;
-    createInfo.baseWidth = x;
-    createInfo.baseHeight = y;
-    createInfo.baseDepth = 1;
-    createInfo.numDimensions = 1 + (y > 1);
-    createInfo.numLevels = 1;
-    createInfo.numLayers = 1;
-    createInfo.numFaces = 1;
-    createInfo.isArray = false;
-    createInfo.generateMipmaps = true;
+    if (totalWidth / 4 == totalHeight / 3)
+    {
+        uint32 faceWidth = totalWidth / 4;
+        uint32 faceHeight = totalHeight / 3;
+        // Cube map
+        createInfo.vkFormat = VK_FORMAT_R8G8B8A8_SRGB;
+        createInfo.baseWidth = totalWidth / 4;
+        createInfo.baseHeight = totalHeight / 3;
+        createInfo.baseDepth = 1;
+        createInfo.numFaces = 6;
+        createInfo.numDimensions = 3;
+        createInfo.numLevels = 1;
+        createInfo.numLayers = 1;
+        createInfo.isArray = false;
+        createInfo.generateMipmaps = true;
 
-    ktxTexture2_Create(&createInfo,
-        KTX_TEXTURE_CREATE_ALLOC_STORAGE,
-        &kTexture);
+        ktxTexture2_Create(&createInfo,
+            KTX_TEXTURE_CREATE_ALLOC_STORAGE,
+            &kTexture);
 
-    ktxTexture_SetImageFromMemory(ktxTexture(kTexture),
-        0, 0, 0, data, x * y * 4 * sizeof(unsigned char));
+        auto loadCubeFace = [kTexture, faceWidth, totalWidth, data](int xPos, int yPos, int faceName)
+        {
+            std::vector<unsigned char> vec(faceWidth * faceWidth * 4);
+            for (int y = 0; y < faceWidth; ++y)
+            {
+                for (int x = 0; x < faceWidth; ++x)
+                {
+                    int imgX = x + (xPos * faceWidth);
+                    int imgY = y + (yPos * faceWidth);
+                    std::memcpy(&vec[(x + (faceWidth * y)) * 4], &data[(imgX + (totalWidth * imgY)) * 4], 4);
+                }
+            }
+            ktxTexture_SetImageFromMemory(ktxTexture(kTexture),
+                0, 0, faceName, vec.data(), vec.size());
+        };
+        loadCubeFace(1, 0, 0);
+        loadCubeFace(0, 1, 1);
+        loadCubeFace(1, 1, 2);
+        loadCubeFace(2, 1, 3);
+        loadCubeFace(3, 1, 4);
+        loadCubeFace(1, 2, 5);
+    }
+    else
+    {
+        createInfo.vkFormat = VK_FORMAT_R8G8B8A8_SRGB;
+        createInfo.baseWidth = totalWidth;
+        createInfo.baseHeight = totalHeight;
+        createInfo.baseDepth = 1;
+        createInfo.numDimensions = 1 + (totalHeight > 1);
+        createInfo.numLevels = 1;
+        createInfo.numLayers = 1;
+        createInfo.numFaces = 1;
+        createInfo.isArray = false;
+        createInfo.generateMipmaps = true;
+
+        ktxTexture2_Create(&createInfo,
+            KTX_TEXTURE_CREATE_ALLOC_STORAGE,
+            &kTexture);
+
+        ktxTexture_SetImageFromMemory(ktxTexture(kTexture),
+            0, 0, 0, data, totalWidth * totalHeight * 4 * sizeof(unsigned char));
+    }
 
     stbi_image_free(data);
 
     ktxTexture_WriteToNamedFile(ktxTexture(kTexture), textureAsset->getFullPath().c_str());
     ktxTexture_Destroy(ktxTexture(kTexture));
 
-    textureAsset->load();
+    textureAsset->load(graphics);
     textureAsset->setStatus(Asset::Status::Ready);
     ////co_return;
 }

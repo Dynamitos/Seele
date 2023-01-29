@@ -1,22 +1,17 @@
 #include "WindowManager.h"
-#include "Graphics/Vulkan/VulkanGraphics.h"
+#include "Graphics/Graphics.h"
 
 using namespace Seele;
 
-Gfx::PGraphics WindowManager::graphics;
-
 WindowManager::WindowManager()
 {
-    graphics = new Vulkan::Graphics();
-    GraphicsInitializer initializer;
-    graphics->init(initializer);
 }
 
 WindowManager::~WindowManager()
 {
 }
 
-PWindow WindowManager::addWindow(const WindowCreateInfo &createInfo)
+PWindow WindowManager::addWindow(Gfx::PGraphics graphics, const WindowCreateInfo &createInfo)
 {
     Gfx::PWindow handle = graphics->createWindow(createInfo);
     PWindow window = new Window(this, handle);

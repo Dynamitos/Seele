@@ -37,6 +37,8 @@ public:
     virtual void executeCommands(const Array<PComputeCommand>& commands) = 0;
 
     virtual PTexture2D createTexture2D(const TextureCreateInfo &createInfo) = 0;
+    virtual PTexture3D createTexture3D(const TextureCreateInfo &createInfo) = 0;
+    virtual PTextureCube createTextureCube(const TextureCreateInfo &createInfo) = 0;
     virtual PUniformBuffer createUniformBuffer(const UniformBufferCreateInfo &bulkData) = 0;
     virtual PStructuredBuffer createStructuredBuffer(const StructuredBufferCreateInfo &bulkData) = 0;
     virtual PVertexBuffer createVertexBuffer(const VertexBufferCreateInfo &bulkData) = 0;

@@ -5,32 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Engine Debug (Linux)",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${workspaceRoot}/bin/Debug/Engine",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceRoot}/bin/Debug",
-            "console": "integratedTerminal",
-            "visualizerFile": "${workspaceRoot}/Seele.natvis",
-            "environment": [],
-            "externalConsole": false,
-            "setupCommands": [
-                {
-                    "description": "Enable break on all exceptions",
-                    "text": "catch throw",
-                    "ignoreFailures": true
-                },
-                {
-                    "description": "Connect to valgrind",
-                    "text": "${command:valgrind-task-integration.valgrindGdbArg}",
-                    "ignoreFailures": true
-                }
-            ]
-        },
-        {
-            "name": "Editor Debug",
+            "name": "Editor",
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceRoot}/bin/Debug/Editor.exe",
@@ -48,62 +23,6 @@
                 "trace": true,
                 "traceResponse": true
             }
-        },
-        {
-            "name": "Editor Release",
-            "type": "cppvsdbg",
-            "request": "launch",
-            "program": "${workspaceRoot}/bin/Release/Editor.exe",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceRoot}/bin/Release",
-            "console": "integratedTerminal",
-            "environment": [],
-            "symbolSearchPath": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.25.28610\\lib\\x64",
-            "requireExactSource": false,
-            "visualizerFile": "${workspaceRoot}/Seele.natvis",
-            "logging": {
-                "moduleLoad": false,
-                "exceptions": true,
-                "trace": true,
-                "traceResponse": true
-            }
-        },
-        {
-            "name": "Test (Linux)",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${workspaceRoot}/bin/Debug/Seele_unit_tests",
-            "args": [],
-            "stopAtEntry": false,
-            "console": "integratedTerminal",
-            "cwd": "${workspaceRoot}/bin/Debug",
-            "environment": [],
-            "visualizerFile": "${workspaceRoot}/Seele.natvis",
-            "setupCommands": [
-                {
-                    "description": "Enable break on all exceptions",
-                    "text": "catch throw",
-                    "ignoreFailures": true
-                },
-                {
-                    "description": "Connect to valgrind",
-                    "text": "${command:valgrind-task-integration.valgrindGdbArg}",
-                    "ignoreFailures": true
-                }
-            ]
-        },
-        {
-            "name": "Test",
-            "type": "cppvsdbg",
-            "request": "launch",
-            "program": "${workspaceRoot}/bin/Debug/Seele_unit_tests.exe",
-            "args": ["--detect_memory_leaks"],
-            "stopAtEntry": false,
-            "console": "integratedTerminal",
-            "cwd": "${workspaceRoot}/bin/Debug",
-            "visualizerFile": "${workspaceRoot}/Seele.natvis",
-            "environment": [],
         },
     ]
 }
