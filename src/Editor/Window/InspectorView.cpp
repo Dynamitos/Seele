@@ -3,6 +3,7 @@
 #include "Actor/Actor.h"
 #include "Window/Window.h"
 #include "Asset/AssetRegistry.h"
+#include "Asset/FontLoader.h"
 #include "UI/System.h"
 
 using namespace Seele;
@@ -15,7 +16,9 @@ InspectorView::InspectorView(Gfx::PGraphics graphics, PWindow window, const View
     ))
     , uiSystem(new UI::System())
 {
-    AssetRegistry::importFile("./fonts/Calibri.ttf");
+    AssetRegistry::importFont(FontImportArgs{
+        .filePath = "./fonts/Calibri.ttf",
+    });
     renderGraph.updateViewport(viewport);
     uiSystem->updateViewport(viewport);
 }

@@ -8,58 +8,58 @@ SkyboxRenderPass::SkyboxRenderPass(Gfx::PGraphics graphics)
 {
     Array<Vector> vertices = {
         // Back
-        Vector(-1, -1, -1),
-        Vector(1, -1, -1),
-        Vector(-1,  1, -1),
+        Vector(-512, -512,  512),
+        Vector(-512,  512,  512),
+        Vector( 512, -512,  512),
 
-        Vector(1, -1, -1),
-        Vector(-1,  1, -1),
-        Vector(1,  1, -1),
+        Vector( 512, -512,  512),
+        Vector(-512,  512,  512),
+        Vector( 512,  512,  512),
 
         // Front
-        Vector(1, -1,  1),
-        Vector(-1,  1,  1),
-        Vector(-1, -1,  1),
+        Vector( 512, -512, -512),
+        Vector( 512,  512, -512),
+        Vector(-512, -512, -512),
 
-        Vector(-1,  1,  1),
-        Vector(1,  1,  1),
-        Vector(1, -1,  1),
+        Vector(-512, -512, -512),
+        Vector( 512,  512, -512),
+        Vector(-512,  512, -512),
 
         // Top
-        Vector(-1, -1, -1),
-        Vector(1, -1, -1),
-        Vector(1, -1,  1),
+        Vector(-512, -512, -512),
+        Vector(-512, -512,  512),
+        Vector( 512, -512, -512),
 
-        Vector(1, -1, -1),
-        Vector(1, -1,  1),
-        Vector(1, -1,  1),
+        Vector( 512, -512, -512),
+        Vector(-512, -512,  512),
+        Vector( 512, -512,  512),
 
         // Bottom
-        Vector(-1,  1, -1),
-        Vector(-1,  1,  1),
-        Vector(1,  1, -1),
+        Vector(-512,  512,  512),
+        Vector(-512,  512, -512),
+        Vector( 512,  512,  512),
 
-        Vector(1,  1, -1),
-        Vector(-1,  1,  1),
-        Vector(1,  1,  1),
+        Vector( 512,  512,  512),
+        Vector(-512,  512, -512),
+        Vector( 512,  512, -512),
 
         // Left
-        Vector(-1, -1, -1),
-        Vector(-1, -1,  1),
-        Vector(-1,  1, -1),
+        Vector(-512, -512, -512),
+        Vector(-512,  512, -512),
+        Vector(-512, -512,  512),
 
-        Vector(-1,  1, -1),
-        Vector(-1, -1,  1),
-        Vector(-1,  1,  1),
+        Vector(-512, -512,  512),
+        Vector(-512,  512, -512),
+        Vector(-512,  512,  512),
 
         // Right
-        Vector(1, -1,  1),
-        Vector(1,  1, -1),
-        Vector(1, -1, -1),
+        Vector( 512, -512,  512),
+        Vector( 512,  512,  512),
+        Vector( 512, -512, -512),
 
-        Vector(1, -1,  1),
-        Vector(1,  1,  1),
-        Vector(1,  1, -1),
+        Vector( 512, -512, -512),
+        Vector( 512,  512,  512),
+        Vector( 512,  512, -512),
     };
 
     VertexBufferCreateInfo vertexBufferInfo = {
@@ -93,7 +93,7 @@ void SkyboxRenderPass::beginFrame(const Component::Camera& cam)
     descriptorSet->updateBuffer(0, viewParamsBuffer);
     descriptorSet->updateTexture(1, passData.skybox.day);
     descriptorSet->updateTexture(2, passData.skybox.night);
-    descriptorSet->updateSampler(3, passData.skybox.sampler);
+    descriptorSet->updateSampler(3, skyboxSampler);
     descriptorSet->writeChanges();
 }
 
@@ -105,8 +105,8 @@ void SkyboxRenderPass::render()
     renderCommand->bindPipeline(pipeline);
     renderCommand->bindDescriptor(descriptorSet);
     renderCommand->bindVertexBuffer({ VertexInputStream(0, 0, cubeBuffer) });
-    renderCommand->pushConstants(pipelineLayout, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, sizeof(Vector), &passData.skybox.fogColor);
-    renderCommand->pushConstants(pipelineLayout, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, sizeof(Vector), sizeof(float), &passData.skybox.blendFactor);
+    renderCommand->pushConstants(pipelineLayout, Gfx::SE_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(Vector), &passData.skybox.fogColor);
+    renderCommand->pushConstants(pipelineLayout, Gfx::SE_SHADER_STAGE_FRAGMENT_BIT, sizeof(Vector), sizeof(float), &passData.skybox.blendFactor);
     renderCommand->draw(36, 1, 0, 0);
     graphics->executeCommands(Array{ renderCommand });
     graphics->endRenderPass();
@@ -138,17 +138,14 @@ void SkyboxRenderPass::publishOutputs()
     pipelineLayout = graphics->createPipelineLayout();
     pipelineLayout->addDescriptorLayout(0, descriptorLayout);
     pipelineLayout->addPushConstants(Gfx::SePushConstantRange{
-        .stageFlags = Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+        .stageFlags = Gfx::SE_SHADER_STAGE_FRAGMENT_BIT,
         .offset = 0,
-        .size = sizeof(Vector),
-        });
-    pipelineLayout->addPushConstants(Gfx::SePushConstantRange{
-        .stageFlags = Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-        .offset = sizeof(Vector),
-        .size = sizeof(float),
+        .size = sizeof(Vector4),
         });
 
     pipelineLayout->create();
+
+    skyboxSampler = graphics->createSamplerState({});
 }
 
 void SkyboxRenderPass::createRenderPass()

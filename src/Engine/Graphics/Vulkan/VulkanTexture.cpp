@@ -37,6 +37,7 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType,
     , sizeY(createInfo.height)
     , sizeZ(createInfo.depth)
     , arrayCount(createInfo.bArray ? createInfo.arrayLayers : 1)
+    , layerCount(1)
     , mipLevels(createInfo.mipLevels)
     , samples(createInfo.samples)
     , format(createInfo.format)
@@ -53,10 +54,8 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType,
         info.extent.width = sizeX;
         info.extent.height = sizeY;
         info.extent.depth = sizeZ;
-        info.arrayLayers = arrayCount;
         info.format = cast(format);
 
-        uint32 layerCount = 1;
         switch (viewType)
         {
         case VK_IMAGE_VIEW_TYPE_1D:
@@ -72,6 +71,7 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType,
             break;
         case VK_IMAGE_VIEW_TYPE_CUBE:
         case VK_IMAGE_VIEW_TYPE_CUBE_ARRAY:
+            info.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
             info.imageType = VK_IMAGE_TYPE_2D;
             layerCount = 6 * arrayCount;
             break;
@@ -127,7 +127,7 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType,
         region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         region.imageSubresource.mipLevel = 0;
         region.imageSubresource.baseArrayLayer = 0;
-        region.imageSubresource.layerCount = 1;
+        region.imageSubresource.layerCount = layerCount;
 
         region.imageOffset = {0, 0, 0};
         region.imageExtent = {sizeX, sizeY, sizeZ};
@@ -153,7 +153,7 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType,
     viewInfo.viewType = viewType;
     viewInfo.image = image;
     viewInfo.format = cast(format);
-    viewInfo.subresourceRange.layerCount = (viewType == VK_IMAGE_VIEW_TYPE_CUBE_ARRAY || viewType == VK_IMAGE_VIEW_TYPE_CUBE) ? 6 : 1;
+    viewInfo.subresourceRange.layerCount = layerCount;
     viewInfo.subresourceRange.levelCount = mipLevels;
 
     VK_CHECK(vkCreateImageView(graphics->getDevice(), &viewInfo, nullptr, &defaultView));
@@ -181,6 +181,16 @@ TextureHandle* TextureBase::cast(Gfx::PTexture texture)
         PTexture2D texture2D = texture.cast<Texture2D>();
         return texture2D->textureHandle;
     }
+    if(texture->getTexture3D() != nullptr)
+    {
+        PTexture3D texture3D = texture.cast<Texture3D>();
+        return texture3D->textureHandle;
+    }
+    if(texture->getTextureCube() != nullptr)
+    {
+        PTextureCube textureCube = texture.cast<TextureCube>();
+        return textureCube->textureHandle;
+    }
     return nullptr;
 }
 
@@ -193,6 +203,7 @@ void TextureHandle::changeLayout(Gfx::SeImageLayout newLayout)
             cast(newLayout));
     barrier.subresourceRange =
         init::ImageSubresourceRange(aspect);
+    barrier.subresourceRange.layerCount = layerCount;
     PCommandBufferManager cmdManager = graphics->getQueueCommands(currentOwner);
     vkCmdPipelineBarrier(cmdManager->getCommands()->getHandle(),
                             VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,

@@ -4,6 +4,7 @@
 #include "Graphics/Graphics.h"
 #include "Graphics/MeshBatch.h"
 #include "Physics/PhysicsSystem.h"
+#include "Component/Skybox.h"
 
 namespace Seele
 {
@@ -70,6 +71,7 @@ public:
     }
     Array<StaticMeshBatch> getStaticMeshes();
     LightEnv getLightBuffer() const;
+    Component::Skybox getSkybox();
     Gfx::PStructuredBuffer getSceneDataBuffer() const { return sceneDataBuffer;  }
     Gfx::PGraphics getGraphics() const { return graphics; }
     entt::registry registry;

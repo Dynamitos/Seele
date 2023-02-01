@@ -23,15 +23,15 @@ TextureLoader::~TextureLoader()
 {
 }
 
-void TextureLoader::importAsset(const std::filesystem::path& path, const std::string& importPath)
+void TextureLoader::importAsset(TextureImportArgs args)
 {
-    std::filesystem::path assetPath = path.filename();
+    std::filesystem::path assetPath = args.filePath.filename();
     assetPath.replace_extension("asset");
     PTextureAsset asset = new TextureAsset(assetPath.generic_string());
     asset->setStatus(Asset::Status::Loading);
     asset->setTexture(placeholderAsset->getTexture());
-    AssetRegistry::get().registerTexture(asset, importPath);
-    import(path, asset);
+    AssetRegistry::get().registerTexture(asset, args.importPath);
+    import(args, asset);
 }
 
 PTextureAsset TextureLoader::getPlaceholderTexture() 
@@ -39,14 +39,14 @@ PTextureAsset TextureLoader::getPlaceholderTexture()
     return placeholderAsset;
 }
 
-void TextureLoader::import(std::filesystem::path path, PTextureAsset textureAsset)
+void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset)
 {
     int totalWidth, totalHeight, n;
-    unsigned char* data = stbi_load(path.string().c_str(), &totalWidth, &totalHeight, &n, 4);
+    unsigned char* data = stbi_load(args.filePath.string().c_str(), &totalWidth, &totalHeight, &n, 4);
     ktxTexture2* kTexture;
     ktxTextureCreateInfo createInfo;
 
-    if (totalWidth / 4 == totalHeight / 3)
+    if (args.type == TextureImportType::TEXTURE_CUBEMAP)
     {
         uint32 faceWidth = totalWidth / 4;
         uint32 faceHeight = totalHeight / 3;
@@ -56,7 +56,7 @@ void TextureLoader::import(std::filesystem::path path, PTextureAsset textureAsse
         createInfo.baseHeight = totalHeight / 3;
         createInfo.baseDepth = 1;
         createInfo.numFaces = 6;
-        createInfo.numDimensions = 3;
+        createInfo.numDimensions = 2;
         createInfo.numLevels = 1;
         createInfo.numLayers = 1;
         createInfo.isArray = false;
@@ -66,7 +66,7 @@ void TextureLoader::import(std::filesystem::path path, PTextureAsset textureAsse
             KTX_TEXTURE_CREATE_ALLOC_STORAGE,
             &kTexture);
 
-        auto loadCubeFace = [kTexture, faceWidth, totalWidth, data](int xPos, int yPos, int faceName)
+        auto loadCubeFace = [&kTexture, &faceWidth, &totalWidth, &data](int xPos, int yPos, int faceName)
         {
             std::vector<unsigned char> vec(faceWidth * faceWidth * 4);
             for (int y = 0; y < faceWidth; ++y)
@@ -81,12 +81,12 @@ void TextureLoader::import(std::filesystem::path path, PTextureAsset textureAsse
             ktxTexture_SetImageFromMemory(ktxTexture(kTexture),
                 0, 0, faceName, vec.data(), vec.size());
         };
-        loadCubeFace(1, 0, 0);
-        loadCubeFace(0, 1, 1);
-        loadCubeFace(1, 1, 2);
-        loadCubeFace(2, 1, 3);
-        loadCubeFace(3, 1, 4);
-        loadCubeFace(1, 2, 5);
+        loadCubeFace(2, 1, 0); // +X
+        loadCubeFace(0, 1, 1); // -X
+        loadCubeFace(1, 0, 2); // +Y
+        loadCubeFace(1, 2, 3); // -Y
+        loadCubeFace(1, 1, 4); // -Z
+        loadCubeFace(3, 1, 5); // -Z
     }
     else
     {

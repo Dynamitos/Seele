@@ -18,22 +18,22 @@ FontLoader::~FontLoader()
 {
 }
 
-void FontLoader::importAsset(const std::filesystem::path& filePath, const std::string& importPath)
+void FontLoader::importAsset(FontImportArgs args)
 {
-    std::filesystem::path assetPath = filePath.filename();
+    std::filesystem::path assetPath = args.filePath.filename();
     assetPath.replace_extension("asset");
     PFontAsset asset = new FontAsset(assetPath.generic_string());
     std::error_code code;
-    std::filesystem::copy_file(filePath, asset->getFullPath(), code);
+    std::filesystem::copy_file(args.filePath, asset->getFullPath(), code);
     asset->setStatus(Asset::Status::Loading);
-    AssetRegistry::get().registerFont(asset, importPath);
-    import(filePath, asset);
+    AssetRegistry::get().registerFont(asset, args.importPath);
+    import(args, asset);
 }
 
 // in case of the space character there is no bitmap
 // so we create a single pixel empty texture
 uint8 transparentPixel = 0;
-void FontLoader::import(std::filesystem::path path, PFontAsset asset)
+void FontLoader::import(FontImportArgs args, PFontAsset asset)
 {
     FT_Library ft;
     FT_Error error = FT_Init_FreeType(&ft);

@@ -17,6 +17,8 @@
 using namespace Seele;
 using json = nlohmann::json;
 
+extern AssetRegistry* instance;
+
 AssetRegistry::~AssetRegistry()
 {
 }
@@ -26,35 +28,26 @@ void AssetRegistry::init(const std::string& rootFolder, Gfx::PGraphics graphics)
     get().initialize(rootFolder, graphics);
 }
 
-void AssetRegistry::importFile(const std::string &filePath)
+void AssetRegistry::importMesh(MeshImportArgs args)
 {
-    importFile(filePath, "");
+    get().meshLoader->importAsset(args);
 }
 
-void AssetRegistry::importFile(const std::string &filePath, const std::string& importPath)
+void AssetRegistry::importTexture(TextureImportArgs args)
 {
-    std::filesystem::path fsPath = std::filesystem::path(filePath);
-    std::string extension = fsPath.extension().string();
-    if (extension.compare(".fbx") == 0 
-     || extension.compare(".obj") == 0
-     || extension.compare(".blend") == 0)
-    {
-        get().importMesh(fsPath, importPath);
-    }
-    if (extension.compare(".png") == 0
-     || extension.compare(".jpg") == 0)
-    {
-        get().importTexture(fsPath, importPath);
-    }
-    if(extension.compare(".ttf") == 0)
-    {
-        get().importFont(fsPath, importPath);
-    }
-    if (extension.compare(".asset") == 0)
-    {
-        get().importMaterial(fsPath, importPath);
-    }
+    get().textureLoader->importAsset(args);
 }
+
+void AssetRegistry::importFont(FontImportArgs args)
+{
+    get().fontLoader->importAsset(args);
+}
+
+void AssetRegistry::importMaterial(MaterialImportArgs args)
+{
+    get().materialLoader->importAsset(args);
+}
+
 
 PMeshAsset AssetRegistry::findMesh(const std::string &filePath)
 {
@@ -125,8 +118,7 @@ std::ifstream AssetRegistry::createReadStream(const std::string& relativePath, s
 
 AssetRegistry &AssetRegistry::get()
 {
-    static AssetRegistry instance;
-    return instance;
+    return *instance;
 }
 
 AssetRegistry::AssetRegistry()
@@ -146,26 +138,6 @@ void AssetRegistry::initialize(const std::filesystem::path &_rootFolder, Gfx::PG
 std::string AssetRegistry::getRootFolder()
 {
     return get().rootFolder.generic_string();
-}
-
-void AssetRegistry::importMesh(const std::filesystem::path &filePath, const std::string& importPath)
-{
-    meshLoader->importAsset(filePath, importPath);
-}
-
-void AssetRegistry::importTexture(const std::filesystem::path &filePath, const std::string& importPath)
-{
-    textureLoader->importAsset(filePath, importPath);
-}
-
-void AssetRegistry::importFont(const std::filesystem::path& filePath, const std::string& importPath)
-{
-    fontLoader->importAsset(filePath, importPath);
-}
-
-void AssetRegistry::importMaterial(const std::filesystem::path &filePath, const std::string& importPath)
-{
-    materialLoader->importAsset(filePath, importPath);
 }
 
 void AssetRegistry::registerMesh(PMeshAsset mesh, const std::string& importPath) 

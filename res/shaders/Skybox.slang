@@ -15,38 +15,40 @@ struct VertexShaderOutput
 ConstantBuffer<float4x4> transformMatrix;
 
 [shader("vertex")]
-VertexStageOutput vertexMain(
+VertexShaderOutput vertexMain(
     VertexShaderInput input)
 {
-    VertexStageOutput output;
-    vec4 worldPos = 512 * vec4(input.position, 1.0f);
-    clip(dot(worldPos, clipPlane));
-    output.clipPos = gViewParams.projectionMatrix * gViewParams.viewMatrix * worldPos;
-    output.texCoords = position;
+    VertexShaderOutput output;
+    float3x3 cameraRotation = float3x3(gViewParams.viewMatrix);
+    float4 worldPos = float4(mul(cameraRotation, input.position), 1.0f);
+    //clip(dot(worldPos, clipPlane));
+    output.clipPos = mul(gViewParams.projectionMatrix, worldPos);
+    output.texCoords = normalize(input.position);
     return output;
 }
 
 [[vk::push_constant]]
-ConstantBuffer<float3> fogColor;
+ConstantBuffer<float4> fogBlend;
 
-[[vk::push_constant]]
-ConstantBuffer<float> blendFactor;
-
-Texture3D cubeMap;
-Texture3D cubeMap2;
+layout(set = 0, binding = 1)
+TextureCube cubeMap;
+layout(set = 0, binding = 2)
+TextureCube cubeMap2;
+layout(set = 0, binding = 3)
 SamplerState sampler;
 
-const float lowerLimit = 0.0;
-const float upperLimit = 0.1;
+static const float lowerLimit = 0.0;
+static const float upperLimit = 0.1;
 
-float4 fragMain(
-    VertexShaderOutput output)
+[shader("fragment")]
+float4 fragmentMain(
+    VertexShaderOutput output) : SV_Target
 {
     float4 texture1 = cubeMap.Sample(sampler, output.texCoords);
     float4 texture2 = cubeMap2.Sample(sampler, output.texCoords);
-    float4 finalColor = mix(texture1, texture2, blendFactor);
+    float4 finalColor = lerp(texture1, texture2, fogBlend.w);
 
-    float factor = (input.texCoords.y - lowerLimit) / (upperLimit - lowerLimit);
+    float factor = (output.texCoords.y - lowerLimit) / (upperLimit - lowerLimit);
     factor = clamp(factor, 0.0, 1.0);
-    return = mix(vec4(fogColor, 1), finalColor, factor);
+    return lerp(float4(fogBlend.xyz, 1), finalColor, factor);
 }

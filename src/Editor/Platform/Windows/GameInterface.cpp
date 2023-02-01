@@ -5,7 +5,6 @@ using namespace Seele;
 GameInterface::GameInterface(std::string dllPath)
     : dllPath(dllPath)
 {
-    reloadGame();
 }
 
 GameInterface::~GameInterface()
@@ -13,7 +12,12 @@ GameInterface::~GameInterface()
     
 }
 
-Game* GameInterface::reloadGame()
+Game* GameInterface::getGame()
+{
+    return game;
+}
+
+void GameInterface::reload(AssetRegistry* registry)
 {
     if(lib != NULL)
     {
@@ -23,6 +27,5 @@ Game* GameInterface::reloadGame()
     lib = LoadLibraryA(dllPath.c_str());
     createInstance = (decltype(createInstance))GetProcAddress(lib, "createInstance");
     destroyInstance = (decltype(destroyInstance))GetProcAddress(lib, "destroyInstance");
-    game = createInstance();
-    return game;
+    game = createInstance(registry);
 }

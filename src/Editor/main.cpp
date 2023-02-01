@@ -30,12 +30,12 @@ int main()
     sceneViewInfo.dimensions.offset.y = 0;
     PGameView sceneView = new GameView(graphics, window, sceneViewInfo);
     
-    ViewportCreateInfo inspectorViewInfo;
-    inspectorViewInfo.dimensions.size.x = 640;
-    inspectorViewInfo.dimensions.size.y = 720;
-    inspectorViewInfo.dimensions.offset.x = 640;
-    inspectorViewInfo.dimensions.offset.y = 0;
-    PInspectorView inspectorView = new InspectorView(graphics, window, inspectorViewInfo);
+    //ViewportCreateInfo inspectorViewInfo;
+    //inspectorViewInfo.dimensions.size.x = 640;
+    //inspectorViewInfo.dimensions.size.y = 720;
+    //inspectorViewInfo.dimensions.offset.x = 640;
+    //inspectorViewInfo.dimensions.offset.y = 0;
+    //PInspectorView inspectorView = new InspectorView(graphics, window, inspectorViewInfo);
     //window->addView(inspectorView);
     sceneView->setFocused();
 

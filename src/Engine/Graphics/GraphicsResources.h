@@ -547,6 +547,8 @@ public:
     virtual uint32 getMipLevels() const = 0;
     virtual void changeLayout(SeImageLayout newLayout) = 0;
     virtual class Texture2D* getTexture2D() { return nullptr; }
+    virtual class Texture3D* getTexture3D() { return nullptr; }
+    virtual class TextureCube* getTextureCube() { return nullptr; }
     virtual void* getNativeHandle() { return nullptr; }
 protected:
     // Inherited via QueueOwnedResource

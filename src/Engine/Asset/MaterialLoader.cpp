@@ -15,26 +15,29 @@ using json = nlohmann::json;
 MaterialLoader::MaterialLoader(Gfx::PGraphics graphics)
     : graphics(graphics)
 {
-    importAsset(std::filesystem::absolute("./shaders/Placeholder.asset"), "");
+    importAsset(MaterialImportArgs{
+        .filePath = std::filesystem::absolute("./shaders/Placeholder.asset"),
+        .importPath = "",
+        });
 }
 
 MaterialLoader::~MaterialLoader()
 {
 }
 
-void MaterialLoader::importAsset(const std::filesystem::path& name, const std::string& importPath)
+void MaterialLoader::importAsset(MaterialImportArgs args)
 {
-    std::filesystem::path assetPath = name.filename();
+    std::filesystem::path assetPath = args.filePath.filename();
     assetPath.replace_extension("asset");
     PMaterialAsset asset = new MaterialAsset(assetPath.generic_string());
     asset->setStatus(Asset::Status::Loading);
-    AssetRegistry::get().registerMaterial(asset, importPath);
-    import(name, asset);
+    AssetRegistry::get().registerMaterial(asset, args.importPath);
+    import(args, asset);
 }
 
-void MaterialLoader::import(std::filesystem::path name, PMaterialAsset asset)
+void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
 {
-    auto stream = std::ifstream(name.c_str());
+    auto stream = std::ifstream(args.filePath.c_str());
     json j;
     stream >> j;
     std::string materialName = j["name"].get<std::string>() + "Material";

@@ -7,15 +7,20 @@ namespace Seele
 {
 DECLARE_REF(MaterialAsset)
 DECLARE_NAME_REF(Gfx, Graphics)
+struct MaterialImportArgs
+{
+    std::filesystem::path filePath;
+    std::string importPath;
+};
 class MaterialLoader
 {
 public:
     MaterialLoader(Gfx::PGraphics graphic);
     ~MaterialLoader();
-    void importAsset(const std::filesystem::path& name, const std::string& importPath);
+    void importAsset(MaterialImportArgs args);
     PMaterialAsset getPlaceHolderMaterial();
 private:
-    void import(std::filesystem::path filePath, PMaterialAsset asset);
+    void import(MaterialImportArgs args, PMaterialAsset asset);
     Gfx::PGraphics graphics;
     PMaterialAsset placeholderMaterial;
 };

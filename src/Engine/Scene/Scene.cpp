@@ -3,6 +3,8 @@
 #include "Graphics/Mesh.h"
 #include "Component/StaticMesh.h"
 #include "Component/Transform.h"
+#include "Asset/AssetRegistry.h"
+#include "Asset/TextureAsset.h"
 
 using namespace Seele;
 
@@ -88,4 +90,14 @@ LightEnv Scene::getLightBuffer() const
     result.numDirectionalLights = 1;
     result.numPointLights = 0;
     return result;
+}
+
+Component::Skybox Scene::getSkybox()
+{
+    return Seele::Component::Skybox {
+        .day = AssetRegistry::findTexture("FS000_Day_01")->getTexture().cast<Gfx::TextureCube>(),
+        .night = AssetRegistry::findTexture("FS000_Night_01")->getTexture().cast<Gfx::TextureCube>(),
+        .fogColor = Vector(0.2, 0.1, 0.6),
+        .blendFactor = 0,
+    };
 }

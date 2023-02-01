@@ -46,7 +46,7 @@ private:
 	dp::thread_pool<> threadPool;
 	float updateTime = 0;
 #ifdef EDITOR
-	bool showDebug = true;
+	bool showDebug = false;
 #endif
 
 	virtual void keyCallback(Seele::KeyCode code, Seele::InputAction action, Seele::KeyModifier modifier) override;

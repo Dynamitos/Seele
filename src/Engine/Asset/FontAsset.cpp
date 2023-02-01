@@ -24,7 +24,6 @@ FontAsset::~FontAsset()
 
 void FontAsset::save(Gfx::PGraphics graphics)
 {
-    assert(false && "Cannot save font files");
 }
 
 

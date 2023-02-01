@@ -15,6 +15,7 @@ DECLARE_REF(FontAsset)
 DECLARE_REF(MeshAsset)
 DECLARE_REF(MaterialAsset)
 DECLARE_NAME_REF(Gfx, Graphics)
+
 class AssetRegistry
 {
 public:
@@ -23,9 +24,6 @@ public:
 
     static std::string getRootFolder();
 
-    static void importFile(const std::string& filePath);
-    static void importFile(const std::string& filePath, const std::string& importPath);
-    
     static PMeshAsset findMesh(const std::string& filePath);
     static PTextureAsset findTexture(const std::string& filePath);
     static PFontAsset findFont(const std::string& name);
@@ -33,6 +31,13 @@ public:
 
     static std::ofstream createWriteStream(const std::string& relativePath, std::ios_base::openmode openmode = std::ios::out);
     static std::ifstream createReadStream(const std::string& relativePath, std::ios_base::openmode openmode = std::ios::in);
+
+    static void importMesh(struct MeshImportArgs args);
+    static void importTexture(struct TextureImportArgs args);
+    static void importFont(struct FontImportArgs args);
+    static void importMaterial(struct MaterialImportArgs args);
+    static void set(AssetRegistry registry);
+    AssetRegistry();
 private:
     struct AssetFolder
     {
@@ -46,13 +51,8 @@ private:
 
     static AssetRegistry& get();
 
-    AssetRegistry();
     void initialize(const std::filesystem::path& rootFolder, Gfx::PGraphics graphics);
 
-    void importMesh(const std::filesystem::path& filePath, const std::string& importPath);
-    void importTexture(const std::filesystem::path& filePath, const std::string& importPath);
-    void importFont(const std::filesystem::path& filePath, const std::string& importPath);
-    void importMaterial(const std::filesystem::path& filePath, const std::string& importPath);
 
     void registerMesh(PMeshAsset mesh, const std::string& importPath);
     void registerTexture(PTextureAsset texture, const std::string& importPath);

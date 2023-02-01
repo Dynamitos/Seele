@@ -72,7 +72,7 @@ static inline Vector toRotator(const Quaternion &other)
 	const float yawX = (1.f - 2.f * (square(other.y) + square(other.z)));
 
 	const float SINGULARITY_THRESHOLD = 0.4999995f;
-	const float RAD_TO_DEG = (180.f) / glm::pi<float>();
+	constexpr const float RAD_TO_DEG = (180.f) / glm::pi<float>();
 	Vector rotatorFromQuat;
 
 	if (singularityTest < -SINGULARITY_THRESHOLD)

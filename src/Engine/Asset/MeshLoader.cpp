@@ -15,6 +15,8 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include <assimp/material.h>
+#include <Asset/MaterialLoader.h>
+#include <Asset/TextureLoader.h>
 
 using namespace Seele;
 
@@ -27,14 +29,14 @@ MeshLoader::~MeshLoader()
 {
 }
 
-void MeshLoader::importAsset(const std::filesystem::path &path, const std::string& importPath)
+void MeshLoader::importAsset(MeshImportArgs args)
 {
-    std::filesystem::path assetPath = path.filename();
+    std::filesystem::path assetPath = args.filePath.filename();
     assetPath.replace_extension("asset");
     PMeshAsset asset = new MeshAsset(assetPath.generic_string());
     asset->setStatus(Asset::Status::Loading);
-    AssetRegistry::get().registerMesh(asset, importPath);
-    import(path, asset);
+    AssetRegistry::get().registerMesh(asset, args.importPath);
+    import(args, asset);
 }
 
 void MeshLoader::loadMaterials(const aiScene* scene, Array<PMaterial>& globalMaterials)
@@ -93,7 +95,10 @@ void MeshLoader::loadMaterials(const aiScene* scene, Array<PMaterial>& globalMat
         outMatFile.close();
 
         std::cout << "writing json to " << outMatFilename << std::endl;
-        AssetRegistry::importFile(AssetRegistry::getRootFolder() + "/" + outMatFilename);
+        AssetRegistry::importMaterial(MaterialImportArgs{
+            .filePath = AssetRegistry::getRootFolder() + "/" + outMatFilename,
+            .importPath = "",
+            });
         PMaterialAsset asset = AssetRegistry::findMaterial(matCode["name"].get<std::string>());
         globalMaterials[i] = asset->getMaterial();
     }
@@ -262,15 +267,18 @@ void MeshLoader::loadTextures(const aiScene* scene, const std::filesystem::path&
             delete[] texData;
         }
         std::cout << "Loading model texture " << texPngPath.string() << std::endl;
-        AssetRegistry::importFile(texPngPath.string());
+        AssetRegistry::importTexture(TextureImportArgs {
+            .filePath = texPath,
+            .importPath = ""
+            });
     }
 }
-void MeshLoader::import(std::filesystem::path path, PMeshAsset meshAsset)
+void MeshLoader::import(MeshImportArgs args, PMeshAsset meshAsset)
 {
-    std::cout << "Starting to import "<<path << std::endl;
+    std::cout << "Starting to import "<<args.filePath<< std::endl;
     meshAsset->setStatus(Asset::Status::Loading);
     Assimp::Importer importer;
-    importer.ReadFile(path.string().c_str(), (uint32)(
+    importer.ReadFile(args.filePath.string().c_str(), (uint32)(
         aiProcess_FlipUVs |
         aiProcess_Triangulate |
         aiProcess_SortByPType |
@@ -281,7 +289,7 @@ void MeshLoader::import(std::filesystem::path path, PMeshAsset meshAsset)
     const aiScene *scene = importer.ApplyPostProcessing(aiProcess_CalcTangentSpace);
     
     Array<PMaterial> globalMaterials(scene->mNumMaterials);
-    loadTextures(scene, path.parent_path());
+    loadTextures(scene, args.filePath.parent_path());
     loadMaterials(scene, globalMaterials);
     
     Array<PMesh> globalMeshes(scene->mNumMeshes);
@@ -300,5 +308,5 @@ void MeshLoader::import(std::filesystem::path path, PMeshAsset meshAsset)
     }
     meshAsset->physicsMesh = std::move(collider);
     meshAsset->setStatus(Asset::Status::Ready);
-    std::cout << "Finished loading " << path << std::endl;
+    std::cout << "Finished loading " << args.filePath<< std::endl;
 }

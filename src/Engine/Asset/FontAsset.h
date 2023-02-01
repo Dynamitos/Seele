@@ -21,9 +21,9 @@ public:
         IVector2 bearing;
         uint32 advance;
     };
-    const std::map<uint32, Glyph> getGlyphData() const { return glyphs; }
+    const Map<uint32, Glyph> getGlyphData() const { return glyphs; }
 private:
-    std::map<uint32, Glyph> glyphs;
+    Map<uint32, Glyph> glyphs;
     friend class FontLoader;
 };
 DECLARE_REF(FontAsset)

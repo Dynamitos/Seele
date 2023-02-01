@@ -9,7 +9,6 @@ struct Skybox
 {
     Gfx::PTextureCube day;
     Gfx::PTextureCube night;
-    Gfx::PSamplerState sampler;
     Vector fogColor;
     float blendFactor;
 };

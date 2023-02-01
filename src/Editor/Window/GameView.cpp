@@ -3,8 +3,11 @@
 #include "Window/Window.h"
 #include "Component/KeyboardInput.h"
 #include "Actor/CameraActor.h"
+#include "Asset/AssetRegistry.h"
 
 using namespace Seele;
+
+AssetRegistry* instance = new AssetRegistry();
 
 GameView::GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo &createInfo)
     : View(graphics, window, createInfo, "Game")
@@ -20,8 +23,10 @@ GameView::GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreate
     ))
 {
     scene = new Scene(graphics);
+    gameInterface.reload(instance);
+    gameInterface.getGame()->importAssets();
     systemGraph = new SystemGraph();
-    gameInterface.reloadGame()->setupScene(scene, systemGraph);
+    gameInterface.getGame()->setupScene(scene, systemGraph);
     renderGraph.updateViewport(viewport);
 }
 
@@ -52,6 +57,7 @@ void GameView::commitUpdate()
     lightCullingData.lightEnv = scene->getLightBuffer();
     basePassData.staticDrawList = scene->getStaticMeshes();
     basePassData.sceneDataBuffer = scene->getSceneDataBuffer();
+    skyboxData.skybox = scene->getSkybox();
 #ifdef EDITOR
     if(showDebug)
     {

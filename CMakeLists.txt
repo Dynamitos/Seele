@@ -88,7 +88,7 @@ endif()
 add_executable(Editor "")
 target_link_libraries(Editor PRIVATE Engine)
 target_include_directories(Editor PRIVATE src/Editor)
-target_compile_definitions(Editor PRIVATE EDITOR)
+#target_compile_definitions(Editor PRIVATE EDITOR)
 
 target_precompile_headers(Engine 
   PUBLIC    

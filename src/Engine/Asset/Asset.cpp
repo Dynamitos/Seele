@@ -42,12 +42,12 @@ Asset::~Asset()
 
 std::ifstream Asset::getReadStream() const
 {
-    return std::ifstream(fullPath);
+    return std::ifstream(fullPath, std::ios::binary);
 }
 
 std::ofstream Asset::getWriteStream() const
 {
-    return std::ofstream(fullPath);
+    return std::ofstream(fullPath, std::ios::binary);
 }
 
 std::string Asset::getFileName() const

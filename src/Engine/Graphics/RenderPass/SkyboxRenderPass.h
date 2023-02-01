@@ -29,6 +29,7 @@ private:
     Gfx::PDescriptorSet descriptorSet;
     Gfx::PPipelineLayout pipelineLayout;
     Gfx::PGraphicsPipeline pipeline;
+    Gfx::PSamplerState skyboxSampler;
 };
 DEFINE_REF(SkyboxRenderPass)
 } // namespace Seele

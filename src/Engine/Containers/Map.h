@@ -364,7 +364,6 @@ public:
     {
         return _size;
     }
-
 private:
     void verifyTree()
     {
@@ -441,7 +440,7 @@ private:
         return Iterator(endIndex, &nodeContainer, std::move(endTraversal));
     
     }
-    Array<Node, NodeAlloc> nodeContainer;
+    Array<Node, NodeAlloc> nodeContainer = Array<Node, NodeAlloc>();
     size_t root;
     Iterator beginIt;
     Iterator endIt;
