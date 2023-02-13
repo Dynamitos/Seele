@@ -170,7 +170,7 @@ public:
     virtual ~VertexBuffer();
 
     virtual void updateRegion(BulkResourceData update) override;
-
+    virtual void download(Array<uint8>& buffer) override;
 protected:
     // Inherited via Vulkan::Buffer
     virtual VkAccessFlags getSourceAccessMask();
@@ -189,6 +189,7 @@ public:
     IndexBuffer(PGraphics graphics, const IndexBufferCreateInfo &resourceData);
     virtual ~IndexBuffer();
 
+    virtual void download(Array<uint8>& buffer) override;
 protected:
     // Inherited via Vulkan::Buffer
     virtual VkAccessFlags getSourceAccessMask();
@@ -248,6 +249,7 @@ public:
     void executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage,
         VkAccessFlags dstAccess, VkPipelineStageFlags dstStage);
     void changeLayout(Gfx::SeImageLayout newLayout);
+    void download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<uint8>& buffer);
 
 private:
     //Updates via reference
@@ -314,6 +316,7 @@ public:
         return textureHandle->getMipLevels();
     }
     virtual void changeLayout(Gfx::SeImageLayout newLayout) override;
+    virtual void download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<uint8>& buffer) override;
     virtual void* getNativeHandle() override
     {
         return textureHandle;
@@ -369,6 +372,7 @@ public:
         return textureHandle->getMipLevels();
     }
     virtual void changeLayout(Gfx::SeImageLayout newLayout) override;
+    virtual void download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<uint8>& buffer) override;
     virtual void* getNativeHandle() override
     {
         return textureHandle;
@@ -424,6 +428,7 @@ public:
         return textureHandle->getMipLevels();
     }
     virtual void changeLayout(Gfx::SeImageLayout newLayout) override;
+    virtual void download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<uint8>& buffer) override;
     virtual void* getNativeHandle() override
     {
         return textureHandle;

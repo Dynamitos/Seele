@@ -6,6 +6,54 @@
 
 using namespace Seele;
 
+void Seele::Serialization::save(ArchiveBuffer& buffer, VertexStreamComponent& comp)
+{
+    if (comp.vertexBuffer == nullptr)
+    {
+        Serialization::save(buffer, (uint32)0);
+    }
+    else
+    {
+        Serialization::save(buffer, comp.vertexBuffer->getNumVertices());
+        Serialization::save(buffer, comp.vertexBuffer->getVertexSize());
+        Array<uint8> rawBuffer;
+        comp.vertexBuffer->download(rawBuffer);
+        Serialization::save(buffer, rawBuffer);
+        Serialization::save(buffer, comp.streamOffset);
+        Serialization::save(buffer, comp.offset);
+        Serialization::save(buffer, comp.stride);
+        Serialization::save(buffer, comp.type);
+    }
+}
+void Seele::Serialization::load(ArchiveBuffer& buffer, VertexStreamComponent& comp)
+{
+    uint32 numVertices;
+    Serialization::load(buffer, numVertices);
+    if (numVertices == 0)
+    {
+        comp.vertexBuffer = nullptr;
+    }
+    else
+    {
+        uint32 vertexSize;
+        Serialization::load(buffer, vertexSize);
+        Array<uint8> rawBuffer;
+        Serialization::load(buffer, rawBuffer);
+        VertexBufferCreateInfo createInfo = {
+            .resourceData = {
+                .size = rawBuffer.size(),
+                .data = rawBuffer.data(),
+            },
+            .vertexSize = vertexSize,
+            .numVertices = numVertices,
+        };
+        comp.vertexBuffer = buffer.getGraphics()->createVertexBuffer(createInfo);
+        Serialization::load(buffer, comp.streamOffset);
+        Serialization::load(buffer, comp.offset);
+        Serialization::load(buffer, comp.stride);
+        Serialization::load(buffer, comp.type);
+    }
+}
 
 List<VertexInputType*>& VertexInputType::getTypeList()
 {
@@ -90,7 +138,6 @@ Gfx::VertexElement VertexShaderInput::accessStreamComponent(const VertexStreamCo
 {
     VertexStream vertexStream;
     vertexStream.vertexBuffer = component.vertexBuffer;
-    assert(component.stride < UINT8_MAX && component.offset < UINT8_MAX && component.offset < UINT8_MAX);
     vertexStream.stride = static_cast<uint8>(component.stride);
     vertexStream.offset = static_cast<uint8>(component.offset);
     
@@ -101,7 +148,6 @@ Gfx::VertexElement VertexShaderInput::accessPositionStreamComponent(const Vertex
 {
     VertexStream vertexStream;
     vertexStream.vertexBuffer = component.vertexBuffer;
-    assert(component.stride < UINT8_MAX && component.offset < UINT8_MAX && component.offset < UINT8_MAX);
     vertexStream.stride = static_cast<uint8>(component.stride);
     vertexStream.offset = static_cast<uint8>(component.offset);
     

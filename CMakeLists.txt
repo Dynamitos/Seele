@@ -80,6 +80,7 @@ target_link_libraries(Engine PUBLIC dp::thread-pool)
 target_link_libraries(Engine PUBLIC crcpp)
 target_link_libraries(Engine PUBLIC odeint)
 target_link_libraries(Engine PUBLIC zlib)
+target_link_libraries(Engine PUBLIC zlibstatic)
 if(UNIX)
 target_link_libraries(Engine PUBLIC Threads::Threads)
 target_link_libraries(Engine PUBLIC dl)
@@ -89,6 +90,10 @@ add_executable(Editor "")
 target_link_libraries(Editor PRIVATE Engine)
 target_include_directories(Editor PRIVATE src/Editor)
 #target_compile_definitions(Editor PRIVATE EDITOR)
+
+add_executable(AssetViewer "")
+target_link_libraries(AssetViewer PRIVATE Engine)
+target_include_directories(AssetViewer PRIVATE src/AssetViewer)
 
 target_precompile_headers(Engine 
   PUBLIC    
@@ -122,16 +127,15 @@ endif()
 
 add_subdirectory(src/)
 
-#add_executable(Seele_unit_tests "")
-#add_subdirectory(test/)
-
 add_custom_target(SeeleEngine ALL
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/res $<TARGET_FILE_DIR:Engine>
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:Editor> $<TARGET_FILE_DIR:Engine> 
     COMMAND_EXPAND_LISTS
 	DEPENDS Editor slang-build)
 
 install(
     TARGETS
+        AssetViewer
         Editor
         Engine
         EnTT
@@ -145,9 +149,6 @@ install(
         nlohmann_json
         ThreadPool
         zlib
-        slang
-        slang-glslang
-        slang-llvm
         zlibstatic
         IrrXML
         odeint

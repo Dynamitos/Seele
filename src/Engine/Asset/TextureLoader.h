@@ -1,6 +1,7 @@
 #pragma once
 #include "MinimalEngine.h"
 #include "Containers/List.h"
+#include "Graphics/GraphicsEnums.h"
 #include <filesystem>
 
 namespace Seele
@@ -18,6 +19,7 @@ struct TextureImportArgs
     std::filesystem::path filePath;
     std::string importPath;
     TextureImportType type = TextureImportType::TEXTURE_2D;
+    Gfx::SeImageUsageFlagBits usage = Gfx::SE_IMAGE_USAGE_SAMPLED_BIT;
 };
 class TextureLoader
 {

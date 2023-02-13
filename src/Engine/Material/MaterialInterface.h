@@ -9,11 +9,15 @@ DECLARE_NAME_REF(Gfx, UniformBuffer)
 class MaterialInterface
 {
 public:
+    MaterialInterface() {}
     MaterialInterface(Gfx::PGraphics graphics, Array<PShaderParameter> parameter, uint32 uniformDataSize, uint32 uniformBinding);
     virtual ~MaterialInterface();
     PShaderParameter getParameter(const std::string& name);
     virtual Gfx::PDescriptorSet createDescriptorSet() = 0;
     virtual Gfx::PDescriptorLayout getDescriptorLayout() const = 0;
+
+    virtual void save(ArchiveBuffer& buffer) const;
+    virtual void load(ArchiveBuffer& buffer);
 
     // The name of the generated material shader, opposed to the name of the .asset file
     virtual const std::string& getName() = 0;

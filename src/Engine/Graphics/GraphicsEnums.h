@@ -1,5 +1,6 @@
 #pragma once
 #include "MinimalEngine.h"
+#include "Math/Vector.h"
 
 namespace Seele
 {
@@ -1002,6 +1003,16 @@ typedef enum SeFormat
     SE_FORMAT_RANGE_SIZE = (SE_FORMAT_ASTC_12x12_SRGB_BLOCK - SE_FORMAT_UNDEFINED + 1),
     SE_FORMAT_MAX_ENUM = 0x7FFFFFFF
 } SeFormat;
+
+struct FormatCompatibilityInfo
+{
+    // std::string class
+    uint32 blockSize;
+    UVector blockExtent;
+    uint32 texelsPerBlock;
+};
+
+FormatCompatibilityInfo getFormatInfo(SeFormat format);
 
 typedef enum SeImageType
 {

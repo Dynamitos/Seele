@@ -155,7 +155,7 @@ private:
 		Array<PAllocation> allocations;
 	};
 	Array<HeapInfo> heaps;
-	VkResult findMemoryType(uint32 typeBits, VkMemoryPropertyFlags properties, uint8 *typeIndex);
+	uint32 findMemoryType(uint32 typeBits, VkMemoryPropertyFlags properties);
 	std::mutex lock;
 	PGraphics graphics;
 	VkPhysicalDeviceMemoryProperties memProperties;

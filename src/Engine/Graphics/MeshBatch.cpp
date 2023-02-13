@@ -2,6 +2,7 @@
 #include "GraphicsResources.h"
 #include "VertexShaderInput.h"
 #include "Material/MaterialInterface.h"
+#include "Graphics/Graphics.h"
 
 using namespace Seele;
 

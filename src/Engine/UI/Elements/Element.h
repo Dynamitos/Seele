@@ -1,5 +1,7 @@
 #pragma once
 #include "MinimalEngine.h"
+#include "Containers/Array.h"
+#include "Math/Math.h"
 
 namespace Seele
 {

@@ -182,7 +182,7 @@ void Allocation::markFree(SubAllocation *allocation)
         
         if (allocHandle == nullptr)
         {
-            allocHandle = new SubAllocation(this, allocation->alignedOffset, allocation->size, allocation->alignedOffset, allocation->allocatedSize);
+            allocHandle = new SubAllocation(this, allocation->allocatedOffset, allocation->size, allocation->alignedOffset, allocation->allocatedSize);
             freeRanges[allocation->allocatedOffset] = allocHandle;
         }
         activeAllocations.erase(allocation->allocatedOffset);
@@ -226,8 +226,7 @@ PSubAllocation Allocator::allocate(const VkMemoryRequirements2 &memRequirements2
 {
     std::scoped_lock lck(lock);
     const VkMemoryRequirements &requirements = memRequirements2.memoryRequirements;
-    uint8 memoryTypeIndex;
-    VK_CHECK(findMemoryType(requirements.memoryTypeBits, properties, &memoryTypeIndex));
+    uint32 memoryTypeIndex = findMemoryType(requirements.memoryTypeBits, properties);
     uint32 heapIndex = memProperties.memoryTypes[memoryTypeIndex].heapIndex;
 
     if (memRequirements2.pNext != nullptr)
@@ -243,10 +242,13 @@ PSubAllocation Allocator::allocate(const VkMemoryRequirements2 &memRequirements2
     }
     for (auto alloc : heaps[heapIndex].allocations)
     {
-        PSubAllocation suballoc = alloc->getSuballocation(requirements.size, requirements.alignment);
-        if (suballoc != nullptr)
+        if(alloc->memoryTypeIndex == memoryTypeIndex)
         {
-            return suballoc;
+            PSubAllocation suballoc = alloc->getSuballocation(requirements.size, requirements.alignment);
+            if (suballoc != nullptr)
+            {
+                return suballoc;
+            }
         }
     }
 
@@ -273,22 +275,17 @@ void Allocator::free(Allocation *allocation)
         }
     }
 }
-VkResult Allocator::findMemoryType(uint32 typeBits, VkMemoryPropertyFlags properties, uint8 *typeIndex)
+uint32 Allocator::findMemoryType(uint32 typeFilter, VkMemoryPropertyFlags properties)
 {
-    for (uint8 memoryIndex = 0; memoryIndex < memProperties.memoryTypeCount && typeBits; ++memoryIndex)
+    for (uint32 i = 0; i < memProperties.memoryTypeCount; i++) 
     {
-        if ((typeBits & 1) == 1)
+        if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties) 
         {
-            if ((memProperties.memoryTypes[memoryIndex].propertyFlags & properties) == properties)
-            {
-                *typeIndex = memoryIndex;
-                return VK_SUCCESS;
-            }
+            return i;
         }
-        typeBits >>= 1;
     }
 
-    return VK_ERROR_FORMAT_NOT_SUPPORTED;
+    throw std::runtime_error("error finding memory");
 }
 
 StagingBuffer::StagingBuffer()

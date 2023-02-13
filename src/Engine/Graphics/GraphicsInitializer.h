@@ -1,9 +1,9 @@
 #pragma once
 #include "GraphicsEnums.h"
+#include "Containers/Map.h"
 
 namespace Seele
 {
-
 struct GraphicsInitializer
 {
     const char *applicationName;

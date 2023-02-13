@@ -40,9 +40,53 @@ Gfx::PDescriptorSet Material::createDescriptorSet()
     return descriptorSet;
 }
 
-PMaterialInstance Material::instantiate()
+void Material::save(ArchiveBuffer& buffer) const
 {
-    return new MaterialInstance(graphics, this);
+    MaterialInterface::save(buffer);
+    Serialization::save(buffer,materialName);
+    Serialization::save(buffer, layout->getSetIndex());
+    const auto& bindings = layout->getBindings();
+    Serialization::save(buffer, bindings.size());
+    for (const auto& binding : bindings)
+    {
+        Serialization::save(buffer, binding.binding);
+        Serialization::save(buffer, binding.bindingFlags);
+        Serialization::save(buffer, binding.descriptorCount);
+        Serialization::save(buffer, binding.descriptorType);
+        Serialization::save(buffer, binding.shaderStages);
+    }
+}
+
+void Material::load(ArchiveBuffer& buffer)
+{
+    graphics = buffer.getGraphics();
+    MaterialInterface::load(buffer);
+    Serialization::load(buffer, materialName);
+    uint32 setIndex;
+    Serialization::load(buffer, setIndex);
+    uint64 numBindings;
+    Serialization::load(buffer, numBindings);
+    layout = graphics->createDescriptorLayout();
+    for (uint64 i = 0; i < numBindings; ++i)
+    {
+        uint32 binding;
+        Serialization::load(buffer, binding);
+
+        Gfx::SeDescriptorBindingFlags bindingFlags;
+        Serialization::load(buffer, bindingFlags);
+
+        uint32 descriptorCount;
+        Serialization::load(buffer, descriptorCount);
+
+        Gfx::SeDescriptorType descriptorType;
+        Serialization::load(buffer, descriptorType);
+
+        Gfx::SeShaderStageFlags shaderStages;
+        Serialization::load(buffer, shaderStages);
+
+        layout->addDescriptorBinding(binding, descriptorType, descriptorCount, bindingFlags, shaderStages);
+    }
+    layout->create();
 }
 
 const Gfx::ShaderCollection* Material::getShaders(Gfx::RenderPassType renderPass, VertexInputType* vertexInput) const
@@ -50,8 +94,8 @@ const Gfx::ShaderCollection* Material::getShaders(Gfx::RenderPassType renderPass
     Gfx::ShaderPermutation permutation;
     permutation.passType = renderPass;
     std::string vertexInputName = vertexInput->getName();
-    std::memcpy(permutation.materialName, materialName.c_str(), sizeof(permutation.materialName));
-    std::memcpy(permutation.vertexInputName, vertexInputName.c_str(), sizeof(permutation.vertexInputName));
+    std::strncpy(permutation.materialName, materialName.c_str(), sizeof(permutation.materialName));
+    std::strncpy(permutation.vertexInputName, vertexInputName.c_str(), sizeof(permutation.vertexInputName));
     return shaderMap.findShaders(Gfx::PermutationId(permutation));
 }
 

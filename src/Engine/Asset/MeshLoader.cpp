@@ -33,20 +33,20 @@ void MeshLoader::importAsset(MeshImportArgs args)
 {
     std::filesystem::path assetPath = args.filePath.filename();
     assetPath.replace_extension("asset");
-    PMeshAsset asset = new MeshAsset(assetPath.generic_string());
+    PMeshAsset asset = new MeshAsset(args.importPath, assetPath.stem().string());
     asset->setStatus(Asset::Status::Loading);
-    AssetRegistry::get().registerMesh(asset, args.importPath);
+    AssetRegistry::get().registerMesh(asset);
     import(args, asset);
 }
 
-void MeshLoader::loadMaterials(const aiScene* scene, Array<PMaterial>& globalMaterials)
+void MeshLoader::loadMaterials(const aiScene* scene, const std::string& baseName, const std::filesystem::path& meshDirectory, const std::string& importPath, Array<PMaterialAsset>& globalMaterials)
 {
     using json = nlohmann::json;
     for(uint32 i = 0; i < scene->mNumMaterials; ++i)
     {
         aiMaterial* material = scene->mMaterials[i];
         json matCode;
-        matCode["name"] = material->GetName().C_Str();
+        matCode["name"] = baseName + material->GetName().C_Str();
         matCode["profile"] = "BlinnPhong"; //TODO: other shading models
         aiString texPath;
         //TODO make samplers based on used textures
@@ -89,18 +89,17 @@ void MeshLoader::loadMaterials(const aiScene* scene, Array<PMaterial>& globalMat
             matCode["code"]["normal"] = "return normalTexture.Sample(textureSampler, input.texCoords[0]).xyz;";
         }
         std::string outMatFilename = matCode["name"].get<std::string>().append(".asset");
-        std::ofstream outMatFile = AssetRegistry::createWriteStream(outMatFilename);
+        std::ofstream outMatFile = std::ofstream(meshDirectory / outMatFilename);
         outMatFile << std::setw(4) << matCode;
         outMatFile.flush();
         outMatFile.close();
 
         std::cout << "writing json to " << outMatFilename << std::endl;
         AssetRegistry::importMaterial(MaterialImportArgs{
-            .filePath = AssetRegistry::getRootFolder() + "/" + outMatFilename,
-            .importPath = "",
+            .filePath = meshDirectory / outMatFilename,
+            .importPath = importPath,
             });
-        PMaterialAsset asset = AssetRegistry::findMaterial(matCode["name"].get<std::string>());
-        globalMaterials[i] = asset->getMaterial();
+        globalMaterials[i] = AssetRegistry::findMaterial(matCode["name"].get<std::string>());
     }
 }
 
@@ -168,7 +167,7 @@ VertexStreamComponent createVertexStream(uint32 size, aiColor4D* sourceData, Gfx
     vertexBuffer->transferOwnership(Gfx::QueueType::GRAPHICS);
     return VertexStreamComponent(vertexBuffer, 0, vbInfo.vertexSize, Gfx::SE_FORMAT_R32G32B32A32_SFLOAT);
 }
-void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterial>& materials, Array<PMesh>& globalMeshes, Component::Collider& collider)
+void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialAsset>& materials, Array<PMesh>& globalMeshes, Component::Collider& collider)
 {
     for (uint32 meshIndex = 0; meshIndex < scene->mNumMeshes; ++meshIndex)
     {
@@ -191,7 +190,7 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterial>& 
         {
             if(mesh->HasTextureCoords(i))
             {
-                data.textureCoordinates.add(createVertexStream(mesh->mNumVertices, mesh->mTextureCoords[i], graphics));
+                data.textureCoordinates[i] = createVertexStream(mesh->mNumVertices, mesh->mTextureCoords[i], graphics);
             }
         }
         if(mesh->HasNormals())
@@ -243,7 +242,7 @@ void MeshLoader::convertAssimpARGB(unsigned char* dst, aiTexel* src, uint32 numP
         dst[i * 4 + 3] = src[i].a;
     }
 }
-void MeshLoader::loadTextures(const aiScene* scene, const std::filesystem::path& meshDirectory)
+void MeshLoader::loadTextures(const aiScene* scene, const std::filesystem::path& meshDirectory, const std::string& importPath)
 {
     for (uint32 i = 0; i < scene->mNumTextures; ++i)
     {
@@ -269,7 +268,7 @@ void MeshLoader::loadTextures(const aiScene* scene, const std::filesystem::path&
         std::cout << "Loading model texture " << texPngPath.string() << std::endl;
         AssetRegistry::importTexture(TextureImportArgs {
             .filePath = texPath,
-            .importPath = ""
+            .importPath = importPath,
             });
     }
 }
@@ -288,9 +287,9 @@ void MeshLoader::import(MeshImportArgs args, PMeshAsset meshAsset)
         aiProcess_FindDegenerates));
     const aiScene *scene = importer.ApplyPostProcessing(aiProcess_CalcTangentSpace);
     
-    Array<PMaterial> globalMaterials(scene->mNumMaterials);
-    loadTextures(scene, args.filePath.parent_path());
-    loadMaterials(scene, globalMaterials);
+    Array<PMaterialAsset> globalMaterials(scene->mNumMaterials);
+    loadTextures(scene, args.filePath.parent_path(), args.importPath);
+    loadMaterials(scene, args.filePath.stem().string(), args.filePath.parent_path(), args.importPath, globalMaterials);
     
     Array<PMesh> globalMeshes(scene->mNumMeshes);
     Component::Collider collider;

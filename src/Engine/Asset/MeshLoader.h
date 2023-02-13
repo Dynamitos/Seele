@@ -10,7 +10,7 @@ namespace Seele
 {
 DECLARE_REF(Mesh)
 DECLARE_REF(MeshAsset)
-DECLARE_REF(Material)
+DECLARE_REF(MaterialAsset)
 DECLARE_NAME_REF(Gfx, Graphics)
 struct MeshImportArgs
 {
@@ -24,9 +24,9 @@ public:
     ~MeshLoader();
     void importAsset(MeshImportArgs args);
 private:
-    void loadMaterials(const aiScene* scene, Array<PMaterial>& globalMaterials);
-    void loadTextures(const aiScene* scene, const std::filesystem::path& meshPath);
-    void loadGlobalMeshes(const aiScene* scene, const Array<PMaterial>& materials, Array<PMesh>& globalMeshes, Component::Collider& collider);
+    void loadMaterials(const aiScene* scene, const std::string& baseName, const std::filesystem::path& meshDirectory, const std::string& importPath, Array<PMaterialAsset>& globalMaterials);
+    void loadTextures(const aiScene* scene, const std::filesystem::path& meshDirectory, const std::string& importPath);
+    void loadGlobalMeshes(const aiScene* scene, const Array<PMaterialAsset>& materials, Array<PMesh>& globalMeshes, Component::Collider& collider);
     void convertAssimpARGB(unsigned char* dst, aiTexel* src, uint32 numPixels);
 
     void import(MeshImportArgs args, PMeshAsset meshAsset);

@@ -166,7 +166,12 @@ void CmdBuffer::refreshFence()
 
 void CmdBuffer::waitForCommand(uint32 timeout)
 {
-    std::scoped_lock lock(handleLock);
+    manager->submitCommands();
+    if (state == State::InsideBegin)
+    {
+        // is already done
+        return;
+    }
     fence->wait(timeout);
     refreshFence();
 }

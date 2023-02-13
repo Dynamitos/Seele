@@ -5,6 +5,7 @@
 #include "Component/Transform.h"
 #include "Asset/AssetRegistry.h"
 #include "Asset/TextureAsset.h"
+#include "Asset/MaterialAsset.h"
 
 using namespace Seele;
 
@@ -28,9 +29,9 @@ void Scene::update(float deltaTime)
     physics.update(deltaTime);
 }
 
-Array<StaticMeshBatch> Scene::getStaticMeshes()
+Array<MeshBatch> Scene::getStaticMeshes()
 {
-    Array<StaticMeshBatch> result;
+    Array<MeshBatch> result;
     auto view = registry.view<Component::StaticMesh, Component::Transform>();
     uint32 sceneDataIndex = 0;
     sceneData.clear();
@@ -44,7 +45,7 @@ Array<StaticMeshBatch> Scene::getStaticMeshes()
         for(auto& m : mesh.mesh->meshes)
         {
             auto& batch = result.add();
-            batch.material = m->referencedMaterial;
+            batch.material = m->referencedMaterial->getMaterial();
             batch.isBackfaceCullingDisabled = false;
             batch.isCastingShadow = true;
             batch.topology = Gfx::SE_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;

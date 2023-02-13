@@ -1,7 +1,5 @@
 #pragma once
-#include "Containers/Map.h"
 #include "EngineTypes.h"
-#include "Math/Math.h"
 #include <map>
 
 #define DEFINE_REF(x)           \
@@ -206,7 +204,7 @@ public:
         }
         return *this;
     }
-    constexpr RefPtr &operator=(RefPtr &&rhs)
+    constexpr RefPtr &operator=(RefPtr &&rhs) noexcept
     {
         if (this != &rhs)
         {
@@ -260,7 +258,6 @@ public:
     {
         return RefPtr<T, Deleter>(new T(*getHandle()));
     }
-
 private:
     RefObject<T, Deleter> *object;
 };

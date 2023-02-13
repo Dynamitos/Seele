@@ -501,7 +501,7 @@ void Graphics::createDevice(GraphicsInitializer initializer)
                 numQueuesForFamily++;
             }
         }
-        if ((currProps.queueFlags & VK_QUEUE_COMPUTE_BIT) == VK_QUEUE_COMPUTE_BIT)
+        if (currProps.queueFlags & VK_QUEUE_COMPUTE_BIT)
         {
             if (computeQueueInfo.familyIndex == -1)
             {
@@ -526,7 +526,7 @@ void Graphics::createDevice(GraphicsInitializer initializer)
                 }
             }
         }
-        if ((currProps.queueFlags & VK_QUEUE_TRANSFER_BIT) == VK_QUEUE_TRANSFER_BIT)
+        if (currProps.queueFlags & VK_QUEUE_TRANSFER_BIT)
         {
             if (transferQueueInfo.familyIndex == -1)
             {
@@ -587,6 +587,7 @@ void Graphics::createDevice(GraphicsInitializer initializer)
     deviceInfo.ppEnabledExtensionNames = initializer.deviceExtensions.data();
     deviceInfo.enabledLayerCount = (uint32_t)initializer.layers.size();
     deviceInfo.ppEnabledLayerNames = initializer.layers.data();
+    deviceInfo.pEnabledFeatures = &features;
 
     VK_CHECK(vkCreateDevice(physicalDevice, &deviceInfo, nullptr, &handle));
     std::cout << "Vulkan handle: " << handle << std::endl;

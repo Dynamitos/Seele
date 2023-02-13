@@ -34,6 +34,11 @@ void DepthPrepassMeshProcessor::processMeshBatch(
     const PVertexShaderInput vertexInput = batch.vertexInput;
 
 	const Gfx::ShaderCollection* collection = material->getShaders(Gfx::RenderPassType::DepthPrepass, vertexInput->getType());
+    if (collection == nullptr)
+    {
+        material->createShaders(graphics, Gfx::RenderPassType::DepthPrepass, vertexInput->getType());
+        collection = material->getShaders(Gfx::RenderPassType::DepthPrepass, vertexInput->getType());
+    }
     assert(collection != nullptr);
     
     Gfx::PRenderCommand renderCommand = graphics->createRenderCommand();    
@@ -128,7 +133,7 @@ void DepthPrepass::render()
         Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT);
     depthAttachment->getTexture()->transferOwnership(Gfx::QueueType::GRAPHICS);
     graphics->beginRenderPass(renderPass);
-    for (auto &&meshBatch : passData.staticDrawList)
+    for (const auto& meshBatch : passData.staticDrawList)
     {
         processor->processMeshBatch(meshBatch, viewport, renderPass, depthPrepassLayout, primitiveLayout, descriptorSets);
     }

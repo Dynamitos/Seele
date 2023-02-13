@@ -208,7 +208,6 @@ void *ShaderBuffer::lockRegion(uint64 regionOffset, uint64 regionSize, bool bWri
     else
     {
         PCmdBuffer current = graphics->getQueueCommands(owner)->getCommands();
-        graphics->getQueueCommands(owner)->submitCommands();
         current->waitForCommand();
 
         requestOwnershipTransfer(Gfx::QueueType::DEDICATED_TRANSFER);
@@ -466,6 +465,13 @@ void VertexBuffer::updateRegion(BulkResourceData update)
     unlock();
 }
 
+void VertexBuffer::download(Array<uint8>& buffer)
+{
+    void* data = lock(false);
+    buffer.resize(size);
+    std::memcpy(buffer.data(), data, size);
+    unlock();
+}
 
 void VertexBuffer::requestOwnershipTransfer(Gfx::QueueType newOwner)
 {
@@ -507,6 +513,14 @@ IndexBuffer::IndexBuffer(PGraphics graphics, const IndexBufferCreateInfo &resour
 
 IndexBuffer::~IndexBuffer()
 {
+}
+
+void IndexBuffer::download(Array<uint8>& buffer)
+{
+    void* data = lock(false);
+    buffer.resize(size);
+    std::memcpy(buffer.data(), data, size);
+    unlock();
 }
 
 void IndexBuffer::requestOwnershipTransfer(Gfx::QueueType newOwner)

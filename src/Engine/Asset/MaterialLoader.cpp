@@ -29,9 +29,9 @@ void MaterialLoader::importAsset(MaterialImportArgs args)
 {
     std::filesystem::path assetPath = args.filePath.filename();
     assetPath.replace_extension("asset");
-    PMaterialAsset asset = new MaterialAsset(assetPath.generic_string());
+    PMaterialAsset asset = new MaterialAsset(args.importPath, assetPath.stem().string());
     asset->setStatus(Asset::Status::Loading);
-    AssetRegistry::get().registerMaterial(asset, args.importPath);
+    AssetRegistry::get().registerMaterial(asset);
     import(args, asset);
 }
 

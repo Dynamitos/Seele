@@ -2,6 +2,7 @@
 #include <regex>
 #include <format>
 #include <nlohmann/json.hpp>
+#include "Serialization/ArchiveBuffer.h"
 
 using namespace Seele;
 

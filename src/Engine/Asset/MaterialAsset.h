@@ -7,12 +7,12 @@ DECLARE_REF(Material)
 class MaterialAsset : public Asset
 {
 public:
+    static constexpr uint64 IDENTIFIER = 0x4;
     MaterialAsset();
-    MaterialAsset(const std::string &directory, const std::string &name);
-    MaterialAsset(const std::filesystem::path &fullPath);
+    MaterialAsset(std::string_view folderPath, std::string_view name);
     virtual ~MaterialAsset();
-    virtual void save(Gfx::PGraphics graphics) override;
-    virtual void load(Gfx::PGraphics graphics) override;
+    virtual void save(ArchiveBuffer& buffer) const override;
+    virtual void load(ArchiveBuffer& buffer) override;
     PMaterial getMaterial() const { return material; }
 private:
     PMaterial material;

@@ -8,6 +8,8 @@
 #include <glm/gtc/quaternion.hpp>
 #pragma warning(pop)
 #include <nlohmann/json_fwd.hpp>
+#include "Serialization/ArchiveBuffer.h"
+
 namespace Seele
 {
 typedef glm::vec2 Vector2;
@@ -15,11 +17,11 @@ typedef glm::vec3 Vector;
 typedef glm::vec4 Vector4;
 
 typedef glm::uvec2 UVector2;
-typedef glm::uvec3 UVector3;
+typedef glm::uvec3 UVector;
 typedef glm::uvec4 UVector4;
 
 typedef glm::ivec2 IVector2;
-typedef glm::ivec3 IVector3;
+typedef glm::ivec3 IVector;
 typedef glm::ivec4 IVector4;
 
 typedef glm::quat Quaternion;
@@ -97,6 +99,32 @@ static inline Vector toRotator(const Quaternion &other)
 }
 void to_json(nlohmann::json& j, const Vector& vec);
 void from_json(nlohmann::json& j, Vector& vec);
+
+namespace Serialization
+{
+	static void save(ArchiveBuffer& buffer, const IVector2& vec)
+	{
+		save(buffer, vec.x);
+		save(buffer, vec.y);
+	}
+	static void load(ArchiveBuffer& buffer, IVector2& vec)
+	{
+		save(buffer, vec.x);
+		save(buffer, vec.y);
+	}
+	static void save(ArchiveBuffer& buffer, const Vector& vec)
+	{
+		save(buffer, vec.x);
+		save(buffer, vec.y);
+		save(buffer, vec.z);
+	}
+	static void load(ArchiveBuffer& buffer, Vector& vec)
+	{
+		save(buffer, vec.x);
+		save(buffer, vec.y);
+		save(buffer, vec.z);
+	}
+} // namespace Serialization
 } // namespace Seele
 
 std::ostream& operator<<(std::ostream& stream, const Seele::Vector2& vector);

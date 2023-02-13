@@ -94,7 +94,7 @@ ShaderCollection& ShaderMap::createShaders(
 
 	return collection;
 }
-void DescriptorLayout::addDescriptorBinding(uint32 bindingIndex, SeDescriptorType type, uint32 arrayCount, SeDescriptorBindingFlags bindingFlags)
+void DescriptorLayout::addDescriptorBinding(uint32 bindingIndex, SeDescriptorType type, uint32 arrayCount, SeDescriptorBindingFlags bindingFlags, SeShaderStageFlags shaderStages)
 {
 	if (descriptorBindings.size() <= bindingIndex)
 	{
@@ -105,6 +105,7 @@ void DescriptorLayout::addDescriptorBinding(uint32 bindingIndex, SeDescriptorTyp
 	binding.descriptorType = type;
 	binding.descriptorCount = arrayCount;
 	binding.bindingFlags = bindingFlags;
+	binding.shaderStages = shaderStages;
 }
 
 PDescriptorSet DescriptorLayout::allocateDescriptorSet()

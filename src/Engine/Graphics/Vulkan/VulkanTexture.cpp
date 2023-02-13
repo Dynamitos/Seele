@@ -4,6 +4,7 @@
 #include "VulkanGraphicsEnums.h"
 #include "VulkanAllocator.h"
 #include "VulkanCommandBuffer.h"
+#include "Graphics/GraphicsEnums.h"
 #include <math.h>
 
 using namespace Seele;
@@ -127,7 +128,7 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType,
         region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         region.imageSubresource.mipLevel = 0;
         region.imageSubresource.baseArrayLayer = 0;
-        region.imageSubresource.layerCount = layerCount;
+        region.imageSubresource.layerCount = arrayCount * layerCount;
 
         region.imageOffset = {0, 0, 0};
         region.imageExtent = {sizeX, sizeY, sizeZ};
@@ -210,6 +211,35 @@ void TextureHandle::changeLayout(Gfx::SeImageLayout newLayout)
                             0, 0, nullptr, 0, nullptr, 1, &barrier);
     cmdManager->submitCommands();
     layout = newLayout;
+}
+
+void TextureHandle::download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<uint8>& buffer)
+{
+    uint64 imageSize = sizeX * sizeY * sizeZ * Gfx::getFormatInfo(format).blockSize;
+
+    PStagingBuffer stagingbuffer = graphics->getStagingManager()->allocateStagingBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT, true);
+    auto prevlayout = layout;
+    changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+    PCmdBuffer cmdBuffer = graphics->getQueueCommands(currentOwner)->getCommands();
+    Gfx::FormatCompatibilityInfo formatInfo = Gfx::getFormatInfo(format);
+    VkBufferImageCopy region = {
+        .bufferOffset = 0,
+        .bufferRowLength = 0,
+        .bufferImageHeight = 0,
+        .imageSubresource = {
+            .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+            .mipLevel = mipLevel,
+            .baseArrayLayer = arrayLayer * layerCount + face,
+            .layerCount = 1,
+        },
+        .imageOffset = { 0, 0, 0 },
+        .imageExtent = { sizeX, sizeY, sizeZ },
+    };
+    vkCmdCopyImageToBuffer(cmdBuffer->getHandle(), image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, stagingbuffer->getHandle(), 1, &region);
+    changeLayout(prevlayout);
+    buffer.resize(stagingbuffer->getSize());
+    void* data = stagingbuffer->getMappedPointer();
+    std::memcpy(buffer.data(), data, buffer.size());
 }
 
 void TextureHandle::executeOwnershipBarrier(Gfx::QueueType newOwner)
@@ -307,6 +337,11 @@ void Texture2D::changeLayout(Gfx::SeImageLayout newLayout)
     textureHandle->changeLayout(newLayout);
 }
 
+void Texture2D::download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<uint8>& buffer)
+{
+    textureHandle->download(mipLevel, arrayLayer, face, buffer);
+}
+
 void Texture2D::executeOwnershipBarrier(Gfx::QueueType newOwner)
 {
     textureHandle->executeOwnershipBarrier(newOwner);
@@ -334,6 +369,10 @@ void Texture3D::changeLayout(Gfx::SeImageLayout newLayout)
     textureHandle->changeLayout(newLayout);
 }
 
+void Texture3D::download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<uint8>& buffer)
+{
+    textureHandle->download(mipLevel, arrayLayer, face, buffer);
+}
 void Texture3D::executeOwnershipBarrier(Gfx::QueueType newOwner)
 {
     textureHandle->executeOwnershipBarrier(newOwner);
@@ -361,6 +400,10 @@ void TextureCube::changeLayout(Gfx::SeImageLayout newLayout)
     textureHandle->changeLayout(newLayout);
 }
 
+void TextureCube::download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<uint8>& buffer)
+{
+    textureHandle->download(mipLevel, arrayLayer, face, buffer);
+}
 void TextureCube::executeOwnershipBarrier(Gfx::QueueType newOwner)
 {
     textureHandle->executeOwnershipBarrier(newOwner);

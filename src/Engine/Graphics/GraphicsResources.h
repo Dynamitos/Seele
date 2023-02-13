@@ -1,4 +1,5 @@
 #pragma once
+#include "Math/Math.h"
 #include "GraphicsEnums.h"
 #include "Containers/Array.h"
 #include "Containers/List.h"
@@ -158,9 +159,9 @@ public:
         : binding(other.binding), descriptorType(other.descriptorType), descriptorCount(other.descriptorCount), shaderStages(other.shaderStages)
     {
     }
-    uint32_t binding;
+    uint32 binding;
     SeDescriptorType descriptorType;
-    uint32_t descriptorCount;
+    uint32 descriptorCount;
     SeDescriptorBindingFlags bindingFlags = 0;
     SeShaderStageFlags shaderStages;
 };
@@ -217,11 +218,12 @@ public:
         return *this;
     }
     virtual void create() = 0;
-    virtual void addDescriptorBinding(uint32 binding, SeDescriptorType type, uint32 arrayCount = 1, SeDescriptorBindingFlags bindingFlags = 0);
+    virtual void addDescriptorBinding(uint32 binding, SeDescriptorType type, uint32 arrayCount = 1, SeDescriptorBindingFlags bindingFlags = 0, SeShaderStageFlags shaderStages = SeShaderStageFlagBits::SE_SHADER_STAGE_ALL);
     virtual void reset();
     virtual PDescriptorSet allocateDescriptorSet();
     const Array<DescriptorBinding> &getBindings() const { return descriptorBindings; }
-    inline uint32 getSetIndex() const { return setIndex; }
+    constexpr uint32 getSetIndex() const { return setIndex; }
+    constexpr void setSetIndex(uint32 _setIndex) { setIndex = _setIndex; }
 
 protected:
     Array<DescriptorBinding> descriptorBindings;
@@ -371,7 +373,7 @@ public:
     }
 
     virtual void updateRegion(BulkResourceData update) = 0;
-
+    virtual void download(Array<uint8>& buffer) = 0;
 protected:
     // Inherited via QueueOwnedResource
     virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
@@ -396,6 +398,7 @@ public:
         return indexType;
     }
 
+    virtual void download(Array<uint8>& buffer) = 0;
 protected:
     // Inherited via QueueOwnedResource
     virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
@@ -543,6 +546,7 @@ public:
     virtual uint32 getSizeX() const = 0;
     virtual uint32 getSizeY() const = 0;
     virtual uint32 getSizeZ() const = 0;
+    virtual uint32 getNumFaces() const { return 1; }
     virtual SeSampleCountFlags getNumSamples() const = 0;
     virtual uint32 getMipLevels() const = 0;
     virtual void changeLayout(SeImageLayout newLayout) = 0;
@@ -550,6 +554,7 @@ public:
     virtual class Texture3D* getTexture3D() { return nullptr; }
     virtual class TextureCube* getTextureCube() { return nullptr; }
     virtual void* getNativeHandle() { return nullptr; }
+    virtual void download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<uint8>& buffer) = 0;
 protected:
     // Inherited via QueueOwnedResource
     virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
@@ -612,6 +617,7 @@ public:
     virtual uint32 getSizeX() const = 0;
     virtual uint32 getSizeY() const = 0;
     virtual uint32 getSizeZ() const = 0;
+    virtual uint32 getNumFaces() const { return 6; }
     virtual SeSampleCountFlags getNumSamples() const = 0;
     virtual uint32 getMipLevels() const = 0;
     virtual void changeLayout(SeImageLayout newLayout) = 0;

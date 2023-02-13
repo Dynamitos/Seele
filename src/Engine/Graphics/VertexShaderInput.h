@@ -2,6 +2,7 @@
 #include "MinimalEngine.h"
 #include "GraphicsEnums.h"
 #include "GraphicsResources.h"
+#include "Serialization/ArchiveBuffer.h"
 
 namespace Seele
 {
@@ -75,8 +76,11 @@ struct VertexStreamComponent
     {}
 };
 
-#define STRUCTMEMBER_VERTEXSTREAMCOMPONENT(vertexBuffer, vertexType, member, memberType) \
-    VertexStreamComponent(vertexBuffer, offsetof(vertexType, member), sizeof(vertexType), memberType)
+namespace Serialization
+{
+    void save(ArchiveBuffer& buffer, VertexStreamComponent& comp);
+    void load(ArchiveBuffer& buffer, VertexStreamComponent& comp);
+} // namespace Serialization
 
 class VertexInputType
 {
@@ -120,6 +124,8 @@ public:
     void getPositionOnlyStream(VertexInputStreamArray& outVertexStreams) const;
     virtual bool supportsTesselation() { return false; }
     virtual VertexInputType* getType() const { return nullptr; }
+    virtual void save(ArchiveBuffer& buffer) {}
+    virtual void load(ArchiveBuffer& buffer) {}
     Gfx::PVertexDeclaration getDeclaration() const {return declaration;}
     Gfx::PVertexDeclaration getPositionDeclaration() const {return positionDeclaration;}
     std::string getName() const { return name; }

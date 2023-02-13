@@ -8,13 +8,8 @@ MaterialAsset::MaterialAsset()
 {
 }
 
-MaterialAsset::MaterialAsset(const std::string& directory, const std::string& name) 
-    : Asset(directory, name)
-{
-}
-
-MaterialAsset::MaterialAsset(const std::filesystem::path& fullPath) 
-    : Asset(fullPath)
+MaterialAsset::MaterialAsset(std::string_view folderPath, std::string_view name)
+    : Asset(folderPath, name)
 {
 }
 
@@ -22,13 +17,14 @@ MaterialAsset::~MaterialAsset()
 {
 }
 
-
-void MaterialAsset::save(Gfx::PGraphics graphics)
+void MaterialAsset::save(ArchiveBuffer& buffer) const
 {
+    material->save(buffer);
 }
 
-void MaterialAsset::load(Gfx::PGraphics graphics)
+void MaterialAsset::load(ArchiveBuffer& buffer)
 {
-    
+    material = new Material();
+    material->load(buffer);
 }
 

@@ -8,9 +8,9 @@
             "generator": "Visual Studio 17 2022 Win64",
             "intelliSenseMode": "windows-msvc-x64",
             "cmakeExecutable": "D:/Programms/CMake/bin/cmake.exe",
-            "inheritEnvironments": [],
+            "inheritEnvironments": [ "msvc_x64" ],
             "cmakeCommandArgs": "-DCMAKE_DEBUG_POSTFIX=d -DCMAKE_PLATFORM=x64 -DCMAKE_BUILD_TYPE=Debug",
-            "buildRoot": "bin/Debug"
+            "buildRoot": "C:/Users/Dynamitos/Seele/bin/Debug"
         },
         {
             "name": "Release",

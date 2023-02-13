@@ -3,6 +3,7 @@
 #include "Window/GameView.h"
 #include "Window/InspectorView.h"
 #include "Asset/AssetRegistry.h"
+#include "Asset/TextureLoader.h"
 #include "Graphics/Vulkan/VulkanGraphics.h"
 
 using namespace Seele;
@@ -11,10 +12,12 @@ using namespace Seele::Editor;
 int main()
 {
     Gfx::PGraphics graphics = new Vulkan::Graphics();
+
     GraphicsInitializer initializer;
     graphics->init(initializer);
     PWindowManager windowManager = new WindowManager();
-    AssetRegistry::init(std::string("C:\\Users\\Dynamitos\\TrackClear"), graphics);
+    AssetRegistry::init(std::string("C:\\Users\\Dynamitos\\TrackClear\\Assets"), graphics);
+
     WindowCreateInfo mainWindowInfo;
     mainWindowInfo.title = "SeeleEngine";
     mainWindowInfo.width = 1280;

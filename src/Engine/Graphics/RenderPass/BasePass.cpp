@@ -35,6 +35,11 @@ void BasePassMeshProcessor::processMeshBatch(
     const PVertexShaderInput vertexInput = batch.vertexInput;
 
     const Gfx::ShaderCollection* collection = material->getShaders(Gfx::RenderPassType::BasePass, vertexInput->getType());
+    if(collection == nullptr)
+    { 
+        material->createShaders(graphics, Gfx::RenderPassType::BasePass, vertexInput->getType());
+        collection = material->getShaders(Gfx::RenderPassType::BasePass, vertexInput->getType());
+    }
     assert(collection != nullptr);
 
     Gfx::PRenderCommand renderCommand = graphics->createRenderCommand();    
@@ -158,7 +163,7 @@ void BasePass::render()
     descriptorSets[INDEX_LIGHT_ENV]->writeChanges();
 
     graphics->beginRenderPass(renderPass);
-    for (auto &&meshBatch : passData.staticDrawList)
+    for (const auto& meshBatch : passData.staticDrawList)
     {
         processor->processMeshBatch(meshBatch, viewport, renderPass, basePassLayout, primitiveLayout, descriptorSets);
     }

@@ -250,9 +250,7 @@ public:
     constexpr mapped_type& operator[](const key_type& key)
     {
         root = splay(root, key);
-        if (!isValid(root) 
-         || comp(getNode(root)->pair.key, key) 
-         || comp(key, getNode(root)->pair.key))
+        if (!isValid(root) || !equal(getNode(root)->pair.key, key))
         {
             root = insert(root, key);
             _size++;
@@ -263,12 +261,31 @@ public:
     constexpr mapped_type& operator[](key_type&& key)
     {
         root = splay(root, std::move(key));
-        if (!isValid(root)
-         || comp(getNode(root)->pair.key, key) 
-         || comp(key, getNode(root)->pair.key))
+        if (!isValid(root) || !equal(getNode(root)->pair.key, key))
         {
             root = insert(root, std::move(key));
             _size++;
+        }
+        markIteratorsDirty();
+        return getNode(root)->pair.value;
+    }
+
+    constexpr mapped_type& at(const key_type& key)
+    {
+        root = splay(root, key);
+        if (!isValid(root) || !equal(getNode(root)->pair.key, key))
+        {
+            throw std::logic_error("Key not found");
+        }
+        markIteratorsDirty();
+        return getNode(root)->pair.value;
+    }
+    constexpr mapped_type& at(key_type&& key)
+    {
+        root = splay(root, std::move(key));
+        if (!isValid(root) || !equal(getNode(root)->pair.key, key))
+        {
+            throw std::logic_error("Key not found");
         }
         markIteratorsDirty();
         return getNode(root)->pair.value;
@@ -277,9 +294,7 @@ public:
     {
         root = splay(root, key);
         refreshIterators();
-        if (!isValid(root)
-         || comp(getNode(root)->pair.key, key) 
-         || comp(key, getNode(root)->pair.key))
+        if (!isValid(root) || !equal(getNode(root)->pair.key, key))
         {
             return endIt;
         }
@@ -289,9 +304,7 @@ public:
     {
         root = splay(root, std::move(key));
         refreshIterators();
-        if (!isValid(root)
-         || comp(getNode(root)->pair.key, key) 
-         || comp(key, getNode(root)->pair.key))
+        if (!isValid(root) || !equal(getNode(root)->pair.key, key))
         {
             return endIt;
         }
@@ -323,6 +336,14 @@ public:
     constexpr bool exists(key_type&& key)
     {
         return find(std::move(key)) != endIt;
+    }
+    constexpr bool contains(const key_type& key)
+    {
+        return exists(key);
+    }
+    constexpr bool contains(key_type&& key)
+    {
+        return exists(key);
     }
     constexpr iterator begin()
     {
@@ -476,13 +497,13 @@ private:
         r = splay(r, key);
         Node* node = getNode(r);
 
-        if (!(comp(node->pair.key, key) || comp(key, node->pair.key)))
+        if (equal(node->pair.key, key))
             return r;
 
         Node *newNode = &nodeContainer.emplace(std::forward<KeyType>(key));
         node = getNode(r);
 
-        if (comp(key, node->pair.key))
+        if (comp(newNode->pair.key, node->pair.key))
         {
             newNode->rightChild = r;
             newNode->leftChild = node->leftChild;
@@ -506,7 +527,7 @@ private:
         r = splay(r, key);
         Node* node = getNode(r);
 
-        if (comp(node->pair.key, key) || comp(key, node->pair.key))
+        if (!equal(node->pair.key, key))
             return r;
 
         if (!isValid(node->leftChild))
@@ -549,9 +570,7 @@ private:
     size_t splay(size_t r, KeyType&& key)
     {
         Node* node = getNode(r);
-        if (node == nullptr 
-         || !(comp(node->pair.key, key) 
-          ||  comp(key, node->pair.key)))
+        if (node == nullptr || equal(node->pair.key, key))
         {
             return r;
         }
@@ -601,6 +620,10 @@ private:
             }
             return (!isValid(node->rightChild)) ? r : rotateLeft(r);
         }
+    }
+    bool equal(const key_type& a, const key_type& b)
+    {
+        return !comp(a, b) && !comp(b, a);
     }
 };
 } // namespace Seele

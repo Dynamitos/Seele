@@ -7,17 +7,15 @@
 
 using namespace Seele;
 
+#define KTX_CHECK(x) { ktx_error_code_e err = x; assert(err == KTX_SUCCESS); }
 
 TextureAsset::TextureAsset()
 {
 }
-TextureAsset::TextureAsset(const std::string& directory, const std::string& name)
-    : Asset(directory, name)
+
+TextureAsset::TextureAsset(std::string_view folderPath, std::string_view name)
+    : Asset(folderPath, name)
 {
-}
-TextureAsset::TextureAsset(const std::filesystem::path& fullPath) 
-    : Asset(fullPath)
-{   
 }
 
 TextureAsset::~TextureAsset() 
@@ -25,48 +23,99 @@ TextureAsset::~TextureAsset()
     
 }
 
-void TextureAsset::save(Gfx::PGraphics graphics) 
+void TextureAsset::save(ArchiveBuffer& buffer) const
 {
-    //TODO: make this an actual file, not just a png wrapper
-    assert(false && "Editing textures is not yet supported");
+    Array<uint8> textureData;
+    ktxTexture2* kTexture;
+    ktxTextureCreateInfo createInfo = {
+        .vkFormat = (uint32_t)texture->getFormat(),
+        .baseWidth = texture->getSizeX(),
+        .baseHeight = texture->getSizeY(),
+        .baseDepth = texture->getSizeZ(),
+        .numDimensions = texture->getSizeZ() > 1 ? 3u : texture->getSizeY() > 1 ? 2u : 1u,
+        .numLevels = texture->getMipLevels(),
+        .numLayers = 1,
+        .numFaces = texture->getNumFaces(),
+        .isArray = false,
+        .generateMipmaps = false,
+    };
+    KTX_CHECK(ktxTexture2_Create(&createInfo, KTX_TEXTURE_CREATE_ALLOC_STORAGE, &kTexture));
+
+    for (uint32 depth = 0; depth < texture->getSizeZ(); ++depth)
+    {
+        for (uint32 face = 0; face < texture->getNumFaces(); ++face)
+        {
+            // technically, downloading cant be const, because we have to allocate temporary buffers and change layouts
+            // but practically the texture stays the same
+            const_cast<Gfx::Texture*>(texture.getHandle())->download(0, depth, face, textureData);
+            KTX_CHECK(ktxTexture_SetImageFromMemory(ktxTexture(kTexture), 0, depth, face, textureData.data(), textureData.size()));
+        }
+    }
+    char writer[100];
+    snprintf(writer, sizeof(writer), "%s version %s", "SeeleEngine", "0.0.1");
+    ktxHashList_AddKVPair(&kTexture->kvDataHead, KTX_WRITER_KEY,
+        (ktx_uint32_t)strlen(writer) + 1,
+        writer);
+
+    //ktx_error_code_e error = ktxTexture2_CompressBasis(kTexture, 0);
+
+    ktx_uint8_t* texData;
+    ktx_size_t texSize;
+    KTX_CHECK(ktxTexture_WriteToMemory(ktxTexture(kTexture), &texData, &texSize));
+
+    Array<uint8> rawData(texSize);
+    std::memcpy(rawData.data(), texData, texSize);
+    free(texData);
+    
+    Serialization::save(buffer, rawData);
 }
 
-void TextureAsset::load(Gfx::PGraphics graphics) 
+void TextureAsset::load(ArchiveBuffer& buffer) 
 {
     setStatus(Status::Loading);
-    ktxTexture2* kTexture;
-    // TODO: consider return
-    std::cout << "Loading texture " << getFullPath() << std::endl;
-    ktxTexture2_CreateFromNamedFile(getFullPath().c_str(), 
-        KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, 
-        &kTexture);
 
-    TextureCreateInfo createInfo;
-    createInfo.width = kTexture->baseWidth;
-    createInfo.height = kTexture->baseHeight;
-    createInfo.depth = kTexture->baseDepth;
-    createInfo.bArray = kTexture->isArray;
-    createInfo.arrayLayers = kTexture->isArray ? kTexture->numLayers : kTexture->numFaces;
-    createInfo.format = Vulkan::cast((VkFormat)kTexture->vkFormat);
-    createInfo.mipLevels = kTexture->numLevels;
-    createInfo.usage = Gfx::SE_IMAGE_USAGE_SAMPLED_BIT;
-    createInfo.resourceData.data = ktxTexture_GetData(ktxTexture(kTexture));
-    createInfo.resourceData.size = ktxTexture_GetDataSize(ktxTexture(kTexture));
-    createInfo.resourceData.owner = Gfx::QueueType::DEDICATED_TRANSFER;
+    Array<uint8> rawData;
+    Serialization::load(buffer, rawData);
+
+    ktxTexture2* kTexture;
+    std::cout << "Loading texture " << name << std::endl;
+    KTX_CHECK(ktxTexture_CreateFromMemory(rawData.data(),
+        rawData.size(),
+        KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, 
+        (ktxTexture**) & kTexture));
+
+    //ktxTexture2_TranscodeBasis(kTexture, KTX_TTF_BC7_RGBA, 0);
+
+    TextureCreateInfo createInfo = {
+            .resourceData = {
+                .size = ktxTexture_GetDataSize(ktxTexture(kTexture)),
+                .data = ktxTexture_GetData(ktxTexture(kTexture)),
+                .owner = Gfx::QueueType::DEDICATED_TRANSFER,
+            },
+            .width = kTexture->baseWidth,
+            .height = kTexture->baseHeight,
+            .depth = kTexture->baseDepth,
+            .bArray = kTexture->isArray,
+            .arrayLayers = kTexture->isArray ? kTexture->numLayers : kTexture->numFaces,
+            .mipLevels = kTexture->numLevels,
+            .format = Vulkan::cast((VkFormat)kTexture->vkFormat),
+            .usage = Gfx::SE_IMAGE_USAGE_SAMPLED_BIT,
+    };
     Gfx::PTexture tex;
     if (kTexture->isCubemap)
     {
-        tex = graphics->createTextureCube(createInfo);
+        tex = buffer.getGraphics()->createTextureCube(createInfo);
     }
     else if (kTexture->isArray)
     {
-        tex = graphics->createTexture3D(createInfo);
+        tex = buffer.getGraphics()->createTexture3D(createInfo);
     }
     else
     {
-        tex = graphics->createTexture2D(createInfo);
+        tex = buffer.getGraphics()->createTexture2D(createInfo);
     }
     tex->transferOwnership(Gfx::QueueType::GRAPHICS);
     setTexture(tex);
+    ktxTexture_Destroy(ktxTexture(kTexture));
     setStatus(Asset::Status::Ready);
 }

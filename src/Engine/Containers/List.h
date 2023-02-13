@@ -34,7 +34,7 @@ public:
             : node(i.node)
         {
         }
-        IteratorBase(IteratorBase&& i)
+        IteratorBase(IteratorBase&& i) noexcept
             : node(std::move(i.node))
         {
         }
@@ -49,7 +49,7 @@ public:
             }
             return *this;
         }
-        IteratorBase& operator=(IteratorBase&& other)
+        IteratorBase& operator=(IteratorBase&& other) noexcept
         {
             if(this != &other)
             {

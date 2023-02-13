@@ -1,5 +1,6 @@
 #pragma once
 #include "GraphicsEnums.h"
+#include "Containers/Array.h"
 
 namespace Seele
 {
@@ -46,9 +47,5 @@ struct MeshBatch
     MeshBatch(MeshBatch&& other) = default;
     MeshBatch& operator=(const MeshBatch& other) = default;
     MeshBatch& operator=(MeshBatch&& other) = default;
-};
-struct StaticMeshBatch : public MeshBatch
-{
-    uint32 index;
 };
 } // namespace Seele

@@ -1,6 +1,6 @@
 #pragma once
 #include "GraphicsResources.h"
-#include "Material/MaterialInterface.h"
+#include "Asset/MaterialAsset.h"
 
 namespace Seele
 {
@@ -14,7 +14,7 @@ public:
 
     Gfx::PIndexBuffer indexBuffer;
     PVertexShaderInput vertexInput;
-    PMaterialInterface referencedMaterial;
+    PMaterialAsset referencedMaterial;
 private:
 };
 DEFINE_REF(Mesh)

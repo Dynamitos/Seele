@@ -1,7 +1,7 @@
 include (ExternalProject)
 
 #--------------ZLIB------------------------------
-add_subdirectory(${ZLIB_ROOT})
+add_subdirectory(${ZLIB_ROOT} ${ZLIB_ROOT})
 
 #--------------FreeType------------------------------
 add_subdirectory(${FREETYPE_ROOT})
@@ -60,7 +60,7 @@ ExternalProject_Add(slang-build
     SOURCE_DIR ${SLANG_ROOT}
     BINARY_DIR ${SLANG_ROOT}
     CONFIGURE_COMMAND ${SLANG_ROOT}/premake.bat vs2019 --file=${SLANG_ROOT}/premake5.lua gmake --arch=${CMAKE_PLATFORM} --deps=true
-    BUILD_COMMAND msbuild slang.sln -p:Configuration=Release -p:Platform=${CMAKE_PLATFORM}
+    BUILD_COMMAND msbuild slang.sln -p:PlatformToolset=v143 -p:Configuration=Release -p:Platform=${CMAKE_PLATFORM}
     INSTALL_COMMAND ""
 )
 elseif(UNIX)
@@ -73,7 +73,7 @@ ExternalProject_Add(slang-build
 )
 endif()
 
-add_library(slang-llvm INTERFACE)
+add_library(slang-llvm SHARED IMPORTED)
 target_link_libraries(slang-llvm INTERFACE 
     $<BUILD_INTERFACE:${SLANG_BINARY_DIR}/slang.lib>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/lib/slang.lib>
@@ -81,7 +81,7 @@ target_link_libraries(slang-llvm INTERFACE
 set_target_properties(slang-llvm PROPERTIES IMPORTED_IMPLIB ${SLANG_BINARY_DIR}/slang.lib)
 set_target_properties(slang-llvm PROPERTIES IMPORTED_LOCATION ${SLANG_BINARY_DIR}/slang-llvm.dll)
 
-add_library(slang-glslang INTERFACE)
+add_library(slang-glslang SHARED IMPORTED)
 target_link_libraries(slang-glslang INTERFACE 
     $<BUILD_INTERFACE:${SLANG_BINARY_DIR}/slang.lib>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/lib/slang.lib>
@@ -89,7 +89,7 @@ target_link_libraries(slang-glslang INTERFACE
 set_target_properties(slang-glslang PROPERTIES IMPORTED_IMPLIB ${SLANG_BINARY_DIR}/slang.lib)
 set_target_properties(slang-glslang PROPERTIES IMPORTED_LOCATION ${SLANG_BINARY_DIR}/slang-glslang.dll)
 
-add_library(slang INTERFACE)
+add_library(slang SHARED IMPORTED)
 
 target_include_directories(slang INTERFACE 
     $<BUILD_INTERFACE:${SLANG_ROOT}/>

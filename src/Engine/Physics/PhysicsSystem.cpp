@@ -22,7 +22,7 @@ void PhysicsSystem::update(float deltaTime)
     Array<Body> initialBodies;
     readRigidBodies(initialBodies);
 
-    std::cout << "Updating " << initialBodies.size() << " bodies" << std::endl;
+    //std::cout << "Updating " << initialBodies.size() << " bodies" << std::endl;
     Array<Body> bodies = integratePhysics(initialBodies, 0, deltaTime);
     writeRigidBodies(bodies);
 

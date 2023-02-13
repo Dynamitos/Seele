@@ -22,11 +22,9 @@ void FontLoader::importAsset(FontImportArgs args)
 {
     std::filesystem::path assetPath = args.filePath.filename();
     assetPath.replace_extension("asset");
-    PFontAsset asset = new FontAsset(assetPath.generic_string());
-    std::error_code code;
-    std::filesystem::copy_file(args.filePath, asset->getFullPath(), code);
+    PFontAsset asset = new FontAsset(args.importPath, assetPath.stem().string());
     asset->setStatus(Asset::Status::Loading);
-    AssetRegistry::get().registerFont(asset, args.importPath);
+    AssetRegistry::get().registerFont(asset);
     import(args, asset);
 }
 
@@ -39,7 +37,7 @@ void FontLoader::import(FontImportArgs args, PFontAsset asset)
     FT_Error error = FT_Init_FreeType(&ft);
     assert(!error);
     FT_Face face;
-    error = FT_New_Face(ft, asset->getFullPath().c_str(), 0, &face);
+    error = FT_New_Face(ft, args.filePath.string().c_str(), 0, &face);
     assert(!error);
     FT_Set_Pixel_Sizes(face, 0, 48);
     for(uint32 c = 0; c < 256; ++c)
@@ -59,7 +57,7 @@ void FontLoader::import(FontImportArgs args, PFontAsset asset)
         imageData.height = face->glyph->bitmap.rows;
         imageData.resourceData.data = face->glyph->bitmap.buffer;
         imageData.resourceData.size = imageData.width * imageData.height;
-        if(imageData.width == 0 || imageData.width == 0)
+        if(imageData.width == 0 || imageData.height == 0)
         {
             glyph.size.x = 1;
             glyph.size.y = 1;

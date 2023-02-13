@@ -47,16 +47,15 @@ void StaticMeshVertexInput::init(Gfx::PGraphics graphics)
     {
         elements.add(accessStreamComponent(VertexStreamComponent(graphics->getNullVertexBuffer(), 0, 0, Gfx::SE_FORMAT_R32G32B32A32_SFLOAT), 4));
     }
-    if(data.textureCoordinates.size())
+    const int32 baseTexCoordAttribute = 5;
+    for(uint32 coordinateIndex = 0; coordinateIndex < MAX_TEXCOORDS; ++coordinateIndex)
     {
-        const int32 baseTexCoordAttribute = 5;
-        for(uint32 coordinateIndex = 0; coordinateIndex < data.textureCoordinates.size(); ++coordinateIndex)
-        {
-            elements.add(accessStreamComponent(
-                data.textureCoordinates[coordinateIndex],
-                static_cast<uint8>(baseTexCoordAttribute + coordinateIndex)
-            ));
-        }
+        if (data.textureCoordinates[coordinateIndex].vertexBuffer == nullptr)
+            continue;
+        elements.add(accessStreamComponent(
+            data.textureCoordinates[coordinateIndex],
+            static_cast<uint8>(baseTexCoordAttribute + coordinateIndex)
+        ));
     }
     initDeclaration(graphics, elements);
 }
@@ -64,6 +63,19 @@ void StaticMeshVertexInput::init(Gfx::PGraphics graphics)
 void StaticMeshVertexInput::setData(StaticMeshDataType&& _data) 
 {
     data = std::move(_data);
+}
+
+void StaticMeshVertexInput::save(ArchiveBuffer& buffer)
+{
+    Serialization::save(buffer, name);
+    Serialization::save(buffer, data);
+}
+
+void StaticMeshVertexInput::load(ArchiveBuffer& buffer)
+{
+    Serialization::load(buffer, name);
+    Serialization::load(buffer, data);
+    init(buffer.getGraphics());
 }
 
 IMPLEMENT_VERTEX_INPUT_TYPE(StaticMeshVertexInput, "StaticMeshVertexInput")

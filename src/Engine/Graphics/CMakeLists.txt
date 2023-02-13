@@ -12,8 +12,6 @@ target_sources(Engine
         Mesh.cpp
         MeshBatch.h
         MeshBatch.cpp
-        RenderMaterial.h
-        RenderMaterial.cpp
         ShaderCompiler.h
         ShaderCompiler.cpp
         VertexShaderInput.h
@@ -31,7 +29,6 @@ target_sources(Engine
             Graphics.h
             Mesh.h
             MeshBatch.h
-            RenderMaterial.h
             ShaderCompiler.h
             VertexShaderInput.h
             StaticMeshVertexInput.h)

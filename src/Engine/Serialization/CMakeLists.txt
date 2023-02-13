@@ -1,6 +1,7 @@
 target_sources(Engine
     PRIVATE
-        ArchiveBuffer.h)
+        ArchiveBuffer.h
+        ArchiveBuffer.cpp)
 
 
 target_sources(Engine

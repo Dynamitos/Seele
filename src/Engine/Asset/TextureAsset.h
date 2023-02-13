@@ -7,20 +7,18 @@ DECLARE_NAME_REF(Gfx, Texture)
 class TextureAsset : public Asset
 {
 public:
+    static constexpr uint64 IDENTIFIER = 0x1;
     TextureAsset();
-    TextureAsset(const std::string& directory, const std::string& name);
-    TextureAsset(const std::filesystem::path& fullPath);
+    TextureAsset(std::string_view folderPath, std::string_view name);
     virtual ~TextureAsset();
-    virtual void save(Gfx::PGraphics graphics) override;
-    virtual void load(Gfx::PGraphics graphics) override;
+    virtual void save(ArchiveBuffer& buffer) const override;
+    virtual void load(ArchiveBuffer& buffer) override;
     void setTexture(Gfx::PTexture _texture)
     {
-        std::scoped_lock lck(lock);
         texture = _texture;
     }
     Gfx::PTexture getTexture()
     {
-        std::scoped_lock lck(lock);
         return texture;
     }
 private:

@@ -21,7 +21,6 @@ private:
     PGraphics graphics;
     Array<VkDescriptorSetLayoutBinding> bindings;
     VkDescriptorSetLayout layoutHandle;
-    std::string name;
     friend class DescriptorAllocator;
 };
 DEFINE_REF(DescriptorLayout)

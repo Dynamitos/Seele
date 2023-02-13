@@ -7,12 +7,12 @@ namespace Seele
 class MaterialInstanceAsset : public Asset
 {
 public:
+    static constexpr uint64 IDENTIFIER = 0x8;
     MaterialInstanceAsset();
-    MaterialInstanceAsset(const std::string &directory, const std::string &name);
-    MaterialInstanceAsset(const std::filesystem::path &fullPath);
+    MaterialInstanceAsset(std::string_view folderPath, std::string_view name);
     virtual ~MaterialInstanceAsset();
-    virtual void save(Gfx::PGraphics graphics) override;
-    virtual void load(Gfx::PGraphics graphics) override;
+    virtual void save(ArchiveBuffer& buffer) const override;
+    virtual void load(ArchiveBuffer& buffer) override;
 private:
     PMaterialInstance material;
 };

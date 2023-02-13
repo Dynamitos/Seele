@@ -9,16 +9,15 @@ DECLARE_REF(MaterialInterface)
 class MeshAsset : public Asset
 {
 public:
+    static constexpr uint64 IDENTIFIER = 0x2;
     MeshAsset();
-    MeshAsset(const std::string& directory, const std::string& name);
-    MeshAsset(const std::filesystem::path& fullPath);
+    MeshAsset(std::string_view folderPath, std::string_view name);
     virtual ~MeshAsset();
-    virtual void save(Gfx::PGraphics graphics) override;
-    virtual void load(Gfx::PGraphics graphics) override;
+    virtual void save(ArchiveBuffer& buffer) const override;
+    virtual void load(ArchiveBuffer& buffer) override;
     void addMesh(PMesh mesh);
     const Array<PMesh> getMeshes();
     //Workaround while no editor
-    Array<PMaterialInterface> referencedMaterials;
     Array<PMesh> meshes;
     Component::Collider physicsMesh;
 };

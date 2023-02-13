@@ -69,7 +69,7 @@ public:
     {
         registry.view<Component>().each(func);
     }
-    Array<StaticMeshBatch> getStaticMeshes();
+    Array<MeshBatch> getStaticMeshes();
     LightEnv getLightBuffer() const;
     Component::Skybox getSkybox();
     Gfx::PStructuredBuffer getSceneDataBuffer() const { return sceneDataBuffer;  }

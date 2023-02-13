@@ -14,9 +14,15 @@ using namespace Seele;
 TextureLoader::TextureLoader(Gfx::PGraphics graphics)
     : graphics(graphics)
 {
-    placeholderAsset = new TextureAsset(std::filesystem::absolute("./textures/placeholder.ktx"));
-    placeholderAsset->load(graphics);
-    AssetRegistry::get().assetRoot.textures[""] = placeholderAsset;
+    //(std::filesystem::absolute("./textures/placeholder.ktx"));
+    //placeholderAsset->load(graphics);
+    //AssetRegistry::get().assetRoot.textures[""] = placeholderAsset;
+    placeholderAsset = new TextureAsset();
+    import(TextureImportArgs{
+        .filePath = std::filesystem::absolute("./textures/placeholder.png"),
+        .importPath = "",
+        }, placeholderAsset);
+    AssetRegistry::get().assetRoot->textures[""] = placeholderAsset;
 }
 
 TextureLoader::~TextureLoader()
@@ -27,10 +33,10 @@ void TextureLoader::importAsset(TextureImportArgs args)
 {
     std::filesystem::path assetPath = args.filePath.filename();
     assetPath.replace_extension("asset");
-    PTextureAsset asset = new TextureAsset(assetPath.generic_string());
+    PTextureAsset asset = new TextureAsset(args.importPath, assetPath.stem().string());
     asset->setStatus(Asset::Status::Loading);
     asset->setTexture(placeholderAsset->getTexture());
-    AssetRegistry::get().registerTexture(asset, args.importPath);
+    AssetRegistry::get().registerTexture(asset);
     import(args, asset);
 }
 
@@ -45,22 +51,22 @@ void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset)
     unsigned char* data = stbi_load(args.filePath.string().c_str(), &totalWidth, &totalHeight, &n, 4);
     ktxTexture2* kTexture;
     ktxTextureCreateInfo createInfo;
+    createInfo.vkFormat = VK_FORMAT_R8G8B8A8_UNORM;
+    createInfo.baseDepth = 1;
+    createInfo.numLevels = 1;
+    createInfo.numLayers = 1;
+    createInfo.isArray = false;
+    createInfo.generateMipmaps = false;
 
     if (args.type == TextureImportType::TEXTURE_CUBEMAP)
     {
         uint32 faceWidth = totalWidth / 4;
         uint32 faceHeight = totalHeight / 3;
         // Cube map
-        createInfo.vkFormat = VK_FORMAT_R8G8B8A8_SRGB;
         createInfo.baseWidth = totalWidth / 4;
         createInfo.baseHeight = totalHeight / 3;
-        createInfo.baseDepth = 1;
         createInfo.numFaces = 6;
         createInfo.numDimensions = 2;
-        createInfo.numLevels = 1;
-        createInfo.numLayers = 1;
-        createInfo.isArray = false;
-        createInfo.generateMipmaps = true;
 
         ktxTexture2_Create(&createInfo,
             KTX_TEXTURE_CREATE_ALLOC_STORAGE,
@@ -85,21 +91,15 @@ void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset)
         loadCubeFace(0, 1, 1); // -X
         loadCubeFace(1, 0, 2); // +Y
         loadCubeFace(1, 2, 3); // -Y
-        loadCubeFace(1, 1, 4); // -Z
+        loadCubeFace(1, 1, 4); // +Z
         loadCubeFace(3, 1, 5); // -Z
     }
     else
     {
-        createInfo.vkFormat = VK_FORMAT_R8G8B8A8_SRGB;
         createInfo.baseWidth = totalWidth;
         createInfo.baseHeight = totalHeight;
-        createInfo.baseDepth = 1;
-        createInfo.numDimensions = 1 + (totalHeight > 1);
-        createInfo.numLevels = 1;
-        createInfo.numLayers = 1;
         createInfo.numFaces = 1;
-        createInfo.isArray = false;
-        createInfo.generateMipmaps = true;
+        createInfo.numDimensions = 1 + (totalHeight > 1);
 
         ktxTexture2_Create(&createInfo,
             KTX_TEXTURE_CREATE_ALLOC_STORAGE,
@@ -108,13 +108,47 @@ void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset)
         ktxTexture_SetImageFromMemory(ktxTexture(kTexture),
             0, 0, 0, data, totalWidth * totalHeight * 4 * sizeof(unsigned char));
     }
+    std::cout << "starting compression of " << textureAsset->getAssetIdentifier() << std::endl;
+    ktxBasisParams params = {
+        .structSize = sizeof(ktxBasisParams),
+        .uastc = KTX_TRUE,
+        .threadCount = std::thread::hardware_concurrency(),
+        .qualityLevel = 0,
+    };
+    //ktx_error_code_e error = ktxTexture2_CompressBasisEx(kTexture, &params);
+    //assert(error == KTX_SUCCESS);
 
+    //error = ktxTexture2_TranscodeBasis(kTexture, KTX_TTF_BC7_RGBA, 0);
+    //assert(error == KTX_SUCCESS);
+    
     stbi_image_free(data);
 
-    ktxTexture_WriteToNamedFile(ktxTexture(kTexture), textureAsset->getFullPath().c_str());
-    ktxTexture_Destroy(ktxTexture(kTexture));
+    TextureCreateInfo texInfo = {
+        .resourceData = {
+            .size = ktxTexture_GetDataSize(ktxTexture(kTexture)),
+            .data = ktxTexture_GetData(ktxTexture(kTexture)),
+        },
+        .width = createInfo.baseWidth,
+        .height = createInfo.baseHeight,
+        .depth = createInfo.baseDepth,
+        .bArray = false,
+        .arrayLayers = createInfo.numFaces,
+        .mipLevels = 1,
+        .samples = 1,
+        .format = (Gfx::SeFormat)kTexture->vkFormat,
+        .usage = args.usage,
+    };
 
-    textureAsset->load(graphics);
+    if (createInfo.numFaces == 1)
+    {
+        textureAsset->setTexture(graphics->createTexture2D(texInfo));
+    }
+    else
+    {
+        textureAsset->setTexture(graphics->createTextureCube(texInfo));
+    }
+
+    ktxTexture_Destroy(ktxTexture(kTexture));
     textureAsset->setStatus(Asset::Status::Ready);
     ////co_return;
 }

@@ -1,64 +1,47 @@
 #include "Asset.h"
 #include "AssetRegistry.h"
+#include "Graphics/Graphics.h"
 
 using namespace Seele;
 
 Asset::Asset()
-    : fullPath("")
+    : folderPath("")
     , name("")
-    , parentDir("")
-    , extension("")
     , status(Status::Uninitialized)
     , byteSize(0)
 {
 }
-Asset::Asset(const std::filesystem::path& path)
+Asset::Asset(std::string_view _folderPath, std::string_view _name)
     : status(Status::Uninitialized)
+    , folderPath(_folderPath)
+    , name(_name)
 {
-    if(path.is_absolute())
+    if (folderPath.empty())
     {
-        fullPath = path;
+        assetId = name;
     }
     else
     {
-        fullPath = AssetRegistry::getRootFolder();
-        fullPath.append(path.generic_string());
+        assetId = folderPath + "/" + name;
     }
-    
-    fullPath.make_preferred();
-    parentDir = fullPath.parent_path();
-    name = fullPath.stem();
-    extension = fullPath.extension();
 }
 
-Asset::Asset(const std::string &directory, const std::string &fileName)
-    : Asset(std::filesystem::path(directory + fileName))
-{
-}
 
 Asset::~Asset()
 {
 }
 
-std::ifstream Asset::getReadStream() const
+std::string Asset::getFolderPath() const
 {
-    return std::ifstream(fullPath, std::ios::binary);
+    return folderPath;
 }
 
-std::ofstream Asset::getWriteStream() const
+std::string Asset::getName() const
 {
-    return std::ofstream(fullPath, std::ios::binary);
+    return name;
 }
 
-std::string Asset::getFileName() const
+std::string Asset::getAssetIdentifier() const
 {
-    return name.generic_string();
-}
-std::string Asset::getFullPath() const
-{
-    return fullPath.generic_string();
-}
-std::string Asset::getExtension() const
-{
-    return extension.generic_string();
+    return assetId;
 }
