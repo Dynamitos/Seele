@@ -1,7 +1,7 @@
 #include "FontLoader.h"
 #include "Graphics/Graphics.h"
-#include "FontAsset.h"
-#include "AssetRegistry.h"
+#include "Asset/FontAsset.h"
+#include "Asset/AssetRegistry.h"
 #include "Graphics/GraphicsResources.h"
 #include <ft2build.h>
 #include FT_FREETYPE_H

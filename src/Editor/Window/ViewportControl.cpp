@@ -2,6 +2,7 @@
 #include "Component/Camera.h"
 
 using namespace Seele;
+using namespace Seele::Editor;
 
 ViewportControl::ViewportControl(const URect& viewportDimensions, Vector initialPos)
     : position(initialPos)

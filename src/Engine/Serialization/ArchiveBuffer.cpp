@@ -44,9 +44,33 @@ void ArchiveBuffer::readFromStream(std::istream& stream)
     stream.read((char*)memory.data(), bufferLength);
 }
 
+void ArchiveBuffer::seek(int64 s, SeekOp op)
+{
+    int64 newPos = position;
+    switch (op)
+    {
+    case SeekOp::BEGIN:
+        newPos = s;
+        break;
+    case SeekOp::END:
+        newPos = memory.size() + s;
+        break;
+    case SeekOp::CURRENT:
+        newPos = position + s;
+        break;
+    }
+    assert(newPos >= 0 && newPos < memory.size());
+    newPos = position;
+}
+
 bool ArchiveBuffer::eof() const
 {
     return position == memory.size();
+}
+
+size_t Seele::ArchiveBuffer::size() const
+{
+    return memory.size();
 }
 
 void ArchiveBuffer::rewind()

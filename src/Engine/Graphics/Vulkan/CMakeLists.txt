@@ -29,7 +29,7 @@ target_sources(Engine
 		VulkanQueue.h
 		VulkanQueue.cpp
 		VulkanViewport.cpp)
-		
+
 target_sources(Engine
 	PUBLIC FILE_SET HEADERS
 		FILES

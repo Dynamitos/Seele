@@ -16,7 +16,15 @@ public:
     void readBytes(void* dest, uint64 size);
     void writeToStream(std::ostream& stream);
     void readFromStream(std::istream& stream);
+    enum class SeekOp
+    {
+        CURRENT,
+        BEGIN,
+        END,
+    };
+    void seek(int64 s, SeekOp op);
     bool eof() const;
+    size_t size() const;
     void rewind();
     Gfx::PGraphics& getGraphics();
 private:
@@ -105,7 +113,6 @@ namespace Serialization
         type.resize(length);
         buffer.readBytes(type.data(), sizeof(T) * type.size());
     }
-
     template<std::floating_point T>
     static void save(ArchiveBuffer& buffer, const Array<T>& type)
     {
@@ -120,6 +127,26 @@ namespace Serialization
         buffer.readBytes(&length, sizeof(uint64));
         type.resize(length);
         buffer.readBytes(type.data(), sizeof(T) * type.size());
+    }
+    template<std::integral T, size_t N>
+    static void save(ArchiveBuffer& buffer, const StaticArray<T, N>& type)
+    {
+        buffer.writeBytes(type.data(), sizeof(T) * N);
+    }
+    template<std::integral T, size_t N>
+    static void load(ArchiveBuffer& buffer, StaticArray<T, N>& type)
+    {
+        buffer.readBytes(type.data(), sizeof(T) * N);
+    }
+    template<std::floating_point T, size_t N>
+    static void save(ArchiveBuffer& buffer, const StaticArray<T, N>& type)
+    {
+        buffer.writeBytes(type.data(), sizeof(T) * N);
+    }
+    template<std::floating_point T, size_t N>
+    static void load(ArchiveBuffer& buffer, StaticArray<T, N>& type)
+    {
+        buffer.readBytes(type.data(), sizeof(T) * N);
     }
     template<typename T>
     static void save(ArchiveBuffer& buffer, const Array<T>& type) requires (!std::is_integral_v<T> && !std::is_floating_point_v<T>)

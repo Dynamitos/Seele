@@ -1,7 +1,7 @@
 #include "TextureLoader.h"
-#include "TextureAsset.h"
+#include "Asset/TextureAsset.h"
 #include "Graphics/Graphics.h"
-#include "AssetRegistry.h"
+#include "Asset/AssetRegistry.h"
 #include "Graphics/Vulkan/VulkanGraphicsEnums.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -115,40 +115,22 @@ void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset)
         .threadCount = std::thread::hardware_concurrency(),
         .qualityLevel = 0,
     };
-    //ktx_error_code_e error = ktxTexture2_CompressBasisEx(kTexture, &params);
-    //assert(error == KTX_SUCCESS);
+    ktx_error_code_e error = ktxTexture2_CompressBasisEx(kTexture, &params);
+    assert(error == KTX_SUCCESS);
 
     //error = ktxTexture2_TranscodeBasis(kTexture, KTX_TTF_BC7_RGBA, 0);
     //assert(error == KTX_SUCCESS);
     
+    ktx_uint8_t* dest;
+    ktx_size_t size;
+    ktxTexture_WriteToMemory(ktxTexture(kTexture), &dest, &size);
+
+    Array<uint8> memory(size);
+    std::memcpy(memory.data(), dest, size);
+
+    textureAsset->createFromMemory(std::move(memory), graphics);
+
+    free(dest);
     stbi_image_free(data);
-
-    TextureCreateInfo texInfo = {
-        .resourceData = {
-            .size = ktxTexture_GetDataSize(ktxTexture(kTexture)),
-            .data = ktxTexture_GetData(ktxTexture(kTexture)),
-        },
-        .width = createInfo.baseWidth,
-        .height = createInfo.baseHeight,
-        .depth = createInfo.baseDepth,
-        .bArray = false,
-        .arrayLayers = createInfo.numFaces,
-        .mipLevels = 1,
-        .samples = 1,
-        .format = (Gfx::SeFormat)kTexture->vkFormat,
-        .usage = args.usage,
-    };
-
-    if (createInfo.numFaces == 1)
-    {
-        textureAsset->setTexture(graphics->createTexture2D(texInfo));
-    }
-    else
-    {
-        textureAsset->setTexture(graphics->createTextureCube(texInfo));
-    }
-
-    ktxTexture_Destroy(ktxTexture(kTexture));
-    textureAsset->setStatus(Asset::Status::Ready);
     ////co_return;
 }

@@ -6,22 +6,14 @@ target_sources(Engine
         AssetRegistry.cpp
         FontAsset.h
         FontAsset.cpp
-        FontLoader.h
-        FontLoader.cpp
         MaterialAsset.h
         MaterialAsset.cpp
         MaterialInstanceAsset.h
         MaterialInstanceAsset.cpp
-        MaterialLoader.h
-        MaterialLoader.cpp
         MeshAsset.h
         MeshAsset.cpp
-        MeshLoader.h
-        MeshLoader.cpp
         TextureAsset.h
-        TextureAsset.cpp
-        TextureLoader.h
-        TextureLoader.cpp)
+        TextureAsset.cpp)
 
 target_sources(Engine
     PUBLIC FILE_SET HEADERS
@@ -29,11 +21,7 @@ target_sources(Engine
             Asset.h
             AssetRegistry.h
             FontAsset.h
-            FontLoader.h
             MaterialAsset.h
             MaterialInstanceAsset.h
-            MaterialLoader.h
             MeshAsset.h
-            MeshLoader.h
-            TextureAsset.h
-            TextureLoader.h)
+            TextureAsset.h)

@@ -290,6 +290,18 @@ public:
         markIteratorsDirty();
         return getNode(root)->pair.value;
     }
+    
+    constexpr const mapped_type& at(const key_type& key) const
+    {
+        for(const auto& node : nodeContainer)
+        {
+            if(equal(node.pair.key, key))
+            {
+                return node.pair.value;
+            }
+        }
+        throw std::logic_error("Key not found");
+    }
     constexpr iterator find(const key_type& key)
     {
         root = splay(root, key);
@@ -621,7 +633,7 @@ private:
             return (!isValid(node->rightChild)) ? r : rotateLeft(r);
         }
     }
-    bool equal(const key_type& a, const key_type& b)
+    bool equal(const key_type& a, const key_type& b) const
     {
         return !comp(a, b) && !comp(b, a);
     }

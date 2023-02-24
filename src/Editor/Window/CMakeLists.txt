@@ -1,9 +1,9 @@
 target_sources(Editor
     PRIVATE
-        GameView.h
-        GameView.cpp
         InspectorView.h
         InspectorView.cpp
+        PlayView.h
+        PlayView.cpp
         SceneView.h
         SceneView.cpp
         ViewportControl.h

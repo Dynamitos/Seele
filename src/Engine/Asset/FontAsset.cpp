@@ -22,10 +22,9 @@ FontAsset::~FontAsset()
 void FontAsset::save(ArchiveBuffer& buffer) const
 {
     uint64 numGlyphs = glyphs.size();
-    buffer.writeBytes(&numGlyphs, sizeof(uint64));
+    Serialization::save(buffer, numGlyphs);
     for (auto& [index, glyph] : glyphs)
     {
-        Serialization::save(buffer, index);
 
         Array<uint8> textureData;
         ktxTexture2* kTexture;
@@ -36,6 +35,7 @@ void FontAsset::save(ArchiveBuffer& buffer) const
             .baseDepth = glyph.texture->getSizeZ(),
             .numDimensions = glyph.texture->getSizeZ() > 1 ? 3u : glyph.texture->getSizeY() > 1 ? 2u : 1u,
             .numLevels = glyph.texture->getMipLevels(),
+            .numLayers = glyph.texture->getSizeZ(),
             .numFaces = glyph.texture->getNumFaces(),
             .isArray = false,
             .generateMipmaps = false,
@@ -64,9 +64,13 @@ void FontAsset::save(ArchiveBuffer& buffer) const
         ktx_size_t texSize;
         ktxTexture_WriteToMemory(ktxTexture(kTexture), &texData, &texSize);
 
-        buffer.writeBytes(texData, texSize);
+        Array<uint8> rawData(texSize);
+        std::memcpy(rawData.data(), texData, texSize);
+
         free(texData);
 
+        Serialization::save(buffer, index);
+        Serialization::save(buffer, rawData);
         Serialization::save(buffer, glyph.size);
         Serialization::save(buffer, glyph.bearing);
         Serialization::save(buffer, glyph.advance);
@@ -77,7 +81,7 @@ void FontAsset::save(ArchiveBuffer& buffer) const
 void FontAsset::load(ArchiveBuffer& buffer)
 {
     uint64 numGlyphs = glyphs.size();
-    buffer.readBytes(&numGlyphs, sizeof(uint64));
+    Serialization::load(buffer, numGlyphs);
     for (uint64 x = 0; x < numGlyphs; ++x)
     {
         uint32 index;
@@ -85,11 +89,8 @@ void FontAsset::load(ArchiveBuffer& buffer)
 
         Glyph& glyph = glyphs[index];
 
-        uint64 texSize;
-        buffer.readBytes(&texSize, sizeof(uint64));
         Array<uint8> rawTex;
-        rawTex.resize(texSize);
-        buffer.readBytes(rawTex.data(), rawTex.size());
+        Serialization::load(buffer, rawTex);
 
         ktxTexture2* kTexture;
         ktxTexture2_CreateFromMemory(rawTex.data(),

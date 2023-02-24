@@ -6,6 +6,16 @@
 
 using namespace Seele;
 
+void ShaderExpression::save(ArchiveBuffer& buffer) const
+{
+    Serialization::save(buffer, key);
+}
+
+void ShaderExpression::load(ArchiveBuffer& buffer)
+{
+    Serialization::load(buffer, key);
+}
+
 ShaderParameter::ShaderParameter(std::string name, uint32 byteOffset, uint32 binding) 
     : name(name)
     , byteOffset(byteOffset)
@@ -17,8 +27,15 @@ ShaderParameter::~ShaderParameter()
 {
 }
 
+std::string ShaderParameter::evaluate(Map<int32, std::string>& varState) const
+{
+    varState[key] = name;
+    return "";
+}
+
 void ShaderParameter::save(ArchiveBuffer& buffer) const
 {
+    ShaderExpression::save(buffer);
     Serialization::save(buffer, name);
     Serialization::save(buffer, byteOffset);
     Serialization::save(buffer, binding);
@@ -26,6 +43,7 @@ void ShaderParameter::save(ArchiveBuffer& buffer) const
 
 void ShaderParameter::load(ArchiveBuffer& buffer)
 {
+    ShaderExpression::load(buffer);
     Serialization::load(buffer, name);
     Serialization::load(buffer, byteOffset);
     Serialization::load(buffer, binding);
@@ -35,6 +53,8 @@ FloatParameter::FloatParameter(std::string name, uint32 byteOffset, uint32 bindi
     : ShaderParameter(name, byteOffset, binding)
     , data(0)
 {
+    output.name = name;
+    output.type = ExpressionType::FLOAT;
 }
 
 FloatParameter::~FloatParameter() 
@@ -58,20 +78,31 @@ void FloatParameter::updateDescriptorSet(Gfx::PDescriptorSet, uint8* dst)
     std::memcpy(dst + byteOffset, &data, sizeof(float));
 }
 
+void FloatParameter::generateDeclaration(std::ofstream& stream) const
+{
+    stream << "\tlayout(offset = " << byteOffset << ") float " << name << ";\n";
+}
+
 VectorParameter::VectorParameter(std::string name, uint32 byteOffset, uint32 binding) 
     : ShaderParameter(name, byteOffset, binding)
     , data()
 {
+    output.name = name;
+    output.type = ExpressionType::FLOAT3;
 }
 
 VectorParameter::~VectorParameter() 
 {
 }
 
-
 void VectorParameter::updateDescriptorSet(Gfx::PDescriptorSet, uint8* dst) 
 {
     std::memcpy(dst + byteOffset, &data, sizeof(Vector));
+}
+
+void VectorParameter::generateDeclaration(std::ofstream& stream) const
+{
+    stream << "\tlayout(offset = " << byteOffset << ") float3 " << name << ";\n";
 }
 
 void VectorParameter::save(ArchiveBuffer& buffer) const
@@ -88,7 +119,9 @@ void VectorParameter::load(ArchiveBuffer& buffer)
 
 TextureParameter::TextureParameter(std::string name, uint32 byteOffset, uint32 binding) 
     : ShaderParameter(name, byteOffset, binding)
-{   
+{
+    output.name = name;
+    output.type = ExpressionType::TEXTURE;
 }
 
 TextureParameter::~TextureParameter() 
@@ -98,6 +131,11 @@ TextureParameter::~TextureParameter()
 void TextureParameter::updateDescriptorSet(Gfx::PDescriptorSet descriptorSet, uint8*) 
 {
     descriptorSet->updateTexture(binding, data->getTexture());
+}
+
+void TextureParameter::generateDeclaration(std::ofstream& stream) const
+{
+    stream << "\tTexture2D " << name << ";\n";
 }
 
 void TextureParameter::save(ArchiveBuffer& buffer) const
@@ -117,6 +155,8 @@ void TextureParameter::load(ArchiveBuffer& buffer)
 SamplerParameter::SamplerParameter(std::string name, uint32 byteOffset, uint32 binding) 
     : ShaderParameter(name, byteOffset, binding)
 {
+    output.name = name;
+    output.type = ExpressionType::SAMPLER;
 }
 
 SamplerParameter::~SamplerParameter() 
@@ -129,6 +169,10 @@ void SamplerParameter::updateDescriptorSet(Gfx::PDescriptorSet descriptorSet, ui
     descriptorSet->updateSampler(binding, data);
 }
 
+void SamplerParameter::generateDeclaration(std::ofstream& stream) const
+{
+    stream << "\tSamplerState " << name << ";\n";
+}
 
 void SamplerParameter::save(ArchiveBuffer& buffer) const
 {
@@ -144,6 +188,8 @@ void SamplerParameter::load(ArchiveBuffer& buffer)
 CombinedTextureParameter::CombinedTextureParameter(std::string name, uint32 byteOffset, uint32 binding) 
     : ShaderParameter(name, byteOffset, binding)
 {
+    output.name = name;
+    output.type = ExpressionType::TEXTURE;
 }
 
 CombinedTextureParameter::~CombinedTextureParameter() 
@@ -151,10 +197,14 @@ CombinedTextureParameter::~CombinedTextureParameter()
     
 }
 
-
 void CombinedTextureParameter::updateDescriptorSet(Gfx::PDescriptorSet descriptorSet, uint8*) 
 {
     descriptorSet->updateTexture(binding, data->getTexture(), sampler);
+}
+
+void CombinedTextureParameter::generateDeclaration(std::ofstream& stream) const
+{
+    stream << "\tTexture2D " << name << ";\n";
 }
 
 void CombinedTextureParameter::save(ArchiveBuffer& buffer) const
@@ -170,6 +220,213 @@ void CombinedTextureParameter::load(ArchiveBuffer& buffer)
     Serialization::load(buffer, filename);
     data = AssetRegistry::findTexture(filename);
     sampler = buffer.getGraphics()->createSamplerState({});
+}
+
+ConstantExpression::ConstantExpression()
+{
+}
+
+ConstantExpression::ConstantExpression(std::string expr, ExpressionType type)
+    : expr(expr)
+{
+    output.name = "cexpr";
+    output.type = type;
+}
+
+ConstantExpression::~ConstantExpression()
+{
+    
+}
+
+std::string ConstantExpression::evaluate(Map<int32, std::string>& varState) const 
+{
+    std::string varName = std::format("const_exp_{}", std::abs(key));
+    varState[key] = varName;
+    return std::format("let {} = {};\n", varName, expr);
+}
+
+void ConstantExpression::save(ArchiveBuffer& buffer) const 
+{
+    ShaderExpression::save(buffer);
+    Serialization::save(buffer, expr);
+}
+
+void ConstantExpression::load(ArchiveBuffer& buffer)
+{
+    ShaderExpression::load(buffer);
+    Serialization::load(buffer, expr);
+}
+
+AddExpression::AddExpression()
+{
+
+}
+
+AddExpression::~AddExpression()
+{
+    
+}
+
+std::string AddExpression::evaluate(Map<int32, std::string>& varState) const 
+{
+    std::string varName = std::format("exp_{}", key);
+    varState[key] = varName;
+    return std::format("let {} = {} + {};\n", varName, varState[inputs.at("lhs").source], varState[inputs.at("rhs").source]);
+}
+
+void AddExpression::save(ArchiveBuffer& buffer) const 
+{
+    ShaderExpression::save(buffer);
+}
+
+void AddExpression::load(ArchiveBuffer& buffer)
+{
+    ShaderExpression::load(buffer);
+}
+
+std::string SubExpression::evaluate(Map<int32, std::string>& varState) const 
+{
+    std::string varName = std::format("exp_{}", key);
+    varState[key] = varName;
+    return std::format("let {} = {} - {};\n", varName, varState[inputs.at("lhs").source], varState[inputs.at("rhs").source]);
+}
+
+void SubExpression::save(ArchiveBuffer& buffer) const 
+{
+    ShaderExpression::save(buffer);
+}
+
+void SubExpression::load(ArchiveBuffer& buffer)
+{
+    ShaderExpression::load(buffer);
+}
+
+std::string MulExpression::evaluate(Map<int32, std::string>& varState) const 
+{
+    std::string varName = std::format("exp_{}", key);
+    varState[key] = varName;
+    return std::format("let {} = mul({}, {});\n", varName, varState[inputs.at("lhs").source], varState[inputs.at("rhs").source]);
+}
+
+void MulExpression::save(ArchiveBuffer& buffer) const 
+{
+    ShaderExpression::save(buffer);
+}
+
+void MulExpression::load(ArchiveBuffer& buffer)
+{
+    ShaderExpression::load(buffer);
+}
+
+std::string SwizzleExpression::evaluate(Map<int32, std::string>& varState) const 
+{
+    std::string varName = std::format("exp_{}", key);
+    std::string swizzle = "";
+    for(uint32 i = 0; i < 4; ++i)
+    {
+        if(comp[i] == -1)
+        {
+            break;
+        }
+        switch (comp[i])
+        {
+        case 0:
+            swizzle += "x";
+            break;
+        case 1:
+            swizzle += "y";
+            break;
+        case 2:
+            swizzle += "z";
+            break;
+        case 3:
+            swizzle += "w";
+        default:
+            throw std::logic_error("invalid component");
+        }
+    }
+    varState[key] = varName;
+    return std::format("let {} = {}.{};\n", varName, varState[inputs.at("target").source], swizzle);
+}
+
+void SwizzleExpression::save(ArchiveBuffer& buffer) const 
+{
+    ShaderExpression::save(buffer);
+    Serialization::save(buffer, comp);
+}
+
+void SwizzleExpression::load(ArchiveBuffer& buffer)
+{
+    ShaderExpression::load(buffer);
+    Serialization::load(buffer, comp);
+}
+
+std::string SampleExpression::evaluate(Map<int32, std::string>& varState) const 
+{
+    std::string varName = std::format("exp_{}", key);
+    varState[key] = varName;
+    return std::format("let {} = {}.Sample({}, {});\n", varName, varState[inputs.at("texture").source], varState[inputs.at("sampler").source], varState[inputs.at("coords").source]);
+}
+
+void SampleExpression::save(ArchiveBuffer& buffer) const 
+{
+    ShaderExpression::save(buffer);
+}
+
+void SampleExpression::load(ArchiveBuffer& buffer)
+{
+    ShaderExpression::load(buffer);
+}
+
+void Serialization::save(ArchiveBuffer& buffer, const PShaderExpression& parameter)
+{
+    Serialization::save(buffer, parameter->getIdentifier());
+    parameter->save(buffer);
+}
+
+void Serialization::load(ArchiveBuffer& buffer, PShaderExpression& parameter)
+{
+    uint64 identifier = 0;
+    Serialization::load(buffer, identifier);
+    switch (identifier)
+    {
+    case FloatParameter::IDENTIFIER:
+        parameter = new FloatParameter();
+        break;
+    case VectorParameter::IDENTIFIER:
+        parameter = new VectorParameter();
+        break;
+    case TextureParameter::IDENTIFIER:
+        parameter = new TextureParameter();
+        break;
+    case SamplerParameter::IDENTIFIER:
+        parameter = new SamplerParameter();
+        break;
+    case CombinedTextureParameter::IDENTIFIER:
+        parameter = new CombinedTextureParameter();
+        break;
+    case ConstantExpression::IDENTIFIER:
+        parameter = new ConstantExpression();
+        break;
+    case AddExpression::IDENTIFIER:
+        parameter = new AddExpression();
+        break;
+    case SubExpression::IDENTIFIER:
+        parameter = new SubExpression();
+        break;
+    case MulExpression::IDENTIFIER:
+        parameter = new MulExpression();
+        break;
+    case SwizzleExpression::IDENTIFIER:
+        parameter = new SwizzleExpression();
+        break;
+    case SampleExpression::IDENTIFIER:
+        parameter = new SampleExpression();
+        break;
+    default:
+        throw std::runtime_error("Unknown Identifier");
+    }
+    parameter->load(buffer);
 }
 
 void Serialization::save(ArchiveBuffer& buffer, const PShaderParameter& parameter)

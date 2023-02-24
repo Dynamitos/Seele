@@ -26,7 +26,7 @@ VertexStageOutput vertexMain(
     VertexStageOutput output;
     VertexValueCache cache = input.getVertexCache();
     float3 worldPosition = input.getWorldPosition();
-    worldPosition += gMaterial.getWorldOffset();
+    //worldPosition += gMaterial.getWorldOffset();
     float4 clipSpacePosition;
     
     float3x3 tangentToLocal = cache.getTangentToLocal();

@@ -4,10 +4,6 @@
 #include "TextureAsset.h"
 #include "MaterialAsset.h"
 #include "MaterialInstanceAsset.h"
-#include "FontLoader.h"
-#include "TextureLoader.h"
-#include "MaterialLoader.h"
-#include "MeshLoader.h"
 #include "Graphics/Mesh.h"
 #include "Graphics/Graphics.h"
 #include "Window/WindowManager.h"
@@ -27,46 +23,6 @@ AssetRegistry::~AssetRegistry()
 void AssetRegistry::init(const std::string& rootFolder, Gfx::PGraphics graphics)
 {
     get().initialize(rootFolder, graphics);
-}
-
-void AssetRegistry::importMesh(MeshImportArgs args)
-{
-    if (get().getOrCreateFolder(args.importPath)->meshes.contains(args.filePath.stem().string()))
-    {
-        // skip importing duplicates
-        return;
-    }
-    get().meshLoader->importAsset(args);
-}
-
-void AssetRegistry::importTexture(TextureImportArgs args)
-{
-    if (get().getOrCreateFolder(args.importPath)->textures.contains(args.filePath.stem().string()))
-    {
-        // skip importing duplicates
-        return;
-    }
-    get().textureLoader->importAsset(args);
-}
-
-void AssetRegistry::importFont(FontImportArgs args)
-{
-    if (get().getOrCreateFolder(args.importPath)->fonts.contains(args.filePath.stem().string()))
-    {
-        // skip importing duplicates
-        return;
-    }
-    get().fontLoader->importAsset(args);
-}
-
-void AssetRegistry::importMaterial(MaterialImportArgs args)
-{
-    if (get().getOrCreateFolder(args.importPath)->materials.contains(args.filePath.stem().string()))
-    {
-        // skip importing duplicates
-        return;
-    }
-    get().materialLoader->importAsset(args);
 }
 
 PMeshAsset AssetRegistry::findMesh(const std::string &filePath)
@@ -150,15 +106,12 @@ void AssetRegistry::saveRegistry()
     get().saveRegistryInternal();
 }
 
+
 void AssetRegistry::initialize(const std::filesystem::path &_rootFolder, Gfx::PGraphics _graphics)
 {
     this->graphics = _graphics;
     this->rootFolder = _rootFolder;
     this->assetRoot = new AssetFolder("");
-    this->fontLoader = new FontLoader(graphics);
-    this->meshLoader = new MeshLoader(graphics);
-    this->textureLoader = new TextureLoader(graphics);
-    this->materialLoader = new MaterialLoader(graphics);
     loadRegistryInternal();
 }
 
@@ -167,7 +120,6 @@ void AssetRegistry::loadRegistryInternal()
     peekFolder(assetRoot);
     loadFolder(assetRoot);
 }
-
 
 void AssetRegistry::peekFolder(AssetFolder* folder)
 {
@@ -192,48 +144,9 @@ void AssetRegistry::peekFolder(AssetFolder* folder)
 
         ArchiveBuffer buffer(graphics);
         buffer.readFromStream(stream);
-
-        // Read asset type
-        uint64 identifier;
-        Serialization::load(buffer, identifier);
-
-        // Read name
-        std::string name;
-        Serialization::load(buffer, name);
-
-        // Read folder
-        std::string folderPath;
-        Serialization::load(buffer, folderPath);
-
-        PAsset asset;
-        switch (identifier)
-        {
-        case TextureAsset::IDENTIFIER:
-            asset = new TextureAsset(folderPath, name);
-            folder->textures[asset->getName()] = asset;
-            break;
-        case MeshAsset::IDENTIFIER:
-            asset = new MeshAsset(folderPath, name);
-            folder->meshes[asset->getName()] = asset;
-            break;
-        case MaterialAsset::IDENTIFIER:
-            asset = new MaterialAsset(folderPath, name);
-            folder->materials[asset->getName()] = asset;
-            break;
-        case MaterialInstanceAsset::IDENTIFIER:
-            asset = new MaterialInstanceAsset(folderPath, name);
-            // TODO
-            break;
-        case FontAsset::IDENTIFIER:
-            asset = new FontAsset(folderPath, name);
-            folder->fonts[asset->getName()] = asset;
-            break;
-        default:
-            throw new std::logic_error("Unknown Identifier");
-        }
+        peekAsset(buffer);
     }
 }
-
 
 void AssetRegistry::loadFolder(AssetFolder* folder)
 {
@@ -251,43 +164,99 @@ void AssetRegistry::loadFolder(AssetFolder* folder)
 
         ArchiveBuffer buffer(graphics);
         buffer.readFromStream(stream);
-
-        // Read asset type
-        uint64 identifier;
-        Serialization::load(buffer, identifier);
-
-        // Read name
-        std::string name;
-        Serialization::load(buffer, name);
-        
-        // Read folder
-        std::string folderPath;
-        Serialization::load(buffer, folderPath);
-
-        PAsset asset;
-        switch (identifier)
-        {
-        case TextureAsset::IDENTIFIER:
-            asset = folder->textures.at(name);
-            break;
-        case MeshAsset::IDENTIFIER:
-            asset = folder->meshes.at(name);
-            break;
-        case MaterialAsset::IDENTIFIER:
-            asset = folder->materials.at(name);
-            break;
-        case MaterialInstanceAsset::IDENTIFIER:
-            //asset = new MaterialInstanceAsset(path);
-            // TODO
-            break;
-        case FontAsset::IDENTIFIER:
-            asset = folder->fonts.at(name);
-            break;
-        default:
-            throw new std::logic_error("Unknown Identifier");
-        }
-        asset->load(buffer);
+        loadAsset(buffer);
     }
+}
+
+void AssetRegistry::peekAsset(ArchiveBuffer& buffer)
+{
+    // Read asset type
+    uint64 identifier;
+    Serialization::load(buffer, identifier);
+
+    // Read name
+    std::string name;
+    Serialization::load(buffer, name);
+
+    // Read folder
+    std::string folderPath;
+    Serialization::load(buffer, folderPath);
+
+    uint64 assetSize;
+    Serialization::load(buffer, assetSize);
+
+    AssetFolder* folder = getOrCreateFolder(folderPath);
+
+    PAsset asset;
+    switch (identifier)
+    {
+    case TextureAsset::IDENTIFIER:
+        asset = new TextureAsset(folderPath, name);
+        folder->textures[asset->getName()] = asset;
+        break;
+    case MeshAsset::IDENTIFIER:
+        asset = new MeshAsset(folderPath, name);
+        folder->meshes[asset->getName()] = asset;
+        break;
+    case MaterialAsset::IDENTIFIER:
+        asset = new MaterialAsset(folderPath, name);
+        folder->materials[asset->getName()] = asset;
+        break;
+    case MaterialInstanceAsset::IDENTIFIER:
+        asset = new MaterialInstanceAsset(folderPath, name);
+        // TODO
+        break;
+    case FontAsset::IDENTIFIER:
+        asset = new FontAsset(folderPath, name);
+        folder->fonts[asset->getName()] = asset;
+        break;
+    default:
+        throw new std::logic_error("Unknown Identifier");
+    }
+}
+
+void AssetRegistry::loadAsset(ArchiveBuffer& buffer)
+{
+    // Read asset type
+    uint64 identifier;
+    Serialization::load(buffer, identifier);
+
+    // Read name
+    std::string name;
+    Serialization::load(buffer, name);
+
+    // Read folder
+    std::string folderPath;
+    Serialization::load(buffer, folderPath);
+
+    uint64 assetSize;
+    Serialization::load(buffer, assetSize);
+
+    AssetFolder* folder = getOrCreateFolder(folderPath);
+
+    PAsset asset;
+    switch (identifier)
+    {
+    case TextureAsset::IDENTIFIER:
+        asset = folder->textures.at(name);
+        break;
+    case MeshAsset::IDENTIFIER:
+        asset = folder->meshes.at(name);
+        break;
+    case MaterialAsset::IDENTIFIER:
+        asset = folder->materials.at(name);
+        break;
+    case MaterialInstanceAsset::IDENTIFIER:
+        //asset = new MaterialInstanceAsset(path);
+        // TODO
+        break;
+    case FontAsset::IDENTIFIER:
+        asset = folder->fonts.at(name);
+        break;
+    default:
+        throw new std::logic_error("Unknown Identifier");
+    }
+    asset->load(buffer);
 }
 
 void AssetRegistry::saveRegistryInternal()
@@ -334,6 +303,9 @@ void AssetRegistry::saveAsset(PAsset asset, uint64 identifier, const std::filesy
     Serialization::save(assetBuffer, name);
     // write folder
     Serialization::save(assetBuffer, folderPath.string());
+    // write the asset size
+    asset->updateByteSize();
+    Serialization::save(assetBuffer, asset->getByteSize());
     // write asset data
     asset->save(assetBuffer);
     assetBuffer.writeToStream(assetStream);
@@ -420,3 +392,4 @@ AssetRegistry::AssetFolder::~AssetFolder()
         delete child;
     }
 }
+

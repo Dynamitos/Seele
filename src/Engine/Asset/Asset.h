@@ -18,6 +18,8 @@ public:
     Asset(std::string_view folderPath, std::string_view name);
     virtual ~Asset();
 
+    void updateByteSize();
+
     virtual void save(ArchiveBuffer& buffer) const = 0;
     virtual void load(ArchiveBuffer& buffer) = 0;
     
@@ -27,6 +29,8 @@ public:
     std::string getFolderPath() const;
     // returns the identifier with which it can be found from the asset registry
     std::string getAssetIdentifier() const;
+    // returns the size of the assets data in bytes(excluding name and folder)
+    uint64 getByteSize() const { return byteSize; }
 
     constexpr Status getStatus() 
     {
@@ -41,7 +45,7 @@ protected:
     std::string name;
     std::string assetId;
     Status status;
-    uint32 byteSize;
+    uint64 byteSize;
 };
 DEFINE_REF(Asset)
 } // namespace Seele

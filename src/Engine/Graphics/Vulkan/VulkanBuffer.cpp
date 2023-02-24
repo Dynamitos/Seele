@@ -235,7 +235,7 @@ void *ShaderBuffer::lockRegion(uint64 regionOffset, uint64 regionSize, bool bWri
 
         graphics->getQueueCommands(owner)->submitCommands();
         vkQueueWaitIdle(graphics->getQueueCommands(owner)->getQueue()->getHandle());
-
+        stagingBuffer->getMappedPointer(); // this maps the memory if not mapped already
         stagingBuffer->flushMappedMemory();
         pending.stagingBuffer = stagingBuffer;
 

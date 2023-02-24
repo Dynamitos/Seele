@@ -80,7 +80,6 @@ target_link_libraries(Engine PUBLIC dp::thread-pool)
 target_link_libraries(Engine PUBLIC crcpp)
 target_link_libraries(Engine PUBLIC odeint)
 target_link_libraries(Engine PUBLIC zlib)
-target_link_libraries(Engine PUBLIC zlibstatic)
 if(UNIX)
 target_link_libraries(Engine PUBLIC Threads::Threads)
 target_link_libraries(Engine PUBLIC dl)
@@ -89,7 +88,7 @@ endif()
 add_executable(Editor "")
 target_link_libraries(Editor PRIVATE Engine)
 target_include_directories(Editor PRIVATE src/Editor)
-#target_compile_definitions(Editor PRIVATE EDITOR)
+target_compile_definitions(Editor PRIVATE EDITOR=1)
 
 add_executable(AssetViewer "")
 target_link_libraries(AssetViewer PRIVATE Engine)
@@ -149,7 +148,6 @@ install(
         nlohmann_json
         ThreadPool
         zlib
-        zlibstatic
         IrrXML
         odeint
     EXPORT 

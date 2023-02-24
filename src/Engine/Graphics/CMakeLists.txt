@@ -18,7 +18,7 @@ target_sources(Engine
         VertexShaderInput.cpp
         StaticMeshVertexInput.h
         StaticMeshVertexInput.cpp)
-        
+
 target_sources(Engine
     PUBLIC FILE_SET HEADERS
         FILES

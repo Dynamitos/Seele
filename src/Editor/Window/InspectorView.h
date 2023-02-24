@@ -8,6 +8,8 @@
 namespace Seele
 {
 DECLARE_REF(Actor)
+namespace Editor
+{
 class InspectorView : public View
 {
 public:
@@ -39,4 +41,5 @@ protected:
 	virtual void fileCallback(int count, const char** paths) override;
 };
 DEFINE_REF(InspectorView)
+} // namespace Editor
 } // namespace Seele

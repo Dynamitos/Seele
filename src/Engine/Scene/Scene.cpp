@@ -86,12 +86,13 @@ LightEnv Scene::getLightBuffer() const
 {
     LightEnv result;
     result.directionalLights[0].color = Vector4(0.4, 0.3, 0.5, 1.0);
-    result.directionalLights[0].direction = Vector4(0.5, 0.5, 0, 0);
-    result.directionalLights[0].intensity = Vector4(1.0, 0.9, 0.7, 0.5);\
+    result.directionalLights[0].direction = Vector4(0.5, -0.5, 0, 0);
+    result.directionalLights[0].intensity = Vector4(1.0, 0.9, 0.7, 0.5);
     result.numDirectionalLights = 1;
     result.numPointLights = 0;
     return result;
 }
+
 
 Component::Skybox Scene::getSkybox()
 {

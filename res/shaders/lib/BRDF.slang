@@ -20,7 +20,7 @@ struct BlinnPhong : IBRDF
         float3 h = normalize(light + view);
         float nDotH = saturate(dot(normal, h));
 		
-        return baseColor * nDotL + lightColor * specular * pow(nDotH, sheen);
+        return baseColor;
     }
 };
 

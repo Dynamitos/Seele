@@ -1,13 +1,21 @@
 #include "Window/WindowManager.h"
 #include "Window/SceneView.h"
-#include "Window/GameView.h"
+#include "Window/PlayView.h"
 #include "Window/InspectorView.h"
 #include "Asset/AssetRegistry.h"
+#include "Asset/AssetImporter.h"
 #include "Asset/TextureLoader.h"
 #include "Graphics/Vulkan/VulkanGraphics.h"
+#include "Asset/MeshLoader.h"
+#include "Asset/TextureLoader.h"
+#include "Asset/MaterialLoader.h"
+#include "Asset/FontLoader.h"
+#include "Asset/AssetImporter.h"
 
 using namespace Seele;
 using namespace Seele::Editor;
+
+extern AssetRegistry* instance;
 
 int main()
 {
@@ -17,6 +25,180 @@ int main()
     graphics->init(initializer);
     PWindowManager windowManager = new WindowManager();
     AssetRegistry::init(std::string("C:\\Users\\Dynamitos\\TrackClear\\Assets"), graphics);
+    AssetImporter::init(graphics, instance);
+    AssetImporter::importFont(FontImportArgs{
+        .filePath = "./fonts/Calibri.ttf",
+        });
+    AssetImporter::importMesh(MeshImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/models/arena.fbx",
+        });
+    AssetImporter::importMesh(MeshImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/models/train.fbx",
+        });
+    AssetImporter::importMesh(MeshImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/models/bird.fbx",
+        });
+    AssetImporter::importMesh(MeshImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/models/cube.fbx",
+        });
+    AssetImporter::importMesh(MeshImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/models/flameThrower.fbx",
+        });
+    AssetImporter::importMesh(MeshImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/models/player.fbx",
+        });
+    AssetImporter::importMesh(MeshImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/models/shotgun.fbx",
+        });
+    AssetImporter::importMesh(MeshImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/models/track.fbx",
+        });
+    AssetImporter::importMesh(MeshImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/models/zombie.fbx",
+        });
+
+    AssetImporter::importTexture(TextureImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/textures/Dirt.png",
+        });
+    AssetImporter::importTexture(TextureImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/textures/DirtGrass.png",
+        });
+    AssetImporter::importTexture(TextureImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/textures/Grass.png",
+        });
+    AssetImporter::importTexture(TextureImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/textures/Ice.png",
+        });
+    AssetImporter::importTexture(TextureImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/textures/Lava.png",
+        });
+    AssetImporter::importTexture(TextureImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/textures/Obsidian.png",
+        });
+    AssetImporter::importTexture(TextureImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/textures/Rocks.png",
+        });
+    AssetImporter::importTexture(TextureImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/textures/Sand.png",
+        });
+    AssetImporter::importTexture(TextureImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/textures/Water.png",
+        });
+    AssetImporter::importTexture(TextureImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/textures/Wood.png",
+        });
+
+    AssetImporter::importTexture(TextureImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/textures/level0/blendMap.png",
+        .importPath = "level0",
+        });
+    AssetImporter::importTexture(TextureImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/textures/level0/heightMap.png",
+        .importPath = "level0",
+        });
+    AssetImporter::importTexture(TextureImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/textures/level0/trackMap.png",
+        .importPath = "level0",
+        });
+    AssetImporter::importMaterial(MaterialImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/shaders/TerrainMaterial.json",
+        .importPath = "level0",
+        });
+    AssetImporter::importTexture(TextureImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/textures/level1/blendMap.png",
+        .importPath = "level1",
+        });
+    AssetImporter::importTexture(TextureImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/textures/level1/heightMap.png",
+        .importPath = "level1",
+        });
+    AssetImporter::importTexture(TextureImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/textures/level1/trackMap.png",
+        .importPath = "level1",
+        });
+    AssetImporter::importTexture(TextureImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/textures/level2/blendMap.png",
+        .importPath = "level2",
+        });
+    AssetImporter::importTexture(TextureImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/textures/level2/heightMap.png",
+        .importPath = "level2",
+        });
+    AssetImporter::importTexture(TextureImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/textures/level2/trackMap.png",
+        .importPath = "level2",
+        });
+    AssetImporter::importTexture(TextureImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/textures/level3/blendMap.png",
+        .importPath = "level3",
+        });
+    AssetImporter::importTexture(TextureImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/textures/level3/heightMap.png",
+        .importPath = "level3",
+        });
+    AssetImporter::importTexture(TextureImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/textures/level3/trackMap.png",
+        .importPath = "level3",
+        });
+    AssetImporter::importTexture(TextureImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/textures/level4/blendMap.png",
+        .importPath = "level4",
+        });
+    AssetImporter::importTexture(TextureImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/textures/level4/heightMap.png",
+        .importPath = "level4",
+        });
+    AssetImporter::importTexture(TextureImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/textures/level4/trackMap.png",
+        .importPath = "level4",
+        });
+    AssetImporter::importTexture(TextureImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/textures/level5/blendMap.png",
+        .importPath = "level5",
+        });
+    AssetImporter::importTexture(TextureImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/textures/level5/heightMap.png",
+        .importPath = "level5",
+        });
+    AssetImporter::importTexture(TextureImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/textures/level5/trackMap.png",
+        .importPath = "level5",
+        });
+    AssetImporter::importTexture(TextureImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/textures/level6/blendMap.png",
+        .importPath = "level6",
+        });
+    AssetImporter::importTexture(TextureImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/textures/level6/heightMap.png",
+        .importPath = "level6",
+        });
+    AssetImporter::importTexture(TextureImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/textures/level6/trackMap.png",
+        .importPath = "level6",
+        });
+    AssetImporter::importTexture(TextureImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/textures/level7/blendMap.png",
+        .importPath = "level7",
+        });
+    AssetImporter::importTexture(TextureImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/textures/level7/heightMap.png",
+        .importPath = "level7",
+        });
+    AssetImporter::importTexture(TextureImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/textures/level7/trackMap.png",
+        .importPath = "level7",
+        });
+
+    AssetImporter::importTexture(TextureImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/skyboxes/FS000_Day_01.png",
+        .type = TextureImportType::TEXTURE_CUBEMAP,
+        });
+    AssetImporter::importTexture(TextureImportArgs{
+        .filePath = "C:/Users/Dynamitos/TrackClear/old_resources/skyboxes/FS000_Night_01.png",
+        .type = TextureImportType::TEXTURE_CUBEMAP,
+        });
+
+    AssetRegistry::saveRegistry();
 
     WindowCreateInfo mainWindowInfo;
     mainWindowInfo.title = "SeeleEngine";
@@ -31,7 +213,7 @@ int main()
     sceneViewInfo.dimensions.size.y = 720;
     sceneViewInfo.dimensions.offset.x = 0;
     sceneViewInfo.dimensions.offset.y = 0;
-    PGameView sceneView = new GameView(graphics, window, sceneViewInfo);
+    PGameView sceneView = new Editor::PlayView(graphics, window, sceneViewInfo, "C:\\Users\\Dynamitos\\TrackClear\\bin\\TrackCleard.dll");
     
     //ViewportCreateInfo inspectorViewInfo;
     //inspectorViewInfo.dimensions.size.x = 640;

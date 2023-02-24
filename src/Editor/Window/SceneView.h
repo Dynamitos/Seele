@@ -11,7 +11,6 @@ namespace Seele
 DECLARE_REF(Scene)
 namespace Editor
 {
-
 class SceneView : public View
 {
 public:

@@ -4,7 +4,6 @@
 #include "Graphics/RenderPass/DepthPrepass.h"
 #include "Graphics/RenderPass/LightCullingPass.h"
 #include "Graphics/RenderPass/BasePass.h"
-#include "Graphics/RenderPass/DebugPass.h"
 #include "Graphics/RenderPass/SkyboxRenderPass.h"
 #include "Platform/Windows/GameInterface.h" // TODO
 
@@ -13,7 +12,7 @@ namespace Seele
 class GameView : public View
 {
 public:
-    GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo &createInfo);
+    GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo &createInfo, std::string dllPath);
     virtual ~GameView();
 	virtual void beginUpdate() override;
 	virtual void update() override;
@@ -27,9 +26,6 @@ private:
         DepthPrepass,
 		LightCullingPass,
         BasePass,
-#ifdef EDITOR
-		DebugPass,
-#endif
 		SkyboxRenderPass
 		> renderGraph;
 		
@@ -37,17 +33,11 @@ private:
 	LightCullingPassData lightCullingData;
 	BasePassData basePassData;
 	SkyboxPassData skyboxData;
-#ifdef EDITOR
-	DebugPassData debugPassData;
-#endif
 
 	PScene scene;
 	PSystemGraph systemGraph;
 	dp::thread_pool<> threadPool;
 	float updateTime = 0;
-#ifdef EDITOR
-	bool showDebug = false;
-#endif
 
 	virtual void keyCallback(Seele::KeyCode code, Seele::InputAction action, Seele::KeyModifier modifier) override;
 	virtual void mouseMoveCallback(double xPos, double yPos) override;

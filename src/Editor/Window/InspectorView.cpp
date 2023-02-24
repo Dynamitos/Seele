@@ -1,24 +1,22 @@
 #include "InspectorView.h"
 #include "Graphics/Graphics.h"
 #include "Actor/Actor.h"
-#include "Window/Window.h"
 #include "Asset/AssetRegistry.h"
 #include "Asset/FontLoader.h"
 #include "UI/System.h"
+#include "Window/Window.h"
 
 using namespace Seele;
+using namespace Seele::Editor;
 
 InspectorView::InspectorView(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo &createInfo) 
-    : View(graphics, window, createInfo, "InspectorView")
+    : View(graphics, std::move(window), std::move(createInfo), "InspectorView")
     , renderGraph(RenderGraphBuilder::build(
         UIPass(graphics),
         TextPass(graphics)
     ))
     , uiSystem(new UI::System())
 {
-    AssetRegistry::importFont(FontImportArgs{
-        .filePath = "./fonts/Calibri.ttf",
-    });
     renderGraph.updateViewport(viewport);
     uiSystem->updateViewport(viewport);
 }

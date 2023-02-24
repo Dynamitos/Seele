@@ -1,11 +1,11 @@
 #include "MeshLoader.h"
 #include "Graphics/GraphicsResources.h"
 #include "Graphics/Graphics.h"
-#include "MeshAsset.h"
+#include "Asset/MeshAsset.h"
 #include "Graphics/Mesh.h"
 #include "Graphics/StaticMeshVertexInput.h"
-#include "AssetRegistry.h"
-#include "MaterialAsset.h"
+#include "Asset/AssetImporter.h"
+#include "Asset/MaterialAsset.h"
 #include <fstream>
 #include <iostream>
 #include <nlohmann/json.hpp>
@@ -62,31 +62,48 @@ void MeshLoader::loadMaterials(const aiScene* scene, const std::string& baseName
                     {"type", "Texture2D"}, 
                     {"default", texFilename}
                 };
-            matCode["code"]["baseColor"] = "return diffuseTexture.Sample(textureSampler, input.texCoords[0]).xyz;";
+            matCode["code"].push_back(
+                {
+                    { "exp",  "Sample" },
+                    { "texture", "diffuseTexture" },
+                    { "sampler", "textureSampler" },
+                    { "coords", "input.texCoords[0]"}
+                }
+            );
+            matCode["code"].push_back(
+                {
+                    { "exp", "Swizzle" },
+                    { "target", 0 },
+                    { "comp", json::array({0, 1, 2}) },
+                }
+            );
+            matCode["code"].push_back(
+                {
+                    { "exp", "BRDF" },
+                    { "profile", "BlinnPhong" },
+                    { "values", {
+                        {"baseColor", 1}
+                    }}
+                }
+            );
         }
         else
         {
-            matCode["code"]["baseColor"] = "return input.vertexColor.xyz;";
+            matCode["code"].push_back(
+                {
+                    { "exp", "BRDF" },
+                    { "profile", "BlinnPhong" },
+                    { "values", {
+                        {"baseColor", "input.vertexColor.xyz"}
+                    }}
+                }
+            );
         }
         if(material->GetTexture(aiTextureType_SPECULAR, 0, &texPath) == AI_SUCCESS)
         {
-            std::string texFilename = std::filesystem::path(texPath.C_Str()).replace_extension("asset").stem().string();
-            matCode["params"]["specularTexture"] =
-                {
-                    {"type", "Texture2D"},
-                    {"default", texFilename}
-                };
-            matCode["code"]["specular"] = "return specularTexture.Sample(textureSampler, input.texCoords[0]).x;";
         }
         if(material->GetTexture(aiTextureType_NORMALS, 0, &texPath) == AI_SUCCESS)
         {
-            std::string texFilename = std::filesystem::path(texPath.C_Str()).replace_extension("asset").stem().string();
-            matCode["params"]["normalTexture"] =
-                {
-                    {"type", "Texture2D"},
-                    {"default", texFilename}
-                };
-            matCode["code"]["normal"] = "return normalTexture.Sample(textureSampler, input.texCoords[0]).xyz;";
         }
         std::string outMatFilename = matCode["name"].get<std::string>().append(".asset");
         std::ofstream outMatFile = std::ofstream(meshDirectory / outMatFilename);
@@ -95,7 +112,7 @@ void MeshLoader::loadMaterials(const aiScene* scene, const std::string& baseName
         outMatFile.close();
 
         std::cout << "writing json to " << outMatFilename << std::endl;
-        AssetRegistry::importMaterial(MaterialImportArgs{
+        AssetImporter::importMaterial(MaterialImportArgs{
             .filePath = meshDirectory / outMatFilename,
             .importPath = importPath,
             });
@@ -266,7 +283,7 @@ void MeshLoader::loadTextures(const aiScene* scene, const std::filesystem::path&
             delete[] texData;
         }
         std::cout << "Loading model texture " << texPngPath.string() << std::endl;
-        AssetRegistry::importTexture(TextureImportArgs {
+        AssetImporter::importTexture(TextureImportArgs {
             .filePath = texPath,
             .importPath = importPath,
             });

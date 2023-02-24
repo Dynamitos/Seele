@@ -14,7 +14,7 @@ VertexStageOutput vertexMain(PositionOnlyVertexShaderInput input)
 	VertexStageOutput output;
     
 	float3 worldPosition = input.getWorldPosition();
-    worldPosition += gMaterial.getWorldOffset();
+    //worldPosition += gMaterial.getWorldOffset();
     float4 clipSpacePosition;
     
     float4 viewSpacePosition = mul(gViewParams.viewMatrix, float4(worldPosition, 1));

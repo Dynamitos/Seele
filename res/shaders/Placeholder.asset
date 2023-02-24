@@ -35,27 +35,24 @@
             "type": "SamplerState"
         }
     },
-    "code": {
-        "baseColor": [
-            "return diffuseTexture.Sample(textureSampler, input.texCoords[0] * uvScale).xyz;"
-        ],
-        "metallic": [
-            "return metallic;"
-        ],
-        "normal": [
-            "return normalTexture.Sample(textureSampler, input.texCoords[0] * uvScale).xyz;"
-        ],
-        "specular": [
-            "return specularTexture.Sample(textureSampler, input.texCoords[0] * uvScale).x;"
-        ],
-        "roughness": [
-            "return roughness;"
-        ],
-        "sheen": [
-            "return sheen;"
-        ],
-        "worldOffset": [
-            "return worldOffset;"
-        ]
-    }
+    "code": [
+        {
+            "exp": "Sample",
+            "texture": "diffuseTexture",
+            "sampler": "textureSampler",
+            "coords": "input.texCoords[0]"
+        },
+        {
+            "exp": "Swizzle",
+            "target": 0,
+            "comp": [0, 1, 2]
+        },
+		{
+			"exp": "BRDF",
+			"profile": "BlinnPhong",
+			"values": {
+				"baseColor": 1
+			}
+		}
+    ]
 }

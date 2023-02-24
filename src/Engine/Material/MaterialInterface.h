@@ -25,7 +25,7 @@ public:
     virtual Gfx::ShaderCollection& createShaders(Gfx::PGraphics graphics, Gfx::RenderPassType renderPass, VertexInputType* vertexInput) = 0;
 protected:
     Gfx::PGraphics graphics;
-    //For now its simply the collection of parameters, since there is no point for expressions
+    std::string brdfName;
     Array<PShaderParameter> parameters;
     Gfx::PUniformBuffer uniformBuffer;
     uint32 uniformDataSize;

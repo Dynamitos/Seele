@@ -25,7 +25,7 @@ TextureAsset::~TextureAsset()
 
 void TextureAsset::save(ArchiveBuffer& buffer) const
 {
-    Array<uint8> textureData;
+    /*Array<uint8> textureData;
     ktxTexture2* kTexture;
     ktxTextureCreateInfo createInfo = {
         .vkFormat = (uint32_t)texture->getFormat(),
@@ -66,25 +66,28 @@ void TextureAsset::save(ArchiveBuffer& buffer) const
     Array<uint8> rawData(texSize);
     std::memcpy(rawData.data(), texData, texSize);
     free(texData);
-    
-    Serialization::save(buffer, rawData);
+    */
+    Serialization::save(buffer, textureData);
 }
 
 void TextureAsset::load(ArchiveBuffer& buffer) 
 {
-    setStatus(Status::Loading);
-
     Array<uint8> rawData;
     Serialization::load(buffer, rawData);
+    createFromMemory(std::move(rawData), buffer.getGraphics());
+}
 
+void TextureAsset::createFromMemory(Array<uint8> memory, Gfx::PGraphics graphics)
+{
+    textureData = std::move(memory);
     ktxTexture2* kTexture;
     std::cout << "Loading texture " << name << std::endl;
-    KTX_CHECK(ktxTexture_CreateFromMemory(rawData.data(),
-        rawData.size(),
-        KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, 
-        (ktxTexture**) & kTexture));
+    KTX_CHECK(ktxTexture_CreateFromMemory(textureData.data(),
+        textureData.size(),
+        KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT,
+        (ktxTexture**)&kTexture));
 
-    //ktxTexture2_TranscodeBasis(kTexture, KTX_TTF_BC7_RGBA, 0);
+    ktxTexture2_TranscodeBasis(kTexture, KTX_TTF_BC7_RGBA, 0);
 
     TextureCreateInfo createInfo = {
             .resourceData = {
@@ -101,21 +104,18 @@ void TextureAsset::load(ArchiveBuffer& buffer)
             .format = Vulkan::cast((VkFormat)kTexture->vkFormat),
             .usage = Gfx::SE_IMAGE_USAGE_SAMPLED_BIT,
     };
-    Gfx::PTexture tex;
     if (kTexture->isCubemap)
     {
-        tex = buffer.getGraphics()->createTextureCube(createInfo);
+        texture = graphics->createTextureCube(createInfo);
     }
     else if (kTexture->isArray)
     {
-        tex = buffer.getGraphics()->createTexture3D(createInfo);
+        texture = graphics->createTexture3D(createInfo);
     }
     else
     {
-        tex = buffer.getGraphics()->createTexture2D(createInfo);
+        texture = graphics->createTexture2D(createInfo);
     }
-    tex->transferOwnership(Gfx::QueueType::GRAPHICS);
-    setTexture(tex);
+    texture->transferOwnership(Gfx::QueueType::GRAPHICS);
     ktxTexture_Destroy(ktxTexture(kTexture));
-    setStatus(Asset::Status::Ready);
 }

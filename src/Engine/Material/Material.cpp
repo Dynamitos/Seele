@@ -9,10 +9,19 @@ using namespace Seele;
 Gfx::ShaderMap Material::shaderMap;
 std::mutex Material::shaderMapLock;
 
-Material::Material(Gfx::PGraphics graphics, Array<PShaderParameter> parameter, Gfx::PDescriptorLayout layout, uint32 uniformDataSize, uint32 uniformBinding, std::string materialName)
+Material::Material(Gfx::PGraphics graphics, 
+        Array<PShaderParameter> parameter, 
+        Gfx::PDescriptorLayout layout, 
+        uint32 uniformDataSize, 
+        uint32 uniformBinding, 
+        std::string materialName, 
+        Array<PShaderExpression> expressions, 
+        MaterialNode brdf)
     : MaterialInterface(graphics, parameter, uniformDataSize, uniformBinding)
     , layout(layout)
     , materialName(materialName)
+    , codeExpressions(expressions)
+    , brdf(brdf)
 {
 }
 
@@ -87,6 +96,34 @@ void Material::load(ArchiveBuffer& buffer)
         layout->addDescriptorBinding(binding, descriptorType, descriptorCount, bindingFlags, shaderStages);
     }
     layout->create();
+}
+
+void Material::compile()
+{
+    std::ofstream codeStream("./shaders/generated/"+materialName+".slang");
+    codeStream << "import Material;\n";
+    codeStream << "import BRDF;\n";
+    codeStream << "import MaterialParameter;\n";
+    codeStream << "struct " << materialName << " : IMaterial {\n";
+    for(const auto& parameter : parameters)
+    {
+        parameter->generateDeclaration(codeStream);
+    }
+    codeStream << "\ttypedef " << brdf.profile << " BRDF;\n";
+    codeStream << "\t" << brdf.profile << " prepare(MaterialFragmentParameter input) {\n";
+    codeStream << "\t\t" << brdf.profile << " result;\n";
+    Map<int32, std::string> varState;
+    for(const auto& expr : codeExpressions)
+    {
+        codeStream << expr->evaluate(varState);
+    }
+    for(const auto& [name, exp] : brdf.variables)
+    {
+        codeStream << "\t\tresult." << name << " = " << varState[exp->key] << ";";
+    }
+    codeStream << "\t\treturn result;\n";
+    codeStream << "\t}\n";
+    codeStream << "};\n";
 }
 
 const Gfx::ShaderCollection* Material::getShaders(Gfx::RenderPassType renderPass, VertexInputType* vertexInput) const
