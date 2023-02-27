@@ -10,20 +10,52 @@ struct VertexValueCache
     //every attribute, including this matrix, but matrix layout
     //qualifiers are illegal for non-uniform and buffer fields,
     //leading to a compiler error
-    float3 tangentToLocal[3];
-    float3 tangentToWorld[3];
+    float3 position_MS;
+    float3 tangent;
+    float3 biTangent;
+    float3 normal;
     float4 color;
+#if NUM_MATERIAL_TEXCOORDS
+    float2 texCoords[NUM_MATERIAL_TEXCOORDS];
+#endif
 
-    float3x3 getTangentToLocal()
+    float4x4 getModelToTangent()
     {
-        return float3x3(tangentToLocal[0], tangentToLocal[1], tangentToLocal[2]);
+        return transpose(float4x4(
+            float4(normalize(tangent), 0.0f),
+            float4(normalize(biTangent), 0.0f),
+            float4(normalize(normal), 0.0f),
+            float4(0, 0, 0, 1)
+        ));
     }
 
-    float3x3 getTangentToWorld()
+    float4x4 getWorldToTangent()
     {
-        return float3x3(tangentToWorld[0], tangentToWorld[1], tangentToWorld[2]);
+        return transpose(float4x4(
+            normalize(mul(getSceneData().worldToModel, float4(tangent, 0))),
+            normalize(mul(getSceneData().worldToModel, float4(biTangent, 0))),
+            normalize(mul(getSceneData().worldToModel, float4(normal, 0))),
+            float4(0, 0, 0, 1)
+        ));
     }
+    
 
+    MaterialFragmentParameter getFragmentParameters()
+    {
+        MaterialFragmentParameter result = (MaterialFragmentParameter)0;
+        float4x4 worldToTangent = getWorldToTangent();
+        float4 cameraPos_TS = mul(worldToTangent, gViewParams.cameraPos_WS);
+        float4 position_TS = mul(getModelToTangent(), float4(position_MS, 1.0f));
+        result.worldToTangent = float3x3(worldToTangent);
+        result.position_TS = position_TS.xyz;
+        result.viewDir_TS = normalize((cameraPos_TS - position_TS).xyz);
+        result.vertexColor = color;
+        for(uint i = 0; i < NUM_MATERIAL_TEXCOORDS; ++i)
+        {
+            result.texCoords[i] = texCoords[i];
+        }
+        return result;
+    }
 #if USE_INSTANCING
     float4 instanceOrigin;
     float3 instanceTransform1;
@@ -36,60 +68,15 @@ struct VertexValueCache
             float4(instanceTransform1.xyz, 0.0f),
             float4(instanceTransform2.xyz, 0.0f),
             float4(instanceTransform3.xyz, 0.0f),
-            float4(instanceOrigin.xyz, 1.0f));
-        )
+            float4(instanceOrigin.xyz, 1.0f)
+        );
     }
 #endif // USE_INSTANCING
 };
 
-struct ShaderAttributeInterpolation
-{
-    float3 worldPosition;
-    float3 viewPosition;
-    float3 normal;
-    float3 tangent;
-    float3 biTangent;
-    float4 color;
-#if NUM_MATERIAL_TEXCOORDS
-    float4 packedTexCoords[(NUM_MATERIAL_TEXCOORDS+1) / 2];
-#endif // NUM_MATERIAL_TEXCOORDS
-#if USE_INSTANCING
-    float4 perInstanceParams;
-#endif
-
-    MaterialFragmentParameter getMaterialParameter(float4 clipSpacePosition)
-    {
-        MaterialFragmentParameter result;
-#if NUM_MATERIAL_TEXCOORDS
-        for(int i = 0; i < NUM_MATERIAL_TEXCOORDS; ++i)
-        {
-            if(i % 2 == 1)
-            {
-                result.texCoords[i] = packedTexCoords[i / 2].zw;
-            }
-            else
-            {
-                result.texCoords[i] = packedTexCoords[i / 2].xy;
-            }
-        }
-#endif
-        result.tangentToWorld[0] = tangent;
-        result.tangentToWorld[1] = biTangent;
-        result.tangentToWorld[2] = normal;
-        result.clipPosition = clipSpacePosition;
-        result.worldPosition = worldPosition;
-        result.viewDir = gViewParams.cameraPos_WS.xyz - worldPosition;
-        result.worldNormal = normal;
-        result.worldTangent = tangent;
-        result.worldBiTangent = biTangent;
-        result.vertexColor = color;
-        return result;
-    }
-};
-
 struct VertexShaderInput
 {
-	float4 position;
+	float3 position;
     float3 normal;
     float3 tangent;
     float3 biTangent;
@@ -118,28 +105,24 @@ struct VertexShaderInput
     float3 instanceTransform2;
     float3 instanceTransform3;
 #endif // USE_INSTANCING
-    
-    float3x3 calcTangentToLocal()
-    {
-        float3x3 result;
-        result[0] = tangent;
-        result[1] = biTangent;
-        result[2] = normal;
 
-        return result;
+    float3 getModelPosition()
+    {
+        return position;
     }
-    
+
     float3 getWorldPosition()
     {
-        float4x4 localToWorld = getSceneData().localToWorld;
-        float3 rotatedPosition = localToWorld[0].xyz * position.xxx + localToWorld[1].xyz * position.yyy + localToWorld[2].xyz * position.zzz;
-        return mul(getSceneData().localToWorld, position).xyz;
-        //rotatedPosition + float3(localToWorld[0].w, localToWorld[1].w, localToWorld[2].w);
+        return mul(getSceneData().modelToWorld, float4(position, 1.0f)).xyz;
     }
 
     VertexValueCache getVertexCache()
     {
         VertexValueCache cache;
+        cache.position_MS = position;
+        cache.tangent = tangent;
+        cache.biTangent = biTangent;
+        cache.normal = normal;
         cache.color = color;
 #if USE_INSTANCING
         cache.instanceTransform1 = instanceTransform1;
@@ -148,25 +131,18 @@ struct VertexShaderInput
         cache.instanceOrigin = instanceOrigin;
 #endif
 
-        float3x3 tangentToLocal = calcTangentToLocal();
-        cache.tangentToLocal[0] = tangentToLocal[0];
-        cache.tangentToLocal[1] = tangentToLocal[1];
-        cache.tangentToLocal[2] = tangentToLocal[2];
-
-        cache.tangentToWorld[0] = mul(getSceneData().localToWorld, float4(tangentToLocal[0], 0.0f)).xyz;
-        cache.tangentToWorld[1] = mul(getSceneData().localToWorld, float4(tangentToLocal[1], 0.0f)).xyz;
-        cache.tangentToWorld[2] = mul(getSceneData().localToWorld, float4(tangentToLocal[2], 0.0f)).xyz;
+        cache.texCoords[0] = packedTexCoords2;
 
         return cache;
     }
 
-    MaterialVertexParameter getMaterialVertexParameters(VertexValueCache cache, float3 worldPosition, float3 viewPosition, float3x3 tangentToLocal)
+    MaterialVertexParameter getMaterialVertexParameters(VertexValueCache cache, float3 worldPosition, float3 viewPosition)
     {
         MaterialVertexParameter result;
         result.worldPosition = worldPosition;
         result.viewPosition = viewPosition;
         result.vertexColor = cache.color;
-        result.tangentToWorld = cache.getTangentToWorld();
+        result.worldToTangent = float3x3(cache.getWorldToTangent());
         // TODO instancing
         /*for(int i = 0; i < NUM_MATERIAL_TEXCOORDS-1; i+=2)
         {
@@ -179,35 +155,11 @@ struct VertexShaderInput
         result.texCoords[0] = packedTexCoords2;
         return result;
     }
-
-    ShaderAttributeInterpolation getInterpolants(VertexValueCache cache, MaterialVertexParameter vertexParams)
-    {
-        ShaderAttributeInterpolation result = (ShaderAttributeInterpolation)0;
-        float3x3 tangentToWorld = cache.getTangentToWorld();
-        result.normal = mul(getSceneData().localToWorld, float4(normal, 0.0f)).xyz;
-        result.tangent = mul(getSceneData().localToWorld, float4(tangent, 0.0f)).xyz;
-        result.biTangent = mul(getSceneData().localToWorld, float4(biTangent, 0.0f)).xyz;
-        result.color = color;
-        result.worldPosition = vertexParams.worldPosition;
-        result.viewPosition = vertexParams.viewPosition;
-        for(int i = 0; i < NUM_MATERIAL_TEXCOORDS; ++i)
-        {
-            if(i % 2 == 1)
-            {
-                result.packedTexCoords[i / 2].zw = vertexParams.texCoords[i];
-            }
-            else
-            {
-                result.packedTexCoords[i / 2].xy = vertexParams.texCoords[i];
-            }
-        }
-        return result;
-    }
 };
 
 struct PositionOnlyVertexShaderInput
 {
-    float4 position;
+    float3 position;
 #if USE_INSTANCING
     float4 instanceOrigin;
     float3 instanceTransform1;
@@ -216,9 +168,6 @@ struct PositionOnlyVertexShaderInput
 #endif // USE_INSTANCING
     float3 getWorldPosition()
     {
-        float4x4 localToWorld = getSceneData().localToWorld;
-        float3 rotatedPosition = localToWorld[0].xyz * position.xxx + localToWorld[1].xyz * position.yyy + localToWorld[2].xyz * position.zzz;
-        return mul(getSceneData().localToWorld, position).xyz;
-        //rotatedPosition + float3(localToWorld[0].w, localToWorld[1].w, localToWorld[2].w);
+        return mul(getSceneData().modelToWorld, float4(position, 1.0f)).xyz;
     }
 };

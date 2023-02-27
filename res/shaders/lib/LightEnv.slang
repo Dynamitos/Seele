@@ -4,33 +4,33 @@ import Common;
 
 interface ILightEnv
 {
-    float3 illuminate<B:IBRDF>(MaterialFragmentParameter input, B brdf, float3 wo);
+    float3 illuminate<B:IBRDF>(MaterialFragmentParameter input, B brdf);
 };
 
 struct DirectionalLight : ILightEnv
 {
     float4 color;
     float4 direction;
-    float4 intensity;
 
-    float3 illuminate<B:IBRDF>(MaterialFragmentParameter input, B brdf, float3 wo)
+    float3 illuminate<B:IBRDF>(MaterialFragmentParameter input, B brdf)
     {
-        return intensity.xyz * brdf.evaluate(wo, normalize(direction.xyz), input.worldNormal, input.worldTangent, input.worldBiTangent, color.xyz);	
+        float3 lightDir_TS = input.transformWorldToTangent(normalize(direction.xyz));
+        return brdf.evaluate(input.viewDir_TS, -lightDir_TS, color.xyz);	
     }
 };
 
 struct PointLight : ILightEnv
 {
-    float4 positionWS;
+    float4 position_WS;
     float4 colorRange;
     
-    float3 illuminate<B:IBRDF>(MaterialFragmentParameter input, B brdf, float3 viewDir)
+    float3 illuminate<B:IBRDF>(MaterialFragmentParameter input, B brdf)
     {
-        float3 lightVec = positionWS.xyz - input.worldPosition;
-        float d = length(lightVec);
-        float3 direction = normalize(lightVec);
+        float3 position_TS = input.transformWorldToTangent(position_WS.xyz);
+        float3 lightDir_TS = position_TS - input.position_TS;
+        float d = length(lightDir_TS);
         float illuminance = max(1 - d / colorRange.w, 0);
-        return illuminance * brdf.evaluate(viewDir, direction, input.worldNormal, input.worldTangent, input.worldBiTangent, colorRange.xyz);
+        return illuminance * brdf.evaluate(input.viewDir_TS, normalize(lightDir_TS), colorRange.xyz);
     }
 
     bool insidePlane(Plane plane)
@@ -57,7 +57,7 @@ struct PointLight : ILightEnv
     }
     float3 getViewPos()
     {
-        return mul(gViewParams.viewMatrix, positionWS).xyz;
+        return mul(gViewParams.viewMatrix, position_WS).xyz;
     }
 };
 

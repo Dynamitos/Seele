@@ -2,7 +2,7 @@ struct MaterialVertexParameter
 {
     float3 worldPosition;
     float3 viewPosition;
-    float3x3 tangentToWorld;
+    float3x3 worldToTangent;
 #if NUM_MATERIAL_TEXCOORDS
     float2 texCoords[NUM_MATERIAL_TEXCOORDS];
 #endif
@@ -19,29 +19,19 @@ struct MaterialVertexParameter
 
 struct MaterialFragmentParameter
 {
-    float3 worldPosition;
-    float3 viewDir;
-    float3 worldNormal;
-    float3 worldTangent;
-    float3 worldBiTangent;
-	float4 clipPosition;
+    float3 position_TS;
+    float3 viewDir_TS;
     float4 vertexColor;
-    float3x3 tangentToWorld;
+    float3x3 worldToTangent;
 #ifdef USE_INSTANCING
     float3 perInstanceParams;
 #endif
 #if NUM_MATERIAL_TEXCOORDS
     float2 texCoords[NUM_MATERIAL_TEXCOORDS];
 #endif
-    float3 transformNormalToWorld(float3 tangentSpaceNormal)
+    float3 transformWorldToTangent(float3 vec)
     {
-        float3 result = mul(tangentToWorld, tangentSpaceNormal);
-        return result;
-    }
-    float3 transformNormalTexture(float3 rawNormal)
-    {
-	    rawNormal = 2.0 * rawNormal - float3(1.0, 1.0, 1.0);
-	    return transformNormalToWorld(rawNormal);
+        return mul(worldToTangent, vec);
     }
 };
 

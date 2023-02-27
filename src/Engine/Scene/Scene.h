@@ -15,7 +15,6 @@ struct DirectionalLight
 {
     Vector4 color;
     Vector4 direction;
-    Vector4 intensity;
 };
 
 struct PointLight
@@ -29,10 +28,10 @@ struct PointLight
 #define MAX_POINT_LIGHTS 256
 struct LightEnv
 {
-    DirectionalLight directionalLights[MAX_DIRECTIONAL_LIGHTS];
-    PointLight pointLights[MAX_POINT_LIGHTS];
-    uint32 numDirectionalLights;
-    uint32 numPointLights;
+    Gfx::PStructuredBuffer directionalLights;
+    Gfx::PUniformBuffer numDirectional;
+    Gfx::PStructuredBuffer pointLights;
+    Gfx::PUniformBuffer numPoints;
 };
 
 class Scene
@@ -83,7 +82,8 @@ private:
         Vector4 actorLocation;
     };
     Array<PrimitiveSceneData> sceneData;
-    Gfx::PStructuredBuffer sceneDataBuffer; 
+    Gfx::PStructuredBuffer sceneDataBuffer;
+    LightEnv lightEnv;
     PhysicsSystem physics;
     Gfx::PGraphics graphics;
 };

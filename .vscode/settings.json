@@ -4,6 +4,7 @@
     "files.associations": {
         "*.h": "cpp",
         "*.ush": "hlsl",
+        "*.slang": "hlsl",
         "*.pl": "prolog",
         "xstring": "cpp",
         "list": "cpp",

@@ -14,7 +14,6 @@ RWTexture2D<uint2> lightGrid;
 
 struct VertexStageOutput
 {
-    ShaderAttributeInterpolation shaderAttributeInterpolation : Interpolation;
     VertexValueCache cache : ShaderCache;
     float4 position : SV_Position;
 };
@@ -27,36 +26,30 @@ VertexStageOutput vertexMain(
     VertexValueCache cache = input.getVertexCache();
     float3 worldPosition = input.getWorldPosition();
     //worldPosition += gMaterial.getWorldOffset();
-    float4 clipSpacePosition;
     
-    float3x3 tangentToLocal = cache.getTangentToLocal();
     float4 viewSpacePosition = mul(gViewParams.viewMatrix, float4(worldPosition, 1));
-    MaterialVertexParameter vertexParams = input.getMaterialVertexParameters(cache, worldPosition, viewSpacePosition.xyz, tangentToLocal);
+    MaterialVertexParameter vertexParams = input.getMaterialVertexParameters(cache, worldPosition, viewSpacePosition.xyz);
 
-    clipSpacePosition = mul(gViewParams.projectionMatrix, viewSpacePosition);
+    float4 clipSpacePosition = mul(gViewParams.projectionMatrix, viewSpacePosition);
     output.position = clipSpacePosition;
-    output.shaderAttributeInterpolation = input.getInterpolants(cache, vertexParams);
     output.cache = cache;
     return output;
 }
 
 [shader("fragment")]
 float4 fragmentMain(
-    ShaderAttributeInterpolation input : Interpolation,
     VertexValueCache cache : ShaderCache,
     float4 position : SV_Position
     ) : SV_Target
 {
-    MaterialFragmentParameter materialParams = input.getMaterialParameter(position);
+    MaterialFragmentParameter materialParams = cache.getFragmentParameters();
     let brdf = gMaterial.prepare(materialParams);
-    
-    float3 viewDir = normalize(materialParams.viewDir);
-    
+        
     float3 result = float3(0, 0, 0);
 
     for (int i = 0; i < numDirectionalLights; i++)
     {
-        result += directionalLights[i].illuminate(materialParams, brdf, viewDir);
+        result += directionalLights[i].illuminate(materialParams, brdf);
     }
     
     uint2 tileIndex = uint2(floor(position.xy / BLOCK_SIZE));
@@ -68,8 +61,7 @@ float4 fragmentMain(
     {
         //uint lightIndex = lightIndexList[startOffset + j];
         PointLight pointLight = pointLights[j];
-        if(pointLight.colorRange.w < length(pointLight.getViewPos() - input.viewPosition)) continue;
-        result += pointLight.illuminate(materialParams, brdf, viewDir);
+        result += pointLight.illuminate(materialParams, brdf);
     }
     return float4(result, 1.0f);
 }

@@ -25,25 +25,11 @@ void LightCullingPass::beginFrame(const Component::Camera& cam)
     BulkResourceData uniformUpdate;
     viewParams.viewMatrix = cam.getViewMatrix();
     viewParams.projectionMatrix = viewport->getProjectionMatrix();
-    viewParams.cameraPosition = Vector4(cam.getCameraPosition(), 0);
+    viewParams.cameraPosition = Vector4(cam.getCameraPosition(), 1);
     viewParams.screenDimensions = Vector2(static_cast<float>(viewportWidth), static_cast<float>(viewportHeight));
     uniformUpdate.size = sizeof(ViewParameter);
     uniformUpdate.data = (uint8*)&viewParams;
     viewParamsBuffer->updateContents(uniformUpdate);
-    
-    const LightEnv& lightEnv = passData.lightEnv;
-    uniformUpdate.size = sizeof(DirectionalLight) * MAX_DIRECTIONAL_LIGHTS;
-    uniformUpdate.data = (uint8*)&lightEnv.directionalLights;
-    directLightBuffer->updateContents(uniformUpdate);
-    uniformUpdate.size = sizeof(PointLight) * MAX_POINT_LIGHTS;
-    uniformUpdate.data = (uint8*)&lightEnv.pointLights;
-    pointLightBuffer->updateContents(uniformUpdate);
-    
-    uniformUpdate.size = sizeof(uint32);
-    uniformUpdate.data = (uint8*)&lightEnv.numDirectionalLights;
-    numDirLightBuffer->updateContents(uniformUpdate);
-    uniformUpdate.data = (uint8*)&lightEnv.numPointLights;
-    numPointLightBuffer->updateContents(uniformUpdate);
 
     BulkResourceData counterReset;
     uint32 reset = 0;
@@ -68,10 +54,10 @@ void LightCullingPass::beginFrame(const Component::Camera& cam)
     cullingDescriptorSet->updateBuffer(9, frustumBuffer);
 
 
-    lightEnvDescriptorSet->updateBuffer(0, directLightBuffer);
-    lightEnvDescriptorSet->updateBuffer(1, numDirLightBuffer);
-    lightEnvDescriptorSet->updateBuffer(2, pointLightBuffer);
-    lightEnvDescriptorSet->updateBuffer(3, numPointLightBuffer);
+    lightEnvDescriptorSet->updateBuffer(0, passData.lightEnv.directionalLights);
+    lightEnvDescriptorSet->updateBuffer(1, passData.lightEnv.numDirectional);
+    lightEnvDescriptorSet->updateBuffer(2, passData.lightEnv.pointLights);
+    lightEnvDescriptorSet->updateBuffer(3, passData.lightEnv.numPoints);
     lightEnvDescriptorSet->writeChanges();
     //std::cout << "LightCulling beginFrame()" << std::endl;
     //co_return;
@@ -201,28 +187,6 @@ void LightCullingPass::publishOutputs()
     tLightIndexList = graphics->createStructuredBuffer(structInfo);
     resources->registerBufferOutput("LIGHTCULLING_OLIGHTLIST", oLightIndexList);
     resources->registerBufferOutput("LIGHTCULLING_TLIGHTLIST", tLightIndexList);
-    
-    structInfo = {
-        .resourceData = {
-            .size = sizeof(DirectionalLight) * MAX_DIRECTIONAL_LIGHTS,
-            .data = nullptr,
-        },
-        .stride = sizeof(DirectionalLight),
-        .bDynamic = true,
-    };
-    directLightBuffer = graphics->createStructuredBuffer(structInfo);
-    structInfo.resourceData.size = sizeof(PointLight) * MAX_POINT_LIGHTS;
-    pointLightBuffer = graphics->createStructuredBuffer(structInfo);
-    
-    UniformBufferCreateInfo uniformInfo = {
-        .resourceData = {
-            .size = sizeof(uint32),
-            .data = nullptr
-        },
-        .bDynamic = true
-    };
-    numDirLightBuffer = graphics->createUniformBuffer(uniformInfo);
-    numPointLightBuffer = graphics->createUniformBuffer(uniformInfo);
     
     resources->registerBufferOutput("DIRECTIONAL_LIGHTS", directLightBuffer);
     resources->registerUniformOutput("NUM_DIRECTIONAL_LIGHTS", numDirLightBuffer);

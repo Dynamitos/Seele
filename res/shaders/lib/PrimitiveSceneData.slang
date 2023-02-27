@@ -1,7 +1,7 @@
 struct PrimitiveSceneData
 {
-    float4x4 localToWorld;
-    float4x4 worldToLocal;
+    float4x4 modelToWorld;
+    float4x4 worldToModel;
     float4 actorLocation;
 };
 

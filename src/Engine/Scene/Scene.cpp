@@ -18,6 +18,29 @@ Scene::Scene(Gfx::PGraphics graphics)
     : graphics(graphics)
     , physics(registry)
 {
+    
+    StructuredBufferCreateInfo structInfo = {
+        .resourceData = {
+            .size = sizeof(DirectionalLight) * MAX_DIRECTIONAL_LIGHTS,
+            .data = nullptr,
+        },
+        .stride = sizeof(DirectionalLight),
+        .bDynamic = true,
+    };
+    lightEnv.directionalLights = graphics->createStructuredBuffer(structInfo);
+    structInfo.resourceData.size = sizeof(PointLight) * MAX_POINT_LIGHTS;
+    lightEnv.pointLights = graphics->createStructuredBuffer(structInfo);
+    
+    UniformBufferCreateInfo uniformInfo = {
+        .resourceData = {
+            .size = sizeof(uint32),
+            .data = nullptr
+        },
+        .bDynamic = true
+    };
+    lightEnv.numDirectional = graphics->createUniformBuffer(uniformInfo);
+    lightEnv.numPoints = graphics->createUniformBuffer(uniformInfo);
+    
 }
 
 Scene::~Scene()
@@ -84,12 +107,12 @@ Array<MeshBatch> Scene::getStaticMeshes()
 
 LightEnv Scene::getLightBuffer() const 
 {
-    LightEnv result;
     result.directionalLights[0].color = Vector4(0.4, 0.3, 0.5, 1.0);
     result.directionalLights[0].direction = Vector4(0.5, -0.5, 0, 0);
-    result.directionalLights[0].intensity = Vector4(1.0, 0.9, 0.7, 0.5);
-    result.numDirectionalLights = 1;
-    result.numPointLights = 0;
+    result.numDirectionalLights = 0;
+    result.pointLights[0].positionWS = Vector4(0, 50, 0, 0);
+    result.pointLights[0].colorRange = Vector4(0.2, 0.4, 0.7, 100); 
+    result.numPointLights = 1;
     return result;
 }
 
