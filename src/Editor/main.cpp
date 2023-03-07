@@ -227,6 +227,8 @@ int main()
     window->render();
     //export game
     std::string outputPath = "C:\\Users\\Dynamitos\\TrackClearGame";
+    
+    std::system("cmake --configure");
 
     return 0;
 }

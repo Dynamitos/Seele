@@ -6,6 +6,8 @@ target_sources(Engine
         AssetRegistry.cpp
         FontAsset.h
         FontAsset.cpp
+        LevelAsset.h
+        LevelAsset.cpp
         MaterialAsset.h
         MaterialAsset.cpp
         MaterialInstanceAsset.h
@@ -21,6 +23,7 @@ target_sources(Engine
             Asset.h
             AssetRegistry.h
             FontAsset.h
+            LevelAsset.h
             MaterialAsset.h
             MaterialInstanceAsset.h
             MeshAsset.h

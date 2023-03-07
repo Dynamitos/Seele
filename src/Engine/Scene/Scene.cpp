@@ -105,15 +105,37 @@ Array<MeshBatch> Scene::getStaticMeshes()
     return result;
 }
 
-LightEnv Scene::getLightBuffer() const 
+LightEnv Scene::getLightBuffer() 
 {
-    result.directionalLights[0].color = Vector4(0.4, 0.3, 0.5, 1.0);
-    result.directionalLights[0].direction = Vector4(0.5, -0.5, 0, 0);
-    result.numDirectionalLights = 0;
-    result.pointLights[0].positionWS = Vector4(0, 50, 0, 0);
-    result.pointLights[0].colorRange = Vector4(0.2, 0.4, 0.7, 100); 
-    result.numPointLights = 1;
-    return result;
+    StaticArray<DirectionalLight, MAX_DIRECTIONAL_LIGHTS> dirLights;
+    uint32 numDirLights;
+    for(auto&& [entity, light] : registry.view<DirectionalLight>().each())
+    {
+        dirLights[numDirLights++] = light;
+    }
+    lightEnv.directionalLights->updateContents({
+        .size = sizeof(DirectionalLight) * numDirLights,
+        .data = (uint8*)dirLights.data(),
+    });
+    lightEnv.numDirectional->updateContents({
+        .size = sizeof(uint32),
+        .data = (uint8*)&numDirLights,
+    });
+    StaticArray<PointLight, MAX_POINT_LIGHTS> pointLights;
+    uint32 numPointLights;
+    for(auto&& [entity, light] : registry.view<PointLight>().each())
+    {
+        pointLights[numPointLights++] = light;
+    }
+    lightEnv.pointLights->updateContents({
+        .size = sizeof(PointLight) * numPointLights,
+        .data = (uint8*)pointLights.data(),
+    });
+    lightEnv.numPoints->updateContents({
+        .size = sizeof(uint32),
+        .data = (uint8*)&numPointLights,
+    });
+    return lightEnv;
 }
 
 

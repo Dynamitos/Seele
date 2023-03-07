@@ -188,10 +188,10 @@ void LightCullingPass::publishOutputs()
     resources->registerBufferOutput("LIGHTCULLING_OLIGHTLIST", oLightIndexList);
     resources->registerBufferOutput("LIGHTCULLING_TLIGHTLIST", tLightIndexList);
     
-    resources->registerBufferOutput("DIRECTIONAL_LIGHTS", directLightBuffer);
-    resources->registerUniformOutput("NUM_DIRECTIONAL_LIGHTS", numDirLightBuffer);
-    resources->registerBufferOutput("POINT_LIGHTS", pointLightBuffer);
-    resources->registerUniformOutput("NUM_POINT_LIGHTS", numPointLightBuffer);
+    resources->registerBufferOutput("DIRECTIONAL_LIGHTS", passData.lightEnv.directionalLights);
+    resources->registerUniformOutput("NUM_DIRECTIONAL_LIGHTS", passData.lightEnv.numDirectional);
+    resources->registerBufferOutput("POINT_LIGHTS", passData.lightEnv.pointLights);
+    resources->registerUniformOutput("NUM_POINT_LIGHTS", passData.lightEnv.numPoints);
     
     TextureCreateInfo textureInfo = {
         .width = dispatchParams.numThreadGroups.x,

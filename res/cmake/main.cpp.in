@@ -1,29 +1,34 @@
-#include "Window/WindowManager.h"
-#include ""
-#include "Asset/AssetRegistry.h"
+#include <Window/WindowManager.h>
+#include <Asset/AssetRegistry.h>
+#include <Window/GameView.h>
+#include <Graphics/Vulkan/VulkanGraphics.h>
+
+using namespace Seele;
 
 int main()
 {
+    Gfx::PGraphics graphics = new Vulkan::Graphics();
+    GraphicsInitializer initializer;
+    graphics->init(initializer);
+
     PWindowManager windowManager = new WindowManager();
-    AssetRegistry::load("registry");
-    WindowCreateInfo gameWindowInfo = {
-        .title = ${GAME_TITLE},
-        .width = 1280,
-        .height = 720,
-        .bFullscreen = false,
-        .numSamples = 1,
-        .pixelFormat = Gfx::SE_FORMAT_B8G8R8A8_UNORM,
-    };
-    auto window = windowManager->addWindow(gameWindowInfo);
-    ViewportCreateInfo gameViewinfo = {
-        .dimensions = {
-            .size = {
-                .x = 1280,
-                .y = 720,
-            },
-        },
-    };
-    new GameView(windowManager->getGraphics(), window, gameViewInfo, ${DLL_PATH});
+    AssetRegistry::init("Assets", graphics);
+
+    WindowCreateInfo mainWindowInfo;
+    mainWindowInfo.title = "@GAME_TITLE@";
+    mainWindowInfo.width = 1280;
+    mainWindowInfo.height = 720;
+    mainWindowInfo.bFullscreen = false;
+    mainWindowInfo.numSamples = 1;
+    mainWindowInfo.pixelFormat = Gfx::SE_FORMAT_B8G8R8A8_UNORM;
+    auto window = windowManager->addWindow(graphics, mainWindowInfo);
+    ViewportCreateInfo sceneViewInfo;
+    sceneViewInfo.dimensions.size.x = 1280;
+    sceneViewInfo.dimensions.size.y = 720;
+    sceneViewInfo.dimensions.offset.x = 0;
+    sceneViewInfo.dimensions.offset.y = 0;
+    PGameView sceneView = new GameView(graphics, window, sceneViewInfo, "@GAME_BINARY@");
+    sceneView->setFocused();
     window->render();
     return 0;
 }

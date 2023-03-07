@@ -5,6 +5,22 @@ if(${CMAKE_VERSION} VERSION_LESS 3.12)
 endif()
 set(CMAKE_CXX_STANDARD 20)
 
-project(${GAME_TITLE})
+project(@GAME_TITLE@)
 
-add_executable(${GAME_TITLE} main.cpp )
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY @GAME_DESTINATION@)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG @GAME_DESTINATION@)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE @GAME_DESTINATION@)
+
+find_package(Vulkan REQUIRED)
+find_package(Threads REQUIRED)
+find_package(Seele REQUIRED)
+
+link_directories(${Seele_DIR}/lib)
+
+add_executable(@GAME_TITLE@ main.cpp)
+target_link_libraries(@GAME_TITLE@ PUBLIC Seele::Engine)
+
+add_custom_command(TARGET @GAME_TITLE@ POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy -t @GAME_DESTINATION@ $<TARGET_RUNTIME_DLLS:@GAME_TITLE@>
+  COMMAND_EXPAND_LISTS
+)
