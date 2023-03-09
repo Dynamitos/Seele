@@ -7,8 +7,10 @@ target_sources(Engine
         Collider.h
         Collider.cpp
         Component.h
+        DirectionalLight.h
         KeyboardInput.h
         MeshCollider.h
+        PointLight.h
         RigidBody.h
         ShapeBase.h
         ShapeBase.cpp
@@ -27,8 +29,10 @@ target_sources(Engine
             Camera.h
             Collider.h
             Component.h
+            DirectionalLight.h
             KeyboardInput.h
             MeshCollider.h
+            PointLight.h
             RigidBody.h
             ShapeBase.h
             Skybox.h

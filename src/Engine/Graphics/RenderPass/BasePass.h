@@ -30,6 +30,7 @@ struct BasePassData
 {
     Array<MeshBatch> staticDrawList;
     Gfx::PStructuredBuffer sceneDataBuffer;
+    LightEnv lightEnv;
 };
 class BasePass : public RenderPass<BasePassData>
 {
@@ -54,10 +55,6 @@ private:
     Gfx::PPipelineLayout basePassLayout;
     // Set 0: Light environment
     static constexpr uint32 INDEX_LIGHT_ENV = 0;
-    Gfx::PStructuredBuffer directLightBuffer;
-    Gfx::PUniformBuffer numDirLightBuffer;
-    Gfx::PStructuredBuffer pointLightBuffer;
-    Gfx::PUniformBuffer numPointLightBuffer;
     Gfx::PStructuredBuffer oLightIndexList;
     Gfx::PTexture oLightGrid;
     Gfx::PDescriptorLayout lightLayout;

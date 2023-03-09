@@ -11,19 +11,6 @@ namespace Seele
 DECLARE_REF(Material)
 DECLARE_REF(Entity)
 
-struct DirectionalLight
-{
-    Vector4 color;
-    Vector4 direction;
-};
-
-struct PointLight
-{
-    Vector4 positionWS;
-    //Vector4 positionVS;
-    Vector4 colorRange;
-};
-
 #define MAX_DIRECTIONAL_LIGHTS 4
 #define MAX_POINT_LIGHTS 256
 struct LightEnv

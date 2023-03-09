@@ -6,13 +6,11 @@
 #include "Asset/AssetRegistry.h"
 #include "Asset/TextureAsset.h"
 #include "Asset/MaterialAsset.h"
+#include "Component/PointLight.h"
+#include "Component/DirectionalLight.h"
+#include "Actor/PointLightActor.h"
 
 using namespace Seele;
-
-inline float frand()
-{
-    return (float)rand()/RAND_MAX;
-}
 
 Scene::Scene(Gfx::PGraphics graphics)
     : graphics(graphics)
@@ -21,14 +19,15 @@ Scene::Scene(Gfx::PGraphics graphics)
     
     StructuredBufferCreateInfo structInfo = {
         .resourceData = {
-            .size = sizeof(DirectionalLight) * MAX_DIRECTIONAL_LIGHTS,
+            .size = sizeof(Component::DirectionalLight) * MAX_DIRECTIONAL_LIGHTS,
             .data = nullptr,
         },
-        .stride = sizeof(DirectionalLight),
+        .stride = sizeof(Component::DirectionalLight),
         .bDynamic = true,
     };
     lightEnv.directionalLights = graphics->createStructuredBuffer(structInfo);
-    structInfo.resourceData.size = sizeof(PointLight) * MAX_POINT_LIGHTS;
+    structInfo.resourceData.size = sizeof(Component::PointLight) * MAX_POINT_LIGHTS;
+    structInfo.stride = sizeof(Component::PointLight);
     lightEnv.pointLights = graphics->createStructuredBuffer(structInfo);
     
     UniformBufferCreateInfo uniformInfo = {
@@ -40,7 +39,6 @@ Scene::Scene(Gfx::PGraphics graphics)
     };
     lightEnv.numDirectional = graphics->createUniformBuffer(uniformInfo);
     lightEnv.numPoints = graphics->createUniformBuffer(uniformInfo);
-    
 }
 
 Scene::~Scene()
@@ -107,28 +105,28 @@ Array<MeshBatch> Scene::getStaticMeshes()
 
 LightEnv Scene::getLightBuffer() 
 {
-    StaticArray<DirectionalLight, MAX_DIRECTIONAL_LIGHTS> dirLights;
-    uint32 numDirLights;
-    for(auto&& [entity, light] : registry.view<DirectionalLight>().each())
+    StaticArray<Component::DirectionalLight, MAX_DIRECTIONAL_LIGHTS> dirLights;
+    uint32 numDirLights = 0;
+    for(auto&& [entity, light] : registry.view<Component::DirectionalLight>().each())
     {
         dirLights[numDirLights++] = light;
     }
     lightEnv.directionalLights->updateContents({
-        .size = sizeof(DirectionalLight) * numDirLights,
+        .size = sizeof(Component::DirectionalLight) * numDirLights,
         .data = (uint8*)dirLights.data(),
     });
     lightEnv.numDirectional->updateContents({
         .size = sizeof(uint32),
         .data = (uint8*)&numDirLights,
     });
-    StaticArray<PointLight, MAX_POINT_LIGHTS> pointLights;
-    uint32 numPointLights;
-    for(auto&& [entity, light] : registry.view<PointLight>().each())
+    StaticArray<Component::PointLight, MAX_POINT_LIGHTS> pointLights;
+    uint32 numPointLights = 0;
+    for(auto&& [entity, light] : registry.view<Component::PointLight>().each())
     {
         pointLights[numPointLights++] = light;
     }
     lightEnv.pointLights->updateContents({
-        .size = sizeof(PointLight) * numPointLights,
+        .size = sizeof(Component::PointLight) * numPointLights,
         .data = (uint8*)pointLights.data(),
     });
     lightEnv.numPoints->updateContents({

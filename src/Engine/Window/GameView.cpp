@@ -54,6 +54,7 @@ void GameView::commitUpdate()
     lightCullingData.lightEnv = scene->getLightBuffer();
     basePassData.staticDrawList = scene->getStaticMeshes();
     basePassData.sceneDataBuffer = scene->getSceneDataBuffer();
+    basePassData.lightEnv = scene->getLightBuffer();
     skyboxData.skybox = scene->getSkybox();
 }
 

@@ -4,12 +4,18 @@ target_sources(Engine
         Actor.h
         CameraActor.cpp
         CameraActor.h
+        DirectionalLightActor.cpp
+        DirectionalLightActor.h
         Entity.cpp
-        Entity.h)
+        Entity.h
+        PointLightActor.cpp
+        PointLightActor.h)
 
 target_sources(Engine
     PUBLIC FILE_SET HEADERS
         FILES
             Actor.h
             CameraActor.h
-            Entity.h)
+            DirectionalLightActor.h
+            Entity.h
+            PointLightActor.h)

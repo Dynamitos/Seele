@@ -154,10 +154,10 @@ void BasePass::render()
 		Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 
 		Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
 
-    descriptorSets[INDEX_LIGHT_ENV]->updateBuffer(0, directLightBuffer);
-    descriptorSets[INDEX_LIGHT_ENV]->updateBuffer(1, numDirLightBuffer);
-    descriptorSets[INDEX_LIGHT_ENV]->updateBuffer(2, pointLightBuffer);
-    descriptorSets[INDEX_LIGHT_ENV]->updateBuffer(3, numPointLightBuffer);
+    descriptorSets[INDEX_LIGHT_ENV]->updateBuffer(0, passData.lightEnv.directionalLights);
+    descriptorSets[INDEX_LIGHT_ENV]->updateBuffer(1, passData.lightEnv.numDirectional);
+    descriptorSets[INDEX_LIGHT_ENV]->updateBuffer(2, passData.lightEnv.pointLights);
+    descriptorSets[INDEX_LIGHT_ENV]->updateBuffer(3, passData.lightEnv.numPoints);
     descriptorSets[INDEX_LIGHT_ENV]->updateBuffer(4, oLightIndexList);
     descriptorSets[INDEX_LIGHT_ENV]->updateTexture(5, oLightGrid);
     descriptorSets[INDEX_LIGHT_ENV]->writeChanges();
@@ -186,11 +186,7 @@ void BasePass::publishOutputs()
 }
 
 void BasePass::createRenderPass() 
-{    
-	directLightBuffer = resources->requestBuffer("DIRECTIONAL_LIGHTS");
-	pointLightBuffer = resources->requestBuffer("POINT_LIGHTS");
-	numDirLightBuffer = resources->requestUniform("NUM_DIRECTIONAL_LIGHTS");
-	numPointLightBuffer = resources->requestUniform("NUM_POINT_LIGHTS");
+{
     Gfx::PRenderTargetAttachment depthAttachment = resources->requestRenderTarget("DEPTHPREPASS_DEPTH");
     depthAttachment->loadOp = Gfx::SE_ATTACHMENT_LOAD_OP_LOAD;
     colorAttachment->loadOp = Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR;
