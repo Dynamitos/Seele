@@ -65,6 +65,16 @@ namespace Serialization
     {
         buffer.readBytes(&type, sizeof(type));
     }
+    template<typename T>
+    static void save2(ArchiveBuffer& buffer, const T& type) requires(serializable<T>)
+    {
+        type.save(buffer);
+    }
+    template<typename T>
+    static void load2(ArchiveBuffer& buffer, T& type) requires(serializable<T>)
+    {
+        type.load(buffer);
+    }
     //template<class T>
     //static void save(ArchiveBuffer& buffer, const T& type)
     //{

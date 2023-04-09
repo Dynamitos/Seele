@@ -19,11 +19,7 @@ GameView::GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreate
         SkyboxRenderPass(graphics)
     ))
 {
-    scene = new Scene(graphics);
-    gameInterface.reload(instance);
-    
-    systemGraph = new SystemGraph();
-    gameInterface.getGame()->setupScene(scene, systemGraph);
+    reloadGame();
     renderGraph.updateViewport(viewport);
 }
 
@@ -74,6 +70,15 @@ void GameView::render()
     });
 }
 
+void GameView::reloadGame()
+{
+    scene = new Scene(graphics);
+    gameInterface.reload(instance);
+    
+    systemGraph = new SystemGraph();
+    gameInterface.getGame()->setupScene(scene, systemGraph);
+}
+
 void GameView::keyCallback(KeyCode code, InputAction action, KeyModifier)
 {
     scene->view<Component::KeyboardInput>([=](Component::KeyboardInput& input)
@@ -99,6 +104,10 @@ void GameView::keyCallback(KeyCode code, InputAction action, KeyModifier)
         //    showDebug = !showDebug;
         //    debugPassData.vertices.clear();
         //}
+        if(code == KeyCode::KEY_R && action == InputAction::PRESS)
+        {
+            reloadGame();
+        }
 
         input.keys[code] = action != InputAction::RELEASE;
     });

@@ -19,12 +19,19 @@ extern AssetRegistry* instance;
 
 int main()
 {
+
+    std::string outputPath = "C:/Users/Dynamitos/TrackClearGame";
+    std::string cmakePath = "C:/Users/Dynamitos/TrackClearGame/cmake";
+    std::string gameName = "TrackClear";
+    std::string sourcePath = "C:/Users/Dynamitos/TrackClear/";
+    std::string binaryPath = "C:/Users/Dynamitos/TrackClear/bin/TrackClear.dll";
+
     Gfx::PGraphics graphics = new Vulkan::Graphics();
 
     GraphicsInitializer initializer;
     graphics->init(initializer);
     PWindowManager windowManager = new WindowManager();
-    AssetRegistry::init(std::string("C:\\Users\\Dynamitos\\TrackClear\\Assets"), graphics);
+    AssetRegistry::init(std::string("C:/Users/Dynamitos/TrackClear/Assets"), graphics);
     AssetImporter::init(graphics, instance);
     AssetImporter::importFont(FontImportArgs{
         .filePath = "./fonts/Calibri.ttf",
@@ -213,7 +220,7 @@ int main()
     sceneViewInfo.dimensions.size.y = 720;
     sceneViewInfo.dimensions.offset.x = 0;
     sceneViewInfo.dimensions.offset.y = 0;
-    PGameView sceneView = new Editor::PlayView(graphics, window, sceneViewInfo, "C:\\Users\\Dynamitos\\TrackClear\\bin\\TrackCleard.dll");
+    PGameView sceneView = new Editor::PlayView(graphics, window, sceneViewInfo, binaryPath);
     
     //ViewportCreateInfo inspectorViewInfo;
     //inspectorViewInfo.dimensions.size.x = 640;
@@ -226,9 +233,18 @@ int main()
 
     window->render();
     //export game
-    std::string outputPath = "C:\\Users\\Dynamitos\\TrackClearGame";
-    
-    std::system("cmake --configure");
+
+    std::filesystem::create_directories(outputPath);
+    std::system(std::format("cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGAME_TITLE=\"{}\" -DGAME_DESTINATION=\"{}\" -DGAME_BINARY=\"{}\" -P ./cmake/ExportProject.cmake", gameName, outputPath, binaryPath).c_str());
+    std::system(std::format("cmake -S {} -B {}", cmakePath, cmakePath).c_str());
+    std::system(std::format("cmake --build {}", cmakePath).c_str());
+    std::filesystem::copy(std::filesystem::path(sourcePath) / "Assets", std::filesystem::path(outputPath) / "Assets", std::filesystem::copy_options::recursive);
+    std::filesystem::copy("shaders", std::filesystem::path(outputPath) / "shaders", std::filesystem::copy_options::recursive);
+    std::filesystem::copy("textures", std::filesystem::path(outputPath) / "textures", std::filesystem::copy_options::recursive);
+    std::filesystem::copy_file("assimp-vc143-mt.dll", std::filesystem::path(outputPath) / "assimp-vc143-mt.dll");
+    std::filesystem::copy_file("slang.dll", std::filesystem::path(outputPath) / "slang.dll");
+    std::filesystem::copy_file("slang-glslang.dll", std::filesystem::path(outputPath) / "slang-glslang.dll");
+    std::filesystem::copy_file("slang-llvm.dll", std::filesystem::path(outputPath) / "slang-llvm.dll");
 
     return 0;
 }

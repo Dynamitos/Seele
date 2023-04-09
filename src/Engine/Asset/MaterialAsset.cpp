@@ -26,5 +26,6 @@ void MaterialAsset::load(ArchiveBuffer& buffer)
 {
     material = new Material();
     material->load(buffer);
+    material->compile();
 }
 

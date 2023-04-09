@@ -20,6 +20,8 @@ public:
 
 	virtual void prepareRender() override;
 	virtual void render() override;
+
+	void reloadGame();
 private:
 	GameInterface gameInterface;
     RenderGraph<
