@@ -8,11 +8,20 @@ interface IBRDF
 struct BlinnPhong : IBRDF
 {
     float3 baseColor;
-    float metallic = 0;
-    float3 normal = float3(0, 0, 1);
-    float specular = 0.5;
-    float roughness = 0.5;
-    float sheen = 1.f;
+    float metallic;
+    float3 normal;
+    float specular;
+    float roughness;
+    float sheen;
+
+    __init()
+    {
+        metallic = 0;
+        normal = float3(0, 0, 1);
+        specular = 0.5;
+        roughness = 0.5;
+        sheen = 1;
+    }
 
     float3 evaluate(float3 viewDir_TS, float3 lightDir_TS, float3 lightColor)
     {

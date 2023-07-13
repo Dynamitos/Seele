@@ -114,8 +114,8 @@ target_precompile_headers(Engine
     
 if(MSVC)
     set(_CRT_SECURE_NO_WARNINGS)
-    target_compile_options(Engine PUBLIC /Zi /MP14 /W4 /DEBUG "/WX-")
-    target_compile_options(Editor PUBLIC /Zi /MP14 /W4 /DEBUG "/WX-")
+    target_compile_options(Engine PUBLIC /std:c++20 /Zi /MP14 /W4 /DEBUG "/WX-")
+    target_compile_options(Editor PUBLIC /std:c++20 /Zi /MP14 /W4 /DEBUG "/WX-")
     target_sources(Engine INTERFACE   
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Seele.natvis>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/Seele.natvis>

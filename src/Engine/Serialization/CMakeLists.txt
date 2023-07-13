@@ -1,9 +1,11 @@
 target_sources(Engine
     PRIVATE
         ArchiveBuffer.h
-        ArchiveBuffer.cpp)
+        ArchiveBuffer.cpp
+        Serialization.h)
 
 target_sources(Engine
     PUBLIC FILE_SET HEADERS
         FILES
-            ArchiveBuffer.h)
+            ArchiveBuffer.h
+            Serialization.h)

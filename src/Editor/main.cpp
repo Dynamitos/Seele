@@ -19,7 +19,6 @@ extern AssetRegistry* instance;
 
 int main()
 {
-
     std::string outputPath = "C:/Users/Dynamitos/TrackClearGame";
     std::string cmakePath = "C:/Users/Dynamitos/TrackClearGame/cmake";
     std::string gameName = "TrackClear";

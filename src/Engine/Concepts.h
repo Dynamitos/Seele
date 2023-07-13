@@ -6,11 +6,11 @@ namespace Seele
 template<class F, class... Args>
 concept invocable = std::invocable<F, Args...>;
 
-template<class T, class Archive>
-concept serializable = requires(const T t, Archive& a)
+template<class Archive, class T>
+concept serializable = requires(const T& t, Archive& a)
 {
     t.save(a);
-} && requires(T t, Archive& a)
+} && requires(T& t, Archive& a)
 {
     t.load(a);
 };

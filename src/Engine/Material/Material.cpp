@@ -54,7 +54,8 @@ void Material::save(ArchiveBuffer& buffer) const
     MaterialInterface::save(buffer);
     Serialization::save(buffer, materialName);
     Serialization::save(buffer, layout->getSetIndex());
-    Serialization::save2(buffer, brdf);
+    Serialization::save(buffer, codeExpressions);
+    Serialization::save(buffer, brdf);
     const auto& bindings = layout->getBindings();
     Serialization::save(buffer, bindings.size());
     for (const auto& binding : bindings)
@@ -74,7 +75,8 @@ void Material::load(ArchiveBuffer& buffer)
     Serialization::load(buffer, materialName);
     uint32 setIndex;
     Serialization::load(buffer, setIndex);
-    Serialization::load2(buffer, brdf);
+    Serialization::load(buffer, codeExpressions);
+    Serialization::load(buffer, brdf);
     uint64 numBindings;
     Serialization::load(buffer, numBindings);
     layout = graphics->createDescriptorLayout();

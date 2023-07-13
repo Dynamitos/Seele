@@ -8,7 +8,7 @@
 #include <glm/gtc/quaternion.hpp>
 #pragma warning(pop)
 #include <nlohmann/json_fwd.hpp>
-#include "Serialization/ArchiveBuffer.h"
+#include "Serialization/Serialization.h"
 
 namespace Seele
 {

@@ -2,6 +2,8 @@
 #include <utility>
 #include "Array.h"
 #include "Pair.h"
+#include "Serialization/Serialization.h"
+
 namespace Seele
 {
 template <typename K, 
@@ -396,6 +398,28 @@ public:
     constexpr size_type size() const
     {
         return _size;
+    }
+    void save(ArchiveBuffer& buffer) const
+    {
+        buffer.writeBytes(&_size, sizeof(uint64));
+        for(const auto& [k, v] : *this)
+        {
+            Serialization::save(buffer, k);
+            Serialization::save(buffer, v);
+        }
+    }
+    void load(ArchiveBuffer& buffer)
+    {
+        uint64 len = 0;
+        buffer.readBytes(&len, sizeof(uint64));
+        for(uint64 i = 0; i < len; ++i)
+        {
+            K k;
+            V v;
+            Serialization::load(buffer, k);
+            Serialization::load(buffer, v);
+            this->operator[](k) = v;
+        }
     }
 private:
     void verifyTree()

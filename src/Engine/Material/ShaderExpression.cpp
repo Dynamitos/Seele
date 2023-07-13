@@ -6,13 +6,41 @@
 
 using namespace Seele;
 
+void ExpressionInput::save(ArchiveBuffer& buffer) const
+{
+    Serialization::save(buffer, source);
+    Serialization::save(buffer, type);
+}
+
+void ExpressionInput::load(ArchiveBuffer& buffer)
+{
+    Serialization::load(buffer, source);
+    Serialization::load(buffer, type);
+}
+
+void ExpressionOutput::save(ArchiveBuffer& buffer) const
+{
+    Serialization::save(buffer, name);
+    Serialization::save(buffer, type);
+}
+
+void ExpressionOutput::load(ArchiveBuffer& buffer)
+{
+    Serialization::load(buffer, name);
+    Serialization::load(buffer, type);
+}
+
 void ShaderExpression::save(ArchiveBuffer& buffer) const
 {
+    Serialization::save(buffer, inputs);
+    Serialization::save(buffer, output);
     Serialization::save(buffer, key);
 }
 
 void ShaderExpression::load(ArchiveBuffer& buffer)
 {
+    Serialization::load(buffer, inputs);
+    Serialization::load(buffer, output);
     Serialization::load(buffer, key);
 }
 
@@ -378,86 +406,13 @@ void SampleExpression::load(ArchiveBuffer& buffer)
     ShaderExpression::load(buffer);
 }
 
-void Serialization::save(ArchiveBuffer& buffer, const PShaderExpression& parameter)
+void MaterialNode::save(ArchiveBuffer& buffer) const 
 {
-    Serialization::save(buffer, parameter->getIdentifier());
-    parameter->save(buffer);
+    Serialization::save(buffer, profile);
+    Serialization::save(buffer, variables);
 }
-
-void Serialization::load(ArchiveBuffer& buffer, PShaderExpression& parameter)
+void MaterialNode::load(ArchiveBuffer& buffer) 
 {
-    uint64 identifier = 0;
-    Serialization::load(buffer, identifier);
-    switch (identifier)
-    {
-    case FloatParameter::IDENTIFIER:
-        parameter = new FloatParameter();
-        break;
-    case VectorParameter::IDENTIFIER:
-        parameter = new VectorParameter();
-        break;
-    case TextureParameter::IDENTIFIER:
-        parameter = new TextureParameter();
-        break;
-    case SamplerParameter::IDENTIFIER:
-        parameter = new SamplerParameter();
-        break;
-    case CombinedTextureParameter::IDENTIFIER:
-        parameter = new CombinedTextureParameter();
-        break;
-    case ConstantExpression::IDENTIFIER:
-        parameter = new ConstantExpression();
-        break;
-    case AddExpression::IDENTIFIER:
-        parameter = new AddExpression();
-        break;
-    case SubExpression::IDENTIFIER:
-        parameter = new SubExpression();
-        break;
-    case MulExpression::IDENTIFIER:
-        parameter = new MulExpression();
-        break;
-    case SwizzleExpression::IDENTIFIER:
-        parameter = new SwizzleExpression();
-        break;
-    case SampleExpression::IDENTIFIER:
-        parameter = new SampleExpression();
-        break;
-    default:
-        throw std::runtime_error("Unknown Identifier");
-    }
-    parameter->load(buffer);
-}
-
-void Serialization::save(ArchiveBuffer& buffer, const PShaderParameter& parameter)
-{
-    Serialization::save(buffer, parameter->getIdentifier());
-    parameter->save(buffer);
-}
-
-void Serialization::load(ArchiveBuffer& buffer, PShaderParameter& parameter)
-{
-    uint64 identifier = 0;
-    Serialization::load(buffer, identifier);
-    switch (identifier)
-    {
-    case FloatParameter::IDENTIFIER:
-        parameter = new FloatParameter();
-        break;
-    case VectorParameter::IDENTIFIER:
-        parameter = new VectorParameter();
-        break;
-    case TextureParameter::IDENTIFIER:
-        parameter = new TextureParameter();
-        break;
-    case SamplerParameter::IDENTIFIER:
-        parameter = new SamplerParameter();
-        break;
-    case CombinedTextureParameter::IDENTIFIER:
-        parameter = new CombinedTextureParameter();
-        break;
-    default:
-        throw std::runtime_error("Unknown Identifier");
-    }
-    parameter->load(buffer);
+    Serialization::load(buffer, profile);
+    Serialization::load(buffer, variables);
 }
