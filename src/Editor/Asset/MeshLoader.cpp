@@ -323,6 +323,17 @@ void MeshLoader::import(MeshImportArgs args, PMeshAsset meshAsset)
         }
     }
     meshAsset->physicsMesh = std::move(collider);
+
+
+    auto stream = AssetRegistry::createWriteStream((std::filesystem::path(meshAsset->getFolderPath()) / meshAsset->getName()).replace_extension("asset").string(), std::ios::binary);
+
+    ArchiveBuffer archive;
+    Serialization::save(archive, MeshAsset::IDENTIFIER);
+    Serialization::save(archive, meshAsset->getName());
+    Serialization::save(archive, meshAsset->getFolderPath());
+    meshAsset->save(archive);
+    archive.writeToStream(stream);
+
     meshAsset->setStatus(Asset::Status::Ready);
-    std::cout << "Finished loading " << args.filePath<< std::endl;
+    std::cout << "Finished loading " << args.filePath << std::endl;
 }

@@ -204,8 +204,6 @@ int main()
         .type = TextureImportType::TEXTURE_CUBEMAP,
         });
 
-    AssetRegistry::saveRegistry();
-
     WindowCreateInfo mainWindowInfo;
     mainWindowInfo.title = "SeeleEngine";
     mainWindowInfo.width = 1280;

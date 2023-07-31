@@ -47,6 +47,7 @@ PTextureAsset TextureLoader::getPlaceholderTexture()
 
 void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset)
 {
+
     int totalWidth, totalHeight, n;
     unsigned char* data = stbi_load(args.filePath.string().c_str(), &totalWidth, &totalHeight, &n, 4);
     ktxTexture2* kTexture;
@@ -109,28 +110,45 @@ void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset)
             0, 0, 0, data, totalWidth * totalHeight * 4 * sizeof(unsigned char));
     }
     std::cout << "starting compression of " << textureAsset->getAssetIdentifier() << std::endl;
-    ktxBasisParams params = {
+
+    ktxBasisParams params2 = {
         .structSize = sizeof(ktxBasisParams),
-        .uastc = KTX_TRUE,
+        .uastc = false,
         .threadCount = std::thread::hardware_concurrency(),
+        .compressionLevel = 5,
         .qualityLevel = 0,
     };
-    ktx_error_code_e error = ktxTexture2_CompressBasisEx(kTexture, &params);
+
+    ktx_error_code_e error = ktxTexture2_CompressBasisEx(kTexture, &params2);
     assert(error == KTX_SUCCESS);
 
-    //error = ktxTexture2_TranscodeBasis(kTexture, KTX_TTF_BC7_RGBA, 0);
-    //assert(error == KTX_SUCCESS);
-    
     ktx_uint8_t* dest;
     ktx_size_t size;
     ktxTexture_WriteToMemory(ktxTexture(kTexture), &dest, &size);
 
     Array<uint8> memory(size);
     std::memcpy(memory.data(), dest, size);
-
-    textureAsset->createFromMemory(std::move(memory), graphics);
-
     free(dest);
+    
     stbi_image_free(data);
+
+    ArchiveBuffer temp(graphics);
+    Serialization::save(temp, memory);
+    temp.rewind();
+    textureAsset->load(temp);
+    if (textureAsset->getName().empty())
+    {
+        return;
+    }
+    auto stream = AssetRegistry::createWriteStream((std::filesystem::path(textureAsset->folderPath) / textureAsset->getName()).replace_extension("asset").string(), std::ios::binary);
+
+    ArchiveBuffer archive;
+    Serialization::save(archive, TextureAsset::IDENTIFIER);
+    Serialization::save(archive, textureAsset->getName());
+    Serialization::save(archive, textureAsset->getFolderPath());
+    Serialization::save(archive, memory);
+    archive.writeToStream(stream);
+
+
     ////co_return;
 }

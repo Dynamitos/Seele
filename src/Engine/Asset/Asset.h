@@ -23,14 +23,13 @@ public:
     virtual void save(ArchiveBuffer& buffer) const = 0;
     virtual void load(ArchiveBuffer& buffer) = 0;
     
+    bool isModified() const;
     // returns the assets name
     std::string getName() const;
     // returns the (virtual) folder path
     std::string getFolderPath() const;
     // returns the identifier with which it can be found from the asset registry
     std::string getAssetIdentifier() const;
-    // returns the size of the assets data in bytes(excluding name and folder)
-    uint64 getByteSize() const { return byteSize; }
 
     constexpr Status getStatus() 
     {

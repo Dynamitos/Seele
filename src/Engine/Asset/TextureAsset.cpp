@@ -25,8 +25,7 @@ TextureAsset::~TextureAsset()
 
 void TextureAsset::save(ArchiveBuffer& buffer) const
 {
-    /*Array<uint8> textureData;
-    ktxTexture2* kTexture;
+    /*ktxTexture2* kTexture;
     ktxTextureCreateInfo createInfo = {
         .vkFormat = (uint32_t)texture->getFormat(),
         .baseWidth = texture->getSizeX(),
@@ -47,8 +46,9 @@ void TextureAsset::save(ArchiveBuffer& buffer) const
         {
             // technically, downloading cant be const, because we have to allocate temporary buffers and change layouts
             // but practically the texture stays the same
-            const_cast<Gfx::Texture*>(texture.getHandle())->download(0, depth, face, textureData);
-            KTX_CHECK(ktxTexture_SetImageFromMemory(ktxTexture(kTexture), 0, depth, face, textureData.data(), textureData.size()));
+            Array<uint8> faceData;
+            const_cast<Gfx::Texture*>(texture.getHandle())->download(0, depth, face, faceData);
+            KTX_CHECK(ktxTexture_SetImageFromMemory(ktxTexture(kTexture), 0, depth, face, faceData.data(), faceData.size()));
         }
     }
     char writer[100];
@@ -57,7 +57,7 @@ void TextureAsset::save(ArchiveBuffer& buffer) const
         (ktx_uint32_t)strlen(writer) + 1,
         writer);
 
-    //ktx_error_code_e error = ktxTexture2_CompressBasis(kTexture, 0);
+    KTX_CHECK(ktxTexture2_CompressAstc(kTexture, 0));
 
     ktx_uint8_t* texData;
     ktx_size_t texSize;
@@ -65,29 +65,24 @@ void TextureAsset::save(ArchiveBuffer& buffer) const
 
     Array<uint8> rawData(texSize);
     std::memcpy(rawData.data(), texData, texSize);
-    free(texData);
-    */
-    Serialization::save(buffer, textureData);
+    Serialization::save(buffer, rawData);
+    free(texData);*/
+    assert(false); // TODO
 }
 
 void TextureAsset::load(ArchiveBuffer& buffer) 
 {
+    Gfx::PGraphics graphics = buffer.getGraphics();
     Array<uint8> rawData;
     Serialization::load(buffer, rawData);
-    createFromMemory(std::move(rawData), buffer.getGraphics());
-}
-
-void TextureAsset::createFromMemory(Array<uint8> memory, Gfx::PGraphics graphics)
-{
-    textureData = std::move(memory);
     ktxTexture2* kTexture;
-    std::cout << "Loading texture " << name << std::endl;
-    KTX_CHECK(ktxTexture_CreateFromMemory(textureData.data(),
-        textureData.size(),
+    KTX_CHECK(ktxTexture_CreateFromMemory(rawData.data(),
+        rawData.size(),
         KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT,
         (ktxTexture**)&kTexture));
 
-    ktxTexture2_TranscodeBasis(kTexture, KTX_TTF_BC7_RGBA, 0);
+    ktx_error_code_e e = ktxTexture2_TranscodeBasis(kTexture, KTX_TTF_BC7_RGBA, 0);
+    assert(e == ktx_error_code_e::KTX_SUCCESS);
 
     TextureCreateInfo createInfo = {
             .resourceData = {

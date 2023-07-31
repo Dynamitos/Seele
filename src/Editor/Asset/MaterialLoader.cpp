@@ -38,9 +38,9 @@ void MaterialLoader::importAsset(MaterialImportArgs args)
 
 void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
 {
-    auto stream = std::ifstream(args.filePath.c_str());
+    auto jsonstream = std::ifstream(args.filePath.c_str());
     json j;
-    stream >> j;
+    jsonstream >> j;
     std::string materialName = j["name"].get<std::string>() + "Material";
     Gfx::PDescriptorLayout layout = graphics->createDescriptorLayout(materialName + "Layout");
     //Shader file needs to conform to the slang standard, which prohibits _
@@ -221,9 +221,24 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
         std::move(codeExp),
         std::move(mat)
     );
+
     asset->material->compile();
     graphics->getShaderCompiler()->registerMaterial(asset->material);
     asset->setStatus(Asset::Status::Ready);
+
+    if (asset->getName().empty())
+    {
+        return;
+    }
+
+    auto stream = AssetRegistry::createWriteStream((std::filesystem::path(asset->folderPath) / asset->getName()).string().append(".asset"), std::ios::binary);
+
+    ArchiveBuffer archive;
+    Serialization::save(archive, MaterialAsset::IDENTIFIER);
+    Serialization::save(archive, asset->getName());
+    Serialization::save(archive, asset->getFolderPath());
+    asset->save(archive);
+    archive.writeToStream(stream);
     ////co_return;
 }
 

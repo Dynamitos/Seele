@@ -77,12 +77,12 @@ PMaterialAsset AssetRegistry::findMaterial(const std::string &filePath)
     return folder->materials.at(fileName);
 }
 
-std::ofstream AssetRegistry::createWriteStream(const std::string& relativePath, std::ios_base::openmode openmode) 
+std::ofstream AssetRegistry::createWriteStream(const std::filesystem::path& relativePath, std::ios_base::openmode openmode) 
 {
     return get().internalCreateWriteStream(relativePath, openmode);
 }
 
-std::ifstream AssetRegistry::createReadStream(const std::string& relativePath, std::ios_base::openmode openmode) 
+std::ifstream AssetRegistry::createReadStream(const std::filesystem::path& relativePath, std::ios_base::openmode openmode)
 {
     return get().internalCreateReadStream(relativePath, openmode);
 }
@@ -229,9 +229,6 @@ void AssetRegistry::loadAsset(ArchiveBuffer& buffer)
     std::string folderPath;
     Serialization::load(buffer, folderPath);
 
-    uint64 assetSize;
-    Serialization::load(buffer, assetSize);
-
     AssetFolder* folder = getOrCreateFolder(folderPath);
 
     PAsset asset;
@@ -294,7 +291,7 @@ void AssetRegistry::saveAsset(PAsset asset, uint64 identifier, const std::filesy
     if (name.empty())
         return;
 
-    std::string path = (folderPath / name).string().append(".asset");
+    std::string path = (folderPath / name).replace_extension("asset").string();
     auto assetStream = createWriteStream(std::move(path), std::ios::binary);
     ArchiveBuffer assetBuffer(graphics);
     // write identifier
@@ -303,13 +300,9 @@ void AssetRegistry::saveAsset(PAsset asset, uint64 identifier, const std::filesy
     Serialization::save(assetBuffer, name);
     // write folder
     Serialization::save(assetBuffer, folderPath.string());
-    // write the asset size
-    asset->updateByteSize();
-    Serialization::save(assetBuffer, asset->getByteSize());
     // write asset data
     asset->save(assetBuffer);
     assetBuffer.writeToStream(assetStream);
-
 }
 
 std::filesystem::path AssetRegistry::getRootFolder()
@@ -367,17 +360,17 @@ AssetRegistry::AssetFolder* AssetRegistry::getOrCreateFolder(std::string fullPat
     return result;
 }
 
-std::ofstream AssetRegistry::internalCreateWriteStream(const std::string& relativePath, std::ios_base::openmode openmode) 
+std::ofstream AssetRegistry::internalCreateWriteStream(const std::filesystem::path& relativePath, std::ios_base::openmode openmode)
 {
-    auto fullPath = rootFolder;
-    fullPath.append(relativePath);
+    auto fullPath = rootFolder / relativePath;
+    std::filesystem::create_directories(fullPath.parent_path());
     return std::ofstream(fullPath.string(), openmode);
 }
 
-std::ifstream AssetRegistry::internalCreateReadStream(const std::string& relativePath, std::ios_base::openmode openmode)
+std::ifstream AssetRegistry::internalCreateReadStream(const std::filesystem::path& relativePath, std::ios_base::openmode openmode)
 {
-    auto fullPath = rootFolder;
-    fullPath.append(relativePath);
+    auto fullPath = rootFolder / relativePath;
+    std::filesystem::create_directories(fullPath.parent_path());
     return std::ifstream(fullPath.string(), openmode);
 }
 

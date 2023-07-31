@@ -31,13 +31,6 @@ Asset::~Asset()
 {
 }
 
-void Asset::updateByteSize()
-{
-    ArchiveBuffer buffer;
-    save(buffer);
-    byteSize = buffer.size();
-}
-
 std::string Asset::getFolderPath() const
 {
     return folderPath;

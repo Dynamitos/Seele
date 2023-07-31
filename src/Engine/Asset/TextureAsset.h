@@ -13,7 +13,6 @@ public:
     virtual ~TextureAsset();
     virtual void save(ArchiveBuffer& buffer) const override;
     virtual void load(ArchiveBuffer& buffer) override;
-    void createFromMemory(Array<uint8> memory, Gfx::PGraphics graphics);
     void setTexture(Gfx::PTexture _texture)
     {
         texture = _texture;
@@ -23,7 +22,6 @@ public:
         return texture;
     }
 private:
-    Array<uint8> textureData;
     Gfx::PTexture texture;
     friend class TextureLoader;
 };

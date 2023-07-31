@@ -25,8 +25,8 @@ public:
     static PFontAsset findFont(const std::string& name);
     static PMaterialAsset findMaterial(const std::string& filePath);
 
-    static std::ofstream createWriteStream(const std::string& relativePath, std::ios_base::openmode openmode = std::ios::out);
-    static std::ifstream createReadStream(const std::string& relativePath, std::ios_base::openmode openmode = std::ios::in);
+    static std::ofstream createWriteStream(const std::filesystem::path& relativePath, std::ios_base::openmode openmode = std::ios::out);
+    static std::ifstream createReadStream(const std::filesystem::path& relativePath, std::ios_base::openmode openmode = std::ios::in);
 
     static void set(AssetRegistry registry);
 
@@ -63,8 +63,8 @@ private:
     void registerFont(PFontAsset font);
     void registerMaterial(PMaterialAsset material);
 
-    std::ofstream internalCreateWriteStream(const std::string& relativePath, std::ios_base::openmode openmode = std::ios::out);
-    std::ifstream internalCreateReadStream(const std::string& relaitvePath, std::ios_base::openmode openmode = std::ios::in);
+    std::ofstream internalCreateWriteStream(const std::filesystem::path& relativePath, std::ios_base::openmode openmode = std::ios::out);
+    std::ifstream internalCreateReadStream(const std::filesystem::path& relaitvePath, std::ios_base::openmode openmode = std::ios::in);
 
     std::filesystem::path rootFolder;
     AssetFolder* assetRoot;
