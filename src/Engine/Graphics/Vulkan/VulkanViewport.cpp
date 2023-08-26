@@ -8,6 +8,12 @@
 using namespace Seele;
 using namespace Seele::Vulkan;
 
+double currentFrameDelta = 0;
+double Gfx::getCurrentFrameDelta()
+{
+    return currentFrameDelta;
+}
+
 void glfwKeyCallback(GLFWwindow* handle, int key, int, int action, int modifier)
 {
     Window* window = (Window*)glfwGetWindowUserPointer(handle);
@@ -209,6 +215,8 @@ void Window::recreateSwapchain(const WindowCreateInfo &windowInfo)
     createSwapchain();
 }
 
+static uint32_t currentFrameIndex = 0;
+
 void Window::present()
 {
     backBufferImages[currentImageIndex]->changeLayout(Gfx::SE_IMAGE_LAYOUT_PRESENT_SRC_KHR);
@@ -230,11 +238,11 @@ void Window::present()
     {
         presentResult = vkQueuePresentKHR(graphics->getGraphicsCommands()->getQueue()->getHandle(), &info);
     }
-    Gfx::currentFrameIndex = (Gfx::currentFrameIndex + 1)%Gfx::numFramesBuffered;
+    currentFrameIndex = (currentFrameIndex + 1) % Gfx::numFramesBuffered;
     static double lastFrameTime = 0.f;
     double currentTime = glfwGetTime();
     double currentDelta = currentTime - lastFrameTime;
-    Gfx::currentFrameDelta = currentDelta;
+    currentFrameDelta = currentDelta;
     lastFrameTime = currentTime;
 }
 

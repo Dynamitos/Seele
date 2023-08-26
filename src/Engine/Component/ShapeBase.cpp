@@ -233,36 +233,38 @@ void ShapeBase::addCollider(Array<Vector> verts, Array<uint32> inds, Matrix4 mat
 
 void ShapeBase::visualize() const
 {
+    Array<DebugVertex> verts;
     for(uint32 i = 0; i < indices.size(); i+=3)
     {
-        gDebugVertices.add(DebugVertex{
+        verts.add(DebugVertex{
             .position = Vector(vertices[indices[i+0]]),
             .color = Vector(1, 0, 0),
         });
         
-        gDebugVertices.add(DebugVertex{
+        verts.add(DebugVertex{
             .position = Vector(vertices[indices[i+1]]),
             .color = Vector(1, 0, 0),
         });
 
-        gDebugVertices.add(DebugVertex{
+        verts.add(DebugVertex{
             .position = Vector(vertices[indices[i+1]]),
             .color = Vector(1, 0, 0),
         });
 
-        gDebugVertices.add(DebugVertex{
+        verts.add(DebugVertex{
             .position = Vector(vertices[indices[i+2]]),
             .color = Vector(1, 0, 0),
         });
 
-        gDebugVertices.add(DebugVertex{
+        verts.add(DebugVertex{
             .position = Vector(vertices[indices[i+2]]),
             .color = Vector(1, 0, 0),
         });
 
-        gDebugVertices.add(DebugVertex{
+        verts.add(DebugVertex{
             .position = Vector(vertices[indices[i+0]]),
             .color = Vector(1, 0, 0),
         });
     }
+    addDebugVertices(std::move(verts));
 }

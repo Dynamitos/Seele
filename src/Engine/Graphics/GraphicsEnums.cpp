@@ -3,8 +3,6 @@
 using namespace Seele;
 using namespace Seele::Gfx;
 
-uint32 Gfx::currentFrameIndex = 0;
-double Gfx::currentFrameDelta = 0;
 
 FormatCompatibilityInfo Gfx::getFormatInfo(SeFormat format)
 {

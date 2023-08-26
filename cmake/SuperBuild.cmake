@@ -26,6 +26,8 @@ set(KTX_FEATURE_TOOLS off)
 
 add_subdirectory(${KTX_ROOT} ${KTX_ROOT})
 
+target_compile_options(ktx PUBLIC /WX-)
+
 #--------------------JSON------------------
 set(JSON_MultipleHeaders ON CACHE INTERNAL "")
 set(JSON_BuildTests OFF CACHE INTERNAL "")

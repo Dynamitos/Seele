@@ -45,6 +45,7 @@ public:
     };
     AssetFolder* getOrCreateFolder(std::string foldername);
     AssetRegistry();
+    static AssetRegistry* getInstance();
 private:
     static AssetRegistry& get();
 

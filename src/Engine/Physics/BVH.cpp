@@ -49,14 +49,16 @@ void BVH::colliderCallback(entt::registry& registry, entt::entity entity)
 
 void BVH::visualize()
 {
-    for(const auto& node : staticNodes)
+    Array<DebugVertex> verts;
+    for (const auto& node : staticNodes)
     {
-        node.box.visualize(gDebugVertices);
+        node.box.visualize(verts);
     }
-    for(const auto& node : dynamicNodes)
+    for (const auto& node : dynamicNodes)
     {
-        node.box.visualize(gDebugVertices);
+        node.box.visualize(verts);
     }
+    addDebugVertices(verts);
 }
 
 void BVH::traverseStaticTree(const AABB& aabb, entt::entity source, int32 nodeIndex, Array<Pair<entt::entity, entt::entity>>& overlaps)

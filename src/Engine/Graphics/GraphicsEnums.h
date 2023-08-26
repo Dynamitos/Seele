@@ -166,8 +166,7 @@ namespace Gfx
 static constexpr bool useAsyncCompute = true;
 static constexpr bool waitIdleOnSubmit = true;
 static constexpr uint32 numFramesBuffered = 8;
-extern uint32 currentFrameIndex;
-extern double currentFrameDelta;
+double getCurrentFrameDelta();
 
 enum class MaterialShadingModel
 {

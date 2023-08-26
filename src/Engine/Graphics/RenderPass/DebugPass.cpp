@@ -3,7 +3,17 @@
 
 using namespace Seele;
 
-Array<DebugVertex> Seele::gDebugVertices;
+Array<DebugVertex> gDebugVertices;
+
+void Seele::addDebugVertex(DebugVertex vert)
+{
+    gDebugVertices.add(vert);
+}
+
+void Seele::addDebugVertices(Array<DebugVertex> verts)
+{
+    gDebugVertices.addAll(verts);
+}
 
 DebugPass::DebugPass(Gfx::PGraphics graphics)
     : RenderPass(graphics)

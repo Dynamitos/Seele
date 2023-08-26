@@ -31,7 +31,7 @@ int main()
     graphics->init(initializer);
     PWindowManager windowManager = new WindowManager();
     AssetRegistry::init(std::string("C:/Users/Dynamitos/TrackClear/Assets"), graphics);
-    AssetImporter::init(graphics, instance);
+    AssetImporter::init(graphics, AssetRegistry::getInstance());
     AssetImporter::importFont(FontImportArgs{
         .filePath = "./fonts/Calibri.ttf",
         });

@@ -23,8 +23,9 @@
         typedef WeakPtr<x> W##x;    \
     }
 
-extern std::map<void *, void *> registeredObjects;
-extern std::mutex registeredObjectsLock;
+std::map<void*, void*>& getRegisteredObjects();
+std::mutex& getRegisteredObjectLock();
+
 namespace Seele
 {
 template <typename T, typename Deleter>
@@ -47,8 +48,8 @@ public:
     ~RefObject()
     {
         {
-            std::scoped_lock lock(registeredObjectsLock);
-            registeredObjects.erase(handle);
+            std::scoped_lock lock(getRegisteredObjectLock());
+            getRegisteredObjects().erase(handle);
         }
 //    #pragma warning( disable: 4150)
         deleter(handle);
@@ -112,14 +113,14 @@ public:
     }
     constexpr RefPtr(T *ptr, Deleter deleter = Deleter())
     {
-        std::scoped_lock l(registeredObjectsLock);
-        auto registeredObj = registeredObjects.find(ptr);
+        std::scoped_lock l(getRegisteredObjectLock());
+        auto registeredObj = getRegisteredObjects().find(ptr);
         // get here for thread safetly
-        auto registeredEnd = registeredObjects.end();
+        auto registeredEnd = getRegisteredObjects().end();
         if (registeredObj == registeredEnd)
         {
             object = new RefObject<T, Deleter>(ptr, std::move(deleter));
-            registeredObjects[ptr] = object;
+            getRegisteredObjects()[ptr] = object;
         }
         else
         {		

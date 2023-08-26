@@ -27,7 +27,7 @@ SceneView::SceneView(Gfx::PGraphics graphics, PWindow owner, const ViewportCreat
     //AssetRegistry::importFile("D:\\Private\\Programming\\Unreal Engine\\Assets\\Cube\\cube.obj");
     //AssetRegistry::importFile("D:\\Private\\Programming\\Unreal Engine\\Assets\\Plane\\plane.fbx");
     
-    cameraSystem.update(viewportCamera, static_cast<float>(Gfx::currentFrameDelta));
+    cameraSystem.update(viewportCamera, static_cast<float>(Gfx::getCurrentFrameDelta()));
     
     renderGraph.updateViewport(viewport);
 }
@@ -43,7 +43,7 @@ void SceneView::beginUpdate()
 
 void SceneView::update() 
 {
-    cameraSystem.update(viewportCamera, static_cast<float>(Gfx::currentFrameDelta));
+    cameraSystem.update(viewportCamera, static_cast<float>(Gfx::getCurrentFrameDelta()));
     //co_return;
 }
 

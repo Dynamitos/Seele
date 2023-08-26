@@ -9,5 +9,6 @@ struct DebugVertex
     Vector position;
     Vector color;
 };
-extern Array<DebugVertex> gDebugVertices;
+void addDebugVertex(DebugVertex vert);
+void addDebugVertices(Array<DebugVertex> vert);
 } // namespace Seele

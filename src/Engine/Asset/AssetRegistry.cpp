@@ -10,10 +10,11 @@
 #include "MeshAsset.h"
 #include <nlohmann/json.hpp>
 #include <iostream>
+#include <fstream>
 
 using namespace Seele;
 
-extern AssetRegistry* instance;
+AssetRegistry* instance = new AssetRegistry();
 
 AssetRegistry::~AssetRegistry()
 {
@@ -94,6 +95,11 @@ AssetRegistry &AssetRegistry::get()
 
 AssetRegistry::AssetRegistry()
 {
+}
+
+AssetRegistry* AssetRegistry::getInstance()
+{
+    return instance;
 }
 
 void AssetRegistry::loadRegistry()

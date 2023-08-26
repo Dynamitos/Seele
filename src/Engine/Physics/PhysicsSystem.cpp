@@ -284,11 +284,11 @@ void PhysicsSystem::calculateContacts(entt::entity id1, const ShapeBase& shape1,
         const Vector v1 = point2 - point1;
         const Vector v2 = point3 - point1;
         const Vector faceNormal = glm::normalize(glm::cross(v1, v2));
-        Seele::gDebugVertices.add(DebugVertex{
+        addDebugVertex(DebugVertex{
             .position = (point1 + point2 + point3) / 3.f,
             .color = Vector(1, 0, 0)
         });
-        Seele::gDebugVertices.add(DebugVertex{
+        addDebugVertex(DebugVertex{
             .position = faceNormal + (point1 + point2 + point3) / 3.f,
             .color = Vector(1, 0, 0)
         });

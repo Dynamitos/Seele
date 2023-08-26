@@ -7,8 +7,6 @@
 
 using namespace Seele;
 
-AssetRegistry* instance = new AssetRegistry();
-
 GameView::GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo &createInfo, std::string dllPath)
     : View(graphics, window, createInfo, "Game")
     , gameInterface(dllPath)
@@ -73,7 +71,7 @@ void GameView::render()
 void GameView::reloadGame()
 {
     scene = new Scene(graphics);
-    gameInterface.reload(instance);
+    gameInterface.reload(AssetRegistry::getInstance());
     
     systemGraph = new SystemGraph();
     gameInterface.getGame()->setupScene(scene, systemGraph);
