@@ -15,9 +15,9 @@ DECLARE_REF(Entity)
 #define MAX_POINT_LIGHTS 256
 struct LightEnv
 {
-    Gfx::PStructuredBuffer directionalLights;
+    Gfx::PShaderBuffer directionalLights;
     Gfx::PUniformBuffer numDirectional;
-    Gfx::PStructuredBuffer pointLights;
+    Gfx::PShaderBuffer pointLights;
     Gfx::PUniformBuffer numPoints;
 };
 
@@ -58,7 +58,7 @@ public:
     Array<MeshBatch> getStaticMeshes();
     LightEnv getLightBuffer();
     Component::Skybox getSkybox();
-    Gfx::PStructuredBuffer getSceneDataBuffer() const { return sceneDataBuffer;  }
+    Gfx::PShaderBuffer getSceneDataBuffer() const { return sceneDataBuffer;  }
     Gfx::PGraphics getGraphics() const { return graphics; }
     entt::registry registry;
 private:
@@ -69,7 +69,7 @@ private:
         Vector4 actorLocation;
     };
     Array<PrimitiveSceneData> sceneData;
-    Gfx::PStructuredBuffer sceneDataBuffer;
+    Gfx::PShaderBuffer sceneDataBuffer;
     LightEnv lightEnv;
     PhysicsSystem physics;
     Gfx::PGraphics graphics;

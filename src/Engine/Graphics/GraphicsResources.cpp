@@ -196,7 +196,7 @@ bool UniformBuffer::updateContents(const BulkResourceData& resourceData)
 	return true;
 }
 
-StructuredBuffer::StructuredBuffer(QueueFamilyMapping mapping, uint32 stride, uint32 numElements, const BulkResourceData& resourceData)
+ShaderBuffer::ShaderBuffer(QueueFamilyMapping mapping, uint32 stride, uint32 numElements, const BulkResourceData& resourceData)
 	: Buffer(mapping, resourceData.owner)
 	, contents(resourceData.size)
 	, stride(stride)
@@ -207,11 +207,11 @@ StructuredBuffer::StructuredBuffer(QueueFamilyMapping mapping, uint32 stride, ui
 		std::memcpy(contents.data(), resourceData.data, resourceData.size);
 	}
 }
-StructuredBuffer::~StructuredBuffer()
+ShaderBuffer::~ShaderBuffer()
 {
 }
 
-bool StructuredBuffer::updateContents(const BulkResourceData& resourceData) 
+bool ShaderBuffer::updateContents(const BulkResourceData& resourceData) 
 {
 	assert(contents.size() >= resourceData.size);
 	if(std::memcmp(contents.data(), resourceData.data, resourceData.size) == 0)

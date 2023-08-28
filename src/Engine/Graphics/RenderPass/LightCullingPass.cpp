@@ -159,7 +159,7 @@ void LightCullingPass::publishOutputs()
     cullingPipeline = graphics->createComputePipeline(pipelineInfo);
 
     uint32 counterReset = 0;
-    StructuredBufferCreateInfo structInfo = 
+    ShaderBufferCreateInfo structInfo = 
     {
         .resourceData = {
             .size = sizeof(uint32),
@@ -169,8 +169,8 @@ void LightCullingPass::publishOutputs()
         .stride = sizeof(uint32),
         .bDynamic = true,
     };
-    oLightIndexCounter = graphics->createStructuredBuffer(structInfo);
-    tLightIndexCounter = graphics->createStructuredBuffer(structInfo);
+    oLightIndexCounter = graphics->createShaderBuffer(structInfo);
+    tLightIndexCounter = graphics->createShaderBuffer(structInfo);
     structInfo = {
         .resourceData = {
             .size = (uint32)sizeof(uint32) 
@@ -183,8 +183,8 @@ void LightCullingPass::publishOutputs()
         .stride = sizeof(uint32),
         .bDynamic = false,
     };
-    oLightIndexList = graphics->createStructuredBuffer(structInfo);
-    tLightIndexList = graphics->createStructuredBuffer(structInfo);
+    oLightIndexList = graphics->createShaderBuffer(structInfo);
+    tLightIndexList = graphics->createShaderBuffer(structInfo);
     resources->registerBufferOutput("LIGHTCULLING_OLIGHTLIST", oLightIndexList);
     resources->registerBufferOutput("LIGHTCULLING_TLIGHTLIST", tLightIndexList);
     
@@ -263,7 +263,7 @@ void LightCullingPass::setupFrustums()
     uniformInfo.bDynamic = false;
     dispatchParamsBuffer = graphics->createUniformBuffer(uniformInfo);
 
-    StructuredBufferCreateInfo structuredInfo = {
+    ShaderBufferCreateInfo structuredInfo = {
         .resourceData = {
             .size = sizeof(Frustum) * numThreads.x * numThreads.y * numThreads.z,
             .data = nullptr,
@@ -271,7 +271,7 @@ void LightCullingPass::setupFrustums()
         .stride = sizeof(Frustum),
         .bDynamic = false,
     };
-    frustumBuffer = graphics->createStructuredBuffer(structuredInfo);
+    frustumBuffer = graphics->createShaderBuffer(structuredInfo);
     
     frustumDescriptorSet = frustumDescriptorLayout->allocateDescriptorSet();
     frustumDescriptorSet->updateBuffer(0, viewParamsBuffer);

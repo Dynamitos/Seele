@@ -17,7 +17,7 @@ Scene::Scene(Gfx::PGraphics graphics)
     , physics(registry)
 {
     
-    StructuredBufferCreateInfo structInfo = {
+    ShaderBufferCreateInfo structInfo = {
         .resourceData = {
             .size = sizeof(Component::DirectionalLight) * MAX_DIRECTIONAL_LIGHTS,
             .data = nullptr,
@@ -25,10 +25,10 @@ Scene::Scene(Gfx::PGraphics graphics)
         .stride = sizeof(Component::DirectionalLight),
         .bDynamic = true,
     };
-    lightEnv.directionalLights = graphics->createStructuredBuffer(structInfo);
+    lightEnv.directionalLights = graphics->createShaderBuffer(structInfo);
     structInfo.resourceData.size = sizeof(Component::PointLight) * MAX_POINT_LIGHTS;
     structInfo.stride = sizeof(Component::PointLight);
-    lightEnv.pointLights = graphics->createStructuredBuffer(structInfo);
+    lightEnv.pointLights = graphics->createShaderBuffer(structInfo);
     
     UniformBufferCreateInfo uniformInfo = {
         .resourceData = {
@@ -87,14 +87,14 @@ Array<MeshBatch> Scene::getStaticMeshes()
     }
     if(sceneDataBuffer == nullptr || sceneDataBuffer->getNumElements() != sceneData.size())
     {
-        StructuredBufferCreateInfo createInfo = StructuredBufferCreateInfo {
+        ShaderBufferCreateInfo createInfo = ShaderBufferCreateInfo {
             .resourceData = {
                 .size = sceneData.size() * sizeof(PrimitiveSceneData),
                 .data = nullptr,
             },
             .stride = (uint32)sceneData.size(),
         };
-        sceneDataBuffer = graphics->createStructuredBuffer(createInfo);
+        sceneDataBuffer = graphics->createShaderBuffer(createInfo);
     }
     sceneDataBuffer->updateContents(BulkResourceData {
         .size = sceneData.size() * sizeof(PrimitiveSceneData),

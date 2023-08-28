@@ -67,7 +67,7 @@ public:
     virtual ~DescriptorSet();
     virtual void writeChanges();
     virtual void updateBuffer(uint32_t binding, Gfx::PUniformBuffer uniformBuffer);
-    virtual void updateBuffer(uint32_t binding, Gfx::PStructuredBuffer uniformBuffer);
+    virtual void updateBuffer(uint32_t binding, Gfx::PShaderBuffer uniformBuffer);
     virtual void updateSampler(uint32_t binding, Gfx::PSamplerState samplerState);
     virtual void updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::PSamplerState sampler = nullptr);
     virtual void updateTextureArray(uint32_t binding, Array<Gfx::PTexture> texture);

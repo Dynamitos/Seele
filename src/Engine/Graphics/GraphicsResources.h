@@ -178,7 +178,7 @@ public:
 };
 DEFINE_REF(DescriptorAllocator)
 DECLARE_REF(UniformBuffer)
-DECLARE_REF(StructuredBuffer)
+DECLARE_REF(ShaderBuffer)
 DECLARE_REF(Texture)
 class DescriptorSet
 {
@@ -186,7 +186,7 @@ public:
     virtual ~DescriptorSet() {}
     virtual void writeChanges() = 0;
     virtual void updateBuffer(uint32 binding, PUniformBuffer uniformBuffer) = 0;
-    virtual void updateBuffer(uint32 binding, PStructuredBuffer structuredBuffer) = 0;
+    virtual void updateBuffer(uint32 binding, PShaderBuffer ShaderBuffer) = 0;
     virtual void updateSampler(uint32 binding, PSamplerState samplerState) = 0;
     virtual void updateTexture(uint32 binding, PTexture texture, PSamplerState samplerState = nullptr) = 0;
     virtual void updateTextureArray(uint32_t binding, Array<PTexture> texture) = 0;
@@ -409,13 +409,13 @@ protected:
 };
 DEFINE_REF(IndexBuffer)
 
-class StructuredBuffer : public Buffer
+class ShaderBuffer : public Buffer
 {
 public:
-    StructuredBuffer(QueueFamilyMapping mapping, uint32 stride, uint32 numElements, const BulkResourceData& bulkResourceData);
-    virtual ~StructuredBuffer();
+    ShaderBuffer(QueueFamilyMapping mapping, uint32 stride, uint32 numElements, const BulkResourceData& bulkResourceData);
+    virtual ~ShaderBuffer();
     virtual bool updateContents(const BulkResourceData& resourceData);
-    bool isDataEquals(StructuredBuffer* other)
+    bool isDataEquals(ShaderBuffer* other)
     {
         if(other == nullptr)
         {
@@ -449,7 +449,7 @@ protected:
     uint32 numElements;
     uint32 stride;
 };
-DEFINE_REF(StructuredBuffer)
+DEFINE_REF(ShaderBuffer)
 class VertexStream
 {
 public:

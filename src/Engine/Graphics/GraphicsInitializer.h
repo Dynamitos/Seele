@@ -102,7 +102,7 @@ struct UniformBufferCreateInfo
     BulkResourceData resourceData = BulkResourceData();
     uint8 bDynamic = 0;
 };
-struct StructuredBufferCreateInfo
+struct ShaderBufferCreateInfo
 {
     BulkResourceData resourceData;
     uint32 stride;

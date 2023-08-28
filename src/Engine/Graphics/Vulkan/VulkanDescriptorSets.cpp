@@ -135,10 +135,10 @@ void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PUniformBuffer uniformBu
     cachedData[binding] = new UniformBuffer(*vulkanBuffer.getHandle());
 }
 
-void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PStructuredBuffer structuredBuffer)
+void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PShaderBuffer ShaderBuffer)
 {
-    PStructuredBuffer vulkanBuffer = structuredBuffer.cast<StructuredBuffer>();
-    StructuredBuffer* cachedBuffer = reinterpret_cast<StructuredBuffer*>(cachedData[binding]);
+    PShaderBuffer vulkanBuffer = ShaderBuffer.cast<ShaderBuffer>();
+    ShaderBuffer* cachedBuffer = reinterpret_cast<ShaderBuffer*>(cachedData[binding]);
     if(vulkanBuffer.getHandle() == cachedBuffer)
     {
         return;

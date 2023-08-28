@@ -134,10 +134,10 @@ Gfx::PUniformBuffer Graphics::createUniformBuffer(const UniformBufferCreateInfo 
     return uniformBuffer;
 }
 
-Gfx::PStructuredBuffer Graphics::createStructuredBuffer(const StructuredBufferCreateInfo &bulkData)
+Gfx::PShaderBuffer Graphics::createShaderBuffer(const ShaderBufferCreateInfo &bulkData)
 {
-    PStructuredBuffer structuredBuffer = new StructuredBuffer(this, bulkData);
-    return structuredBuffer;
+    PShaderBuffer ShaderBuffer = new ShaderBuffer(this, bulkData);
+    return ShaderBuffer;
 }
 Gfx::PVertexBuffer Graphics::createVertexBuffer(const VertexBufferCreateInfo &bulkData)
 {
@@ -269,7 +269,7 @@ void Graphics::copyTexture(Gfx::PTexture srcTexture, Gfx::PTexture dstTexture)
     {
         /*VkMemoryRequirements imageRequirements;
         vkGetImageMemoryRequirements(handle, srcHandle->getImage(), &imageRequirements);
-        PStructuredBuffer tempBuffer = createStructuredBuffer();
+        PShaderBuffer tempBuffer = createShaderBuffer();
         VkBufferImageCopy bufferImageCopy;
         bufferImageCopy.bufferOffset = 0;
         bufferImageCopy.bufferRowLength = srcTexture->getSizeX();

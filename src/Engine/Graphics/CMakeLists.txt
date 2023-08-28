@@ -14,10 +14,8 @@ target_sources(Engine
         MeshBatch.cpp
         ShaderCompiler.h
         ShaderCompiler.cpp
-        VertexShaderInput.h
-        VertexShaderInput.cpp
-        StaticMeshVertexInput.h
-        StaticMeshVertexInput.cpp)
+        VertexData.h
+        VertexData.cpp)
 
 target_sources(Engine
     PUBLIC FILE_SET HEADERS
@@ -29,9 +27,7 @@ target_sources(Engine
             Graphics.h
             Mesh.h
             MeshBatch.h
-            ShaderCompiler.h
-            VertexShaderInput.h
-            StaticMeshVertexInput.h)
+            ShaderCompiler.h)
 
 add_subdirectory(RenderPass/)
 add_subdirectory(Vulkan/)

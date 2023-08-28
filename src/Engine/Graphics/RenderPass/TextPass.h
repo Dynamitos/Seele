@@ -8,7 +8,7 @@ namespace Seele
 {
 DECLARE_NAME_REF(Gfx, Texture2D)
 DECLARE_NAME_REF(Gfx, RenderTargetAttachment)
-DECLARE_NAME_REF(Gfx, StructuredBuffer)
+DECLARE_NAME_REF(Gfx, ShaderBuffer)
 struct TextRender
 {
     std::string text;

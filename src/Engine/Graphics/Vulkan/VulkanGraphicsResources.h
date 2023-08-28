@@ -140,11 +140,11 @@ private:
 };
 DEFINE_REF(UniformBuffer)
 
-class StructuredBuffer : public Gfx::StructuredBuffer, public ShaderBuffer
+class ShaderBuffer : public Gfx::ShaderBuffer, public ShaderBuffer
 {
 public:
-    StructuredBuffer(PGraphics graphics, const StructuredBufferCreateInfo &resourceData);
-    virtual ~StructuredBuffer();
+    ShaderBuffer(PGraphics graphics, const ShaderBufferCreateInfo &resourceData);
+    virtual ~ShaderBuffer();
     virtual bool updateContents(const BulkResourceData &resourceData);
 
     virtual void* lock(bool bWriteOnly = true) override;
@@ -161,7 +161,7 @@ protected:
 private:
     PStagingBuffer dedicatedStagingBuffer;
 };
-DEFINE_REF(StructuredBuffer)
+DEFINE_REF(ShaderBuffer)
 
 class VertexBuffer : public Gfx::VertexBuffer, public ShaderBuffer
 {

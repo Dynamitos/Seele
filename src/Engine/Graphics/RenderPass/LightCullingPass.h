@@ -44,7 +44,7 @@ private:
         Plane planes[4];
     };
         
-    Gfx::PStructuredBuffer frustumBuffer;
+    Gfx::PShaderBuffer frustumBuffer;
     Gfx::PUniformBuffer dispatchParamsBuffer;
     Gfx::PUniformBuffer viewParamsBuffer;
     Gfx::PDescriptorSet frustumDescriptorSet;
@@ -53,11 +53,11 @@ private:
     Gfx::PComputePipeline frustumPipeline;
 
     Gfx::PTexture2D depthAttachment;
-    Gfx::PStructuredBuffer frustums;
-    Gfx::PStructuredBuffer oLightIndexCounter;
-    Gfx::PStructuredBuffer tLightIndexCounter;
-    Gfx::PStructuredBuffer oLightIndexList;
-    Gfx::PStructuredBuffer tLightIndexList;
+    Gfx::PShaderBuffer frustums;
+    Gfx::PShaderBuffer oLightIndexCounter;
+    Gfx::PShaderBuffer tLightIndexCounter;
+    Gfx::PShaderBuffer oLightIndexList;
+    Gfx::PShaderBuffer tLightIndexList;
     Gfx::PTexture2D oLightGrid;
     Gfx::PTexture2D tLightGrid;
     Gfx::PDescriptorSet lightEnvDescriptorSet;

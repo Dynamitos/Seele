@@ -4,16 +4,16 @@
 
 namespace Seele
 {
-DECLARE_REF(VertexShaderInput)
+DECLARE_REF(MeshletBuffer)
 DECLARE_NAME_REF(Gfx, IndexBuffer)
 class Mesh
 {
 public:
-    Mesh(PVertexShaderInput vertexInput, Gfx::PIndexBuffer indexBuffer);
+    Mesh(PMeshletBuffer meshlets);
     ~Mesh();
 
-    Gfx::PIndexBuffer indexBuffer;
-    PVertexShaderInput vertexInput;
+    PMeshletBuffer meshlets;
+    PVertexData vertexData;
     PMaterialAsset referencedMaterial;
 private:
 };

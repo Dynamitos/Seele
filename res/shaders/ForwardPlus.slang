@@ -8,7 +8,7 @@ import PrimitiveSceneData;
 import MaterialParameter;
 
 layout(set = INDEX_LIGHT_ENV, binding = 4)
-StructuredBuffer<uint> lightIndexList;
+ShaderBuffer<uint> lightIndexList;
 layout(set = INDEX_LIGHT_ENV, binding = 5)
 RWTexture2D<uint2> lightGrid;
 

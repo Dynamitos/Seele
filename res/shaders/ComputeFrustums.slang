@@ -17,7 +17,7 @@ cbuffer DispatchParams
 	uint pad1;
 }
 layout(set = 0, binding = 2, std430)
-RWStructuredBuffer<Frustum> out_Frustums;
+RWShaderBuffer<Frustum> out_Frustums;
 
 
 [numthreads(BLOCK_SIZE, BLOCK_SIZE, 1)]

@@ -17,7 +17,7 @@ ConstantBuffer<ViewData> viewData;
 layout(set = 0, binding = 1)
 SamplerState glyphSampler;
 //layout(set = 1)
-//StructuredBuffer<GlyphData> glyphData;
+//ShaderBuffer<GlyphData> glyphData;
 layout(set = 1)
 Texture2D<uint> glyphTextures[];
 layout(push_constant)

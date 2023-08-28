@@ -48,7 +48,7 @@ public:
     virtual Gfx::PTexture3D createTexture3D(const TextureCreateInfo &createInfo) override;
     virtual Gfx::PTextureCube createTextureCube(const TextureCreateInfo &createInfo) override;
     virtual Gfx::PUniformBuffer createUniformBuffer(const UniformBufferCreateInfo &bulkData) override;
-    virtual Gfx::PStructuredBuffer createStructuredBuffer(const StructuredBufferCreateInfo &bulkData) override;
+    virtual Gfx::PShaderBuffer createShaderBuffer(const ShaderBufferCreateInfo &bulkData) override;
     virtual Gfx::PVertexBuffer createVertexBuffer(const VertexBufferCreateInfo &bulkData) override;
     virtual Gfx::PIndexBuffer createIndexBuffer(const IndexBufferCreateInfo &bulkData) override;
     virtual Gfx::PRenderCommand createRenderCommand(const std::string& name) override;

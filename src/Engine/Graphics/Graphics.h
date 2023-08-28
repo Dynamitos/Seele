@@ -40,7 +40,7 @@ public:
     virtual PTexture3D createTexture3D(const TextureCreateInfo &createInfo) = 0;
     virtual PTextureCube createTextureCube(const TextureCreateInfo &createInfo) = 0;
     virtual PUniformBuffer createUniformBuffer(const UniformBufferCreateInfo &bulkData) = 0;
-    virtual PStructuredBuffer createStructuredBuffer(const StructuredBufferCreateInfo &bulkData) = 0;
+    virtual PShaderBuffer createShaderBuffer(const ShaderBufferCreateInfo &bulkData) = 0;
     virtual PVertexBuffer createVertexBuffer(const VertexBufferCreateInfo &bulkData) = 0;
     virtual PIndexBuffer createIndexBuffer(const IndexBufferCreateInfo &bulkData) = 0;
     virtual PRenderCommand createRenderCommand(const std::string& name = "") = 0;

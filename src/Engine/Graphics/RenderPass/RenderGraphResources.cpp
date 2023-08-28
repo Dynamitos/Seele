@@ -32,7 +32,7 @@ Gfx::PTexture RenderGraphResources::requestTexture(const std::string& outputName
     return registeredTextures[outputName];
 }
 
-Gfx::PStructuredBuffer RenderGraphResources::requestBuffer(const std::string& outputName) 
+Gfx::PShaderBuffer RenderGraphResources::requestBuffer(const std::string& outputName) 
 {
     if(registeredBuffers.find(outputName) == registeredBuffers.end())
     {
@@ -62,7 +62,7 @@ void RenderGraphResources::registerTextureOutput(const std::string& outputName, 
     registeredTextures[outputName] = texture;
 }
 
-void RenderGraphResources::registerBufferOutput(const std::string& outputName, Gfx::PStructuredBuffer buffer) 
+void RenderGraphResources::registerBufferOutput(const std::string& outputName, Gfx::PShaderBuffer buffer) 
 {
     registeredBuffers[outputName] = buffer;
 }

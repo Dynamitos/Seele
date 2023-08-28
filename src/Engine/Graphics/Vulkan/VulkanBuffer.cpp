@@ -361,8 +361,8 @@ VkAccessFlags UniformBuffer::getDestAccessMask()
     return VK_ACCESS_UNIFORM_READ_BIT;
 }
 
-StructuredBuffer::StructuredBuffer(PGraphics graphics, const StructuredBufferCreateInfo &resourceData)
-    : Gfx::StructuredBuffer(graphics->getFamilyMapping(), resourceData.stride, resourceData.resourceData.size / resourceData.stride, resourceData.resourceData)
+ShaderBuffer::ShaderBuffer(PGraphics graphics, const ShaderBufferCreateInfo &resourceData)
+    : Gfx::ShaderBuffer(graphics->getFamilyMapping(), resourceData.stride, resourceData.resourceData.size / resourceData.stride, resourceData.resourceData)
     , Vulkan::ShaderBuffer(graphics, resourceData.resourceData.size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, currentOwner, resourceData.bDynamic)
 {
     if (resourceData.resourceData.data != nullptr)
@@ -373,21 +373,21 @@ StructuredBuffer::StructuredBuffer(PGraphics graphics, const StructuredBufferCre
     }
 }
 
-StructuredBuffer::~StructuredBuffer()
+ShaderBuffer::~ShaderBuffer()
 {
 }
 
-bool StructuredBuffer::updateContents(const BulkResourceData &resourceData) 
+bool ShaderBuffer::updateContents(const BulkResourceData &resourceData) 
 {
     assert(resourceData.size <= getSize());
-    Gfx::StructuredBuffer::updateContents(resourceData);
+    Gfx::ShaderBuffer::updateContents(resourceData);
     //We always want to update, as the contents could be different on the GPU
     void* data = lock();
     std::memcpy(data, resourceData.data, resourceData.size);
     unlock();
     return true;
 }
-void* StructuredBuffer::lock(bool bWriteOnly)
+void* ShaderBuffer::lock(bool bWriteOnly)
 {
     if(dedicatedStagingBuffer != nullptr)
     {
@@ -396,7 +396,7 @@ void* StructuredBuffer::lock(bool bWriteOnly)
     return ShaderBuffer::lock(bWriteOnly);
 }
 
-void StructuredBuffer::unlock()
+void ShaderBuffer::unlock()
 {
     if(dedicatedStagingBuffer != nullptr)
     {
@@ -416,28 +416,28 @@ void StructuredBuffer::unlock()
     }
 }
 
-void StructuredBuffer::requestOwnershipTransfer(Gfx::QueueType newOwner)
+void ShaderBuffer::requestOwnershipTransfer(Gfx::QueueType newOwner)
 {
     Gfx::QueueOwnedResource::transferOwnership(newOwner);
 }
 
-void StructuredBuffer::executeOwnershipBarrier(Gfx::QueueType newOwner)
+void ShaderBuffer::executeOwnershipBarrier(Gfx::QueueType newOwner)
 {
     Vulkan::ShaderBuffer::executeOwnershipBarrier(newOwner);
 }
 
-void StructuredBuffer::executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, 
+void ShaderBuffer::executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, 
         VkAccessFlags dstAccess, VkPipelineStageFlags dstStage) 
 {
     Vulkan::ShaderBuffer::executePipelineBarrier(srcAccess, srcStage, dstAccess, dstStage);
 }
 
-VkAccessFlags StructuredBuffer::getSourceAccessMask()
+VkAccessFlags ShaderBuffer::getSourceAccessMask()
 {
     return VK_ACCESS_MEMORY_WRITE_BIT;
 }
 
-VkAccessFlags StructuredBuffer::getDestAccessMask()
+VkAccessFlags ShaderBuffer::getDestAccessMask()
 {
     return VK_ACCESS_MEMORY_READ_BIT;
 }
