@@ -9,15 +9,15 @@ struct ViewParameter
     float4 cameraPos_WS;
     float2 screenDimensions;
 }
-layout(set = INDEX_VIEW_PARAMS, binding = 0, std430)
-ConstantBuffer<ViewParameter> gViewParams;
+//layout(set = INDEX_VIEW_PARAMS, binding = 0, std430)
+ParameterBlock<ViewParameter> viewParams;
 
  
 // Convert screen space coordinates to view space.
 float4 screenToClip( float4 screen )
 {
     // Convert to normalized texture coordinates
-    float2 texCoord = screen.xy / gViewParams.screenDimensions;
+    float2 texCoord = screen.xy / viewParams.screenDimensions;
  
     // Convert to clip space 
     return float4( float2( texCoord.x, 1.0f-texCoord.y ) * 2.0f - 1.0f, screen.z, screen.w );

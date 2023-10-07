@@ -61,11 +61,21 @@ struct PointLight : ILightEnv
     }
 };
 
-layout(set = INDEX_LIGHT_ENV, binding = 0, std430)
-ShaderBuffer<DirectionalLight> directionalLights;
-layout(set = INDEX_LIGHT_ENV, binding = 1, std430)
-ConstantBuffer<uint> numDirectionalLights;
-layout(set = INDEX_LIGHT_ENV, binding = 2, std430)
-ShaderBuffer<PointLight> pointLights;
-layout(set = INDEX_LIGHT_ENV, binding = 3, std430)
-ConstantBuffer<uint> numPointLights;
+struct LightEnv
+{
+    StructuredBuffer<DirectionalLight> directionalLights;
+    uint numDirectionalLights;
+    StructureBuffer<PointLight> pointLights;
+    uint numPointLights;
+};
+
+ParameterBlock<LightEnv> gLightEnv;
+
+//layout(set = INDEX_LIGHT_ENV, binding = 0, std430)
+//ShaderBuffer<DirectionalLight> directionalLights;
+//layout(set = INDEX_LIGHT_ENV, binding = 1, std430)
+//ConstantBuffer<uint> numDirectionalLights;
+//layout(set = INDEX_LIGHT_ENV, binding = 2, std430)
+//ShaderBuffer<PointLight> pointLights;
+//layout(set = INDEX_LIGHT_ENV, binding = 3, std430)
+//ConstantBuffer<uint> numPointLights;

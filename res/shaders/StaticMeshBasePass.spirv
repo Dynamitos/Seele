@@ -1,0 +1,235 @@
+#pragma pack_matrix(column_major)
+#ifdef SLANG_HLSL_ENABLE_NVAPI
+#include "nvHLSLExtns.h"
+#endif
+#pragma warning(disable: 3557)
+
+
+#line 1 "lib/Scene.slang"
+struct InstanceData_0
+{
+    matrix<float,int(4),int(4)>  transformMatrix_0;
+};
+
+
+#line 46 "./StaticMeshBasePass.slang"
+StructuredBuffer<InstanceData_0 > scene_instances_0 : register(t0, space3);
+
+
+#line 1 "lib/Meshlet.slang"
+struct MeshletDescription_0
+{
+    uint vertexCount_0;
+    uint primitiveCount_0;
+    uint vertexOffset_0;
+    uint primitiveOffset_0;
+};
+
+
+#line 47 "./StaticMeshBasePass.slang"
+StructuredBuffer<MeshletDescription_0 > meshlets_meshletInfos_0 : register(t0, space2);
+
+
+#line 9 "lib/Meshlet.slang"
+StructuredBuffer<uint8_t > meshlets_primitiveIndices_0 : register(t1, space2);
+
+
+#line 9
+StructuredBuffer<uint > meshlets_vertexIndices_0 : register(t2, space2);
+
+
+#line 24 "lib/StaticMeshVertexData.slang"
+StructuredBuffer<float4 > vertexData_positions_0 : register(t0, space4);
+
+
+#line 24
+StructuredBuffer<float2 > vertexData_texCoords_0 : register(t1, space4);
+
+
+#line 24
+StructuredBuffer<float3 > vertexData_normals_0 : register(t2, space4);
+
+
+#line 5 "lib/Common.slang"
+struct ViewParameter_0
+{
+    matrix<float,int(4),int(4)>  viewMatrix_0;
+    matrix<float,int(4),int(4)>  projectionMatrix_0;
+    float4 cameraPos_WS_0;
+    float2 screenDimensions_0;
+};
+
+cbuffer viewParams_0 : register(b0, space1)
+{
+    ViewParameter_0 viewParams_0;
+}
+
+#line 24 "./StaticMeshBasePass.slang"
+
+uint gs_numVertices_0_init()
+{
+
+#line 24
+    return 0U;
+}
+static groupshared uint gs_numVertices_0 = gs_numVertices_0_init();
+
+
+#line 5 "lib/StaticMeshVertexData.slang"
+struct StaticMeshVertexAttributes_0
+{
+    float4 position_0 : SV_Position;
+    float2 texCoords_0 : TEXCOORD0;
+    float3 normal_0 : NORMAL0;
+};
+
+
+#line 22 "./StaticMeshBasePass.slang"
+static groupshared StaticMeshVertexAttributes_0  gs_vertices_0[int(64)];
+
+
+#line 26 "lib/StaticMeshVertexData.slang"
+StaticMeshVertexAttributes_0 StaticMeshVertexData_getAttributes_0(StructuredBuffer<float4 > this_positions_0, StructuredBuffer<float2 > this_texCoords_0, StructuredBuffer<float3 > this_normals_0, uint index_0, InstanceData_0 inst_0)
+{
+    StaticMeshVertexAttributes_0 attr_0;
+
+
+
+    attr_0.position_0 = mul(viewParams_0.projectionMatrix_0, mul(viewParams_0.viewMatrix_0, mul(inst_0.transformMatrix_0, this_positions_0.Load(index_0))));
+    attr_0.texCoords_0 = this_texCoords_0.Load(index_0);
+    attr_0.normal_0 = this_normals_0.Load(index_0);
+    return attr_0;
+}
+
+
+#line 25 "./StaticMeshBasePass.slang"
+
+uint gs_numPrimitives_0_init()
+{
+
+#line 25
+    return 0U;
+}
+static groupshared uint gs_numPrimitives_0 = gs_numPrimitives_0_init();
+
+
+#line 23
+static groupshared uint3  gs_indices_0[int(126)];
+
+
+#line 11
+struct MeshShaderPayload_0
+{
+    uint instanceId_0;
+    uint meshletId_0;
+};
+
+
+#line 39
+[shader("mesh")][numthreads(32, 1, 1)]
+[outputtopology("triangle")]
+void meshMain(uint3 threadID_0 : SV_GROUPINDEX, uint3 groupID_0 : SV_GROUPID, vertices vertices out StaticMeshVertexAttributes_0  vertices_0[int(64)], indices indices out uint3  indices_0[int(126)])
+{
+
+#line 39
+    MeshShaderPayload_0 p_0;
+
+#line 46
+    InstanceData_0 _S1 = scene_instances_0.Load(p_0.instanceId_0);
+    MeshletDescription_0 _S2 = meshlets_meshletInfos_0.Load(p_0.meshletId_0);
+
+
+
+    uint _S3 = threadID_0.x;
+    uint _S4 = _S2.vertexCount_0 - 1U;
+
+#line 64
+    uint _S5 = _S2.primitiveCount_0 - 1U;
+
+#line 64
+    uint loop_0 = 0U;
+
+#line 64
+    for(;;)
+    {
+
+#line 52
+        uint v_0 = min(_S3 + loop_0 * 32U, _S4);
+        InterlockedMax(gs_numVertices_0, v_0 + 1U);
+
+
+        gs_vertices_0[v_0] = StaticMeshVertexData_getAttributes_0(vertexData_positions_0, vertexData_texCoords_0, vertexData_normals_0, uint(int(meshlets_vertexIndices_0.Load(_S2.vertexOffset_0 + v_0))), _S1);
+
+#line 49
+        uint loop_1 = loop_0 + 1U;
+
+#line 49
+        if(loop_1 < 2U)
+        {
+        }
+        else
+        {
+
+#line 49
+            break;
+        }
+
+#line 49
+        loop_0 = loop_1;
+
+#line 49
+    }
+
+#line 49
+    loop_0 = 0U;
+
+#line 49
+    for(;;)
+    {
+
+#line 64
+        uint p_1 = min(_S3 + loop_0 * 32U, _S5);
+        InterlockedMax(gs_numPrimitives_0, p_1 + 1U);
+
+        uint _S6 = p_1 * 3U;
+
+#line 67
+        uint _S7 = _S2.primitiveOffset_0 + _S6;
+
+
+
+        uint idx1_0 = meshlets_vertexIndices_0.Load(_S2.vertexOffset_0 + uint(meshlets_primitiveIndices_0.Load(_S7 + 1U)));
+        uint idx2_0 = meshlets_vertexIndices_0.Load(_S2.vertexOffset_0 + uint(meshlets_primitiveIndices_0.Load(_S7 + 2U)));
+        gs_indices_0[_S6] = (uint3)meshlets_vertexIndices_0.Load(_S2.vertexOffset_0 + uint(meshlets_primitiveIndices_0.Load(_S7)));
+        gs_indices_0[_S6 + 1U] = (uint3)idx1_0;
+        gs_indices_0[_S6 + 2U] = (uint3)idx2_0;
+
+#line 61
+        uint loop_2 = loop_0 + 1U;
+
+#line 61
+        if(loop_2 < 4U)
+        {
+        }
+        else
+        {
+
+#line 61
+            break;
+        }
+
+#line 61
+        loop_0 = loop_2;
+
+#line 61
+    }
+
+#line 78
+    GroupMemoryBarrierWithGroupSync();
+    SetMeshOutputCounts(gs_numVertices_0, gs_numPrimitives_0);
+    GroupMemoryBarrierWithGroupSync();
+
+#line 93
+    return;
+}
+

@@ -7,7 +7,7 @@ class VertexData
 {
 public:
 private:
-    Gfx::PShaderBuffer vertexData;
-    
+    Gfx::PShaderBuffer positions;
 };
+DEFINE_REF(VertexData)
 }

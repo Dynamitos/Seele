@@ -5,7 +5,6 @@
 namespace Seele
 {
 DECLARE_REF(MeshletBuffer)
-DECLARE_NAME_REF(Gfx, IndexBuffer)
 class Mesh
 {
 public:

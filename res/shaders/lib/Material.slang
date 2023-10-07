@@ -8,5 +8,4 @@ interface IMaterial
 	BRDF prepare(MaterialFragmentParameter input);
 };
 
-layout(set = INDEX_MATERIAL, binding = 0, std430)
 ParameterBlock<IMaterial> gMaterial;
