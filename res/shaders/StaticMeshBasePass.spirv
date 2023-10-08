@@ -1,22 +1,23 @@
-#pragma pack_matrix(column_major)
-#ifdef SLANG_HLSL_ENABLE_NVAPI
-#include "nvHLSLExtns.h"
-#endif
-#pragma warning(disable: 3557)
+#version 450
+#extension GL_EXT_mesh_shader : require
+#extension GL_EXT_shader_8bit_storage : require
+#extension GL_EXT_shader_explicit_arithmetic_types : require
+layout(row_major) uniform;
+layout(row_major) buffer;
 
-
-#line 1 "lib/Scene.slang"
+#line 1 0
 struct InstanceData_0
 {
-    matrix<float,int(4),int(4)>  transformMatrix_0;
+    mat4x4 transformMatrix_0;
 };
 
 
-#line 46 "./StaticMeshBasePass.slang"
-StructuredBuffer<InstanceData_0 > scene_instances_0 : register(t0, space3);
+#line 46 1
+layout(std430, binding = 0, set = 2) readonly buffer StructuredBuffer_InstanceData_t_0 {
+    InstanceData_0 _data[];
+} scene_instances_0;
 
-
-#line 1 "lib/Meshlet.slang"
+#line 1 2
 struct MeshletDescription_0
 {
     uint vertexCount_0;
@@ -26,45 +27,55 @@ struct MeshletDescription_0
 };
 
 
-#line 47 "./StaticMeshBasePass.slang"
-StructuredBuffer<MeshletDescription_0 > meshlets_meshletInfos_0 : register(t0, space2);
+#line 47 1
+layout(std430, binding = 0, set = 1) readonly buffer StructuredBuffer_MeshletDescription_t_0 {
+    MeshletDescription_0 _data[];
+} meshlets_meshletInfos_0;
 
-
-#line 9 "lib/Meshlet.slang"
-StructuredBuffer<uint8_t > meshlets_primitiveIndices_0 : register(t1, space2);
-
+#line 9 2
+layout(std430, binding = 1, set = 1) readonly buffer StructuredBuffer_uint8_t_0 {
+    uint8_t _data[];
+} meshlets_primitiveIndices_0;
 
 #line 9
-StructuredBuffer<uint > meshlets_vertexIndices_0 : register(t2, space2);
+layout(std430, binding = 2, set = 1) readonly buffer StructuredBuffer_uint_t_0 {
+    uint _data[];
+} meshlets_vertexIndices_0;
 
-
-#line 24 "lib/StaticMeshVertexData.slang"
-StructuredBuffer<float4 > vertexData_positions_0 : register(t0, space4);
-
-
-#line 24
-StructuredBuffer<float2 > vertexData_texCoords_0 : register(t1, space4);
-
+#line 24 3
+layout(std430, binding = 0, set = 3) readonly buffer StructuredBuffer_float4_t_0 {
+    vec4 _data[];
+} vertexData_positions_0;
 
 #line 24
-StructuredBuffer<float3 > vertexData_normals_0 : register(t2, space4);
+layout(std430, binding = 1, set = 3) readonly buffer StructuredBuffer_float2_t_0 {
+    vec2 _data[];
+} vertexData_texCoords_0;
 
+#line 24
+layout(std430, binding = 2, set = 3) readonly buffer StructuredBuffer_float3_t_0 {
+    vec3 _data[];
+} vertexData_normals_0;
 
-#line 5 "lib/Common.slang"
+#line 5 4
 struct ViewParameter_0
 {
-    matrix<float,int(4),int(4)>  viewMatrix_0;
-    matrix<float,int(4),int(4)>  projectionMatrix_0;
-    float4 cameraPos_WS_0;
-    float2 screenDimensions_0;
+    mat4x4 viewMatrix_0;
+    mat4x4 projectionMatrix_0;
+    vec4 cameraPos_WS_0;
+    vec2 screenDimensions_0;
 };
 
-cbuffer viewParams_0 : register(b0, space1)
+layout(binding = 0)
+layout(std140) uniform _S1
 {
-    ViewParameter_0 viewParams_0;
-}
+    mat4x4 viewMatrix_0;
+    mat4x4 projectionMatrix_0;
+    vec4 cameraPos_WS_0;
+    vec2 screenDimensions_0;
+}viewParams_0;
 
-#line 24 "./StaticMeshBasePass.slang"
+#line 24 1
 
 uint gs_numVertices_0_init()
 {
@@ -72,37 +83,22 @@ uint gs_numVertices_0_init()
 #line 24
     return 0U;
 }
-static groupshared uint gs_numVertices_0 = gs_numVertices_0_init();
+shared uint gs_numVertices_0 = gs_numVertices_0_init();
 
 
-#line 5 "lib/StaticMeshVertexData.slang"
+#line 5 3
 struct StaticMeshVertexAttributes_0
 {
-    float4 position_0 : SV_Position;
-    float2 texCoords_0 : TEXCOORD0;
-    float3 normal_0 : NORMAL0;
+    vec4 position_0;
+    vec2 texCoords_0;
+    vec3 normal_0;
 };
 
 
-#line 22 "./StaticMeshBasePass.slang"
-static groupshared StaticMeshVertexAttributes_0  gs_vertices_0[int(64)];
+#line 22 1
+shared StaticMeshVertexAttributes_0  gs_vertices_0[64];
 
 
-#line 26 "lib/StaticMeshVertexData.slang"
-StaticMeshVertexAttributes_0 StaticMeshVertexData_getAttributes_0(StructuredBuffer<float4 > this_positions_0, StructuredBuffer<float2 > this_texCoords_0, StructuredBuffer<float3 > this_normals_0, uint index_0, InstanceData_0 inst_0)
-{
-    StaticMeshVertexAttributes_0 attr_0;
-
-
-
-    attr_0.position_0 = mul(viewParams_0.projectionMatrix_0, mul(viewParams_0.viewMatrix_0, mul(inst_0.transformMatrix_0, this_positions_0.Load(index_0))));
-    attr_0.texCoords_0 = this_texCoords_0.Load(index_0);
-    attr_0.normal_0 = this_normals_0.Load(index_0);
-    return attr_0;
-}
-
-
-#line 25 "./StaticMeshBasePass.slang"
 
 uint gs_numPrimitives_0_init()
 {
@@ -110,11 +106,11 @@ uint gs_numPrimitives_0_init()
 #line 25
     return 0U;
 }
-static groupshared uint gs_numPrimitives_0 = gs_numPrimitives_0_init();
+shared uint gs_numPrimitives_0 = gs_numPrimitives_0_init();
 
 
 #line 23
-static groupshared uint3  gs_indices_0[int(126)];
+shared uvec3  gs_indices_0[126];
 
 
 #line 11
@@ -125,26 +121,44 @@ struct MeshShaderPayload_0
 };
 
 
-#line 39
-[shader("mesh")][numthreads(32, 1, 1)]
-[outputtopology("triangle")]
-void meshMain(uint3 threadID_0 : SV_GROUPINDEX, uint3 groupID_0 : SV_GROUPID, vertices vertices out StaticMeshVertexAttributes_0  vertices_0[int(64)], indices indices out uint3  indices_0[int(126)])
+#line 20 3
+StaticMeshVertexAttributes_0 StaticMeshVertexData_getAttributes_0(uint _S2, InstanceData_0 _S3)
+{
+
+#line 28
+    StaticMeshVertexAttributes_0 attr_0;
+
+
+
+    attr_0.position_0 = (((((((((vertexData_positions_0._data[_S2]) * (_S3.transformMatrix_0)))) * (viewParams_0.viewMatrix_0)))) * (viewParams_0.projectionMatrix_0)));
+    attr_0.texCoords_0 = vertexData_texCoords_0._data[_S2];
+    attr_0.normal_0 = vertexData_normals_0._data[_S2];
+    return attr_0;
+}
+
+
+#line 39 1
+layout(local_size_x = 32, local_size_y = 1, local_size_z = 1) in;
+layout(max_vertices = 64) out;
+layout(max_primitives = 126) out;
+layout(triangles) out;
+void main()
 {
 
 #line 39
     MeshShaderPayload_0 p_0;
 
 #line 46
-    InstanceData_0 _S1 = scene_instances_0.Load(p_0.instanceId_0);
-    MeshletDescription_0 _S2 = meshlets_meshletInfos_0.Load(p_0.meshletId_0);
+    InstanceData_0 _S4 = scene_instances_0._data[p_0.instanceId_0];
+    MeshletDescription_0 _S5 = meshlets_meshletInfos_0._data[p_0.meshletId_0];
 
 
 
-    uint _S3 = threadID_0.x;
-    uint _S4 = _S2.vertexCount_0 - 1U;
+    uint _S6 = uvec3(gl_LocalInvocationIndex).x;
+    uint _S7 = _S5.vertexCount_0 - 1U;
 
 #line 64
-    uint _S5 = _S2.primitiveCount_0 - 1U;
+    uint _S8 = _S5.primitiveCount_0 - 1U;
 
 #line 64
     uint loop_0 = 0U;
@@ -154,11 +168,11 @@ void meshMain(uint3 threadID_0 : SV_GROUPINDEX, uint3 groupID_0 : SV_GROUPID, ve
     {
 
 #line 52
-        uint v_0 = min(_S3 + loop_0 * 32U, _S4);
-        InterlockedMax(gs_numVertices_0, v_0 + 1U);
+        uint v_0 = min(_S6 + loop_0 * 32U, _S7);
+        atomicMax((gs_numVertices_0), (v_0 + 1U));
 
 
-        gs_vertices_0[v_0] = StaticMeshVertexData_getAttributes_0(vertexData_positions_0, vertexData_texCoords_0, vertexData_normals_0, uint(int(meshlets_vertexIndices_0.Load(_S2.vertexOffset_0 + v_0))), _S1);
+        gs_vertices_0[v_0] = StaticMeshVertexData_getAttributes_0(uint(int(meshlets_vertexIndices_0._data[_S5.vertexOffset_0 + v_0])), _S4);
 
 #line 49
         uint loop_1 = loop_0 + 1U;
@@ -188,21 +202,21 @@ void meshMain(uint3 threadID_0 : SV_GROUPINDEX, uint3 groupID_0 : SV_GROUPID, ve
     {
 
 #line 64
-        uint p_1 = min(_S3 + loop_0 * 32U, _S5);
-        InterlockedMax(gs_numPrimitives_0, p_1 + 1U);
+        uint p_1 = min(_S6 + loop_0 * 32U, _S8);
+        atomicMax((gs_numPrimitives_0), (p_1 + 1U));
 
-        uint _S6 = p_1 * 3U;
+        uint _S9 = p_1 * 3U;
 
 #line 67
-        uint _S7 = _S2.primitiveOffset_0 + _S6;
+        uint _S10 = _S5.primitiveOffset_0 + _S9;
 
 
 
-        uint idx1_0 = meshlets_vertexIndices_0.Load(_S2.vertexOffset_0 + uint(meshlets_primitiveIndices_0.Load(_S7 + 1U)));
-        uint idx2_0 = meshlets_vertexIndices_0.Load(_S2.vertexOffset_0 + uint(meshlets_primitiveIndices_0.Load(_S7 + 2U)));
-        gs_indices_0[_S6] = (uint3)meshlets_vertexIndices_0.Load(_S2.vertexOffset_0 + uint(meshlets_primitiveIndices_0.Load(_S7)));
-        gs_indices_0[_S6 + 1U] = (uint3)idx1_0;
-        gs_indices_0[_S6 + 2U] = (uint3)idx2_0;
+        uint idx1_0 = meshlets_vertexIndices_0._data[_S5.vertexOffset_0 + uint(meshlets_primitiveIndices_0._data[_S10 + 1U])];
+        uint idx2_0 = meshlets_vertexIndices_0._data[_S5.vertexOffset_0 + uint(meshlets_primitiveIndices_0._data[_S10 + 2U])];
+        gs_indices_0[_S9] = uvec3(meshlets_vertexIndices_0._data[_S5.vertexOffset_0 + uint(meshlets_primitiveIndices_0._data[_S10])]);
+        gs_indices_0[_S9 + 1U] = uvec3(idx1_0);
+        gs_indices_0[_S9 + 2U] = uvec3(idx2_0);
 
 #line 61
         uint loop_2 = loop_0 + 1U;
@@ -225,9 +239,9 @@ void meshMain(uint3 threadID_0 : SV_GROUPINDEX, uint3 groupID_0 : SV_GROUPID, ve
     }
 
 #line 78
-    GroupMemoryBarrierWithGroupSync();
-    SetMeshOutputCounts(gs_numVertices_0, gs_numPrimitives_0);
-    GroupMemoryBarrierWithGroupSync();
+    barrier();
+    SetMeshOutputsEXT(gs_numVertices_0, gs_numPrimitives_0);
+    barrier();
 
 #line 93
     return;

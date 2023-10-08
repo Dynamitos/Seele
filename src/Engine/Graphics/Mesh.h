@@ -4,14 +4,15 @@
 
 namespace Seele
 {
-DECLARE_REF(MeshletBuffer)
+DECLARE_REF(TopologyData)
+DECLARE_REF(VertexData)
 class Mesh
 {
 public:
-    Mesh(PMeshletBuffer meshlets);
+    Mesh();
     ~Mesh();
 
-    PMeshletBuffer meshlets;
+    PTopologyData meshlets;
     PVertexData vertexData;
     PMaterialAsset referencedMaterial;
 private:
