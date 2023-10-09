@@ -1,12 +1,16 @@
 #pragma once
+#ifdef WIN32
 #pragma warning(push)
 #pragma warning(disable: 4201)
+#endif
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 
 #include <glm/gtc/quaternion.hpp>
+#ifdef WIN32
 #pragma warning(pop)
+#endif
 #include <nlohmann/json_fwd.hpp>
 #include "Serialization/Serialization.h"
 

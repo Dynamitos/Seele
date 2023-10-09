@@ -24,9 +24,13 @@ endif()
 set(KTX_FEATURE_TESTS off)
 set(KTX_FEATURE_TOOLS off)
 
-add_subdirectory(${KTX_ROOT} ${KTX_ROOT})
+add_subdirectory(${KTX_ROOT})
 
-target_compile_options(ktx PUBLIC /WX-)
+if(MSVC)
+    target_compile_options(ktx PRIVATE /WX-)
+else()
+    target_compile_options(ktx PRIVATE -Wno-error)
+endif()
 
 #--------------------JSON------------------
 set(JSON_MultipleHeaders ON CACHE INTERNAL "")
@@ -52,16 +56,18 @@ add_subdirectory(${ENTT_ROOT})
 #--------------thread-pool------------------------------
 add_subdirectory(${THREADPOOL_ROOT})
 
-target_compile_options(ThreadPool INTERFACE "/W0")
+if(MSVC)
+    target_compile_options(ThreadPool INTERFACE /W0)
+endif()
 
 #--------------SLang------------------------------
-string(TOLOWER release_${CMAKE_PLATFORM} SLANG_CONFIG)
+string(TOLOWER release_x64 SLANG_CONFIG)
 if(WIN32)
 string(TOLOWER ${SLANG_ROOT}/bin/windows-${CMAKE_PLATFORM}/release SLANG_BINARY_DIR)
 ExternalProject_Add(slang-build
     SOURCE_DIR ${SLANG_ROOT}
     BINARY_DIR ${SLANG_ROOT}
-    CONFIGURE_COMMAND ${SLANG_ROOT}/premake.bat vs2019 --file=${SLANG_ROOT}/premake5.lua gmake --arch=${CMAKE_PLATFORM} --deps=true
+    CONFIGURE_COMMAND ${SLANG_ROOT}/premake.bat vs2019 --file=${SLANG_ROOT}/premake5.lua gmake --arch=x64 --deps=true
     BUILD_COMMAND msbuild slang.sln -p:PlatformToolset=v143 -p:Configuration=Release -p:Platform=${CMAKE_PLATFORM}
     INSTALL_COMMAND ""
 )
@@ -69,7 +75,7 @@ elseif(UNIX)
 ExternalProject_Add(slang-build
     SOURCE_DIR ${SLANG_ROOT}
     BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}
-    CONFIGURE_COMMAND ${CMAKE_SOURCE_DIR}/premake5 --file=${CMAKE_SOURCE_DIR}/external/slang/premake5.lua gmake --arch=${CMAKE_PLATFORM} --deps=true --build-location=build/linux
+    CONFIGURE_COMMAND ${CMAKE_SOURCE_DIR}/premake5 --file=${CMAKE_SOURCE_DIR}/external/slang/premake5.lua gmake2 --arch=x64 --deps=true --build-location=build/linux
     BUILD_COMMAND make -C ${CMAKE_SOURCE_DIR}/external/slang/build/linux config=${SLANG_CONFIG}
     INSTALL_COMMAND ""
 )
