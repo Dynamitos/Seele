@@ -4,20 +4,31 @@ import Scene;
 
 struct StaticMeshVertexAttributes : VertexAttributes
 {
-	float4 position: SV_Position;
+	float4 clipPosition: SV_Position;
+	float3 worldPosition: POSITION0;
 	float2 texCoords: TEXCOORD0;
 	float3 normal: NORMAL0;
-	float4 getPosition()
+	float3 tangent: TANGENT0;
+	float3 biTangent: BITANGENT0;
+	float3 getWorldPosition()
 	{
-		return position;
+		return worldPosition;
 	}
-	float2 getTexCoord()
+	float2 getTexCoords()
 	{
 		return texCoords;
 	}
 	float3 getNormal()
 	{
 		return normal;
+	}
+	float3 getTangent()
+	{
+		return tangent;
+	}
+	float3 getBiTangent()
+	{
+		return biTangent;
 	}
 }
 
@@ -26,16 +37,22 @@ struct StaticMeshVertexData : VertexData
 	StaticMeshVertexAttributes getAttributes(uint index, InstanceData inst)
 	{
 		StaticMeshVertexAttributes attr;
-		float4 worldPos = mul(inst.transformMatrix, positions[index]);
+		float4 localPos = float4(positions[index], 1);
+		float4 worldPos = mul(inst.transformMatrix, localPos);
 		float4 viewPos = mul(viewParams.viewMatrix, worldPos);
 		float4 clipPos = mul(viewParams.projectionMatrix, viewPos);
-		attr.position = clipPos;
+		attr.clipPosition = clipPos;
+		attr.worldPosition = worldPos.xyz;
 		attr.texCoords = texCoords[index];
 		attr.normal = normals[index];
+		attr.tangent = tangents[index];
+		attr.biTangent = biTangents[index];
 		return attr;
 	}
-	StructuredBuffer<float4> positions;
+	StructuredBuffer<float3> positions;
 	StructuredBuffer<float2> texCoords;
 	StructuredBuffer<float3> normals;
+	StructuredBuffer<float3> tangents;
+	StructuredBuffer<float3> biTangents;
 }
 ParameterBlock<StaticMeshVertexData> vertexData;

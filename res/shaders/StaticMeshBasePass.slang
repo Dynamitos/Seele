@@ -21,8 +21,8 @@ struct PrimitiveAttributes
 
 groupshared StaticMeshVertexAttributes gs_vertices[MAX_VERTICES];
 groupshared uint3 gs_indices[MAX_PRIMITIVES];
-groupshared uint gs_numVertices = 0;
-groupshared uint gs_numPrimitives = 0;
+groupshared uint gs_numVertices;
+groupshared uint gs_numPrimitives;
 
 [numthreads(GROUP_SIZE, 1, 1)]
 [shader("amplification")]
@@ -39,8 +39,8 @@ void taskMain(
 void meshMain(
 	uint3 threadID: SV_GroupIndex,
 	uint3 groupID: SV_GroupID,
-	out vertices StaticMeshVertexAttributes vertices[MAX_VERTICES], 
-	out indices uint3 indices[MAX_PRIMITIVES]
+	out Vertices<StaticMeshVertexAttributes, MAX_VERTICES> vertices, 
+	out Indices<uint3, MAX_PRIMITIVES> indices
 ){
 	MeshShaderPayload p;
 	InstanceData inst = scene.instances[p.instanceId];

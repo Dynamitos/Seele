@@ -3,9 +3,11 @@
 
 namespace Seele
 {
-class IndexBufferTopologyData
+class IndexBufferTopologyData : public TopologyData
 {
 public:
+    IndexBufferTopologyData();
+    virtual ~IndexBufferTopologyData();
 private:
     Gfx::PIndexBuffer indices;
 };
