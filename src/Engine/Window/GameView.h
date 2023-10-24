@@ -36,6 +36,7 @@ private:
 	BasePassData basePassData;
 	SkyboxPassData skyboxData;
 
+	PEntity camera;
 	PScene scene;
 	PSystemGraph systemGraph;
 	dp::thread_pool<> threadPool;

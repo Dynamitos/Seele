@@ -9,6 +9,7 @@ target_sources(Engine
         Component.h
         DirectionalLight.h
         KeyboardInput.h
+        Mesh.h
         MeshCollider.h
         PointLight.h
         RigidBody.h
@@ -16,7 +17,6 @@ target_sources(Engine
         ShapeBase.cpp
         Skybox.h
         SphereCollider.h
-        StaticMesh.h
 		Transform.h
 		Transform.cpp)
 
@@ -32,10 +32,10 @@ target_sources(Engine
             DirectionalLight.h
             KeyboardInput.h
             MeshCollider.h
+            Mesh.h
             PointLight.h
             RigidBody.h
             ShapeBase.h
             Skybox.h
             SphereCollider.h
-            StaticMesh.h
             Transform.h)

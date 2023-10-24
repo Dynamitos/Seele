@@ -50,26 +50,16 @@ public:
     {
         return registry.get<Component>(entity);
     }
-    template<typename Component, typename Func>
-    void view(Func func) requires std::is_invocable_v<Func, Component&>
+    template<typename... Component, typename Func>
+    void view(Func func) requires std::is_invocable_v<Func, Component&...> || std::is_invocable_v<Func, entt::entity, Component&...>
     {
-        registry.view<Component>().each(func);
+        registry.view<Component...>().each(func);
     }
-    Array<MeshBatch> getStaticMeshes();
     LightEnv getLightBuffer();
     Component::Skybox getSkybox();
-    Gfx::PShaderBuffer getSceneDataBuffer() const { return sceneDataBuffer;  }
     Gfx::PGraphics getGraphics() const { return graphics; }
     entt::registry registry;
 private:
-    struct PrimitiveSceneData
-    {
-        Matrix4 localToWorld;
-        Matrix4 worldToLocal;
-        Vector4 actorLocation;
-    };
-    Array<PrimitiveSceneData> sceneData;
-    Gfx::PShaderBuffer sceneDataBuffer;
     LightEnv lightEnv;
     PhysicsSystem physics;
     Gfx::PGraphics graphics;

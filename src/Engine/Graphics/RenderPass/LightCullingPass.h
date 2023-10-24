@@ -12,7 +12,7 @@ struct LightCullingPassData
 {
     LightEnv lightEnv;
 };
-class LightCullingPass : public RenderPass<LightCullingPassData>
+class LightCullingPass : public RenderPass
 {
 public:
     LightCullingPass(Gfx::PGraphics graphics);

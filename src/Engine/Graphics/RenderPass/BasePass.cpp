@@ -2,6 +2,7 @@
 #include "Graphics/Graphics.h"
 #include "Window/Window.h"
 #include "Component/Camera.h"
+#include "Component/Mesh.h"
 #include "Actor/CameraActor.h"
 #include "Math/Vector.h"
 #include "RenderGraph.h"
@@ -9,69 +10,8 @@
 
 using namespace Seele;
 
-BasePassMeshProcessor::BasePassMeshProcessor(Gfx::PGraphics graphics) 
-    : MeshProcessor(graphics)
-//    , translucentBasePass(translucentBasePass)
-    //, cachedPrimitiveIndex(0)
-{
-}
-
-BasePassMeshProcessor::~BasePassMeshProcessor() 
-{ 
-}
-
-void BasePassMeshProcessor::processMeshBatch(
-    const MeshBatch& batch, 
-    Gfx::PViewport target,
-    Gfx::PRenderPass renderPass,
-    Gfx::PPipelineLayout baseLayout,
-    Gfx::PDescriptorLayout primitiveLayout,
-    Array<Gfx::PDescriptorSet> descriptorSets,
-    int32 /*staticMeshId*/) 
-{
-    PMaterialInterface material = batch.material;
-    //const Gfx::MaterialShadingModel shadingModel = material->getShadingModel();
-
-    const PVertexShaderInput vertexInput = batch.vertexInput;
-
-    const Gfx::ShaderCollection* collection = material->getShaders(Gfx::RenderPassType::BasePass, vertexInput->getType());
-    if(collection == nullptr)
-    { 
-        material->createShaders(graphics, Gfx::RenderPassType::BasePass, vertexInput->getType());
-        collection = material->getShaders(Gfx::RenderPassType::BasePass, vertexInput->getType());
-    }
-    assert(collection != nullptr);
-
-    Gfx::PRenderCommand renderCommand = graphics->createRenderCommand();    
-    renderCommand->setViewport(target);
-    
-    Gfx::PPipelineLayout pipelineLayout = graphics->createPipelineLayout(baseLayout);
-    pipelineLayout->addDescriptorLayout(BasePass::INDEX_MATERIAL, material->getDescriptorLayout());
-    pipelineLayout->create();
-    Gfx::PDescriptorSet materialSet = material->createDescriptorSet();
-    descriptorSets[BasePass::INDEX_MATERIAL] = materialSet;
-    for(uint32 i = 0; i < batch.elements.size(); ++i)
-    {
-        buildMeshDrawCommand(batch, 
-            renderPass,
-            pipelineLayout,
-            renderCommand,
-            descriptorSets,
-            collection->vertexShader, 
-            collection->controlShader,
-            collection->evalutionShader,
-            collection->geometryShader,
-            collection->fragmentShader,
-            false);
-    }
-    std::scoped_lock lock(commandLock);
-    renderCommands.add(renderCommand);
-    //co_return;
-}
-
-BasePass::BasePass(Gfx::PGraphics graphics) 
-    : RenderPass(graphics)
-    , processor(new BasePassMeshProcessor(graphics))
+BasePass::BasePass(Gfx::PGraphics graphics, PScene scene) 
+    : RenderPass(graphics, scene)
     , descriptorSets(4)
 {
     UniformBufferCreateInfo uniformInitializer;
@@ -80,11 +20,11 @@ BasePass::BasePass(Gfx::PGraphics graphics)
     lightLayout = graphics->createDescriptorLayout("LightLayout");
     
     // Directional Lights
-	lightLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
-	lightLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-	// Point Lights
+    lightLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    lightLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+    // Point Lights
 	lightLayout->addDescriptorBinding(2, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
-	lightLayout->addDescriptorBinding(3, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+    lightLayout->addDescriptorBinding(3, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
     // Light Index List
     lightLayout->addDescriptorBinding(4, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
     // Light Grid
@@ -103,25 +43,32 @@ BasePass::BasePass(Gfx::PGraphics graphics)
     basePassLayout->addDescriptorLayout(INDEX_VIEW_PARAMS, viewLayout);
     descriptorSets[INDEX_VIEW_PARAMS] = viewLayout->allocateDescriptorSet();
 
-    primitiveLayout = graphics->createDescriptorLayout("PrimitiveLayout");
-    primitiveLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
-    primitiveLayout->create();
-    basePassLayout->addDescriptorLayout(INDEX_SCENE_DATA, primitiveLayout);
-    basePassLayout->addPushConstants(Gfx::SePushConstantRange{
-        .stageFlags = (Gfx::SE_SHADER_STAGE_VERTEX_BIT | Gfx::SE_SHADER_STAGE_FRAGMENT_BIT),
-        .offset = 0,
-        .size = sizeof(uint32),
-    });
+    sceneLayout = graphics->createDescriptorLayout("SceneLayout");
+    sceneLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    sceneLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    sceneLayout->create();
+    basePassLayout->addDescriptorLayout(INDEX_SCENE_DATA, sceneLayout);
+    //basePassLayout->addPushConstants(Gfx::SePushConstantRange{
+    //    .stageFlags = (Gfx::SE_SHADER_STAGE_VERTEX_BIT | Gfx::SE_SHADER_STAGE_FRAGMENT_BIT),
+    //    .offset = 0,
+    //    .size = sizeof(uint32),
+    //});
 }
 
 BasePass::~BasePass()
-{   
+{
+}
+
+void BasePass::readScene()
+{
+    Array<InstanceData> instances;
+    scene->view<Component::Transform, Component::Mesh>([]
+        (const Component::Transform& transform, const Component::Mesh& mesh) {
+    });
 }
 
 void BasePass::beginFrame(const Component::Camera& cam) 
 {
-    processor->clearCommands();
-    primitiveLayout->reset();
     BulkResourceData uniformUpdate;
 
     viewParams.viewMatrix = cam.getViewMatrix();
@@ -134,7 +81,7 @@ void BasePass::beginFrame(const Component::Camera& cam)
     viewLayout->reset();
     lightLayout->reset();
 
-    descriptorSets[INDEX_SCENE_DATA] = primitiveLayout->allocateDescriptorSet();
+    descriptorSets[INDEX_SCENE_DATA] = sceneLayout->allocateDescriptorSet();
     descriptorSets[INDEX_SCENE_DATA]->updateBuffer(0, passData.sceneDataBuffer);
     descriptorSets[INDEX_SCENE_DATA]->writeChanges();
     descriptorSets[INDEX_LIGHT_ENV] = lightLayout->allocateDescriptorSet();

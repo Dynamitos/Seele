@@ -8,8 +8,6 @@ target_sources(Engine
         DepthPrepass.cpp
         LightCullingPass.h
         LightCullingPass.cpp
-        MeshProcessor.h
-        MeshProcessor.cpp
         RenderGraph.h
         RenderGraphResources.h
         RenderGraphResources.cpp
@@ -28,7 +26,6 @@ target_sources(Engine
             DebugPass.h
             DepthPrepass.h
             LightCullingPass.h
-            MeshProcessor.h
             RenderGraph.h
             RenderGraphResources.h
             RenderPass.h

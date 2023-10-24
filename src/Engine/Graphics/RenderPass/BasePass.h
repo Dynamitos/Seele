@@ -1,44 +1,16 @@
 #pragma once
 #include "MinimalEngine.h"
-#include "MeshProcessor.h"
 #include "RenderPass.h"
 
 namespace Seele
 {
-class BasePassMeshProcessor : public MeshProcessor
-{
-public:
-    BasePassMeshProcessor(Gfx::PGraphics graphics);
-    virtual ~BasePassMeshProcessor();
-
-    virtual void processMeshBatch(
-        const MeshBatch& batch, 
-        Gfx::PViewport target,
-        Gfx::PRenderPass renderPass,
-        Gfx::PPipelineLayout pipelineLayout,
-        Gfx::PDescriptorLayout primitiveLayout,
-        Array<Gfx::PDescriptorSet> descriptorSets,
-        int32 staticMeshId = -1) override;
-private:
-    //Array<Gfx::PDescriptorSet> cachedPrimitiveSets;
-    //uint8 translucentBasePass;
-    //uint32 cachedPrimitiveIndex;
-};
-DEFINE_REF(BasePassMeshProcessor)
 DECLARE_REF(CameraActor)
-struct BasePassData
-{
-    Array<MeshBatch> staticDrawList;
-    Gfx::PShaderBuffer sceneDataBuffer;
-    LightEnv lightEnv;
-};
-class BasePass : public RenderPass<BasePassData>
+class BasePass : public RenderPass
 {
 public:
-    BasePass(Gfx::PGraphics graphics);
-    BasePass(BasePass&& other) = default;
+    BasePass(Gfx::PGraphics graphics, PScene scene);
     virtual ~BasePass();
-    BasePass& operator=(BasePass&& other) = default;
+    virtual void readScene() override;
     virtual void beginFrame(const Component::Camera& cam) override;
     virtual void render() override;
     virtual void endFrame() override;
@@ -48,7 +20,6 @@ public:
 private:
     Gfx::PRenderTargetAttachment colorAttachment;
     Gfx::PTexture2D depthBuffer;
-    UPBasePassMeshProcessor processor;
     
     Array<Gfx::PDescriptorSet> descriptorSets;
     PCameraActor source;
@@ -66,9 +37,7 @@ private:
     static constexpr uint32 INDEX_MATERIAL = 2;
     // Set 3: primitive scene data
     static constexpr uint32 INDEX_SCENE_DATA = 3;
-    Gfx::PDescriptorLayout primitiveLayout;
-    Gfx::PUniformBuffer primitiveUniformBuffer;
-    friend class BasePassMeshProcessor;
+    Gfx::PDescriptorLayout sceneLayout;
 };
 DEFINE_REF(BasePass)
 } // namespace Seele

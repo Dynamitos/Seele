@@ -1,90 +1,63 @@
-import Common;
-import BRDF;
-import Meshlet;
-import Scene;
-import VertexData;
-import StaticMeshVertexData;
 
-layout(push_constant)
-ConstantBuffer<uint> meshId;
-
-struct MeshShaderPayload
+struct MeshPayload
 {
-	uint instanceId;
-	uint meshletId;
+    int exponent;
 };
 
-struct PrimitiveAttributes
-{
-	uint cull: SV_CullPrimitive;
-};
+groupshared MeshPayload payload;
 
-groupshared StaticMeshVertexAttributes gs_vertices[MAX_VERTICES];
-groupshared uint3 gs_indices[MAX_PRIMITIVES];
-groupshared uint gs_numVertices;
-groupshared uint gs_numPrimitives;
-
-[numthreads(GROUP_SIZE, 1, 1)]
-[shader("amplification")]
+[numthreads(1, 1, 1)]
+[outputtopology("triangle")]
 void taskMain(
 	uint3 threadID: SV_GroupIndex,
 	uint3 groupID: SV_GroupID
 ){
-	
+	DispatchMesh(1,1,1,payload);
 }
 
-[numthreads(GROUP_SIZE, 1, 1)]
+
+
+const static float2 positions[3] = {
+  float2(0.0, -0.5),
+  float2(0.5, 0.5),
+  float2(-0.5, 0.5)
+};
+
+const static float3 colors[3] = {
+  float3(1.0, 1.0, 0.0),
+  float3(0.0, 1.0, 1.0),
+  float3(1.0, 0.0, 1.0)
+};
+struct Vertex
+{
+  float4 pos : SV_Position;
+  float3 color : Color;
+  int index : Index;
+  int value : Value;
+};
+
+const static uint MAX_VERTS = 12;
+const static uint MAX_PRIMS = 4;
+
 [outputtopology("triangle")]
 [shader("mesh")]
+[numthreads(12, 1, 1)]
 void meshMain(
-	uint threadID: SV_GroupIndex,
-	uint3 groupID: SV_GroupID,
-	out Vertices<StaticMeshVertexAttributes, MAX_VERTICES> vertices, 
-	out Indices<uint3, MAX_PRIMITIVES> indices
-){
-	InstanceData inst = scene.instances[threadID];
-	MeshletDescription m = meshlets.meshletInfos[groupID.x];
-	const uint vertexLoops = (MAX_VERTICES + GROUP_SIZE - 1) / GROUP_SIZE;
-	for(uint loop = 0; loop < vertexLoops; ++loop) 
-	{
-		uint v = threadID + loop * GROUP_SIZE;
-		v = min(v, m.vertexCount - 1);
-		InterlockedMax(gs_numVertices, v + 1);
-		{
-			int vertexIndex = meshlets.vertexIndices[m.vertexOffset + v];
-			gs_vertices[v] = vertexData.getAttributes(vertexIndex, inst);
-		}
-	}
+    in uint tig : SV_GroupIndex,
+    in payload MeshPayload meshPayload,
+    out Vertices<Vertex, MAX_VERTS> verts,
+    out Indices<uint3, MAX_PRIMS> triangles)
+{
+    const uint numVertices = 12;
+    const uint numPrimitives = 4;
+    SetMeshOutputCounts(numVertices, numPrimitives);
 
-	const uint primitiveLoops = (MAX_PRIMITIVES + GROUP_SIZE - 1) / GROUP_SIZE;
-	for(uint loop = 0; loop < primitiveLoops; ++loop)
-	{
-		uint p = threadID + loop * GROUP_SIZE;
-		p = min(p, m.primitiveCount - 1);
-		InterlockedMax(gs_numPrimitives, p + 1);
-		{
-			uint8_t local_idx0 = meshlets.primitiveIndices[m.primitiveOffset + (p * 3) + 0];
-			uint8_t local_idx1 = meshlets.primitiveIndices[m.primitiveOffset + (p * 3) + 1];
-			uint8_t local_idx2 = meshlets.primitiveIndices[m.primitiveOffset + (p * 3) + 2];
-			uint32_t idx0 = meshlets.vertexIndices[m.vertexOffset + local_idx0];
-			uint32_t idx1 = meshlets.vertexIndices[m.vertexOffset + local_idx1];
-			uint32_t idx2 = meshlets.vertexIndices[m.vertexOffset + local_idx2];
-			gs_indices[p * 3 + 0] = idx0;
-			gs_indices[p * 3 + 1] = idx1;
-			gs_indices[p * 3 + 2] = idx2;
-		}
-	}
-	GroupMemoryBarrierWithGroupSync();
-	SetMeshOutputCounts(gs_numVertices, gs_numPrimitives);
-	GroupMemoryBarrierWithGroupSync();
-	for(uint loop1 = 0; loop1 < vertexLoops; ++loop1) 
-	{
-		uint v = threadID + loop1 * GROUP_SIZE;
-		vertices[v] = gs_vertices[v];
-	}
-	for(uint loop2 = 0; loop2 < primitiveLoops; ++loop2)
-	{
-		uint p = threadID + loop2 * GROUP_SIZE;
-		indices[p] = gs_indices[p];
-	}
+    if(tig < numVertices)
+    {
+        const int tri = tig / 3;
+        verts[tig] = {float4(positions[tig % 3], 0, 1), colors[tig % 3], tri, int(pow(tri, meshPayload.exponent))};
+    }
+
+    if(tig < numPrimitives)
+        triangles[tig] = tig * 3 + uint3(0,1,2);
 }

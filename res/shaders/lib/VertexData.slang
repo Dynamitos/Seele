@@ -11,5 +11,5 @@ interface VertexAttributes
 
 interface VertexData
 {
-	VertexAttributes getAttributes(uint index, InstanceData inst);
+	VertexAttributes getAttributes(uint index, float4x4 transform);
 };

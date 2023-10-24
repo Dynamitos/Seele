@@ -90,8 +90,8 @@ public:
 	virtual void bindVertexBuffer(const Array<VertexInputStream>& streams) override;
 	virtual void bindIndexBuffer(Gfx::PIndexBuffer indexBuffer) override;
 	virtual void pushConstants(Gfx::PPipelineLayout layout, Gfx::SeShaderStageFlags stage, uint32 offset, uint32 size, const void* data) override;
-	virtual void draw(const MeshBatchElement& data) override;
 	virtual void draw(uint32 vertexCount, uint32 instanceCount, int32 firstVertex, uint32 firstInstance) override;
+	virtual void dispatch(uint32 groupX, uint32 groupY, uint32 groupZ) override;
 private:
 	PGraphicsPipeline pipeline;
 	bool ready;

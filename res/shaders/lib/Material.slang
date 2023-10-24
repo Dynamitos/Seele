@@ -8,4 +8,5 @@ interface IMaterial
 
 };
 
+layout(set = INDEX_MATERIAL)
 ParameterBlock<IMaterial> gMaterial;

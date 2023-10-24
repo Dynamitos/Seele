@@ -1,24 +1,26 @@
 #pragma once
-#include "MaterialInterface.h"
+#include "Material.h"
 
 namespace Seele
 {
-DECLARE_REF(Material)
-class MaterialInstance : public MaterialInterface
+class MaterialInstance
 {
 public:
-    MaterialInstance(Gfx::PGraphics graphics, PMaterial baseMaterial);
-    virtual ~MaterialInstance();
-    virtual Gfx::PDescriptorSet createDescriptorSet();
-    virtual Gfx::PDescriptorLayout getDescriptorLayout() const;
-
-    // The name of the generated material shader, opposed to the name of the .asset file
-    virtual const std::string& getName();
-    virtual const Gfx::ShaderCollection* getShaders(Gfx::RenderPassType renderPass, VertexInputType* vertexInput) const;
-    virtual Gfx::ShaderCollection& createShaders(Gfx::PGraphics graphics, Gfx::RenderPassType renderPass, VertexInputType* vertexInput);
-
+    MaterialInstance(uint64 id, Gfx::PGraphics graphics, PMaterial baseMaterial, Gfx::PDescriptorSet descriptor, Array<PShaderParameter> params, uint32 uniformBinding, uint32 uniformSize);
+    ~MaterialInstance();
+    void updateDescriptor();
+    Gfx::PDescriptorSet getDescriptorSet() const;
+    PMaterial getBaseMaterial() const { return baseMaterial; }
+    uint64 getId() const { return id; }
 private:
+    Gfx::PGraphics graphics;
+    Array<uint8> uniformData;
+    uint32 uniformBinding;
+    Gfx::PUniformBuffer uniformBuffer;
+    Array<PShaderParameter> parameters;
+    Gfx::PDescriptorSet descriptor;
     PMaterial baseMaterial;
+    uint64 id;
 };
 DEFINE_REF(MaterialInstance)
 } // namespace Seele

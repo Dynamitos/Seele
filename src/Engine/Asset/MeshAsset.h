@@ -15,8 +15,6 @@ public:
     virtual ~MeshAsset();
     virtual void save(ArchiveBuffer& buffer) const override;
     virtual void load(ArchiveBuffer& buffer) override;
-    void addMesh(PMesh mesh);
-    const Array<PMesh> getMeshes();
     //Workaround while no editor
     Array<PMesh> meshes;
     Component::Collider physicsMesh;

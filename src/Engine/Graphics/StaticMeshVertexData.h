@@ -8,7 +8,5 @@ public:
     StaticMeshVertexData();
     virtual ~StaticMeshVertexData();
 private:
-    Gfx::PShaderBuffer texCoords;
-    Gfx::PShaderBuffer normals;
 };
 }

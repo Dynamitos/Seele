@@ -8,11 +8,7 @@ namespace Seele
 DECLARE_REF(CameraActor)
 DECLARE_REF(Scene)
 DECLARE_REF(Viewport)
-struct SkyboxPassData
-{
-    Component::Skybox skybox;
-};
-class SkyboxRenderPass : public RenderPass<SkyboxPassData>
+class SkyboxRenderPass : public RenderPass
 {
 public:
     SkyboxRenderPass(Gfx::PGraphics graphics);

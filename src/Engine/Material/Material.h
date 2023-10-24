@@ -1,13 +1,13 @@
 #pragma once
-#include "MaterialInterface.h"
+#include "ShaderExpression.h"
+#include "Graphics/GraphicsResources.h"
 
 namespace Seele
 {
 DECLARE_REF(MaterialInstance)
-class Material : public MaterialInterface
+class Material
 {
 public:
-    Material() {}
     Material(Gfx::PGraphics graphics, 
         Array<PShaderParameter> parameter, 
         Gfx::PDescriptorLayout layout, 
@@ -16,30 +16,27 @@ public:
         std::string materialName, 
         Array<PShaderExpression> expressions, 
         MaterialNode brdf);
-    virtual ~Material();
-    virtual Gfx::PDescriptorSet createDescriptorSet();
-    virtual Gfx::PDescriptorLayout getDescriptorLayout() const { return layout; }
-    virtual const std::string& getName() { return materialName; }
+    ~Material();
+    Gfx::PDescriptorLayout getDescriptorLayout() const { return layout; }
+    PMaterialInstance instantiate();
+    const std::string& getName() { return materialName; }
 
-    virtual void save(ArchiveBuffer& buffer) const;
-    virtual void load(ArchiveBuffer& buffer);
+    void save(ArchiveBuffer& buffer) const;
+    void load(ArchiveBuffer& buffer);
 
     void compile();
 
-    virtual const Gfx::ShaderCollection* getShaders(Gfx::RenderPassType renderPass, VertexInputType* vertexInput) const;
-    virtual Gfx::ShaderCollection& createShaders(Gfx::PGraphics graphics, Gfx::RenderPassType renderPass, VertexInputType* vertexInput);
 private:
-    static Gfx::ShaderMap shaderMap;
-    static std::mutex shaderMapLock;
-
+    Gfx::PGraphics graphics;
+    std::string brdfName;
+    uint32 uniformDataSize;
+    uint32 uniformBinding;
+    uint64 instanceId;
     Gfx::PDescriptorLayout layout;
     std::string materialName;
     Array<PShaderExpression> codeExpressions;
+    Array<PShaderParameter> parameters;
     MaterialNode brdf;
-    // With draw-indirect, we batch vertex data into big vertex buffers
-    // Gfx::PVertexDataManager vertexData;
-
-    friend class MaterialInstance;
 };
 DEFINE_REF(Material)
 

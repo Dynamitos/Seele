@@ -2,77 +2,16 @@
 #include "Graphics/Graphics.h"
 #include "Window/Window.h"
 #include "Component/Camera.h"
+#include "Component/Mesh.h"
 #include "Actor/CameraActor.h"
 #include "Math/Vector.h"
 #include "RenderGraph.h"
-#include "Material/MaterialInterface.h"
 
 using namespace Seele;
 
-DepthPrepassMeshProcessor::DepthPrepassMeshProcessor(Gfx::PGraphics graphics) 
-    : MeshProcessor(graphics)
-{
-}
-
-DepthPrepassMeshProcessor::~DepthPrepassMeshProcessor() 
-{ 
-}
-
-void DepthPrepassMeshProcessor::processMeshBatch(
-    const MeshBatch& batch, 
-    Gfx::PViewport target,
-    Gfx::PRenderPass renderPass,
-    Gfx::PPipelineLayout baseLayout,
-    Gfx::PDescriptorLayout primitiveLayout,
-    Array<Gfx::PDescriptorSet> descriptorSets,
-    int32 /*staticMeshId*/) 
-{
-    //std::cout << "Depth void started" << std::endl;
-    PMaterialInterface material = batch.material;
-    //const Gfx::MaterialShadingModel shadingModel = material->getShadingModel();
-
-    const PVertexShaderInput vertexInput = batch.vertexInput;
-
-	const Gfx::ShaderCollection* collection = material->getShaders(Gfx::RenderPassType::DepthPrepass, vertexInput->getType());
-    if (collection == nullptr)
-    {
-        material->createShaders(graphics, Gfx::RenderPassType::DepthPrepass, vertexInput->getType());
-        collection = material->getShaders(Gfx::RenderPassType::DepthPrepass, vertexInput->getType());
-    }
-    assert(collection != nullptr);
-    
-    Gfx::PRenderCommand renderCommand = graphics->createRenderCommand();    
-    renderCommand->setViewport(target);
-    Gfx::PPipelineLayout pipelineLayout = graphics->createPipelineLayout(baseLayout);
-    pipelineLayout->addDescriptorLayout(DepthPrepass::INDEX_MATERIAL, material->getDescriptorLayout());
-    pipelineLayout->create();
-    Gfx::PDescriptorSet materialSet = material->createDescriptorSet();
-    descriptorSets[DepthPrepass::INDEX_MATERIAL] = materialSet;
-    for(uint32 i = 0; i < batch.elements.size(); ++i)
-    {
-        buildMeshDrawCommand(batch, 
-//            primitiveComponent, 
-            renderPass,
-            pipelineLayout,
-            renderCommand,
-            descriptorSets,
-            collection->vertexShader, 
-            collection->controlShader,
-            collection->evalutionShader,
-            collection->geometryShader,
-            collection->fragmentShader,
-            true);
-    }
-    std::scoped_lock lock(commandLock);
-    renderCommands.add(renderCommand);
-    //std::cout << "Finished depth job" << std::endl;
-    //co_return;
-}
-
-DepthPrepass::DepthPrepass(Gfx::PGraphics graphics) 
-    : RenderPass(graphics)
-    , processor(new DepthPrepassMeshProcessor(graphics))
-    , descriptorSets(3)
+DepthPrepass::DepthPrepass(Gfx::PGraphics graphics, PScene scene) 
+    : RenderPass(graphics, scene)
+    , descriptorSets(4)
 {
     UniformBufferCreateInfo uniformInitializer;
 
@@ -86,16 +25,6 @@ DepthPrepass::DepthPrepass(Gfx::PGraphics graphics)
     viewParamBuffer = graphics->createUniformBuffer(uniformInitializer);
     viewLayout->create();
     depthPrepassLayout->addDescriptorLayout(INDEX_VIEW_PARAMS, viewLayout);
-
-    primitiveLayout = graphics->createDescriptorLayout("PrimitiveLayout");
-    primitiveLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
-    primitiveLayout->create();
-    depthPrepassLayout->addDescriptorLayout(INDEX_SCENE_DATA, primitiveLayout);
-    depthPrepassLayout->addPushConstants(Gfx::SePushConstantRange{
-        .stageFlags = (Gfx::SE_SHADER_STAGE_VERTEX_BIT | Gfx::SE_SHADER_STAGE_FRAGMENT_BIT),
-        .offset = 0,
-        .size = sizeof(uint32),
-    });
 }
 
 DepthPrepass::~DepthPrepass()
@@ -104,8 +33,6 @@ DepthPrepass::~DepthPrepass()
 
 void DepthPrepass::beginFrame(const Component::Camera& cam) 
 {
-    processor->clearCommands();
-    primitiveLayout->reset();
     BulkResourceData uniformUpdate;
 
     viewParams.viewMatrix = cam.getViewMatrix();
@@ -116,12 +43,10 @@ void DepthPrepass::beginFrame(const Component::Camera& cam)
     uniformUpdate.data = (uint8*)&viewParams;
     viewParamBuffer->updateContents(uniformUpdate);
     viewLayout->reset();
-    descriptorSets[INDEX_SCENE_DATA] = primitiveLayout->allocateDescriptorSet();
-    descriptorSets[INDEX_SCENE_DATA]->updateBuffer(0, passData.sceneDataBuffer);
-    descriptorSets[INDEX_SCENE_DATA]->writeChanges();
     descriptorSets[INDEX_VIEW_PARAMS] = viewLayout->allocateDescriptorSet();
     descriptorSets[INDEX_VIEW_PARAMS]->updateBuffer(0, viewParamBuffer);
     descriptorSets[INDEX_VIEW_PARAMS]->writeChanges();
+
     //std::cout << "DepthPrepass beginFrame()" << std::endl;
     //co_return;
 }
@@ -133,11 +58,39 @@ void DepthPrepass::render()
         Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT);
     depthAttachment->getTexture()->transferOwnership(Gfx::QueueType::GRAPHICS);
     graphics->beginRenderPass(renderPass);
-    for (const auto& meshBatch : passData.staticDrawList)
+    for (VertexData* vertexData : VertexData::getList())
     {
-        processor->processMeshBatch(meshBatch, viewport, renderPass, depthPrepassLayout, primitiveLayout, descriptorSets);
+        const auto& materials = vertexData->getMaterialData();
+        for (const auto& [_, materialData] : materials) 
+        {
+            // Create Pipeline(Material, VertexData)
+            // Descriptors:
+            // ViewData => global, static
+            // Material => per material
+            // VertexData => per meshtype
+            // SceneData => per topology
+            Gfx::PRenderCommand command = graphics->createRenderCommand("DepthRender");
+            Gfx::PPipelineLayout layout = graphics->createPipelineLayout(depthPrepassLayout);
+            layout->addDescriptorLayout(INDEX_MATERIAL, materialData.material->getDescriptorLayout());
+            layout->addDescriptorLayout(INDEX_VERTEX_DATA, vertexData->getVertexDataLayout());
+            layout->addDescriptorLayout(INDEX_SCENE_DATA, vertexData->getInstanceDataLayout());
+            layout->create();
+
+            GraphicsPipelineCreateInfo pipelineInfo;
+            Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(pipelineInfo);
+            command->bindPipeline(pipeline);
+
+            vertexData->bindBuffers(command);
+            descriptorSets[INDEX_VERTEX_DATA] = vertexData->getVertexDataSet();
+            for (const auto&[_, instance]: materialData.instances)
+            {
+                descriptorSets[INDEX_MATERIAL] = instance.materialInstance->getDescriptorSet();
+                descriptorSets[INDEX_SCENE_DATA] = instance.descriptorSet;
+                command->bindDescriptor(descriptorSets);
+                command->dispatch(instance.numMeshes, 1, 1);
+            }
+        }
     }
-    graphics->executeCommands(processor->getRenderCommands());
     graphics->endRenderPass();
     //std::cout << "DepthPrepass render()" << std::endl;
     //co_return;
@@ -175,5 +128,6 @@ void DepthPrepass::modifyRenderPassMacros(Map<const char*, const char*>& defines
 {
     defines["INDEX_VIEW_PARAMS"] = "0";
     defines["INDEX_MATERIAL"] = "1";
-    defines["INDEX_SCENE_DATA"] = "2";
+    defines["INDEX_VERTEX_DATA"] = "2";
+    defines["INDEX_SCENE_DATA"] = "3";
 }

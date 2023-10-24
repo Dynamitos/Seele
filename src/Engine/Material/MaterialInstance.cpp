@@ -4,52 +4,20 @@
 
 using namespace Seele;
 
-MaterialInstance::MaterialInstance(Gfx::PGraphics graphics, PMaterial baseMaterial)
-    : MaterialInterface(graphics, baseMaterial->parameters, baseMaterial->uniformDataSize, baseMaterial->uniformBinding)
-    , baseMaterial(baseMaterial)
+MaterialInstance::MaterialInstance(uint64 id, Gfx::PGraphics graphics, PMaterial baseMaterial, Gfx::PDescriptorSet descriptor, Array<PShaderParameter> params, uint32 uniformBinding, uint32 uniformSize)
+    : id(id), graphics(graphics), baseMaterial(baseMaterial), descriptor(descriptor), parameters(params), uniformBinding(uniformBinding)
 {
+    uniformBuffer = graphics->createUniformBuffer(UniformBufferCreateInfo{
+            .resourceData = {
+                .size = uniformSize,
+            },
+            .bDynamic = true,
+        }
+    );
+    uniformData.resize(uniformSize);
 }
 
 MaterialInstance::~MaterialInstance()
 {
     
-}
-
-Gfx::PDescriptorSet MaterialInstance::createDescriptorSet()
-{
-    Gfx::PDescriptorSet descriptorSet = baseMaterial->layout->allocateDescriptorSet();
-    BulkResourceData uniformUpdate;
-    uniformUpdate.size = uniformDataSize;
-    uniformUpdate.data = (uint8*)uniformData.data();
-    for(auto param : parameters)
-    {
-        param->updateDescriptorSet(descriptorSet, uniformData.data());
-    }
-    if(uniformUpdate.size != 0)
-    {
-        uniformBuffer->updateContents(uniformUpdate);
-        descriptorSet->updateBuffer(uniformBinding, uniformBuffer);
-    }
-    descriptorSet->writeChanges();
-    return descriptorSet;
-}
-
-Gfx::PDescriptorLayout MaterialInstance::getDescriptorLayout() const
-{
-    return baseMaterial->getDescriptorLayout();
-}
-
-const std::string& MaterialInstance::getName()
-{
-    return baseMaterial->getName();
-}
-
-const Gfx::ShaderCollection* Seele::MaterialInstance::getShaders(Gfx::RenderPassType renderPass, VertexInputType* vertexInput) const
-{
-    return baseMaterial->getShaders(renderPass, vertexInput);
-}
-
-Gfx::ShaderCollection& Seele::MaterialInstance::createShaders(Gfx::PGraphics graphics, Gfx::RenderPassType renderPass, VertexInputType* vertexInput)
-{
-    return baseMaterial->createShaders(graphics, renderPass, vertexInput);
 }

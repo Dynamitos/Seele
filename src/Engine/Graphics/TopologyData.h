@@ -1,5 +1,6 @@
 #pragma once
 #include "GraphicsResources.h"
+#include "VertexData.h"
 
 namespace Seele
 {
@@ -9,6 +10,8 @@ public:
     TopologyData();
     virtual ~TopologyData();
     virtual void bind() = 0;
-private:
+protected:
+    VertexData* vertexData;
 };
+DEFINE_REF(TopologyData)
 } // namespace Seele

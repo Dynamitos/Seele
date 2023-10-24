@@ -17,12 +17,7 @@ struct TextRender
     Vector2 position;
     float scale;
 };
-struct TextPassData
-{
-    Array<TextRender> texts;
-};
-
-class TextPass : public RenderPass<TextPassData>
+class TextPass : public RenderPass
 {
 public:
     TextPass(Gfx::PGraphics graphics);

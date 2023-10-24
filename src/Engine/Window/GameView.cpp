@@ -11,9 +11,9 @@ GameView::GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreate
     : View(graphics, window, createInfo, "Game")
     , gameInterface(dllPath)
     , renderGraph(RenderGraphBuilder::build(
-        DepthPrepass(graphics),
+        DepthPrepass(graphics, scene),
         LightCullingPass(graphics),
-        BasePass(graphics),
+        BasePass(graphics, scene),
         SkyboxRenderPass(graphics)
     ))
 {
@@ -33,8 +33,16 @@ void GameView::beginUpdate()
 void GameView::update()
 {
     static auto startTime = std::chrono::high_resolution_clock::now();
+    for (VertexData* vd : VertexData::getList())
+    {
+        vd->resetMeshData();
+    }
     systemGraph->run(threadPool, updateTime);
     scene->update(updateTime);
+    for (VertexData* vd : VertexData::getList())
+    {
+        vd->createDescriptors();
+    }
     auto endTime = std::chrono::high_resolution_clock::now();
     std::chrono::duration<float> duration = (endTime - startTime);
     updateTime = duration.count();
@@ -43,13 +51,7 @@ void GameView::update()
 
 void GameView::commitUpdate()
 {
-    depthPrepassData.staticDrawList = scene->getStaticMeshes();
-    depthPrepassData.sceneDataBuffer = scene->getSceneDataBuffer();
-    lightCullingData.lightEnv = scene->getLightBuffer();
-    basePassData.staticDrawList = scene->getStaticMeshes();
-    basePassData.sceneDataBuffer = scene->getSceneDataBuffer();
-    basePassData.lightEnv = scene->getLightBuffer();
-    skyboxData.skybox = scene->getSkybox();
+
 }
 
 void GameView::prepareRender()
@@ -59,13 +61,7 @@ void GameView::prepareRender()
 
 void GameView::render()
 {
-    scene->view<Component::Camera>([&](Component::Camera& cam)
-    {
-        if(cam.mainCamera)
-        {
-            renderGraph.render(cam);
-        }
-    });
+    renderGraph.render(camera->accessComponent<Component::Camera>());
 }
 
 void GameView::reloadGame()

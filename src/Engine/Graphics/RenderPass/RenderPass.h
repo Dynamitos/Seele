@@ -3,24 +3,25 @@
 #include "Math/Math.h"
 #include "RenderGraphResources.h"
 #include "Component/Camera.h"
+#include "Graphics/TopologyData.h"
+#include "Scene/Scene.h"
+#include "Material/MaterialInstance.h"
+#include "Graphics/VertexData.h"
 
 namespace Seele
 {
 DECLARE_NAME_REF(Gfx, Viewport)
 DECLARE_NAME_REF(Gfx, Graphics)
 DECLARE_NAME_REF(Gfx, RenderPass)
-template<typename RenderPassDataType>
 class RenderPass
 {
 public:
-    RenderPass(Gfx::PGraphics graphics)
+    RenderPass(Gfx::PGraphics graphics, PScene scene)
         : graphics(graphics)
+        , scene(scene)
     {}
     virtual ~RenderPass()
     {}
-    void updateViewFrame(RenderPassDataType viewFrame) {
-        passData = std::move(viewFrame);
-    }
     virtual void beginFrame(const Component::Camera& cam) = 0;
     virtual void render() = 0;
     virtual void endFrame() = 0;
@@ -41,13 +42,26 @@ protected:
         Vector2 screenDimensions;
         Vector2 pad0;
     } viewParams;
+    struct DrawListId
+    {
+        DrawListId(PMaterialInstance mat, PVertexData vertex)
+        {
+            id = mat->getBaseMaterial()->getName();
+        }
+        std::strong_ordering operator<=>(const DrawListId& other) const
+        {
+            return id <=> other.id;
+        }
+        std::string id;
+    };
+    Map<DrawListId, DrawListInfo> drawList;
     PRenderGraphResources resources;
-    RenderPassDataType passData;
     Gfx::PRenderPass renderPass;
     Gfx::PGraphics graphics;
     Gfx::PViewport viewport;
+    PScene scene;
 };
-template<typename RP, typename T>
-concept RenderPassType = std::derived_from<RP, RenderPass<T>>;
+template<typename RP>
+concept RenderPassType = std::derived_from<RP, RenderPass>;
 
 } // namespace Seele

@@ -1,5 +1,8 @@
+import AABB;
+
 struct MeshletDescription
 {
+	AABB boundingBox;
 	uint32_t vertexCount;
 	uint32_t primitiveCount;
 	uint32_t vertexOffset;
@@ -14,8 +17,30 @@ struct MeshletData
 	StructuredBuffer<uint32_t> vertexIndices;
 };
 
+struct MeshData
+{
+	uint numMeshlets;
+	uint meshletOffset;
+};
+
 static const uint MAX_VERTICES = 64;
 static const uint MAX_PRIMITIVES = 126;
-static const uint GROUP_SIZE = 32;
+static const uint TASK_GROUP_SIZE = 128;
+static const uint MESH_GROUP_SIZE = 32;
+static const uint MAX_MESHLETS_PER_MESH = 512;
 
-ParameterBlock<MeshletData> meshlets;
+struct InstanceData
+{
+	float4x4 transformMatrix;
+};
+
+struct Scene
+{
+	StructuredBuffer<InstanceData> instances;
+	StructuredBuffer<MeshData> meshData;
+	StructuredBuffer<MeshletData> meshlets;
+};
+
+layout(set = INDEX_SCENE_DATA)
+ParameterBlock<Scene> scene;
+

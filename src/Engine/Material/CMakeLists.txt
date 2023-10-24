@@ -4,8 +4,8 @@ target_sources(Engine
         Material.cpp
         MaterialInstance.h
         MaterialInstance.cpp
-        MaterialInterface.h
-        MaterialInterface.cpp
+        
+        
         ShaderExpression.h
         ShaderExpression.cpp)
 
@@ -14,6 +14,5 @@ target_sources(Engine
         FILES
             Material.h
             MaterialInstance.h
-            MaterialInterface.h
             ShaderExpression.h)
 

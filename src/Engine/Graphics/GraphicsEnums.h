@@ -165,23 +165,9 @@ namespace Gfx
 {
 static constexpr bool useAsyncCompute = true;
 static constexpr bool waitIdleOnSubmit = true;
+static constexpr bool useMeshShading = true;
 static constexpr uint32 numFramesBuffered = 8;
 double getCurrentFrameDelta();
-
-enum class MaterialShadingModel
-{
-    Unlit,
-    DefaultLit,
-    Subsurface,
-    PreintegratedSkin,
-    ClearCoat,
-    SubsurfaceProfile,
-    TwoSidedFoliage,
-    Hair,
-    Cloth,
-    Eye,
-    Max
-};
 
 enum class RenderPassType : uint8
 {
@@ -195,14 +181,6 @@ enum class QueueType
     COMPUTE = 2,
     TRANSFER = 3,
     DEDICATED_TRANSFER = 4
-};
-enum class VertexAttribute
-{
-    POSITION,
-    TEXCOORD,
-    NORMAL,
-    TANGENT,
-    BITANGENT
 };
 
 typedef uint32_t SeFlags;

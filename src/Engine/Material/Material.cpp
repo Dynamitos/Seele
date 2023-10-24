@@ -1,13 +1,10 @@
 #include "Material.h"
 #include "Window/WindowManager.h"
 #include "MaterialInstance.h"
-#include "Graphics/VertexShaderInput.h"
 #include "Graphics/Graphics.h"
 
 using namespace Seele;
 
-Gfx::ShaderMap Material::shaderMap;
-std::mutex Material::shaderMapLock;
 
 Material::Material(Gfx::PGraphics graphics, 
         Array<PShaderParameter> parameter, 
@@ -17,11 +14,15 @@ Material::Material(Gfx::PGraphics graphics,
         std::string materialName, 
         Array<PShaderExpression> expressions, 
         MaterialNode brdf)
-    : MaterialInterface(graphics, parameter, uniformDataSize, uniformBinding)
+    : graphics(graphics)
+    , parameters(parameter)
+    , uniformDataSize(uniformDataSize)
+    , uniformBinding(uniformBinding)
     , layout(layout)
     , materialName(materialName)
     , codeExpressions(expressions)
     , brdf(brdf)
+    , instanceId(0)
 {
 }
 
@@ -128,20 +129,4 @@ void Material::compile()
     codeStream << "\t\treturn result;\n";
     codeStream << "\t}\n";
     codeStream << "};\n";
-}
-
-const Gfx::ShaderCollection* Material::getShaders(Gfx::RenderPassType renderPass, VertexInputType* vertexInput) const
-{
-    Gfx::ShaderPermutation permutation;
-    permutation.passType = renderPass;
-    std::string vertexInputName = vertexInput->getName();
-    std::strncpy(permutation.materialName, materialName.c_str(), sizeof(permutation.materialName));
-    std::strncpy(permutation.vertexInputName, vertexInputName.c_str(), sizeof(permutation.vertexInputName));
-    return shaderMap.findShaders(Gfx::PermutationId(permutation));
-}
-
-Gfx::ShaderCollection& Material::createShaders(Gfx::PGraphics graphics, Gfx::RenderPassType renderPass, VertexInputType* vertexInput) 
-{
-    std::scoped_lock l(shaderMapLock);
-    return shaderMap.createShaders(graphics, renderPass, this, vertexInput, false);
 }

@@ -9,11 +9,7 @@ namespace Seele
 DECLARE_REF(CameraActor)
 DECLARE_REF(Scene)
 DECLARE_REF(Viewport)
-struct DebugPassData
-{
-    Array<DebugVertex> vertices;
-};
-class DebugPass : public RenderPass<DebugPassData>
+class DebugPass : public RenderPass
 {
 public:
     DebugPass(Gfx::PGraphics graphics);

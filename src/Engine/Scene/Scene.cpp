@@ -16,7 +16,6 @@ Scene::Scene(Gfx::PGraphics graphics)
     : graphics(graphics)
     , physics(registry)
 {
-    
     ShaderBufferCreateInfo structInfo = {
         .resourceData = {
             .size = sizeof(Component::DirectionalLight) * MAX_DIRECTIONAL_LIGHTS,
@@ -48,59 +47,6 @@ Scene::~Scene()
 void Scene::update(float deltaTime)
 {
     physics.update(deltaTime);
-}
-
-Array<MeshBatch> Scene::getStaticMeshes()
-{
-    Array<MeshBatch> result;
-    auto view = registry.view<Component::StaticMesh, Component::Transform>();
-    uint32 sceneDataIndex = 0;
-    sceneData.clear();
-    for(auto&& [entity, mesh, transform] : view.each())
-    {
-        sceneData.add(PrimitiveSceneData {
-            .localToWorld = transform.toMatrix(),
-            .worldToLocal = glm::inverse(transform.toMatrix()),
-            .actorLocation = Vector4(transform.getPosition(), 1.0f)
-        });
-        for(auto& m : mesh.mesh->meshes)
-        {
-            auto& batch = result.add();
-            batch.material = m->referencedMaterial->getMaterial();
-            batch.isBackfaceCullingDisabled = false;
-            batch.isCastingShadow = true;
-            batch.topology = Gfx::SE_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-            batch.useReverseCulling = false;
-            batch.useWireframe = false;
-            batch.vertexInput = m->vertexInput;
-            MeshBatchElement batchElement;
-            batchElement.baseVertexIndex = 0;
-            batchElement.firstIndex = 0;
-            batchElement.indexBuffer = m->indexBuffer;
-            batchElement.indirectArgsBuffer = nullptr;
-            batchElement.isInstanced = false;
-            batchElement.numInstances = 1;
-            batchElement.sceneDataIndex = sceneDataIndex;
-            batch.elements.add(batchElement);
-        }
-        sceneDataIndex++;
-    }
-    if(sceneDataBuffer == nullptr || sceneDataBuffer->getNumElements() != sceneData.size())
-    {
-        ShaderBufferCreateInfo createInfo = ShaderBufferCreateInfo {
-            .resourceData = {
-                .size = sceneData.size() * sizeof(PrimitiveSceneData),
-                .data = nullptr,
-            },
-            .stride = (uint32)sceneData.size(),
-        };
-        sceneDataBuffer = graphics->createShaderBuffer(createInfo);
-    }
-    sceneDataBuffer->updateContents(BulkResourceData {
-        .size = sceneData.size() * sizeof(PrimitiveSceneData),
-        .data = (uint8*)sceneData.data(),
-    });
-    return result;
 }
 
 LightEnv Scene::getLightBuffer() 

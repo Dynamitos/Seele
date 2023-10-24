@@ -10,8 +10,6 @@ target_sources(Engine
         Graphics.cpp
         Mesh.h
         Mesh.cpp
-        MeshBatch.h
-        MeshBatch.cpp
         ShaderCompiler.h
         ShaderCompiler.cpp
         StaticMeshVertexData.h
@@ -28,7 +26,6 @@ target_sources(Engine
             GraphicsEnums.h
             Graphics.h
             Mesh.h
-            MeshBatch.h
             ShaderCompiler.h
             StaticMeshVertexData.h
             VertexData.h)

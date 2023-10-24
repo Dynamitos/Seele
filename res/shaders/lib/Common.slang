@@ -9,7 +9,7 @@ struct ViewParameter
     float4 cameraPos_WS;
     float2 screenDimensions;
 }
-//layout(set = INDEX_VIEW_PARAMS, binding = 0, std430)
+layout(set = INDEX_VIEW_PARAMS)
 ParameterBlock<ViewParameter> viewParams;
 
  
@@ -31,7 +31,24 @@ struct Plane
 
 struct Frustum
 {
-    Plane planes[4];
+    Plane sides[4];
+    Plane basePlane;
+    bool pointInside(float3 point)
+    {
+        if (dot(basePlane.n, point) + basePlane.d < 0)
+        {
+            return false;
+        }
+        for(int p = 0; p < 4; ++p)
+        {
+            float result = dot(sides[p].n, point) + sides[p].d;
+            if(result < 0)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
 };
 Plane computePlane(float3 p0, float3 p1, float3 p2)
 {

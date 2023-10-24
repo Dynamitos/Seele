@@ -2,7 +2,6 @@
 #include "MinimalEngine.h"
 #include "GraphicsResources.h"
 #include "Containers/Array.h"
-#include "VertexShaderInput.h"
 #include "ShaderCompiler.h"
 
 namespace Seele
