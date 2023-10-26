@@ -1,12 +1,12 @@
 #include "TextPass.h"
 #include "RenderGraph.h"
 #include "Graphics/Graphics.h"
-#include "Graphics/VertexShaderInput.h"
+#include "Graphics/RenderTarget.h"
 
 using namespace Seele;
 
-TextPass::TextPass(Gfx::PGraphics graphics) 
-    : RenderPass(graphics)
+TextPass::TextPass(Gfx::PGraphics graphics, PScene scene) 
+    : RenderPass(graphics, scene)
 {
 }
 
@@ -17,7 +17,7 @@ TextPass::~TextPass()
 
 void TextPass::beginFrame(const Component::Camera&) 
 {
-    for(TextRender& render : passData.texts)
+    for(TextRender& render : texts)
     {
         FontData& fd = getFontData(render.font);
         TextResources& res = textResources[render.font].add();
@@ -82,7 +82,7 @@ void TextPass::render()
         for(const auto& resource : res)
         {
             command->bindDescriptor({generalSet, resource.textureArraySet});
-            command->bindVertexBuffer({VertexInputStream(0, 0, resource.vertexBuffer)});
+            command->bindVertexBuffer({resource.vertexBuffer});
             
             command->pushConstants(pipelineLayout, Gfx::SE_SHADER_STAGE_VERTEX_BIT | Gfx::SE_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(TextData), &resource.textData);
             command->draw(4, static_cast<uint32>(resource.vertexBuffer->getNumVertices()), 0, 0);
@@ -121,7 +121,7 @@ void TextPass::createRenderPass()
     fragmentShader = graphics->createFragmentShader(createInfo);
     Array<Gfx::VertexElement> elements;
     elements.add({
-        .streamIndex = 0, 
+        .binding = 0, 
         .offset = offsetof(GlyphInstanceData, position), 
         .vertexFormat = Gfx::SE_FORMAT_R32G32_SFLOAT, 
         .attributeIndex = 0, 
@@ -129,7 +129,7 @@ void TextPass::createRenderPass()
         .bInstanced = 1
     });
     elements.add({
-        .streamIndex = 0, 
+        .binding = 0, 
         .offset = offsetof(GlyphInstanceData, widthHeight), 
         .vertexFormat = Gfx::SE_FORMAT_R32G32_SFLOAT, 
         .attributeIndex = 1,
@@ -137,7 +137,7 @@ void TextPass::createRenderPass()
         .bInstanced = 1
     });
     elements.add({
-        .streamIndex = 0,
+        .binding = 0,
         .offset = offsetof(GlyphInstanceData, glyphIndex),
         .vertexFormat = Gfx::SE_FORMAT_R32_UINT,
         .attributeIndex = 2,
@@ -187,7 +187,7 @@ void TextPass::createRenderPass()
     Gfx::PRenderTargetLayout layout = new Gfx::RenderTargetLayout(renderTarget, depthAttachment);
     renderPass = graphics->createRenderPass(layout, viewport);
     
-    GraphicsPipelineCreateInfo pipelineInfo;
+    Gfx::LegacyPipelineCreateInfo pipelineInfo;
     pipelineInfo.vertexDeclaration = declaration;
     pipelineInfo.vertexShader = vertexShader;
     pipelineInfo.fragmentShader = fragmentShader;

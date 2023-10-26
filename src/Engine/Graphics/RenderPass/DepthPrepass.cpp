@@ -68,7 +68,7 @@ void DepthPrepass::render()
             // ViewData => global, static
             // Material => per material
             // VertexData => per meshtype
-            // SceneData => per topology
+            // SceneData => per material instance
             Gfx::PRenderCommand command = graphics->createRenderCommand("DepthRender");
             Gfx::PPipelineLayout layout = graphics->createPipelineLayout(depthPrepassLayout);
             layout->addDescriptorLayout(INDEX_MATERIAL, materialData.material->getDescriptorLayout());

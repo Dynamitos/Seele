@@ -30,11 +30,6 @@ private:
         BasePass,
 		SkyboxRenderPass
 		> renderGraph;
-		
-	DepthPrepassData depthPrepassData;
-	LightCullingPassData lightCullingData;
-	BasePassData basePassData;
-	SkyboxPassData skyboxData;
 
 	PEntity camera;
 	PScene scene;

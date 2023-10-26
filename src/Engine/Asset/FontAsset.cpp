@@ -1,6 +1,7 @@
 #include "FontAsset.h"
 #include "Graphics/Graphics.h"
-#include "Graphics/Vulkan/VulkanGraphicsEnums.h"
+#include "Graphics/Vulkan/Enums.h"
+#include "Graphics/Texture.h"
 #include <ktx.h>
 
 using namespace Seele;

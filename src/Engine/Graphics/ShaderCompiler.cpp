@@ -1,5 +1,4 @@
 #include "ShaderCompiler.h"
-#include "VertexShaderInput.h"
 #include "Graphics.h"
 
 using namespace Seele;

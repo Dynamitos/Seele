@@ -1,11 +1,12 @@
 #include "UIPass.h"
 #include "RenderGraph.h"
 #include "Graphics/Graphics.h"
+#include "Graphics/RenderTarget.h"
 
 using namespace Seele;
 
-UIPass::UIPass(Gfx::PGraphics graphics) 
-    : RenderPass(graphics)
+UIPass::UIPass(Gfx::PGraphics graphics, PScene scene) 
+    : RenderPass(graphics, scene)
 {
 }
 
@@ -18,20 +19,20 @@ void UIPass::beginFrame(const Component::Camera&)
 {
     VertexBufferCreateInfo info = {
         .resourceData = {
-            .size = (uint32)(sizeof(UI::RenderElementStyle) * passData.renderElements.size()),
-            .data = (uint8*)passData.renderElements.data()
+            .size = (uint32)(sizeof(UI::RenderElementStyle) * renderElements.size()),
+            .data = (uint8*)renderElements.data()
         },
         .vertexSize = sizeof(UI::RenderElementStyle),
-        .numVertices = (uint32)passData.renderElements.size(),
+        .numVertices = (uint32)renderElements.size(),
     };
     elementBuffer = graphics->createVertexBuffer(info);
-    uint32 numTextures = static_cast<uint32>(passData.usedTextures.size());
+    uint32 numTextures = static_cast<uint32>(usedTextures.size());
     numTexturesBuffer->updateContents({
         .size = sizeof(uint32),
         .data = (uint8*)&numTextures,
     });
     descriptorSet->updateBuffer(2, numTexturesBuffer);
-    descriptorSet->updateTextureArray(3, passData.usedTextures);
+    descriptorSet->updateTextureArray(3, usedTextures);
     descriptorSet->writeChanges();
     //co_return;
 }
@@ -42,11 +43,12 @@ void UIPass::render()
     Gfx::PRenderCommand command = graphics->createRenderCommand("UIPassCommand");
     command->setViewport(viewport);
     command->bindPipeline(pipeline);
-    command->bindVertexBuffer({VertexInputStream(0, 0, elementBuffer)});
+    command->bindVertexBuffer({elementBuffer});
     command->bindDescriptor(descriptorSet);
-    command->draw(4, static_cast<uint32>(passData.renderElements.size()), 0, 0);
+    command->draw(4, static_cast<uint32>(renderElements.size()), 0, 0);
     graphics->executeCommands(Array<Gfx::PRenderCommand>({command}));
     graphics->endRenderPass();
+    
     //co_return;
 }
 
@@ -96,7 +98,7 @@ void UIPass::createRenderPass()
     fragmentShader = graphics->createFragmentShader(createInfo);
     Array<Gfx::VertexElement> decl;
     decl.add({
-        .streamIndex = 0,
+        .binding = 0,
         .offset = offsetof(UI::RenderElementStyle, position),
         .vertexFormat = Gfx::SE_FORMAT_R32G32B32_SFLOAT,
         .attributeIndex = 0,
@@ -104,7 +106,7 @@ void UIPass::createRenderPass()
         .bInstanced = 1
     });
     decl.add({
-        .streamIndex = 0,
+        .binding = 0,
         .offset = offsetof(UI::RenderElementStyle, backgroundImageIndex),
         .vertexFormat = Gfx::SE_FORMAT_R32_UINT,
         .attributeIndex = 1,
@@ -112,7 +114,7 @@ void UIPass::createRenderPass()
         .bInstanced = 1
     });
     decl.add({
-        .streamIndex = 0,
+        .binding = 0,
         .offset = offsetof(UI::RenderElementStyle, backgroundColor),
         .vertexFormat = Gfx::SE_FORMAT_R32G32B32_SFLOAT,
         .attributeIndex = 2,
@@ -120,7 +122,7 @@ void UIPass::createRenderPass()
         .bInstanced = 1
     });
     decl.add({
-        .streamIndex = 0,
+        .binding = 0,
         .offset = offsetof(UI::RenderElementStyle, opacity),
         .vertexFormat = Gfx::SE_FORMAT_R32_SFLOAT,
         .attributeIndex = 3,
@@ -128,7 +130,7 @@ void UIPass::createRenderPass()
         .bInstanced = 1
     });
     decl.add({
-        .streamIndex = 0,
+        .binding = 0,
         .offset = offsetof(UI::RenderElementStyle, dimensions),
         .vertexFormat = Gfx::SE_FORMAT_R32G32_SFLOAT,
         .attributeIndex = 4,
@@ -177,7 +179,7 @@ void UIPass::createRenderPass()
     Gfx::PRenderTargetLayout layout = new Gfx::RenderTargetLayout(renderTarget, depthAttachment);
     renderPass = graphics->createRenderPass(layout, viewport);
     
-    GraphicsPipelineCreateInfo pipelineInfo;
+    Gfx::LegacyPipelineCreateInfo pipelineInfo;
     pipelineInfo.vertexDeclaration = declaration;
     pipelineInfo.vertexShader = vertexShader;
     pipelineInfo.fragmentShader = fragmentShader;

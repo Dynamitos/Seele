@@ -2,9 +2,6 @@
 #include "Graphics/Graphics.h"
 #include "Graphics/Mesh.h"
 #include "AssetRegistry.h"
-#include "Graphics/VertexShaderInput.h"
-#include "Material/MaterialInterface.h"
-#include "Graphics/StaticMeshVertexInput.h"
 
 using namespace Seele;
 

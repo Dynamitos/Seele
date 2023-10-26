@@ -3,6 +3,8 @@ target_sources(Engine
         ComponentSystem.h
         Executor.h
         Executor.cpp
+        LightGather.h
+        LightGather.cpp
         MeshUpdater.h
         MeshUpdater.cpp
         SystemBase.h
@@ -13,7 +15,8 @@ target_sources(Engine
     PUBLIC FILE_SET HEADERS
         FILES
             ComponentSystem.h
-            MeshUpdater.h
             Executor.h
+            LightGather.h
+            MeshUpdater.h
             SystemBase.h
             SystemGraph.h)

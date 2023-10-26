@@ -1,6 +1,5 @@
 #pragma once
 #include "RenderPass.h"
-#include "Graphics/GraphicsResources.h"
 #include "Scene/Scene.h"
 #include "Graphics/DebugVertex.h"
 

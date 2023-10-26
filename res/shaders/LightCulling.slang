@@ -8,36 +8,28 @@ struct ComputeShaderInput
     uint3 dispatchThreadID : SV_DispatchThreadID;
     uint groupIndex : SV_GroupIndex;
 };
-layout(set = INDEX_VIEW_PARAMS, binding = 1)
-cbuffer DispatchParams
+struct CullingParams
 {
     uint3 numThreadGroups;
     uint pad0;
     uint3 numThreads;
     uint pad1;
-}
 
-layout(set = INDEX_VIEW_PARAMS, binding = 2)
-Texture2D depthTextureVS;
+    Texture2D depthTextureVS;
 
-layout(set = INDEX_VIEW_PARAMS, binding = 3)
-globallycoherent RWShaderBuffer<uint> oLightIndexCounter;
-layout(set = INDEX_VIEW_PARAMS, binding = 4)
-globallycoherent RWShaderBuffer<uint> tLightIndexCounter;
+    globallycoherent RWStructuredBuffer<uint> oLightIndexCounter;
+    globallycoherent RWStructuredBuffer<uint> tLightIndexCounter;
 
-layout(set = INDEX_VIEW_PARAMS, binding = 5)
-RWShaderBuffer<uint> oLightIndexList;
-layout(set = INDEX_VIEW_PARAMS, binding = 6)
-RWShaderBuffer<uint> tLightIndexList;
+    RWStructuredBuffer<uint> oLightIndexList;
+    RWStructuredBuffer<uint> tLightIndexList;
 
-layout(set = INDEX_VIEW_PARAMS, binding = 7)
-RWTexture2D<uint2> oLightGrid;
-layout(set = INDEX_VIEW_PARAMS, binding = 8)
-RWTexture2D<uint2> tLightGrid;
+    RWTexture2D<uint2> oLightGrid;
+    RWTexture2D<uint2> tLightGrid;
 
-layout(set = INDEX_VIEW_PARAMS, binding = 9)
-ShaderBuffer<Frustum> frustums;
+    StructuredBuffer<Frustum> frustums;
 
+};
+ParameterBlock<CullingParams> gCullingParams;
 // Debug
 //layout(set = INDEX_VIEW_PARAMS, binding = 10)
 //Texture2D lightCountHeatMap;
@@ -83,7 +75,7 @@ void tAppendLight(uint lightIndex)
 void cullLights(ComputeShaderInput in)
 {
     int2 texCoord = int2(in.dispatchThreadID.xy);
-    float fDepth = depthTextureVS.Load(int3(texCoord, 0)).r;
+    float fDepth = gCullingParams.depthTextureVS.Load(int3(texCoord, 0)).r;
 
     uint uDepth = asuint(fDepth);
     if(in.groupIndex == 0)
@@ -92,7 +84,7 @@ void cullLights(ComputeShaderInput in)
         uMaxDepth = 0x0;
         oLightCount = 0;
         tLightCount = 0;
-        groupFrustum = frustums[in.groupID.x + (in.groupID.y * numThreadGroups.x)];
+        groupFrustum = gCullingParams.frustums[in.groupID.x + (in.groupID.y * gCullingParams.numThreadGroups.x)];
     }
 
     GroupMemoryBarrierWithGroupSync();
@@ -111,9 +103,9 @@ void cullLights(ComputeShaderInput in)
 
     Plane minPlane = {float3(0, 0, -1), -minDepthVS};
 
-    for ( uint i = in.groupIndex; i < numPointLights; i += BLOCK_SIZE * BLOCK_SIZE )
+    for ( uint i = in.groupIndex; i < gLightEnv.numPointLights; i += BLOCK_SIZE * BLOCK_SIZE )
     {
-        PointLight light = pointLights[i];
+        PointLight light = gLightEnv.pointLights[i];
         //TODO: why doesn't this check go through?
         //if(light.insideFrustum(groupFrustum, nearClipVS, maxDepthVS))
         {
@@ -129,23 +121,23 @@ void cullLights(ComputeShaderInput in)
 
     if(in.groupIndex == 0)
     {
-        InterlockedAdd(oLightIndexCounter[0], oLightCount, oLightIndexStartOffset);
-        oLightGrid[in.groupID.xy] = uint2(oLightIndexStartOffset, oLightCount);
+        InterlockedAdd(gCullingParams.oLightIndexCounter[0], oLightCount, oLightIndexStartOffset);
+        gCullingParams.oLightGrid[in.groupID.xy] = uint2(oLightIndexStartOffset, oLightCount);
 
-        InterlockedAdd(tLightIndexCounter[0], tLightCount, tLightIndexStartOffset);
-        tLightGrid[in.groupID.xy] = uint2(tLightIndexStartOffset, tLightCount);
+        InterlockedAdd(gCullingParams.tLightIndexCounter[0], tLightCount, tLightIndexStartOffset);
+        gCullingParams.tLightGrid[in.groupID.xy] = uint2(tLightIndexStartOffset, tLightCount);
     }
     GroupMemoryBarrierWithGroupSync();
 
     for (uint j = in.groupIndex; j < oLightCount; j += BLOCK_SIZE * BLOCK_SIZE)
     {
-        oLightIndexList[oLightIndexStartOffset + j] = oLightList[j];
+        gCullingParams.oLightIndexList[oLightIndexStartOffset + j] = oLightList[j];
     }
     
     // For transparent geometry.
     for ( uint k = in.groupIndex; k < tLightCount; k += BLOCK_SIZE * BLOCK_SIZE )
     {
-        tLightIndexList[tLightIndexStartOffset + k] = tLightList[k];
+        gCullingParams.tLightIndexList[tLightIndexStartOffset + k] = tLightList[k];
     }
 
     

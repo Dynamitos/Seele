@@ -2,11 +2,13 @@ import VertexData;
 
 struct MaterialParameter
 {
+float3 position_TS;
 	float3 worldPosition;
 	float2 texCoords;
 	float3 normal;
 	float3 tangent;
 	float3 biTangent;
+	float3 viewDir_TS;
 
 	static MaterialParameter create(VertexAttributes attrib)
 	{

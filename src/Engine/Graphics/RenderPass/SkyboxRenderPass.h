@@ -1,6 +1,6 @@
 #pragma once
 #include "RenderPass.h"
-#include "Graphics/GraphicsResources.h"
+#include "Graphics/Resources.h"
 #include "Component/Skybox.h"
 
 namespace Seele
@@ -11,7 +11,7 @@ DECLARE_REF(Viewport)
 class SkyboxRenderPass : public RenderPass
 {
 public:
-    SkyboxRenderPass(Gfx::PGraphics graphics);
+    SkyboxRenderPass(Gfx::PGraphics graphics, PScene scene);
     virtual ~SkyboxRenderPass();
     virtual void beginFrame(const Component::Camera& cam) override;
     virtual void render() override;
@@ -26,6 +26,7 @@ private:
     Gfx::PPipelineLayout pipelineLayout;
     Gfx::PGraphicsPipeline pipeline;
     Gfx::PSamplerState skyboxSampler;
+    Component::Skybox skybox;
 };
 DEFINE_REF(SkyboxRenderPass)
 } // namespace Seele

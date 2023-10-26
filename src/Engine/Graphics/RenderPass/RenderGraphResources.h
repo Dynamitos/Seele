@@ -1,6 +1,8 @@
 #pragma once
 #include "MinimalEngine.h"
-#include "Graphics/GraphicsResources.h"
+#include "Graphics/RenderTarget.h"
+#include "Graphics/Texture.h"
+#include "Graphics/Buffer.h"
 
 namespace Seele
 {

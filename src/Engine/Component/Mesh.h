@@ -1,7 +1,6 @@
 #pragma once
 #include "Asset/MeshAsset.h"
 #include "Graphics/VertexData.h"
-#include "Graphics/TopologyData.h"
 #include "Material/MaterialInstance.h"
 
 namespace Seele

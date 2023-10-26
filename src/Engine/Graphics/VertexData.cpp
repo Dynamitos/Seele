@@ -1,6 +1,8 @@
 #include "VertexData.h"
 #include "Material/Material.h"
 #include "Graphics/Graphics.h"
+#include "Graphics/Descriptor.h"
+#include "Component/Mesh.h"
 
 using namespace Seele;
 

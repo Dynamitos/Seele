@@ -1,8 +1,9 @@
 #include "ShaderExpression.h"
-#include "Graphics/GraphicsResources.h"
+#include "Graphics/Resources.h"
 #include "Asset/TextureAsset.h"
 #include "Asset/AssetRegistry.h"
 #include "Graphics/Graphics.h"
+#include "Graphics/Descriptor.h"
 
 using namespace Seele;
 

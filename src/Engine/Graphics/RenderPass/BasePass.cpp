@@ -7,6 +7,7 @@
 #include "Math/Vector.h"
 #include "RenderGraph.h"
 #include "Material/MaterialInstance.h"
+#include "Graphics/Descriptor.h"
 
 using namespace Seele;
 
@@ -57,14 +58,6 @@ BasePass::BasePass(Gfx::PGraphics graphics, PScene scene)
 
 BasePass::~BasePass()
 {
-}
-
-void BasePass::readScene()
-{
-    Array<InstanceData> instances;
-    scene->view<Component::Transform, Component::Mesh>([]
-        (const Component::Transform& transform, const Component::Mesh& mesh) {
-    });
 }
 
 void BasePass::beginFrame(const Component::Camera& cam) 

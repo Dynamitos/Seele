@@ -4,8 +4,8 @@
 
 using namespace Seele;
 
-MaterialInstance::MaterialInstance(uint64 id, Gfx::PGraphics graphics, PMaterial baseMaterial, Gfx::PDescriptorSet descriptor, Array<PShaderParameter> params, uint32 uniformBinding, uint32 uniformSize)
-    : id(id), graphics(graphics), baseMaterial(baseMaterial), descriptor(descriptor), parameters(params), uniformBinding(uniformBinding)
+MaterialInstance::MaterialInstance(uint64 id, Gfx::PGraphics graphics, PMaterial baseMaterial, Gfx::PDescriptorLayout descriptor, Array<PShaderParameter> params, uint32 uniformBinding, uint32 uniformSize)
+    : id(id), graphics(graphics), baseMaterial(baseMaterial), layout(layout), parameters(params), uniformBinding(uniformBinding)
 {
     uniformBuffer = graphics->createUniformBuffer(UniformBufferCreateInfo{
             .resourceData = {
@@ -20,4 +20,8 @@ MaterialInstance::MaterialInstance(uint64 id, Gfx::PGraphics graphics, PMaterial
 MaterialInstance::~MaterialInstance()
 {
     
+}
+
+void Seele::MaterialInstance::updateDescriptor()
+{
 }

@@ -1,5 +1,4 @@
 #pragma once
-#include "GraphicsResources.h"
 #include "Asset/MaterialInstanceAsset.h"
 #include "VertexData.h"
 

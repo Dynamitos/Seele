@@ -310,6 +310,20 @@ public:
         }
         return end();
     }
+
+    template<class Pred>
+    requires std::predicate<Pred, value_type>
+    constexpr iterator find(Pred pred) noexcept
+    {
+        for (size_type i = 0; i < arraySize; ++i)
+        {
+            if (pred(_data[i]))
+            {
+                return const_iterator(&_data[i]);
+            }
+        }
+        return end();
+    }
     constexpr allocator_type get_allocator() const noexcept
     {
         return allocator;

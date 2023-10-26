@@ -1,7 +1,7 @@
 #include "Scene.h"
 #include "Graphics/Graphics.h"
 #include "Graphics/Mesh.h"
-#include "Component/StaticMesh.h"
+#include "Component/Mesh.h"
 #include "Component/Transform.h"
 #include "Asset/AssetRegistry.h"
 #include "Asset/TextureAsset.h"
@@ -80,15 +80,4 @@ LightEnv Scene::getLightBuffer()
         .data = (uint8*)&numPointLights,
     });
     return lightEnv;
-}
-
-
-Component::Skybox Scene::getSkybox()
-{
-    return Seele::Component::Skybox {
-        .day = AssetRegistry::findTexture("FS000_Day_01")->getTexture().cast<Gfx::TextureCube>(),
-        .night = AssetRegistry::findTexture("FS000_Night_01")->getTexture().cast<Gfx::TextureCube>(),
-        .fogColor = Vector(0.2, 0.1, 0.6),
-        .blendFactor = 0,
-    };
 }

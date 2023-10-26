@@ -10,7 +10,6 @@ class BasePass : public RenderPass
 public:
     BasePass(Gfx::PGraphics graphics, PScene scene);
     virtual ~BasePass();
-    virtual void readScene() override;
     virtual void beginFrame(const Component::Camera& cam) override;
     virtual void render() override;
     virtual void endFrame() override;

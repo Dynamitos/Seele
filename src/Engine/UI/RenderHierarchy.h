@@ -1,7 +1,8 @@
 #pragma once
 #include "Elements/Element.h"
 #include "Containers/List.h"
-#include "Graphics/GraphicsResources.h"
+#include "Graphics/Resources.h"
+#include "Graphics/Texture.h"
 
 namespace Seele
 {

@@ -1,5 +1,6 @@
 #include "DebugPass.h"
 #include "Graphics/Graphics.h"
+#include "Graphics/RenderTarget.h"
 
 using namespace Seele;
 

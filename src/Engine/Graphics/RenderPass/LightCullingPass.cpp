@@ -7,8 +7,8 @@
 
 using namespace Seele;
 
-LightCullingPass::LightCullingPass(Gfx::PGraphics graphics)
-    : RenderPass(graphics)
+LightCullingPass::LightCullingPass(Gfx::PGraphics graphics, PScene scene)
+    : RenderPass(graphics, scene)
 {
 }
 
@@ -153,7 +153,7 @@ void LightCullingPass::publishOutputs()
     createInfo.defines["NUM_MATERIAL_TEXCOORDS"] = "0";
     cullingShader = graphics->createComputeShader(createInfo);
 
-    ComputePipelineCreateInfo pipelineInfo;
+    Gfx::ComputePipelineCreateInfo pipelineInfo;
     pipelineInfo.computeShader = cullingShader;
     pipelineInfo.pipelineLayout = cullingLayout;
     cullingPipeline = graphics->createComputePipeline(pipelineInfo);
@@ -243,7 +243,7 @@ void LightCullingPass::setupFrustums()
     createInfo.defines["INDEX_VIEW_PARAMS"] = "0";
     frustumShader = graphics->createComputeShader(createInfo);
 
-    ComputePipelineCreateInfo pipelineInfo;
+    Gfx::ComputePipelineCreateInfo pipelineInfo;
     pipelineInfo.computeShader = frustumShader;
     pipelineInfo.pipelineLayout = frustumLayout;
     frustumPipeline = graphics->createComputePipeline(pipelineInfo);

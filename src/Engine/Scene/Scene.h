@@ -2,25 +2,14 @@
 #include <entt/entt.hpp>
 #include "MinimalEngine.h"
 #include "Graphics/Graphics.h"
-#include "Graphics/MeshBatch.h"
 #include "Physics/PhysicsSystem.h"
 #include "Component/Skybox.h"
+#include "LightEnvironment.h"
 
 namespace Seele
 {
 DECLARE_REF(Material)
 DECLARE_REF(Entity)
-
-#define MAX_DIRECTIONAL_LIGHTS 4
-#define MAX_POINT_LIGHTS 256
-struct LightEnv
-{
-    Gfx::PShaderBuffer directionalLights;
-    Gfx::PUniformBuffer numDirectional;
-    Gfx::PShaderBuffer pointLights;
-    Gfx::PUniformBuffer numPoints;
-};
-
 class Scene
 {
 public:
@@ -55,12 +44,11 @@ public:
     {
         registry.view<Component...>().each(func);
     }
-    LightEnv getLightBuffer();
-    Component::Skybox getSkybox();
+    PLightEnvironment getLightEnvironment() { return lightEnv; }
     Gfx::PGraphics getGraphics() const { return graphics; }
     entt::registry registry;
 private:
-    LightEnv lightEnv;
+    PLightEnvironment lightEnv;
     PhysicsSystem physics;
     Gfx::PGraphics graphics;
 };

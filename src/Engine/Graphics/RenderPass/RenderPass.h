@@ -3,7 +3,6 @@
 #include "Math/Math.h"
 #include "RenderGraphResources.h"
 #include "Component/Camera.h"
-#include "Graphics/TopologyData.h"
 #include "Scene/Scene.h"
 #include "Material/MaterialInstance.h"
 #include "Graphics/VertexData.h"
@@ -42,19 +41,6 @@ protected:
         Vector2 screenDimensions;
         Vector2 pad0;
     } viewParams;
-    struct DrawListId
-    {
-        DrawListId(PMaterialInstance mat, PVertexData vertex)
-        {
-            id = mat->getBaseMaterial()->getName();
-        }
-        std::strong_ordering operator<=>(const DrawListId& other) const
-        {
-            return id <=> other.id;
-        }
-        std::string id;
-    };
-    Map<DrawListId, DrawListInfo> drawList;
     PRenderGraphResources resources;
     Gfx::PRenderPass renderPass;
     Gfx::PGraphics graphics;

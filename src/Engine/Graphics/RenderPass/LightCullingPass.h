@@ -1,6 +1,6 @@
 #pragma once
 #include "RenderPass.h"
-#include "Graphics/GraphicsResources.h"
+#include "Graphics/Resources.h"
 #include "Scene/Scene.h"
 
 namespace Seele
@@ -8,14 +8,10 @@ namespace Seele
 DECLARE_REF(CameraActor)
 DECLARE_REF(Scene)
 DECLARE_REF(Viewport)
-struct LightCullingPassData
-{
-    LightEnv lightEnv;
-};
 class LightCullingPass : public RenderPass
 {
 public:
-    LightCullingPass(Gfx::PGraphics graphics);
+    LightCullingPass(Gfx::PGraphics graphics, PScene scene);
     virtual ~LightCullingPass();
     virtual void beginFrame(const Component::Camera& cam) override;
     virtual void render() override;

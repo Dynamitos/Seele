@@ -1,5 +1,5 @@
 #pragma once
-#include "Graphics/GraphicsResources.h"
+#include "Graphics/Texture.h"
 
 namespace Seele
 {

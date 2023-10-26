@@ -1,13 +1,31 @@
 #pragma once
 #include "MinimalEngine.h"
-#include "GraphicsResources.h"
+#include "Resources.h"
 #include "Containers/Array.h"
-#include "ShaderCompiler.h"
 
 namespace Seele
 {
 namespace Gfx
 {
+DECLARE_REF(Window)
+DECLARE_REF(Viewport)
+DECLARE_REF(RenderTargetLayout)
+DECLARE_REF(ShaderCompiler)
+DECLARE_REF(Texture)
+DECLARE_REF(Texture2D)
+DECLARE_REF(Texture3D)
+DECLARE_REF(TextureCube)
+DECLARE_REF(DescriptorLayout)
+DECLARE_REF(VertexShader)
+DECLARE_REF(FragmentShader)
+DECLARE_REF(ComputeShader)
+DECLARE_REF(TaskShader)
+DECLARE_REF(MeshShader)
+DECLARE_REF(ShaderBuffer)
+DECLARE_REF(VertexBuffer)
+DECLARE_REF(IndexBuffer)
+DECLARE_REF(UniformBuffer)
+DECLARE_REF(PipelineLayout)
 class Graphics
 {
 public:
@@ -46,12 +64,12 @@ public:
     virtual PComputeCommand createComputeCommand(const std::string& name = "") = 0;
     virtual PVertexDeclaration createVertexDeclaration(const Array<VertexElement>& element) = 0;
     virtual PVertexShader createVertexShader(const ShaderCreateInfo& createInfo) = 0;
-    virtual PControlShader createControlShader(const ShaderCreateInfo& createInfo) = 0;
-    virtual PEvaluationShader createEvaluationShader(const ShaderCreateInfo& createInfo) = 0;
-    virtual PGeometryShader createGeometryShader(const ShaderCreateInfo& createInfo) = 0;
     virtual PFragmentShader createFragmentShader(const ShaderCreateInfo& createInfo) = 0;
     virtual PComputeShader createComputeShader(const ShaderCreateInfo& createInfo) = 0;
-    virtual PGraphicsPipeline createGraphicsPipeline(const GraphicsPipelineCreateInfo& createInfo) = 0;
+    virtual PMeshShader createMeshShader(const ShaderCreateInfo& createInfo) = 0;
+    virtual PTaskShader createTaskShader(const ShaderCreateInfo& createInfo) = 0;
+    virtual PGraphicsPipeline createGraphicsPipeline(const LegacyPipelineCreateInfo& createInfo) = 0;
+    virtual PGraphicsPipeline createGraphicsPipeline(const MeshPipelineCreateInfo& createInfo) = 0;
     virtual PComputePipeline createComputePipeline(const ComputePipelineCreateInfo& createInfo) = 0;
     virtual PSamplerState createSamplerState(const SamplerCreateInfo& createInfo) = 0;
 

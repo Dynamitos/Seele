@@ -1,33 +1,47 @@
 target_sources(Engine
     PRIVATE
+        Buffer.h
+        Buffer.cpp
         DebugVertex.h
-        GraphicsResources.h
-        GraphicsResources.cpp
-        GraphicsInitializer.h
-        GraphicsEnums.h
-        GraphicsEnums.cpp
+        Descriptor.h
+        Descriptor.cpp
+        Enums.h
+        Enums.cpp
         Graphics.h
         Graphics.cpp
+        Initializer.h
         Mesh.h
         Mesh.cpp
+        RenderTarget.h
+        RenderTarget.cpp
+        Resources.h
+        Resources.cpp
+        Shader.h
+        Shader.cpp
         ShaderCompiler.h
         ShaderCompiler.cpp
         StaticMeshVertexData.h
         StaticMeshVertexData.cpp
+        Texture.h
+        Texture.cpp
         VertexData.h
         VertexData.cpp)
 
 target_sources(Engine
     PUBLIC FILE_SET HEADERS
         FILES
+            Buffer.h
             DebugVertex.h
-            GraphicsResources.h
-            GraphicsInitializer.h
-            GraphicsEnums.h
+            Descriptor.h
             Graphics.h
+            Initializer.h
             Mesh.h
+            RenderTarget.h
+            Resources.h
+            Shader.h
             ShaderCompiler.h
             StaticMeshVertexData.h
+            Texture.h
             VertexData.h)
 
 add_subdirectory(RenderPass/)

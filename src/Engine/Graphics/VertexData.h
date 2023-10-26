@@ -1,11 +1,17 @@
 #pragma once
-#include "GraphicsResources.h"
 #include "Material/MaterialInstance.h"
-#include "Component/Mesh.h"
 #include "Component/Transform.h"
+#include "Containers/List.h"
+#include "Graphics/Resources.h"
+#include "Graphics/Descriptor.h"
+#include "Graphics/Buffer.h"
 
 namespace Seele
 {
+namespace Component
+{
+    struct Mesh;
+}
 struct MeshId
 {
     uint64 id;

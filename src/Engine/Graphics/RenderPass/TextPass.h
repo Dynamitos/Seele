@@ -1,7 +1,7 @@
 #pragma once
 #include "RenderPass.h"
 #include "UI/RenderHierarchy.h"
-#include "Graphics/GraphicsResources.h"
+#include "Graphics/Resources.h"
 #include "Asset/FontAsset.h"
 
 namespace Seele
@@ -20,7 +20,7 @@ struct TextRender
 class TextPass : public RenderPass
 {
 public:
-    TextPass(Gfx::PGraphics graphics);
+    TextPass(Gfx::PGraphics graphics, PScene scene);
     virtual ~TextPass();
     virtual void beginFrame(const Component::Camera& cam) override;
     virtual void render() override;
@@ -60,7 +60,7 @@ private:
         Gfx::PDescriptorSet textureArraySet;
         TextData textData;
     };
-    std::map<PFontAsset, Array<TextResources>> textResources;
+    Map<PFontAsset, Array<TextResources>> textResources;
 
     Gfx::PRenderTargetAttachment renderTarget;
     Gfx::PRenderTargetAttachment depthAttachment;
@@ -78,6 +78,7 @@ private:
     Gfx::PFragmentShader fragmentShader;
     Gfx::PPipelineLayout pipelineLayout;
     Gfx::PGraphicsPipeline pipeline;
+    Array<TextRender> texts;
 };
 DEFINE_REF(TextPass);
 } // namespace Seele

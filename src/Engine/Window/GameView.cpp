@@ -12,9 +12,9 @@ GameView::GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreate
     , gameInterface(dllPath)
     , renderGraph(RenderGraphBuilder::build(
         DepthPrepass(graphics, scene),
-        LightCullingPass(graphics),
+        LightCullingPass(graphics, scene),
         BasePass(graphics, scene),
-        SkyboxRenderPass(graphics)
+        SkyboxRenderPass(graphics, scene)
     ))
 {
     reloadGame();

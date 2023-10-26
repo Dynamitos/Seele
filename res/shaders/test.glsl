@@ -1,73 +1,114 @@
 #version 450
-#extension GL_EXT_mesh_shader : require
-#extension GL_EXT_shader_8bit_storage : require
-#extension GL_EXT_shader_explicit_arithmetic_types : require
+#extension GL_EXT_samplerless_texture_functions : require
 layout(row_major) uniform;
 layout(row_major) buffer;
 
-#line 1 0
-struct InstanceData_0
+#line 11 0
+struct CullingParams_0
 {
-    mat4x4 transformMatrix_0;
+    uvec3 numThreadGroups_0;
+    uint pad0_0;
+    uvec3 numThreads_0;
+    uint pad1_0;
 };
 
 
-#line 45 1
-layout(std430, binding = 0, set = 2) readonly buffer StructuredBuffer_InstanceData_t_0 {
-    InstanceData_0 _data[];
-} scene_instances_0;
-
-#line 1 2
-struct MeshletDescription_0
+#line 35 1
+layout(binding = 0, set = 1)
+layout(std140) uniform _S1
 {
-    uint vertexCount_0;
-    uint primitiveCount_0;
-    uint vertexOffset_0;
-    uint primitiveOffset_0;
-};
+    uvec3 numThreadGroups_0;
+    uint pad0_0;
+    uvec3 numThreads_0;
+    uint pad1_0;
+}gCullingParams_0;
+
+#line 2113 2
+layout(binding = 1, set = 1)
+uniform texture2D gCullingParams_depthTextureVS_0;
 
 
-#line 46 1
-layout(std430, binding = 0, set = 1) readonly buffer StructuredBuffer_MeshletDescription_t_0 {
-    MeshletDescription_0 _data[];
-} meshlets_meshletInfos_0;
-
-#line 9 2
-layout(std430, binding = 1, set = 1) readonly buffer StructuredBuffer_uint8_t_0 {
-    uint8_t _data[];
-} meshlets_primitiveIndices_0;
-
-#line 9
-layout(std430, binding = 2, set = 1) readonly buffer StructuredBuffer_uint_t_0 {
+#line 11 0
+layout(std430, binding = 2, set = 1) buffer StructuredBuffer_uint_t_0 {
     uint _data[];
-} meshlets_vertexIndices_0;
+} gCullingParams_oLightIndexCounter_0;
 
-#line 35 3
-layout(std430, binding = 0, set = 3) readonly buffer StructuredBuffer_float3_t_0 {
-    vec3 _data[];
-} vertexData_positions_0;
+#line 11
+layout(std430, binding = 3, set = 1) buffer StructuredBuffer_uint_t_1 {
+    uint _data[];
+} gCullingParams_tLightIndexCounter_0;
 
-#line 35
-layout(std430, binding = 1, set = 3) readonly buffer StructuredBuffer_float2_t_0 {
-    vec2 _data[];
-} vertexData_texCoords_0;
+#line 11
+layout(std430, binding = 4, set = 1) buffer StructuredBuffer_uint_t_2 {
+    uint _data[];
+} gCullingParams_oLightIndexList_0;
 
-#line 35
-layout(std430, binding = 2, set = 3) readonly buffer StructuredBuffer_float3_t_1 {
-    vec3 _data[];
-} vertexData_normals_0;
+#line 11
+layout(std430, binding = 5, set = 1) buffer StructuredBuffer_uint_t_3 {
+    uint _data[];
+} gCullingParams_tLightIndexList_0;
 
-#line 35
-layout(std430, binding = 3, set = 3) readonly buffer StructuredBuffer_float3_t_2 {
-    vec3 _data[];
-} vertexData_tangents_0;
+#line 1572 2
+layout(rg32ui)
+layout(binding = 6, set = 1)
+uniform uimage2D gCullingParams_oLightGrid_0;
 
-#line 35
-layout(std430, binding = 4, set = 3) readonly buffer StructuredBuffer_float3_t_3 {
-    vec3 _data[];
-} vertexData_biTangents_0;
 
-#line 5 4
+#line 1572
+layout(rg32ui)
+layout(binding = 7, set = 1)
+uniform uimage2D gCullingParams_tLightGrid_0;
+
+
+#line 26 1
+struct Plane_0
+{
+    vec3 n_0;
+    float d_0;
+};
+
+struct Frustum_0
+{
+    Plane_0  sides_0[4];
+    Plane_0 basePlane_0;
+};
+
+
+#line 11 0
+layout(std430, binding = 8, set = 1) readonly buffer StructuredBuffer_Frustum_t_0 {
+    Frustum_0 _data[];
+} gCullingParams_frustums_0;
+
+#line 64 3
+struct LightEnv_0
+{
+    uint numDirectionalLights_0;
+    uint numPointLights_0;
+};
+
+
+#line 25
+layout(binding = 0, set = 2)
+layout(std140) uniform _S2
+{
+    uint numDirectionalLights_0;
+    uint numPointLights_0;
+}gLightEnv_0;
+
+#line 22
+struct PointLight_0
+{
+    vec4 position_WS_0;
+    vec4 colorRange_0;
+};
+
+
+#line 64
+layout(std430, binding = 2, set = 2) readonly buffer StructuredBuffer_PointLight_t_0 {
+    PointLight_0 _data[];
+} gLightEnv_pointLights_0;
+
+#line 5 1
 struct ViewParameter_0
 {
     mat4x4 viewMatrix_0;
@@ -77,7 +118,7 @@ struct ViewParameter_0
 };
 
 layout(binding = 0)
-layout(std140) uniform _S1
+layout(std140) uniform _S3
 {
     mat4x4 viewMatrix_0;
     mat4x4 projectionMatrix_0;
@@ -85,264 +126,257 @@ layout(std140) uniform _S1
     vec2 screenDimensions_0;
 }viewParams_0;
 
-#line 1267 5
-out gl_MeshPerVertexEXT
+#line 39 0
+shared uint uMinDepth_0;
+
+
+#line 40
+shared uint uMaxDepth_0;
+
+
+
+shared uint oLightCount_0;
+
+
+
+shared uint tLightCount_0;
+
+
+#line 42
+shared Frustum_0 groupFrustum_0;
+
+
+#line 50
+shared uint  tLightList_0[1024];
+
+
+#line 63
+void tAppendLight_0(uint lightIndex_0)
 {
-    vec4 gl_Position;
-} gl_MeshVerticesEXT[64];
+    uint index_0;
+    ((index_0) = atomicAdd((tLightCount_0), (1U)));
+    if(index_0 < 1024U)
+    {
+        tLightList_0[index_0] = lightIndex_0;
+
+#line 67
+    }
 
 
-#line 24 1
-shared uint gs_numVertices_0;
 
-
-#line 5 3
-struct StaticMeshVertexAttributes_0
-{
-    vec4 clipPosition_0;
-    vec3 worldPosition_0;
-    vec2 texCoords_0;
-    vec3 normal_0;
-    vec3 tangent_0;
-    vec3 biTangent_0;
-};
-
-
-#line 22 1
-shared StaticMeshVertexAttributes_0  gs_vertices_0[64];
-
-
-shared uint gs_numPrimitives_0;
-
-
-#line 23
-shared uvec3  gs_indices_0[126];
-
-
-#line 7910 6
-layout(location = 0)
-out vec3  _S2[64];
-
-
-#line 7910
-layout(location = 1)
-out vec2  _S3[64];
-
-
-#line 7910
-layout(location = 2)
-out vec3  _S4[64];
-
-
-#line 7910
-layout(location = 3)
-out vec3  _S5[64];
-
-
-#line 7910
-layout(location = 4)
-out vec3  _S6[64];
-
-
-#line 7910
-out uvec3  gl_PrimitiveTriangleIndicesEXT[126];
-
-
-#line 900 7
-StaticMeshVertexAttributes_0 StaticMeshVertexData_getAttributes_0(uint _S7, InstanceData_0 _S8)
-{
-
-#line 41 3
-    vec4 worldPos_0 = (((vec4(vertexData_positions_0._data[_S7], 1.0)) * (_S8.transformMatrix_0)));
-
-#line 39
-    StaticMeshVertexAttributes_0 attr_0;
-
-#line 44
-    attr_0.clipPosition_0 = ((((((worldPos_0) * (viewParams_0.viewMatrix_0)))) * (viewParams_0.projectionMatrix_0)));
-    attr_0.worldPosition_0 = worldPos_0.xyz;
-    attr_0.texCoords_0 = vertexData_texCoords_0._data[_S7];
-    attr_0.normal_0 = vertexData_normals_0._data[_S7];
-    attr_0.tangent_0 = vertexData_tangents_0._data[_S7];
-    attr_0.biTangent_0 = vertexData_biTangents_0._data[_S7];
-    return attr_0;
+    return;
 }
 
 
-#line 39 1
-layout(local_size_x = 32, local_size_y = 1, local_size_z = 1) in;
-layout(max_vertices = 64) out;
-layout(max_primitives = 126) out;
-layout(triangles) out;
+#line 58 3
+vec3 PointLight_getViewPos_0(PointLight_0 this_0)
+{
+    return (((this_0.position_WS_0) * (viewParams_0.viewMatrix_0))).xyz;
+}
+
+
+#line 36
+bool PointLight_insidePlane_0(PointLight_0 this_1, Plane_0 plane_0)
+{
+    return dot(plane_0.n_0, PointLight_getViewPos_0(this_1).xyz) - plane_0.d_0 < - this_1.colorRange_0.w;
+}
+
+
+#line 46 0
+shared uint  oLightList_0[1024];
+
+
+#line 53
+void oAppendLight_0(uint lightIndex_1)
+{
+    uint index_1;
+    ((index_1) = atomicAdd((oLightCount_0), (1U)));
+    if(index_1 < 1024U)
+    {
+        oLightList_0[index_1] = lightIndex_1;
+
+#line 57
+    }
+
+
+
+    return;
+}
+
+
+#line 45
+shared uint oLightIndexStartOffset_0;
+
+
+
+shared uint tLightIndexStartOffset_0;
+
+
+#line 75
+layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 void main()
 {
-    InstanceData_0 _S9 = scene_instances_0._data[gl_LocalInvocationIndex];
-    MeshletDescription_0 m_0 = meshlets_meshletInfos_0._data[gl_WorkGroupID.x];
+    ivec3 _S4 = ivec3(ivec2(gl_GlobalInvocationID.xy), 0);
 
-#line 51
-    uint _S10 = m_0.vertexCount_0 - 1U;
+    uint uDepth_0 = floatBitsToUint((texelFetch((gCullingParams_depthTextureVS_0), ((_S4)).xy, ((_S4)).z)).x);
+    bool _S5 = gl_LocalInvocationIndex == 0U;
 
-#line 63
-    uint _S11 = m_0.primitiveCount_0 - 1U;
+#line 81
+    if(_S5)
+    {
+        uMinDepth_0 = 4294967295U;
+        uMaxDepth_0 = 0U;
+        oLightCount_0 = 0U;
+        tLightCount_0 = 0U;
+        groupFrustum_0 = gCullingParams_frustums_0._data[gl_WorkGroupID.x + gl_WorkGroupID.y * gCullingParams_0.numThreadGroups_0.x];
 
-#line 82
-    uint v_0 = min(gl_LocalInvocationIndex, _S10);
+#line 81
+    }
 
+#line 90
+    barrier();
 
+    atomicMin((uMinDepth_0), (uDepth_0));
+    atomicMax((uMaxDepth_0), (uDepth_0));
 
-    uint v_1 = gl_LocalInvocationIndex + 32U;
-    uint v_2 = min(v_1, _S10);
-
-#line 92
-    uint p_0 = min(gl_LocalInvocationIndex, _S11);
-
-#line 98
-    uint p_1 = min(v_1, _S11);
+    barrier();
 
 #line 104
-    uint p_2 = min(gl_LocalInvocationIndex + 64U, _S11);
+    Plane_0 _S6 = { vec3(0.0, 0.0, -1.0), - uintBitsToFloat(uMinDepth_0) };
 
-#line 110
-    uint p_3 = min(gl_LocalInvocationIndex + 96U, _S11);
+#line 125
+    uvec2 _S7 = gl_WorkGroupID.xy;
 
-#line 110
-    uint loop_0 = 0U;
+#line 125
+    uint i_0 = gl_LocalInvocationIndex;
 
-#line 110
+#line 125
     for(;;)
     {
 
-#line 51
-        uint v_3 = min(gl_LocalInvocationIndex + loop_0 * 32U, _S10);
-        atomicMax((gs_numVertices_0), (v_3 + 1U));
-
-
-        gs_vertices_0[v_3] = StaticMeshVertexData_getAttributes_0(uint(int(meshlets_vertexIndices_0._data[m_0.vertexOffset_0 + v_3])), _S9);
-
-#line 48
-        uint loop_1 = loop_0 + 1U;
-
-#line 48
-        if(loop_1 < 2U)
+#line 106
+        if(i_0 < gLightEnv_0.numPointLights_0)
         {
         }
         else
         {
 
-#line 48
+#line 106
             break;
         }
+        PointLight_0 light_0 = gLightEnv_pointLights_0._data[i_0];
 
-#line 48
-        loop_0 = loop_1;
 
-#line 48
+
+        tAppendLight_0(i_0);
+        if(!PointLight_insidePlane_0(light_0, _S6))
+        {
+            oAppendLight_0(i_0);
+
+#line 113
+        }
+
+#line 106
+        i_0 = i_0 + 1024U;
+
+#line 106
     }
 
-#line 48
-    loop_0 = 0U;
+#line 120
+    barrier();
 
-#line 48
-    for(;;)
+    if(_S5)
+    {
+        ((oLightIndexStartOffset_0) = atomicAdd((gCullingParams_oLightIndexCounter_0._data[0U]), (oLightCount_0)));
+        imageStore((gCullingParams_oLightGrid_0), ivec2((_S7)), uvec4(uvec2(oLightIndexStartOffset_0, oLightCount_0), uint(0), uint(0)));
+
+        ((tLightIndexStartOffset_0) = atomicAdd((gCullingParams_tLightIndexCounter_0._data[0U]), (tLightCount_0)));
+        imageStore((gCullingParams_tLightGrid_0), ivec2((_S7)), uvec4(uvec2(tLightIndexStartOffset_0, tLightCount_0), uint(0), uint(0)));
+
+#line 122
+    }
+
+#line 130
+    barrier();
+
+#line 130
+    uint k_0;
+
+#line 130
+    if(gl_LocalInvocationIndex < oLightCount_0)
     {
 
-#line 63
-        uint p_4 = min(gl_LocalInvocationIndex + loop_0 * 32U, _S11);
-        atomicMax((gs_numPrimitives_0), (p_4 + 1U));
+#line 130
+        k_0 = gl_LocalInvocationIndex;
 
-        uint _S12 = p_4 * 3U;
-
-#line 66
-        uint _S13 = m_0.primitiveOffset_0 + _S12;
-
-
-
-        uint idx1_0 = meshlets_vertexIndices_0._data[m_0.vertexOffset_0 + uint(meshlets_primitiveIndices_0._data[_S13 + 1U])];
-        uint idx2_0 = meshlets_vertexIndices_0._data[m_0.vertexOffset_0 + uint(meshlets_primitiveIndices_0._data[_S13 + 2U])];
-        gs_indices_0[_S12] = uvec3(meshlets_vertexIndices_0._data[m_0.vertexOffset_0 + uint(meshlets_primitiveIndices_0._data[_S13])]);
-        gs_indices_0[_S12 + 1U] = uvec3(idx1_0);
-        gs_indices_0[_S12 + 2U] = uvec3(idx2_0);
-
-#line 60
-        uint loop_2 = loop_0 + 1U;
-
-#line 60
-        if(loop_2 < 4U)
-        {
-        }
-        else
+#line 130
+        for(;;)
         {
 
-#line 60
-            break;
+
+            gCullingParams_oLightIndexList_0._data[oLightIndexStartOffset_0 + k_0] = oLightList_0[k_0];
+
+#line 132
+            uint j_0 = k_0 + 1024U;
+
+#line 132
+            if(j_0 < oLightCount_0)
+            {
+            }
+            else
+            {
+
+#line 132
+                break;
+            }
+
+#line 132
+            k_0 = j_0;
+
+#line 132
         }
 
-#line 60
-        loop_0 = loop_2;
-
-#line 60
+#line 132
     }
 
-#line 77
-    barrier();
-    SetMeshOutputsEXT(gs_numVertices_0, gs_numPrimitives_0);
-    barrier();
+#line 132
+    if(gl_LocalInvocationIndex < tLightCount_0)
+    {
 
+#line 132
+        k_0 = gl_LocalInvocationIndex;
 
+#line 132
+        for(;;)
+        {
 
-    StaticMeshVertexAttributes_0 _S14 = gs_vertices_0[v_0];
+#line 140
+            gCullingParams_tLightIndexList_0._data[tLightIndexStartOffset_0 + k_0] = tLightList_0[k_0];
 
-#line 83
-    gl_MeshVerticesEXT[v_0].gl_Position = gs_vertices_0[v_0].clipPosition_0;
+#line 138
+            uint k_1 = k_0 + 1024U;
 
-#line 83
-    _S2[v_0] = _S14.worldPosition_0;
+#line 138
+            if(k_1 < tLightCount_0)
+            {
+            }
+            else
+            {
 
-#line 83
-    _S3[v_0] = _S14.texCoords_0;
+#line 138
+                break;
+            }
 
-#line 83
-    _S4[v_0] = _S14.normal_0;
+#line 138
+            k_0 = k_1;
 
-#line 83
-    _S5[v_0] = _S14.tangent_0;
+#line 138
+        }
 
-#line 83
-    _S6[v_0] = _S14.biTangent_0;
+#line 138
+    }
 
-#line 88
-    StaticMeshVertexAttributes_0 _S15 = gs_vertices_0[v_2];
-
-#line 88
-    gl_MeshVerticesEXT[v_2].gl_Position = gs_vertices_0[v_2].clipPosition_0;
-
-#line 88
-    _S2[v_2] = _S15.worldPosition_0;
-
-#line 88
-    _S3[v_2] = _S15.texCoords_0;
-
-#line 88
-    _S4[v_2] = _S15.normal_0;
-
-#line 88
-    _S5[v_2] = _S15.tangent_0;
-
-#line 88
-    _S6[v_2] = _S15.biTangent_0;
-
-#line 93
-    gl_PrimitiveTriangleIndicesEXT[p_0] = gs_indices_0[p_0];
-
-#line 99
-    gl_PrimitiveTriangleIndicesEXT[p_1] = gs_indices_0[p_1];
-
-#line 105
-    gl_PrimitiveTriangleIndicesEXT[p_2] = gs_indices_0[p_2];
-
-#line 111
-    gl_PrimitiveTriangleIndicesEXT[p_3] = gs_indices_0[p_3];
-
+#line 144
     return;
 }
 

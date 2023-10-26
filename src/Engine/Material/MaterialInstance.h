@@ -1,12 +1,13 @@
 #pragma once
 #include "Material.h"
+#include "Graphics/Buffer.h"
 
 namespace Seele
 {
 class MaterialInstance
 {
 public:
-    MaterialInstance(uint64 id, Gfx::PGraphics graphics, PMaterial baseMaterial, Gfx::PDescriptorSet descriptor, Array<PShaderParameter> params, uint32 uniformBinding, uint32 uniformSize);
+    MaterialInstance(uint64 id, Gfx::PGraphics graphics, PMaterial baseMaterial, Gfx::PDescriptorLayout descriptor, Array<PShaderParameter> params, uint32 uniformBinding, uint32 uniformSize);
     ~MaterialInstance();
     void updateDescriptor();
     Gfx::PDescriptorSet getDescriptorSet() const;
@@ -18,6 +19,7 @@ private:
     uint32 uniformBinding;
     Gfx::PUniformBuffer uniformBuffer;
     Array<PShaderParameter> parameters;
+    Gfx::PDescriptorLayout layout;
     Gfx::PDescriptorSet descriptor;
     PMaterial baseMaterial;
     uint64 id;

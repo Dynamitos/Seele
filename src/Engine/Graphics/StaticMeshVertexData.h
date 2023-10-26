@@ -5,7 +5,7 @@ namespace Seele
 class StaticMeshVertexData : public VertexData
 {
 public:
-    StaticMeshVertexData();
+    StaticMeshVertexData(Gfx::PGraphics graphics);
     virtual ~StaticMeshVertexData();
 private:
 };

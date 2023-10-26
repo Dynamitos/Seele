@@ -1,21 +1,16 @@
 #pragma once
 #include "RenderPass.h"
 #include "UI/RenderHierarchy.h"
-#include "Graphics/GraphicsResources.h"
+#include "Graphics/Resources.h"
 
 namespace Seele
 {
 DECLARE_NAME_REF(Gfx, Texture2D)
 DECLARE_NAME_REF(Gfx, RenderTargetAttachment)
-struct UIPassData
-{
-    Array<UI::RenderElementStyle> renderElements;
-    Array<Gfx::PTexture> usedTextures;
-};
-class UIPass : public RenderPass<UIPassData>
+class UIPass : public RenderPass
 {
 public:
-    UIPass(Gfx::PGraphics graphics);
+    UIPass(Gfx::PGraphics graphics, PScene scene);
     virtual ~UIPass();
     virtual void beginFrame(const Component::Camera& cam) override;
     virtual void render() override;
@@ -39,6 +34,9 @@ private:
     Gfx::PFragmentShader fragmentShader;
     Gfx::PPipelineLayout pipelineLayout;
     Gfx::PGraphicsPipeline pipeline;
+
+    Array<UI::RenderElementStyle> renderElements;
+    Array<Gfx::PTexture> usedTextures;
 };
 DEFINE_REF(UIPass);
 } // namespace Seele

@@ -1,6 +1,6 @@
 #pragma once
-#include "Graphics/GraphicsResources.h"
 #include "View.h"
+#include "Graphics/RenderTarget.h"
 
 namespace Seele
 {

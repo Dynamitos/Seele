@@ -1,11 +1,18 @@
 #include "SkyboxRenderPass.h"
 #include "Graphics/Graphics.h"
+#include "Asset/AssetRegistry.h"
 
 using namespace Seele;
 
-SkyboxRenderPass::SkyboxRenderPass(Gfx::PGraphics graphics)
-    : RenderPass(graphics)
+SkyboxRenderPass::SkyboxRenderPass(Gfx::PGraphics graphics, PScene scene)
+    : RenderPass(graphics, scene)
 {
+    skybox = Seele::Component::Skybox{
+        .day = AssetRegistry::findTexture("FS000_Day_01")->getTexture().cast<Gfx::TextureCube>(),
+        .night = AssetRegistry::findTexture("FS000_Night_01")->getTexture().cast<Gfx::TextureCube>(),
+        .fogColor = Vector(0.2, 0.1, 0.6),
+        .blendFactor = 0,
+    };
     Array<Vector> vertices = {
         // Back
         Vector(-512, -512,  512),
@@ -91,8 +98,8 @@ void SkyboxRenderPass::beginFrame(const Component::Camera& cam)
     descriptorLayout->reset();
     descriptorSet = descriptorLayout->allocateDescriptorSet();
     descriptorSet->updateBuffer(0, viewParamsBuffer);
-    descriptorSet->updateTexture(1, passData.skybox.day);
-    descriptorSet->updateTexture(2, passData.skybox.night);
+    descriptorSet->updateTexture(1, skybox.day);
+    descriptorSet->updateTexture(2, skybox.night);
     descriptorSet->updateSampler(3, skyboxSampler);
     descriptorSet->writeChanges();
 }
@@ -104,9 +111,9 @@ void SkyboxRenderPass::render()
     renderCommand->setViewport(viewport);
     renderCommand->bindPipeline(pipeline);
     renderCommand->bindDescriptor(descriptorSet);
-    renderCommand->bindVertexBuffer({ VertexInputStream(0, 0, cubeBuffer) });
-    renderCommand->pushConstants(pipelineLayout, Gfx::SE_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(Vector), &passData.skybox.fogColor);
-    renderCommand->pushConstants(pipelineLayout, Gfx::SE_SHADER_STAGE_FRAGMENT_BIT, sizeof(Vector), sizeof(float), &passData.skybox.blendFactor);
+    renderCommand->bindVertexBuffer({ cubeBuffer });
+    renderCommand->pushConstants(pipelineLayout, Gfx::SE_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(Vector), &skybox.fogColor);
+    renderCommand->pushConstants(pipelineLayout, Gfx::SE_SHADER_STAGE_FRAGMENT_BIT, sizeof(Vector), sizeof(float), &skybox.blendFactor);
     renderCommand->draw(36, 1, 0, 0);
     graphics->executeCommands(Array{ renderCommand });
     graphics->endRenderPass();
@@ -170,15 +177,15 @@ void SkyboxRenderPass::createRenderPass()
 
     Gfx::PVertexDeclaration vertexDecl = graphics->createVertexDeclaration({
         Gfx::VertexElement {
-            .streamIndex = 0,
+            .binding = 0,
             .offset = 0,
             .vertexFormat = Gfx::SE_FORMAT_R32G32B32_SFLOAT,
             .attributeIndex = 0,
             .stride = sizeof(Vector),
         }
-        });
+    });
 
-    GraphicsPipelineCreateInfo gfxInfo;
+    Gfx::LegacyPipelineCreateInfo gfxInfo;
     gfxInfo.vertexDeclaration = vertexDecl;
     gfxInfo.vertexShader = vertexShader;
     gfxInfo.fragmentShader = fragmentShader;

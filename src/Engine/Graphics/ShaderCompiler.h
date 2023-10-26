@@ -1,6 +1,5 @@
 #pragma once
 #include "Material/Material.h"
-#include "GraphicsResources.h"
 
 namespace Seele
 {

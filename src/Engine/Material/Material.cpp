@@ -30,24 +30,9 @@ Material::~Material()
 {
 }
 
-Gfx::PDescriptorSet Material::createDescriptorSet()
+PMaterialInstance Seele::Material::instantiate()
 {
-    Gfx::PDescriptorSet descriptorSet = layout->allocateDescriptorSet();
-    BulkResourceData uniformUpdate = {
-        .size = uniformDataSize,
-        .data = (uint8*)uniformData.data(),
-    };
-    for(auto param : parameters)
-    {
-        param->updateDescriptorSet(descriptorSet, uniformData.data());
-    }
-    if(uniformUpdate.size != 0)
-    {
-        uniformBuffer->updateContents(uniformUpdate);
-        descriptorSet->updateBuffer(uniformBinding, uniformBuffer);
-    }
-    descriptorSet->writeChanges();
-    return descriptorSet;
+    return new MaterialInstance(instanceId++, graphics, this, layout, parameters, uniformBinding, uniformDataSize);
 }
 
 void Material::save(ArchiveBuffer& buffer) const

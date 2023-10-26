@@ -1,6 +1,6 @@
 #pragma once
 #include "ShaderExpression.h"
-#include "Graphics/GraphicsResources.h"
+#include "Graphics/Descriptor.h"
 
 namespace Seele
 {

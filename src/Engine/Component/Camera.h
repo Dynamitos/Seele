@@ -1,7 +1,6 @@
 #pragma once
 #include "Component.h"
 #include "Math/Matrix.h"
-#include "Graphics/GraphicsResources.h"
 #include "Transform.h"
 
 namespace Seele
