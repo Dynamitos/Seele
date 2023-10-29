@@ -196,7 +196,7 @@ public:
         , comp(comp)
     {
     }
-    constexpr explicit Map(const Allocator& alloc) noexcept(noexcept(Compare))
+    constexpr explicit Map(const Allocator& alloc) noexcept(noexcept(Compare()))
         : nodeContainer(alloc)
         , root(SIZE_MAX)
         , beginIt(SIZE_MAX)

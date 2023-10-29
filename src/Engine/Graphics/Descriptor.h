@@ -18,6 +18,17 @@ public:
         : binding(other.binding), descriptorType(other.descriptorType), descriptorCount(other.descriptorCount), shaderStages(other.shaderStages)
     {
     }
+		DescriptorBinding& operator=(const DescriptorBinding& other)
+		{
+		    if(this != &other)
+        {
+            binding = other.binding;
+            descriptorType = other.descriptorType;
+            descriptorCount = other.descriptorCount;
+            shaderStages = other.shaderStages;
+        }
+        return *this;
+		}
     uint32 binding;
     SeDescriptorType descriptorType;
     uint32 descriptorCount;
@@ -64,7 +75,14 @@ public:
         , name(name)
     {
     }
-    virtual ~DescriptorLayout() {}
+    DescriptorLayout(const DescriptorLayout& other)
+    {
+        descriptorBindings.resize(other.descriptorBindings.size());
+        for(uint32 i = 0; i < descriptorBindings.size(); ++i)
+				{
+					descriptorBindings[i] = other.descriptorBindings[i];
+				}
+    }
     DescriptorLayout& operator=(const DescriptorLayout& other)
     {
         if (this != &other)
@@ -77,6 +95,7 @@ public:
         }
         return *this;
     }
+    virtual ~DescriptorLayout() {}
     virtual void create() = 0;
     virtual void addDescriptorBinding(uint32 binding, SeDescriptorType type, uint32 arrayCount = 1, SeDescriptorBindingFlags bindingFlags = 0, SeShaderStageFlags shaderStages = SeShaderStageFlagBits::SE_SHADER_STAGE_ALL);
     virtual void reset();

@@ -124,7 +124,7 @@ if(MSVC)
         Seele.natvis
         DESTINATION .)
 else()
-    target_compile_options(Engine PUBLIC -g -Wall -Wextra -Wno-delete-incomplete -pedantic -fcoroutines)
+    target_compile_options(Engine PUBLIC -g -Wall -Wextra -Wno-delete-incomplete -pedantic -std=c++20)
 endif()
 
 add_subdirectory(src/)

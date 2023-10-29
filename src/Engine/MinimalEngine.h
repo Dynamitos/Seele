@@ -104,14 +104,14 @@ class RefPtr
 {
 public:
     constexpr RefPtr() noexcept
+        : object(nullptr)
     {
-        object = nullptr;
     }
-    constexpr RefPtr(nullptr_t) noexcept
+    constexpr RefPtr(std::nullptr_t) noexcept
+        : object(nullptr)
     {
-        object = nullptr;
     }
-    constexpr RefPtr(T *ptr, Deleter deleter = Deleter())
+    RefPtr(T *ptr, Deleter deleter = Deleter())
     {
         std::scoped_lock l(getRegisteredObjectLock());
         auto registeredObj = getRegisteredObjects().find(ptr);
@@ -270,7 +270,7 @@ public:
         : handle(nullptr)
     {
     }
-    UniquePtr(nullptr_t)
+    UniquePtr(std::nullptr_t)
         : handle(nullptr)
     {
     }

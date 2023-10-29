@@ -76,6 +76,7 @@ List<VertexData*> VertexData::getList()
 
 VertexData::VertexData(Gfx::PGraphics graphics)
     : graphics(graphics)
+    , idCounter(0)
 {
     instanceDataLayout = graphics->createDescriptorLayout("VertexDataInstanceLayout");
     instanceDataLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);

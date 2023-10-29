@@ -40,8 +40,8 @@ bool UniformBuffer::updateContents(const BulkResourceData& resourceData)
 ShaderBuffer::ShaderBuffer(QueueFamilyMapping mapping, uint32 stride, uint32 numElements, const BulkResourceData& resourceData)
 	: Buffer(mapping, resourceData.owner)
 	, contents(resourceData.size)
-	, stride(stride)
 	, numElements(numElements)
+	, stride(stride)
 {
 	if (resourceData.data != nullptr)
 	{

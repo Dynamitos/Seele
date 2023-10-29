@@ -48,6 +48,7 @@ public:
     void resetMeshData();
     void updateMesh(const Component::Transform& transform, const Component::Mesh& mesh);
     void createDescriptors();
+    virtual MeshId allocateVertexData(uint64 numVertices) = 0;
     virtual void bindBuffers(Gfx::PRenderCommand command) = 0;
     virtual Gfx::PDescriptorLayout getVertexDataLayout() = 0;
     virtual Gfx::PDescriptorSet getVertexDataSet() = 0;
@@ -82,5 +83,6 @@ protected:
     // for legacy pipeline
     Gfx::PIndexBuffer indexBuffer;
     VertexData(Gfx::PGraphics graphics);
+    uint64 idCounter;
 };
 }
