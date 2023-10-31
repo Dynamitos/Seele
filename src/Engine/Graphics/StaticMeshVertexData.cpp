@@ -1,15 +1,13 @@
 #include "StaticMeshVertexData.h"
 #include "Graphics.h"
+#include "Graphics/Enums.h"
 
 using namespace Seele;
 
 extern List<VertexData*> vertexDataList;
 
-constexpr static uint64 NUM_DEFAULT_ELEMENTS = 1024;
 
 StaticMeshVertexData::StaticMeshVertexData()
-    : head(0)
-    , verticesAllocated(NUM_DEFAULT_ELEMENTS)
 {
     vertexDataList.add(this);
 }
@@ -17,39 +15,10 @@ StaticMeshVertexData::StaticMeshVertexData()
 StaticMeshVertexData::~StaticMeshVertexData()
 {}
 
-StaticMeshVertexData* Seele::StaticMeshVertexData::getInstance()
+StaticMeshVertexData* StaticMeshVertexData::getInstance()
 {
-    return ;
-}
-
-MeshId StaticMeshVertexData::allocateVertexData(uint64 numVertices)
-{
-    MeshId res{ idCounter++ };
-    meshOffsets[res] = head;
-    head += numVertices;
-    if (head > verticesAllocated)
-    {
-        ShaderBufferCreateInfo createInfo = {
-            .resourceData = {
-                .size = head * sizeof(Vector),
-            },
-            .stride = sizeof(Vector),
-            .bDynamic = true,
-        };
-        positions = graphics->createShaderBuffer(createInfo);
-        normals = graphics->createShaderBuffer(createInfo);
-        tangents = graphics->createShaderBuffer(createInfo);
-        biTangents = graphics->createShaderBuffer(createInfo);
-        createInfo.resourceData.size = head * sizeof(Vector2);
-        createInfo.stride = sizeof(Vector2);
-        texCoords = graphics->createShaderBuffer(createInfo);
-    }
-    positionData.resize(head);
-    texCoordsData.resize(head);
-    normalData.resize(head);
-    tangentData.resize(head);
-    biTangentData.resize(head);
-    return res;
+    static StaticMeshVertexData instance;
+    return &instance;
 }
 
 void StaticMeshVertexData::loadPositions(MeshId id, const Array<Vector>& data)
@@ -95,9 +64,36 @@ void StaticMeshVertexData::loadBiTangents(MeshId id, const Array<Vector>& data)
 void StaticMeshVertexData::init(Gfx::PGraphics graphics)
 {
     VertexData::init(graphics);
+    descriptorLayout = graphics->createDescriptorLayout("StaticMeshDescriptorLayout");
+    descriptorLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    descriptorLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    descriptorLayout->addDescriptorBinding(2, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    descriptorLayout->addDescriptorBinding(3, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    descriptorLayout->addDescriptorBinding(4, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    descriptorLayout->create();
+    descriptorSet = descriptorLayout->allocateDescriptorSet();
+}
+
+void StaticMeshVertexData::bindBuffers(Gfx::PRenderCommand)
+{
+    // TODO: for legacy vertex buffer binding
+}
+
+Gfx::PDescriptorLayout StaticMeshVertexData::getVertexDataLayout()
+{
+    return descriptorLayout;
+}
+
+Gfx::PDescriptorSet StaticMeshVertexData::getVertexDataSet()
+{
+    return descriptorSet;
+}
+
+void StaticMeshVertexData::resizeBuffers()
+{
     ShaderBufferCreateInfo createInfo = {
         .resourceData = {
-            .size = NUM_DEFAULT_ELEMENTS * sizeof(Vector),
+            .size = verticesAllocated * sizeof(Vector),
         },
         .stride = sizeof(Vector),
         .bDynamic = true,
@@ -106,9 +102,15 @@ void StaticMeshVertexData::init(Gfx::PGraphics graphics)
     normals = graphics->createShaderBuffer(createInfo);
     tangents = graphics->createShaderBuffer(createInfo);
     biTangents = graphics->createShaderBuffer(createInfo);
-    createInfo.resourceData.size = NUM_DEFAULT_ELEMENTS * sizeof(Vector2);
+    createInfo.resourceData.size = verticesAllocated * sizeof(Vector2);
     createInfo.stride = sizeof(Vector2);
     texCoords = graphics->createShaderBuffer(createInfo);
+    
+    positionData.resize(verticesAllocated);
+    texCoordsData.resize(verticesAllocated);
+    normalData.resize(verticesAllocated);
+    tangentData.resize(verticesAllocated);
+    biTangentData.resize(verticesAllocated);
 }
 
 void StaticMeshVertexData::updateBuffers()
@@ -133,4 +135,11 @@ void StaticMeshVertexData::updateBuffers()
         .size = biTangentData.size() * sizeof(Vector),
         .data = (uint8*)biTangentData.data(),
         });
+    descriptorSet = descriptorLayout->allocateDescriptorSet();
+    descriptorSet->updateBuffer(0, positions);
+    descriptorSet->updateBuffer(1, texCoords);
+    descriptorSet->updateBuffer(2, normals);
+    descriptorSet->updateBuffer(3, tangents);
+    descriptorSet->updateBuffer(4, biTangents);
+    descriptorSet->writeChanges();
 }

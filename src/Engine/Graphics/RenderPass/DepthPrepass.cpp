@@ -76,11 +76,10 @@ void DepthPrepass::render()
             layout->addDescriptorLayout(INDEX_SCENE_DATA, vertexData->getInstanceDataLayout());
             layout->create();
 
-            GraphicsPipelineCreateInfo pipelineInfo;
+            Gfx::MeshPipelineCreateInfo pipelineInfo;
             Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(pipelineInfo);
             command->bindPipeline(pipeline);
 
-            vertexData->bindBuffers(command);
             descriptorSets[INDEX_VERTEX_DATA] = vertexData->getVertexDataSet();
             for (const auto&[_, instance]: materialData.instances)
             {

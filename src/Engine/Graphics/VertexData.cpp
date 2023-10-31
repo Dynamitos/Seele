@@ -6,6 +6,8 @@
 
 using namespace Seele;
 
+constexpr static uint64 NUM_DEFAULT_ELEMENTS = 1024;
+
 void VertexData::resetMeshData()
 {
     materialData.clear();
@@ -28,27 +30,37 @@ void VertexData::updateMesh(const Component::Transform& transform, const Compone
     });
 }
 
-void VertexData::loadMesh(MeshId id, Array<Meshlet> meshlets)
+void VertexData::loadMesh(MeshId id, Array<Meshlet> loadedMeshlets)
 {
     meshData[id].clear();
-    uint32 head = 0;
-    while (head < meshlets.size())
+    uint32 currentMesh = 0;
+    while (currentMesh < loadedMeshlets.size())
     {
-        uint32 numMeshlets = std::min<uint32>(512, meshlets.size() - head);
-        Array<MeshletDescription> desc(numMeshlets);
+        uint32 numMeshlets = std::min<uint32>(512, loadedMeshlets.size() - currentMesh);
+        uint32 meshletOffset = meshlets.size();
         for (uint32 i = 0; i < numMeshlets; ++i)
         {
-            Meshlet& m = meshlets[head + i];
-
-            vertexIndices.resize()
-            desc.add(MeshletDescription{
+            Meshlet& m = loadedMeshlets[currentMesh + i];
+            uint32 vertexOffset = vertexIndices.size();
+            vertexIndices.resize(vertexOffset + m.numVertices);
+            std::memcpy(vertexIndices.data() + vertexOffset, m.uniqueVertices, sizeof(m.uniqueVertices));
+            uint32 primitiveOffset = primitiveIndices.size();
+            primitiveIndices.resize(primitiveOffset + (m.numPrimitives * 3));
+            std::memcpy(primitiveIndices.data() + primitiveOffset, m.primitiveLayout, sizeof(m.primitiveLayout));
+            meshlets.add(MeshletDescription{
                 .boundingBox = MeshletAABB(),
                 .vertexCount = m.numVertices,
                 .primitiveCount = m.numPrimitives,
+                .vertexOffset = vertexOffset,
+                .primitiveOffset = primitiveOffset,
                 });
         }
-        meshData[id].add();
-        head += numMeshlets;
+        meshData[id].add(MeshData{
+            .numMeshlets = numMeshlets,
+            .meshletOffset = meshletOffset,
+            .indicesOffset = static_cast<uint32>(meshOffsets[id]),
+        });
+        currentMesh += numMeshlets;
     }
 }
 
@@ -95,6 +107,19 @@ void VertexData::createDescriptors()
     }
 }
 
+MeshId VertexData::allocateVertexData(uint64 numVertices)
+{
+    MeshId res{ idCounter++ };
+    meshOffsets[res] = head;
+    head += numVertices;
+    if (head > verticesAllocated)
+    {
+        verticesAllocated = head;
+        resizeBuffers();
+    }
+    return res;
+}
+
 List<VertexData*> vertexDataList;
 
 List<VertexData*> VertexData::getList()
@@ -105,6 +130,7 @@ List<VertexData*> VertexData::getList()
 void Seele::VertexData::init(Gfx::PGraphics graphics)
 {
     this->graphics = graphics;
+    verticesAllocated = NUM_DEFAULT_ELEMENTS;
     instanceDataLayout = graphics->createDescriptorLayout("VertexDataInstanceLayout");
     instanceDataLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
     if (Gfx::useMeshShading)
@@ -115,13 +141,14 @@ void Seele::VertexData::init(Gfx::PGraphics graphics)
         instanceDataLayout->addDescriptorBinding(2, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
         meshletBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
             .resourceData = {
-                .size = sizeof(MeshletData),
+                .size = sizeof(MeshletDescription) * 512,
                 .data = nullptr,
             },
             .bDynamic = true,
         });
     }
     instanceDataLayout->create();
+    resizeBuffers();
 }
 
 VertexData::VertexData()

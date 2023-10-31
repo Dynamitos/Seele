@@ -33,10 +33,10 @@ public:
     virtual ~Graphics();
     virtual void init(GraphicsInitializer initializer) = 0;
     
-	const QueueFamilyMapping getFamilyMapping() const
-	{
-		return queueMapping;
-	}
+  	const QueueFamilyMapping getFamilyMapping() const
+  	{
+  		return queueMapping;
+  	}
 
     PShaderCompiler getShaderCompiler() const
     {
@@ -73,10 +73,10 @@ public:
     virtual PComputePipeline createComputePipeline(const ComputePipelineCreateInfo& createInfo) = 0;
     virtual PSamplerState createSamplerState(const SamplerCreateInfo& createInfo) = 0;
 
-	virtual PDescriptorLayout createDescriptorLayout(const std::string& name = "") = 0;
-	virtual PPipelineLayout createPipelineLayout(PPipelineLayout baseLayout = nullptr) = 0;
+  	virtual PDescriptorLayout createDescriptorLayout(const std::string& name = "") = 0;
+  	virtual PPipelineLayout createPipelineLayout(PPipelineLayout baseLayout = nullptr) = 0;
 
-	virtual void copyTexture(Gfx::PTexture srcTexture, Gfx::PTexture dstTexture) = 0;
+  	virtual void copyTexture(Gfx::PTexture srcTexture, Gfx::PTexture dstTexture) = 0;
     
     PVertexBuffer getNullVertexBuffer();
 

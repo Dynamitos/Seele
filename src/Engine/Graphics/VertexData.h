@@ -55,23 +55,24 @@ public:
     {
         uint32 numMeshlets;
         uint32 meshletOffset;
-        uint32 vertexOffset;
+        uint32 indicesOffset;
     };
     void resetMeshData();
     void updateMesh(const Component::Transform& transform, const Component::Mesh& mesh);
     void loadMesh(MeshId id, Array<Meshlet> meshlets);
     void createDescriptors();
-    virtual MeshId allocateVertexData(uint64 numVertices) = 0;
+    MeshId allocateVertexData(uint64 numVertices);
     virtual void bindBuffers(Gfx::PRenderCommand command) = 0;
     virtual Gfx::PDescriptorLayout getVertexDataLayout() = 0;
     virtual Gfx::PDescriptorSet getVertexDataSet() = 0;
-    virtual Gfx::PDescriptorLayout getInstanceDataLayout() = 0;
     virtual std::string getTypeName() const = 0;
+    Gfx::PDescriptorLayout getInstanceDataLayout() { return instanceDataLayout; }
     const Map<std::string, MaterialData>& getMaterialData() const { return materialData; }
     const Array<MeshData>& getMeshData(MeshId id) { return meshData[id]; }
     static List<VertexData*> getList();
     virtual void init(Gfx::PGraphics graphics);
 protected:
+    virtual void resizeBuffers() = 0;
     virtual void updateBuffers() = 0;
     VertexData();
     struct MeshletAABB
@@ -91,6 +92,7 @@ protected:
     };
     Map<std::string, MaterialData> materialData;
     Map<MeshId, Array<MeshData>> meshData;
+    Map<MeshId, uint64_t> meshOffsets;
     Array<MeshletDescription> meshlets;
     Array<uint8> primitiveIndices;
     Array<uint32> vertexIndices;
@@ -101,6 +103,8 @@ protected:
     // for legacy pipeline
     Gfx::PIndexBuffer indexBuffer;
     uint64 idCounter;
+	uint64 head;
+	uint64 verticesAllocated;
     bool dirty;
 };
 }
