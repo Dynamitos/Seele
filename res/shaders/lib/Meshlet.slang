@@ -9,18 +9,11 @@ struct MeshletDescription
 	uint32_t primitiveOffset;
 };
 
-struct MeshletData
-{
-	StructuredBuffer<MeshletDescription> meshletInfos;
-	StructuredBuffer<uint8_t> primitiveIndices;
-
-	StructuredBuffer<uint32_t> vertexIndices;
-};
-
 struct MeshData
 {
 	uint numMeshlets;
 	uint meshletOffset;
+	uint indicesOffset;
 };
 
 static const uint MAX_VERTICES = 64;
@@ -38,7 +31,10 @@ struct Scene
 {
 	StructuredBuffer<InstanceData> instances;
 	StructuredBuffer<MeshData> meshData;
-	StructuredBuffer<MeshletData> meshlets;
+	StructuredBuffer<MeshletDescription> meshletInfos;
+	StructuredBuffer<uint8_t> primitiveIndices;
+
+	StructuredBuffer<uint32_t> vertexIndices;
 };
 
 layout(set = INDEX_SCENE_DATA)

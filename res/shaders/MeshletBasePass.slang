@@ -82,6 +82,7 @@ void meshMain(
 	out Indices<uint3, MAX_PRIMITIVES> indices
 ){
 	InstanceData inst = scene.instances[meshPayload.instanceId[groupID]];
+	MeshData md = scene.meshData[meshPayload.instanceId[groupID]];
 	MeshletDescription m = meshlets.meshletInfos[meshPayload.meshletId[groupID]];
 	const uint vertexLoops = (MAX_VERTICES + MESH_GROUP_SIZE - 1) / MESH_GROUP_SIZE;
 	for(uint loop = 0; loop < vertexLoops; ++loop) 
@@ -91,7 +92,7 @@ void meshMain(
 		InterlockedMax(gs_numVertices, v + 1);
 		{
 			int vertexIndex = meshlets.vertexIndices[m.vertexOffset + v];
-			gs_vertices[v] = vertexData.getAttributes(vertexIndex, inst);
+			gs_vertices[v] = vertexData.getAttributes(md.indexOffset + vertexIndex, inst);
 		}
 	}
 

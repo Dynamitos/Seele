@@ -1,7 +1,7 @@
 #pragma once
 #include "MinimalEngine.h"
 #include "Containers/List.h"
-#include "Graphics/GraphicsEnums.h"
+#include "Graphics/Enums.h"
 #include <filesystem>
 
 namespace Seele

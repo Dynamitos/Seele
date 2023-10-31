@@ -9,6 +9,10 @@ using namespace Seele;
 void VertexData::resetMeshData()
 {
     materialData.clear();
+    if (dirty)
+    {
+        updateBuffers();
+    }
 }
 
 void VertexData::updateMesh(const Component::Transform& transform, const Component::Mesh& mesh)
@@ -22,6 +26,30 @@ void VertexData::updateMesh(const Component::Transform& transform, const Compone
             .transformMatrix = transform.toMatrix(),
         }
     });
+}
+
+void VertexData::loadMesh(MeshId id, Array<Meshlet> meshlets)
+{
+    meshData[id].clear();
+    uint32 head = 0;
+    while (head < meshlets.size())
+    {
+        uint32 numMeshlets = std::min<uint32>(512, meshlets.size() - head);
+        Array<MeshletDescription> desc(numMeshlets);
+        for (uint32 i = 0; i < numMeshlets; ++i)
+        {
+            Meshlet& m = meshlets[head + i];
+
+            vertexIndices.resize()
+            desc.add(MeshletDescription{
+                .boundingBox = MeshletAABB(),
+                .vertexCount = m.numVertices,
+                .primitiveCount = m.numPrimitives,
+                });
+        }
+        meshData[id].add();
+        head += numMeshlets;
+    }
 }
 
 void VertexData::createDescriptors()
@@ -74,10 +102,9 @@ List<VertexData*> VertexData::getList()
     return vertexDataList;
 }
 
-VertexData::VertexData(Gfx::PGraphics graphics)
-    : graphics(graphics)
-    , idCounter(0)
+void Seele::VertexData::init(Gfx::PGraphics graphics)
 {
+    this->graphics = graphics;
     instanceDataLayout = graphics->createDescriptorLayout("VertexDataInstanceLayout");
     instanceDataLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
     if (Gfx::useMeshShading)
@@ -95,4 +122,10 @@ VertexData::VertexData(Gfx::PGraphics graphics)
         });
     }
     instanceDataLayout->create();
+}
+
+VertexData::VertexData()
+    : idCounter(0)
+    , dirty(false)
+{
 }

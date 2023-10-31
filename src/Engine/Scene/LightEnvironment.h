@@ -18,10 +18,14 @@ public:
 private:
     #define MAX_DIRECTIONAL_LIGHTS 4
     #define MAX_POINT_LIGHTS 256
+    struct LightEnv
+    {
+        uint32 numDirectionalLights;
+        uint32 numPointLights;
+    } lightEnv;
     Gfx::PShaderBuffer directionalLights;
-    Gfx::PUniformBuffer numDirectional;
+    Gfx::PUniformBuffer lightEnvBuffer;
     Gfx::PShaderBuffer pointLights;
-    Gfx::PUniformBuffer numPoints;;
     Array<Component::DirectionalLight> dirs;
     Array<Component::PointLight> points;
     Gfx::PDescriptorLayout layout;

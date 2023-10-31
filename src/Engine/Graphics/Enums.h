@@ -167,6 +167,10 @@ static constexpr bool useAsyncCompute = true;
 static constexpr bool waitIdleOnSubmit = true;
 static constexpr bool useMeshShading = true;
 static constexpr uint32 numFramesBuffered = 8;
+
+// meshlet dimensions curated by NVIDIA
+static constexpr uint32 numVerticesPerMeshlet = 64;
+static constexpr uint32 numPrimitivesPerMeshlet = 126;
 double getCurrentFrameDelta();
 
 enum class RenderPassType : uint8

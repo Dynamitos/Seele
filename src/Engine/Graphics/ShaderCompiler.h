@@ -11,9 +11,7 @@ class ShaderCompiler
 public:
     ShaderCompiler(PGraphics graphics);
     ~ShaderCompiler();
-    void registerMaterial(PMaterial material);
 private:
-    Array<PMaterial> pendingCompiles;
     PGraphics graphics;
 };
 DEFINE_REF(ShaderCompiler)

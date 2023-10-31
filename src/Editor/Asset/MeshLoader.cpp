@@ -1,11 +1,11 @@
 #include "MeshLoader.h"
-#include "Graphics/GraphicsResources.h"
 #include "Graphics/Graphics.h"
 #include "Asset/MeshAsset.h"
 #include "Graphics/Mesh.h"
-#include "Graphics/StaticMeshVertexInput.h"
+#include "Graphics/StaticMeshVertexData.h"
 #include "Asset/AssetImporter.h"
 #include "Asset/MaterialAsset.h"
+#include <set>
 #include <fstream>
 #include <iostream>
 #include <nlohmann/json.hpp>
@@ -120,7 +120,6 @@ void MeshLoader::loadMaterials(const aiScene* scene, const std::string& baseName
     }
 }
 
-
 void findMeshRoots(aiNode *node, List<aiNode *> &meshNodes)
 {
     if (node->mNumMeshes > 0)
@@ -133,57 +132,7 @@ void findMeshRoots(aiNode *node, List<aiNode *> &meshNodes)
         findMeshRoots(node->mChildren[i], meshNodes);
     }
 }
-VertexStreamComponent createVertexStream(uint32 size, aiVector3D* sourceData, Gfx::PGraphics graphics)
-{
-    Array<Vector> buffer(size);
-    for(uint32 i = 0; i < size; ++i)
-    {
-        buffer[i] = Vector(sourceData[i].x, sourceData[i].y, sourceData[i].z);
-    }
-    VertexBufferCreateInfo vbInfo;
-    vbInfo.numVertices = size;
-    vbInfo.vertexSize = sizeof(Vector);
-    vbInfo.resourceData.data = (uint8 *)buffer.data();
-    vbInfo.resourceData.owner = Gfx::QueueType::DEDICATED_TRANSFER;
-    vbInfo.resourceData.size = sizeof(Vector) * buffer.size();
-    Gfx::PVertexBuffer vertexBuffer = graphics->createVertexBuffer(vbInfo);
-    vertexBuffer->transferOwnership(Gfx::QueueType::GRAPHICS);
-    return VertexStreamComponent(vertexBuffer, 0, vbInfo.vertexSize, Gfx::SE_FORMAT_R32G32B32_SFLOAT);
-}
-VertexStreamComponent createVertexStream(uint32 size, aiVector2D* sourceData, Gfx::PGraphics graphics)
-{
-    Array<Vector2> buffer(size);
-    for(uint32 i = 0; i < size; ++i)
-    {
-        buffer[i] = Vector2(sourceData[i].x, sourceData[i].y);
-    }    
-    VertexBufferCreateInfo vbInfo;
-    vbInfo.numVertices = size;
-    vbInfo.vertexSize = sizeof(Vector2);
-    vbInfo.resourceData.data = (uint8 *)buffer.data();
-    vbInfo.resourceData.owner = Gfx::QueueType::DEDICATED_TRANSFER;
-    vbInfo.resourceData.size = sizeof(Vector2) * buffer.size();
-    Gfx::PVertexBuffer vertexBuffer = graphics->createVertexBuffer(vbInfo);
-    vertexBuffer->transferOwnership(Gfx::QueueType::GRAPHICS);
-    return VertexStreamComponent(vertexBuffer, 0, vbInfo.vertexSize, Gfx::SE_FORMAT_R32G32_SFLOAT);
-}
-VertexStreamComponent createVertexStream(uint32 size, aiColor4D* sourceData, Gfx::PGraphics graphics)
-{
-    Array<Vector4> buffer(size);
-    for(uint32 i = 0; i < size; ++i)
-    {
-        buffer[i] = Vector4(sourceData[i].r, sourceData[i].g, sourceData[i].b, sourceData[i].a);
-    }    
-    VertexBufferCreateInfo vbInfo;
-    vbInfo.numVertices = size;
-    vbInfo.vertexSize = sizeof(Vector4);
-    vbInfo.resourceData.data = (uint8 *)buffer.data();
-    vbInfo.resourceData.owner = Gfx::QueueType::DEDICATED_TRANSFER;
-    vbInfo.resourceData.size = sizeof(Vector4) * buffer.size();
-    Gfx::PVertexBuffer vertexBuffer = graphics->createVertexBuffer(vbInfo);
-    vertexBuffer->transferOwnership(Gfx::QueueType::GRAPHICS);
-    return VertexStreamComponent(vertexBuffer, 0, vbInfo.vertexSize, Gfx::SE_FORMAT_R32G32B32A32_SFLOAT);
-}
+
 void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialAsset>& materials, Array<PMesh>& globalMeshes, Component::Collider& collider)
 {
     for (uint32 meshIndex = 0; meshIndex < scene->mNumMeshes; ++meshIndex)
@@ -192,50 +141,106 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialAss
         collider.boundingbox.adjust(Vector(mesh->mAABB.mMin.x, mesh->mAABB.mMin.y, mesh->mAABB.mMin.z));
         collider.boundingbox.adjust(Vector(mesh->mAABB.mMax.x, mesh->mAABB.mMax.y, mesh->mAABB.mMax.z));
 
-        //! \todo duplicate from createVertexStream, clean up
-        Array<Vector> vertices(mesh->mNumVertices);
+        // assume static mesh for now
+        Array<Vector> positions(mesh->mNumVertices);
+        Array<Vector2> texCoords(mesh->mNumVertices);
+        Array<Vector> normals(mesh->mNumVertices);
+        Array<Vector> tangents(mesh->mNumVertices);
+        Array<Vector> biTangents(mesh->mNumVertices);
+
+        StaticMeshVertexData* vertexData = StaticMeshVertexData::getInstance();
+
         for(uint32 i = 0; i < mesh->mNumVertices; ++i)
         {
-            vertices[i] = Vector(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
+            positions[i] = Vector(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
+            texCoords[i] = Vector2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].x);
+            normals[i] = Vector(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z);
+            tangents[i] = Vector(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z);
+            biTangents[i] = Vector(mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z);
         }
 
-        PStaticMeshVertexInput vertexShaderInput = new StaticMeshVertexInput(std::string(mesh->mName.C_Str()));
-        StaticMeshDataType data;
-        data.positionStream = createVertexStream(mesh->mNumVertices, mesh->mVertices, graphics);
-
-        for(uint32 i = 0; i < MAX_TEXCOORDS; ++i)
-        {
-            if(mesh->HasTextureCoords(i))
-            {
-                data.textureCoordinates[i] = createVertexStream(mesh->mNumVertices, mesh->mTextureCoords[i], graphics);
-            }
-        }
-        if(mesh->HasNormals())
-        {
-            data.tangentBasisComponents[0] = createVertexStream(mesh->mNumVertices, mesh->mNormals, graphics);
-        }
-        if(mesh->HasTangentsAndBitangents())
-        {
-            //TODO: use bitangent to calculate sign for 4th coordinate of tangentstream
-            data.tangentBasisComponents[1] = createVertexStream(mesh->mNumVertices, mesh->mTangents, graphics);
-            data.tangentBasisComponents[2] = createVertexStream(mesh->mNumVertices, mesh->mBitangents, graphics);
-        }
-        if(mesh->HasVertexColors(0))
-        {
-            data.colorComponent = createVertexStream(mesh->mNumVertices, mesh->mColors[0], graphics);
-        }
-        vertexShaderInput->setData(std::move(data));
-        vertexShaderInput->init(graphics);
+        MeshId id = vertexData->allocateVertexData(mesh->mNumVertices);
+        vertexData->loadPositions(id, positions);
+        vertexData->loadTexCoords(id, texCoords);
+        vertexData->loadNormals(id, normals);
+        vertexData->loadTangents(id, tangents);
+        vertexData->loadBiTangents(id, biTangents);
 
         Array<uint32> indices(mesh->mNumFaces * 3);
-        for (uint32 faceIndex = 0; faceIndex < mesh->mNumFaces; ++faceIndex)
+        for (size_t faceIndex = 0; faceIndex < mesh->mNumFaces; ++faceIndex)
         {
             indices[faceIndex * 3 + 0] = mesh->mFaces[faceIndex].mIndices[0];
             indices[faceIndex * 3 + 1] = mesh->mFaces[faceIndex].mIndices[1];
             indices[faceIndex * 3 + 2] = mesh->mFaces[faceIndex].mIndices[2];
         }
 
-        collider.physicsMesh.addCollider(vertices, indices, Matrix4(1.0f));
+        if (Gfx::useMeshShading)
+        {
+            Array<Meshlet> meshlets;
+            meshlets.reserve(indices.size() / (3ull * Gfx::numPrimitivesPerMeshlet));
+            std::set<uint32> uniqueVertices;
+            Meshlet current = {
+                .numVertices = 0,
+                .numPrimitives = 0,
+            };
+            auto insertAndGetIndex = [&uniqueVertices, &current](uint32 index) -> int8_t
+            {
+                auto [it, inserted] = uniqueVertices.insert(index);
+                if (inserted)
+                {
+                    if (current.numVertices == Gfx::numVerticesPerMeshlet)
+                    {
+                        return -1;
+                    }
+                    current.uniqueVertices[current.numVertices] = index;
+                    return current.numVertices++;
+                }
+                else
+                {
+                    for (uint32 i = 0; i < current.numVertices; ++i)
+                    {
+                        if (current.uniqueVertices[i] == index)
+                        {
+                            return i;
+                        }
+                    }
+                    assert(false);
+                }
+            };
+            auto completeMeshlet = [&meshlets, &current, &uniqueVertices]() {
+                meshlets.add(current);
+                current = {
+                    .numVertices = 0,
+                    .numPrimitives = 0,
+                };
+                uniqueVertices.clear();
+            };
+            for (size_t faceIndex = 0; faceIndex < mesh->mNumFaces; ++faceIndex)
+            {
+                auto i1 = insertAndGetIndex(mesh->mFaces[faceIndex].mIndices[0]);
+                auto i2 = insertAndGetIndex(mesh->mFaces[faceIndex].mIndices[1]);
+                auto i3 = insertAndGetIndex(mesh->mFaces[faceIndex].mIndices[2]);
+                if (i1 == -1 || i2 == -1 || i3 == -1)
+                {
+                    completeMeshlet();
+                }
+                current.primitiveLayout[current.numPrimitives * 3 + 0] = i1;
+                current.primitiveLayout[current.numPrimitives * 3 + 1] = i2;
+                current.primitiveLayout[current.numPrimitives * 3 + 2] = i3;
+                current.numPrimitives++;
+                if (current.numPrimitives == Gfx::numPrimitivesPerMeshlet)
+                {
+                    completeMeshlet();
+                }
+            }
+        }
+        else
+        {
+            // \! todo
+        }
+        
+
+        collider.physicsMesh.addCollider(positions, indices, Matrix4(1.0f));
 
         IndexBufferCreateInfo idxInfo;
         idxInfo.indexType = Gfx::SE_INDEX_TYPE_UINT32;
