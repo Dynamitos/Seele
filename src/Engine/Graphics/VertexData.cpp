@@ -1,4 +1,6 @@
 #include "VertexData.h"
+#include "Graphics/Enums.h"
+#include "Graphics/Initializer.h"
 #include "Material/Material.h"
 #include "Graphics/Graphics.h"
 #include "Graphics/Descriptor.h"
@@ -62,6 +64,31 @@ void VertexData::loadMesh(MeshId id, Array<Meshlet> loadedMeshlets)
         });
         currentMesh += numMeshlets;
     }
+    meshletBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo {
+        .resourceData = {
+            .size = sizeof(MeshletDescription) * meshlets.size(),
+            .data = (uint8*)meshlets.data()
+        },
+        .stride = sizeof(MeshletDescription),
+        .bDynamic = true,
+    });
+    vertexIndicesBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo {
+        .resourceData = {
+            .size = sizeof(uint32) * vertexIndices.size(),
+            .data = (uint8*)vertexIndices.data(),
+        },
+        .stride = sizeof(uint32),
+        .bDynamic = true,
+    });
+    primitiveIndicesBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo {
+        .resourceData = {
+            .size = sizeof(uint8) * primitiveIndices.size(),
+            .data = (uint8*)primitiveIndices.data(),
+        },
+        .stride = sizeof(uint8),
+        .bDynamic = true,
+    });
+
 }
 
 void VertexData::createDescriptors()
@@ -87,19 +114,21 @@ void VertexData::createDescriptors()
                 },
                 .stride = sizeof(InstanceData)
             });
-            Gfx::PShaderBuffer meshDataBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
-                .resourceData = {
-                    .size = sizeof(MeshData) * meshes.size(),
-                    .data = (uint8*)meshes.data(),
-                },
-                .stride = sizeof(MeshData)
-            });
             matInst.descriptorSet = instanceDataLayout->allocateDescriptorSet();
             matInst.descriptorSet->updateBuffer(0, instanceBuffer);
             if (Gfx::useMeshShading)
             {
+                Gfx::PShaderBuffer meshDataBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
+                    .resourceData = {
+                        .size = sizeof(MeshData) * meshes.size(),
+                        .data = (uint8*)meshes.data(),
+                    },
+                    .stride = sizeof(MeshData)
+                });
                 matInst.descriptorSet->updateBuffer(1, meshDataBuffer);
                 matInst.descriptorSet->updateBuffer(2, meshletBuffer);
+                matInst.descriptorSet->updateBuffer(3, primitiveIndicesBuffer);
+                matInst.descriptorSet->updateBuffer(4, vertexIndicesBuffer);
             }
             matInst.descriptorSet->writeChanges();
             matInst.numMeshes = meshes.size();
@@ -139,13 +168,10 @@ void Seele::VertexData::init(Gfx::PGraphics graphics)
         instanceDataLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
         // meshletData
         instanceDataLayout->addDescriptorBinding(2, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
-        meshletBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
-            .resourceData = {
-                .size = sizeof(MeshletDescription) * 512,
-                .data = nullptr,
-            },
-            .bDynamic = true,
-        });
+        // primitiveIndices
+        instanceDataLayout->addDescriptorBinding(3, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+        // vetexIndices
+        instanceDataLayout->addDescriptorBinding(4, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
     }
     instanceDataLayout->create();
     resizeBuffers();

@@ -140,52 +140,52 @@ struct VertexElement
 static_assert(std::is_aggregate_v<VertexElement>);
 struct RasterizationState
 {
-    uint8 depthClampEnable : 1;
-    uint8 rasterizerDiscardEnable : 1;
-    uint8 depthBiasEnable : 1;
-    float depthBoasConstantFactor;
-    float depthBiasClamp;
-    float depthBiasSlopeFactor;
-    float lineWidth;
+    uint8 depthClampEnable : 1 = 0;
+    uint8 rasterizerDiscardEnable : 1 = 0;
+    uint8 depthBiasEnable : 1 = 0;
+    float depthBiasConstantFactor = 0;
+    float depthBiasClamp = 0;
+    float depthBiasSlopeFactor = 0;
+    float lineWidth = 0;
     SePolygonMode polygonMode;
     SeCullModeFlags cullMode;
     SeFrontFace frontFace;
 };
 struct MultisampleState
 {
-    uint32 samples;
-    float minSampleShading;
-    uint8 sampleShadingEnable : 1;
-    uint8 alphaCoverageEnable;
-    uint8 alphaToOneEnable;
+    uint32 samples = 1;
+    float minSampleShading = 1;
+    uint8 sampleShadingEnable : 1 = 0;
+    uint8 alphaCoverageEnable = 0;
+    uint8 alphaToOneEnable = 0;
 };
 struct DepthStencilState
 {
-    uint8 depthTestEnable : 1;
-    uint8 depthWriteEnable : 1;
-    uint8 depthBoundsTestEnable : 1;
-    uint8 stencilTestEnable : 1;
+    uint8 depthTestEnable : 1 = 0;
+    uint8 depthWriteEnable : 1 = 0;
+    uint8 depthBoundsTestEnable : 1 = 0;
+    uint8 stencilTestEnable : 1 = 0;
     SeCompareOp depthCompareOp;
-    SeStencilOp front;
-    SeStencilOp back;
+    SeStencilOp front = Gfx::SE_STENCIL_OP_END_RANGE;
+    SeStencilOp back = Gfx::SE_STENCIL_OP_END_RANGE;
     float minDepthBounds;
     float maxDepthBounds;
 };
 struct ColorBlendState
 {
     uint8 logicOpEnable : 1;
-    SeLogicOp logicOp;
+    SeLogicOp logicOp = Gfx::SE_LOGIC_OP_OR;
     uint32 attachmentCount;
     struct BlendAttachment
     {
-        uint8 blendEnable;
-        SeBlendFactor srcColorBlendFactor;
-        SeBlendFactor dstColorBlendFactor;
-        SeBlendOp colorBlendOp;
-        SeBlendFactor srcAlphaBlendFactor;
-        SeBlendFactor dstAlphaBlendFactor;
-        SeBlendOp alphaBlendOp;
-        SeColorComponentFlags colorWriteMask;
+        uint8 blendEnable = 0;
+        SeBlendFactor srcColorBlendFactor = Gfx::SE_BLEND_FACTOR_SRC_ALPHA;
+        SeBlendFactor dstColorBlendFactor = Gfx::SE_BLEND_FACTOR_SRC_ALPHA;
+        SeBlendOp colorBlendOp = Gfx::SE_BLEND_OP_ADD;
+        SeBlendFactor srcAlphaBlendFactor = Gfx::SE_BLEND_FACTOR_SRC_ALPHA;
+        SeBlendFactor dstAlphaBlendFactor = Gfx::SE_BLEND_FACTOR_SRC_ALPHA;
+        SeBlendOp alphaBlendOp = Gfx::SE_BLEND_OP_ADD;
+        SeColorComponentFlags colorWriteMask = 0;
     } blendAttachments[16];
     float blendConstants[4];
 };
@@ -212,6 +212,9 @@ struct LegacyPipelineCreateInfo
     ColorBlendState colorBlend;
     LegacyPipelineCreateInfo()
         : topology(Gfx::SE_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
+        , multisampleState(MultisampleState{
+            .samples = 1,
+        })
         , rasterizationState(RasterizationState{
             .polygonMode = Gfx::SE_POLYGON_MODE_FILL,
             .cullMode = Gfx::SE_CULL_MODE_BACK_BIT,
@@ -224,9 +227,6 @@ struct LegacyPipelineCreateInfo
             .depthCompareOp = Gfx::SE_COMPARE_OP_LESS_OR_EQUAL,
             .minDepthBounds = 0.0f,
             .maxDepthBounds = 1.0f,
-        })
-        , multisampleState(MultisampleState{
-            .samples = 1,
         })
         , colorBlend(ColorBlendState{
             .logicOpEnable = false,
@@ -263,7 +263,10 @@ struct MeshPipelineCreateInfo
     DepthStencilState depthStencilState;
     ColorBlendState colorBlend;
     MeshPipelineCreateInfo()
-        : rasterizationState(RasterizationState{
+        : multisampleState(MultisampleState{
+            .samples = 1,
+        })
+        , rasterizationState(RasterizationState{
             .polygonMode = Gfx::SE_POLYGON_MODE_FILL,
             .cullMode = Gfx::SE_CULL_MODE_BACK_BIT,
             .frontFace = Gfx::SE_FRONT_FACE_COUNTER_CLOCKWISE,
@@ -275,9 +278,6 @@ struct MeshPipelineCreateInfo
             .depthCompareOp = Gfx::SE_COMPARE_OP_LESS_OR_EQUAL,
             .minDepthBounds = 0.0f,
             .maxDepthBounds = 1.0f,
-        })
-        , multisampleState(MultisampleState{
-            .samples = 1,
         })
         , colorBlend(ColorBlendState{
             .logicOpEnable = false,

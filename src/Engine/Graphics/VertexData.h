@@ -100,6 +100,8 @@ protected:
     Gfx::PDescriptorLayout instanceDataLayout;
     // for mesh shading
     Gfx::PShaderBuffer meshletBuffer;
+    Gfx::PShaderBuffer vertexIndicesBuffer;
+    Gfx::PShaderBuffer primitiveIndicesBuffer;
     // for legacy pipeline
     Gfx::PIndexBuffer indexBuffer;
     uint64 idCounter;
