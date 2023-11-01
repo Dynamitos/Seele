@@ -16,10 +16,7 @@ Window::~Window()
 
 void Window::addView(PView view)
 {
-    //WindowView* windowView = new WindowView(view);
-    //windowView->worker = std::thread(&Window::viewWorker, this, windowView);
     views.add(view);
-    //viewWorker(views.size() - 1);
 }
 
 void Window::render() 
@@ -37,7 +34,6 @@ void Window::render()
         }
         gfxHandle->endFrame();
     }
-    //co_return;
 }
 
 Gfx::PWindow Window::getGfxHandle()
@@ -61,22 +57,3 @@ void Window::setFocused(PView view)
         owner->notifyWindowClosed(this);
     });
 }
-
-/*void Window::viewWorker(size_t viewIndex)
-{
-    WindowView* windowView = views[viewIndex];
-    co_await windowView->view->beginUpdate();
-    co_await windowView->view->update();
-    {
-        std::scoped_lock lock(windowView->workerMutex);
-        windowView->view->commitUpdate();
-    }
-    //std::cout << "Update completed" << std::endl;
-    //windowView->updateFinished.raise();
-    // enqueue next frame update
-    if(owner->isActive())
-    {
-        viewWorker(viewIndex);
-    }
-    //co_return;
-}*/

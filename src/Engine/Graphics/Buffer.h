@@ -26,10 +26,10 @@ protected:
 class UniformBuffer : public Buffer
 {
 public:
-    UniformBuffer(QueueFamilyMapping mapping, const BulkResourceData& resourceData);
+    UniformBuffer(QueueFamilyMapping mapping, const DataSource& sourceData);
     virtual ~UniformBuffer();
     // returns true if an update was performed, false if the old contents == new contents
-    virtual bool updateContents(const BulkResourceData& resourceData);
+    virtual bool updateContents(const DataSource& sourceData);
     bool isDataEquals(UniformBuffer* other)
     {
         if(other == nullptr)
@@ -70,7 +70,7 @@ public:
         return vertexSize;
     }
 
-    virtual void updateRegion(BulkResourceData update) = 0;
+    virtual void updateRegion(DataSource update) = 0;
     virtual void download(Array<uint8>& buffer) = 0;
 protected:
     // Inherited via QueueOwnedResource
@@ -110,9 +110,9 @@ DEFINE_REF(IndexBuffer)
 class ShaderBuffer : public Buffer
 {
 public:
-    ShaderBuffer(QueueFamilyMapping mapping, uint32 stride, uint32 numElements, const BulkResourceData& bulkResourceData);
+    ShaderBuffer(QueueFamilyMapping mapping, uint32 stride, uint32 numElements, const DataSource& bulkResourceData);
     virtual ~ShaderBuffer();
-    virtual bool updateContents(const BulkResourceData& resourceData);
+    virtual bool updateContents(const DataSource& sourceData);
     bool isDataEquals(ShaderBuffer* other)
     {
         if(other == nullptr)

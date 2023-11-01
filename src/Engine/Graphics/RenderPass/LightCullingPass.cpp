@@ -22,7 +22,7 @@ void LightCullingPass::beginFrame(const Component::Camera& cam)
     uint32_t viewportWidth = viewport->getSizeX();
     uint32_t viewportHeight = viewport->getSizeY();
 
-    BulkResourceData uniformUpdate;
+    DataSource uniformUpdate;
     viewParams.viewMatrix = cam.getViewMatrix();
     viewParams.projectionMatrix = viewport->getProjectionMatrix();
     viewParams.cameraPosition = Vector4(cam.getCameraPosition(), 1);
@@ -31,7 +31,7 @@ void LightCullingPass::beginFrame(const Component::Camera& cam)
     uniformUpdate.data = (uint8*)&viewParams;
     viewParamsBuffer->updateContents(uniformUpdate);
 
-    BulkResourceData counterReset;
+    DataSource counterReset;
     uint32 reset = 0;
     counterReset.data = (uint8*)&reset;
     counterReset.size = sizeof(uint32);
@@ -161,7 +161,7 @@ void LightCullingPass::publishOutputs()
     uint32 counterReset = 0;
     ShaderBufferCreateInfo structInfo = 
     {
-        .resourceData = {
+        .sourceData = {
             .size = sizeof(uint32),
             .data = (uint8*)&counterReset,
             .owner = Gfx::QueueType::COMPUTE,
@@ -172,7 +172,7 @@ void LightCullingPass::publishOutputs()
     oLightIndexCounter = graphics->createShaderBuffer(structInfo);
     tLightIndexCounter = graphics->createShaderBuffer(structInfo);
     structInfo = {
-        .resourceData = {
+        .sourceData = {
             .size = (uint32)sizeof(uint32) 
                 * dispatchParams.numThreadGroups.x 
                 * dispatchParams.numThreadGroups.y 
@@ -248,23 +248,23 @@ void LightCullingPass::setupFrustums()
     pipelineInfo.pipelineLayout = frustumLayout;
     frustumPipeline = graphics->createComputePipeline(pipelineInfo);
     
-    BulkResourceData resourceInfo;
+    DataSource resourceInfo;
     UniformBufferCreateInfo uniformInfo;
     resourceInfo.size = sizeof(ViewParameter);
     resourceInfo.data = (uint8*)&viewParams;
     resourceInfo.owner = Gfx::QueueType::COMPUTE;
-    uniformInfo.resourceData = resourceInfo;
+    uniformInfo.sourceData = resourceInfo;
     uniformInfo.bDynamic = false;
     viewParamsBuffer = graphics->createUniformBuffer(uniformInfo);
 
     resourceInfo.size = sizeof(DispatchParams);
     resourceInfo.data = (uint8*)&dispatchParams;
-    uniformInfo.resourceData = resourceInfo;
+    uniformInfo.sourceData = resourceInfo;
     uniformInfo.bDynamic = false;
     dispatchParamsBuffer = graphics->createUniformBuffer(uniformInfo);
 
     ShaderBufferCreateInfo structuredInfo = {
-        .resourceData = {
+        .sourceData = {
             .size = sizeof(Frustum) * numThreads.x * numThreads.y * numThreads.z,
             .data = nullptr,
         },

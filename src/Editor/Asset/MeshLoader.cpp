@@ -245,9 +245,9 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialAss
 
         IndexBufferCreateInfo idxInfo;
         idxInfo.indexType = Gfx::SE_INDEX_TYPE_UINT32;
-        idxInfo.resourceData.data = (uint8 *)indices.data();
-        idxInfo.resourceData.owner = Gfx::QueueType::DEDICATED_TRANSFER;
-        idxInfo.resourceData.size = sizeof(uint32) * indices.size();
+        idxInfo.sourceData.data = (uint8 *)indices.data();
+        idxInfo.sourceData.owner = Gfx::QueueType::DEDICATED_TRANSFER;
+        idxInfo.sourceData.size = sizeof(uint32) * indices.size();
         Gfx::PIndexBuffer indexBuffer = graphics->createIndexBuffer(idxInfo);
         indexBuffer->transferOwnership(Gfx::QueueType::GRAPHICS);
 

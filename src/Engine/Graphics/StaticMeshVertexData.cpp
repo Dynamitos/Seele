@@ -131,7 +131,7 @@ Gfx::PDescriptorSet StaticMeshVertexData::getVertexDataSet()
 void StaticMeshVertexData::resizeBuffers()
 {
     ShaderBufferCreateInfo createInfo = {
-        .resourceData = {
+        .sourceData = {
             .size = verticesAllocated * sizeof(Vector),
         },
         .stride = sizeof(Vector),
@@ -141,7 +141,7 @@ void StaticMeshVertexData::resizeBuffers()
     normals = graphics->createShaderBuffer(createInfo);
     tangents = graphics->createShaderBuffer(createInfo);
     biTangents = graphics->createShaderBuffer(createInfo);
-    createInfo.resourceData.size = verticesAllocated * sizeof(Vector2);
+    createInfo.sourceData.size = verticesAllocated * sizeof(Vector2);
     createInfo.stride = sizeof(Vector2);
     texCoords = graphics->createShaderBuffer(createInfo);
     
@@ -154,23 +154,23 @@ void StaticMeshVertexData::resizeBuffers()
 
 void StaticMeshVertexData::updateBuffers()
 {
-    positions->updateContents(BulkResourceData{
+    positions->updateContents(DataSource{
         .size = positionData.size() * sizeof(Vector),
         .data = (uint8*)positionData.data(),
         });
-    texCoords->updateContents(BulkResourceData{
+    texCoords->updateContents(DataSource{
         .size = texCoordsData.size() * sizeof(Vector2),
         .data = (uint8*)texCoordsData.data(),
         });
-    normals->updateContents(BulkResourceData{
+    normals->updateContents(DataSource{
         .size = normalData.size() * sizeof(Vector),
         .data = (uint8*)normalData.data(),
         });
-    tangents->updateContents(BulkResourceData{
+    tangents->updateContents(DataSource{
         .size = tangentData.size() * sizeof(Vector),
         .data = (uint8*)tangentData.data(),
         });
-    biTangents->updateContents(BulkResourceData{
+    biTangents->updateContents(DataSource{
         .size = biTangentData.size() * sizeof(Vector),
         .data = (uint8*)biTangentData.data(),
         });

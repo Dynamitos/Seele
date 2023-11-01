@@ -28,7 +28,7 @@ public:
 
 protected:
 	Gfx::PGraphics graphics;
-	Gfx::PViewport viewport;
+	Gfx::OViewport viewport;
 	PWindow owner;
 	std::string name;
 	

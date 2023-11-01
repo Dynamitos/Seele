@@ -33,10 +33,6 @@ public:
 	void addWaitSemaphore(VkPipelineStageFlags stages, PSemaphore waitSemaphore);
 	void refreshFence();
 	void waitForCommand(uint32 timeToWait = 1000000u);
-	Fence* operator co_await()
-	{
-		return fence.getHandle();
-	}
 	PFence getFence();
 	PCommandBufferManager getManager();
 	enum State
@@ -51,7 +47,7 @@ public:
 private:
 	PGraphics graphics;
 	PCommandBufferManager manager;
-	PFence fence;
+	OFence fence;
 	State state;
 	VkViewport currentViewport;
 	VkRect2D currentScissor;
@@ -62,7 +58,7 @@ private:
 	Array<VkPipelineStageFlags> waitFlags;
 	Array<PRenderCommand> executingRenders;
 	Array<PComputeCommand> executingComputes;
-	Array<DescriptorSet*> boundDescriptors;
+	Array<PDescriptorSet> boundDescriptors;
 	friend class RenderCommand;
 	friend class CommandBufferManager;
 	friend class Queue;
@@ -88,7 +84,7 @@ public:
 	virtual void bindPipeline(Gfx::PGraphicsPipeline pipeline) override;
 	virtual void bindDescriptor(Gfx::PDescriptorSet descriptorSet) override;
 	virtual void bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorSets) override;
-	virtual void bindVertexBuffer(const Array<PVertexBuffer>& buffers) override;
+	virtual void bindVertexBuffer(const Array<Gfx::PVertexBuffer>& buffers) override;
 	virtual void bindIndexBuffer(Gfx::PIndexBuffer indexBuffer) override;
 	virtual void pushConstants(Gfx::PPipelineLayout layout, Gfx::SeShaderStageFlags stage, uint32 offset, uint32 size, const void* data) override;
 	virtual void draw(uint32 vertexCount, uint32 instanceCount, int32 firstVertex, uint32 firstInstance) override;
@@ -96,7 +92,7 @@ public:
 private:
 	PGraphicsPipeline pipeline;
 	bool ready;
-	Array<DescriptorSet*> boundDescriptors;
+	Array<PDescriptorSet> boundDescriptors;
 	VkViewport currentViewport;
 	VkRect2D currentScissor;
 	PGraphics graphics;
@@ -163,11 +159,11 @@ private:
 	uint32 queueFamilyIndex;
 	PCmdBuffer activeCmdBuffer;
 	std::mutex allocatedBufferLock;
-	Array<PCmdBuffer> allocatedBuffers;
+	Array<OCmdBuffer> allocatedBuffers;
 	std::mutex allocatedRenderLock;
 	std::mutex allocatedComputeLock;
-	Array<PRenderCommand> allocatedRenderCommands;
-	Array<PComputeCommand> allocatedComputeCommands;
+	Array<ORenderCommand> allocatedRenderCommands;
+	Array<OComputeCommand> allocatedComputeCommands;
 };
 DEFINE_REF(CommandBufferManager)
 } // namespace Vulkan

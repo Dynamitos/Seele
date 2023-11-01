@@ -15,7 +15,7 @@ public:
     virtual void beginFrame() = 0;
     virtual void endFrame() = 0;
     virtual void onWindowCloseEvent() = 0;
-    virtual PTexture2D getBackBuffer() const = 0;
+    virtual PTexture2D getBackBuffer() = 0;
     virtual void setKeyCallback(std::function<void(KeyCode, InputAction, KeyModifier)> callback) = 0;
     virtual void setMouseMoveCallback(std::function<void(double, double)> callback) = 0;
     virtual void setMouseButtonCallback(std::function<void(MouseButton, InputAction, KeyModifier)> callback) = 0;
@@ -167,13 +167,13 @@ class RenderTargetLayout
 {
 public:
     RenderTargetLayout();
-    RenderTargetLayout(PRenderTargetAttachment depthAttachment);
-    RenderTargetLayout(PRenderTargetAttachment colorAttachment, PRenderTargetAttachment depthAttachment);
-    RenderTargetLayout(Array<PRenderTargetAttachment> colorAttachments, PRenderTargetAttachment depthAttachmet);
-    RenderTargetLayout(Array<PRenderTargetAttachment> inputAttachments, Array<PRenderTargetAttachment> colorAttachments, PRenderTargetAttachment depthAttachment);
-    Array<PRenderTargetAttachment> inputAttachments;
-    Array<PRenderTargetAttachment> colorAttachments;
-    PRenderTargetAttachment depthAttachment;
+    RenderTargetLayout(ORenderTargetAttachment depthAttachment);
+    RenderTargetLayout(ORenderTargetAttachment colorAttachment, ORenderTargetAttachment depthAttachment);
+    RenderTargetLayout(Array<ORenderTargetAttachment> colorAttachments, ORenderTargetAttachment depthAttachmet);
+    RenderTargetLayout(Array<ORenderTargetAttachment> inputAttachments, Array<ORenderTargetAttachment> colorAttachments, ORenderTargetAttachment depthAttachment);
+    Array<ORenderTargetAttachment> inputAttachments;
+    Array<ORenderTargetAttachment> colorAttachments;
+    ORenderTargetAttachment depthAttachment;
     uint32 width;
     uint32 height;
 };
@@ -182,12 +182,12 @@ DEFINE_REF(RenderTargetLayout)
 class RenderPass
 {
 public:
-    RenderPass(PRenderTargetLayout layout) : layout(layout) {}
+    RenderPass(ORenderTargetLayout layout) : layout(std::move(layout)) {}
     virtual ~RenderPass() {}
-    inline PRenderTargetLayout getLayout() const { return layout; }
+    inline PRenderTargetLayout getLayout() { return layout; }
 
 protected:
-    PRenderTargetLayout layout;
+    ORenderTargetLayout layout;
 };
 DEFINE_REF(RenderPass)
 }

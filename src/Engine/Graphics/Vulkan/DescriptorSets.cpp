@@ -312,7 +312,7 @@ DescriptorAllocator::~DescriptorAllocator()
     }
 }
 
-void DescriptorAllocator::allocateDescriptorSet(Gfx::PDescriptorSet &descriptorSet)
+Gfx::PDescriptorSet DescriptorAllocator::allocateDescriptorSet()
 {
     VkDescriptorSetLayout layoutHandle = layout.getHandle();
     VkDescriptorSetAllocateInfo allocInfo =

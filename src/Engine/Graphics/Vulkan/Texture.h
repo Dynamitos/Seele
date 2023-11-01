@@ -61,7 +61,7 @@ private:
     //Updates via reference
     Gfx::QueueType& currentOwner;
     PGraphics graphics;
-    PSubAllocation allocation;
+    OSubAllocation allocation;
     uint32 sizeX;
     uint32 sizeY;
     uint32 sizeZ;

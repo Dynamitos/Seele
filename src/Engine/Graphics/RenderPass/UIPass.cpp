@@ -18,7 +18,7 @@ UIPass::~UIPass()
 void UIPass::beginFrame(const Component::Camera&) 
 {
     VertexBufferCreateInfo info = {
-        .resourceData = {
+        .sourceData = {
             .size = (uint32)(sizeof(UI::RenderElementStyle) * renderElements.size()),
             .data = (uint8*)renderElements.data()
         },
@@ -148,7 +148,7 @@ void UIPass::createRenderPass()
 
     Matrix4 projectionMatrix = glm::ortho(0, 1, 1, 0);
     UniformBufferCreateInfo info = {
-        .resourceData = {
+        .sourceData = {
             .size = sizeof(Matrix4),
             .data = (uint8*)&projectionMatrix,
         },
@@ -158,7 +158,7 @@ void UIPass::createRenderPass()
     Gfx::PSamplerState backgroundSampler = graphics->createSamplerState({});
 
     info = {
-        .resourceData = {
+        .sourceData = {
             .size = sizeof(uint32),
             .data = nullptr
         },

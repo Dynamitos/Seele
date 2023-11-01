@@ -8,6 +8,10 @@ MeshUpdater::MeshUpdater(PScene scene)
 {
 }
 
+MeshUpdater::~MeshUpdater()
+{
+}
+
 void MeshUpdater::update(Component::Transform& transform, Component::Mesh& mesh)
 {
     mesh.vertexData->updateMesh(transform, mesh);

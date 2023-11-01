@@ -102,7 +102,7 @@ void FontAsset::load(ArchiveBuffer& buffer)
         ktxTexture2_TranscodeBasis(kTexture, KTX_TTF_BC7_RGBA, 0);
 
         TextureCreateInfo createInfo = {
-            .resourceData = {
+            .sourceData = {
                 .size = ktxTexture_GetDataSize(ktxTexture(kTexture)),
                 .data = ktxTexture_GetData(ktxTexture(kTexture)),
                 .owner = Gfx::QueueType::GRAPHICS,

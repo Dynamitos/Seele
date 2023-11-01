@@ -7,8 +7,8 @@
 using namespace Seele;
 using namespace Seele::Vulkan;
 
-RenderPass::RenderPass(PGraphics graphics, Gfx::PRenderTargetLayout layout, Gfx::PViewport viewport)
-    : Gfx::RenderPass(layout)
+RenderPass::RenderPass(PGraphics graphics, Gfx::ORenderTargetLayout layout, Gfx::PViewport viewport)
+    : Gfx::RenderPass(std::move(layout))
     , graphics(graphics)
 {
     renderArea.extent.width = viewport->getSizeX();
@@ -21,7 +21,7 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::PRenderTargetLayout layout, Gfx:
     Array<VkAttachmentReference> colorRefs;
     VkAttachmentReference depthRef;
     uint32 attachmentCounter = 0;
-    for (auto inputAttachment : layout->inputAttachments)
+    for (auto& inputAttachment : this->layout->inputAttachments)
     {
         PTexture2D image = inputAttachment->getTexture().cast<Texture2D>();
         VkAttachmentDescription& desc = attachments.add();
@@ -39,7 +39,7 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::PRenderTargetLayout layout, Gfx:
         ref.attachment = attachmentCounter;
         attachmentCounter++;
     }
-    for (auto colorAttachment : layout->colorAttachments)
+    for (auto& colorAttachment : this->layout->colorAttachments)
     {
         VkAttachmentDescription& desc = attachments.add();
         desc.flags = 0;
@@ -127,12 +127,12 @@ uint32 RenderPass::getFramebufferHash()
 {
     FramebufferDescription description;
     std::memset(&description, 0, sizeof(FramebufferDescription));
-    for (auto inputAttachment : layout->inputAttachments)
+    for (auto& inputAttachment : layout->inputAttachments)
     {
         PTexture2D tex = inputAttachment->getTexture().cast<Texture2D>();
         description.inputAttachments[description.numInputAttachments++] = tex->getView();
     }
-    for (auto colorAttachment : layout->colorAttachments)
+    for (auto& colorAttachment : layout->colorAttachments)
     {
         PTexture2D tex = colorAttachment->getTexture().cast<Texture2D>();
         description.colorAttachments[description.numColorAttachments++] = tex->getView();

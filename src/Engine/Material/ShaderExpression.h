@@ -208,21 +208,21 @@ DEFINE_REF(SampleExpression)
 struct MaterialNode
 {
     std::string profile;
-    Map<std::string, PShaderExpression> variables;
+    Map<std::string, OShaderExpression> variables;
     MaterialNode() {}
     ~MaterialNode() {}
     void save(ArchiveBuffer& buffer) const;
     void load(ArchiveBuffer& buffer);
 };
 template<>
-static void Serialization::save(ArchiveBuffer& buffer, const PShaderExpression& parameter)
+static void Serialization::save(ArchiveBuffer& buffer, const OShaderExpression& parameter)
 {
     Serialization::save(buffer, parameter->getIdentifier());
     parameter->save(buffer);
 }
 
 template<>
-static void Serialization::load(ArchiveBuffer& buffer, PShaderExpression& parameter)
+static void Serialization::load(ArchiveBuffer& buffer, OShaderExpression& parameter)
 {
     uint64 identifier = 0;
     Serialization::load(buffer, identifier);
@@ -268,14 +268,14 @@ static void Serialization::load(ArchiveBuffer& buffer, PShaderExpression& parame
 }
 
 template<>
-static void Serialization::save(ArchiveBuffer& buffer, const PShaderParameter& parameter)
+static void Serialization::save(ArchiveBuffer& buffer, const OShaderParameter& parameter)
 {
     Serialization::save(buffer, parameter->getIdentifier());
     parameter->save(buffer);
 }
 
 template<>
-static void Serialization::load(ArchiveBuffer& buffer, PShaderParameter& parameter)
+static void Serialization::load(ArchiveBuffer& buffer, OShaderParameter& parameter)
 {
     uint64 identifier = 0;
     Serialization::load(buffer, identifier);

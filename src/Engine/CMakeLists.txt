@@ -3,8 +3,7 @@ target_sources(Engine
         Concepts.h
         EngineTypes.h
         Game.h
-        MinimalEngine.h
-        MinimalEngine.cpp)
+        MinimalEngine.h)
 
 target_sources(Engine
     PUBLIC FILE_SET HEADERS

@@ -319,7 +319,7 @@ public:
         {
             if (pred(_data[i]))
             {
-                return const_iterator(&_data[i]);
+                return iterator(&_data[i]);
             }
         }
         return end();

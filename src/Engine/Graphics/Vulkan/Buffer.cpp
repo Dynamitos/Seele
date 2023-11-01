@@ -12,9 +12,9 @@ struct PendingBuffer
     bool bWriteOnly;
 };
 
-static std::map<Vulkan::ShaderBuffer *, PendingBuffer> pendingBuffers;
+static std::map<Vulkan::Buffer*, PendingBuffer> pendingBuffers;
 
-ShaderBuffer::ShaderBuffer(PGraphics graphics, uint64 size, VkBufferUsageFlags usage, Gfx::QueueType& queueType, bool bDynamic)
+Buffer::Buffer(PGraphics graphics, uint64 size, VkBufferUsageFlags usage, Gfx::QueueType& queueType, bool bDynamic)
     : graphics(graphics)
     , currentBuffer(0)
     , size(size)
@@ -57,7 +57,7 @@ ShaderBuffer::ShaderBuffer(PGraphics graphics, uint64 size, VkBufferUsageFlags u
     }
 }
 
-ShaderBuffer::~ShaderBuffer()
+Buffer::~Buffer()
 {
     //PCmdBuffer cmdBuffer = graphics->getQueueCommands(owner)->getCommands();
     //VkDevice device = graphics->getDevice();
@@ -75,12 +75,12 @@ ShaderBuffer::~ShaderBuffer()
     graphics = nullptr;
 }
 
-VkDeviceSize ShaderBuffer::getOffset() const
+VkDeviceSize Buffer::getOffset() const
 {
     return buffers[currentBuffer].allocation->getOffset();
 }
 
-void ShaderBuffer::executeOwnershipBarrier(Gfx::QueueType newOwner)
+void Buffer::executeOwnershipBarrier(Gfx::QueueType newOwner)
 {
     VkBufferMemoryBarrier barrier =
         init::BufferMemoryBarrier();
@@ -146,7 +146,7 @@ void ShaderBuffer::executeOwnershipBarrier(Gfx::QueueType newOwner)
     sourceManager->submitCommands();
 }
 
-void ShaderBuffer::executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, 
+void Buffer::executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage,
         VkAccessFlags dstAccess, VkPipelineStageFlags dstStage) 
 {
     PCmdBuffer commandBuffer = graphics->getQueueCommands(owner)->getCommands();
@@ -166,12 +166,12 @@ void ShaderBuffer::executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineSta
     vkCmdPipelineBarrier(commandBuffer->getHandle(), srcStage, dstStage, 0, 0, nullptr, numBuffers, dynamicBarriers, 0, nullptr);
 }
 
-void *ShaderBuffer::lock(bool bWriteOnly)
+void * Buffer::lock(bool bWriteOnly)
 {
     return lockRegion(0, size, bWriteOnly);
 }
 
-void *ShaderBuffer::lockRegion(uint64 regionOffset, uint64 regionSize, bool bWriteOnly)
+void * Buffer::lockRegion(uint64 regionOffset, uint64 regionSize, bool bWriteOnly)
 {
     void *data = nullptr;
 
@@ -243,7 +243,7 @@ void *ShaderBuffer::lockRegion(uint64 regionOffset, uint64 regionSize, bool bWri
     return data;
 }
 
-void ShaderBuffer::unlock()
+void Buffer::unlock()
 {
     auto found = pendingBuffers.find(this);
     if (found != pendingBuffers.end())
@@ -270,18 +270,18 @@ void ShaderBuffer::unlock()
 }
 
 UniformBuffer::UniformBuffer(PGraphics graphics, const UniformBufferCreateInfo &createInfo)
-    : Gfx::UniformBuffer(graphics->getFamilyMapping(), createInfo.resourceData)
-    , Vulkan::ShaderBuffer(graphics, createInfo.resourceData.size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, currentOwner, createInfo.bDynamic)
+    : Gfx::UniformBuffer(graphics->getFamilyMapping(), createInfo.sourceData)
+    , Vulkan::Buffer(graphics, createInfo.sourceData.size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, currentOwner, createInfo.bDynamic)
     , dedicatedStagingBuffer(nullptr)
 {
     if(createInfo.bDynamic)
     {
-        dedicatedStagingBuffer = graphics->getStagingManager()->allocateStagingBuffer(createInfo.resourceData.size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+        dedicatedStagingBuffer = graphics->getStagingManager()->allocateStagingBuffer(createInfo.sourceData.size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
     }
-    if (createInfo.resourceData.data != nullptr)
+    if (createInfo.sourceData.data != nullptr)
     {
         void *data = lock();
-        std::memcpy(data, createInfo.resourceData.data, createInfo.resourceData.size);
+        std::memcpy(data, createInfo.sourceData.data, createInfo.sourceData.size);
         unlock();
     }
 }
@@ -290,15 +290,15 @@ UniformBuffer::~UniformBuffer()
 {
 }
 
-bool UniformBuffer::updateContents(const BulkResourceData &resourceData) 
+bool UniformBuffer::updateContents(const DataSource &sourceData) 
 {
-    if(!Gfx::UniformBuffer::updateContents(resourceData))
+    if(!Gfx::UniformBuffer::updateContents(sourceData))
     {
         // no update was performed, skip
         return false;
     }
     void* data = lock();
-    std::memcpy(data, resourceData.data, resourceData.size);
+    std::memcpy(data, sourceData.data, sourceData.size);
     unlock();
     return true;
 }
@@ -308,7 +308,7 @@ void* UniformBuffer::lock(bool bWriteOnly)
     {
         return dedicatedStagingBuffer->getMappedPointer();
     }
-    return ShaderBuffer::lock(bWriteOnly);
+    return Vulkan::Buffer::lock(bWriteOnly);
 }
 
 void UniformBuffer::unlock()
@@ -321,13 +321,13 @@ void UniformBuffer::unlock()
 
         VkBufferCopy region;
         std::memset(&region, 0, sizeof(VkBufferCopy));
-        region.size = ShaderBuffer::size;
+        region.size = Vulkan::Buffer::size;
         vkCmdCopyBuffer(cmdHandle, dedicatedStagingBuffer->getHandle(), buffers[currentBuffer].buffer, 1, &region);
         graphics->getQueueCommands(currentOwner)->submitCommands();
     }
     else
     {
-        ShaderBuffer::unlock();
+        Vulkan::Buffer::unlock();
     }
 }
 
@@ -338,13 +338,13 @@ void UniformBuffer::requestOwnershipTransfer(Gfx::QueueType newOwner)
 
 void UniformBuffer::executeOwnershipBarrier(Gfx::QueueType newOwner)
 {
-    Vulkan::ShaderBuffer::executeOwnershipBarrier(newOwner);
+    Vulkan::Buffer::executeOwnershipBarrier(newOwner);
 }
 
 void UniformBuffer::executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, 
         VkAccessFlags dstAccess, VkPipelineStageFlags dstStage) 
 {
-    Vulkan::ShaderBuffer::executePipelineBarrier(srcAccess, srcStage, dstAccess, dstStage);
+    Vulkan::Buffer::executePipelineBarrier(srcAccess, srcStage, dstAccess, dstStage);
 }
 
 VkAccessFlags UniformBuffer::getSourceAccessMask()
@@ -357,14 +357,14 @@ VkAccessFlags UniformBuffer::getDestAccessMask()
     return VK_ACCESS_UNIFORM_READ_BIT;
 }
 
-ShaderBuffer::ShaderBuffer(PGraphics graphics, const ShaderBufferCreateInfo &resourceData)
-    : Gfx::ShaderBuffer(graphics->getFamilyMapping(), resourceData.stride, resourceData.resourceData.size / resourceData.stride, resourceData.resourceData)
-    , Vulkan::ShaderBuffer(graphics, resourceData.resourceData.size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, currentOwner, resourceData.bDynamic)
+ShaderBuffer::ShaderBuffer(PGraphics graphics, const ShaderBufferCreateInfo &sourceData)
+    : Gfx::ShaderBuffer(graphics->getFamilyMapping(), sourceData.stride, sourceData.sourceData.size / sourceData.stride, sourceData.sourceData)
+    , Vulkan::Buffer(graphics, sourceData.sourceData.size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, currentOwner, sourceData.bDynamic)
 {
-    if (resourceData.resourceData.data != nullptr)
+    if (sourceData.sourceData.data != nullptr)
     {
         void *data = lock();
-        std::memcpy(data, resourceData.resourceData.data, resourceData.resourceData.size);
+        std::memcpy(data, sourceData.sourceData.data, sourceData.sourceData.size);
         unlock();
     }
 }
@@ -373,13 +373,13 @@ ShaderBuffer::~ShaderBuffer()
 {
 }
 
-bool ShaderBuffer::updateContents(const BulkResourceData &resourceData) 
+bool ShaderBuffer::updateContents(const DataSource &sourceData) 
 {
-    assert(resourceData.size <= getSize());
-    Gfx::ShaderBuffer::updateContents(resourceData);
+    assert(sourceData.size <= getSize());
+    Gfx::ShaderBuffer::updateContents(sourceData);
     //We always want to update, as the contents could be different on the GPU
     void* data = lock();
-    std::memcpy(data, resourceData.data, resourceData.size);
+    std::memcpy(data, sourceData.data, sourceData.size);
     unlock();
     return true;
 }
@@ -402,13 +402,13 @@ void ShaderBuffer::unlock()
 
         VkBufferCopy region;
         std::memset(&region, 0, sizeof(VkBufferCopy));
-        region.size = ShaderBuffer::size;
+        region.size = Vulkan::Buffer::size;
         vkCmdCopyBuffer(cmdHandle, dedicatedStagingBuffer->getHandle(), buffers[currentBuffer].buffer, 1, &region);
         graphics->getQueueCommands(currentOwner)->submitCommands();
     }
     else
     {
-        ShaderBuffer::unlock();
+        Vulkan::Buffer::unlock();
     }
 }
 
@@ -438,14 +438,14 @@ VkAccessFlags ShaderBuffer::getDestAccessMask()
     return VK_ACCESS_MEMORY_READ_BIT;
 }
 
-VertexBuffer::VertexBuffer(PGraphics graphics, const VertexBufferCreateInfo &resourceData)
-    : Gfx::VertexBuffer(graphics->getFamilyMapping(), resourceData.numVertices, resourceData.vertexSize, resourceData.resourceData.owner)
-    , Vulkan::ShaderBuffer(graphics, resourceData.resourceData.size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, currentOwner)
+VertexBuffer::VertexBuffer(PGraphics graphics, const VertexBufferCreateInfo &sourceData)
+    : Gfx::VertexBuffer(graphics->getFamilyMapping(), sourceData.numVertices, sourceData.vertexSize, sourceData.sourceData.owner)
+    , Vulkan::Buffer(graphics, sourceData.sourceData.size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, currentOwner)
 {
-    if (resourceData.resourceData.data != nullptr)
+    if (sourceData.sourceData.data != nullptr)
     {
         void *data = lock();
-        std::memcpy(data, resourceData.resourceData.data, resourceData.resourceData.size);
+        std::memcpy(data, sourceData.sourceData.data, sourceData.sourceData.size);
         unlock();
     }
 }
@@ -454,7 +454,7 @@ VertexBuffer::~VertexBuffer()
 {
 }
 
-void VertexBuffer::updateRegion(BulkResourceData update)
+void VertexBuffer::updateRegion(DataSource update)
 {
     void* data = lockRegion(update.offset, update.size);
     std::memcpy(data, update.data, update.size);
@@ -476,13 +476,13 @@ void VertexBuffer::requestOwnershipTransfer(Gfx::QueueType newOwner)
 
 void VertexBuffer::executeOwnershipBarrier(Gfx::QueueType newOwner)
 {
-    Vulkan::ShaderBuffer::executeOwnershipBarrier(newOwner);
+    Vulkan::Buffer::executeOwnershipBarrier(newOwner);
 }
 
 void VertexBuffer::executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, 
         VkAccessFlags dstAccess, VkPipelineStageFlags dstStage) 
 {
-    Vulkan::ShaderBuffer::executePipelineBarrier(srcAccess, srcStage, dstAccess, dstStage);
+    Vulkan::Buffer::executePipelineBarrier(srcAccess, srcStage, dstAccess, dstStage);
 }
 
 VkAccessFlags VertexBuffer::getSourceAccessMask()
@@ -495,14 +495,14 @@ VkAccessFlags VertexBuffer::getDestAccessMask()
     return VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT;
 }
 
-IndexBuffer::IndexBuffer(PGraphics graphics, const IndexBufferCreateInfo &resourceData)
-    : Gfx::IndexBuffer(graphics->getFamilyMapping(), resourceData.resourceData.size, resourceData.indexType, resourceData.resourceData.owner)
-    , Vulkan::ShaderBuffer(graphics, resourceData.resourceData.size, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, currentOwner)
+IndexBuffer::IndexBuffer(PGraphics graphics, const IndexBufferCreateInfo &sourceData)
+    : Gfx::IndexBuffer(graphics->getFamilyMapping(), sourceData.sourceData.size, sourceData.indexType, sourceData.sourceData.owner)
+    , Vulkan::Buffer(graphics, sourceData.sourceData.size, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, currentOwner)
 {
-    if (resourceData.resourceData.data != nullptr)
+    if (sourceData.sourceData.data != nullptr)
     {
         void *data = lock();
-        std::memcpy(data, resourceData.resourceData.data, resourceData.resourceData.size);
+        std::memcpy(data, sourceData.sourceData.data, sourceData.sourceData.size);
         unlock();
     }
 }
@@ -526,13 +526,13 @@ void IndexBuffer::requestOwnershipTransfer(Gfx::QueueType newOwner)
 
 void IndexBuffer::executeOwnershipBarrier(Gfx::QueueType newOwner)
 {
-    Vulkan::ShaderBuffer::executeOwnershipBarrier(newOwner);
+    Vulkan::Buffer::executeOwnershipBarrier(newOwner);
 }
 
 void IndexBuffer::executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, 
         VkAccessFlags dstAccess, VkPipelineStageFlags dstStage) 
 {
-    Vulkan::ShaderBuffer::executePipelineBarrier(srcAccess, srcStage, dstAccess, dstStage);
+    Vulkan::Buffer::executePipelineBarrier(srcAccess, srcStage, dstAccess, dstStage);
 }
 
 VkAccessFlags IndexBuffer::getSourceAccessMask()

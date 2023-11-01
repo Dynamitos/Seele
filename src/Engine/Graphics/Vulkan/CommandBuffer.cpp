@@ -7,6 +7,7 @@
 #include "RenderPass.h"
 #include "Pipeline.h"
 #include "DescriptorSets.h"
+#include "RenderTarget.h"
 
 using namespace Seele;
 using namespace Seele::Vulkan;
@@ -277,16 +278,16 @@ void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorS
     vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getLayout(), 0, (uint32)descriptorSets.size(), sets, 0, nullptr);
     delete[] sets;
 }
-void RenderCommand::bindVertexBuffer(const Array<VertexInputStream>& streams)
+void RenderCommand::bindVertexBuffer(const Array<Gfx::PVertexBuffer>& streams)
 {
     assert(threadId == std::this_thread::get_id());
     Array<VkBuffer> buffers(streams.size());
     Array<VkDeviceSize> offsets(streams.size());
     for(uint32 i = 0; i < streams.size(); ++i)
     {
-        PVertexBuffer buf = streams[i].vertexBuffer.cast<VertexBuffer>();
+        PVertexBuffer buf = streams[i].cast<VertexBuffer>();
         buffers[i] = buf->getHandle();
-        offsets[i] = streams[i].offset;
+        offsets[i] = 0;
     };
     vkCmdBindVertexBuffers(handle, 0, (uint32)streams.size(), buffers.data(), offsets.data());
 }
@@ -424,10 +425,13 @@ CommandBufferManager::CommandBufferManager(PGraphics graphics, PQueue queue)
 
     VK_CHECK(vkCreateCommandPool(graphics->getDevice(), &info, nullptr, &commandPool));
 
-    activeCmdBuffer = new CmdBuffer(graphics, commandPool, this);
+    {
+        std::scoped_lock lock(allocatedBufferLock);
+        allocatedBuffers.add(new CmdBuffer(graphics, commandPool, this));
+    }
+    
+    activeCmdBuffer = allocatedBuffers.back();
     activeCmdBuffer->begin();
-    std::scoped_lock lock(allocatedBufferLock);
-    allocatedBuffers.add(activeCmdBuffer);
 }
 
 CommandBufferManager::~CommandBufferManager()
@@ -455,10 +459,10 @@ PRenderCommand CommandBufferManager::createRenderCommand(PRenderPass renderPass,
             return cmdBuffer;
         }
     }
-    PRenderCommand result = new RenderCommand(graphics, commandPool);
+    allocatedRenderCommands.add(new RenderCommand(graphics, commandPool));
+    PRenderCommand result = allocatedRenderCommands.back();
     result->name = name;
     result->begin(renderPass, framebuffer);
-    allocatedRenderCommands.add(result);
     return result;
 }
 
@@ -475,10 +479,10 @@ PComputeCommand CommandBufferManager::createComputeCommand(const std::string& na
             return cmdBuffer;
         }
     }
-    PComputeCommand result = new ComputeCommand(graphics, commandPool);
+    allocatedComputeCommands.add(new ComputeCommand(graphics, commandPool));
+    PComputeCommand result = allocatedComputeCommands.back();
     result->name = name;
     result->begin(activeCmdBuffer);
-    allocatedComputeCommands.add(result);
     return result;
 }
 
@@ -517,7 +521,7 @@ void CommandBufferManager::submitCommands(PSemaphore signalSemaphore)
             assert(cmdBuffer->state == CmdBuffer::State::Submitted);
         }
     }
-    activeCmdBuffer = new CmdBuffer(graphics, commandPool, this);
-    allocatedBuffers.add(activeCmdBuffer);
+    allocatedBuffers.add(new CmdBuffer(graphics, commandPool, this));
+    activeCmdBuffer = allocatedBuffers.back();
     activeCmdBuffer->begin();
 }

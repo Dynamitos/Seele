@@ -1,8 +1,9 @@
-#include "VulkanGraphicsResources.h"
-#include "VulkanGraphics.h"
-#include "VulkanInitializer.h"
-#include "VulkanGraphicsEnums.h"
-#include "VulkanCommandBuffer.h"
+#include "RenderTarget.h"
+#include "Resources.h"
+#include "Graphics.h"
+#include "Initializer.h"
+#include "Enums.h"
+#include "CommandBuffer.h"
 #include <GLFW/glfw3.h>
 
 using namespace Seele;
@@ -116,9 +117,9 @@ void Window::onWindowCloseEvent()
 {
 }
 
-Gfx::PTexture2D Window::getBackBuffer() const
+Gfx::PTexture2D Window::getBackBuffer()
 {
-    return backBufferImages[currentImageIndex];
+    return PTexture2D(backBufferImages[currentImageIndex]);
 }
 
 void Window::setKeyCallback(std::function<void(KeyCode, InputAction, KeyModifier)> callback)
@@ -289,7 +290,7 @@ void Window::createSwapchain()
     backBufferCreateInfo.width = getSizeX();
     backBufferCreateInfo.height = getSizeY();
     backBufferCreateInfo.usage = Gfx::SE_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-    backBufferCreateInfo.resourceData.owner = Gfx::QueueType::GRAPHICS;
+    backBufferCreateInfo.sourceData.owner = Gfx::QueueType::GRAPHICS;
     backBufferCreateInfo.format = cast(surfaceFormat.format);
     for (uint32 i = 0; i < numSwapchainImages; ++i)
     {

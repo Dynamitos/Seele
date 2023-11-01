@@ -43,7 +43,7 @@ void SubAllocation::invalidateMemory()
     owner->invalidateMemory();
 }
 
-Allocation::Allocation(PGraphics graphics, Allocator *allocator, VkDeviceSize size, uint8 memoryTypeIndex,
+Allocation::Allocation(PGraphics graphics, PAllocator allocator, VkDeviceSize size, uint8 memoryTypeIndex,
                        VkMemoryPropertyFlags properties, VkMemoryDedicatedAllocateInfo *dedicatedInfo)
     : device(graphics->getDevice())
     , allocator(allocator)

@@ -1,6 +1,7 @@
 #pragma once
 #include "Enums.h"
 #include "CRC.h"
+#include "Resources.h"
 
 namespace Seele
 {
@@ -86,9 +87,12 @@ struct PermutationId
 struct ShaderCollection
 {
     PermutationId id;
-    //PVertexDeclaration vertexDeclaration;
-    PVertexShader vertexShader;
-    PFragmentShader fragmentShader;
+
+    OVertexDeclaration vertexDeclaration;
+    OVertexShader vertexShader;
+    OTaskShader taskShader;
+    OMeshShader meshShader;
+    OFragmentShader fragmentShader;
 };
 class ShaderMap
 {

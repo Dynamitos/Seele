@@ -12,14 +12,14 @@ LightEnvironment::LightEnvironment(Gfx::PGraphics graphics)
     layout->addDescriptorBinding(2, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
     layout->create();
     lightEnvBuffer = graphics->createUniformBuffer(UniformBufferCreateInfo{
-        .resourceData = {
+        .sourceData = {
             .size = sizeof(LightEnv),
             .data = (uint8*) &lightEnv,
         },
         .bDynamic = true,
     });
     directionalLights = graphics->createShaderBuffer(ShaderBufferCreateInfo{
-        .resourceData = {
+        .sourceData = {
             .size = sizeof(Component::DirectionalLight) * MAX_DIRECTIONAL_LIGHTS,
             .data = (uint8*)dirs.data(),
         },
@@ -27,7 +27,7 @@ LightEnvironment::LightEnvironment(Gfx::PGraphics graphics)
         .bDynamic = true,
     });
     pointLights = graphics->createShaderBuffer(ShaderBufferCreateInfo{
-        .resourceData = {
+        .sourceData = {
             .size = sizeof(Component::PointLight) * MAX_POINT_LIGHTS,
             .data = (uint8*)dirs.data(),
         },
@@ -62,15 +62,15 @@ void LightEnvironment::commit()
 {
     lightEnv.numDirectionalLights = dirs.size();
     lightEnv.numPointLights = points.size();
-    lightEnvBuffer->updateContents(BulkResourceData{
+    lightEnvBuffer->updateContents(DataSource{
         .size = sizeof(LightEnv),
         .data = (uint8*) & lightEnv,
         });
-    directionalLights->updateContents(BulkResourceData{
+    directionalLights->updateContents(DataSource{
         .size = sizeof(Component::DirectionalLight) * dirs.size(),
         .data = (uint8*)dirs.data(),
         });
-    pointLights->updateContents(BulkResourceData{
+    pointLights->updateContents(DataSource{
         .size = sizeof(Component::PointLight) * points.size(),
         .data = (uint8*)points.data(),
         });

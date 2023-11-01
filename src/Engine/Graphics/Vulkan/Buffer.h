@@ -8,11 +8,11 @@ namespace Seele
 namespace Vulkan
 {
 
-class ShaderBuffer
+class Buffer
 {
 public:
-    ShaderBuffer(PGraphics graphics, uint64 size, VkBufferUsageFlags usage, Gfx::QueueType& queueType, bool bDynamic = false);
-    virtual ~ShaderBuffer();
+    Buffer(PGraphics graphics, uint64 size, VkBufferUsageFlags usage, Gfx::QueueType& queueType, bool bDynamic = false);
+    virtual ~Buffer();
     VkBuffer getHandle() const
     {
         return buffers[currentBuffer].buffer;
@@ -52,15 +52,15 @@ protected:
     virtual VkAccessFlags getSourceAccessMask() = 0;
     virtual VkAccessFlags getDestAccessMask() = 0;
 };
-DEFINE_REF(ShaderBuffer)
+DEFINE_REF(Buffer)
 
 DECLARE_REF(StagingBuffer)
-class UniformBuffer : public Gfx::UniformBuffer, public ShaderBuffer
+class UniformBuffer : public Gfx::UniformBuffer, public Buffer
 {
 public:
-    UniformBuffer(PGraphics graphics, const UniformBufferCreateInfo &resourceData);
+    UniformBuffer(PGraphics graphics, const UniformBufferCreateInfo &sourceData);
     virtual ~UniformBuffer();
-    virtual bool updateContents(const BulkResourceData &resourceData);
+    virtual bool updateContents(const DataSource &sourceData);
     
     virtual void* lock(bool bWriteOnly = true) override;
     virtual void unlock() override;
@@ -79,12 +79,12 @@ private:
 };
 DEFINE_REF(UniformBuffer)
 
-class ShaderBuffer : public Gfx::ShaderBuffer, public ShaderBuffer
+class ShaderBuffer : public Gfx::ShaderBuffer, public Buffer
 {
 public:
-    ShaderBuffer(PGraphics graphics, const ShaderBufferCreateInfo &resourceData);
+    ShaderBuffer(PGraphics graphics, const ShaderBufferCreateInfo &sourceData);
     virtual ~ShaderBuffer();
-    virtual bool updateContents(const BulkResourceData &resourceData);
+    virtual bool updateContents(const DataSource &sourceData);
 
     virtual void* lock(bool bWriteOnly = true) override;
     virtual void unlock() override;
@@ -102,13 +102,13 @@ private:
 };
 DEFINE_REF(ShaderBuffer)
 
-class VertexBuffer : public Gfx::VertexBuffer, public ShaderBuffer
+class VertexBuffer : public Gfx::VertexBuffer, public Buffer
 {
 public:
-    VertexBuffer(PGraphics graphics, const VertexBufferCreateInfo &resourceData);
+    VertexBuffer(PGraphics graphics, const VertexBufferCreateInfo &sourceData);
     virtual ~VertexBuffer();
 
-    virtual void updateRegion(BulkResourceData update) override;
+    virtual void updateRegion(DataSource update) override;
     virtual void download(Array<uint8>& buffer) override;
 protected:
     // Inherited via Vulkan::Buffer
@@ -122,10 +122,10 @@ protected:
 };
 DEFINE_REF(VertexBuffer)
 
-class IndexBuffer : public Gfx::IndexBuffer, public ShaderBuffer
+class IndexBuffer : public Gfx::IndexBuffer, public Buffer
 {
 public:
-    IndexBuffer(PGraphics graphics, const IndexBufferCreateInfo &resourceData);
+    IndexBuffer(PGraphics graphics, const IndexBufferCreateInfo &sourceData);
     virtual ~IndexBuffer();
 
     virtual void download(Array<uint8>& buffer) override;

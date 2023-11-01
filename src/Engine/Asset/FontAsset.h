@@ -18,7 +18,7 @@ public:
 
     struct Glyph
     {
-        Gfx::PTexture2D texture;
+        Gfx::OTexture2D texture;
         IVector2 size;
         IVector2 bearing;
         uint32 advance;

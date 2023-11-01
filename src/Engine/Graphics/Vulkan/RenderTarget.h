@@ -16,7 +16,7 @@ public:
     virtual ~Window();
     virtual void beginFrame() override;
     virtual void endFrame() override;
-    virtual Gfx::PTexture2D getBackBuffer() const override;
+    virtual Gfx::PTexture2D getBackBuffer() override;
     virtual void onWindowCloseEvent() override;
     virtual void setKeyCallback(std::function<void(KeyCode, InputAction, KeyModifier)> callback) override;
     virtual void setMouseMoveCallback(std::function<void(double, double)> callback) override;
@@ -45,9 +45,9 @@ protected:
     void chooseSurfaceFormat(const Array<VkSurfaceFormatKHR> &available, Gfx::SeFormat preferred);
     void choosePresentMode(const Array<VkPresentModeKHR> &modes);
 
-    PTexture2D backBufferImages[Gfx::numFramesBuffered];
-    PSemaphore renderFinished[Gfx::numFramesBuffered];
-    PSemaphore imageAcquired[Gfx::numFramesBuffered];
+    OTexture2D backBufferImages[Gfx::numFramesBuffered];
+    OSemaphore renderFinished[Gfx::numFramesBuffered];
+    OSemaphore imageAcquired[Gfx::numFramesBuffered];
     PSemaphore imageAcquiredSemaphore;
 
     PGraphics graphics;

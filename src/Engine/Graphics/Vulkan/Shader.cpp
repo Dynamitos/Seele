@@ -1,6 +1,5 @@
-#include "VulkanShader.h"
-#include "VulkanGraphics.h"
-#include "VulkanDescriptorSets.h"
+#include "Shader.h"
+#include "Graphics.h"
 #include "slang.h"
 #include "slang-com-ptr.h"
 #include "stdlib.h"
@@ -21,11 +20,6 @@ Shader::~Shader()
     {
         vkDestroyShaderModule(graphics->getDevice(), module, nullptr);
     }
-}
-
-Map<uint32, PDescriptorLayout> Shader::getDescriptorLayouts()
-{
-    return descriptorSets;
 }
 
 uint32 Seele::Vulkan::Shader::getShaderHash() const

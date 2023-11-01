@@ -46,9 +46,9 @@ namespace Serialization
         type.load(buffer);
     }
     template<typename T>
-    static void save(ArchiveBuffer& buffer, const RefPtr<T>& ptr);
+    static void save(ArchiveBuffer& buffer, const OwningPtr<T>& ptr);
     template<typename T>
-    static void load(ArchiveBuffer& buffer, RefPtr<T>& ptr);
+    static void load(ArchiveBuffer& buffer, OwningPtr<T>& ptr);
     static void save(ArchiveBuffer& buffer, const std::string& type)
     {
         uint64 length = type.size();

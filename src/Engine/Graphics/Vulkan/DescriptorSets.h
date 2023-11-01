@@ -131,7 +131,7 @@ class DescriptorAllocator : public Gfx::DescriptorAllocator
 public:
     DescriptorAllocator(PGraphics graphics, DescriptorLayout &layout);
     virtual ~DescriptorAllocator();
-    virtual void allocateDescriptorSet(Gfx::PDescriptorSet &descriptorSet);
+    virtual Gfx::PDescriptorSet allocateDescriptorSet() override;
     virtual void reset();
 
     inline VkDescriptorPool getHandle() const
@@ -147,7 +147,7 @@ private:
     PGraphics graphics;
     DescriptorLayout &layout;
     const static int maxSets = 64;
-    StaticArray<PDescriptorSet, maxSets> cachedHandles;
+    StaticArray<ODescriptorSet, maxSets> cachedHandles;
     VkDescriptorPool poolHandle;
     DescriptorAllocator* nextAlloc = nullptr;
 };

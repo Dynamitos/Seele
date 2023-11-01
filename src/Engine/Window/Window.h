@@ -4,17 +4,6 @@
 
 namespace Seele
 {
-/*struct WindowView
-{
-    PView view;
-    Event updateFinished;
-    std::mutex workerMutex;
-    WindowView(PView view)
-        : view(view)
-        , updateFinished(view->getName())
-    {}
-};*/
-//DEFINE_REF(WindowView)
 DECLARE_REF(WindowManager)
 // The logical window, with the graphics proxy
 class Window

@@ -23,13 +23,13 @@ private:
         uint32 numDirectionalLights;
         uint32 numPointLights;
     } lightEnv;
-    Gfx::PShaderBuffer directionalLights;
-    Gfx::PUniformBuffer lightEnvBuffer;
-    Gfx::PShaderBuffer pointLights;
+    Gfx::OShaderBuffer directionalLights;
+    Gfx::OUniformBuffer lightEnvBuffer;
+    Gfx::OShaderBuffer pointLights;
     Array<Component::DirectionalLight> dirs;
     Array<Component::PointLight> points;
-    Gfx::PDescriptorLayout layout;
-    Gfx::PDescriptorSet set;
+    Gfx::ODescriptorLayout layout;
+    Gfx::ODescriptorSet set;
     Gfx::PGraphics graphics;
 };
 DEFINE_REF(LightEnvironment)

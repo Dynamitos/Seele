@@ -28,7 +28,7 @@ DebugPass::~DebugPass()
 
 void DebugPass::beginFrame(const Component::Camera& cam)
 {
-    BulkResourceData uniformUpdate;
+    DataSource uniformUpdate;
 
     viewParams.viewMatrix = cam.getViewMatrix();
     viewParams.projectionMatrix = viewport->getProjectionMatrix();
@@ -43,7 +43,7 @@ void DebugPass::beginFrame(const Component::Camera& cam)
     descriptorSet->writeChanges();
     
     VertexBufferCreateInfo vertexBufferInfo = {
-        .resourceData = {
+        .sourceData = {
             .size = sizeof(DebugVertex) * passData.vertices.size(),
             .data = (uint8*)passData.vertices.data(),
         },
@@ -75,7 +75,7 @@ void DebugPass::endFrame()
 void DebugPass::publishOutputs()
 {
     UniformBufferCreateInfo viewCreateInfo = {
-        .resourceData = BulkResourceData {
+        .sourceData = DataSource {
             .size = sizeof(ViewParameter),
             .data = nullptr,
         },

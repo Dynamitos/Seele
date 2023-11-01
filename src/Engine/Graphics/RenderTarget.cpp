@@ -11,35 +11,35 @@ RenderTargetLayout::RenderTargetLayout()
 {
 }
 
-RenderTargetLayout::RenderTargetLayout(PRenderTargetAttachment depthAttachment)
+RenderTargetLayout::RenderTargetLayout(ORenderTargetAttachment depthAttachment)
 	: inputAttachments()
 	, colorAttachments()
-	, depthAttachment(depthAttachment)
+	, depthAttachment(std::move(depthAttachment))
 	, width(depthAttachment->getTexture()->getSizeX())
 	, height(depthAttachment->getTexture()->getSizeY())
 {
 }
 
-RenderTargetLayout::RenderTargetLayout(PRenderTargetAttachment colorAttachment, PRenderTargetAttachment depthAttachment)
+RenderTargetLayout::RenderTargetLayout(ORenderTargetAttachment colorAttachment, ORenderTargetAttachment depthAttachment)
 	: inputAttachments()
-	, depthAttachment(depthAttachment)
+	, depthAttachment(std::move(depthAttachment))
 	, width(depthAttachment->getTexture()->getSizeX())
 	, height(depthAttachment->getTexture()->getSizeY())
 {
 	colorAttachments.add(colorAttachment);
 }
-RenderTargetLayout::RenderTargetLayout(Array<PRenderTargetAttachment> colorAttachments, PRenderTargetAttachment depthAttachment)
+RenderTargetLayout::RenderTargetLayout(Array<ORenderTargetAttachment> colorAttachments, ORenderTargetAttachment depthAttachment)
 	: inputAttachments()
-	, colorAttachments(colorAttachments)
-	, depthAttachment(depthAttachment)
+	, colorAttachments(std::move(colorAttachments))
+	, depthAttachment(std::move(depthAttachment))
 	, width(depthAttachment->getTexture()->getSizeX())
 	, height(depthAttachment->getTexture()->getSizeY())
 {
 }
-RenderTargetLayout::RenderTargetLayout(Array<PRenderTargetAttachment> inputAttachments, Array<PRenderTargetAttachment> colorAttachments, PRenderTargetAttachment depthAttachment)
-	: inputAttachments(inputAttachments)
-	, colorAttachments(colorAttachments)
-	, depthAttachment(depthAttachment)
+RenderTargetLayout::RenderTargetLayout(Array<ORenderTargetAttachment> inputAttachments, Array<ORenderTargetAttachment> colorAttachments, ORenderTargetAttachment depthAttachment)
+	: inputAttachments(std::move(inputAttachments))
+	, colorAttachments(std::move(colorAttachments))
+	, depthAttachment(std::move(depthAttachment))
 	, width(depthAttachment->getTexture()->getSizeX())
 	, height(depthAttachment->getTexture()->getSizeY())
 {

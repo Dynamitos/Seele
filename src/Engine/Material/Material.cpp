@@ -10,20 +10,20 @@ Material::Material()
 }
 
 Material::Material(Gfx::PGraphics graphics, 
-        Array<PShaderParameter> parameter, 
-        Gfx::PDescriptorLayout layout, 
+        Array<OShaderParameter> parameter, 
+        Gfx::ODescriptorLayout layout, 
         uint32 uniformDataSize, 
         uint32 uniformBinding, 
         std::string materialName, 
-        Array<PShaderExpression> expressions, 
+        Array<OShaderExpression> expressions, 
         MaterialNode brdf)
     : graphics(graphics)
-    , parameters(parameter)
+    , parameters(std::move(parameter))
     , uniformDataSize(uniformDataSize)
     , uniformBinding(uniformBinding)
-    , layout(layout)
+    , layout(std::move(layout))
     , materialName(materialName)
-    , codeExpressions(expressions)
+    , codeExpressions(std::move(expressions))
     , brdf(brdf)
     , instanceId(0)
 {
@@ -59,6 +59,7 @@ void Material::save(ArchiveBuffer& buffer) const
         Serialization::save(buffer, binding.descriptorType);
         Serialization::save(buffer, binding.shaderStages);
     }
+    Serialization::save(buffer, instances);
 }
 
 void Material::load(ArchiveBuffer& buffer)
@@ -97,6 +98,11 @@ void Material::load(ArchiveBuffer& buffer)
         layout->addDescriptorBinding(binding, descriptorType, descriptorCount, bindingFlags, shaderStages);
     }
     layout->create();
+    Serialization::load(buffer, instances);
+    for (auto& instance : instances)
+    {
+        instance->setBaseMaterial(this);
+    }
 }
 
 void Material::compile()

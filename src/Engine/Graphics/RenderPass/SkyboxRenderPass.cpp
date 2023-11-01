@@ -70,7 +70,7 @@ SkyboxRenderPass::SkyboxRenderPass(Gfx::PGraphics graphics, PScene scene)
     };
 
     VertexBufferCreateInfo vertexBufferInfo = {
-        .resourceData = {
+        .sourceData = {
             .size = sizeof(Vector) * vertices.size(),
             .data = (uint8*)vertices.data(),
         },
@@ -86,7 +86,7 @@ SkyboxRenderPass::~SkyboxRenderPass()
 
 void SkyboxRenderPass::beginFrame(const Component::Camera& cam)
 {
-    BulkResourceData uniformUpdate;
+    DataSource uniformUpdate;
 
     viewParams.viewMatrix = cam.getViewMatrix();
     viewParams.projectionMatrix = viewport->getProjectionMatrix();
@@ -127,7 +127,7 @@ void SkyboxRenderPass::endFrame()
 void SkyboxRenderPass::publishOutputs()
 {
     UniformBufferCreateInfo viewCreateInfo = {
-        .resourceData = BulkResourceData {
+        .sourceData = DataSource {
             .size = sizeof(ViewParameter),
             .data = nullptr,
         },

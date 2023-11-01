@@ -36,8 +36,8 @@ BasePass::BasePass(Gfx::PGraphics graphics, PScene scene)
 
     viewLayout = graphics->createDescriptorLayout("ViewLayout");
     viewLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-    uniformInitializer.resourceData.size = sizeof(ViewParameter);
-    uniformInitializer.resourceData.data = (uint8*)&viewParams;
+    uniformInitializer.sourceData.size = sizeof(ViewParameter);
+    uniformInitializer.sourceData.data = (uint8*)&viewParams;
     uniformInitializer.bDynamic = true;
     viewParamBuffer = graphics->createUniformBuffer(uniformInitializer);
     viewLayout->create();
@@ -62,7 +62,7 @@ BasePass::~BasePass()
 
 void BasePass::beginFrame(const Component::Camera& cam) 
 {
-    BulkResourceData uniformUpdate;
+    DataSource uniformUpdate;
 
     viewParams.viewMatrix = cam.getViewMatrix();
     viewParams.projectionMatrix = viewport->getProjectionMatrix();

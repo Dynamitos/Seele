@@ -1,8 +1,7 @@
-#include "VulkanGraphicsResources.h"
-#include "VulkanInitializer.h"
-#include "VulkanGraphics.h"
-#include "VulkanGraphicsEnums.h"
-#include "VulkanCommandBuffer.h"
+#include "Resources.h"
+#include "Enums.h"
+#include "Initializer.h"
+#include "Graphics.h"
 
 using namespace Seele;
 using namespace Seele::Vulkan;

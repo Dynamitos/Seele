@@ -12,13 +12,13 @@ Buffer::~Buffer()
 {
 }
 
-UniformBuffer::UniformBuffer(QueueFamilyMapping mapping, const BulkResourceData& resourceData)
-	: Buffer(mapping, resourceData.owner)
-	, contents(resourceData.size)
+UniformBuffer::UniformBuffer(QueueFamilyMapping mapping, const DataSource& sourceData)
+	: Buffer(mapping, sourceData.owner)
+	, contents(sourceData.size)
 {
-	if (resourceData.data != nullptr)
+	if (sourceData.data != nullptr)
 	{
-		std::memcpy(contents.data(), resourceData.data, contents.size());
+		std::memcpy(contents.data(), sourceData.data, contents.size());
 	}
 }
 
@@ -26,40 +26,40 @@ UniformBuffer::~UniformBuffer()
 {
 }
 
-bool UniformBuffer::updateContents(const BulkResourceData& resourceData)
+bool UniformBuffer::updateContents(const DataSource& sourceData)
 {
-	assert(contents.size() == resourceData.size);
-	if (std::memcmp(contents.data(), resourceData.data, contents.size()) == 0)
+	assert(contents.size() == sourceData.size);
+	if (std::memcmp(contents.data(), sourceData.data, contents.size()) == 0)
 	{
 		return false;
 	}
-	std::memcpy(contents.data(), resourceData.data, contents.size());
+	std::memcpy(contents.data(), sourceData.data, contents.size());
 	return true;
 }
 
-ShaderBuffer::ShaderBuffer(QueueFamilyMapping mapping, uint32 stride, uint32 numElements, const BulkResourceData& resourceData)
-	: Buffer(mapping, resourceData.owner)
-	, contents(resourceData.size)
+ShaderBuffer::ShaderBuffer(QueueFamilyMapping mapping, uint32 stride, uint32 numElements, const DataSource& sourceData)
+	: Buffer(mapping, sourceData.owner)
+	, contents(sourceData.size)
 	, numElements(numElements)
 	, stride(stride)
 {
-	if (resourceData.data != nullptr)
+	if (sourceData.data != nullptr)
 	{
-		std::memcpy(contents.data(), resourceData.data, resourceData.size);
+		std::memcpy(contents.data(), sourceData.data, sourceData.size);
 	}
 }
 ShaderBuffer::~ShaderBuffer()
 {
 }
 
-bool ShaderBuffer::updateContents(const BulkResourceData& resourceData)
+bool ShaderBuffer::updateContents(const DataSource& sourceData)
 {
-	assert(contents.size() >= resourceData.size);
-	if (std::memcmp(contents.data(), resourceData.data, resourceData.size) == 0)
+	assert(contents.size() >= sourceData.size);
+	if (std::memcmp(contents.data(), sourceData.data, sourceData.size) == 0)
 	{
 		return false;
 	}
-	std::memcpy(contents.data(), resourceData.data, resourceData.size);
+	std::memcpy(contents.data(), sourceData.data, sourceData.size);
 	return true;
 }
 VertexBuffer::VertexBuffer(QueueFamilyMapping mapping, uint32 numVertices, uint32 vertexSize, QueueType startQueueType)

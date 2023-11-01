@@ -26,11 +26,11 @@ public:
         //SLang renames all entry points to main, so we dont need that
         return "main";//entryPointName.c_str();
     }
-    Map<uint32, PDescriptorLayout> getDescriptorLayouts();
+    //Map<uint32, PDescriptorLayout> getDescriptorLayouts();
     uint32 getShaderHash() const;
 private:
     PGraphics graphics;
-    Map<uint32, PDescriptorLayout> descriptorSets;
+    //Map<uint32, PDescriptorLayout> descriptorSets;
     VkShaderModule module;
     ShaderType type;
     VkShaderStageFlags stage;
@@ -62,6 +62,5 @@ DEFINE_REF(FragmentShader)
 DEFINE_REF(ComputeShader)
 DEFINE_REF(TaskShader)
 DEFINE_REF(MeshShader)
-
 } // namespace Vulkan
 }

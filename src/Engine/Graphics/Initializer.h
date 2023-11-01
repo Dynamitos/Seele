@@ -48,7 +48,7 @@ struct ViewportCreateInfo
     float fieldOfView = 1.222f; // 70 deg
 };
 // doesnt own the data, only proxy it
-struct BulkResourceData
+struct DataSource
 {
     uint64 size = 0;
     uint64 offset = 0;
@@ -57,7 +57,7 @@ struct BulkResourceData
 };
 struct TextureCreateInfo
 {
-    BulkResourceData resourceData = BulkResourceData();
+    DataSource sourceData = DataSource();
     uint32 width = 1;
     uint32 height = 1;
     uint32 depth = 1;
@@ -89,24 +89,24 @@ struct SamplerCreateInfo
 };
 struct VertexBufferCreateInfo
 {
-    BulkResourceData resourceData = BulkResourceData();
+    DataSource sourceData = DataSource();
     // bytes per vertex
     uint32 vertexSize = 0;
     uint32 numVertices = 0;
 };
 struct IndexBufferCreateInfo
 {
-    BulkResourceData resourceData = BulkResourceData();
+    DataSource sourceData = DataSource();
     Gfx::SeIndexType indexType = Gfx::SeIndexType::SE_INDEX_TYPE_UINT16;
 };
 struct UniformBufferCreateInfo
 {
-    BulkResourceData resourceData = BulkResourceData();
+    DataSource sourceData = DataSource();
     uint8 bDynamic = 0;
 };
 struct ShaderBufferCreateInfo
 {
-    BulkResourceData resourceData;
+    DataSource sourceData = DataSource();
     uint32 stride;
     uint8 bDynamic = 0;
 };

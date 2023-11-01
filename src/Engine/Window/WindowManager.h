@@ -18,7 +18,7 @@ public:
 	}
 
 private:
-	Array<PWindow> windows;
+	Array<OWindow> windows;
 };
 DEFINE_REF(WindowManager)
 } // namespace Seele

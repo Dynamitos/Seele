@@ -43,7 +43,7 @@ class DescriptorAllocator
 public:
     DescriptorAllocator() {}
     virtual ~DescriptorAllocator() {}
-    virtual void allocateDescriptorSet(PDescriptorSet& descriptorSet) = 0;
+    virtual PDescriptorSet allocateDescriptorSet() = 0;
     virtual void reset() = 0;
 };
 DEFINE_REF(DescriptorAllocator)
@@ -54,6 +54,7 @@ DECLARE_REF(SamplerState)
 class DescriptorSet
 {
 public:
+    DescriptorSet() {}
     virtual ~DescriptorSet() {}
     virtual void writeChanges() = 0;
     virtual void updateBuffer(uint32 binding, PUniformBuffer uniformBuffer) = 0;
@@ -106,7 +107,7 @@ public:
 
 protected:
     Array<DescriptorBinding> descriptorBindings;
-    PDescriptorAllocator allocator;
+    ODescriptorAllocator allocator;
     std::mutex allocatorLock;
     uint32 setIndex;
     std::string name;
@@ -117,6 +118,9 @@ DEFINE_REF(DescriptorLayout)
 class PipelineLayout
 {
 public:
+    PipelineLayout()
+    {
+    }
     PipelineLayout(PPipelineLayout baseLayout)
     {
         if (baseLayout != nullptr)
@@ -128,12 +132,12 @@ public:
     virtual ~PipelineLayout() {}
     virtual void create() = 0;
     virtual void reset() = 0;
-    void addDescriptorLayout(uint32 setIndex, PDescriptorLayout layout);
+    void addDescriptorLayout(uint32 setIndex, const PDescriptorLayout layout);
     void addPushConstants(const SePushConstantRange& pushConstants);
     virtual uint32 getHash() const = 0;
 
 protected:
-    Array<PDescriptorLayout> descriptorSetLayouts;
+    Array<const PDescriptorLayout> descriptorSetLayouts;
     Array<SePushConstantRange> pushConstants;
 };
 DEFINE_REF(PipelineLayout)

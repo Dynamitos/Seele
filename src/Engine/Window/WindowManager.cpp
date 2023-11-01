@@ -13,15 +13,16 @@ WindowManager::~WindowManager()
 
 PWindow WindowManager::addWindow(Gfx::PGraphics graphics, const WindowCreateInfo &createInfo)
 {
-    Gfx::PWindow handle = graphics->createWindow(createInfo);
-    PWindow window = new Window(this, handle);
-    windows.add(window);
-    return window;
+    Gfx::OWindow handle = graphics->createWindow(createInfo);
+    OWindow window = new Window(this, handle);
+    PWindow ref = window;
+    windows.add(std::move(window));
+    return ref;
 }
 
 void WindowManager::notifyWindowClosed(PWindow window) 
 {
-    windows.remove(windows.find(window));
+    windows.remove(windows.find([window] (OWindow w) { return window == w; }));
     if(windows.empty())
     {
         exit(0);

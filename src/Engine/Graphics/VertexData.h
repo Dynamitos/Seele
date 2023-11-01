@@ -101,14 +101,14 @@ protected:
     Array<MeshletDescription> meshlets;
     Array<uint8> primitiveIndices;
     Array<uint32> vertexIndices;
-    Gfx::PGraphics graphics;
-    Gfx::PDescriptorLayout instanceDataLayout;
+    Gfx::OGraphics graphics;
+    Gfx::ODescriptorLayout instanceDataLayout;
     // for mesh shading
-    Gfx::PShaderBuffer meshletBuffer;
-    Gfx::PShaderBuffer vertexIndicesBuffer;
-    Gfx::PShaderBuffer primitiveIndicesBuffer;
+    Gfx::OShaderBuffer meshletBuffer;
+    Gfx::OShaderBuffer vertexIndicesBuffer;
+    Gfx::OShaderBuffer primitiveIndicesBuffer;
     // for legacy pipeline
-    Gfx::PIndexBuffer indexBuffer;
+    Gfx::OIndexBuffer indexBuffer;
     uint64 idCounter;
 	uint64 head;
 	uint64 verticesAllocated;

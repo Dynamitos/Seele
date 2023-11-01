@@ -55,8 +55,8 @@ void FontLoader::import(FontImportArgs args, PFontAsset asset)
         imageData.format = Gfx::SE_FORMAT_R8_UINT;
         imageData.width = face->glyph->bitmap.width;
         imageData.height = face->glyph->bitmap.rows;
-        imageData.resourceData.data = face->glyph->bitmap.buffer;
-        imageData.resourceData.size = imageData.width * imageData.height;
+        imageData.sourceData.data = face->glyph->bitmap.buffer;
+        imageData.sourceData.size = imageData.width * imageData.height;
         if(imageData.width == 0 || imageData.height == 0)
         {
             glyph.size.x = 1;
@@ -65,8 +65,8 @@ void FontLoader::import(FontImportArgs args, PFontAsset asset)
             glyph.bearing.y = 0;
             imageData.width = 1;
             imageData.height = 1;
-            imageData.resourceData.size = sizeof(uint8);
-            imageData.resourceData.data = &transparentPixel;
+            imageData.sourceData.size = sizeof(uint8);
+            imageData.sourceData.data = &transparentPixel;
         }
         glyph.texture = graphics->createTexture2D(imageData);
     }

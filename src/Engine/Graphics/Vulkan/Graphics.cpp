@@ -1,24 +1,22 @@
 #include "Containers/Array.h"
-#include "VulkanGraphics.h"
-#include "VulkanAllocator.h"
-#include "VulkanQueue.h"
-#include "VulkanInitializer.h"
-#include "VulkanCommandBuffer.h"
-#include "VulkanRenderPass.h"
-#include "VulkanFramebuffer.h"
-#include "VulkanPipelineCache.h"
-#include "VulkanDescriptorSets.h"
-#include "VulkanShader.h"
-#include "Graphics/GraphicsResources.h"
+#include "Graphics.h"
+#include "Allocator.h"
+#include "Buffer.h"
+#include "PipelineCache.h"
+#include "CommandBuffer.h"
+#include "Initializer.h"
+#include "RenderTarget.h"
+#include "RenderPass.h"
+#include "Framebuffer.h"
 #include <GLFW/glfw3.h>
 
 using namespace Seele;
 using namespace Seele::Vulkan;
 
-thread_local PCommandBufferManager Seele::Vulkan::Graphics::graphicsCommands = nullptr;
-thread_local PCommandBufferManager Seele::Vulkan::Graphics::computeCommands = nullptr;
-thread_local PCommandBufferManager Seele::Vulkan::Graphics::transferCommands = nullptr;
-thread_local PCommandBufferManager Seele::Vulkan::Graphics::dedicatedTransferCommands = nullptr;
+thread_local OCommandBufferManager Seele::Vulkan::Graphics::graphicsCommands = nullptr;
+thread_local OCommandBufferManager Seele::Vulkan::Graphics::computeCommands = nullptr;
+thread_local OCommandBufferManager Seele::Vulkan::Graphics::transferCommands = nullptr;
+thread_local OCommandBufferManager Seele::Vulkan::Graphics::dedicatedTransferCommands = nullptr;
 
 Graphics::Graphics()
     : instance(VK_NULL_HANDLE)
@@ -49,22 +47,22 @@ void Graphics::init(GraphicsInitializer initInfo)
     pipelineCache = new PipelineCache(this, "pipeline.cache");
 }
 
-Gfx::PWindow Graphics::createWindow(const WindowCreateInfo &createInfo)
+Gfx::OWindow Graphics::createWindow(const WindowCreateInfo &createInfo)
 {
-    PWindow result = new Window(this, createInfo);
+    OWindow result = new Window(this, createInfo);
     return result;
 }
 
-Gfx::PViewport Graphics::createViewport(Gfx::PWindow owner, const ViewportCreateInfo &viewportInfo)
+Gfx::OViewport Graphics::createViewport(Gfx::PWindow owner, const ViewportCreateInfo &viewportInfo)
 {
-    PViewport result = new Viewport(this, owner, viewportInfo);
+    OViewport result = new Viewport(this, owner, viewportInfo);
     std::scoped_lock lock(viewportLock);
     viewports.add(result);
     return result;
 }
-Gfx::PRenderPass Graphics::createRenderPass(Gfx::PRenderTargetLayout layout, Gfx::PViewport renderArea)
+Gfx::ORenderPass Graphics::createRenderPass(Gfx::ORenderTargetLayout layout, Gfx::PViewport renderArea)
 {
-    PRenderPass result = new RenderPass(this, layout, renderArea);
+    ORenderPass result = new RenderPass(this, std::move(layout), renderArea);
     return result;
 }
 void Graphics::beginRenderPass(Gfx::PRenderPass renderPass)
@@ -77,12 +75,12 @@ void Graphics::beginRenderPass(Gfx::PRenderPass renderPass)
         auto found = allocatedFramebuffers.find(framebufferHash);
         if (found == allocatedFramebuffers.end())
         {
-            framebuffer = new Framebuffer(this, rp, rp->getLayout());
-            allocatedFramebuffers[framebufferHash] = framebuffer;
+            allocatedFramebuffers[framebufferHash] = new Framebuffer(this, rp, rp->getLayout());
+            framebuffer = allocatedFramebuffers[framebufferHash];
         }
         else
         {
-            framebuffer = found->value;
+            framebuffer = std::move(found->value);
         }
     }
     getGraphicsCommands()->getCommands()->beginRenderPass(rp, framebuffer);
@@ -110,67 +108,67 @@ void Graphics::executeCommands(const Array<Gfx::PComputeCommand>& commands)
     getComputeCommands()->getCommands()->executeCommands(commands);
 }
 
-Gfx::PTexture2D Graphics::createTexture2D(const TextureCreateInfo &createInfo)
+Gfx::OTexture2D Graphics::createTexture2D(const TextureCreateInfo &createInfo)
 {
-    PTexture2D result = new Texture2D(this, createInfo);
+    OTexture2D result = new Texture2D(this, createInfo);
     return result;
 }
 
-Gfx::PTexture3D Graphics::createTexture3D(const TextureCreateInfo &createInfo)
+Gfx::OTexture3D Graphics::createTexture3D(const TextureCreateInfo &createInfo)
 {
-    PTexture3D result = new Texture3D(this, createInfo);
+    OTexture3D result = new Texture3D(this, createInfo);
     return result;
 }
 
-Gfx::PTextureCube Graphics::createTextureCube(const TextureCreateInfo &createInfo)
+Gfx::OTextureCube Graphics::createTextureCube(const TextureCreateInfo &createInfo)
 {
-    PTextureCube result = new TextureCube(this, createInfo);
+    OTextureCube result = new TextureCube(this, createInfo);
     return result;
 }
 
-Gfx::PUniformBuffer Graphics::createUniformBuffer(const UniformBufferCreateInfo &bulkData)
+Gfx::OUniformBuffer Graphics::createUniformBuffer(const UniformBufferCreateInfo &bulkData)
 {
-    PUniformBuffer uniformBuffer = new UniformBuffer(this, bulkData);
+    OUniformBuffer uniformBuffer = new UniformBuffer(this, bulkData);
     return uniformBuffer;
 }
 
-Gfx::PShaderBuffer Graphics::createShaderBuffer(const ShaderBufferCreateInfo &bulkData)
+Gfx::OShaderBuffer Graphics::createShaderBuffer(const ShaderBufferCreateInfo &bulkData)
 {
-    PShaderBuffer ShaderBuffer = new ShaderBuffer(this, bulkData);
+    OShaderBuffer ShaderBuffer = new ShaderBuffer(this, bulkData);
     return ShaderBuffer;
 }
-Gfx::PVertexBuffer Graphics::createVertexBuffer(const VertexBufferCreateInfo &bulkData)
+Gfx::OVertexBuffer Graphics::createVertexBuffer(const VertexBufferCreateInfo &bulkData)
 {
-    PVertexBuffer vertexBuffer = new VertexBuffer(this, bulkData);
+    OVertexBuffer vertexBuffer = new VertexBuffer(this, bulkData);
     return vertexBuffer;
 }
 
-Gfx::PIndexBuffer Graphics::createIndexBuffer(const IndexBufferCreateInfo &bulkData)
+Gfx::OIndexBuffer Graphics::createIndexBuffer(const IndexBufferCreateInfo &bulkData)
 {
-    PIndexBuffer indexBuffer = new IndexBuffer(this, bulkData);
+    OIndexBuffer indexBuffer = new IndexBuffer(this, bulkData);
     return indexBuffer;
 }
 Gfx::PRenderCommand Graphics::createRenderCommand(const std::string& name)
 {
-    PRenderCommand cmdBuffer = getGraphicsCommands()->createRenderCommand(activeRenderPass, activeFramebuffer, name);
+    ORenderCommand cmdBuffer = getGraphicsCommands()->createRenderCommand(activeRenderPass, activeFramebuffer, name);
     return cmdBuffer;
 }
 
 Gfx::PComputeCommand Graphics::createComputeCommand(const std::string& name) 
 {
-    PComputeCommand cmdBuffer = getComputeCommands()->createComputeCommand(name);
+    OComputeCommand cmdBuffer = getComputeCommands()->createComputeCommand(name);
     return cmdBuffer;
 }
 
-Gfx::PVertexDeclaration Graphics::createVertexDeclaration(const Array<Gfx::VertexElement>& element) 
+Gfx::OVertexDeclaration Graphics::createVertexDeclaration(const Array<Gfx::VertexElement>& element) 
 {
-    PVertexDeclaration declaration = new VertexDeclaration(element);
+    OVertexDeclaration declaration = new VertexDeclaration(element);
     return declaration;
 }
 
-Gfx::PVertexShader Graphics::createVertexShader(const ShaderCreateInfo& createInfo)
+Gfx::OVertexShader Graphics::createVertexShader(const ShaderCreateInfo& createInfo)
 {
-    PVertexShader shader = new VertexShader(this);
+    OVertexShader shader = new VertexShader(this);
     shader->create(createInfo);
     return shader;
 }

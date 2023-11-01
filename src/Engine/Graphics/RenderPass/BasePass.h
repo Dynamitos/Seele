@@ -22,21 +22,21 @@ private:
     
     Array<Gfx::PDescriptorSet> descriptorSets;
     PCameraActor source;
-    Gfx::PPipelineLayout basePassLayout;
+    Gfx::OPipelineLayout basePassLayout;
     // Set 0: Light environment
     static constexpr uint32 INDEX_LIGHT_ENV = 0;
-    Gfx::PShaderBuffer oLightIndexList;
-    Gfx::PTexture oLightGrid;
-    Gfx::PDescriptorLayout lightLayout;
+    Gfx::OShaderBuffer oLightIndexList;
+    Gfx::OTexture oLightGrid;
+    Gfx::ODescriptorLayout lightLayout;
     // Set 1: viewParameter
     static constexpr uint32 INDEX_VIEW_PARAMS = 1;
-    Gfx::PDescriptorLayout viewLayout;
-    Gfx::PUniformBuffer viewParamBuffer;
+    Gfx::ODescriptorLayout viewLayout;
+    Gfx::OUniformBuffer viewParamBuffer;
     // Set 2: materials, generated
     static constexpr uint32 INDEX_MATERIAL = 2;
     // Set 3: primitive scene data
     static constexpr uint32 INDEX_SCENE_DATA = 3;
-    Gfx::PDescriptorLayout sceneLayout;
+    Gfx::ODescriptorLayout sceneLayout;
 };
 DEFINE_REF(BasePass)
 } // namespace Seele

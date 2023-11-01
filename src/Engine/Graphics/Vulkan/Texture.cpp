@@ -110,13 +110,13 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType,
         vkBindImageMemory(graphics->getDevice(), image, allocation->getHandle(), allocation->getOffset());
     }
 
-    const BulkResourceData& resourceData = createInfo.resourceData;
-    if(resourceData.size > 0)
+    const DataSource& sourceData = createInfo.sourceData;
+    if(sourceData.size > 0)
     {
         changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-        PStagingBuffer staging = graphics->getStagingManager()->allocateStagingBuffer(resourceData.size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+        PStagingBuffer staging = graphics->getStagingManager()->allocateStagingBuffer(sourceData.size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
         void* data = staging->getMappedPointer();
-        std::memcpy(data, resourceData.data, resourceData.size);
+        std::memcpy(data, sourceData.data, sourceData.size);
         staging->flushMappedMemory();
         
         PCommandBufferManager cmdBufferManager = graphics->getQueueCommands(currentOwner);
@@ -322,7 +322,7 @@ void TextureHandle::executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineSt
 }
 
 Texture2D::Texture2D(PGraphics graphics, const TextureCreateInfo& createInfo, VkImage existingImage)
-    : Gfx::Texture2D(graphics->getFamilyMapping(), createInfo.resourceData.owner)
+    : Gfx::Texture2D(graphics->getFamilyMapping(), createInfo.sourceData.owner)
 {
     textureHandle = new TextureHandle(graphics, createInfo.bArray ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D, 
         createInfo, currentOwner, existingImage);
@@ -354,7 +354,7 @@ void Texture2D::executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageF
 }
 
 Texture3D::Texture3D(PGraphics graphics, const TextureCreateInfo& createInfo, VkImage existingImage)
-    : Gfx::Texture3D(graphics->getFamilyMapping(), createInfo.resourceData.owner)
+    : Gfx::Texture3D(graphics->getFamilyMapping(), createInfo.sourceData.owner)
 {
     textureHandle = new TextureHandle(graphics, VK_IMAGE_VIEW_TYPE_3D, 
         createInfo, currentOwner, existingImage);
@@ -385,7 +385,7 @@ void Texture3D::executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageF
 }
 
 TextureCube::TextureCube(PGraphics graphics, const TextureCreateInfo& createInfo, VkImage existingImage)
-    : Gfx::TextureCube(graphics->getFamilyMapping(), createInfo.resourceData.owner)
+    : Gfx::TextureCube(graphics->getFamilyMapping(), createInfo.sourceData.owner)
 {
     textureHandle = new TextureHandle(graphics, createInfo.bArray ? VK_IMAGE_VIEW_TYPE_CUBE_ARRAY : VK_IMAGE_VIEW_TYPE_CUBE, 
         createInfo, currentOwner, existingImage);

@@ -84,7 +84,7 @@ void TextureAsset::load(ArchiveBuffer& buffer)
     assert(e == ktx_error_code_e::KTX_SUCCESS);
 
     TextureCreateInfo createInfo = {
-            .resourceData = {
+            .sourceData = {
                 .size = ktxTexture_GetDataSize(ktxTexture(kTexture)),
                 .data = ktxTexture_GetData(ktxTexture(kTexture)),
                 .owner = Gfx::QueueType::DEDICATED_TRANSFER,

@@ -20,9 +20,7 @@ void DescriptorLayout::addDescriptorBinding(uint32 bindingIndex, SeDescriptorTyp
 PDescriptorSet DescriptorLayout::allocateDescriptorSet()
 {
 	std::scoped_lock lock(allocatorLock);
-	PDescriptorSet result;
-	allocator->allocateDescriptorSet(result);
-	return result;
+	return allocator->allocateDescriptorSet();
 }
 
 void DescriptorLayout::reset()

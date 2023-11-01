@@ -65,7 +65,7 @@ void VertexData::loadMesh(MeshId id, Array<Meshlet> loadedMeshlets)
         currentMesh += numMeshlets;
     }
     meshletBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo {
-        .resourceData = {
+        .sourceData = {
             .size = sizeof(MeshletDescription) * meshlets.size(),
             .data = (uint8*)meshlets.data()
         },
@@ -73,7 +73,7 @@ void VertexData::loadMesh(MeshId id, Array<Meshlet> loadedMeshlets)
         .bDynamic = true,
     });
     vertexIndicesBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo {
-        .resourceData = {
+        .sourceData = {
             .size = sizeof(uint32) * vertexIndices.size(),
             .data = (uint8*)vertexIndices.data(),
         },
@@ -81,7 +81,7 @@ void VertexData::loadMesh(MeshId id, Array<Meshlet> loadedMeshlets)
         .bDynamic = true,
     });
     primitiveIndicesBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo {
-        .resourceData = {
+        .sourceData = {
             .size = sizeof(uint8) * primitiveIndices.size(),
             .data = (uint8*)primitiveIndices.data(),
         },
@@ -108,7 +108,7 @@ void VertexData::createDescriptors()
                 }
             }
             Gfx::PShaderBuffer instanceBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
-                .resourceData = {
+                .sourceData = {
                     .size = sizeof(InstanceData) * instanceData.size(),
                     .data = (uint8*)instanceData.data(),
                 },
@@ -119,7 +119,7 @@ void VertexData::createDescriptors()
             if (Gfx::useMeshShading)
             {
                 Gfx::PShaderBuffer meshDataBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
-                    .resourceData = {
+                    .sourceData = {
                         .size = sizeof(MeshData) * meshes.size(),
                         .data = (uint8*)meshes.data(),
                     },

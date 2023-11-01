@@ -48,7 +48,7 @@ public:
     Gfx::PGraphics getGraphics() const { return graphics; }
     entt::registry registry;
 private:
-    PLightEnvironment lightEnv;
+    OLightEnvironment lightEnv;
     PhysicsSystem physics;
     Gfx::PGraphics graphics;
 };

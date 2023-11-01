@@ -22,19 +22,19 @@ public:
 	virtual Gfx::PDescriptorSet getVertexDataSet() override;
 	virtual std::string getTypeName() const override { return "StaticMeshVertexData"; }
 private:
-		virtual void resizeBuffers() override;
+	virtual void resizeBuffers() override;
 	virtual void updateBuffers() override;
-    Gfx::PShaderBuffer positions;
+    Gfx::OShaderBuffer positions;
 	Array<Vector> positionData;
-    Gfx::PShaderBuffer texCoords;
+    Gfx::OShaderBuffer texCoords;
 	Array<Vector2> texCoordsData;
-    Gfx::PShaderBuffer normals;
+    Gfx::OShaderBuffer normals;
 	Array<Vector> normalData;
-    Gfx::PShaderBuffer tangents;
+    Gfx::OShaderBuffer tangents;
 	Array<Vector> tangentData;
-    Gfx::PShaderBuffer biTangents;
+    Gfx::OShaderBuffer biTangents;
 	Array<Vector> biTangentData;
-		Gfx::PDescriptorLayout descriptorLayout;
-		Gfx::PDescriptorSet descriptorSet;
+	Gfx::ODescriptorLayout descriptorLayout;
+	Gfx::ODescriptorSet descriptorSet;
 };
 }

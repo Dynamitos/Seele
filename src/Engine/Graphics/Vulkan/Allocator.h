@@ -95,11 +95,11 @@ public:
 
 private:
 	VkDevice device;
-	Allocator *allocator;
+	PAllocator allocator;
 	VkDeviceSize bytesAllocated;
 	VkDeviceSize bytesUsed;
 	VkDeviceMemory allocatedMemory;
-	std::map<VkDeviceSize, SubAllocation *> activeAllocations;
+	std::map<VkDeviceSize, PSubAllocation> activeAllocations;
 	std::map<VkDeviceSize, PSubAllocation> freeRanges;
 	std::mutex lock;
 	void *mappedPointer;
@@ -118,9 +118,9 @@ class Allocator
 public:
 	Allocator(PGraphics graphics);
 	~Allocator();
-	PSubAllocation allocate(const VkMemoryRequirements2 &requirements, VkMemoryPropertyFlags props,
+	OSubAllocation allocate(const VkMemoryRequirements2 &requirements, VkMemoryPropertyFlags props,
 							VkMemoryDedicatedAllocateInfo *dedicatedInfo = nullptr);
-	inline PSubAllocation allocate(const VkMemoryRequirements2 &requirements, VkMemoryPropertyFlags props,
+	OSubAllocation allocate(const VkMemoryRequirements2 &requirements, VkMemoryPropertyFlags props,
 								   VkBuffer buffer)
 	{
 		VkMemoryDedicatedAllocateInfo allocInfo;
@@ -130,7 +130,7 @@ public:
 		allocInfo.image = VK_NULL_HANDLE;
 		return allocate(requirements, props, &allocInfo);
 	}
-	inline PSubAllocation allocate(const VkMemoryRequirements2 &requirements, VkMemoryPropertyFlags props,
+	OSubAllocation allocate(const VkMemoryRequirements2 &requirements, VkMemoryPropertyFlags props,
 								   VkImage image)
 	{
 		VkMemoryDedicatedAllocateInfo allocInfo;

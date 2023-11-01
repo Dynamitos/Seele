@@ -18,22 +18,22 @@ public:
     virtual void publishOutputs() override;
     virtual void createRenderPass() override;
 private:
-    Gfx::PRenderTargetAttachment renderTarget;
-    Gfx::PTexture2D colorBuffer;
-    Gfx::PRenderTargetAttachment depthAttachment;
-    Gfx::PTexture2D depthBuffer;
+    Gfx::ORenderTargetAttachment renderTarget;
+    Gfx::OTexture2D colorBuffer;
+    Gfx::ORenderTargetAttachment depthAttachment;
+    Gfx::OTexture2D depthBuffer;
 
-    Gfx::PDescriptorLayout descriptorLayout;
-    Gfx::PDescriptorSet descriptorSet;
+    Gfx::ODescriptorLayout descriptorLayout;
+    Gfx::ODescriptorSet descriptorSet;
 
-    Gfx::PUniformBuffer numTexturesBuffer;
-    Gfx::PVertexBuffer elementBuffer;
+    Gfx::OUniformBuffer numTexturesBuffer;
+    Gfx::OVertexBuffer elementBuffer;
 
-    Gfx::PVertexDeclaration declaration;
-    Gfx::PVertexShader vertexShader;
-    Gfx::PFragmentShader fragmentShader;
-    Gfx::PPipelineLayout pipelineLayout;
-    Gfx::PGraphicsPipeline pipeline;
+    Gfx::OVertexDeclaration declaration;
+    Gfx::OVertexShader vertexShader;
+    Gfx::OFragmentShader fragmentShader;
+    Gfx::OPipelineLayout pipelineLayout;
+    Gfx::OGraphicsPipeline pipeline;
 
     Array<UI::RenderElementStyle> renderElements;
     Array<Gfx::PTexture> usedTextures;

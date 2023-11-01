@@ -19,8 +19,8 @@ DepthPrepass::DepthPrepass(Gfx::PGraphics graphics, PScene scene)
 
     viewLayout = graphics->createDescriptorLayout("ViewLayout");
     viewLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-    uniformInitializer.resourceData.size = sizeof(ViewParameter);
-    uniformInitializer.resourceData.data = (uint8*)&viewParams;
+    uniformInitializer.sourceData.size = sizeof(ViewParameter);
+    uniformInitializer.sourceData.data = (uint8*)&viewParams;
     uniformInitializer.bDynamic = true;
     viewParamBuffer = graphics->createUniformBuffer(uniformInitializer);
     viewLayout->create();
@@ -33,7 +33,7 @@ DepthPrepass::~DepthPrepass()
 
 void DepthPrepass::beginFrame(const Component::Camera& cam) 
 {
-    BulkResourceData uniformUpdate;
+    DataSource uniformUpdate;
 
     viewParams.viewMatrix = cam.getViewMatrix();
     viewParams.projectionMatrix = viewport->getProjectionMatrix();
@@ -70,7 +70,7 @@ void DepthPrepass::render()
             // VertexData => per meshtype
             // SceneData => per material instance
             Gfx::PRenderCommand command = graphics->createRenderCommand("DepthRender");
-            Gfx::PPipelineLayout layout = graphics->createPipelineLayout(depthPrepassLayout);
+            Gfx::OPipelineLayout layout = graphics->createPipelineLayout(depthPrepassLayout);
             layout->addDescriptorLayout(INDEX_MATERIAL, materialData.material->getDescriptorLayout());
             layout->addDescriptorLayout(INDEX_VERTEX_DATA, vertexData->getVertexDataLayout());
             layout->addDescriptorLayout(INDEX_SCENE_DATA, vertexData->getInstanceDataLayout());

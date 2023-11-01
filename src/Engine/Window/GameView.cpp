@@ -56,7 +56,6 @@ void GameView::commitUpdate()
 
 void GameView::prepareRender()
 {
-    renderGraph.updatePassData(depthPrepassData, lightCullingData, basePassData, skyboxData);
 }
 
 void GameView::render()

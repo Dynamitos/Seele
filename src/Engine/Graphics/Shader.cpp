@@ -1,4 +1,6 @@
 #include "Shader.h"
+#include "Graphics/RenderPass/DepthPrepass.h"
+#include "Graphics/RenderPass/BasePass.h"
 
 using namespace Seele;
 using namespace Seele::Gfx;
@@ -51,7 +53,6 @@ ShaderCollection& ShaderMap::createShaders(
 	PGraphics graphics,
 	RenderPassType renderPass,
 	PMaterial material,
-	VertexInputType* vertexInput,
 	bool /*bPositionOnly*/)
 {
 	std::scoped_lock lock(shadersLock);

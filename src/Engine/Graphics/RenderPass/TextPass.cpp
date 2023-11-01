@@ -43,7 +43,7 @@ void TextPass::beginFrame(const Component::Camera&)
             x += (glyph.advance >> 6) * render.scale;
         }
         VertexBufferCreateInfo vbInfo = {
-            .resourceData = {
+            .sourceData = {
                 .size = static_cast<uint32>(instanceData.size() * sizeof(GlyphInstanceData)),
                 .data = reinterpret_cast<uint8*>(instanceData.data()),
                 },
@@ -60,7 +60,7 @@ void TextPass::beginFrame(const Component::Camera&)
         };
     }
     auto proj = viewport->getProjectionMatrix();
-    BulkResourceData projectionUpdate = {
+    DataSource projectionUpdate = {
         .size = sizeof(Matrix4),
         .data = (uint8*)&proj,
     };
@@ -156,7 +156,7 @@ void TextPass::createRenderPass()
     textureArrayLayout->create();
 
     projectionBuffer = graphics->createUniformBuffer({
-        .resourceData = {
+        .sourceData = {
             .size = sizeof(Matrix4),
             .data = nullptr,
         },

@@ -37,38 +37,40 @@ public:
 
     // Inherited via Graphics
     virtual void init(GraphicsInitializer initializer) override;
-    virtual Gfx::PWindow createWindow(const WindowCreateInfo &createInfo) override;
-    virtual Gfx::PViewport createViewport(Gfx::PWindow owner, const ViewportCreateInfo &createInfo) override;
+    virtual Gfx::OWindow createWindow(const WindowCreateInfo &createInfo) override;
+    virtual Gfx::OViewport createViewport(Gfx::PWindow owner, const ViewportCreateInfo &createInfo) override;
 
-    virtual Gfx::PRenderPass createRenderPass(Gfx::PRenderTargetLayout layout, Gfx::PViewport renderArea) override;
+    virtual Gfx::ORenderPass createRenderPass(Gfx::ORenderTargetLayout layout, Gfx::PViewport renderArea) override;
     virtual void beginRenderPass(Gfx::PRenderPass renderPass) override;
     virtual void endRenderPass() override;
 
     virtual void executeCommands(const Array<Gfx::PRenderCommand>& commands) override;
     virtual void executeCommands(const Array<Gfx::PComputeCommand>& commands) override;
 
-    virtual Gfx::PTexture2D createTexture2D(const TextureCreateInfo &createInfo) override;
-    virtual Gfx::PTexture3D createTexture3D(const TextureCreateInfo &createInfo) override;
-    virtual Gfx::PTextureCube createTextureCube(const TextureCreateInfo &createInfo) override;
-    virtual Gfx::PUniformBuffer createUniformBuffer(const UniformBufferCreateInfo &bulkData) override;
-    virtual Gfx::PShaderBuffer createShaderBuffer(const ShaderBufferCreateInfo &bulkData) override;
-    virtual Gfx::PVertexBuffer createVertexBuffer(const VertexBufferCreateInfo &bulkData) override;
-    virtual Gfx::PIndexBuffer createIndexBuffer(const IndexBufferCreateInfo &bulkData) override;
+    virtual Gfx::OTexture2D createTexture2D(const TextureCreateInfo &createInfo) override;
+    virtual Gfx::OTexture3D createTexture3D(const TextureCreateInfo &createInfo) override;
+    virtual Gfx::OTextureCube createTextureCube(const TextureCreateInfo &createInfo) override;
+    virtual Gfx::OUniformBuffer createUniformBuffer(const UniformBufferCreateInfo &bulkData) override;
+    virtual Gfx::OShaderBuffer createShaderBuffer(const ShaderBufferCreateInfo &bulkData) override;
+    virtual Gfx::OVertexBuffer createVertexBuffer(const VertexBufferCreateInfo &bulkData) override;
+    virtual Gfx::OIndexBuffer createIndexBuffer(const IndexBufferCreateInfo &bulkData) override;
+    
     virtual Gfx::PRenderCommand createRenderCommand(const std::string& name) override;
     virtual Gfx::PComputeCommand createComputeCommand(const std::string& name) override;
-    virtual Gfx::PVertexDeclaration createVertexDeclaration(const Array<Gfx::VertexElement>& element) override;
-    virtual Gfx::PVertexShader createVertexShader(const ShaderCreateInfo& createInfo) override;
-    virtual Gfx::PFragmentShader createFragmentShader(const ShaderCreateInfo& createInfo) override;
-    virtual Gfx::PComputeShader createComputeShader(const ShaderCreateInfo& createInfo) override;
-    virtual Gfx::PTaskShader createTaskShader(const ShaderCreateInfo& createInfo) override;
-    virtual Gfx::PMeshShader createMeshShader(const ShaderCreateInfo& createInfo) override;
-    virtual Gfx::PGraphicsPipeline createGraphicsPipeline(const Gfx::LegacyPipelineCreateInfo& createInfo) override;
-    virtual Gfx::PGraphicsPipeline createGraphicsPipeline(const Gfx::MeshPipelineCreateInfo& createInfo) override;
-    virtual Gfx::PComputePipeline createComputePipeline(const Gfx::ComputePipelineCreateInfo& createInfo) override;
-    virtual Gfx::PSamplerState createSamplerState(const SamplerCreateInfo& createInfo) override;
+    
+    virtual Gfx::OVertexDeclaration createVertexDeclaration(const Array<Gfx::VertexElement>& element) override;
+    virtual Gfx::OVertexShader createVertexShader(const ShaderCreateInfo& createInfo) override;
+    virtual Gfx::OFragmentShader createFragmentShader(const ShaderCreateInfo& createInfo) override;
+    virtual Gfx::OComputeShader createComputeShader(const ShaderCreateInfo& createInfo) override;
+    virtual Gfx::OTaskShader createTaskShader(const ShaderCreateInfo& createInfo) override;
+    virtual Gfx::OMeshShader createMeshShader(const ShaderCreateInfo& createInfo) override;
+    virtual Gfx::OGraphicsPipeline createGraphicsPipeline(const Gfx::LegacyPipelineCreateInfo& createInfo) override;
+    virtual Gfx::OGraphicsPipeline createGraphicsPipeline(const Gfx::MeshPipelineCreateInfo& createInfo) override;
+    virtual Gfx::OComputePipeline createComputePipeline(const Gfx::ComputePipelineCreateInfo& createInfo) override;
+    virtual Gfx::OSamplerState createSamplerState(const SamplerCreateInfo& createInfo) override;
 
-    virtual Gfx::PDescriptorLayout createDescriptorLayout(const std::string& name = "") override;
-    virtual Gfx::PPipelineLayout createPipelineLayout(Gfx::PPipelineLayout baseLayout = nullptr) override;
+    virtual Gfx::ODescriptorLayout createDescriptorLayout(const std::string& name = "") override;
+    virtual Gfx::OPipelineLayout createPipelineLayout(Gfx::PPipelineLayout baseLayout = nullptr) override;
 
     virtual void copyTexture(Gfx::PTexture srcTexture, Gfx::PTexture dstTexture) override;
 protected:
@@ -82,18 +84,18 @@ protected:
     VkDevice handle;
     VkPhysicalDevice physicalDevice;
 
-    PQueue graphicsQueue;
-    PQueue computeQueue;
-    PQueue transferQueue;
-    PQueue dedicatedTransferQueue;
-    PPipelineCache pipelineCache;
+    OQueue graphicsQueue;
+    OQueue computeQueue;
+    OQueue transferQueue;
+    OQueue dedicatedTransferQueue;
+    OPipelineCache pipelineCache;
     std::mutex renderPassLock;
     PRenderPass activeRenderPass;
     PFramebuffer activeFramebuffer;
-    thread_local static PCommandBufferManager graphicsCommands;
-    thread_local static PCommandBufferManager computeCommands;
-    thread_local static PCommandBufferManager transferCommands;
-    thread_local static PCommandBufferManager dedicatedTransferCommands;
+    thread_local static OCommandBufferManager graphicsCommands;
+    thread_local static OCommandBufferManager computeCommands;
+    thread_local static OCommandBufferManager transferCommands;
+    thread_local static OCommandBufferManager dedicatedTransferCommands;
     VkPhysicalDeviceProperties props;
     VkPhysicalDeviceFeatures features;
     VkDebugReportCallbackEXT callback;
@@ -101,8 +103,8 @@ protected:
     Array<PViewport> viewports;
     std::mutex allocatedFrameBufferLock;
     Map<uint32, PFramebuffer> allocatedFramebuffers;
-    PAllocator allocator;
-    PStagingManager stagingManager;
+    OAllocator allocator;
+    OStagingManager stagingManager;
 
     friend class Window;
 };
