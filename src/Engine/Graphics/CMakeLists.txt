@@ -10,6 +10,7 @@ target_sources(Engine
         Graphics.h
         Graphics.cpp
         Initializer.h
+        Initializer.cpp
         Mesh.h
         Mesh.cpp
         RenderTarget.h

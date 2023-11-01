@@ -12,7 +12,11 @@ public:
 
     VertexData* vertexData;
     MeshId id;
-    PMaterialInstanceAsset referencedMaterial;
+    uint64 vertexCount;
+    PMaterialInstance referencedMaterial;
+    Array<Meshlet> meshlets;
+    void save(ArchiveBuffer& buffer);
+    void load(ArchiveBuffer& buffer);
 private:
 };
 DEFINE_REF(Mesh)

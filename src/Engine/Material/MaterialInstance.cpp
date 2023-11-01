@@ -22,6 +22,41 @@ MaterialInstance::~MaterialInstance()
     
 }
 
-void Seele::MaterialInstance::updateDescriptor()
+void MaterialInstance::updateDescriptor()
 {
+    descriptor = layout->allocateDescriptorSet();
+    for (auto param : parameters)
+    {
+        param->updateDescriptorSet(descriptor, uniformData.data());
+    }
+    descriptor->writeChanges();
+}
+
+Gfx::PDescriptorSet Seele::MaterialInstance::getDescriptorSet() const
+{
+    return descriptor;
+}
+
+void MaterialInstance::save(ArchiveBuffer& buffer) const
+{
+    Serialization::save(buffer, uniformData);
+    Serialization::save(buffer, uniformBinding);
+    Serialization::save(buffer, uniformBuffer);
+    Serialization::save(buffer, parameters);
+    Serialization::save(buffer, layout);
+    Serialization::save(buffer, descriptor);
+    Serialization::save(buffer, baseMaterial);
+    Serialization::save(buffer, id);
+}
+
+void MaterialInstance::load(ArchiveBuffer& buffer)
+{
+    Serialization::load(buffer, uniformData);
+    Serialization::load(buffer, uniformBinding);
+    Serialization::load(buffer, uniformBuffer);
+    Serialization::load(buffer, parameters);
+    Serialization::load(buffer, layout);
+    Serialization::load(buffer, descriptor);
+    Serialization::load(buffer, baseMaterial);
+    Serialization::load(buffer, id);
 }

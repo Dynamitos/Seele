@@ -14,6 +14,8 @@ public:
 	void loadNormals(MeshId id, const Array<Vector>& data);
 	void loadTangents(MeshId id, const Array<Vector>& data);
 	void loadBiTangents(MeshId id, const Array<Vector>& data);
+	virtual void serializeMesh(MeshId id, uint64 numVertices, ArchiveBuffer& buffer) override;
+	virtual void deserializeMesh(MeshId id, ArchiveBuffer& buffer) override;
 	virtual void init(Gfx::PGraphics graphics) override;
 	virtual void bindBuffers(Gfx::PRenderCommand command) override;
 	virtual Gfx::PDescriptorLayout getVertexDataLayout() override;

@@ -174,9 +174,9 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialAss
             indices[faceIndex * 3 + 2] = mesh->mFaces[faceIndex].mIndices[2];
         }
 
+        Array<Meshlet> meshlets;
         if (Gfx::useMeshShading)
         {
-            Array<Meshlet> meshlets;
             meshlets.reserve(indices.size() / (3ull * Gfx::numPrimitivesPerMeshlet));
             std::set<uint32> uniqueVertices;
             Meshlet current = {
@@ -233,6 +233,7 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialAss
                     completeMeshlet();
                 }
             }
+            vertexData->loadMesh(id, meshlets);
         }
         else
         {
@@ -250,10 +251,14 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialAss
         Gfx::PIndexBuffer indexBuffer = graphics->createIndexBuffer(idxInfo);
         indexBuffer->transferOwnership(Gfx::QueueType::GRAPHICS);
 
-        globalMeshes[meshIndex] = new Mesh(vertexShaderInput, indexBuffer);
-        globalMeshes[meshIndex]->referencedMaterial = materials[mesh->mMaterialIndex];
+        globalMeshes[meshIndex] = new Mesh();
+        globalMeshes[meshIndex]->vertexData = vertexData;
+        globalMeshes[meshIndex]->id = id;
+        globalMeshes[meshIndex]->referencedMaterial = materials[mesh->mMaterialIndex]->getMaterial()->instantiate();
+        globalMeshes[meshIndex]->meshlets = std::move(meshlets);
     }
 }
+
 void MeshLoader::convertAssimpARGB(unsigned char* dst, aiTexel* src, uint32 numPixels)
 {
     for(uint32 i = 0; i < numPixels; ++i)

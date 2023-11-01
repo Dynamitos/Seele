@@ -22,10 +22,12 @@ struct MeshId
 };
 struct Meshlet
 {
-    uint32 uniqueVertices[Gfx::numVerticesPerMeshlet]; // unique vertiex indices in the vertex data
-    uint8 primitiveLayout[Gfx::numPrimitivesPerMeshlet * 3]; // indices into the uniqueVertices array, only uint8 needed
+    StaticArray<uint32, Gfx::numVerticesPerMeshlet> uniqueVertices; // unique vertiex indices in the vertex data
+    StaticArray<uint8, Gfx::numPrimitivesPerMeshlet * 3> primitiveLayout; // indices into the uniqueVertices array, only uint8 needed
     uint32 numVertices;
     uint32 numPrimitives;
+    void save(ArchiveBuffer& buffer);
+    void load(ArchiveBuffer& buffer);
 };
 class VertexData
 {
@@ -62,6 +64,8 @@ public:
     void loadMesh(MeshId id, Array<Meshlet> meshlets);
     void createDescriptors();
     MeshId allocateVertexData(uint64 numVertices);
+    virtual void serializeMesh(MeshId id, uint64 numVertices, ArchiveBuffer& buffer) = 0;
+    virtual void deserializeMesh(MeshId id, ArchiveBuffer& buffer) = 0;
     virtual void bindBuffers(Gfx::PRenderCommand command) = 0;
     virtual Gfx::PDescriptorLayout getVertexDataLayout() = 0;
     virtual Gfx::PDescriptorSet getVertexDataSet() = 0;
@@ -70,6 +74,7 @@ public:
     const Map<std::string, MaterialData>& getMaterialData() const { return materialData; }
     const Array<MeshData>& getMeshData(MeshId id) { return meshData[id]; }
     static List<VertexData*> getList();
+    static VertexData* findByTypeName(std::string name);
     virtual void init(Gfx::PGraphics graphics);
 protected:
     virtual void resizeBuffers() = 0;
@@ -92,7 +97,7 @@ protected:
     };
     Map<std::string, MaterialData> materialData;
     Map<MeshId, Array<MeshData>> meshData;
-    Map<MeshId, uint64_t> meshOffsets;
+    Map<MeshId, uint64> meshOffsets;
     Array<MeshletDescription> meshlets;
     Array<uint8> primitiveIndices;
     Array<uint32> vertexIndices;

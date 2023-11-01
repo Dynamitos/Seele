@@ -1,5 +1,6 @@
 #include "Initializer.h"
 #include <iostream>
+#include "Initializer.h"
 
 using namespace Seele::Vulkan;
 

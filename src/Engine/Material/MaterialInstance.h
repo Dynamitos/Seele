@@ -13,6 +13,10 @@ public:
     Gfx::PDescriptorSet getDescriptorSet() const;
     PMaterial getBaseMaterial() const { return baseMaterial; }
     uint64 getId() const { return id; }
+
+    void save(ArchiveBuffer& buffer) const;
+    void load(ArchiveBuffer& buffer);
+
 private:
     Gfx::PGraphics graphics;
     Array<uint8> uniformData;

@@ -8,6 +8,7 @@ DECLARE_REF(MaterialInstance)
 class Material
 {
 public:
+    Material();
     Material(Gfx::PGraphics graphics, 
         Array<PShaderParameter> parameter, 
         Gfx::PDescriptorLayout layout, 

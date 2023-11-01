@@ -61,6 +61,45 @@ void StaticMeshVertexData::loadBiTangents(MeshId id, const Array<Vector>& data)
     dirty = true;
 }
 
+void StaticMeshVertexData::serializeMesh(MeshId id, uint64 numVertices, ArchiveBuffer& buffer)
+{
+    uint64 offset = meshOffsets[id];
+    Array<Vector> pos(numVertices);
+    Array<Vector2> tex(numVertices);
+    Array<Vector> nor(numVertices);
+    Array<Vector> tan(numVertices);
+    Array<Vector> bit(numVertices);
+    std::copy(positionData.begin() + offset, positionData.begin() + offset + numVertices, pos.begin());
+    std::copy(texCoordsData.begin() + offset, texCoordsData.begin() + offset + numVertices, tex.begin());
+    std::copy(normalData.begin() + offset, normalData.begin() + offset + numVertices, nor.begin());
+    std::copy(tangentData.begin() + offset, tangentData.begin() + offset + numVertices, tan.begin());
+    std::copy(biTangentData.begin() + offset, biTangentData.begin() + offset + numVertices, bit.begin());
+    Serialization::save(buffer, pos);
+    Serialization::save(buffer, tex);
+    Serialization::save(buffer, nor);
+    Serialization::save(buffer, tan);
+    Serialization::save(buffer, bit);
+}
+
+void StaticMeshVertexData::deserializeMesh(MeshId id, ArchiveBuffer& buffer)
+{
+    Array<Vector> pos;
+    Array<Vector2> tex;
+    Array<Vector> nor;
+    Array<Vector> tan;
+    Array<Vector> bit;
+    Serialization::load(buffer, pos);
+    Serialization::load(buffer, tex);
+    Serialization::load(buffer, nor);
+    Serialization::load(buffer, tan);
+    Serialization::load(buffer, bit);
+    loadPositions(id, pos);
+    loadTexCoords(id, tex);
+    loadNormals(id, nor);
+    loadTangents(id, tan);
+    loadBiTangents(id, bit);
+}
+
 void StaticMeshVertexData::init(Gfx::PGraphics graphics)
 {
     VertexData::init(graphics);

@@ -129,7 +129,7 @@ PGraphicsPipeline PipelineCache::createPipeline(const Gfx::LegacyPipelineCreateI
         );
     rasterizationState.depthBiasEnable = gfxInfo.rasterizationState.depthBiasEnable;    
     rasterizationState.depthBiasClamp = gfxInfo.rasterizationState.depthBiasClamp;
-    rasterizationState.depthBiasConstantFactor = gfxInfo.rasterizationState.depthBoasConstantFactor;
+    rasterizationState.depthBiasConstantFactor = gfxInfo.rasterizationState.depthBiasConstantFactor;
     rasterizationState.depthBiasSlopeFactor = gfxInfo.rasterizationState.depthBiasSlopeFactor;
     rasterizationState.depthClampEnable = gfxInfo.rasterizationState.depthClampEnable;
     rasterizationState.lineWidth = gfxInfo.rasterizationState.lineWidth;
@@ -274,7 +274,7 @@ PGraphicsPipeline PipelineCache::createPipeline(const Gfx::MeshPipelineCreateInf
         );
     rasterizationState.depthBiasEnable = gfxInfo.rasterizationState.depthBiasEnable;
     rasterizationState.depthBiasClamp = gfxInfo.rasterizationState.depthBiasClamp;
-    rasterizationState.depthBiasConstantFactor = gfxInfo.rasterizationState.depthBoasConstantFactor;
+    rasterizationState.depthBiasConstantFactor = gfxInfo.rasterizationState.depthBiasConstantFactor;
     rasterizationState.depthBiasSlopeFactor = gfxInfo.rasterizationState.depthBiasSlopeFactor;
     rasterizationState.depthClampEnable = gfxInfo.rasterizationState.depthClampEnable;
     rasterizationState.lineWidth = gfxInfo.rasterizationState.lineWidth;

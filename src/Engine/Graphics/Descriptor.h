@@ -79,9 +79,9 @@ public:
     {
         descriptorBindings.resize(other.descriptorBindings.size());
         for(uint32 i = 0; i < descriptorBindings.size(); ++i)
-				{
-					descriptorBindings[i] = other.descriptorBindings[i];
-				}
+		{
+			descriptorBindings[i] = other.descriptorBindings[i];
+		}
     }
     DescriptorLayout& operator=(const DescriptorLayout& other)
     {

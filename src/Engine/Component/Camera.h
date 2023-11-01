@@ -5,6 +5,7 @@
 
 namespace Seele
 {
+DECLARE_NAME_REF(Gfx, Viewport)
 namespace Component
 {
 struct Camera

@@ -5,6 +5,9 @@
 
 using namespace Seele;
 
+Material::Material()
+{
+}
 
 Material::Material(Gfx::PGraphics graphics, 
         Array<PShaderParameter> parameter, 
@@ -37,11 +40,15 @@ PMaterialInstance Seele::Material::instantiate()
 
 void Material::save(ArchiveBuffer& buffer) const
 {
-    MaterialInterface::save(buffer);
+    Serialization::save(buffer, brdfName);
+    Serialization::save(buffer, uniformDataSize);
+    Serialization::save(buffer, uniformBinding);
+    Serialization::save(buffer, instanceId);
     Serialization::save(buffer, materialName);
-    Serialization::save(buffer, layout->getSetIndex());
     Serialization::save(buffer, codeExpressions);
+    Serialization::save(buffer, parameters);
     Serialization::save(buffer, brdf);
+    Serialization::save(buffer, layout->getSetIndex());
     const auto& bindings = layout->getBindings();
     Serialization::save(buffer, bindings.size());
     for (const auto& binding : bindings)
@@ -57,12 +64,16 @@ void Material::save(ArchiveBuffer& buffer) const
 void Material::load(ArchiveBuffer& buffer)
 {
     graphics = buffer.getGraphics();
-    MaterialInterface::load(buffer);
+    Serialization::load(buffer, brdfName);
+    Serialization::load(buffer, uniformDataSize);
+    Serialization::load(buffer, uniformBinding);
+    Serialization::load(buffer, instanceId);
     Serialization::load(buffer, materialName);
+    Serialization::load(buffer, codeExpressions);
+    Serialization::load(buffer, parameters);
+    Serialization::load(buffer, brdf);
     uint32 setIndex;
     Serialization::load(buffer, setIndex);
-    Serialization::load(buffer, codeExpressions);
-    Serialization::load(buffer, brdf);
     uint64 numBindings;
     Serialization::load(buffer, numBindings);
     layout = graphics->createDescriptorLayout();

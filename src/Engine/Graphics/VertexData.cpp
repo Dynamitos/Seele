@@ -45,10 +45,10 @@ void VertexData::loadMesh(MeshId id, Array<Meshlet> loadedMeshlets)
             Meshlet& m = loadedMeshlets[currentMesh + i];
             uint32 vertexOffset = vertexIndices.size();
             vertexIndices.resize(vertexOffset + m.numVertices);
-            std::memcpy(vertexIndices.data() + vertexOffset, m.uniqueVertices, sizeof(m.uniqueVertices));
+            std::memcpy(vertexIndices.data() + vertexOffset, m.uniqueVertices.data(), sizeof(m.uniqueVertices));
             uint32 primitiveOffset = primitiveIndices.size();
             primitiveIndices.resize(primitiveOffset + (m.numPrimitives * 3));
-            std::memcpy(primitiveIndices.data() + primitiveOffset, m.primitiveLayout, sizeof(m.primitiveLayout));
+            std::memcpy(primitiveIndices.data() + primitiveOffset, m.primitiveLayout.data(), sizeof(m.primitiveLayout));
             meshlets.add(MeshletDescription{
                 .boundingBox = MeshletAABB(),
                 .vertexCount = m.numVertices,
@@ -156,6 +156,18 @@ List<VertexData*> VertexData::getList()
     return vertexDataList;
 }
 
+VertexData* Seele::VertexData::findByTypeName(std::string name)
+{
+    for (auto vd : vertexDataList)
+    {
+        if (vd->getTypeName() == name)
+        {
+            return vd;
+        }
+    }
+    return nullptr;
+}
+
 void Seele::VertexData::init(Gfx::PGraphics graphics)
 {
     this->graphics = graphics;
@@ -181,4 +193,20 @@ VertexData::VertexData()
     : idCounter(0)
     , dirty(false)
 {
+}
+
+void Meshlet::save(ArchiveBuffer& buffer)
+{
+    Serialization::save(buffer, uniqueVertices);
+    Serialization::save(buffer, primitiveLayout);
+    Serialization::save(buffer, numVertices);
+    Serialization::save(buffer, numPrimitives);
+}
+
+void Meshlet::load(ArchiveBuffer& buffer)
+{
+    Serialization::load(buffer, uniqueVertices);
+    Serialization::load(buffer, primitiveLayout);
+    Serialization::load(buffer, numVertices);
+    Serialization::load(buffer, numPrimitives);
 }
