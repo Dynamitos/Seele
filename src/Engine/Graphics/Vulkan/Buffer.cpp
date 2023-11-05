@@ -1,4 +1,6 @@
 #include "Buffer.h"
+#include "Initializer.h"
+#include "CommandBuffer.h"
 
 using namespace Seele;
 using namespace Seele::Vulkan;
@@ -7,20 +9,20 @@ struct PendingBuffer
 {
     uint64 offset;
     uint64 size;
-    PStagingBuffer stagingBuffer;
+    OStagingBuffer stagingBuffer;
     Gfx::QueueType prevQueue;
-    bool bWriteOnly;
+    bool writeOnly;
 };
 
 static std::map<Vulkan::Buffer*, PendingBuffer> pendingBuffers;
 
-Buffer::Buffer(PGraphics graphics, uint64 size, VkBufferUsageFlags usage, Gfx::QueueType& queueType, bool bDynamic)
+Buffer::Buffer(PGraphics graphics, uint64 size, VkBufferUsageFlags usage, Gfx::QueueType& queueType, bool dynamic)
     : graphics(graphics)
     , currentBuffer(0)
     , size(size)
     , owner(queueType)
 {
-    if(bDynamic)
+    if(dynamic)
     {
         numBuffers = Gfx::numFramesBuffered;
     } 
@@ -166,12 +168,12 @@ void Buffer::executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlag
     vkCmdPipelineBarrier(commandBuffer->getHandle(), srcStage, dstStage, 0, 0, nullptr, numBuffers, dynamicBarriers, 0, nullptr);
 }
 
-void * Buffer::lock(bool bWriteOnly)
+void * Buffer::lock(bool writeOnly)
 {
-    return lockRegion(0, size, bWriteOnly);
+    return lockRegion(0, size, writeOnly);
 }
 
-void * Buffer::lockRegion(uint64 regionOffset, uint64 regionSize, bool bWriteOnly)
+void * Buffer::lockRegion(uint64 regionOffset, uint64 regionSize, bool writeOnly)
 {
     void *data = nullptr;
 
@@ -190,16 +192,16 @@ void * Buffer::lockRegion(uint64 regionOffset, uint64 regionSize, bool bWriteOnl
     //assert(bStatic || bDynamic || bUAV);
 
     PendingBuffer pending;
-    pending.bWriteOnly = bWriteOnly;
+    pending.writeOnly = writeOnly;
     pending.prevQueue = owner;
     pending.offset = regionOffset;
     pending.size = regionSize;
-    if (bWriteOnly)
+    if (writeOnly)
     {
         //requestOwnershipTransfer(Gfx::QueueType::DEDICATED_TRANSFER);
-        PStagingBuffer stagingBuffer = graphics->getStagingManager()->allocateStagingBuffer(regionSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+        OStagingBuffer stagingBuffer = graphics->getStagingManager()->allocateStagingBuffer(regionSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
         data = stagingBuffer->getMappedPointer();
-        pending.stagingBuffer = stagingBuffer;
+        pending.stagingBuffer = std::move(stagingBuffer);
     }
     else
     {
@@ -220,7 +222,7 @@ void * Buffer::lockRegion(uint64 regionOffset, uint64 regionSize, bool bWriteOnl
         barrier.size = size;
         vkCmdPipelineBarrier(handle, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 1, &barrier, 0, nullptr);
 
-        PStagingBuffer stagingBuffer = graphics->getStagingManager()->allocateStagingBuffer(size, VK_BUFFER_USAGE_TRANSFER_DST_BIT, true);
+        OStagingBuffer stagingBuffer = graphics->getStagingManager()->allocateStagingBuffer(size, VK_BUFFER_USAGE_TRANSFER_DST_BIT, true);
 
         VkBufferCopy regions;
         regions.size = size;
@@ -233,11 +235,12 @@ void * Buffer::lockRegion(uint64 regionOffset, uint64 regionSize, bool bWriteOnl
         vkQueueWaitIdle(graphics->getQueueCommands(owner)->getQueue()->getHandle());
         stagingBuffer->getMappedPointer(); // this maps the memory if not mapped already
         stagingBuffer->flushMappedMemory();
-        pending.stagingBuffer = stagingBuffer;
-
         data = stagingBuffer->getMappedPointer();
+
+        pending.stagingBuffer = std::move(stagingBuffer);
+
     }
-    pendingBuffers[this] = pending;
+    pendingBuffers[this] = std::move(pending);
 
     assert(data);
     return data;
@@ -248,10 +251,9 @@ void Buffer::unlock()
     auto found = pendingBuffers.find(this);
     if (found != pendingBuffers.end())
     {
-        PendingBuffer pending = found->second;
+        PendingBuffer& pending = found->second;
         pending.stagingBuffer->flushMappedMemory();
-        pendingBuffers.erase(this);
-        if (pending.bWriteOnly)
+        if (pending.writeOnly)
         {
             PStagingBuffer stagingBuffer = pending.stagingBuffer;
             PCmdBuffer cmdBuffer = graphics->getQueueCommands(owner)->getCommands();
@@ -265,16 +267,17 @@ void Buffer::unlock()
             graphics->getQueueCommands(owner)->submitCommands();
         }
         //requestOwnershipTransfer(pending.prevQueue);
-        graphics->getStagingManager()->releaseStagingBuffer(pending.stagingBuffer);
+        graphics->getStagingManager()->releaseStagingBuffer(std::move(pending.stagingBuffer));
+        pendingBuffers.erase(this);
     }
 }
 
 UniformBuffer::UniformBuffer(PGraphics graphics, const UniformBufferCreateInfo &createInfo)
     : Gfx::UniformBuffer(graphics->getFamilyMapping(), createInfo.sourceData)
-    , Vulkan::Buffer(graphics, createInfo.sourceData.size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, currentOwner, createInfo.bDynamic)
+    , Vulkan::Buffer(graphics, createInfo.sourceData.size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, currentOwner, createInfo.dynamic)
     , dedicatedStagingBuffer(nullptr)
 {
-    if(createInfo.bDynamic)
+    if(createInfo.dynamic)
     {
         dedicatedStagingBuffer = graphics->getStagingManager()->allocateStagingBuffer(createInfo.sourceData.size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
     }
@@ -302,13 +305,13 @@ bool UniformBuffer::updateContents(const DataSource &sourceData)
     unlock();
     return true;
 }
-void* UniformBuffer::lock(bool bWriteOnly)
+void* UniformBuffer::lock(bool writeOnly)
 {
     if(dedicatedStagingBuffer != nullptr)
     {
         return dedicatedStagingBuffer->getMappedPointer();
     }
-    return Vulkan::Buffer::lock(bWriteOnly);
+    return Vulkan::Buffer::lock(writeOnly);
 }
 
 void UniformBuffer::unlock()
@@ -359,7 +362,7 @@ VkAccessFlags UniformBuffer::getDestAccessMask()
 
 ShaderBuffer::ShaderBuffer(PGraphics graphics, const ShaderBufferCreateInfo &sourceData)
     : Gfx::ShaderBuffer(graphics->getFamilyMapping(), sourceData.stride, sourceData.sourceData.size / sourceData.stride, sourceData.sourceData)
-    , Vulkan::Buffer(graphics, sourceData.sourceData.size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, currentOwner, sourceData.bDynamic)
+    , Vulkan::Buffer(graphics, sourceData.sourceData.size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, currentOwner, sourceData.dynamic)
 {
     if (sourceData.sourceData.data != nullptr)
     {
@@ -383,13 +386,13 @@ bool ShaderBuffer::updateContents(const DataSource &sourceData)
     unlock();
     return true;
 }
-void* ShaderBuffer::lock(bool bWriteOnly)
+void* ShaderBuffer::lock(bool writeOnly)
 {
     if(dedicatedStagingBuffer != nullptr)
     {
         return dedicatedStagingBuffer->getMappedPointer();
     }
-    return ShaderBuffer::lock(bWriteOnly);
+    return ShaderBuffer::lock(writeOnly);
 }
 
 void ShaderBuffer::unlock()

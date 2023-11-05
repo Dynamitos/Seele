@@ -8,38 +8,40 @@ RenderTargetLayout::RenderTargetLayout()
 	: inputAttachments()
 	, colorAttachments()
 	, depthAttachment()
+	, width(0)
+	, height(0)
 {
 }
 
-RenderTargetLayout::RenderTargetLayout(ORenderTargetAttachment depthAttachment)
+RenderTargetLayout::RenderTargetLayout(PRenderTargetAttachment depthAttachment)
 	: inputAttachments()
 	, colorAttachments()
-	, depthAttachment(std::move(depthAttachment))
+	, depthAttachment(depthAttachment)
 	, width(depthAttachment->getTexture()->getSizeX())
 	, height(depthAttachment->getTexture()->getSizeY())
 {
 }
 
-RenderTargetLayout::RenderTargetLayout(ORenderTargetAttachment colorAttachment, ORenderTargetAttachment depthAttachment)
+RenderTargetLayout::RenderTargetLayout(PRenderTargetAttachment colorAttachment, PRenderTargetAttachment depthAttachment)
 	: inputAttachments()
-	, depthAttachment(std::move(depthAttachment))
+	, depthAttachment(depthAttachment)
 	, width(depthAttachment->getTexture()->getSizeX())
 	, height(depthAttachment->getTexture()->getSizeY())
 {
 	colorAttachments.add(colorAttachment);
 }
-RenderTargetLayout::RenderTargetLayout(Array<ORenderTargetAttachment> colorAttachments, ORenderTargetAttachment depthAttachment)
+RenderTargetLayout::RenderTargetLayout(Array<PRenderTargetAttachment> colorAttachments, PRenderTargetAttachment depthAttachment)
 	: inputAttachments()
-	, colorAttachments(std::move(colorAttachments))
-	, depthAttachment(std::move(depthAttachment))
+	, colorAttachments(colorAttachments)
+	, depthAttachment(depthAttachment)
 	, width(depthAttachment->getTexture()->getSizeX())
 	, height(depthAttachment->getTexture()->getSizeY())
 {
 }
-RenderTargetLayout::RenderTargetLayout(Array<ORenderTargetAttachment> inputAttachments, Array<ORenderTargetAttachment> colorAttachments, ORenderTargetAttachment depthAttachment)
-	: inputAttachments(std::move(inputAttachments))
-	, colorAttachments(std::move(colorAttachments))
-	, depthAttachment(std::move(depthAttachment))
+RenderTargetLayout::RenderTargetLayout(Array<PRenderTargetAttachment> inputAttachments, Array<PRenderTargetAttachment> colorAttachments, PRenderTargetAttachment depthAttachment)
+	: inputAttachments(inputAttachments)
+	, colorAttachments(colorAttachments)
+	, depthAttachment(depthAttachment)
 	, width(depthAttachment->getTexture()->getSizeX())
 	, height(depthAttachment->getTexture()->getSizeY())
 {

@@ -7,6 +7,7 @@
 #include "Material/ShaderExpression.h"
 #include "Asset/TextureAsset.h"
 #include <nlohmann/json.hpp>
+#include <format>
 
 using namespace Seele;
 using json = nlohmann::json;
@@ -14,12 +15,12 @@ using json = nlohmann::json;
 MaterialLoader::MaterialLoader(Gfx::PGraphics graphics)
     : graphics(graphics)
 {
-    PMaterialAsset placeholderAsset = new MaterialAsset();
+    OMaterialAsset placeholderAsset = new MaterialAsset();
     import(MaterialImportArgs{
         .filePath = std::filesystem::absolute("./shaders/Placeholder.asset"),
         .importPath = "",
         }, placeholderAsset);
-    AssetRegistry::get().assetRoot->materials[""] = placeholderAsset;
+    AssetRegistry::get().assetRoot->materials[""] = std::move(placeholderAsset);
 }
 
 MaterialLoader::~MaterialLoader()
@@ -30,10 +31,11 @@ void MaterialLoader::importAsset(MaterialImportArgs args)
 {
     std::filesystem::path assetPath = args.filePath.filename();
     assetPath.replace_extension("asset");
-    PMaterialAsset asset = new MaterialAsset(args.importPath, assetPath.stem().string());
+    OMaterialAsset asset = new MaterialAsset(args.importPath, assetPath.stem().string());
     asset->setStatus(Asset::Status::Loading);
-    AssetRegistry::get().registerMaterial(asset);
-    import(args, asset);
+    PMaterialAsset ref = asset;
+    AssetRegistry::get().registerMaterial(std::move(asset));
+    import(args, ref);
 }
 
 void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
@@ -42,7 +44,7 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
     json j;
     jsonstream >> j;
     std::string materialName = j["name"].get<std::string>() + "Material";
-    Gfx::PDescriptorLayout layout = graphics->createDescriptorLayout(materialName + "Layout");
+    Gfx::ODescriptorLayout layout = graphics->createDescriptorLayout(materialName + "Layout");
     //Shader file needs to conform to the slang standard, which prohibits _
     materialName.erase(std::remove(materialName.begin(), materialName.end(), '_'), materialName.end());
     materialName.erase(std::remove(materialName.begin(), materialName.end(), '.'), materialName.end());
@@ -50,19 +52,18 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
     uint32 uniformBufferOffset = 0;
     uint32 bindingCounter = 0; // Uniform buffers are always binding 0
     uint32 uniformBinding = -1;
-    Map<int32, PShaderExpression> expressions;
-    int32 key = 0;
-    int32 auxKey = -1;
-    Map<std::string, PShaderParameter> parameters;
-    for(auto param : j["params"].items())
+    Map<std::string, OShaderExpression> expressions;
+    uint32 key = 0;
+    uint32 auxKey = 0;
+    Array<std::string> parameters;
+    for(auto& param : j["params"].items())
     {
         std::string type = param.value()["type"].get<std::string>();
         auto defaultValue = param.value().find("default");
         // TODO: ALIGNMENT RULES
         if(type.compare("float") == 0)
         {
-            PFloatParameter p = new FloatParameter(param.key(), uniformBufferOffset, 0);
-            p->key = auxKey;
+            OFloatParameter p = new FloatParameter(param.key(), uniformBufferOffset, 0);
             if(uniformBinding == -1)
             {
                 layout->addDescriptorBinding(bindingCounter, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
@@ -73,14 +74,13 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
             {
                 p->data = std::stof(defaultValue.value().get<std::string>());
             }
-            expressions[auxKey--] = p;
-            parameters[param.key()] = p;
+            parameters.add(p->key);
+            expressions[p->key] = std::move(p);
         }
         // TODO: ALIGNMENT RULES
         else if(type.compare("float3") == 0)
         {
-            PVectorParameter p = new VectorParameter(param.key(), uniformBufferOffset, 0);
-            p->key = auxKey;
+            OVectorParameter p = new VectorParameter(param.key(), uniformBufferOffset, 0);
             if(uniformBinding == -1)
             {
                 layout->addDescriptorBinding(bindingCounter, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
@@ -91,13 +91,12 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
             {
                 p->data = parseVector(defaultValue.value().get<std::string>().c_str());
             }
-            expressions[auxKey--] = p;
-            parameters[param.key()] = p;
+            parameters.add(p->key); 
+            expressions[p->key] = std::move(p);
         }
         else if(type.compare("Texture2D") == 0)
         {
-            PTextureParameter p = new TextureParameter(param.key(), 0, bindingCounter);
-            p->key = auxKey;
+            OTextureParameter p = new TextureParameter(param.key(), 0, bindingCounter);
             layout->addDescriptorBinding(bindingCounter++, Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
             if(defaultValue != param.value().end())
             {
@@ -108,17 +107,16 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
             {
                 p->data = AssetRegistry::findTexture(""); // this will return placeholder texture
             }
-            expressions[auxKey--] = p;
-            parameters[param.key()] = p;
+            parameters.add(p->key);
+            expressions[p->key] = std::move(p);
         }
         else if(type.compare("SamplerState") == 0)
         {
-            PSamplerParameter p = new SamplerParameter(param.key(), 0, bindingCounter);
-            p->key = auxKey;
+            OSamplerParameter p = new SamplerParameter(param.key(), 0, bindingCounter);
             layout->addDescriptorBinding(bindingCounter++, Gfx::SE_DESCRIPTOR_TYPE_SAMPLER);
             p->data = graphics->createSamplerState({});
-            expressions[auxKey--] = p;
-            parameters[param.key()] = p;
+            parameters.add(p->key);
+            expressions[p->key] = std::move(p);
         }
         else
         {
@@ -126,99 +124,100 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
         }
     }
     uint32 uniformDataSize = uniformBufferOffset;
-    auto referenceExpression = [&auxKey, &expressions](json obj) -> PShaderExpression
+    auto referenceExpression = [&auxKey, &expressions](json obj) -> std::string
     {
         if(obj.is_string())
         {
-            PConstantExpression c = new ConstantExpression(obj.get<std::string>(), ExpressionType::UNKNOWN);
-            c->key = auxKey;
-            expressions[auxKey--] = c;
-            return c;
+            std::string str = obj.get<std::string>();
+            if (expressions.contains(str))
+            {
+                return str;
+            }
+            OConstantExpression c = new ConstantExpression(str, ExpressionType::UNKNOWN);
+            std::string name = std::format("Const{0}", auxKey++);
+            c->key = name;
+            expressions[c->key] = std::move(c);
+            return name;
         }
         else
         {
-            return expressions[obj.get<uint32>()];
+            return std::format("{0}", obj.get<uint32>());
         }
     };
     MaterialNode mat;
 
-    for(auto param : j["code"].items())
+    for(auto& param : j["code"].items())
     {
-        auto obj = param.value();
+        auto& obj = param.value();
         std::string exp = obj["exp"].get<std::string>();
         if(exp.compare("Add") == 0)
         {
-            PAddExpression p = new AddExpression();
-            p->key = key;
-            p->inputs["lhs"].source = referenceExpression(obj["lhs"])->key;
-            p->inputs["rhs"].source = referenceExpression(obj["rhs"])->key;
-            expressions[key++] = p;
+            OAddExpression p = new AddExpression();
+            std::string name = std::format("{0}", key++);
+            p->key = name;
+            p->inputs["lhs"].source = referenceExpression(obj["lhs"]);
+            p->inputs["rhs"].source = referenceExpression(obj["rhs"]);
+            expressions[name] = std::move(p);
         }
         if(exp.compare("Sub") == 0)
         {
-            PSubExpression p = new SubExpression();
-            p->key = key;
-            p->inputs["lhs"].source = referenceExpression(obj["lhs"])->key;
-            p->inputs["rhs"].source = referenceExpression(obj["rhs"])->key;
-            expressions[key++] = p;
+            OSubExpression p = new SubExpression();
+            std::string name = std::format("{0}", key++);
+            p->key = name;
+            p->inputs["lhs"].source = referenceExpression(obj["lhs"]);
+            p->inputs["rhs"].source = referenceExpression(obj["rhs"]);
+            expressions[name] = std::move(p);
         }
         if(exp.compare("Mul") == 0)
         {
-            PMulExpression p = new MulExpression();
-            p->key = key;
-            p->inputs["lhs"].source = referenceExpression(obj["lhs"])->key;
-            p->inputs["rhs"].source = referenceExpression(obj["rhs"])->key;
-            expressions[key++] = p;
+            OMulExpression p = new MulExpression();
+            std::string name = std::format("{0}", key++);
+            p->key = name;
+            p->inputs["lhs"].source = referenceExpression(obj["lhs"]);
+            p->inputs["rhs"].source = referenceExpression(obj["rhs"]);
+            expressions[name] = std::move(p);
         }
         if(exp.compare("Swizzle") == 0)
         {
-            PSwizzleExpression p = new SwizzleExpression();
-            p->key = key;
-            p->inputs["target"].source = referenceExpression(obj["target"])->key;
+            OSwizzleExpression p = new SwizzleExpression();
+            std::string name = std::format("{0}", key);
+            p->key = name;
+            p->inputs["target"].source = referenceExpression(obj["target"]);
             int32 i = 0;
-            for(auto c : obj["comp"].items())
+            for(auto& c : obj["comp"].items())
             {
                 p->comp[i++] = c.value().get<uint32>();
             }
-            expressions[key++] = p;
+            expressions[name] = std::move(p);
         }
         if(exp.compare("Sample") == 0)
         {
-            PSampleExpression p = new SampleExpression();
-            p->key = key;
-            p->inputs["texture"].source = parameters[obj["texture"].get<std::string>()]->key;
-            p->inputs["sampler"].source = parameters[obj["sampler"].get<std::string>()]->key;
-            p->inputs["coords"].source = referenceExpression(obj["coords"])->key;
-            expressions[key++] = p;
+            OSampleExpression p = new SampleExpression();
+            std::string name = std::format("{0}", key);
+            p->key = name;
+            p->inputs["texture"].source = referenceExpression(obj["texture"]);
+            p->inputs["sampler"].source = referenceExpression(obj["sampler"]);
+            p->inputs["coords"].source = referenceExpression(obj["coords"]);
+            expressions[name] = std::move(p);
         }
         if(exp.compare("BRDF") == 0)
         {
             mat.profile = obj["profile"].get<std::string>();
-            for(auto val : obj["values"].items())
+            for(auto& val : obj["values"].items())
             {
-                mat.variables[val.key()] = referenceExpression(val.value());
+                mat.variables[val.key()] = val.value();
             }
         }
     }
     layout->create();
-    Array<PShaderExpression> codeExp;
-    for(const auto& [_, e] : expressions)
-    {
-        codeExp.add(e);
-    }
-    Array<PShaderParameter> params;
-    for(const auto& [_, p] : parameters)
-    {
-        params.add(p);
-    }
     asset->material = new Material(
         graphics,
-        std::move(params),
         std::move(layout),
         uniformDataSize,
         uniformBinding,
         materialName,
-        std::move(codeExp),
+        std::move(expressions),
+        std::move(parameters),
         std::move(mat)
     );
 

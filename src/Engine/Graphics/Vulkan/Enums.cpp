@@ -1,4 +1,4 @@
-#include "VulkanGraphicsEnums.h"
+#include "Enums.h"
 
 using namespace Seele;
 using namespace Seele::Vulkan;

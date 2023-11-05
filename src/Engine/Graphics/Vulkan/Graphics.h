@@ -73,7 +73,9 @@ public:
     virtual Gfx::OPipelineLayout createPipelineLayout(Gfx::PPipelineLayout baseLayout = nullptr) override;
 
     virtual void copyTexture(Gfx::PTexture srcTexture, Gfx::PTexture dstTexture) override;
+    void vkCmdDrawMeshTasksEXT(VkCommandBuffer handle, uint32 groupX, uint32 groupY, uint32 groupZ);
 protected:
+    PFN_vkCmdDrawMeshTasksEXT cmdDrawMeshTasks;
     Array<const char *> getRequiredExtensions();
     void initInstance(GraphicsInitializer initInfo);
     void setupDebugCallback();
@@ -97,7 +99,7 @@ protected:
     thread_local static OCommandBufferManager transferCommands;
     thread_local static OCommandBufferManager dedicatedTransferCommands;
     VkPhysicalDeviceProperties props;
-    VkPhysicalDeviceFeatures features;
+    VkPhysicalDeviceFeatures2 features;
     VkDebugReportCallbackEXT callback;
     std::mutex viewportLock;
     Array<PViewport> viewports;

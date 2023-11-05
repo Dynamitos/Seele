@@ -12,6 +12,8 @@ class LightCullingPass : public RenderPass
 {
 public:
     LightCullingPass(Gfx::PGraphics graphics, PScene scene);
+    LightCullingPass(LightCullingPass&&) = default;
+    LightCullingPass& operator=(LightCullingPass&&) = default;
     virtual ~LightCullingPass();
     virtual void beginFrame(const Component::Camera& cam) override;
     virtual void render() override;
@@ -39,30 +41,29 @@ private:
     {
         Plane planes[4];
     };
-        
-    Gfx::PShaderBuffer frustumBuffer;
-    Gfx::PUniformBuffer dispatchParamsBuffer;
-    Gfx::PUniformBuffer viewParamsBuffer;
-    Gfx::PDescriptorSet frustumDescriptorSet;
-    Gfx::PComputeShader frustumShader;
-    Gfx::PPipelineLayout frustumLayout;
-    Gfx::PComputePipeline frustumPipeline;
 
+    Gfx::OShaderBuffer frustumBuffer;
+    Gfx::OUniformBuffer dispatchParamsBuffer;
+    Gfx::OUniformBuffer viewParamsBuffer;
+    Gfx::PDescriptorSet frustumDescriptorSet;
+    Gfx::OComputeShader frustumShader;
+    Gfx::OPipelineLayout frustumLayout;
+    Gfx::OComputePipeline frustumPipeline;
+    
+    PLightEnvironment lightEnv;
     Gfx::PTexture2D depthAttachment;
-    Gfx::PShaderBuffer frustums;
-    Gfx::PShaderBuffer oLightIndexCounter;
-    Gfx::PShaderBuffer tLightIndexCounter;
-    Gfx::PShaderBuffer oLightIndexList;
-    Gfx::PShaderBuffer tLightIndexList;
-    Gfx::PTexture2D oLightGrid;
-    Gfx::PTexture2D tLightGrid;
-    Gfx::PDescriptorSet lightEnvDescriptorSet;
+    Gfx::OShaderBuffer frustums;
+    Gfx::OShaderBuffer oLightIndexCounter;
+    Gfx::OShaderBuffer tLightIndexCounter;
+    Gfx::OShaderBuffer oLightIndexList;
+    Gfx::OShaderBuffer tLightIndexList;
+    Gfx::OTexture2D oLightGrid;
+    Gfx::OTexture2D tLightGrid;
     Gfx::PDescriptorSet cullingDescriptorSet;
-    Gfx::PDescriptorLayout lightEnvDescriptorLayout;
-    Gfx::PDescriptorLayout cullingDescriptorLayout;
-    Gfx::PComputeShader cullingShader;
-    Gfx::PPipelineLayout cullingLayout;
-    Gfx::PComputePipeline cullingPipeline;
+    Gfx::ODescriptorLayout cullingDescriptorLayout;
+    Gfx::OComputeShader cullingShader;
+    Gfx::OPipelineLayout cullingLayout;
+    Gfx::OComputePipeline cullingPipeline;
 };
 DEFINE_REF(LightCullingPass)
 } // namespace Seele

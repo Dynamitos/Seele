@@ -5,7 +5,6 @@
 
 namespace Seele
 {
-DECLARE_NAME_REF(Gfx, Viewport)
 namespace Component
 {
 struct Camera
@@ -24,7 +23,6 @@ struct Camera
     {
         return Vector(viewMatrix[3]);
     }
-    void setViewport(Gfx::PViewport viewport);
     void mouseMove(float deltaX, float deltaY);
     void mouseScroll(float x);
     void moveX(float amount);

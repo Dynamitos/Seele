@@ -83,7 +83,7 @@ class VertexDeclaration
 {
 public:
     VertexDeclaration();
-    ~VertexDeclaration();
+    virtual ~VertexDeclaration();
 
     static PVertexDeclaration createDeclaration(PGraphics graphics, const Array<VertexElement>& elementList);
 private:
@@ -126,7 +126,7 @@ public:
     virtual void bindIndexBuffer(Gfx::PIndexBuffer indexBuffer) = 0;
     virtual void pushConstants(Gfx::PPipelineLayout layout, Gfx::SeShaderStageFlags stage, uint32 offset, uint32 size, const void* data) = 0;
     virtual void draw(uint32 vertexCount, uint32 instanceCount, int32 firstVertex, uint32 firstInstance) = 0;
-    virtual void dispatch(uint32 groupX, uint32 groupY, uint32 groupZ);
+    virtual void dispatch(uint32 groupX, uint32 groupY, uint32 groupZ) = 0;
     std::string name;
 };
 DEFINE_REF(RenderCommand)

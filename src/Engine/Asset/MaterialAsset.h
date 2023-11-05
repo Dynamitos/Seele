@@ -4,6 +4,12 @@
 namespace Seele
 {
 DECLARE_REF(Material)
+DECLARE_REF(MaterialInstanceAsset)
+struct InstantiationParameter
+{
+    std::string name;
+    std::string folderPath;
+};
 class MaterialAsset : public Asset
 {
 public:
@@ -14,8 +20,9 @@ public:
     virtual void save(ArchiveBuffer& buffer) const override;
     virtual void load(ArchiveBuffer& buffer) override;
     PMaterial getMaterial() const { return material; }
+    OMaterialInstanceAsset instantiate(const InstantiationParameter& params);
 private:
-    PMaterial material;
+    OMaterial material;
     friend class MaterialLoader;
 };
 DEFINE_REF(MaterialAsset)

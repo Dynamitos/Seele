@@ -167,13 +167,13 @@ class RenderTargetLayout
 {
 public:
     RenderTargetLayout();
-    RenderTargetLayout(ORenderTargetAttachment depthAttachment);
-    RenderTargetLayout(ORenderTargetAttachment colorAttachment, ORenderTargetAttachment depthAttachment);
-    RenderTargetLayout(Array<ORenderTargetAttachment> colorAttachments, ORenderTargetAttachment depthAttachmet);
-    RenderTargetLayout(Array<ORenderTargetAttachment> inputAttachments, Array<ORenderTargetAttachment> colorAttachments, ORenderTargetAttachment depthAttachment);
-    Array<ORenderTargetAttachment> inputAttachments;
-    Array<ORenderTargetAttachment> colorAttachments;
-    ORenderTargetAttachment depthAttachment;
+    RenderTargetLayout(PRenderTargetAttachment depthAttachment);
+    RenderTargetLayout(PRenderTargetAttachment colorAttachment, PRenderTargetAttachment depthAttachment);
+    RenderTargetLayout(Array<PRenderTargetAttachment> colorAttachments, PRenderTargetAttachment depthAttachmet);
+    RenderTargetLayout(Array<PRenderTargetAttachment> inputAttachments, Array<PRenderTargetAttachment> colorAttachments, PRenderTargetAttachment depthAttachment);
+    Array<PRenderTargetAttachment> inputAttachments;
+    Array<PRenderTargetAttachment> colorAttachments;
+    PRenderTargetAttachment depthAttachment;
     uint32 width;
     uint32 height;
 };
@@ -184,7 +184,9 @@ class RenderPass
 public:
     RenderPass(ORenderTargetLayout layout) : layout(std::move(layout)) {}
     virtual ~RenderPass() {}
-    inline PRenderTargetLayout getLayout() { return layout; }
+    RenderPass(RenderPass&&) = default;
+    RenderPass& operator=(RenderPass&&) = default;
+    PRenderTargetLayout getLayout() const { return layout; }
 
 protected:
     ORenderTargetLayout layout;

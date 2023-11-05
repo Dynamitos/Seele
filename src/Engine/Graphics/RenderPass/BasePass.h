@@ -9,6 +9,8 @@ class BasePass : public RenderPass
 {
 public:
     BasePass(Gfx::PGraphics graphics, PScene scene);
+    BasePass(BasePass&&) = default;
+    BasePass& operator=(BasePass&&) = default;
     virtual ~BasePass();
     virtual void beginFrame(const Component::Camera& cam) override;
     virtual void render() override;
@@ -19,24 +21,26 @@ public:
 private:
     Gfx::PRenderTargetAttachment colorAttachment;
     Gfx::PTexture2D depthBuffer;
+    Gfx::PShaderBuffer oLightIndexList;
+    Gfx::PShaderBuffer tLightIndexList;
+    Gfx::PTexture2D oLightGrid;
+    Gfx::PTexture2D tLightGrid;
     
     Array<Gfx::PDescriptorSet> descriptorSets;
     PCameraActor source;
     Gfx::OPipelineLayout basePassLayout;
-    // Set 0: Light environment
-    static constexpr uint32 INDEX_LIGHT_ENV = 0;
-    Gfx::OShaderBuffer oLightIndexList;
-    Gfx::OTexture oLightGrid;
-    Gfx::ODescriptorLayout lightLayout;
-    // Set 1: viewParameter
-    static constexpr uint32 INDEX_VIEW_PARAMS = 1;
-    Gfx::ODescriptorLayout viewLayout;
-    Gfx::OUniformBuffer viewParamBuffer;
-    // Set 2: materials, generated
-    static constexpr uint32 INDEX_MATERIAL = 2;
-    // Set 3: primitive scene data
-    static constexpr uint32 INDEX_SCENE_DATA = 3;
-    Gfx::ODescriptorLayout sceneLayout;
+    // Set 0: viewParameter, provided by renderpass
+    // Set 1: light environment, provided by lightenv
+    static constexpr uint32 INDEX_LIGHT_ENV = 1;
+    // Set 2: light culling data
+    static constexpr uint32 INDEX_LIGHT_CULLING = 2;
+    Gfx::ODescriptorLayout lightCullingLayout;
+    // Set 3: material data, generated from material
+    static constexpr uint32 INDEX_MATERIAL = 3;
+    // Set 4: vertex buffers, provided by vertexdata
+    static constexpr uint32 INDEX_VERTEX_DATA = 4;
+    // Set 5: instance data, provided by vertexdata
+    static constexpr uint32 INDEX_SCENE_DATA = 5;
 };
 DEFINE_REF(BasePass)
 } // namespace Seele

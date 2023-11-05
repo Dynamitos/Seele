@@ -3,6 +3,7 @@
 #include "Graphics.h"
 #include "Framebuffer.h"
 #include "Texture.h"
+#include "RenderPass.h"
 
 using namespace Seele;
 using namespace Seele::Vulkan;
@@ -144,3 +145,4 @@ uint32 RenderPass::getFramebufferHash()
     }
     return CRC::Calculate(&description, sizeof(FramebufferDescription), CRC::CRC_32());
 }
+

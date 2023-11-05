@@ -33,10 +33,11 @@ void MeshLoader::importAsset(MeshImportArgs args)
 {
     std::filesystem::path assetPath = args.filePath.filename();
     assetPath.replace_extension("asset");
-    PMeshAsset asset = new MeshAsset(args.importPath, assetPath.stem().string());
+    OMeshAsset asset = new MeshAsset(args.importPath, assetPath.stem().string());
+    PMeshAsset ref = asset;
     asset->setStatus(Asset::Status::Loading);
-    AssetRegistry::get().registerMesh(asset);
-    import(args, asset);
+    AssetRegistry::get().registerMesh(std::move(asset));
+    import(args, ref);
 }
 
 void MeshLoader::loadMaterials(const aiScene* scene, const std::string& baseName, const std::filesystem::path& meshDirectory, const std::string& importPath, Array<PMaterialAsset>& globalMaterials)
@@ -133,7 +134,7 @@ void findMeshRoots(aiNode *node, List<aiNode *> &meshNodes)
     }
 }
 
-void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialAsset>& materials, Array<PMesh>& globalMeshes, Component::Collider& collider)
+void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialAsset>& materials, Array<OMesh>& globalMeshes, Component::Collider& collider)
 {
     for (uint32 meshIndex = 0; meshIndex < scene->mNumMeshes; ++meshIndex)
     {
@@ -318,20 +319,22 @@ void MeshLoader::import(MeshImportArgs args, PMeshAsset meshAsset)
     loadTextures(scene, args.filePath.parent_path(), args.importPath);
     loadMaterials(scene, args.filePath.stem().string(), args.filePath.parent_path(), args.importPath, globalMaterials);
     
-    Array<PMesh> globalMeshes(scene->mNumMeshes);
+    Array<OMesh> globalMeshes(scene->mNumMeshes);
     Component::Collider collider;
     loadGlobalMeshes(scene, globalMaterials, globalMeshes, collider);
 
     List<aiNode *> meshNodes;
     findMeshRoots(scene->mRootNode, meshNodes);
     
+    Array<OMesh> meshes;
     for (auto meshNode : meshNodes)
     {
         for(uint32 i = 0; i < meshNode->mNumMeshes; ++i)
         {
-            meshAsset->addMesh(globalMeshes[meshNode->mMeshes[i]]);
+            meshes.add(std::move(globalMeshes[meshNode->mMeshes[i]]));
         }
     }
+    meshAsset->meshes = std::move(meshes);
     meshAsset->physicsMesh = std::move(collider);
 
 

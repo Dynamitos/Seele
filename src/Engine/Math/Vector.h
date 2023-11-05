@@ -12,7 +12,6 @@
 #pragma warning(pop)
 #endif
 #include <nlohmann/json_fwd.hpp>
-#include "Serialization/Serialization.h"
 
 namespace Seele
 {
@@ -32,103 +31,8 @@ typedef glm::quat Quaternion;
 
 Vector parseVector(const char*);
 
-static inline float square(float x)
-{
-	return x * x;
-}
-
-static inline Vector unrotateVector(Quaternion quaternion, Vector v)
-{
-	const Vector q(-quaternion.x, -quaternion.y, -quaternion.z);
-	const Vector t = 2.f * glm::cross(q, v);
-	const Vector result = v + (quaternion.w * t) + glm::cross(q, t);
-	return result;
-}
-
-static inline bool equalsQuaternion(const Quaternion &right, const Quaternion &left, float tolerance)
-{
-	return (abs(right.x - left.x) <= tolerance && abs(right.y - left.y) <= tolerance && abs(right.z - left.z) <= tolerance && abs(right.w - left.w) <= tolerance) || (abs(right.x + left.x) <= tolerance && abs(right.y + left.y) <= tolerance && abs(right.z + left.z) <= tolerance && abs(right.w + left.w) <= tolerance);
-}
-
-static inline float clampRotatorAxis(float angle)
-{
-	angle = fmod(angle, 360.f);
-	if (angle < 0.f)
-	{
-		angle += 360.f;
-	}
-	return angle;
-}
-static inline float normalizeRotatorAxis(float angle)
-{
-	angle = clampRotatorAxis(angle);
-
-	if (angle > 180.f)
-	{
-		angle -= 360.f;
-	}
-	return angle;
-}
-
-
-static inline Vector toRotator(const Quaternion &other)
-{
-	const float singularityTest = other.z * other.x - other.w * other.y;
-	const float yawY = 2.f * (other.w * other.z + other.x * other.y);
-	const float yawX = (1.f - 2.f * (square(other.y) + square(other.z)));
-
-	const float SINGULARITY_THRESHOLD = 0.4999995f;
-	constexpr const float RAD_TO_DEG = (180.f) / glm::pi<float>();
-	Vector rotatorFromQuat;
-
-	if (singularityTest < -SINGULARITY_THRESHOLD)
-	{
-		rotatorFromQuat.x = -90.f;
-		rotatorFromQuat.y = atan2(yawY, yawX) * RAD_TO_DEG;
-		rotatorFromQuat.z = normalizeRotatorAxis(-rotatorFromQuat.y - (2.f * atan2(other.x, other.w) * RAD_TO_DEG));
-	}
-	else if (singularityTest > SINGULARITY_THRESHOLD)
-	{
-		rotatorFromQuat.x = 90.f;
-		rotatorFromQuat.y = atan2(yawY, yawX) * RAD_TO_DEG;
-		rotatorFromQuat.z = normalizeRotatorAxis(rotatorFromQuat.y - (2.f * atan2(other.x, other.w) * RAD_TO_DEG));
-	}
-	else
-	{
-		rotatorFromQuat.x = asin(2.f * (singularityTest)) * RAD_TO_DEG;
-		rotatorFromQuat.y = atan2(yawY, yawX) * RAD_TO_DEG;
-		rotatorFromQuat.z = atan2(-2.f * (other.w * other.x + other.y * other.z), (1.f - 2.f * (square(other.x) + square(other.y)))) * RAD_TO_DEG;
-	}
-	return rotatorFromQuat;
-}
 void to_json(nlohmann::json& j, const Vector& vec);
 void from_json(nlohmann::json& j, Vector& vec);
-
-namespace Serialization
-{
-	static void save(ArchiveBuffer& buffer, const IVector2& vec)
-	{
-		save(buffer, vec.x);
-		save(buffer, vec.y);
-	}
-	static void load(ArchiveBuffer& buffer, IVector2& vec)
-	{
-		save(buffer, vec.x);
-		save(buffer, vec.y);
-	}
-	static void save(ArchiveBuffer& buffer, const Vector& vec)
-	{
-		save(buffer, vec.x);
-		save(buffer, vec.y);
-		save(buffer, vec.z);
-	}
-	static void load(ArchiveBuffer& buffer, Vector& vec)
-	{
-		save(buffer, vec.x);
-		save(buffer, vec.y);
-		save(buffer, vec.z);
-	}
-} // namespace Serialization
 } // namespace Seele
 
 std::ostream& operator<<(std::ostream& stream, const Seele::Vector2& vector);

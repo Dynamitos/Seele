@@ -1,12 +1,11 @@
 import Common;
 import BRDF;
+import MaterialParameter;
 
 interface IMaterial
 {
 	associatedtype BRDF : IBRDF;
-	BRDF prepare(MaterialFragmentParameter input);
-
+	BRDF prepare(MaterialParameter input);
 };
 
-layout(set = INDEX_MATERIAL)
 ParameterBlock<IMaterial> gMaterial;

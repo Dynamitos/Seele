@@ -13,3 +13,4 @@ interface VertexData
 {
 	VertexAttributes getAttributes(uint index, float4x4 transform);
 };
+ParameterBlock<VertexData> vertexData;

@@ -173,12 +173,6 @@ static constexpr uint32 numVerticesPerMeshlet = 64;
 static constexpr uint32 numPrimitivesPerMeshlet = 126;
 double getCurrentFrameDelta();
 
-enum class RenderPassType : uint8
-{
-    DepthPrepass,
-    BasePass
-};
-
 enum class QueueType
 {
     GRAPHICS = 1,

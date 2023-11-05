@@ -32,7 +32,7 @@ private:
 		> renderGraph;
 
 	PEntity camera;
-	PScene scene;
+	OScene scene;
 	PSystemGraph systemGraph;
 	dp::thread_pool<> threadPool;
 	float updateTime = 0;

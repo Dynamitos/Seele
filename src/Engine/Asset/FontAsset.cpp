@@ -117,7 +117,9 @@ void FontAsset::load(ArchiveBuffer& buffer)
             .usage = Gfx::SE_IMAGE_USAGE_SAMPLED_BIT,
         };
 
-        glyph.texture = buffer.getGraphics()->createTexture2D(createInfo);
+        Gfx::OTexture2D texture = buffer.getGraphics()->createTexture2D(createInfo);
+        glyph.texture = texture;
+        usedTextures.add(std::move(texture));
 
         ktxTexture_Destroy(ktxTexture(kTexture));
 

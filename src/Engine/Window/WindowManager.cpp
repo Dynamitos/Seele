@@ -22,7 +22,7 @@ PWindow WindowManager::addWindow(Gfx::PGraphics graphics, const WindowCreateInfo
 
 void WindowManager::notifyWindowClosed(PWindow window) 
 {
-    windows.remove(windows.find([window] (OWindow w) { return window == w; }));
+    windows.remove(windows.find([window] (const OWindow& w) { return window == w; }));
     if(windows.empty())
     {
         exit(0);

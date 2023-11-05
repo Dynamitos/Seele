@@ -4,7 +4,6 @@
 #include "Asset/TextureAsset.h"
 #include "Asset/MaterialAsset.h"
 #include "Asset/MaterialInstanceAsset.h"
-#include "Graphics/Vulkan/VulkanGraphics.h"
 #include "Asset/AssetRegistry.h"
 
 using namespace Seele;

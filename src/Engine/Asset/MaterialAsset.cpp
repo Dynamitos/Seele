@@ -1,6 +1,7 @@
 #include "MaterialAsset.h"
 #include "Material/Material.h"
 #include "Graphics/Graphics.h"
+#include "MaterialInstanceAsset.h"
 
 using namespace Seele;
 
@@ -28,4 +29,14 @@ void MaterialAsset::load(ArchiveBuffer& buffer)
     material->load(buffer);
     material->compile();
 }
+
+OMaterialInstanceAsset Seele::MaterialAsset::instantiate(const InstantiationParameter& params)
+{
+    OMaterialInstance instance = material->instantiate();
+    instance->setBaseMaterial(this);
+    OMaterialInstanceAsset asset = new MaterialInstanceAsset(params.folderPath, params.name);
+    asset->setHandle(std::move(instance));
+    return asset;
+}
+
 

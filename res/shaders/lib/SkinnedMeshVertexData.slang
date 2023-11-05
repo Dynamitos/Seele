@@ -63,5 +63,3 @@ struct SkinnedMeshVertexData : VertexData
 	StructuredBuffer<float4> boneWeights;
 	StructuredBuffer<float4x4> bones;
 }
-layout(set = INDEX_VERTEX_DATA)
-ParameterBlock<SkinnedMeshVertexData> vertexData;

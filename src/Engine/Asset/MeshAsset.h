@@ -16,7 +16,7 @@ public:
     virtual void save(ArchiveBuffer& buffer) const override;
     virtual void load(ArchiveBuffer& buffer) override;
     //Workaround while no editor
-    Array<PMesh> meshes;
+    Array<OMesh> meshes;
     Component::Collider physicsMesh;
 };
 DEFINE_REF(MeshAsset)

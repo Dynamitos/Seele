@@ -11,7 +11,7 @@ Mesh::~Mesh()
 {
 }
 
-void Mesh::save(ArchiveBuffer& buffer)
+void Mesh::save(ArchiveBuffer& buffer) const
 {
     Serialization::save(buffer, vertexData->getTypeName());
     Serialization::save(buffer, vertexCount);

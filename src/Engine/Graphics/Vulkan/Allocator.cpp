@@ -4,7 +4,7 @@
 
 using namespace Seele::Vulkan;
 
-SubAllocation::SubAllocation(Allocation *owner, VkDeviceSize allocatedOffset, VkDeviceSize size, VkDeviceSize alignedOffset, VkDeviceSize allocatedSize)
+SubAllocation::SubAllocation(PAllocation owner, VkDeviceSize allocatedOffset, VkDeviceSize size, VkDeviceSize alignedOffset, VkDeviceSize allocatedSize)
     : owner(owner)
     , size(size)
     , allocatedOffset(allocatedOffset)
@@ -18,12 +18,22 @@ SubAllocation::~SubAllocation()
     owner->markFree(this);
 }
 
-VkDeviceMemory SubAllocation::getHandle() const
+constexpr VkDeviceMemory SubAllocation::getHandle() const
 {
     return owner->getHandle();
 }
 
-bool SubAllocation::isReadable() const
+constexpr VkDeviceSize SubAllocation::getSize() const
+{
+    return size;
+}
+
+constexpr VkDeviceSize SubAllocation::getOffset() const
+{
+    return alignedOffset;
+}
+
+constexpr bool SubAllocation::isReadable() const
 {
     return owner->isReadable();
 }
@@ -61,8 +71,7 @@ Allocation::Allocation(PGraphics graphics, PAllocator allocator, VkDeviceSize si
     allocInfo.pNext = dedicatedInfo;
     VK_CHECK(vkAllocateMemory(device, &allocInfo, nullptr, &allocatedMemory));
     bytesAllocated = size;
-    PSubAllocation freeRange = new SubAllocation(this, 0, size, 0, size);
-    freeRanges[0] = freeRange;
+    freeRanges[0] = new SubAllocation(this, 0, size, 0, size);
 
     canMap = (properties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) == VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
     isMapped = false;
@@ -72,15 +81,15 @@ Allocation::~Allocation()
 {
 }
 
-PSubAllocation Allocation::getSuballocation(VkDeviceSize requestedSize, VkDeviceSize alignment)
+OSubAllocation Allocation::getSuballocation(VkDeviceSize requestedSize, VkDeviceSize alignment)
 {
     std::scoped_lock lck(lock);
     if (isDedicated)
     {
         if (activeAllocations.empty() && requestedSize == bytesAllocated)
         {
-            PSubAllocation suballoc = freeRanges[0];
-            activeAllocations[0] = suballoc.getHandle();
+            OSubAllocation suballoc = std::move(freeRanges[0]);
+            activeAllocations.add(suballoc);
             freeRanges.clear();
             bytesUsed += requestedSize;
             return suballoc;
@@ -92,37 +101,38 @@ PSubAllocation Allocation::getSuballocation(VkDeviceSize requestedSize, VkDevice
     }
     for (auto& it : freeRanges)
     {
-        VkDeviceSize allocatedOffset = it.first;
-        PSubAllocation freeAllocation = it.second;
+        VkDeviceSize allocatedOffset = it.key;
+        OSubAllocation& freeAllocation = it.value;
         assert(allocatedOffset == freeAllocation->allocatedOffset);
-        VkDeviceSize alignedOffset = align(allocatedOffset, alignment);
-        VkDeviceSize alignmentAdjustment = alignedOffset - allocatedOffset;
-        VkDeviceSize size = alignmentAdjustment + requestedSize;
-        if (freeAllocation->size == size)
+        VkDeviceSize alignedOffset = allocatedOffset + alignment - 1;
+        alignedOffset /= alignment;
+        alignedOffset *= alignment;
+        VkDeviceSize allocatedSize = requestedSize + (alignedOffset - allocatedOffset);
+        if (freeAllocation->size == allocatedSize)
         {
-            activeAllocations[allocatedOffset] = freeAllocation.getHandle();
+            activeAllocations.add(freeAllocation);
             freeRanges.erase(allocatedOffset);
-            bytesUsed += size;
-            return freeAllocation;
+            bytesUsed += allocatedSize;
+            return std::move(freeAllocation);
         }
-        else if (size < freeAllocation->allocatedSize)
+        else if (allocatedSize < freeAllocation->allocatedSize)
         {
-            freeAllocation->size -= size;
-            freeAllocation->allocatedSize -= size;
-            freeAllocation->allocatedOffset += size;
-            freeAllocation->alignedOffset += size;
-            PSubAllocation subAlloc = new SubAllocation(this, allocatedOffset, size, alignedOffset, size);
-            activeAllocations[allocatedOffset] = subAlloc.getHandle();
+            freeAllocation->size -= allocatedSize;
+            freeAllocation->allocatedSize -= allocatedSize;
+            freeAllocation->allocatedOffset += allocatedSize;
+            freeAllocation->alignedOffset += allocatedSize;
+            OSubAllocation subAlloc = new SubAllocation(this, allocatedOffset, allocatedSize, alignedOffset, allocatedSize);
+            activeAllocations.add(subAlloc);
+            freeRanges[freeAllocation->allocatedOffset] = std::move(freeAllocation);
             freeRanges.erase(allocatedOffset);
-            freeRanges[freeAllocation->allocatedOffset] = freeAllocation;
-            bytesUsed += size;
+            bytesUsed += allocatedSize;
             return subAlloc;
         }
     }
     return nullptr;
 }
 
-void Allocation::markFree(SubAllocation *allocation)
+void Allocation::markFree(PSubAllocation allocation)
 {
     // Dont free if it is already a free allocation, since they also mark themselves on deletion
     if (freeRanges.find(allocation->allocatedOffset) != freeRanges.end())
@@ -143,7 +153,7 @@ void Allocation::markFree(SubAllocation *allocation)
             && freeAlloc->allocatedOffset + freeAlloc->allocatedSize >= upperBound)
             {
                 // allocation is already in a free region
-                return;
+                assert(false);
             }
             if (freeAlloc->allocatedOffset + freeAlloc->allocatedSize == lowerBound)
             {
@@ -157,35 +167,34 @@ void Allocation::markFree(SubAllocation *allocation)
         auto foundAlloc = freeRanges.find(upperBound);
         if (foundAlloc != freeRanges.end())
         {
-            freeRangeToDelete = foundAlloc->second;
             // There is a free allocation ending where the new free one ends
+            freeRangeToDelete = foundAlloc->value;
             if (allocHandle != nullptr)
             {
                 // extend allocHandle by another foundAlloc->allocatedSize bytes
-                allocHandle->allocatedSize += foundAlloc->second->allocatedSize;
-                freeRanges.erase(foundAlloc->first);
+                allocHandle->allocatedSize += foundAlloc->value->allocatedSize;
+                freeRanges.erase(foundAlloc->key);
             }
             else
             {
                 // set foundAlloc back by size amount
-                allocHandle = foundAlloc->second;
+                allocHandle = foundAlloc->value;
                 allocHandle->allocatedOffset -= allocation->allocatedSize;
                 allocHandle->alignedOffset -= allocation->allocatedSize;
                 allocHandle->size += allocation->allocatedSize;
                 allocHandle->allocatedSize += allocation->allocatedSize;
-                // place back at correct offset
-                freeRanges[allocHandle->allocatedOffset] = allocHandle;
+                // place back at correct offset, move original owning pointer
+                freeRanges[allocHandle->allocatedOffset] = std::move(foundAlloc->value);
                 // remove from offset map since key changes
-                freeRanges.erase(foundAlloc->first);
+                freeRanges.erase(foundAlloc->key);
             }
         }
         
         if (allocHandle == nullptr)
         {
-            allocHandle = new SubAllocation(this, allocation->allocatedOffset, allocation->size, allocation->alignedOffset, allocation->allocatedSize);
-            freeRanges[allocation->allocatedOffset] = allocHandle;
+            freeRanges[allocation->allocatedOffset] = new SubAllocation(this, allocation->allocatedOffset, allocation->size, allocation->alignedOffset, allocation->allocatedSize);
         }
-        activeAllocations.erase(allocation->allocatedOffset);
+        activeAllocations.remove_if([&](const PSubAllocation& a) {return a.getHandle() == allocation.getHandle(); });
     }
     bytesUsed -= allocation->allocatedSize;
     if(bytesUsed == 0)
@@ -194,25 +203,73 @@ void Allocation::markFree(SubAllocation *allocation)
     }
 }
 
+constexpr VkDeviceMemory Allocation::getHandle() const
+{
+    return allocatedMemory;
+}
+
+constexpr void* Allocation::getMappedPointer()
+{
+    if (!canMap)
+    {
+        return nullptr;
+    }
+    if (!isMapped)
+    {
+        vkMapMemory(device, allocatedMemory, 0, bytesAllocated, 0, &mappedPointer);
+        isMapped = true;
+    }
+    return mappedPointer;
+}
+
+constexpr bool Allocation::isReadable() const
+{
+    return readable;
+}
+
+void Allocation::flushMemory()
+{
+    VkMappedMemoryRange range = {
+        .sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE,
+        .pNext = 0,
+        .memory = allocatedMemory,
+        .offset = 0,
+        .size = bytesAllocated,
+    };
+    vkFlushMappedMemoryRanges(device, 1, &range);
+}
+
+void Allocation::invalidateMemory()
+{
+    VkMappedMemoryRange range = {
+        .sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE,
+        .pNext = 0,
+        .memory = allocatedMemory,
+        .size = bytesAllocated,
+    };
+    vkInvalidateMappedMemoryRanges(device, 1, &range);
+}
+
 Allocator::Allocator(PGraphics graphics)
     : graphics(graphics)
 {
     vkGetPhysicalDeviceMemoryProperties(graphics->getPhysicalDevice(), &memProperties);
-    heaps.resize(memProperties.memoryHeapCount);
+    heaps.reserve(memProperties.memoryHeapCount);
     for (size_t i = 0; i < memProperties.memoryHeapCount; ++i)
     {
         VkMemoryHeap memoryHeap = memProperties.memoryHeaps[i];
-        HeapInfo &heapInfo = heaps[i];
+        HeapInfo heapInfo; 
         heapInfo.maxSize = memoryHeap.size;
+        heaps.add(std::move(heapInfo));
     }
 }
 
 Allocator::~Allocator()
 {
     std::scoped_lock lck(lock);
-    for (auto heap : heaps)
+    for (auto& heap : heaps)
     {
-        for (auto alloc : heap.allocations)
+        for (auto& alloc : heap.allocations)
         {
             assert(alloc->activeAllocations.empty());
             assert(alloc->freeRanges.size() == 1);
@@ -222,7 +279,7 @@ Allocator::~Allocator()
     graphics = nullptr;
 }
 
-PSubAllocation Allocator::allocate(const VkMemoryRequirements2 &memRequirements2, VkMemoryPropertyFlags properties, VkMemoryDedicatedAllocateInfo *dedicatedInfo)
+OSubAllocation Allocator::allocate(const VkMemoryRequirements2 &memRequirements2, VkMemoryPropertyFlags properties, VkMemoryDedicatedAllocateInfo *dedicatedInfo)
 {
     std::scoped_lock lck(lock);
     const VkMemoryRequirements &requirements = memRequirements2.memoryRequirements;
@@ -234,17 +291,17 @@ PSubAllocation Allocator::allocate(const VkMemoryRequirements2 &memRequirements2
         VkMemoryDedicatedRequirements *dedicatedReq = (VkMemoryDedicatedRequirements *)memRequirements2.pNext;
         if (dedicatedReq->prefersDedicatedAllocation)
         {
-            PAllocation newAllocation = new Allocation(graphics, this, requirements.size, memoryTypeIndex, properties, dedicatedInfo);
-            heaps[heapIndex].allocations.add(newAllocation);
+            OAllocation newAllocation = new Allocation(graphics, this, requirements.size, memoryTypeIndex, properties, dedicatedInfo);
             heaps[heapIndex].inUse += newAllocation->bytesAllocated;
-            return newAllocation->getSuballocation(requirements.size, requirements.alignment);
+            heaps[heapIndex].allocations.add(std::move(newAllocation));
+            return heaps[heapIndex].allocations.back()->getSuballocation(requirements.size, requirements.alignment);
         } 
     }
-    for (auto alloc : heaps[heapIndex].allocations)
+    for (auto& alloc : heaps[heapIndex].allocations)
     {
         if(alloc->memoryTypeIndex == memoryTypeIndex)
         {
-            PSubAllocation suballoc = alloc->getSuballocation(requirements.size, requirements.alignment);
+            OSubAllocation suballoc = alloc->getSuballocation(requirements.size, requirements.alignment);
             if (suballoc != nullptr)
             {
                 return suballoc;
@@ -253,16 +310,16 @@ PSubAllocation Allocator::allocate(const VkMemoryRequirements2 &memRequirements2
     }
 
     // no suitable allocations found, allocate new block
-    PAllocation newAllocation = new Allocation(graphics, this, (requirements.size > MemoryBlockSize) ? requirements.size : (VkDeviceSize)MemoryBlockSize, memoryTypeIndex, properties, nullptr);
-    heaps[heapIndex].allocations.add(newAllocation);
+    OAllocation newAllocation = new Allocation(graphics, this, (requirements.size > MemoryBlockSize) ? requirements.size : (VkDeviceSize)MemoryBlockSize, memoryTypeIndex, properties, nullptr);
     heaps[heapIndex].inUse += newAllocation->bytesAllocated;
-    return newAllocation->getSuballocation(requirements.size, requirements.alignment);
+    heaps[heapIndex].allocations.add(std::move(newAllocation));
+    return heaps[heapIndex].allocations.back()->getSuballocation(requirements.size, requirements.alignment);
 }
 
 void Allocator::free(Allocation *allocation)
 {
     std::scoped_lock lck(lock);
-    for (auto heap : heaps)
+    for (auto& heap : heaps)
     {
         for (uint32 i = 0; i < heap.allocations.size(); ++i)
         {
@@ -288,12 +345,58 @@ uint32 Allocator::findMemoryType(uint32 typeFilter, VkMemoryPropertyFlags proper
     throw std::runtime_error("error finding memory");
 }
 
-StagingBuffer::StagingBuffer()
+StagingBuffer::StagingBuffer(OSubAllocation allocation, VkBuffer buffer, VkBufferUsageFlags usage, uint8 readable)
+    : allocation(std::move(allocation))
+    , buffer(buffer)
+    , usage(usage)
+    , readable(readable)
 {
 }
 
 StagingBuffer::~StagingBuffer()
 {
+    assert(allocation == nullptr);
+    // buffer went out of scope without being cleaned up
+}
+
+void* StagingBuffer::getMappedPointer()
+{
+    return allocation->getMappedPointer();
+}
+
+void StagingBuffer::flushMappedMemory()
+{
+    allocation->flushMemory();
+}
+
+void StagingBuffer::invalidateMemory()
+{
+    allocation->invalidateMemory();
+}
+
+constexpr VkDeviceMemory StagingBuffer::getMemoryHandle() const
+{
+    return allocation->getHandle();
+}
+
+constexpr VkDeviceSize StagingBuffer::getOffset() const
+{
+    return allocation->getOffset();
+}
+
+constexpr uint64 StagingBuffer::getSize() const
+{
+    return allocation->getSize();
+}
+
+constexpr bool StagingBuffer::isReadable() const
+{
+    return readable;
+}
+
+constexpr VkBufferUsageFlags StagingBuffer::getUsage() const
+{
+    return usage;
 }
 
 StagingManager::StagingManager(PGraphics graphics, PAllocator allocator)
@@ -309,22 +412,22 @@ void StagingManager::clearPending()
 {
 }
 
-PStagingBuffer StagingManager::allocateStagingBuffer(uint64 size, VkBufferUsageFlags usage, bool bCPURead)
+OStagingBuffer StagingManager::allocateStagingBuffer(uint64 size, VkBufferUsageFlags usage, bool readable)
 {
     std::scoped_lock l(lock);
     for (auto it = freeBuffers.begin(); it != freeBuffers.end(); ++it)
     {
-        auto freeBuffer = *it;
-        if (freeBuffer->getSize() == size && freeBuffer->isReadable() == bCPURead && freeBuffer->usage == usage)
+        auto& freeBuffer = *it;
+        if (freeBuffer->getSize() == size && freeBuffer->isReadable() == readable && freeBuffer->getUsage()  == usage)
         {
             //std::cout << "Reusing staging buffer" << std::endl;
-            activeBuffers.add(freeBuffer.getHandle());
+            activeBuffers.add(freeBuffer);
             freeBuffers.remove(it, false);
-            return freeBuffer;
+            return std::move(freeBuffer);
         }
     }
     //std::cout << "Creating new stagingbuffer" << std::endl;
-    PStagingBuffer stagingBuffer = new StagingBuffer();
+    VkBuffer buffer;
     VkBufferCreateInfo stagingBufferCreateInfo = init::BufferCreateInfo(usage, size);
     stagingBufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     uint32 queueIndex = graphics->getFamilyMapping().getQueueTypeFamilyIndex(Gfx::QueueType::DEDICATED_TRANSFER);
@@ -332,37 +435,42 @@ PStagingBuffer StagingManager::allocateStagingBuffer(uint64 size, VkBufferUsageF
     stagingBufferCreateInfo.pQueueFamilyIndices = &queueIndex;
     VkDevice vulkanDevice = graphics->getDevice();
 
-    VK_CHECK(vkCreateBuffer(vulkanDevice, &stagingBufferCreateInfo, nullptr, &stagingBuffer->buffer));
+    VK_CHECK(vkCreateBuffer(vulkanDevice, &stagingBufferCreateInfo, nullptr, &buffer));
 
-    VkMemoryDedicatedRequirements dedicatedReqs;
-    dedicatedReqs.sType = VK_STRUCTURE_TYPE_MEMORY_DEDICATED_REQUIREMENTS;
-    dedicatedReqs.pNext = nullptr;
-    VkMemoryRequirements2 memReqs;
-    memReqs.sType = VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2;
-    memReqs.pNext = &dedicatedReqs;
-    VkBufferMemoryRequirementsInfo2 bufferQuery;
-    bufferQuery.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_REQUIREMENTS_INFO_2;
-    bufferQuery.pNext = nullptr;
-    bufferQuery.buffer = stagingBuffer->buffer;
+    VkMemoryDedicatedRequirements dedicatedReqs = {
+        .sType = VK_STRUCTURE_TYPE_MEMORY_DEDICATED_REQUIREMENTS,
+        .pNext = nullptr,
+    };
+    VkMemoryRequirements2 memReqs = {
+        .sType = VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2,
+        .pNext = &dedicatedReqs,
+    };
+    VkBufferMemoryRequirementsInfo2 bufferQuery = {
+        .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_REQUIREMENTS_INFO_2,
+        .pNext = nullptr,
+        .buffer = buffer,
+    };
     vkGetBufferMemoryRequirements2(vulkanDevice, &bufferQuery, &memReqs);
 
     memReqs.memoryRequirements.alignment =
         (16 > memReqs.memoryRequirements.alignment) ? 16 : memReqs.memoryRequirements.alignment;
-    
-    stagingBuffer->allocation = allocator->allocate(memReqs, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | (bCPURead ? VK_MEMORY_PROPERTY_HOST_COHERENT_BIT : VK_MEMORY_PROPERTY_HOST_CACHED_BIT), stagingBuffer->buffer);
-    stagingBuffer->bReadable = bCPURead;
-    stagingBuffer->size = size;
-    stagingBuffer->usage = usage;
-    vkBindBufferMemory(graphics->getDevice(), stagingBuffer->buffer, stagingBuffer->getMemoryHandle(), stagingBuffer->getOffset());
 
-    activeBuffers.add(stagingBuffer.getHandle());
+    OStagingBuffer stagingBuffer = new StagingBuffer(
+        allocator->allocate(memReqs, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | (readable ? VK_MEMORY_PROPERTY_HOST_COHERENT_BIT : VK_MEMORY_PROPERTY_HOST_CACHED_BIT), buffer),
+        buffer,
+        usage,
+        readable
+    );
+    vkBindBufferMemory(graphics->getDevice(), buffer, stagingBuffer->getMemoryHandle(), stagingBuffer->getOffset());
+
+    activeBuffers.add(stagingBuffer);
     
     return stagingBuffer;
 }
 
-void StagingManager::releaseStagingBuffer(PStagingBuffer buffer)
+void StagingManager::releaseStagingBuffer(OStagingBuffer buffer)
 {
     std::scoped_lock l(lock);
-    freeBuffers.add(buffer);
-    activeBuffers.remove(activeBuffers.find(buffer.getHandle()));
+    activeBuffers.remove(buffer);
+    freeBuffers.add(std::move(buffer));
 }

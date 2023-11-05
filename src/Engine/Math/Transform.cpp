@@ -41,10 +41,6 @@ Transform::Transform(Quaternion rotation, Vector scale)
 Transform::~Transform()
 {
 }
-Vector Transform::inverseTransformPosition(const Vector &v) const
-{
-    return (unrotateVector(rotation, v - Vector(position))) * getSafeScaleReciprocal(scale);
-}
 Matrix4 Transform::toMatrix() const
 {
     Matrix4 mat;
@@ -94,35 +90,6 @@ Matrix4 Transform::toMatrix() const
     mat[3][3] = 1.0f;
 
     return mat;
-}
-Vector Transform::getSafeScaleReciprocal(const Vector4 &inScale, float tolerance)
-{
-    Vector safeReciprocalScale;
-    if (abs(inScale.x) <= tolerance)
-    {
-        safeReciprocalScale.x = 0.f;
-    }
-    else
-    {
-        safeReciprocalScale.x = 1 / inScale.x;
-    }
-    if (abs(inScale.y) <= tolerance)
-    {
-        safeReciprocalScale.y = 0.f;
-    }
-    else
-    {
-        safeReciprocalScale.y = 1 / inScale.y;
-    }
-    if (abs(inScale.z) <= tolerance)
-    {
-        safeReciprocalScale.z = 0.f;
-    }
-    else
-    {
-        safeReciprocalScale.z = 1 / inScale.z;
-    }
-    return safeReciprocalScale;
 }
 
 Vector Transform::transformPosition(const Vector &v) const

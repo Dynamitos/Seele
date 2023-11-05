@@ -2,6 +2,7 @@
 #include "MinimalEngine.h"
 #include "Resources.h"
 #include "Containers/Array.h"
+#include "Shader.h"
 
 namespace Seele
 {

@@ -5,7 +5,7 @@
 #include "Asset/AssetRegistry.h"
 #include "Asset/AssetImporter.h"
 #include "Asset/TextureLoader.h"
-#include "Graphics/Vulkan/VulkanGraphics.h"
+#include "Graphics/Vulkan/Graphics.h"
 #include "Asset/MeshLoader.h"
 #include "Asset/TextureLoader.h"
 #include "Asset/MaterialLoader.h"
@@ -25,7 +25,7 @@ int main()
     std::string sourcePath = "C:/Users/Dynamitos/TrackClear/";
     std::string binaryPath = "C:/Users/Dynamitos/TrackClear/bin/TrackClear.dll";
 
-    Gfx::PGraphics graphics = new Vulkan::Graphics();
+    Gfx::OGraphics graphics = new Vulkan::Graphics();
 
     GraphicsInitializer initializer;
     graphics->init(initializer);

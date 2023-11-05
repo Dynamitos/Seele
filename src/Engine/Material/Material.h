@@ -9,18 +9,17 @@ class Material
 {
 public:
     Material();
-    Material(Gfx::PGraphics graphics, 
-        Array<OShaderParameter> parameter, 
+    Material(Gfx::PGraphics graphics,
         Gfx::ODescriptorLayout layout, 
         uint32 uniformDataSize, 
         uint32 uniformBinding, 
         std::string materialName, 
-        Array<OShaderExpression> expressions, 
+        Map<std::string, OShaderExpression> expressions,
+        Array<std::string> parameter,
         MaterialNode brdf);
     ~Material();
     const Gfx::PDescriptorLayout getDescriptorLayout() const { return layout; }
-    PMaterialInstance instantiate();
-    PMaterialInstance getInstance(uint64 instance) { return instances[instance]; }
+    OMaterialInstance instantiate();
     const std::string& getName() const { return materialName; }
 
     void save(ArchiveBuffer& buffer) const;
@@ -30,15 +29,13 @@ public:
 
 private:
     Gfx::PGraphics graphics;
-    std::string brdfName;
     uint32 uniformDataSize;
     uint32 uniformBinding;
     uint64 instanceId;
     Gfx::ODescriptorLayout layout;
     std::string materialName;
-    Array<OShaderExpression> codeExpressions;
-    Array<OShaderParameter> parameters;
-    Array<OMaterialInstance> instances;
+    Map<std::string, OShaderExpression> codeExpressions;
+    Array<std::string> parameters;
     MaterialNode brdf;
 };
 DEFINE_REF(Material)

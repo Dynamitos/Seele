@@ -2,7 +2,6 @@
 #include "Enums.h"
 #include "Containers/Map.h"
 #include "Math/Math.h"
-#include "Shader.h"
 
 namespace Seele
 {
@@ -26,7 +25,7 @@ struct GraphicsInitializer
         , engineName("SeeleEngine")
         , windowLayoutFile(nullptr)
         , layers{"VK_LAYER_KHRONOS_validation"}
-        , instanceExtensions{}
+        , instanceExtensions{"VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME"}
         , deviceExtensions{"VK_KHR_swapchain"}
         , windowHandle(nullptr)
     {
@@ -102,18 +101,17 @@ struct IndexBufferCreateInfo
 struct UniformBufferCreateInfo
 {
     DataSource sourceData = DataSource();
-    uint8 bDynamic = 0;
+    uint8 dynamic = 0;
 };
 struct ShaderBufferCreateInfo
 {
     DataSource sourceData = DataSource();
     uint32 stride;
-    uint8 bDynamic = 0;
+    uint8 dynamic = 0;
 };
 struct ShaderCreateInfo
 {
     std::string mainModule;
-    //It's possible to input multiple source files for materials or vertexFactories
     Array<std::string> additionalModules;
     std::string name; // Debug info
     std::string entryPoint;
@@ -136,7 +134,7 @@ struct VertexElement
     SeFormat vertexFormat;
     uint8 attributeIndex;
     uint8 stride;
-    uint8 bInstanced = 0;
+    uint8 instanced = 0;
 };
 static_assert(std::is_aggregate_v<VertexElement>);
 struct RasterizationState
@@ -191,6 +189,11 @@ struct ColorBlendState
     float blendConstants[4];
 };
 DECLARE_REF(VertexDeclaration)
+DECLARE_REF(VertexShader)
+DECLARE_REF(TaskShader)
+DECLARE_REF(MeshShader)
+DECLARE_REF(FragmentShader)
+DECLARE_REF(ComputeShader)
 DECLARE_REF(RenderPass)
 DECLARE_REF(PipelineLayout)
 struct LegacyPipelineCreateInfo
@@ -220,44 +223,8 @@ struct MeshPipelineCreateInfo
     RasterizationState rasterizationState;
     DepthStencilState depthStencilState;
     ColorBlendState colorBlend;
-    MeshPipelineCreateInfo()
-        : multisampleState(MultisampleState{
-            .samples = 1,
-        })
-        , rasterizationState(RasterizationState{
-            .polygonMode = Gfx::SE_POLYGON_MODE_FILL,
-            .cullMode = Gfx::SE_CULL_MODE_BACK_BIT,
-            .frontFace = Gfx::SE_FRONT_FACE_COUNTER_CLOCKWISE,
-        })
-        , depthStencilState(DepthStencilState{
-            .depthTestEnable = true,
-            .depthWriteEnable = true,
-            .stencilTestEnable = false,
-            .depthCompareOp = Gfx::SE_COMPARE_OP_LESS_OR_EQUAL,
-            .minDepthBounds = 0.0f,
-            .maxDepthBounds = 1.0f,
-        })
-        , colorBlend(ColorBlendState{
-            .logicOpEnable = false,
-            .attachmentCount = 0,
-            .blendAttachments = {
-                ColorBlendState::BlendAttachment{
-                    .colorWriteMask =
-                        Gfx::SE_COLOR_COMPONENT_R_BIT |
-                        Gfx::SE_COLOR_COMPONENT_G_BIT |
-                        Gfx::SE_COLOR_COMPONENT_B_BIT |
-                        Gfx::SE_COLOR_COMPONENT_A_BIT,
-                }
-            },
-            .blendConstants = {
-                1.0f,
-                1.0f,
-                1.0f,
-                1.0f,
-            },
-        })
-    {
-    }
+    MeshPipelineCreateInfo();
+    ~MeshPipelineCreateInfo();
 };
 struct ComputePipelineCreateInfo
 {

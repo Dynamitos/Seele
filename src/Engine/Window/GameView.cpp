@@ -11,10 +11,10 @@ GameView::GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreate
     : View(graphics, window, createInfo, "Game")
     , gameInterface(dllPath)
     , renderGraph(RenderGraphBuilder::build(
-        DepthPrepass(graphics, scene),
-        LightCullingPass(graphics, scene),
-        BasePass(graphics, scene),
-        SkyboxRenderPass(graphics, scene)
+        std::move(DepthPrepass(graphics, scene)),
+        std::move(LightCullingPass(graphics, scene)),
+        std::move(BasePass(graphics, scene)),
+        std::move(SkyboxRenderPass(graphics, scene))
     ))
 {
     reloadGame();
@@ -43,6 +43,7 @@ void GameView::update()
     {
         vd->createDescriptors();
     }
+    scene->getLightEnvironment()->commit();
     auto endTime = std::chrono::high_resolution_clock::now();
     std::chrono::duration<float> duration = (endTime - startTime);
     updateTime = duration.count();

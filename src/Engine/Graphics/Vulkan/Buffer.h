@@ -11,7 +11,7 @@ namespace Vulkan
 class Buffer
 {
 public:
-    Buffer(PGraphics graphics, uint64 size, VkBufferUsageFlags usage, Gfx::QueueType& queueType, bool bDynamic = false);
+    Buffer(PGraphics graphics, uint64 size, VkBufferUsageFlags usage, Gfx::QueueType& queueType, bool dynamic = false);
     virtual ~Buffer();
     VkBuffer getHandle() const
     {
@@ -26,8 +26,8 @@ public:
     {
         currentBuffer = (currentBuffer + 1) % numBuffers;
     }
-    virtual void *lock(bool bWriteOnly = true);
-    virtual void *lockRegion(uint64 regionOffset, uint64 regionSize, bool bWriteOnly = true);
+    virtual void *lock(bool writeOnly = true);
+    virtual void *lockRegion(uint64 regionOffset, uint64 regionSize, bool writeOnly = true);
     virtual void unlock();
 
 protected:
@@ -62,7 +62,7 @@ public:
     virtual ~UniformBuffer();
     virtual bool updateContents(const DataSource &sourceData);
     
-    virtual void* lock(bool bWriteOnly = true) override;
+    virtual void* lock(bool writeOnly = true) override;
     virtual void unlock() override;
 protected:
     // Inherited via Vulkan::Buffer
@@ -75,7 +75,7 @@ protected:
         VkAccessFlags dstAccess, VkPipelineStageFlags dstStage);
 
 private:
-    PStagingBuffer dedicatedStagingBuffer;
+    OStagingBuffer dedicatedStagingBuffer;
 };
 DEFINE_REF(UniformBuffer)
 
@@ -86,7 +86,7 @@ public:
     virtual ~ShaderBuffer();
     virtual bool updateContents(const DataSource &sourceData);
 
-    virtual void* lock(bool bWriteOnly = true) override;
+    virtual void* lock(bool writeOnly = true) override;
     virtual void unlock() override;
 protected:
     // Inherited via Vulkan::Buffer
@@ -98,7 +98,7 @@ protected:
     virtual void executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, 
         VkAccessFlags dstAccess, VkPipelineStageFlags dstStage);
 private:
-    PStagingBuffer dedicatedStagingBuffer;
+    OStagingBuffer dedicatedStagingBuffer;
 };
 DEFINE_REF(ShaderBuffer)
 

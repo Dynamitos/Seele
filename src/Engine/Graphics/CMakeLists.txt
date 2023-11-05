@@ -19,8 +19,6 @@ target_sources(Engine
         Resources.cpp
         Shader.h
         Shader.cpp
-        ShaderCompiler.h
-        ShaderCompiler.cpp
         StaticMeshVertexData.h
         StaticMeshVertexData.cpp
         Texture.h
@@ -40,7 +38,6 @@ target_sources(Engine
             RenderTarget.h
             Resources.h
             Shader.h
-            ShaderCompiler.h
             StaticMeshVertexData.h
             Texture.h
             VertexData.h)

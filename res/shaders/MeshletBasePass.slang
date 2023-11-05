@@ -2,7 +2,7 @@ import Common;
 import BRDF;
 import Meshlet;
 import Scene;
-import StaticMeshVertexData;
+import VertexData;
 
 struct MeshPayload
 {
@@ -61,7 +61,7 @@ void taskMain(
 	DispatchMesh(head, 1, 1, p);
 }
 
-groupshared StaticMeshVertexAttributes gs_vertices[MAX_VERTICES];
+groupshared VertexAttributes gs_vertices[MAX_VERTICES];
 groupshared uint3 gs_indices[MAX_PRIMITIVES];
 groupshared uint gs_numVertices;
 groupshared uint gs_numPrimitives;
@@ -78,7 +78,7 @@ void meshMain(
 	in uint threadID: SV_GroupIndex,
 	in uint groupID: SV_GroupID,
 	in payload MeshPayload meshPayload,
-	out Vertices<StaticMeshVertexAttributes, MAX_VERTICES> vertices, 
+	out Vertices<VertexAttributes, MAX_VERTICES> vertices, 
 	out Indices<uint3, MAX_PRIMITIVES> indices
 ){
 	InstanceData inst = scene.instances[meshPayload.instanceId[groupID]];

@@ -1,5 +1,6 @@
 #include "BasePass.h"
 #include "Graphics/Graphics.h"
+#include "Graphics/Shader.h"
 #include "Window/Window.h"
 #include "Component/Camera.h"
 #include "Component/Mesh.h"
@@ -13,47 +14,25 @@ using namespace Seele;
 
 BasePass::BasePass(Gfx::PGraphics graphics, PScene scene) 
     : RenderPass(graphics, scene)
-    , descriptorSets(4)
+    , descriptorSets(6)
 {
-    UniformBufferCreateInfo uniformInitializer;
     basePassLayout = graphics->createPipelineLayout();
 
-    lightLayout = graphics->createDescriptorLayout("LightLayout");
-    
-    // Directional Lights
-    lightLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
-    lightLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-    // Point Lights
-	lightLayout->addDescriptorBinding(2, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
-    lightLayout->addDescriptorBinding(3, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-    // Light Index List
-    lightLayout->addDescriptorBinding(4, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
-    // Light Grid
-    lightLayout->addDescriptorBinding(5, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_IMAGE);
-    lightLayout->create();
-    basePassLayout->addDescriptorLayout(INDEX_LIGHT_ENV, lightLayout);
-    descriptorSets[INDEX_LIGHT_ENV] = lightLayout->allocateDescriptorSet();
+    basePassLayout->addDescriptorLayout(INDEX_VIEW_PARAMS, viewParamsLayout);
+    basePassLayout->addDescriptorLayout(INDEX_LIGHT_ENV, scene->getLightEnvironment()->getDescriptorLayout());
 
-    viewLayout = graphics->createDescriptorLayout("ViewLayout");
-    viewLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-    uniformInitializer.sourceData.size = sizeof(ViewParameter);
-    uniformInitializer.sourceData.data = (uint8*)&viewParams;
-    uniformInitializer.bDynamic = true;
-    viewParamBuffer = graphics->createUniformBuffer(uniformInitializer);
-    viewLayout->create();
-    basePassLayout->addDescriptorLayout(INDEX_VIEW_PARAMS, viewLayout);
-    descriptorSets[INDEX_VIEW_PARAMS] = viewLayout->allocateDescriptorSet();
+    lightCullingLayout = graphics->createDescriptorLayout("BasePassLightCulling");
+    // oLightIndexList
+    lightCullingLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    // tLightIndexList
+    lightCullingLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    // oLightGrid
+    lightCullingLayout->addDescriptorBinding(2, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER);
+    // tLightGrid
+    lightCullingLayout->addDescriptorBinding(3, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER);
+    lightCullingLayout->create();
 
-    sceneLayout = graphics->createDescriptorLayout("SceneLayout");
-    sceneLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
-    sceneLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
-    sceneLayout->create();
-    basePassLayout->addDescriptorLayout(INDEX_SCENE_DATA, sceneLayout);
-    //basePassLayout->addPushConstants(Gfx::SePushConstantRange{
-    //    .stageFlags = (Gfx::SE_SHADER_STAGE_VERTEX_BIT | Gfx::SE_SHADER_STAGE_FRAGMENT_BIT),
-    //    .offset = 0,
-    //    .size = sizeof(uint32),
-    //});
+    basePassLayout->addDescriptorLayout(INDEX_LIGHT_CULLING, lightCullingLayout);
 }
 
 BasePass::~BasePass()
@@ -62,61 +41,95 @@ BasePass::~BasePass()
 
 void BasePass::beginFrame(const Component::Camera& cam) 
 {
-    DataSource uniformUpdate;
+    RenderPass::beginFrame(cam);
 
-    viewParams.viewMatrix = cam.getViewMatrix();
-    viewParams.projectionMatrix = viewport->getProjectionMatrix();
-    viewParams.cameraPosition = Vector4(cam.getCameraPosition(), 1);
-    viewParams.screenDimensions = Vector2(static_cast<float>(viewport->getSizeX()), static_cast<float>(viewport->getSizeY()));
-    uniformUpdate.size = sizeof(ViewParameter);
-    uniformUpdate.data = (uint8*)&viewParams;
-    viewParamBuffer->updateContents(uniformUpdate);
-    viewLayout->reset();
-    lightLayout->reset();
-
-    descriptorSets[INDEX_SCENE_DATA] = sceneLayout->allocateDescriptorSet();
-    descriptorSets[INDEX_SCENE_DATA]->updateBuffer(0, passData.sceneDataBuffer);
-    descriptorSets[INDEX_SCENE_DATA]->writeChanges();
-    descriptorSets[INDEX_LIGHT_ENV] = lightLayout->allocateDescriptorSet();
-    descriptorSets[INDEX_VIEW_PARAMS] = viewLayout->allocateDescriptorSet();
-    descriptorSets[INDEX_VIEW_PARAMS]->updateBuffer(0, viewParamBuffer);
-    descriptorSets[INDEX_VIEW_PARAMS]->writeChanges();
-    //std::cout << "BasePass beginFrame()" << std::endl;
-    //co_return;
+    lightCullingLayout->reset();
+    descriptorSets[INDEX_VIEW_PARAMS] = viewParamsSet;
+    descriptorSets[INDEX_LIGHT_ENV] = scene->getLightEnvironment()->getDescriptorSet();
+    descriptorSets[INDEX_LIGHT_CULLING] = lightCullingLayout->allocateDescriptorSet();
 }
 
 void BasePass::render() 
 {
-    oLightIndexList->pipelineBarrier( 
-		Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-		Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
-	oLightGrid->pipelineBarrier( 
-		Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 
-		Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+    oLightIndexList->pipelineBarrier(
+        Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+        Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+    tLightIndexList->pipelineBarrier(
+        Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+        Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+    oLightGrid->pipelineBarrier(
+        Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+        Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+    tLightGrid->pipelineBarrier(
+        Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+        Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
 
-    descriptorSets[INDEX_LIGHT_ENV]->updateBuffer(0, passData.lightEnv.directionalLights);
-    descriptorSets[INDEX_LIGHT_ENV]->updateBuffer(1, passData.lightEnv.numDirectional);
-    descriptorSets[INDEX_LIGHT_ENV]->updateBuffer(2, passData.lightEnv.pointLights);
-    descriptorSets[INDEX_LIGHT_ENV]->updateBuffer(3, passData.lightEnv.numPoints);
-    descriptorSets[INDEX_LIGHT_ENV]->updateBuffer(4, oLightIndexList);
-    descriptorSets[INDEX_LIGHT_ENV]->updateTexture(5, oLightGrid);
-    descriptorSets[INDEX_LIGHT_ENV]->writeChanges();
+    descriptorSets[INDEX_LIGHT_CULLING]->updateBuffer(0, oLightIndexList);
+    descriptorSets[INDEX_LIGHT_CULLING]->updateBuffer(1, tLightIndexList);
+    descriptorSets[INDEX_LIGHT_CULLING]->updateTexture(2, oLightGrid);
+    descriptorSets[INDEX_LIGHT_CULLING]->updateTexture(3, tLightGrid);
+    descriptorSets[INDEX_LIGHT_CULLING]->writeChanges();
 
     graphics->beginRenderPass(renderPass);
-    for (const auto& meshBatch : passData.staticDrawList)
+    Gfx::ShaderPermutation permutation;
+    permutation.hasFragment = true;
+    permutation.useMeshShading = true;
+    permutation.hasTaskShader = true;
+    std::memcpy(permutation.taskFile, "MeshletBasePass", std::strlen("MeshletBasePass"));
+    std::memcpy(permutation.vertexMeshFile, "MeshletBasePass", std::strlen("MeshletBasePass"));
+    std::memcpy(permutation.fragmentFile, "BasePass", std::strlen("BasePass"));
+    for (VertexData* vertexData : VertexData::getList())
     {
-        processor->processMeshBatch(meshBatch, viewport, renderPass, basePassLayout, primitiveLayout, descriptorSets);
+        std::memcpy(permutation.vertexDataName, vertexData->getTypeName().c_str(), std::strlen(vertexData->getTypeName().c_str()));
+        const auto& materials = vertexData->getMaterialData();
+        for (const auto& [_, materialData] : materials)
+        {
+            // Create Pipeline(Material, VertexData)
+            // Descriptors:
+            // ViewData => global, static
+            // LightEnv => global, static
+            // LightCulling => global, static
+            // Material => per material
+            // VertexData => per meshtype
+            // SceneData => per material instance
+
+            std::memcpy(permutation.materialName, materialData.material->getName().c_str(), std::strlen(materialData.material->getName().c_str()));
+            Gfx::PermutationId id(permutation);
+
+            Gfx::PRenderCommand command = graphics->createRenderCommand("DepthRender");
+            Gfx::OPipelineLayout layout = graphics->createPipelineLayout(basePassLayout);
+            layout->addDescriptorLayout(INDEX_MATERIAL, materialData.material->getDescriptorLayout());
+            layout->addDescriptorLayout(INDEX_VERTEX_DATA, vertexData->getVertexDataLayout());
+            layout->addDescriptorLayout(INDEX_SCENE_DATA, vertexData->getInstanceDataLayout());
+            layout->create();
+
+            const Gfx::ShaderCollection* collection = graphics->getShaderCompiler()->findShaders(id);
+            assert(collection != nullptr);
+            Gfx::MeshPipelineCreateInfo pipelineInfo;
+            pipelineInfo.taskShader = collection->taskShader;
+            pipelineInfo.meshShader = collection->meshShader;
+            pipelineInfo.fragmentShader = collection->fragmentShader;
+            pipelineInfo.pipelineLayout = layout;
+            pipelineInfo.renderPass = renderPass;
+            pipelineInfo.depthStencilState.depthCompareOp = Gfx::SE_COMPARE_OP_LESS_OR_EQUAL;
+            Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(pipelineInfo);
+            command->bindPipeline(pipeline);
+
+            descriptorSets[INDEX_VERTEX_DATA] = vertexData->getVertexDataSet();
+            for (const auto& [_, instance] : materialData.instances)
+            {
+                descriptorSets[INDEX_MATERIAL] = instance.materialInstance->getDescriptorSet();
+                descriptorSets[INDEX_SCENE_DATA] = instance.descriptorSet;
+                command->bindDescriptor(descriptorSets);
+                command->dispatch(instance.numMeshes, 1, 1);
+            }
+        }
     }
-    graphics->executeCommands(processor->getRenderCommands());
     graphics->endRenderPass();
-    //std::cout << "BasePass render()" << std::endl;
-    //co_return;
 }
 
 void BasePass::endFrame() 
 {
-    //std::cout << "BasePass endFrame()" << std::endl;
-    //co_return;
 }
 
 void BasePass::publishOutputs() 
@@ -131,16 +144,14 @@ void BasePass::createRenderPass()
     depthAttachment->loadOp = Gfx::SE_ATTACHMENT_LOAD_OP_LOAD;
     colorAttachment->loadOp = Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR;
     colorAttachment->storeOp = Gfx::SE_ATTACHMENT_STORE_OP_STORE;
-    Gfx::PRenderTargetLayout layout = new Gfx::RenderTargetLayout(colorAttachment, depthAttachment);
-    renderPass = graphics->createRenderPass(layout, viewport);
+    Gfx::ORenderTargetLayout layout = new Gfx::RenderTargetLayout(colorAttachment, depthAttachment);
+    renderPass = graphics->createRenderPass(std::move(layout), viewport);
     oLightIndexList = resources->requestBuffer("LIGHTCULLING_OLIGHTLIST");
+    tLightIndexList = resources->requestBuffer("LIGHTCULLING_TLIGHTLIST");
     oLightGrid = resources->requestTexture("LIGHTCULLING_OLIGHTGRID");
+    tLightGrid = resources->requestTexture("LIGHTCULLING_TLIGHTGRID");
 }
 
 void BasePass::modifyRenderPassMacros(Map<const char*, const char*>& defines)
 {
-    defines["INDEX_LIGHT_ENV"] = "0";
-    defines["INDEX_VIEW_PARAMS"] = "1";
-    defines["INDEX_MATERIAL"] = "2";
-    defines["INDEX_SCENE_DATA"] = "3";
 }

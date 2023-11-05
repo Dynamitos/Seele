@@ -26,7 +26,7 @@ struct Meshlet
     StaticArray<uint8, Gfx::numPrimitivesPerMeshlet * 3> primitiveLayout; // indices into the uniqueVertices array, only uint8 needed
     uint32 numVertices;
     uint32 numPrimitives;
-    void save(ArchiveBuffer& buffer);
+    void save(ArchiveBuffer& buffer) const;
     void load(ArchiveBuffer& buffer);
 };
 class VertexData
@@ -101,7 +101,7 @@ protected:
     Array<MeshletDescription> meshlets;
     Array<uint8> primitiveIndices;
     Array<uint32> vertexIndices;
-    Gfx::OGraphics graphics;
+    Gfx::PGraphics graphics;
     Gfx::ODescriptorLayout instanceDataLayout;
     // for mesh shading
     Gfx::OShaderBuffer meshletBuffer;

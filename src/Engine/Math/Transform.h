@@ -17,9 +17,7 @@ public:
     Transform(Vector position, Quaternion rotation, Vector scale);
     Transform(Quaternion rotation, Vector scale);
     ~Transform();
-    Vector inverseTransformPosition(const Vector &v) const;
     Matrix4 toMatrix() const;
-    static Vector getSafeScaleReciprocal(const Vector4 &inScale, float tolerance = 0.000000001f);
     Vector transformPosition(const Vector &v) const;
 
     Vector getPosition() const;

@@ -24,12 +24,6 @@ public:
     virtual void render() override;
     void selectActor();
 protected:
-    RenderGraph<
-        UIPass,
-        TextPass> renderGraph;
-    
-    UIPassData uiPassData;
-    TextPassData textPassData;
 
     UI::PSystem uiSystem;
     PActor selectedActor;

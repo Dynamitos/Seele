@@ -26,17 +26,13 @@ public:
 
 	PScene getScene() const { return scene; }
 private:
-	PScene scene;
+	OScene scene;
 	Component::Camera viewportCamera;
 	
 	RenderGraph<
 		DepthPrepass,
 		LightCullingPass,
 		BasePass> renderGraph;
-
-	DepthPrepassData depthPrepassData;
-	LightCullingPassData lightCullingPassData;
-	BasePassData basePassData;
 
 	dp::thread_pool<> pool;
 	ViewportControl cameraSystem;

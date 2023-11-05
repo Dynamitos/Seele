@@ -24,7 +24,7 @@ template<typename This, typename... Rest>
 class RenderGraph<This, Rest...> : private RenderGraph<Rest...>
 {
 public:
-    RenderGraph(PRenderGraphResources resources, This&& pass, Rest&&... rest)
+    RenderGraph(PRenderGraphResources resources, This pass, Rest... rest)
         : RenderGraph<Rest...>(resources, std::move(rest)...)
         , resources(resources)
         , rp(std::move(pass))
@@ -83,7 +83,7 @@ class RenderGraphBuilder
 {
 public:
     template<typename... RenderPasses>
-    static RenderGraph<RenderPasses...> build(RenderPasses&&... renderPasses)
+    static RenderGraph<RenderPasses...> build(RenderPasses... renderPasses)
     {
         PRenderGraphResources resources = new RenderGraphResources();
         return RenderGraph<RenderPasses...>(resources, std::move(renderPasses)...);

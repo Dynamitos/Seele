@@ -1,5 +1,5 @@
-import LightEnv;
 import Common;
+import LightEnv;
 
 struct ComputeShaderInput
 {
@@ -27,13 +27,10 @@ struct CullingParams
     RWTexture2D<uint2> tLightGrid;
 
     StructuredBuffer<Frustum> frustums;
-
 };
 ParameterBlock<CullingParams> gCullingParams;
 // Debug
-//layout(set = INDEX_VIEW_PARAMS, binding = 10)
 //Texture2D lightCountHeatMap;
-//layout(set = INDEX_VIEW_PARAMS, binding = 11)
 //RWTexture2D<float4> debugTexture;
 
 groupshared uint uMinDepth;

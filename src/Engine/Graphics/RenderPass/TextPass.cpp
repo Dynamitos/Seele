@@ -15,8 +15,9 @@ TextPass::~TextPass()
     
 }
 
-void TextPass::beginFrame(const Component::Camera&) 
+void TextPass::beginFrame(const Component::Camera& cam) 
 {
+    RenderPass::beginFrame(cam);
     for(TextRender& render : texts)
     {
         FontData& fd = getFontData(render.font);
@@ -126,7 +127,7 @@ void TextPass::createRenderPass()
         .vertexFormat = Gfx::SE_FORMAT_R32G32_SFLOAT, 
         .attributeIndex = 0, 
         .stride = sizeof(GlyphInstanceData), 
-        .bInstanced = 1
+        .instanced = 1
     });
     elements.add({
         .binding = 0, 
@@ -134,7 +135,7 @@ void TextPass::createRenderPass()
         .vertexFormat = Gfx::SE_FORMAT_R32G32_SFLOAT, 
         .attributeIndex = 1,
         .stride = sizeof(GlyphInstanceData), 
-        .bInstanced = 1
+        .instanced = 1
     });
     elements.add({
         .binding = 0,
@@ -142,7 +143,7 @@ void TextPass::createRenderPass()
         .vertexFormat = Gfx::SE_FORMAT_R32_UINT,
         .attributeIndex = 2,
         .stride = sizeof(GlyphInstanceData),
-        .bInstanced = 1
+        .instanced = 1
     });
     declaration = graphics->createVertexDeclaration(elements);
 
@@ -160,7 +161,7 @@ void TextPass::createRenderPass()
             .size = sizeof(Matrix4),
             .data = nullptr,
         },
-        .bDynamic = true,
+        .dynamic = true,
     });
 
     glyphSampler = graphics->createSamplerState({
@@ -184,8 +185,8 @@ void TextPass::createRenderPass()
         .size = sizeof(TextData)});
     pipelineLayout->create();
 
-    Gfx::PRenderTargetLayout layout = new Gfx::RenderTargetLayout(renderTarget, depthAttachment);
-    renderPass = graphics->createRenderPass(layout, viewport);
+    Gfx::ORenderTargetLayout layout = new Gfx::RenderTargetLayout(renderTarget, depthAttachment);
+    renderPass = graphics->createRenderPass(std::move(layout), viewport);
     
     Gfx::LegacyPipelineCreateInfo pipelineInfo;
     pipelineInfo.vertexDeclaration = declaration;
@@ -229,6 +230,7 @@ TextPass::FontData& TextPass::getFontData(PFontAsset font)
     }
     fd.glyphDataSet = glyphData;
     
+    textureArrayLayout->reset();
     fd.textureArraySet = textureArrayLayout->allocateDescriptorSet();
     fd.textureArraySet->updateTextureArray(0, textures);
     fd.textureArraySet->writeChanges();

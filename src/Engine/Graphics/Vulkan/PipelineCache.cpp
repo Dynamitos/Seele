@@ -48,7 +48,7 @@ PipelineCache::~PipelineCache()
     std::cout << "Written " << cacheSize << " bytes to cache" << std::endl;
 }
 
-PGraphicsPipeline PipelineCache::createPipeline(const Gfx::LegacyPipelineCreateInfo& gfxInfo)
+OGraphicsPipeline PipelineCache::createPipeline(const Gfx::LegacyPipelineCreateInfo& gfxInfo)
 {
     uint32 stageCount = 0;
     
@@ -99,7 +99,7 @@ PGraphicsPipeline PipelineCache::createPipeline(const Gfx::LegacyPipelineCreateI
             *res = VkVertexInputBindingDescription{
                 .binding = elem.binding,
                 .stride = elem.stride,
-                .inputRate = elem.bInstanced ? VK_VERTEX_INPUT_RATE_INSTANCE : VK_VERTEX_INPUT_RATE_VERTEX,
+                .inputRate = elem.instanced ? VK_VERTEX_INPUT_RATE_INSTANCE : VK_VERTEX_INPUT_RATE_VERTEX,
             };
         }
         vertexInput.pVertexAttributeDescriptions = attributes.data();
@@ -217,12 +217,12 @@ PGraphicsPipeline PipelineCache::createPipeline(const Gfx::LegacyPipelineCreateI
     std::cout << "Gfx creation time: " << delta << std::endl;
     
 
-    PGraphicsPipeline result = new GraphicsPipeline(graphics, pipelineHandle, layout);
+    OGraphicsPipeline result = new GraphicsPipeline(graphics, pipelineHandle, layout);
     return result;
 }
 
 
-PGraphicsPipeline PipelineCache::createPipeline(const Gfx::MeshPipelineCreateInfo& gfxInfo)
+OGraphicsPipeline PipelineCache::createPipeline(const Gfx::MeshPipelineCreateInfo& gfxInfo)
 {
     uint32 stageCount = 0;
 
@@ -361,33 +361,35 @@ PGraphicsPipeline PipelineCache::createPipeline(const Gfx::MeshPipelineCreateInf
     int64 delta = std::chrono::duration_cast<std::chrono::microseconds>(endTime - beginTime).count();
     std::cout << "Gfx creation time: " << delta << std::endl;
 
-
-    PGraphicsPipeline result = new GraphicsPipeline(graphics, pipelineHandle, layout);
+    OGraphicsPipeline result = new GraphicsPipeline(graphics, pipelineHandle, layout);
     return result;
 }
 
 
-PComputePipeline PipelineCache::createPipeline(const Gfx::ComputePipelineCreateInfo& computeInfo) 
+OComputePipeline PipelineCache::createPipeline(const Gfx::ComputePipelineCreateInfo& computeInfo) 
 {
-    VkComputePipelineCreateInfo createInfo;
-    createInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
-    createInfo.pNext = 0;
-    createInfo.flags = 0;
-    createInfo.basePipelineIndex = 0;
-    createInfo.basePipelineHandle = VK_NULL_HANDLE;
     auto layout = computeInfo.pipelineLayout.cast<PipelineLayout>();
-    createInfo.layout = layout->getHandle();
     auto computeStage = computeInfo.computeShader.cast<ComputeShader>();
-    createInfo.stage = init::PipelineShaderStageCreateInfo(
-        VK_SHADER_STAGE_COMPUTE_BIT,
-        computeStage->getModuleHandle(),
-        computeStage->getEntryPointName());
+
+    VkComputePipelineCreateInfo createInfo = {
+        .sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO,
+        .pNext = 0,
+        .flags = 0,
+        .stage = init::PipelineShaderStageCreateInfo(
+            VK_SHADER_STAGE_COMPUTE_BIT,
+            computeStage->getModuleHandle(),
+            computeStage->getEntryPointName()),
+        .layout = layout->getHandle(),
+        .basePipelineHandle = VK_NULL_HANDLE,
+        .basePipelineIndex = 0,
+    };
+    
     VkPipeline pipelineHandle;
     auto beginTime = std::chrono::high_resolution_clock::now();
     VK_CHECK(vkCreateComputePipelines(graphics->getDevice(), cache, 1, &createInfo, nullptr, &pipelineHandle));
     auto endTime = std::chrono::high_resolution_clock::now();
     int64 delta = std::chrono::duration_cast<std::chrono::microseconds>(endTime - beginTime).count();
     std::cout << "Compute creation time: " << delta << std::endl;
-    PComputePipeline result = new ComputePipeline(graphics, pipelineHandle, layout);
+    OComputePipeline result = new ComputePipeline(graphics, pipelineHandle, layout);
     return result;
 }

@@ -2,6 +2,7 @@
 #include "Enums.h"
 #include "CRC.h"
 #include "Resources.h"
+#include "VertexData.h"
 
 namespace Seele
 {
@@ -52,9 +53,14 @@ DEFINE_REF(ComputeShader)
     //using the type parameters used to generate it
 struct ShaderPermutation
 {
-    RenderPassType passType;
-    char vertexInputName[15];
-    char materialName[16];
+    char taskFile[32];
+    char vertexMeshFile[32];
+    char fragmentFile[32];
+    char vertexDataName[32];
+    char materialName[32];
+    uint8 hasFragment : 1;
+    uint8 useMeshShading : 1;
+    uint8 hasTaskShader : 1;
     //TODO: lightmapping etc
 };
 //Hashed ShaderPermutation for fast lookup
@@ -67,47 +73,59 @@ struct PermutationId
     PermutationId(ShaderPermutation permutation)
         : hash(CRC::Calculate(&permutation, sizeof(ShaderPermutation), CRC::CRC_32()))
     {}
-    friend inline bool operator==(const PermutationId& lhs, const PermutationId& rhs)
+    friend constexpr bool operator==(const PermutationId& lhs, const PermutationId& rhs)
     {
         return lhs.hash == rhs.hash;
     }
-    friend inline bool operator!=(const PermutationId& lhs, const PermutationId& rhs)
+    friend constexpr auto operator<=>(const PermutationId& lhs, const PermutationId& rhs)
     {
-        return lhs.hash != rhs.hash;
-    }
-    friend inline bool operator<(const PermutationId& lhs, const PermutationId& rhs)
-    {
-        return lhs.hash < rhs.hash;
-    }
-    friend inline bool operator>(const PermutationId& lhs, const PermutationId& rhs)
-    {
-        return lhs.hash > rhs.hash;
+        return lhs.hash <=> rhs.hash;
     }
 };
 struct ShaderCollection
 {
-    PermutationId id;
-
     OVertexDeclaration vertexDeclaration;
     OVertexShader vertexShader;
     OTaskShader taskShader;
     OMeshShader meshShader;
     OFragmentShader fragmentShader;
 };
-class ShaderMap
+class ShaderCompiler
 {
 public:
-    ShaderMap();
-    ~ShaderMap();
-    const ShaderCollection* findShaders(PermutationId&& id) const;
-    ShaderCollection& createShaders(
-        PGraphics graphics,
-        RenderPassType passName,
-        bool bPositionOnly);
+    ShaderCompiler(Gfx::PGraphics graphics);
+    ~ShaderCompiler();
+    const ShaderCollection* findShaders(PermutationId id) const;
+    void registerMaterial(PMaterial material);
+    void registerVertexData(VertexData* vertexData);
+    void registerRenderPass(std::string name,
+        std::string mainFile,
+        bool useMaterials = false,
+        bool hasFragmentShader = false,
+        std::string fragmentFile = "",
+        bool useMeshShading = false,
+        bool hasTaskShader = false,
+        std::string taskFile = "");
 private:
+    void compile();
+    ShaderCollection& createShaders(ShaderPermutation permutation);
     std::mutex shadersLock;
-    Array<ShaderCollection> shaders;
+    Map<PermutationId, ShaderCollection> shaders;
+    Map<std::string, PMaterial> materials;
+    Map<std::string, VertexData*> vertexData;
+    struct PassConfig
+    {
+        std::string taskFile;
+        std::string mainFile;
+        std::string fragmentFile;
+        bool hasFragmentShader;
+        bool useMeshShading;
+        bool hasTaskShader;
+        bool useMaterial;
+    };
+    Map<std::string, PassConfig> passes;
+    Gfx::PGraphics graphics;
 };
-DEFINE_REF(ShaderMap)
+DEFINE_REF(ShaderCompiler)
 }
 } // namespace Seele

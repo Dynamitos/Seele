@@ -393,7 +393,8 @@ public:
         std::allocator_traits<allocator_type>::construct(allocator, &_data[arraySize++], arguments...);
         return _data[arraySize - 1];
     }
-    template<std::predicate Pred>
+    template<class Pred>
+    requires std::predicate<Pred, value_type>
     constexpr void remove_if(Pred pred, bool keepOrder = true)
     {
         remove(find(pred), keepOrder);

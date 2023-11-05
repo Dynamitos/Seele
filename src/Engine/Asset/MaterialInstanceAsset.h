@@ -13,8 +13,11 @@ public:
     virtual ~MaterialInstanceAsset();
     virtual void save(ArchiveBuffer& buffer) const override;
     virtual void load(ArchiveBuffer& buffer) override;
+    void setHandle(OMaterialInstance handle) { material = std::move(handle); }
+    void setBase(PMaterialAsset base) { baseMaterial = base; }
 private:
-    PMaterialInstance material;
+    OMaterialInstance material;
+    PMaterialAsset baseMaterial;
 };
 DEFINE_REF(MaterialInstanceAsset)
 } // namespace Seele

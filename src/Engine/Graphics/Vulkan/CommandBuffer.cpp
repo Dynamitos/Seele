@@ -313,7 +313,7 @@ void RenderCommand::draw(uint32 vertexCount, uint32 instanceCount, int32 firstVe
 void RenderCommand::dispatch(uint32 groupX, uint32 groupY, uint32 groupZ)
 {
     assert(threadId == std::this_thread::get_id());
-    vkCmdDrawMeshTasksEXT(handle, groupX, groupY, groupZ);
+    graphics->vkCmdDrawMeshTasksEXT(handle, groupX, groupY, groupZ);
 }
 
 ComputeCommand::ComputeCommand(PGraphics graphics, VkCommandPool cmdPool) 

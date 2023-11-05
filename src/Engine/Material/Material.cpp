@@ -9,23 +9,23 @@ Material::Material()
 {
 }
 
-Material::Material(Gfx::PGraphics graphics, 
-        Array<OShaderParameter> parameter, 
+Material::Material(Gfx::PGraphics graphics,
         Gfx::ODescriptorLayout layout, 
         uint32 uniformDataSize, 
         uint32 uniformBinding, 
         std::string materialName, 
-        Array<OShaderExpression> expressions, 
+        Map<std::string, OShaderExpression> expressions,
+        Array<std::string> parameter,
         MaterialNode brdf)
     : graphics(graphics)
-    , parameters(std::move(parameter))
     , uniformDataSize(uniformDataSize)
     , uniformBinding(uniformBinding)
+    , instanceId(0)
     , layout(std::move(layout))
     , materialName(materialName)
     , codeExpressions(std::move(expressions))
-    , brdf(brdf)
-    , instanceId(0)
+    , parameters(std::move(parameter))
+    , brdf(std::move(brdf))
 {
 }
 
@@ -33,14 +33,19 @@ Material::~Material()
 {
 }
 
-PMaterialInstance Seele::Material::instantiate()
+OMaterialInstance Material::instantiate()
 {
-    return new MaterialInstance(instanceId++, graphics, this, layout, parameters, uniformBinding, uniformDataSize);
+    return new MaterialInstance(
+        instanceId++, 
+        graphics, 
+        codeExpressions,
+        parameters, 
+        uniformBinding, 
+        uniformDataSize);
 }
 
 void Material::save(ArchiveBuffer& buffer) const
 {
-    Serialization::save(buffer, brdfName);
     Serialization::save(buffer, uniformDataSize);
     Serialization::save(buffer, uniformBinding);
     Serialization::save(buffer, instanceId);
@@ -59,13 +64,11 @@ void Material::save(ArchiveBuffer& buffer) const
         Serialization::save(buffer, binding.descriptorType);
         Serialization::save(buffer, binding.shaderStages);
     }
-    Serialization::save(buffer, instances);
 }
 
 void Material::load(ArchiveBuffer& buffer)
 {
     graphics = buffer.getGraphics();
-    Serialization::load(buffer, brdfName);
     Serialization::load(buffer, uniformDataSize);
     Serialization::load(buffer, uniformBinding);
     Serialization::load(buffer, instanceId);
@@ -98,11 +101,6 @@ void Material::load(ArchiveBuffer& buffer)
         layout->addDescriptorBinding(binding, descriptorType, descriptorCount, bindingFlags, shaderStages);
     }
     layout->create();
-    Serialization::load(buffer, instances);
-    for (auto& instance : instances)
-    {
-        instance->setBaseMaterial(this);
-    }
 }
 
 void Material::compile()
@@ -114,21 +112,23 @@ void Material::compile()
     codeStream << "struct " << materialName << " : IMaterial {\n";
     for(const auto& parameter : parameters)
     {
-        parameter->generateDeclaration(codeStream);
+        PShaderParameter handle = PShaderExpression(codeExpressions[parameter]);
+        handle->generateDeclaration(codeStream);
     }
     codeStream << "\ttypedef " << brdf.profile << " BRDF;\n";
     codeStream << "\t" << brdf.profile << " prepare(MaterialFragmentParameter input) {\n";
     codeStream << "\t\t" << brdf.profile << " result;\n";
-    Map<int32, std::string> varState;
-    for(const auto& expr : codeExpressions)
+    Map<std::string, std::string> varState;
+    for(const auto& [_, expr] :codeExpressions)
     {
         codeStream << expr->evaluate(varState);
     }
     for(const auto& [name, exp] : brdf.variables)
     {
-        codeStream << "\t\tresult." << name << " = " << varState[exp->key] << ";";
+        codeStream << "\t\tresult." << name << " = " << varState[exp] << ";";
     }
     codeStream << "\t\treturn result;\n";
     codeStream << "\t}\n";
     codeStream << "};\n";
+    graphics->getShaderCompiler()->registerMaterial(this);
 }

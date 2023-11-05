@@ -31,6 +31,15 @@ void ExpressionOutput::load(ArchiveBuffer& buffer)
     Serialization::load(buffer, type);
 }
 
+ShaderExpression::ShaderExpression()
+{
+}
+
+ShaderExpression::ShaderExpression(std::string key)
+    : key(key)
+{
+}
+
 void ShaderExpression::save(ArchiveBuffer& buffer) const
 {
     Serialization::save(buffer, inputs);
@@ -46,7 +55,7 @@ void ShaderExpression::load(ArchiveBuffer& buffer)
 }
 
 ShaderParameter::ShaderParameter(std::string name, uint32 byteOffset, uint32 binding) 
-    : name(name)
+    : ShaderExpression(name)
     , byteOffset(byteOffset)
     , binding(binding)
 {
@@ -56,16 +65,16 @@ ShaderParameter::~ShaderParameter()
 {
 }
 
-std::string ShaderParameter::evaluate(Map<int32, std::string>& varState) const
+std::string ShaderParameter::evaluate(Map<std::string, std::string>& varState) const
 {
-    varState[key] = name;
+    varState[key] = key;
     return "";
 }
 
 void ShaderParameter::save(ArchiveBuffer& buffer) const
 {
     ShaderExpression::save(buffer);
-    Serialization::save(buffer, name);
+    Serialization::save(buffer, key);
     Serialization::save(buffer, byteOffset);
     Serialization::save(buffer, binding);
 }
@@ -73,7 +82,7 @@ void ShaderParameter::save(ArchiveBuffer& buffer) const
 void ShaderParameter::load(ArchiveBuffer& buffer)
 {
     ShaderExpression::load(buffer);
-    Serialization::load(buffer, name);
+    Serialization::load(buffer, key);
     Serialization::load(buffer, byteOffset);
     Serialization::load(buffer, binding);
 }
@@ -109,7 +118,7 @@ void FloatParameter::updateDescriptorSet(Gfx::PDescriptorSet, uint8* dst)
 
 void FloatParameter::generateDeclaration(std::ofstream& stream) const
 {
-    stream << "\tlayout(offset = " << byteOffset << ") float " << name << ";\n";
+    stream << "\tlayout(offset = " << byteOffset << ") float " << key << ";\n";
 }
 
 VectorParameter::VectorParameter(std::string name, uint32 byteOffset, uint32 binding) 
@@ -131,7 +140,7 @@ void VectorParameter::updateDescriptorSet(Gfx::PDescriptorSet, uint8* dst)
 
 void VectorParameter::generateDeclaration(std::ofstream& stream) const
 {
-    stream << "\tlayout(offset = " << byteOffset << ") float3 " << name << ";\n";
+    stream << "\tlayout(offset = " << byteOffset << ") float3 " << key << ";\n";
 }
 
 void VectorParameter::save(ArchiveBuffer& buffer) const
@@ -164,7 +173,7 @@ void TextureParameter::updateDescriptorSet(Gfx::PDescriptorSet descriptorSet, ui
 
 void TextureParameter::generateDeclaration(std::ofstream& stream) const
 {
-    stream << "\tTexture2D " << name << ";\n";
+    stream << "\tTexture2D " << key << ";\n";
 }
 
 void TextureParameter::save(ArchiveBuffer& buffer) const
@@ -200,7 +209,7 @@ void SamplerParameter::updateDescriptorSet(Gfx::PDescriptorSet descriptorSet, ui
 
 void SamplerParameter::generateDeclaration(std::ofstream& stream) const
 {
-    stream << "\tSamplerState " << name << ";\n";
+    stream << "\tSamplerState " << key << ";\n";
 }
 
 void SamplerParameter::save(ArchiveBuffer& buffer) const
@@ -233,7 +242,7 @@ void CombinedTextureParameter::updateDescriptorSet(Gfx::PDescriptorSet descripto
 
 void CombinedTextureParameter::generateDeclaration(std::ofstream& stream) const
 {
-    stream << "\tTexture2D " << name << ";\n";
+    stream << "\tTexture2D " << key << ";\n";
 }
 
 void CombinedTextureParameter::save(ArchiveBuffer& buffer) const
@@ -267,9 +276,9 @@ ConstantExpression::~ConstantExpression()
     
 }
 
-std::string ConstantExpression::evaluate(Map<int32, std::string>& varState) const 
+std::string ConstantExpression::evaluate(Map<std::string, std::string>& varState) const
 {
-    std::string varName = std::format("const_exp_{}", std::abs(key));
+    std::string varName = std::format("const_exp_{}", key);
     varState[key] = varName;
     return std::format("let {} = {};\n", varName, expr);
 }
@@ -296,7 +305,7 @@ AddExpression::~AddExpression()
     
 }
 
-std::string AddExpression::evaluate(Map<int32, std::string>& varState) const 
+std::string AddExpression::evaluate(Map<std::string, std::string>& varState) const
 {
     std::string varName = std::format("exp_{}", key);
     varState[key] = varName;
@@ -313,7 +322,7 @@ void AddExpression::load(ArchiveBuffer& buffer)
     ShaderExpression::load(buffer);
 }
 
-std::string SubExpression::evaluate(Map<int32, std::string>& varState) const 
+std::string SubExpression::evaluate(Map<std::string, std::string>& varState) const
 {
     std::string varName = std::format("exp_{}", key);
     varState[key] = varName;
@@ -330,7 +339,7 @@ void SubExpression::load(ArchiveBuffer& buffer)
     ShaderExpression::load(buffer);
 }
 
-std::string MulExpression::evaluate(Map<int32, std::string>& varState) const 
+std::string MulExpression::evaluate(Map<std::string, std::string>& varState) const 
 {
     std::string varName = std::format("exp_{}", key);
     varState[key] = varName;
@@ -347,7 +356,7 @@ void MulExpression::load(ArchiveBuffer& buffer)
     ShaderExpression::load(buffer);
 }
 
-std::string SwizzleExpression::evaluate(Map<int32, std::string>& varState) const 
+std::string SwizzleExpression::evaluate(Map<std::string, std::string>& varState) const
 {
     std::string varName = std::format("exp_{}", key);
     std::string swizzle = "";
@@ -370,6 +379,7 @@ std::string SwizzleExpression::evaluate(Map<int32, std::string>& varState) const
             break;
         case 3:
             swizzle += "w";
+            break;
         default:
             throw std::logic_error("invalid component");
         }
@@ -390,7 +400,7 @@ void SwizzleExpression::load(ArchiveBuffer& buffer)
     Serialization::load(buffer, comp);
 }
 
-std::string SampleExpression::evaluate(Map<int32, std::string>& varState) const 
+std::string SampleExpression::evaluate(Map<std::string, std::string>& varState) const 
 {
     std::string varName = std::format("exp_{}", key);
     varState[key] = varName;

@@ -132,12 +132,12 @@ public:
     virtual ~PipelineLayout() {}
     virtual void create() = 0;
     virtual void reset() = 0;
-    void addDescriptorLayout(uint32 setIndex, const PDescriptorLayout layout);
+    void addDescriptorLayout(uint32 setIndex, PDescriptorLayout layout);
     void addPushConstants(const SePushConstantRange& pushConstants);
     virtual uint32 getHash() const = 0;
 
 protected:
-    Array<const PDescriptorLayout> descriptorSetLayouts;
+    Array<PDescriptorLayout> descriptorSetLayouts;
     Array<SePushConstantRange> pushConstants;
 };
 DEFINE_REF(PipelineLayout)

@@ -272,6 +272,39 @@ public:
         return getNode(root)->pair.value;
     }
 
+    constexpr const mapped_type& operator[](const key_type& key) const
+    {
+        size_t it = root;
+        while (!equal(getNode(it)->pair.key, key))
+        {
+            if (comp(key, getNode(it)->pair.key))
+            {
+                it = getNode(it)->leftChild;
+            }
+            else
+            {
+                it = getNode(it)->rightChild;
+            }
+        }
+        return getNode(it)->pair.value;
+    }
+    constexpr const mapped_type& operator[](key_type&& key) const
+    {
+        size_t it = root;
+        while (!equal(getNode(it)->pair.key, key))
+        {
+            if (comp(key, getNode(it)->pair.key))
+            {
+                it = getNode(it)->leftChild;
+            }
+            else
+            {
+                it = getNode(it)->rightChild;
+            }
+        }
+        return getNode(it)->pair.value;
+    }
+
     constexpr mapped_type& at(const key_type& key)
     {
         root = splay(root, key);
@@ -414,11 +447,11 @@ public:
         buffer.readBytes(&len, sizeof(uint64));
         for(uint64 i = 0; i < len; ++i)
         {
-            K k;
-            V v;
+            K k = K();
+            V v = V();
             Serialization::load(buffer, k);
             Serialization::load(buffer, v);
-            this->operator[](k) = v;
+            this->operator[](std::move(k)) = std::move(v);
         }
     }
 private:

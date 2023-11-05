@@ -18,7 +18,7 @@ enum class ExpressionType
 };
 struct ExpressionInput
 {
-    int source;
+    std::string source;
     ExpressionType type = ExpressionType::UNKNOWN;
     void save(ArchiveBuffer& buffer) const;
     void load(ArchiveBuffer& buffer);
@@ -35,9 +35,11 @@ struct ShaderExpression
 {
     Map<std::string, ExpressionInput> inputs;
     ExpressionOutput output;
-    int32 key;
+    std::string key;
+    ShaderExpression();
+    ShaderExpression(std::string key);
     virtual uint64 getIdentifier() const = 0;
-    virtual std::string evaluate(Map<int32, std::string>& varState) const = 0;
+    virtual std::string evaluate(Map<std::string, std::string>& varState) const = 0;
     virtual void save(ArchiveBuffer& buffer) const;
     virtual void load(ArchiveBuffer& buffer);
 };
@@ -46,7 +48,6 @@ DEFINE_REF(ShaderExpression)
 DECLARE_NAME_REF(Gfx, DescriptorSet)
 struct ShaderParameter : public ShaderExpression
 {
-    std::string name;
     uint32 byteOffset;
     uint32 binding;
     ShaderParameter() {}
@@ -56,7 +57,7 @@ struct ShaderParameter : public ShaderExpression
     virtual void updateDescriptorSet(Gfx::PDescriptorSet descriptorSet, uint8* dst) = 0;
     virtual void generateDeclaration(std::ofstream& stream) const = 0;
     virtual uint64 getIdentifier() const = 0;
-    virtual std::string evaluate(Map<int32, std::string>& varState) const override;
+    virtual std::string evaluate(Map<std::string, std::string>& varState) const override;
     virtual void save(ArchiveBuffer& buffer) const;
     virtual void load(ArchiveBuffer& buffer);
 };
@@ -143,7 +144,7 @@ struct ConstantExpression : public ShaderExpression
     ConstantExpression(std::string expr, ExpressionType type);
     virtual ~ConstantExpression();
     virtual uint64 getIdentifier() const { return IDENTIFIER; }
-    virtual std::string evaluate(Map<int32, std::string>& varState) const override;
+    virtual std::string evaluate(Map<std::string, std::string>& varState) const override;
     virtual void save(ArchiveBuffer& buffer) const override;
     virtual void load(ArchiveBuffer& buffer) override;
 };
@@ -154,7 +155,7 @@ struct AddExpression : public ShaderExpression
     AddExpression();
     virtual ~AddExpression();
     virtual uint64 getIdentifier() const { return IDENTIFIER; }
-    virtual std::string evaluate(Map<int32, std::string>& varState) const override;
+    virtual std::string evaluate(Map<std::string, std::string>& varState) const override;
     virtual void save(ArchiveBuffer& buffer) const override;
     virtual void load(ArchiveBuffer& buffer) override;
 };
@@ -165,7 +166,7 @@ struct SubExpression : public ShaderExpression
     SubExpression() {}
     virtual ~SubExpression() {}
     virtual uint64 getIdentifier() const { return IDENTIFIER; }
-    virtual std::string evaluate(Map<int32, std::string>& varState) const override;
+    virtual std::string evaluate(Map<std::string, std::string>& varState) const override;
     virtual void save(ArchiveBuffer& buffer) const override;
     virtual void load(ArchiveBuffer& buffer) override;
 };
@@ -176,7 +177,7 @@ struct MulExpression : public ShaderExpression
     MulExpression() {}
     virtual ~MulExpression() {}
     virtual uint64 getIdentifier() const { return IDENTIFIER; }
-    virtual std::string evaluate(Map<int32, std::string>& varState) const override;
+    virtual std::string evaluate(Map<std::string, std::string>& varState) const override;
     virtual void save(ArchiveBuffer& buffer) const override;
     virtual void load(ArchiveBuffer& buffer) override;
 };
@@ -188,7 +189,7 @@ struct SwizzleExpression : public ShaderExpression
     SwizzleExpression() {}
     virtual ~SwizzleExpression() {}
     virtual uint64 getIdentifier() const { return IDENTIFIER; }
-    virtual std::string evaluate(Map<int32, std::string>& varState) const override;
+    virtual std::string evaluate(Map<std::string, std::string>& varState) const override;
     virtual void save(ArchiveBuffer& buffer) const override;
     virtual void load(ArchiveBuffer& buffer) override;
 };
@@ -199,7 +200,7 @@ struct SampleExpression : public ShaderExpression
     SampleExpression() {}
     virtual ~SampleExpression() {}
     virtual uint64 getIdentifier() const { return IDENTIFIER; }
-    virtual std::string evaluate(Map<int32, std::string>& varState) const override;
+    virtual std::string evaluate(Map<std::string, std::string>& varState) const override;
     virtual void save(ArchiveBuffer& buffer) const override;
     virtual void load(ArchiveBuffer& buffer) override;
 };
@@ -208,7 +209,7 @@ DEFINE_REF(SampleExpression)
 struct MaterialNode
 {
     std::string profile;
-    Map<std::string, OShaderExpression> variables;
+    Map<std::string, std::string> variables;
     MaterialNode() {}
     ~MaterialNode() {}
     void save(ArchiveBuffer& buffer) const;

@@ -2,6 +2,7 @@
 #include "Graphics.h"
 #include "Initializer.h"
 #include "CommandBuffer.h"
+#include "Texture.h"
 
 using namespace Seele;
 using namespace Seele::Vulkan;
@@ -130,12 +131,12 @@ void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PUniformBuffer uniformBu
     VkWriteDescriptorSet writeDescriptor = init::WriteDescriptorSet(setHandle, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, binding, &bufferInfos.back());
     writeDescriptors.add(writeDescriptor);
 
-    cachedData[binding] = new UniformBuffer(*vulkanBuffer.getHandle());
+    cachedData[binding] = vulkanBuffer.getHandle();
 }
 
-void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PShaderBuffer ShaderBuffer)
+void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PShaderBuffer shaderBuffer)
 {
-    PShaderBuffer vulkanBuffer = ShaderBuffer.cast<ShaderBuffer>();
+    PShaderBuffer vulkanBuffer = shaderBuffer.cast<ShaderBuffer>();
     ShaderBuffer* cachedBuffer = reinterpret_cast<ShaderBuffer*>(cachedData[binding]);
     if(vulkanBuffer.getHandle() == cachedBuffer)
     {
@@ -349,21 +350,20 @@ Gfx::PDescriptorSet DescriptorAllocator::allocateDescriptorSet()
             VK_CHECK(vkAllocateDescriptorSets(graphics->getDevice(), &allocInfo, &cachedHandles[setIndex]->setHandle));
         }
         cachedHandles[setIndex]->allocate();
-        descriptorSet = cachedHandles[setIndex];
         
-        PDescriptorSet vulkanSet = descriptorSet.cast<DescriptorSet>();
+        PDescriptorSet vulkanSet = cachedHandles[setIndex];
         vulkanSet->cachedData.resize(layout.bindings.size());
         // Not really pretty, but this way the set knows which ones are valid
         std::memset(vulkanSet->cachedData.data(), 0, sizeof(void*) * vulkanSet->cachedData.size());
         
         //Found set, stop searching
-        return;
+        return vulkanSet;
     }
     if(nextAlloc == nullptr)
     {
         nextAlloc = new DescriptorAllocator(graphics, layout);
     }
-    nextAlloc->allocateDescriptorSet(descriptorSet);
+    return nextAlloc->allocateDescriptorSet();
     //throw std::logic_error("Out of descriptor sets");
 }
 

@@ -26,56 +26,6 @@
 
 namespace Seele
 {
-template <typename T, typename Deleter = std::default_delete<T>>
-class OwningPtr
-{
-public:
-    OwningPtr()
-        : pointer(nullptr)
-    {
-    }
-    OwningPtr(T* ptr)
-        : pointer(ptr)
-    {}
-    template<typename F>
-    OwningPtr(OwningPtr<F>&& other)
-    {
-        pointer = static_cast<T*>(other.pointer);
-    }
-    OwningPtr(const OwningPtr& other) = delete;
-    OwningPtr(OwningPtr&& other)
-    {
-        pointer = other.pointer;
-        other.pointer = nullptr;
-    }
-    OwningPtr& operator=(const OwningPtr& other) = delete;
-    OwningPtr& operator=(OwningPtr&& other)
-    {
-        if (this != &other)
-        {
-            pointer = other.pointer;
-        }
-        return *this;
-    }
-    constexpr T* operator->()
-    {
-        return pointer;
-    }
-    constexpr const T* operator->() const
-    {
-        return pointer;
-    }
-    constexpr bool operator==(const OwningPtr& rhs) const noexcept
-    {
-        return pointer == rhs.pointer;
-    }
-    constexpr auto operator<=>(const OwningPtr& rhs) const noexcept
-    {
-        return pointer <=> rhs.pointer;
-    }
-private:
-    T* pointer;
-};
 template <typename T>
 class RefPtr
 {
@@ -88,44 +38,42 @@ public:
         : object(nullptr)
     {
     }
-    RefPtr(T *ptr)
+    RefPtr(T* ptr)
         : object(ptr)
     {
     }
-    constexpr RefPtr(const RefPtr &other) noexcept
+    constexpr RefPtr(const RefPtr& other) noexcept
         : object(other.object)
     {
     }
-    constexpr RefPtr(RefPtr &&rhs) noexcept
+    constexpr RefPtr(RefPtr&& rhs) noexcept
         : object(std::move(rhs.object))
     {
         rhs.object = nullptr;
     }
     template <typename F>
-    constexpr RefPtr(const RefPtr<F> &other)
+    constexpr RefPtr<F> cast()
     {
-        object = other.cast<T>();
-    }
-    constexpr RefPtr(OwningPtr<T>& owning)
-    {
-        object = owning.getHandle();
-    }
-    constexpr RefPtr(const OwningPtr<T>& owning)
-    {
-        object = owning.getHandle();
-    }
-    template <typename F>
-    constexpr const RefPtr<F> cast() const
-    {
-        T *t = object;
-        F *f = dynamic_cast<F *>(t);
+        T* t = object;
+        F* f = dynamic_cast<F*>(t);
         if (f == nullptr)
         {
             return nullptr;
         }
         return RefPtr<F>(f);
     }
-    constexpr RefPtr &operator=(const RefPtr &other)
+    template <typename F>
+    constexpr const RefPtr<F> cast() const
+    {
+        T* t = object;
+        F* f = dynamic_cast<F*>(t);
+        if (f == nullptr)
+        {
+            return nullptr;
+        }
+        return RefPtr<F>(f);
+    }
+    constexpr RefPtr& operator=(const RefPtr& other)
     {
         if (this != &other)
         {
@@ -133,7 +81,7 @@ public:
         }
         return *this;
     }
-    constexpr RefPtr &operator=(RefPtr &&rhs) noexcept
+    constexpr RefPtr& operator=(RefPtr&& rhs) noexcept
     {
         if (this != &rhs)
         {
@@ -149,15 +97,25 @@ public:
     {
         return object == rhs.object;
     }
-    constexpr auto operator<=>(const RefPtr &rhs) const noexcept
+    constexpr auto operator<=>(const RefPtr& rhs) const noexcept
     {
         return object <=> rhs.object;
     }
-    constexpr T *operator->()
+    template<typename F>
+    constexpr operator RefPtr<F>()
+    {
+        return RefPtr<F>(static_cast<F*>(object));
+    }
+    template<typename F>
+    constexpr operator RefPtr<F>() const
+    {
+        return RefPtr<F>(static_cast<F*>(object));
+    }
+    constexpr T* operator->()
     {
         return object;
     }
-    constexpr const T *operator->() const
+    constexpr const T* operator->() const
     {
         return object;
     }
@@ -171,6 +129,73 @@ public:
     }
 private:
     T* object;
+};
+template <typename T, typename Deleter = std::default_delete<T>>
+class OwningPtr
+{
+public:
+    OwningPtr()
+        : pointer(nullptr)
+    {
+    }
+    OwningPtr(T* ptr)
+        : pointer(ptr)
+    {}
+    template<typename F>
+    OwningPtr(OwningPtr<F>&& other)
+    {
+        pointer = dynamic_cast<T*>(*other);
+    }
+    OwningPtr(const OwningPtr& other) = delete;
+    OwningPtr(OwningPtr&& other) noexcept
+    {
+        pointer = other.pointer;
+        other.pointer = nullptr;
+    }
+    OwningPtr& operator=(const OwningPtr& other) = delete;
+    OwningPtr& operator=(OwningPtr&& other) noexcept
+    {
+        if (this != &other)
+        {
+            pointer = other.pointer;
+        }
+        return *this;
+    }
+    operator RefPtr<T>()
+    {
+        return RefPtr<T>(pointer);
+    }
+    operator RefPtr<T>() const
+    {
+        return RefPtr<T>(pointer);
+    }
+    constexpr T* operator->()
+    {
+        return pointer;
+    }
+    constexpr const T* operator->() const
+    {
+        return pointer;
+    }
+    constexpr T* operator*()
+    {
+        return pointer;
+    }
+    constexpr const T* operator*() const
+    {
+        return pointer;
+    }
+    constexpr bool operator==(const OwningPtr& rhs) const noexcept
+    {
+        return pointer == rhs.pointer;
+    }
+    constexpr auto operator<=>(const OwningPtr& rhs) const noexcept
+    {
+        return pointer <=> rhs.pointer;
+    }
+private:
+    friend class RefPtr<T>;
+    T* pointer;
 };
 template <typename T>
 class UniquePtr
@@ -197,8 +222,11 @@ public:
     UniquePtr &operator=(const UniquePtr &rhs) = delete;
     UniquePtr &operator=(UniquePtr &&rhs)
     {
-        handle = rhs.handle;
-        rhs.handle = nullptr;
+        if (this != &rhs)
+        {
+            handle = rhs.handle;
+            rhs.handle = nullptr;
+        }
         return *this;
     }
     ~UniquePtr()

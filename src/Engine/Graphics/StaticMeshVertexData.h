@@ -1,4 +1,5 @@
 #pragma once
+#include "Math/Vector.h"
 #include "VertexData.h"
 
 namespace Seele
@@ -35,6 +36,6 @@ private:
     Gfx::OShaderBuffer biTangents;
 	Array<Vector> biTangentData;
 	Gfx::ODescriptorLayout descriptorLayout;
-	Gfx::ODescriptorSet descriptorSet;
+	Gfx::PDescriptorSet descriptorSet;
 };
 }

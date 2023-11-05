@@ -13,16 +13,16 @@ public:
     virtual ~TextureAsset();
     virtual void save(ArchiveBuffer& buffer) const override;
     virtual void load(ArchiveBuffer& buffer) override;
-    void setTexture(Gfx::PTexture _texture)
+    void setTexture(Gfx::OTexture _texture)
     {
-        texture = _texture;
+        texture = std::move(_texture);
     }
     Gfx::PTexture getTexture()
     {
         return texture;
     }
 private:
-    Gfx::PTexture texture;
+    Gfx::OTexture texture;
     friend class TextureLoader;
 };
 DEFINE_REF(TextureAsset)

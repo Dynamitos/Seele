@@ -86,6 +86,7 @@ SkyboxRenderPass::~SkyboxRenderPass()
 
 void SkyboxRenderPass::beginFrame(const Component::Camera& cam)
 {
+    RenderPass::beginFrame(cam);
     DataSource uniformUpdate;
 
     viewParams.viewMatrix = cam.getViewMatrix();
@@ -131,7 +132,7 @@ void SkyboxRenderPass::publishOutputs()
             .size = sizeof(ViewParameter),
             .data = nullptr,
         },
-        .bDynamic = true
+        .dynamic = true
     };
     viewParamsBuffer = graphics->createUniformBuffer(viewCreateInfo);
 
@@ -161,8 +162,8 @@ void SkyboxRenderPass::createRenderPass()
     baseColorAttachment->loadOp = Gfx::SE_ATTACHMENT_LOAD_OP_LOAD;
     Gfx::PRenderTargetAttachment depthAttachment = resources->requestRenderTarget("DEPTHPREPASS_DEPTH");
     depthAttachment->loadOp = Gfx::SE_ATTACHMENT_LOAD_OP_LOAD;
-    Gfx::PRenderTargetLayout layout = new Gfx::RenderTargetLayout(baseColorAttachment, depthAttachment);
-    renderPass = graphics->createRenderPass(layout, viewport);
+    Gfx::ORenderTargetLayout layout = new Gfx::RenderTargetLayout(baseColorAttachment, depthAttachment);
+    renderPass = graphics->createRenderPass(std::move(layout), viewport);
 
     ShaderCreateInfo createInfo;
     createInfo.name = "SkyboxVertex";

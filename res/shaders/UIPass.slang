@@ -1,3 +1,5 @@
+import Common;
+
 struct RenderElementStyle
 {
     float3 position;
@@ -15,22 +17,14 @@ struct RenderElementStyle
     float2 dimensions;
 };
 
-struct ViewData
+struct UIParameter
 {
-    float4x4 projectionMatrix;
-};
+    SamplerState backgroundSampler;
+    uint numBackgroundTextures;
+    Texture2D<float4> backgroundTextures[];
+}
 
-layout(set = 0, binding = 0)
-ConstantBuffer<ViewData> viewData;
-
-layout(set = 0, binding = 1)
-SamplerState backgroundSampler;
-
-layout(set = 0, binding = 2)
-ConstantBuffer<uint> numBackgroundTextures;
-
-layout(set = 0, binding = 3)
-Texture2D<float4> backgroundTextures[];
+ParameterBuffer<UIParameter> params;
 
 struct VertexStageOutput
 {

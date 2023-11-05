@@ -15,23 +15,17 @@ DECLARE_NAME_REF(Gfx, RenderPass)
 class RenderPass
 {
 public:
-    RenderPass(Gfx::PGraphics graphics, PScene scene)
-        : graphics(graphics)
-        , scene(scene)
-    {}
-    virtual ~RenderPass()
-    {}
-    virtual void beginFrame(const Component::Camera& cam) = 0;
+    RenderPass(Gfx::PGraphics graphics, PScene scene);
+    RenderPass(RenderPass&&) = default;
+    RenderPass& operator=(RenderPass&&) = default;
+    virtual ~RenderPass();
+    virtual void beginFrame(const Component::Camera& cam);
     virtual void render() = 0;
     virtual void endFrame() = 0;
     virtual void publishOutputs() = 0;
     virtual void createRenderPass() = 0;
-    void setResources(PRenderGraphResources _resources) { resources = _resources; }
-    void setViewport(Gfx::PViewport _viewport) 
-    { 
-        viewport = _viewport;
-        publishOutputs();
-    }
+    void setResources(PRenderGraphResources _resources);
+    void setViewport(Gfx::PViewport _viewport);
 protected:
     struct ViewParameter
     {
@@ -42,7 +36,11 @@ protected:
         Vector2 pad0;
     } viewParams;
     PRenderGraphResources resources;
-    Gfx::PRenderPass renderPass;
+    static constexpr uint32 INDEX_VIEW_PARAMS = 0;
+    Gfx::ODescriptorLayout viewParamsLayout;
+    Gfx::OShaderBuffer viewParamsBuffer;
+    Gfx::PDescriptorSet viewParamsSet;
+    Gfx::ORenderPass renderPass;
     Gfx::PGraphics graphics;
     Gfx::PViewport viewport;
     PScene scene;

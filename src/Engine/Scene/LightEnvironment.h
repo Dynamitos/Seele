@@ -15,6 +15,8 @@ public:
     void addDirectionalLight(Component::DirectionalLight dirLight);
     void addPointLight(Component::PointLight pointLight);
     void commit();
+    const Gfx::PDescriptorLayout getDescriptorLayout() const;
+    Gfx::PDescriptorSet getDescriptorSet();
 private:
     #define MAX_DIRECTIONAL_LIGHTS 4
     #define MAX_POINT_LIGHTS 256
@@ -29,7 +31,7 @@ private:
     Array<Component::DirectionalLight> dirs;
     Array<Component::PointLight> points;
     Gfx::ODescriptorLayout layout;
-    Gfx::ODescriptorSet set;
+    Gfx::PDescriptorSet set;
     Gfx::PGraphics graphics;
 };
 DEFINE_REF(LightEnvironment)

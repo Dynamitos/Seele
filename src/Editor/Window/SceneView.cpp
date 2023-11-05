@@ -7,7 +7,7 @@
 #include "Asset/AssetRegistry.h"
 #include "Actor/CameraActor.h"
 #include "Component/Camera.h"
-#include "Component/StaticMesh.h"
+#include "Component/Mesh.h"
 
 using namespace Seele;
 using namespace Seele::Editor;
@@ -16,9 +16,9 @@ SceneView::SceneView(Gfx::PGraphics graphics, PWindow owner, const ViewportCreat
     : View(graphics, owner, createInfo, "SceneView")
     , scene(new Scene(graphics))
     , renderGraph(RenderGraphBuilder::build(
-        DepthPrepass(graphics),
-        LightCullingPass(graphics),
-        BasePass(graphics)
+        DepthPrepass(graphics, scene),
+        LightCullingPass(graphics, scene),
+        BasePass(graphics, scene)
     ))
     , cameraSystem(createInfo.dimensions, Vector(0, 0, 10))
 {
@@ -49,14 +49,10 @@ void SceneView::update()
 
 void SceneView::commitUpdate() 
 {
-    depthPrepassData.staticDrawList = scene->getStaticMeshes();
-    lightCullingPassData.lightEnv = scene->getLightBuffer();
-    basePassData.staticDrawList = scene->getStaticMeshes();
 }
 
 void SceneView::prepareRender() 
 {
-    renderGraph.updatePassData(depthPrepassData, lightCullingPassData, basePassData);
 }
 
 void SceneView::render() 

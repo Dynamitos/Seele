@@ -70,7 +70,7 @@ void VertexData::loadMesh(MeshId id, Array<Meshlet> loadedMeshlets)
             .data = (uint8*)meshlets.data()
         },
         .stride = sizeof(MeshletDescription),
-        .bDynamic = true,
+        .dynamic = true,
     });
     vertexIndicesBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo {
         .sourceData = {
@@ -78,7 +78,7 @@ void VertexData::loadMesh(MeshId id, Array<Meshlet> loadedMeshlets)
             .data = (uint8*)vertexIndices.data(),
         },
         .stride = sizeof(uint32),
-        .bDynamic = true,
+        .dynamic = true,
     });
     primitiveIndicesBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo {
         .sourceData = {
@@ -86,7 +86,7 @@ void VertexData::loadMesh(MeshId id, Array<Meshlet> loadedMeshlets)
             .data = (uint8*)primitiveIndices.data(),
         },
         .stride = sizeof(uint8),
-        .bDynamic = true,
+        .dynamic = true,
     });
 
 }
@@ -114,6 +114,7 @@ void VertexData::createDescriptors()
                 },
                 .stride = sizeof(InstanceData)
             });
+            instanceDataLayout->reset();
             matInst.descriptorSet = instanceDataLayout->allocateDescriptorSet();
             matInst.descriptorSet->updateBuffer(0, instanceBuffer);
             if (Gfx::useMeshShading)
@@ -187,15 +188,18 @@ void Seele::VertexData::init(Gfx::PGraphics graphics)
     }
     instanceDataLayout->create();
     resizeBuffers();
+    graphics->getShaderCompiler()->registerVertexData(this);
 }
 
 VertexData::VertexData()
     : idCounter(0)
     , dirty(false)
+    , head(0)
+    , verticesAllocated(0)
 {
 }
 
-void Meshlet::save(ArchiveBuffer& buffer)
+void Meshlet::save(ArchiveBuffer& buffer) const
 {
     Serialization::save(buffer, uniqueVertices);
     Serialization::save(buffer, primitiveLayout);

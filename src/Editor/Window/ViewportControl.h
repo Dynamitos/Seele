@@ -2,6 +2,9 @@
 #include "MinimalEngine.h"
 #include "Math/Vector.h"
 #include "Component/Camera.h"
+#include "Math/Math.h"
+#include "Graphics/Enums.h"
+#include "Containers/Array.h"
 
 namespace Seele
 {

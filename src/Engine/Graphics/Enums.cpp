@@ -1,4 +1,4 @@
-#include "GraphicsEnums.h"
+#include "Enums.h"
 
 using namespace Seele;
 using namespace Seele::Gfx;

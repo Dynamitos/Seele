@@ -15,8 +15,9 @@ UIPass::~UIPass()
     
 }
 
-void UIPass::beginFrame(const Component::Camera&) 
+void UIPass::beginFrame(const Component::Camera& cam) 
 {
+    RenderPass::beginFrame(cam);
     VertexBufferCreateInfo info = {
         .sourceData = {
             .size = (uint32)(sizeof(UI::RenderElementStyle) * renderElements.size()),
@@ -103,7 +104,7 @@ void UIPass::createRenderPass()
         .vertexFormat = Gfx::SE_FORMAT_R32G32B32_SFLOAT,
         .attributeIndex = 0,
         .stride = sizeof(UI::RenderElementStyle),
-        .bInstanced = 1
+        .instanced = 1
     });
     decl.add({
         .binding = 0,
@@ -111,7 +112,7 @@ void UIPass::createRenderPass()
         .vertexFormat = Gfx::SE_FORMAT_R32_UINT,
         .attributeIndex = 1,
         .stride = sizeof(UI::RenderElementStyle),
-        .bInstanced = 1
+        .instanced = 1
     });
     decl.add({
         .binding = 0,
@@ -119,7 +120,7 @@ void UIPass::createRenderPass()
         .vertexFormat = Gfx::SE_FORMAT_R32G32B32_SFLOAT,
         .attributeIndex = 2,
         .stride = sizeof(UI::RenderElementStyle),
-        .bInstanced = 1
+        .instanced = 1
     });
     decl.add({
         .binding = 0,
@@ -127,7 +128,7 @@ void UIPass::createRenderPass()
         .vertexFormat = Gfx::SE_FORMAT_R32_SFLOAT,
         .attributeIndex = 3,
         .stride = sizeof(UI::RenderElementStyle),
-        .bInstanced = 1
+        .instanced = 1
     });
     decl.add({
         .binding = 0,
@@ -135,7 +136,7 @@ void UIPass::createRenderPass()
         .vertexFormat = Gfx::SE_FORMAT_R32G32_SFLOAT,
         .attributeIndex = 4,
         .stride = sizeof(UI::RenderElementStyle),
-        .bInstanced = 1
+        .instanced = 1
     });
     declaration = graphics->createVertexDeclaration(decl);
 
@@ -152,7 +153,7 @@ void UIPass::createRenderPass()
             .size = sizeof(Matrix4),
             .data = (uint8*)&projectionMatrix,
         },
-        .bDynamic = false,
+        .dynamic = false,
     };
     Gfx::PUniformBuffer uniformBuffer = graphics->createUniformBuffer(info);
     Gfx::PSamplerState backgroundSampler = graphics->createSamplerState({});
@@ -162,7 +163,7 @@ void UIPass::createRenderPass()
             .size = sizeof(uint32),
             .data = nullptr
         },
-        .bDynamic = true,
+        .dynamic = true,
     };
 
     numTexturesBuffer = graphics->createUniformBuffer(info);
@@ -176,8 +177,8 @@ void UIPass::createRenderPass()
     pipelineLayout->addDescriptorLayout(0, descriptorLayout);
     pipelineLayout->create();
 
-    Gfx::PRenderTargetLayout layout = new Gfx::RenderTargetLayout(renderTarget, depthAttachment);
-    renderPass = graphics->createRenderPass(layout, viewport);
+    Gfx::ORenderTargetLayout layout = new Gfx::RenderTargetLayout(std::move(renderTarget), std::move(depthAttachment));
+    renderPass = graphics->createRenderPass(std::move(layout), viewport);
     
     Gfx::LegacyPipelineCreateInfo pipelineInfo;
     pipelineInfo.vertexDeclaration = declaration;

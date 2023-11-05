@@ -8,16 +8,15 @@ struct ComputeShaderInput
 	uint groupIndex : SV_GroupIndex;
 };
 
-layout(set = 0, binding = 1, std430)
-cbuffer DispatchParams
+struct DispatchParams
 {
 	uint3 numThreadGroups;
 	uint pad0;
 	uint3 numThreads;
 	uint pad1;
+	RWShaderBuffer<Frustum> frustums;
 }
-layout(set = 0, binding = 2, std430)
-RWShaderBuffer<Frustum> out_Frustums;
+ParameterBuffer<DispatchParams> dispatchParams;
 
 
 [numthreads(BLOCK_SIZE, BLOCK_SIZE, 1)]
@@ -49,9 +48,9 @@ void computeFrustums(ComputeShaderInput in)
 	frustum.planes[2] = computePlane(eyePos, viewSpace[0], viewSpace[1]);
 	frustum.planes[3] = computePlane(eyePos, viewSpace[3], viewSpace[2]);
 
-	if(in.dispatchThreadID.x < numThreads.x && in.dispatchThreadID.y < numThreads.y)
+	if(in.dispatchThreadID.x < dispatchParams.numThreads.x && in.dispatchThreadID.y < dispatchParams.numThreads.y)
 	{
 		uint index = in.dispatchThreadID.x + (in.dispatchThreadID.y * numThreads.x);
-		out_Frustums[index] = frustum;
+		dispatchParams.frustums[index] = frustum;
 	}
 }

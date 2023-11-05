@@ -11,7 +11,9 @@ DECLARE_REF(Viewport)
 class DebugPass : public RenderPass
 {
 public:
-    DebugPass(Gfx::PGraphics graphics);
+    DebugPass(Gfx::PGraphics graphics, PScene scene);
+    DebugPass(DebugPass&&) = default;
+    DebugPass& operator=(DebugPass&&) = default;
     virtual ~DebugPass();
     virtual void beginFrame(const Component::Camera& cam) override;
     virtual void render() override;
@@ -19,12 +21,12 @@ public:
     virtual void publishOutputs() override;
     virtual void createRenderPass() override;
 private:
-    Gfx::PVertexBuffer debugVertices;
-    Gfx::PUniformBuffer viewParamsBuffer;
-    Gfx::PDescriptorLayout descriptorLayout;
+    Gfx::OVertexBuffer debugVertices;
+    Gfx::OUniformBuffer viewParamsBuffer;
+    Gfx::ODescriptorLayout descriptorLayout;
     Gfx::PDescriptorSet descriptorSet;
-    Gfx::PPipelineLayout pipelineLayout;
-    Gfx::PGraphicsPipeline pipeline;
+    Gfx::OPipelineLayout pipelineLayout;
+    Gfx::OGraphicsPipeline pipeline;
 };
 DEFINE_REF(DebugPass)
 } // namespace Seele

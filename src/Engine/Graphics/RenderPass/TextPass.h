@@ -21,6 +21,8 @@ class TextPass : public RenderPass
 {
 public:
     TextPass(Gfx::PGraphics graphics, PScene scene);
+    TextPass(TextPass&&) = default;
+    TextPass& operator=(TextPass&&) = default;
     virtual ~TextPass();
     virtual void beginFrame(const Component::Camera& cam) override;
     virtual void render() override;
@@ -65,19 +67,19 @@ private:
     Gfx::PRenderTargetAttachment renderTarget;
     Gfx::PRenderTargetAttachment depthAttachment;
 
-    Gfx::PDescriptorLayout generalLayout;
-    Gfx::PDescriptorLayout textureArrayLayout;
+    Gfx::ODescriptorLayout generalLayout;
+    Gfx::ODescriptorLayout textureArrayLayout;
 
     Gfx::PDescriptorSet generalSet;
 
-    Gfx::PUniformBuffer projectionBuffer;
-    Gfx::PSamplerState glyphSampler;
+    Gfx::OUniformBuffer projectionBuffer;
+    Gfx::OSamplerState glyphSampler;
 
-    Gfx::PVertexDeclaration declaration;
-    Gfx::PVertexShader vertexShader;
-    Gfx::PFragmentShader fragmentShader;
-    Gfx::PPipelineLayout pipelineLayout;
-    Gfx::PGraphicsPipeline pipeline;
+    Gfx::OVertexDeclaration declaration;
+    Gfx::OVertexShader vertexShader;
+    Gfx::OFragmentShader fragmentShader;
+    Gfx::OPipelineLayout pipelineLayout;
+    Gfx::OGraphicsPipeline pipeline;
     Array<TextRender> texts;
 };
 DEFINE_REF(TextPass);

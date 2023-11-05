@@ -25,6 +25,7 @@ Scene::~Scene()
 
 void Scene::update(float deltaTime)
 {
+    lightEnv->reset();
     physics.update(deltaTime);
 }
 

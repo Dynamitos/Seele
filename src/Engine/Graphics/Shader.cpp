@@ -5,89 +5,125 @@
 using namespace Seele;
 using namespace Seele::Gfx;
 
-std::string getShaderNameFromRenderPassType(Gfx::RenderPassType type)
-{
-	switch (type)
-	{
-	case Gfx::RenderPassType::DepthPrepass:
-		return "DepthPrepass";
-	case Gfx::RenderPassType::BasePass:
-		return "ForwardPlus";
-	default:
-		return "";
-	}
-}
-void modifyRenderPassMacros(Gfx::RenderPassType type, Map<const char*, const char*>& defines)
-{
-	switch (type)
-	{
-	case Gfx::RenderPassType::DepthPrepass:
-		DepthPrepass::modifyRenderPassMacros(defines);
-		break;
-	case Gfx::RenderPassType::BasePass:
-		BasePass::modifyRenderPassMacros(defines);
-		break;
-	}
-}
-
-ShaderMap::ShaderMap()
+ShaderCompiler::ShaderCompiler(Gfx::PGraphics graphics)
+	: graphics(graphics)
 {
 }
 
-ShaderMap::~ShaderMap()
+ShaderCompiler::~ShaderCompiler()
 {
 }
 
-const ShaderCollection* ShaderMap::findShaders(PermutationId&& id) const
+const ShaderCollection* ShaderCompiler::findShaders(PermutationId id) const
 {
-	for (uint32 i = 0; i < shaders.size(); ++i)
+	return &shaders[id];
+}
+
+void ShaderCompiler::registerMaterial(PMaterial material)
+{
+	materials[material->getName()] = material;
+	compile();
+}
+
+void ShaderCompiler::registerVertexData(VertexData* vd)
+{
+	vertexData[vd->getTypeName()] = vd;
+	compile();
+}
+
+void ShaderCompiler::registerRenderPass(std::string name, std::string mainFile, bool useMaterials, bool hasFragmentShader, std::string fragmentFile, bool useMeshShading, bool hasTaskShader, std::string taskFile)
+{
+	passes[name] = PassConfig{
+		.taskFile = taskFile,
+		.mainFile = mainFile,
+		.fragmentFile = fragmentFile,
+		.hasFragmentShader = hasFragmentShader,
+		.useMeshShading = useMeshShading,
+		.hasTaskShader = hasTaskShader,
+		.useMaterial = useMaterials,
+	};
+	compile();
+}
+
+
+void ShaderCompiler::compile()
+{
+	ShaderPermutation permutation;
+	for (const auto& [name, pass] : passes)
 	{
-		if (shaders[i].id == id)
+		std::memset(&permutation, 0, sizeof(ShaderPermutation));
+		permutation = {
+			.hasFragment = pass.hasFragmentShader,
+			.useMeshShading = pass.useMeshShading,
+			.hasTaskShader = pass.hasTaskShader,
+		};
+		std::memcpy(permutation.vertexMeshFile, pass.mainFile.c_str(), sizeof(permutation.vertexMeshFile));
+		if (pass.hasFragmentShader)
 		{
-			return &(shaders[i]);
+			std::memcpy(permutation.fragmentFile, pass.fragmentFile.c_str(), sizeof(permutation.fragmentFile));
+		}
+		if (pass.hasTaskShader)
+		{
+			std::memcpy(permutation.taskFile, pass.taskFile.c_str(), sizeof(permutation.taskFile));
+		}
+		for (const auto& [vdName, vd] : vertexData)
+		{
+			std::memcpy(permutation.vertexDataName, vd->getTypeName().c_str(), sizeof(permutation.vertexDataName));
+			if (pass.useMaterial)
+			{
+				for (const auto& [matName, mat] : materials)
+				{
+					std::memcpy(permutation.materialName, matName.c_str(), sizeof(permutation.materialName));
+					createShaders(permutation);
+				}
+			}
+			else
+			{
+				std::memset(permutation.materialName, 0, sizeof(permutation.materialName));
+				createShaders(permutation);
+			}
 		}
 	}
-	return nullptr;
 }
-ShaderCollection& ShaderMap::createShaders(
-	PGraphics graphics,
-	RenderPassType renderPass,
-	PMaterial material,
-	bool /*bPositionOnly*/)
+
+ShaderCollection& ShaderCompiler::createShaders(ShaderPermutation permutation)
 {
 	std::scoped_lock lock(shadersLock);
-	ShaderCollection& collection = shaders.add();
-	//collection.vertexDeclaration = bPositionOnly ? vertexInput->getPositionDeclaration() : vertexInput->getDeclaration();
+	ShaderCollection collection;
 
 	ShaderCreateInfo createInfo;
-	createInfo.entryPoint = "vertexMain";
-	createInfo.typeParameter = { material->getName().c_str() };
-	createInfo.defines["NUM_MATERIAL_TEXCOORDS"] = "1";
-	createInfo.defines["USE_INSTANCING"] = "0";
-	modifyRenderPassMacros(renderPass, createInfo.defines);
-	createInfo.name = getShaderNameFromRenderPassType(renderPass) + " Material " + material->getName();
+	createInfo.typeParameter = { permutation.materialName, permutation.vertexDataName };
+	createInfo.name = std::format("Material {0}", permutation.materialName);
+	createInfo.additionalModules.add(permutation.materialName);
+	createInfo.additionalModules.add(permutation.vertexDataName);
 
-	std::ifstream codeStream("./shaders/" + getShaderNameFromRenderPassType(renderPass));
-
-	createInfo.mainModule = getShaderNameFromRenderPassType(renderPass);
-	createInfo.additionalModules.add(vertexInput->getShaderFilename());
-	createInfo.additionalModules.add(material->getName());
-
-	collection.vertexShader = graphics->createVertexShader(createInfo);
-
-	if (renderPass != RenderPassType::DepthPrepass)
+	if (permutation.useMeshShading)
 	{
-		createInfo.entryPoint = "fragmentMain";
+		if (permutation.hasTaskShader)
+		{
+			createInfo.mainModule = permutation.taskFile;
+			createInfo.entryPoint = "taskMain";
+			collection.taskShader = graphics->createTaskShader(createInfo);
+		}
+		createInfo.mainModule = permutation.vertexMeshFile;
+		createInfo.entryPoint = "meshMain";
+		collection.meshShader = graphics->createMeshShader(createInfo);
+	}
+	else
+	{
+		createInfo.mainModule = permutation.vertexMeshFile;
+		createInfo.entryPoint = "vertexMain";
+		collection.vertexShader = graphics->createVertexShader(createInfo);
+	}
 
+	if (permutation.hasFragment)
+	{
+		createInfo.mainModule = permutation.fragmentFile;
+		createInfo.entryPoint = "fragmentMain";
 		collection.fragmentShader = graphics->createFragmentShader(createInfo);
 	}
-	ShaderPermutation permutation;
-	std::string materialName = material->getName();
-	std::string vertexInputName = vertexInput->getName();
-	permutation.passType = renderPass;
-	std::memcpy(permutation.materialName, materialName.c_str(), sizeof(permutation.materialName));
-	std::memcpy(permutation.vertexInputName, vertexInputName.c_str(), sizeof(permutation.vertexInputName));
-	collection.id = PermutationId(permutation);
+	PermutationId perm = PermutationId(permutation);
+	shaders[perm] = std::move(collection);
 
-	return collection;
+	return shaders[perm];
 }

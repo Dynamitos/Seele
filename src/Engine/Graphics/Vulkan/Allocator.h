@@ -10,29 +10,23 @@ namespace Seele
 namespace Vulkan
 {
 DECLARE_REF(Graphics)
-class Allocation;
-class Allocator;
+DECLARE_REF(Allocator)
+DECLARE_REF(Allocation)
 class SubAllocation
 {
 public:
-	SubAllocation(Allocation *owner, VkDeviceSize allocatedOffset, VkDeviceSize size, VkDeviceSize alignedOffset, VkDeviceSize allocatedSize);
+	SubAllocation(PAllocation owner, VkDeviceSize allocatedOffset, VkDeviceSize size, VkDeviceSize alignedOffset, VkDeviceSize allocatedSize);
 	~SubAllocation();
-	VkDeviceMemory getHandle() const;
-	inline VkDeviceSize getSize() const
-	{
-		return size;
-	}
-	inline VkDeviceSize getOffset() const
-	{
-		return alignedOffset;
-	}
-	inline bool isReadable() const;
+	constexpr VkDeviceMemory getHandle() const;
+	constexpr VkDeviceSize getSize() const;
+	constexpr VkDeviceSize getOffset() const;
+	constexpr bool isReadable() const;
 	void *getMappedPointer();
 	void flushMemory();
 	void invalidateMemory();
 
 private:
-	Allocation *owner;
+	PAllocation owner;
 	VkDeviceSize size;
 	VkDeviceSize allocatedOffset;
 	VkDeviceSize alignedOffset;
@@ -44,54 +38,16 @@ DEFINE_REF(SubAllocation)
 class Allocation
 {
 public:
-	Allocation(PGraphics graphics, Allocator *allocator, VkDeviceSize size, uint8 memoryTypeIndex,
+	Allocation(PGraphics graphics, PAllocator allocator, VkDeviceSize size, uint8 memoryTypeIndex,
 			   VkMemoryPropertyFlags properties, VkMemoryDedicatedAllocateInfo *dedicatedInfo = nullptr);
 	~Allocation();
-	PSubAllocation getSuballocation(VkDeviceSize size, VkDeviceSize alignment);
-	void markFree(SubAllocation *alloc);
-	inline VkDeviceMemory getHandle() const
-	{
-		return allocatedMemory;
-	}
-	inline void *getMappedPointer()
-	{
-		if (!canMap)
-		{
-			return nullptr;
-		}
-		if (!isMapped)
-		{
-			vkMapMemory(device, allocatedMemory, 0, bytesAllocated, 0, &mappedPointer);
-			isMapped = true;
-		}
-		return mappedPointer;
-	}
-
-	inline bool isReadable() const
-	{
-		return readable;
-	}
-
-	void flushMemory()
-	{
-		VkMappedMemoryRange range;
-		range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-		range.pNext = 0;
-		range.memory = allocatedMemory;
-		range.size = bytesAllocated;
-		range.offset = 0;
-		vkFlushMappedMemoryRanges(device, 1, &range);
-	}
-
-	void invalidateMemory()
-	{
-		VkMappedMemoryRange range;
-		range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-		range.pNext = 0;
-		range.memory = allocatedMemory;
-		range.size = bytesAllocated;
-		vkInvalidateMappedMemoryRanges(device, 1, &range);
-	}
+	OSubAllocation getSuballocation(VkDeviceSize size, VkDeviceSize alignment);
+	void markFree(PSubAllocation alloc);
+	constexpr VkDeviceMemory getHandle() const;
+	constexpr void* getMappedPointer();
+	constexpr bool isReadable() const;
+	void flushMemory();
+	void invalidateMemory();
 
 private:
 	VkDevice device;
@@ -99,8 +55,8 @@ private:
 	VkDeviceSize bytesAllocated;
 	VkDeviceSize bytesUsed;
 	VkDeviceMemory allocatedMemory;
-	std::map<VkDeviceSize, PSubAllocation> activeAllocations;
-	std::map<VkDeviceSize, PSubAllocation> freeRanges;
+	Array<PSubAllocation> activeAllocations;
+	Map<VkDeviceSize, OSubAllocation> freeRanges;
 	std::mutex lock;
 	void *mappedPointer;
 	uint8 isDedicated : 1;
@@ -142,7 +98,6 @@ public:
 	}
 
 	void free(Allocation *allocation);
-	void notifyUsageChanged(int64 usageChange);
 private:
 	enum
 	{
@@ -152,7 +107,12 @@ private:
 	{
 		VkDeviceSize maxSize = 0;
 		VkDeviceSize inUse = 0;
-		Array<PAllocation> allocations;
+		Array<OAllocation> allocations;
+		HeapInfo() {}
+		HeapInfo(const HeapInfo& other) = delete;
+		HeapInfo(HeapInfo&& other) = default;
+		HeapInfo& operator=(const HeapInfo& other) = delete;
+		HeapInfo& operator=(HeapInfo&& other) = default;
 	};
 	Array<HeapInfo> heaps;
 	uint32 findMemoryType(uint32 typeBits, VkMemoryPropertyFlags properties);
@@ -161,52 +121,29 @@ private:
 	VkPhysicalDeviceMemoryProperties memProperties;
 };
 DEFINE_REF(Allocator)
-
+DECLARE_REF(StagingManager)
 class StagingBuffer
 {
 public:
-	StagingBuffer();
+	StagingBuffer(OSubAllocation allocation, VkBuffer buffer, VkBufferUsageFlags usage, uint8 readable);
 	~StagingBuffer();
-	void *getMappedPointer()
-	{
-		return allocation->getMappedPointer();
-	}
-	void flushMappedMemory()
-	{
-		allocation->flushMemory();
-	}
-	void invalidateMemory()
-	{
-		allocation->invalidateMemory();
-	}
-	VkBuffer getHandle() const
+	void* getMappedPointer();
+	void flushMappedMemory();
+	void invalidateMemory();
+	constexpr VkBuffer getHandle() const
 	{
 		return buffer;
 	}
-	VkDeviceMemory getMemoryHandle() const
-	{
-		return allocation->getHandle();
-	}
-	VkDeviceSize getOffset() const
-	{
-		return allocation->getOffset();
-	}
-	uint64 getSize() const
-	{
-		return size;
-	}
-	bool isReadable() const
-	{
-		return bReadable;
-	}
-
+	constexpr VkDeviceMemory getMemoryHandle() const;
+	constexpr VkDeviceSize getOffset() const;
+	constexpr uint64 getSize() const;
+	constexpr bool isReadable() const;
+	constexpr VkBufferUsageFlags getUsage() const;
 private:
-	PSubAllocation allocation;
+	OSubAllocation allocation;
 	VkBuffer buffer;
-	uint64 size;
 	VkBufferUsageFlags usage;
-	uint8 bReadable;
-	friend class StagingManager;
+	uint8 readable;
 };
 DEFINE_REF(StagingBuffer)
 
@@ -215,15 +152,15 @@ class StagingManager
 public:
 	StagingManager(PGraphics graphics, PAllocator allocator);
 	~StagingManager();
-	PStagingBuffer allocateStagingBuffer(uint64 size, VkBufferUsageFlags usageFlags = VK_BUFFER_USAGE_TRANSFER_SRC_BIT, bool bCPURead = false);
-	void releaseStagingBuffer(PStagingBuffer buffer);
+	OStagingBuffer allocateStagingBuffer(uint64 size, VkBufferUsageFlags usageFlags = VK_BUFFER_USAGE_TRANSFER_SRC_BIT, bool bCPURead = false);
+	void releaseStagingBuffer(OStagingBuffer buffer);
 	void clearPending();
 
 private:
 	PGraphics graphics;
 	PAllocator allocator;
-	Array<PStagingBuffer> freeBuffers;
-	Array<StagingBuffer *> activeBuffers;
+	Array<OStagingBuffer> freeBuffers;
+	Array<PStagingBuffer> activeBuffers;
 	std::mutex lock;
 };
 DEFINE_REF(StagingManager)

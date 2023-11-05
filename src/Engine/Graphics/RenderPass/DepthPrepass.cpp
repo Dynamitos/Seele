@@ -1,5 +1,6 @@
 #include "DepthPrepass.h"
 #include "Graphics/Graphics.h"
+#include "Graphics/Shader.h"
 #include "Window/Window.h"
 #include "Component/Camera.h"
 #include "Component/Mesh.h"
@@ -16,15 +17,7 @@ DepthPrepass::DepthPrepass(Gfx::PGraphics graphics, PScene scene)
     UniformBufferCreateInfo uniformInitializer;
 
     depthPrepassLayout = graphics->createPipelineLayout();
-
-    viewLayout = graphics->createDescriptorLayout("ViewLayout");
-    viewLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-    uniformInitializer.sourceData.size = sizeof(ViewParameter);
-    uniformInitializer.sourceData.data = (uint8*)&viewParams;
-    uniformInitializer.bDynamic = true;
-    viewParamBuffer = graphics->createUniformBuffer(uniformInitializer);
-    viewLayout->create();
-    depthPrepassLayout->addDescriptorLayout(INDEX_VIEW_PARAMS, viewLayout);
+    depthPrepassLayout->addDescriptorLayout(INDEX_VIEW_PARAMS, viewParamsLayout);
 }
 
 DepthPrepass::~DepthPrepass()
@@ -33,22 +26,8 @@ DepthPrepass::~DepthPrepass()
 
 void DepthPrepass::beginFrame(const Component::Camera& cam) 
 {
-    DataSource uniformUpdate;
-
-    viewParams.viewMatrix = cam.getViewMatrix();
-    viewParams.projectionMatrix = viewport->getProjectionMatrix();
-    viewParams.cameraPosition = Vector4(cam.getCameraPosition(), 1);
-    viewParams.screenDimensions = Vector2(static_cast<float>(viewport->getSizeX()), static_cast<float>(viewport->getSizeY()));
-    uniformUpdate.size = sizeof(ViewParameter);
-    uniformUpdate.data = (uint8*)&viewParams;
-    viewParamBuffer->updateContents(uniformUpdate);
-    viewLayout->reset();
-    descriptorSets[INDEX_VIEW_PARAMS] = viewLayout->allocateDescriptorSet();
-    descriptorSets[INDEX_VIEW_PARAMS]->updateBuffer(0, viewParamBuffer);
-    descriptorSets[INDEX_VIEW_PARAMS]->writeChanges();
-
-    //std::cout << "DepthPrepass beginFrame()" << std::endl;
-    //co_return;
+    RenderPass::beginFrame(cam);
+    descriptorSets[INDEX_VIEW_PARAMS] = viewParamsSet;
 }
 
 void DepthPrepass::render() 
@@ -57,9 +36,16 @@ void DepthPrepass::render()
         Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
         Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT);
     depthAttachment->getTexture()->transferOwnership(Gfx::QueueType::GRAPHICS);
+    Gfx::ShaderPermutation permutation;
+    permutation.hasFragment = false;
+    permutation.useMeshShading = true;
+    permutation.hasTaskShader = true;
+    std::memcpy(permutation.taskFile, "MeshletBasePass", sizeof("MeshletBasePass"));
+    std::memcpy(permutation.vertexMeshFile, "MeshletBasePass", sizeof("MeshletBasePass"));
     graphics->beginRenderPass(renderPass);
     for (VertexData* vertexData : VertexData::getList())
     {
+        std::memcpy(permutation.vertexDataName, vertexData->getTypeName().c_str(), std::strlen(vertexData->getTypeName().c_str()));
         const auto& materials = vertexData->getMaterialData();
         for (const auto& [_, materialData] : materials) 
         {
@@ -69,6 +55,9 @@ void DepthPrepass::render()
             // Material => per material
             // VertexData => per meshtype
             // SceneData => per material instance
+            std::memcpy(permutation.materialName, materialData.material->getName().c_str(), std::strlen(materialData.material->getName().c_str()));
+            Gfx::PermutationId id(permutation);
+            
             Gfx::PRenderCommand command = graphics->createRenderCommand("DepthRender");
             Gfx::OPipelineLayout layout = graphics->createPipelineLayout(depthPrepassLayout);
             layout->addDescriptorLayout(INDEX_MATERIAL, materialData.material->getDescriptorLayout());
@@ -91,14 +80,10 @@ void DepthPrepass::render()
         }
     }
     graphics->endRenderPass();
-    //std::cout << "DepthPrepass render()" << std::endl;
-    //co_return;
 }
 
 void DepthPrepass::endFrame() 
 {
-    //std::cout << "DepthPrepass endFrame()" << std::endl;
-    //co_return;
 }
 
 void DepthPrepass::publishOutputs() 
@@ -119,8 +104,8 @@ void DepthPrepass::publishOutputs()
 
 void DepthPrepass::createRenderPass() 
 {
-    Gfx::PRenderTargetLayout layout = new Gfx::RenderTargetLayout(depthAttachment);
-    renderPass = graphics->createRenderPass(layout, viewport);
+    Gfx::ORenderTargetLayout layout = new Gfx::RenderTargetLayout(depthAttachment);
+    renderPass = graphics->createRenderPass(std::move(layout), viewport);
 }
 
 void DepthPrepass::modifyRenderPassMacros(Map<const char*, const char*>& defines) 

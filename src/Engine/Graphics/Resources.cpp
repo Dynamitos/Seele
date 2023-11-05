@@ -1,8 +1,11 @@
-#include "GraphicsResources.h"
+#include "Resources.h"
 #include "Graphics.h"
 #include "RenderPass/DepthPrepass.h"
 #include "RenderPass/BasePass.h"
 #include "Material/Material.h"
+
+using namespace Seele;
+using namespace Seele::Gfx;
 
 QueueOwnedResource::QueueOwnedResource(QueueFamilyMapping mapping, QueueType startQueueType)
 	: currentOwner(startQueueType)

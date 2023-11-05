@@ -11,6 +11,8 @@ class UIPass : public RenderPass
 {
 public:
     UIPass(Gfx::PGraphics graphics, PScene scene);
+    UIPass(UIPass&&) = default;
+    UIPass& operator=(UIPass&&) = default;
     virtual ~UIPass();
     virtual void beginFrame(const Component::Camera& cam) override;
     virtual void render() override;
@@ -24,7 +26,7 @@ private:
     Gfx::OTexture2D depthBuffer;
 
     Gfx::ODescriptorLayout descriptorLayout;
-    Gfx::ODescriptorSet descriptorSet;
+    Gfx::PDescriptorSet descriptorSet;
 
     Gfx::OUniformBuffer numTexturesBuffer;
     Gfx::OVertexBuffer elementBuffer;

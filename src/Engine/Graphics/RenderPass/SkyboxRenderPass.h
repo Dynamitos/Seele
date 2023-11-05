@@ -12,6 +12,8 @@ class SkyboxRenderPass : public RenderPass
 {
 public:
     SkyboxRenderPass(Gfx::PGraphics graphics, PScene scene);
+    SkyboxRenderPass(SkyboxRenderPass&&) = default;
+    SkyboxRenderPass& operator=(SkyboxRenderPass&&) = default;
     virtual ~SkyboxRenderPass();
     virtual void beginFrame(const Component::Camera& cam) override;
     virtual void render() override;
@@ -19,13 +21,13 @@ public:
     virtual void publishOutputs() override;
     virtual void createRenderPass() override;
 private:
-    Gfx::PVertexBuffer cubeBuffer;
-    Gfx::PUniformBuffer viewParamsBuffer;
-    Gfx::PDescriptorLayout descriptorLayout;
+    Gfx::OVertexBuffer cubeBuffer;
+    Gfx::OUniformBuffer viewParamsBuffer;
+    Gfx::ODescriptorLayout descriptorLayout;
     Gfx::PDescriptorSet descriptorSet;
-    Gfx::PPipelineLayout pipelineLayout;
-    Gfx::PGraphicsPipeline pipeline;
-    Gfx::PSamplerState skyboxSampler;
+    Gfx::OPipelineLayout pipelineLayout;
+    Gfx::OGraphicsPipeline pipeline;
+    Gfx::OSamplerState skyboxSampler;
     Component::Skybox skybox;
 };
 DEFINE_REF(SkyboxRenderPass)

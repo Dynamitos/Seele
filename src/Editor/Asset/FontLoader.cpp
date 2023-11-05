@@ -2,7 +2,7 @@
 #include "Graphics/Graphics.h"
 #include "Asset/FontAsset.h"
 #include "Asset/AssetRegistry.h"
-#include "Graphics/GraphicsResources.h"
+#include "Graphics/Resources.h"
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
@@ -22,10 +22,12 @@ void FontLoader::importAsset(FontImportArgs args)
 {
     std::filesystem::path assetPath = args.filePath.filename();
     assetPath.replace_extension("asset");
-    PFontAsset asset = new FontAsset(args.importPath, assetPath.stem().string());
+    OFontAsset asset = new FontAsset(args.importPath, assetPath.stem().string());
     asset->setStatus(Asset::Status::Loading);
-    AssetRegistry::get().registerFont(asset);
-    import(args, asset);
+    // the registry takes ownership, but we need to edit the reference
+    PFontAsset ref = asset;
+    AssetRegistry::get().registerFont(std::move(asset));
+    import(args, ref);
 }
 
 // in case of the space character there is no bitmap

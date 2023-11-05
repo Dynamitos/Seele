@@ -8,6 +8,7 @@
 #include "RenderTarget.h"
 #include "RenderPass.h"
 #include "Framebuffer.h"
+#include "Shader.h"
 #include <GLFW/glfw3.h>
 
 using namespace Seele;
@@ -134,8 +135,8 @@ Gfx::OUniformBuffer Graphics::createUniformBuffer(const UniformBufferCreateInfo 
 
 Gfx::OShaderBuffer Graphics::createShaderBuffer(const ShaderBufferCreateInfo &bulkData)
 {
-    OShaderBuffer ShaderBuffer = new ShaderBuffer(this, bulkData);
-    return ShaderBuffer;
+    OShaderBuffer shaderBuffer = new ShaderBuffer(this, bulkData);
+    return shaderBuffer;
 }
 Gfx::OVertexBuffer Graphics::createVertexBuffer(const VertexBufferCreateInfo &bulkData)
 {
@@ -150,13 +151,13 @@ Gfx::OIndexBuffer Graphics::createIndexBuffer(const IndexBufferCreateInfo &bulkD
 }
 Gfx::PRenderCommand Graphics::createRenderCommand(const std::string& name)
 {
-    ORenderCommand cmdBuffer = getGraphicsCommands()->createRenderCommand(activeRenderPass, activeFramebuffer, name);
+    PRenderCommand cmdBuffer = getGraphicsCommands()->createRenderCommand(activeRenderPass, activeFramebuffer, name);
     return cmdBuffer;
 }
 
 Gfx::PComputeCommand Graphics::createComputeCommand(const std::string& name) 
 {
-    OComputeCommand cmdBuffer = getComputeCommands()->createComputeCommand(name);
+    PComputeCommand cmdBuffer = getComputeCommands()->createComputeCommand(name);
     return cmdBuffer;
 }
 
@@ -172,52 +173,51 @@ Gfx::OVertexShader Graphics::createVertexShader(const ShaderCreateInfo& createIn
     shader->create(createInfo);
     return shader;
 }
-Gfx::PControlShader Graphics::createControlShader(const ShaderCreateInfo& createInfo)
+Gfx::OFragmentShader Graphics::createFragmentShader(const ShaderCreateInfo& createInfo)
 {
-    PControlShader shader = new ControlShader(this);
+    OFragmentShader shader = new FragmentShader(this);
     shader->create(createInfo);
     return shader;
 }
-Gfx::PEvaluationShader Graphics::createEvaluationShader(const ShaderCreateInfo& createInfo)
+Gfx::OComputeShader Graphics::createComputeShader(const ShaderCreateInfo& createInfo) 
 {
-    PEvaluationShader shader = new EvaluationShader(this);
+    OComputeShader shader = new ComputeShader(this);
     shader->create(createInfo);
     return shader;
 }
-Gfx::PGeometryShader Graphics::createGeometryShader(const ShaderCreateInfo& createInfo)
+Gfx::OTaskShader Graphics::createTaskShader(const ShaderCreateInfo& createInfo)
 {
-    PGeometryShader shader = new GeometryShader(this);
+    OTaskShader shader = new TaskShader(this);
     shader->create(createInfo);
     return shader;
 }
-Gfx::PFragmentShader Graphics::createFragmentShader(const ShaderCreateInfo& createInfo)
+Gfx::OMeshShader Graphics::createMeshShader(const ShaderCreateInfo& createInfo)
 {
-    PFragmentShader shader = new FragmentShader(this);
-    shader->create(createInfo);
-    return shader;
-}
-Gfx::PComputeShader Graphics::createComputeShader(const ShaderCreateInfo& createInfo) 
-{
-    PComputeShader shader = new ComputeShader(this);
+    OMeshShader shader = new MeshShader(this);
     shader->create(createInfo);
     return shader;
 }
 
-Gfx::PGraphicsPipeline Graphics::createGraphicsPipeline(const GraphicsPipelineCreateInfo& createInfo)
+Gfx::OGraphicsPipeline Graphics::createGraphicsPipeline(const Gfx::LegacyPipelineCreateInfo& createInfo)
 {
-    PGraphicsPipeline pipeline = pipelineCache->createPipeline(createInfo);
+    OGraphicsPipeline pipeline = pipelineCache->createPipeline(createInfo);
+    return pipeline;
+}
+Gfx::OGraphicsPipeline Graphics::createGraphicsPipeline(const Gfx::MeshPipelineCreateInfo& createInfo)
+{
+    OGraphicsPipeline pipeline = pipelineCache->createPipeline(createInfo);
     return pipeline;
 }
 
-Gfx::PComputePipeline Graphics::createComputePipeline(const ComputePipelineCreateInfo& createInfo) 
+Gfx::OComputePipeline Graphics::createComputePipeline(const Gfx::ComputePipelineCreateInfo& createInfo) 
 {
-    PComputePipeline pipeline = pipelineCache->createPipeline(createInfo);
+    OComputePipeline pipeline = pipelineCache->createPipeline(createInfo);
     return pipeline;
 }
 
-Gfx::PSamplerState Graphics::createSamplerState(const SamplerCreateInfo& createInfo) 
+Gfx::OSamplerState Graphics::createSamplerState(const SamplerCreateInfo& createInfo) 
 {
-    PSamplerState sampler = new SamplerState();
+    OSamplerState sampler = new SamplerState();
     VkSamplerCreateInfo vkInfo = 
         init::SamplerCreateInfo();
     vkInfo.addressModeU = cast(createInfo.addressModeU);
@@ -239,14 +239,14 @@ Gfx::PSamplerState Graphics::createSamplerState(const SamplerCreateInfo& createI
     VK_CHECK(vkCreateSampler(handle, &vkInfo, nullptr, &sampler->sampler));
     return sampler;
 }
-Gfx::PDescriptorLayout Graphics::createDescriptorLayout(const std::string& name)
+Gfx::ODescriptorLayout Graphics::createDescriptorLayout(const std::string& name)
 {
-    PDescriptorLayout layout = new DescriptorLayout(this, name);
+    ODescriptorLayout layout = new DescriptorLayout(this, name);
     return layout;
 }
-Gfx::PPipelineLayout Graphics::createPipelineLayout(Gfx::PPipelineLayout baseLayout)
+Gfx::OPipelineLayout Graphics::createPipelineLayout(Gfx::PPipelineLayout baseLayout)
 {
-    PPipelineLayout layout = new PipelineLayout(this, baseLayout);
+    OPipelineLayout layout = new PipelineLayout(this, baseLayout);
     return layout;
 }
 
@@ -317,6 +317,10 @@ void Graphics::copyTexture(Gfx::PTexture srcTexture, Gfx::PTexture dstTexture)
     }
 }
 
+void Graphics::vkCmdDrawMeshTasksEXT(VkCommandBuffer handle, uint32 groupX, uint32 groupY, uint32 groupZ)
+{
+    cmdDrawMeshTasks(handle, groupX, groupY, groupZ);
+}
 PCommandBufferManager Graphics::getQueueCommands(Gfx::QueueType queueType)
 {
     switch (queueType)
@@ -361,7 +365,7 @@ PCommandBufferManager Graphics::getDedicatedTransferCommands()
 {
     if(dedicatedTransferCommands == nullptr)
     {
-        dedicatedTransferCommands = new CommandBufferManager(this, dedicatedTransferQueue);
+        dedicatedTransferCommands = new CommandBufferManager(this, dedicatedTransferQueue != nullptr ? dedicatedTransferQueue : transferQueue);
     }
     return dedicatedTransferCommands;
 }
@@ -441,7 +445,7 @@ void Graphics::pickPhysicalDevice()
     {
         uint32 currentRating = 0;
         vkGetPhysicalDeviceProperties(dev, &props);
-        vkGetPhysicalDeviceFeatures(dev, &features);
+        vkGetPhysicalDeviceFeatures2(dev, &features);
         if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
         {
             std::cout << "found dedicated gpu " << props.deviceName << std::endl;
@@ -461,7 +465,7 @@ void Graphics::pickPhysicalDevice()
     }
     physicalDevice = bestDevice;
     vkGetPhysicalDeviceProperties(physicalDevice, &props);
-    vkGetPhysicalDeviceFeatures(physicalDevice, &features);
+    vkGetPhysicalDeviceFeatures2(physicalDevice, &features);
 }
 
 void Graphics::createDevice(GraphicsInitializer initializer)
@@ -563,13 +567,13 @@ void Graphics::createDevice(GraphicsInitializer initializer)
         (uint32)queueInfos.size(),
         &features);
 
-    VkPhysicalDeviceDescriptorIndexingFeatures descriptorIndexing = {};
-    std::memset(&descriptorIndexing, 0, sizeof(descriptorIndexing));
-    descriptorIndexing.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
-    descriptorIndexing.shaderSampledImageArrayNonUniformIndexing = VK_TRUE;
-    descriptorIndexing.runtimeDescriptorArray = VK_TRUE;
-    descriptorIndexing.descriptorBindingVariableDescriptorCount = VK_TRUE;
-    descriptorIndexing.descriptorBindingPartiallyBound = VK_TRUE;
+    VkPhysicalDeviceDescriptorIndexingFeatures descriptorIndexing = {
+        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES,
+        .shaderSampledImageArrayNonUniformIndexing = VK_TRUE,
+        .descriptorBindingPartiallyBound = VK_TRUE,
+        .descriptorBindingVariableDescriptorCount = VK_TRUE,
+        .runtimeDescriptorArray = VK_TRUE,
+    };
     deviceInfo.pNext = &descriptorIndexing;
 #if ENABLE_VALIDATION
     VkDeviceDiagnosticsConfigCreateInfoNV crashDiagInfo;
@@ -581,6 +585,18 @@ void Graphics::createDevice(GraphicsInitializer initializer)
         VK_DEVICE_DIAGNOSTICS_CONFIG_ENABLE_SHADER_DEBUG_INFO_BIT_NV;
     descriptorIndexing.pNext = &crashDiagInfo;
 #endif
+    VkPhysicalDeviceMeshShaderFeaturesEXT enabledMeshShaderFeatures = {
+        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT,
+        .taskShader = VK_TRUE,
+        .meshShader = VK_TRUE,
+    };
+    if (Gfx::useMeshShading)
+    {
+        descriptorIndexing.pNext = &enabledMeshShaderFeatures;
+        initializer.deviceExtensions.add("VK_EXT_mesh_shader");
+        initializer.deviceExtensions.add("VK_KHR_SPIRV_1_4_EXTENSION_NAME");
+        initializer.deviceExtensions.add("VK_KHR_SHADER_FLOAT_CONTROLS_EXTENSION_NAME");
+    }
     deviceInfo.enabledExtensionCount = (uint32)initializer.deviceExtensions.size();
     deviceInfo.ppEnabledExtensionNames = initializer.deviceExtensions.data();
     deviceInfo.enabledLayerCount = (uint32_t)initializer.layers.size();
@@ -589,6 +605,8 @@ void Graphics::createDevice(GraphicsInitializer initializer)
 
     VK_CHECK(vkCreateDevice(physicalDevice, &deviceInfo, nullptr, &handle));
     std::cout << "Vulkan handle: " << handle << std::endl;
+
+    cmdDrawMeshTasks = (PFN_vkCmdDrawMeshTasksEXT)vkGetDeviceProcAddr(handle, "vkCmdDrawMeshTasksEXT");
 
     graphicsQueue = new Queue(this, Gfx::QueueType::GRAPHICS, graphicsQueueInfo.familyIndex, 0);
     if (Gfx::useAsyncCompute && asyncComputeInfo.familyIndex != -1)
@@ -613,12 +631,8 @@ void Graphics::createDevice(GraphicsInitializer initializer)
     {
         dedicatedTransferQueue = new Queue(this, Gfx::QueueType::DEDICATED_TRANSFER, dedicatedTransferQueueInfo.familyIndex, 0);
     }
-    else
-    {
-        dedicatedTransferQueue = transferQueue;
-    }
     queueMapping.graphicsFamily = graphicsQueue->getFamilyIndex();
     queueMapping.computeFamily = computeQueue->getFamilyIndex();
     queueMapping.transferFamily = transferQueue->getFamilyIndex();
-    queueMapping.dedicatedTransferFamily = dedicatedTransferQueue->getFamilyIndex();
+    queueMapping.dedicatedTransferFamily = dedicatedTransferQueue != nullptr ? dedicatedTransferQueue->getFamilyIndex() : transferQueue->getFamilyIndex();
 }

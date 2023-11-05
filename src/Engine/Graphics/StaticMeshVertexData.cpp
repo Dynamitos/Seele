@@ -135,7 +135,7 @@ void StaticMeshVertexData::resizeBuffers()
             .size = verticesAllocated * sizeof(Vector),
         },
         .stride = sizeof(Vector),
-        .bDynamic = true,
+        .dynamic = true,
     };
     positions = graphics->createShaderBuffer(createInfo);
     normals = graphics->createShaderBuffer(createInfo);
@@ -174,6 +174,7 @@ void StaticMeshVertexData::updateBuffers()
         .size = biTangentData.size() * sizeof(Vector),
         .data = (uint8*)biTangentData.data(),
         });
+    descriptorLayout->reset();
     descriptorSet = descriptorLayout->allocateDescriptorSet();
     descriptorSet->updateBuffer(0, positions);
     descriptorSet->updateBuffer(1, texCoords);

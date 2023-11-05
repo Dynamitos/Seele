@@ -193,28 +193,28 @@ void AssetRegistry::peekAsset(ArchiveBuffer& buffer)
 
     AssetFolder* folder = getOrCreateFolder(folderPath);
 
-    PAsset asset;
+    OAsset asset;
     switch (identifier)
     {
     case TextureAsset::IDENTIFIER:
         asset = new TextureAsset(folderPath, name);
-        folder->textures[asset->getName()] = asset;
+        folder->textures[name] = std::move(asset);
         break;
     case MeshAsset::IDENTIFIER:
         asset = new MeshAsset(folderPath, name);
-        folder->meshes[asset->getName()] = asset;
+        folder->meshes[name] = std::move(asset);
         break;
     case MaterialAsset::IDENTIFIER:
         asset = new MaterialAsset(folderPath, name);
-        folder->materials[asset->getName()] = asset;
+        folder->materials[name] = std::move(asset);
         break;
     case MaterialInstanceAsset::IDENTIFIER:
         asset = new MaterialInstanceAsset(folderPath, name);
-        // TODO
+        folder->instances[name] = std::move(asset);
         break;
     case FontAsset::IDENTIFIER:
         asset = new FontAsset(folderPath, name);
-        folder->fonts[asset->getName()] = asset;
+        folder->fonts[name] = std::move(asset);
         break;
     default:
         throw new std::logic_error("Unknown Identifier");
@@ -241,20 +241,19 @@ void AssetRegistry::loadAsset(ArchiveBuffer& buffer)
     switch (identifier)
     {
     case TextureAsset::IDENTIFIER:
-        asset = folder->textures.at(name);
+        asset = PTextureAsset(folder->textures.at(name));
         break;
     case MeshAsset::IDENTIFIER:
-        asset = folder->meshes.at(name);
+        asset = PMeshAsset(folder->meshes.at(name));
         break;
     case MaterialAsset::IDENTIFIER:
-        asset = folder->materials.at(name);
+        asset = PMaterialAsset(folder->materials.at(name));
         break;
     case MaterialInstanceAsset::IDENTIFIER:
-        //asset = new MaterialInstanceAsset(path);
-        // TODO
+        asset = PMaterialInstanceAsset(folder->instances.at(name));
         break;
     case FontAsset::IDENTIFIER:
-        asset = folder->fonts.at(name);
+        asset = PFontAsset(folder->fonts.at(name));
         break;
     default:
         throw new std::logic_error("Unknown Identifier");
@@ -272,19 +271,23 @@ void AssetRegistry::saveFolder(const std::filesystem::path& folderPath, AssetFol
     std::filesystem::create_directory(rootFolder / folderPath);
     for (const auto& [name, texture] : folder->textures)
     {
-        saveAsset(texture, TextureAsset::IDENTIFIER, folderPath, name);
+        saveAsset(PTextureAsset(texture), TextureAsset::IDENTIFIER, folderPath, name);
     }
     for (const auto& [name, mesh] : folder->meshes)
     {
-        saveAsset(mesh, MeshAsset::IDENTIFIER, folderPath, name);
+        saveAsset(PMeshAsset(mesh), MeshAsset::IDENTIFIER, folderPath, name);
     }
     for (const auto& [name, material] : folder->materials)
     {
-        saveAsset(material, MaterialAsset::IDENTIFIER, folderPath, name);
+        saveAsset(PMaterialAsset(material), MaterialAsset::IDENTIFIER, folderPath, name);
+    }
+    for (const auto& [name, material] : folder->instances)
+    {
+        saveAsset(PMaterialInstanceAsset(material), MaterialInstanceAsset::IDENTIFIER, folderPath, name);
     }
     for (const auto& [name, font] : folder->fonts)
     {
-        saveAsset(font, FontAsset::IDENTIFIER, folderPath, name);
+        saveAsset(PFontAsset(font), FontAsset::IDENTIFIER, folderPath, name);
     }
     for (auto& [name, child] : folder->children)
     {
@@ -316,28 +319,34 @@ std::filesystem::path AssetRegistry::getRootFolder()
     return get().rootFolder;
 }
 
-void AssetRegistry::registerMesh(PMeshAsset mesh) 
+void AssetRegistry::registerMesh(OMeshAsset mesh) 
 {
     AssetFolder* folder = getOrCreateFolder(mesh->getFolderPath());
-    folder->meshes[mesh->getName()] = mesh;
+    folder->meshes[mesh->getName()] = std::move(mesh);
 }
 
-void AssetRegistry::registerTexture(PTextureAsset texture) 
+void AssetRegistry::registerTexture(OTextureAsset texture) 
 {
     AssetFolder* folder = getOrCreateFolder(texture->getFolderPath());
-    folder->textures[texture->getName()] = texture;
+    folder->textures[texture->getName()] = std::move(texture);
 }
 
-void AssetRegistry::registerFont(PFontAsset font)
+void AssetRegistry::registerFont(OFontAsset font)
 {
     AssetFolder* folder = getOrCreateFolder(font->getFolderPath());
-    folder->fonts[font->getName()] = font;
+    folder->fonts[font->getName()] = std::move(font);
 }
 
-void AssetRegistry::registerMaterial(PMaterialAsset material)
+void AssetRegistry::registerMaterial(OMaterialAsset material)
 {
     AssetFolder* folder = getOrCreateFolder(material->getFolderPath());
-    folder->materials[material->getName()] = material;
+    folder->materials[material->getName()] = std::move(material);
+}
+
+void AssetRegistry::registerMaterialInstance(OMaterialInstanceAsset material)
+{
+    AssetFolder* folder = getOrCreateFolder(material->getFolderPath());
+    folder->instances[material->getName()] = std::move(material);
 }
 
 AssetRegistry::AssetFolder* AssetRegistry::getOrCreateFolder(std::string fullPath)

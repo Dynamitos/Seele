@@ -18,13 +18,14 @@ public:
 
     struct Glyph
     {
-        Gfx::OTexture2D texture;
+        Gfx::PTexture2D texture;
         IVector2 size;
         IVector2 bearing;
         uint32 advance;
     };
     const Map<uint32, Glyph> getGlyphData() const { return glyphs; }
 private:
+    Array<Gfx::OTexture2D> usedTextures;
     Map<uint32, Glyph> glyphs;
     friend class FontLoader;
 };

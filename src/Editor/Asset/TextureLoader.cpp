@@ -2,7 +2,7 @@
 #include "Asset/TextureAsset.h"
 #include "Graphics/Graphics.h"
 #include "Asset/AssetRegistry.h"
-#include "Graphics/Vulkan/VulkanGraphicsEnums.h"
+#include "Graphics/Vulkan/Enums.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -14,15 +14,13 @@ using namespace Seele;
 TextureLoader::TextureLoader(Gfx::PGraphics graphics)
     : graphics(graphics)
 {
-    //(std::filesystem::absolute("./textures/placeholder.ktx"));
-    //placeholderAsset->load(graphics);
-    //AssetRegistry::get().assetRoot.textures[""] = placeholderAsset;
-    placeholderAsset = new TextureAsset();
+    OTextureAsset placeholder = new TextureAsset();
+    placeholderAsset = placeholder;
     import(TextureImportArgs{
         .filePath = std::filesystem::absolute("./textures/placeholder.png"),
         .importPath = "",
         }, placeholderAsset);
-    AssetRegistry::get().assetRoot->textures[""] = placeholderAsset;
+    AssetRegistry::get().assetRoot->textures[""] = std::move(placeholder);
 }
 
 TextureLoader::~TextureLoader()
@@ -33,11 +31,12 @@ void TextureLoader::importAsset(TextureImportArgs args)
 {
     std::filesystem::path assetPath = args.filePath.filename();
     assetPath.replace_extension("asset");
-    PTextureAsset asset = new TextureAsset(args.importPath, assetPath.stem().string());
+    
+    OTextureAsset asset = new TextureAsset(args.importPath, assetPath.stem().string());
+    PTextureAsset ref = asset;
     asset->setStatus(Asset::Status::Loading);
-    asset->setTexture(placeholderAsset->getTexture());
-    AssetRegistry::get().registerTexture(asset);
-    import(args, asset);
+    AssetRegistry::get().registerTexture(std::move(asset));
+    import(args, ref);
 }
 
 PTextureAsset TextureLoader::getPlaceholderTexture() 

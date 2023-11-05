@@ -1,5 +1,6 @@
 #pragma once
 #include "ArchiveBuffer.h"
+#include "Math/Vector.h"
 
 namespace Seele
 {
@@ -24,6 +25,38 @@ namespace Serialization
     static void load(ArchiveBuffer& buffer, T& type)
     {
         buffer.readBytes(&type, sizeof(type));
+    }
+    static void save(ArchiveBuffer& buffer, const IVector2& vec)
+    {
+        save(buffer, vec.x);
+        save(buffer, vec.y);
+    }
+    static void load(ArchiveBuffer& buffer, IVector2& vec)
+    {
+        save(buffer, vec.x);
+        save(buffer, vec.y);
+    }
+    static void save(ArchiveBuffer& buffer, const Vector2& vec)
+    {
+        save(buffer, vec.x);
+        save(buffer, vec.y);
+    }
+    static void load(ArchiveBuffer& buffer, Vector2& vec)
+    {
+        save(buffer, vec.x);
+        save(buffer, vec.y);
+    }
+    static void save(ArchiveBuffer& buffer, const Vector& vec)
+    {
+        save(buffer, vec.x);
+        save(buffer, vec.y);
+        save(buffer, vec.z);
+    }
+    static void load(ArchiveBuffer& buffer, Vector& vec)
+    {
+        save(buffer, vec.x);
+        save(buffer, vec.y);
+        save(buffer, vec.z);
     }
     template<enumeration T>
     static void save(ArchiveBuffer& buffer, const T& type)
@@ -92,7 +125,7 @@ namespace Serialization
     {
         uint64 length = type.size();
         buffer.writeBytes(&length, sizeof(uint64));
-        for (const auto& x : type)
+        for (const T& x : type)
         {
             save(buffer, x);
         }
@@ -102,10 +135,12 @@ namespace Serialization
     {
         uint64 length = 0;
         buffer.readBytes(&length, sizeof(uint64));
-        type.resize(length);
-        for (auto& x : type)
+        type.reserve(length);
+        for (uint32 i = 0; i < length; ++i)
         {
-            load(buffer, x);
+            T t = T();
+            load(buffer, t);
+            type.add(std::move(t));
         }
     }
 } // namespace Serialization

@@ -11,13 +11,13 @@ using namespace Seele::Editor;
 
 InspectorView::InspectorView(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo &createInfo) 
     : View(graphics, std::move(window), std::move(createInfo), "InspectorView")
-    , renderGraph(RenderGraphBuilder::build(
-        UIPass(graphics),
-        TextPass(graphics)
-    ))
+    //, renderGraph(RenderGraphBuilder::build(
+    //    UIPass(graphics),
+    //    TextPass(graphics)
+    //))
     , uiSystem(new UI::System())
 {
-    renderGraph.updateViewport(viewport);
+    //renderGraph.updateViewport(viewport);
     uiSystem->updateViewport(viewport);
 }
 
@@ -41,15 +41,11 @@ void InspectorView::commitUpdate()
 
 void InspectorView::prepareRender() 
 {
-    renderGraph.updatePassData(
-        uiSystem->getUIPassData(),
-        uiSystem->getTextPassData()
-    );
+    
 }
 
 void InspectorView::render() 
 {
-    renderGraph.render(uiSystem->getVirtualCamera());
 }
 
 void InspectorView::keyCallback(KeyCode, InputAction, KeyModifier) 

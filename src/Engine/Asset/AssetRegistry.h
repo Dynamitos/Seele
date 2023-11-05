@@ -10,8 +10,8 @@ DECLARE_REF(TextureAsset)
 DECLARE_REF(FontAsset)
 DECLARE_REF(MeshAsset)
 DECLARE_REF(MaterialAsset)
+DECLARE_REF(MaterialInstanceAsset)
 DECLARE_NAME_REF(Gfx, Graphics)
-
 class AssetRegistry
 {
 public:
@@ -24,6 +24,7 @@ public:
     static PTextureAsset findTexture(const std::string& filePath);
     static PFontAsset findFont(const std::string& name);
     static PMaterialAsset findMaterial(const std::string& filePath);
+    static PMaterialInstanceAsset findMaterialInstance(const std::string& filePath);
 
     static std::ofstream createWriteStream(const std::filesystem::path& relativePath, std::ios_base::openmode openmode = std::ios::out);
     static std::ifstream createReadStream(const std::filesystem::path& relativePath, std::ios_base::openmode openmode = std::ios::in);
@@ -36,10 +37,11 @@ public:
     {
         std::string folderPath;
         Map<std::string, AssetFolder*> children;
-        Map<std::string, PTextureAsset> textures;
-        Map<std::string, PFontAsset> fonts;
-        Map<std::string, PMeshAsset> meshes;
-        Map<std::string, PMaterialAsset> materials;
+        Map<std::string, OTextureAsset> textures;
+        Map<std::string, OFontAsset> fonts;
+        Map<std::string, OMeshAsset> meshes;
+        Map<std::string, OMaterialAsset> materials;
+        Map<std::string, OMaterialInstanceAsset> instances;
         AssetFolder(std::string_view folderPath);
         ~AssetFolder();
     };
@@ -59,10 +61,11 @@ private:
     void saveFolder(const std::filesystem::path& folderPath, AssetFolder* folder);
     void saveAsset(PAsset asset, uint64 identifier, const std::filesystem::path& folderPath, std::string name);
 
-    void registerMesh(PMeshAsset mesh);
-    void registerTexture(PTextureAsset texture);
-    void registerFont(PFontAsset font);
-    void registerMaterial(PMaterialAsset material);
+    void registerMesh(OMeshAsset mesh);
+    void registerTexture(OTextureAsset texture);
+    void registerFont(OFontAsset font);
+    void registerMaterial(OMaterialAsset material);
+    void registerMaterialInstance(OMaterialInstanceAsset instance);
 
     std::ofstream internalCreateWriteStream(const std::filesystem::path& relativePath, std::ios_base::openmode openmode = std::ios::out);
     std::ifstream internalCreateReadStream(const std::filesystem::path& relaitvePath, std::ios_base::openmode openmode = std::ios::in);

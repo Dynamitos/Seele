@@ -1,26 +1,19 @@
+import Common;
 
 struct GlyphData
 {
     float4 bearingSize;
 };
-struct ViewData
-{
-    float4x4 projectionMatrix;
-}
 struct TextData
 {
     float4 textColor;
     float scale;
 }
-layout(set = 0, binding = 0)
-ConstantBuffer<ViewData> viewData;
-layout(set = 0, binding = 1)
-SamplerState glyphSampler;
+ParameterBuffer<SamplerState> glyphSampler;
 //layout(set = 1)
 //ShaderBuffer<GlyphData> glyphData;
-layout(set = 1)
-Texture2D<uint> glyphTextures[];
-layout(push_constant)
+ParameterBuffer<Texture2D<uint>[]> glyphTextures;
+[[vk::push_constant]]
 ConstantBuffer<TextData> textData;
 
 struct VertexStageInput

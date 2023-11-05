@@ -55,5 +55,3 @@ struct StaticMeshVertexData : VertexData
 	StructuredBuffer<float3> tangents;
 	StructuredBuffer<float3> biTangents;
 }
-layout(set = INDEX_VERTEX_DATA)
-ParameterBlock<StaticMeshVertexData> vertexData;
