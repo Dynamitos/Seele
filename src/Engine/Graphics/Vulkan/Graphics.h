@@ -99,7 +99,7 @@ protected:
     thread_local static OCommandBufferManager transferCommands;
     thread_local static OCommandBufferManager dedicatedTransferCommands;
     VkPhysicalDeviceProperties props;
-    VkPhysicalDeviceFeatures2 features;
+    VkPhysicalDeviceFeatures features;
     VkDebugReportCallbackEXT callback;
     std::mutex viewportLock;
     Array<PViewport> viewports;

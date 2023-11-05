@@ -1,0 +1,15 @@
+{
+	"name": "TerrainMaterial",
+    "params": {
+    },
+	"code": [
+		{
+			"exp": "BRDF",
+			"profile": "BlinnPhong",
+			"values": {
+				"baseColor": "float3(0, 1, 0)",
+				"normal": "float3(0, 0, 1)"
+			}
+		}
+	]
+}

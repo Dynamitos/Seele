@@ -30,7 +30,7 @@ MaterialInstance::MaterialInstance(uint64 id,
     parameters.reserve(params.size());
     for (int i = 0; i < params.size(); ++i)
     {
-        Serialization::save(buffer, params[i]);
+        Serialization::save(buffer, expressions[params[i]]);
         buffer.rewind();
         OShaderParameter param;
         Serialization::load(buffer, param);

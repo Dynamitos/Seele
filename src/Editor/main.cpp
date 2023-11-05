@@ -11,6 +11,7 @@
 #include "Asset/MaterialLoader.h"
 #include "Asset/FontLoader.h"
 #include "Asset/AssetImporter.h"
+#include "Graphics/StaticMeshVertexData.h"
 
 using namespace Seele;
 using namespace Seele::Editor;
@@ -29,6 +30,8 @@ int main()
 
     GraphicsInitializer initializer;
     graphics->init(initializer);
+    StaticMeshVertexData* vd = StaticMeshVertexData::getInstance();
+    vd->init(graphics);
     PWindowManager windowManager = new WindowManager();
     AssetRegistry::init(std::string("C:/Users/Dynamitos/TrackClear/Assets"), graphics);
     AssetImporter::init(graphics, AssetRegistry::getInstance());

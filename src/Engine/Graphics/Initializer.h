@@ -25,7 +25,7 @@ struct GraphicsInitializer
         , engineName("SeeleEngine")
         , windowLayoutFile(nullptr)
         , layers{"VK_LAYER_KHRONOS_validation"}
-        , instanceExtensions{"VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME"}
+        , instanceExtensions{}
         , deviceExtensions{"VK_KHR_swapchain"}
         , windowHandle(nullptr)
     {

@@ -24,7 +24,7 @@ StaticMeshVertexData* StaticMeshVertexData::getInstance()
 void StaticMeshVertexData::loadPositions(MeshId id, const Array<Vector>& data)
 {
     uint64 offset = meshOffsets[id];
-    assert(offset + data.size() < head);
+    assert(offset + data.size() <= head);
     std::memcpy(positionData.data() + offset, data.data(), data.size() * sizeof(Vector));
     dirty = true;
 }
@@ -32,7 +32,7 @@ void StaticMeshVertexData::loadPositions(MeshId id, const Array<Vector>& data)
 void StaticMeshVertexData::loadTexCoords(MeshId id, const Array<Vector2>& data)
 {
     uint64 offset = meshOffsets[id];
-    assert(offset + data.size() < head);
+    assert(offset + data.size() <= head);
     std::memcpy(texCoordsData.data() + offset, data.data(), data.size() * sizeof(Vector2));
     dirty = true;
 }
@@ -40,7 +40,7 @@ void StaticMeshVertexData::loadTexCoords(MeshId id, const Array<Vector2>& data)
 void StaticMeshVertexData::loadNormals(MeshId id, const Array<Vector>& data)
 {
     uint64 offset = meshOffsets[id];
-    assert(offset + data.size() < head);
+    assert(offset + data.size() <= head);
     std::memcpy(normalData.data() + offset, data.data(), data.size() * sizeof(Vector));
     dirty = true;
 }
@@ -48,7 +48,7 @@ void StaticMeshVertexData::loadNormals(MeshId id, const Array<Vector>& data)
 void StaticMeshVertexData::loadTangents(MeshId id, const Array<Vector>& data)
 {
     uint64 offset = meshOffsets[id];
-    assert(offset + data.size() < head);
+    assert(offset + data.size() <= head);
     std::memcpy(tangentData.data() + offset, data.data(), data.size() * sizeof(Vector));
     dirty = true;
 }
@@ -56,7 +56,7 @@ void StaticMeshVertexData::loadTangents(MeshId id, const Array<Vector>& data)
 void StaticMeshVertexData::loadBiTangents(MeshId id, const Array<Vector>& data)
 {
     uint64 offset = meshOffsets[id];
-    assert(offset + data.size() < head);
+    assert(offset + data.size() <= head);
     std::memcpy(biTangentData.data() + offset, data.data(), data.size() * sizeof(Vector));
     dirty = true;
 }

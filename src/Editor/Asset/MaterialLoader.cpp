@@ -17,7 +17,7 @@ MaterialLoader::MaterialLoader(Gfx::PGraphics graphics)
 {
     OMaterialAsset placeholderAsset = new MaterialAsset();
     import(MaterialImportArgs{
-        .filePath = std::filesystem::absolute("./shaders/Placeholder.asset"),
+        .filePath = std::filesystem::absolute("./shaders/Placeholder.json"),
         .importPath = "",
         }, placeholderAsset);
     AssetRegistry::get().assetRoot->materials[""] = std::move(placeholderAsset);

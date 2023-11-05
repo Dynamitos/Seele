@@ -445,7 +445,7 @@ void Graphics::pickPhysicalDevice()
     {
         uint32 currentRating = 0;
         vkGetPhysicalDeviceProperties(dev, &props);
-        vkGetPhysicalDeviceFeatures2(dev, &features);
+        vkGetPhysicalDeviceFeatures(dev, &features);
         if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
         {
             std::cout << "found dedicated gpu " << props.deviceName << std::endl;
@@ -465,7 +465,7 @@ void Graphics::pickPhysicalDevice()
     }
     physicalDevice = bestDevice;
     vkGetPhysicalDeviceProperties(physicalDevice, &props);
-    vkGetPhysicalDeviceFeatures2(physicalDevice, &features);
+    vkGetPhysicalDeviceFeatures(physicalDevice, &features);
 }
 
 void Graphics::createDevice(GraphicsInitializer initializer)
@@ -565,7 +565,7 @@ void Graphics::createDevice(GraphicsInitializer initializer)
     VkDeviceCreateInfo deviceInfo = init::DeviceCreateInfo(
         queueInfos.data(),
         (uint32)queueInfos.size(),
-        &features);
+        nullptr);
 
     VkPhysicalDeviceDescriptorIndexingFeatures descriptorIndexing = {
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES,
@@ -594,8 +594,6 @@ void Graphics::createDevice(GraphicsInitializer initializer)
     {
         descriptorIndexing.pNext = &enabledMeshShaderFeatures;
         initializer.deviceExtensions.add("VK_EXT_mesh_shader");
-        initializer.deviceExtensions.add("VK_KHR_SPIRV_1_4_EXTENSION_NAME");
-        initializer.deviceExtensions.add("VK_KHR_SHADER_FLOAT_CONTROLS_EXTENSION_NAME");
     }
     deviceInfo.enabledExtensionCount = (uint32)initializer.deviceExtensions.size();
     deviceInfo.ppEnabledExtensionNames = initializer.deviceExtensions.data();

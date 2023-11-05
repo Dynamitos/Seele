@@ -51,11 +51,6 @@ VkDeviceCreateInfo DeviceCreateInfo(
 	uint32_t queueCount,
 	VkPhysicalDeviceFeatures *features);
 
-VkDeviceCreateInfo DeviceCreateInfo(
-	VkDeviceQueueCreateInfo* queueInfos,
-	uint32_t queueCount,
-	VkPhysicalDeviceFeatures2* features);
-
 VkSwapchainCreateInfoKHR SwapchainCreateInfo(
 	VkSurfaceKHR surface,
 	uint32_t minImageCount,

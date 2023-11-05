@@ -392,7 +392,7 @@ void* ShaderBuffer::lock(bool writeOnly)
     {
         return dedicatedStagingBuffer->getMappedPointer();
     }
-    return ShaderBuffer::lock(writeOnly);
+    return Vulkan::Buffer::lock(writeOnly);
 }
 
 void ShaderBuffer::unlock()
