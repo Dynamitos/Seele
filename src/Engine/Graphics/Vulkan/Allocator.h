@@ -17,10 +17,20 @@ class SubAllocation
 public:
 	SubAllocation(PAllocation owner, VkDeviceSize allocatedOffset, VkDeviceSize size, VkDeviceSize alignedOffset, VkDeviceSize allocatedSize);
 	~SubAllocation();
-	constexpr VkDeviceMemory getHandle() const;
-	constexpr VkDeviceSize getSize() const;
-	constexpr VkDeviceSize getOffset() const;
-	constexpr bool isReadable() const;
+	VkDeviceMemory getHandle() const;
+
+	constexpr VkDeviceSize getSize() const
+	{
+		return size;
+	}
+
+	constexpr VkDeviceSize getOffset() const
+	{
+		return alignedOffset;
+	}
+
+	bool isReadable() const;
+
 	void *getMappedPointer();
 	void flushMemory();
 	void invalidateMemory();
@@ -43,9 +53,30 @@ public:
 	~Allocation();
 	OSubAllocation getSuballocation(VkDeviceSize size, VkDeviceSize alignment);
 	void markFree(PSubAllocation alloc);
-	constexpr VkDeviceMemory getHandle() const;
-	constexpr void* getMappedPointer();
-	constexpr bool isReadable() const;
+	constexpr VkDeviceMemory getHandle() const
+	{
+		return allocatedMemory;
+	}
+	
+	constexpr void* getMappedPointer()
+	{
+		if (!canMap)
+		{
+			return nullptr;
+		}
+		if (!isMapped)
+		{
+			vkMapMemory(device, allocatedMemory, 0, bytesAllocated, 0, &mappedPointer);
+			isMapped = true;
+		}
+		return mappedPointer;
+	}
+
+	constexpr bool isReadable() const
+	{
+		return readable;
+	}
+
 	void flushMemory();
 	void invalidateMemory();
 
@@ -134,11 +165,19 @@ public:
 	{
 		return buffer;
 	}
-	constexpr VkDeviceMemory getMemoryHandle() const;
-	constexpr VkDeviceSize getOffset() const;
-	constexpr uint64 getSize() const;
-	constexpr bool isReadable() const;
-	constexpr VkBufferUsageFlags getUsage() const;
+	VkDeviceMemory getMemoryHandle() const;
+	VkDeviceSize getOffset() const;
+	uint64 getSize() const;
+	constexpr bool isReadable() const
+	{
+		return readable;
+	}
+
+	constexpr VkBufferUsageFlags getUsage() const
+	{
+		return usage;
+	}
+
 private:
 	OSubAllocation allocation;
 	VkBuffer buffer;

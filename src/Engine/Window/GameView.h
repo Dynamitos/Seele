@@ -5,7 +5,11 @@
 #include "Graphics/RenderPass/LightCullingPass.h"
 #include "Graphics/RenderPass/BasePass.h"
 #include "Graphics/RenderPass/SkyboxRenderPass.h"
+#ifdef WIN32
 #include "Platform/Windows/GameInterface.h" // TODO
+#else
+#include "Platform/Linux/GameInterface.h"
+#endif
 
 namespace Seele
 {
@@ -23,6 +27,8 @@ public:
 
 	void reloadGame();
 private:
+	OScene scene;
+	PEntity camera;
 	GameInterface gameInterface;
     RenderGraph<
         DepthPrepass,
@@ -31,8 +37,6 @@ private:
 		SkyboxRenderPass
 		> renderGraph;
 
-	PEntity camera;
-	OScene scene;
 	PSystemGraph systemGraph;
 	dp::thread_pool<> threadPool;
 	float updateTime = 0;

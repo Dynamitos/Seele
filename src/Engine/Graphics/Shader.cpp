@@ -1,6 +1,7 @@
 #include "Shader.h"
 #include "Graphics/RenderPass/DepthPrepass.h"
 #include "Graphics/RenderPass/BasePass.h"
+#include <format>
 
 using namespace Seele;
 using namespace Seele::Gfx;
@@ -52,11 +53,9 @@ void ShaderCompiler::compile()
 	for (const auto& [name, pass] : passes)
 	{
 		std::memset(&permutation, 0, sizeof(ShaderPermutation));
-		permutation = {
-			.hasFragment = pass.hasFragmentShader,
-			.useMeshShading = pass.useMeshShading,
-			.hasTaskShader = pass.hasTaskShader,
-		};
+		permutation.hasFragment = pass.hasFragmentShader;
+		permutation.useMeshShading = pass.useMeshShading;
+		permutation.hasTaskShader = pass.hasTaskShader;
 		std::memcpy(permutation.vertexMeshFile, pass.mainFile.c_str(), sizeof(permutation.vertexMeshFile));
 		if (pass.hasFragmentShader)
 		{

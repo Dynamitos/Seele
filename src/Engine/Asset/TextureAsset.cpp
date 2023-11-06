@@ -2,6 +2,7 @@
 #include "Graphics/Graphics.h"
 #include "Window/WindowManager.h"
 #include "Graphics/Vulkan/Enums.h"
+#include "Graphics/Texture.h"
 #include "ktx.h"
 
 using namespace Seele;
@@ -22,7 +23,7 @@ TextureAsset::~TextureAsset()
     
 }
 
-void TextureAsset::save(ArchiveBuffer& buffer) const
+void TextureAsset::save(ArchiveBuffer&) const
 {
     /*ktxTexture2* kTexture;
     ktxTextureCreateInfo createInfo = {
@@ -112,4 +113,9 @@ void TextureAsset::load(ArchiveBuffer& buffer)
     }
     texture->transferOwnership(Gfx::QueueType::GRAPHICS);
     ktxTexture_Destroy(ktxTexture(kTexture));
+}
+
+void TextureAsset::setTexture(Gfx::OTexture _texture)
+{
+    texture = std::move(_texture);    
 }

@@ -110,6 +110,7 @@ FormatCompatibilityInfo Gfx::getFormatInfo(SeFormat format)
                 .blockExtent = Vector(1, 1, 1),
                 .texelsPerBlock = 1,
             };
+        default:
+            throw new std::logic_error("not yet implemented");
     }
-    throw new std::logic_error("not yet implemented");
 }

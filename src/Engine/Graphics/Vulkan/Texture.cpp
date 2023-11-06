@@ -217,7 +217,7 @@ void TextureHandle::download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Ar
     auto prevlayout = layout;
     changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
     PCmdBuffer cmdBuffer = graphics->getQueueCommands(currentOwner)->getCommands();
-    Gfx::FormatCompatibilityInfo formatInfo = Gfx::getFormatInfo(format);
+    //Gfx::FormatCompatibilityInfo formatInfo = Gfx::getFormatInfo(format);
     VkBufferImageCopy region = {
         .bufferOffset = 0,
         .bufferRowLength = 0,

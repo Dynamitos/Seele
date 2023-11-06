@@ -109,7 +109,7 @@ void BVH::reinsertCollider(entt::entity entity, AABB aabb)
 void BVH::removeCollider(entt::entity entity)
 {
     int32 nodeIndex = -1;
-    for (int32 i = 0; i < dynamicNodes.size(); i++)
+    for (size_t i = 0; i < dynamicNodes.size(); i++)
     {
         if(dynamicNodes[i].isLeaf && dynamicNodes[i].owner == entity)
         {
@@ -119,7 +119,6 @@ void BVH::removeCollider(entt::entity entity)
     }
     if(nodeIndex == -1)
     {
-        
         return;
     }
     int32 parentIndex = dynamicNodes[nodeIndex].parentIndex;
@@ -354,7 +353,7 @@ int32 BVH::splitNode(Array<AABBCenter> aabbs)
 }
 int32 BVH::allocateNode()
 {
-    for (int32 i = 0; i < dynamicNodes.size(); i++)
+    for (size_t i = 0; i < dynamicNodes.size(); i++)
     {
         if(!dynamicNodes[i].isValid)
         {
@@ -377,7 +376,7 @@ void BVH::validateBVH() const
     {
         assert(dynamicNodes[dynamicRoot].parentIndex == -1);
     }
-    for(int32 i = 0; i < dynamicNodes.size(); ++i)
+    for(size_t i = 0; i < dynamicNodes.size(); ++i)
     {
         int32 nodeIdx = i;
         size_t counter = dynamicNodes.size();

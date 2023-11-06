@@ -14,8 +14,8 @@ using namespace Seele;
 
 Scene::Scene(Gfx::PGraphics graphics)
     : graphics(graphics)
-    , physics(registry)
     , lightEnv(new LightEnvironment(graphics))
+    , physics(registry)
 {
 }
 

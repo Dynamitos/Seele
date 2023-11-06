@@ -10,7 +10,7 @@ using namespace Seele;
 
 AssetRegistry * instance = new AssetRegistry();
 
-int main(int argc, char** argv)
+int main(int, char**)
 {
     //if(argc < 2)
     //{

@@ -209,17 +209,17 @@ public:
     constexpr Map(const Map& other)
         : nodeContainer(other.nodeContainer)
         , root(other.root)
+        , iteratorsDirty(true)
         , _size(other._size)
         , comp(other.comp)
-        , iteratorsDirty(true)
     {
     }
     constexpr Map(Map&& other) noexcept
         : nodeContainer(std::move(other.nodeContainer))
         , root(std::move(other.root))
+        , iteratorsDirty(true)
         , _size(std::move(other._size))
         , comp(std::move(other.comp))
-        , iteratorsDirty(true)
     {
     }
     constexpr ~Map() noexcept
@@ -502,7 +502,7 @@ private:
         endIt = calcEndIterator();
         iteratorsDirty = false;
     }
-    inline Iterator calcBeginIterator() const
+    constexpr Iterator calcBeginIterator() const
     {
         size_t beginIndex = root;
         Array<size_t> beginTraversal;
@@ -518,7 +518,7 @@ private:
         }
         return Iterator(beginIndex, &nodeContainer, std::move(beginTraversal));
     }
-    inline Iterator calcEndIterator() const
+    constexpr Iterator calcEndIterator() const
     {
         size_t endIndex = root;
         Array<size_t> endTraversal;

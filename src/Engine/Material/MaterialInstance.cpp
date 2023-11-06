@@ -14,21 +14,24 @@ MaterialInstance::MaterialInstance(uint64 id,
     Array<std::string> params, 
     uint32 uniformBinding, 
     uint32 uniformSize)
-    : id(id)
-    , graphics(graphics)
+    : graphics(graphics)
     , uniformBinding(uniformBinding)
+    , id(id)
 {
-    uniformBuffer = graphics->createUniformBuffer(UniformBufferCreateInfo{
-            .sourceData = {
-                .size = uniformSize,
-            },
-            .dynamic = true,
-        }
-    );
+    if(uniformSize > 0)
+    {
+        uniformBuffer = graphics->createUniformBuffer(UniformBufferCreateInfo{
+                .sourceData = {
+                    .size = uniformSize,
+                },
+                .dynamic = true,
+            }
+        );
+    }
     uniformData.resize(uniformSize);
     ArchiveBuffer buffer(graphics);
     parameters.reserve(params.size());
-    for (int i = 0; i < params.size(); ++i)
+    for (size_t i = 0; i < params.size(); ++i)
     {
         Serialization::save(buffer, expressions[params[i]]);
         buffer.rewind();
@@ -52,6 +55,14 @@ void MaterialInstance::updateDescriptor()
     {
         param->updateDescriptorSet(descriptor, uniformData.data());
     }
+    if(uniformData.size() > 0)
+    {
+        uniformBuffer->updateContents(DataSource{
+            .size = uniformData.size(),
+            .data = uniformData.data(),
+        });
+        descriptor->updateBuffer(uniformBinding, uniformBuffer);
+    }
     descriptor->writeChanges();
 }
 
@@ -62,13 +73,16 @@ Gfx::PDescriptorSet MaterialInstance::getDescriptorSet() const
 
 void MaterialInstance::setBaseMaterial(PMaterialAsset asset)
 {
-    uniformBuffer = graphics->createUniformBuffer(UniformBufferCreateInfo{
-            .sourceData = {
-                .size = uniformData.size(),
-            },
-            .dynamic = true,
-        }
-    );
+    if(uniformData.size() > 0)
+    {
+        uniformBuffer = graphics->createUniformBuffer(UniformBufferCreateInfo{
+                .sourceData = {
+                    .size = uniformData.size(),
+                },
+                .dynamic = true,
+            }
+        );
+    }
     baseMaterial = asset;
 }
 

@@ -75,6 +75,7 @@ private:
     Gfx::PGraphics graphics;
     ArchiveBuffer assetBuffer;
     bool release = false;
+    friend class MaterialAsset;
     friend class TextureLoader;
     friend class FontLoader;
     friend class MaterialLoader;

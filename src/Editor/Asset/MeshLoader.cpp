@@ -6,6 +6,7 @@
 #include "Asset/AssetImporter.h"
 #include "Asset/MaterialAsset.h"
 #include <set>
+#include <format>
 #include <fstream>
 #include <iostream>
 #include <nlohmann/json.hpp>
@@ -249,13 +250,16 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialAss
         idxInfo.sourceData.data = (uint8 *)indices.data();
         idxInfo.sourceData.owner = Gfx::QueueType::DEDICATED_TRANSFER;
         idxInfo.sourceData.size = sizeof(uint32) * indices.size();
-        Gfx::PIndexBuffer indexBuffer = graphics->createIndexBuffer(idxInfo);
+        Gfx::OIndexBuffer indexBuffer = graphics->createIndexBuffer(idxInfo);
         indexBuffer->transferOwnership(Gfx::QueueType::GRAPHICS);
 
         globalMeshes[meshIndex] = new Mesh();
         globalMeshes[meshIndex]->vertexData = vertexData;
         globalMeshes[meshIndex]->id = id;
-        globalMeshes[meshIndex]->referencedMaterial = materials[mesh->mMaterialIndex]->getMaterial()->instantiate();
+        globalMeshes[meshIndex]->referencedMaterial = materials[mesh->mMaterialIndex]->instantiate(InstantiationParameter{
+            .name = std::format("{0}_Inst_0", materials[mesh->mMaterialIndex]->getName()),
+            .folderPath = materials[mesh->mMaterialIndex]->getFolderPath(),
+        });
         globalMeshes[meshIndex]->meshlets = std::move(meshlets);
         globalMeshes[meshIndex]->vertexCount = mesh->mNumVertices;
     }

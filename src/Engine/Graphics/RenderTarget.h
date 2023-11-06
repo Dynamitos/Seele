@@ -75,13 +75,13 @@ public:
                            SeAttachmentStoreOp storeOp = SE_ATTACHMENT_STORE_OP_STORE,
                            SeAttachmentLoadOp stencilLoadOp = SE_ATTACHMENT_LOAD_OP_DONT_CARE,
                            SeAttachmentStoreOp stencilStoreOp = SE_ATTACHMENT_STORE_OP_DONT_CARE)
-        : loadOp(loadOp)
+        : clear()
+        , componentFlags(0)
+        , loadOp(loadOp)
         , storeOp(storeOp)
         , stencilLoadOp(stencilLoadOp)
         , stencilStoreOp(stencilStoreOp)
         , texture(texture)
-        , clear()
-        , componentFlags(0)
     {
     }
     virtual ~RenderTargetAttachment()

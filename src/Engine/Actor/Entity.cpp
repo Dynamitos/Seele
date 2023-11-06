@@ -3,8 +3,8 @@
 using namespace Seele;
 
 Entity::Entity(PScene scene)
-    : identifier(scene->createEntity())
-    , scene(scene)
+    : scene(scene)
+    , identifier(scene->createEntity())
 {
 }
 

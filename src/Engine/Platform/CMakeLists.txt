@@ -1,1 +1,5 @@
-add_subdirectory(Windows/)
+if(WIN32)
+    add_subdirectory(Windows/)
+else()
+    add_subdirectory(Linux/)
+endif()

@@ -30,7 +30,9 @@ void FontAsset::save(ArchiveBuffer& buffer) const
         Array<uint8> textureData;
         ktxTexture2* kTexture;
         ktxTextureCreateInfo createInfo = {
+            .glInternalformat = 0,
             .vkFormat = (uint32_t)glyph.texture->getFormat(),
+            .pDfd = nullptr,
             .baseWidth = glyph.texture->getSizeX(),
             .baseHeight = glyph.texture->getSizeY(),
             .baseDepth = glyph.texture->getSizeZ(),

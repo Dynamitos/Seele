@@ -4,6 +4,7 @@
 #include "Asset/AssetRegistry.h"
 #include "Graphics/Graphics.h"
 #include "Graphics/Descriptor.h"
+#include <format>
 
 using namespace Seele;
 
@@ -37,6 +38,10 @@ ShaderExpression::ShaderExpression()
 
 ShaderExpression::ShaderExpression(std::string key)
     : key(key)
+{
+}
+
+ShaderExpression::~ShaderExpression()
 {
 }
 

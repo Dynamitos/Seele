@@ -51,7 +51,7 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
     
     uint32 uniformBufferOffset = 0;
     uint32 bindingCounter = 0; // Uniform buffers are always binding 0
-    uint32 uniformBinding = -1;
+    int32 uniformBinding = -1;
     Map<std::string, OShaderExpression> expressions;
     uint32 key = 0;
     uint32 auxKey = 0;
@@ -205,7 +205,7 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
             mat.profile = obj["profile"].get<std::string>();
             for(auto& val : obj["values"].items())
             {
-                mat.variables[val.key()] = val.value();
+                mat.variables[val.key()] = referenceExpression(val.value());
             }
         }
     }

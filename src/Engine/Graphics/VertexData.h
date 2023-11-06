@@ -8,10 +8,7 @@
 
 namespace Seele
 {
-namespace Component
-{
-    struct Mesh;
-}
+DECLARE_REF(Mesh)
 struct MeshId
 {
     uint64 id;
@@ -60,7 +57,7 @@ public:
         uint32 indicesOffset;
     };
     void resetMeshData();
-    void updateMesh(const Component::Transform& transform, const Component::Mesh& mesh);
+    void updateMesh(const Component::Transform& transform, PMesh mesh);
     void loadMesh(MeshId id, Array<Meshlet> meshlets);
     void createDescriptors();
     MeshId allocateVertexData(uint64 numVertices);

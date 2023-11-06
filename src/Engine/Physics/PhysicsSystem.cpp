@@ -346,19 +346,19 @@ void PhysicsSystem::calculateContacts(entt::entity id1, const ShapeBase& shape1,
              && tx >= 0.f
              && tx <= 1.f)
             {
-                Vector p = p1 + tx * (p2 - p1);
-                Vector ea = p2 - p1;
-                Vector eb = p4 - p3;
-                Vector n = glm::normalize(glm::cross(eb, ea));
-                Contact contact = {
-                    .a = id1,
-                    .b = id2,
-                    .p = p,
-                    .n = n,
-                    .ea = ea,
-                    .eb = eb,
-                    .vf = false
-                };
+                // Vector p = p1 + tx * (p2 - p1);
+                // Vector ea = p2 - p1;
+                // Vector eb = p4 - p3;
+                // Vector n = glm::normalize(glm::cross(eb, ea));
+                // Contact contact = {
+                //     .a = id1,
+                //     .b = id2,
+                //     .p = p,
+                //     .n = n,
+                //     .ea = ea,
+                //     .eb = eb,
+                //     .vf = false
+                // };
             }
         };
         for(size_t j = 0; j < shape2.indices.size(); j+=3)

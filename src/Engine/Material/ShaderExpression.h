@@ -38,6 +38,7 @@ struct ShaderExpression
     std::string key;
     ShaderExpression();
     ShaderExpression(std::string key);
+    virtual ~ShaderExpression();
     virtual uint64 getIdentifier() const = 0;
     virtual std::string evaluate(Map<std::string, std::string>& varState) const = 0;
     virtual void save(ArchiveBuffer& buffer) const;
@@ -216,14 +217,14 @@ struct MaterialNode
     void load(ArchiveBuffer& buffer);
 };
 template<>
-static void Serialization::save(ArchiveBuffer& buffer, const OShaderExpression& parameter)
+void Serialization::save(ArchiveBuffer& buffer, const OShaderExpression& parameter)
 {
     Serialization::save(buffer, parameter->getIdentifier());
     parameter->save(buffer);
 }
 
 template<>
-static void Serialization::load(ArchiveBuffer& buffer, OShaderExpression& parameter)
+void Serialization::load(ArchiveBuffer& buffer, OShaderExpression& parameter)
 {
     uint64 identifier = 0;
     Serialization::load(buffer, identifier);
@@ -269,14 +270,14 @@ static void Serialization::load(ArchiveBuffer& buffer, OShaderExpression& parame
 }
 
 template<>
-static void Serialization::save(ArchiveBuffer& buffer, const OShaderParameter& parameter)
+void Serialization::save(ArchiveBuffer& buffer, const OShaderParameter& parameter)
 {
     Serialization::save(buffer, parameter->getIdentifier());
     parameter->save(buffer);
 }
 
 template<>
-static void Serialization::load(ArchiveBuffer& buffer, OShaderParameter& parameter)
+void Serialization::load(ArchiveBuffer& buffer, OShaderParameter& parameter)
 {
     uint64 identifier = 0;
     Serialization::load(buffer, identifier);

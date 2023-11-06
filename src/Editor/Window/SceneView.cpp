@@ -60,14 +60,10 @@ void SceneView::render()
     renderGraph.render(viewportCamera);
 }
 
-static float cameraSpeed = 1;
-
 void SceneView::keyCallback(KeyCode code, InputAction action, KeyModifier)
 {
     cameraSystem.keyCallback(code, action);
 }
-
-static bool mouseDown = false;
 
 void SceneView::mouseMoveCallback(double xPos, double yPos) 
 {

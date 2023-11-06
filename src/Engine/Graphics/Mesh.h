@@ -13,7 +13,7 @@ public:
     VertexData* vertexData;
     MeshId id;
     uint64 vertexCount;
-    PMaterialInstance referencedMaterial;
+    PMaterialInstanceAsset referencedMaterial;
     Array<Meshlet> meshlets;
     void save(ArchiveBuffer& buffer) const;
     void load(ArchiveBuffer& buffer);
@@ -23,12 +23,12 @@ DEFINE_REF(Mesh)
 namespace Serialization
 {
     template<>
-    static void save(ArchiveBuffer& buffer, const OMesh& ptr)
+    void save(ArchiveBuffer& buffer, const OMesh& ptr)
     {
         ptr->save(buffer);
     }
     template<>
-    static void load(ArchiveBuffer& buffer, OMesh& ptr)
+    void load(ArchiveBuffer& buffer, OMesh& ptr)
     {
         ptr = new Mesh();
         ptr->load(buffer);

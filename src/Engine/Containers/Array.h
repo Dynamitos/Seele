@@ -56,6 +56,11 @@ public:
         {
             return (int)(p - other.p);
         }
+        constexpr IteratorBase& operator+=(difference_type other)
+        {
+            p+=other;
+            return *this;
+        }
         constexpr bool operator<(const IteratorBase& other) const
         {
             return p < other.p;
@@ -725,7 +730,7 @@ public:
     }
     StaticArray(T value)
     {
-        for (int i = 0; i < N; ++i)
+        for (size_t i = 0; i < N; ++i)
         {
             _data[i] = value;
         }
@@ -736,7 +741,7 @@ public:
     {
         assert(init.size() == N);
         auto beg = init.begin();
-        for (int i = 0; i < N; ++i)
+        for (size_t i = 0; i < N; ++i)
         {
             _data[i] = *beg;
             beg++;

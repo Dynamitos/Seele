@@ -8,7 +8,7 @@
 
 using namespace Seele;
 
-constexpr static uint64 NUM_DEFAULT_ELEMENTS = 1024;
+constexpr static uint64 NUM_DEFAULT_ELEMENTS = 1024 * 1024;
 
 void VertexData::resetMeshData()
 {
@@ -19,13 +19,13 @@ void VertexData::resetMeshData()
     }
 }
 
-void VertexData::updateMesh(const Component::Transform& transform, const Component::Mesh& mesh)
+void VertexData::updateMesh(const Component::Transform& transform, PMesh mesh)
 {
-    PMaterial mat = mesh.instance->getBaseMaterial();
+    PMaterial mat = mesh->referencedMaterial->getHandle()->getBaseMaterial();
     MaterialData& matData = materialData[mat->getName()];
-    MaterialInstanceData& matInstanceData = matData.instances[mesh.instance->getId()];
+    MaterialInstanceData& matInstanceData = matData.instances[mesh->referencedMaterial->getHandle()->getId()];
     matInstanceData.meshes.add(MeshInstanceData{
-        .id = mesh.id,
+        .id = mesh->id,
         .instance = InstanceData {
             .transformMatrix = transform.toMatrix(),
         }
@@ -45,10 +45,10 @@ void VertexData::loadMesh(MeshId id, Array<Meshlet> loadedMeshlets)
             Meshlet& m = loadedMeshlets[currentMesh + i];
             uint32 vertexOffset = vertexIndices.size();
             vertexIndices.resize(vertexOffset + m.numVertices);
-            std::memcpy(vertexIndices.data() + vertexOffset, m.uniqueVertices.data(), sizeof(m.uniqueVertices));
+            std::memcpy(vertexIndices.data() + vertexOffset, m.uniqueVertices.data(), m.numVertices * sizeof(uint32));
             uint32 primitiveOffset = primitiveIndices.size();
             primitiveIndices.resize(primitiveOffset + (m.numPrimitives * 3));
-            std::memcpy(primitiveIndices.data() + primitiveOffset, m.primitiveLayout.data(), sizeof(m.primitiveLayout));
+            std::memcpy(primitiveIndices.data() + primitiveOffset, m.primitiveLayout.data(), m.numPrimitives * 3 * sizeof(uint8));
             meshlets.add(MeshletDescription{
                 .boundingBox = MeshletAABB(),
                 .vertexCount = m.numVertices,
@@ -193,9 +193,9 @@ void Seele::VertexData::init(Gfx::PGraphics graphics)
 
 VertexData::VertexData()
     : idCounter(0)
-    , dirty(false)
     , head(0)
     , verticesAllocated(0)
+    , dirty(false)
 {
 }
 

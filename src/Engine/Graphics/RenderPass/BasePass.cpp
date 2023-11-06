@@ -152,6 +152,6 @@ void BasePass::createRenderPass()
     tLightGrid = resources->requestTexture("LIGHTCULLING_TLIGHTGRID");
 }
 
-void BasePass::modifyRenderPassMacros(Map<const char*, const char*>& defines)
+void BasePass::modifyRenderPassMacros(Map<const char*, const char*>&)
 {
 }

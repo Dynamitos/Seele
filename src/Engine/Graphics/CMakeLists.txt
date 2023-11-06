@@ -32,6 +32,7 @@ target_sources(Engine
             Buffer.h
             DebugVertex.h
             Descriptor.h
+            Enums.h
             Graphics.h
             Initializer.h
             Mesh.h

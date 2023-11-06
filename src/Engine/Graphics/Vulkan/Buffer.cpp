@@ -291,6 +291,7 @@ UniformBuffer::UniformBuffer(PGraphics graphics, const UniformBufferCreateInfo &
 
 UniformBuffer::~UniformBuffer()
 {
+    graphics->getStagingManager()->releaseStagingBuffer(std::move(dedicatedStagingBuffer));
 }
 
 bool UniformBuffer::updateContents(const DataSource &sourceData) 
@@ -363,7 +364,12 @@ VkAccessFlags UniformBuffer::getDestAccessMask()
 ShaderBuffer::ShaderBuffer(PGraphics graphics, const ShaderBufferCreateInfo &sourceData)
     : Gfx::ShaderBuffer(graphics->getFamilyMapping(), sourceData.stride, sourceData.sourceData.size / sourceData.stride, sourceData.sourceData)
     , Vulkan::Buffer(graphics, sourceData.sourceData.size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, currentOwner, sourceData.dynamic)
+    , dedicatedStagingBuffer(nullptr)
 {
+    if(sourceData.dynamic)
+    {
+        dedicatedStagingBuffer = graphics->getStagingManager()->allocateStagingBuffer(sourceData.sourceData.size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+    }
     if (sourceData.sourceData.data != nullptr)
     {
         void *data = lock();
@@ -374,6 +380,7 @@ ShaderBuffer::ShaderBuffer(PGraphics graphics, const ShaderBufferCreateInfo &sou
 
 ShaderBuffer::~ShaderBuffer()
 {
+    graphics->getStagingManager()->releaseStagingBuffer(std::move(dedicatedStagingBuffer));
 }
 
 bool ShaderBuffer::updateContents(const DataSource &sourceData) 
@@ -422,13 +429,13 @@ void ShaderBuffer::requestOwnershipTransfer(Gfx::QueueType newOwner)
 
 void ShaderBuffer::executeOwnershipBarrier(Gfx::QueueType newOwner)
 {
-    Vulkan::ShaderBuffer::executeOwnershipBarrier(newOwner);
+    Vulkan::Buffer::executeOwnershipBarrier(newOwner);
 }
 
 void ShaderBuffer::executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, 
         VkAccessFlags dstAccess, VkPipelineStageFlags dstStage) 
 {
-    Vulkan::ShaderBuffer::executePipelineBarrier(srcAccess, srcStage, dstAccess, dstStage);
+    Vulkan::Buffer::executePipelineBarrier(srcAccess, srcStage, dstAccess, dstStage);
 }
 
 VkAccessFlags ShaderBuffer::getSourceAccessMask()

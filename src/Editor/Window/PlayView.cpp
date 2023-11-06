@@ -5,7 +5,7 @@ using namespace Seele;
 using namespace Seele::Editor;
 
 PlayView::PlayView(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo& createInfo, std::string dllPath)
-    : GameView(std::move(graphics), std::move(window), std::move(createInfo), dllPath)
+    : GameView(graphics, window, createInfo, dllPath)
 {
 }
 

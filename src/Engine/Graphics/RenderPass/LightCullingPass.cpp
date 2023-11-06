@@ -20,8 +20,6 @@ LightCullingPass::~LightCullingPass()
 void LightCullingPass::beginFrame(const Component::Camera& cam) 
 {
     RenderPass::beginFrame(cam);
-    uint32_t viewportWidth = viewport->getSizeX();
-    uint32_t viewportHeight = viewport->getSizeY();
 
     uint32 reset = 0;
     DataSource counterReset = {

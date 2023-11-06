@@ -54,6 +54,10 @@ add_subdirectory(${GLFW_ROOT})
 add_subdirectory(${ENTT_ROOT})
 
 #--------------thread-pool------------------------------
+set(TP_BUILD_TESTS OFF)
+set(TP_BUILD_EXAMPLES OFF)
+set(TP_BUILD_BENCHMARKS OFF)
+
 add_subdirectory(${THREADPOOL_ROOT})
 
 if(MSVC)
@@ -63,39 +67,49 @@ endif()
 #--------------SLang------------------------------
 string(TOLOWER release_x64 SLANG_CONFIG)
 if(WIN32)
-string(TOLOWER ${SLANG_ROOT}/bin/windows-${CMAKE_PLATFORM}/release SLANG_BINARY_DIR)
+string(TOLOWER ${SLANG_ROOT}/bin/windows-x64/release SLANG_BINARY_DIR)
 ExternalProject_Add(slang-build
     SOURCE_DIR ${SLANG_ROOT}
     BINARY_DIR ${SLANG_ROOT}
     CONFIGURE_COMMAND ${SLANG_ROOT}/premake.bat vs2019 --file=${SLANG_ROOT}/premake5.lua gmake --arch=x64 --deps=true
-    BUILD_COMMAND msbuild slang.sln -p:PlatformToolset=v143 -p:Configuration=Release -p:Platform=${CMAKE_PLATFORM}
+    BUILD_COMMAND msbuild slang.sln -p:PlatformToolset=v143 -p:Configuration=Release -p:Platform=x64
     INSTALL_COMMAND ""
 )
 elseif(UNIX)
+set(SLANG_BINARY_DIR ${SLANG_ROOT}/bin/linux-x64/release)
 ExternalProject_Add(slang-build
     SOURCE_DIR ${SLANG_ROOT}
     BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}
-    CONFIGURE_COMMAND ${CMAKE_SOURCE_DIR}/premake5 --file=${CMAKE_SOURCE_DIR}/external/slang/premake5.lua gmake2 --arch=x64 --deps=true --build-location=build/linux
+    CONFIGURE_COMMAND premake5 --file=${CMAKE_SOURCE_DIR}/external/slang/premake5.lua gmake2 --arch=x64 --deps=true --build-location=build/linux
     BUILD_COMMAND make -C ${CMAKE_SOURCE_DIR}/external/slang/build/linux config=${SLANG_CONFIG}
     INSTALL_COMMAND ""
 )
 endif()
 
 add_library(slang-llvm SHARED IMPORTED)
-target_link_libraries(slang-llvm INTERFACE 
-    $<BUILD_INTERFACE:${SLANG_BINARY_DIR}/slang.lib>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/lib/slang.lib>
-)
-set_target_properties(slang-llvm PROPERTIES IMPORTED_IMPLIB ${SLANG_BINARY_DIR}/slang.lib)
-set_target_properties(slang-llvm PROPERTIES IMPORTED_LOCATION ${SLANG_BINARY_DIR}/slang-llvm.dll)
+if(WIN32)
+    target_link_libraries(slang-llvm INTERFACE 
+        $<BUILD_INTERFACE:${SLANG_BINARY_DIR}/slang.lib>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/lib/slang.lib>
+    )
+    set_target_properties(slang-llvm PROPERTIES IMPORTED_IMPLIB ${SLANG_BINARY_DIR}/slang.lib)
+    set_target_properties(slang-llvm PROPERTIES IMPORTED_LOCATION ${SLANG_BINARY_DIR}/slang-llvm.dll)
+else()
+    set_target_properties(slang-llvm PROPERTIES IMPORTED_LOCATION ${SLANG_BINARY_DIR}/libslang-llvm.so)
+endif()
 
 add_library(slang-glslang SHARED IMPORTED)
-target_link_libraries(slang-glslang INTERFACE 
-    $<BUILD_INTERFACE:${SLANG_BINARY_DIR}/slang.lib>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/lib/slang.lib>
-)
-set_target_properties(slang-glslang PROPERTIES IMPORTED_IMPLIB ${SLANG_BINARY_DIR}/slang.lib)
-set_target_properties(slang-glslang PROPERTIES IMPORTED_LOCATION ${SLANG_BINARY_DIR}/slang-glslang.dll)
+
+if(WIN32)
+    target_link_libraries(slang-glslang INTERFACE 
+        $<BUILD_INTERFACE:${SLANG_BINARY_DIR}/slang.lib>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/lib/slang.lib>
+    )
+    set_target_properties(slang-glslang PROPERTIES IMPORTED_IMPLIB ${SLANG_BINARY_DIR}/slang.lib)
+    set_target_properties(slang-glslang PROPERTIES IMPORTED_LOCATION ${SLANG_BINARY_DIR}/slang-glslang.dll)
+else()
+    set_target_properties(slang-glslang PROPERTIES IMPORTED_LOCATION ${SLANG_BINARY_DIR}/libslang-glslang.so)
+endif()
 
 add_library(slang SHARED IMPORTED)
 
@@ -103,14 +117,18 @@ target_include_directories(slang INTERFACE
     $<BUILD_INTERFACE:${SLANG_ROOT}/>
     $<INSTALL_INTERFACE:include>
 )
-target_link_libraries(slang INTERFACE 
-    $<BUILD_INTERFACE:${SLANG_BINARY_DIR}/slang.lib>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/lib/slang.lib>
-)
+if(WIN32)
+    target_link_libraries(slang INTERFACE 
+        $<BUILD_INTERFACE:${SLANG_BINARY_DIR}/slang.lib>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/lib/slang.lib>
+    )
+    set_target_properties(slang PROPERTIES IMPORTED_IMPLIB ${SLANG_BINARY_DIR}/slang.lib)
+    set_target_properties(slang PROPERTIES IMPORTED_LOCATION ${SLANG_BINARY_DIR}/slang.dll)
+else()
+    set_target_properties(slang PROPERTIES IMPORTED_LOCATION ${SLANG_BINARY_DIR}/libslang.so)
+endif()
 target_link_libraries(slang INTERFACE slang-glslang)
 target_link_libraries(slang INTERFACE slang-llvm)
-set_target_properties(slang PROPERTIES IMPORTED_IMPLIB ${SLANG_BINARY_DIR}/slang.lib)
-set_target_properties(slang PROPERTIES IMPORTED_LOCATION ${SLANG_BINARY_DIR}/slang.dll)
 
 install(DIRECTORY
     ${SLANG_ROOT}

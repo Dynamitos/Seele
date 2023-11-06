@@ -9,12 +9,13 @@ using namespace Seele;
 
 GameView::GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo &createInfo, std::string dllPath)
     : View(graphics, window, createInfo, "Game")
+    , scene(new Scene(graphics))
     , gameInterface(dllPath)
     , renderGraph(RenderGraphBuilder::build(
-        std::move(DepthPrepass(graphics, scene)),
-        std::move(LightCullingPass(graphics, scene)),
-        std::move(BasePass(graphics, scene)),
-        std::move(SkyboxRenderPass(graphics, scene))
+        DepthPrepass(graphics, scene),
+        LightCullingPass(graphics, scene),
+        BasePass(graphics, scene),
+        SkyboxRenderPass(graphics, scene)
     ))
 {
     reloadGame();
@@ -75,7 +76,7 @@ void GameView::reloadGame()
 
 void GameView::keyCallback(KeyCode code, InputAction action, KeyModifier)
 {
-    scene->view<Component::KeyboardInput>([=](Component::KeyboardInput& input)
+    scene->view<Component::KeyboardInput>([=, this](Component::KeyboardInput& input)
     {
         //if(code == KeyCode::KEY_R && action == InputAction::PRESS)
         //{

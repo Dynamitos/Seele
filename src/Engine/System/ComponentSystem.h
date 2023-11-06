@@ -27,6 +27,14 @@ public:
     {
         return (deps | ...);
     }
+    void setupView(Dependencies<>, dp::thread_pool<>&)
+    {
+        registry.view<Components...>().each([&](Components&... comp){
+            //pool.enqueue_detach([&](){
+                update(comp...);
+            //});
+        });
+    }
     template<typename... Deps>
     void setupView(Dependencies<Deps...>, dp::thread_pool<>&)
     {
@@ -37,20 +45,12 @@ public:
             //});
         });
     }
-    template<>
-    void setupView(Dependencies<>, dp::thread_pool<>&)
-    {
-        registry.view<Components...>().each([&](Components&... comp){
-            //pool.enqueue_detach([&](){
-                update(comp...);
-            //});
-        });
-    }
     virtual void run(dp::thread_pool<>& pool, double delta) override
     {
         SystemBase::run(pool, delta);
         setupView(mergeDependencies((getDependencies<Components>(),...)), pool);
     }
+    virtual void update() {}
     virtual void update(Components&... components) = 0;
 };
 } // namespace System

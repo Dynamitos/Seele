@@ -20,7 +20,7 @@ public:
     virtual void save(ArchiveBuffer& buffer) const override;
     virtual void load(ArchiveBuffer& buffer) override;
     PMaterial getMaterial() const { return material; }
-    OMaterialInstanceAsset instantiate(const InstantiationParameter& params);
+    PMaterialInstanceAsset instantiate(const InstantiationParameter& params);
 private:
     OMaterial material;
     friend class MaterialLoader;

@@ -22,7 +22,7 @@ void System::update()
     
 }
 
-void System::updateViewport(Gfx::PViewport viewport)
+void System::updateViewport(Gfx::PViewport)
 {
     //TODO set viewport FoV to 0
 }

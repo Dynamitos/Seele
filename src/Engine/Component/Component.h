@@ -21,7 +21,6 @@ struct Dependencies<This, Rest...> : public Dependencies<Rest...>
 
 namespace Component
 {
-#pragma warning(disable: 4505)
 template<typename Comp>
 static int accessComponent(Comp& comp);
 }

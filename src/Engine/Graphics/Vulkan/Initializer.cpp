@@ -172,6 +172,8 @@ VkDeviceCreateInfo init::DeviceCreateInfo(VkDeviceQueueCreateInfo *queueInfos, u
 	createInfo.enabledLayerCount = layerCount;
 	createInfo.ppEnabledLayerNames = layers;
 #else
+	(void)layers;
+	(void)layerCount;
 	createInfo.enabledLayerCount = 0;
 	layerCount = 0;
 	layers = nullptr;

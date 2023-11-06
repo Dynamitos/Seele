@@ -3,10 +3,15 @@
 #include "Graphics/Graphics.h"
 #include "Asset/AssetRegistry.h"
 #include "Graphics/Vulkan/Enums.h"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-compare"
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+#pragma GCC diagnostic ignored "-Wunused-variable"
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
+#pragma GCC diagnostic pop
 #include "ktx.h"
 
 using namespace Seele;
@@ -17,7 +22,7 @@ TextureLoader::TextureLoader(Gfx::PGraphics graphics)
     OTextureAsset placeholder = new TextureAsset();
     placeholderAsset = placeholder;
     import(TextureImportArgs{
-        .filePath = std::filesystem::absolute("./textures/placeholder.png"),
+        .filePath = std::filesystem::absolute("textures/placeholder.png"),
         .importPath = "",
         }, placeholderAsset);
     AssetRegistry::get().assetRoot->textures[""] = std::move(placeholder);
@@ -46,10 +51,9 @@ PTextureAsset TextureLoader::getPlaceholderTexture()
 
 void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset)
 {
-
-    int totalWidth, totalHeight, n;
+    int totalWidth = 0, totalHeight = 0, n = 0;
     unsigned char* data = stbi_load(args.filePath.string().c_str(), &totalWidth, &totalHeight, &n, 4);
-    ktxTexture2* kTexture;
+    ktxTexture2* kTexture = nullptr;
     ktxTextureCreateInfo createInfo;
     createInfo.vkFormat = VK_FORMAT_R8G8B8A8_UNORM;
     createInfo.baseDepth = 1;
@@ -61,7 +65,7 @@ void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset)
     if (args.type == TextureImportType::TEXTURE_CUBEMAP)
     {
         uint32 faceWidth = totalWidth / 4;
-        uint32 faceHeight = totalHeight / 3;
+        // uint32 faceHeight = totalHeight / 3;
         // Cube map
         createInfo.baseWidth = totalWidth / 4;
         createInfo.baseHeight = totalHeight / 3;
@@ -75,9 +79,9 @@ void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset)
         auto loadCubeFace = [&kTexture, &faceWidth, &totalWidth, &data](int xPos, int yPos, int faceName)
         {
             std::vector<unsigned char> vec(faceWidth * faceWidth * 4);
-            for (int y = 0; y < faceWidth; ++y)
+            for (uint32 y = 0; y < faceWidth; ++y)
             {
-                for (int x = 0; x < faceWidth; ++x)
+                for (uint32 x = 0; x < faceWidth; ++x)
                 {
                     int imgX = x + (xPos * faceWidth);
                     int imgY = y + (yPos * faceWidth);
@@ -114,7 +118,7 @@ void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset)
         .structSize = sizeof(ktxBasisParams),
         .uastc = false,
         .threadCount = std::thread::hardware_concurrency(),
-        .compressionLevel = 5,
+        .compressionLevel = 0,
         .qualityLevel = 0,
     };
 

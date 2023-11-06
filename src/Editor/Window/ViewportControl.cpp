@@ -8,8 +8,8 @@ ViewportControl::ViewportControl(const URect& viewportDimensions, Vector initial
     : position(initialPos)
     , fieldOfView(glm::radians(70.f))
     , aspectRatio(static_cast<float>(viewportDimensions.size.x) / viewportDimensions.size.y)
-    , yaw(glm::pi<float>()/-2.0f)
     , pitch(0)
+    , yaw(glm::pi<float>()/-2.0f)
 {
     std::cout << yaw << " " << pitch << std::endl;
 }

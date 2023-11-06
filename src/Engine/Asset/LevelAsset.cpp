@@ -18,12 +18,12 @@ LevelAsset::~LevelAsset()
     
 }
 
-void LevelAsset::save(ArchiveBuffer& buffer) const 
+void LevelAsset::save(ArchiveBuffer&) const 
 {
     
 }
 
-void LevelAsset::load(ArchiveBuffer& buffer)
+void LevelAsset::load(ArchiveBuffer&)
 {
     
 }

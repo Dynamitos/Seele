@@ -124,14 +124,20 @@ if(MSVC)
         Seele.natvis
         DESTINATION .)
 else()
-    target_compile_options(Engine PUBLIC -g -Wall -Wextra -Wno-delete-incomplete -pedantic -std=c++20)
+    target_compile_options(Engine PUBLIC -g -Wall -Wextra -Wno-error -pedantic -std=c++20 -Wno-missing-field-initializers -Wno-unused-function)
+    target_compile_options(Editor PUBLIC -g -Wall -Wextra -Wno-error -pedantic -std=c++20)
 endif()
 
 add_subdirectory(src/)
 
+set(COPY_DLL_COMMAND "true")
+if(WIN32)
+    set(COPY_DLL_COMMAND "copy $<TARGET_RUNTIME_DLLS:Editor> $<TARGET_FILE_DIR:Engine>")
+endif()
+
 add_custom_target(SeeleEngine ALL
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/res $<TARGET_FILE_DIR:Engine>
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:Editor> $<TARGET_FILE_DIR:Engine> 
+    COMMAND ${CMAKE_COMMAND} -E ${COPY_DLL_COMMAND}
     COMMAND_EXPAND_LISTS
 	DEPENDS Editor slang-build)
 

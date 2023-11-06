@@ -34,7 +34,7 @@ protected:
     struct BufferAllocation
     {
         VkBuffer buffer;
-        PSubAllocation allocation;
+        OSubAllocation allocation;
     };
     PGraphics graphics;
     uint32 currentBuffer;
@@ -140,6 +140,5 @@ protected:
         VkAccessFlags dstAccess, VkPipelineStageFlags dstStage);
 };
 DEFINE_REF(IndexBuffer)
-
 }
 }

@@ -12,9 +12,9 @@ Asset::Asset()
 {
 }
 Asset::Asset(std::string_view _folderPath, std::string_view _name)
-    : status(Status::Uninitialized)
-    , folderPath(_folderPath)
+    : folderPath(_folderPath)
     , name(_name)
+    , status(Status::Uninitialized)
 {
     if (folderPath.empty())
     {

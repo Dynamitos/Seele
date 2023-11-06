@@ -15,6 +15,7 @@ public:
     virtual void load(ArchiveBuffer& buffer) override;
     void setHandle(OMaterialInstance handle) { material = std::move(handle); }
     void setBase(PMaterialAsset base) { baseMaterial = base; }
+    PMaterialInstance getHandle() const { return material; }
 private:
     OMaterialInstance material;
     PMaterialAsset baseMaterial;

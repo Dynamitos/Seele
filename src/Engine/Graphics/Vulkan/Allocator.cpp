@@ -18,22 +18,12 @@ SubAllocation::~SubAllocation()
     owner->markFree(this);
 }
 
-constexpr VkDeviceMemory SubAllocation::getHandle() const
+VkDeviceMemory SubAllocation::getHandle() const
 {
     return owner->getHandle();
 }
 
-constexpr VkDeviceSize SubAllocation::getSize() const
-{
-    return size;
-}
-
-constexpr VkDeviceSize SubAllocation::getOffset() const
-{
-    return alignedOffset;
-}
-
-constexpr bool SubAllocation::isReadable() const
+bool SubAllocation::isReadable() const
 {
     return owner->isReadable();
 }
@@ -203,30 +193,6 @@ void Allocation::markFree(PSubAllocation allocation)
     }
 }
 
-constexpr VkDeviceMemory Allocation::getHandle() const
-{
-    return allocatedMemory;
-}
-
-constexpr void* Allocation::getMappedPointer()
-{
-    if (!canMap)
-    {
-        return nullptr;
-    }
-    if (!isMapped)
-    {
-        vkMapMemory(device, allocatedMemory, 0, bytesAllocated, 0, &mappedPointer);
-        isMapped = true;
-    }
-    return mappedPointer;
-}
-
-constexpr bool Allocation::isReadable() const
-{
-    return readable;
-}
-
 void Allocation::flushMemory()
 {
     VkMappedMemoryRange range = {
@@ -260,6 +226,7 @@ Allocator::Allocator(PGraphics graphics)
         VkMemoryHeap memoryHeap = memProperties.memoryHeaps[i];
         HeapInfo heapInfo; 
         heapInfo.maxSize = memoryHeap.size;
+        std::cout << "Creating heap " << i << " with properties " << memoryHeap.flags << " size " << memoryHeap.size << std::endl;
         heaps.add(std::move(heapInfo));
     }
 }
@@ -293,6 +260,7 @@ OSubAllocation Allocator::allocate(const VkMemoryRequirements2 &memRequirements2
         {
             OAllocation newAllocation = new Allocation(graphics, this, requirements.size, memoryTypeIndex, properties, dedicatedInfo);
             heaps[heapIndex].inUse += newAllocation->bytesAllocated;
+            std::cout << "Heap " << heapIndex << " +" <<newAllocation->bytesAllocated << ": " << (float)heaps[heapIndex].inUse / heaps[heapIndex].maxSize << "%" << std::endl; 
             heaps[heapIndex].allocations.add(std::move(newAllocation));
             return heaps[heapIndex].allocations.back()->getSuballocation(requirements.size, requirements.alignment);
         } 
@@ -312,7 +280,7 @@ OSubAllocation Allocator::allocate(const VkMemoryRequirements2 &memRequirements2
     // no suitable allocations found, allocate new block
     OAllocation newAllocation = new Allocation(graphics, this, (requirements.size > MemoryBlockSize) ? requirements.size : (VkDeviceSize)MemoryBlockSize, memoryTypeIndex, properties, nullptr);
     heaps[heapIndex].inUse += newAllocation->bytesAllocated;
-    heaps[heapIndex].allocations.add(std::move(newAllocation));
+    std::cout << "Heap " << heapIndex << " +" <<newAllocation->bytesAllocated << ": " << (float)heaps[heapIndex].inUse / heaps[heapIndex].maxSize << "%" << std::endl;     heaps[heapIndex].allocations.add(std::move(newAllocation));
     return heaps[heapIndex].allocations.back()->getSuballocation(requirements.size, requirements.alignment);
 }
 
@@ -321,12 +289,13 @@ void Allocator::free(Allocation *allocation)
     std::scoped_lock lck(lock);
     for (auto& heap : heaps)
     {
-        for (uint32 i = 0; i < heap.allocations.size(); ++i)
+        for (uint32 heapIndex = 0; heapIndex < heap.allocations.size(); ++heapIndex)
         {
-            if (heap.allocations[i] == allocation)
+            if (heap.allocations[heapIndex] == allocation)
             {
                 heap.inUse -= allocation->bytesAllocated;
-                heap.allocations.removeAt(i, false);
+                std::cout << "Heap " << heapIndex << " -" <<allocation->bytesAllocated << ":" << (float)heaps[heapIndex].inUse / heaps[heapIndex].maxSize << "%" << std::endl; 
+                heap.allocations.removeAt(heapIndex, false);
                 return;
             }
         }
@@ -374,29 +343,19 @@ void StagingBuffer::invalidateMemory()
     allocation->invalidateMemory();
 }
 
-constexpr VkDeviceMemory StagingBuffer::getMemoryHandle() const
+VkDeviceMemory StagingBuffer::getMemoryHandle() const
 {
     return allocation->getHandle();
 }
 
-constexpr VkDeviceSize StagingBuffer::getOffset() const
+VkDeviceSize StagingBuffer::getOffset() const
 {
     return allocation->getOffset();
 }
 
-constexpr uint64 StagingBuffer::getSize() const
+uint64 StagingBuffer::getSize() const
 {
     return allocation->getSize();
-}
-
-constexpr bool StagingBuffer::isReadable() const
-{
-    return readable;
-}
-
-constexpr VkBufferUsageFlags StagingBuffer::getUsage() const
-{
-    return usage;
 }
 
 StagingManager::StagingManager(PGraphics graphics, PAllocator allocator)
@@ -422,8 +381,9 @@ OStagingBuffer StagingManager::allocateStagingBuffer(uint64 size, VkBufferUsageF
         {
             //std::cout << "Reusing staging buffer" << std::endl;
             activeBuffers.add(freeBuffer);
+            OStagingBuffer owner = std::move(freeBuffer);
             freeBuffers.remove(it, false);
-            return std::move(freeBuffer);
+            return owner;
         }
     }
     //std::cout << "Creating new stagingbuffer" << std::endl;
@@ -463,6 +423,8 @@ OStagingBuffer StagingManager::allocateStagingBuffer(uint64 size, VkBufferUsageF
     );
     vkBindBufferMemory(graphics->getDevice(), buffer, stagingBuffer->getMemoryHandle(), stagingBuffer->getOffset());
 
+    std::cout << "Creating new stagingbuffer size " << stagingBuffer->getSize() << std::endl;
+
     activeBuffers.add(stagingBuffer);
     
     return stagingBuffer;
@@ -471,6 +433,11 @@ OStagingBuffer StagingManager::allocateStagingBuffer(uint64 size, VkBufferUsageF
 void StagingManager::releaseStagingBuffer(OStagingBuffer buffer)
 {
     std::scoped_lock l(lock);
+    if(activeBuffers.find(buffer) == activeBuffers.end())
+    {
+        return;
+    }
     activeBuffers.remove(buffer);
+    std::cout << "Releasing stagingbuffer size " << buffer->getSize() << std::endl;
     freeBuffers.add(std::move(buffer));
 }

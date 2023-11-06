@@ -157,6 +157,10 @@ public:
     {
         if (this != &other)
         {
+            if(pointer != nullptr)
+            {
+                Deleter()(pointer);
+            }
             pointer = other.pointer;
         }
         return *this;

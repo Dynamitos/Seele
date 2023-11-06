@@ -8,7 +8,7 @@ namespace Seele
 class Game
 {
 public:
-    Game(AssetRegistry* registry) {}
+    Game(AssetRegistry*) {}
     virtual ~Game() {}
     virtual void setupScene(PScene scene, PSystemGraph graph) = 0;
 };

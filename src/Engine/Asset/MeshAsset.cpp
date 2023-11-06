@@ -21,7 +21,6 @@ MeshAsset::~MeshAsset()
 void MeshAsset::save(ArchiveBuffer& buffer) const
 {
     Serialization::save(buffer, meshes);
-    
 }
 
 void MeshAsset::load(ArchiveBuffer& buffer) 

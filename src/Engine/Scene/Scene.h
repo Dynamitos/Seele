@@ -48,9 +48,9 @@ public:
     Gfx::PGraphics getGraphics() const { return graphics; }
     entt::registry registry;
 private:
+    Gfx::PGraphics graphics;
     OLightEnvironment lightEnv;
     PhysicsSystem physics;
-    Gfx::PGraphics graphics;
 };
 DEFINE_REF(Scene)
 } // namespace Seele

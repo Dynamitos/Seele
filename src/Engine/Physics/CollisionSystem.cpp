@@ -91,7 +91,7 @@ bool CollisionSystem::createWitness(Witness& result, const ShapeBase& source, co
     }
     for (size_t i = 0; i < source.indices.size(); i += 3)
     {
-        auto findEdgePlane = [=, &result](uint32_t point1Index, uint32_t point2Index)
+        auto findEdgePlane = [this, &source, &other, &result](uint32_t point1Index, uint32_t point2Index)
         {
             const glm::vec3 point1 = source.vertices[point1Index];
             const glm::vec3 point2 = source.vertices[point2Index];

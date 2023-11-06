@@ -8,8 +8,8 @@ using namespace Seele::Component;
 using namespace Seele::Math;
 
 Camera::Camera()
-    : bNeedsViewBuild(false)
-    , viewMatrix(Matrix4())
+    : viewMatrix(Matrix4())
+    , bNeedsViewBuild(false)
 {
     yaw = 0;
     pitch = 0;
