@@ -1,4 +1,5 @@
 #pragma once
+#include "Graphics/Initializer.h"
 #include "Math/Vector.h"
 #include "VertexData.h"
 
@@ -15,6 +16,7 @@ public:
 	void loadNormals(MeshId id, const Array<Vector>& data);
 	void loadTangents(MeshId id, const Array<Vector>& data);
 	void loadBiTangents(MeshId id, const Array<Vector>& data);
+	virtual Gfx::PVertexDeclaration getDeclaration() override;
 	virtual void serializeMesh(MeshId id, uint64 numVertices, ArchiveBuffer& buffer) override;
 	virtual void deserializeMesh(MeshId id, ArchiveBuffer& buffer) override;
 	virtual void init(Gfx::PGraphics graphics) override;

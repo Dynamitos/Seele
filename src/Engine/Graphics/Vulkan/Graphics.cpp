@@ -2,6 +2,7 @@
 #include "Graphics.h"
 #include "Allocator.h"
 #include "Buffer.h"
+#include "Graphics/Enums.h"
 #include "PipelineCache.h"
 #include "CommandBuffer.h"
 #include "Initializer.h"
@@ -10,6 +11,8 @@
 #include "Framebuffer.h"
 #include "Shader.h"
 #include <GLFW/glfw3.h>
+#include <cstring>
+#include <vulkan/vulkan_core.h>
 
 using namespace Seele;
 using namespace Seele::Vulkan;
@@ -466,6 +469,18 @@ void Graphics::pickPhysicalDevice()
     physicalDevice = bestDevice;
     vkGetPhysicalDeviceProperties(physicalDevice, &props);
     vkGetPhysicalDeviceFeatures(physicalDevice, &features);
+    uint32 count = 0;
+    vkEnumerateDeviceExtensionProperties(physicalDevice, "VK_EXT_mesh_shader", &count, nullptr);
+    Array<VkExtensionProperties> extensionProps(count);
+    vkEnumerateDeviceExtensionProperties(physicalDevice, "VK_EXT_mesh_shader", &count, extensionProps.data());
+    for(size_t i = 0; i < count; ++i)
+    {
+        if(std::strcmp("VK_EXT_mesh_shader", extensionProps[i].extensionName) == 0)
+        {
+            Gfx::useMeshShading = true;
+            break;
+        }
+    }
 }
 
 void Graphics::createDevice(GraphicsInitializer initializer)

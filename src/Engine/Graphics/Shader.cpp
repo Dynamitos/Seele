@@ -1,4 +1,5 @@
 #include "Shader.h"
+#include "Graphics/Initializer.h"
 #include "Graphics/RenderPass/DepthPrepass.h"
 #include "Graphics/RenderPass/BasePass.h"
 #include <format>
@@ -121,6 +122,7 @@ ShaderCollection& ShaderCompiler::createShaders(ShaderPermutation permutation)
 		createInfo.entryPoint = "fragmentMain";
 		collection.fragmentShader = graphics->createFragmentShader(createInfo);
 	}
+	collection.vertexDeclaration = graphics->createVertexDeclaration(Array<VertexElement>());
 	PermutationId perm = PermutationId(permutation);
 	shaders[perm] = std::move(collection);
 

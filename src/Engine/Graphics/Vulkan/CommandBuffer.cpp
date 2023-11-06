@@ -8,6 +8,7 @@
 #include "Pipeline.h"
 #include "DescriptorSets.h"
 #include "RenderTarget.h"
+#include <vulkan/vulkan_core.h>
 
 using namespace Seele;
 using namespace Seele::Vulkan;
@@ -310,6 +311,11 @@ void RenderCommand::draw(uint32 vertexCount, uint32 instanceCount, int32 firstVe
     vkCmdDraw(handle, vertexCount, instanceCount, firstVertex, firstInstance);
 }
 
+void RenderCommand::drawIndexed(uint32 indexCount, uint32 instanceCount, int32 firstIndex, uint32 vertexOffset, uint32 firstInstance) 
+{
+    assert(threadId == std::this_thread::get_id());
+    vkCmdDrawIndexed(handle, indexCount, instanceCount, firstIndex, vertexOffset, firstIndex);
+}
 void RenderCommand::dispatch(uint32 groupX, uint32 groupY, uint32 groupZ)
 {
     assert(threadId == std::this_thread::get_id());

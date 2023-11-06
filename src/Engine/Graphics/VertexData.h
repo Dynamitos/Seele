@@ -1,4 +1,5 @@
 #pragma once
+#include "Graphics/Initializer.h"
 #include "Material/MaterialInstance.h"
 #include "Component/Transform.h"
 #include "Containers/List.h"
@@ -37,12 +38,13 @@ public:
     {
         MeshId id;
         InstanceData instance;
+        Gfx::PIndexBuffer indexBuffer;
     };
     struct MaterialInstanceData
     {
         PMaterialInstance materialInstance;
         Gfx::PDescriptorSet descriptorSet;
-        uint32_t numMeshes; // not necessarily equal to meshes.size() if a MeshId has multiple meshes
+        uint32 numMeshes; // not necessarily equal to meshes.size() if a MeshId has multiple meshes
         Array<MeshInstanceData> meshes;
     };
     struct MaterialData
@@ -61,6 +63,7 @@ public:
     void loadMesh(MeshId id, Array<Meshlet> meshlets);
     void createDescriptors();
     MeshId allocateVertexData(uint64 numVertices);
+    uint32 getMeshOffset(MeshId id);
     virtual void serializeMesh(MeshId id, uint64 numVertices, ArchiveBuffer& buffer) = 0;
     virtual void deserializeMesh(MeshId id, ArchiveBuffer& buffer) = 0;
     virtual void bindBuffers(Gfx::PRenderCommand command) = 0;

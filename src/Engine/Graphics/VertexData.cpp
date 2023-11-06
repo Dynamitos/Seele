@@ -28,7 +28,8 @@ void VertexData::updateMesh(const Component::Transform& transform, PMesh mesh)
         .id = mesh->id,
         .instance = InstanceData {
             .transformMatrix = transform.toMatrix(),
-        }
+        },
+        .indexBuffer = mesh->indexBuffer,
     });
 }
 
@@ -148,6 +149,11 @@ MeshId VertexData::allocateVertexData(uint64 numVertices)
         resizeBuffers();
     }
     return res;
+}
+
+uint32 VertexData::getMeshOffset(MeshId id)
+{
+    return meshOffsets[id];
 }
 
 List<VertexData*> vertexDataList;

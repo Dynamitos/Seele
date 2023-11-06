@@ -1,5 +1,7 @@
 #include "BasePass.h"
+#include "Graphics/Enums.h"
 #include "Graphics/Graphics.h"
+#include "Graphics/Initializer.h"
 #include "Graphics/Shader.h"
 #include "Window/Window.h"
 #include "Component/Camera.h"
@@ -73,10 +75,18 @@ void BasePass::render()
     graphics->beginRenderPass(renderPass);
     Gfx::ShaderPermutation permutation;
     permutation.hasFragment = true;
-    permutation.useMeshShading = true;
-    permutation.hasTaskShader = true;
-    std::memcpy(permutation.taskFile, "MeshletBasePass", std::strlen("MeshletBasePass"));
-    std::memcpy(permutation.vertexMeshFile, "MeshletBasePass", std::strlen("MeshletBasePass"));
+    if(Gfx::useMeshShading)
+    {
+        permutation.useMeshShading = true;
+        permutation.hasTaskShader = true;
+        std::memcpy(permutation.taskFile, "MeshletBasePass", sizeof("MeshletBasePass"));
+        std::memcpy(permutation.vertexMeshFile, "MeshletBasePass", sizeof("MeshletBasePass"));
+    }
+    else
+    {
+        permutation.useMeshShading = false;
+        std::memcpy(permutation.vertexMeshFile, "LegacyBasePass", sizeof("LegacyBasePass"));
+    }
     std::memcpy(permutation.fragmentFile, "BasePass", std::strlen("BasePass"));
     for (VertexData* vertexData : VertexData::getList())
     {
@@ -105,15 +115,30 @@ void BasePass::render()
 
             const Gfx::ShaderCollection* collection = graphics->getShaderCompiler()->findShaders(id);
             assert(collection != nullptr);
-            Gfx::MeshPipelineCreateInfo pipelineInfo;
-            pipelineInfo.taskShader = collection->taskShader;
-            pipelineInfo.meshShader = collection->meshShader;
-            pipelineInfo.fragmentShader = collection->fragmentShader;
-            pipelineInfo.pipelineLayout = layout;
-            pipelineInfo.renderPass = renderPass;
-            pipelineInfo.depthStencilState.depthCompareOp = Gfx::SE_COMPARE_OP_LESS_OR_EQUAL;
-            Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(pipelineInfo);
-            command->bindPipeline(pipeline);
+            if(Gfx::useMeshShading)
+            {
+                Gfx::MeshPipelineCreateInfo pipelineInfo;
+                pipelineInfo.taskShader = collection->taskShader;
+                pipelineInfo.meshShader = collection->meshShader;
+                pipelineInfo.fragmentShader = collection->fragmentShader;
+                pipelineInfo.pipelineLayout = layout;
+                pipelineInfo.renderPass = renderPass;
+                pipelineInfo.depthStencilState.depthCompareOp = Gfx::SE_COMPARE_OP_LESS_OR_EQUAL;
+                Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(pipelineInfo);
+                command->bindPipeline(pipeline);
+            }
+            else
+            {
+                Gfx::LegacyPipelineCreateInfo pipelineInfo;
+                pipelineInfo.vertexDeclaration = collection->vertexDeclaration;
+                pipelineInfo.vertexShader = collection->vertexShader;
+                pipelineInfo.fragmentShader = collection->fragmentShader;
+                pipelineInfo.pipelineLayout = layout;
+                pipelineInfo.renderPass = renderPass;
+                pipelineInfo.depthStencilState.depthCompareOp = Gfx::SE_COMPARE_OP_LESS_OR_EQUAL;
+                Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(pipelineInfo);
+                command->bindPipeline(pipeline);
+            }
 
             descriptorSets[INDEX_VERTEX_DATA] = vertexData->getVertexDataSet();
             for (const auto& [_, instance] : materialData.instances)
@@ -121,7 +146,20 @@ void BasePass::render()
                 descriptorSets[INDEX_MATERIAL] = instance.materialInstance->getDescriptorSet();
                 descriptorSets[INDEX_SCENE_DATA] = instance.descriptorSet;
                 command->bindDescriptor(descriptorSets);
-                command->dispatch(instance.numMeshes, 1, 1);
+                if(Gfx::useMeshShading)
+                {
+                    command->dispatch(instance.numMeshes, 1, 1);
+                }
+                else
+                {
+                    uint32 instanceOffset = 0;
+                    for(const auto& mesh : instance.meshes)
+                    {
+                        uint32 vertexOffset = vertexData->getMeshOffset(mesh.id);
+                        command->bindIndexBuffer(mesh.indexBuffer);
+                        command->drawIndexed(mesh.indexBuffer->getNumIndices(), 1, 0, vertexOffset, instanceOffset);
+                    }
+                }
             }
         }
     }

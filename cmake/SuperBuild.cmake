@@ -80,7 +80,7 @@ set(SLANG_BINARY_DIR ${SLANG_ROOT}/bin/linux-x64/release)
 ExternalProject_Add(slang-build
     SOURCE_DIR ${SLANG_ROOT}
     BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}
-    CONFIGURE_COMMAND premake5 --file=${CMAKE_SOURCE_DIR}/external/slang/premake5.lua gmake2 --arch=x64 --deps=true --build-location=build/linux
+    CONFIGURE_COMMAND ${CMAKE_SOURCE_DIR}/premake5 --file=${CMAKE_SOURCE_DIR}/external/slang/premake5.lua gmake2 --arch=x64 --deps=true --build-location=build/linux
     BUILD_COMMAND make -C ${CMAKE_SOURCE_DIR}/external/slang/build/linux config=${SLANG_CONFIG}
     INSTALL_COMMAND ""
 )

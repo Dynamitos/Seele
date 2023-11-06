@@ -1,6 +1,7 @@
 #pragma once
 #include "Asset/MaterialInstanceAsset.h"
 #include "VertexData.h"
+#include "Graphics/Buffer.h"
 
 namespace Seele
 {
@@ -13,6 +14,7 @@ public:
     VertexData* vertexData;
     MeshId id;
     uint64 vertexCount;
+    Gfx::OIndexBuffer indexBuffer;
     PMaterialInstanceAsset referencedMaterial;
     Array<Meshlet> meshlets;
     void save(ArchiveBuffer& buffer) const;
