@@ -128,7 +128,7 @@ public:
 		return allocate(requirements, props, &allocInfo);
 	}
 
-	void free(Allocation *allocation);
+	void free(PAllocation allocation);
 private:
 	enum
 	{

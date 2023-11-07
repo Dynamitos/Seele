@@ -19,7 +19,7 @@ public:
     virtual void createRenderPass() override;
     static void modifyRenderPassMacros(Map<const char*, const char*>& defines);
 private:
-    Gfx::PRenderTargetAttachment colorAttachment;
+    Gfx::ORenderTargetAttachment colorAttachment;
     Gfx::PTexture2D depthBuffer;
     Gfx::PShaderBuffer oLightIndexList;
     Gfx::PShaderBuffer tLightIndexList;

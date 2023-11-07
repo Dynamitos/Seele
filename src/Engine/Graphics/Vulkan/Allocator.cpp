@@ -89,10 +89,8 @@ OSubAllocation Allocation::getSuballocation(VkDeviceSize requestedSize, VkDevice
             return nullptr;
         }
     }
-    for (auto& it : freeRanges)
+    for (auto& [allocatedOffset, freeAllocation] : freeRanges)
     {
-        VkDeviceSize allocatedOffset = it.key;
-        OSubAllocation& freeAllocation = it.value;
         assert(allocatedOffset == freeAllocation->allocatedOffset);
         VkDeviceSize alignedOffset = allocatedOffset + alignment - 1;
         alignedOffset /= alignment;
@@ -284,18 +282,18 @@ OSubAllocation Allocator::allocate(const VkMemoryRequirements2 &memRequirements2
     return heaps[heapIndex].allocations.back()->getSuballocation(requirements.size, requirements.alignment);
 }
 
-void Allocator::free(Allocation *allocation)
+void Allocator::free(PAllocation allocation)
 {
     std::scoped_lock lck(lock);
-    for (auto& heap : heaps)
+    for (uint32 heapIndex = 0; heapIndex < heaps.size(); ++heapIndex)
     {
-        for (uint32 heapIndex = 0; heapIndex < heap.allocations.size(); ++heapIndex)
+        for (uint32 alloc = 0; alloc < heaps[heapIndex].allocations.size(); ++alloc)
         {
-            if (heap.allocations[heapIndex] == allocation)
+            if (heaps[heapIndex].allocations[alloc] == allocation)
             {
-                heap.inUse -= allocation->bytesAllocated;
-                std::cout << "Heap " << heapIndex << " -" <<allocation->bytesAllocated << ":" << (float)heaps[heapIndex].inUse / heaps[heapIndex].maxSize << "%" << std::endl; 
-                heap.allocations.removeAt(heapIndex, false);
+                heaps[heapIndex].inUse -= allocation->bytesAllocated;
+                std::cout << "Heap " << heapIndex << " -" <<allocation->bytesAllocated << ": " << (float)heaps[heapIndex].inUse / heaps[heapIndex].maxSize << "%" << std::endl;
+                heaps[heapIndex].allocations.removeAt(heapIndex, false);
                 return;
             }
         }
@@ -432,11 +430,11 @@ OStagingBuffer StagingManager::allocateStagingBuffer(uint64 size, VkBufferUsageF
 
 void StagingManager::releaseStagingBuffer(OStagingBuffer buffer)
 {
-    std::scoped_lock l(lock);
-    if(activeBuffers.find(buffer) == activeBuffers.end())
+    if (buffer == nullptr)
     {
         return;
     }
+    std::scoped_lock l(lock);
     activeBuffers.remove(buffer);
     std::cout << "Releasing stagingbuffer size " << buffer->getSize() << std::endl;
     freeBuffers.add(std::move(buffer));

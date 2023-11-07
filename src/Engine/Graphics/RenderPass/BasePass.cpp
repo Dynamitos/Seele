@@ -75,7 +75,7 @@ void BasePass::render()
     graphics->beginRenderPass(renderPass);
     Gfx::ShaderPermutation permutation;
     permutation.hasFragment = true;
-    if(Gfx::useMeshShading)
+    if(graphics->supportMeshShading())
     {
         permutation.useMeshShading = true;
         permutation.hasTaskShader = true;
@@ -115,7 +115,7 @@ void BasePass::render()
 
             const Gfx::ShaderCollection* collection = graphics->getShaderCompiler()->findShaders(id);
             assert(collection != nullptr);
-            if(Gfx::useMeshShading)
+            if(graphics->supportMeshShading())
             {
                 Gfx::MeshPipelineCreateInfo pipelineInfo;
                 pipelineInfo.taskShader = collection->taskShader;

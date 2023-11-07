@@ -226,7 +226,7 @@ TextPass::FontData& TextPass::getFontData(PFontAsset font)
         gd.bearing = value.bearing;
         gd.size = value.size;
         gd.advance = value.advance;
-        textures.add(value.texture);
+        textures.add(font->getTexture(value.textureIndex));
     }
     fd.glyphDataSet = glyphData;
     

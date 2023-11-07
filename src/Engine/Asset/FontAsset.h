@@ -18,12 +18,16 @@ public:
 
     struct Glyph
     {
-        Gfx::PTexture2D texture;
+        uint32 textureIndex;
         IVector2 size;
         IVector2 bearing;
         uint32 advance;
+        void save(ArchiveBuffer& buffer) const;
+        void load(ArchiveBuffer& buffer);
     };
     const Map<uint32, Glyph> getGlyphData() const { return glyphs; }
+    Gfx::PTexture2D getTexture(uint32 index) { return usedTextures[index]; }
+    void setUsedTextures(Array<Gfx::OTexture2D> _usedTextures);
 private:
     Array<Gfx::OTexture2D> usedTextures;
     Map<uint32, Glyph> glyphs;

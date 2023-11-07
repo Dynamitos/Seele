@@ -21,7 +21,7 @@ AssetRegistry::~AssetRegistry()
     delete assetRoot;
 }
 
-void AssetRegistry::init(const std::string& rootFolder, Gfx::PGraphics graphics)
+void AssetRegistry::init(std::filesystem::path rootFolder, Gfx::PGraphics graphics)
 {
     get().initialize(rootFolder, graphics);
 }

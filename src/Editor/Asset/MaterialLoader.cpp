@@ -75,7 +75,7 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
                 p->data = std::stof(defaultValue.value().get<std::string>());
             }
             parameters.add(p->key);
-            expressions[p->key] = std::move(p);
+            expressions[param.key()] = std::move(p);
         }
         // TODO: ALIGNMENT RULES
         else if(type.compare("float3") == 0)
@@ -92,7 +92,7 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
                 p->data = parseVector(defaultValue.value().get<std::string>().c_str());
             }
             parameters.add(p->key); 
-            expressions[p->key] = std::move(p);
+            expressions[param.key()] = std::move(p);
         }
         else if(type.compare("Texture2D") == 0)
         {
@@ -108,7 +108,7 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
                 p->data = AssetRegistry::findTexture(""); // this will return placeholder texture
             }
             parameters.add(p->key);
-            expressions[p->key] = std::move(p);
+            expressions[param.key()] = std::move(p);
         }
         else if(type.compare("SamplerState") == 0)
         {
@@ -116,7 +116,7 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
             layout->addDescriptorBinding(bindingCounter++, Gfx::SE_DESCRIPTOR_TYPE_SAMPLER);
             p->data = graphics->createSamplerState({});
             parameters.add(p->key);
-            expressions[p->key] = std::move(p);
+            expressions[param.key()] = std::move(p);
         }
         else
         {
@@ -136,7 +136,7 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
             OConstantExpression c = new ConstantExpression(str, ExpressionType::UNKNOWN);
             std::string name = std::format("Const{0}", auxKey++);
             c->key = name;
-            expressions[c->key] = std::move(c);
+            expressions[name] = std::move(c);
             return name;
         }
         else

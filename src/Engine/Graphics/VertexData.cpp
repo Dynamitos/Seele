@@ -118,7 +118,7 @@ void VertexData::createDescriptors()
             instanceDataLayout->reset();
             matInst.descriptorSet = instanceDataLayout->allocateDescriptorSet();
             matInst.descriptorSet->updateBuffer(0, instanceBuffer);
-            if (Gfx::useMeshShading)
+            if (graphics->supportMeshShading())
             {
                 Gfx::PShaderBuffer meshDataBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
                     .sourceData = {
@@ -181,7 +181,7 @@ void Seele::VertexData::init(Gfx::PGraphics graphics)
     verticesAllocated = NUM_DEFAULT_ELEMENTS;
     instanceDataLayout = graphics->createDescriptorLayout("VertexDataInstanceLayout");
     instanceDataLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
-    if (Gfx::useMeshShading)
+    if (graphics->supportMeshShading())
     {
         // meshData
         instanceDataLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);

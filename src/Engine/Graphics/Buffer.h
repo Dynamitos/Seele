@@ -23,6 +23,7 @@ protected:
     virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
 };
 
+DECLARE_REF(UniformBuffer)
 class UniformBuffer : public Buffer
 {
 public:
@@ -30,7 +31,7 @@ public:
     virtual ~UniformBuffer();
     // returns true if an update was performed, false if the old contents == new contents
     virtual bool updateContents(const DataSource& sourceData);
-    bool isDataEquals(UniformBuffer* other)
+    bool isDataEquals(PUniformBuffer other)
     {
         if(other == nullptr)
         {

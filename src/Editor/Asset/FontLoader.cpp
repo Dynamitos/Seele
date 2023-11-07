@@ -3,6 +3,7 @@
 #include "Asset/FontAsset.h"
 #include "Asset/AssetRegistry.h"
 #include "Graphics/Resources.h"
+#include "Graphics/Texture.h"
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
@@ -42,6 +43,7 @@ void FontLoader::import(FontImportArgs args, PFontAsset asset)
     error = FT_New_Face(ft, args.filePath.string().c_str(), 0, &face);
     assert(!error);
     FT_Set_Pixel_Sizes(face, 0, 48);
+    Array<Gfx::OTexture2D> usedTextures;
     for(uint32 c = 0; c < 256; ++c)
     {
         if(FT_Load_Char(face, c, FT_LOAD_RENDER))
@@ -70,10 +72,12 @@ void FontLoader::import(FontImportArgs args, PFontAsset asset)
             imageData.sourceData.size = sizeof(uint8);
             imageData.sourceData.data = &transparentPixel;
         }
-        glyph.texture = graphics->createTexture2D(imageData);
+        glyph.textureIndex = usedTextures.size();
+        usedTextures.add(graphics->createTexture2D(imageData));
     }
     FT_Done_Face(face);
     FT_Done_FreeType(ft);
+    asset->setUsedTextures(std::move(usedTextures));
 
     auto stream = AssetRegistry::createWriteStream((std::filesystem::path(asset->getFolderPath()) / asset->getName()).replace_extension("asset").string(), std::ios::binary);
 

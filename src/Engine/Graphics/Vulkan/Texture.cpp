@@ -110,7 +110,7 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType,
     if(sourceData.size > 0)
     {
         changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-        PStagingBuffer staging = graphics->getStagingManager()->allocateStagingBuffer(sourceData.size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+        OStagingBuffer staging = graphics->getStagingManager()->allocateStagingBuffer(sourceData.size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
         void* data = staging->getMappedPointer();
         std::memcpy(data, sourceData.data, sourceData.size);
         staging->flushMappedMemory();
@@ -134,6 +134,7 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType,
         
         // When loading a texture from a file, we will almost always use it as a texture map for fragment shaders
         changeLayout(Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        graphics->getStagingManager()->releaseStagingBuffer(std::move(staging));
     }
     else if(usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
     {
@@ -213,7 +214,7 @@ void TextureHandle::download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Ar
 {
     uint64 imageSize = sizeX * sizeY * sizeZ * Gfx::getFormatInfo(format).blockSize;
 
-    PStagingBuffer stagingbuffer = graphics->getStagingManager()->allocateStagingBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT, true);
+    OStagingBuffer stagingbuffer = graphics->getStagingManager()->allocateStagingBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT, true);
     auto prevlayout = layout;
     changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
     PCmdBuffer cmdBuffer = graphics->getQueueCommands(currentOwner)->getCommands();
@@ -236,6 +237,7 @@ void TextureHandle::download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Ar
     buffer.resize(stagingbuffer->getSize());
     void* data = stagingbuffer->getMappedPointer();
     std::memcpy(buffer.data(), data, buffer.size());
+    graphics->getStagingManager()->releaseStagingBuffer(std::move(stagingbuffer));
 }
 
 void TextureHandle::executeOwnershipBarrier(Gfx::QueueType newOwner)

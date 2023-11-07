@@ -114,108 +114,95 @@ void Graphics::executeCommands(const Array<Gfx::PComputeCommand>& commands)
 
 Gfx::OTexture2D Graphics::createTexture2D(const TextureCreateInfo &createInfo)
 {
-    OTexture2D result = new Texture2D(this, createInfo);
-    return result;
+    return new Texture2D(this, createInfo);
 }
 
 Gfx::OTexture3D Graphics::createTexture3D(const TextureCreateInfo &createInfo)
 {
-    OTexture3D result = new Texture3D(this, createInfo);
-    return result;
+    return new Texture3D(this, createInfo);
 }
 
 Gfx::OTextureCube Graphics::createTextureCube(const TextureCreateInfo &createInfo)
 {
-    OTextureCube result = new TextureCube(this, createInfo);
-    return result;
+    return new TextureCube(this, createInfo);
 }
 
 Gfx::OUniformBuffer Graphics::createUniformBuffer(const UniformBufferCreateInfo &bulkData)
 {
-    OUniformBuffer uniformBuffer = new UniformBuffer(this, bulkData);
-    return uniformBuffer;
+    return new UniformBuffer(this, bulkData);
 }
 
 Gfx::OShaderBuffer Graphics::createShaderBuffer(const ShaderBufferCreateInfo &bulkData)
 {
-    OShaderBuffer shaderBuffer = new ShaderBuffer(this, bulkData);
-    return shaderBuffer;
+    return new ShaderBuffer(this, bulkData);
 }
 Gfx::OVertexBuffer Graphics::createVertexBuffer(const VertexBufferCreateInfo &bulkData)
 {
-    OVertexBuffer vertexBuffer = new VertexBuffer(this, bulkData);
-    return vertexBuffer;
+    return new VertexBuffer(this, bulkData);
 }
 
 Gfx::OIndexBuffer Graphics::createIndexBuffer(const IndexBufferCreateInfo &bulkData)
 {
-    OIndexBuffer indexBuffer = new IndexBuffer(this, bulkData);
-    return indexBuffer;
+    return new IndexBuffer(this, bulkData);
 }
 Gfx::PRenderCommand Graphics::createRenderCommand(const std::string& name)
 {
-    PRenderCommand cmdBuffer = getGraphicsCommands()->createRenderCommand(activeRenderPass, activeFramebuffer, name);
-    return cmdBuffer;
+    return getGraphicsCommands()->createRenderCommand(activeRenderPass, activeFramebuffer, name);
 }
 
 Gfx::PComputeCommand Graphics::createComputeCommand(const std::string& name) 
 {
-    PComputeCommand cmdBuffer = getComputeCommands()->createComputeCommand(name);
-    return cmdBuffer;
+    return getComputeCommands()->createComputeCommand(name);
 }
 
 Gfx::OVertexDeclaration Graphics::createVertexDeclaration(const Array<Gfx::VertexElement>& element) 
 {
-    OVertexDeclaration declaration = new VertexDeclaration(element);
-    return declaration;
+    return new VertexDeclaration(element);
 }
 
 Gfx::OVertexShader Graphics::createVertexShader(const ShaderCreateInfo& createInfo)
 {
     OVertexShader shader = new VertexShader(this);
     shader->create(createInfo);
-    return shader;
+    return std::move(shader);
 }
 Gfx::OFragmentShader Graphics::createFragmentShader(const ShaderCreateInfo& createInfo)
 {
     OFragmentShader shader = new FragmentShader(this);
     shader->create(createInfo);
-    return shader;
+    return std::move(shader);
 }
 Gfx::OComputeShader Graphics::createComputeShader(const ShaderCreateInfo& createInfo) 
 {
     OComputeShader shader = new ComputeShader(this);
     shader->create(createInfo);
-    return shader;
+    return std::move(shader);
 }
 Gfx::OTaskShader Graphics::createTaskShader(const ShaderCreateInfo& createInfo)
 {
     OTaskShader shader = new TaskShader(this);
     shader->create(createInfo);
-    return shader;
+    return std::move(shader);
 }
 Gfx::OMeshShader Graphics::createMeshShader(const ShaderCreateInfo& createInfo)
 {
     OMeshShader shader = new MeshShader(this);
     shader->create(createInfo);
-    return shader;
+    return std::move(shader);
 }
 
 Gfx::OGraphicsPipeline Graphics::createGraphicsPipeline(const Gfx::LegacyPipelineCreateInfo& createInfo)
 {
-    OGraphicsPipeline pipeline = pipelineCache->createPipeline(createInfo);
-    return pipeline;
+    return pipelineCache->createPipeline(createInfo);
 }
 Gfx::OGraphicsPipeline Graphics::createGraphicsPipeline(const Gfx::MeshPipelineCreateInfo& createInfo)
 {
-    OGraphicsPipeline pipeline = pipelineCache->createPipeline(createInfo);
-    return pipeline;
+    return pipelineCache->createPipeline(createInfo);
 }
 
 Gfx::OComputePipeline Graphics::createComputePipeline(const Gfx::ComputePipelineCreateInfo& createInfo) 
 {
-    OComputePipeline pipeline = pipelineCache->createPipeline(createInfo);
-    return pipeline;
+    return pipelineCache->createPipeline(createInfo);
 }
 
 Gfx::OSamplerState Graphics::createSamplerState(const SamplerCreateInfo& createInfo) 
@@ -240,17 +227,15 @@ Gfx::OSamplerState Graphics::createSamplerState(const SamplerCreateInfo& createI
     vkInfo.mipmapMode = cast(createInfo.mipmapMode);
     vkInfo.unnormalizedCoordinates = createInfo.unnormalizedCoordinates;
     VK_CHECK(vkCreateSampler(handle, &vkInfo, nullptr, &sampler->sampler));
-    return sampler;
+    return std::move(sampler);
 }
 Gfx::ODescriptorLayout Graphics::createDescriptorLayout(const std::string& name)
 {
-    ODescriptorLayout layout = new DescriptorLayout(this, name);
-    return layout;
+    return new DescriptorLayout(this, name);
 }
 Gfx::OPipelineLayout Graphics::createPipelineLayout(Gfx::PPipelineLayout baseLayout)
 {
-    OPipelineLayout layout = new PipelineLayout(this, baseLayout);
-    return layout;
+    return new PipelineLayout(this, baseLayout);
 }
 
 void Graphics::copyTexture(Gfx::PTexture srcTexture, Gfx::PTexture dstTexture) 
@@ -469,16 +454,19 @@ void Graphics::pickPhysicalDevice()
     physicalDevice = bestDevice;
     vkGetPhysicalDeviceProperties(physicalDevice, &props);
     vkGetPhysicalDeviceFeatures(physicalDevice, &features);
-    uint32 count = 0;
-    vkEnumerateDeviceExtensionProperties(physicalDevice, "VK_EXT_mesh_shader", &count, nullptr);
-    Array<VkExtensionProperties> extensionProps(count);
-    vkEnumerateDeviceExtensionProperties(physicalDevice, "VK_EXT_mesh_shader", &count, extensionProps.data());
-    for(size_t i = 0; i < count; ++i)
+    if (Gfx::useMeshShading)
     {
-        if(std::strcmp("VK_EXT_mesh_shader", extensionProps[i].extensionName) == 0)
+        uint32 count = 0;
+        vkEnumerateDeviceExtensionProperties(physicalDevice, VK_EXT_MESH_SHADER_EXTENSION_NAME, &count, nullptr);
+        Array<VkExtensionProperties> extensionProps(count);
+        vkEnumerateDeviceExtensionProperties(physicalDevice, VK_EXT_MESH_SHADER_EXTENSION_NAME, &count, extensionProps.data());
+        for (size_t i = 0; i < count; ++i)
         {
-            Gfx::useMeshShading = true;
-            break;
+            if (std::strcmp(VK_EXT_MESH_SHADER_EXTENSION_NAME, extensionProps[i].extensionName) == 0)
+            {
+                meshShadingEnabled = true;
+                break;
+            }
         }
     }
 }
@@ -605,7 +593,7 @@ void Graphics::createDevice(GraphicsInitializer initializer)
         .taskShader = VK_TRUE,
         .meshShader = VK_TRUE,
     };
-    if (Gfx::useMeshShading)
+    if (supportMeshShading())
     {
         descriptorIndexing.pNext = &enabledMeshShaderFeatures;
         initializer.deviceExtensions.add("VK_EXT_mesh_shader");

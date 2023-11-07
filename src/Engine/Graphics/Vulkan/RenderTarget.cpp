@@ -9,7 +9,6 @@
 using namespace Seele;
 using namespace Seele::Vulkan;
 
-double useMeshShading = false;
 double currentFrameDelta = 0;
 double Gfx::getCurrentFrameDelta()
 {

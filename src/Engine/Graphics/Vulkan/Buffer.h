@@ -7,7 +7,6 @@ namespace Seele
 {
 namespace Vulkan
 {
-
 class Buffer
 {
 public:

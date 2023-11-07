@@ -145,6 +145,7 @@ public:
     OwningPtr(OwningPtr<F>&& other)
     {
         pointer = dynamic_cast<T*>(*other);
+        other.clear();
     }
     OwningPtr(const OwningPtr& other) = delete;
     OwningPtr(OwningPtr&& other) noexcept
@@ -162,8 +163,13 @@ public:
                 Deleter()(pointer);
             }
             pointer = other.pointer;
+            other.pointer = nullptr;
         }
         return *this;
+    }
+    ~OwningPtr()
+    {
+        Deleter()(pointer);
     }
     operator RefPtr<T>()
     {
@@ -189,13 +195,18 @@ public:
     {
         return pointer;
     }
-    constexpr bool operator==(const OwningPtr& rhs) const noexcept
+    constexpr bool operator==(std::nullptr_t) const noexcept
     {
-        return pointer == rhs.pointer;
+        return pointer == nullptr;
     }
     constexpr auto operator<=>(const OwningPtr& rhs) const noexcept
     {
         return pointer <=> rhs.pointer;
+    }
+    // INTERNAL USE
+    constexpr void clear()
+    {
+        pointer = nullptr;
     }
 private:
     friend class RefPtr<T>;

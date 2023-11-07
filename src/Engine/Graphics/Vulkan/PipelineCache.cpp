@@ -38,7 +38,7 @@ PipelineCache::~PipelineCache()
 {
     VkDeviceSize cacheSize;
     vkGetPipelineCacheData(graphics->getDevice(), cache, &cacheSize, nullptr);
-    Array<uint8> cacheData;
+    Array<uint8> cacheData(cacheSize);
     vkGetPipelineCacheData(graphics->getDevice(), cache, &cacheSize, cacheData.data());
     std::ofstream stream(cacheFile, std::ios::binary);
     stream.write((char*)cacheData.data(), cacheSize);

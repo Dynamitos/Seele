@@ -39,7 +39,7 @@ void DepthPrepass::render()
     depthAttachment->getTexture()->transferOwnership(Gfx::QueueType::GRAPHICS);
     Gfx::ShaderPermutation permutation;
     permutation.hasFragment = false;
-    if(Gfx::useMeshShading)
+    if(graphics->supportMeshShading())
     {
         permutation.useMeshShading = true;
         permutation.hasTaskShader = true;
@@ -76,7 +76,7 @@ void DepthPrepass::render()
 
             const Gfx::ShaderCollection* collection = graphics->getShaderCompiler()->findShaders(id);
             assert(collection != nullptr);
-            if(Gfx::useMeshShading)
+            if(graphics->supportMeshShading())
             {
                 Gfx::MeshPipelineCreateInfo pipelineInfo;
                 pipelineInfo.taskShader = collection->taskShader;
@@ -107,7 +107,7 @@ void DepthPrepass::render()
                 descriptorSets[INDEX_MATERIAL] = instance.materialInstance->getDescriptorSet();
                 descriptorSets[INDEX_SCENE_DATA] = instance.descriptorSet;
                 command->bindDescriptor(descriptorSets);
-                if(Gfx::useMeshShading)
+                if(graphics->supportMeshShading())
                 {
                     command->dispatch(instance.numMeshes, 1, 1);
                 }

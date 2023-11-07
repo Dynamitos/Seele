@@ -16,7 +16,7 @@ class AssetRegistry
 {
 public:
     ~AssetRegistry();
-    static void init(const std::string& rootFolder, Gfx::PGraphics graphics);
+    static void init(std::filesystem::path path, Gfx::PGraphics graphics);
 
     static std::filesystem::path getRootFolder();
 

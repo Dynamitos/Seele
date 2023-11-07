@@ -80,10 +80,11 @@ public:
   	virtual OPipelineLayout createPipelineLayout(PPipelineLayout baseLayout = nullptr) = 0;
 
   	virtual void copyTexture(Gfx::PTexture srcTexture, Gfx::PTexture dstTexture) = 0;
-    
+    bool supportMeshShading() const { return meshShadingEnabled; }
 protected:
     QueueFamilyMapping queueMapping;
     OShaderCompiler shaderCompiler;
+    bool meshShadingEnabled = false;
     friend class Window;
 };
 DEFINE_REF(Graphics)

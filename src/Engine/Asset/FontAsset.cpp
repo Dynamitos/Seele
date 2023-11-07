@@ -22,36 +22,35 @@ FontAsset::~FontAsset()
 
 void FontAsset::save(ArchiveBuffer& buffer) const
 {
-    uint64 numGlyphs = glyphs.size();
-    Serialization::save(buffer, numGlyphs);
-    for (auto& [index, glyph] : glyphs)
+    Serialization::save(buffer, glyphs);
+    Serialization::save(buffer, usedTextures.size());
+    for (uint32 x = 0; x < usedTextures.size(); ++x)
     {
-
         Array<uint8> textureData;
         ktxTexture2* kTexture;
         ktxTextureCreateInfo createInfo = {
             .glInternalformat = 0,
-            .vkFormat = (uint32_t)glyph.texture->getFormat(),
+            .vkFormat = (uint32_t)usedTextures[x]->getFormat(),
             .pDfd = nullptr,
-            .baseWidth = glyph.texture->getSizeX(),
-            .baseHeight = glyph.texture->getSizeY(),
-            .baseDepth = glyph.texture->getSizeZ(),
-            .numDimensions = glyph.texture->getSizeZ() > 1 ? 3u : glyph.texture->getSizeY() > 1 ? 2u : 1u,
-            .numLevels = glyph.texture->getMipLevels(),
-            .numLayers = glyph.texture->getSizeZ(),
-            .numFaces = glyph.texture->getNumFaces(),
+            .baseWidth = usedTextures[x]->getSizeX(),
+            .baseHeight = usedTextures[x]->getSizeY(),
+            .baseDepth = usedTextures[x]->getSizeZ(),
+            .numDimensions = usedTextures[x]->getSizeZ() > 1 ? 3u : usedTextures[x]->getSizeY() > 1 ? 2u : 1u,
+            .numLevels = usedTextures[x]->getMipLevels(),
+            .numLayers = usedTextures[x]->getSizeZ(),
+            .numFaces = usedTextures[x]->getNumFaces(),
             .isArray = false,
             .generateMipmaps = false,
         };
         ktxTexture2_Create(&createInfo, KTX_TEXTURE_CREATE_ALLOC_STORAGE, &kTexture);
 
-        for (uint32 depth = 0; depth < glyph.texture->getSizeZ(); ++depth)
+        for (uint32 depth = 0; depth < usedTextures[x]->getSizeZ(); ++depth)
         {
-            for (uint32 face = 0; face < glyph.texture->getNumFaces(); ++face)
+            for (uint32 face = 0; face < usedTextures[x]->getNumFaces(); ++face)
             {
                 // technically, downloading cant be const, because we have to allocate temporary buffers and change layouts
                 // but practically the texture stays the same
-                glyph.texture->download(0, depth, face, textureData);
+                usedTextures[x]->download(0, depth, face, textureData);
                 ktxTexture_SetImageFromMemory(ktxTexture(kTexture), 0, depth, face, textureData.data(), textureData.size());
             }
         }
@@ -72,26 +71,18 @@ void FontAsset::save(ArchiveBuffer& buffer) const
 
         free(texData);
 
-        Serialization::save(buffer, index);
         Serialization::save(buffer, rawData);
-        Serialization::save(buffer, glyph.size);
-        Serialization::save(buffer, glyph.bearing);
-        Serialization::save(buffer, glyph.advance);
     }
 }
 
 
 void FontAsset::load(ArchiveBuffer& buffer)
 {
-    uint64 numGlyphs = glyphs.size();
-    Serialization::load(buffer, numGlyphs);
-    for (uint64 x = 0; x < numGlyphs; ++x)
+    Serialization::load(buffer, glyphs);
+    size_t numTextures;
+    Serialization::load(buffer, numTextures);
+    for (uint64 x = 0; x < numTextures; ++x)
     {
-        uint32 index;
-        Serialization::load(buffer, index);
-
-        Glyph& glyph = glyphs[index];
-
         Array<uint8> rawTex;
         Serialization::load(buffer, rawTex);
 
@@ -120,13 +111,29 @@ void FontAsset::load(ArchiveBuffer& buffer)
         };
 
         Gfx::OTexture2D texture = buffer.getGraphics()->createTexture2D(createInfo);
-        glyph.texture = texture;
         usedTextures.add(std::move(texture));
 
         ktxTexture_Destroy(ktxTexture(kTexture));
-
-        Serialization::load(buffer, glyph.size);
-        Serialization::load(buffer, glyph.bearing);
-        Serialization::load(buffer, glyph.advance);
     }
+}
+
+void Seele::FontAsset::setUsedTextures(Array<Gfx::OTexture2D> _usedTextures) 
+{ 
+    usedTextures = std::move(_usedTextures); 
+}
+
+void FontAsset::Glyph::save(ArchiveBuffer& buffer) const
+{
+    Serialization::save(buffer, textureIndex);
+    Serialization::save(buffer, size);
+    Serialization::save(buffer, bearing);
+    Serialization::save(buffer, advance);
+}
+
+void FontAsset::Glyph::load(ArchiveBuffer& buffer)
+{
+    Serialization::load(buffer, textureIndex);
+    Serialization::load(buffer, size);
+    Serialization::load(buffer, bearing);
+    Serialization::load(buffer, advance);
 }

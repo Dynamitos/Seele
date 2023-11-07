@@ -41,7 +41,7 @@ void MeshLoader::importAsset(MeshImportArgs args)
     import(args, ref);
 }
 
-void MeshLoader::loadMaterials(const aiScene* scene, const std::string& baseName, const std::filesystem::path& meshDirectory, const std::string& importPath, Array<PMaterialAsset>& globalMaterials)
+void MeshLoader::loadMaterials(const aiScene* scene, const std::string& baseName, const std::filesystem::path& meshDirectory, const std::string& importPath, Array<PMaterialInstanceAsset>& globalMaterials)
 {
     using json = nlohmann::json;
     for(uint32 i = 0; i < scene->mNumMaterials; ++i)
@@ -118,7 +118,11 @@ void MeshLoader::loadMaterials(const aiScene* scene, const std::string& baseName
             .filePath = meshDirectory / outMatFilename,
             .importPath = importPath,
             });
-        globalMaterials[i] = AssetRegistry::findMaterial(matCode["name"].get<std::string>());
+        PMaterialAsset baseMat = AssetRegistry::findMaterial(matCode["name"].get<std::string>());
+        globalMaterials[i] = baseMat->instantiate(InstantiationParameter{
+            .name = std::format("{0}_Inst_0", baseMat->getName()),
+            .folderPath = baseMat->getFolderPath(),
+            });
     }
 }
 
@@ -135,11 +139,11 @@ void findMeshRoots(aiNode *node, List<aiNode *> &meshNodes)
     }
 }
 
-void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialAsset>& materials, Array<OMesh>& globalMeshes, Component::Collider& collider)
+void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialInstanceAsset>& materials, Array<OMesh>& globalMeshes, Component::Collider& collider)
 {
     for (uint32 meshIndex = 0; meshIndex < scene->mNumMeshes; ++meshIndex)
     {
-        aiMesh *mesh = scene->mMeshes[meshIndex];
+        aiMesh* mesh = scene->mMeshes[meshIndex];
         collider.boundingbox.adjust(Vector(mesh->mAABB.mMin.x, mesh->mAABB.mMin.y, mesh->mAABB.mMin.z));
         collider.boundingbox.adjust(Vector(mesh->mAABB.mMax.x, mesh->mAABB.mMax.y, mesh->mAABB.mMax.z));
 
@@ -152,7 +156,7 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialAss
 
         StaticMeshVertexData* vertexData = StaticMeshVertexData::getInstance();
 
-        for(uint32 i = 0; i < mesh->mNumVertices; ++i)
+        for (uint32 i = 0; i < mesh->mNumVertices; ++i)
         {
             positions[i] = Vector(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
             texCoords[i] = Vector2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].x);
@@ -184,29 +188,29 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialAss
             .numPrimitives = 0,
         };
         auto insertAndGetIndex = [&uniqueVertices, &current](uint32 index) -> int8_t
-        {
-            auto [it, inserted] = uniqueVertices.insert(index);
-            if (inserted)
             {
-                if (current.numVertices == Gfx::numVerticesPerMeshlet)
+                auto [it, inserted] = uniqueVertices.insert(index);
+                if (inserted)
                 {
-                    return -1;
-                }
-                current.uniqueVertices[current.numVertices] = index;
-                return current.numVertices++;
-            }
-            else
-            {
-                for (uint32 i = 0; i < current.numVertices; ++i)
-                {
-                    if (current.uniqueVertices[i] == index)
+                    if (current.numVertices == Gfx::numVerticesPerMeshlet)
                     {
-                        return i;
+                        return -1;
                     }
+                    current.uniqueVertices[current.numVertices] = index;
+                    return current.numVertices++;
                 }
-                assert(false);
-            }
-        };
+                else
+                {
+                    for (uint32 i = 0; i < current.numVertices; ++i)
+                    {
+                        if (current.uniqueVertices[i] == index)
+                        {
+                            return i;
+                        }
+                    }
+                    assert(false);
+                }
+            };
         auto completeMeshlet = [&meshlets, &current, &uniqueVertices]() {
             meshlets.add(current);
             current = {
@@ -214,7 +218,7 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialAss
                 .numPrimitives = 0,
             };
             uniqueVertices.clear();
-        };
+            };
         for (size_t faceIndex = 0; faceIndex < mesh->mNumFaces; ++faceIndex)
         {
             auto i1 = insertAndGetIndex(mesh->mFaces[faceIndex].mIndices[0]);
@@ -234,13 +238,13 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialAss
             }
         }
         vertexData->loadMesh(id, meshlets);
-    
+
 
         collider.physicsMesh.addCollider(positions, indices, Matrix4(1.0f));
 
         IndexBufferCreateInfo idxInfo;
         idxInfo.indexType = Gfx::SE_INDEX_TYPE_UINT32;
-        idxInfo.sourceData.data = (uint8 *)indices.data();
+        idxInfo.sourceData.data = (uint8*)indices.data();
         idxInfo.sourceData.owner = Gfx::QueueType::DEDICATED_TRANSFER;
         idxInfo.sourceData.size = sizeof(uint32) * indices.size();
         Gfx::OIndexBuffer indexBuffer = graphics->createIndexBuffer(idxInfo);
@@ -249,10 +253,7 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialAss
         globalMeshes[meshIndex] = new Mesh();
         globalMeshes[meshIndex]->vertexData = vertexData;
         globalMeshes[meshIndex]->id = id;
-        globalMeshes[meshIndex]->referencedMaterial = materials[mesh->mMaterialIndex]->instantiate(InstantiationParameter{
-            .name = std::format("{0}_Inst_0", materials[mesh->mMaterialIndex]->getName()),
-            .folderPath = materials[mesh->mMaterialIndex]->getFolderPath(),
-        });
+        globalMeshes[meshIndex]->referencedMaterial = materials[mesh->mMaterialIndex];
         globalMeshes[meshIndex]->meshlets = std::move(meshlets);
         globalMeshes[meshIndex]->vertexCount = mesh->mNumVertices;
         globalMeshes[meshIndex]->indexBuffer = std::move(indexBuffer);
@@ -314,7 +315,7 @@ void MeshLoader::import(MeshImportArgs args, PMeshAsset meshAsset)
         aiProcess_FindDegenerates));
     const aiScene *scene = importer.ApplyPostProcessing(aiProcess_CalcTangentSpace);
     
-    Array<PMaterialAsset> globalMaterials(scene->mNumMaterials);
+    Array<PMaterialInstanceAsset> globalMaterials(scene->mNumMaterials);
     loadTextures(scene, args.filePath.parent_path(), args.importPath);
     loadMaterials(scene, args.filePath.stem().string(), args.filePath.parent_path(), args.importPath, globalMaterials);
     

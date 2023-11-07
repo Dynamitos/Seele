@@ -30,6 +30,7 @@ void MaterialInstanceAsset::load(ArchiveBuffer& buffer)
 {
     std::string id;
     Serialization::load(buffer, id);
+    material = new MaterialInstance();
     material->load(buffer);
     baseMaterial = AssetRegistry::findMaterial(id);
     material->setBaseMaterial(baseMaterial);

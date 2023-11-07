@@ -130,16 +130,20 @@ endif()
 
 add_subdirectory(src/)
 
-set(COPY_DLL_COMMAND "true")
 if(WIN32)
-    set(COPY_DLL_COMMAND "copy $<TARGET_RUNTIME_DLLS:Editor> $<TARGET_FILE_DIR:Engine>")
+    add_custom_target(dll_copy ALL
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:Engine> $<TARGET_FILE_DIR:Editor>
+        COMMAND_EXPAND_LISTS
+        DEPENDS Editor slang-build)
+else()
+    add_custom_target(dll_copy ALL
+        COMMAND ${CMAKE_COMMAND} -E true)
 endif()
 
 add_custom_target(SeeleEngine ALL
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/res $<TARGET_FILE_DIR:Engine>
-    COMMAND ${CMAKE_COMMAND} -E ${COPY_DLL_COMMAND}
     COMMAND_EXPAND_LISTS
-	DEPENDS Editor slang-build)
+	DEPENDS Editor slang-build dll_copy)
 
 install(
     TARGETS

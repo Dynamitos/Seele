@@ -165,7 +165,7 @@ namespace Gfx
 {
 static constexpr bool useAsyncCompute = true;
 static constexpr bool waitIdleOnSubmit = true;
-extern bool useMeshShading = false; // enable if supported
+static constexpr bool useMeshShading = true;
 static constexpr uint32 numFramesBuffered = 3;
 
 // meshlet dimensions curated by NVIDIA

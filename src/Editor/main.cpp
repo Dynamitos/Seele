@@ -227,7 +227,7 @@ int main()
     sceneViewInfo.dimensions.size.y = 720;
     sceneViewInfo.dimensions.offset.x = 0;
     sceneViewInfo.dimensions.offset.y = 0;
-    OGameView sceneView = new Editor::PlayView(graphics, window, sceneViewInfo, binaryPath);
+    OGameView sceneView = new Editor::PlayView(graphics, window, sceneViewInfo, binaryPath.generic_string());
     
     //ViewportCreateInfo inspectorViewInfo;
     //inspectorViewInfo.dimensions.size.x = 640;
