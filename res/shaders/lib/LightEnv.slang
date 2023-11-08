@@ -1,6 +1,6 @@
-import MaterialParameter;
-import BRDF;
 import Common;
+import BRDF;
+import MaterialParameter;
 
 interface ILightEnv
 {
@@ -15,7 +15,7 @@ struct DirectionalLight : ILightEnv
     float3 illuminate<B:IBRDF>(MaterialParameter input, B brdf)
     {
         float3 lightDir_TS = normalize(direction.xyz);
-        return brdf.evaluate(input.viewDir_TS, -lightDir_TS, color.xyz);	
+        return brdf.evaluate(input.viewDir_TS, -lightDir_TS, color.xyz);
     }
 };
 
@@ -57,7 +57,7 @@ struct PointLight : ILightEnv
     }
     float3 getViewPos()
     {
-        return mul(viewParams.viewMatrix, position_WS).xyz;
+        return mul(pViewParams.viewMatrix, position_WS).xyz;
     }
 };
 
@@ -69,4 +69,4 @@ struct LightEnv
     uint numPointLights;
 };
 
-ParameterBlock<LightEnv> gLightEnv;
+ParameterBlock<LightEnv> pLightEnv;

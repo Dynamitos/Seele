@@ -1,8 +1,8 @@
-import VertexData;
 import Common;
-import Scene;
+import VertexData;
+import MaterialParameter;
 
-struct StaticMeshVertexAttributes : VertexAttributes
+struct StaticMeshVertexAttributes : IVertexAttributes
 {
 	float4 clipPosition: SV_Position;
 	float3 worldPosition: POSITION0;
@@ -10,37 +10,30 @@ struct StaticMeshVertexAttributes : VertexAttributes
 	float3 normal: NORMAL0;
 	float3 tangent: TANGENT0;
 	float3 biTangent: BITANGENT0;
-	float3 getWorldPosition()
+	
+	MaterialParameter create()
 	{
-		return worldPosition;
+		MaterialParameter result;
+		result.worldPosition = worldPosition;
+		result.texCoords = texCoords;
+		result.normal = normal;
+		result.tangent = tangent;
+		result.biTangent = biTangent;
+		return result;
 	}
-	float2 getTexCoords()
-	{
-		return texCoords;
-	}
-	float3 getNormal()
-	{
-		return normal;
-	}
-	float3 getTangent()
-	{
-		return tangent;
-	}
-	float3 getBiTangent()
-	{
-		return biTangent;
-	}
-}
 
-struct StaticMeshVertexData : VertexData
+};
+
+struct StaticMeshVertexData : IVertexData
 {
+	typedef StaticMeshVertexAttributes VertexAttributes;
 	StaticMeshVertexAttributes getAttributes(uint index, float4x4 transform)
 	{
 		StaticMeshVertexAttributes attr;
 		float4 localPos = float4(positions[index], 1);
 		float4 worldPos = mul(transform, localPos);
-		float4 viewPos = mul(viewParams.viewMatrix, worldPos);
-		float4 clipPos = mul(viewParams.projectionMatrix, viewPos);
+		float4 viewPos = mul(pViewParams.viewMatrix, worldPos);
+		float4 clipPos = mul(pViewParams.projectionMatrix, viewPos);
 		attr.clipPosition = clipPos;
 		attr.worldPosition = worldPos.xyz;
 		attr.texCoords = texCoords[index];
@@ -54,4 +47,4 @@ struct StaticMeshVertexData : VertexData
 	StructuredBuffer<float3> normals;
 	StructuredBuffer<float3> tangents;
 	StructuredBuffer<float3> biTangents;
-}
+};

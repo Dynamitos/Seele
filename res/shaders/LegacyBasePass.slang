@@ -1,5 +1,4 @@
 import VertexData;
-import StaticMeshVertexData;
 
 struct InstanceData
 {
@@ -11,14 +10,14 @@ struct Scene
 	StructuredBuffer<InstanceData> instances;
 }
 
-ParameterBlock<Scene> scene;
+ParameterBlock<Scene> pScene;
 
 [shader("vertex")]
-StaticMeshVertexAttributes vertexMain(	
+IVertexAttributes vertexMain(	
 	uint vertexId: SV_VertexID,
 	uint instanceId: SV_InstanceID,
 ){
-	InstanceData inst = scene.instances[instanceId];
-	StaticMeshVertexAttributes attr = vertexData.getAttributes(vertexId, inst.transformMatrix);
+	InstanceData inst = pScene.instances[instanceId];
+	IVertexAttributes attr = pVertexData.getAttributes(vertexId, inst.transformMatrix);
 	return attr;
 }

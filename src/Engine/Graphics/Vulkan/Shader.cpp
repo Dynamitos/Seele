@@ -39,11 +39,11 @@ void Shader::create(const ShaderCreateInfo& createInfo)
     sessionDesc.flags = 0;
     sessionDesc.defaultMatrixLayoutMode = SLANG_MATRIX_LAYOUT_COLUMN_MAJOR;
     Array<slang::PreprocessorMacroDesc> macros;
-    for(auto define : createInfo.defines)
+    for(const auto& [key, val] : createInfo.defines)
     {
         macros.add(slang::PreprocessorMacroDesc{
-            .name = define.key,
-            .value = define.value
+            .name = key,
+            .value = val,
         });
     }
     sessionDesc.preprocessorMacroCount = macros.size();
@@ -91,10 +91,11 @@ void Shader::create(const ShaderCreateInfo& createInfo)
         std::cout << (const char*)diagnostics->getBufferPointer() << std::endl;
     }
 
-    /*for(auto typeParam : createInfo.typeParameter)
+    /*slang::ProgramLayout* layout = moduleComposition->getLayout();
+    for(auto typeParam : createInfo.typeParameter)
     {
         Slang::ComPtr<slang::ITypeConformance> typeConformance;
-        session->createTypeConformanceComponentType(moduleComposition->getLayout()->findTypeByName(typeParam), moduleComposition->getLayout()->findTypeByName("IMaterial"), typeConformance.writeRef(), -1, diagnostics.writeRef());
+        session->createTypeConformanceComponentType(layout->findTypeByName(typeParam), layout->findTypeByName("IMaterial"), typeConformance.writeRef(), -1, diagnostics.writeRef());
         modules.add(typeConformance);
         if(diagnostics)
         {
@@ -104,7 +105,7 @@ void Shader::create(const ShaderCreateInfo& createInfo)
 
     Slang::ComPtr<slang::IComponentType> conformingModule;
     session->createCompositeComponentType(modules.data(), modules.size(), conformingModule.writeRef(), diagnostics.writeRef());
-*/
+    */
     Slang::ComPtr<slang::IComponentType> linkedProgram;
     moduleComposition->link(linkedProgram.writeRef(), diagnostics.writeRef());
     if(diagnostics)

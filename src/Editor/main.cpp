@@ -17,8 +17,6 @@
 using namespace Seele;
 using namespace Seele::Editor;
 
-extern AssetRegistry* instance;
-
 int main()
 {
 #ifdef WIN32
@@ -41,7 +39,7 @@ int main()
     vd->init(graphics);
     PWindowManager windowManager = new WindowManager();
     AssetRegistry::init(sourcePath / "Assets", graphics);
-    AssetImporter::init(graphics, AssetRegistry::getInstance());
+    AssetImporter::init(graphics);
     AssetImporter::importFont(FontImportArgs{
         .filePath = "./fonts/Calibri.ttf",
         });

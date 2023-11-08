@@ -47,9 +47,9 @@ void AssetImporter::importMaterial(MaterialImportArgs args)
     get().materialLoader->importAsset(args);
 }
 
-void AssetImporter::init(Gfx::PGraphics graphics, AssetRegistry* registry)
+void AssetImporter::init(Gfx::PGraphics graphics)
 {
-    get().registry = registry;
+    get().registry = AssetRegistry::getInstance();
     get().meshLoader = new MeshLoader(graphics);
     get().textureLoader = new TextureLoader(graphics);
     get().materialLoader = new MaterialLoader(graphics);

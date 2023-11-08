@@ -21,7 +21,7 @@ LightEnvironment::LightEnvironment(Gfx::PGraphics graphics)
     directionalLights = graphics->createShaderBuffer(ShaderBufferCreateInfo{
         .sourceData = {
             .size = sizeof(Component::DirectionalLight) * MAX_DIRECTIONAL_LIGHTS,
-            .data = (uint8*)dirs.data(),
+            .data = nullptr,
         },
         .stride = sizeof(Component::DirectionalLight),
         .dynamic = true,
@@ -29,7 +29,7 @@ LightEnvironment::LightEnvironment(Gfx::PGraphics graphics)
     pointLights = graphics->createShaderBuffer(ShaderBufferCreateInfo{
         .sourceData = {
             .size = sizeof(Component::PointLight) * MAX_POINT_LIGHTS,
-            .data = (uint8*)dirs.data(),
+            .data = nullptr,
         },
         .stride = sizeof(Component::PointLight),
         .dynamic = true,
@@ -77,6 +77,7 @@ void LightEnvironment::commit()
     set->updateBuffer(0, lightEnvBuffer);
     set->updateBuffer(1, directionalLights);
     set->updateBuffer(2, pointLights);
+    set->writeChanges();
 }
 
 const Gfx::PDescriptorLayout Seele::LightEnvironment::getDescriptorLayout() const

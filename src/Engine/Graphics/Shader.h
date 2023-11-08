@@ -62,6 +62,10 @@ struct ShaderPermutation
     uint8 useMeshShading : 1;
     uint8 hasTaskShader : 1;
     //TODO: lightmapping etc
+    ShaderPermutation()
+    {
+        std::memset(this, 0, sizeof(ShaderPermutation));
+    }
 };
 //Hashed ShaderPermutation for fast lookup
 struct PermutationId

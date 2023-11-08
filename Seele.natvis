@@ -41,6 +41,14 @@
       </ArrayItems>
     </Expand>
   </Type>
+  <Type Name="Seele::Map&lt;*&gt;::Node">
+      <DisplayString>[{pair}]</DisplayString>
+      <Expand>
+          <Item Name="[pair]">pair</Item>
+          <Item Name="[left]">leftChild</Item>
+          <Item Name="[right]">rightChild</Item>
+      </Expand>
+  </Type>
   <Type Name="Seele::Map&lt;*&gt;::IteratorBase&lt;*&gt;">
     <DisplayString Condition="nodeContainer.arraySize==0">empty</DisplayString>
     <DisplayString>[{nodeContainer._data[node].pair}]</DisplayString>
@@ -50,9 +58,9 @@
   </Type>
   <Type Name="Seele::RefPtr&lt;*&gt;">
     <DisplayString Condition="object == nullptr">empty</DisplayString>
-    <DisplayString>RefPtr {*object->handle} {object->refCount} references</DisplayString>
+    <DisplayString>RefPtr {*object}</DisplayString>
     <Expand>
-      <ExpandedItem>object->handle</ExpandedItem>
+      <ExpandedItem>object</ExpandedItem>
     </Expand>
   </Type>
   <Type Name="Seele::UniquePtr&lt;*&gt;">

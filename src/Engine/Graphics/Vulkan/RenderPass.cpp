@@ -8,8 +8,8 @@
 using namespace Seele;
 using namespace Seele::Vulkan;
 
-RenderPass::RenderPass(PGraphics graphics, Gfx::ORenderTargetLayout layout, Gfx::PViewport viewport)
-    : Gfx::RenderPass(std::move(layout))
+RenderPass::RenderPass(PGraphics graphics, Gfx::ORenderTargetLayout _layout, Gfx::PViewport viewport)
+    : Gfx::RenderPass(std::move(_layout))
     , graphics(graphics)
 {
     renderArea.extent.width = viewport->getSizeX();
@@ -22,7 +22,7 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::ORenderTargetLayout layout, Gfx:
     Array<VkAttachmentReference> colorRefs;
     VkAttachmentReference depthRef;
     uint32 attachmentCounter = 0;
-    for (auto& inputAttachment : this->layout->inputAttachments)
+    for (auto& inputAttachment : layout->inputAttachments)
     {
         PTexture2D image = inputAttachment->getTexture().cast<Texture2D>();
         VkAttachmentDescription& desc = attachments.add();
@@ -40,7 +40,7 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::ORenderTargetLayout layout, Gfx:
         ref.attachment = attachmentCounter;
         attachmentCounter++;
     }
-    for (auto& colorAttachment : this->layout->colorAttachments)
+    for (auto& colorAttachment : layout->colorAttachments)
     {
         VkAttachmentDescription& desc = attachments.add();
         desc.flags = 0;

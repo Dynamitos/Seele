@@ -15,7 +15,7 @@ public:
     static void importTexture(struct TextureImportArgs args);
     static void importFont(struct FontImportArgs args);
     static void importMaterial(struct MaterialImportArgs args);
-    static void init(Gfx::PGraphics graphics, AssetRegistry* registry);
+    static void init(Gfx::PGraphics graphics);
 private:
     static AssetImporter& get();
     UPTextureLoader textureLoader;

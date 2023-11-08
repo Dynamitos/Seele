@@ -16,6 +16,7 @@ void VertexData::resetMeshData()
     if (dirty)
     {
         updateBuffers();
+        dirty = false;
     }
 }
 
@@ -23,6 +24,7 @@ void VertexData::updateMesh(const Component::Transform& transform, PMesh mesh)
 {
     PMaterial mat = mesh->referencedMaterial->getHandle()->getBaseMaterial();
     MaterialData& matData = materialData[mat->getName()];
+    matData.material = mat;
     MaterialInstanceData& matInstanceData = matData.instances[mesh->referencedMaterial->getHandle()->getId()];
     matInstanceData.meshes.add(MeshInstanceData{
         .id = mesh->id,
@@ -89,7 +91,6 @@ void VertexData::loadMesh(MeshId id, Array<Meshlet> loadedMeshlets)
         .stride = sizeof(uint8),
         .dynamic = true,
     });
-
 }
 
 void VertexData::createDescriptors()
@@ -108,7 +109,7 @@ void VertexData::createDescriptors()
                     meshes.add(mesh);
                 }
             }
-            Gfx::PShaderBuffer instanceBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
+            matInst.instanceBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
                 .sourceData = {
                     .size = sizeof(InstanceData) * instanceData.size(),
                     .data = (uint8*)instanceData.data(),
@@ -117,17 +118,17 @@ void VertexData::createDescriptors()
             });
             instanceDataLayout->reset();
             matInst.descriptorSet = instanceDataLayout->allocateDescriptorSet();
-            matInst.descriptorSet->updateBuffer(0, instanceBuffer);
+            matInst.descriptorSet->updateBuffer(0, matInst.instanceBuffer);
             if (graphics->supportMeshShading())
             {
-                Gfx::PShaderBuffer meshDataBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
+                matInst.meshDataBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
                     .sourceData = {
                         .size = sizeof(MeshData) * meshes.size(),
                         .data = (uint8*)meshes.data(),
                     },
                     .stride = sizeof(MeshData)
                 });
-                matInst.descriptorSet->updateBuffer(1, meshDataBuffer);
+                matInst.descriptorSet->updateBuffer(1, matInst.meshDataBuffer);
                 matInst.descriptorSet->updateBuffer(2, meshletBuffer);
                 matInst.descriptorSet->updateBuffer(3, primitiveIndicesBuffer);
                 matInst.descriptorSet->updateBuffer(4, vertexIndicesBuffer);

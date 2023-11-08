@@ -28,7 +28,7 @@ struct CullingParams
 
     StructuredBuffer<Frustum> frustums;
 };
-ParameterBlock<CullingParams> gCullingParams;
+ParameterBlock<CullingParams> pCullingParams;
 // Debug
 //Texture2D lightCountHeatMap;
 //RWTexture2D<float4> debugTexture;
@@ -72,7 +72,7 @@ void tAppendLight(uint lightIndex)
 void cullLights(ComputeShaderInput in)
 {
     int2 texCoord = int2(in.dispatchThreadID.xy);
-    float fDepth = gCullingParams.depthTextureVS.Load(int3(texCoord, 0)).r;
+    float fDepth = pCullingParams.depthTextureVS.Load(int3(texCoord, 0)).r;
 
     uint uDepth = asuint(fDepth);
     if(in.groupIndex == 0)
@@ -81,7 +81,7 @@ void cullLights(ComputeShaderInput in)
         uMaxDepth = 0x0;
         oLightCount = 0;
         tLightCount = 0;
-        groupFrustum = gCullingParams.frustums[in.groupID.x + (in.groupID.y * gCullingParams.numThreadGroups.x)];
+        groupFrustum = pCullingParams.frustums[in.groupID.x + (in.groupID.y * pCullingParams.numThreadGroups.x)];
     }
 
     GroupMemoryBarrierWithGroupSync();
@@ -100,9 +100,9 @@ void cullLights(ComputeShaderInput in)
 
     Plane minPlane = {float3(0, 0, -1), -minDepthVS};
 
-    for ( uint i = in.groupIndex; i < gLightEnv.numPointLights; i += BLOCK_SIZE * BLOCK_SIZE )
+    for ( uint i = in.groupIndex; i < pLightEnv.numPointLights; i += BLOCK_SIZE * BLOCK_SIZE )
     {
-        PointLight light = gLightEnv.pointLights[i];
+        PointLight light = pLightEnv.pointLights[i];
         //TODO: why doesn't this check go through?
         //if(light.insideFrustum(groupFrustum, nearClipVS, maxDepthVS))
         {
@@ -118,23 +118,23 @@ void cullLights(ComputeShaderInput in)
 
     if(in.groupIndex == 0)
     {
-        InterlockedAdd(gCullingParams.oLightIndexCounter[0], oLightCount, oLightIndexStartOffset);
-        gCullingParams.oLightGrid[in.groupID.xy] = uint2(oLightIndexStartOffset, oLightCount);
+        InterlockedAdd(pCullingParams.oLightIndexCounter[0], oLightCount, oLightIndexStartOffset);
+        pCullingParams.oLightGrid[in.groupID.xy] = uint2(oLightIndexStartOffset, oLightCount);
 
-        InterlockedAdd(gCullingParams.tLightIndexCounter[0], tLightCount, tLightIndexStartOffset);
-        gCullingParams.tLightGrid[in.groupID.xy] = uint2(tLightIndexStartOffset, tLightCount);
+        InterlockedAdd(pCullingParams.tLightIndexCounter[0], tLightCount, tLightIndexStartOffset);
+        pCullingParams.tLightGrid[in.groupID.xy] = uint2(tLightIndexStartOffset, tLightCount);
     }
     GroupMemoryBarrierWithGroupSync();
 
     for (uint j = in.groupIndex; j < oLightCount; j += BLOCK_SIZE * BLOCK_SIZE)
     {
-        gCullingParams.oLightIndexList[oLightIndexStartOffset + j] = oLightList[j];
+        pCullingParams.oLightIndexList[oLightIndexStartOffset + j] = oLightList[j];
     }
     
     // For transparent geometry.
     for ( uint k = in.groupIndex; k < tLightCount; k += BLOCK_SIZE * BLOCK_SIZE )
     {
-        gCullingParams.tLightIndexList[tLightIndexStartOffset + k] = tLightList[k];
+        pCullingParams.tLightIndexList[tLightIndexStartOffset + k] = tLightList[k];
     }
 
     

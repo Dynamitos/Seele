@@ -200,7 +200,7 @@ void LightCullingPass::setupFrustums()
     dispatchParams.numThreads = numThreads;
     dispatchParams.numThreadGroups = numThreadGroups;
 
-    Gfx::ODescriptorLayout frustumDescriptorLayout = graphics->createDescriptorLayout("FrustumLayout");
+    frustumDescriptorLayout = graphics->createDescriptorLayout("FrustumLayout");
     frustumDescriptorLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
     frustumDescriptorLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
     frustumLayout = graphics->createPipelineLayout();

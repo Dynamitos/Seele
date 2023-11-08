@@ -45,6 +45,7 @@ private:
     Gfx::OShaderBuffer frustumBuffer;
     Gfx::OUniformBuffer dispatchParamsBuffer;
     Gfx::OUniformBuffer viewParamsBuffer;
+    Gfx::ODescriptorLayout frustumDescriptorLayout;
     Gfx::PDescriptorSet frustumDescriptorSet;
     Gfx::OComputeShader frustumShader;
     Gfx::OPipelineLayout frustumLayout;

@@ -104,7 +104,7 @@ protected:
     std::mutex viewportLock;
     Array<PViewport> viewports;
     std::mutex allocatedFrameBufferLock;
-    Map<uint32, PFramebuffer> allocatedFramebuffers;
+    Map<uint32, OFramebuffer> allocatedFramebuffers;
     OAllocator allocator;
     OStagingManager stagingManager;
 

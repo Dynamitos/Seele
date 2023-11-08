@@ -9,14 +9,14 @@ struct TextData
     float4 textColor;
     float scale;
 }
-ParameterBuffer<SamplerState> glyphSampler;
+ParameterBlock<SamplerState> glyphSampler;
 //layout(set = 1)
 //ShaderBuffer<GlyphData> glyphData;
-ParameterBuffer<Texture2D<uint>[]> glyphTextures;
+ParameterBuffer<Texture2D<uint>[]> pGlyphTextures;
 [[vk::push_constant]]
 ConstantBuffer<TextData> textData;
 
-struct VertexStageInput
+struct VertexInput
 {
     float2 position;
     float2 widthHeight;
@@ -24,7 +24,7 @@ struct VertexStageInput
     uint vertexId : SV_VertexID;
 };
 
-struct VertexStageOutput
+struct VertexOutput
 {
     float4 position : SV_Position;
     float2 texCoords : TEXCOORD;
@@ -32,7 +32,7 @@ struct VertexStageOutput
 };
 
 [shader("vertex")]
-VertexStageOutput vertexMain(VertexStageInput input)
+VertexOutput vertexMain(VertexInput input)
 {
     float xpos = input.position.x;
     float ypos = input.position.y;
@@ -61,5 +61,5 @@ float4 fragmentMain(
     uint glyphIndex : GLYPHINDEX
 ) : SV_Target
 {
-    return textData.textColor * glyphTextures[glyphIndex].Sample(glyphSampler, texCoords);
+    return textData.textColor * pGlyphTextures[glyphIndex].Sample(glyphSampler, texCoords);
 }

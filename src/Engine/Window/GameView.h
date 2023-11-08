@@ -28,13 +28,13 @@ public:
 	void reloadGame();
 private:
 	OScene scene;
-	PEntity camera;
+	OEntity camera;
 	GameInterface gameInterface;
     RenderGraph<
-        DepthPrepass,
-		LightCullingPass,
-        BasePass,
-		SkyboxRenderPass
+        DepthPrepass
+		//LightCullingPass,
+        //BasePass,
+		//SkyboxRenderPass
 		> renderGraph;
 
 	PSystemGraph systemGraph;

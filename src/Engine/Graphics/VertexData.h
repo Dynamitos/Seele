@@ -43,6 +43,8 @@ public:
     struct MaterialInstanceData
     {
         PMaterialInstance materialInstance;
+        Gfx::OShaderBuffer instanceBuffer;
+        Gfx::OShaderBuffer meshDataBuffer;
         Gfx::PDescriptorSet descriptorSet;
         uint32 numMeshes; // not necessarily equal to meshes.size() if a MeshId has multiple meshes
         Array<MeshInstanceData> meshes;

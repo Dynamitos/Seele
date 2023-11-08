@@ -18,8 +18,8 @@ public:
     virtual void createRenderPass() override;
     static void modifyRenderPassMacros(Map<const char*, const char*>& defines);
 private:
-    Gfx::PRenderTargetAttachment depthAttachment;
-    Gfx::PTexture2D depthBuffer;
+    Gfx::ORenderTargetAttachment depthAttachment;
+    Gfx::OTexture2D depthBuffer;
 
     Array<Gfx::PDescriptorSet> descriptorSets;
     

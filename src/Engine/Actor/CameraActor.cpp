@@ -7,7 +7,7 @@ CameraActor::CameraActor(PScene scene)
     : Actor(scene)
 {
     attachComponent<Component::Camera>();
-    attachComponent<Component::Transform>().setRelativeLocation(Vector(10, 5, 14));
+    accessComponent<Component::Transform>().setRelativeLocation(Vector(10, 5, 14));
 }
 
 CameraActor::~CameraActor()

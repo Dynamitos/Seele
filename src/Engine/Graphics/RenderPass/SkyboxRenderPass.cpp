@@ -169,14 +169,13 @@ void SkyboxRenderPass::createRenderPass()
     createInfo.name = "SkyboxVertex";
     createInfo.mainModule = "Skybox";
     createInfo.entryPoint = "vertexMain";
-    createInfo.defines["INDEX_VIEW_PARAMS"] = "0";
-    Gfx::PVertexShader vertexShader = graphics->createVertexShader(createInfo);
+    vertexShader = graphics->createVertexShader(createInfo);
 
     createInfo.name = "SkyboxFragment";
     createInfo.entryPoint = "fragmentMain";
-    Gfx::PFragmentShader fragmentShader = graphics->createFragmentShader(createInfo);
+    fragmentShader = graphics->createFragmentShader(createInfo);
 
-    Gfx::PVertexDeclaration vertexDecl = graphics->createVertexDeclaration({
+    declaration = graphics->createVertexDeclaration({
         Gfx::VertexElement {
             .binding = 0,
             .offset = 0,
@@ -187,7 +186,7 @@ void SkyboxRenderPass::createRenderPass()
     });
 
     Gfx::LegacyPipelineCreateInfo gfxInfo;
-    gfxInfo.vertexDeclaration = vertexDecl;
+    gfxInfo.vertexDeclaration = declaration;
     gfxInfo.vertexShader = vertexShader;
     gfxInfo.fragmentShader = fragmentShader;
     gfxInfo.rasterizationState.polygonMode = Gfx::SE_POLYGON_MODE_FILL;

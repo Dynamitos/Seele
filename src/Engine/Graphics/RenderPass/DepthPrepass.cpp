@@ -19,6 +19,7 @@ DepthPrepass::DepthPrepass(Gfx::PGraphics graphics, PScene scene)
 
     depthPrepassLayout = graphics->createPipelineLayout();
     depthPrepassLayout->addDescriptorLayout(INDEX_VIEW_PARAMS, viewParamsLayout);
+    graphics->getShaderCompiler()->registerRenderPass("DepthPass", "LegacyBasePass");
 }
 
 DepthPrepass::~DepthPrepass()
@@ -43,18 +44,18 @@ void DepthPrepass::render()
     {
         permutation.useMeshShading = true;
         permutation.hasTaskShader = true;
-        std::memcpy(permutation.taskFile, "MeshletBasePass", sizeof("MeshletBasePass"));
-        std::memcpy(permutation.vertexMeshFile, "MeshletBasePass", sizeof("MeshletBasePass"));
+        std::strncpy(permutation.taskFile, "MeshletBasePass", sizeof("MeshletBasePass"));
+        std::strncpy(permutation.vertexMeshFile, "MeshletBasePass", sizeof("MeshletBasePass"));
     }
     else
     {
         permutation.useMeshShading = false;
-        std::memcpy(permutation.vertexMeshFile, "LegacyBasePass", sizeof("LegacyBasePass"));
+        std::strncpy(permutation.vertexMeshFile, "LegacyBasePass", sizeof("LegacyBasePass"));
     }
     graphics->beginRenderPass(renderPass);
     for (VertexData* vertexData : VertexData::getList())
     {
-        std::memcpy(permutation.vertexDataName, vertexData->getTypeName().c_str(), std::strlen(vertexData->getTypeName().c_str()));
+        std::strncpy(permutation.vertexDataName, vertexData->getTypeName().c_str(), sizeof(permutation.vertexDataName));
         const auto& materials = vertexData->getMaterialData();
         for (const auto& [_, materialData] : materials) 
         {
@@ -64,7 +65,7 @@ void DepthPrepass::render()
             // Material => per material
             // VertexData => per meshtype
             // SceneData => per material instance
-            std::memcpy(permutation.materialName, materialData.material->getName().c_str(), std::strlen(materialData.material->getName().c_str()));
+            std::strncpy(permutation.materialName, materialData.material->getName().c_str(), sizeof(permutation.materialName));
             Gfx::PermutationId id(permutation);
             
             Gfx::PRenderCommand command = graphics->createRenderCommand("DepthRender");

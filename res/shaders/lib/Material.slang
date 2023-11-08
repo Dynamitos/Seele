@@ -8,4 +8,4 @@ interface IMaterial
 	BRDF prepare(MaterialParameter input);
 };
 
-ParameterBlock<IMaterial> gMaterial;
+ParameterBlock<IMaterial> pMaterial;

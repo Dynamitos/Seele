@@ -13,8 +13,7 @@ WindowManager::~WindowManager()
 
 PWindow WindowManager::addWindow(Gfx::PGraphics graphics, const WindowCreateInfo &createInfo)
 {
-    Gfx::OWindow handle = graphics->createWindow(createInfo);
-    OWindow window = new Window(this, handle);
+    OWindow window = new Window(this, graphics->createWindow(createInfo));
     PWindow ref = window;
     windows.add(std::move(window));
     return ref;

@@ -15,13 +15,13 @@ DECLARE_REF(Allocation)
 class SubAllocation
 {
 public:
-	SubAllocation(PAllocation owner, VkDeviceSize allocatedOffset, VkDeviceSize size, VkDeviceSize alignedOffset, VkDeviceSize allocatedSize);
+	SubAllocation(PAllocation owner, VkDeviceSize requestedSize, VkDeviceSize allocatedOffset, VkDeviceSize allocatedSize, VkDeviceSize alignedOffset);
 	~SubAllocation();
 	VkDeviceMemory getHandle() const;
 
 	constexpr VkDeviceSize getSize() const
 	{
-		return size;
+		return requestedSize;
 	}
 
 	constexpr VkDeviceSize getOffset() const
@@ -37,7 +37,7 @@ public:
 
 private:
 	PAllocation owner;
-	VkDeviceSize size;
+	VkDeviceSize requestedSize;
 	VkDeviceSize allocatedOffset;
 	VkDeviceSize alignedOffset;
 	VkDeviceSize allocatedSize;
@@ -87,8 +87,7 @@ private:
 	VkDeviceSize bytesUsed;
 	VkDeviceMemory allocatedMemory;
 	Array<PSubAllocation> activeAllocations;
-	Map<VkDeviceSize, OSubAllocation> freeRanges;
-	std::mutex lock;
+	Map<VkDeviceSize, VkDeviceSize> freeRanges;
 	void *mappedPointer;
 	uint8 isDedicated : 1;
 	uint8 canMap : 1;
@@ -147,7 +146,6 @@ private:
 	};
 	Array<HeapInfo> heaps;
 	uint32 findMemoryType(uint32 typeBits, VkMemoryPropertyFlags properties);
-	std::mutex lock;
 	PGraphics graphics;
 	VkPhysicalDeviceMemoryProperties memProperties;
 };
@@ -200,7 +198,6 @@ private:
 	PAllocator allocator;
 	Array<OStagingBuffer> freeBuffers;
 	Array<PStagingBuffer> activeBuffers;
-	std::mutex lock;
 };
 DEFINE_REF(StagingManager)
 } // namespace Vulkan

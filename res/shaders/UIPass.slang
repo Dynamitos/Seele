@@ -24,9 +24,9 @@ struct UIParameter
     Texture2D<float4> backgroundTextures[];
 }
 
-ParameterBuffer<UIParameter> params;
+ParameterBlock<UIParameter> pParams;
 
-struct VertexStageOutput
+struct VertexOutput
 {
     float4 position  : SV_Position;
     float2 texCoords : TEXCOORD;
@@ -34,7 +34,7 @@ struct VertexStageOutput
 };
 
 [shader("vertex")]
-VertexStageOutput vertexMain(uint vertexId : SV_VertexID, RenderElementStyle style)
+VertexOutput vertexMain(uint vertexId : SV_VertexID, RenderElementStyle style)
 {
     float xMin = style.position.x;
     float xMax = xMin + style.dimensions.x;
@@ -46,8 +46,8 @@ VertexStageOutput vertexMain(uint vertexId : SV_VertexID, RenderElementStyle sty
         float4(xMax, yMin, 1, 0),
         float4(xMax, yMax, 1, 1)
     };
-    VertexStageOutput output;
-    output.position = mul(viewData.projectionMatrix, float4(coordinates[vertexId].xy, style.position.z, 1));
+    VertexOutput output;
+    output.position = mul(pViewData.projectionMatrix, float4(coordinates[vertexId].xy, style.position.z, 1));
     output.texCoords = coordinates[vertexId].zw;
     output.style = style;
     return output;
@@ -64,7 +64,7 @@ float4 fragmentMain(
     uint imageIndex = style.backgroundImageIndex;
     if(imageIndex < numBackgroundTextures)
     {
-        bgTextureColor = backgroundTextures[imageIndex].Sample(backgroundSampler, texCoords);
+        bgTextureColor = pParams.backgroundTextures[imageIndex].Sample(pParams.backgroundSampler, texCoords);
     }
     return float4(style.backgroundColor, style.opacity) * bgTextureColor;
 }

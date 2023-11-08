@@ -1,16 +1,13 @@
-import Scene;
+import MaterialParameter;
 
-interface VertexAttributes
+interface IVertexAttributes
 {
-	float3 getWorldPosition();
-	float2 getTexCoords();
-	float3 getNormal();
-	float3 getTangent();
-	float3 getBiTangent();
-}
+	MaterialParameter create();
+};
 
-interface VertexData
+interface IVertexData
 {
+	associatedtype VertexAttributes : IVertexAttributes;
 	VertexAttributes getAttributes(uint index, float4x4 transform);
 };
-ParameterBlock<VertexData> vertexData;
+ParameterBlock<IVertexData> pVertexData;

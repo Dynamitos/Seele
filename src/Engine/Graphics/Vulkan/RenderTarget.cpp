@@ -223,16 +223,16 @@ void Window::present()
     backBufferImages[currentImageIndex]->changeLayout(Gfx::SE_IMAGE_LAYOUT_PRESENT_SRC_KHR);
     graphics->getGraphicsCommands()->submitCommands(renderFinished[currentImageIndex]);
     VkSemaphore renderFinishedHandle = renderFinished[currentImageIndex]->getHandle();
-    VkPresentInfoKHR info;
-    info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-    info.pNext = nullptr;
-    info.swapchainCount = 1;
-    info.pSwapchains = &swapchain;
-    info.pImageIndices = (uint32 *)&currentImageIndex;
-    info.pResults = 0;
-    info.waitSemaphoreCount = 1;
-    info.pWaitSemaphores = &renderFinishedHandle;
-
+    VkPresentInfoKHR info = {
+        .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+        .pNext = nullptr,
+        .waitSemaphoreCount = 1,
+        .pWaitSemaphores = &renderFinishedHandle,
+        .swapchainCount = 1,
+        .pSwapchains = &swapchain,
+        .pImageIndices = (uint32*)&currentImageIndex,
+        .pResults = 0,
+    };
     VkResult presentResult = VK_ERROR_OUT_OF_DATE_KHR;
     // Trial and error
     while (presentResult != VK_SUCCESS)

@@ -4,9 +4,9 @@
 
 using namespace Seele;
 
-Window::Window(PWindowManager owner, Gfx::PWindow handle)
+Window::Window(PWindowManager owner, Gfx::OWindow handle)
     : owner(owner)
-    , gfxHandle(handle)
+    , gfxHandle(std::move(handle))
 {
 }
 

@@ -4,6 +4,8 @@
 #include "Component/KeyboardInput.h"
 #include "Actor/CameraActor.h"
 #include "Asset/AssetRegistry.h"
+#include "System/LightGather.h"
+#include "System/MeshUpdater.h"
 
 using namespace Seele;
 
@@ -12,12 +14,13 @@ GameView::GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreate
     , scene(new Scene(graphics))
     , gameInterface(dllPath)
     , renderGraph(RenderGraphBuilder::build(
-        DepthPrepass(graphics, scene),
-        LightCullingPass(graphics, scene),
-        BasePass(graphics, scene),
-        SkyboxRenderPass(graphics, scene)
+        DepthPrepass(graphics, scene)
+        //LightCullingPass(graphics, scene),
+        //BasePass(graphics, scene),
+        //SkyboxRenderPass(graphics, scene)
     ))
 {
+    camera = new CameraActor(scene);
     reloadGame();
     renderGraph.updateViewport(viewport);
 }
@@ -67,11 +70,12 @@ void GameView::render()
 
 void GameView::reloadGame()
 {
-    scene = new Scene(graphics);
     gameInterface.reload(AssetRegistry::getInstance());
     
     systemGraph = new SystemGraph();
     gameInterface.getGame()->setupScene(scene, systemGraph);
+    systemGraph->addSystem(new System::LightGather(scene));
+    systemGraph->addSystem(new System::MeshUpdater(scene));
 }
 
 void GameView::keyCallback(KeyCode code, InputAction action, KeyModifier)

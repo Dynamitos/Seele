@@ -155,8 +155,8 @@ void UIPass::createRenderPass()
         },
         .dynamic = false,
     };
-    Gfx::PUniformBuffer uniformBuffer = graphics->createUniformBuffer(info);
-    Gfx::PSamplerState backgroundSampler = graphics->createSamplerState({});
+    Gfx::OUniformBuffer uniformBuffer = graphics->createUniformBuffer(info);
+    Gfx::OSamplerState backgroundSampler = graphics->createSamplerState({});
 
     info = {
         .sourceData = {

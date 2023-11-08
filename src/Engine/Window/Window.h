@@ -9,7 +9,7 @@ DECLARE_REF(WindowManager)
 class Window
 {
 public:
-    Window(PWindowManager owner, Gfx::PWindow handle);
+    Window(PWindowManager owner, Gfx::OWindow handle);
     ~Window();
     void addView(PView view);
     void render();
@@ -19,7 +19,7 @@ public:
 protected:
     PWindowManager owner;
     Array<PView> views;
-    Gfx::PWindow gfxHandle;
+    Gfx::OWindow gfxHandle;
 
     //void viewWorker(size_t viewIndex);
 };

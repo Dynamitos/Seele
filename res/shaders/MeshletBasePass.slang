@@ -22,11 +22,11 @@ void taskMain(
 	uint threadID: SV_GroupIndex,
 	uint groupID: SV_GroupID
 ){
-	InstanceData instance = scene.instances[groupID];
+	InstanceData instance = pScene.instances[groupID];
 	if(threadID == 0)
 	{
 		head = 0;
-		localToClip = mul(viewParams.projectionMatrix, mul(viewParams.viewMatrix, instance.transformMatrix));
+		localToClip = mul(pViewParams.projectionMatrix, mul(pViewParams.viewMatrix, instance.transformMatrix));
 		// Left
 		viewFrustum.sides[0].n = float3(1, 0, 0);
 		viewFrustum.sides[0].d = -1;
@@ -44,11 +44,11 @@ void taskMain(
 		viewFrustum.basePlane.d = 0;
 	}
 	GroupMemoryBarrierWithGroupSync();
-	MeshData mesh = scene.meshData[groupID];
+	MeshData mesh = pScene.meshData[groupID];
 	for(uint i = threadID; i < MAX_MESHLETS_PER_MESH; i += TASK_GROUP_SIZE)
 	{
 		uint m = mesh.meshletOffset + min(mesh.numMeshlets, i);
-		MeshletDescription meshlet = scene.meshlets.meshletInfos[m];
+		MeshletDescription meshlet = pScene.meshlets.meshletInfos[m];
 		//if(meshlet.boundingBox.insideFrustum(localToClip, viewFrustum))
 		{
 			uint index;
@@ -61,7 +61,7 @@ void taskMain(
 	DispatchMesh(head, 1, 1, p);
 }
 
-groupshared VertexAttributes gs_vertices[MAX_VERTICES];
+groupshared IVertexAttributes gs_vertices[MAX_VERTICES];
 groupshared uint3 gs_indices[MAX_PRIMITIVES];
 groupshared uint gs_numVertices;
 groupshared uint gs_numPrimitives;
@@ -78,12 +78,12 @@ void meshMain(
 	in uint threadID: SV_GroupIndex,
 	in uint groupID: SV_GroupID,
 	in payload MeshPayload meshPayload,
-	out Vertices<VertexAttributes, MAX_VERTICES> vertices, 
+	out Vertices<IVertexAttributes, MAX_VERTICES> vertices, 
 	out Indices<uint3, MAX_PRIMITIVES> indices
 ){
-	InstanceData inst = scene.instances[meshPayload.instanceId[groupID]];
-	MeshData md = scene.meshData[meshPayload.instanceId[groupID]];
-	MeshletDescription m = meshlets.meshletInfos[meshPayload.meshletId[groupID]];
+	InstanceData inst = pScene.instances[meshPayload.instanceId[groupID]];
+	MeshData md = pScene.meshData[meshPayload.instanceId[groupID]];
+	MeshletDescription m = pScene.meshletInfos[meshPayload.meshletId[groupID]];
 	const uint vertexLoops = (MAX_VERTICES + MESH_GROUP_SIZE - 1) / MESH_GROUP_SIZE;
 	for(uint loop = 0; loop < vertexLoops; ++loop) 
 	{
@@ -91,8 +91,8 @@ void meshMain(
 		v = min(v, m.vertexCount - 1);
 		InterlockedMax(gs_numVertices, v + 1);
 		{
-			int vertexIndex = meshlets.vertexIndices[m.vertexOffset + v];
-			gs_vertices[v] = vertexData.getAttributes(md.indexOffset + vertexIndex, inst);
+			int vertexIndex = pScene.vertexIndices[m.vertexOffset + v];
+			gs_vertices[v] = pVertexData.getAttributes(md.indexOffset + vertexIndex, inst);
 		}
 	}
 
@@ -103,12 +103,12 @@ void meshMain(
 		p = min(p, m.primitiveCount - 1);
 		InterlockedMax(gs_numPrimitives, p + 1);
 		{
-			uint8_t local_idx0 = meshlets.primitiveIndices[m.primitiveOffset + (p * 3) + 0];
-			uint8_t local_idx1 = meshlets.primitiveIndices[m.primitiveOffset + (p * 3) + 1];
-			uint8_t local_idx2 = meshlets.primitiveIndices[m.primitiveOffset + (p * 3) + 2];
-			uint32_t idx0 = meshlets.vertexIndices[m.vertexOffset + local_idx0];
-			uint32_t idx1 = meshlets.vertexIndices[m.vertexOffset + local_idx1];
-			uint32_t idx2 = meshlets.vertexIndices[m.vertexOffset + local_idx2];
+			uint8_t local_idx0 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 0];
+			uint8_t local_idx1 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 1];
+			uint8_t local_idx2 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 2];
+			uint32_t idx0 = pScene.vertexIndices[m.vertexOffset + local_idx0];
+			uint32_t idx1 = pScene.vertexIndices[m.vertexOffset + local_idx1];
+			uint32_t idx2 = pScene.vertexIndices[m.vertexOffset + local_idx2];
 			gs_indices[p * 3 + 0] = idx0;
 			gs_indices[p * 3 + 1] = idx1;
 			gs_indices[p * 3 + 2] = idx2;

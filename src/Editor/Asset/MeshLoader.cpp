@@ -48,7 +48,9 @@ void MeshLoader::loadMaterials(const aiScene* scene, const std::string& baseName
     {
         aiMaterial* material = scene->mMaterials[i];
         json matCode;
-        matCode["name"] = baseName + material->GetName().C_Str();
+        std::string materialName = std::format("{0}{1}", baseName, material->GetName().C_Str());
+        materialName.erase(std::remove(materialName.begin(), materialName.end(), '.'), materialName.end()); // dots break adding the .asset extension later
+        matCode["name"] = materialName;
         matCode["profile"] = "BlinnPhong"; //TODO: other shading models
         aiString texPath;
         //TODO make samplers based on used textures
@@ -58,7 +60,7 @@ void MeshLoader::loadMaterials(const aiScene* scene, const std::string& baseName
             };
         if(material->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS)
         {
-            std::string texFilename = std::filesystem::path(texPath.C_Str()).replace_extension("asset").stem().string();
+            std::string texFilename = std::filesystem::path(texPath.C_Str()).stem().string();
             matCode["params"]["diffuseTexture"] = 
                 {
                     {"type", "Texture2D"}, 

@@ -76,31 +76,31 @@ public:
     virtual void updateTextureArray(uint32_t binding, Array<Gfx::PTexture> texture);
     virtual bool operator<(Gfx::PDescriptorSet other);
     
-    inline bool isCurrentlyBound() const
+    constexpr bool isCurrentlyBound() const
     {
         return currentlyBound;
     }
-    inline bool isCurrentlyInUse() const
+    constexpr bool isCurrentlyInUse() const
     {
         return currentlyInUse;
     }
-    void bind()
+    constexpr void bind()
     {
         currentlyBound = true;
     }
-    void unbind()
+    constexpr void unbind()
     {
         currentlyBound = false;
     }
-    void allocate()
+    constexpr void allocate()
     {
         currentlyInUse = true;
     }
-    void free()
+    constexpr void free()
     {
         currentlyInUse = false;
     }
-    inline VkDescriptorSet getHandle() const
+    constexpr VkDescriptorSet getHandle() const
     {
         return setHandle;
     }

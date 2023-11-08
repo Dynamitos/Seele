@@ -53,27 +53,26 @@ void ShaderCompiler::compile()
 	ShaderPermutation permutation;
 	for (const auto& [name, pass] : passes)
 	{
-		std::memset(&permutation, 0, sizeof(ShaderPermutation));
 		permutation.hasFragment = pass.hasFragmentShader;
 		permutation.useMeshShading = pass.useMeshShading;
 		permutation.hasTaskShader = pass.hasTaskShader;
-		std::memcpy(permutation.vertexMeshFile, pass.mainFile.c_str(), sizeof(permutation.vertexMeshFile));
+		std::strncpy(permutation.vertexMeshFile, pass.mainFile.c_str(), sizeof(permutation.vertexMeshFile));
 		if (pass.hasFragmentShader)
 		{
-			std::memcpy(permutation.fragmentFile, pass.fragmentFile.c_str(), sizeof(permutation.fragmentFile));
+			std::strncpy(permutation.fragmentFile, pass.fragmentFile.c_str(), sizeof(permutation.fragmentFile));
 		}
 		if (pass.hasTaskShader)
 		{
-			std::memcpy(permutation.taskFile, pass.taskFile.c_str(), sizeof(permutation.taskFile));
+			std::strncpy(permutation.taskFile, pass.taskFile.c_str(), sizeof(permutation.taskFile));
 		}
 		for (const auto& [vdName, vd] : vertexData)
 		{
-			std::memcpy(permutation.vertexDataName, vd->getTypeName().c_str(), sizeof(permutation.vertexDataName));
+			std::strncpy(permutation.vertexDataName, vd->getTypeName().c_str(), sizeof(permutation.vertexDataName));
 			if (pass.useMaterial)
 			{
 				for (const auto& [matName, mat] : materials)
 				{
-					std::memcpy(permutation.materialName, matName.c_str(), sizeof(permutation.materialName));
+					std::strncpy(permutation.materialName, matName.c_str(), sizeof(permutation.materialName));
 					createShaders(permutation);
 				}
 			}
@@ -92,10 +91,23 @@ ShaderCollection& ShaderCompiler::createShaders(ShaderPermutation permutation)
 	ShaderCollection collection;
 
 	ShaderCreateInfo createInfo;
-	createInfo.typeParameter = { permutation.materialName, permutation.vertexDataName };
+	createInfo.typeParameter = { permutation.vertexDataName };
 	createInfo.name = std::format("Material {0}", permutation.materialName);
-	createInfo.additionalModules.add(permutation.materialName);
+	if (std::strlen(permutation.materialName) > 0)
+	{
+		createInfo.additionalModules.add(permutation.materialName);
+		createInfo.typeParameter.add(permutation.materialName);
+	}
 	createInfo.additionalModules.add(permutation.vertexDataName);
+	createInfo.additionalModules.add(permutation.vertexMeshFile);
+	if (permutation.hasFragment)
+	{
+		createInfo.additionalModules.add(permutation.fragmentFile);
+	}
+	if (permutation.hasTaskShader)
+	{
+		createInfo.additionalModules.add(permutation.taskFile);
+	}
 
 	if (permutation.useMeshShading)
 	{

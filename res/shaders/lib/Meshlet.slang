@@ -37,5 +37,5 @@ struct Scene
 	StructuredBuffer<uint32_t> vertexIndices;
 };
 
-ParameterBlock<Scene> scene;
+ParameterBlock<Scene> pScene;
 

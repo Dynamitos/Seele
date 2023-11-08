@@ -38,7 +38,7 @@ protected:
     PRenderGraphResources resources;
     static constexpr uint32 INDEX_VIEW_PARAMS = 0;
     Gfx::ODescriptorLayout viewParamsLayout;
-    Gfx::OShaderBuffer viewParamsBuffer;
+    Gfx::OUniformBuffer viewParamsBuffer;
     Gfx::PDescriptorSet viewParamsSet;
     Gfx::ORenderPass renderPass;
     Gfx::PGraphics graphics;

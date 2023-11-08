@@ -26,6 +26,9 @@ private:
     Gfx::ODescriptorLayout descriptorLayout;
     Gfx::PDescriptorSet descriptorSet;
     Gfx::OPipelineLayout pipelineLayout;
+    Gfx::OVertexDeclaration declaration;
+    Gfx::OVertexShader vertexShader;
+    Gfx::OFragmentShader fragmentShader;
     Gfx::OGraphicsPipeline pipeline;
     Gfx::OSamplerState skyboxSampler;
     Component::Skybox skybox;
