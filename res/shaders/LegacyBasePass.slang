@@ -1,4 +1,5 @@
 import VertexData;
+import MaterialParameter;
 
 struct InstanceData
 {
@@ -13,11 +14,11 @@ struct Scene
 ParameterBlock<Scene> pScene;
 
 [shader("vertex")]
-IVertexAttributes vertexMain(	
+VertexAttributes vertexMain(	
 	uint vertexId: SV_VertexID,
 	uint instanceId: SV_InstanceID,
 ){
 	InstanceData inst = pScene.instances[instanceId];
-	IVertexAttributes attr = pVertexData.getAttributes(vertexId, inst.transformMatrix);
+	VertexAttributes attr = pVertexData.getAttributes(vertexId, inst.transformMatrix);
 	return attr;
 }

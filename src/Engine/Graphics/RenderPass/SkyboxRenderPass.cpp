@@ -96,13 +96,16 @@ void SkyboxRenderPass::beginFrame(const Component::Camera& cam)
     uniformUpdate.size = sizeof(ViewParameter);
     uniformUpdate.data = (uint8*)&viewParams;
     viewParamsBuffer->updateContents(uniformUpdate);
-    descriptorLayout->reset();
-    descriptorSet = descriptorLayout->allocateDescriptorSet();
-    descriptorSet->updateBuffer(0, viewParamsBuffer);
-    descriptorSet->updateTexture(1, skybox.day);
-    descriptorSet->updateTexture(2, skybox.night);
-    descriptorSet->updateSampler(3, skyboxSampler);
-    descriptorSet->writeChanges();
+    skyboxDataLayout->reset();
+    textureLayout->reset();
+    skyboxDataSet = skyboxDataLayout->allocateDescriptorSet();
+    skyboxDataSet->updateBuffer(0, viewParamsBuffer);
+    skyboxDataSet->writeChanges();
+    textureSet = textureLayout->allocateDescriptorSet();
+    textureSet->updateTexture(0, skybox.day);
+    textureSet->updateTexture(1, skybox.night);
+    textureSet->updateSampler(2, skyboxSampler);
+    textureSet->writeChanges();
 }
 
 void SkyboxRenderPass::render()
@@ -111,10 +114,8 @@ void SkyboxRenderPass::render()
     Gfx::PRenderCommand renderCommand = graphics->createRenderCommand("SkyboxRender");
     renderCommand->setViewport(viewport);
     renderCommand->bindPipeline(pipeline);
-    renderCommand->bindDescriptor(descriptorSet);
+    renderCommand->bindDescriptor({skyboxDataSet, textureSet});
     renderCommand->bindVertexBuffer({ cubeBuffer });
-    renderCommand->pushConstants(pipelineLayout, Gfx::SE_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(Vector), &skybox.fogColor);
-    renderCommand->pushConstants(pipelineLayout, Gfx::SE_SHADER_STAGE_FRAGMENT_BIT, sizeof(Vector), sizeof(float), &skybox.blendFactor);
     renderCommand->draw(36, 1, 0, 0);
     graphics->executeCommands(Array{ renderCommand });
     graphics->endRenderPass();
@@ -136,22 +137,14 @@ void SkyboxRenderPass::publishOutputs()
     };
     viewParamsBuffer = graphics->createUniformBuffer(viewCreateInfo);
 
-    descriptorLayout = graphics->createDescriptorLayout("SkyboxDescLayout");
-    descriptorLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-    descriptorLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
-    descriptorLayout->addDescriptorBinding(2, Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
-    descriptorLayout->addDescriptorBinding(3, Gfx::SE_DESCRIPTOR_TYPE_SAMPLER);
-    descriptorLayout->create();
-
-    pipelineLayout = graphics->createPipelineLayout();
-    pipelineLayout->addDescriptorLayout(0, descriptorLayout);
-    pipelineLayout->addPushConstants(Gfx::SePushConstantRange{
-        .stageFlags = Gfx::SE_SHADER_STAGE_FRAGMENT_BIT,
-        .offset = 0,
-        .size = sizeof(Vector4),
-        });
-
-    pipelineLayout->create();
+    skyboxDataLayout = graphics->createDescriptorLayout("SkyboxDescLayout");
+    skyboxDataLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+    skyboxDataLayout->create();
+    textureLayout = graphics->createDescriptorLayout();
+    textureLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
+    textureLayout->addDescriptorBinding(2, Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
+    textureLayout->addDescriptorBinding(3, Gfx::SE_DESCRIPTOR_TYPE_SAMPLER);
+    textureLayout->create();
 
     skyboxSampler = graphics->createSamplerState({});
 }
@@ -185,6 +178,11 @@ void SkyboxRenderPass::createRenderPass()
         }
     });
 
+    Gfx::OPipelineLayout pipelineLayout = graphics->createPipelineLayout();
+    pipelineLayout->addDescriptorLayout(0, skyboxDataLayout);
+    pipelineLayout->addDescriptorLayout(0, textureLayout);
+    pipelineLayout->create();
+
     Gfx::LegacyPipelineCreateInfo gfxInfo;
     gfxInfo.vertexDeclaration = declaration;
     gfxInfo.vertexShader = vertexShader;
@@ -192,7 +190,7 @@ void SkyboxRenderPass::createRenderPass()
     gfxInfo.rasterizationState.polygonMode = Gfx::SE_POLYGON_MODE_FILL;
     gfxInfo.rasterizationState.lineWidth = 5.f;
     gfxInfo.topology = Gfx::SE_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-    gfxInfo.pipelineLayout = pipelineLayout;
+    gfxInfo.pipelineLayout = std::move(pipelineLayout);
     gfxInfo.renderPass = renderPass;
-    pipeline = graphics->createGraphicsPipeline(gfxInfo);
+    pipeline = graphics->createGraphicsPipeline(std::move(gfxInfo));
 }

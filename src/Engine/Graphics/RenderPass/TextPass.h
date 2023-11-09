@@ -78,8 +78,8 @@ private:
     Gfx::OVertexDeclaration declaration;
     Gfx::OVertexShader vertexShader;
     Gfx::OFragmentShader fragmentShader;
-    Gfx::OPipelineLayout pipelineLayout;
-    Gfx::OGraphicsPipeline pipeline;
+    Gfx::PPipelineLayout layoutRef;
+    Gfx::PGraphicsPipeline pipeline;
     Array<TextRender> texts;
 };
 DEFINE_REF(TextPass);

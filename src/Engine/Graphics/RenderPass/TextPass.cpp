@@ -85,7 +85,7 @@ void TextPass::render()
             command->bindDescriptor({generalSet, resource.textureArraySet});
             command->bindVertexBuffer({resource.vertexBuffer});
             
-            command->pushConstants(pipelineLayout, Gfx::SE_SHADER_STAGE_VERTEX_BIT | Gfx::SE_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(TextData), &resource.textData);
+            command->pushConstants(layoutRef, Gfx::SE_SHADER_STAGE_VERTEX_BIT | Gfx::SE_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(TextData), &resource.textData);
             command->draw(4, static_cast<uint32>(resource.vertexBuffer->getNumVertices()), 0, 0);
         }
         commands.add(command);
@@ -176,7 +176,8 @@ void TextPass::createRenderPass()
     generalSet->updateSampler(1, glyphSampler);
     generalSet->writeChanges();
     
-    pipelineLayout = graphics->createPipelineLayout();
+    Gfx::OPipelineLayout pipelineLayout = graphics->createPipelineLayout();
+    layoutRef = pipelineLayout;
     pipelineLayout->addDescriptorLayout(0, generalLayout);
     pipelineLayout->addDescriptorLayout(1, textureArrayLayout);
     pipelineLayout->addPushConstants({
@@ -193,7 +194,7 @@ void TextPass::createRenderPass()
     pipelineInfo.vertexShader = vertexShader;
     pipelineInfo.fragmentShader = fragmentShader;
     pipelineInfo.renderPass = renderPass;
-    pipelineInfo.pipelineLayout = pipelineLayout;
+    pipelineInfo.pipelineLayout = std::move(pipelineLayout);
     pipelineInfo.rasterizationState.cullMode = Gfx::SE_CULL_MODE_NONE;
     pipelineInfo.colorBlend.attachmentCount = 1;
     pipelineInfo.colorBlend.blendAttachments[0].blendEnable = true;
@@ -206,7 +207,7 @@ void TextPass::createRenderPass()
     pipelineInfo.colorBlend.blendAttachments[0].alphaBlendOp = Gfx::SE_BLEND_OP_ADD;
     pipelineInfo.topology = Gfx::SE_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
 
-    pipeline = graphics->createGraphicsPipeline(pipelineInfo);
+    pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
 }
 TextPass::FontData& TextPass::getFontData(PFontAsset font)
 {

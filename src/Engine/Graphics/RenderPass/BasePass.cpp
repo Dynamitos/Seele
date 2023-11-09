@@ -121,10 +121,10 @@ void BasePass::render()
                 pipelineInfo.taskShader = collection->taskShader;
                 pipelineInfo.meshShader = collection->meshShader;
                 pipelineInfo.fragmentShader = collection->fragmentShader;
-                pipelineInfo.pipelineLayout = layout;
+                pipelineInfo.pipelineLayout = std::move(layout);
                 pipelineInfo.renderPass = renderPass;
                 pipelineInfo.depthStencilState.depthCompareOp = Gfx::SE_COMPARE_OP_LESS_OR_EQUAL;
-                Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(pipelineInfo);
+                Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
                 command->bindPipeline(pipeline);
             }
             else
@@ -133,10 +133,10 @@ void BasePass::render()
                 pipelineInfo.vertexDeclaration = collection->vertexDeclaration;
                 pipelineInfo.vertexShader = collection->vertexShader;
                 pipelineInfo.fragmentShader = collection->fragmentShader;
-                pipelineInfo.pipelineLayout = layout;
+                pipelineInfo.pipelineLayout = std::move(layout);
                 pipelineInfo.renderPass = renderPass;
                 pipelineInfo.depthStencilState.depthCompareOp = Gfx::SE_COMPARE_OP_LESS_OR_EQUAL;
-                Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(pipelineInfo);
+                Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
                 command->bindPipeline(pipeline);
             }
 
@@ -156,8 +156,15 @@ void BasePass::render()
                     for(const auto& mesh : instance.meshes)
                     {
                         uint32 vertexOffset = vertexData->getMeshOffset(mesh.id);
-                        command->bindIndexBuffer(mesh.indexBuffer);
-                        command->drawIndexed(mesh.indexBuffer->getNumIndices(), 1, 0, vertexOffset, instanceOffset);
+                        if (mesh.indexBuffer != nullptr)
+                        {
+                            command->bindIndexBuffer(mesh.indexBuffer);
+                            command->drawIndexed(mesh.indexBuffer->getNumIndices(), 1, 0, vertexOffset, instanceOffset);
+                        }
+                        else
+                        {
+                            command->draw(vertexData->getMeshVertexCount(mesh.id), 1, vertexOffset, instanceOffset);
+                        }
                     }
                 }
             }

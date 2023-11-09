@@ -33,6 +33,7 @@ void VertexData::updateMesh(const Component::Transform& transform, PMesh mesh)
         },
         .indexBuffer = mesh->indexBuffer,
     });
+    matInstanceData.numMeshes += meshData[mesh->id].size();
 }
 
 void VertexData::loadMesh(MeshId id, Array<Meshlet> loadedMeshlets)
@@ -143,6 +144,7 @@ MeshId VertexData::allocateVertexData(uint64 numVertices)
 {
     MeshId res{ idCounter++ };
     meshOffsets[res] = head;
+    meshVertexCounts[res] = numVertices;
     head += numVertices;
     if (head > verticesAllocated)
     {
@@ -152,9 +154,14 @@ MeshId VertexData::allocateVertexData(uint64 numVertices)
     return res;
 }
 
-uint32 VertexData::getMeshOffset(MeshId id)
+uint64 VertexData::getMeshOffset(MeshId id)
 {
     return meshOffsets[id];
+}
+
+uint64 VertexData::getMeshVertexCount(MeshId id)
+{
+    return meshVertexCounts[id];
 }
 
 List<VertexData*> vertexDataList;

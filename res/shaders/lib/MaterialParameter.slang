@@ -9,3 +9,8 @@ struct MaterialParameter
 	float3 viewDir_TS;
 }
 
+struct VertexAttributes
+{
+	MaterialParameter parameter : PARAMETER;
+	float4 clipPosition: SV_POSITION;
+};

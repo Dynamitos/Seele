@@ -71,9 +71,9 @@ public:
     virtual OComputeShader createComputeShader(const ShaderCreateInfo& createInfo) = 0;
     virtual OMeshShader createMeshShader(const ShaderCreateInfo& createInfo) = 0;
     virtual OTaskShader createTaskShader(const ShaderCreateInfo& createInfo) = 0;
-    virtual OGraphicsPipeline createGraphicsPipeline(const LegacyPipelineCreateInfo& createInfo) = 0;
-    virtual OGraphicsPipeline createGraphicsPipeline(const MeshPipelineCreateInfo& createInfo) = 0;
-    virtual OComputePipeline createComputePipeline(const ComputePipelineCreateInfo& createInfo) = 0;
+    virtual PGraphicsPipeline createGraphicsPipeline(LegacyPipelineCreateInfo createInfo) = 0;
+    virtual PGraphicsPipeline createGraphicsPipeline(MeshPipelineCreateInfo createInfo) = 0;
+    virtual PComputePipeline createComputePipeline(ComputePipelineCreateInfo createInfo) = 0;
     virtual OSamplerState createSamplerState(const SamplerCreateInfo& createInfo) = 0;
 
   	virtual ODescriptorLayout createDescriptorLayout(const std::string& name = "") = 0;

@@ -1,4 +1,5 @@
 #include "Initializer.h"
+#include "Descriptor.h"
 
 using namespace Seele;
 using namespace Seele::Gfx;
@@ -88,5 +89,14 @@ MeshPipelineCreateInfo::MeshPipelineCreateInfo()
 }
 
 MeshPipelineCreateInfo::~MeshPipelineCreateInfo()
+{
+}
+
+ComputePipelineCreateInfo::ComputePipelineCreateInfo()
+{
+	std::memset((void*)this, 0, sizeof(*this));
+}
+
+ComputePipelineCreateInfo::~ComputePipelineCreateInfo()
 {
 }

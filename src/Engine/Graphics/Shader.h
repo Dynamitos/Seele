@@ -49,8 +49,8 @@ public:
 };
 DEFINE_REF(ComputeShader)
 
-    //Uniquely identifies a permutation of shaders
-    //using the type parameters used to generate it
+//Uniquely identifies a permutation of shaders
+//using the type parameters used to generate it
 struct ShaderPermutation
 {
     char taskFile[32];
@@ -61,10 +61,46 @@ struct ShaderPermutation
     uint8 hasFragment : 1;
     uint8 useMeshShading : 1;
     uint8 hasTaskShader : 1;
+    uint8 useMaterial : 1;
     //TODO: lightmapping etc
     ShaderPermutation()
     {
         std::memset(this, 0, sizeof(ShaderPermutation));
+    }
+    void setTaskFile(std::string_view name)
+    {
+        std::memset(taskFile, 0, sizeof(taskFile));
+        hasTaskShader = 1;
+        std::strncpy(taskFile, name.data(), 32);
+    }
+    void setVertexFile(std::string_view name)
+    {
+        std::memset(vertexMeshFile, 0, sizeof(vertexMeshFile));
+        useMeshShading = 0;
+        std::strncpy(vertexMeshFile, name.data(), 32);
+    }
+    void setMeshFile(std::string_view name)
+    {
+        std::memset(vertexMeshFile, 0, sizeof(vertexMeshFile));
+        useMeshShading = 1;
+        std::strncpy(vertexMeshFile, name.data(), 32);
+    }
+    void setFragmentFile(std::string_view name)
+    {
+        std::memset(fragmentFile, 0, sizeof(fragmentFile));
+        hasFragment = 1;
+        std::strncpy(fragmentFile, name.data(), 32);
+    }
+    void setVertexData(std::string_view name)
+    {
+        std::memset(vertexDataName, 0, sizeof(vertexDataName));
+        std::strncpy(vertexDataName, name.data(), 32);
+    }
+    void setMaterial(std::string_view name)
+    {
+        std::memset(materialName, 0, sizeof(materialName));
+        useMaterial = 1;
+        std::strncpy(materialName, name.data(), 32);
     }
 };
 //Hashed ShaderPermutation for fast lookup

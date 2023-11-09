@@ -13,7 +13,7 @@ using namespace Seele;
 
 DepthPrepass::DepthPrepass(Gfx::PGraphics graphics, PScene scene) 
     : RenderPass(graphics, scene)
-    , descriptorSets(4)
+    , descriptorSets(3)
 {
     UniformBufferCreateInfo uniformInitializer;
 
@@ -39,18 +39,14 @@ void DepthPrepass::render()
         Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT);
     depthAttachment->getTexture()->transferOwnership(Gfx::QueueType::GRAPHICS);
     Gfx::ShaderPermutation permutation;
-    permutation.hasFragment = false;
     if(graphics->supportMeshShading())
     {
-        permutation.useMeshShading = true;
-        permutation.hasTaskShader = true;
-        std::strncpy(permutation.taskFile, "MeshletBasePass", sizeof("MeshletBasePass"));
-        std::strncpy(permutation.vertexMeshFile, "MeshletBasePass", sizeof("MeshletBasePass"));
+        permutation.setTaskFile("MeshletBasePass");
+        permutation.setMeshFile("MeshletBasePass");
     }
     else
     {
-        permutation.useMeshShading = false;
-        std::strncpy(permutation.vertexMeshFile, "LegacyBasePass", sizeof("LegacyBasePass"));
+        permutation.setVertexFile("LegacyBasePass");
     }
     graphics->beginRenderPass(renderPass);
     for (VertexData* vertexData : VertexData::getList())
@@ -65,12 +61,11 @@ void DepthPrepass::render()
             // Material => per material
             // VertexData => per meshtype
             // SceneData => per material instance
-            std::strncpy(permutation.materialName, materialData.material->getName().c_str(), sizeof(permutation.materialName));
             Gfx::PermutationId id(permutation);
             
             Gfx::PRenderCommand command = graphics->createRenderCommand("DepthRender");
             Gfx::OPipelineLayout layout = graphics->createPipelineLayout(depthPrepassLayout);
-            layout->addDescriptorLayout(INDEX_MATERIAL, materialData.material->getDescriptorLayout());
+            //layout->addDescriptorLayout(INDEX_MATERIAL, materialData.material->getDescriptorLayout());
             layout->addDescriptorLayout(INDEX_VERTEX_DATA, vertexData->getVertexDataLayout());
             layout->addDescriptorLayout(INDEX_SCENE_DATA, vertexData->getInstanceDataLayout());
             layout->create();
@@ -83,10 +78,10 @@ void DepthPrepass::render()
                 pipelineInfo.taskShader = collection->taskShader;
                 pipelineInfo.meshShader = collection->meshShader;
                 pipelineInfo.fragmentShader = collection->fragmentShader;
-                pipelineInfo.pipelineLayout = layout;
+                pipelineInfo.pipelineLayout = std::move(layout);
                 pipelineInfo.renderPass = renderPass;
                 pipelineInfo.depthStencilState.depthCompareOp = Gfx::SE_COMPARE_OP_LESS_OR_EQUAL;
-                Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(pipelineInfo);
+                Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
                 command->bindPipeline(pipeline);
             }
             else
@@ -95,17 +90,17 @@ void DepthPrepass::render()
                 pipelineInfo.vertexDeclaration = collection->vertexDeclaration;
                 pipelineInfo.vertexShader = collection->vertexShader;
                 pipelineInfo.fragmentShader = collection->fragmentShader;
-                pipelineInfo.pipelineLayout = layout;
+                pipelineInfo.pipelineLayout = std::move(layout);
                 pipelineInfo.renderPass = renderPass;
                 pipelineInfo.depthStencilState.depthCompareOp = Gfx::SE_COMPARE_OP_LESS_OR_EQUAL;
-                Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(pipelineInfo);
+                Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
                 command->bindPipeline(pipeline);
             }
 
             descriptorSets[INDEX_VERTEX_DATA] = vertexData->getVertexDataSet();
             for (const auto& [_, instance] : materialData.instances)
             {
-                descriptorSets[INDEX_MATERIAL] = instance.materialInstance->getDescriptorSet();
+                //descriptorSets[INDEX_MATERIAL] = instance.materialInstance->getDescriptorSet();
                 descriptorSets[INDEX_SCENE_DATA] = instance.descriptorSet;
                 command->bindDescriptor(descriptorSets);
                 if(graphics->supportMeshShading())
@@ -118,8 +113,15 @@ void DepthPrepass::render()
                     for(const auto& mesh : instance.meshes)
                     {
                         uint32 vertexOffset = vertexData->getMeshOffset(mesh.id);
-                        command->bindIndexBuffer(mesh.indexBuffer);
-                        command->drawIndexed(mesh.indexBuffer->getNumIndices(), 1, 0, vertexOffset, instanceOffset);
+                        if (mesh.indexBuffer != nullptr)
+                        {
+                            command->bindIndexBuffer(mesh.indexBuffer);
+                            command->drawIndexed(mesh.indexBuffer->getNumIndices(), 1, 0, vertexOffset, instanceOffset);
+                        }
+                        else
+                        {
+                            command->draw(vertexData->getMeshVertexCount(mesh.id), 1, vertexOffset, instanceOffset);
+                        }
                     }
                 }
             }

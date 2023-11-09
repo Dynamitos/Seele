@@ -65,7 +65,8 @@ public:
     void loadMesh(MeshId id, Array<Meshlet> meshlets);
     void createDescriptors();
     MeshId allocateVertexData(uint64 numVertices);
-    uint32 getMeshOffset(MeshId id);
+    uint64 getMeshOffset(MeshId id);
+    uint64 getMeshVertexCount(MeshId id);
     virtual void serializeMesh(MeshId id, uint64 numVertices, ArchiveBuffer& buffer) = 0;
     virtual void deserializeMesh(MeshId id, ArchiveBuffer& buffer) = 0;
     virtual void bindBuffers(Gfx::PRenderCommand command) = 0;
@@ -100,6 +101,7 @@ protected:
     Map<std::string, MaterialData> materialData;
     Map<MeshId, Array<MeshData>> meshData;
     Map<MeshId, uint64> meshOffsets;
+    Map<MeshId, uint64> meshVertexCounts;
     Array<MeshletDescription> meshlets;
     Array<uint8> primitiveIndices;
     Array<uint32> vertexIndices;

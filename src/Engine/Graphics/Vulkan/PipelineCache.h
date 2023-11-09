@@ -10,10 +10,12 @@ class PipelineCache
 public:
     PipelineCache(PGraphics graphics, const std::string& cacheFilePath);
     ~PipelineCache();
-    OGraphicsPipeline createPipeline(const Gfx::LegacyPipelineCreateInfo& createInfo);
-    OGraphicsPipeline createPipeline(const Gfx::MeshPipelineCreateInfo& createInfo);
-    OComputePipeline createPipeline(const Gfx::ComputePipelineCreateInfo& createInfo);
+    PGraphicsPipeline createPipeline(Gfx::LegacyPipelineCreateInfo createInfo);
+    PGraphicsPipeline createPipeline(Gfx::MeshPipelineCreateInfo createInfo);
+    PComputePipeline createPipeline(Gfx::ComputePipelineCreateInfo createInfo);
 private:
+    Map<uint32, OGraphicsPipeline> graphicsPipelines;
+    Map<uint32, OComputePipeline> computePipelines;
     VkPipelineCache cache;
     PGraphics graphics;
     std::string cacheFile;

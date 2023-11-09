@@ -23,13 +23,14 @@ public:
 private:
     Gfx::OVertexBuffer cubeBuffer;
     Gfx::OUniformBuffer viewParamsBuffer;
-    Gfx::ODescriptorLayout descriptorLayout;
-    Gfx::PDescriptorSet descriptorSet;
-    Gfx::OPipelineLayout pipelineLayout;
+    Gfx::ODescriptorLayout skyboxDataLayout;
+    Gfx::PDescriptorSet skyboxDataSet;
+    Gfx::ODescriptorLayout textureLayout;
+    Gfx::PDescriptorSet textureSet;
     Gfx::OVertexDeclaration declaration;
     Gfx::OVertexShader vertexShader;
     Gfx::OFragmentShader fragmentShader;
-    Gfx::OGraphicsPipeline pipeline;
+    Gfx::PGraphicsPipeline pipeline;
     Gfx::OSamplerState skyboxSampler;
     Component::Skybox skybox;
 };

@@ -64,9 +64,9 @@ public:
     virtual Gfx::OComputeShader createComputeShader(const ShaderCreateInfo& createInfo) override;
     virtual Gfx::OTaskShader createTaskShader(const ShaderCreateInfo& createInfo) override;
     virtual Gfx::OMeshShader createMeshShader(const ShaderCreateInfo& createInfo) override;
-    virtual Gfx::OGraphicsPipeline createGraphicsPipeline(const Gfx::LegacyPipelineCreateInfo& createInfo) override;
-    virtual Gfx::OGraphicsPipeline createGraphicsPipeline(const Gfx::MeshPipelineCreateInfo& createInfo) override;
-    virtual Gfx::OComputePipeline createComputePipeline(const Gfx::ComputePipelineCreateInfo& createInfo) override;
+    virtual Gfx::PGraphicsPipeline createGraphicsPipeline(Gfx::LegacyPipelineCreateInfo createInfo) override;
+    virtual Gfx::PGraphicsPipeline createGraphicsPipeline(Gfx::MeshPipelineCreateInfo createInfo) override;
+    virtual Gfx::PComputePipeline createComputePipeline(Gfx::ComputePipelineCreateInfo createInfo) override;
     virtual Gfx::OSamplerState createSamplerState(const SamplerCreateInfo& createInfo) override;
 
     virtual Gfx::ODescriptorLayout createDescriptorLayout(const std::string& name = "") override;

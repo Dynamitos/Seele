@@ -25,12 +25,10 @@ private:
     
     Gfx::OPipelineLayout depthPrepassLayout;
     // Set 0: viewParameter
-    // Set 1: materials, generated
-    constexpr static uint32 INDEX_MATERIAL = 1;
-    // Set 2: vertices, from VertexData
-    constexpr static uint32 INDEX_VERTEX_DATA = 2;
-    // Set 3: mesh data, either index buffer or meshlet data
-    constexpr static uint32 INDEX_SCENE_DATA = 3;
+    // Set 1: vertices, from VertexData
+    constexpr static uint32 INDEX_VERTEX_DATA = 1;
+    // Set 2: mesh data, either index buffer or meshlet data
+    constexpr static uint32 INDEX_SCENE_DATA = 2;
     Gfx::ODescriptorLayout sceneDataLayout;
 };
 DEFINE_REF(DepthPrepass)

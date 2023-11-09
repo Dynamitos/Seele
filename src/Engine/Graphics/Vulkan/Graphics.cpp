@@ -191,18 +191,18 @@ Gfx::OMeshShader Graphics::createMeshShader(const ShaderCreateInfo& createInfo)
     return std::move(shader);
 }
 
-Gfx::OGraphicsPipeline Graphics::createGraphicsPipeline(const Gfx::LegacyPipelineCreateInfo& createInfo)
+Gfx::PGraphicsPipeline Graphics::createGraphicsPipeline(Gfx::LegacyPipelineCreateInfo createInfo)
 {
-    return pipelineCache->createPipeline(createInfo);
+    return pipelineCache->createPipeline(std::move(createInfo));
 }
-Gfx::OGraphicsPipeline Graphics::createGraphicsPipeline(const Gfx::MeshPipelineCreateInfo& createInfo)
+Gfx::PGraphicsPipeline Graphics::createGraphicsPipeline(Gfx::MeshPipelineCreateInfo createInfo)
 {
-    return pipelineCache->createPipeline(createInfo);
+    return pipelineCache->createPipeline(std::move(createInfo));
 }
 
-Gfx::OComputePipeline Graphics::createComputePipeline(const Gfx::ComputePipelineCreateInfo& createInfo) 
+Gfx::PComputePipeline Graphics::createComputePipeline(Gfx::ComputePipelineCreateInfo createInfo) 
 {
-    return pipelineCache->createPipeline(createInfo);
+    return pipelineCache->createPipeline(std::move(createInfo));
 }
 
 Gfx::OSamplerState Graphics::createSamplerState(const SamplerCreateInfo& createInfo) 

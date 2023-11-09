@@ -4,6 +4,7 @@
 #include "Containers/Array.h"
 #include "Containers/List.h"
 #include "Initializer.h"
+#include "Descriptor.h"
 #include "CRC.h"
 #include <functional>
 
@@ -92,22 +93,22 @@ DEFINE_REF(VertexDeclaration)
 class GraphicsPipeline
 {
 public:
-    GraphicsPipeline(PPipelineLayout layout) : layout(layout) {}
+    GraphicsPipeline(OPipelineLayout layout) : layout(std::move(layout)) {}
     virtual ~GraphicsPipeline(){}
     PPipelineLayout getPipelineLayout() const { return layout; }
 protected:
-    PPipelineLayout layout;
+    OPipelineLayout layout;
 };
 DEFINE_REF(GraphicsPipeline)
 
 class ComputePipeline
 {
 public:
-    ComputePipeline(PPipelineLayout layout) : layout(layout) {}
+    ComputePipeline(OPipelineLayout layout) : layout(std::move(layout)) {}
     virtual ~ComputePipeline(){}
     PPipelineLayout getPipelineLayout() const { return layout; }
 protected:
-    PPipelineLayout layout;
+    OPipelineLayout layout;
 };
 DEFINE_REF(ComputePipeline)
 

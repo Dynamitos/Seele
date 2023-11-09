@@ -5,8 +5,8 @@
 using namespace Seele;
 using namespace Seele::Vulkan;
 
-GraphicsPipeline::GraphicsPipeline(PGraphics graphics, VkPipeline handle, PPipelineLayout pipelineLayout)
-    : Gfx::GraphicsPipeline(pipelineLayout)
+GraphicsPipeline::GraphicsPipeline(PGraphics graphics, VkPipeline handle, Gfx::OPipelineLayout pipelineLayout)
+    : Gfx::GraphicsPipeline(std::move(pipelineLayout))
     , graphics(graphics)
     , pipeline(handle)
 {
@@ -23,11 +23,11 @@ void GraphicsPipeline::bind(VkCommandBuffer handle)
 
 VkPipelineLayout GraphicsPipeline::getLayout() const
 {
-    return layout.cast<PipelineLayout>()->getHandle();  
+    return Gfx::PPipelineLayout(layout).cast<PipelineLayout>()->getHandle();  
 }
 
-ComputePipeline::ComputePipeline(PGraphics graphics, VkPipeline handle, PPipelineLayout pipelineLayout) 
-    : Gfx::ComputePipeline(pipelineLayout)
+ComputePipeline::ComputePipeline(PGraphics graphics, VkPipeline handle, Gfx::OPipelineLayout pipelineLayout) 
+    : Gfx::ComputePipeline(std::move(pipelineLayout))
     , graphics(graphics)
     , pipeline(handle)
 {
@@ -45,5 +45,5 @@ void ComputePipeline::bind(VkCommandBuffer handle)
 
 VkPipelineLayout ComputePipeline::getLayout() const
 {
-    return layout.cast<PipelineLayout>()->getHandle();
+    return Gfx::PPipelineLayout(layout).cast<PipelineLayout>()->getHandle();
 }

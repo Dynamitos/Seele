@@ -61,7 +61,7 @@ void taskMain(
 	DispatchMesh(head, 1, 1, p);
 }
 
-groupshared IVertexAttributes gs_vertices[MAX_VERTICES];
+groupshared VertexAttributes gs_vertices[MAX_VERTICES];
 groupshared uint3 gs_indices[MAX_PRIMITIVES];
 groupshared uint gs_numVertices;
 groupshared uint gs_numPrimitives;
@@ -78,7 +78,7 @@ void meshMain(
 	in uint threadID: SV_GroupIndex,
 	in uint groupID: SV_GroupID,
 	in payload MeshPayload meshPayload,
-	out Vertices<IVertexAttributes, MAX_VERTICES> vertices, 
+	out Vertices<VertexAttributes, MAX_VERTICES> vertices, 
 	out Indices<uint3, MAX_PRIMITIVES> indices
 ){
 	InstanceData inst = pScene.instances[meshPayload.instanceId[groupID]];

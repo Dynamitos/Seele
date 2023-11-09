@@ -203,12 +203,14 @@ struct LegacyPipelineCreateInfo
     PVertexShader vertexShader;
     PFragmentShader fragmentShader;
     PRenderPass renderPass;
-    PPipelineLayout pipelineLayout;
+    OPipelineLayout pipelineLayout;
     MultisampleState multisampleState;
     RasterizationState rasterizationState;
     DepthStencilState depthStencilState;
     ColorBlendState colorBlend;
     LegacyPipelineCreateInfo();
+    LegacyPipelineCreateInfo(LegacyPipelineCreateInfo&& rhs) = default;
+    LegacyPipelineCreateInfo& operator=(LegacyPipelineCreateInfo&& rhs) = default;
     ~LegacyPipelineCreateInfo();
 };
 
@@ -218,22 +220,24 @@ struct MeshPipelineCreateInfo
     PMeshShader meshShader;
     PFragmentShader fragmentShader;
     PRenderPass renderPass;
-    PPipelineLayout pipelineLayout;
+    OPipelineLayout pipelineLayout;
     MultisampleState multisampleState;
     RasterizationState rasterizationState;
     DepthStencilState depthStencilState;
     ColorBlendState colorBlend;
     MeshPipelineCreateInfo();
+    MeshPipelineCreateInfo(MeshPipelineCreateInfo&& rhs) = default;
+    MeshPipelineCreateInfo& operator=(MeshPipelineCreateInfo&& rhs) = default;
     ~MeshPipelineCreateInfo();
 };
 struct ComputePipelineCreateInfo
 {
     Gfx::PComputeShader computeShader;
-    Gfx::PPipelineLayout pipelineLayout;
-    ComputePipelineCreateInfo()
-    {
-        std::memset((void*)this, 0, sizeof(*this));
-    }
+    Gfx::OPipelineLayout pipelineLayout;
+    ComputePipelineCreateInfo();
+    ComputePipelineCreateInfo(ComputePipelineCreateInfo&& rhs) = default;
+    ComputePipelineCreateInfo& operator=(ComputePipelineCreateInfo&& rhs) = default;
+    ~ComputePipelineCreateInfo();
 };
 } // namespace Gfx
 } // namespace Seele

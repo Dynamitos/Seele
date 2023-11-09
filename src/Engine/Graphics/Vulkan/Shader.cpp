@@ -63,17 +63,19 @@ void Shader::create(const ShaderCreateInfo& createInfo)
     Slang::ComPtr<slang::IBlob> diagnostics;
     Array<slang::IComponentType*> modules;
     Slang::ComPtr<slang::IEntryPoint> entrypoint;
-    
-    for (auto moduleName : createInfo.additionalModules)
+    slang::IModule* mainModule = nullptr;
+    for (const auto& moduleName : createInfo.additionalModules)
     {
         modules.add(session->loadModule(moduleName.c_str(), diagnostics.writeRef()));
+        if (moduleName == createInfo.mainModule)
+        {
+            mainModule = (slang::IModule*)modules.back();
+        }
         if(diagnostics)
         {
             std::cout << (const char*)diagnostics->getBufferPointer() << std::endl;
         }
     }
-    slang::IModule* mainModule = session->loadModule(createInfo.mainModule.c_str(), diagnostics.writeRef());
-    modules.add(mainModule);
 
     if(diagnostics)
     {
@@ -143,13 +145,14 @@ void Shader::create(const ShaderCreateInfo& createInfo)
     }
 
     VkShaderModuleCreateInfo moduleInfo;
-	moduleInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-	moduleInfo.pNext = nullptr;
-	moduleInfo.flags = 0;
-	moduleInfo.codeSize = kernelBlob->getBufferSize();
-	moduleInfo.pCode = (uint32_t*)kernelBlob->getBufferPointer();
-	VK_CHECK(vkCreateShaderModule(graphics->getDevice(), &moduleInfo, nullptr, &module));
+    moduleInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    moduleInfo.pNext = nullptr;
+    moduleInfo.flags = 0;
+    moduleInfo.codeSize = kernelBlob->getBufferSize();
+    moduleInfo.pCode = (uint32_t*)kernelBlob->getBufferPointer();
+    VK_CHECK(vkCreateShaderModule(graphics->getDevice(), &moduleInfo, nullptr, &module));
 
     hash = CRC::Calculate(entryPointName.data(), entryPointName.size(), CRC::CRC_32());
     hash = CRC::Calculate(kernelBlob->getBufferPointer(), kernelBlob->getBufferSize(), CRC::CRC_32(), hash);
+    std::cout << "Creating Shader" << std::endl;
 }

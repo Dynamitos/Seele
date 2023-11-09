@@ -53,32 +53,28 @@ void ShaderCompiler::compile()
 	ShaderPermutation permutation;
 	for (const auto& [name, pass] : passes)
 	{
-		permutation.hasFragment = pass.hasFragmentShader;
-		permutation.useMeshShading = pass.useMeshShading;
-		permutation.hasTaskShader = pass.hasTaskShader;
 		std::strncpy(permutation.vertexMeshFile, pass.mainFile.c_str(), sizeof(permutation.vertexMeshFile));
 		if (pass.hasFragmentShader)
 		{
-			std::strncpy(permutation.fragmentFile, pass.fragmentFile.c_str(), sizeof(permutation.fragmentFile));
+			permutation.setFragmentFile(pass.fragmentFile);
 		}
 		if (pass.hasTaskShader)
 		{
-			std::strncpy(permutation.taskFile, pass.taskFile.c_str(), sizeof(permutation.taskFile));
+			permutation.setTaskFile(pass.taskFile);
 		}
 		for (const auto& [vdName, vd] : vertexData)
 		{
-			std::strncpy(permutation.vertexDataName, vd->getTypeName().c_str(), sizeof(permutation.vertexDataName));
+			permutation.setVertexData(vd->getTypeName());
 			if (pass.useMaterial)
 			{
 				for (const auto& [matName, mat] : materials)
 				{
-					std::strncpy(permutation.materialName, matName.c_str(), sizeof(permutation.materialName));
+					permutation.setMaterial(mat->getName());
 					createShaders(permutation);
 				}
 			}
 			else
 			{
-				std::memset(permutation.materialName, 0, sizeof(permutation.materialName));
 				createShaders(permutation);
 			}
 		}

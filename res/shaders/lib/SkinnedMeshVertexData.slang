@@ -2,36 +2,6 @@ import VertexData;
 import Common;
 import Scene;
 
-struct SkinnedMeshVertexAttributes : VertexAttributes
-{
-	float4 clipPosition: SV_Position;
-	float3 worldPosition: POSITION0;
-	float2 texCoords: TEXCOORD0;
-	float3 normal: NORMAL0;
-	float3 tangent: TANGENT0;
-	float3 biTangent: BITANGENT0;
-	float3 getWorldPosition()
-	{
-		return worldPosition;
-	}
-	float2 getTexCoords()
-	{
-		return texCoords;
-	}
-	float3 getNormal()
-	{
-		return normal;
-	}
-	float3 getTangent()
-	{
-		return tangent;
-	}
-	float3 getBiTangent()
-	{
-		return biTangent;
-	}
-}
-
 struct SkinnedMeshVertexData : VertexData
 {
 	SkinnedMeshVertexAttributes getAttributes(uint index, float4x4 transform)

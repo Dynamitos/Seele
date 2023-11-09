@@ -11,7 +11,7 @@ DECLARE_REF(Graphics)
 class GraphicsPipeline : public Gfx::GraphicsPipeline
 {
 public:
-    GraphicsPipeline(PGraphics graphics, VkPipeline handle, PPipelineLayout pipelineLayout);
+    GraphicsPipeline(PGraphics graphics, VkPipeline handle, Gfx::OPipelineLayout pipelineLayout);
     virtual ~GraphicsPipeline();
     void bind(VkCommandBuffer handle);
     VkPipelineLayout getLayout() const;
@@ -23,7 +23,7 @@ DEFINE_REF(GraphicsPipeline)
 class ComputePipeline : public Gfx::ComputePipeline
 {
 public:
-    ComputePipeline(PGraphics graphics, VkPipeline handle, PPipelineLayout pipelineLayout);
+    ComputePipeline(PGraphics graphics, VkPipeline handle, Gfx::OPipelineLayout pipelineLayout);
     virtual ~ComputePipeline();
     void bind(VkCommandBuffer handle);
     VkPipelineLayout getLayout() const;

@@ -173,7 +173,7 @@ void UIPass::createRenderPass()
     descriptorSet->updateSampler(1, backgroundSampler);
     descriptorSet->writeChanges();
 
-    pipelineLayout = graphics->createPipelineLayout();
+    Gfx::OPipelineLayout pipelineLayout = graphics->createPipelineLayout();
     pipelineLayout->addDescriptorLayout(0, descriptorLayout);
     pipelineLayout->create();
 
@@ -185,9 +185,9 @@ void UIPass::createRenderPass()
     pipelineInfo.vertexShader = vertexShader;
     pipelineInfo.fragmentShader = fragmentShader;
     pipelineInfo.renderPass = renderPass;
-    pipelineInfo.pipelineLayout = pipelineLayout;
+    pipelineInfo.pipelineLayout = std::move(pipelineLayout);
     pipelineInfo.rasterizationState.cullMode = Gfx::SE_CULL_MODE_NONE;
     pipelineInfo.topology = Gfx::SE_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
 
-    pipeline = graphics->createGraphicsPipeline(pipelineInfo);
+    pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
 }

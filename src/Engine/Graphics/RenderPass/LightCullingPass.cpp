@@ -117,7 +117,7 @@ void LightCullingPass::publishOutputs()
 
     lightEnv = scene->getLightEnvironment();
 
-    cullingLayout = graphics->createPipelineLayout();
+    Gfx::OPipelineLayout cullingLayout = graphics->createPipelineLayout();
     cullingLayout->addDescriptorLayout(0, viewParamsLayout);
     cullingLayout->addDescriptorLayout(1, lightEnv->getDescriptorLayout());
     cullingLayout->addDescriptorLayout(2, cullingDescriptorLayout);
@@ -132,8 +132,8 @@ void LightCullingPass::publishOutputs()
 
     Gfx::ComputePipelineCreateInfo pipelineInfo;
     pipelineInfo.computeShader = cullingShader;
-    pipelineInfo.pipelineLayout = cullingLayout;
-    cullingPipeline = graphics->createComputePipeline(pipelineInfo);
+    pipelineInfo.pipelineLayout = std::move(cullingLayout);
+    cullingPipeline = graphics->createComputePipeline(std::move(pipelineInfo));
 
     uint32 counterReset = 0;
     ShaderBufferCreateInfo structInfo = 
@@ -203,7 +203,7 @@ void LightCullingPass::setupFrustums()
     frustumDescriptorLayout = graphics->createDescriptorLayout("FrustumLayout");
     frustumDescriptorLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
     frustumDescriptorLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
-    frustumLayout = graphics->createPipelineLayout();
+    Gfx::OPipelineLayout frustumLayout = graphics->createPipelineLayout();
     frustumLayout->addDescriptorLayout(0, viewParamsLayout);
     frustumLayout->addDescriptorLayout(1, frustumDescriptorLayout);
     frustumLayout->create();
@@ -216,8 +216,8 @@ void LightCullingPass::setupFrustums()
 
     Gfx::ComputePipelineCreateInfo pipelineInfo;
     pipelineInfo.computeShader = frustumShader;
-    pipelineInfo.pipelineLayout = frustumLayout;
-    frustumPipeline = graphics->createComputePipeline(pipelineInfo);
+    pipelineInfo.pipelineLayout = std::move(frustumLayout);
+    frustumPipeline = graphics->createComputePipeline(std::move(pipelineInfo));
     
     Gfx::OUniformBuffer frustumDispatchParamsBuffer = graphics->createUniformBuffer(UniformBufferCreateInfo{
         .sourceData = {
