@@ -82,6 +82,7 @@ IndexBuffer::IndexBuffer(QueueFamilyMapping mapping, uint64 size, Gfx::SeIndexTy
 		break;
 	case SE_INDEX_TYPE_UINT32:
 		numIndices = size / sizeof(uint32);
+		break;
 	default:
 		break;
 	}

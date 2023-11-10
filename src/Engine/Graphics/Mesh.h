@@ -16,6 +16,7 @@ public:
     uint64 vertexCount;
     Gfx::OIndexBuffer indexBuffer;
     PMaterialInstanceAsset referencedMaterial;
+    Array<uint32> indices;
     Array<Meshlet> meshlets;
     void save(ArchiveBuffer& buffer) const;
     void load(ArchiveBuffer& buffer);

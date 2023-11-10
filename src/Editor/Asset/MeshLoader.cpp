@@ -261,6 +261,7 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
         globalMeshes[meshIndex]->id = id;
         globalMeshes[meshIndex]->referencedMaterial = materials[mesh->mMaterialIndex];
         globalMeshes[meshIndex]->meshlets = std::move(meshlets);
+        globalMeshes[meshIndex]->indices = std::move(indices);
         globalMeshes[meshIndex]->vertexCount = mesh->mNumVertices;
         globalMeshes[meshIndex]->indexBuffer = std::move(indexBuffer);
     }
