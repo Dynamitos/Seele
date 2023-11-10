@@ -1,3 +1,4 @@
+import Common;
 import VertexData;
 import MaterialParameter;
 
@@ -10,7 +11,7 @@ struct Scene
 {
 	StructuredBuffer<InstanceData> instances;
 }
-
+layout(set=2)
 ParameterBlock<Scene> pScene;
 
 [shader("vertex")]

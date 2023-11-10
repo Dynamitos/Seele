@@ -4,7 +4,6 @@ if(${CMAKE_VERSION} VERSION_LESS 3.12)
     cmake_policy(VERSION ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION})
 endif()
 set(CMAKE_CXX_STANDARD 20)
-
 # Handle superbuild first
 option (USE_SUPERBUILD "Whether or not a superbuild should be invoked" ON)
 
@@ -58,10 +57,6 @@ endif()
 
 if(WIN32)
     add_compile_definitions(USE_EXTENSIONS)
-endif()
-if(CMAKE_DEBUG_POSTFIX)
-    add_compile_definitions(ENABLE_VALIDATION)
-    add_compile_definitions(SEELE_DEBUG)
 endif()
 
 add_library(Engine SHARED "")
@@ -127,6 +122,8 @@ else()
     target_compile_options(Engine PUBLIC -g -Wall -Wextra -Wno-error -pedantic -std=c++20 -Wno-missing-field-initializers -Wno-unused-function)
     target_compile_options(Editor PUBLIC -g -Wall -Wextra -Wno-error -pedantic -std=c++20)
 endif()
+target_compile_options(Engine PUBLIC "$<$<CONFIG:DEBUG>:-DENABLE_VALIDATION>")
+target_compile_options(Engine PUBLIC "$<$<CONFIG:DEBUG>:-DSEELE_DEBUG>")
 
 add_subdirectory(src/)
 

@@ -6,6 +6,7 @@
 #include "Asset/AssetRegistry.h"
 #include "System/LightGather.h"
 #include "System/MeshUpdater.h"
+#include "System/CameraUpdater.h"
 
 using namespace Seele;
 
@@ -76,6 +77,7 @@ void GameView::reloadGame()
     gameInterface.getGame()->setupScene(scene, systemGraph);
     systemGraph->addSystem(new System::LightGather(scene));
     systemGraph->addSystem(new System::MeshUpdater(scene));
+    systemGraph->addSystem(new System::CameraUpdater(scene));
 }
 
 void GameView::keyCallback(KeyCode code, InputAction action, KeyModifier)

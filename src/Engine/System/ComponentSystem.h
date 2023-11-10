@@ -1,6 +1,7 @@
 #pragma once
 #include "SystemBase.h"
 #include "Component/Component.h"
+#include "Component/Camera.h"
 
 namespace Seele
 {
@@ -12,7 +13,7 @@ class ComponentSystem : public SystemBase
 public:
     ComponentSystem(PScene scene) : SystemBase(scene) {}
     virtual ~ComponentSystem() {}
-    template<is_component Comp>
+    template<has_dependencies Comp>
     auto getDependencies()
     {
         return Comp::dependencies;

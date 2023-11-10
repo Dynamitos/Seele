@@ -43,53 +43,14 @@ Transform::~Transform()
 }
 Matrix4 Transform::toMatrix() const
 {
-    Matrix4 mat;
-
-    mat[3][0] = position.x;
-    mat[3][1] = position.y;
-    mat[3][2] = position.z;
-
-    const float x2 = rotation.x + rotation.x;
-    const float y2 = rotation.y + rotation.y;
-    const float z2 = rotation.z + rotation.z;
-    {
-        const float xx2 = rotation.x * x2;
-        const float yy2 = rotation.y * y2;
-        const float zz2 = rotation.z * z2;
-
-        mat[0][0] = (1.0f - (yy2 + zz2)) * scale.x;
-        mat[1][1] = (1.0f - (xx2 + zz2)) * scale.y;
-        mat[2][2] = (1.0f - (xx2 + yy2)) * scale.z;
-    }
-
-    {
-        const float yz2 = rotation.y * z2;
-        const float wx2 = rotation.w * x2;
-
-        mat[2][1] = (yz2 - wx2) * scale.z;
-        mat[1][2] = (yz2 + wx2) * scale.y;
-    }
-    {
-        const float xy2 = rotation.x * y2;
-        const float wz2 = rotation.w * z2;
-
-        mat[1][0] = (xy2 - wz2) * scale.y;
-        mat[0][1] = (xy2 + wz2) * scale.x;
-    }
-    {
-        const float xz2 = rotation.x * z2;
-        const float wy2 = rotation.w * y2;
-
-        mat[2][0] = (xz2 + wy2) * scale.z;
-        mat[0][2] = (xz2 - wy2) * scale.x;
-    }
-
-    mat[0][3] = 0.0f;
-    mat[1][3] = 0.0f;
-    mat[2][3] = 0.0f;
-    mat[3][3] = 1.0f;
-
-    return mat;
+    // TODO: actual calculations, SIMD
+    Matrix4 result = Matrix4(1);
+    result = glm::scale(result, Vector(scale));
+    result = glm::toMat4(rotation) * result;
+    result[3][0] = position.x;
+    result[3][1] = position.y;
+    result[3][2] = position.z;
+    return result;
 }
 
 Vector Transform::transformPosition(const Vector &v) const

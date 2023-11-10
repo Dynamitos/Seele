@@ -8,7 +8,9 @@ template<typename... Types>
 struct Dependencies;
 template<>
 struct Dependencies<>
-{};
+{
+    int x;
+};
 template<typename This, typename... Rest>
 struct Dependencies<This, Rest...> : public Dependencies<Rest...>
 {
@@ -17,6 +19,7 @@ struct Dependencies<This, Rest...> : public Dependencies<Rest...>
     {
         return Dependencies<This, Rest..., Right...>();
     }
+    int x;
 };
 
 namespace Component
@@ -24,16 +27,15 @@ namespace Component
 template<typename Comp>
 static int accessComponent(Comp& comp);
 }
-
-template<typename T, typename... Deps>
-concept is_component = std::same_as<decltype(T::dependencies), Dependencies<Deps...>>;
+template<typename Comp>
+concept has_dependencies = requires(Comp) { Comp::dependencies; };
 
 #define REQUIRE_COMPONENT(x) \
     private: \
     x& get##x() { return *tl_##x; } \
     const x& get##x() const { return *tl_##x; }; \
     public: \
-    static Dependencies<x> dependencies;
+    constexpr static Dependencies<x> dependencies;
 
 #define DECLARE_COMPONENT(x) \
     thread_local extern x* tl_##x; \

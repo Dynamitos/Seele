@@ -18,9 +18,6 @@ struct Transform
 
     Matrix4 toMatrix() const { return transform.toMatrix(); }
 
-    bool isDirty() const { return dirty; }
-    void clean() { dirty = false; }
-
     void setPosition(Vector pos);
     void setRotation(Quaternion quat);
     void setScale(Vector scale);
@@ -34,7 +31,6 @@ struct Transform
     void addRelativeRotation(Quaternion rotation);
     void addRelativeRotation(Vector rotation);
 private:
-    bool dirty = true;
     Math::Transform transform;
 };
 DECLARE_COMPONENT(Transform)

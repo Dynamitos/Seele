@@ -115,7 +115,7 @@ struct ShaderCreateInfo
     Array<std::string> additionalModules;
     std::string name; // Debug info
     std::string entryPoint;
-    Array<const char*> typeParameter;
+    Array<Pair<const char*, const char*>> typeParameter;
     Map<const char*, const char*> defines;
 };
 

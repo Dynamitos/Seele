@@ -33,8 +33,8 @@ namespace Serialization
     }
     static void load(ArchiveBuffer& buffer, IVector2& vec)
     {
-        save(buffer, vec.x);
-        save(buffer, vec.y);
+        load(buffer, vec.x);
+        load(buffer, vec.y);
     }
     static void save(ArchiveBuffer& buffer, const Vector2& vec)
     {
@@ -43,8 +43,8 @@ namespace Serialization
     }
     static void load(ArchiveBuffer& buffer, Vector2& vec)
     {
-        save(buffer, vec.x);
-        save(buffer, vec.y);
+        load(buffer, vec.x);
+        load(buffer, vec.y);
     }
     static void save(ArchiveBuffer& buffer, const Vector& vec)
     {
@@ -54,9 +54,9 @@ namespace Serialization
     }
     static void load(ArchiveBuffer& buffer, Vector& vec)
     {
-        save(buffer, vec.x);
-        save(buffer, vec.y);
-        save(buffer, vec.z);
+        load(buffer, vec.x);
+        load(buffer, vec.y);
+        load(buffer, vec.z);
     }
     template<enumeration T>
     static void save(ArchiveBuffer& buffer, const T& type)

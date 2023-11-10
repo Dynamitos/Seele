@@ -49,9 +49,10 @@ void DepthPrepass::render()
         permutation.setVertexFile("LegacyBasePass");
     }
     graphics->beginRenderPass(renderPass);
+    Array<Gfx::PRenderCommand> commands;
     for (VertexData* vertexData : VertexData::getList())
     {
-        std::strncpy(permutation.vertexDataName, vertexData->getTypeName().c_str(), sizeof(permutation.vertexDataName));
+        permutation.setVertexData(vertexData->getTypeName());
         const auto& materials = vertexData->getMaterialData();
         for (const auto& [_, materialData] : materials) 
         {
@@ -64,6 +65,7 @@ void DepthPrepass::render()
             Gfx::PermutationId id(permutation);
             
             Gfx::PRenderCommand command = graphics->createRenderCommand("DepthRender");
+            command->setViewport(viewport);
             Gfx::OPipelineLayout layout = graphics->createPipelineLayout(depthPrepassLayout);
             //layout->addDescriptorLayout(INDEX_MATERIAL, materialData.material->getDescriptorLayout());
             layout->addDescriptorLayout(INDEX_VERTEX_DATA, vertexData->getVertexDataLayout());
@@ -122,11 +124,14 @@ void DepthPrepass::render()
                         {
                             command->draw(vertexData->getMeshVertexCount(mesh.id), 1, vertexOffset, instanceOffset);
                         }
+                        instanceOffset+=mesh.meshes;
                     }
                 }
             }
+            commands.add(command);
         }
     }
+    graphics->executeCommands(commands);
     graphics->endRenderPass();
 }
 

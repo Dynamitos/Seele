@@ -1,5 +1,7 @@
 target_sources(Engine
     PRIVATE
+        CameraUpdater.h
+        CameraUpdater.cpp
         ComponentSystem.h
         Executor.h
         Executor.cpp
@@ -14,6 +16,7 @@ target_sources(Engine
 target_sources(Engine
     PUBLIC FILE_SET HEADERS
         FILES
+            CameraUpdater.h
             ComponentSystem.h
             Executor.h
             LightGather.h

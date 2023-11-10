@@ -87,12 +87,12 @@ ShaderCollection& ShaderCompiler::createShaders(ShaderPermutation permutation)
 	ShaderCollection collection;
 
 	ShaderCreateInfo createInfo;
-	createInfo.typeParameter = { permutation.vertexDataName };
+	createInfo.typeParameter = { Pair<const char*, const char*>("IVertexData", permutation.vertexDataName) };
 	createInfo.name = std::format("Material {0}", permutation.materialName);
 	if (std::strlen(permutation.materialName) > 0)
 	{
 		createInfo.additionalModules.add(permutation.materialName);
-		createInfo.typeParameter.add(permutation.materialName);
+		createInfo.typeParameter.add(Pair<const char*, const char*>("IMaterial", permutation.materialName));
 	}
 	createInfo.additionalModules.add(permutation.vertexDataName);
 	createInfo.additionalModules.add(permutation.vertexMeshFile);

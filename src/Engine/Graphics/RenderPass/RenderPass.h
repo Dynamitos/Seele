@@ -36,7 +36,6 @@ protected:
         Vector2 pad0;
     } viewParams;
     PRenderGraphResources resources;
-    static constexpr uint32 INDEX_VIEW_PARAMS = 0;
     Gfx::ODescriptorLayout viewParamsLayout;
     Gfx::OUniformBuffer viewParamsBuffer;
     Gfx::PDescriptorSet viewParamsSet;

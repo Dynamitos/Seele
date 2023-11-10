@@ -49,7 +49,7 @@ void Shader::create(const ShaderCreateInfo& createInfo)
     sessionDesc.preprocessorMacroCount = macros.size();
     sessionDesc.preprocessorMacros = macros.data();
     slang::TargetDesc vulkan;
-    vulkan.profile = globalSession->findProfile("glsl_vk");
+    vulkan.profile = globalSession->findProfile("sm_6_6");
     vulkan.format = SLANG_SPIRV;
     sessionDesc.targetCount = 1;
     sessionDesc.targets = &vulkan;
@@ -85,29 +85,14 @@ void Shader::create(const ShaderCreateInfo& createInfo)
     mainModule->findEntryPointByName(createInfo.entryPoint.c_str(), entrypoint.writeRef());
     modules.add(entrypoint);
 
-    slang::IComponentType* moduleComposition;
-    session->createCompositeComponentType(modules.data(), modules.size(), &moduleComposition, diagnostics.writeRef());
+    Slang::ComPtr<slang::IComponentType> moduleComposition;
+    session->createCompositeComponentType(modules.data(), modules.size(), moduleComposition.writeRef(), diagnostics.writeRef());
 
     if(diagnostics)
     {
         std::cout << (const char*)diagnostics->getBufferPointer() << std::endl;
     }
 
-    /*slang::ProgramLayout* layout = moduleComposition->getLayout();
-    for(auto typeParam : createInfo.typeParameter)
-    {
-        Slang::ComPtr<slang::ITypeConformance> typeConformance;
-        session->createTypeConformanceComponentType(layout->findTypeByName(typeParam), layout->findTypeByName("IMaterial"), typeConformance.writeRef(), -1, diagnostics.writeRef());
-        modules.add(typeConformance);
-        if(diagnostics)
-        {
-            std::cout << (const char*)diagnostics->getBufferPointer() << std::endl;
-        }
-    }
-
-    Slang::ComPtr<slang::IComponentType> conformingModule;
-    session->createCompositeComponentType(modules.data(), modules.size(), conformingModule.writeRef(), diagnostics.writeRef());
-    */
     Slang::ComPtr<slang::IComponentType> linkedProgram;
     moduleComposition->link(linkedProgram.writeRef(), diagnostics.writeRef());
     if(diagnostics)
@@ -122,9 +107,9 @@ void Shader::create(const ShaderCreateInfo& createInfo)
     }
 
     Array<slang::SpecializationArg> specialization;
-    for(auto typeArg : createInfo.typeParameter)
+    for(const auto& [key, value] : createInfo.typeParameter)
     {
-        specialization.add(slang::SpecializationArg::fromType(reflection->findTypeByName(typeArg)));
+        specialization.add(slang::SpecializationArg::fromType(reflection->findTypeByName(value)));
     }
     Slang::ComPtr<slang::IComponentType> specializedComponent;
     linkedProgram->specialize(specialization.data(), specialization.size(), specializedComponent.writeRef(), diagnostics.writeRef());
@@ -143,13 +128,20 @@ void Shader::create(const ShaderCreateInfo& createInfo)
     {
         std::cout << (const char*)diagnostics->getBufferPointer() << std::endl;
     }
-
-    VkShaderModuleCreateInfo moduleInfo;
-    moduleInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-    moduleInfo.pNext = nullptr;
-    moduleInfo.flags = 0;
-    moduleInfo.codeSize = kernelBlob->getBufferSize();
-    moduleInfo.pCode = (uint32_t*)kernelBlob->getBufferPointer();
+    for (uint32 i = 0; i < reflection->getParameterCount(); ++i)
+    {
+        slang::VariableLayoutReflection* varLayout = reflection->getParameterByIndex(i);
+        std::cout << varLayout->getName() << " in space " << varLayout->getBindingSpace() << " index " << varLayout->getBindingIndex() << std::endl;
+    }
+    std::cout << reflection->getGlobalConstantBufferSize() << std::endl;
+    VkShaderModuleCreateInfo moduleInfo =
+    {
+        .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .codeSize = kernelBlob->getBufferSize(),
+        .pCode = (uint32_t*)kernelBlob->getBufferPointer(),
+    };
     VK_CHECK(vkCreateShaderModule(graphics->getDevice(), &moduleInfo, nullptr, &module));
 
     hash = CRC::Calculate(entryPointName.data(), entryPointName.size(), CRC::CRC_32());

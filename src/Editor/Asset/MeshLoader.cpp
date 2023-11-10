@@ -239,6 +239,10 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
                 completeMeshlet();
             }
         }
+        if (!uniqueVertices.empty())
+        {
+            completeMeshlet();
+        }
         vertexData->loadMesh(id, meshlets);
 
 

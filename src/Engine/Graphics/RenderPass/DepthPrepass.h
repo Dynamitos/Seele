@@ -25,7 +25,8 @@ private:
     
     Gfx::OPipelineLayout depthPrepassLayout;
     // Set 0: viewParameter
-    // Set 1: vertices, from VertexData
+    static constexpr uint32 INDEX_VIEW_PARAMS = 0;
+    // Set 0: vertices, from VertexData
     constexpr static uint32 INDEX_VERTEX_DATA = 1;
     // Set 2: mesh data, either index buffer or meshlet data
     constexpr static uint32 INDEX_SCENE_DATA = 2;

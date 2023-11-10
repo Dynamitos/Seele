@@ -265,9 +265,10 @@ uint32 Allocator::findMemoryType(uint32 typeFilter, VkMemoryPropertyFlags proper
     throw std::runtime_error("error finding memory");
 }
 
-StagingBuffer::StagingBuffer(OSubAllocation allocation, VkBuffer buffer, VkBufferUsageFlags usage, uint8 readable)
+StagingBuffer::StagingBuffer(OSubAllocation allocation, VkBuffer buffer, VkDeviceSize size, VkBufferUsageFlags usage, uint8 readable)
     : allocation(std::move(allocation))
     , buffer(buffer)
+    , size(size)
     , usage(usage)
     , readable(readable)
 {
@@ -306,7 +307,7 @@ VkDeviceSize StagingBuffer::getOffset() const
 
 uint64 StagingBuffer::getSize() const
 {
-    return allocation->getSize();
+    return size;
 }
 
 StagingManager::StagingManager(PGraphics graphics, PAllocator allocator)
@@ -368,6 +369,7 @@ OStagingBuffer StagingManager::allocateStagingBuffer(uint64 size, VkBufferUsageF
     OStagingBuffer stagingBuffer = new StagingBuffer(
         allocator->allocate(memReqs, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | (readable ? VK_MEMORY_PROPERTY_HOST_COHERENT_BIT : VK_MEMORY_PROPERTY_HOST_CACHED_BIT), buffer),
         buffer,
+        size,
         usage,
         readable
     );

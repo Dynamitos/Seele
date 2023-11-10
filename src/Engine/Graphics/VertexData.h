@@ -39,6 +39,7 @@ public:
         MeshId id;
         InstanceData instance;
         Gfx::PIndexBuffer indexBuffer;
+        uint32 meshes;
     };
     struct MaterialInstanceData
     {
@@ -62,8 +63,8 @@ public:
     };
     void resetMeshData();
     void updateMesh(const Component::Transform& transform, PMesh mesh);
-    void loadMesh(MeshId id, Array<Meshlet> meshlets);
     void createDescriptors();
+    void loadMesh(MeshId id, Array<Meshlet> meshlets);
     MeshId allocateVertexData(uint64 numVertices);
     uint64 getMeshOffset(MeshId id);
     uint64 getMeshVertexCount(MeshId id);

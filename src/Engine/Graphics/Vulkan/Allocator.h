@@ -154,7 +154,7 @@ DECLARE_REF(StagingManager)
 class StagingBuffer
 {
 public:
-	StagingBuffer(OSubAllocation allocation, VkBuffer buffer, VkBufferUsageFlags usage, uint8 readable);
+	StagingBuffer(OSubAllocation allocation, VkBuffer buffer, VkDeviceSize size, VkBufferUsageFlags usage, uint8 readable);
 	~StagingBuffer();
 	void* getMappedPointer();
 	void flushMappedMemory();
@@ -179,6 +179,7 @@ public:
 private:
 	OSubAllocation allocation;
 	VkBuffer buffer;
+	VkDeviceSize size;
 	VkBufferUsageFlags usage;
 	uint8 readable;
 };

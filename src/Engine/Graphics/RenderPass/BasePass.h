@@ -30,6 +30,7 @@ private:
     PCameraActor source;
     Gfx::OPipelineLayout basePassLayout;
     // Set 0: viewParameter, provided by renderpass
+    static constexpr uint32 INDEX_VIEW_PARAMS = 0;
     // Set 1: light environment, provided by lightenv
     static constexpr uint32 INDEX_LIGHT_ENV = 1;
     // Set 2: light culling data
