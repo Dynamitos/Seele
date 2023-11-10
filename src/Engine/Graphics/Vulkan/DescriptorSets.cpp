@@ -32,21 +32,22 @@ void DescriptorLayout::create()
     for (size_t i = 0; i < descriptorBindings.size(); ++i)
     {
         VkDescriptorSetLayoutBinding &binding = bindings[i];
-        const Gfx::DescriptorBinding &rhiBinding = descriptorBindings[i];
-        binding.binding = rhiBinding.binding;
-        binding.descriptorCount = rhiBinding.descriptorCount;
-        binding.descriptorType = cast(rhiBinding.descriptorType);
-        binding.stageFlags = rhiBinding.shaderStages;
+        const Gfx::DescriptorBinding &gfxBinding = descriptorBindings[i];
+        binding.binding = gfxBinding.binding;
+        binding.descriptorCount = gfxBinding.descriptorCount;
+        binding.descriptorType = cast(gfxBinding.descriptorType);
+        binding.stageFlags = gfxBinding.shaderStages;
         binding.pImmutableSamplers = nullptr;
-        bindingFlags[i] = rhiBinding.bindingFlags;
+        bindingFlags[i] = gfxBinding.bindingFlags;
     }
     VkDescriptorSetLayoutCreateInfo createInfo =
         init::DescriptorSetLayoutCreateInfo(bindings.data(), (uint32)bindings.size());
-    VkDescriptorSetLayoutBindingFlagsCreateInfo bindingFlagsInfo = {};
-    bindingFlagsInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO;
-    bindingFlagsInfo.pNext = nullptr;
-    bindingFlagsInfo.bindingCount = static_cast<uint32>(bindingFlags.size());
-    bindingFlagsInfo.pBindingFlags = bindingFlags.data();
+    VkDescriptorSetLayoutBindingFlagsCreateInfo bindingFlagsInfo = {
+        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO,
+        .pNext = nullptr,
+        .bindingCount = static_cast<uint32>(bindingFlags.size()),
+        .pBindingFlags = bindingFlags.data(),
+    };
     createInfo.pNext = &bindingFlagsInfo;
     VK_CHECK(vkCreateDescriptorSetLayout(graphics->getDevice(), &createInfo, nullptr, &layoutHandle));
 

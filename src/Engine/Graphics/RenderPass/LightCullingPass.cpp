@@ -125,7 +125,7 @@ void LightCullingPass::publishOutputs()
     
     ShaderCreateInfo createInfo;
     createInfo.name = "Culling";
-    
+    createInfo.additionalModules.add("LightCulling");
     createInfo.mainModule = "LightCulling";
     createInfo.entryPoint = "cullLights";
     cullingShader = graphics->createComputeShader(createInfo);
@@ -209,7 +209,7 @@ void LightCullingPass::setupFrustums()
     frustumLayout->create();
     ShaderCreateInfo createInfo;
     createInfo.name = "Frustum";
-    
+    createInfo.additionalModules.add("ComputeFrustums");
     createInfo.mainModule = "ComputeFrustums";
     createInfo.entryPoint = "computeFrustums";
     frustumShader = graphics->createComputeShader(createInfo);

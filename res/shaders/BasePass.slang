@@ -11,6 +11,7 @@ struct LightCullingData
     RWTexture2D<uint2> oLightGrid;
     RWTexture2D<uint2> tLightGrid;
 };
+layout(set=5)
 ParameterBlock<LightCullingData> pLightCullingData;
 
 [shader("pixel")]

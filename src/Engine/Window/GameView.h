@@ -31,10 +31,10 @@ private:
 	OEntity camera;
 	GameInterface gameInterface;
     RenderGraph<
-        DepthPrepass
-		//LightCullingPass,
-        //BasePass,
-		//SkyboxRenderPass
+        DepthPrepass,
+		LightCullingPass,
+        BasePass,
+		SkyboxRenderPass
 		> renderGraph;
 
 	PSystemGraph systemGraph;

@@ -74,39 +74,37 @@ void BasePass::render()
 
     graphics->beginRenderPass(renderPass);
     Gfx::ShaderPermutation permutation;
-    permutation.hasFragment = true;
-    if(graphics->supportMeshShading())
+    if (graphics->supportMeshShading())
     {
-        permutation.useMeshShading = true;
-        permutation.hasTaskShader = true;
-        std::memcpy(permutation.taskFile, "MeshletBasePass", sizeof("MeshletBasePass"));
-        std::memcpy(permutation.vertexMeshFile, "MeshletBasePass", sizeof("MeshletBasePass"));
+        permutation.setTaskFile("MeshletBasePass");
+        permutation.setMeshFile("MeshletBasePass");
     }
     else
     {
-        permutation.useMeshShading = false;
-        std::memcpy(permutation.vertexMeshFile, "LegacyBasePass", sizeof("LegacyBasePass"));
+        permutation.setVertexFile("LegacyBasePass");
     }
-    std::memcpy(permutation.fragmentFile, "BasePass", std::strlen("BasePass"));
+    permutation.setFragmentFile("BasePass");
+    graphics->beginRenderPass(renderPass);
+    Array<Gfx::PRenderCommand> commands;
     for (VertexData* vertexData : VertexData::getList())
     {
-        std::memcpy(permutation.vertexDataName, vertexData->getTypeName().c_str(), std::strlen(vertexData->getTypeName().c_str()));
+        permutation.setVertexData(vertexData->getTypeName());
         const auto& materials = vertexData->getMaterialData();
         for (const auto& [_, materialData] : materials)
         {
             // Create Pipeline(Material, VertexData)
             // Descriptors:
             // ViewData => global, static
-            // LightEnv => global, static
-            // LightCulling => global, static
-            // Material => per material
             // VertexData => per meshtype
             // SceneData => per material instance
-
-            std::memcpy(permutation.materialName, materialData.material->getName().c_str(), std::strlen(materialData.material->getName().c_str()));
+            // LightEnv => provided by scene
+            // Material => per material
+            // LightCulling => calculated by pass
+            permutation.setMaterial(materialData.material->getName());
             Gfx::PermutationId id(permutation);
 
             Gfx::PRenderCommand command = graphics->createRenderCommand("DepthRender");
+            command->setViewport(viewport);
             Gfx::OPipelineLayout layout = graphics->createPipelineLayout(basePassLayout);
             layout->addDescriptorLayout(INDEX_MATERIAL, materialData.material->getDescriptorLayout());
             layout->addDescriptorLayout(INDEX_VERTEX_DATA, vertexData->getVertexDataLayout());
@@ -115,7 +113,7 @@ void BasePass::render()
 
             const Gfx::ShaderCollection* collection = graphics->getShaderCompiler()->findShaders(id);
             assert(collection != nullptr);
-            if(graphics->supportMeshShading())
+            if (graphics->supportMeshShading())
             {
                 Gfx::MeshPipelineCreateInfo pipelineInfo;
                 pipelineInfo.taskShader = collection->taskShader;
@@ -146,14 +144,14 @@ void BasePass::render()
                 descriptorSets[INDEX_MATERIAL] = instance.materialInstance->getDescriptorSet();
                 descriptorSets[INDEX_SCENE_DATA] = instance.descriptorSet;
                 command->bindDescriptor(descriptorSets);
-                if(Gfx::useMeshShading)
+                if (graphics->supportMeshShading())
                 {
                     command->dispatch(instance.numMeshes, 1, 1);
                 }
                 else
                 {
                     uint32 instanceOffset = 0;
-                    for(const auto& mesh : instance.meshes)
+                    for (const auto& mesh : instance.meshes)
                     {
                         uint32 vertexOffset = vertexData->getMeshOffset(mesh.id);
                         if (mesh.indexBuffer != nullptr)
@@ -165,11 +163,14 @@ void BasePass::render()
                         {
                             command->draw(vertexData->getMeshVertexCount(mesh.id), 1, vertexOffset, instanceOffset);
                         }
+                        instanceOffset += mesh.meshes;
                     }
                 }
             }
+            commands.add(command);
         }
     }
+    graphics->executeCommands(commands);
     graphics->endRenderPass();
 }
 
