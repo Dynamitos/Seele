@@ -14,7 +14,7 @@ public:
         uint32 uniformDataSize, 
         uint32 uniformBinding, 
         std::string materialName, 
-        Map<std::string, OShaderExpression> expressions,
+        Array<OShaderExpression> expressions,
         Array<std::string> parameter,
         MaterialNode brdf);
     ~Material();
@@ -34,7 +34,7 @@ private:
     uint64 instanceId;
     Gfx::ODescriptorLayout layout;
     std::string materialName;
-    Map<std::string, OShaderExpression> codeExpressions;
+    Array<OShaderExpression> codeExpressions;
     Array<std::string> parameters;
     MaterialNode brdf;
 };

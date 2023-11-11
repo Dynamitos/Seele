@@ -50,10 +50,17 @@ void ShaderCompiler::registerRenderPass(std::string name, std::string mainFile, 
 
 void ShaderCompiler::compile()
 {
-	ShaderPermutation permutation;
 	for (const auto& [name, pass] : passes)
 	{
-		std::strncpy(permutation.vertexMeshFile, pass.mainFile.c_str(), sizeof(permutation.vertexMeshFile));
+		ShaderPermutation permutation;
+		if (pass.useMeshShading)
+		{
+			permutation.setMeshFile(pass.mainFile);
+		}
+		else
+		{
+			permutation.setVertexFile(pass.mainFile);
+		}
 		if (pass.hasFragmentShader)
 		{
 			permutation.setFragmentFile(pass.fragmentFile);
@@ -81,19 +88,22 @@ void ShaderCompiler::compile()
 	}
 }
 
-ShaderCollection& ShaderCompiler::createShaders(ShaderPermutation permutation)
+void ShaderCompiler::createShaders(ShaderPermutation permutation)
 {
 	std::scoped_lock lock(shadersLock);
+	PermutationId perm = PermutationId(permutation);
+	if (shaders.contains(perm))
+		return;
 	ShaderCollection collection;
 
 	ShaderCreateInfo createInfo;
-	createInfo.typeParameter = { Pair<const char*, const char*>("IVertexData", permutation.vertexDataName) };
 	createInfo.name = std::format("Material {0}", permutation.materialName);
 	if (std::strlen(permutation.materialName) > 0)
 	{
 		createInfo.additionalModules.add(permutation.materialName);
 		createInfo.typeParameter.add(Pair<const char*, const char*>("IMaterial", permutation.materialName));
 	}
+	createInfo.typeParameter.add({ Pair<const char*, const char*>("IVertexData", permutation.vertexDataName) });
 	createInfo.additionalModules.add(permutation.vertexDataName);
 	createInfo.additionalModules.add(permutation.vertexMeshFile);
 	if (permutation.hasFragment)
@@ -131,8 +141,5 @@ ShaderCollection& ShaderCompiler::createShaders(ShaderPermutation permutation)
 		collection.fragmentShader = graphics->createFragmentShader(createInfo);
 	}
 	collection.vertexDeclaration = graphics->createVertexDeclaration(Array<VertexElement>());
-	PermutationId perm = PermutationId(permutation);
 	shaders[perm] = std::move(collection);
-
-	return shaders[perm];
 }

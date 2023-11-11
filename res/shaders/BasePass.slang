@@ -15,7 +15,7 @@ layout(set=5)
 ParameterBlock<LightCullingData> pLightCullingData;
 
 [shader("pixel")]
-float4 pixelMain(in MaterialParameter params : PARAMETER) : SV_Target
+float4 fragmentMain(in MaterialParameter params : PARAMETER) : SV_Target
 {
 	let brdf = pMaterial.prepare(params);
     float3 result = float3(0, 0, 0);
@@ -27,5 +27,5 @@ float4 pixelMain(in MaterialParameter params : PARAMETER) : SV_Target
     {
         result += pLightEnv.pointLights[i].illuminate(params, brdf);
     }
-    return float4(1, 1, 0, 1.0f);
+    return float4(result, 1.0f);
 }

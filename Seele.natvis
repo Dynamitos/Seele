@@ -30,7 +30,7 @@
           <Item Name="[value]">value</Item>
       </Expand>
   </Type>
-  <Type Name="Seele::Map&lt;*&gt;">
+  <Type Name="Seele::Map&lt;*,*&gt;">
     <DisplayString>{{ size={_size} }</DisplayString>
     <Expand>
       <Item Name="[size]">_size</Item>

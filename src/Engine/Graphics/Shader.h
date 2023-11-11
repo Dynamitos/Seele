@@ -148,7 +148,7 @@ public:
         std::string taskFile = "");
 private:
     void compile();
-    ShaderCollection& createShaders(ShaderPermutation permutation);
+    void createShaders(ShaderPermutation permutation);
     std::mutex shadersLock;
     Map<PermutationId, ShaderCollection> shaders;
     Map<std::string, PMaterial> materials;

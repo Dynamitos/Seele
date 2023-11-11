@@ -17,6 +17,7 @@ struct StaticMeshVertexData : IVertexData
 		params.normal = float3(normals[3 * index + 0], normals[3 * index + 1], normals[3 * index + 2]);
 		params.tangent = float3(tangents[3 * index + 0], tangents[3 * index + 1], tangents[3 * index + 2]);
 		params.biTangent = float3(biTangents[3 * index + 0], biTangents[3 * index + 1], biTangents[3 * index + 2]);
+		params.vertexColor = float3(color[3 * index + 0], color[3 * index + 1], color[3 * index + 2]);
 		attributes.parameter = params;
 		attributes.clipPosition = clipPos;
 		return attributes;
@@ -26,4 +27,5 @@ struct StaticMeshVertexData : IVertexData
 	StructuredBuffer<float> normals;
 	StructuredBuffer<float> tangents;
 	StructuredBuffer<float> biTangents;
+	StructuredBuffer<float> color;
 };

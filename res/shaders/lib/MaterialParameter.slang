@@ -7,6 +7,7 @@ struct MaterialParameter
 	float3 tangent;
 	float3 biTangent;
 	float3 viewDir_TS;
+	float3 vertexColor;
 }
 
 struct VertexAttributes

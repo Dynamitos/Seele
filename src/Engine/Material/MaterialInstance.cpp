@@ -10,7 +10,7 @@ MaterialInstance::MaterialInstance()
 
 MaterialInstance::MaterialInstance(uint64 id, 
     Gfx::PGraphics graphics, 
-    Map<std::string, OShaderExpression>& expressions,
+    Array<OShaderExpression>& expressions,
     Array<std::string> params, 
     uint32 uniformBinding, 
     uint32 uniformSize)
@@ -33,7 +33,8 @@ MaterialInstance::MaterialInstance(uint64 id,
     parameters.reserve(params.size());
     for (size_t i = 0; i < params.size(); ++i)
     {
-        Serialization::save(buffer, expressions[params[i]]);
+        const std::string& name = params[i];
+        Serialization::save(buffer, *expressions.find([&name](const OShaderExpression& p) {return p->key == name; }));
         buffer.rewind();
         OShaderParameter param;
         Serialization::load(buffer, param);

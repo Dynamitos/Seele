@@ -14,7 +14,7 @@ Material::Material(Gfx::PGraphics graphics,
         uint32 uniformDataSize, 
         uint32 uniformBinding, 
         std::string materialName, 
-        Map<std::string, OShaderExpression> expressions,
+        Array<OShaderExpression> expressions,
         Array<std::string> parameter,
         MaterialNode brdf)
     : graphics(graphics)
@@ -112,14 +112,15 @@ void Material::compile()
     codeStream << "struct " << materialName << " : IMaterial {\n";
     for(const auto& parameter : parameters)
     {
-        PShaderParameter handle = PShaderExpression(codeExpressions[parameter]);
+        PShaderParameter handle = PShaderExpression(*codeExpressions.find([&parameter](const OShaderExpression& exp) {return exp->key == parameter; }));
         handle->generateDeclaration(codeStream);
     }
     codeStream << "\ttypedef " << brdf.profile << " BRDF;\n";
     codeStream << "\t" << brdf.profile << " prepare(MaterialParameter input) {\n";
     codeStream << "\t\t" << brdf.profile << " result;\n";
     Map<std::string, std::string> varState;
-    for(const auto& [_, expr] :codeExpressions)
+    // initialize variable state
+    for(const auto& expr :codeExpressions)
     {
         codeStream << expr->evaluate(varState);
     }

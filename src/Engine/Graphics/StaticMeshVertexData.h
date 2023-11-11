@@ -16,6 +16,7 @@ public:
 	void loadNormals(MeshId id, const Array<Vector>& data);
 	void loadTangents(MeshId id, const Array<Vector>& data);
 	void loadBiTangents(MeshId id, const Array<Vector>& data);
+	void loadColors(MeshId id, const Array<Vector>& data);
 	virtual void serializeMesh(MeshId id, uint64 numVertices, ArchiveBuffer& buffer) override;
 	virtual void deserializeMesh(MeshId id, ArchiveBuffer& buffer) override;
 	virtual void init(Gfx::PGraphics graphics) override;
@@ -36,6 +37,8 @@ private:
 	Array<Vector> tangentData;
     Gfx::OShaderBuffer biTangents;
 	Array<Vector> biTangentData;
+	Gfx::OShaderBuffer colors;
+	Array<Vector> colorData;
 	Gfx::ODescriptorLayout descriptorLayout;
 	Gfx::PDescriptorSet descriptorSet;
 };

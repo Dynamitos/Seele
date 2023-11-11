@@ -109,7 +109,7 @@ DECLARE_NAME_REF(Gfx, SamplerState)
 struct SamplerParameter : public ShaderParameter
 {
     static constexpr uint64 IDENTIFIER = 0x08;
-    Gfx::PSamplerState data;
+    Gfx::OSamplerState data;
     SamplerParameter() {}
     SamplerParameter(std::string name, uint32 byteOffset, uint32 binding);
     virtual ~SamplerParameter();

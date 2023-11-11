@@ -11,7 +11,7 @@ public:
     MaterialInstance();
     MaterialInstance(uint64 id, 
         Gfx::PGraphics graphics, 
-        Map<std::string, OShaderExpression>& expressions,
+        Array<OShaderExpression>& expressions,
         Array<std::string> params, 
         uint32 uniformBinding, 
         uint32 uniformSize);

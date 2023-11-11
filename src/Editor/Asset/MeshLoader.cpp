@@ -155,6 +155,7 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
         Array<Vector> normals(mesh->mNumVertices);
         Array<Vector> tangents(mesh->mNumVertices);
         Array<Vector> biTangents(mesh->mNumVertices);
+        Array<Vector> colors(mesh->mNumVertices);
 
         StaticMeshVertexData* vertexData = StaticMeshVertexData::getInstance();
 
@@ -165,6 +166,14 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
             normals[i] = Vector(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z);
             tangents[i] = Vector(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z);
             biTangents[i] = Vector(mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z);
+            if(mesh->HasVertexColors(0))
+            {
+                colors[i] = Vector(mesh->mColors[0][i].r, mesh->mColors[0][i].g, mesh->mColors[0][i].b);
+            }
+            else
+            {
+                colors[i] = Vector(1, 1, 1);
+            }
         }
 
         MeshId id = vertexData->allocateVertexData(mesh->mNumVertices);
@@ -173,6 +182,7 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
         vertexData->loadNormals(id, normals);
         vertexData->loadTangents(id, tangents);
         vertexData->loadBiTangents(id, biTangents);
+        vertexData->loadColors(id, colors);
 
         Array<uint32> indices(mesh->mNumFaces * 3);
         for (size_t faceIndex = 0; faceIndex < mesh->mNumFaces; ++faceIndex)

@@ -61,6 +61,14 @@ void StaticMeshVertexData::loadBiTangents(MeshId id, const Array<Vector>& data)
     dirty = true;
 }
 
+void Seele::StaticMeshVertexData::loadColors(MeshId id, const Array<Vector>& data)
+{
+    uint64 offset = meshOffsets[id];
+    assert(offset + data.size() <= head);
+    std::memcpy(colorData.data() + offset, data.data(), data.size() * sizeof(Vector));
+    dirty = true;
+}
+
 void StaticMeshVertexData::serializeMesh(MeshId id, uint64 numVertices, ArchiveBuffer& buffer)
 {
     uint64 offset = meshOffsets[id];
@@ -69,16 +77,19 @@ void StaticMeshVertexData::serializeMesh(MeshId id, uint64 numVertices, ArchiveB
     Array<Vector> nor(numVertices);
     Array<Vector> tan(numVertices);
     Array<Vector> bit(numVertices);
+    Array<Vector> col(numVertices);
     std::copy(positionData.begin() + offset, positionData.begin() + offset + numVertices, pos.begin());
     std::copy(texCoordsData.begin() + offset, texCoordsData.begin() + offset + numVertices, tex.begin());
     std::copy(normalData.begin() + offset, normalData.begin() + offset + numVertices, nor.begin());
     std::copy(tangentData.begin() + offset, tangentData.begin() + offset + numVertices, tan.begin());
     std::copy(biTangentData.begin() + offset, biTangentData.begin() + offset + numVertices, bit.begin());
+    std::copy(colorData.begin() + offset, colorData.begin() + offset + numVertices, col.begin());
     Serialization::save(buffer, pos);
     Serialization::save(buffer, tex);
     Serialization::save(buffer, nor);
     Serialization::save(buffer, tan);
     Serialization::save(buffer, bit);
+    Serialization::save(buffer, col);
 }
 
 void StaticMeshVertexData::deserializeMesh(MeshId id, ArchiveBuffer& buffer)
@@ -88,16 +99,19 @@ void StaticMeshVertexData::deserializeMesh(MeshId id, ArchiveBuffer& buffer)
     Array<Vector> nor;
     Array<Vector> tan;
     Array<Vector> bit;
+    Array<Vector> col;
     Serialization::load(buffer, pos);
     Serialization::load(buffer, tex);
     Serialization::load(buffer, nor);
     Serialization::load(buffer, tan);
     Serialization::load(buffer, bit);
+    Serialization::load(buffer, col);
     loadPositions(id, pos);
     loadTexCoords(id, tex);
     loadNormals(id, nor);
     loadTangents(id, tan);
     loadBiTangents(id, bit);
+    loadBiTangents(id, col);
 }
 
 void StaticMeshVertexData::init(Gfx::PGraphics graphics)
@@ -109,6 +123,7 @@ void StaticMeshVertexData::init(Gfx::PGraphics graphics)
     descriptorLayout->addDescriptorBinding(2, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
     descriptorLayout->addDescriptorBinding(3, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
     descriptorLayout->addDescriptorBinding(4, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    descriptorLayout->addDescriptorBinding(5, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
     descriptorLayout->create();
     descriptorSet = descriptorLayout->allocateDescriptorSet();
 }
@@ -141,6 +156,7 @@ void StaticMeshVertexData::resizeBuffers()
     normals = graphics->createShaderBuffer(createInfo);
     tangents = graphics->createShaderBuffer(createInfo);
     biTangents = graphics->createShaderBuffer(createInfo);
+    colors = graphics->createShaderBuffer(createInfo);
     createInfo.sourceData.size = verticesAllocated * sizeof(Vector2);
     createInfo.stride = sizeof(Vector2);
     texCoords = graphics->createShaderBuffer(createInfo);
@@ -150,6 +166,7 @@ void StaticMeshVertexData::resizeBuffers()
     normalData.resize(verticesAllocated);
     tangentData.resize(verticesAllocated);
     biTangentData.resize(verticesAllocated);
+    colorData.resize(verticesAllocated);
 }
 
 void StaticMeshVertexData::updateBuffers()
@@ -174,6 +191,10 @@ void StaticMeshVertexData::updateBuffers()
         .size = biTangentData.size() * sizeof(Vector),
         .data = (uint8*)biTangentData.data(),
         });
+    colors->updateContents(DataSource{
+        .size = colorData.size() * sizeof(Vector),
+        .data = (uint8*)colorData.data()
+        });
     descriptorLayout->reset();
     descriptorSet = descriptorLayout->allocateDescriptorSet();
     descriptorSet->updateBuffer(0, positions);
@@ -181,5 +202,6 @@ void StaticMeshVertexData::updateBuffers()
     descriptorSet->updateBuffer(2, normals);
     descriptorSet->updateBuffer(3, tangents);
     descriptorSet->updateBuffer(4, biTangents);
+    descriptorSet->updateBuffer(5, colors);
     descriptorSet->writeChanges();
 }

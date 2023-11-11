@@ -51,7 +51,7 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
     uint32 uniformBufferOffset = 0;
     uint32 bindingCounter = 0; // Uniform buffers are always binding 0
     int32 uniformBinding = -1;
-    Map<std::string, OShaderExpression> expressions;
+    Array<OShaderExpression> expressions;
     uint32 key = 0;
     uint32 auxKey = 0;
     Array<std::string> parameters;
@@ -74,7 +74,7 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
                 p->data = std::stof(defaultValue.value().get<std::string>());
             }
             parameters.add(p->key);
-            expressions[param.key()] = std::move(p);
+            expressions.add(std::move(p));
         }
         // TODO: ALIGNMENT RULES
         else if(type.compare("float3") == 0)
@@ -91,7 +91,7 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
                 p->data = parseVector(defaultValue.value().get<std::string>().c_str());
             }
             parameters.add(p->key); 
-            expressions[param.key()] = std::move(p);
+            expressions.add(std::move(p));
         }
         else if(type.compare("Texture2D") == 0)
         {
@@ -107,7 +107,7 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
                 p->data = AssetRegistry::findTexture(""); // this will return placeholder texture
             }
             parameters.add(p->key);
-            expressions[param.key()] = std::move(p);
+            expressions.add(std::move(p));
         }
         else if(type.compare("SamplerState") == 0)
         {
@@ -115,7 +115,7 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
             layout->addDescriptorBinding(bindingCounter++, Gfx::SE_DESCRIPTOR_TYPE_SAMPLER);
             p->data = graphics->createSamplerState({});
             parameters.add(p->key);
-            expressions[param.key()] = std::move(p);
+            expressions.add(std::move(p));
         }
         else
         {
@@ -128,14 +128,14 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
         if(obj.is_string())
         {
             std::string str = obj.get<std::string>();
-            if (expressions.contains(str))
+            if (expressions.find([&str, &expressions](const OShaderExpression& exp) {return exp->key == str; }) != expressions.end())
             {
                 return str;
             }
             OConstantExpression c = new ConstantExpression(str, ExpressionType::UNKNOWN);
             std::string name = std::format("Const{0}", auxKey++);
             c->key = name;
-            expressions[name] = std::move(c);
+            expressions.add(std::move(c));
             return name;
         }
         else
@@ -156,7 +156,7 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
             p->key = name;
             p->inputs["lhs"].source = referenceExpression(obj["lhs"]);
             p->inputs["rhs"].source = referenceExpression(obj["rhs"]);
-            expressions[name] = std::move(p);
+            expressions.add(std::move(p));
         }
         if(exp.compare("Sub") == 0)
         {
@@ -165,7 +165,7 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
             p->key = name;
             p->inputs["lhs"].source = referenceExpression(obj["lhs"]);
             p->inputs["rhs"].source = referenceExpression(obj["rhs"]);
-            expressions[name] = std::move(p);
+            expressions.add(std::move(p));
         }
         if(exp.compare("Mul") == 0)
         {
@@ -174,12 +174,12 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
             p->key = name;
             p->inputs["lhs"].source = referenceExpression(obj["lhs"]);
             p->inputs["rhs"].source = referenceExpression(obj["rhs"]);
-            expressions[name] = std::move(p);
+            expressions.add(std::move(p));
         }
         if(exp.compare("Swizzle") == 0)
         {
             OSwizzleExpression p = new SwizzleExpression();
-            std::string name = std::format("{0}", key);
+            std::string name = std::format("{0}", key++);
             p->key = name;
             p->inputs["target"].source = referenceExpression(obj["target"]);
             int32 i = 0;
@@ -187,17 +187,17 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
             {
                 p->comp[i++] = c.value().get<uint32>();
             }
-            expressions[name] = std::move(p);
+            expressions.add(std::move(p));
         }
         if(exp.compare("Sample") == 0)
         {
             OSampleExpression p = new SampleExpression();
-            std::string name = std::format("{0}", key);
+            std::string name = std::format("{0}", key++);
             p->key = name;
             p->inputs["texture"].source = referenceExpression(obj["texture"]);
             p->inputs["sampler"].source = referenceExpression(obj["sampler"]);
             p->inputs["coords"].source = referenceExpression(obj["coords"]);
-            expressions[name] = std::move(p);
+            expressions.add(std::move(p));
         }
         if(exp.compare("BRDF") == 0)
         {

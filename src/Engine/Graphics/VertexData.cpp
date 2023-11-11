@@ -33,6 +33,8 @@ void VertexData::updateMesh(const Component::Transform& transform, PMesh mesh)
         },
         .indexBuffer = mesh->indexBuffer,
     });
+    matInstanceData.materialInstance = mesh->referencedMaterial->getHandle();
+    matInstanceData.materialInstance->updateDescriptor();
     matInstanceData.numMeshes += meshData[mesh->id].size();
 }
 
