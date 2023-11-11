@@ -314,7 +314,7 @@ void RenderCommand::draw(uint32 vertexCount, uint32 instanceCount, int32 firstVe
 void RenderCommand::drawIndexed(uint32 indexCount, uint32 instanceCount, int32 firstIndex, uint32 vertexOffset, uint32 firstInstance) 
 {
     assert(threadId == std::this_thread::get_id());
-    vkCmdDrawIndexed(handle, indexCount, instanceCount, firstIndex, vertexOffset, firstIndex);
+    vkCmdDrawIndexed(handle, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
 }
 void RenderCommand::dispatch(uint32 groupX, uint32 groupY, uint32 groupZ)
 {

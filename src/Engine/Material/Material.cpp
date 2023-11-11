@@ -116,7 +116,7 @@ void Material::compile()
         handle->generateDeclaration(codeStream);
     }
     codeStream << "\ttypedef " << brdf.profile << " BRDF;\n";
-    codeStream << "\t" << brdf.profile << " prepare(MaterialFragmentParameter input) {\n";
+    codeStream << "\t" << brdf.profile << " prepare(MaterialParameter input) {\n";
     codeStream << "\t\t" << brdf.profile << " result;\n";
     Map<std::string, std::string> varState;
     for(const auto& [_, expr] :codeExpressions)

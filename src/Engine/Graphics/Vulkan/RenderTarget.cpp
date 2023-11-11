@@ -62,6 +62,7 @@ Window::Window(PGraphics graphics, const WindowCreateInfo &createInfo)
     GLFWwindow *handle = glfwCreateWindow(createInfo.width, createInfo.height, createInfo.title, createInfo.bFullscreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
     windowHandle = handle;
     glfwSetWindowUserPointer(handle, this);
+    glfwGetWindowSize(handle, &windowState.width, &windowState.height);
 
     glfwSetKeyCallback(handle, &glfwKeyCallback);
     glfwSetCursorPosCallback(handle, &glfwMouseMoveCallback);
@@ -93,7 +94,7 @@ Window::Window(PGraphics graphics, const WindowCreateInfo &createInfo)
         std::cerr << "Device not suitable for presenting to surface " << surface << ", use a different one" << std::endl;
     }
 
-    recreateSwapchain(createInfo);
+    recreateSwapchain(windowState);
 }
 
 Window::~Window()
@@ -364,10 +365,10 @@ void Window::choosePresentMode(const Array<VkPresentModeKHR> &modes)
 Viewport::Viewport(PGraphics graphics, PWindow owner, const ViewportCreateInfo &viewportInfo)
     : Gfx::Viewport(owner, viewportInfo), graphics(graphics)
 {
-    handle.width = static_cast<float>(viewportInfo.dimensions.size.x);
-    handle.height = static_cast<float>(viewportInfo.dimensions.size.y);
-    handle.x = static_cast<float>(viewportInfo.dimensions.offset.x);
-    handle.y = static_cast<float>(viewportInfo.dimensions.offset.y) + handle.height;
+    handle.width = static_cast<float>(sizeX);
+    handle.height = static_cast<float>(sizeY);
+    handle.x = static_cast<float>(offsetX);
+    handle.y = static_cast<float>(offsetY) + handle.height;
     handle.height = -handle.height;
     handle.minDepth =  0.f;
     handle.maxDepth =  1.f;

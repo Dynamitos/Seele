@@ -1,4 +1,5 @@
 import Common;
+import DispatchParams;
 
 struct ComputeShaderInput
 {
@@ -7,17 +8,6 @@ struct ComputeShaderInput
 	uint3 dispatchThreadID : SV_DispatchThreadID;
 	uint groupIndex : SV_GroupIndex;
 };
-
-struct DispatchParams
-{
-	uint3 numThreadGroups;
-	uint pad0;
-	uint3 numThreads;
-	uint pad1;
-	RWStructuredBuffer<Frustum> frustums;
-}
-ParameterBlock<DispatchParams> pDispatchParams;
-
 
 [numthreads(BLOCK_SIZE, BLOCK_SIZE, 1)]
 [shader("compute")]

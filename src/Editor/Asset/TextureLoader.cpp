@@ -133,9 +133,13 @@ void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset)
     std::memcpy(memory.data(), dest, size);
     free(dest);
     
+    Array<uint8> rawPixels(totalWidth * totalHeight * 4);
+    std::memcpy(rawPixels.data(), data, rawPixels.size());
+
     stbi_image_free(data);
 
     ArchiveBuffer temp(graphics);
+    Serialization::save(temp, rawPixels);
     Serialization::save(temp, memory);
     temp.rewind();
     textureAsset->load(temp);
@@ -149,6 +153,7 @@ void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset)
     Serialization::save(archive, TextureAsset::IDENTIFIER);
     Serialization::save(archive, textureAsset->getName());
     Serialization::save(archive, textureAsset->getFolderPath());
+    Serialization::save(archive, rawPixels);
     Serialization::save(archive, memory);
     archive.writeToStream(stream);
 

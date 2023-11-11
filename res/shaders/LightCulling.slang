@@ -1,4 +1,5 @@
 import Common;
+import DispatchParams;
 import LightEnv;
 
 struct ComputeShaderInput
@@ -10,11 +11,6 @@ struct ComputeShaderInput
 };
 struct CullingParams
 {
-    uint3 numThreadGroups;
-    uint pad0;
-    uint3 numThreads;
-    uint pad1;
-
     Texture2D depthTextureVS;
 
     globallycoherent RWStructuredBuffer<uint> oLightIndexCounter;
@@ -25,9 +21,8 @@ struct CullingParams
 
     RWTexture2D<uint2> oLightGrid;
     RWTexture2D<uint2> tLightGrid;
-
-    StructuredBuffer<Frustum> frustums;
 };
+layout(set=2)
 ParameterBlock<CullingParams> pCullingParams;
 // Debug
 //Texture2D lightCountHeatMap;
@@ -81,7 +76,7 @@ void cullLights(ComputeShaderInput in)
         uMaxDepth = 0x0;
         oLightCount = 0;
         tLightCount = 0;
-        groupFrustum = pCullingParams.frustums[in.groupID.x + (in.groupID.y * pCullingParams.numThreadGroups.x)];
+        groupFrustum = pDispatchParams.frustums[in.groupID.x + (in.groupID.y * pDispatchParams.numThreadGroups.x)];
     }
 
     GroupMemoryBarrierWithGroupSync();

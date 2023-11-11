@@ -30,7 +30,6 @@ void RenderPass::beginFrame(const Component::Camera& cam)
         .projectionMatrix = viewport->getProjectionMatrix(),
         .cameraPosition = Vector4(cam.getCameraPosition(), 1),
         .screenDimensions = Vector2(static_cast<float>(viewport->getSizeX()), static_cast<float>(viewport->getSizeY())),
-        .pad0 = Vector2(0),
     };
     DataSource uniformUpdate = {
         .size = sizeof(ViewParameter),

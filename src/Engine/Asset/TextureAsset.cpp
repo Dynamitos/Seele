@@ -73,6 +73,7 @@ void TextureAsset::save(ArchiveBuffer&) const
 void TextureAsset::load(ArchiveBuffer& buffer) 
 {
     Gfx::PGraphics graphics = buffer.getGraphics();
+    Serialization::load(buffer, rawPixels);
     Array<uint8> rawData;
     Serialization::load(buffer, rawData);
     ktxTexture2* kTexture;
@@ -118,4 +119,14 @@ void TextureAsset::load(ArchiveBuffer& buffer)
 void TextureAsset::setTexture(Gfx::OTexture _texture)
 {
     texture = std::move(_texture);    
+}
+
+uint32 TextureAsset::getWidth()
+{
+    return texture->getSizeX();
+}
+
+uint32 TextureAsset::getHeight()
+{
+    return texture->getSizeY();
 }

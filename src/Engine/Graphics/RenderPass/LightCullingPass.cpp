@@ -32,15 +32,12 @@ void LightCullingPass::beginFrame(const Component::Camera& cam)
     cullingDescriptorLayout->reset();
     cullingDescriptorSet = cullingDescriptorLayout->allocateDescriptorSet();
 
-    cullingDescriptorSet->updateBuffer(0, dispatchParamsBuffer);
-    cullingDescriptorSet->updateTexture(1, depthAttachment);
-    cullingDescriptorSet->updateBuffer(2, oLightIndexCounter);
-    cullingDescriptorSet->updateBuffer(3, tLightIndexCounter);
-    cullingDescriptorSet->updateBuffer(4, oLightIndexList);
-    cullingDescriptorSet->updateBuffer(5, tLightIndexList);
-    cullingDescriptorSet->updateTexture(6, Gfx::PTexture2D(oLightGrid));
-    cullingDescriptorSet->updateTexture(7, Gfx::PTexture2D(tLightGrid));
-    cullingDescriptorSet->updateBuffer(8, frustumBuffer);
+    cullingDescriptorSet->updateBuffer(1, oLightIndexCounter);
+    cullingDescriptorSet->updateBuffer(2, tLightIndexCounter);
+    cullingDescriptorSet->updateBuffer(3, oLightIndexList);
+    cullingDescriptorSet->updateBuffer(4, tLightIndexList);
+    cullingDescriptorSet->updateTexture(5, Gfx::PTexture2D(oLightGrid));
+    cullingDescriptorSet->updateTexture(6, Gfx::PTexture2D(tLightGrid));
     //std::cout << "LightCulling beginFrame()" << std::endl;
     //co_return;
 }
@@ -58,11 +55,11 @@ void LightCullingPass::render()
         Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
     depthAttachment->changeLayout(Gfx::SE_IMAGE_LAYOUT_GENERAL);
     depthAttachment->transferOwnership(Gfx::QueueType::COMPUTE);
-    cullingDescriptorSet->updateTexture(2, depthAttachment);
+    cullingDescriptorSet->updateTexture(0, depthAttachment);
     cullingDescriptorSet->writeChanges();
     Gfx::PComputeCommand computeCommand = graphics->createComputeCommand("CullingCommand");
     computeCommand->bindPipeline(cullingPipeline);
-    computeCommand->bindDescriptor({ viewParamsSet, lightEnv->getDescriptorSet(), cullingDescriptorSet });
+    computeCommand->bindDescriptor({ viewParamsSet, dispatchParamsSet, cullingDescriptorSet, lightEnv->getDescriptorSet() });
     computeCommand->dispatch(dispatchParams.numThreadGroups.x, dispatchParams.numThreadGroups.y, dispatchParams.numThreadGroups.z);
     Array<Gfx::PComputeCommand> commands = {computeCommand};
     graphics->executeCommands(commands);
@@ -95,32 +92,29 @@ void LightCullingPass::publishOutputs()
         });
 
     cullingDescriptorLayout = graphics->createDescriptorLayout("CullingLayout");
-    
-    // Dispatchparams
-    cullingDescriptorLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+
     //DepthTexture
-    cullingDescriptorLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
+    cullingDescriptorLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
     //o_lightIndexCounter
-    cullingDescriptorLayout->addDescriptorBinding(2, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    cullingDescriptorLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
     //t_lightIndexCounter
-    cullingDescriptorLayout->addDescriptorBinding(3, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    cullingDescriptorLayout->addDescriptorBinding(2, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
     //o_lightIndexList
-    cullingDescriptorLayout->addDescriptorBinding(4, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    cullingDescriptorLayout->addDescriptorBinding(3, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
     //t_lightIndexList
-    cullingDescriptorLayout->addDescriptorBinding(5, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    cullingDescriptorLayout->addDescriptorBinding(4, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
     //o_lightGrid
-    cullingDescriptorLayout->addDescriptorBinding(6, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_IMAGE);
+    cullingDescriptorLayout->addDescriptorBinding(5, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_IMAGE);
     //t_lightGrid
-    cullingDescriptorLayout->addDescriptorBinding(7, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_IMAGE);
-    //Frustums
-    cullingDescriptorLayout->addDescriptorBinding(8, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER, viewportWidth * viewportHeight);
+    cullingDescriptorLayout->addDescriptorBinding(6, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_IMAGE);
 
     lightEnv = scene->getLightEnvironment();
 
     Gfx::OPipelineLayout cullingLayout = graphics->createPipelineLayout();
     cullingLayout->addDescriptorLayout(0, viewParamsLayout);
-    cullingLayout->addDescriptorLayout(1, lightEnv->getDescriptorLayout());
+    cullingLayout->addDescriptorLayout(1, dispatchParamsLayout);
     cullingLayout->addDescriptorLayout(2, cullingDescriptorLayout);
+    cullingLayout->addDescriptorLayout(3, lightEnv->getDescriptorLayout());
     cullingLayout->create();
     
     ShaderCreateInfo createInfo;
@@ -200,12 +194,12 @@ void LightCullingPass::setupFrustums()
     dispatchParams.numThreads = numThreads;
     dispatchParams.numThreadGroups = numThreadGroups;
 
-    frustumDescriptorLayout = graphics->createDescriptorLayout("FrustumLayout");
-    frustumDescriptorLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-    frustumDescriptorLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    dispatchParamsLayout = graphics->createDescriptorLayout("FrustumLayout");
+    dispatchParamsLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+    dispatchParamsLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
     Gfx::OPipelineLayout frustumLayout = graphics->createPipelineLayout();
     frustumLayout->addDescriptorLayout(0, viewParamsLayout);
-    frustumLayout->addDescriptorLayout(1, frustumDescriptorLayout);
+    frustumLayout->addDescriptorLayout(1, dispatchParamsLayout);
     frustumLayout->create();
     ShaderCreateInfo createInfo;
     createInfo.name = "Frustum";
@@ -236,14 +230,14 @@ void LightCullingPass::setupFrustums()
         .dynamic = false,
     });
     
-    frustumDescriptorSet = frustumDescriptorLayout->allocateDescriptorSet();
-    frustumDescriptorSet->updateBuffer(0, frustumDispatchParamsBuffer);
-    frustumDescriptorSet->updateBuffer(1, frustumBuffer);
-    frustumDescriptorSet->writeChanges();
+    dispatchParamsSet = dispatchParamsLayout->allocateDescriptorSet();
+    dispatchParamsSet->updateBuffer(0, frustumDispatchParamsBuffer);
+    dispatchParamsSet->updateBuffer(1, frustumBuffer);
+    dispatchParamsSet->writeChanges();
     
     Gfx::PComputeCommand command = graphics->createComputeCommand("FrustumCommand");
     command->bindPipeline(frustumPipeline);
-    command->bindDescriptor({ viewParamsSet, frustumDescriptorSet });
+    command->bindDescriptor({ viewParamsSet, dispatchParamsSet });
     command->dispatch(numThreadGroups.x, numThreadGroups.y, numThreadGroups.z);
     Array<Gfx::PComputeCommand> commands = {command};
     graphics->executeCommands(commands);

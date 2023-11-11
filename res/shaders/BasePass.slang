@@ -15,9 +15,9 @@ layout(set=5)
 ParameterBlock<LightCullingData> pLightCullingData;
 
 [shader("pixel")]
-void pixelMain(in MaterialParameter params : PARAMETER, out float4 baseColor)
+float4 pixelMain(in MaterialParameter params : PARAMETER) : SV_Target
 {
-	BRDF brdf = pMaterial.prepare(params);
+	let brdf = pMaterial.prepare(params);
     float3 result = float3(0, 0, 0);
     for(int i = 0; i < pLightEnv.numDirectionalLights; ++i)
     {

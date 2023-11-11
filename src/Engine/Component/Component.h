@@ -35,7 +35,7 @@ concept has_dependencies = requires(Comp) { Comp::dependencies; };
     x& get##x() { return *tl_##x; } \
     const x& get##x() const { return *tl_##x; }; \
     public: \
-    constexpr static Dependencies<x> dependencies;
+    constexpr static Dependencies<x> dependencies = {};
 
 #define DECLARE_COMPONENT(x) \
     thread_local extern x* tl_##x; \

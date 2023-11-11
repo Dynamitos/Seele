@@ -29,12 +29,13 @@ BasePass::BasePass(Gfx::PGraphics graphics, PScene scene)
     // tLightIndexList
     lightCullingLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
     // oLightGrid
-    lightCullingLayout->addDescriptorBinding(2, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER);
+    lightCullingLayout->addDescriptorBinding(2, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_IMAGE);
     // tLightGrid
-    lightCullingLayout->addDescriptorBinding(3, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER);
+    lightCullingLayout->addDescriptorBinding(3, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_IMAGE);
     lightCullingLayout->create();
 
     basePassLayout->addDescriptorLayout(INDEX_LIGHT_CULLING, lightCullingLayout);
+    graphics->getShaderCompiler()->registerRenderPass("BasePass", "LegacyBasePass", true, true, "BasePass");
 }
 
 BasePass::~BasePass()
@@ -72,7 +73,6 @@ void BasePass::render()
     descriptorSets[INDEX_LIGHT_CULLING]->updateTexture(3, tLightGrid);
     descriptorSets[INDEX_LIGHT_CULLING]->writeChanges();
 
-    graphics->beginRenderPass(renderPass);
     Gfx::ShaderPermutation permutation;
     if (graphics->supportMeshShading())
     {

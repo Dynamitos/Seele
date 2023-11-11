@@ -114,7 +114,7 @@ void SkyboxRenderPass::render()
     Gfx::PRenderCommand renderCommand = graphics->createRenderCommand("SkyboxRender");
     renderCommand->setViewport(viewport);
     renderCommand->bindPipeline(pipeline);
-    renderCommand->bindDescriptor({skyboxDataSet, textureSet});
+    renderCommand->bindDescriptor({viewParamsSet, skyboxDataSet, textureSet});
     renderCommand->bindVertexBuffer({ cubeBuffer });
     renderCommand->draw(36, 1, 0, 0);
     graphics->executeCommands(Array{ renderCommand });
@@ -141,9 +141,9 @@ void SkyboxRenderPass::publishOutputs()
     skyboxDataLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
     skyboxDataLayout->create();
     textureLayout = graphics->createDescriptorLayout();
+    textureLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
     textureLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
-    textureLayout->addDescriptorBinding(2, Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
-    textureLayout->addDescriptorBinding(3, Gfx::SE_DESCRIPTOR_TYPE_SAMPLER);
+    textureLayout->addDescriptorBinding(2, Gfx::SE_DESCRIPTOR_TYPE_SAMPLER);
     textureLayout->create();
 
     skyboxSampler = graphics->createSamplerState({});
@@ -160,6 +160,7 @@ void SkyboxRenderPass::createRenderPass()
 
     ShaderCreateInfo createInfo;
     createInfo.name = "SkyboxVertex";
+    createInfo.additionalModules.add("Skybox");
     createInfo.mainModule = "Skybox";
     createInfo.entryPoint = "vertexMain";
     vertexShader = graphics->createVertexShader(createInfo);
@@ -179,8 +180,9 @@ void SkyboxRenderPass::createRenderPass()
     });
 
     Gfx::OPipelineLayout pipelineLayout = graphics->createPipelineLayout();
-    pipelineLayout->addDescriptorLayout(0, skyboxDataLayout);
-    pipelineLayout->addDescriptorLayout(0, textureLayout);
+    pipelineLayout->addDescriptorLayout(0, viewParamsLayout);
+    pipelineLayout->addDescriptorLayout(1, skyboxDataLayout);
+    pipelineLayout->addDescriptorLayout(2, textureLayout);
     pipelineLayout->create();
 
     Gfx::LegacyPipelineCreateInfo gfxInfo;

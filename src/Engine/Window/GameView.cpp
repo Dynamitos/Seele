@@ -57,7 +57,6 @@ void GameView::update()
 
 void GameView::commitUpdate()
 {
-
 }
 
 void GameView::prepareRender()

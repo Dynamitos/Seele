@@ -18,7 +18,14 @@ public:
     {
         return texture;
     }
+    const Array<uint8>& getRawPixels()
+    {
+        return rawPixels;
+    }
+    uint32 getWidth();
+    uint32 getHeight();
 private:
+    Array<uint8> rawPixels;
     Gfx::OTexture texture;
     friend class TextureLoader;
 };

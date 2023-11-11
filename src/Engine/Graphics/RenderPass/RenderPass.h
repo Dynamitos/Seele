@@ -33,7 +33,6 @@ protected:
         Matrix4 projectionMatrix;
         Vector4 cameraPosition;
         Vector2 screenDimensions;
-        Vector2 pad0;
     } viewParams;
     PRenderGraphResources resources;
     Gfx::ODescriptorLayout viewParamsLayout;
