@@ -39,8 +39,8 @@ private:
 	PAllocation owner;
 	VkDeviceSize requestedSize;
 	VkDeviceSize allocatedOffset;
-	VkDeviceSize alignedOffset;
 	VkDeviceSize allocatedSize;
+	VkDeviceSize alignedOffset;
 	friend class Allocation;
 	friend class Allocator;
 };

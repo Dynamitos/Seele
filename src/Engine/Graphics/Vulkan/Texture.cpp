@@ -159,13 +159,8 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType,
 
 TextureHandle::~TextureHandle()
 {
-    //auto cmdBuffer = graphics->getQueueCommands(currentOwner)->getCommands();
-    //VkDevice device = graphics->getDevice();
-    //VkImageView view = defaultView;
-    //VkImage img = image;
-    //vkDestroyImageView(device, view, nullptr);
-    //vkDestroyImage(device, img, nullptr);
-        //co_return;
+    graphics->getDestructionManager()->queueImage(graphics->getQueueCommands(currentOwner)->getCommands(), image);
+    graphics->getDestructionManager()->queueImageView(graphics->getQueueCommands(currentOwner)->getCommands(), defaultView);
 }
 
 TextureHandle* TextureBase::cast(Gfx::PTexture texture) 

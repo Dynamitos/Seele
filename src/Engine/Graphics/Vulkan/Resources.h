@@ -1,6 +1,7 @@
 #pragma once
 #include <vulkan/vulkan.h>
 #include <functional>
+#include "Containers/List.h"
 #include "Graphics/Resources.h"
 #include "Allocator.h"
 
@@ -42,10 +43,6 @@ public:
         return fence;
     }
     void wait(uint32 timeout);
-    /*Event& operator co_await()
-    {
-        return signaled;
-    }*/
     bool operator<(const Fence &other) const
     {
         return fence < other.fence;
@@ -57,6 +54,23 @@ private:
     VkFence fence;
 };
 DEFINE_REF(Fence)
+
+class DestructionManager
+{
+public:
+    DestructionManager(PGraphics graphics);
+    ~DestructionManager();
+    void queueBuffer(PCmdBuffer cmd, VkBuffer buffer);
+    void queueImage(PCmdBuffer cmd, VkImage image);
+    void queueImageView(PCmdBuffer cmd, VkImageView view);
+    void notifyCmdComplete(PCmdBuffer cmdbuffer);
+private:
+    PGraphics graphics;
+    Map<PCmdBuffer, List<VkBuffer>> buffers;
+    Map<PCmdBuffer, List<VkImage>> images;
+    Map<PCmdBuffer, List<VkImageView>> views;
+};
+DEFINE_REF(DestructionManager)
 
 class VertexDeclaration : public Gfx::VertexDeclaration
 {

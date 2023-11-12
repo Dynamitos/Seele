@@ -156,6 +156,7 @@ void CmdBuffer::refreshFence()
                 descriptor->unbind();
             }
             boundDescriptors.clear();
+            graphics->getDestructionManager()->notifyCmdComplete(this);
             state = State::ReadyBegin;
         }
     }

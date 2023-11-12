@@ -80,6 +80,49 @@ void Fence::wait(uint32 timeout)
     }
 }
 
+DestructionManager::DestructionManager(PGraphics graphics)
+    : graphics(graphics)
+{
+}
+
+DestructionManager::~DestructionManager()
+{
+}
+
+void DestructionManager::queueBuffer(PCmdBuffer cmd, VkBuffer buffer)
+{
+    buffers[cmd].add(buffer);
+}
+
+void DestructionManager::queueImage(PCmdBuffer cmd, VkImage image)
+{
+    images[cmd].add(image);
+}
+
+void DestructionManager::queueImageView(PCmdBuffer cmd, VkImageView image)
+{
+    views[cmd].add(image);
+}
+
+void DestructionManager::notifyCmdComplete(PCmdBuffer cmdbuffer)
+{
+    for(auto buf : buffers[cmdbuffer])
+    {
+        vkDestroyBuffer(graphics->getDevice(), buf, nullptr);
+    }
+    for(auto view : views[cmdbuffer])
+    {
+        vkDestroyImageView(graphics->getDevice(), view, nullptr);
+    }
+    for(auto img : images[cmdbuffer])
+    {
+        vkDestroyImage(graphics->getDevice(), img, nullptr);
+    }
+    buffers[cmdbuffer].clear();
+    images[cmdbuffer].clear();
+    views[cmdbuffer].clear();
+}
+
 VertexDeclaration::VertexDeclaration(const Array<Gfx::VertexElement>& elementList) 
     : elementList(elementList)
 {

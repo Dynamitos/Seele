@@ -61,6 +61,10 @@ Buffer::Buffer(PGraphics graphics, uint64 size, VkBufferUsageFlags usage, Gfx::Q
 
 Buffer::~Buffer()
 {
+    for(uint32 i = 0; i < numBuffers; ++i)
+    {        
+        graphics->getDestructionManager()->queueBuffer(graphics->getQueueCommands(owner)->getCommands(), buffers[i].buffer);
+    }
 }
 
 VkDeviceSize Buffer::getOffset() const

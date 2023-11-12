@@ -49,6 +49,7 @@ void Graphics::init(GraphicsInitializer initInfo)
     allocator = new Allocator(this);
     stagingManager = new StagingManager(this, allocator);
     pipelineCache = new PipelineCache(this, "pipeline.cache");
+    destructionManager = new DestructionManager(this);
 }
 
 Gfx::OWindow Graphics::createWindow(const WindowCreateInfo &createInfo)
@@ -164,31 +165,31 @@ Gfx::OVertexShader Graphics::createVertexShader(const ShaderCreateInfo& createIn
 {
     OVertexShader shader = new VertexShader(this);
     shader->create(createInfo);
-    return std::move(shader);
+    return shader;
 }
 Gfx::OFragmentShader Graphics::createFragmentShader(const ShaderCreateInfo& createInfo)
 {
     OFragmentShader shader = new FragmentShader(this);
     shader->create(createInfo);
-    return std::move(shader);
+    return shader;
 }
 Gfx::OComputeShader Graphics::createComputeShader(const ShaderCreateInfo& createInfo) 
 {
     OComputeShader shader = new ComputeShader(this);
     shader->create(createInfo);
-    return std::move(shader);
+    return shader;
 }
 Gfx::OTaskShader Graphics::createTaskShader(const ShaderCreateInfo& createInfo)
 {
     OTaskShader shader = new TaskShader(this);
     shader->create(createInfo);
-    return std::move(shader);
+    return shader;
 }
 Gfx::OMeshShader Graphics::createMeshShader(const ShaderCreateInfo& createInfo)
 {
     OMeshShader shader = new MeshShader(this);
     shader->create(createInfo);
-    return std::move(shader);
+    return shader;
 }
 
 Gfx::PGraphicsPipeline Graphics::createGraphicsPipeline(Gfx::LegacyPipelineCreateInfo createInfo)
@@ -227,12 +228,14 @@ Gfx::OSamplerState Graphics::createSamplerState(const SamplerCreateInfo& createI
     vkInfo.mipmapMode = cast(createInfo.mipmapMode);
     vkInfo.unnormalizedCoordinates = createInfo.unnormalizedCoordinates;
     VK_CHECK(vkCreateSampler(handle, &vkInfo, nullptr, &sampler->sampler));
-    return std::move(sampler);
+    return sampler;
 }
+
 Gfx::ODescriptorLayout Graphics::createDescriptorLayout(const std::string& name)
 {
     return new DescriptorLayout(this, name);
 }
+
 Gfx::OPipelineLayout Graphics::createPipelineLayout(Gfx::PPipelineLayout baseLayout)
 {
     return new PipelineLayout(this, baseLayout);
@@ -365,6 +368,11 @@ PAllocator Graphics::getAllocator()
 PStagingManager Graphics::getStagingManager()
 {
     return stagingManager;
+}
+
+PDestructionManager Graphics::getDestructionManager()
+{
+    return destructionManager;
 }
 
 Array<const char *> Graphics::getRequiredExtensions()

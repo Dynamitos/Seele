@@ -8,6 +8,7 @@ namespace Vulkan
 {
 DECLARE_REF(Allocator)
 DECLARE_REF(StagingManager)
+DECLARE_REF(DestructionManager)
 DECLARE_REF(CommandBufferManager)
 DECLARE_REF(Queue)
 DECLARE_REF(RenderPass)
@@ -34,6 +35,7 @@ public:
 
     PAllocator getAllocator();
     PStagingManager getStagingManager();
+    PDestructionManager getDestructionManager();
 
     // Inherited via Graphics
     virtual void init(GraphicsInitializer initializer) override;
@@ -107,6 +109,7 @@ protected:
     Map<uint32, OFramebuffer> allocatedFramebuffers;
     OAllocator allocator;
     OStagingManager stagingManager;
+    ODestructionManager destructionManager;
 
     friend class Window;
 };

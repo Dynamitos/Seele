@@ -3,6 +3,7 @@
 #include "slang.h"
 #include "slang-com-ptr.h"
 #include "stdlib.h"
+#include <format>
 
 using namespace Seele;
 using namespace Seele::Vulkan;
