@@ -79,7 +79,6 @@ std::string ShaderParameter::evaluate(Map<std::string, std::string>& varState) c
 void ShaderParameter::save(ArchiveBuffer& buffer) const
 {
     ShaderExpression::save(buffer);
-    Serialization::save(buffer, key);
     Serialization::save(buffer, byteOffset);
     Serialization::save(buffer, binding);
 }
@@ -87,7 +86,6 @@ void ShaderParameter::save(ArchiveBuffer& buffer) const
 void ShaderParameter::load(ArchiveBuffer& buffer)
 {
     ShaderExpression::load(buffer);
-    Serialization::load(buffer, key);
     Serialization::load(buffer, byteOffset);
     Serialization::load(buffer, binding);
 }

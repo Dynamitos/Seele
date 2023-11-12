@@ -60,6 +60,10 @@ void LightEnvironment::addPointLight(Component::PointLight pointLight)
 
 void LightEnvironment::commit()
 {
+    dirs.add(Component::DirectionalLight{
+        .color = Vector4(1, 1, 1, 1),
+        .direction = Vector4(1, 0, 1, 0),
+        });
     lightEnv.numDirectionalLights = dirs.size();
     lightEnv.numPointLights = points.size();
     lightEnvBuffer->updateContents(DataSource{

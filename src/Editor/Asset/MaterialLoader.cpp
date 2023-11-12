@@ -62,7 +62,7 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
         // TODO: ALIGNMENT RULES
         if(type.compare("float") == 0)
         {
-            OFloatParameter p = new FloatParameter(param.key(), uniformBufferOffset, 0);
+            OFloatParameter p = new FloatParameter(param.key(), uniformBufferOffset, uniformBinding);
             if(uniformBinding == -1)
             {
                 layout->addDescriptorBinding(bindingCounter, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
@@ -79,7 +79,7 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
         // TODO: ALIGNMENT RULES
         else if(type.compare("float3") == 0)
         {
-            OVectorParameter p = new VectorParameter(param.key(), uniformBufferOffset, 0);
+            OVectorParameter p = new VectorParameter(param.key(), uniformBufferOffset, uniformBinding);
             if(uniformBinding == -1)
             {
                 layout->addDescriptorBinding(bindingCounter, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);

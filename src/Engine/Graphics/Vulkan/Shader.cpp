@@ -27,6 +27,9 @@ uint32 Seele::Vulkan::Shader::getShaderHash() const
     return hash;
 }
 
+#define CHECK_RESULT(x) {SlangResult r = x; if(r != 0) {throw std::runtime_error(std::format("Error: {0}", r));}}
+#define CHECK_DIAGNOSTICS() {if(diagnostics) {std::cout << (const char*)diagnostics->getBufferPointer() << std::endl; assert(false);}}
+
 void Shader::create(const ShaderCreateInfo& createInfo)
 {
     entryPointName = createInfo.entryPoint;
@@ -58,7 +61,7 @@ void Shader::create(const ShaderCreateInfo& createInfo)
     sessionDesc.searchPathCount = searchPaths.size();
 
     Slang::ComPtr<slang::ISession> session;
-    globalSession->createSession(sessionDesc, session.writeRef());
+    CHECK_RESULT(globalSession->createSession(sessionDesc, session.writeRef()));
 
     Slang::ComPtr<slang::IBlob> diagnostics;
     Array<slang::IComponentType*> modules;
@@ -71,16 +74,10 @@ void Shader::create(const ShaderCreateInfo& createInfo)
         {
             mainModule = (slang::IModule*)modules.back();
         }
-        if(diagnostics)
-        {
-            std::cout << (const char*)diagnostics->getBufferPointer() << std::endl;
-        }
+        CHECK_DIAGNOSTICS();
     }
 
-    if(diagnostics)
-    {
-        std::cout << (const char*)diagnostics->getBufferPointer() << std::endl;
-    }
+    CHECK_DIAGNOSTICS();
 
     mainModule->findEntryPointByName(createInfo.entryPoint.c_str(), entrypoint.writeRef());
     modules.add(entrypoint);
@@ -88,23 +85,16 @@ void Shader::create(const ShaderCreateInfo& createInfo)
     Slang::ComPtr<slang::IComponentType> moduleComposition;
     session->createCompositeComponentType(modules.data(), modules.size(), moduleComposition.writeRef(), diagnostics.writeRef());
 
-    if(diagnostics)
-    {
-        std::cout << (const char*)diagnostics->getBufferPointer() << std::endl;
-    }
-
+    CHECK_DIAGNOSTICS();
+    
     Slang::ComPtr<slang::IComponentType> linkedProgram;
     moduleComposition->link(linkedProgram.writeRef(), diagnostics.writeRef());
-    if(diagnostics)
-    {
-        std::cout << (const char*)diagnostics->getBufferPointer() << std::endl;
-    }
+
+    CHECK_DIAGNOSTICS();
 
     slang::ProgramLayout* reflection = linkedProgram->getLayout(0, diagnostics.writeRef());
-    if(diagnostics)
-    {
-        std::cout << (const char*)diagnostics->getBufferPointer() << std::endl;
-    }
+
+    CHECK_DIAGNOSTICS();
 
     Array<slang::SpecializationArg> specialization;
     for(const auto& [key, value] : createInfo.typeParameter)
@@ -113,10 +103,8 @@ void Shader::create(const ShaderCreateInfo& createInfo)
     }
     Slang::ComPtr<slang::IComponentType> specializedComponent;
     linkedProgram->specialize(specialization.data(), specialization.size(), specializedComponent.writeRef(), diagnostics.writeRef());
-    if(diagnostics)
-    {
-        std::cout << (const char*)diagnostics->getBufferPointer() << std::endl;
-    }
+    CHECK_DIAGNOSTICS();
+
     Slang::ComPtr<slang::IBlob> kernelBlob;
     specializedComponent->getEntryPointCode(
         0,
@@ -124,16 +112,13 @@ void Shader::create(const ShaderCreateInfo& createInfo)
         kernelBlob.writeRef(),
         diagnostics.writeRef()
     );
-    if(diagnostics)
-    {
-        std::cout << (const char*)diagnostics->getBufferPointer() << std::endl;
-    }
+    CHECK_DIAGNOSTICS();
+
     for (uint32 i = 0; i < reflection->getParameterCount(); ++i)
     {
         slang::VariableLayoutReflection* varLayout = reflection->getParameterByIndex(i);
-        std::cout << varLayout->getName() << " in space " << varLayout->getBindingSpace() << " index " << varLayout->getBindingIndex() << std::endl;
+        //std::cout << varLayout->getName() << " in space " << varLayout->getBindingSpace() << " index " << varLayout->getBindingIndex() << std::endl;
     }
-    std::cout << reflection->getGlobalConstantBufferSize() << std::endl;
     VkShaderModuleCreateInfo moduleInfo =
     {
         .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
@@ -146,5 +131,4 @@ void Shader::create(const ShaderCreateInfo& createInfo)
 
     hash = CRC::Calculate(entryPointName.data(), entryPointName.size(), CRC::CRC_32());
     hash = CRC::Calculate(kernelBlob->getBufferPointer(), kernelBlob->getBufferSize(), CRC::CRC_32(), hash);
-    std::cout << "Creating Shader" << std::endl;
 }

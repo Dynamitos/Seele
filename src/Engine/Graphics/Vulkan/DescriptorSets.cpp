@@ -331,9 +331,11 @@ Gfx::PDescriptorSet DescriptorAllocator::allocateDescriptorSet()
             counts = binding.descriptorCount;
         }
     }
-    setCounts.pDescriptorCounts = &counts;
-    allocInfo.pNext = &setCounts;
-
+    if (layout.bindings.size() > 0)
+    {
+        setCounts.pDescriptorCounts = &counts;
+        allocInfo.pNext = &setCounts;
+    }
     for(uint32 setIndex = 0; setIndex < cachedHandles.size(); ++setIndex)
     {
         if(cachedHandles[setIndex] == nullptr)

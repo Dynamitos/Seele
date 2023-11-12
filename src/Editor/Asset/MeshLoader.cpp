@@ -54,10 +54,6 @@ void MeshLoader::loadMaterials(const aiScene* scene, const std::string& baseName
         matCode["profile"] = "BlinnPhong"; //TODO: other shading models
         aiString texPath;
         //TODO make samplers based on used textures
-        matCode["params"]["textureSampler"] =
-            {
-                {"type", "SamplerState"}
-            };
         if(material->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS)
         {
             std::string texFilename = std::filesystem::path(texPath.C_Str()).stem().string();
@@ -66,11 +62,15 @@ void MeshLoader::loadMaterials(const aiScene* scene, const std::string& baseName
                     {"type", "Texture2D"}, 
                     {"default", texFilename}
                 };
+            matCode["params"]["diffuseSampler"] =
+            {
+                {"type", "SamplerState"}
+            };
             matCode["code"].push_back(
                 {
                     { "exp",  "Sample" },
                     { "texture", "diffuseTexture" },
-                    { "sampler", "textureSampler" },
+                    { "sampler", "diffuseSampler" },
                     { "coords", "input.texCoords[0]"}
                 }
             );

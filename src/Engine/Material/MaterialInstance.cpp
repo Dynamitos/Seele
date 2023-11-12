@@ -39,6 +39,7 @@ MaterialInstance::MaterialInstance(uint64 id,
         OShaderParameter param;
         Serialization::load(buffer, param);
         parameters.add(std::move(param));
+        buffer.rewind();
     }
 }
 
@@ -50,7 +51,6 @@ MaterialInstance::~MaterialInstance()
 void MaterialInstance::updateDescriptor()
 {
     Gfx::PDescriptorLayout layout = baseMaterial->getMaterial()->getDescriptorLayout();
-    layout->reset();
     descriptor = layout->allocateDescriptorSet();
     for (auto& param : parameters)
     {
