@@ -55,7 +55,7 @@ void Camera::buildViewMatrix()
     Vector eyePos = getTransform().getPosition();//getAbsoluteTransform().getPosition();
     Vector lookAt = eyePos + glm::normalize(Vector(cos(yaw) * cos(pitch), sin(pitch), sin(yaw) * cos(pitch)));
     //std::cout << "Eye: " << eyePos << " lookAt: " << lookAt << std::endl;
-    viewMatrix = glm::lookAt(eyePos, lookAt, Vector(0, 1, 0));
+    viewMatrix = glm::lookAt(Vector(100, 0, 10), Vector(0, 0, 0), Vector(0, 1, 0));//glm::lookAt(eyePos, lookAt, Vector(0, 1, 0));
 
     bNeedsViewBuild = false;
 }

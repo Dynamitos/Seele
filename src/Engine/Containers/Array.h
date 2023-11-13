@@ -607,10 +607,17 @@ private:
             {
                 newData[i] = std::forward<Type>(_data[i]);
             }
-            // As well as default initialize the others
-            for(size_type i = arraySize; i < newSize; ++i)
+            if constexpr (std::is_integral_v<T> || std::is_floating_point_v<T>)
             {
-                std::allocator_traits<allocator_type>::construct(allocator, &newData[i], value);
+                std::memset(&newData[arraySize], 0, sizeof(T) * (newSize - arraySize));
+            }
+            else
+            {
+                // As well as default initialize the others
+                for (size_type i = arraySize; i < newSize; ++i)
+                {
+                    std::allocator_traits<allocator_type>::construct(allocator, &newData[i], value);
+                }
             }
             deallocateArray(_data, allocated);
             arraySize = newSize;

@@ -29,7 +29,7 @@ void VertexData::updateMesh(const Component::Transform& transform, PMesh mesh)
     matInstanceData.meshes.add(MeshInstanceData{
         .id = mesh->id,
         .instance = InstanceData {
-            .transformMatrix = transform.toMatrix(),
+            .transformMatrix = Matrix4(1),//transform.toMatrix(),
         },
         .indexBuffer = mesh->indexBuffer,
     });

@@ -99,6 +99,7 @@ Window::Window(PGraphics graphics, const WindowCreateInfo &createInfo)
 
 Window::~Window()
 {
+    vkDestroySwapchainKHR(graphics->getDevice(), swapchain, nullptr);
     vkDestroySurfaceKHR(instance, surface, nullptr);
     glfwDestroyWindow(static_cast<GLFWwindow *>(windowHandle));
 }

@@ -59,6 +59,7 @@ Allocation::Allocation(PGraphics graphics, PAllocator allocator, VkDeviceSize si
     allocInfo.memoryTypeIndex = memoryTypeIndex;
     isDedicated = dedicatedInfo != nullptr;
     allocInfo.pNext = dedicatedInfo;
+    //std::cout << "New allocation" << std::endl;
     VK_CHECK(vkAllocateMemory(device, &allocInfo, nullptr, &allocatedMemory));
     bytesAllocated = size;
     freeRanges[0] = size;
@@ -69,6 +70,7 @@ Allocation::Allocation(PGraphics graphics, PAllocator allocator, VkDeviceSize si
 
 Allocation::~Allocation()
 {
+    vkFreeMemory(device, allocatedMemory, nullptr);
     assert(bytesUsed == 0);
 }
 
@@ -180,7 +182,7 @@ Allocator::Allocator(PGraphics graphics)
         VkMemoryHeap memoryHeap = memProperties.memoryHeaps[i];
         HeapInfo heapInfo; 
         heapInfo.maxSize = memoryHeap.size;
-        std::cout << "Creating heap " << i << " with properties " << memoryHeap.flags << " size " << memoryHeap.size << std::endl;
+        //std::cout << "Creating heap " << i << " with properties " << memoryHeap.flags << " size " << memoryHeap.size << std::endl;
         heaps.add(std::move(heapInfo));
     }
 }
@@ -212,7 +214,7 @@ OSubAllocation Allocator::allocate(const VkMemoryRequirements2 &memRequirements2
         {
             OAllocation newAllocation = new Allocation(graphics, this, requirements.size, memoryTypeIndex, properties, dedicatedInfo);
             heaps[heapIndex].inUse += newAllocation->bytesAllocated;
-            std::cout << "Heap " << heapIndex << ": " << (float)heaps[heapIndex].inUse / heaps[heapIndex].maxSize << "%" << std::endl; 
+            //std::cout << "Heap " << heapIndex << ": " << (float)heaps[heapIndex].inUse / heaps[heapIndex].maxSize << "%" << std::endl; 
             heaps[heapIndex].allocations.add(std::move(newAllocation));
             return heaps[heapIndex].allocations.back()->getSuballocation(requirements.size, requirements.alignment);
         } 
@@ -232,12 +234,14 @@ OSubAllocation Allocator::allocate(const VkMemoryRequirements2 &memRequirements2
     // no suitable allocations found, allocate new block
     OAllocation newAllocation = new Allocation(graphics, this, (requirements.size > MemoryBlockSize) ? requirements.size : (VkDeviceSize)MemoryBlockSize, memoryTypeIndex, properties, nullptr);
     heaps[heapIndex].inUse += newAllocation->bytesAllocated;
-    std::cout << "Heap " << heapIndex << ": " << (float)heaps[heapIndex].inUse / heaps[heapIndex].maxSize << "%" << std::endl;     heaps[heapIndex].allocations.add(std::move(newAllocation));
+    //std::cout << "Heap " << heapIndex << ": " << (float)heaps[heapIndex].inUse / heaps[heapIndex].maxSize << "%" << std::endl;     
+    heaps[heapIndex].allocations.add(std::move(newAllocation));
     return heaps[heapIndex].allocations.back()->getSuballocation(requirements.size, requirements.alignment);
 }
 
 void Allocator::free(PAllocation allocation)
 {
+    //std::cout << "Freeing allocation" << std::endl;
     for (uint32 heapIndex = 0; heapIndex < heaps.size(); ++heapIndex)
     {
         for (uint32 alloc = 0; alloc < heaps[heapIndex].allocations.size(); ++alloc)
@@ -245,7 +249,7 @@ void Allocator::free(PAllocation allocation)
             if (heaps[heapIndex].allocations[alloc] == allocation)
             {
                 heaps[heapIndex].inUse -= allocation->bytesAllocated;
-                std::cout << "Heap " << heapIndex << ": " << (float)heaps[heapIndex].inUse / heaps[heapIndex].maxSize << "%" << std::endl;
+                //std::cout << "Heap " << heapIndex << ": " << (float)heaps[heapIndex].inUse / heaps[heapIndex].maxSize << "%" << std::endl;
                 heaps[heapIndex].allocations.removeAt(alloc, false);
                 return;
             }
