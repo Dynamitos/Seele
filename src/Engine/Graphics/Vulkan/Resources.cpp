@@ -16,7 +16,6 @@ Semaphore::Semaphore(PGraphics graphics)
 
 Semaphore::~Semaphore()
 {
-    graphics = nullptr;
     vkDestroySemaphore(graphics->getDevice(), handle, nullptr);
 }
 

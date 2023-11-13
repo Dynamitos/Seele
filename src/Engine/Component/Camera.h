@@ -32,7 +32,7 @@ struct Camera
     //Transforms relative to actor
     float yaw;
     float pitch;
-    bool mainCamera = true;
+    bool mainCamera = false;
 private:
     bool bNeedsViewBuild;
 };

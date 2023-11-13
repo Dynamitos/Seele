@@ -15,12 +15,11 @@ layout(set=2)
 ParameterBlock<Scene> pScene;
 
 [shader("vertex")]
-void vertexMain(	
+FragmentParameter vertexMain(	
 	uint vertexId: SV_VertexID,
 	uint instanceId: SV_InstanceID,
-	out FragmentParameter params: PARAMETER,
-){
+) : PARAMETER{
 	InstanceData inst = pScene.instances[instanceId];
 	VertexAttributes attr = pVertexData.getAttributes(vertexId, inst.transformMatrix);
-	params = attr.getParameter(inst.transformMatrix);
+	return attr.getParameter(inst.transformMatrix);
 }
