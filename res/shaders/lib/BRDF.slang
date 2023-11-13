@@ -29,7 +29,7 @@ struct BlinnPhong : IBRDF
         float3 h = normalize(lightDir_TS + viewDir_TS);
         float nDotH = saturate(dot(normal, h));
 		
-        return baseColor;
+        return baseColor * (nDotL + nDotH)  * lightColor;
     }
 };
 
