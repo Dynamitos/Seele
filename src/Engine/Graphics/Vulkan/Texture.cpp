@@ -110,10 +110,10 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType,
     if(sourceData.size > 0)
     {
         changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-        OStagingBuffer staging = graphics->getStagingManager()->allocateStagingBuffer(sourceData.size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
-        void* data = staging->getMappedPointer();
+        OStagingBuffer staging = graphics->getStagingManager()->create(sourceData.size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+        void* data = staging->map();
         std::memcpy(data, sourceData.data, sourceData.size);
-        staging->flushMappedMemory();
+        staging->flush();
         
         PCommandBufferManager cmdBufferManager = graphics->getQueueCommands(currentOwner);
         VkBufferImageCopy region;
@@ -134,7 +134,7 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType,
         
         // When loading a texture from a file, we will almost always use it as a texture map for fragment shaders
         changeLayout(Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-        graphics->getStagingManager()->releaseStagingBuffer(std::move(staging));
+        graphics->getStagingManager()->release(std::move(staging));
     }
     else if(usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
     {
@@ -209,7 +209,7 @@ void TextureHandle::download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Ar
 {
     uint64 imageSize = sizeX * sizeY * sizeZ * Gfx::getFormatInfo(format).blockSize;
 
-    OStagingBuffer stagingbuffer = graphics->getStagingManager()->allocateStagingBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT, true);
+    OStagingBuffer stagingbuffer = graphics->getStagingManager()->create(imageSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT, true);
     auto prevlayout = layout;
     changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
     PCmdBuffer cmdBuffer = graphics->getQueueCommands(currentOwner)->getCommands();
@@ -230,9 +230,9 @@ void TextureHandle::download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Ar
     vkCmdCopyImageToBuffer(cmdBuffer->getHandle(), image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, stagingbuffer->getHandle(), 1, &region);
     changeLayout(prevlayout);
     buffer.resize(stagingbuffer->getSize());
-    void* data = stagingbuffer->getMappedPointer();
+    void* data = stagingbuffer->map();
     std::memcpy(buffer.data(), data, buffer.size());
-    graphics->getStagingManager()->releaseStagingBuffer(std::move(stagingbuffer));
+    graphics->getStagingManager()->release(std::move(stagingbuffer));
 }
 
 void TextureHandle::executeOwnershipBarrier(Gfx::QueueType newOwner)

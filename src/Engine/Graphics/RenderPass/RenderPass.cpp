@@ -29,7 +29,7 @@ void RenderPass::beginFrame(const Component::Camera& cam)
         .viewMatrix = cam.getViewMatrix(),
         .projectionMatrix = viewport->getProjectionMatrix(),
         .cameraPosition = Vector4(cam.getCameraPosition(), 1),
-        .screenDimensions = Vector2(static_cast<float>(viewport->getSizeX()), static_cast<float>(viewport->getSizeY())),
+        .screenDimensions = Vector2(static_cast<float>(viewport->getWidth()), static_cast<float>(viewport->getHeight())),
     };
     DataSource uniformUpdate = {
         .size = sizeof(ViewParameter),

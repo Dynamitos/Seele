@@ -4,7 +4,7 @@
 #include "Buffer.h"
 #include "Graphics/Enums.h"
 #include "PipelineCache.h"
-#include "CommandBuffer.h"
+#include "Command.h"
 #include "Initializer.h"
 #include "RenderTarget.h"
 #include "RenderPass.h"
@@ -241,77 +241,11 @@ Gfx::OPipelineLayout Graphics::createPipelineLayout(Gfx::PPipelineLayout baseLay
     return new PipelineLayout(this, baseLayout);
 }
 
-void Graphics::copyTexture(Gfx::PTexture srcTexture, Gfx::PTexture dstTexture) 
-{
-    Texture2D* src = (Texture2D*)srcTexture->getTexture2D();
-    Texture2D* dst = (Texture2D*)dstTexture->getTexture2D();
-    TextureHandle* srcHandle = (TextureHandle*)src->getNativeHandle();
-    TextureHandle* dstHandle = (TextureHandle*)dst->getNativeHandle();
-    Gfx::SeImageLayout srcLayout = srcHandle->getLayout();
-    Gfx::SeImageLayout dstLayout = dstHandle->getLayout();
-    Gfx::QueueType dstOwner = dstHandle->currentOwner;
-    src->changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
-    dst->changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-    dstTexture->transferOwnership(srcHandle->currentOwner);
-    PCmdBuffer cmdBuffer = getQueueCommands(srcHandle->currentOwner)->getCommands();
-    if(srcHandle->getAspect() != dstHandle->getAspect())
-    {
-        /*VkMemoryRequirements imageRequirements;
-        vkGetImageMemoryRequirements(handle, srcHandle->getImage(), &imageRequirements);
-        PShaderBuffer tempBuffer = createShaderBuffer();
-        VkBufferImageCopy bufferImageCopy;
-        bufferImageCopy.bufferOffset = 0;
-        bufferImageCopy.bufferRowLength = srcTexture->getSizeX();
-        bufferImageCopy.bufferImageHeight = srcTexture->getSizeY();
-        bufferImageCopy.imageExtent.width = srcTexture->getSizeX();
-        bufferImageCopy.imageExtent.height = srcTexture->getSizeY();
-        bufferImageCopy.imageExtent.depth = 1;
-        bufferImageCopy.imageOffset.x = 0;
-        bufferImageCopy.imageOffset.y = 0;
-        bufferImageCopy.imageOffset.z = 0;
-        bufferImageCopy.imageSubresource.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-        bufferImageCopy.imageSubresource.baseArrayLayer = 0;
-        bufferImageCopy.imageSubresource.layerCount = 1;
-        bufferImageCopy.imageSubresource.mipLevel = 0;
-
-        vkCmdCopyImageToBuffer(cmdBuffer->getHandle(), srcHandle->getImage(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, tempBufferAllocation->getHandle(), 1, &bufferImageCopy);
-
-        bufferImageCopy.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        
-        vkCmdCopyBufferToImage(cmdBuffer->getHandle(), tempBufferAllocation->getHandle(), dstHandle->getImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &bufferImageCopy);
-        delete tempBufferAllocation;*/
-        throw new std::logic_error("Not yet implemented!");
-    }
-    else if (src->getSizeX() != dst->getSizeX()
-          || src->getSizeY() != dst->getSizeY())
-    {
-        throw new std::logic_error("Not yet implemented!");
-    }
-    else
-    {
-        VkImageCopy copy;
-        std::memset(&copy, 0, sizeof(VkImageCopy));
-        copy.extent.width = srcTexture->getSizeX();
-        copy.extent.height = srcTexture->getSizeY();
-        copy.extent.depth = 1;
-        copy.srcSubresource.aspectMask = srcHandle->getAspect();
-        copy.srcSubresource.layerCount = 1;
-        copy.dstSubresource.aspectMask = dstHandle->getAspect();
-        copy.dstSubresource.layerCount = 1;
-        vkCmdCopyImage(cmdBuffer->getHandle(),
-                srcHandle->getImage(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-                dstHandle->getImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                1, &copy);
-        src->changeLayout(srcLayout);
-        dst->changeLayout(dstLayout);
-        dstTexture->transferOwnership(dstOwner);
-    }
-}
-
 void Graphics::vkCmdDrawMeshTasksEXT(VkCommandBuffer handle, uint32 groupX, uint32 groupY, uint32 groupZ)
 {
     cmdDrawMeshTasks(handle, groupX, groupY, groupZ);
 }
+
 PCommandBufferManager Graphics::getQueueCommands(Gfx::QueueType queueType)
 {
     switch (queueType)
@@ -332,7 +266,7 @@ PCommandBufferManager Graphics::getGraphicsCommands()
 {
     if(graphicsCommands == nullptr)
     {
-        graphicsCommands = new CommandBufferManager(this, graphicsQueue);
+        graphicsCommands = new CommandPool(this, graphicsQueue);
     }
     return graphicsCommands;
 }
@@ -340,7 +274,7 @@ PCommandBufferManager Graphics::getComputeCommands()
 {
     if(computeCommands == nullptr)
     {
-        computeCommands = new CommandBufferManager(this, computeQueue);
+        computeCommands = new CommandPool(this, computeQueue);
     }
     return computeCommands;
 }
@@ -348,7 +282,7 @@ PCommandBufferManager Graphics::getTransferCommands()
 {
     if(transferCommands == nullptr)
     {
-        transferCommands = new CommandBufferManager(this, transferQueue);
+        transferCommands = new CommandPool(this, transferQueue);
     }
     return transferCommands;
 }
@@ -356,7 +290,7 @@ PCommandBufferManager Graphics::getDedicatedTransferCommands()
 {
     if(dedicatedTransferCommands == nullptr)
     {
-        dedicatedTransferCommands = new CommandBufferManager(this, dedicatedTransferQueue != nullptr ? dedicatedTransferQueue : transferQueue);
+        dedicatedTransferCommands = new CommandPool(this, dedicatedTransferQueue != nullptr ? dedicatedTransferQueue : transferQueue);
     }
     return dedicatedTransferCommands;
 }

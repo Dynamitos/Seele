@@ -32,19 +32,19 @@ void FontAsset::save(ArchiveBuffer& buffer) const
             .glInternalformat = 0,
             .vkFormat = (uint32_t)usedTextures[x]->getFormat(),
             .pDfd = nullptr,
-            .baseWidth = usedTextures[x]->getSizeX(),
-            .baseHeight = usedTextures[x]->getSizeY(),
-            .baseDepth = usedTextures[x]->getSizeZ(),
-            .numDimensions = usedTextures[x]->getSizeZ() > 1 ? 3u : usedTextures[x]->getSizeY() > 1 ? 2u : 1u,
+            .baseWidth = usedTextures[x]->getWidth(),
+            .baseHeight = usedTextures[x]->getHeight(),
+            .baseDepth = usedTextures[x]->getDepth(),
+            .numDimensions = usedTextures[x]->getDepth() > 1 ? 3u : usedTextures[x]->getHeight() > 1 ? 2u : 1u,
             .numLevels = usedTextures[x]->getMipLevels(),
-            .numLayers = usedTextures[x]->getSizeZ(),
+            .numLayers = usedTextures[x]->getDepth(),
             .numFaces = usedTextures[x]->getNumFaces(),
             .isArray = false,
             .generateMipmaps = false,
         };
         ktxTexture2_Create(&createInfo, KTX_TEXTURE_CREATE_ALLOC_STORAGE, &kTexture);
 
-        for (uint32 depth = 0; depth < usedTextures[x]->getSizeZ(); ++depth)
+        for (uint32 depth = 0; depth < usedTextures[x]->getDepth(); ++depth)
         {
             for (uint32 face = 0; face < usedTextures[x]->getNumFaces(); ++face)
             {

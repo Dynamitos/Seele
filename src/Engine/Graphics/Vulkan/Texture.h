@@ -97,15 +97,15 @@ class Texture2D : public Gfx::Texture2D, public TextureBase
 public:
     Texture2D(PGraphics graphics, const TextureCreateInfo& createInfo, VkImage existingImage = VK_NULL_HANDLE);
     virtual ~Texture2D();
-    virtual uint32 getSizeX() const override
+    virtual uint32 getWidth() const override
     {
         return textureHandle->sizeX;
     }
-    virtual uint32 getSizeY() const override
+    virtual uint32 getHeight() const override
     {
         return textureHandle->sizeY;
     }
-    virtual uint32 getSizeZ() const override
+    virtual uint32 getDepth() const override
     {
         return textureHandle->sizeZ;
     }
@@ -153,15 +153,15 @@ class Texture3D : public Gfx::Texture3D, public TextureBase
 public:
     Texture3D(PGraphics graphics, const TextureCreateInfo& createInfo, VkImage existingImage = VK_NULL_HANDLE);
     virtual ~Texture3D();
-    virtual uint32 getSizeX() const override
+    virtual uint32 getWidth() const override
     {
         return textureHandle->sizeX;
     }
-    virtual uint32 getSizeY() const override
+    virtual uint32 getHeight() const override
     {
         return textureHandle->sizeY;
     }
-    virtual uint32 getSizeZ() const override
+    virtual uint32 getDepth() const override
     {
         return textureHandle->sizeZ;
     }
@@ -209,15 +209,15 @@ class TextureCube : public Gfx::TextureCube, public TextureBase
 public:
     TextureCube(PGraphics graphics, const TextureCreateInfo& createInfo, VkImage existingImage = VK_NULL_HANDLE);
     virtual ~TextureCube();
-    virtual uint32 getSizeX() const override
+    virtual uint32 getWidth() const override
     {
         return textureHandle->sizeX;
     }
-    virtual uint32 getSizeY() const override
+    virtual uint32 getHeight() const override
     {
         return textureHandle->sizeY;
     }
-    virtual uint32 getSizeZ() const override
+    virtual uint32 getDepth() const override
     {
         return textureHandle->sizeZ;
     }

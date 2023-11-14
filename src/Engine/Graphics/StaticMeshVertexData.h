@@ -1,5 +1,6 @@
 #pragma once
 #include "Graphics/Initializer.h"
+#include "Graphics/Command.h"
 #include "Math/Vector.h"
 #include "VertexData.h"
 

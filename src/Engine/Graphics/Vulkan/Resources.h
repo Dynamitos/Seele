@@ -1,6 +1,5 @@
 #pragma once
 #include <vulkan/vulkan.h>
-#include <functional>
 #include "Containers/List.h"
 #include "Graphics/Resources.h"
 #include "Allocator.h"
@@ -9,10 +8,9 @@ namespace Seele
 {
 namespace Vulkan
 {
-
 DECLARE_REF(DescriptorAllocator)
-DECLARE_REF(CommandBufferManager)
-DECLARE_REF(CmdBuffer)
+DECLARE_REF(CommandPool)
+DECLARE_REF(Command)
 DECLARE_REF(Graphics)
 DECLARE_REF(SubAllocation)
 class Semaphore
@@ -20,11 +18,10 @@ class Semaphore
 public:
     Semaphore(PGraphics graphics);
     virtual ~Semaphore();
-    inline VkSemaphore getHandle() const
+    constexpr VkSemaphore getHandle() const
     {
         return handle;
     }
-
 private:
     VkSemaphore handle;
     PGraphics graphics;
@@ -38,7 +35,7 @@ public:
     ~Fence();
     bool isSignaled();
     void reset();
-    inline VkFence getHandle() const
+    constexpr VkFence getHandle() const
     {
         return fence;
     }
@@ -60,35 +57,26 @@ class DestructionManager
 public:
     DestructionManager(PGraphics graphics);
     ~DestructionManager();
-    void queueBuffer(PCmdBuffer cmd, VkBuffer buffer);
-    void queueImage(PCmdBuffer cmd, VkImage image);
-    void queueImageView(PCmdBuffer cmd, VkImageView view);
-    void notifyCmdComplete(PCmdBuffer cmdbuffer);
+    void queueBuffer(PCommand cmd, VkBuffer buffer);
+    void queueImage(PCommand cmd, VkImage image);
+    void queueImageView(PCommand cmd, VkImageView view);
+    void queueSemaphore(PCommand cmd, VkSemaphore sem);
+    void notifyCmdComplete(PCommand cmdbuffer);
 private:
     PGraphics graphics;
-    Map<PCmdBuffer, List<VkBuffer>> buffers;
-    Map<PCmdBuffer, List<VkImage>> images;
-    Map<PCmdBuffer, List<VkImageView>> views;
+    Map<PCommand, List<VkBuffer>> buffers;
+    Map<PCommand, List<VkImage>> images;
+    Map<PCommand, List<VkImageView>> views;
+    Map<PCommand, List<VkSemaphore>> sems;
 };
 DEFINE_REF(DestructionManager)
 
-class VertexDeclaration : public Gfx::VertexDeclaration
-{
-public:
-    Array<Gfx::VertexElement> elementList;
-
-    VertexDeclaration(const Array<Gfx::VertexElement>& elementList);
-    virtual ~VertexDeclaration();
-private:
-};
-DEFINE_REF(VertexDeclaration)
-
-class SamplerState : public Gfx::SamplerState
+class Sampler : public Gfx::Sampler
 {
 public:
     VkSampler sampler;
 };
-DEFINE_REF(SamplerState)
+DEFINE_REF(Sampler)
 
 } // namespace Vulkan
 } // namespace Seele

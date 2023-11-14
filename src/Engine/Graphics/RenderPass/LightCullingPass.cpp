@@ -78,8 +78,8 @@ void LightCullingPass::endFrame()
 void LightCullingPass::publishOutputs() 
 {
     setupFrustums();
-    uint32_t viewportWidth = viewport->getSizeX();
-    uint32_t viewportHeight = viewport->getSizeY();
+    uint32_t viewportWidth = viewport->getWidth();
+    uint32_t viewportHeight = viewport->getHeight();
     glm::uvec3 numThreadGroups = glm::ceil(glm::vec3(viewportWidth / (float)BLOCK_SIZE, viewportHeight / (float)BLOCK_SIZE, 1));
     dispatchParams.numThreadGroups = numThreadGroups;
     dispatchParams.numThreads = numThreadGroups * glm::uvec3(BLOCK_SIZE, BLOCK_SIZE, 1);
@@ -184,8 +184,8 @@ void LightCullingPass::modifyRenderPassMacros(Map<const char*, const char*>&)
 
 void LightCullingPass::setupFrustums()
 {
-    uint32_t viewportWidth = viewport->getSizeX();
-    uint32_t viewportHeight = viewport->getSizeY();
+    uint32_t viewportWidth = viewport->getWidth();
+    uint32_t viewportHeight = viewport->getHeight();
 
     glm::uvec3 numThreads = glm::ceil(glm::vec3(viewportWidth / (float)BLOCK_SIZE, viewportHeight / (float)BLOCK_SIZE, 1));
     glm::uvec3 numThreadGroups = glm::ceil(glm::vec3(numThreads.x / (float)BLOCK_SIZE, numThreads.y / (float)BLOCK_SIZE, 1));

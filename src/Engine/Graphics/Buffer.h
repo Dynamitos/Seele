@@ -23,39 +23,6 @@ protected:
     virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
 };
 
-DECLARE_REF(UniformBuffer)
-class UniformBuffer : public Buffer
-{
-public:
-    UniformBuffer(QueueFamilyMapping mapping, const DataSource& sourceData);
-    virtual ~UniformBuffer();
-    // returns true if an update was performed, false if the old contents == new contents
-    virtual bool updateContents(const DataSource& sourceData);
-    bool isDataEquals(PUniformBuffer other)
-    {
-        if(other == nullptr)
-        {
-            return false;
-        }
-        if(contents.size() != other->contents.size())
-        {
-            return false;
-        }
-        if(std::memcmp(contents.data(), other->contents.data(), contents.size()) != 0)
-        {
-            return false;
-        }
-        return true;
-    }
-protected:
-    Array<uint8> contents;
-    // Inherited via QueueOwnedResource
-    virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
-    virtual void executePipelineBarrier(SeAccessFlags srcAccess, SePipelineStageFlags srcStage, 
-        SeAccessFlags dstAccess, SePipelineStageFlags dstStage) = 0;
-};
-DEFINE_REF(UniformBuffer)
-
 class VertexBuffer : public Buffer
 {
 public:
@@ -108,10 +75,42 @@ protected:
 };
 DEFINE_REF(IndexBuffer)
 
+DECLARE_REF(UniformBuffer)
+class UniformBuffer : public Buffer
+{
+public:
+    UniformBuffer(QueueFamilyMapping mapping, const DataSource& sourceData);
+    virtual ~UniformBuffer();
+    // returns true if an update was performed, false if the old contents == new contents
+    virtual bool updateContents(const DataSource& sourceData);
+    bool isDataEquals(PUniformBuffer other)
+    {
+        if (other == nullptr)
+        {
+            return false;
+        }
+        if (contents.size() != other->contents.size())
+        {
+            return false;
+        }
+        if (std::memcmp(contents.data(), other->contents.data(), contents.size()) != 0)
+        {
+            return false;
+        }
+        return true;
+    }
+protected:
+    Array<uint8> contents;
+    // Inherited via QueueOwnedResource
+    virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
+    virtual void executePipelineBarrier(SeAccessFlags srcAccess, SePipelineStageFlags srcStage,
+        SeAccessFlags dstAccess, SePipelineStageFlags dstStage) = 0;
+};
+DEFINE_REF(UniformBuffer)
 class ShaderBuffer : public Buffer
 {
 public:
-    ShaderBuffer(QueueFamilyMapping mapping, uint32 stride, uint32 numElements, const DataSource& bulkResourceData);
+    ShaderBuffer(QueueFamilyMapping mapping, uint32 numElements, const DataSource& bulkResourceData);
     virtual ~ShaderBuffer();
     virtual bool updateContents(const DataSource& sourceData);
     bool isDataEquals(ShaderBuffer* other)
@@ -134,10 +133,6 @@ public:
     {
         return numElements;
     }
-    constexpr uint32 getStride() const
-    {
-        return stride;
-    }
 protected:
     // Inherited via QueueOwnedResource
     virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
@@ -146,9 +141,7 @@ protected:
     
     Array<uint8> contents;
     uint32 numElements;
-    uint32 stride;
 };
 DEFINE_REF(ShaderBuffer)
-
 }
 }

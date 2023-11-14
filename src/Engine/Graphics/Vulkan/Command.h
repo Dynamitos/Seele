@@ -13,13 +13,13 @@ DECLARE_REF(Framebuffer)
 DECLARE_REF(RenderCommand)
 DECLARE_REF(ComputeCommand)
 DECLARE_REF(DescriptorSet)
-DECLARE_REF(CommandBufferManager)
-class CmdBuffer
+DECLARE_REF(CommandPool)
+class Command
 {
 public:
-	CmdBuffer(PGraphics graphics, VkCommandPool cmdPool, PCommandBufferManager manager);
-	virtual ~CmdBuffer();
-	inline VkCommandBuffer getHandle()
+	Command(PGraphics graphics, VkCommandPool cmdPool, PCommandBufferManager manager);
+	virtual ~Command();
+	constexpr VkCommandBuffer getHandle()
 	{
 		return handle;
 	}
@@ -30,18 +30,18 @@ public:
 	void endRenderPass();
 	void executeCommands(const Array<Gfx::PRenderCommand>& secondaryCommands);
 	void executeCommands(const Array<Gfx::PComputeCommand>& secondaryCommands);
-	void addWaitSemaphore(VkPipelineStageFlags stages, PSemaphore waitSemaphore);
-	void refreshFence();
+	void waitForSemaphore(VkPipelineStageFlags stages, PSemaphore waitSemaphore);
+	void checkFence();
 	void waitForCommand(uint32 timeToWait = 1000000u);
 	PFence getFence();
 	PCommandBufferManager getManager();
 	enum State
 	{
-		ReadyBegin,
-		InsideBegin,
-		RenderPassActive,
-		Ended,
-		Submitted,
+		Init,
+		Begin,
+		RenderPass,
+		End,
+		Submit,
 	};
 
 private:
@@ -51,7 +51,6 @@ private:
 	State state;
 	VkViewport currentViewport;
 	VkRect2D currentScissor;
-	std::mutex handleLock;
 	VkCommandBuffer handle;
 	VkCommandPool owner;
 	Array<PSemaphore> waitSemaphores;
@@ -60,10 +59,10 @@ private:
 	Array<PComputeCommand> executingComputes;
 	Array<PDescriptorSet> boundDescriptors;
 	friend class RenderCommand;
-	friend class CommandBufferManager;
+	friend class CommandPool;
 	friend class Queue;
 };
-DEFINE_REF(CmdBuffer)
+DEFINE_REF(Command)
 
 DECLARE_REF(GraphicsPipeline)
 DECLARE_REF(ComputePipeline)
@@ -72,7 +71,7 @@ class RenderCommand : public Gfx::RenderCommand
 public:
 	RenderCommand(PGraphics graphics, VkCommandPool cmdPool);
 	virtual ~RenderCommand();
-	inline VkCommandBuffer getHandle()
+	constexpr VkCommandBuffer getHandle()
 	{
 		return handle;
 	}
@@ -100,7 +99,7 @@ private:
 	std::thread::id threadId;
 	VkCommandBuffer handle;
 	VkCommandPool owner;
-	friend class CmdBuffer;
+	friend class Command;
 };
 DEFINE_REF(RenderCommand)
 
@@ -132,22 +131,22 @@ private:
 	std::thread::id threadId;
 	VkCommandBuffer handle;
 	VkCommandPool owner;
-	friend class CmdBuffer;
+	friend class Command;
 };
 DEFINE_REF(ComputeCommand)
-class CommandBufferManager
+class CommandPool
 {
 public:
-	CommandBufferManager(PGraphics graphics, PQueue queue);
-	virtual ~CommandBufferManager();
-	inline PQueue getQueue() const
+	CommandPool(PGraphics graphics, PQueue queue);
+	virtual ~CommandPool();
+	constexpr PQueue getQueue() const
 	{
 		return queue;
 	}
-	PCmdBuffer getCommands();
+	PCommand getCommands();
 	PRenderCommand createRenderCommand(PRenderPass renderPass, PFramebuffer framebuffer, const std::string& name);
 	PComputeCommand createComputeCommand(const std::string& name);
-	VkCommandPool getPoolHandle() const
+	constexpr VkCommandPool getHandle() const
 	{
 		return commandPool;
 	}
@@ -158,14 +157,11 @@ private:
 	VkCommandPool commandPool;
 	PQueue queue;
 	uint32 queueFamilyIndex;
-	PCmdBuffer activeCmdBuffer;
-	std::mutex allocatedBufferLock;
+	PCommand command;
 	Array<OCmdBuffer> allocatedBuffers;
-	std::mutex allocatedRenderLock;
-	std::mutex allocatedComputeLock;
 	Array<ORenderCommand> allocatedRenderCommands;
 	Array<OComputeCommand> allocatedComputeCommands;
 };
-DEFINE_REF(CommandBufferManager)
+DEFINE_REF(CommandPool)
 } // namespace Vulkan
 } // namespace Seele

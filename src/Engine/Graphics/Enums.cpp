@@ -3,7 +3,6 @@
 using namespace Seele;
 using namespace Seele::Gfx;
 
-
 FormatCompatibilityInfo Gfx::getFormatInfo(SeFormat format)
 {
     switch(format) {

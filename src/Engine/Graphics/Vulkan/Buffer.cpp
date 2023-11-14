@@ -32,23 +32,28 @@ Buffer::Buffer(PGraphics graphics, uint64 size, VkBufferUsageFlags usage, Gfx::Q
     }
     usage |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
     usage |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-    VkBufferCreateInfo info =
-        init::BufferCreateInfo(
-            usage,
-            size);
-    info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     uint32 queueFamilyIndex =  graphics->getFamilyMapping().getQueueTypeFamilyIndex(queueType);
-    info.pQueueFamilyIndices = &queueFamilyIndex;
-    info.queueFamilyIndexCount = 1;
-    VkBufferMemoryRequirementsInfo2 bufferReqInfo;
-    bufferReqInfo.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_REQUIREMENTS_INFO_2;
-    bufferReqInfo.pNext = nullptr;
-    VkMemoryDedicatedRequirements dedicatedRequirements;
-    dedicatedRequirements.sType = VK_STRUCTURE_TYPE_MEMORY_DEDICATED_REQUIREMENTS;
-    dedicatedRequirements.pNext = nullptr;
-    VkMemoryRequirements2 memRequirements;
-    memRequirements.sType = VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2;
-    memRequirements.pNext = &dedicatedRequirements;
+    VkBufferCreateInfo info = {
+        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+        .pNext = nullptr,
+        .size = size,
+        .usage = usage,
+        .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        .queueFamilyIndexCount = 1,
+        .pQueueFamilyIndices = &queueFamilyIndex,
+    };
+    VkBufferMemoryRequirementsInfo2 bufferReqInfo = {
+        .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_REQUIREMENTS_INFO_2,
+        .pNext = nullptr,
+    };
+    VkMemoryDedicatedRequirements dedicatedRequirements = {
+        .sType = VK_STRUCTURE_TYPE_MEMORY_DEDICATED_REQUIREMENTS,
+        .pNext = nullptr,
+    };
+    VkMemoryRequirements2 memRequirements = {
+        .sType = VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2,
+        .pNext = &dedicatedRequirements,
+    };
     for (uint32 i = 0; i < numBuffers; ++i)
     {
         VK_CHECK(vkCreateBuffer(graphics->getDevice(), &info, nullptr, &buffers[i].buffer));
@@ -158,12 +163,12 @@ void Buffer::executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlag
     vkCmdPipelineBarrier(commandBuffer->getHandle(), srcStage, dstStage, 0, 0, nullptr, numBuffers, dynamicBarriers, 0, nullptr);
 }
 
-void * Buffer::lock(bool writeOnly)
+void * Buffer::map(bool writeOnly)
 {
-    return lockRegion(0, size, writeOnly);
+    return mapRegion(0, size, writeOnly);
 }
 
-void * Buffer::lockRegion(uint64 regionOffset, uint64 regionSize, bool writeOnly)
+void * Buffer::mapRegion(uint64 regionOffset, uint64 regionSize, bool writeOnly)
 {
     void *data = nullptr;
 
@@ -189,8 +194,8 @@ void * Buffer::lockRegion(uint64 regionOffset, uint64 regionSize, bool writeOnly
     if (writeOnly)
     {
         //requestOwnershipTransfer(Gfx::QueueType::DEDICATED_TRANSFER);
-        OStagingBuffer stagingBuffer = graphics->getStagingManager()->allocateStagingBuffer(regionSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
-        data = stagingBuffer->getMappedPointer();
+        OStagingBuffer stagingBuffer = graphics->getStagingManager()->create(regionSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+        data = stagingBuffer->map();
         pending.stagingBuffer = std::move(stagingBuffer);
     }
     else
@@ -212,7 +217,7 @@ void * Buffer::lockRegion(uint64 regionOffset, uint64 regionSize, bool writeOnly
         barrier.size = size;
         vkCmdPipelineBarrier(handle, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 1, &barrier, 0, nullptr);
 
-        OStagingBuffer stagingBuffer = graphics->getStagingManager()->allocateStagingBuffer(size, VK_BUFFER_USAGE_TRANSFER_DST_BIT, true);
+        OStagingBuffer stagingBuffer = graphics->getStagingManager()->create(size, VK_BUFFER_USAGE_TRANSFER_DST_BIT, true);
 
         VkBufferCopy regions;
         regions.size = size;
@@ -223,9 +228,9 @@ void * Buffer::lockRegion(uint64 regionOffset, uint64 regionSize, bool writeOnly
 
         graphics->getQueueCommands(owner)->submitCommands();
         vkQueueWaitIdle(graphics->getQueueCommands(owner)->getQueue()->getHandle());
-        stagingBuffer->getMappedPointer(); // this maps the memory if not mapped already
-        stagingBuffer->flushMappedMemory();
-        data = stagingBuffer->getMappedPointer();
+        stagingBuffer->map(); // this maps the memory if not mapped already
+        stagingBuffer->flush();
+        data = stagingBuffer->map();
 
         pending.stagingBuffer = std::move(stagingBuffer);
 
@@ -236,13 +241,13 @@ void * Buffer::lockRegion(uint64 regionOffset, uint64 regionSize, bool writeOnly
     return data;
 }
 
-void Buffer::unlock()
+void Buffer::unmap()
 {
     auto found = pendingBuffers.find(this);
     if (found != pendingBuffers.end())
     {
         PendingBuffer& pending = found->second;
-        pending.stagingBuffer->flushMappedMemory();
+        pending.stagingBuffer->flush();
         if (pending.writeOnly)
         {
             PStagingBuffer stagingBuffer = pending.stagingBuffer;
@@ -257,7 +262,7 @@ void Buffer::unlock()
             graphics->getQueueCommands(owner)->submitCommands();
         }
         //requestOwnershipTransfer(pending.prevQueue);
-        graphics->getStagingManager()->releaseStagingBuffer(std::move(pending.stagingBuffer));
+        graphics->getStagingManager()->release(std::move(pending.stagingBuffer));
         pendingBuffers.erase(this);
     }
 }
@@ -269,19 +274,19 @@ UniformBuffer::UniformBuffer(PGraphics graphics, const UniformBufferCreateInfo &
 {
     if(createInfo.dynamic)
     {
-        dedicatedStagingBuffer = graphics->getStagingManager()->allocateStagingBuffer(createInfo.sourceData.size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+        dedicatedStagingBuffer = graphics->getStagingManager()->create(createInfo.sourceData.size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
     }
     if (createInfo.sourceData.data != nullptr)
     {
-        void *data = lock();
+        void *data = map();
         std::memcpy(data, createInfo.sourceData.data, createInfo.sourceData.size);
-        unlock();
+        unmap();
     }
 }
 
 UniformBuffer::~UniformBuffer()
 {
-    graphics->getStagingManager()->releaseStagingBuffer(std::move(dedicatedStagingBuffer));
+    graphics->getStagingManager()->release(std::move(dedicatedStagingBuffer));
 }
 
 bool UniformBuffer::updateContents(const DataSource &sourceData) 
@@ -291,25 +296,25 @@ bool UniformBuffer::updateContents(const DataSource &sourceData)
         // no update was performed, skip
         return false;
     }
-    void* data = lock();
+    void* data = map();
     std::memcpy(data, sourceData.data, sourceData.size);
-    unlock();
+    unmap();
     return true;
 }
-void* UniformBuffer::lock(bool writeOnly)
+void* UniformBuffer::map(bool writeOnly)
 {
     if(dedicatedStagingBuffer != nullptr)
     {
-        return dedicatedStagingBuffer->getMappedPointer();
+        return dedicatedStagingBuffer->map();
     }
-    return Vulkan::Buffer::lock(writeOnly);
+    return Vulkan::Buffer::map(writeOnly);
 }
 
-void UniformBuffer::unlock()
+void UniformBuffer::unmap()
 {
     if(dedicatedStagingBuffer != nullptr)
     {
-        dedicatedStagingBuffer->flushMappedMemory();
+        dedicatedStagingBuffer->flush();
         PCmdBuffer cmdBuffer = graphics->getQueueCommands(currentOwner)->getCommands();
         VkCommandBuffer cmdHandle = cmdBuffer->getHandle();
 
@@ -321,7 +326,7 @@ void UniformBuffer::unlock()
     }
     else
     {
-        Vulkan::Buffer::unlock();
+        Vulkan::Buffer::unmap();
     }
 }
 
@@ -358,19 +363,19 @@ ShaderBuffer::ShaderBuffer(PGraphics graphics, const ShaderBufferCreateInfo &sou
 {
     if(sourceData.dynamic)
     {
-        dedicatedStagingBuffer = graphics->getStagingManager()->allocateStagingBuffer(sourceData.sourceData.size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+        dedicatedStagingBuffer = graphics->getStagingManager()->create(sourceData.sourceData.size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
     }
     if (sourceData.sourceData.data != nullptr)
     {
-        void *data = lock();
+        void *data = map();
         std::memcpy(data, sourceData.sourceData.data, sourceData.sourceData.size);
-        unlock();
+        unmap();
     }
 }
 
 ShaderBuffer::~ShaderBuffer()
 {
-    graphics->getStagingManager()->releaseStagingBuffer(std::move(dedicatedStagingBuffer));
+    graphics->getStagingManager()->release(std::move(dedicatedStagingBuffer));
 }
 
 bool ShaderBuffer::updateContents(const DataSource &sourceData) 
@@ -378,25 +383,25 @@ bool ShaderBuffer::updateContents(const DataSource &sourceData)
     assert(sourceData.size <= getSize());
     Gfx::ShaderBuffer::updateContents(sourceData);
     //We always want to update, as the contents could be different on the GPU
-    void* data = lock();
+    void* data = map();
     std::memcpy(data, sourceData.data, sourceData.size);
-    unlock();
+    unmap();
     return true;
 }
-void* ShaderBuffer::lock(bool writeOnly)
+void* ShaderBuffer::map(bool writeOnly)
 {
     if(dedicatedStagingBuffer != nullptr)
     {
-        return dedicatedStagingBuffer->getMappedPointer();
+        return dedicatedStagingBuffer->map();
     }
-    return Vulkan::Buffer::lock(writeOnly);
+    return Vulkan::Buffer::map(writeOnly);
 }
 
-void ShaderBuffer::unlock()
+void ShaderBuffer::unmap()
 {
     if(dedicatedStagingBuffer != nullptr)
     {
-        dedicatedStagingBuffer->flushMappedMemory();
+        dedicatedStagingBuffer->flush();
         PCmdBuffer cmdBuffer = graphics->getQueueCommands(currentOwner)->getCommands();
         VkCommandBuffer cmdHandle = cmdBuffer->getHandle();
 
@@ -408,7 +413,7 @@ void ShaderBuffer::unlock()
     }
     else
     {
-        Vulkan::Buffer::unlock();
+        Vulkan::Buffer::unmap();
     }
 }
 
@@ -444,9 +449,9 @@ VertexBuffer::VertexBuffer(PGraphics graphics, const VertexBufferCreateInfo &sou
 {
     if (sourceData.sourceData.data != nullptr)
     {
-        void *data = lock();
+        void *data = map();
         std::memcpy(data, sourceData.sourceData.data, sourceData.sourceData.size);
-        unlock();
+        unmap();
     }
 }
 
@@ -456,17 +461,17 @@ VertexBuffer::~VertexBuffer()
 
 void VertexBuffer::updateRegion(DataSource update)
 {
-    void* data = lockRegion(update.offset, update.size);
+    void* data = mapRegion(update.offset, update.size);
     std::memcpy(data, update.data, update.size);
-    unlock();
+    unmap();
 }
 
 void VertexBuffer::download(Array<uint8>& buffer)
 {
-    void* data = lock(false);
+    void* data = map(false);
     buffer.resize(size);
     std::memcpy(buffer.data(), data, size);
-    unlock();
+    unmap();
 }
 
 void VertexBuffer::requestOwnershipTransfer(Gfx::QueueType newOwner)
@@ -501,9 +506,9 @@ IndexBuffer::IndexBuffer(PGraphics graphics, const IndexBufferCreateInfo &source
 {
     if (sourceData.sourceData.data != nullptr)
     {
-        void *data = lock();
+        void *data = map();
         std::memcpy(data, sourceData.sourceData.data, sourceData.sourceData.size);
-        unlock();
+        unmap();
     }
 }
 
@@ -513,10 +518,10 @@ IndexBuffer::~IndexBuffer()
 
 void IndexBuffer::download(Array<uint8>& buffer)
 {
-    void* data = lock(false);
+    void* data = map(false);
     buffer.resize(size);
     std::memcpy(buffer.data(), data, size);
-    unlock();
+    unmap();
 }
 
 void IndexBuffer::requestOwnershipTransfer(Gfx::QueueType newOwner)

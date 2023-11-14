@@ -22,14 +22,16 @@ DECLARE_REF(DescriptorSet)
 DECLARE_REF(Graphics)
 DECLARE_REF(VertexBuffer)
 DECLARE_REF(IndexBuffer)
-class SamplerState
+DECLARE_REF(GraphicsPipeline)
+DECLARE_REF(ComputePipeline)
+class Sampler
 {
 public:
-    virtual ~SamplerState()
+    virtual ~Sampler()
     {
     }
 };
-DEFINE_REF(SamplerState)
+DEFINE_REF(Sampler)
 
 struct QueueFamilyMapping
 {
@@ -79,73 +81,6 @@ protected:
     QueueFamilyMapping mapping;
 };
 DEFINE_REF(QueueOwnedResource)
-
-class VertexDeclaration
-{
-public:
-    VertexDeclaration();
-    virtual ~VertexDeclaration();
-
-    static PVertexDeclaration createDeclaration(PGraphics graphics, const Array<VertexElement>& elementList);
-private:
-};
-DEFINE_REF(VertexDeclaration)
-class GraphicsPipeline
-{
-public:
-    GraphicsPipeline(OPipelineLayout layout) : layout(std::move(layout)) {}
-    virtual ~GraphicsPipeline(){}
-    PPipelineLayout getPipelineLayout() const { return layout; }
-protected:
-    OPipelineLayout layout;
-};
-DEFINE_REF(GraphicsPipeline)
-
-class ComputePipeline
-{
-public:
-    ComputePipeline(OPipelineLayout layout) : layout(std::move(layout)) {}
-    virtual ~ComputePipeline(){}
-    PPipelineLayout getPipelineLayout() const { return layout; }
-protected:
-    OPipelineLayout layout;
-};
-DEFINE_REF(ComputePipeline)
-
-DECLARE_REF(Viewport)
-class RenderCommand
-{
-public:
-    RenderCommand();
-    virtual ~RenderCommand();
-    virtual bool isReady() = 0;
-    virtual void setViewport(Gfx::PViewport viewport) = 0;
-    virtual void bindPipeline(Gfx::PGraphicsPipeline pipeline) = 0;
-    virtual void bindDescriptor(Gfx::PDescriptorSet set) = 0;
-    virtual void bindDescriptor(const Array<Gfx::PDescriptorSet>& sets) = 0;
-    virtual void bindVertexBuffer(const Array<PVertexBuffer>& buffer) = 0;
-    virtual void bindIndexBuffer(Gfx::PIndexBuffer indexBuffer) = 0;
-    virtual void pushConstants(Gfx::PPipelineLayout layout, Gfx::SeShaderStageFlags stage, uint32 offset, uint32 size, const void* data) = 0;
-    virtual void draw(uint32 vertexCount, uint32 instanceCount, int32 firstVertex, uint32 firstInstance) = 0;
-	  virtual void drawIndexed(uint32 indexCount, uint32 instanceCount, int32 firstIndex, uint32 vertexOffset, uint32 firstInstance) = 0;
-    virtual void dispatch(uint32 groupX, uint32 groupY, uint32 groupZ) = 0;
-    std::string name;
-};
-DEFINE_REF(RenderCommand)
-class ComputeCommand
-{
-public:
-    ComputeCommand();
-    virtual ~ComputeCommand();
-    virtual bool isReady() = 0;
-    virtual void bindPipeline(Gfx::PComputePipeline pipeline) = 0;
-    virtual void bindDescriptor(Gfx::PDescriptorSet set) = 0;
-    virtual void bindDescriptor(const Array<Gfx::PDescriptorSet>& sets) = 0;
-    virtual void pushConstants(Gfx::PPipelineLayout layout, Gfx::SeShaderStageFlags stage, uint32 offset, uint32 size, const void* data) = 0;
-    virtual void dispatch(uint32 threadX, uint32 threadY, uint32 threadZ) = 0;
-    std::string name;
-};
-DEFINE_REF(ComputeCommand)
 
 } // namespace Gfx
 } // namespace Seele

@@ -25,9 +25,9 @@ public:
     {
         currentBuffer = (currentBuffer + 1) % numBuffers;
     }
-    virtual void *lock(bool writeOnly = true);
-    virtual void *lockRegion(uint64 regionOffset, uint64 regionSize, bool writeOnly = true);
-    virtual void unlock();
+    virtual void *map(bool writeOnly = true);
+    virtual void *mapRegion(uint64 regionOffset, uint64 regionSize, bool writeOnly = true);
+    virtual void unmap();
 
 protected:
     struct BufferAllocation
@@ -61,8 +61,8 @@ public:
     virtual ~UniformBuffer();
     virtual bool updateContents(const DataSource &sourceData);
     
-    virtual void* lock(bool writeOnly = true) override;
-    virtual void unlock() override;
+    virtual void* map(bool writeOnly = true) override;
+    virtual void unmap() override;
 protected:
     // Inherited via Vulkan::Buffer
     virtual VkAccessFlags getSourceAccessMask();
@@ -85,8 +85,8 @@ public:
     virtual ~ShaderBuffer();
     virtual bool updateContents(const DataSource &sourceData);
 
-    virtual void* lock(bool writeOnly = true) override;
-    virtual void unlock() override;
+    virtual void* map(bool writeOnly = true) override;
+    virtual void unmap() override;
 protected:
     // Inherited via Vulkan::Buffer
     virtual VkAccessFlags getSourceAccessMask();

@@ -140,6 +140,5 @@ void ShaderCompiler::createShaders(ShaderPermutation permutation)
 		createInfo.entryPoint = "fragmentMain";
 		collection.fragmentShader = graphics->createFragmentShader(createInfo);
 	}
-	collection.vertexDeclaration = graphics->createVertexDeclaration(Array<VertexElement>());
 	shaders[perm] = std::move(collection);
 }

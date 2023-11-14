@@ -5,7 +5,7 @@ namespace Seele
 {
 namespace Vulkan
 {
-DECLARE_REF(CmdBuffer)
+DECLARE_REF(Command)
 DECLARE_REF(Graphics)
 class Queue
 {

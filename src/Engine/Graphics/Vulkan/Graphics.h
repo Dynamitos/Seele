@@ -9,15 +9,9 @@ namespace Vulkan
 DECLARE_REF(Allocator)
 DECLARE_REF(StagingManager)
 DECLARE_REF(DestructionManager)
-DECLARE_REF(CommandBufferManager)
+DECLARE_REF(CommandPool)
 DECLARE_REF(Queue)
-DECLARE_REF(RenderPass)
-DECLARE_REF(Framebuffer)
-DECLARE_REF(RenderCommand)
 DECLARE_REF(PipelineCache)
-DECLARE_REF(Window)
-DECLARE_REF(RenderTargetLayout)
-DECLARE_REF(Viewport)
 class Graphics : public Gfx::Graphics
 {
 public:
@@ -60,7 +54,6 @@ public:
     virtual Gfx::PRenderCommand createRenderCommand(const std::string& name) override;
     virtual Gfx::PComputeCommand createComputeCommand(const std::string& name) override;
     
-    virtual Gfx::OVertexDeclaration createVertexDeclaration(const Array<Gfx::VertexElement>& element) override;
     virtual Gfx::OVertexShader createVertexShader(const ShaderCreateInfo& createInfo) override;
     virtual Gfx::OFragmentShader createFragmentShader(const ShaderCreateInfo& createInfo) override;
     virtual Gfx::OComputeShader createComputeShader(const ShaderCreateInfo& createInfo) override;
@@ -69,7 +62,7 @@ public:
     virtual Gfx::PGraphicsPipeline createGraphicsPipeline(Gfx::LegacyPipelineCreateInfo createInfo) override;
     virtual Gfx::PGraphicsPipeline createGraphicsPipeline(Gfx::MeshPipelineCreateInfo createInfo) override;
     virtual Gfx::PComputePipeline createComputePipeline(Gfx::ComputePipelineCreateInfo createInfo) override;
-    virtual Gfx::OSamplerState createSamplerState(const SamplerCreateInfo& createInfo) override;
+    virtual Gfx::OSampler createSamplerState(const SamplerCreateInfo& createInfo) override;
 
     virtual Gfx::ODescriptorLayout createDescriptorLayout(const std::string& name = "") override;
     virtual Gfx::OPipelineLayout createPipelineLayout(Gfx::PPipelineLayout baseLayout = nullptr) override;
@@ -93,9 +86,6 @@ protected:
     OQueue transferQueue;
     OQueue dedicatedTransferQueue;
     OPipelineCache pipelineCache;
-    std::mutex renderPassLock;
-    PRenderPass activeRenderPass;
-    PFramebuffer activeFramebuffer;
     thread_local static OCommandBufferManager graphicsCommands;
     thread_local static OCommandBufferManager computeCommands;
     thread_local static OCommandBufferManager transferCommands;
@@ -103,7 +93,6 @@ protected:
     VkPhysicalDeviceProperties props;
     VkPhysicalDeviceFeatures features;
     VkDebugReportCallbackEXT callback;
-    std::mutex viewportLock;
     Array<PViewport> viewports;
     std::mutex allocatedFrameBufferLock;
     Map<uint32, OFramebuffer> allocatedFramebuffers;

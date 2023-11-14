@@ -153,8 +153,8 @@ void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PShaderBuffer shaderBuff
 
 void DescriptorSet::updateSampler(uint32_t binding, Gfx::PSamplerState samplerState)
 {
-    PSamplerState vulkanSampler = samplerState.cast<SamplerState>();
-    SamplerState* cachedSampler = reinterpret_cast<SamplerState*>(cachedData[binding]);
+    PSamplerState vulkanSampler = samplerState.cast<Sampler>();
+    Sampler* cachedSampler = reinterpret_cast<Sampler*>(cachedData[binding]);
     if(vulkanSampler.getHandle() == cachedSampler)
     {
         return;
@@ -188,7 +188,7 @@ void DescriptorSet::updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::
             cast(vulkanTexture->getLayout()));
     if (samplerState != nullptr)
     {
-        PSamplerState vulkanSampler = samplerState.cast<SamplerState>();
+        PSamplerState vulkanSampler = samplerState.cast<Sampler>();
         imageInfo.sampler = vulkanSampler->sampler;
     }
     imageInfos.add(imageInfo);

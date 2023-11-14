@@ -144,8 +144,8 @@ void DepthPrepass::publishOutputs()
     TextureCreateInfo depthBufferInfo;
     // If we render to a part of an image, the depth buffer itself must
     // still match the size of the whole image or their coordinate systems go out of sync
-    depthBufferInfo.width = viewport->getOwner()->getSizeX();
-    depthBufferInfo.height = viewport->getOwner()->getSizeY();
+    depthBufferInfo.width = viewport->getOwner()->getWidth();
+    depthBufferInfo.height = viewport->getOwner()->getHeight();
     depthBufferInfo.format = Gfx::SE_FORMAT_D32_SFLOAT;
     depthBufferInfo.usage = Gfx::SE_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
     depthBuffer = graphics->createTexture2D(depthBufferInfo);

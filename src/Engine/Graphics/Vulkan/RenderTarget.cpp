@@ -195,7 +195,7 @@ void Window::advanceBackBuffer()
         &range);
 
     backBufferImages[currentImageIndex]->changeLayout(Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-    graphics->getGraphicsCommands()->getCommands()->addWaitSemaphore(VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, imageAcquiredSemaphore);
+    graphics->getGraphicsCommands()->getCommands()->waitForSemaphore(VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, imageAcquiredSemaphore);
     graphics->getGraphicsCommands()->submitCommands();
 }
 
@@ -264,9 +264,10 @@ void Window::createSwapchain()
         throw new std::logic_error("Trying to buffer more than the maximum number of frames");
     }
 
-    VkExtent2D extent;
-    extent.width = getSizeX();
-    extent.height = getSizeY();
+    VkExtent2D extent = {
+        .width = getWidth(),
+        .height = getHeight(),
+    };
     VkSwapchainCreateInfoKHR swapchainInfo =
         init::SwapchainCreateInfo(
             surface,
@@ -289,8 +290,8 @@ void Window::createSwapchain()
 
 
     TextureCreateInfo backBufferCreateInfo;
-    backBufferCreateInfo.width = getSizeX();
-    backBufferCreateInfo.height = getSizeY();
+    backBufferCreateInfo.width = getWidth();
+    backBufferCreateInfo.height = getHeight();
     backBufferCreateInfo.usage = Gfx::SE_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
     backBufferCreateInfo.sourceData.owner = Gfx::QueueType::GRAPHICS;
     backBufferCreateInfo.format = cast(surfaceFormat.format);
@@ -304,8 +305,8 @@ void Window::createSwapchain()
         std::memset(&clearColor, 0, sizeof(VkClearColorValue));
         backBufferImages[i]->changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
         VkImageSubresourceRange range = init::ImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT);
-        PCmdBuffer cmdBuffer = graphics->getGraphicsCommands()->getCommands();
-        vkCmdClearColorImage(cmdBuffer->getHandle(), backBufferImages[i]->getHandle(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clearColor, 1, &range);
+        PCommand command = graphics->getGraphicsCommands()->getCommands();
+        vkCmdClearColorImage(command->getHandle(), backBufferImages[i]->getHandle(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clearColor, 1, &range);
         backBufferImages[i]->changeLayout(Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
     }
     graphics->getGraphicsCommands()->submitCommands();

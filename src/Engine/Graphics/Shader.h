@@ -124,7 +124,6 @@ struct PermutationId
 };
 struct ShaderCollection
 {
-    OVertexDeclaration vertexDeclaration;
     OVertexShader vertexShader;
     OTaskShader taskShader;
     OMeshShader meshShader;

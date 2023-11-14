@@ -92,7 +92,7 @@ void SkyboxRenderPass::beginFrame(const Component::Camera& cam)
     viewParams.viewMatrix = cam.getViewMatrix();
     viewParams.projectionMatrix = viewport->getProjectionMatrix();
     viewParams.cameraPosition = Vector4(cam.getCameraPosition(), 1);
-    viewParams.screenDimensions = Vector2(static_cast<float>(viewport->getSizeX()), static_cast<float>(viewport->getSizeY()));
+    viewParams.screenDimensions = Vector2(static_cast<float>(viewport->getWidth()), static_cast<float>(viewport->getHeight()));
     uniformUpdate.size = sizeof(ViewParameter);
     uniformUpdate.data = (uint8*)&viewParams;
     viewParamsBuffer->updateContents(uniformUpdate);

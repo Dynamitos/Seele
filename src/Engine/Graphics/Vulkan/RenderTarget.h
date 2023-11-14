@@ -8,7 +8,6 @@ namespace Seele
 {
 namespace Vulkan
 {
-
 class Window : public Gfx::Window
 {
 public:

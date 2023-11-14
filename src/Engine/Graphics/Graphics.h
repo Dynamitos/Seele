@@ -1,8 +1,8 @@
 #pragma once
 #include "MinimalEngine.h"
+#include "Initializer.h"
 #include "Resources.h"
 #include "Containers/Array.h"
-#include "Shader.h"
 
 namespace Seele
 {
@@ -27,6 +27,8 @@ DECLARE_REF(VertexBuffer)
 DECLARE_REF(IndexBuffer)
 DECLARE_REF(UniformBuffer)
 DECLARE_REF(PipelineLayout)
+DECLARE_REF(GraphicsPipeline)
+DECLARE_REF(ComputePipeline)
 class Graphics
 {
 public:
@@ -65,7 +67,6 @@ public:
     virtual PRenderCommand createRenderCommand(const std::string& name = "") = 0;
     virtual PComputeCommand createComputeCommand(const std::string& name = "") = 0;
     
-    virtual OVertexDeclaration createVertexDeclaration(const Array<VertexElement>& element) = 0;
     virtual OVertexShader createVertexShader(const ShaderCreateInfo& createInfo) = 0;
     virtual OFragmentShader createFragmentShader(const ShaderCreateInfo& createInfo) = 0;
     virtual OComputeShader createComputeShader(const ShaderCreateInfo& createInfo) = 0;
@@ -74,12 +75,11 @@ public:
     virtual PGraphicsPipeline createGraphicsPipeline(LegacyPipelineCreateInfo createInfo) = 0;
     virtual PGraphicsPipeline createGraphicsPipeline(MeshPipelineCreateInfo createInfo) = 0;
     virtual PComputePipeline createComputePipeline(ComputePipelineCreateInfo createInfo) = 0;
-    virtual OSamplerState createSamplerState(const SamplerCreateInfo& createInfo) = 0;
+    virtual OSampler createSamplerState(const SamplerCreateInfo& createInfo) = 0;
 
   	virtual ODescriptorLayout createDescriptorLayout(const std::string& name = "") = 0;
   	virtual OPipelineLayout createPipelineLayout(PPipelineLayout baseLayout = nullptr) = 0;
 
-  	virtual void copyTexture(Gfx::PTexture srcTexture, Gfx::PTexture dstTexture) = 0;
     bool supportMeshShading() const { return meshShadingEnabled; }
 protected:
     QueueFamilyMapping queueMapping;

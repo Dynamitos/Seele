@@ -120,7 +120,7 @@ private:
     bool currentlyBound;
     bool currentlyInUse;
     friend class DescriptorAllocator;
-    friend class CmdBuffer;
+    friend class Command;
     friend class RenderCommand;
     friend class ComputeCommand;
 };

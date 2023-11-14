@@ -12,8 +12,8 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::ORenderTargetLayout _layout, Gfx
     : Gfx::RenderPass(std::move(_layout))
     , graphics(graphics)
 {
-    renderArea.extent.width = viewport->getSizeX();
-    renderArea.extent.height = viewport->getSizeY();
+    renderArea.extent.width = viewport->getWidth();
+    renderArea.extent.height = viewport->getHeight();
     renderArea.offset.x = viewport->getOffsetX();
     renderArea.offset.y = viewport->getOffsetY();
     subpassContents = VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS;

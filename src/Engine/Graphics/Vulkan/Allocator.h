@@ -3,6 +3,7 @@
 #include "Enums.h"
 #include "Containers/Map.h"
 #include "Containers/Array.h"
+#include "Graphics/Resources.h"
 #include <mutex>
 
 namespace Seele
@@ -31,9 +32,9 @@ public:
 
 	bool isReadable() const;
 
-	void *getMappedPointer();
+	void *map();
 	void flushMemory();
-	void invalidateMemory();
+	void invalidate();
 
 private:
 	PAllocation owner;
@@ -58,7 +59,7 @@ public:
 		return allocatedMemory;
 	}
 	
-	constexpr void* getMappedPointer()
+	constexpr void* map()
 	{
 		if (!canMap)
 		{
@@ -72,13 +73,8 @@ public:
 		return mappedPointer;
 	}
 
-	constexpr bool isReadable() const
-	{
-		return readable;
-	}
-
 	void flushMemory();
-	void invalidateMemory();
+	void invalidate();
 
 private:
 	VkDevice device;
@@ -92,7 +88,6 @@ private:
 	uint8 isDedicated : 1;
 	uint8 canMap : 1;
 	uint8 isMapped : 1;
-	uint8 readable : 1;
 	VkMemoryPropertyFlags properties;
 	uint8 memoryTypeIndex;
 	friend class Allocator;
@@ -129,16 +124,13 @@ public:
 
 	void free(PAllocation allocation);
 private:
-	enum
-	{
-		MemoryBlockSize = 16 * 1024 * 1024 // 16MB
-	};
+	static constexpr VkDeviceSize DEFAULT_ALLOCATION = 16 * 1024 * 1024; // 16MB
 	struct HeapInfo
 	{
 		VkDeviceSize maxSize = 0;
 		VkDeviceSize inUse = 0;
 		Array<OAllocation> allocations;
-		HeapInfo() {}
+		HeapInfo() = default;
 		HeapInfo(const HeapInfo& other) = delete;
 		HeapInfo(HeapInfo&& other) = default;
 		HeapInfo& operator=(const HeapInfo& other) = delete;
@@ -150,38 +142,32 @@ private:
 	VkPhysicalDeviceMemoryProperties memProperties;
 };
 DEFINE_REF(Allocator)
-DECLARE_REF(StagingManager)
-class StagingBuffer
+class StagingBuffer : public Gfx::QueueOwnedResource
 {
 public:
-	StagingBuffer(OSubAllocation allocation, VkBuffer buffer, VkDeviceSize size, VkBufferUsageFlags usage, uint8 readable);
+	StagingBuffer(PGraphics graphics, OSubAllocation allocation, VkBuffer buffer, VkDeviceSize size);
 	~StagingBuffer();
-	void* getMappedPointer();
-	void flushMappedMemory();
-	void invalidateMemory();
+	void* map();
+	void flush();
+	void invalidate();
 	constexpr VkBuffer getHandle() const
 	{
 		return buffer;
 	}
-	VkDeviceMemory getMemoryHandle() const;
+	VkDeviceMemory getMemory() const;
 	VkDeviceSize getOffset() const;
-	uint64 getSize() const;
-	constexpr bool isReadable() const
+	constexpr uint64 getSize() const
 	{
-		return readable;
+		return size;
 	}
-
-	constexpr VkBufferUsageFlags getUsage() const
-	{
-		return usage;
-	}
-
 private:
+	virtual void executeOwnershipBarrier(Gfx::QueueType newOwner) override;
+	virtual void executePipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage,
+		Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage) override;
 	OSubAllocation allocation;
+	PGraphics graphics;
 	VkBuffer buffer;
 	VkDeviceSize size;
-	VkBufferUsageFlags usage;
-	uint8 readable;
 };
 DEFINE_REF(StagingBuffer)
 
@@ -190,15 +176,11 @@ class StagingManager
 public:
 	StagingManager(PGraphics graphics, PAllocator allocator);
 	~StagingManager();
-	OStagingBuffer allocateStagingBuffer(uint64 size, VkBufferUsageFlags usageFlags = VK_BUFFER_USAGE_TRANSFER_SRC_BIT, bool bCPURead = false);
-	void releaseStagingBuffer(OStagingBuffer buffer);
-	void clearPending();
+	OStagingBuffer create(uint64 size);
 
 private:
 	PGraphics graphics;
 	PAllocator allocator;
-	Array<OStagingBuffer> freeBuffers;
-	Array<PStagingBuffer> activeBuffers;
 };
 DEFINE_REF(StagingManager)
 } // namespace Vulkan

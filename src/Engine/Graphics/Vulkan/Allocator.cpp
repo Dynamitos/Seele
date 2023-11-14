@@ -1,6 +1,7 @@
 #include "Allocator.h"
 #include "Graphics.h"
 #include "Initializer.h"
+#include "Resources.h"
 
 using namespace Seele::Vulkan;
 
@@ -28,9 +29,9 @@ bool SubAllocation::isReadable() const
     return owner->isReadable();
 }
 
-void *SubAllocation::getMappedPointer()
+void *SubAllocation::map()
 {
-    return (uint8 *)owner->getMappedPointer() + alignedOffset;
+    return (uint8 *)owner->map() + alignedOffset;
 }
 
 void SubAllocation::flushMemory()
@@ -38,9 +39,9 @@ void SubAllocation::flushMemory()
     owner->flushMemory();
 }
 
-void SubAllocation::invalidateMemory()
+void SubAllocation::invalidate()
 {
-    owner->invalidateMemory();
+    owner->invalidate();
 }
 
 Allocation::Allocation(PGraphics graphics, PAllocator allocator, VkDeviceSize size, uint8 memoryTypeIndex,
@@ -49,23 +50,22 @@ Allocation::Allocation(PGraphics graphics, PAllocator allocator, VkDeviceSize si
     , allocator(allocator)
     , bytesAllocated(0)
     , bytesUsed(0)
-    , readable(properties & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
+    , canMap((properties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) == VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT),
+    , isMapped(false),
     , properties(properties)
     , memoryTypeIndex(memoryTypeIndex)
 {
-    VkMemoryAllocateInfo allocInfo =
-        init::MemoryAllocateInfo();
-    allocInfo.allocationSize = size;
-    allocInfo.memoryTypeIndex = memoryTypeIndex;
+    VkMemoryAllocateInfo allocInfo = {
+        .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+        .pNext = dedicatedInfo,
+        .allocationSize = size,
+        .memoryTypeIndex = memoryTypeIndex,
+    };
     isDedicated = dedicatedInfo != nullptr;
-    allocInfo.pNext = dedicatedInfo;
-    //std::cout << "New allocation" << std::endl;
     VK_CHECK(vkAllocateMemory(device, &allocInfo, nullptr, &allocatedMemory));
     bytesAllocated = size;
     freeRanges[0] = size;
 
-    canMap = (properties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) == VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
-    isMapped = false;
 }
 
 Allocation::~Allocation()
@@ -97,24 +97,19 @@ OSubAllocation Allocation::getSuballocation(VkDeviceSize requestedSize, VkDevice
         alignedOffset /= alignment;
         alignedOffset *= alignment;
         VkDeviceSize allocatedSize = requestedSize + (alignedOffset - lower);
-        if (size == allocatedSize)
-        {
-            OSubAllocation alloc = new SubAllocation(this, requestedSize, lower, allocatedSize, alignedOffset);
-            activeAllocations.add(alloc);
-            freeRanges.erase(lower);
-            bytesUsed += allocatedSize;
-            return alloc;
-        }
-        else if (allocatedSize < size)
+        if (size <= allocatedSize)
         {
             VkDeviceSize newSize = size - allocatedSize;
             VkDeviceSize newLower = lower + allocatedSize;
-            OSubAllocation subAlloc = new SubAllocation(this, requestedSize, lower, allocatedSize, alignedOffset);
-            activeAllocations.add(subAlloc);
+            OSubAllocation alloc = new SubAllocation(this, requestedSize, lower, allocatedSize, alignedOffset);
+            activeAllocations.add(alloc);
             freeRanges.erase(lower);
-            freeRanges[newLower] = newSize;
+            if (newSize > 0)
+            {
+                freeRanges[newLower] = newSize;
+            }
             bytesUsed += allocatedSize;
-            return subAlloc;
+            return alloc;
         }
     }
     return nullptr;
@@ -161,7 +156,7 @@ void Allocation::flushMemory()
     vkFlushMappedMemoryRanges(device, 1, &range);
 }
 
-void Allocation::invalidateMemory()
+void Allocation::invalidate()
 {
     VkMappedMemoryRange range = {
         .sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE,
@@ -232,7 +227,7 @@ OSubAllocation Allocator::allocate(const VkMemoryRequirements2 &memRequirements2
     }
 
     // no suitable allocations found, allocate new block
-    OAllocation newAllocation = new Allocation(graphics, this, (requirements.size > MemoryBlockSize) ? requirements.size : (VkDeviceSize)MemoryBlockSize, memoryTypeIndex, properties, nullptr);
+    OAllocation newAllocation = new Allocation(graphics, this, (requirements.size > DEFAULT_ALLOCATION) ? requirements.size : DEFAULT_ALLOCATION, memoryTypeIndex, properties, nullptr);
     heaps[heapIndex].inUse += newAllocation->bytesAllocated;
     //std::cout << "Heap " << heapIndex << ": " << (float)heaps[heapIndex].inUse / heaps[heapIndex].maxSize << "%" << std::endl;     
     heaps[heapIndex].allocations.add(std::move(newAllocation));
@@ -269,37 +264,37 @@ uint32 Allocator::findMemoryType(uint32 typeFilter, VkMemoryPropertyFlags proper
     throw std::runtime_error("error finding memory");
 }
 
-StagingBuffer::StagingBuffer(OSubAllocation allocation, VkBuffer buffer, VkDeviceSize size, VkBufferUsageFlags usage, uint8 readable)
-    : allocation(std::move(allocation))
+StagingBuffer::StagingBuffer(PGraphics graphics, OSubAllocation allocation, VkBuffer buffer, VkDeviceSize size)
+    : QueueOwnedResource(graphics->getFamilyMapping(), Gfx::QueueType::DEDICATED_TRANSFER)
+    , graphics(graphics)
+    , allocation(std::move(allocation))
     , buffer(buffer)
     , size(size)
-    , usage(usage)
-    , readable(readable)
 {
 }
 
 StagingBuffer::~StagingBuffer()
 {
-    assert(allocation == nullptr);
-    // buffer went out of scope without being cleaned up
+    graphics->getDestructionManager()->queueBuffer(
+        graphics->getDedicatedTransferCommands()->getCommands(), buffer);
 }
 
-void* StagingBuffer::getMappedPointer()
+void* StagingBuffer::map()
 {
-    return allocation->getMappedPointer();
+    return allocation->map();
 }
 
-void StagingBuffer::flushMappedMemory()
+void StagingBuffer::flush()
 {
     allocation->flushMemory();
 }
 
-void StagingBuffer::invalidateMemory()
+void StagingBuffer::invalidate()
 {
-    allocation->invalidateMemory();
+    allocation->invalidate();
 }
 
-VkDeviceMemory StagingBuffer::getMemoryHandle() const
+VkDeviceMemory StagingBuffer::getMemory() const
 {
     return allocation->getHandle();
 }
@@ -309,9 +304,14 @@ VkDeviceSize StagingBuffer::getOffset() const
     return allocation->getOffset();
 }
 
-uint64 StagingBuffer::getSize() const
+void StagingBuffer::executeOwnershipBarrier(Gfx::QueueType newOwner)
 {
-    return size;
+    assert(false);
+}
+void StagingBuffer::executePipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage,
+    Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage)
+{
+    assert(false);
 }
 
 StagingManager::StagingManager(PGraphics graphics, PAllocator allocator)
@@ -323,34 +323,23 @@ StagingManager::~StagingManager()
 {
 }
 
-void StagingManager::clearPending()
+OStagingBuffer StagingManager::create(uint64 size)
 {
-}
-
-OStagingBuffer StagingManager::allocateStagingBuffer(uint64 size, VkBufferUsageFlags usage, bool readable)
-{
-    for (auto it = freeBuffers.begin(); it != freeBuffers.end(); ++it)
-    {
-        auto& freeBuffer = *it;
-        if (freeBuffer->getSize() == size && freeBuffer->isReadable() == readable && freeBuffer->getUsage()  == usage)
-        {
-            //std::cout << "Reusing staging buffer" << std::endl;
-            activeBuffers.add(freeBuffer);
-            OStagingBuffer owner = std::move(freeBuffer);
-            freeBuffers.remove(it, false);
-            return std::move(owner);
-        }
-    }
     //std::cout << "Creating new stagingbuffer" << std::endl;
-    VkBuffer buffer;
-    VkBufferCreateInfo stagingBufferCreateInfo = init::BufferCreateInfo(usage, size);
-    stagingBufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     uint32 queueIndex = graphics->getFamilyMapping().getQueueTypeFamilyIndex(Gfx::QueueType::DEDICATED_TRANSFER);
-    stagingBufferCreateInfo.queueFamilyIndexCount = 1;
-    stagingBufferCreateInfo.pQueueFamilyIndices = &queueIndex;
-    VkDevice vulkanDevice = graphics->getDevice();
-
-    VK_CHECK(vkCreateBuffer(vulkanDevice, &stagingBufferCreateInfo, nullptr, &buffer));
+    VkBufferCreateInfo stagingBufferCreateInfo = {
+        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .size = size,
+        .usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
+        .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        .queueFamilyIndexCount = 1,
+        .pQueueFamilyIndices = &queueIndex,
+    };
+    
+    VkBuffer buffer;
+    VK_CHECK(vkCreateBuffer(graphics->getDevice(), &stagingBufferCreateInfo, nullptr, &buffer));
 
     VkMemoryDedicatedRequirements dedicatedReqs = {
         .sType = VK_STRUCTURE_TYPE_MEMORY_DEDICATED_REQUIREMENTS,
@@ -365,31 +354,15 @@ OStagingBuffer StagingManager::allocateStagingBuffer(uint64 size, VkBufferUsageF
         .pNext = nullptr,
         .buffer = buffer,
     };
-    vkGetBufferMemoryRequirements2(vulkanDevice, &bufferQuery, &memReqs);
-
-    memReqs.memoryRequirements.alignment =
-        (16 > memReqs.memoryRequirements.alignment) ? 16 : memReqs.memoryRequirements.alignment;
+    vkGetBufferMemoryRequirements2(graphics->getDevice(), &bufferQuery, &memReqs);
 
     OStagingBuffer stagingBuffer = new StagingBuffer(
-        allocator->allocate(memReqs, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | (readable ? VK_MEMORY_PROPERTY_HOST_COHERENT_BIT : VK_MEMORY_PROPERTY_HOST_CACHED_BIT), buffer),
+        graphics,
+        allocator->allocate(memReqs, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT, buffer),
         buffer,
-        size,
-        usage,
-        readable
+        size
     );
-    vkBindBufferMemory(graphics->getDevice(), buffer, stagingBuffer->getMemoryHandle(), stagingBuffer->getOffset());
-
-    activeBuffers.add(stagingBuffer);
+    vkBindBufferMemory(graphics->getDevice(), buffer, stagingBuffer->getMemory(), stagingBuffer->getOffset());
     
-    return std::move(stagingBuffer);
-}
-
-void StagingManager::releaseStagingBuffer(OStagingBuffer buffer)
-{
-    if (buffer == nullptr)
-    {
-        return;
-    }
-    activeBuffers.remove(buffer);
-    freeBuffers.add(std::move(buffer));
+    return stagingBuffer;
 }

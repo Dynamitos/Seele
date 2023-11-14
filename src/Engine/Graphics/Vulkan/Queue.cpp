@@ -22,7 +22,7 @@ Queue::~Queue()
 void Queue::submitCommandBuffer(PCmdBuffer cmdBuffer, uint32 numSignalSemaphores, VkSemaphore *signalSemaphores)
 {
     std::scoped_lock lck(queueLock);
-    assert(cmdBuffer->state == CmdBuffer::State::Ended);
+    assert(cmdBuffer->state == Command::State::End);
 
     PFence fence = cmdBuffer->fence;
     assert(!fence->isSignaled());
@@ -48,7 +48,7 @@ void Queue::submitCommandBuffer(PCmdBuffer cmdBuffer, uint32 numSignalSemaphores
         submitInfo.pWaitDstStageMask = cmdBuffer->waitFlags.data();
     }
     VK_CHECK(vkQueueSubmit(queue, 1, &submitInfo, fence->getHandle()));
-    cmdBuffer->state = CmdBuffer::State::Submitted;
+    cmdBuffer->state = Command::State::Submit;
     cmdBuffer->waitFlags.clear();
     cmdBuffer->waitSemaphores.clear();
 
@@ -57,7 +57,7 @@ void Queue::submitCommandBuffer(PCmdBuffer cmdBuffer, uint32 numSignalSemaphores
         fence->wait(200 * 1000ull);
     }
 
-    cmdBuffer->refreshFence();
+    cmdBuffer->checkFence();
     graphics->getStagingManager()->clearPending();
     
 }

@@ -23,24 +23,24 @@ Framebuffer::Framebuffer(PGraphics graphics, PRenderPass renderPass, Gfx::PRende
         PTexture2D vkInputAttachment = inputAttachment->getTexture().cast<Texture2D>();
         attachments.add(vkInputAttachment->getView());
         description.inputAttachments[description.numInputAttachments++] = vkInputAttachment->getView();
-        sizeX = std::max(sizeX, vkInputAttachment->getSizeX());
-        sizeY = std::max(sizeY, vkInputAttachment->getSizeY());
+        sizeX = std::max(sizeX, vkInputAttachment->getWidth());
+        sizeY = std::max(sizeY, vkInputAttachment->getHeight());
     }
     for (auto colorAttachment : layout->colorAttachments)
     {
         PTexture2D vkColorAttachment = colorAttachment->getTexture().cast<Texture2D>();
         attachments.add(vkColorAttachment->getView());
         description.colorAttachments[description.numColorAttachments++] = vkColorAttachment->getView();
-        sizeX = std::max(sizeX, vkColorAttachment->getSizeX());
-        sizeY = std::max(sizeY, vkColorAttachment->getSizeY());
+        sizeX = std::max(sizeX, vkColorAttachment->getWidth());
+        sizeY = std::max(sizeY, vkColorAttachment->getHeight());
     }
     if (layout->depthAttachment != nullptr)
     {
         PTexture2D vkDepthAttachment = layout->depthAttachment->getTexture().cast<Texture2D>();
         attachments.add(vkDepthAttachment->getView());
         description.depthAttachment = vkDepthAttachment->getView();
-        sizeX = std::max(sizeX, vkDepthAttachment->getSizeX());
-        sizeY = std::max(sizeY, vkDepthAttachment->getSizeY());
+        sizeX = std::max(sizeX, vkDepthAttachment->getWidth());
+        sizeY = std::max(sizeY, vkDepthAttachment->getHeight());
     }
     VkFramebufferCreateInfo createInfo =
         init::FramebufferCreateInfo(

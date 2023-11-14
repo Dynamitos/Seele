@@ -56,16 +56,15 @@ struct DataSource
 };
 struct TextureCreateInfo
 {
-    DataSource sourceData = DataSource();
-    uint32 width = 1;
-    uint32 height = 1;
-    uint32 depth = 1;
-    bool bArray = false;
-    uint32 arrayLayers = 1;
-    uint32 mipLevels = 1;
-    uint32 samples = 1;
-    Gfx::SeFormat format = Gfx::SE_FORMAT_R32G32B32A32_SFLOAT;
-    Gfx::SeImageUsageFlagBits usage = Gfx::SE_IMAGE_USAGE_SAMPLED_BIT;
+    DataSource                  sourceData = DataSource();
+    Gfx::SeFormat               format = Gfx::SE_FORMAT_R32G32B32A32_SFLOAT;
+    uint32                      width = 1;
+    uint32                      height = 1;
+    uint32                      depth = 1;
+    uint32                      mipLevels = 1;
+    uint32                      arrayLayers = 1;
+    uint32                      samples = 1;
+    Gfx::SeImageUsageFlagBits   usage = Gfx::SE_IMAGE_USAGE_SAMPLED_BIT;
 };
 struct SamplerCreateInfo
 {
@@ -88,107 +87,97 @@ struct SamplerCreateInfo
 };
 struct VertexBufferCreateInfo
 {
-    DataSource sourceData = DataSource();
+    DataSource  sourceData = DataSource();
     // bytes per vertex
-    uint32 vertexSize = 0;
-    uint32 numVertices = 0;
+    uint32      vertexSize = 0;
+    uint32      numVertices = 0;
 };
 struct IndexBufferCreateInfo
 {
-    DataSource sourceData = DataSource();
-    Gfx::SeIndexType indexType = Gfx::SeIndexType::SE_INDEX_TYPE_UINT16;
+    DataSource          sourceData = DataSource();
+    Gfx::SeIndexType    indexType = Gfx::SeIndexType::SE_INDEX_TYPE_UINT16;
 };
 struct UniformBufferCreateInfo
 {
-    DataSource sourceData = DataSource();
-    uint8 dynamic = 0;
+    DataSource  sourceData = DataSource();
+    uint8       dynamic = 0;
 };
 struct ShaderBufferCreateInfo
 {
-    DataSource sourceData = DataSource();
-    uint32 stride;
-    uint8 dynamic = 0;
+    DataSource  sourceData = DataSource();
+    uint8       dynamic = 0;
 };
 struct ShaderCreateInfo
 {
-    std::string mainModule;
-    Array<std::string> additionalModules;
-    std::string name; // Debug info
-    std::string entryPoint;
-    Array<Pair<const char*, const char*>> typeParameter;
-    Map<const char*, const char*> defines;
+    std::string                             mainModule;
+    Array<std::string>                      additionalModules;
+    std::string                             name; // Debug info
+    std::string                             entryPoint;
+    Array<Pair<const char*, const char*>>   typeParameter;
+    Map<const char*, const char*>           defines;
 };
 
 namespace Gfx
 {
 struct SePushConstantRange
 {
-    SeShaderStageFlags stageFlags;
-    uint32_t offset;
-    uint32_t size;
+    SeShaderStageFlags  stageFlags;
+    uint32              offset;
+    uint32              size;
 };
-struct VertexElement
-{
-    uint8 binding;
-    uint8 offset;
-    SeFormat vertexFormat;
-    uint8 attributeIndex;
-    uint8 stride;
-    uint8 instanced = 0;
-};
-static_assert(std::is_aggregate_v<VertexElement>);
 struct RasterizationState
 {
-    uint8 depthClampEnable : 1 = 0;
-    uint8 rasterizerDiscardEnable : 1 = 0;
-    uint8 depthBiasEnable : 1 = 0;
-    float depthBiasConstantFactor = 0;
-    float depthBiasClamp = 0;
-    float depthBiasSlopeFactor = 0;
-    float lineWidth = 0;
-    SePolygonMode polygonMode;
-    SeCullModeFlags cullMode;
-    SeFrontFace frontFace;
+    uint32              depthClampEnable = 0;
+    uint32              rasterizerDiscardEnable = 0;
+    SePolygonMode       polygonMode;
+    SeCullModeFlags     cullMode;
+    SeFrontFace         frontFace;
+    uint32              depthBiasEnable = 0;
+    float               depthBiasConstantFactor = 0;
+    float               depthBiasClamp = 0;
+    float               depthBiasSlopeFactor = 0;
+    float               lineWidth = 0;
 };
 struct MultisampleState
 {
-    uint32 samples = 1;
-    float minSampleShading = 1;
-    uint8 sampleShadingEnable : 1 = 0;
-    uint8 alphaCoverageEnable = 0;
-    uint8 alphaToOneEnable = 0;
+    SeSampleCountFlags  samples = 1;
+    uint32              sampleShadingEnable = 0;
+    float               minSampleShading = 1;
+    uint8               alphaCoverageEnable = 0;
+    uint8               alphaToOneEnable = 0;
 };
 struct DepthStencilState
 {
-    uint8 depthTestEnable : 1 = 0;
-    uint8 depthWriteEnable : 1 = 0;
-    uint8 depthBoundsTestEnable : 1 = 0;
-    uint8 stencilTestEnable : 1 = 0;
-    SeCompareOp depthCompareOp;
+    uint32      depthTestEnable = 0;
+    uint32      depthWriteEnable = 0;
+    SeCompareOp depthCompareOp = Gfx::SE_COMPARE_OP_LESS;
+    uint32      depthBoundsTestEnable = 0;
+    uint32      stencilTestEnable = 0;
     SeStencilOp front = Gfx::SE_STENCIL_OP_END_RANGE;
     SeStencilOp back = Gfx::SE_STENCIL_OP_END_RANGE;
-    float minDepthBounds;
-    float maxDepthBounds;
+    float       minDepthBounds;
+    float       maxDepthBounds;
 };
 struct ColorBlendState
 {
-    uint8 logicOpEnable : 1;
-    SeLogicOp logicOp = Gfx::SE_LOGIC_OP_OR;
-    uint32 attachmentCount;
     struct BlendAttachment
     {
-        uint8 blendEnable = 0;
-        SeBlendFactor srcColorBlendFactor = Gfx::SE_BLEND_FACTOR_SRC_ALPHA;
-        SeBlendFactor dstColorBlendFactor = Gfx::SE_BLEND_FACTOR_SRC_ALPHA;
-        SeBlendOp colorBlendOp = Gfx::SE_BLEND_OP_ADD;
-        SeBlendFactor srcAlphaBlendFactor = Gfx::SE_BLEND_FACTOR_SRC_ALPHA;
-        SeBlendFactor dstAlphaBlendFactor = Gfx::SE_BLEND_FACTOR_SRC_ALPHA;
-        SeBlendOp alphaBlendOp = Gfx::SE_BLEND_OP_ADD;
-        SeColorComponentFlags colorWriteMask = 0;
-    } blendAttachments[16];
-    float blendConstants[4];
+        uint32                  blendEnable = 0;
+        SeBlendFactor           srcColorBlendFactor = Gfx::SE_BLEND_FACTOR_SRC_ALPHA;
+        SeBlendFactor           dstColorBlendFactor = Gfx::SE_BLEND_FACTOR_SRC_ALPHA;
+        SeBlendOp               colorBlendOp = Gfx::SE_BLEND_OP_ADD;
+        SeBlendFactor           srcAlphaBlendFactor = Gfx::SE_BLEND_FACTOR_SRC_ALPHA;
+        SeBlendFactor           dstAlphaBlendFactor = Gfx::SE_BLEND_FACTOR_SRC_ALPHA;
+        SeBlendOp               alphaBlendOp = Gfx::SE_BLEND_OP_ADD;
+        SeColorComponentFlags   colorWriteMask = 0;
+    };
+    uint32                              logicOpEnable;
+    SeLogicOp                           logicOp = Gfx::SE_LOGIC_OP_OR;
+    uint32                              attachmentCount;
+    StaticArray<BlendAttachment, 16>    blendAttachments;
+    StaticArray<float, 4>               blendConstants;
 };
-DECLARE_REF(VertexDeclaration)
+
 DECLARE_REF(VertexShader)
 DECLARE_REF(TaskShader)
 DECLARE_REF(MeshShader)
@@ -198,16 +187,15 @@ DECLARE_REF(RenderPass)
 DECLARE_REF(PipelineLayout)
 struct LegacyPipelineCreateInfo
 {
-    PVertexDeclaration vertexDeclaration;
     SePrimitiveTopology topology;
-    PVertexShader vertexShader;
-    PFragmentShader fragmentShader;
-    PRenderPass renderPass;
-    OPipelineLayout pipelineLayout;
-    MultisampleState multisampleState;
-    RasterizationState rasterizationState;
-    DepthStencilState depthStencilState;
-    ColorBlendState colorBlend;
+    PVertexShader       vertexShader;
+    PFragmentShader     fragmentShader;
+    PRenderPass         renderPass;
+    OPipelineLayout     pipelineLayout;
+    MultisampleState    multisampleState;
+    RasterizationState  rasterizationState;
+    DepthStencilState   depthStencilState;
+    ColorBlendState     colorBlend;
     LegacyPipelineCreateInfo();
     LegacyPipelineCreateInfo(LegacyPipelineCreateInfo&& rhs) = default;
     LegacyPipelineCreateInfo& operator=(LegacyPipelineCreateInfo&& rhs) = default;
@@ -216,15 +204,15 @@ struct LegacyPipelineCreateInfo
 
 struct MeshPipelineCreateInfo
 {
-    PTaskShader taskShader;
-    PMeshShader meshShader;
-    PFragmentShader fragmentShader;
-    PRenderPass renderPass;
-    OPipelineLayout pipelineLayout;
-    MultisampleState multisampleState;
-    RasterizationState rasterizationState;
-    DepthStencilState depthStencilState;
-    ColorBlendState colorBlend;
+    PTaskShader         taskShader;
+    PMeshShader         meshShader;
+    PFragmentShader     fragmentShader;
+    PRenderPass         renderPass;
+    OPipelineLayout     pipelineLayout;
+    MultisampleState    multisampleState;
+    RasterizationState  rasterizationState;
+    DepthStencilState   depthStencilState;
+    ColorBlendState     colorBlend;
     MeshPipelineCreateInfo();
     MeshPipelineCreateInfo(MeshPipelineCreateInfo&& rhs) = default;
     MeshPipelineCreateInfo& operator=(MeshPipelineCreateInfo&& rhs) = default;
@@ -232,8 +220,8 @@ struct MeshPipelineCreateInfo
 };
 struct ComputePipelineCreateInfo
 {
-    Gfx::PComputeShader computeShader;
-    Gfx::OPipelineLayout pipelineLayout;
+    Gfx::PComputeShader     computeShader;
+    Gfx::OPipelineLayout    pipelineLayout;
     ComputePipelineCreateInfo();
     ComputePipelineCreateInfo(ComputePipelineCreateInfo&& rhs) = default;
     ComputePipelineCreateInfo& operator=(ComputePipelineCreateInfo&& rhs) = default;

@@ -123,10 +123,10 @@ void TextureAsset::setTexture(Gfx::OTexture _texture)
 
 uint32 TextureAsset::getWidth()
 {
-    return texture->getSizeX();
+    return texture->getWidth();
 }
 
 uint32 TextureAsset::getHeight()
 {
-    return texture->getSizeY();
+    return texture->getHeight();
 }

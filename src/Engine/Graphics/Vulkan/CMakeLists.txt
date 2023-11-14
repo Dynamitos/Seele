@@ -4,10 +4,10 @@ target_sources(Engine
 		Allocator.cpp
 		Buffer.h
 		Buffer.cpp
-		CommandBuffer.h
-		CommandBuffer.cpp
-		DescriptorSets.h
-		DescriptorSets.cpp
+		Command.h
+		Command.cpp
+		Descriptor.h
+		Descriptor.cpp
 		Enums.h
 		Enums.cpp
 		Framebuffer.h
@@ -38,7 +38,7 @@ target_sources(Engine
 		FILES
 			Allocator.h
 			Buffer.h
-			CommandBuffer.h
+			Command.h
 			DescriptorSets.h
 			Enums.h
 			Framebuffer.h

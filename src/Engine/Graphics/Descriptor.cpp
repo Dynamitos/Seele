@@ -3,6 +3,74 @@
 using namespace Seele;
 using namespace Seele::Gfx;
 
+DescriptorBinding::DescriptorBinding()
+	: binding(0)
+	, descriptorType(SE_DESCRIPTOR_TYPE_MAX_ENUM)
+	, descriptorCount(0x7fff)
+	, shaderStages(SE_SHADER_STAGE_ALL)
+{
+}
+
+DescriptorBinding::DescriptorBinding(const DescriptorBinding& other)
+	: binding(other.binding)
+	, descriptorType(other.descriptorType)
+	, descriptorCount(other.descriptorCount)
+	, shaderStages(other.shaderStages)
+{
+}
+
+DescriptorBinding& DescriptorBinding::operator=(const DescriptorBinding& other)
+{
+	if (this != &other)
+	{
+		binding = other.binding;
+		descriptorType = other.descriptorType;
+		descriptorCount = other.descriptorCount;
+		shaderStages = other.shaderStages;
+	}
+	return *this;
+}
+
+DescriptorAllocator::DescriptorAllocator()
+{
+}
+
+DescriptorAllocator::~DescriptorAllocator()
+{
+}
+
+DescriptorLayout::DescriptorLayout(const std::string& name)
+	: setIndex(0)
+	, name(name)
+{
+}
+
+DescriptorLayout::DescriptorLayout(const DescriptorLayout& other)
+{
+	descriptorBindings.resize(other.descriptorBindings.size());
+	for (uint32 i = 0; i < descriptorBindings.size(); ++i)
+	{
+		descriptorBindings[i] = other.descriptorBindings[i];
+	}
+}
+
+DescriptorLayout& DescriptorLayout::operator=(const DescriptorLayout& other)
+{
+	if (this != &other)
+	{
+		descriptorBindings.resize(other.descriptorBindings.size());
+		for (uint32 i = 0; i < descriptorBindings.size(); ++i)
+		{
+			descriptorBindings[i] = other.descriptorBindings[i];
+		}
+	}
+	return *this;
+}
+
+DescriptorLayout::~DescriptorLayout()
+{
+}
+
 void DescriptorLayout::addDescriptorBinding(uint32 bindingIndex, SeDescriptorType type, uint32 arrayCount, SeDescriptorBindingFlags bindingFlags, SeShaderStageFlags shaderStages)
 {
 	if (descriptorBindings.size() <= bindingIndex)
@@ -19,14 +87,29 @@ void DescriptorLayout::addDescriptorBinding(uint32 bindingIndex, SeDescriptorTyp
 
 PDescriptorSet DescriptorLayout::allocateDescriptorSet()
 {
-	std::scoped_lock lock(allocatorLock);
 	return allocator->allocateDescriptorSet();
 }
 
 void DescriptorLayout::reset()
 {
-	std::scoped_lock lock(allocatorLock);
 	allocator->reset();
+}
+
+PipelineLayout::PipelineLayout()
+{
+}
+
+PipelineLayout::PipelineLayout(PPipelineLayout baseLayout)
+{
+	if (baseLayout != nullptr)
+	{
+		descriptorSetLayouts = baseLayout->descriptorSetLayouts;
+		pushConstants = baseLayout->pushConstants;
+	}
+}
+
+PipelineLayout::~PipelineLayout()
+{
 }
 
 void PipelineLayout::addDescriptorLayout(uint32 setIndex, PDescriptorLayout layout)

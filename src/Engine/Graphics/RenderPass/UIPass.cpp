@@ -61,8 +61,8 @@ void UIPass::endFrame()
 void UIPass::publishOutputs() 
 {
     TextureCreateInfo depthBufferInfo = {
-        .width = viewport->getSizeX(),
-        .height = viewport->getSizeY(),
+        .width = viewport->getWidth(),
+        .height = viewport->getHeight(),
         .format = Gfx::SE_FORMAT_D32_SFLOAT,
         .usage = Gfx::SE_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
     };
@@ -74,8 +74,8 @@ void UIPass::publishOutputs()
     resources->registerRenderPassOutput("UIPASS_DEPTH", depthAttachment);
 
     TextureCreateInfo colorBufferInfo = {
-        .width = viewport->getSizeX(),
-        .height = viewport->getSizeY(),
+        .width = viewport->getWidth(),
+        .height = viewport->getHeight(),
         .format = Gfx::SE_FORMAT_R16G16B16A16_SFLOAT,
         .usage = Gfx::SE_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
     };

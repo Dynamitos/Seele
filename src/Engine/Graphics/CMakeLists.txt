@@ -2,6 +2,8 @@ target_sources(Engine
     PRIVATE
         Buffer.h
         Buffer.cpp
+        Command.h
+        Command.cpp
         DebugVertex.h
         Descriptor.h
         Descriptor.cpp
@@ -13,6 +15,8 @@ target_sources(Engine
         Initializer.cpp
         Mesh.h
         Mesh.cpp
+        Pipeline.h
+        Pipeline.cpp
         RenderTarget.h
         RenderTarget.cpp
         Resources.h
@@ -30,12 +34,14 @@ target_sources(Engine
     PUBLIC FILE_SET HEADERS
         FILES
             Buffer.h
+            Command.h
             DebugVertex.h
             Descriptor.h
             Enums.h
             Graphics.h
             Initializer.h
             Mesh.h
+            Pipeline.h
             RenderTarget.h
             Resources.h
             Shader.h

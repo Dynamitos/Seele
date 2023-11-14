@@ -6,7 +6,6 @@ namespace Seele
 {
 namespace Gfx
 {
-    
 class Window
 {
 public:
@@ -22,19 +21,19 @@ public:
     virtual void setScrollCallback(std::function<void(double, double)> callback) = 0;
     virtual void setFileCallback(std::function<void(int, const char**)> callback) = 0;
     virtual void setCloseCallback(std::function<void()> callback) = 0;
-    SeFormat getSwapchainFormat() const
+    constexpr SeFormat getSwapchainFormat() const
     {
         return windowState.pixelFormat;
     }
-    SeSampleCountFlags getNumSamples() const
+    constexpr SeSampleCountFlags getNumSamples() const
     {
         return windowState.numSamples;
     }
-    uint32 getSizeX() const
+    constexpr uint32 getWidth() const
     {
         return windowState.width;
     }
-    uint32 getSizeY() const
+    constexpr uint32 getHeight() const
     {
         return windowState.height;
     }
@@ -52,8 +51,8 @@ public:
     virtual void resize(uint32 newX, uint32 newY) = 0;
     virtual void move(uint32 newOffsetX, uint32 newOffsetY) = 0;
     constexpr PWindow getOwner() const {return owner;}
-    constexpr uint32 getSizeX() const {return sizeX;}
-    constexpr uint32 getSizeY() const {return sizeY;}
+    constexpr uint32 getWidth() const {return sizeX;}
+    constexpr uint32 getHeight() const {return sizeY;}
     constexpr uint32 getOffsetX() const {return offsetX;}
     constexpr uint32 getOffsetY() const {return offsetY;}
     Matrix4 getProjectionMatrix() const;
@@ -71,22 +70,11 @@ class RenderTargetAttachment
 {
 public:
     RenderTargetAttachment(PTexture2D texture,
-                           SeAttachmentLoadOp loadOp = SE_ATTACHMENT_LOAD_OP_LOAD,
-                           SeAttachmentStoreOp storeOp = SE_ATTACHMENT_STORE_OP_STORE,
-                           SeAttachmentLoadOp stencilLoadOp = SE_ATTACHMENT_LOAD_OP_DONT_CARE,
-                           SeAttachmentStoreOp stencilStoreOp = SE_ATTACHMENT_STORE_OP_DONT_CARE)
-        : clear()
-        , componentFlags(0)
-        , loadOp(loadOp)
-        , storeOp(storeOp)
-        , stencilLoadOp(stencilLoadOp)
-        , stencilStoreOp(stencilStoreOp)
-        , texture(texture)
-    {
-    }
-    virtual ~RenderTargetAttachment()
-    {
-    }
+        SeAttachmentLoadOp loadOp = SE_ATTACHMENT_LOAD_OP_LOAD,
+        SeAttachmentStoreOp storeOp = SE_ATTACHMENT_STORE_OP_STORE,
+        SeAttachmentLoadOp stencilLoadOp = SE_ATTACHMENT_LOAD_OP_DONT_CARE,
+        SeAttachmentStoreOp stencilStoreOp = SE_ATTACHMENT_STORE_OP_DONT_CARE);
+    virtual ~RenderTargetAttachment();
     virtual PTexture2D getTexture()
     {
         return texture;
@@ -99,13 +87,13 @@ public:
     {
         return texture->getNumSamples();
     }
-    virtual uint32 getSizeX() const 
+    virtual uint32 getWidth() const 
     { 
-        return texture->getSizeX(); 
+        return texture->getWidth(); 
     }
-    virtual uint32 getSizeY() const 
+    virtual uint32 getHeight() const 
     { 
-        return texture->getSizeY(); 
+        return texture->getHeight(); 
     }
     inline SeAttachmentLoadOp getLoadOp() const { return loadOp; }
     inline SeAttachmentStoreOp getStoreOp() const { return storeOp; }
@@ -126,18 +114,11 @@ class SwapchainAttachment : public RenderTargetAttachment
 {
 public:
     SwapchainAttachment(PWindow owner,
-                        SeAttachmentLoadOp loadOp = SE_ATTACHMENT_LOAD_OP_LOAD,
-                        SeAttachmentStoreOp storeOp = SE_ATTACHMENT_STORE_OP_STORE,
-                        SeAttachmentLoadOp stencilLoadOp = SE_ATTACHMENT_LOAD_OP_DONT_CARE,
-                        SeAttachmentStoreOp stencilStoreOp = SE_ATTACHMENT_STORE_OP_DONT_CARE)
-        : RenderTargetAttachment(nullptr, loadOp, storeOp, stencilLoadOp, stencilStoreOp), owner(owner)
-    {
-        clear.color.float32[0] = 0.0f;
-        clear.color.float32[1] = 0.0f;
-        clear.color.float32[2] = 0.0f;
-        clear.color.float32[3] = 1.0f;
-        componentFlags = SE_COLOR_COMPONENT_R_BIT | SE_COLOR_COMPONENT_G_BIT | SE_COLOR_COMPONENT_B_BIT | SE_COLOR_COMPONENT_A_BIT;
-    }
+        SeAttachmentLoadOp loadOp = SE_ATTACHMENT_LOAD_OP_LOAD,
+        SeAttachmentStoreOp storeOp = SE_ATTACHMENT_STORE_OP_STORE,
+        SeAttachmentLoadOp stencilLoadOp = SE_ATTACHMENT_LOAD_OP_DONT_CARE,
+        SeAttachmentStoreOp stencilStoreOp = SE_ATTACHMENT_STORE_OP_DONT_CARE);
+    virtual ~SwapchainAttachment();
     virtual PTexture2D getTexture() override
     {
         return owner->getBackBuffer();
@@ -150,13 +131,13 @@ public:
     {
         return owner->getNumSamples();
     }
-    virtual uint32 getSizeX() const 
+    virtual uint32 getWidth() const 
     { 
-        return owner->getSizeX(); 
+        return owner->getWidth(); 
     }
-    virtual uint32 getSizeY() const 
+    virtual uint32 getHeight() const 
     { 
-        return owner->getSizeY(); 
+        return owner->getHeight(); 
     }
 private:
     PWindow owner;

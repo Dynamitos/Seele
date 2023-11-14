@@ -6,29 +6,12 @@ namespace Seele
 {
 namespace Gfx
 {
-
 class DescriptorBinding
 {
 public:
-    DescriptorBinding()
-        : binding(0), descriptorType(SE_DESCRIPTOR_TYPE_MAX_ENUM), descriptorCount(0x7fff), shaderStages(SE_SHADER_STAGE_ALL)
-    {
-    }
-    DescriptorBinding(const DescriptorBinding& other)
-        : binding(other.binding), descriptorType(other.descriptorType), descriptorCount(other.descriptorCount), shaderStages(other.shaderStages)
-    {
-    }
-		DescriptorBinding& operator=(const DescriptorBinding& other)
-		{
-		    if(this != &other)
-        {
-            binding = other.binding;
-            descriptorType = other.descriptorType;
-            descriptorCount = other.descriptorCount;
-            shaderStages = other.shaderStages;
-        }
-        return *this;
-		}
+    DescriptorBinding();
+    DescriptorBinding(const DescriptorBinding& other);
+    DescriptorBinding& operator=(const DescriptorBinding& other);
     uint32 binding;
     SeDescriptorType descriptorType;
     uint32 descriptorCount;
@@ -41,8 +24,8 @@ DECLARE_REF(DescriptorSet)
 class DescriptorAllocator
 {
 public:
-    DescriptorAllocator() {}
-    virtual ~DescriptorAllocator() {}
+    DescriptorAllocator();
+    virtual ~DescriptorAllocator();
     virtual PDescriptorSet allocateDescriptorSet() = 0;
     virtual void reset() = 0;
 };
@@ -50,7 +33,7 @@ DEFINE_REF(DescriptorAllocator)
 DECLARE_REF(UniformBuffer)
 DECLARE_REF(ShaderBuffer)
 DECLARE_REF(Texture)
-DECLARE_REF(SamplerState)
+DECLARE_REF(Sampler)
 class DescriptorSet
 {
 public:
@@ -59,8 +42,8 @@ public:
     virtual void writeChanges() = 0;
     virtual void updateBuffer(uint32 binding, PUniformBuffer uniformBuffer) = 0;
     virtual void updateBuffer(uint32 binding, PShaderBuffer ShaderBuffer) = 0;
-    virtual void updateSampler(uint32 binding, PSamplerState samplerState) = 0;
-    virtual void updateTexture(uint32 binding, PTexture texture, PSamplerState samplerState = nullptr) = 0;
+    virtual void updateSampler(uint32 binding, PSampler sampler) = 0;
+    virtual void updateTexture(uint32 binding, PTexture texture, PSampler samplerState = nullptr) = 0;
     virtual void updateTextureArray(uint32_t binding, Array<PTexture> texture) = 0;
     virtual bool operator<(PDescriptorSet other) = 0;
 
@@ -71,44 +54,21 @@ DEFINE_REF(DescriptorSet)
 class DescriptorLayout
 {
 public:
-    DescriptorLayout(const std::string& name)
-        : setIndex(0)
-        , name(name)
-    {
-    }
-    DescriptorLayout(const DescriptorLayout& other)
-    {
-        descriptorBindings.resize(other.descriptorBindings.size());
-        for(uint32 i = 0; i < descriptorBindings.size(); ++i)
-		{
-			descriptorBindings[i] = other.descriptorBindings[i];
-		}
-    }
-    DescriptorLayout& operator=(const DescriptorLayout& other)
-    {
-        if (this != &other)
-        {
-            descriptorBindings.resize(other.descriptorBindings.size());
-            for (uint32 i = 0; i < descriptorBindings.size(); ++i)
-            {
-                descriptorBindings[i] = other.descriptorBindings[i];
-            }
-        }
-        return *this;
-    }
-    virtual ~DescriptorLayout() {}
+    DescriptorLayout(const std::string& name);
+    DescriptorLayout(const DescriptorLayout& other);
+    DescriptorLayout& operator=(const DescriptorLayout& other);
+    virtual ~DescriptorLayout();
     virtual void create() = 0;
     virtual void addDescriptorBinding(uint32 binding, SeDescriptorType type, uint32 arrayCount = 1, SeDescriptorBindingFlags bindingFlags = 0, SeShaderStageFlags shaderStages = SeShaderStageFlagBits::SE_SHADER_STAGE_ALL);
     virtual void reset();
     virtual PDescriptorSet allocateDescriptorSet();
-    const Array<DescriptorBinding>& getBindings() const { return descriptorBindings; }
+    constexpr const Array<DescriptorBinding>& getBindings() const { return descriptorBindings; }
     constexpr uint32 getSetIndex() const { return setIndex; }
     constexpr void setSetIndex(uint32 _setIndex) { setIndex = _setIndex; }
 
 protected:
     Array<DescriptorBinding> descriptorBindings;
     ODescriptorAllocator allocator;
-    std::mutex allocatorLock;
     uint32 setIndex;
     std::string name;
     friend class PipelineLayout;
@@ -118,18 +78,9 @@ DEFINE_REF(DescriptorLayout)
 class PipelineLayout
 {
 public:
-    PipelineLayout()
-    {
-    }
-    PipelineLayout(PPipelineLayout baseLayout)
-    {
-        if (baseLayout != nullptr)
-        {
-            descriptorSetLayouts = baseLayout->descriptorSetLayouts;
-            pushConstants = baseLayout->pushConstants;
-        }
-    }
-    virtual ~PipelineLayout() {}
+    PipelineLayout();
+    PipelineLayout(PPipelineLayout baseLayout);
+    virtual ~PipelineLayout();
     virtual void create() = 0;
     virtual void reset() = 0;
     void addDescriptorLayout(uint32 setIndex, PDescriptorLayout layout);

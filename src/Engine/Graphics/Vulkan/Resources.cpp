@@ -9,13 +9,26 @@ using namespace Seele::Vulkan;
 Semaphore::Semaphore(PGraphics graphics)
     : graphics(graphics)
 {
-    VkSemaphoreCreateInfo info =
-        init::SemaphoreCreateInfo();
+    VkSemaphoreCreateInfo info = {
+        .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+    };
     VK_CHECK(vkCreateSemaphore(graphics->getDevice(), &info, nullptr, &handle));
 }
 
 Semaphore::~Semaphore()
 {
+    uint64 value = 0;
+    VkSemaphoreWaitInfo waitInfo = {
+        .sType = VK_STRUCTURE_TYPE_SEMAPHORE_WAIT_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .semaphoreCount = 1,
+        .pSemaphores = &handle,
+        .pValues = &value,
+    };
+    VK_CHECK(vkWaitSemaphores(graphics->getDevice(), &waitInfo, 10000));
     vkDestroySemaphore(graphics->getDevice(), handle, nullptr);
 }
 
@@ -23,8 +36,11 @@ Fence::Fence(PGraphics graphics)
     : graphics(graphics)
     , signaled(false)
 {
-    VkFenceCreateInfo info =
-        init::FenceCreateInfo(0);
+    VkFenceCreateInfo info = {
+        .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0
+    };
     VK_CHECK(vkCreateFence(graphics->getDevice(), &info, nullptr, &fence));
 }
 
@@ -40,17 +56,15 @@ bool Fence::isSignaled()
         return true;
     }
     VkResult res = vkGetFenceStatus(graphics->getDevice(), fence);
-    switch (res)
+    if (res == VK_SUCCESS)
     {
-    case VK_SUCCESS:
         signaled = true;
-        return signaled;
-    case VK_NOT_READY:
-        break;
-    default:
-        break;
+        return true;
     }
-    return false;
+    if (res == VK_NOT_READY)
+    {
+        return false;
+    }
 }
 
 void Fence::reset()
@@ -65,17 +79,14 @@ void Fence::reset()
 void Fence::wait(uint32 timeout)
 {
     VkFence fences[] = {fence};
-    VkResult r = vkWaitForFences(graphics->getDevice(), 1, fences, true, timeout * 1000ull);
-    switch (r)
+    VkResult res = vkWaitForFences(graphics->getDevice(), 1, fences, true, timeout);
+    if (res == VK_SUCCESS)
     {
-    case VK_SUCCESS:
         signaled = true;
-        break;
-    case VK_TIMEOUT:
-        break;
-    default:
-        VK_CHECK(r);
-        break;
+    }
+    if (res != VK_NOT_READY)
+    {
+        VK_CHECK(res);
     }
 }
 
@@ -88,22 +99,27 @@ DestructionManager::~DestructionManager()
 {
 }
 
-void DestructionManager::queueBuffer(PCmdBuffer cmd, VkBuffer buffer)
+void DestructionManager::queueBuffer(PCommand cmd, VkBuffer buffer)
 {
     buffers[cmd].add(buffer);
 }
 
-void DestructionManager::queueImage(PCmdBuffer cmd, VkImage image)
+void DestructionManager::queueImage(PCommand cmd, VkImage image)
 {
     images[cmd].add(image);
 }
 
-void DestructionManager::queueImageView(PCmdBuffer cmd, VkImageView image)
+void DestructionManager::queueImageView(PCommand cmd, VkImageView image)
 {
     views[cmd].add(image);
 }
 
-void DestructionManager::notifyCmdComplete(PCmdBuffer cmdbuffer)
+void DestructionManager::queueSemaphore(PCommand cmd, VkSemaphore sem)
+{
+    sems[cmd].add(sem);
+}
+
+void DestructionManager::notifyCmdComplete(PCommand cmdbuffer)
 {
     for(auto buf : buffers[cmdbuffer])
     {
@@ -117,16 +133,12 @@ void DestructionManager::notifyCmdComplete(PCmdBuffer cmdbuffer)
     {
         vkDestroyImage(graphics->getDevice(), img, nullptr);
     }
+    for (auto sem : sems[cmdbuffer])
+    {
+        vkDestroySemaphore(graphics->getDevice(), sem, nullptr);
+    }
     buffers[cmdbuffer].clear();
     images[cmdbuffer].clear();
     views[cmdbuffer].clear();
-}
-
-VertexDeclaration::VertexDeclaration(const Array<Gfx::VertexElement>& elementList) 
-    : elementList(elementList)
-{
-}
-
-VertexDeclaration::~VertexDeclaration() 
-{   
+    sems[cmdbuffer].clear();
 }
