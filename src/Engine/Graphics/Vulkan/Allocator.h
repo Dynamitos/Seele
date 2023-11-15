@@ -30,8 +30,6 @@ public:
 		return alignedOffset;
 	}
 
-	bool isReadable() const;
-
 	void *map();
 	void flushMemory();
 	void invalidate();
@@ -49,7 +47,7 @@ DEFINE_REF(SubAllocation)
 class Allocation
 {
 public:
-	Allocation(PGraphics graphics, PAllocator allocator, VkDeviceSize size, uint8 memoryTypeIndex,
+	Allocation(PGraphics graphics, PAllocator pool, VkDeviceSize size, uint8 memoryTypeIndex,
 			   VkMemoryPropertyFlags properties, VkMemoryDedicatedAllocateInfo *dedicatedInfo = nullptr);
 	~Allocation();
 	OSubAllocation getSuballocation(VkDeviceSize size, VkDeviceSize alignment);
@@ -78,16 +76,16 @@ public:
 
 private:
 	VkDevice device;
-	PAllocator allocator;
+	PAllocator pool;
 	VkDeviceSize bytesAllocated;
 	VkDeviceSize bytesUsed;
 	VkDeviceMemory allocatedMemory;
 	Array<PSubAllocation> activeAllocations;
 	Map<VkDeviceSize, VkDeviceSize> freeRanges;
 	void *mappedPointer;
-	uint8 isDedicated : 1;
 	uint8 canMap : 1;
 	uint8 isMapped : 1;
+	uint8 isDedicated : 1;
 	VkMemoryPropertyFlags properties;
 	uint8 memoryTypeIndex;
 	friend class Allocator;
@@ -104,21 +102,23 @@ public:
 	OSubAllocation allocate(const VkMemoryRequirements2 &requirements, VkMemoryPropertyFlags props,
 								   VkBuffer buffer)
 	{
-		VkMemoryDedicatedAllocateInfo allocInfo;
-		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_DEDICATED_ALLOCATE_INFO;
-		allocInfo.pNext = nullptr;
-		allocInfo.buffer = buffer;
-		allocInfo.image = VK_NULL_HANDLE;
+		VkMemoryDedicatedAllocateInfo allocInfo = {
+			.sType = VK_STRUCTURE_TYPE_MEMORY_DEDICATED_ALLOCATE_INFO,
+			.pNext = nullptr,
+			.image = VK_NULL_HANDLE,
+			.buffer = buffer,
+		};
 		return allocate(requirements, props, &allocInfo);
 	}
 	OSubAllocation allocate(const VkMemoryRequirements2 &requirements, VkMemoryPropertyFlags props,
 								   VkImage image)
 	{
-		VkMemoryDedicatedAllocateInfo allocInfo;
-		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_DEDICATED_ALLOCATE_INFO;
-		allocInfo.pNext = nullptr;
-		allocInfo.buffer = VK_NULL_HANDLE;
-		allocInfo.image = image;
+		VkMemoryDedicatedAllocateInfo allocInfo = {
+			.sType = VK_STRUCTURE_TYPE_MEMORY_DEDICATED_ALLOCATE_INFO,
+			.pNext = nullptr,
+			.image = image,
+			.buffer = VK_NULL_HANDLE,
+		};
 		return allocate(requirements, props, &allocInfo);
 	}
 
@@ -174,13 +174,13 @@ DEFINE_REF(StagingBuffer)
 class StagingManager
 {
 public:
-	StagingManager(PGraphics graphics, PAllocator allocator);
+	StagingManager(PGraphics graphics, PAllocator pool);
 	~StagingManager();
 	OStagingBuffer create(uint64 size);
 
 private:
 	PGraphics graphics;
-	PAllocator allocator;
+	PAllocator pool;
 };
 DEFINE_REF(StagingManager)
 } // namespace Vulkan

@@ -12,16 +12,16 @@ class Queue
 public:
     Queue(PGraphics graphics, Gfx::QueueType queueType, uint32 familyIndex, uint32 queueIndex);
     virtual ~Queue();
-    void submitCommandBuffer(PCmdBuffer cmdBuffer, uint32 numSignalSemaphores = 0, VkSemaphore *signalSemaphore = nullptr);
-    inline void submitCommandBuffer(PCmdBuffer cmdBuffer, VkSemaphore signalSemaphore)
+    void submitCommandBuffer(PCommand command, uint32 numSignalSemaphores = 0, VkSemaphore *signalSemaphore = nullptr);
+    void submitCommandBuffer(PCommand command, VkSemaphore signalSemaphore)
     {
-        submitCommandBuffer(cmdBuffer, 1, &signalSemaphore);
+        submitCommandBuffer(command, 1, &signalSemaphore);
     }
-    uint32 getFamilyIndex() const
+    constexpr uint32 getFamilyIndex() const
     {
         return familyIndex;
     }
-    inline VkQueue getHandle() const
+    constexpr VkQueue getHandle() const
     {
         return queue;
     }

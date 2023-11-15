@@ -149,7 +149,7 @@ void StaticMeshVertexData::resizeBuffers()
         .sourceData = {
             .size = verticesAllocated * sizeof(Vector),
         },
-        .stride = sizeof(Vector),
+        .numElements = verticesAllocated * 3,
         .dynamic = true,
     };
     positions = graphics->createShaderBuffer(createInfo);
@@ -158,7 +158,7 @@ void StaticMeshVertexData::resizeBuffers()
     biTangents = graphics->createShaderBuffer(createInfo);
     colors = graphics->createShaderBuffer(createInfo);
     createInfo.sourceData.size = verticesAllocated * sizeof(Vector2);
-    createInfo.stride = sizeof(Vector2);
+    createInfo.numElements = verticesAllocated * 2;
     texCoords = graphics->createShaderBuffer(createInfo);
     
     positionData.resize(verticesAllocated);

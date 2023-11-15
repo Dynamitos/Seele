@@ -5,6 +5,7 @@
 #include "Graphics/Graphics.h"
 #include "Graphics/Descriptor.h"
 #include "Component/Mesh.h"
+#include "Graphics/Shader.h"
 
 using namespace Seele;
 
@@ -62,7 +63,8 @@ void VertexData::createDescriptors()
                     .size = sizeof(InstanceData) * instanceData.size(),
                     .data = (uint8*)instanceData.data(),
                 },
-                .stride = sizeof(InstanceData)
+                .numElements = instanceData.size(),
+                .dynamic = false,
             });
             matInst.descriptorSet = instanceDataLayout->allocateDescriptorSet();
             matInst.descriptorSet->updateBuffer(0, matInst.instanceBuffer);
@@ -73,7 +75,8 @@ void VertexData::createDescriptors()
                         .size = sizeof(MeshData) * meshes.size(),
                         .data = (uint8*)meshes.data(),
                     },
-                    .stride = sizeof(MeshData)
+                    .numElements = meshes.size(),
+                    .dynamic = false,
                 });
                 matInst.descriptorSet->updateBuffer(1, matInst.meshDataBuffer);
                 matInst.descriptorSet->updateBuffer(2, meshletBuffer);
@@ -123,25 +126,25 @@ void VertexData::loadMesh(MeshId id, Array<Meshlet> loadedMeshlets)
             .size = sizeof(MeshletDescription) * meshlets.size(),
             .data = (uint8*)meshlets.data()
         },
-        .stride = sizeof(MeshletDescription),
+        .numElements = meshlets.size(),
         .dynamic = true,
-        });
+    });
     vertexIndicesBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
         .sourceData = {
             .size = sizeof(uint32) * vertexIndices.size(),
             .data = (uint8*)vertexIndices.data(),
         },
-        .stride = sizeof(uint32),
+        .numElements = vertexIndices.size(),
         .dynamic = true,
-        });
+    });
     primitiveIndicesBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
         .sourceData = {
             .size = sizeof(uint8) * primitiveIndices.size(),
             .data = (uint8*)primitiveIndices.data(),
         },
-        .stride = sizeof(uint8),
+        .numElements = primitiveIndices.size(),
         .dynamic = true,
-        });
+    });
 }
 
 MeshId VertexData::allocateVertexData(uint64 numVertices)

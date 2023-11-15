@@ -2,6 +2,7 @@
 #include "Window/WindowManager.h"
 #include "MaterialInstance.h"
 #include "Graphics/Graphics.h"
+#include "Graphics/Shader.h"
 
 using namespace Seele;
 

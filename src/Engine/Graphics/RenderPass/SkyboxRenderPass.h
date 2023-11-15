@@ -1,13 +1,10 @@
 #pragma once
 #include "RenderPass.h"
-#include "Graphics/Resources.h"
+#include "Graphics/Shader.h"
 #include "Component/Skybox.h"
 
 namespace Seele
 {
-DECLARE_REF(CameraActor)
-DECLARE_REF(Scene)
-DECLARE_REF(Viewport)
 class SkyboxRenderPass : public RenderPass
 {
 public:
@@ -27,11 +24,10 @@ private:
     Gfx::PDescriptorSet skyboxDataSet;
     Gfx::ODescriptorLayout textureLayout;
     Gfx::PDescriptorSet textureSet;
-    Gfx::OVertexDeclaration declaration;
     Gfx::OVertexShader vertexShader;
     Gfx::OFragmentShader fragmentShader;
     Gfx::PGraphicsPipeline pipeline;
-    Gfx::OSamplerState skyboxSampler;
+    Gfx::OSampler skyboxSampler;
     Component::Skybox skybox;
 };
 DEFINE_REF(SkyboxRenderPass)

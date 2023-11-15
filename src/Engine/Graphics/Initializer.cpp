@@ -17,8 +17,8 @@ LegacyPipelineCreateInfo::LegacyPipelineCreateInfo()
 	, depthStencilState(DepthStencilState{
 		.depthTestEnable = true,
 		.depthWriteEnable = true,
-		.stencilTestEnable = false,
 		.depthCompareOp = Gfx::SE_COMPARE_OP_LESS_OR_EQUAL,
+		.stencilTestEnable = false,
 		.minDepthBounds = 0.0f,
 		.maxDepthBounds = 1.0f,
 		})
@@ -61,8 +61,8 @@ MeshPipelineCreateInfo::MeshPipelineCreateInfo()
 	, depthStencilState(DepthStencilState{
 		.depthTestEnable = true,
 		.depthWriteEnable = true,
-		.stencilTestEnable = false,
 		.depthCompareOp = Gfx::SE_COMPARE_OP_LESS_OR_EQUAL,
+		.stencilTestEnable = false,
 		.minDepthBounds = 0.0f,
 		.maxDepthBounds = 1.0f,
 		})

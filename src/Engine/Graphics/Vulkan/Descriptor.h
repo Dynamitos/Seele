@@ -24,7 +24,7 @@ private:
     PGraphics graphics;
     Array<VkDescriptorSetLayoutBinding> bindings;
     VkDescriptorSetLayout layoutHandle;
-    friend class DescriptorAllocator;
+    friend class DescriptorPool;
 };
 DEFINE_REF(DescriptorLayout)
 class PipelineLayout : public Gfx::PipelineLayout
@@ -33,25 +33,19 @@ public:
     PipelineLayout(PGraphics graphics, Gfx::PPipelineLayout baseLayout)
         : Gfx::PipelineLayout(baseLayout)
         , graphics(graphics)
-        , layoutHash(0)
         , layoutHandle(VK_NULL_HANDLE)
     {}
     virtual ~PipelineLayout();
     virtual void create();
     virtual void reset();
-    inline VkPipelineLayout getHandle() const
+    constexpr VkPipelineLayout getHandle() const
     {
         return layoutHandle;
-    }
-    virtual uint32 getHash() const
-    {
-        return layoutHash;
     }
 
 private:
     Array<VkDescriptorSetLayout> vulkanDescriptorLayouts;
     PGraphics graphics;
-    uint32 layoutHash;
     VkPipelineLayout layoutHandle;
 };
 DEFINE_REF(PipelineLayout)
@@ -59,7 +53,7 @@ DEFINE_REF(PipelineLayout)
 class DescriptorSet : public Gfx::DescriptorSet
 {
 public:
-    DescriptorSet(PGraphics graphics, PDescriptorAllocator owner)
+    DescriptorSet(PGraphics graphics, PDescriptorPool owner)
         : setHandle(VK_NULL_HANDLE)
         , graphics(graphics)
         , owner(owner)
@@ -71,8 +65,8 @@ public:
     virtual void writeChanges();
     virtual void updateBuffer(uint32_t binding, Gfx::PUniformBuffer uniformBuffer);
     virtual void updateBuffer(uint32_t binding, Gfx::PShaderBuffer uniformBuffer);
-    virtual void updateSampler(uint32_t binding, Gfx::PSamplerState samplerState);
-    virtual void updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::PSamplerState sampler = nullptr);
+    virtual void updateSampler(uint32_t binding, Gfx::PSampler samplerState);
+    virtual void updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::PSampler sampler = nullptr);
     virtual void updateTextureArray(uint32_t binding, Array<Gfx::PTexture> texture);
     virtual bool operator<(Gfx::PDescriptorSet other);
     
@@ -116,29 +110,29 @@ private:
     Array<void*> cachedData;
     VkDescriptorSet setHandle;
     PGraphics graphics;
-    PDescriptorAllocator owner;
+    PDescriptorPool owner;
     bool currentlyBound;
     bool currentlyInUse;
-    friend class DescriptorAllocator;
+    friend class DescriptorPool;
     friend class Command;
     friend class RenderCommand;
     friend class ComputeCommand;
 };
 DEFINE_REF(DescriptorSet)
 
-class DescriptorAllocator : public Gfx::DescriptorAllocator
+class DescriptorPool : public Gfx::DescriptorPool
 {
 public:
-    DescriptorAllocator(PGraphics graphics, DescriptorLayout &layout);
-    virtual ~DescriptorAllocator();
+    DescriptorPool(PGraphics graphics, DescriptorLayout &layout);
+    virtual ~DescriptorPool();
     virtual Gfx::PDescriptorSet allocateDescriptorSet() override;
     virtual void reset();
 
-    inline VkDescriptorPool getHandle() const
+    constexpr VkDescriptorPool getHandle() const
     {
         return poolHandle;
     }
-    inline DescriptorLayout& getLayout() const
+    constexpr DescriptorLayout& getLayout() const
     {
         return layout;
     }
@@ -149,8 +143,8 @@ private:
     const static int maxSets = 64;
     StaticArray<ODescriptorSet, maxSets> cachedHandles;
     VkDescriptorPool poolHandle;
-    DescriptorAllocator* nextAlloc = nullptr;
+    DescriptorPool* nextAlloc = nullptr;
 };
-DEFINE_REF(DescriptorAllocator)
+DEFINE_REF(DescriptorPool)
 } // namespace Vulkan
 } // namespace Seele

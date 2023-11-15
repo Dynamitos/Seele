@@ -1,6 +1,6 @@
 #pragma once
 #include "Queue.h"
-#include "DescriptorSets.h"
+#include "Graphics/Command.h"
 #include "Buffer.h"
 
 namespace Seele
@@ -17,7 +17,7 @@ DECLARE_REF(CommandPool)
 class Command
 {
 public:
-	Command(PGraphics graphics, VkCommandPool cmdPool, PCommandBufferManager manager);
+	Command(PGraphics graphics, VkCommandPool cmdPool, PCommandPool pool);
 	virtual ~Command();
 	constexpr VkCommandBuffer getHandle()
 	{
@@ -34,7 +34,7 @@ public:
 	void checkFence();
 	void waitForCommand(uint32 timeToWait = 1000000u);
 	PFence getFence();
-	PCommandBufferManager getManager();
+	PCommandPool getPool();
 	enum State
 	{
 		Init,
@@ -46,13 +46,15 @@ public:
 
 private:
 	PGraphics graphics;
-	PCommandBufferManager manager;
+	PCommandPool pool;
 	OFence fence;
 	State state;
 	VkViewport currentViewport;
 	VkRect2D currentScissor;
 	VkCommandBuffer handle;
 	VkCommandPool owner;
+	PRenderPass boundRenderPass;
+	PFramebuffer boundFramebuffer;
 	Array<PSemaphore> waitSemaphores;
 	Array<VkPipelineStageFlags> waitFlags;
 	Array<PRenderCommand> executingRenders;
@@ -112,7 +114,7 @@ public:
 	{
 		return handle;
 	}
-	void begin(PCmdBuffer parent);
+	void begin();
 	void end();
 	void reset();
 	virtual bool isReady() override;
@@ -144,7 +146,7 @@ public:
 		return queue;
 	}
 	PCommand getCommands();
-	PRenderCommand createRenderCommand(PRenderPass renderPass, PFramebuffer framebuffer, const std::string& name);
+	PRenderCommand createRenderCommand(const std::string& name);
 	PComputeCommand createComputeCommand(const std::string& name);
 	constexpr VkCommandPool getHandle() const
 	{
@@ -158,7 +160,7 @@ private:
 	PQueue queue;
 	uint32 queueFamilyIndex;
 	PCommand command;
-	Array<OCmdBuffer> allocatedBuffers;
+	Array<OCommand> allocatedBuffers;
 	Array<ORenderCommand> allocatedRenderCommands;
 	Array<OComputeCommand> allocatedComputeCommands;
 };

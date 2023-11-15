@@ -1,6 +1,6 @@
 #pragma once
 #include "Enums.h"
-#include "Graphics/Resources.h"
+#include "Graphics/Pipeline.h"
 
 namespace Seele
 {

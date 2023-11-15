@@ -21,15 +21,15 @@ public:
 DEFINE_REF(DescriptorBinding)
 
 DECLARE_REF(DescriptorSet)
-class DescriptorAllocator
+class DescriptorPool
 {
 public:
-    DescriptorAllocator();
-    virtual ~DescriptorAllocator();
+    DescriptorPool();
+    virtual ~DescriptorPool();
     virtual PDescriptorSet allocateDescriptorSet() = 0;
     virtual void reset() = 0;
 };
-DEFINE_REF(DescriptorAllocator)
+DEFINE_REF(DescriptorPool)
 DECLARE_REF(UniformBuffer)
 DECLARE_REF(ShaderBuffer)
 DECLARE_REF(Texture)
@@ -68,11 +68,11 @@ public:
 
 protected:
     Array<DescriptorBinding> descriptorBindings;
-    ODescriptorAllocator allocator;
+    ODescriptorPool pool;
     uint32 setIndex;
     std::string name;
     friend class PipelineLayout;
-    friend class DescriptorAllocator;
+    friend class DescriptorPool;
 };
 DEFINE_REF(DescriptorLayout)
 class PipelineLayout
@@ -85,9 +85,10 @@ public:
     virtual void reset() = 0;
     void addDescriptorLayout(uint32 setIndex, PDescriptorLayout layout);
     void addPushConstants(const SePushConstantRange& pushConstants);
-    virtual uint32 getHash() const = 0;
+    constexpr uint32 getHash() const { return layoutHash; }
 
 protected:
+    uint32 layoutHash;
     Array<PDescriptorLayout> descriptorSetLayouts;
     Array<SePushConstantRange> pushConstants;
 };

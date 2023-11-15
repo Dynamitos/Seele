@@ -1,10 +1,5 @@
 import Common;
 
-struct VertexShaderInput
-{
-    float3 position;
-};
-
 struct VertexShaderOutput
 {
     float4 clipPos : SV_Position;
@@ -18,13 +13,69 @@ struct SkyboxData
 layout(set=1)
 ParameterBlock<SkyboxData> pSkyboxData;
 
+float3 vertices[] = {
+    // Back
+    float3(-512, -512,  512),
+    float3(-512,  512,  512),
+    float3( 512, -512,  512),
+
+    float3( 512, -512,  512),
+    float3(-512,  512,  512),
+    float3( 512,  512,  512),
+
+    // Front
+    float3( 512, -512, -512),
+    float3( 512,  512, -512),
+    float3(-512, -512, -512),
+
+    float3(-512, -512, -512),
+    float3( 512,  512, -512),
+    float3(-512,  512, -512),
+
+    // Top
+    float3(-512, -512, -512),
+    float3(-512, -512,  512),
+    float3( 512, -512, -512),
+
+    float3( 512, -512, -512),
+    float3(-512, -512,  512),
+    float3( 512, -512,  512),
+
+    // Bottom
+    float3(-512,  512,  512),
+    float3(-512,  512, -512),
+    float3( 512,  512,  512),
+
+    float3( 512,  512,  512),
+    float3(-512,  512, -512),
+    float3( 512,  512, -512),
+
+    // Left
+    float3(-512, -512, -512),
+    float3(-512,  512, -512),
+    float3(-512, -512,  512),
+
+    float3(-512, -512,  512),
+    float3(-512,  512, -512),
+    float3(-512,  512,  512),
+
+    // Right
+    float3( 512, -512,  512),
+    float3( 512,  512,  512),
+    float3( 512, -512, -512),
+
+    float3( 512, -512, -512),
+    float3( 512,  512,  512),
+    float3( 512,  512, -512),
+};
+
 [shader("vertex")]
 VertexShaderOutput vertexMain(
-    VertexShaderInput input)
+    uint vertexIndex : SV_VertexId)
 {
     VertexShaderOutput output;
     float3x3 cameraRotation = float3x3(pViewParams.viewMatrix);
-    float4 worldPos = float4(mul(cameraRotation, input.position), 1.0f);
+    float4 worldPos = float4(mul(cameraRotation, vertices[vertexIndex]), 1.0f);
     //clip(dot(worldPos, clipPlane));
     output.clipPos = mul(pViewParams.projectionMatrix, worldPos);
     output.texCoords = normalize(input.position);

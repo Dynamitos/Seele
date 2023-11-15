@@ -13,15 +13,24 @@ ParameterBlock<SamplerState> glyphSampler;
 //layout(set = 1)
 //ShaderBuffer<GlyphData> glyphData;
 ParameterBuffer<Texture2D<uint>[]> pGlyphTextures;
-[[vk::push_constant]]
-ConstantBuffer<TextData> textData;
 
-struct VertexInput
+struct GlyphInstanceData
 {
     float2 position;
     float2 widthHeight;
     uint glyphIndex;
+};
+struct TextRender
+{
+    StructuredBuffer<GlyphInstanceData> instances;
+    TextData textData;
+}
+ParameterBuffer<TextRender> pRender;
+
+struct VertexInput
+{
     uint vertexId : SV_VertexID;
+    uint instanceId : SV_InstanceID;
 };
 
 struct VertexOutput
@@ -34,11 +43,11 @@ struct VertexOutput
 [shader("vertex")]
 VertexOutput vertexMain(VertexInput input)
 {
-    float xpos = input.position.x;
-    float ypos = input.position.y;
+    float xpos = pRender.instances[input.instanceId].position.x;
+    float ypos = pRender.instances[input.instanceId].position.y;
     
-    float w = input.widthHeight.x;
-    float h = input.widthHeight.y;
+    float w = pRender.instances[input.instanceId].widthHeight.x;
+    float h = pRender.instances[input.instanceId].widthHeight.y;
     
     float4 coordinates[4] = {
         float4(xpos,     ypos,     0, 1),
@@ -50,7 +59,7 @@ VertexOutput vertexMain(VertexInput input)
     VertexStageOutput output;
     output.texCoords = vertex.zw;
     output.position = mul(viewData.projectionMatrix, float4(vertex.xy, 0, 1));
-    output.glyphIndex = input.glyphIndex;
+    output.glyphIndex = pRender.instances[input.instanceId].glyphIndex;
     return output;
 }
 

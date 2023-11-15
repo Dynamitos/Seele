@@ -1,5 +1,5 @@
 #include "Pipeline.h"
-#include "DescriptorSets.h"
+#include "Descriptor.h"
 #include "Graphics.h"
 
 using namespace Seele;

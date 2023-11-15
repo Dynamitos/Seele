@@ -23,7 +23,7 @@ LightEnvironment::LightEnvironment(Gfx::PGraphics graphics)
             .size = sizeof(Component::DirectionalLight) * MAX_DIRECTIONAL_LIGHTS,
             .data = nullptr,
         },
-        .stride = sizeof(Component::DirectionalLight),
+        .numElements = MAX_DIRECTIONAL_LIGHTS,
         .dynamic = true,
     });
     pointLights = graphics->createShaderBuffer(ShaderBufferCreateInfo{
@@ -31,7 +31,7 @@ LightEnvironment::LightEnvironment(Gfx::PGraphics graphics)
             .size = sizeof(Component::PointLight) * MAX_POINT_LIGHTS,
             .data = nullptr,
         },
-        .stride = sizeof(Component::PointLight),
+        .numElements = MAX_POINT_LIGHTS,
         .dynamic = true,
     });
 }

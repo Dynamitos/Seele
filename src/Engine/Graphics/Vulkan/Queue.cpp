@@ -1,8 +1,7 @@
 #include "Queue.h"
-#include "Initializer.h"
 #include "Graphics.h"
 #include "Allocator.h"
-#include "CommandBuffer.h"
+#include "Command.h"
 
 using namespace Seele;
 using namespace Seele::Vulkan;
@@ -19,45 +18,46 @@ Queue::~Queue()
 {
 }
 
-void Queue::submitCommandBuffer(PCmdBuffer cmdBuffer, uint32 numSignalSemaphores, VkSemaphore *signalSemaphores)
+void Queue::submitCommandBuffer(PCommand command, uint32 numSignalSemaphores, VkSemaphore *signalSemaphores)
 {
-    std::scoped_lock lck(queueLock);
-    assert(cmdBuffer->state == Command::State::End);
+    std::unique_lock lock(queueLock);
+    assert(command->state == Command::State::End);
 
-    PFence fence = cmdBuffer->fence;
+    PFence fence = command->fence;
     assert(!fence->isSignaled());
 
-    const VkCommandBuffer cmdBuffers[] = {cmdBuffer->handle};
-
-    VkSubmitInfo submitInfo =
-        init::SubmitInfo();
-    submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = cmdBuffers;
-    submitInfo.signalSemaphoreCount = static_cast<uint32>(numSignalSemaphores);
-    submitInfo.pSignalSemaphores = signalSemaphores;
+    VkCommandBuffer cmdHandle = command->handle;
 
     Array<VkSemaphore> waitSemaphores;
-    if (cmdBuffer->waitSemaphores.size() > 0)
+    if (command->waitSemaphores.size() > 0)
     {
-        for (PSemaphore semaphore : cmdBuffer->waitSemaphores)
+        for (PSemaphore semaphore : command->waitSemaphores)
         {
             waitSemaphores.add(semaphore->getHandle());
         }
-        submitInfo.waitSemaphoreCount = static_cast<uint32>(cmdBuffer->waitSemaphores.size());
-        submitInfo.pWaitSemaphores = waitSemaphores.data();
-        submitInfo.pWaitDstStageMask = cmdBuffer->waitFlags.data();
     }
+
+    VkSubmitInfo submitInfo = {
+        .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+        .pNext = nullptr,
+        .waitSemaphoreCount = static_cast<uint32>(command->waitSemaphores.size()),
+        .pWaitSemaphores = waitSemaphores.data(),
+        .pWaitDstStageMask = command->waitFlags.data(),
+        .commandBufferCount = 1,
+        .pCommandBuffers = &cmdHandle,
+        .signalSemaphoreCount = static_cast<uint32>(numSignalSemaphores),
+        .pSignalSemaphores = signalSemaphores,
+    };
+    
     VK_CHECK(vkQueueSubmit(queue, 1, &submitInfo, fence->getHandle()));
-    cmdBuffer->state = Command::State::Submit;
-    cmdBuffer->waitFlags.clear();
-    cmdBuffer->waitSemaphores.clear();
+    command->state = Command::State::Submit;
+    command->waitFlags.clear();
+    command->waitSemaphores.clear();
 
     if (Gfx::waitIdleOnSubmit)
     {
         fence->wait(200 * 1000ull);
     }
 
-    cmdBuffer->checkFence();
-    graphics->getStagingManager()->clearPending();
-    
+    command->checkFence();    
 }

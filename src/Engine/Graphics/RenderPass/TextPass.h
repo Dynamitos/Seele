@@ -1,8 +1,8 @@
 #pragma once
 #include "RenderPass.h"
 #include "UI/RenderHierarchy.h"
-#include "Graphics/Resources.h"
 #include "Asset/FontAsset.h"
+#include "Graphics/Shader.h"
 
 namespace Seele
 {
@@ -58,7 +58,7 @@ private:
 
     struct TextResources
     {
-        Gfx::PVertexBuffer vertexBuffer;
+        Gfx::PShaderBuffer instanceBuffer;
         Gfx::PDescriptorSet textureArraySet;
         TextData textData;
     };
@@ -73,9 +73,8 @@ private:
     Gfx::PDescriptorSet generalSet;
 
     Gfx::OUniformBuffer projectionBuffer;
-    Gfx::OSamplerState glyphSampler;
+    Gfx::OSampler glyphSampler;
 
-    Gfx::OVertexDeclaration declaration;
     Gfx::OVertexShader vertexShader;
     Gfx::OFragmentShader fragmentShader;
     Gfx::PPipelineLayout layoutRef;

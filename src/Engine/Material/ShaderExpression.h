@@ -105,11 +105,11 @@ struct TextureParameter : public ShaderParameter
     virtual void load(ArchiveBuffer& buffer) override;
 };
 DEFINE_REF(TextureParameter)
-DECLARE_NAME_REF(Gfx, SamplerState)
+DECLARE_NAME_REF(Gfx, Sampler)
 struct SamplerParameter : public ShaderParameter
 {
     static constexpr uint64 IDENTIFIER = 0x08;
-    Gfx::OSamplerState data;
+    Gfx::OSampler data;
     SamplerParameter() {}
     SamplerParameter(std::string name, uint32 byteOffset, uint32 binding);
     virtual ~SamplerParameter();
@@ -124,7 +124,7 @@ struct CombinedTextureParameter : public ShaderParameter
 {
     static constexpr uint64 IDENTIFIER = 0x10;
     PTextureAsset data;
-    Gfx::PSamplerState sampler;
+    Gfx::PSampler sampler;
     CombinedTextureParameter() {}
     CombinedTextureParameter(std::string name, uint32 byteOffset, uint32 binding);
     virtual ~CombinedTextureParameter();

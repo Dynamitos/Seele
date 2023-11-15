@@ -12,6 +12,7 @@ DECLARE_REF(DestructionManager)
 DECLARE_REF(CommandPool)
 DECLARE_REF(Queue)
 DECLARE_REF(PipelineCache)
+DECLARE_REF(Framebuffer)
 class Graphics : public Gfx::Graphics
 {
 public:
@@ -21,11 +22,11 @@ public:
     constexpr VkDevice getDevice() const { return handle; };
     constexpr VkPhysicalDevice getPhysicalDevice() const { return physicalDevice; };
 
-    PCommandBufferManager getQueueCommands(Gfx::QueueType queueType);
-    PCommandBufferManager getGraphicsCommands();
-    PCommandBufferManager getComputeCommands();
-    PCommandBufferManager getTransferCommands();
-    PCommandBufferManager getDedicatedTransferCommands();
+    PCommandPool getQueueCommands(Gfx::QueueType queueType);
+    PCommandPool getGraphicsCommands();
+    PCommandPool getComputeCommands();
+    PCommandPool getTransferCommands();
+    PCommandPool getDedicatedTransferCommands();
 
     PAllocator getAllocator();
     PStagingManager getStagingManager();
@@ -62,12 +63,11 @@ public:
     virtual Gfx::PGraphicsPipeline createGraphicsPipeline(Gfx::LegacyPipelineCreateInfo createInfo) override;
     virtual Gfx::PGraphicsPipeline createGraphicsPipeline(Gfx::MeshPipelineCreateInfo createInfo) override;
     virtual Gfx::PComputePipeline createComputePipeline(Gfx::ComputePipelineCreateInfo createInfo) override;
-    virtual Gfx::OSampler createSamplerState(const SamplerCreateInfo& createInfo) override;
+    virtual Gfx::OSampler createSampler(const SamplerCreateInfo& createInfo) override;
 
     virtual Gfx::ODescriptorLayout createDescriptorLayout(const std::string& name = "") override;
     virtual Gfx::OPipelineLayout createPipelineLayout(Gfx::PPipelineLayout baseLayout = nullptr) override;
 
-    virtual void copyTexture(Gfx::PTexture srcTexture, Gfx::PTexture dstTexture) override;
     void vkCmdDrawMeshTasksEXT(VkCommandBuffer handle, uint32 groupX, uint32 groupY, uint32 groupZ);
 protected:
     PFN_vkCmdDrawMeshTasksEXT cmdDrawMeshTasks;
@@ -86,15 +86,13 @@ protected:
     OQueue transferQueue;
     OQueue dedicatedTransferQueue;
     OPipelineCache pipelineCache;
-    thread_local static OCommandBufferManager graphicsCommands;
-    thread_local static OCommandBufferManager computeCommands;
-    thread_local static OCommandBufferManager transferCommands;
-    thread_local static OCommandBufferManager dedicatedTransferCommands;
+    thread_local static OCommandPool graphicsCommands;
+    thread_local static OCommandPool computeCommands;
+    thread_local static OCommandPool transferCommands;
+    thread_local static OCommandPool dedicatedTransferCommands;
     VkPhysicalDeviceProperties props;
     VkPhysicalDeviceFeatures features;
     VkDebugReportCallbackEXT callback;
-    Array<PViewport> viewports;
-    std::mutex allocatedFrameBufferLock;
     Map<uint32, OFramebuffer> allocatedFramebuffers;
     OAllocator allocator;
     OStagingManager stagingManager;

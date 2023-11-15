@@ -2,6 +2,7 @@
 #include "RenderGraph.h"
 #include "Graphics/Graphics.h"
 #include "Graphics/RenderTarget.h"
+#include "Graphics/Command.h"
 
 using namespace Seele;
 
@@ -43,15 +44,13 @@ void TextPass::beginFrame(const Component::Camera& cam)
             });
             x += (glyph.advance >> 6) * render.scale;
         }
-        VertexBufferCreateInfo vbInfo = {
+        res.instanceBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
             .sourceData = {
                 .size = static_cast<uint32>(instanceData.size() * sizeof(GlyphInstanceData)),
                 .data = reinterpret_cast<uint8*>(instanceData.data()),
-                },
-            .vertexSize = sizeof(GlyphInstanceData),
-            .numVertices = static_cast<uint32>(instanceData.size()),
-        };
-        res.vertexBuffer = graphics->createVertexBuffer(vbInfo);
+            },
+            .numElements = instanceData.size(),
+        });
 
         res.textureArraySet = fd.textureArraySet;
 
@@ -83,10 +82,10 @@ void TextPass::render()
         for(const auto& resource : res)
         {
             command->bindDescriptor({generalSet, resource.textureArraySet});
-            command->bindVertexBuffer({resource.vertexBuffer});
+            //command->bindVertexBuffer({resource.vertexBuffer});
             
             command->pushConstants(layoutRef, Gfx::SE_SHADER_STAGE_VERTEX_BIT | Gfx::SE_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(TextData), &resource.textData);
-            command->draw(4, static_cast<uint32>(resource.vertexBuffer->getNumVertices()), 0, 0);
+            //command->draw(4, static_cast<uint32>(resource.vertexBuffer->getNumVertices()), 0, 0);
         }
         commands.add(command);
     }
@@ -120,33 +119,6 @@ void TextPass::createRenderPass()
     createInfo.name = "TextFragment";
     createInfo.entryPoint =  "fragmentMain";
     fragmentShader = graphics->createFragmentShader(createInfo);
-    Array<Gfx::VertexElement> elements;
-    elements.add({
-        .binding = 0, 
-        .offset = offsetof(GlyphInstanceData, position), 
-        .vertexFormat = Gfx::SE_FORMAT_R32G32_SFLOAT, 
-        .attributeIndex = 0, 
-        .stride = sizeof(GlyphInstanceData), 
-        .instanced = 1
-    });
-    elements.add({
-        .binding = 0, 
-        .offset = offsetof(GlyphInstanceData, widthHeight), 
-        .vertexFormat = Gfx::SE_FORMAT_R32G32_SFLOAT, 
-        .attributeIndex = 1,
-        .stride = sizeof(GlyphInstanceData), 
-        .instanced = 1
-    });
-    elements.add({
-        .binding = 0,
-        .offset = offsetof(GlyphInstanceData, glyphIndex),
-        .vertexFormat = Gfx::SE_FORMAT_R32_UINT,
-        .attributeIndex = 2,
-        .stride = sizeof(GlyphInstanceData),
-        .instanced = 1
-    });
-    declaration = graphics->createVertexDeclaration(elements);
-
     generalLayout = graphics->createDescriptorLayout("TextGeneral");
     generalLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
     generalLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_SAMPLER);
@@ -164,7 +136,7 @@ void TextPass::createRenderPass()
         .dynamic = true,
     });
 
-    glyphSampler = graphics->createSamplerState({
+    glyphSampler = graphics->createSampler({
         .magFilter = Gfx::SE_FILTER_LINEAR,
         .minFilter = Gfx::SE_FILTER_LINEAR,
         .addressModeU = Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
@@ -190,7 +162,6 @@ void TextPass::createRenderPass()
     renderPass = graphics->createRenderPass(std::move(layout), viewport);
     
     Gfx::LegacyPipelineCreateInfo pipelineInfo;
-    pipelineInfo.vertexDeclaration = declaration;
     pipelineInfo.vertexShader = vertexShader;
     pipelineInfo.fragmentShader = fragmentShader;
     pipelineInfo.renderPass = renderPass;

@@ -1,7 +1,7 @@
 #pragma once
 #include "RenderPass.h"
 #include "UI/RenderHierarchy.h"
-#include "Graphics/Resources.h"
+#include "Graphics/Shader.h"
 
 namespace Seele
 {
@@ -31,7 +31,6 @@ private:
     Gfx::OUniformBuffer numTexturesBuffer;
     Gfx::OVertexBuffer elementBuffer;
 
-    Gfx::OVertexDeclaration declaration;
     Gfx::OVertexShader vertexShader;
     Gfx::OFragmentShader fragmentShader;
     Gfx::PGraphicsPipeline pipeline;

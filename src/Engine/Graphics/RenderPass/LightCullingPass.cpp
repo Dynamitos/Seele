@@ -4,6 +4,7 @@
 #include "Actor/CameraActor.h"
 #include "Component/Camera.h"
 #include "RenderGraph.h"
+#include "Graphics/Command.h"
 
 using namespace Seele;
 
@@ -130,14 +131,13 @@ void LightCullingPass::publishOutputs()
     cullingPipeline = graphics->createComputePipeline(std::move(pipelineInfo));
 
     uint32 counterReset = 0;
-    ShaderBufferCreateInfo structInfo = 
-    {
+    ShaderBufferCreateInfo structInfo = {
         .sourceData = {
             .size = sizeof(uint32),
             .data = (uint8*)&counterReset,
             .owner = Gfx::QueueType::COMPUTE,
         },
-        .stride = sizeof(uint32),
+        .numElements = 1,
         .dynamic = true,
     };
     oLightIndexCounter = graphics->createShaderBuffer(structInfo);
@@ -151,7 +151,6 @@ void LightCullingPass::publishOutputs()
             .data = nullptr,
             .owner = Gfx::QueueType::COMPUTE
         },
-        .stride = sizeof(uint32),
         .dynamic = false,
     };
     oLightIndexList = graphics->createShaderBuffer(structInfo);
@@ -160,9 +159,9 @@ void LightCullingPass::publishOutputs()
     resources->registerBufferOutput("LIGHTCULLING_TLIGHTLIST", tLightIndexList);
     
     TextureCreateInfo textureInfo = {
+        .format = Gfx::SE_FORMAT_R32G32_UINT,
         .width = dispatchParams.numThreadGroups.x,
         .height = dispatchParams.numThreadGroups.y,
-        .format = Gfx::SE_FORMAT_R32G32_UINT,
         .usage = Gfx::SE_IMAGE_USAGE_STORAGE_BIT,
     };
     oLightGrid = graphics->createTexture2D(textureInfo);
@@ -226,7 +225,7 @@ void LightCullingPass::setupFrustums()
             .size = sizeof(Frustum) * numThreads.x * numThreads.y * numThreads.z,
             .data = nullptr,
         },
-        .stride = sizeof(Frustum),
+        .numElements = numThreads.x * numThreads.y * numThreads.z,
         .dynamic = false,
     });
     

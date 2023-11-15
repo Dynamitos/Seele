@@ -1,12 +1,11 @@
-#include "CommandBuffer.h"
-#include "Initializer.h"
+#include "Command.h"
 #include "Graphics.h"
 #include "Pipeline.h"
 #include "Enums.h"
 #include "Framebuffer.h"
 #include "RenderPass.h"
 #include "Pipeline.h"
-#include "DescriptorSets.h"
+#include "Descriptor.h"
 #include "RenderTarget.h"
 #include <vulkan/vulkan_core.h>
 
@@ -14,9 +13,9 @@ using namespace Seele;
 using namespace Seele::Vulkan;
 
 
-Command::Command(PGraphics graphics, VkCommandPool cmdPool, PCommandBufferManager manager)
+Command::Command(PGraphics graphics, VkCommandPool cmdPool, PCommandPool pool)
     : graphics(graphics)
-    , manager(manager)
+    , pool(pool)
     , owner(cmdPool)
 {
     VkCommandBufferAllocateInfo allocInfo = {
@@ -159,7 +158,7 @@ void Command::checkFence()
 
 void Command::waitForCommand(uint32 timeout)
 {
-    manager->submitCommands();
+    pool->submitCommands();
     if (state == State::Begin)
     {
         // is already done
@@ -174,9 +173,9 @@ PFence Command::getFence()
     return fence;
 }
 
-PCommandBufferManager Command::getManager() 
+PCommandPool Command::getPool() 
 {
-    return manager;
+    return pool;
 }
 
 RenderCommand::RenderCommand(PGraphics graphics, VkCommandPool cmdPool)
@@ -203,15 +202,21 @@ void RenderCommand::begin(PRenderPass renderPass, PFramebuffer framebuffer)
 {
     threadId = std::this_thread::get_id();
     ready = false;
-    VkCommandBufferBeginInfo beginInfo =
-        init::CommandBufferBeginInfo();
-    VkCommandBufferInheritanceInfo inheritanceInfo =
-        init::CommandBufferInheritanceInfo();
-    inheritanceInfo.framebuffer = framebuffer->getHandle();
-    inheritanceInfo.renderPass = renderPass->getHandle();
-    inheritanceInfo.subpass = 0;
-    beginInfo.pInheritanceInfo = &inheritanceInfo;
-    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
+    VkCommandBufferInheritanceInfo inheritanceInfo = {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO,
+        .renderPass = renderPass->getHandle(),
+        .subpass = 0,
+        .framebuffer = framebuffer->getHandle(),
+        .occlusionQueryEnable = 0,
+        .queryFlags = 0,
+        .pipelineStatistics = 0,
+    };
+    VkCommandBufferBeginInfo beginInfo = {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+        .pNext = nullptr,
+        .flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT,
+        .pInheritanceInfo = &inheritanceInfo,
+    };
     VK_CHECK(vkBeginCommandBuffer(handle, &beginInfo));
 }
 
@@ -236,7 +241,16 @@ void RenderCommand::setViewport(Gfx::PViewport viewport)
 {
     assert(threadId == std::this_thread::get_id());
     VkViewport vp = viewport.cast<Viewport>()->getHandle();
-    VkRect2D scissors = init::Rect2D(viewport->getWidth(), viewport->getHeight(), viewport->getOffsetX(), viewport->getOffsetY());
+    VkRect2D scissors = {
+        .offset = {
+            .x = (int32)viewport->getOffsetX(),
+            .y = (int32)viewport->getOffsetY(),
+        },
+        .extent = {
+            .width = viewport->getWidth(),
+            .height = viewport->getHeight(),
+        },
+    };
     vkCmdSetViewport(handle, 0, 1, &vp);
     vkCmdSetScissor(handle, 0, 1, &scissors);
 }
@@ -321,10 +335,13 @@ ComputeCommand::ComputeCommand(PGraphics graphics, VkCommandPool cmdPool)
     : graphics(graphics)
     , owner(cmdPool)
 {
-    VkCommandBufferAllocateInfo allocInfo =
-        init::CommandBufferAllocateInfo(cmdPool,
-                                        VK_COMMAND_BUFFER_LEVEL_SECONDARY,
-                                        1);
+    VkCommandBufferAllocateInfo allocInfo = {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+        .pNext = nullptr,
+        .commandPool = owner,
+        .level = VK_COMMAND_BUFFER_LEVEL_SECONDARY,
+        .commandBufferCount = 1,
+    };
     VK_CHECK(vkAllocateCommandBuffers(graphics->getDevice(), &allocInfo, &handle));
 }
 
@@ -334,18 +351,25 @@ ComputeCommand::~ComputeCommand()
     vkFreeCommandBuffers(graphics->getDevice(), owner, 1, &handle);
 }
 
-void ComputeCommand::begin(PCmdBuffer) 
+void ComputeCommand::begin() 
 {
     threadId = std::this_thread::get_id();
     ready = false;
-    VkCommandBufferBeginInfo beginInfo =
-        init::CommandBufferBeginInfo();
-    VkCommandBufferInheritanceInfo inheritanceInfo =
-        init::CommandBufferInheritanceInfo();
-    inheritanceInfo.framebuffer = VK_NULL_HANDLE;
-    inheritanceInfo.renderPass = VK_NULL_HANDLE;
-    inheritanceInfo.subpass = 0;
-    beginInfo.pInheritanceInfo = &inheritanceInfo;
+    VkCommandBufferInheritanceInfo inheritanceInfo = {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO,
+        .renderPass = VK_NULL_HANDLE,
+        .subpass = 0,
+        .framebuffer = VK_NULL_HANDLE,
+        .occlusionQueryEnable = 0,
+        .queryFlags = 0,
+        .pipelineStatistics = 0,
+    };
+    VkCommandBufferBeginInfo beginInfo = {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .pInheritanceInfo = &inheritanceInfo,
+    };
     VK_CHECK(vkBeginCommandBuffer(handle, &beginInfo));
 }
 
@@ -419,15 +443,15 @@ void ComputeCommand::dispatch(uint32 threadX, uint32 threadY, uint32 threadZ)
 CommandPool::CommandPool(PGraphics graphics, PQueue queue)
     : graphics(graphics), queue(queue), queueFamilyIndex(queue->getFamilyIndex())
 {
-    VkCommandPoolCreateInfo info =
-        init::CommandPoolCreateInfo();
-    info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-    info.queueFamilyIndex = queue->getFamilyIndex();
-
+    VkCommandPoolCreateInfo info = {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+        .queueFamilyIndex = queue->getFamilyIndex(),
+    };
     VK_CHECK(vkCreateCommandPool(graphics->getDevice(), &info, nullptr, &commandPool));
 
     allocatedBuffers.add(new Command(graphics, commandPool, this));
-
     
     command = allocatedBuffers.back();
     command->begin();
@@ -440,74 +464,65 @@ CommandPool::~CommandPool()
     queue = nullptr;
 }
 
-PCmdBuffer CommandPool::getCommands()
+PCommand CommandPool::getCommands()
 {
     return command;
 }
 
-PRenderCommand CommandPool::createRenderCommand(PRenderPass renderPass, PFramebuffer framebuffer, const std::string& name)
+PRenderCommand CommandPool::createRenderCommand(const std::string& name)
 {
-    std::scoped_lock lck(allocatedRenderLock);
     for (uint32 i = 0; i < allocatedRenderCommands.size(); ++i)
     {
         PRenderCommand cmdBuffer = allocatedRenderCommands[i];
         if (cmdBuffer->isReady())
         {
             cmdBuffer->name = name;
-            cmdBuffer->begin(renderPass, framebuffer);
+            cmdBuffer->begin(command->boundRenderPass, command->boundFramebuffer);
             return cmdBuffer;
         }
     }
     allocatedRenderCommands.add(new RenderCommand(graphics, commandPool));
     PRenderCommand result = allocatedRenderCommands.back();
     result->name = name;
-    result->begin(renderPass, framebuffer);
+    result->begin(command->boundRenderPass, command->boundFramebuffer);
     return result;
 }
 
 PComputeCommand CommandPool::createComputeCommand(const std::string& name)
 {
-    std::scoped_lock lck(allocatedComputeLock);
     for (uint32 i = 0; i < allocatedComputeCommands.size(); ++i)
     {
         PComputeCommand cmdBuffer = allocatedComputeCommands[i];
         if (cmdBuffer->isReady())
         {
             cmdBuffer->name = name;
-            cmdBuffer->begin(command);
+            cmdBuffer->begin();
             return cmdBuffer;
         }
     }
     allocatedComputeCommands.add(new ComputeCommand(graphics, commandPool));
     PComputeCommand result = allocatedComputeCommands.back();
     result->name = name;
-    result->begin(command);
+    result->begin();
     return result;
 }
 
 void CommandPool::submitCommands(PSemaphore signalSemaphore)
 {
-    if (command->state == Command::State::Begin || command->state == Command::State::RenderPass)
+    assert(command->state == Command::State::Begin); // Not in a renderpass
+    command->end();
+    if (signalSemaphore != nullptr)
     {
-        if (command->state == Command::State::RenderPass)
-        {
-            std::cout << "End of renderpass forced" << std::endl;
-            command->endRenderPass();
-        }
-        command->end();
-        if (signalSemaphore != nullptr)
-        {
-            queue->submitCommandBuffer(command, signalSemaphore->getHandle());
-        }
-        else
-        {
-            queue->submitCommandBuffer(command);
-        }
+        queue->submitCommandBuffer(command, signalSemaphore->getHandle());
     }
-    std::scoped_lock map(allocatedBufferLock);
+    else
+    {
+        queue->submitCommandBuffer(command);
+    }
+    
     for (uint32 i = 0; i < allocatedBuffers.size(); ++i)
     {
-        PCmdBuffer cmdBuffer = allocatedBuffers[i];
+        PCommand cmdBuffer = allocatedBuffers[i];
         cmdBuffer->checkFence();
         if (cmdBuffer->state == Command::State::Init)
         {

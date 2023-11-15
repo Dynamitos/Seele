@@ -1,5 +1,6 @@
 #include "MaterialLoader.h"
 #include "Graphics/Graphics.h"
+#include "Graphics/Shader.h"
 #include "Asset/MaterialAsset.h"
 #include "Asset/AssetRegistry.h"
 #include "Material/Material.h"
@@ -109,11 +110,11 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
             parameters.add(p->key);
             expressions.add(std::move(p));
         }
-        else if(type.compare("SamplerState") == 0)
+        else if(type.compare("Sampler") == 0)
         {
             OSamplerParameter p = new SamplerParameter(param.key(), 0, bindingCounter);
             layout->addDescriptorBinding(bindingCounter++, Gfx::SE_DESCRIPTOR_TYPE_SAMPLER);
-            p->data = graphics->createSamplerState({});
+            p->data = graphics->createSampler({});
             parameters.add(p->key);
             expressions.add(std::move(p));
         }

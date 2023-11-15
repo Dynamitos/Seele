@@ -1,11 +1,11 @@
-#include "Containers/Array.h"
 #include "Graphics.h"
+#include "Debug.h"
 #include "Allocator.h"
 #include "Buffer.h"
 #include "Graphics/Enums.h"
 #include "PipelineCache.h"
 #include "Command.h"
-#include "Initializer.h"
+#include "Descriptor.h"
 #include "RenderTarget.h"
 #include "RenderPass.h"
 #include "Framebuffer.h"
@@ -17,10 +17,10 @@
 using namespace Seele;
 using namespace Seele::Vulkan;
 
-thread_local OCommandBufferManager Seele::Vulkan::Graphics::graphicsCommands = nullptr;
-thread_local OCommandBufferManager Seele::Vulkan::Graphics::computeCommands = nullptr;
-thread_local OCommandBufferManager Seele::Vulkan::Graphics::transferCommands = nullptr;
-thread_local OCommandBufferManager Seele::Vulkan::Graphics::dedicatedTransferCommands = nullptr;
+thread_local OCommandPool Seele::Vulkan::Graphics::graphicsCommands = nullptr;
+thread_local OCommandPool Seele::Vulkan::Graphics::computeCommands = nullptr;
+thread_local OCommandPool Seele::Vulkan::Graphics::transferCommands = nullptr;
+thread_local OCommandPool Seele::Vulkan::Graphics::dedicatedTransferCommands = nullptr;
 
 Graphics::Graphics()
     : instance(VK_NULL_HANDLE)
@@ -32,7 +32,6 @@ Graphics::Graphics()
 
 Graphics::~Graphics()
 {
-    viewports.clear();
     vkDestroyDevice(handle, nullptr);
     DestroyDebugReportCallbackEXT(instance, nullptr, callback);
     vkDestroyInstance(instance, nullptr);
@@ -54,21 +53,16 @@ void Graphics::init(GraphicsInitializer initInfo)
 
 Gfx::OWindow Graphics::createWindow(const WindowCreateInfo &createInfo)
 {
-    OWindow result = new Window(this, createInfo);
-    return result;
+    return new Window(this, createInfo);
 }
 
 Gfx::OViewport Graphics::createViewport(Gfx::PWindow owner, const ViewportCreateInfo &viewportInfo)
 {
-    OViewport result = new Viewport(this, owner, viewportInfo);
-    std::scoped_lock lock(viewportLock);
-    viewports.add(result);
-    return result;
+    return new Viewport(this, owner, viewportInfo);
 }
 Gfx::ORenderPass Graphics::createRenderPass(Gfx::ORenderTargetLayout layout, Gfx::PViewport renderArea)
 {
-    ORenderPass result = new RenderPass(this, std::move(layout), renderArea);
-    return result;
+    return new RenderPass(this, std::move(layout), renderArea);
 }
 void Graphics::beginRenderPass(Gfx::PRenderPass renderPass)
 {
@@ -76,7 +70,6 @@ void Graphics::beginRenderPass(Gfx::PRenderPass renderPass)
     uint32 framebufferHash = rp->getFramebufferHash();
     PFramebuffer framebuffer;
     {
-        std::scoped_lock lock(allocatedFrameBufferLock);
         auto found = allocatedFramebuffers.find(framebufferHash);
         if (found == allocatedFramebuffers.end())
         {
@@ -89,18 +82,12 @@ void Graphics::beginRenderPass(Gfx::PRenderPass renderPass)
         }
     }
     getGraphicsCommands()->getCommands()->beginRenderPass(rp, framebuffer);
-    std::scoped_lock lock(renderPassLock);
-    activeRenderPass = rp;
-    activeFramebuffer = framebuffer;
 }
 
 void Graphics::endRenderPass()
 {
     getGraphicsCommands()->getCommands()->endRenderPass();
     getGraphicsCommands()->submitCommands();
-    std::scoped_lock lock(renderPassLock);
-    activeRenderPass = nullptr;
-    activeFramebuffer = nullptr;
 }
 
 void Graphics::executeCommands(const Array<Gfx::PRenderCommand>& commands)
@@ -148,7 +135,7 @@ Gfx::OIndexBuffer Graphics::createIndexBuffer(const IndexBufferCreateInfo &bulkD
 }
 Gfx::PRenderCommand Graphics::createRenderCommand(const std::string& name)
 {
-    return getGraphicsCommands()->createRenderCommand(activeRenderPass, activeFramebuffer, name);
+    return getGraphicsCommands()->createRenderCommand(name);
 }
 
 Gfx::PComputeCommand Graphics::createComputeCommand(const std::string& name) 
@@ -156,10 +143,6 @@ Gfx::PComputeCommand Graphics::createComputeCommand(const std::string& name)
     return getComputeCommands()->createComputeCommand(name);
 }
 
-Gfx::OVertexDeclaration Graphics::createVertexDeclaration(const Array<Gfx::VertexElement>& element) 
-{
-    return new VertexDeclaration(element);
-}
 
 Gfx::OVertexShader Graphics::createVertexShader(const ShaderCreateInfo& createInfo)
 {
@@ -206,27 +189,29 @@ Gfx::PComputePipeline Graphics::createComputePipeline(Gfx::ComputePipelineCreate
     return pipelineCache->createPipeline(std::move(createInfo));
 }
 
-Gfx::OSamplerState Graphics::createSamplerState(const SamplerCreateInfo& createInfo) 
+Gfx::OSampler Graphics::createSampler(const SamplerCreateInfo& createInfo) 
 {
-    OSamplerState sampler = new SamplerState();
-    VkSamplerCreateInfo vkInfo = 
-        init::SamplerCreateInfo();
-    vkInfo.addressModeU = cast(createInfo.addressModeU);
-    vkInfo.addressModeV = cast(createInfo.addressModeV);
-    vkInfo.addressModeW = cast(createInfo.addressModeW);
-    vkInfo.anisotropyEnable = createInfo.anisotropyEnable;
-    vkInfo.borderColor = cast(createInfo.borderColor);
-    vkInfo.compareEnable = createInfo.compareEnable;
-    vkInfo.compareOp = cast(createInfo.compareOp);
-    vkInfo.flags = createInfo.flags;
-    vkInfo.magFilter = cast(createInfo.magFilter);
-    vkInfo.maxAnisotropy = createInfo.maxAnisotropy;
-    vkInfo.maxLod = createInfo.maxLod;
-    vkInfo.minFilter = cast(createInfo.minFilter);
-    vkInfo.minLod = createInfo.minLod;
-    vkInfo.mipLodBias = createInfo.mipLodBias;
-    vkInfo.mipmapMode = cast(createInfo.mipmapMode);
-    vkInfo.unnormalizedCoordinates = createInfo.unnormalizedCoordinates;
+    OSampler sampler = new Sampler();
+    VkSamplerCreateInfo vkInfo = {
+        .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = createInfo.flags,
+        .magFilter = cast(createInfo.magFilter),
+        .minFilter = cast(createInfo.minFilter),
+        .mipmapMode = cast(createInfo.mipmapMode),
+        .addressModeU = cast(createInfo.addressModeU),
+        .addressModeV = cast(createInfo.addressModeV),
+        .addressModeW = cast(createInfo.addressModeW),
+        .mipLodBias = createInfo.mipLodBias,
+        .anisotropyEnable = createInfo.anisotropyEnable,
+        .maxAnisotropy = createInfo.maxAnisotropy,
+        .compareEnable = createInfo.compareEnable,
+        .compareOp = cast(createInfo.compareOp),
+        .minLod = createInfo.minLod,
+        .maxLod = createInfo.maxLod,
+        .borderColor = cast(createInfo.borderColor),
+        .unnormalizedCoordinates = createInfo.unnormalizedCoordinates,
+    };
     VK_CHECK(vkCreateSampler(handle, &vkInfo, nullptr, &sampler->sampler));
     return sampler;
 }
@@ -246,7 +231,7 @@ void Graphics::vkCmdDrawMeshTasksEXT(VkCommandBuffer handle, uint32 groupX, uint
     cmdDrawMeshTasks(handle, groupX, groupY, groupZ);
 }
 
-PCommandBufferManager Graphics::getQueueCommands(Gfx::QueueType queueType)
+PCommandPool Graphics::getQueueCommands(Gfx::QueueType queueType)
 {
     switch (queueType)
     {
@@ -262,7 +247,7 @@ PCommandBufferManager Graphics::getQueueCommands(Gfx::QueueType queueType)
         throw new std::logic_error("invalid queue type");
     }
 }
-PCommandBufferManager Graphics::getGraphicsCommands()
+PCommandPool Graphics::getGraphicsCommands()
 {
     if(graphicsCommands == nullptr)
     {
@@ -270,7 +255,7 @@ PCommandBufferManager Graphics::getGraphicsCommands()
     }
     return graphicsCommands;
 }
-PCommandBufferManager Graphics::getComputeCommands()
+PCommandPool Graphics::getComputeCommands()
 {
     if(computeCommands == nullptr)
     {
@@ -278,7 +263,7 @@ PCommandBufferManager Graphics::getComputeCommands()
     }
     return computeCommands;
 }
-PCommandBufferManager Graphics::getTransferCommands()
+PCommandPool Graphics::getTransferCommands()
 {
     if(transferCommands == nullptr)
     {
@@ -286,7 +271,7 @@ PCommandBufferManager Graphics::getTransferCommands()
     }
     return transferCommands;
 }
-PCommandBufferManager Graphics::getDedicatedTransferCommands()
+PCommandPool Graphics::getDedicatedTransferCommands()
 {
     if(dedicatedTransferCommands == nullptr)
     {
@@ -356,9 +341,13 @@ void Graphics::initInstance(GraphicsInitializer initInfo)
 }
 void Graphics::setupDebugCallback()
 {
-    VkDebugReportCallbackCreateInfoEXT createInfo =
-        init::DebugReportCallbackCreateInfo(
-            VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT);
+    VkDebugReportCallbackCreateInfoEXT createInfo = {
+        .sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT,
+        .pNext = nullptr,
+        .flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT,
+        .pfnCallback = &debugCallback,
+        .pUserData = nullptr,
+    };
 
     VK_CHECK(CreateDebugReportCallbackEXT(instance, &createInfo, nullptr, &callback));
 }
@@ -488,8 +477,13 @@ void Graphics::createDevice(GraphicsInitializer initializer)
         }
         if (numQueuesForFamily > 0)
         {
-            VkDeviceQueueCreateInfo info =
-                init::DeviceQueueCreateInfo(familyIndex, numQueuesForFamily);
+            VkDeviceQueueCreateInfo info = {
+                .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+                .pNext = nullptr,
+                .flags = 0,
+                .queueFamilyIndex = familyIndex,
+                .queueCount = numQueuesForFamily,
+            };
             numPriorities += numQueuesForFamily;
             queueInfos.add(info);
         }
@@ -507,11 +501,6 @@ void Graphics::createDevice(GraphicsInitializer initializer)
             *currentPriority++ = 1.0f;
         }
     }
-    VkDeviceCreateInfo deviceInfo = init::DeviceCreateInfo(
-        queueInfos.data(),
-        (uint32)queueInfos.size(),
-        nullptr);
-
     VkPhysicalDeviceDescriptorIndexingFeatures descriptorIndexing = {
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES,
         .shaderSampledImageArrayNonUniformIndexing = VK_TRUE,
@@ -519,17 +508,6 @@ void Graphics::createDevice(GraphicsInitializer initializer)
         .descriptorBindingVariableDescriptorCount = VK_TRUE,
         .runtimeDescriptorArray = VK_TRUE,
     };
-    deviceInfo.pNext = &descriptorIndexing;
-#if ENABLE_VALIDATION
-    VkDeviceDiagnosticsConfigCreateInfoNV crashDiagInfo;
-    crashDiagInfo.sType = VK_STRUCTURE_TYPE_DEVICE_DIAGNOSTICS_CONFIG_CREATE_INFO_NV;
-    crashDiagInfo.pNext = nullptr;
-    crashDiagInfo.flags = 
-        VK_DEVICE_DIAGNOSTICS_CONFIG_ENABLE_RESOURCE_TRACKING_BIT_NV |
-        VK_DEVICE_DIAGNOSTICS_CONFIG_ENABLE_AUTOMATIC_CHECKPOINTS_BIT_NV |
-        VK_DEVICE_DIAGNOSTICS_CONFIG_ENABLE_SHADER_DEBUG_INFO_BIT_NV;
-    descriptorIndexing.pNext = &crashDiagInfo;
-#endif
     VkPhysicalDeviceMeshShaderFeaturesEXT enabledMeshShaderFeatures = {
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT,
         .taskShader = VK_TRUE,
@@ -540,11 +518,17 @@ void Graphics::createDevice(GraphicsInitializer initializer)
         descriptorIndexing.pNext = &enabledMeshShaderFeatures;
         initializer.deviceExtensions.add("VK_EXT_mesh_shader");
     }
-    deviceInfo.enabledExtensionCount = (uint32)initializer.deviceExtensions.size();
-    deviceInfo.ppEnabledExtensionNames = initializer.deviceExtensions.data();
-    deviceInfo.enabledLayerCount = (uint32_t)initializer.layers.size();
-    deviceInfo.ppEnabledLayerNames = initializer.layers.data();
-    deviceInfo.pEnabledFeatures = &features;
+    VkDeviceCreateInfo deviceInfo = {
+        .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+        .pNext = &descriptorIndexing,
+        .queueCreateInfoCount = (uint32)queueInfos.size(),
+        .pQueueCreateInfos = queueInfos.data(),
+        .enabledLayerCount = (uint32_t)initializer.layers.size(),
+        .ppEnabledLayerNames = initializer.layers.data(),
+        .enabledExtensionCount = (uint32)initializer.deviceExtensions.size(),
+        .ppEnabledExtensionNames = initializer.deviceExtensions.data(),
+        .pEnabledFeatures = &features,
+    };
 
     VK_CHECK(vkCreateDevice(physicalDevice, &deviceInfo, nullptr, &handle));
     std::cout << "Vulkan handle: " << handle << std::endl;

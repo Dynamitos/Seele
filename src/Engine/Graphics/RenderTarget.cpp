@@ -38,10 +38,10 @@ Matrix4 Viewport::getProjectionMatrix() const
 	}
 }
 RenderTargetAttachment::RenderTargetAttachment(PTexture2D texture,
-	SeAttachmentLoadOp loadOp = SE_ATTACHMENT_LOAD_OP_LOAD,
-	SeAttachmentStoreOp storeOp = SE_ATTACHMENT_STORE_OP_STORE,
-	SeAttachmentLoadOp stencilLoadOp = SE_ATTACHMENT_LOAD_OP_DONT_CARE,
-	SeAttachmentStoreOp stencilStoreOp = SE_ATTACHMENT_STORE_OP_DONT_CARE)
+	SeAttachmentLoadOp loadOp,
+	SeAttachmentStoreOp storeOp,
+	SeAttachmentLoadOp stencilLoadOp,
+	SeAttachmentStoreOp stencilStoreOp)
 	: clear()
 	, componentFlags(0)
 	, loadOp(loadOp)
@@ -57,10 +57,10 @@ RenderTargetAttachment::~RenderTargetAttachment()
 }
 
 SwapchainAttachment::SwapchainAttachment(PWindow owner,
-	SeAttachmentLoadOp loadOp = SE_ATTACHMENT_LOAD_OP_LOAD,
-	SeAttachmentStoreOp storeOp = SE_ATTACHMENT_STORE_OP_STORE,
-	SeAttachmentLoadOp stencilLoadOp = SE_ATTACHMENT_LOAD_OP_DONT_CARE,
-	SeAttachmentStoreOp stencilStoreOp = SE_ATTACHMENT_STORE_OP_DONT_CARE)
+	SeAttachmentLoadOp loadOp,
+	SeAttachmentStoreOp storeOp,
+	SeAttachmentLoadOp stencilLoadOp,
+	SeAttachmentStoreOp stencilStoreOp)
 	: RenderTargetAttachment(nullptr, loadOp, storeOp, stencilLoadOp, stencilStoreOp), owner(owner)
 {
 	clear.color.float32[0] = 0.0f;

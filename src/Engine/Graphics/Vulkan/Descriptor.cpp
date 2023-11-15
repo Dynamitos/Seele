@@ -1,8 +1,7 @@
-#include "DescriptorSets.h"
+#include "Descriptor.h"
 #include "Graphics.h"
-#include "Initializer.h"
-#include "CommandBuffer.h"
 #include "Texture.h"
+#include "Buffer.h"
 
 using namespace Seele;
 using namespace Seele::Vulkan;
@@ -31,27 +30,32 @@ void DescriptorLayout::create()
     Array<VkDescriptorBindingFlags> bindingFlags(descriptorBindings.size());
     for (size_t i = 0; i < descriptorBindings.size(); ++i)
     {
-        VkDescriptorSetLayoutBinding &binding = bindings[i];
         const Gfx::DescriptorBinding &gfxBinding = descriptorBindings[i];
-        binding.binding = gfxBinding.binding;
-        binding.descriptorCount = gfxBinding.descriptorCount;
-        binding.descriptorType = cast(gfxBinding.descriptorType);
-        binding.stageFlags = gfxBinding.shaderStages;
-        binding.pImmutableSamplers = nullptr;
+        bindings[i] = {
+            .binding = gfxBinding.binding,
+            .descriptorType = cast(gfxBinding.descriptorType),
+            .descriptorCount = gfxBinding.descriptorCount,
+            .stageFlags = gfxBinding.shaderStages,
+            .pImmutableSamplers = nullptr,
+        };
         bindingFlags[i] = gfxBinding.bindingFlags;
     }
-    VkDescriptorSetLayoutCreateInfo createInfo =
-        init::DescriptorSetLayoutCreateInfo(bindings.data(), (uint32)bindings.size());
     VkDescriptorSetLayoutBindingFlagsCreateInfo bindingFlagsInfo = {
         .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO,
         .pNext = nullptr,
         .bindingCount = static_cast<uint32>(bindingFlags.size()),
         .pBindingFlags = bindingFlags.data(),
     };
-    createInfo.pNext = &bindingFlagsInfo;
+    VkDescriptorSetLayoutCreateInfo createInfo = {
+        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+        .pNext = &bindingFlagsInfo,
+        .flags = 0,
+        .bindingCount = (uint32)bindings.size(),
+        .pBindings = bindings.data(),
+    };
     VK_CHECK(vkCreateDescriptorSetLayout(graphics->getDevice(), &createInfo, nullptr, &layoutHandle));
 
-    allocator = new DescriptorAllocator(graphics, *this);
+    pool = new DescriptorPool(graphics, *this);
 
     hash = CRC::Calculate(bindings.data(), sizeof(VkDescriptorSetLayoutBinding) * bindings.size(), CRC::CRC_32());
 }
@@ -60,11 +64,9 @@ PipelineLayout::~PipelineLayout()
 {
     if (layoutHandle != VK_NULL_HANDLE)
     {
-        //vkDestroyPipelineLayout(graphics->getDevice(), layoutHandle, nullptr);
+        vkDestroyPipelineLayout(graphics->getDevice(), layoutHandle, nullptr);
     }
 }
-
-static Map<uint32, VkPipelineLayout> layoutCache;
 
 void PipelineLayout::create()
 {
@@ -82,8 +84,6 @@ void PipelineLayout::create()
         vulkanDescriptorLayouts[i] = layout->getHandle();
     }
 
-    VkPipelineLayoutCreateInfo createInfo =
-        init::PipelineLayoutCreateInfo(vulkanDescriptorLayouts.data(), (uint32)vulkanDescriptorLayouts.size());
     Array<VkPushConstantRange> vkPushConstants(pushConstants.size());
     for (size_t i = 0; i < pushConstants.size(); i++)
     {
@@ -91,20 +91,21 @@ void PipelineLayout::create()
         vkPushConstants[i].size = pushConstants[i].size;
         vkPushConstants[i].stageFlags = (VkShaderStageFlagBits)pushConstants[i].stageFlags;
     }
-    createInfo.pushConstantRangeCount = (uint32)vkPushConstants.size();
-    createInfo.pPushConstantRanges = vkPushConstants.data();
+    
+    VkPipelineLayoutCreateInfo createInfo = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .setLayoutCount = (uint32)vulkanDescriptorLayouts.size(),
+        .pSetLayouts = vulkanDescriptorLayouts.data(),
+        .pushConstantRangeCount = (uint32)vkPushConstants.size(),
+        .pPushConstantRanges = vkPushConstants.data(),
+    };
 
     layoutHash = CRC::Calculate(createInfo.pPushConstantRanges, sizeof(VkPushConstantRange) * createInfo.pushConstantRangeCount, CRC::CRC_32());
     layoutHash = CRC::Calculate(createInfo.pSetLayouts, sizeof(VkDescriptorSetLayout) * createInfo.setLayoutCount, CRC::CRC_32(), layoutHash);
 
-    if(layoutCache[layoutHash] != VK_NULL_HANDLE)
-    {
-        layoutHandle = layoutCache[layoutHash];
-        return;
-    }
-
     VK_CHECK(vkCreatePipelineLayout(graphics->getDevice(), &createInfo, nullptr, &layoutHandle));
-    layoutCache[layoutHash] = layoutHandle;
 }
 
 void PipelineLayout::reset()
@@ -127,10 +128,22 @@ void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PUniformBuffer uniformBu
         //std::cout << "uniform data equal, skip" << std::endl; 
         return;
     }
-    bufferInfos.add(init::DescriptorBufferInfo(vulkanBuffer->getHandle(), 0, vulkanBuffer->getSize()));
+    bufferInfos.add(VkDescriptorBufferInfo{
+        .buffer = vulkanBuffer->getHandle(),
+        .offset = 0,
+        .range = vulkanBuffer->getSize(),
+    });
 
-    VkWriteDescriptorSet writeDescriptor = init::WriteDescriptorSet(setHandle, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, binding, &bufferInfos.back());
-    writeDescriptors.add(writeDescriptor);
+    writeDescriptors.add(VkWriteDescriptorSet{
+        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .pNext = nullptr,
+        .dstSet = setHandle,
+        .dstBinding = binding,
+        .dstArrayElement = 0,
+        .descriptorCount = 1,
+        .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+        .pBufferInfo = &bufferInfos.back(),
+    });
 
     cachedData[binding] = vulkanBuffer.getHandle();
 }
@@ -143,55 +156,69 @@ void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PShaderBuffer shaderBuff
     {
         return;
     }
-    bufferInfos.add(init::DescriptorBufferInfo(vulkanBuffer->getHandle(), 0, vulkanBuffer->getSize()));
 
-    VkWriteDescriptorSet writeDescriptor = init::WriteDescriptorSet(setHandle, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, binding, &bufferInfos.back());
-    writeDescriptors.add(writeDescriptor);
+    bufferInfos.add(VkDescriptorBufferInfo{
+        .buffer = vulkanBuffer->getHandle(),
+        .offset = 0,
+        .range = vulkanBuffer->getSize(),
+        });
+
+    writeDescriptors.add(VkWriteDescriptorSet{
+        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .pNext = nullptr,
+        .dstSet = setHandle,
+        .dstBinding = binding,
+        .dstArrayElement = 0,
+        .descriptorCount = 1,
+        .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+        .pBufferInfo = &bufferInfos.back(),
+    });
 
     cachedData[binding] = vulkanBuffer.getHandle();
 }
 
-void DescriptorSet::updateSampler(uint32_t binding, Gfx::PSamplerState samplerState)
+void DescriptorSet::updateSampler(uint32_t binding, Gfx::PSampler samplerState)
 {
-    PSamplerState vulkanSampler = samplerState.cast<Sampler>();
+    PSampler vulkanSampler = samplerState.cast<Sampler>();
     Sampler* cachedSampler = reinterpret_cast<Sampler*>(cachedData[binding]);
     if(vulkanSampler.getHandle() == cachedSampler)
     {
         return;
     }
-    VkDescriptorImageInfo imageInfo =
-        init::DescriptorImageInfo(
-            vulkanSampler->sampler,
-            VK_NULL_HANDLE,
-            VK_IMAGE_LAYOUT_UNDEFINED);
-    imageInfos.add(imageInfo);
+    imageInfos.add(VkDescriptorImageInfo{
+        .sampler = vulkanSampler->sampler,
+        .imageView = VK_NULL_HANDLE,
+        .imageLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+    });
 
-    VkWriteDescriptorSet writeDescriptor = init::WriteDescriptorSet(setHandle, VK_DESCRIPTOR_TYPE_SAMPLER, binding, &imageInfos.back());
-    writeDescriptors.add(writeDescriptor);
+    writeDescriptors.add(VkWriteDescriptorSet{
+        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .pNext = nullptr,
+        .dstSet = setHandle,
+        .dstBinding = binding,
+        .dstArrayElement = 0,
+        .descriptorCount = 1,
+        .descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER,
+        .pImageInfo = &imageInfos.back(),
+    });
 
     cachedData[binding] = vulkanSampler.getHandle();
 }
 
-void DescriptorSet::updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::PSamplerState samplerState)
+void DescriptorSet::updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::PSampler samplerState)
 {
-    TextureHandle* vulkanTexture = TextureBase::cast(texture);
-    TextureHandle* cachedTexture = reinterpret_cast<TextureHandle*>(cachedData[binding]);
+    TextureBase* vulkanTexture = texture.cast<TextureBase>().getHandle();
+    TextureBase* cachedTexture = reinterpret_cast<TextureBase*>(cachedData[binding]);
     if(vulkanTexture == cachedTexture)
     {
         return;
     }
     //It is assumed that the image is in the correct layout
-    VkDescriptorImageInfo imageInfo =
-        init::DescriptorImageInfo(
-            VK_NULL_HANDLE,
-            vulkanTexture->getView(),
-            cast(vulkanTexture->getLayout()));
-    if (samplerState != nullptr)
-    {
-        PSamplerState vulkanSampler = samplerState.cast<Sampler>();
-        imageInfo.sampler = vulkanSampler->sampler;
-    }
-    imageInfos.add(imageInfo);
+    imageInfos.add(VkDescriptorImageInfo{
+        .sampler = samplerState != nullptr ? samplerState.cast<Sampler>()->sampler : VK_NULL_HANDLE,
+        .imageView = vulkanTexture->getView(),
+        .imageLayout = cast(vulkanTexture->getLayout()),
+    });
     VkDescriptorType descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
     if(samplerState != nullptr)
     {
@@ -201,14 +228,16 @@ void DescriptorSet::updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::
     {
         descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
     }
-    VkWriteDescriptorSet writeDescriptor = 
-        init::WriteDescriptorSet(
-            setHandle, 
-            descriptorType, 
-            binding, 
-            &imageInfos.back());
-    
-    writeDescriptors.add(writeDescriptor);
+    writeDescriptors.add(VkWriteDescriptorSet{
+        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .pNext = nullptr,
+        .dstSet = setHandle,
+        .dstBinding = binding,
+        .dstArrayElement = 0,
+        .descriptorCount = 1,
+        .descriptorType = descriptorType,
+        .pImageInfo = &imageInfos.back(),
+        });
 
     cachedData[binding] = vulkanTexture;
 }
@@ -216,28 +245,30 @@ void DescriptorSet::updateTextureArray(uint32_t binding, Array<Gfx::PTexture> te
 {
     // maybe make this a parameter?
     uint32 arrayElement = 0;
-    for(const auto& gfxTexture : textures)
+    for(auto& gfxTexture : textures)
     {
-        TextureHandle* vulkanTexture = TextureBase::cast(gfxTexture);
-        imageInfos.add(
-            init::DescriptorImageInfo(
-                VK_NULL_HANDLE,
-                vulkanTexture->getView(),
-                cast(vulkanTexture->getLayout())));
+        TextureBase* vulkanTexture = gfxTexture.cast<TextureBase>().getHandle();
+        imageInfos.add(VkDescriptorImageInfo{
+            .sampler = VK_NULL_HANDLE,
+            .imageView = vulkanTexture->getView(),
+            .imageLayout = cast(vulkanTexture->getLayout()),
+        });
 
         VkDescriptorType descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
         if (vulkanTexture->getUsage() & VK_IMAGE_USAGE_STORAGE_BIT)
         {
             descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
         }
-        VkWriteDescriptorSet& write = writeDescriptors.add(
-            init::WriteDescriptorSet(
-                setHandle,
-                descriptorType,
-                binding,
-                &imageInfos.back()
-            ));
-        write.dstArrayElement = arrayElement++;
+        writeDescriptors.add(VkWriteDescriptorSet{
+            .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+            .pNext = nullptr,
+            .dstSet = setHandle,
+            .dstBinding = binding,
+            .dstArrayElement = arrayElement++,
+            .descriptorCount = 1,
+            .descriptorType = descriptorType,
+            .pImageInfo = &imageInfos.back(),
+        });
     }
 }
 
@@ -268,7 +299,7 @@ void DescriptorSet::writeChanges()
     }
 }
 
-DescriptorAllocator::DescriptorAllocator(PGraphics graphics, DescriptorLayout &layout)
+DescriptorPool::DescriptorPool(PGraphics graphics, DescriptorLayout &layout)
     : graphics(graphics)
     , layout(layout)
 {
@@ -296,15 +327,18 @@ DescriptorAllocator::DescriptorAllocator(PGraphics graphics, DescriptorLayout &l
             poolSizes.add(size);
         }
     }
-    VkDescriptorPoolCreateInfo createInfo 
-        = init::DescriptorPoolCreateInfo(
-            (uint32)poolSizes.size(), 
-            poolSizes.data(), 
-            maxSets * Gfx::numFramesBuffered);
+    VkDescriptorPoolCreateInfo createInfo = {
+        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .maxSets = maxSets * Gfx::numFramesBuffered,
+        .poolSizeCount = (uint32)poolSizes.size(),
+        .pPoolSizes = poolSizes.data(),
+    };
     VK_CHECK(vkCreateDescriptorPool(graphics->getDevice(), &createInfo, nullptr, &poolHandle));
 }
 
-DescriptorAllocator::~DescriptorAllocator()
+DescriptorPool::~DescriptorPool()
 {
     vkDestroyDescriptorPool(graphics->getDevice(), poolHandle, nullptr);
     graphics = nullptr;
@@ -314,15 +348,21 @@ DescriptorAllocator::~DescriptorAllocator()
     }
 }
 
-Gfx::PDescriptorSet DescriptorAllocator::allocateDescriptorSet()
+Gfx::PDescriptorSet DescriptorPool::allocateDescriptorSet()
 {
     VkDescriptorSetLayout layoutHandle = layout.getHandle();
-    VkDescriptorSetAllocateInfo allocInfo =
-        init::DescriptorSetAllocateInfo(poolHandle, &layoutHandle, 1);
-    VkDescriptorSetVariableDescriptorCountAllocateInfo setCounts = {};
-    setCounts.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO;
-    setCounts.pNext = nullptr;
-    setCounts.descriptorSetCount = 1;
+    VkDescriptorSetVariableDescriptorCountAllocateInfo setCounts = {
+        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO,
+        .pNext = nullptr,
+        .descriptorSetCount = 1,
+    };
+    VkDescriptorSetAllocateInfo allocInfo = {
+        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+        .pNext = nullptr,
+        .descriptorPool = poolHandle,
+        .descriptorSetCount = 1,
+        .pSetLayouts = &layoutHandle,
+    };
     uint32 counts = 0;
     for(const auto& binding : layout.bindings)
     {
@@ -364,13 +404,13 @@ Gfx::PDescriptorSet DescriptorAllocator::allocateDescriptorSet()
     }
     if(nextAlloc == nullptr)
     {
-        nextAlloc = new DescriptorAllocator(graphics, layout);
+        nextAlloc = new DescriptorPool(graphics, layout);
     }
     return nextAlloc->allocateDescriptorSet();
     //throw std::logic_error("Out of descriptor sets");
 }
 
-void DescriptorAllocator::reset()
+void DescriptorPool::reset()
 {
     for(uint32 i = 0; i < cachedHandles.size(); ++i)
     {

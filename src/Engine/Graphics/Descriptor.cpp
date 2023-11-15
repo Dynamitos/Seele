@@ -31,11 +31,11 @@ DescriptorBinding& DescriptorBinding::operator=(const DescriptorBinding& other)
 	return *this;
 }
 
-DescriptorAllocator::DescriptorAllocator()
+DescriptorPool::DescriptorPool()
 {
 }
 
-DescriptorAllocator::~DescriptorAllocator()
+DescriptorPool::~DescriptorPool()
 {
 }
 
@@ -87,12 +87,12 @@ void DescriptorLayout::addDescriptorBinding(uint32 bindingIndex, SeDescriptorTyp
 
 PDescriptorSet DescriptorLayout::allocateDescriptorSet()
 {
-	return allocator->allocateDescriptorSet();
+	return pool->allocateDescriptorSet();
 }
 
 void DescriptorLayout::reset()
 {
-	allocator->reset();
+	pool->reset();
 }
 
 PipelineLayout::PipelineLayout()

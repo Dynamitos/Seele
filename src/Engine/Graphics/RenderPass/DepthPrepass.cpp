@@ -8,6 +8,7 @@
 #include "Actor/CameraActor.h"
 #include "Math/Vector.h"
 #include "RenderGraph.h"
+#include "Graphics/Command.h"
 
 using namespace Seele;
 
@@ -89,7 +90,6 @@ void DepthPrepass::render()
             else
             {
                 Gfx::LegacyPipelineCreateInfo pipelineInfo;
-                pipelineInfo.vertexDeclaration = collection->vertexDeclaration;
                 pipelineInfo.vertexShader = collection->vertexShader;
                 pipelineInfo.fragmentShader = collection->fragmentShader;
                 pipelineInfo.pipelineLayout = std::move(layout);
@@ -141,13 +141,14 @@ void DepthPrepass::endFrame()
 
 void DepthPrepass::publishOutputs() 
 {
-    TextureCreateInfo depthBufferInfo;
     // If we render to a part of an image, the depth buffer itself must
     // still match the size of the whole image or their coordinate systems go out of sync
-    depthBufferInfo.width = viewport->getOwner()->getWidth();
-    depthBufferInfo.height = viewport->getOwner()->getHeight();
-    depthBufferInfo.format = Gfx::SE_FORMAT_D32_SFLOAT;
-    depthBufferInfo.usage = Gfx::SE_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+    TextureCreateInfo depthBufferInfo = {
+        .format = Gfx::SE_FORMAT_D32_SFLOAT,
+        .width = viewport->getOwner()->getWidth(),
+        .height = viewport->getOwner()->getHeight(),
+        .usage = Gfx::SE_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+    };
     depthBuffer = graphics->createTexture2D(depthBufferInfo);
     depthAttachment = 
         new Gfx::RenderTargetAttachment(depthBuffer, Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);

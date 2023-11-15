@@ -1,6 +1,5 @@
 #include "Buffer.h"
-#include "Initializer.h"
-#include "CommandBuffer.h"
+#include "Command.h"
 
 using namespace Seele;
 using namespace Seele::Vulkan;
@@ -79,15 +78,19 @@ VkDeviceSize Buffer::getOffset() const
 
 void Buffer::executeOwnershipBarrier(Gfx::QueueType newOwner)
 {
-    VkBufferMemoryBarrier barrier =
-        init::BufferMemoryBarrier();
-    PCommandBufferManager sourceManager = graphics->getQueueCommands(owner);
-    PCommandBufferManager dstManager = nullptr;
+    Gfx::QueueFamilyMapping mapping = graphics->getFamilyMapping();
+    VkBufferMemoryBarrier barrier = {
+        .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
+        .pNext = nullptr,
+        .srcQueueFamilyIndex = mapping.getQueueTypeFamilyIndex(owner),
+        .dstQueueFamilyIndex = mapping.getQueueTypeFamilyIndex(newOwner),
+        .offset = 0,
+        .size = size,
+    };
+    PCommandPool sourcePool = graphics->getQueueCommands(owner);
+    PCommandPool dstPool = nullptr;
     VkPipelineStageFlags srcStage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
     VkPipelineStageFlags dstStage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
-    Gfx::QueueFamilyMapping mapping = graphics->getFamilyMapping();
-    barrier.srcQueueFamilyIndex = mapping.getQueueTypeFamilyIndex(owner);
-    barrier.dstQueueFamilyIndex = mapping.getQueueTypeFamilyIndex(newOwner);
     assert(barrier.srcQueueFamilyIndex != barrier.dstQueueFamilyIndex);
     if (owner == Gfx::QueueType::TRANSFER || owner == Gfx::QueueType::DEDICATED_TRANSFER)
     {
@@ -108,31 +111,29 @@ void Buffer::executeOwnershipBarrier(Gfx::QueueType newOwner)
     {
         barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
         dstStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-        dstManager = graphics->getTransferCommands();
+        dstPool = graphics->getTransferCommands();
     }
     else if (newOwner == Gfx::QueueType::DEDICATED_TRANSFER)
     {
         barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
         dstStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-        dstManager = graphics->getDedicatedTransferCommands();
+        dstPool = graphics->getDedicatedTransferCommands();
     }
     else if (newOwner == Gfx::QueueType::COMPUTE)
     {
         barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
         dstStage = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
-        dstManager = graphics->getComputeCommands();
+        dstPool = graphics->getComputeCommands();
     }
     else if (newOwner == Gfx::QueueType::GRAPHICS)
     {
         barrier.dstAccessMask = getDestAccessMask();
         dstStage = VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT;
-        dstManager = graphics->getGraphicsCommands();
+        dstPool = graphics->getGraphicsCommands();
     }
-    VkCommandBuffer srcCommand = sourceManager->getCommands()->getHandle();
-    VkCommandBuffer dstCommand = dstManager->getCommands()->getHandle();
+    VkCommandBuffer srcCommand = sourcePool->getCommands()->getHandle();
+    VkCommandBuffer dstCommand = dstPool->getCommands()->getHandle();
     VkBufferMemoryBarrier dynamicBarriers[Gfx::numFramesBuffered];
-    barrier.offset = 0;
-    barrier.size = size;
     for (uint32 i = 0; i < numBuffers; ++i)
     {
         dynamicBarriers[i] = barrier;
@@ -140,20 +141,23 @@ void Buffer::executeOwnershipBarrier(Gfx::QueueType newOwner)
     }
     vkCmdPipelineBarrier(srcCommand, srcStage, srcStage, 0, 0, nullptr, numBuffers, dynamicBarriers, 0, nullptr);
     vkCmdPipelineBarrier(dstCommand, dstStage, dstStage, 0, 0, nullptr, numBuffers, dynamicBarriers, 0, nullptr);
-    sourceManager->submitCommands();
+    sourcePool->submitCommands();
 }
 
 void Buffer::executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage,
         VkAccessFlags dstAccess, VkPipelineStageFlags dstStage) 
 {
-    PCmdBuffer commandBuffer = graphics->getQueueCommands(owner)->getCommands();
-    VkBufferMemoryBarrier barrier = init::BufferMemoryBarrier();
-    barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    barrier.dstAccessMask = dstAccess;
-    barrier.srcAccessMask = srcAccess;
-    barrier.offset = 0;
-    barrier.size = size;
+    PCommand commandBuffer = graphics->getQueueCommands(owner)->getCommands();
+    VkBufferMemoryBarrier barrier = {
+        .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
+        .pNext = nullptr, 
+        .srcAccessMask = srcAccess,
+        .dstAccessMask = dstAccess,
+        .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+        .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+        .offset = 0,
+        .size = size,
+    };
     VkBufferMemoryBarrier dynamicBarriers[Gfx::numFramesBuffered];
     for(uint32 i = 0; i < numBuffers; ++i)
     {
@@ -194,36 +198,39 @@ void * Buffer::mapRegion(uint64 regionOffset, uint64 regionSize, bool writeOnly)
     if (writeOnly)
     {
         //requestOwnershipTransfer(Gfx::QueueType::DEDICATED_TRANSFER);
-        OStagingBuffer stagingBuffer = graphics->getStagingManager()->create(regionSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+        OStagingBuffer stagingBuffer = graphics->getStagingManager()->create(regionSize);
         data = stagingBuffer->map();
         pending.stagingBuffer = std::move(stagingBuffer);
     }
     else
     {
-        PCmdBuffer current = graphics->getQueueCommands(owner)->getCommands();
+        PCommand current = graphics->getQueueCommands(owner)->getCommands();
         current->waitForCommand();
 
         requestOwnershipTransfer(Gfx::QueueType::DEDICATED_TRANSFER);
         VkCommandBuffer handle = graphics->getQueueCommands(owner)->getCommands()->getHandle();
 
-        VkBufferMemoryBarrier barrier =
-            init::BufferMemoryBarrier();
-        barrier.srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
-        barrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-        barrier.buffer = buffers[currentBuffer].buffer;
-        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.offset = 0;
-        barrier.size = size;
+        VkBufferMemoryBarrier barrier = {
+            .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
+            .pNext = nullptr, 
+            .srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT,
+            .dstAccessMask = VK_ACCESS_MEMORY_READ_BIT,
+            .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+            .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+            .buffer = buffers[currentBuffer].buffer,
+            .offset = 0,
+            .size = size,
+        };
         vkCmdPipelineBarrier(handle, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 1, &barrier, 0, nullptr);
 
-        OStagingBuffer stagingBuffer = graphics->getStagingManager()->create(size, VK_BUFFER_USAGE_TRANSFER_DST_BIT, true);
+        OStagingBuffer stagingBuffer = graphics->getStagingManager()->create(size);
 
-        VkBufferCopy regions;
-        regions.size = size;
-        regions.srcOffset = 0;
-        regions.dstOffset = 0;
-
+        VkBufferCopy regions = {
+            .srcOffset = 0,
+            .dstOffset = 0,
+            .size = size,
+        };
+        
         vkCmdCopyBuffer(handle, buffers[currentBuffer].buffer, stagingBuffer->getHandle(), 1, &regions);
 
         graphics->getQueueCommands(owner)->submitCommands();
@@ -251,18 +258,18 @@ void Buffer::unmap()
         if (pending.writeOnly)
         {
             PStagingBuffer stagingBuffer = pending.stagingBuffer;
-            PCmdBuffer cmdBuffer = graphics->getQueueCommands(owner)->getCommands();
-            VkCommandBuffer cmdHandle = cmdBuffer->getHandle();
+            PCommand command = graphics->getQueueCommands(owner)->getCommands();
+            VkCommandBuffer cmdHandle = command->getHandle();
 
-            VkBufferCopy region;
-            std::memset(&region, 0, sizeof(VkBufferCopy));
-            region.size = pending.size;
-            region.dstOffset = pending.offset;
+            VkBufferCopy region = {
+                .srcOffset = 0,
+                .dstOffset = pending.offset,
+                .size = pending.size,
+            };
             vkCmdCopyBuffer(cmdHandle, stagingBuffer->getHandle(), buffers[currentBuffer].buffer, 1, &region);
             graphics->getQueueCommands(owner)->submitCommands();
         }
         //requestOwnershipTransfer(pending.prevQueue);
-        graphics->getStagingManager()->release(std::move(pending.stagingBuffer));
         pendingBuffers.erase(this);
     }
 }
@@ -274,7 +281,7 @@ UniformBuffer::UniformBuffer(PGraphics graphics, const UniformBufferCreateInfo &
 {
     if(createInfo.dynamic)
     {
-        dedicatedStagingBuffer = graphics->getStagingManager()->create(createInfo.sourceData.size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+        dedicatedStagingBuffer = graphics->getStagingManager()->create(createInfo.sourceData.size);
     }
     if (createInfo.sourceData.data != nullptr)
     {
@@ -286,7 +293,6 @@ UniformBuffer::UniformBuffer(PGraphics graphics, const UniformBufferCreateInfo &
 
 UniformBuffer::~UniformBuffer()
 {
-    graphics->getStagingManager()->release(std::move(dedicatedStagingBuffer));
 }
 
 bool UniformBuffer::updateContents(const DataSource &sourceData) 
@@ -315,8 +321,8 @@ void UniformBuffer::unmap()
     if(dedicatedStagingBuffer != nullptr)
     {
         dedicatedStagingBuffer->flush();
-        PCmdBuffer cmdBuffer = graphics->getQueueCommands(currentOwner)->getCommands();
-        VkCommandBuffer cmdHandle = cmdBuffer->getHandle();
+        PCommand command = graphics->getQueueCommands(currentOwner)->getCommands();
+        VkCommandBuffer cmdHandle = command->getHandle();
 
         VkBufferCopy region;
         std::memset(&region, 0, sizeof(VkBufferCopy));
@@ -357,13 +363,13 @@ VkAccessFlags UniformBuffer::getDestAccessMask()
 }
 
 ShaderBuffer::ShaderBuffer(PGraphics graphics, const ShaderBufferCreateInfo &sourceData)
-    : Gfx::ShaderBuffer(graphics->getFamilyMapping(), sourceData.stride, sourceData.sourceData.size / sourceData.stride, sourceData.sourceData)
+    : Gfx::ShaderBuffer(graphics->getFamilyMapping(), sourceData.numElements, sourceData.sourceData)
     , Vulkan::Buffer(graphics, sourceData.sourceData.size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, currentOwner, sourceData.dynamic)
     , dedicatedStagingBuffer(nullptr)
 {
     if(sourceData.dynamic)
     {
-        dedicatedStagingBuffer = graphics->getStagingManager()->create(sourceData.sourceData.size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+        dedicatedStagingBuffer = graphics->getStagingManager()->create(sourceData.sourceData.size);
     }
     if (sourceData.sourceData.data != nullptr)
     {
@@ -375,7 +381,6 @@ ShaderBuffer::ShaderBuffer(PGraphics graphics, const ShaderBufferCreateInfo &sou
 
 ShaderBuffer::~ShaderBuffer()
 {
-    graphics->getStagingManager()->release(std::move(dedicatedStagingBuffer));
 }
 
 bool ShaderBuffer::updateContents(const DataSource &sourceData) 
@@ -402,12 +407,14 @@ void ShaderBuffer::unmap()
     if(dedicatedStagingBuffer != nullptr)
     {
         dedicatedStagingBuffer->flush();
-        PCmdBuffer cmdBuffer = graphics->getQueueCommands(currentOwner)->getCommands();
-        VkCommandBuffer cmdHandle = cmdBuffer->getHandle();
+        PCommand command = graphics->getQueueCommands(currentOwner)->getCommands();
+        VkCommandBuffer cmdHandle = command->getHandle();
 
-        VkBufferCopy region;
-        std::memset(&region, 0, sizeof(VkBufferCopy));
-        region.size = Vulkan::Buffer::size;
+        VkBufferCopy region = {
+            .srcOffset = 0,
+            .dstOffset = 0,
+            .size = Vulkan::Buffer::size,
+        };
         vkCmdCopyBuffer(cmdHandle, dedicatedStagingBuffer->getHandle(), buffers[currentBuffer].buffer, 1, &region);
         graphics->getQueueCommands(currentOwner)->submitCommands();
     }

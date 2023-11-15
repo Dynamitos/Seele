@@ -91,13 +91,13 @@ void TextureAsset::load(ArchiveBuffer& buffer)
                 .data = ktxTexture_GetData(ktxTexture(kTexture)),
                 .owner = Gfx::QueueType::DEDICATED_TRANSFER,
             },
+            .format = Vulkan::cast((VkFormat)kTexture->vkFormat),
             .width = kTexture->baseWidth,
             .height = kTexture->baseHeight,
             .depth = kTexture->baseDepth,
-            .bArray = kTexture->isArray,
-            .arrayLayers = kTexture->isArray ? kTexture->numLayers : kTexture->numFaces,
             .mipLevels = kTexture->numLevels,
-            .format = Vulkan::cast((VkFormat)kTexture->vkFormat),
+            .layers = kTexture->numFaces,
+            .elements = kTexture->numLayers,
             .usage = Gfx::SE_IMAGE_USAGE_SAMPLED_BIT,
     };
     if (kTexture->isCubemap)

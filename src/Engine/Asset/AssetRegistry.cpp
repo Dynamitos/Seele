@@ -107,6 +107,7 @@ AssetRegistry &AssetRegistry::get()
 }
 
 AssetRegistry::AssetRegistry()
+    : assetRoot(nullptr)
 {
 }
 

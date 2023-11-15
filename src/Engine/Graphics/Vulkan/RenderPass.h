@@ -11,28 +11,32 @@ class RenderPass : public Gfx::RenderPass
 public:
     RenderPass(PGraphics graphics, Gfx::ORenderTargetLayout layout, Gfx::PViewport viewport);
     virtual ~RenderPass();
-    uint32 getFramebufferHash();
-    inline VkRenderPass getHandle() const
+    constexpr uint32 getFramebufferHash() const
+    {
+        return framebufferHash;
+    }
+    constexpr VkRenderPass getHandle() const
     {
         return renderPass;
     }
-    inline size_t getClearValueCount() const
+    constexpr size_t getClearValueCount() const
     {
         return clearValues.size();
     }
-    inline VkClearValue *getClearValues() const
+    constexpr VkClearValue *getClearValues() const
     {
         return clearValues.data();
     }
-    inline VkRect2D getRenderArea() const
+    constexpr VkRect2D getRenderArea() const
     {
         return renderArea;
     }
-    inline VkSubpassContents getSubpassContents() const
+    constexpr VkSubpassContents getSubpassContents() const
     {
         return subpassContents;
     }
 private:
+    uint32 framebufferHash;
     PGraphics graphics;
     VkRenderPass renderPass;
     Array<VkClearValue> clearValues;

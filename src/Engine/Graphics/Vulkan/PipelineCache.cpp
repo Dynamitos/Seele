@@ -1,9 +1,8 @@
 #include "PipelineCache.h"
 #include "Graphics.h"
 #include "Enums.h"
-#include "Initializer.h"
 #include "RenderPass.h"
-#include "DescriptorSets.h"
+#include "Descriptor.h"
 #include "Shader.h"
 #include <fstream>
 
@@ -15,11 +14,12 @@ PipelineCache::PipelineCache(PGraphics graphics, const std::string& cacheFilePat
     , cacheFile(cacheFilePath)
 {
     std::ifstream stream(cacheFilePath, std::ios::binary | std::ios::ate);
-    VkPipelineCacheCreateInfo cacheCreateInfo;
-    cacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
-    cacheCreateInfo.pNext = nullptr;
-    cacheCreateInfo.flags = 0;
-    cacheCreateInfo.initialDataSize = 0;
+    VkPipelineCacheCreateInfo cacheCreateInfo = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .initialDataSize = 0,
+    };
     if(stream.good())
     {
         Array<uint8> cacheData;
@@ -52,41 +52,11 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo gf
 {
     PPipelineLayout layout = Gfx::PPipelineLayout(gfxInfo.pipelineLayout).cast<PipelineLayout>();
     uint32 hash = layout->getHash();
-    VkPipelineVertexInputStateCreateInfo vertexInput =
-        init::PipelineVertexInputStateCreateInfo();
-
-    Array<VkVertexInputBindingDescription> bindings;
-    Array<VkVertexInputAttributeDescription> attributes;
-    if (gfxInfo.vertexDeclaration != nullptr)
-    {
-        PVertexDeclaration decl = gfxInfo.vertexDeclaration.cast<VertexDeclaration>();
-        for (const auto& elem : decl->elementList)
-        {
-            attributes.add(VkVertexInputAttributeDescription{
-                .location = elem.attributeIndex,
-                .binding = elem.binding,
-                .format = cast(elem.vertexFormat),
-                .offset = elem.offset,
-            });
-            auto res = bindings.find([elem](const VkVertexInputBindingDescription& b) {return b.binding == elem.binding; });
-            if (res == bindings.end())
-            {
-                bindings.add({});
-                res = bindings.end();
-            }
-            *res = VkVertexInputBindingDescription{
-                .binding = elem.binding,
-                .stride = elem.stride,
-                .inputRate = elem.instanced ? VK_VERTEX_INPUT_RATE_INSTANCE : VK_VERTEX_INPUT_RATE_VERTEX,
-            };
-        }
-        vertexInput.pVertexAttributeDescriptions = attributes.data();
-        vertexInput.vertexAttributeDescriptionCount = attributes.size();
-        vertexInput.pVertexBindingDescriptions = bindings.data();
-        vertexInput.vertexBindingDescriptionCount = bindings.size();
-    }
-    hash = CRC::Calculate(bindings.data(), bindings.size() * sizeof(VkVertexInputBindingDescription), CRC::CRC_32(), hash);
-    hash = CRC::Calculate(attributes.data(), attributes.size() * sizeof(VkVertexInputAttributeDescription), CRC::CRC_32(), hash);
+    VkPipelineVertexInputStateCreateInfo vertexInput = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+    };
     uint32 stageCount = 0;
 
     VkPipelineShaderStageCreateInfo stageInfos[2];
@@ -112,52 +82,64 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo gf
         };
     }
     hash = CRC::Calculate(stageInfos, sizeof(stageInfos), CRC::CRC_32(), hash);
-    VkPipelineInputAssemblyStateCreateInfo assemblyInfo =
-        init::PipelineInputAssemblyStateCreateInfo(
-            cast(gfxInfo.topology),
-            0,
-            false
-        );
+    VkPipelineInputAssemblyStateCreateInfo assemblyInfo = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .topology = cast(gfxInfo.topology),
+        .primitiveRestartEnable = false,
+    };
     hash = CRC::Calculate(&assemblyInfo, sizeof(assemblyInfo), CRC::CRC_32(), hash);
-    VkPipelineViewportStateCreateInfo viewportInfo =
-        init::PipelineViewportStateCreateInfo(
-            1,
-            1,
-            0
-        );
+    VkPipelineViewportStateCreateInfo viewportInfo = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .viewportCount = 1,
+        .scissorCount = 1,
+    };
     hash = CRC::Calculate(&viewportInfo, sizeof(viewportInfo), CRC::CRC_32(), hash);
-    VkPipelineRasterizationStateCreateInfo rasterizationState =
-        init::PipelineRasterizationStateCreateInfo(
-            cast(gfxInfo.rasterizationState.polygonMode),
-            gfxInfo.rasterizationState.cullMode,
-            (VkFrontFace)gfxInfo.rasterizationState.frontFace,
-            0
-        );
-    rasterizationState.depthBiasEnable = gfxInfo.rasterizationState.depthBiasEnable;    
-    rasterizationState.depthBiasClamp = gfxInfo.rasterizationState.depthBiasClamp;
-    rasterizationState.depthBiasConstantFactor = gfxInfo.rasterizationState.depthBiasConstantFactor;
-    rasterizationState.depthBiasSlopeFactor = gfxInfo.rasterizationState.depthBiasSlopeFactor;
-    rasterizationState.depthClampEnable = gfxInfo.rasterizationState.depthClampEnable;
-    rasterizationState.lineWidth = gfxInfo.rasterizationState.lineWidth;
-    rasterizationState.rasterizerDiscardEnable = gfxInfo.rasterizationState.rasterizerDiscardEnable;
+    VkPipelineRasterizationStateCreateInfo rasterizationState = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .depthClampEnable = gfxInfo.rasterizationState.depthClampEnable,
+        .rasterizerDiscardEnable = gfxInfo.rasterizationState.rasterizerDiscardEnable,
+        .polygonMode = cast(gfxInfo.rasterizationState.polygonMode),
+        .cullMode = gfxInfo.rasterizationState.cullMode,
+        .frontFace = (VkFrontFace)gfxInfo.rasterizationState.frontFace,
+        .depthBiasEnable = gfxInfo.rasterizationState.depthBiasEnable,
+        .depthBiasConstantFactor = gfxInfo.rasterizationState.depthBiasConstantFactor,
+        .depthBiasClamp = gfxInfo.rasterizationState.depthBiasClamp,
+        .depthBiasSlopeFactor = gfxInfo.rasterizationState.depthBiasSlopeFactor,
+        .lineWidth = 0,
+    };
     hash = CRC::Calculate(&rasterizationState, sizeof(rasterizationState), CRC::CRC_32(), hash);
 
-    VkPipelineMultisampleStateCreateInfo multisampleState =
-        init::PipelineMultisampleStateCreateInfo(
-            (VkSampleCountFlagBits)gfxInfo.multisampleState.samples, 
-            0);
-    multisampleState.alphaToCoverageEnable = gfxInfo.multisampleState.alphaCoverageEnable;
-    multisampleState.alphaToOneEnable = gfxInfo.multisampleState.alphaToOneEnable;
-    multisampleState.minSampleShading = gfxInfo.multisampleState.minSampleShading;
-    multisampleState.sampleShadingEnable = gfxInfo.multisampleState.sampleShadingEnable;
+    VkPipelineMultisampleStateCreateInfo multisampleState = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .rasterizationSamples = (VkSampleCountFlagBits)gfxInfo.multisampleState.samples,
+        .sampleShadingEnable = gfxInfo.multisampleState.sampleShadingEnable,
+        .minSampleShading = gfxInfo.multisampleState.minSampleShading,
+        .alphaToCoverageEnable = gfxInfo.multisampleState.alphaCoverageEnable,
+        .alphaToOneEnable = gfxInfo.multisampleState.alphaToOneEnable,
+    };
     hash = CRC::Calculate(&multisampleState, sizeof(multisampleState), CRC::CRC_32(), hash);
 
-    VkPipelineDepthStencilStateCreateInfo depthStencilState =
-        init::PipelineDepthStencilStateCreateInfo(
-            gfxInfo.depthStencilState.depthTestEnable,
-            gfxInfo.depthStencilState.depthWriteEnable,
-            cast(gfxInfo.depthStencilState.depthCompareOp)
-        );
+    VkPipelineDepthStencilStateCreateInfo depthStencilState = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .depthTestEnable = gfxInfo.depthStencilState.depthTestEnable,
+        .depthWriteEnable = gfxInfo.depthStencilState.depthWriteEnable,
+        .depthCompareOp = cast(gfxInfo.depthStencilState.depthCompareOp),
+        .depthBoundsTestEnable = gfxInfo.depthStencilState.depthBoundsTestEnable,
+        .front = (VkStencilOp)gfxInfo.depthStencilState.front,
+        .back = (VkStencilOp)gfxInfo.depthStencilState.back,
+        .minDepthBounds = gfxInfo.depthStencilState.minDepthBounds,
+        .maxDepthBounds = gfxInfo.depthStencilState.maxDepthBounds,
+    };
     hash = CRC::Calculate(&depthStencilState, sizeof(depthStencilState), CRC::CRC_32(), hash);
 
     const auto& colorAttachments = gfxInfo.renderPass->getLayout()->colorAttachments;
@@ -178,14 +160,16 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo gf
     }
     hash = CRC::Calculate(blendAttachments.data(), blendAttachments.size() * sizeof(VkPipelineColorBlendAttachmentState), CRC::CRC_32(), hash);
 
-    VkPipelineColorBlendStateCreateInfo blendState = 
-        init::PipelineColorBlendStateCreateInfo(
-            (uint32)blendAttachments.size(),
-            blendAttachments.data()
-        );
-    blendState.logicOpEnable = gfxInfo.colorBlend.logicOpEnable;
-    blendState.logicOp = (VkLogicOp)gfxInfo.colorBlend.logicOp;
-    std::memcpy(blendState.blendConstants, gfxInfo.colorBlend.blendConstants, sizeof(gfxInfo.colorBlend.blendConstants));
+    VkPipelineColorBlendStateCreateInfo blendState = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .logicOpEnable = gfxInfo.colorBlend.logicOpEnable,
+        .logicOp = (VkLogicOp)gfxInfo.colorBlend.logicOp,
+        .attachmentCount = (uint32)blendAttachments.size(),
+        .pAttachments = blendAttachments.data(),
+    };
+    std::memcpy(blendState.blendConstants, gfxInfo.colorBlend.blendConstants.data(), sizeof(blendState.blendConstants));
 
     uint32 numDynamicEnabled = 0;
     StaticArray<VkDynamicState, 2> dynamicEnabled;
@@ -193,12 +177,12 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo gf
     dynamicEnabled[numDynamicEnabled++] = VK_DYNAMIC_STATE_SCISSOR;
     hash = CRC::Calculate(dynamicEnabled.data(), dynamicEnabled.size() * sizeof(VkDynamicState), CRC::CRC_32(), hash);
 
-    VkPipelineDynamicStateCreateInfo dynamicState =
-        init::PipelineDynamicStateCreateInfo(
-            dynamicEnabled.data(),
-            numDynamicEnabled,
-            0
-        );
+    VkPipelineDynamicStateCreateInfo dynamicState = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
+        .pNext = nullptr,
+        .dynamicStateCount = (uint32)dynamicEnabled.size(),
+        .pDynamicStates = dynamicEnabled.data(),
+    };
 
     if (graphicsPipelines.contains(hash))
     {
@@ -278,46 +262,56 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::MeshPipelineCreateInfo gfxI
     }
     hash = CRC::Calculate(stageInfos, sizeof(stageInfos), CRC::CRC_32(), hash);
 
-    VkPipelineViewportStateCreateInfo viewportInfo =
-        init::PipelineViewportStateCreateInfo(
-            1,
-            1,
-            0
-        );
+    VkPipelineViewportStateCreateInfo viewportInfo = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .viewportCount = 1,
+        .scissorCount = 1,
+    };
     hash = CRC::Calculate(&viewportInfo, sizeof(viewportInfo), CRC::CRC_32(), hash);
-
-    VkPipelineRasterizationStateCreateInfo rasterizationState =
-        init::PipelineRasterizationStateCreateInfo(
-            cast(gfxInfo.rasterizationState.polygonMode),
-            gfxInfo.rasterizationState.cullMode,
-            (VkFrontFace)gfxInfo.rasterizationState.frontFace,
-            0
-        );
-    rasterizationState.depthBiasEnable = gfxInfo.rasterizationState.depthBiasEnable;
-    rasterizationState.depthBiasClamp = gfxInfo.rasterizationState.depthBiasClamp;
-    rasterizationState.depthBiasConstantFactor = gfxInfo.rasterizationState.depthBiasConstantFactor;
-    rasterizationState.depthBiasSlopeFactor = gfxInfo.rasterizationState.depthBiasSlopeFactor;
-    rasterizationState.depthClampEnable = gfxInfo.rasterizationState.depthClampEnable;
-    rasterizationState.lineWidth = gfxInfo.rasterizationState.lineWidth;
-    rasterizationState.rasterizerDiscardEnable = gfxInfo.rasterizationState.rasterizerDiscardEnable;
+    VkPipelineRasterizationStateCreateInfo rasterizationState = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .depthClampEnable = gfxInfo.rasterizationState.depthClampEnable,
+        .rasterizerDiscardEnable = gfxInfo.rasterizationState.rasterizerDiscardEnable,
+        .polygonMode = cast(gfxInfo.rasterizationState.polygonMode),
+        .cullMode = gfxInfo.rasterizationState.cullMode,
+        .frontFace = (VkFrontFace)gfxInfo.rasterizationState.frontFace,
+        .depthBiasEnable = gfxInfo.rasterizationState.depthBiasEnable,
+        .depthBiasConstantFactor = gfxInfo.rasterizationState.depthBiasConstantFactor,
+        .depthBiasClamp = gfxInfo.rasterizationState.depthBiasClamp,
+        .depthBiasSlopeFactor = gfxInfo.rasterizationState.depthBiasSlopeFactor,
+        .lineWidth = 0,
+    };
     hash = CRC::Calculate(&rasterizationState, sizeof(rasterizationState), CRC::CRC_32(), hash);
 
-    VkPipelineMultisampleStateCreateInfo multisampleState =
-        init::PipelineMultisampleStateCreateInfo(
-            (VkSampleCountFlagBits)gfxInfo.multisampleState.samples,
-            0);
-    multisampleState.alphaToCoverageEnable = gfxInfo.multisampleState.alphaCoverageEnable;
-    multisampleState.alphaToOneEnable = gfxInfo.multisampleState.alphaToOneEnable;
-    multisampleState.minSampleShading = gfxInfo.multisampleState.minSampleShading;
-    multisampleState.sampleShadingEnable = gfxInfo.multisampleState.sampleShadingEnable;
+    VkPipelineMultisampleStateCreateInfo multisampleState = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .rasterizationSamples = (VkSampleCountFlagBits)gfxInfo.multisampleState.samples,
+        .sampleShadingEnable = gfxInfo.multisampleState.sampleShadingEnable,
+        .minSampleShading = gfxInfo.multisampleState.minSampleShading,
+        .alphaToCoverageEnable = gfxInfo.multisampleState.alphaCoverageEnable,
+        .alphaToOneEnable = gfxInfo.multisampleState.alphaToOneEnable,
+    };
     hash = CRC::Calculate(&multisampleState, sizeof(multisampleState), CRC::CRC_32(), hash);
 
-    VkPipelineDepthStencilStateCreateInfo depthStencilState =
-        init::PipelineDepthStencilStateCreateInfo(
-            gfxInfo.depthStencilState.depthTestEnable,
-            gfxInfo.depthStencilState.depthWriteEnable,
-            cast(gfxInfo.depthStencilState.depthCompareOp)
-        );
+    VkPipelineDepthStencilStateCreateInfo depthStencilState = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .depthTestEnable = gfxInfo.depthStencilState.depthTestEnable,
+        .depthWriteEnable = gfxInfo.depthStencilState.depthWriteEnable,
+        .depthCompareOp = cast(gfxInfo.depthStencilState.depthCompareOp),
+        .depthBoundsTestEnable = gfxInfo.depthStencilState.depthBoundsTestEnable,
+        .front = (VkStencilOp)gfxInfo.depthStencilState.front,
+        .back = (VkStencilOp)gfxInfo.depthStencilState.back,
+        .minDepthBounds = gfxInfo.depthStencilState.minDepthBounds,
+        .maxDepthBounds = gfxInfo.depthStencilState.maxDepthBounds,
+    };
     hash = CRC::Calculate(&depthStencilState, sizeof(depthStencilState), CRC::CRC_32(), hash);
 
     const auto& colorAttachments = gfxInfo.renderPass->getLayout()->colorAttachments;
@@ -338,14 +332,16 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::MeshPipelineCreateInfo gfxI
     }
     hash = CRC::Calculate(blendAttachments.data(), blendAttachments.size() * sizeof(VkPipelineColorBlendAttachmentState), CRC::CRC_32(), hash);
 
-    VkPipelineColorBlendStateCreateInfo blendState =
-        init::PipelineColorBlendStateCreateInfo(
-            (uint32)blendAttachments.size(),
-            blendAttachments.data()
-        );
-    blendState.logicOpEnable = gfxInfo.colorBlend.logicOpEnable;
-    blendState.logicOp = (VkLogicOp)gfxInfo.colorBlend.logicOp;
-    std::memcpy(blendState.blendConstants, gfxInfo.colorBlend.blendConstants, sizeof(gfxInfo.colorBlend.blendConstants));
+    VkPipelineColorBlendStateCreateInfo blendState = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .logicOpEnable = gfxInfo.colorBlend.logicOpEnable,
+        .logicOp = (VkLogicOp)gfxInfo.colorBlend.logicOp,
+        .attachmentCount = (uint32)blendAttachments.size(),
+        .pAttachments = blendAttachments.data(),
+    };
+    std::memcpy(blendState.blendConstants, gfxInfo.colorBlend.blendConstants.data(), sizeof(blendState.blendConstants));
 
     uint32 numDynamicEnabled = 0;
     StaticArray<VkDynamicState, 2> dynamicEnabled;
@@ -353,12 +349,12 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::MeshPipelineCreateInfo gfxI
     dynamicEnabled[numDynamicEnabled++] = VK_DYNAMIC_STATE_SCISSOR;
     hash = CRC::Calculate(dynamicEnabled.data(), dynamicEnabled.size() * sizeof(VkDynamicState), CRC::CRC_32(), hash);
 
-    VkPipelineDynamicStateCreateInfo dynamicState =
-        init::PipelineDynamicStateCreateInfo(
-            dynamicEnabled.data(),
-            numDynamicEnabled,
-            0
-        );
+    VkPipelineDynamicStateCreateInfo dynamicState = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
+        .pNext = nullptr,
+        .dynamicStateCount = (uint32)dynamicEnabled.size(),
+        .pDynamicStates = dynamicEnabled.data(),
+    };
 
     if (graphicsPipelines.contains(hash))
     {
@@ -409,10 +405,14 @@ PComputePipeline PipelineCache::createPipeline(Gfx::ComputePipelineCreateInfo co
         .sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO,
         .pNext = 0,
         .flags = 0,
-        .stage = init::PipelineShaderStageCreateInfo(
-            VK_SHADER_STAGE_COMPUTE_BIT,
-            computeStage->getModuleHandle(),
-            computeStage->getEntryPointName()),
+        .stage = {
+            .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+            .pNext = nullptr,
+            .flags = 0,
+            .stage = VK_SHADER_STAGE_COMPUTE_BIT,
+            .module = computeStage->getModuleHandle(),
+            .pName = computeStage->getEntryPointName(),
+        },
         .layout = layout->getHandle(),
         .basePipelineHandle = VK_NULL_HANDLE,
         .basePipelineIndex = 0,

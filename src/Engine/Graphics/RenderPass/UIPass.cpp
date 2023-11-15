@@ -2,6 +2,7 @@
 #include "RenderGraph.h"
 #include "Graphics/Graphics.h"
 #include "Graphics/RenderTarget.h"
+#include "Graphics/Command.h"
 
 using namespace Seele;
 
@@ -61,9 +62,9 @@ void UIPass::endFrame()
 void UIPass::publishOutputs() 
 {
     TextureCreateInfo depthBufferInfo = {
+        .format = Gfx::SE_FORMAT_D32_SFLOAT,
         .width = viewport->getWidth(),
         .height = viewport->getHeight(),
-        .format = Gfx::SE_FORMAT_D32_SFLOAT,
         .usage = Gfx::SE_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
     };
 
@@ -74,9 +75,9 @@ void UIPass::publishOutputs()
     resources->registerRenderPassOutput("UIPASS_DEPTH", depthAttachment);
 
     TextureCreateInfo colorBufferInfo = {
+        .format = Gfx::SE_FORMAT_R16G16B16A16_SFLOAT,
         .width = viewport->getWidth(),
         .height = viewport->getHeight(),
-        .format = Gfx::SE_FORMAT_R16G16B16A16_SFLOAT,
         .usage = Gfx::SE_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
     };
     colorBuffer = graphics->createTexture2D(colorBufferInfo);
@@ -97,48 +98,6 @@ void UIPass::createRenderPass()
     createInfo.name = "UIFragment";
     createInfo.entryPoint =  "fragmentMain";
     fragmentShader = graphics->createFragmentShader(createInfo);
-    Array<Gfx::VertexElement> decl;
-    decl.add({
-        .binding = 0,
-        .offset = offsetof(UI::RenderElementStyle, position),
-        .vertexFormat = Gfx::SE_FORMAT_R32G32B32_SFLOAT,
-        .attributeIndex = 0,
-        .stride = sizeof(UI::RenderElementStyle),
-        .instanced = 1
-    });
-    decl.add({
-        .binding = 0,
-        .offset = offsetof(UI::RenderElementStyle, backgroundImageIndex),
-        .vertexFormat = Gfx::SE_FORMAT_R32_UINT,
-        .attributeIndex = 1,
-        .stride = sizeof(UI::RenderElementStyle),
-        .instanced = 1
-    });
-    decl.add({
-        .binding = 0,
-        .offset = offsetof(UI::RenderElementStyle, backgroundColor),
-        .vertexFormat = Gfx::SE_FORMAT_R32G32B32_SFLOAT,
-        .attributeIndex = 2,
-        .stride = sizeof(UI::RenderElementStyle),
-        .instanced = 1
-    });
-    decl.add({
-        .binding = 0,
-        .offset = offsetof(UI::RenderElementStyle, opacity),
-        .vertexFormat = Gfx::SE_FORMAT_R32_SFLOAT,
-        .attributeIndex = 3,
-        .stride = sizeof(UI::RenderElementStyle),
-        .instanced = 1
-    });
-    decl.add({
-        .binding = 0,
-        .offset = offsetof(UI::RenderElementStyle, dimensions),
-        .vertexFormat = Gfx::SE_FORMAT_R32G32_SFLOAT,
-        .attributeIndex = 4,
-        .stride = sizeof(UI::RenderElementStyle),
-        .instanced = 1
-    });
-    declaration = graphics->createVertexDeclaration(decl);
 
     descriptorLayout = graphics->createDescriptorLayout("UIDescriptorLayout");
     descriptorLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
@@ -156,7 +115,7 @@ void UIPass::createRenderPass()
         .dynamic = false,
     };
     Gfx::OUniformBuffer uniformBuffer = graphics->createUniformBuffer(info);
-    Gfx::OSamplerState backgroundSampler = graphics->createSamplerState({});
+    Gfx::OSampler backgroundSampler = graphics->createSampler({});
 
     info = {
         .sourceData = {
@@ -181,7 +140,6 @@ void UIPass::createRenderPass()
     renderPass = graphics->createRenderPass(std::move(layout), viewport);
     
     Gfx::LegacyPipelineCreateInfo pipelineInfo;
-    pipelineInfo.vertexDeclaration = declaration;
     pipelineInfo.vertexShader = vertexShader;
     pipelineInfo.fragmentShader = fragmentShader;
     pipelineInfo.renderPass = renderPass;

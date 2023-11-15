@@ -1,6 +1,6 @@
 #pragma once
 #include "RenderPass.h"
-#include "Graphics/Resources.h"
+#include "Graphics/Shader.h"
 #include "Scene/Scene.h"
 
 namespace Seele

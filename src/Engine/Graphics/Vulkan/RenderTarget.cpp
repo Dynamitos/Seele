@@ -1,9 +1,8 @@
 #include "RenderTarget.h"
 #include "Resources.h"
 #include "Graphics.h"
-#include "Initializer.h"
 #include "Enums.h"
-#include "CommandBuffer.h"
+#include "Command.h"
 #include <GLFW/glfw3.h>
 
 using namespace Seele;
@@ -184,11 +183,13 @@ void Window::advanceBackBuffer()
 
     backBufferImages[currentImageIndex]->changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
     VkClearColorValue clearColor = {0.0f, 0.0f, 0.0f, 0.0f};
-    PCmdBuffer cmdBuffer = graphics->getGraphicsCommands()->getCommands();
-    VkImageSubresourceRange range = init::ImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT);
+    PCommand command = graphics->getGraphicsCommands()->getCommands();
+    VkImageSubresourceRange range = {
+        .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+    };
     vkCmdClearColorImage(
-        cmdBuffer->getHandle(), 
-        backBufferImages[currentImageIndex]->getHandle(),
+        command->getHandle(),
+        backBufferHandles[currentImageIndex],
         VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
         &clearColor,
         1,
@@ -264,23 +265,26 @@ void Window::createSwapchain()
         throw new std::logic_error("Trying to buffer more than the maximum number of frames");
     }
 
-    VkExtent2D extent = {
-        .width = getWidth(),
-        .height = getHeight(),
+    VkSwapchainCreateInfoKHR swapchainInfo = {
+        .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
+        .pNext = nullptr,
+        .flags = 0,
+        .surface = surface,
+        .minImageCount = desiredNumBuffers,
+        .imageFormat = surfaceFormat.format,
+        .imageColorSpace = surfaceFormat.colorSpace,
+        .imageExtent = {
+            .width = getWidth(),
+            .height = getHeight(),
+        },
+        .imageArrayLayers = 1,
+        .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
+        .imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        .preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR,
+        .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
+        .presentMode = presentMode,
+        .clipped = VK_TRUE,
     };
-    VkSwapchainCreateInfoKHR swapchainInfo =
-        init::SwapchainCreateInfo(
-            surface,
-            desiredNumBuffers,
-            surfaceFormat.format,
-            surfaceFormat.colorSpace,
-            extent,
-            1,
-            VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-            VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR,
-            VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
-            presentMode,
-            VK_TRUE);
     VK_CHECK(vkCreateSwapchainKHR(graphics->getDevice(), &swapchainInfo, nullptr, &swapchain));
 
     uint32 numSwapchainImages;
@@ -289,24 +293,34 @@ void Window::createSwapchain()
     VK_CHECK(vkGetSwapchainImagesKHR(graphics->getDevice(), swapchain, &numSwapchainImages, swapchainImages.data()));
 
 
-    TextureCreateInfo backBufferCreateInfo;
-    backBufferCreateInfo.width = getWidth();
-    backBufferCreateInfo.height = getHeight();
-    backBufferCreateInfo.usage = Gfx::SE_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-    backBufferCreateInfo.sourceData.owner = Gfx::QueueType::GRAPHICS;
-    backBufferCreateInfo.format = cast(surfaceFormat.format);
+    TextureCreateInfo backBufferCreateInfo = {
+        .sourceData = {
+            .owner = Gfx::QueueType::GRAPHICS,
+        },
+        .format = cast(surfaceFormat.format),
+        .width = getWidth(),
+        .height = getHeight(),
+        .usage = Gfx::SE_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+    };
     for (uint32 i = 0; i < numSwapchainImages; ++i)
     {
         imageAcquired[i] = new Semaphore(graphics);
         renderFinished[i] = new Semaphore(graphics);
         backBufferImages[i] = new Texture2D(graphics, backBufferCreateInfo, swapchainImages[i]);
+        backBufferHandles[i] = swapchainImages[i];
 
         VkClearColorValue clearColor;
         std::memset(&clearColor, 0, sizeof(VkClearColorValue));
         backBufferImages[i]->changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-        VkImageSubresourceRange range = init::ImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT);
+        VkImageSubresourceRange range = { 
+            .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+            .baseMipLevel = 0,
+            .levelCount = 1,
+            .baseArrayLayer = 0,
+            .layerCount = 1,
+        };
         PCommand command = graphics->getGraphicsCommands()->getCommands();
-        vkCmdClearColorImage(command->getHandle(), backBufferImages[i]->getHandle(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clearColor, 1, &range);
+        vkCmdClearColorImage(command->getHandle(), backBufferHandles[i], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clearColor, 1, &range);
         backBufferImages[i]->changeLayout(Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
     }
     graphics->getGraphicsCommands()->submitCommands();

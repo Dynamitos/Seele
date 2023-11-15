@@ -6,6 +6,8 @@ target_sources(Engine
 		Buffer.cpp
 		Command.h
 		Command.cpp
+		Debug.h
+		Debug.cpp
 		Descriptor.h
 		Descriptor.cpp
 		Enums.h
@@ -14,8 +16,6 @@ target_sources(Engine
 		Framebuffer.cpp
 		Graphics.h
 		Graphics.cpp
-		Initializer.h
-		Initializer.cpp
 		Pipeline.h
 		Pipeline.cpp
 		PipelineCache.h
@@ -39,11 +39,11 @@ target_sources(Engine
 			Allocator.h
 			Buffer.h
 			Command.h
-			DescriptorSets.h
+			Debug.h
+			Descriptor.h
 			Enums.h
 			Framebuffer.h
 			Graphics.h
-			Initializer.h
 			Pipeline.h
 			PipelineCache.h
 			Queue.h

@@ -8,7 +8,7 @@ namespace Seele
 {
 namespace Vulkan
 {
-DECLARE_REF(DescriptorAllocator)
+DECLARE_REF(DescriptorPool)
 DECLARE_REF(CommandPool)
 DECLARE_REF(Command)
 DECLARE_REF(Graphics)
@@ -61,6 +61,7 @@ public:
     void queueImage(PCommand cmd, VkImage image);
     void queueImageView(PCommand cmd, VkImageView view);
     void queueSemaphore(PCommand cmd, VkSemaphore sem);
+    void queueAllocation(PCommand cmd, OSubAllocation alloc);
     void notifyCmdComplete(PCommand cmdbuffer);
 private:
     PGraphics graphics;
@@ -68,6 +69,7 @@ private:
     Map<PCommand, List<VkImage>> images;
     Map<PCommand, List<VkImageView>> views;
     Map<PCommand, List<VkSemaphore>> sems;
+    Map<PCommand, List<OSubAllocation>> allocs;
 };
 DEFINE_REF(DestructionManager)
 

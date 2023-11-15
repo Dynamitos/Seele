@@ -62,7 +62,8 @@ struct TextureCreateInfo
     uint32                      height = 1;
     uint32                      depth = 1;
     uint32                      mipLevels = 1;
-    uint32                      arrayLayers = 1;
+    uint32                      layers = 1;
+    uint32                      elements = 1;
     uint32                      samples = 1;
     Gfx::SeImageUsageFlagBits   usage = Gfx::SE_IMAGE_USAGE_SAMPLED_BIT;
 };
@@ -105,6 +106,7 @@ struct UniformBufferCreateInfo
 struct ShaderBufferCreateInfo
 {
     DataSource  sourceData = DataSource();
+    uint64      numElements = 1;
     uint8       dynamic = 0;
 };
 struct ShaderCreateInfo

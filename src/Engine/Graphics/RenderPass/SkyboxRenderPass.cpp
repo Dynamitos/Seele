@@ -1,6 +1,7 @@
 #include "SkyboxRenderPass.h"
 #include "Graphics/Graphics.h"
 #include "Asset/AssetRegistry.h"
+#include "Graphics/Command.h"
 
 using namespace Seele;
 
@@ -13,71 +14,6 @@ SkyboxRenderPass::SkyboxRenderPass(Gfx::PGraphics graphics, PScene scene)
         .fogColor = Vector(0.2, 0.1, 0.6),
         .blendFactor = 0,
     };
-    Array<Vector> vertices = {
-        // Back
-        Vector(-512, -512,  512),
-        Vector(-512,  512,  512),
-        Vector( 512, -512,  512),
-
-        Vector( 512, -512,  512),
-        Vector(-512,  512,  512),
-        Vector( 512,  512,  512),
-
-        // Front
-        Vector( 512, -512, -512),
-        Vector( 512,  512, -512),
-        Vector(-512, -512, -512),
-
-        Vector(-512, -512, -512),
-        Vector( 512,  512, -512),
-        Vector(-512,  512, -512),
-
-        // Top
-        Vector(-512, -512, -512),
-        Vector(-512, -512,  512),
-        Vector( 512, -512, -512),
-
-        Vector( 512, -512, -512),
-        Vector(-512, -512,  512),
-        Vector( 512, -512,  512),
-
-        // Bottom
-        Vector(-512,  512,  512),
-        Vector(-512,  512, -512),
-        Vector( 512,  512,  512),
-
-        Vector( 512,  512,  512),
-        Vector(-512,  512, -512),
-        Vector( 512,  512, -512),
-
-        // Left
-        Vector(-512, -512, -512),
-        Vector(-512,  512, -512),
-        Vector(-512, -512,  512),
-
-        Vector(-512, -512,  512),
-        Vector(-512,  512, -512),
-        Vector(-512,  512,  512),
-
-        // Right
-        Vector( 512, -512,  512),
-        Vector( 512,  512,  512),
-        Vector( 512, -512, -512),
-
-        Vector( 512, -512, -512),
-        Vector( 512,  512,  512),
-        Vector( 512,  512, -512),
-    };
-
-    VertexBufferCreateInfo vertexBufferInfo = {
-        .sourceData = {
-            .size = sizeof(Vector) * vertices.size(),
-            .data = (uint8*)vertices.data(),
-        },
-        .vertexSize = sizeof(Vector),
-        .numVertices = (uint32)vertices.size(),
-    };
-    cubeBuffer = graphics->createVertexBuffer(vertexBufferInfo);
 }
 SkyboxRenderPass::~SkyboxRenderPass()
 {
@@ -146,7 +82,7 @@ void SkyboxRenderPass::publishOutputs()
     textureLayout->addDescriptorBinding(2, Gfx::SE_DESCRIPTOR_TYPE_SAMPLER);
     textureLayout->create();
 
-    skyboxSampler = graphics->createSamplerState({});
+    skyboxSampler = graphics->createSampler({});
 }
 
 void SkyboxRenderPass::createRenderPass()
@@ -169,16 +105,6 @@ void SkyboxRenderPass::createRenderPass()
     createInfo.entryPoint = "fragmentMain";
     fragmentShader = graphics->createFragmentShader(createInfo);
 
-    declaration = graphics->createVertexDeclaration({
-        Gfx::VertexElement {
-            .binding = 0,
-            .offset = 0,
-            .vertexFormat = Gfx::SE_FORMAT_R32G32B32_SFLOAT,
-            .attributeIndex = 0,
-            .stride = sizeof(Vector),
-        }
-    });
-
     Gfx::OPipelineLayout pipelineLayout = graphics->createPipelineLayout();
     pipelineLayout->addDescriptorLayout(0, viewParamsLayout);
     pipelineLayout->addDescriptorLayout(1, skyboxDataLayout);
@@ -186,7 +112,6 @@ void SkyboxRenderPass::createRenderPass()
     pipelineLayout->create();
 
     Gfx::LegacyPipelineCreateInfo gfxInfo;
-    gfxInfo.vertexDeclaration = declaration;
     gfxInfo.vertexShader = vertexShader;
     gfxInfo.fragmentShader = fragmentShader;
     gfxInfo.rasterizationState.polygonMode = Gfx::SE_POLYGON_MODE_FILL;

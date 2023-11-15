@@ -4,7 +4,7 @@ using namespace Seele;
 using namespace Seele::Gfx;
 
 GraphicsPipeline::GraphicsPipeline(OPipelineLayout layout) 
-    : layout(std::move(layout)) {} 
+    : layout(std::move(layout))
 {
 }
 

@@ -29,6 +29,8 @@ DECLARE_REF(UniformBuffer)
 DECLARE_REF(PipelineLayout)
 DECLARE_REF(GraphicsPipeline)
 DECLARE_REF(ComputePipeline)
+DECLARE_REF(RenderCommand)
+DECLARE_REF(ComputeCommand)
 class Graphics
 {
 public:
@@ -75,7 +77,7 @@ public:
     virtual PGraphicsPipeline createGraphicsPipeline(LegacyPipelineCreateInfo createInfo) = 0;
     virtual PGraphicsPipeline createGraphicsPipeline(MeshPipelineCreateInfo createInfo) = 0;
     virtual PComputePipeline createComputePipeline(ComputePipelineCreateInfo createInfo) = 0;
-    virtual OSampler createSamplerState(const SamplerCreateInfo& createInfo) = 0;
+    virtual OSampler createSampler(const SamplerCreateInfo& createInfo) = 0;
 
   	virtual ODescriptorLayout createDescriptorLayout(const std::string& name = "") = 0;
   	virtual OPipelineLayout createPipelineLayout(PPipelineLayout baseLayout = nullptr) = 0;

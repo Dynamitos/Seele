@@ -1,6 +1,5 @@
 #include "Resources.h"
 #include "Enums.h"
-#include "Initializer.h"
 #include "Graphics.h"
 
 using namespace Seele;
@@ -79,14 +78,18 @@ void Fence::reset()
 void Fence::wait(uint32 timeout)
 {
     VkFence fences[] = {fence};
-    VkResult res = vkWaitForFences(graphics->getDevice(), 1, fences, true, timeout);
-    if (res == VK_SUCCESS)
+    VkResult r = vkWaitForFences(graphics->getDevice(), 1, fences, true, timeout);
+    if (r == VK_SUCCESS)
     {
         signaled = true;
     }
-    if (res != VK_NOT_READY)
+    else if (r == VK_TIMEOUT)
     {
-        VK_CHECK(res);
+        return;
+    }
+    else if (r != VK_NOT_READY)
+    {
+        VK_CHECK(r);
     }
 }
 
@@ -119,26 +122,32 @@ void DestructionManager::queueSemaphore(PCommand cmd, VkSemaphore sem)
     sems[cmd].add(sem);
 }
 
-void DestructionManager::notifyCmdComplete(PCommand cmdbuffer)
+void DestructionManager::queueAllocation(PCommand cmd, OSubAllocation alloc)
 {
-    for(auto buf : buffers[cmdbuffer])
+    allocs[cmd].add(std::move(alloc));
+}
+
+void DestructionManager::notifyCmdComplete(PCommand cmd)
+{
+    for(auto buf : buffers[cmd])
     {
         vkDestroyBuffer(graphics->getDevice(), buf, nullptr);
     }
-    for(auto view : views[cmdbuffer])
+    for(auto view : views[cmd])
     {
         vkDestroyImageView(graphics->getDevice(), view, nullptr);
     }
-    for(auto img : images[cmdbuffer])
+    for(auto img : images[cmd])
     {
         vkDestroyImage(graphics->getDevice(), img, nullptr);
     }
-    for (auto sem : sems[cmdbuffer])
+    for (auto sem : sems[cmd])
     {
         vkDestroySemaphore(graphics->getDevice(), sem, nullptr);
     }
-    buffers[cmdbuffer].clear();
-    images[cmdbuffer].clear();
-    views[cmdbuffer].clear();
-    sems[cmdbuffer].clear();
+    buffers[cmd].clear();
+    images[cmd].clear();
+    views[cmd].clear();
+    sems[cmd].clear();
+    allocs[cmd].clear();
 }

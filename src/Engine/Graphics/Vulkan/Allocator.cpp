@@ -1,7 +1,8 @@
 #include "Allocator.h"
 #include "Graphics.h"
-#include "Initializer.h"
 #include "Resources.h"
+#include "Enums.h"
+#include "Command.h"
 
 using namespace Seele::Vulkan;
 
@@ -24,11 +25,6 @@ VkDeviceMemory SubAllocation::getHandle() const
     return owner->getHandle();
 }
 
-bool SubAllocation::isReadable() const
-{
-    return owner->isReadable();
-}
-
 void *SubAllocation::map()
 {
     return (uint8 *)owner->map() + alignedOffset;
@@ -44,14 +40,14 @@ void SubAllocation::invalidate()
     owner->invalidate();
 }
 
-Allocation::Allocation(PGraphics graphics, PAllocator allocator, VkDeviceSize size, uint8 memoryTypeIndex,
+Allocation::Allocation(PGraphics graphics, PAllocator pool, VkDeviceSize size, uint8 memoryTypeIndex,
                        VkMemoryPropertyFlags properties, VkMemoryDedicatedAllocateInfo *dedicatedInfo)
     : device(graphics->getDevice())
-    , allocator(allocator)
+    , pool(pool)
     , bytesAllocated(0)
     , bytesUsed(0)
-    , canMap((properties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) == VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT),
-    , isMapped(false),
+    , canMap((properties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) == VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)
+    , isMapped(false)
     , properties(properties)
     , memoryTypeIndex(memoryTypeIndex)
 {
@@ -97,7 +93,7 @@ OSubAllocation Allocation::getSuballocation(VkDeviceSize requestedSize, VkDevice
         alignedOffset /= alignment;
         alignedOffset *= alignment;
         VkDeviceSize allocatedSize = requestedSize + (alignedOffset - lower);
-        if (size <= allocatedSize)
+        if (size >= allocatedSize)
         {
             VkDeviceSize newSize = size - allocatedSize;
             VkDeviceSize newLower = lower + allocatedSize;
@@ -140,7 +136,7 @@ void Allocation::markFree(PSubAllocation allocation)
     bytesUsed -= allocation->allocatedSize;
     if (bytesUsed == 0)
     {
-        allocator->free(this);
+        pool->free(this);
     }
 }
 
@@ -209,7 +205,7 @@ OSubAllocation Allocator::allocate(const VkMemoryRequirements2 &memRequirements2
         {
             OAllocation newAllocation = new Allocation(graphics, this, requirements.size, memoryTypeIndex, properties, dedicatedInfo);
             heaps[heapIndex].inUse += newAllocation->bytesAllocated;
-            //std::cout << "Heap " << heapIndex << ": " << (float)heaps[heapIndex].inUse / heaps[heapIndex].maxSize << "%" << std::endl; 
+            std::cout << "Heap " << heapIndex << ": " << (float)heaps[heapIndex].inUse / heaps[heapIndex].maxSize << "%" << std::endl; 
             heaps[heapIndex].allocations.add(std::move(newAllocation));
             return heaps[heapIndex].allocations.back()->getSuballocation(requirements.size, requirements.alignment);
         } 
@@ -229,7 +225,7 @@ OSubAllocation Allocator::allocate(const VkMemoryRequirements2 &memRequirements2
     // no suitable allocations found, allocate new block
     OAllocation newAllocation = new Allocation(graphics, this, (requirements.size > DEFAULT_ALLOCATION) ? requirements.size : DEFAULT_ALLOCATION, memoryTypeIndex, properties, nullptr);
     heaps[heapIndex].inUse += newAllocation->bytesAllocated;
-    //std::cout << "Heap " << heapIndex << ": " << (float)heaps[heapIndex].inUse / heaps[heapIndex].maxSize << "%" << std::endl;     
+    std::cout << "Heap " << heapIndex << ": " << (float)heaps[heapIndex].inUse / heaps[heapIndex].maxSize << "%" << std::endl;     
     heaps[heapIndex].allocations.add(std::move(newAllocation));
     return heaps[heapIndex].allocations.back()->getSuballocation(requirements.size, requirements.alignment);
 }
@@ -244,7 +240,7 @@ void Allocator::free(PAllocation allocation)
             if (heaps[heapIndex].allocations[alloc] == allocation)
             {
                 heaps[heapIndex].inUse -= allocation->bytesAllocated;
-                //std::cout << "Heap " << heapIndex << ": " << (float)heaps[heapIndex].inUse / heaps[heapIndex].maxSize << "%" << std::endl;
+                std::cout << "Heap " << heapIndex << ": " << (float)heaps[heapIndex].inUse / heaps[heapIndex].maxSize << "%" << std::endl;
                 heaps[heapIndex].allocations.removeAt(alloc, false);
                 return;
             }
@@ -277,6 +273,8 @@ StagingBuffer::~StagingBuffer()
 {
     graphics->getDestructionManager()->queueBuffer(
         graphics->getDedicatedTransferCommands()->getCommands(), buffer);
+    graphics->getDestructionManager()->queueAllocation(
+        graphics->getDedicatedTransferCommands()->getCommands(), std::move(allocation));
 }
 
 void* StagingBuffer::map()
@@ -314,8 +312,8 @@ void StagingBuffer::executePipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::Se
     assert(false);
 }
 
-StagingManager::StagingManager(PGraphics graphics, PAllocator allocator)
-    : graphics(graphics), allocator(allocator)
+StagingManager::StagingManager(PGraphics graphics, PAllocator pool)
+    : graphics(graphics), pool(pool)
 {
 }
 
@@ -358,7 +356,7 @@ OStagingBuffer StagingManager::create(uint64 size)
 
     OStagingBuffer stagingBuffer = new StagingBuffer(
         graphics,
-        allocator->allocate(memReqs, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT, buffer),
+        pool->allocate(memReqs, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT, buffer),
         buffer,
         size
     );

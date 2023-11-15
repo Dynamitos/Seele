@@ -10,8 +10,8 @@ namespace Vulkan
 DECLARE_REF(RenderPass)
 struct FramebufferDescription
 {
-    VkImageView inputAttachments[16];
-    VkImageView colorAttachments[16];
+    StaticArray<VkImageView, 16> inputAttachments;
+    StaticArray<VkImageView, 16> colorAttachments;
     VkImageView depthAttachment;
     uint32 numInputAttachments;
     uint32 numColorAttachments;
@@ -21,11 +21,11 @@ class Framebuffer
 public:
     Framebuffer(PGraphics graphics, PRenderPass renderpass, Gfx::PRenderTargetLayout renderTargetLayout);
     virtual ~Framebuffer();
-    inline VkFramebuffer getHandle() const
+    constexpr VkFramebuffer getHandle() const
     {
         return handle;
     }
-    inline uint32 getHash() const
+    constexpr uint32 getHash() const
     {
         return hash;
     }

@@ -223,7 +223,7 @@ void SamplerParameter::save(ArchiveBuffer& buffer) const
 void SamplerParameter::load(ArchiveBuffer& buffer)
 {
     ShaderParameter::load(buffer);
-    data = buffer.getGraphics()->createSamplerState({});
+    data = buffer.getGraphics()->createSampler({});
 }
 
 CombinedTextureParameter::CombinedTextureParameter(std::string name, uint32 byteOffset, uint32 binding) 
@@ -260,7 +260,7 @@ void CombinedTextureParameter::load(ArchiveBuffer& buffer)
     std::string filename;
     Serialization::load(buffer, filename);
     data = AssetRegistry::findTexture(filename);
-    sampler = buffer.getGraphics()->createSamplerState({});
+    sampler = buffer.getGraphics()->createSampler({});
 }
 
 ConstantExpression::ConstantExpression()

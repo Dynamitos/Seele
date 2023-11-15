@@ -3,7 +3,7 @@
 #include "Material/MaterialInstance.h"
 #include "Component/Transform.h"
 #include "Containers/List.h"
-#include "Graphics/Resources.h"
+#include "Graphics/Command.h"
 #include "Graphics/Descriptor.h"
 #include "Graphics/Buffer.h"
 

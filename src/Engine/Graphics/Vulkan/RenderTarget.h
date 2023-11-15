@@ -45,6 +45,7 @@ protected:
     void choosePresentMode(const Array<VkPresentModeKHR> &modes);
 
     OTexture2D backBufferImages[Gfx::numFramesBuffered];
+    VkImage backBufferHandles[Gfx::numFramesBuffered];
     OSemaphore renderFinished[Gfx::numFramesBuffered];
     OSemaphore imageAcquired[Gfx::numFramesBuffered];
     PSemaphore imageAcquiredSemaphore;

@@ -11,6 +11,7 @@
 #include "RenderGraph.h"
 #include "Material/MaterialInstance.h"
 #include "Graphics/Descriptor.h"
+#include "Graphics/Command.h"
 
 using namespace Seele;
 
@@ -128,7 +129,6 @@ void BasePass::render()
             else
             {
                 Gfx::LegacyPipelineCreateInfo pipelineInfo;
-                pipelineInfo.vertexDeclaration = collection->vertexDeclaration;
                 pipelineInfo.vertexShader = collection->vertexShader;
                 pipelineInfo.fragmentShader = collection->fragmentShader;
                 pipelineInfo.pipelineLayout = std::move(layout);
