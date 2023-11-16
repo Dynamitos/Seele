@@ -121,7 +121,15 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::ORenderTargetLayout _layout, Gfx
     };
 
     VK_CHECK(vkCreateRenderPass(graphics->getDevice(), &info, nullptr, &renderPass));
+}
 
+RenderPass::~RenderPass()
+{
+    vkDestroyRenderPass(graphics->getDevice(), renderPass, nullptr);
+}
+
+uint32 RenderPass::getFramebufferHash()
+{
     FramebufferDescription description;
     std::memset(&description, 0, sizeof(FramebufferDescription));
     for (auto& inputAttachment : layout->inputAttachments)
@@ -139,11 +147,5 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::ORenderTargetLayout _layout, Gfx
         PTexture2D tex = layout->depthAttachment->getTexture().cast<Texture2D>();
         description.depthAttachment = tex->getView();
     }
-    framebufferHash = CRC::Calculate(&description, sizeof(FramebufferDescription), CRC::CRC_32());
+    return CRC::Calculate(&description, sizeof(FramebufferDescription), CRC::CRC_32());
 }
-
-RenderPass::~RenderPass()
-{
-    vkDestroyRenderPass(graphics->getDevice(), renderPass, nullptr);
-}
-

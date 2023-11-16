@@ -6,7 +6,7 @@
 #include "PipelineCache.h"
 #include "Command.h"
 #include "Descriptor.h"
-#include "RenderTarget.h"
+#include "Window.h"
 #include "RenderPass.h"
 #include "Framebuffer.h"
 #include "Shader.h"

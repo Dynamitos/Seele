@@ -1,71 +1,12 @@
 #pragma once
 #include "Resources.h"
 #include "Texture.h"
+#include "Window.h"
 
 namespace Seele
 {
 namespace Gfx
 {
-class Window
-{
-public:
-    Window(const WindowCreateInfo &createInfo);
-    virtual ~Window();
-    virtual void beginFrame() = 0;
-    virtual void endFrame() = 0;
-    virtual void onWindowCloseEvent() = 0;
-    virtual PTexture2D getBackBuffer() = 0;
-    virtual void setKeyCallback(std::function<void(KeyCode, InputAction, KeyModifier)> callback) = 0;
-    virtual void setMouseMoveCallback(std::function<void(double, double)> callback) = 0;
-    virtual void setMouseButtonCallback(std::function<void(MouseButton, InputAction, KeyModifier)> callback) = 0;
-    virtual void setScrollCallback(std::function<void(double, double)> callback) = 0;
-    virtual void setFileCallback(std::function<void(int, const char**)> callback) = 0;
-    virtual void setCloseCallback(std::function<void()> callback) = 0;
-    constexpr SeFormat getSwapchainFormat() const
-    {
-        return windowState.pixelFormat;
-    }
-    constexpr SeSampleCountFlags getNumSamples() const
-    {
-        return windowState.numSamples;
-    }
-    constexpr uint32 getWidth() const
-    {
-        return windowState.width;
-    }
-    constexpr uint32 getHeight() const
-    {
-        return windowState.height;
-    }
-
-protected:
-    WindowCreateInfo windowState;
-};
-DEFINE_REF(Window)
-
-class Viewport
-{
-public:
-    Viewport(PWindow owner, const ViewportCreateInfo &createInfo);
-    virtual ~Viewport();
-    virtual void resize(uint32 newX, uint32 newY) = 0;
-    virtual void move(uint32 newOffsetX, uint32 newOffsetY) = 0;
-    constexpr PWindow getOwner() const {return owner;}
-    constexpr uint32 getWidth() const {return sizeX;}
-    constexpr uint32 getHeight() const {return sizeY;}
-    constexpr uint32 getOffsetX() const {return offsetX;}
-    constexpr uint32 getOffsetY() const {return offsetY;}
-    Matrix4 getProjectionMatrix() const;
-protected:
-    uint32 sizeX;
-    uint32 sizeY;
-    uint32 offsetX;
-    uint32 offsetY;
-    float fieldOfView;
-    PWindow owner;
-};
-DEFINE_REF(Viewport)
-
 class RenderTargetAttachment
 {
 public:
@@ -133,11 +74,11 @@ public:
     }
     virtual uint32 getWidth() const 
     { 
-        return owner->getWidth(); 
+        return owner->getFramebufferWidth(); 
     }
     virtual uint32 getHeight() const 
     { 
-        return owner->getHeight(); 
+        return owner->getFramebufferHeight(); 
     }
 private:
     PWindow owner;

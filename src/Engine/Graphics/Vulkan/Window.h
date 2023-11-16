@@ -24,11 +24,6 @@ public:
     virtual void setFileCallback(std::function<void(int, const char**)> callback) override;
     virtual void setCloseCallback(std::function<void()> callback);
 
-    VkFormat getPixelFormat() const
-    {
-        return cast(windowState.pixelFormat);
-    }
-
     std::function<void(KeyCode, InputAction, KeyModifier)> keyCallback;
     std::function<void(double, double)> mouseMoveCallback;
     std::function<void(MouseButton, InputAction, KeyModifier)> mouseButtonCallback;
@@ -36,32 +31,30 @@ public:
     std::function<void(int, const char**)> fileCallback;
     std::function<void()> closeCallback;
 protected:
-    void advanceBackBuffer();
-    void recreateSwapchain(const WindowCreateInfo &createInfo);
-    void present();
-    void destroySwapchain();
-    void createSwapchain();
-    void chooseSurfaceFormat(const Array<VkSurfaceFormatKHR> &available, Gfx::SeFormat preferred);
-    void choosePresentMode(const Array<VkPresentModeKHR> &modes);
-
-    OTexture2D backBufferImages[Gfx::numFramesBuffered];
-    VkImage backBufferHandles[Gfx::numFramesBuffered];
-    OSemaphore renderFinished[Gfx::numFramesBuffered];
-    OSemaphore imageAcquired[Gfx::numFramesBuffered];
-    PSemaphore imageAcquiredSemaphore;
-
+    void chooseSwapSurfaceFormat();
+    void chooseSwapPresentMode();
+    void chooseSwapExtent();
+    void createSwapChain();
     PGraphics graphics;
+    WindowCreateInfo preferences;
     VkInstance instance;
     VkSwapchainKHR swapchain;
     VkSampleCountFlags numSamples;
-    VkPresentModeKHR presentMode;
     VkSurfaceKHR surface;
-    VkSurfaceFormatKHR surfaceFormat;
+    VkSurfaceCapabilitiesKHR capabilities;
+    Array<VkSurfaceFormatKHR> supportedFormats;
+    Array<VkPresentModeKHR> supportedPresentModes;
+    // the values used for the current swapchain
+    VkSurfaceFormatKHR format;
+    VkPresentModeKHR presentMode;
+    VkExtent2D extent;
     void *windowHandle;
-    int32 currentImageIndex;
-    int32 acquiredImageIndex;
-    int32 preAcquiredImageIndex;
-    int32 semaphoreIndex;
+    StaticArray<VkImage, Gfx::numFramesBuffered> swapChainImages;
+    StaticArray<OTexture2D, Gfx::numFramesBuffered> swapChainTextures;
+    StaticArray<OSemaphore, Gfx::numFramesBuffered> imageAvailableSemaphores;
+    StaticArray<OSemaphore, Gfx::numFramesBuffered> renderingDoneSemaphores;
+    uint32 currentImageIndex = 0;
+    uint32 currentSemaphoreIndex = 0;
 };
 DEFINE_REF(Window)
 

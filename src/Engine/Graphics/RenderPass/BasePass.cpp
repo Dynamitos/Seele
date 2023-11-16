@@ -48,9 +48,6 @@ void BasePass::beginFrame(const Component::Camera& cam)
     RenderPass::beginFrame(cam);
 
     lightCullingLayout->reset();
-    descriptorSets[INDEX_VIEW_PARAMS] = viewParamsSet;
-    descriptorSets[INDEX_LIGHT_ENV] = scene->getLightEnvironment()->getDescriptorSet();
-    descriptorSets[INDEX_LIGHT_CULLING] = lightCullingLayout->allocateDescriptorSet();
 }
 
 void BasePass::render() 
@@ -67,6 +64,10 @@ void BasePass::render()
     tLightGrid->pipelineBarrier(
         Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
         Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+
+    descriptorSets[INDEX_VIEW_PARAMS] = viewParamsSet;
+    descriptorSets[INDEX_LIGHT_ENV] = scene->getLightEnvironment()->getDescriptorSet();
+    descriptorSets[INDEX_LIGHT_CULLING] = lightCullingLayout->allocateDescriptorSet();
 
     descriptorSets[INDEX_LIGHT_CULLING]->updateBuffer(0, oLightIndexList);
     descriptorSets[INDEX_LIGHT_CULLING]->updateBuffer(1, tLightIndexList);

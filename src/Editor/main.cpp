@@ -216,9 +216,8 @@ int main()
     mainWindowInfo.title = "SeeleEngine";
     mainWindowInfo.width = 1280;
     mainWindowInfo.height = 720;
-    mainWindowInfo.bFullscreen = false;
     mainWindowInfo.numSamples = 1;
-    mainWindowInfo.pixelFormat = Gfx::SE_FORMAT_B8G8R8A8_UNORM;
+    mainWindowInfo.preferredFormat = Gfx::SE_FORMAT_B8G8R8A8_SRGB;
     auto window = windowManager->addWindow(graphics, mainWindowInfo);
     ViewportCreateInfo sceneViewInfo;
     sceneViewInfo.dimensions.size.x = 1280;

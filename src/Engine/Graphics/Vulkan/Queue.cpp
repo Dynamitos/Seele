@@ -23,8 +23,7 @@ void Queue::submitCommandBuffer(PCommand command, uint32 numSignalSemaphores, Vk
     std::unique_lock lock(queueLock);
     assert(command->state == Command::State::End);
 
-    PFence fence = command->fence;
-    assert(!fence->isSignaled());
+    assert(!(command->fence->isSignaled()));
 
     VkCommandBuffer cmdHandle = command->handle;
 
@@ -49,15 +48,15 @@ void Queue::submitCommandBuffer(PCommand command, uint32 numSignalSemaphores, Vk
         .pSignalSemaphores = signalSemaphores,
     };
     
-    VK_CHECK(vkQueueSubmit(queue, 1, &submitInfo, fence->getHandle()));
+    VK_CHECK(vkQueueSubmit(queue, 1, &submitInfo, command->fence->getHandle()));
     command->state = Command::State::Submit;
     command->waitFlags.clear();
     command->waitSemaphores.clear();
 
     if (Gfx::waitIdleOnSubmit)
     {
-        fence->wait(200 * 1000ull);
+        command->fence->wait(200 * 1000ull);
     }
 
-    command->checkFence();    
+    command->checkFence();
 }

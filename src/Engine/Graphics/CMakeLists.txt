@@ -28,7 +28,9 @@ target_sources(Engine
         Texture.h
         Texture.cpp
         VertexData.h
-        VertexData.cpp)
+        VertexData.cpp
+        Window.h
+        Window.cpp)
 
 target_sources(Engine
     PUBLIC FILE_SET HEADERS
@@ -47,7 +49,8 @@ target_sources(Engine
             Shader.h
             StaticMeshVertexData.h
             Texture.h
-            VertexData.h)
+            VertexData.h
+            Window.h)
 
 add_subdirectory(RenderPass/)
 add_subdirectory(Vulkan/)

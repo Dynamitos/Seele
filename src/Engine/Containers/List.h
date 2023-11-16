@@ -179,7 +179,6 @@ public:
         , _size(std::move(other._size))
         , allocator(std::move(other.allocator))
     {
-        other.clear();
     }
     List(List&& other, const Allocator& alloc)
         : root(std::move(other.root))

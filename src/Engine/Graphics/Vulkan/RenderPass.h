@@ -11,10 +11,7 @@ class RenderPass : public Gfx::RenderPass
 public:
     RenderPass(PGraphics graphics, Gfx::ORenderTargetLayout layout, Gfx::PViewport viewport);
     virtual ~RenderPass();
-    constexpr uint32 getFramebufferHash() const
-    {
-        return framebufferHash;
-    }
+    uint32 getFramebufferHash();
     constexpr VkRenderPass getHandle() const
     {
         return renderPass;

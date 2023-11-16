@@ -746,12 +746,14 @@ public:
     }
     StaticArray(std::initializer_list<T> init)
     {
-        assert(init.size() == N);
         auto beg = init.begin();
         for (size_t i = 0; i < N; ++i)
         {
             _data[i] = *beg;
-            beg++;
+            if (init.size() == N)
+            {
+                beg++;
+            }
         }
     }
     ~StaticArray()

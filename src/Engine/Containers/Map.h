@@ -260,18 +260,6 @@ public:
         markIteratorsDirty();
         return getNode(root)->pair.value;
     }
-    constexpr mapped_type& operator[](key_type&& key)
-    {
-        root = splay(root, std::move(key));
-        if (!isValid(root) || !equal(getNode(root)->pair.key, key))
-        {
-            root = insert(root, std::move(key));
-            _size++;
-        }
-        markIteratorsDirty();
-        return getNode(root)->pair.value;
-    }
-
     constexpr const mapped_type& operator[](const key_type& key) const
     {
         size_t it = root;
@@ -288,23 +276,6 @@ public:
         }
         return getNode(it)->pair.value;
     }
-    constexpr const mapped_type& operator[](key_type&& key) const
-    {
-        size_t it = root;
-        while (!equal(getNode(it)->pair.key, key))
-        {
-            if (comp(key, getNode(it)->pair.key))
-            {
-                it = getNode(it)->leftChild;
-            }
-            else
-            {
-                it = getNode(it)->rightChild;
-            }
-        }
-        return getNode(it)->pair.value;
-    }
-
     constexpr mapped_type& at(const key_type& key)
     {
         root = splay(root, key);
@@ -361,6 +332,7 @@ public:
     {
         root = remove(root, key);
         refreshIterators();
+        assert(root != SIZE_MAX || _size == 0);
         return iterator(root, &nodeContainer);	
     }
     constexpr iterator erase(key_type&& key)
@@ -528,7 +500,6 @@ private:
             endIndex = getNode(endIndex)->rightChild;
         }
         return Iterator(endIndex, &nodeContainer, std::move(endTraversal));
-    
     }
     Array<Node, NodeAlloc> nodeContainer = Array<Node, NodeAlloc>();
     size_t root;

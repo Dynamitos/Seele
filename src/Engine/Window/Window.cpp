@@ -33,6 +33,7 @@ void Window::render()
             view->render();
         }
         gfxHandle->endFrame();
+        std::cout << "Render" << std::endl;
     }
 }
 

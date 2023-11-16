@@ -197,7 +197,9 @@ void TextureBase::changeLayout(Gfx::SeImageLayout newLayout)
         .image = image,
         .subresourceRange = {
             .aspectMask = aspect,
+            .baseMipLevel = 0,
             .levelCount = 1,
+            .baseArrayLayer = 0,
             .layerCount = layerCount,
         },
     };
@@ -328,6 +330,10 @@ void TextureBase::executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStag
         .image = image,
         .subresourceRange = {
             .aspectMask = aspect,
+            .baseMipLevel = 0,
+            .levelCount = 1,
+            .baseArrayLayer = 0,
+            .layerCount = 1,
         },
     };
     PCommand command = graphics->getQueueCommands(currentOwner)->getCommands();

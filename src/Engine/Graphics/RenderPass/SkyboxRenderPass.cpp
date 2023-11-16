@@ -51,7 +51,6 @@ void SkyboxRenderPass::render()
     renderCommand->setViewport(viewport);
     renderCommand->bindPipeline(pipeline);
     renderCommand->bindDescriptor({viewParamsSet, skyboxDataSet, textureSet});
-    renderCommand->bindVertexBuffer({ cubeBuffer });
     renderCommand->draw(36, 1, 0, 0);
     graphics->executeCommands(Array{ renderCommand });
     graphics->endRenderPass();

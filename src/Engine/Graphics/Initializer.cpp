@@ -8,12 +8,12 @@ LegacyPipelineCreateInfo::LegacyPipelineCreateInfo()
 	: topology(Gfx::SE_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST)
 	, multisampleState(MultisampleState{
 		.samples = 1,
-		})
+	})
 	, rasterizationState(RasterizationState{
 		.polygonMode = Gfx::SE_POLYGON_MODE_FILL,
 		.cullMode = Gfx::SE_CULL_MODE_BACK_BIT,
 		.frontFace = Gfx::SE_FRONT_FACE_COUNTER_CLOCKWISE,
-		})
+	})
 	, depthStencilState(DepthStencilState{
 		.depthTestEnable = true,
 		.depthWriteEnable = true,
@@ -21,7 +21,7 @@ LegacyPipelineCreateInfo::LegacyPipelineCreateInfo()
 		.stencilTestEnable = false,
 		.minDepthBounds = 0.0f,
 		.maxDepthBounds = 1.0f,
-		})
+	})
 	, colorBlend(ColorBlendState{
 		.logicOpEnable = false,
 		.attachmentCount = 0,
@@ -40,7 +40,7 @@ LegacyPipelineCreateInfo::LegacyPipelineCreateInfo()
 			1.0f,
 			1.0f,
 		},
-		})
+	})
 {
 }
 

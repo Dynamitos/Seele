@@ -44,8 +44,9 @@ Allocation::Allocation(PGraphics graphics, PAllocator pool, VkDeviceSize size, u
                        VkMemoryPropertyFlags properties, VkMemoryDedicatedAllocateInfo *dedicatedInfo)
     : device(graphics->getDevice())
     , pool(pool)
-    , bytesAllocated(0)
+    , bytesAllocated(size)
     , bytesUsed(0)
+    , mappedPointer(nullptr)
     , canMap((properties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) == VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)
     , isMapped(false)
     , properties(properties)
@@ -59,9 +60,7 @@ Allocation::Allocation(PGraphics graphics, PAllocator pool, VkDeviceSize size, u
     };
     isDedicated = dedicatedInfo != nullptr;
     VK_CHECK(vkAllocateMemory(device, &allocInfo, nullptr, &allocatedMemory));
-    bytesAllocated = size;
     freeRanges[0] = size;
-
 }
 
 Allocation::~Allocation()
@@ -95,6 +94,7 @@ OSubAllocation Allocation::getSuballocation(VkDeviceSize requestedSize, VkDevice
         VkDeviceSize allocatedSize = requestedSize + (alignedOffset - lower);
         if (size >= allocatedSize)
         {
+            //std::cout << "Allocating " << lower << "-" << lower + allocatedSize << std::endl;
             VkDeviceSize newSize = size - allocatedSize;
             VkDeviceSize newLower = lower + allocatedSize;
             OSubAllocation alloc = new SubAllocation(this, requestedSize, lower, allocatedSize, alignedOffset);
@@ -113,6 +113,7 @@ OSubAllocation Allocation::getSuballocation(VkDeviceSize requestedSize, VkDevice
 
 void Allocation::markFree(PSubAllocation allocation)
 {
+    //std::cout << "Freeing " << allocation->allocatedOffset << "-" << allocation->allocatedOffset + allocation->allocatedSize << std::endl;
     assert(activeAllocations.find(allocation) != activeAllocations.end());
     VkDeviceSize lowerBound = allocation->allocatedOffset;
     VkDeviceSize upperBound = allocation->allocatedOffset + allocation->allocatedSize;
@@ -121,7 +122,7 @@ void Allocation::markFree(PSubAllocation allocation)
     {
         if (lower + size == lowerBound)
         {
-            freeRanges[lower] = upperBound;
+            freeRanges[lower] = size + allocation->allocatedSize;
             freeRanges.erase(lowerBound);
             lowerBound = lower;
             break;
@@ -134,10 +135,6 @@ void Allocation::markFree(PSubAllocation allocation)
     }
     activeAllocations.remove(allocation, false);
     bytesUsed -= allocation->allocatedSize;
-    if (bytesUsed == 0)
-    {
-        pool->free(this);
-    }
 }
 
 void Allocation::flushMemory()
@@ -205,7 +202,7 @@ OSubAllocation Allocator::allocate(const VkMemoryRequirements2 &memRequirements2
         {
             OAllocation newAllocation = new Allocation(graphics, this, requirements.size, memoryTypeIndex, properties, dedicatedInfo);
             heaps[heapIndex].inUse += newAllocation->bytesAllocated;
-            std::cout << "Heap " << heapIndex << ": " << (float)heaps[heapIndex].inUse / heaps[heapIndex].maxSize << "%" << std::endl; 
+            std::cout << "Heap " << heapIndex << ": " << (float)heaps[heapIndex].inUse / heaps[heapIndex].maxSize * 100 << "%" << std::endl; 
             heaps[heapIndex].allocations.add(std::move(newAllocation));
             return heaps[heapIndex].allocations.back()->getSuballocation(requirements.size, requirements.alignment);
         } 
@@ -225,7 +222,7 @@ OSubAllocation Allocator::allocate(const VkMemoryRequirements2 &memRequirements2
     // no suitable allocations found, allocate new block
     OAllocation newAllocation = new Allocation(graphics, this, (requirements.size > DEFAULT_ALLOCATION) ? requirements.size : DEFAULT_ALLOCATION, memoryTypeIndex, properties, nullptr);
     heaps[heapIndex].inUse += newAllocation->bytesAllocated;
-    std::cout << "Heap " << heapIndex << ": " << (float)heaps[heapIndex].inUse / heaps[heapIndex].maxSize << "%" << std::endl;     
+    std::cout << "Heap " << heapIndex << ": " << (float)heaps[heapIndex].inUse / heaps[heapIndex].maxSize * 100 << "%" << std::endl;
     heaps[heapIndex].allocations.add(std::move(newAllocation));
     return heaps[heapIndex].allocations.back()->getSuballocation(requirements.size, requirements.alignment);
 }
@@ -240,7 +237,7 @@ void Allocator::free(PAllocation allocation)
             if (heaps[heapIndex].allocations[alloc] == allocation)
             {
                 heaps[heapIndex].inUse -= allocation->bytesAllocated;
-                std::cout << "Heap " << heapIndex << ": " << (float)heaps[heapIndex].inUse / heaps[heapIndex].maxSize << "%" << std::endl;
+                std::cout << "Heap " << heapIndex << ": " << (float)heaps[heapIndex].inUse / heaps[heapIndex].maxSize * 100 << "%" << std::endl;
                 heaps[heapIndex].allocations.removeAt(alloc, false);
                 return;
             }

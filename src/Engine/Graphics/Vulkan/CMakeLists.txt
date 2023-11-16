@@ -24,14 +24,14 @@ target_sources(Engine
 		Queue.cpp
 		RenderPass.h
 		RenderPass.cpp
-		RenderTarget.h
-		RenderTarget.cpp
 		Resources.h
 		Resources.cpp
 		Shader.h
 		Shader.cpp
 		Texture.h
-		Texture.cpp)
+		Texture.cpp
+		Window.h
+		Window.cpp)
 
 target_sources(Engine
 	PUBLIC FILE_SET HEADERS
@@ -48,8 +48,8 @@ target_sources(Engine
 			PipelineCache.h
 			Queue.h
 			RenderPass.h
-			RenderTarget.h
 			Resources.h
 			Shader.h
-			Texture.h)
+			Texture.h
+			Window.h)
 	

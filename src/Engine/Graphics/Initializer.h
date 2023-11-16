@@ -36,9 +36,8 @@ struct WindowCreateInfo
     int32 width;
     int32 height;
     const char *title;
-    bool bFullscreen;
     Gfx::SeSampleCountFlags numSamples;
-    Gfx::SeFormat pixelFormat;
+    Gfx::SeFormat preferredFormat = Gfx::SE_FORMAT_MAX_ENUM;
     void *windowHandle;
 };
 struct ViewportCreateInfo

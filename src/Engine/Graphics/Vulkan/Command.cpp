@@ -6,7 +6,7 @@
 #include "RenderPass.h"
 #include "Pipeline.h"
 #include "Descriptor.h"
-#include "RenderTarget.h"
+#include "Window.h"
 #include <vulkan/vulkan_core.h>
 
 using namespace Seele;
@@ -58,7 +58,8 @@ void Command::end()
 void Command::beginRenderPass(PRenderPass renderPass, PFramebuffer framebuffer)
 {
     assert(state == State::Begin);
-
+    boundRenderPass = renderPass;
+    boundFramebuffer = framebuffer;
     VkRenderPassBeginInfo beginInfo = {
         .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
         .pNext = nullptr,
@@ -74,6 +75,8 @@ void Command::beginRenderPass(PRenderPass renderPass, PFramebuffer framebuffer)
 
 void Command::endRenderPass()
 {
+    boundRenderPass = nullptr;
+    boundFramebuffer = nullptr;
     vkCmdEndRenderPass(handle);
     state = State::Begin;
 }
@@ -148,6 +151,7 @@ void Command::checkFence()
         for(auto& descriptor : boundDescriptors)
         {
             descriptor->unbind();
+            //std::cout << "Unbinding descriptor " << descriptor.cast<DescriptorSet>()->getHandle() << " to cmd " << handle << std::endl;
         }
         boundDescriptors.clear();
         graphics->getDestructionManager()->notifyCmdComplete(this);
@@ -282,6 +286,7 @@ void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorS
         assert(descriptorSet->writeDescriptors.size() == 0);
         descriptorSet->bind();
 
+        //std::cout << "Binding descriptor " << descriptorSet->getHandle() << " to cmd " << handle << std::endl;
         boundDescriptors.add(descriptorSet.getHandle());
         sets[descriptorSet->getSetIndex()] = descriptorSet->getHandle();
     }
