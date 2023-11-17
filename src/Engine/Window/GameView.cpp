@@ -21,7 +21,6 @@ GameView::GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreate
         SkyboxRenderPass(graphics, scene)
     ))
 {
-    camera = new CameraActor(scene);
     reloadGame();
     renderGraph.updateViewport(viewport);
 }
@@ -65,7 +64,12 @@ void GameView::prepareRender()
 
 void GameView::render()
 {
-    renderGraph.render(camera->accessComponent<Component::Camera>());
+    Component::Camera cam;
+    scene->view<Component::Camera>([&cam](Component::Camera& c) {
+        if (c.mainCamera) 
+            cam = c; 
+    });
+    renderGraph.render(cam);
 }
 
 void GameView::reloadGame()
@@ -74,75 +78,33 @@ void GameView::reloadGame()
     
     systemGraph = new SystemGraph();
     gameInterface.getGame()->setupScene(scene, systemGraph);
+    System::OKeyboardInput keyInput = new System::KeyboardInput(scene);
+    keyboardSystem = keyInput;
+    systemGraph->addSystem(std::move(keyInput));
     systemGraph->addSystem(new System::LightGather(scene));
     systemGraph->addSystem(new System::MeshUpdater(scene));
     systemGraph->addSystem(new System::CameraUpdater(scene));
 }
 
-void GameView::keyCallback(KeyCode code, InputAction action, KeyModifier)
+void GameView::keyCallback(KeyCode code, InputAction action, KeyModifier modifier)
 {
-    scene->view<Component::KeyboardInput>([=, this](Component::KeyboardInput& input)
-    {
-        //if(code == KeyCode::KEY_R && action == InputAction::PRESS)
-        //{
-        //    auto cubeMesh = AssetRegistry::findMesh("cube");
-        //    PEntity cube2 = new Entity(scene);
-        //    Component::Transform& cube2Transform = cube2->attachComponent<Component::Transform>();
-        //    cube2Transform.setPosition(Vector(0, 20, 0));
-        //    cube2Transform.setRotation(Quaternion(Vector(0.f, 90.f, 90.f)));
-        //    cube2Transform.setScale(Vector(2.f, 2.f, 2.f));
-        //    cubeMesh->physicsMesh.type = Component::ColliderType::DYNAMIC;
-        //    cube2->attachComponent<Component::Collider>(cubeMesh->physicsMesh);
-        //    cube2->attachComponent<Component::StaticMesh>(cubeMesh);
-        //    Component::RigidBody& physics2 = cube2->attachComponent<Component::RigidBody>();
-        //    physics2.linearMomentum = Vector(0, -10, 0);
-        //    physics2.angularMomentum = Vector(0, 0, 0);
-        //}
-        //
-        //if(code == KeyCode::KEY_B && action == InputAction::PRESS)
-        //{
-        //    showDebug = !showDebug;
-        //    debugPassData.vertices.clear();
-        //}
-        if(code == KeyCode::KEY_R && action == InputAction::PRESS)
-        {
-            reloadGame();
-        }
-
-        input.keys[code] = action != InputAction::RELEASE;
-    });
+    keyboardSystem->keyCallback(code, action, modifier);
 }
 
 void GameView::mouseMoveCallback(double xPos, double yPos)
 {
-    scene->view<Component::KeyboardInput>([=](Component::KeyboardInput& input)
-    {
-        input.mouseX = static_cast<float>(xPos);
-        input.mouseY = static_cast<float>(yPos);
-    });
+    keyboardSystem->mouseCallback(xPos, yPos);
 }
 
-void GameView::mouseButtonCallback(MouseButton button, InputAction action, KeyModifier)
+void GameView::mouseButtonCallback(MouseButton button, InputAction action, KeyModifier modifier)
 {
-    scene->view<Component::KeyboardInput>([=](Component::KeyboardInput& input)
-    {
-        if (button == MouseButton::MOUSE_BUTTON_1)
-        {
-            input.mouse1 = action != InputAction::RELEASE;
-        }
-        if (button == MouseButton::MOUSE_BUTTON_2)
-        {
-            input.mouse2 = action != InputAction::RELEASE;
-        }
-    });
+    keyboardSystem->mouseButtonCallback(button, action, modifier);
 }
 
 void GameView::scrollCallback(double, double)
 {
-    
 }
 
 void GameView::fileCallback(int, const char**)
 {
-    
 }

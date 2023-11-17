@@ -5,6 +5,8 @@ target_sources(Engine
         ComponentSystem.h
         Executor.h
         Executor.cpp
+        KeyboardInput.h
+        KeyboardInput.cpp
         LightGather.h
         LightGather.cpp
         MeshUpdater.h
@@ -19,6 +21,7 @@ target_sources(Engine
             CameraUpdater.h
             ComponentSystem.h
             Executor.h
+            KeyboardInput.h
             LightGather.h
             MeshUpdater.h
             SystemBase.h

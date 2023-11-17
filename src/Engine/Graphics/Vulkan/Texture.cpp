@@ -41,9 +41,11 @@ TextureBase::TextureBase(PGraphics graphics, VkImageViewType viewType,
     , image(existingImage)
     , aspect(getAspectFromFormat(createInfo.format))
     , layout(Gfx::SE_IMAGE_LAYOUT_UNDEFINED)
+    , ownsImage(false)
 {
     if (existingImage == VK_NULL_HANDLE)
     {
+        ownsImage = true;
         PAllocator pool = graphics->getAllocator();
         VkImageType type = VK_IMAGE_TYPE_MAX_ENUM;
         VkImageCreateFlags flags = 0;
@@ -175,13 +177,16 @@ TextureBase::TextureBase(PGraphics graphics, VkImageViewType viewType,
         },
     };
     
-    VK_CHECK(vkCreateImageView(graphics->getDevice(), &viewInfo, nullptr, &defaultView));
+    VK_CHECK(vkCreateImageView(graphics->getDevice(), &viewInfo, nullptr, &imageView));
 }
 
 TextureBase::~TextureBase()
 {
-    graphics->getDestructionManager()->queueImage(graphics->getQueueCommands(currentOwner)->getCommands(), image);
-    graphics->getDestructionManager()->queueImageView(graphics->getQueueCommands(currentOwner)->getCommands(), defaultView);
+    if (ownsImage)
+    {
+        graphics->getDestructionManager()->queueImage(graphics->getQueueCommands(currentOwner)->getCommands(), image);
+    }
+    graphics->getDestructionManager()->queueImageView(graphics->getQueueCommands(currentOwner)->getCommands(), imageView);
 }
 
 

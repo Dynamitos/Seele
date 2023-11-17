@@ -1,6 +1,8 @@
 #include "Resources.h"
 #include "Enums.h"
 #include "Graphics.h"
+#include "Command.h"
+#include "Window.h"
 
 using namespace Seele;
 using namespace Seele::Vulkan;
@@ -18,17 +20,7 @@ Semaphore::Semaphore(PGraphics graphics)
 
 Semaphore::~Semaphore()
 {
-    uint64 value = 0;
-    VkSemaphoreWaitInfo waitInfo = {
-        .sType = VK_STRUCTURE_TYPE_SEMAPHORE_WAIT_INFO,
-        .pNext = nullptr,
-        .flags = 0,
-        .semaphoreCount = 1,
-        .pSemaphores = &handle,
-        .pValues = &value,
-    };
-    VK_CHECK(vkWaitSemaphores(graphics->getDevice(), &waitInfo, 10000));
-    vkDestroySemaphore(graphics->getDevice(), handle, nullptr);
+    graphics->getDestructionManager()->queueSemaphore(graphics->getGraphicsCommands()->getCommands(), handle);
 }
 
 Fence::Fence(PGraphics graphics)

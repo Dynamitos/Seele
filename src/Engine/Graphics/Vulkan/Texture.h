@@ -21,7 +21,7 @@ public:
     }
     constexpr VkImageView getView() const
     {
-        return defaultView;
+        return imageView;
     }
     constexpr Gfx::SeImageLayout getLayout() const
     {
@@ -72,9 +72,10 @@ protected:
     Gfx::SeFormat format;
     Gfx::SeImageUsageFlags usage;
     VkImage image;
-    VkImageView defaultView;
+    VkImageView imageView;
     VkImageAspectFlags aspect;
     Gfx::SeImageLayout layout;
+    uint8 ownsImage;
     friend class Graphics;
 };
 

@@ -5,6 +5,7 @@
 #include "Graphics/RenderPass/LightCullingPass.h"
 #include "Graphics/RenderPass/BasePass.h"
 #include "Graphics/RenderPass/SkyboxRenderPass.h"
+#include "System/KeyboardInput.h"
 #ifdef WIN32
 #include "Platform/Windows/GameInterface.h" // TODO
 #else
@@ -28,7 +29,6 @@ public:
 	void reloadGame();
 private:
 	OScene scene;
-	OEntity camera;
 	GameInterface gameInterface;
     RenderGraph<
         DepthPrepass,
@@ -38,6 +38,7 @@ private:
 		> renderGraph;
 
 	PSystemGraph systemGraph;
+	System::PKeyboardInput keyboardSystem;
 	dp::thread_pool<> threadPool;
 	float updateTime = 0;
 

@@ -2,7 +2,7 @@
 
 using namespace Seele;
 
-void SystemGraph::addSystem(System::UPSystemBase system)
+void SystemGraph::addSystem(System::OSystemBase system)
 {
     systems.add(std::move(system));
 }

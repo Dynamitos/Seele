@@ -468,6 +468,13 @@ CommandPool::CommandPool(PGraphics graphics, PQueue queue)
 
 CommandPool::~CommandPool()
 {
+    for (auto& command : allocatedBuffers)
+    {
+        command->waitForCommand();
+    }
+    allocatedRenderCommands.clear();
+    allocatedComputeCommands.clear();
+    allocatedBuffers.clear();
     vkDestroyCommandPool(graphics->getDevice(), commandPool, nullptr);
     graphics = nullptr;
     queue = nullptr;

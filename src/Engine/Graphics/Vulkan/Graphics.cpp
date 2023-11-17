@@ -522,8 +522,6 @@ void Graphics::createDevice(GraphicsInitializer initializer)
         .pNext = &descriptorIndexing,
         .queueCreateInfoCount = (uint32)queueInfos.size(),
         .pQueueCreateInfos = queueInfos.data(),
-        .enabledLayerCount = (uint32_t)initializer.layers.size(),
-        .ppEnabledLayerNames = initializer.layers.data(),
         .enabledExtensionCount = (uint32)initializer.deviceExtensions.size(),
         .ppEnabledExtensionNames = initializer.deviceExtensions.data(),
         .pEnabledFeatures = &features,

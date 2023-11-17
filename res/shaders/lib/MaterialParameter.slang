@@ -20,14 +20,13 @@ struct LightingParameter
 // data passed to fragment shader
 struct FragmentParameter
 {
-	// clip position has to be the first attribute for some reason????
-	float4 position_CS : SV_Position;
 	float3 position_TS;
 	float3 viewDir_TS;
 	float3 normal_WS;
 	float3 tangent_WS;
 	float3 biTangent_WS;
 	float3 position_WS;
+	float4 position_CS;
 	float2 texCoords;
 	float3 vertexColor;
 	MaterialParameter getMaterialParameter()

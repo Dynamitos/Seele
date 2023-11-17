@@ -12,6 +12,8 @@ struct KeyboardInput
     bool mouse2;
     float mouseX;
     float mouseY;
+    float deltaX;
+    float deltaY;
 };  
 } // namespace Component
 } // namespace Seele

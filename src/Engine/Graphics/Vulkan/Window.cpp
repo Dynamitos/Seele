@@ -49,6 +49,11 @@ void glfwCloseCallback(GLFWwindow* handle)
     Window* window = (Window*)glfwGetWindowUserPointer(handle);
     window->closeCallback();
 }
+void glfwResizeCallback(GLFWwindow* handle, int width, int height)
+{
+    Window* window = (Window*)glfwGetWindowUserPointer(handle);
+    window->resize(width, height);
+}
 
 Window::Window(PGraphics graphics, const WindowCreateInfo &createInfo)
     : graphics(graphics)
@@ -68,20 +73,11 @@ Window::Window(PGraphics graphics, const WindowCreateInfo &createInfo)
     glfwSetScrollCallback(handle, &glfwScrollCallback);
     glfwSetDropCallback(handle, &glfwFileCallback);
     glfwSetWindowCloseCallback(handle, &glfwCloseCallback);
+    glfwSetWindowSizeCallback(handle, &glfwResizeCallback);
 
     glfwCreateWindowSurface(instance, handle, nullptr, &surface);
     
-    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(graphics->getPhysicalDevice(), surface, &capabilities);
-    
-    uint32 numFormats;
-    vkGetPhysicalDeviceSurfaceFormatsKHR(graphics->getPhysicalDevice(), surface, &numFormats, nullptr);
-    supportedFormats.resize(numFormats);
-    vkGetPhysicalDeviceSurfaceFormatsKHR(graphics->getPhysicalDevice(), surface, &numFormats, supportedFormats.data());
-
-    uint32 numPresentModes;
-    vkGetPhysicalDeviceSurfacePresentModesKHR(graphics->getPhysicalDevice(), surface, &numPresentModes, nullptr);
-    supportedPresentModes.resize(numFormats);
-    vkGetPhysicalDeviceSurfacePresentModesKHR(graphics->getPhysicalDevice(), surface, &numPresentModes, supportedPresentModes.data());
+    querySurface();
     chooseSwapSurfaceFormat();
     framebufferFormat = cast(format.format);
     chooseSwapPresentMode();
@@ -173,6 +169,33 @@ void Window::setFileCallback(std::function<void(int, const char**)> callback)
 void Window::setCloseCallback(std::function<void()> callback)
 {
     closeCallback = callback;
+}
+
+void Window::resize(int width, int height)
+{
+    querySurface();
+    chooseSwapSurfaceFormat();
+    framebufferFormat = cast(format.format);
+    chooseSwapPresentMode();
+    chooseSwapExtent();
+    framebufferWidth = extent.width;
+    framebufferHeight = extent.height;
+    createSwapChain();
+}
+
+void Window::querySurface()
+{
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(graphics->getPhysicalDevice(), surface, &capabilities);
+
+    uint32 numFormats;
+    vkGetPhysicalDeviceSurfaceFormatsKHR(graphics->getPhysicalDevice(), surface, &numFormats, nullptr);
+    supportedFormats.resize(numFormats);
+    vkGetPhysicalDeviceSurfaceFormatsKHR(graphics->getPhysicalDevice(), surface, &numFormats, supportedFormats.data());
+
+    uint32 numPresentModes;
+    vkGetPhysicalDeviceSurfacePresentModesKHR(graphics->getPhysicalDevice(), surface, &numPresentModes, nullptr);
+    supportedPresentModes.resize(numFormats);
+    vkGetPhysicalDeviceSurfacePresentModesKHR(graphics->getPhysicalDevice(), surface, &numPresentModes, supportedPresentModes.data());
 }
 
 void Window::chooseSwapSurfaceFormat()

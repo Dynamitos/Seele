@@ -123,11 +123,11 @@ void Material::compile()
     // initialize variable state
     for(const auto& expr :codeExpressions)
     {
-        codeStream << expr->evaluate(varState);
+        codeStream << "\t\t" << expr->evaluate(varState);
     }
     for(const auto& [name, exp] : brdf.variables)
     {
-        codeStream << "\t\tresult." << name << " = " << varState[exp] << ";";
+        codeStream << "\t\tresult." << name << " = " << varState[exp] << ";" << std::endl;
     }
     codeStream << "\t\treturn result;\n";
     codeStream << "\t}\n";

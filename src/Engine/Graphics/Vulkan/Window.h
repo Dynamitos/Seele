@@ -23,6 +23,7 @@ public:
     virtual void setScrollCallback(std::function<void(double, double)> callback) override;
     virtual void setFileCallback(std::function<void(int, const char**)> callback) override;
     virtual void setCloseCallback(std::function<void()> callback);
+    void resize(int width, int height);
 
     std::function<void(KeyCode, InputAction, KeyModifier)> keyCallback;
     std::function<void(double, double)> mouseMoveCallback;
@@ -31,6 +32,7 @@ public:
     std::function<void(int, const char**)> fileCallback;
     std::function<void()> closeCallback;
 protected:
+    void querySurface();
     void chooseSwapSurfaceFormat();
     void chooseSwapPresentMode();
     void chooseSwapExtent();
