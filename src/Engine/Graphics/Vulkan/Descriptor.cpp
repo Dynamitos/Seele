@@ -391,6 +391,7 @@ Gfx::PDescriptorSet DescriptorPool::allocateDescriptorSet()
         {
             //If it hasnt been initialized, allocate it
             VK_CHECK(vkAllocateDescriptorSets(graphics->getDevice(), &allocInfo, &cachedHandles[setIndex]->setHandle));
+            std::cout << "New descriptor " << cachedHandles[setIndex]->setHandle << std::endl;
         }
         cachedHandles[setIndex]->allocate();
         
@@ -406,6 +407,7 @@ Gfx::PDescriptorSet DescriptorPool::allocateDescriptorSet()
     {
         nextAlloc = new DescriptorPool(graphics, layout);
     }
+    std::cout << "Out of descriptors, forwarding" << std::endl;
     return nextAlloc->allocateDescriptorSet();
     //throw std::logic_error("Out of descriptor sets");
 }

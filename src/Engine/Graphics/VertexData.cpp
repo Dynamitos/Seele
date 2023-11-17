@@ -13,6 +13,10 @@ constexpr static uint64 NUM_DEFAULT_ELEMENTS = 1024 * 1024;
 
 void VertexData::resetMeshData()
 {
+    for (auto& [_, mat] : materialData)
+    {
+        mat.material->getDescriptorLayout()->reset();
+    }
     materialData.clear();
     if (dirty)
     {

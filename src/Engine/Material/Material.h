@@ -19,6 +19,7 @@ public:
         MaterialNode brdf);
     ~Material();
     const Gfx::PDescriptorLayout getDescriptorLayout() const { return layout; }
+    Gfx::PDescriptorLayout getDescriptorLayout() { return layout; }
     OMaterialInstance instantiate();
     const std::string& getName() const { return materialName; }
 

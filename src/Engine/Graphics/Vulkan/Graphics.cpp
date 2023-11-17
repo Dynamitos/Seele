@@ -332,11 +332,10 @@ void Graphics::initInstance(GraphicsInitializer initInfo)
     info.enabledExtensionCount = (uint32)extensions.size();
     info.ppEnabledExtensionNames = extensions.data();
 #if ENABLE_VALIDATION
+    initInfo.layers.add("VK_LAYER_KHRONOS_validation");
+#endif
     info.enabledLayerCount = (uint32)initInfo.layers.size();
     info.ppEnabledLayerNames = initInfo.layers.data();
-#else
-    info.enabledLayerCount = 0;
-#endif
     VK_CHECK(vkCreateInstance(&info, nullptr, &instance));
 }
 void Graphics::setupDebugCallback()

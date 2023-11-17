@@ -248,11 +248,9 @@ void Window::createSwapChain()
     };
     VK_CHECK(vkCreateSwapchainKHR(graphics->getDevice(), &createInfo, nullptr, &swapchain));
 
-    uint32 numImages;
-    vkGetSwapchainImagesKHR(graphics->getDevice(), swapchain, &numImages, swapChainImages.data());
+    VK_CHECK(vkGetSwapchainImagesKHR(graphics->getDevice(), swapchain, &imageCount, swapChainImages.data()));
 
-    assert(numImages == Gfx::numFramesBuffered);
-    for (uint32 i = 0; i < numImages; ++i)
+    for (uint32 i = 0; i < imageCount; ++i)
     {
         swapChainTextures[i] = new Texture2D(graphics, TextureCreateInfo{
                 .format = cast(format.format),
