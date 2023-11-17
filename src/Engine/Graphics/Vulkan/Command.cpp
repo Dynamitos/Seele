@@ -7,7 +7,6 @@
 #include "Pipeline.h"
 #include "Descriptor.h"
 #include "Window.h"
-#include <vulkan/vulkan_core.h>
 
 using namespace Seele;
 using namespace Seele::Vulkan;
@@ -28,7 +27,9 @@ Command::Command(PGraphics graphics, VkCommandPool cmdPool, PCommandPool pool)
     VK_CHECK(vkAllocateCommandBuffers(graphics->getDevice(), &allocInfo, &handle))
 
     fence = new Fence(graphics);
+    signalSemaphore = new Semaphore(graphics);
     state = State::Init;
+    //std::cout << "Cmd " << handle << " semaphore " << signalSemaphore->getHandle() << std::endl;
 }
 
 Command::~Command()
@@ -98,6 +99,7 @@ void Command::executeCommands(const Array<Gfx::PRenderCommand>& commands)
         for(auto& descriptor : command->boundDescriptors)
         {
             boundDescriptors.add(descriptor);
+            //std::cout << "Cmd " << handle << " bound descriptor " << descriptor->getHandle() << std::endl;
         }
         cmdBuffers[i] = command->getHandle();
     }
@@ -119,6 +121,7 @@ void Command::executeCommands(const Array<Gfx::PComputeCommand>& commands)
         for(auto& descriptor : command->boundDescriptors)
         {
             boundDescriptors.add(descriptor);
+            //std::cout << "Cmd " << handle << " bound descriptor " << descriptor->getHandle() << std::endl;
         }
         cmdBuffers[i] = command->getHandle();
     }
@@ -129,6 +132,7 @@ void Command::waitForSemaphore(VkPipelineStageFlags flags, PSemaphore semaphore)
 {
     waitSemaphores.add(semaphore);
     waitFlags.add(flags);
+    //std::cout << "Cmd " << handle << " wait for " << semaphore->getHandle() << std::endl;
 }
 
 void Command::checkFence()
@@ -136,6 +140,7 @@ void Command::checkFence()
     assert(state == State::Submit || !fence->isSignaled());
     if (fence->isSignaled())
     {
+        //std::cout << "Cmd " << handle << " was signaled" << std::endl;
         vkResetCommandBuffer(handle, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
         fence->reset();
         for(auto& command : executingComputes)
@@ -151,7 +156,7 @@ void Command::checkFence()
         for(auto& descriptor : boundDescriptors)
         {
             descriptor->unbind();
-            //std::cout << "Unbinding descriptor " << descriptor.cast<DescriptorSet>()->getHandle() << " to cmd " << handle << std::endl;
+            //std::cout << "Cmd " << handle << " unbind " << descriptor->getHandle() << std::endl;
         }
         boundDescriptors.clear();
         graphics->getDestructionManager()->notifyCmdComplete(this);
@@ -286,7 +291,6 @@ void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorS
         assert(descriptorSet->writeDescriptors.size() == 0);
         descriptorSet->bind();
 
-        //std::cout << "Binding descriptor " << descriptorSet->getHandle() << " to cmd " << handle << std::endl;
         boundDescriptors.add(descriptorSet.getHandle());
         sets[descriptorSet->getSetIndex()] = descriptorSet->getHandle();
     }
@@ -321,6 +325,7 @@ void RenderCommand::pushConstants(Gfx::PPipelineLayout layout, Gfx::SeShaderStag
 
 void RenderCommand::draw(uint32 vertexCount, uint32 instanceCount, int32 firstVertex, uint32 firstInstance) 
 {
+    graphics->setCheckpointMarker(handle, "Fuck");
     assert(threadId == std::this_thread::get_id());
     vkCmdDraw(handle, vertexCount, instanceCount, firstVertex, firstInstance);
 }
@@ -516,15 +521,15 @@ void CommandPool::submitCommands(PSemaphore signalSemaphore)
 {
     assert(command->state == Command::State::Begin); // Not in a renderpass
     command->end();
+    Array<VkSemaphore> semaphores = { command->signalSemaphore->getHandle() };
     if (signalSemaphore != nullptr)
     {
-        queue->submitCommandBuffer(command, signalSemaphore->getHandle());
+        semaphores.add(signalSemaphore->getHandle());
     }
-    else
-    {
-        queue->submitCommandBuffer(command);
-    }
-    
+    queue->submitCommandBuffer(command, semaphores);
+    //std::cout << "Cmd " << command->getHandle() << " signalling " << command->signalSemaphore->getHandle() << std::endl;
+
+    PSemaphore waitSemaphore = command->signalSemaphore;
     for (uint32 i = 0; i < allocatedBuffers.size(); ++i)
     {
         PCommand cmdBuffer = allocatedBuffers[i];
@@ -533,6 +538,7 @@ void CommandPool::submitCommands(PSemaphore signalSemaphore)
         {
             command = cmdBuffer;
             command->begin();
+            command->waitForSemaphore(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, waitSemaphore);
             return;
         }
         else
@@ -543,4 +549,5 @@ void CommandPool::submitCommands(PSemaphore signalSemaphore)
     allocatedBuffers.add(new Command(graphics, commandPool, this));
     command = allocatedBuffers.back();
     command->begin();
+    command->waitForSemaphore(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, waitSemaphore);
 }

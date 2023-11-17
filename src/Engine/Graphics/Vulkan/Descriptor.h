@@ -57,7 +57,7 @@ public:
         : setHandle(VK_NULL_HANDLE)
         , graphics(graphics)
         , owner(owner)
-        , currentlyBound(false)
+        , bindCount(0)
         , currentlyInUse(false)
     {
     }
@@ -72,7 +72,7 @@ public:
     
     constexpr bool isCurrentlyBound() const
     {
-        return currentlyBound;
+        return bindCount > 0;
     }
     constexpr bool isCurrentlyInUse() const
     {
@@ -80,11 +80,11 @@ public:
     }
     constexpr void bind()
     {
-        currentlyBound = true;
+        bindCount++;
     }
     constexpr void unbind()
     {
-        currentlyBound = false;
+        bindCount--;
     }
     constexpr void allocate()
     {
@@ -111,7 +111,7 @@ private:
     VkDescriptorSet setHandle;
     PGraphics graphics;
     PDescriptorPool owner;
-    bool currentlyBound;
+    uint32 bindCount;
     bool currentlyInUse;
     friend class DescriptorPool;
     friend class Command;

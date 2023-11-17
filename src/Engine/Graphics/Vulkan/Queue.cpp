@@ -18,7 +18,7 @@ Queue::~Queue()
 {
 }
 
-void Queue::submitCommandBuffer(PCommand command, uint32 numSignalSemaphores, VkSemaphore *signalSemaphores)
+void Queue::submitCommandBuffer(PCommand command, const Array<VkSemaphore>& signalSemaphores)
 {
     std::unique_lock lock(queueLock);
     assert(command->state == Command::State::End);
@@ -28,14 +28,11 @@ void Queue::submitCommandBuffer(PCommand command, uint32 numSignalSemaphores, Vk
     VkCommandBuffer cmdHandle = command->handle;
 
     Array<VkSemaphore> waitSemaphores;
-    if (command->waitSemaphores.size() > 0)
+    for (PSemaphore semaphore : command->waitSemaphores)
     {
-        for (PSemaphore semaphore : command->waitSemaphores)
-        {
-            waitSemaphores.add(semaphore->getHandle());
-        }
+        waitSemaphores.add(semaphore->getHandle());
     }
-
+    
     VkSubmitInfo submitInfo = {
         .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
         .pNext = nullptr,
@@ -44,8 +41,8 @@ void Queue::submitCommandBuffer(PCommand command, uint32 numSignalSemaphores, Vk
         .pWaitDstStageMask = command->waitFlags.data(),
         .commandBufferCount = 1,
         .pCommandBuffers = &cmdHandle,
-        .signalSemaphoreCount = static_cast<uint32>(numSignalSemaphores),
-        .pSignalSemaphores = signalSemaphores,
+        .signalSemaphoreCount = static_cast<uint32>(signalSemaphores.size()),
+        .pSignalSemaphores = signalSemaphores.data(),
     };
     
     VK_CHECK(vkQueueSubmit(queue, 1, &submitInfo, command->fence->getHandle()));

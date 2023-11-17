@@ -48,6 +48,7 @@ private:
 	PGraphics graphics;
 	PCommandPool pool;
 	OFence fence;
+	OSemaphore signalSemaphore;
 	State state;
 	VkViewport currentViewport;
 	VkRect2D currentScissor;
