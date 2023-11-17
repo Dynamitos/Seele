@@ -325,7 +325,6 @@ void RenderCommand::pushConstants(Gfx::PPipelineLayout layout, Gfx::SeShaderStag
 
 void RenderCommand::draw(uint32 vertexCount, uint32 instanceCount, int32 firstVertex, uint32 firstInstance) 
 {
-    graphics->setCheckpointMarker(handle, "Fuck");
     assert(threadId == std::this_thread::get_id());
     vkCmdDraw(handle, vertexCount, instanceCount, firstVertex, firstInstance);
 }
