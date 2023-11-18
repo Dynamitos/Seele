@@ -95,6 +95,7 @@ public:
     RenderTargetLayout(Array<PRenderTargetAttachment> inputAttachments, Array<PRenderTargetAttachment> colorAttachments, PRenderTargetAttachment depthAttachment);
     Array<PRenderTargetAttachment> inputAttachments;
     Array<PRenderTargetAttachment> colorAttachments;
+    Array<PRenderTargetAttachment> resolveAttachments;
     PRenderTargetAttachment depthAttachment;
     uint32 width;
     uint32 height;

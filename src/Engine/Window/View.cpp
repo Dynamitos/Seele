@@ -18,11 +18,6 @@ View::~View()
 {
 }
 
-void View::applyArea(URect)
-{
-
-}
-
 void View::setFocused() 
 {
 	owner->setFocused(this);	

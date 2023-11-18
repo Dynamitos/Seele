@@ -72,6 +72,14 @@ void GameView::render()
     renderGraph.render(cam);
 }
 
+void GameView::applyArea(URect rect)
+{
+    viewport = graphics->createViewport(owner->getGfxHandle(), ViewportCreateInfo{
+        .dimensions = rect,
+        });
+    renderGraph.updateViewport(viewport);
+}
+
 void GameView::reloadGame()
 {
     gameInterface.reload(AssetRegistry::getInstance());

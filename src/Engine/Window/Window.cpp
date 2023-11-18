@@ -8,6 +8,7 @@ Window::Window(PWindowManager owner, Gfx::OWindow handle)
     : owner(owner)
     , gfxHandle(std::move(handle))
 {
+    gfxHandle->setResizeCallback([this](uint32 w, uint32 h) {onResize(w, h); });
 }
 
 Window::~Window()
@@ -56,4 +57,16 @@ void Window::setFocused(PView view)
     gfxHandle->setCloseCallback([this](){
         owner->notifyWindowClosed(this);
     });
+}
+
+void Window::onResize(uint32 width, uint32 height)
+{
+    for (auto& view : views)
+    {
+        // TODO: some sort of layouting algorithm should do this
+        view->applyArea(URect{
+            .size = UVector2(width, height),
+            .offset = UVector2(0, 0),
+            });
+    }
 }

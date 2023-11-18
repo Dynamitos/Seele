@@ -23,14 +23,15 @@ public:
     virtual void setScrollCallback(std::function<void(double, double)> callback) override;
     virtual void setFileCallback(std::function<void(int, const char**)> callback) override;
     virtual void setCloseCallback(std::function<void()> callback);
+    virtual void setResizeCallback(std::function<void(uint32, uint32)> callback) override;
+    
+    void keyPress(KeyCode code, InputAction action, KeyModifier modifier);
+    void mouseMove(double x, double y);
+    void mouseButton(MouseButton button, InputAction action, KeyModifier modifier);
+    void scroll(double x, double y);
+    void fileDrop(int num, const char** files);
+    void close();
     void resize(int width, int height);
-
-    std::function<void(KeyCode, InputAction, KeyModifier)> keyCallback;
-    std::function<void(double, double)> mouseMoveCallback;
-    std::function<void(MouseButton, InputAction, KeyModifier)> mouseButtonCallback;
-    std::function<void(double, double)> scrollCallback;
-    std::function<void(int, const char**)> fileCallback;
-    std::function<void()> closeCallback;
 protected:
     void querySurface();
     void chooseSwapSurfaceFormat();
@@ -57,6 +58,14 @@ protected:
     StaticArray<OSemaphore, Gfx::numFramesBuffered> renderingDoneSemaphores;
     uint32 currentImageIndex = 0;
     uint32 currentSemaphoreIndex = 0;
+
+    std::function<void(KeyCode, InputAction, KeyModifier)> keyCallback;
+    std::function<void(double, double)> mouseMoveCallback;
+    std::function<void(MouseButton, InputAction, KeyModifier)> mouseButtonCallback;
+    std::function<void(double, double)> scrollCallback;
+    std::function<void(int, const char**)> fileCallback;
+    std::function<void()> closeCallback;
+    std::function<void(uint32, uint32)> resizeCallback;
 };
 DEFINE_REF(Window)
 

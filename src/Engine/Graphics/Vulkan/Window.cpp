@@ -17,37 +17,37 @@ double Gfx::getCurrentFrameDelta()
 void glfwKeyCallback(GLFWwindow* handle, int key, int, int action, int modifier)
 {
     Window* window = (Window*)glfwGetWindowUserPointer(handle);
-    window->keyCallback((KeyCode)key, (InputAction)action, (KeyModifier)modifier);
+    window->keyPress((KeyCode)key, (InputAction)action, (KeyModifier)modifier);
 }
 
 void glfwMouseMoveCallback(GLFWwindow* handle, double xpos, double ypos)
 {
     Window* window = (Window*)glfwGetWindowUserPointer(handle);
-    window->mouseMoveCallback(xpos, ypos);
+    window->mouseMove(xpos, ypos);
 }
 
 void glfwMouseButtonCallback(GLFWwindow* handle, int button, int action, int modifier)
 {
     Window* window = (Window*)glfwGetWindowUserPointer(handle);
-    window->mouseButtonCallback((MouseButton)button, (InputAction)action, (KeyModifier)modifier);
+    window->mouseButton((MouseButton)button, (InputAction)action, (KeyModifier)modifier);
 }
 
 void glfwScrollCallback(GLFWwindow* handle, double xoffset, double yoffset)
 {
     Window* window = (Window*)glfwGetWindowUserPointer(handle);
-    window->scrollCallback(xoffset, yoffset);
+    window->scroll(xoffset, yoffset);
 }
 
 void glfwFileCallback(GLFWwindow* handle, int count, const char** paths)
 {
     Window* window = (Window*)glfwGetWindowUserPointer(handle);
-    window->fileCallback(count, paths);
+    window->fileDrop(count, paths);
 }
 
 void glfwCloseCallback(GLFWwindow* handle)
 {
     Window* window = (Window*)glfwGetWindowUserPointer(handle);
-    window->closeCallback();
+    window->close();
 }
 void glfwResizeCallback(GLFWwindow* handle, int width, int height)
 {
@@ -171,6 +171,41 @@ void Window::setCloseCallback(std::function<void()> callback)
     closeCallback = callback;
 }
 
+void Seele::Vulkan::Window::setResizeCallback(std::function<void(uint32, uint32)> callback)
+{
+    resizeCallback = callback;
+}
+
+void Window::keyPress(KeyCode code, InputAction action, KeyModifier modifier)
+{
+    keyCallback(code, action, modifier);
+}
+
+void Window::mouseMove(double x, double y)
+{
+    mouseMoveCallback(x, y);
+}
+
+void Window::mouseButton(MouseButton button, InputAction action, KeyModifier modifier)
+{
+    mouseButtonCallback(button, action, modifier);
+}
+
+void Window::scroll(double x, double y)
+{
+    scrollCallback(x, y);
+}
+
+void Window::fileDrop(int num, const char** files)
+{
+    fileCallback(num, files);
+}
+
+void Window::close()
+{
+    closeCallback();
+}
+
 void Window::resize(int width, int height)
 {
     querySurface();
@@ -181,6 +216,7 @@ void Window::resize(int width, int height)
     framebufferWidth = extent.width;
     framebufferHeight = extent.height;
     createSwapChain();
+    resizeCallback(width, height);
 }
 
 void Window::querySurface()

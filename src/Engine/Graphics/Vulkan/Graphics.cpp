@@ -387,9 +387,9 @@ void Graphics::pickPhysicalDevice()
     if (Gfx::useMeshShading)
     {
         uint32 count = 0;
-        vkEnumerateDeviceExtensionProperties(physicalDevice, VK_EXT_MESH_SHADER_EXTENSION_NAME, &count, nullptr);
+        vkEnumerateDeviceExtensionProperties(physicalDevice, NULL, &count, nullptr);
         Array<VkExtensionProperties> extensionProps(count);
-        vkEnumerateDeviceExtensionProperties(physicalDevice, VK_EXT_MESH_SHADER_EXTENSION_NAME, &count, extensionProps.data());
+        vkEnumerateDeviceExtensionProperties(physicalDevice, NULL, &count, extensionProps.data());
         for (size_t i = 0; i < count; ++i)
         {
             if (std::strcmp(VK_EXT_MESH_SHADER_EXTENSION_NAME, extensionProps[i].extensionName) == 0)
@@ -515,7 +515,7 @@ void Graphics::createDevice(GraphicsInitializer initializer)
     if (supportMeshShading())
     {
         descriptorIndexing.pNext = &enabledMeshShaderFeatures;
-        initializer.deviceExtensions.add("VK_EXT_mesh_shader");
+        initializer.deviceExtensions.add(VK_EXT_MESH_SHADER_EXTENSION_NAME);
     }
     VkDeviceCreateInfo deviceInfo = {
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,

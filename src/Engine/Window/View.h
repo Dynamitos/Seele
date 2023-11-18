@@ -11,17 +11,13 @@ public:
 	View(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo &createInfo, std::string name);
 	virtual ~View();
 	
-	// These are called from the view thread, and handle updating game data
 	virtual void beginUpdate() = 0;
 	virtual void update() = 0;
-	// End frame is called with a lock, so it is safe to write to shared memory
 	virtual void commitUpdate() = 0;
 
-	// These are called from the render thread
-	// prepare render is also locked, so reading from shared memory is also safe
 	virtual void prepareRender() = 0;
 	virtual void render() = 0;
-	void applyArea(URect area);
+	virtual void applyArea(URect area) = 0;
 	void setFocused();
 
 	const std::string& getName();

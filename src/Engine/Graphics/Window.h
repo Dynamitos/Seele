@@ -21,6 +21,7 @@ public:
     virtual void setScrollCallback(std::function<void(double, double)> callback) = 0;
     virtual void setFileCallback(std::function<void(int, const char**)> callback) = 0;
     virtual void setCloseCallback(std::function<void()> callback) = 0;
+    virtual void setResizeCallback(std::function<void(uint32, uint32)> callback) = 0;
     constexpr SeFormat getSwapchainFormat() const
     {
         return framebufferFormat;
@@ -46,7 +47,7 @@ protected:
 };
 DEFINE_REF(Window)
 
-    class Viewport
+class Viewport
 {
 public:
     Viewport(PWindow owner, const ViewportCreateInfo& createInfo);

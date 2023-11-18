@@ -25,6 +25,7 @@ public:
 
 	virtual void prepareRender() override;
 	virtual void render() override;
+	virtual void applyArea(URect rect) override;
 
 	void reloadGame();
 private:

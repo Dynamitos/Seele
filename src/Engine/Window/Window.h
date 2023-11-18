@@ -15,13 +15,11 @@ public:
     void render();
     Gfx::PWindow getGfxHandle();
     void setFocused(PView view);
-
+    void onResize(uint32 width, uint32 height);
 protected:
     PWindowManager owner;
     Array<PView> views;
     Gfx::OWindow gfxHandle;
-
-    //void viewWorker(size_t viewIndex);
 };
 DEFINE_REF(Window)
 } // namespace Seele
