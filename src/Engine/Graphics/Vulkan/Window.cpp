@@ -257,14 +257,14 @@ void Window::chooseSwapSurfaceFormat()
 
 void Window::chooseSwapPresentMode()
 {
-    for (const auto& supportedPresentMode : supportedPresentModes)
+    /*for (const auto& supportedPresentMode : supportedPresentModes)
     {
         if (supportedPresentMode == VK_PRESENT_MODE_MAILBOX_KHR)
         {
             presentMode = supportedPresentMode;
             return;
         }
-    }
+    }*/
     presentMode = VK_PRESENT_MODE_FIFO_KHR;
 }
 

@@ -602,17 +602,18 @@ private:
             // The array is not big enough, so we make a new one
             T *newData = allocateArray(newSize);
 
-            // And move the current elements into that one
-            for(size_type i = 0; i < arraySize; ++i)
-            {
-                newData[i] = std::forward<Type>(_data[i]);
-            }
             if constexpr (std::is_integral_v<T> || std::is_floating_point_v<T>)
             {
+                std::memcpy(newData, _data, sizeof(T) * arraySize);
                 std::memset(&newData[arraySize], 0, sizeof(T) * (newSize - arraySize));
             }
             else
             {
+                // And move the current elements into that one
+                for(size_type i = 0; i < arraySize; ++i)
+                {
+                    newData[i] = std::forward<Type>(_data[i]);
+                }
                 // As well as default initialize the others
                 for (size_type i = arraySize; i < newSize; ++i)
                 {

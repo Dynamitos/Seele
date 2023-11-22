@@ -44,6 +44,16 @@ public:
     {
         registry.view<Component...>().each(func);
     }
+    template<typename Component>
+    auto constructCallback()
+    {
+        return registry.on_construct<Component>();
+    }
+    template<typename Component>
+    auto destroyCallback()
+    {
+        return registry.on_destroy<Component>();
+    }
     PLightEnvironment getLightEnvironment() { return lightEnv; }
     Gfx::PGraphics getGraphics() const { return graphics; }
     entt::registry registry;

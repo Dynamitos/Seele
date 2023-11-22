@@ -327,7 +327,7 @@ OStagingBuffer StagingManager::create(uint64 size)
         .pNext = nullptr,
         .flags = 0,
         .size = size,
-        .usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
+        .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
         .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
         .queueFamilyIndexCount = 1,
         .pQueueFamilyIndices = &queueIndex,

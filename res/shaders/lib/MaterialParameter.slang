@@ -20,15 +20,15 @@ struct LightingParameter
 // data passed to fragment shader
 struct FragmentParameter
 {
-	float3 position_TS;
-	float3 viewDir_TS;
-	float3 normal_WS;
-	float3 tangent_WS;
-	float3 biTangent_WS;
-	float3 position_WS;
-	float4 position_CS;
-	float2 texCoords;
-	float3 vertexColor;
+	float4 position_CS : SV_Position;
+	float3 position_TS : POSITION0;
+	float3 viewDir_TS : POSITION1;
+	float3 normal_WS : NORMAL0;
+	float3 tangent_WS : TANGENT0;
+	float3 biTangent_WS : TANGENT1;
+	float3 position_WS : POSITION2;
+	float2 texCoords : TEXCOORD0;
+	float3 vertexColor : COLOR0;
 	MaterialParameter getMaterialParameter()
 	{
 		MaterialParameter result;

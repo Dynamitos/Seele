@@ -194,67 +194,8 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
 
         Array<Meshlet> meshlets;
         meshlets.reserve(indices.size() / (3ull * Gfx::numPrimitivesPerMeshlet));
-        std::set<uint32> uniqueVertices;
-        Meshlet current = {
-            .numVertices = 0,
-            .numPrimitives = 0,
-        };
-        auto insertAndGetIndex = [&uniqueVertices, &current](uint32 index) -> int8_t
-            {
-                auto [it, inserted] = uniqueVertices.insert(index);
-                if (inserted)
-                {
-                    if (current.numVertices == Gfx::numVerticesPerMeshlet)
-                    {
-                        return -1;
-                    }
-                    current.uniqueVertices[current.numVertices] = index;
-                    return current.numVertices++;
-                }
-                else
-                {
-                    for (uint32 i = 0; i < current.numVertices; ++i)
-                    {
-                        if (current.uniqueVertices[i] == index)
-                        {
-                            return i;
-                        }
-                    }
-                    assert(false);
-                }
-            };
-        auto completeMeshlet = [&meshlets, &current, &uniqueVertices]() {
-            meshlets.add(current);
-            current = {
-                .numVertices = 0,
-                .numPrimitives = 0,
-            };
-            uniqueVertices.clear();
-            };
-        for (size_t faceIndex = 0; faceIndex < mesh->mNumFaces; ++faceIndex)
-        {
-            auto i1 = insertAndGetIndex(mesh->mFaces[faceIndex].mIndices[0]);
-            auto i2 = insertAndGetIndex(mesh->mFaces[faceIndex].mIndices[1]);
-            auto i3 = insertAndGetIndex(mesh->mFaces[faceIndex].mIndices[2]);
-            if (i1 == -1 || i2 == -1 || i3 == -1)
-            {
-                completeMeshlet();
-            }
-            current.primitiveLayout[current.numPrimitives * 3 + 0] = i1;
-            current.primitiveLayout[current.numPrimitives * 3 + 1] = i2;
-            current.primitiveLayout[current.numPrimitives * 3 + 2] = i3;
-            current.numPrimitives++;
-            if (current.numPrimitives == Gfx::numPrimitivesPerMeshlet)
-            {
-                completeMeshlet();
-            }
-        }
-        if (!uniqueVertices.empty())
-        {
-            completeMeshlet();
-        }
+        Meshlet::buildFromIndexBuffer(indices, meshlets);
         vertexData->loadMesh(id, meshlets);
-
 
         collider.physicsMesh.addCollider(positions, indices, Matrix4(1.0f));
 

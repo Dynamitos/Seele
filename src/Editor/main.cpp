@@ -37,39 +37,39 @@ int main()
     graphics->init(initializer);
     StaticMeshVertexData* vd = StaticMeshVertexData::getInstance();
     vd->init(graphics);
-    PWindowManager windowManager = new WindowManager();
+    OWindowManager windowManager = new WindowManager();
     AssetRegistry::init(sourcePath / "Assets", graphics);
     AssetImporter::init(graphics);
     AssetImporter::importFont(FontImportArgs{
         .filePath = "./fonts/Calibri.ttf",
         });
-    AssetImporter::importMesh(MeshImportArgs{
-        .filePath = sourcePath / "old_resources/models/arena.fbx",
-        });
+    //AssetImporter::importMesh(MeshImportArgs{
+    //    .filePath = sourcePath / "old_resources/models/arena.fbx",
+    //    });
     AssetImporter::importMesh(MeshImportArgs{
         .filePath = sourcePath / "old_resources/models/train.fbx",
         });
-    AssetImporter::importMesh(MeshImportArgs{
-        .filePath= sourcePath / "old_resources/models/bird.fbx",
-        });
+    //AssetImporter::importMesh(MeshImportArgs{
+    //    .filePath= sourcePath / "old_resources/models/bird.fbx",
+    //    });
     AssetImporter::importMesh(MeshImportArgs{
         .filePath= sourcePath / "old_resources/models/cube.fbx",
         });
-    AssetImporter::importMesh(MeshImportArgs{
-        .filePath= sourcePath / "old_resources/models/flameThrower.fbx",
-        });
-    AssetImporter::importMesh(MeshImportArgs{
-        .filePath= sourcePath / "old_resources/models/player.fbx",
-        });
-    AssetImporter::importMesh(MeshImportArgs{
-        .filePath= sourcePath / "old_resources/models/shotgun.fbx",
-        });
-    AssetImporter::importMesh(MeshImportArgs{
-        .filePath= sourcePath / "old_resources/models/track.fbx",
-        });
-    AssetImporter::importMesh(MeshImportArgs{
-        .filePath= sourcePath / "old_resources/models/zombie.fbx",
-        });
+    //AssetImporter::importMesh(MeshImportArgs{
+    //    .filePath= sourcePath / "old_resources/models/flameThrower.fbx",
+    //    });
+    //AssetImporter::importMesh(MeshImportArgs{
+    //    .filePath= sourcePath / "old_resources/models/player.fbx",
+    //    });
+    //AssetImporter::importMesh(MeshImportArgs{
+    //    .filePath= sourcePath / "old_resources/models/shotgun.fbx",
+    //    });
+    //AssetImporter::importMesh(MeshImportArgs{
+    //    .filePath= sourcePath / "old_resources/models/track.fbx",
+    //    });
+    //AssetImporter::importMesh(MeshImportArgs{
+    //    .filePath= sourcePath / "old_resources/models/zombie.fbx",
+    //    });
 
     AssetImporter::importTexture(TextureImportArgs{
         .filePath= sourcePath / "old_resources/textures/Dirt.png",

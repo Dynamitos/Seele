@@ -36,7 +36,14 @@ BasePass::BasePass(Gfx::PGraphics graphics, PScene scene)
     lightCullingLayout->create();
 
     basePassLayout->addDescriptorLayout(INDEX_LIGHT_CULLING, lightCullingLayout);
-    graphics->getShaderCompiler()->registerRenderPass("BasePass", "LegacyBasePass", true, true, "BasePass");
+    if (graphics->supportMeshShading())
+    {
+        graphics->getShaderCompiler()->registerRenderPass("BasePass", "MeshletBasePass", true, true, "BasePass", true, true, "MeshletBasePass");
+    }
+    else
+    {
+        graphics->getShaderCompiler()->registerRenderPass("BasePass", "LegacyBasePass", true, true, "BasePass");
+    }
 }
 
 BasePass::~BasePass()
@@ -124,6 +131,7 @@ void BasePass::render()
                 pipelineInfo.pipelineLayout = std::move(layout);
                 pipelineInfo.renderPass = renderPass;
                 pipelineInfo.depthStencilState.depthCompareOp = Gfx::SE_COMPARE_OP_LESS_OR_EQUAL;
+                pipelineInfo.rasterizationState.lineWidth = 10.f;
                 Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
                 command->bindPipeline(pipeline);
             }

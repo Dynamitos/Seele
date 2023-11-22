@@ -85,6 +85,7 @@ void MaterialInstance::setBaseMaterial(PMaterialAsset asset)
         );
     }
     baseMaterial = asset;
+    updateDescriptor();
 }
 
 void MaterialInstance::save(ArchiveBuffer& buffer) const

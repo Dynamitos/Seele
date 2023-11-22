@@ -20,7 +20,14 @@ DepthPrepass::DepthPrepass(Gfx::PGraphics graphics, PScene scene)
 
     depthPrepassLayout = graphics->createPipelineLayout();
     depthPrepassLayout->addDescriptorLayout(INDEX_VIEW_PARAMS, viewParamsLayout);
-    graphics->getShaderCompiler()->registerRenderPass("DepthPass", "LegacyBasePass");
+    if (graphics->supportMeshShading())
+    {
+        graphics->getShaderCompiler()->registerRenderPass("DepthPass", "MeshletBasePass", false, false, "", true, true, "MeshletBasePass");
+    }
+    else
+    {
+        graphics->getShaderCompiler()->registerRenderPass("DepthPass", "LegacyBasePass");
+    }
 }
 
 DepthPrepass::~DepthPrepass()

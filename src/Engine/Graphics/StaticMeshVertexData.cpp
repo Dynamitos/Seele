@@ -111,7 +111,7 @@ void StaticMeshVertexData::deserializeMesh(MeshId id, ArchiveBuffer& buffer)
     loadNormals(id, nor);
     loadTangents(id, tan);
     loadBiTangents(id, bit);
-    loadBiTangents(id, col);
+    loadColors(id, col);
 }
 
 void StaticMeshVertexData::init(Gfx::PGraphics graphics)

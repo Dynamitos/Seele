@@ -1,72 +1,81 @@
 <?xml version="1.0" encoding="utf-8"?>
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
-  <Type Name="Seele::Array&lt;*&gt;">
-    <DisplayString>{{ size={arraySize} }}</DisplayString>
-    <Expand>
-      <Item Name="[size]" ExcludeView="simple">arraySize</Item>
-      <Item Name="[allocated]" ExcludeView="simple">allocated</Item>
-      <ArrayItems>
-        <Size>arraySize</Size>
-        <ValuePointer>_data</ValuePointer>
-      </ArrayItems>
-    </Expand>
-  </Type>
-  <Type Name="Seele::List&lt;*&gt;">
-    <DisplayString>{{ size={_size} }}</DisplayString>
-    <Expand>
-      <Item Name="[size]" ExcludeView="simple">_size</Item>
-      <LinkedListItems>
-        <Size>_size</Size>
-        <HeadPointer>root</HeadPointer>
-        <NextPointer>next</NextPointer>
-        <ValueNode>data</ValueNode>
-      </LinkedListItems>
-    </Expand>
-  </Type>
-  <Type Name="Seele::Pair&lt;*,*&gt;">
-      <DisplayString>[{key}, {value}]</DisplayString>
-      <Expand>
-          <Item Name="[key]">key</Item>
-          <Item Name="[value]">value</Item>
-      </Expand>
-  </Type>
-  <Type Name="Seele::Map&lt;*,*&gt;">
-    <DisplayString>{{ size={_size} }</DisplayString>
-    <Expand>
-      <Item Name="[size]">_size</Item>
-      <Item Name="[comp]">comp</Item>
-      <ArrayItems>
-        <Size>_size</Size>
-        <ValuePointer>nodeContainer._data</ValuePointer>
-      </ArrayItems>
-    </Expand>
-  </Type>
-  <Type Name="Seele::Map&lt;*&gt;::Node">
-      <DisplayString>[{pair}]</DisplayString>
-      <Expand>
-          <Item Name="[pair]">pair</Item>
-          <Item Name="[left]">leftChild</Item>
-          <Item Name="[right]">rightChild</Item>
-      </Expand>
-  </Type>
-  <Type Name="Seele::Map&lt;*&gt;::IteratorBase&lt;*&gt;">
-    <DisplayString Condition="nodeContainer.arraySize==0">empty</DisplayString>
-    <DisplayString>[{nodeContainer._data[node].pair}]</DisplayString>
-    <Expand>
-      <ExpandedItem>nodeContainer._data[node].pair</ExpandedItem>
-    </Expand>
-  </Type>
-  <Type Name="Seele::RefPtr&lt;*&gt;">
-    <DisplayString Condition="object == nullptr">empty</DisplayString>
-    <DisplayString>RefPtr {*object}</DisplayString>
-    <Expand>
-      <ExpandedItem>object</ExpandedItem>
-    </Expand>
-  </Type>
-  <Type Name="Seele::UniquePtr&lt;*&gt;">
-    <DisplayString>UniquePtr {*handle}</DisplayString>
-    <Expand>
-      <ExpandedItem>handle</ExpandedItem>
-    </Expand>
-  </Type>
+    <Type Name="Seele::Array&lt;*&gt;">
+        <DisplayString>{{ size={arraySize} }}</DisplayString>
+        <Expand>
+            <Item Name="[size]" ExcludeView="simple">arraySize</Item>
+            <Item Name="[allocated]" ExcludeView="simple">allocated</Item>
+            <ArrayItems>
+                <Size>arraySize</Size>
+                <ValuePointer>_data</ValuePointer>
+            </ArrayItems>
+        </Expand>
+    </Type>
+    <Type Name="Seele::StaticArray&lt;*,*&gt;">
+        <DisplayString>{{ size={$T2} }}</DisplayString>
+        <Expand>
+            <ArrayItems>
+                <Size>$T2</Size>
+                <ValuePointer>_data</ValuePointer>
+            </ArrayItems>
+        </Expand>
+    </Type>
+    <Type Name="Seele::List&lt;*&gt;">
+        <DisplayString>{{ size={_size} }}</DisplayString>
+        <Expand>
+            <Item Name="[size]" ExcludeView="simple">_size</Item>
+            <LinkedListItems>
+                <Size>_size</Size>
+                <HeadPointer>root</HeadPointer>
+                <NextPointer>next</NextPointer>
+                <ValueNode>data</ValueNode>
+            </LinkedListItems>
+        </Expand>
+    </Type>
+    <Type Name="Seele::Pair&lt;*,*&gt;">
+        <DisplayString>[{key}, {value}]</DisplayString>
+        <Expand>
+            <Item Name="[key]">key</Item>
+            <Item Name="[value]">value</Item>
+        </Expand>
+    </Type>
+    <Type Name="Seele::Map&lt;*,*&gt;">
+        <DisplayString>{{ size={_size} }</DisplayString>
+        <Expand>
+            <Item Name="[size]">_size</Item>
+            <Item Name="[comp]">comp</Item>
+            <ArrayItems>
+                <Size>_size</Size>
+                <ValuePointer>nodeContainer._data</ValuePointer>
+            </ArrayItems>
+        </Expand>
+    </Type>
+    <Type Name="Seele::Map&lt;*&gt;::Node">
+        <DisplayString>[{pair}]</DisplayString>
+        <Expand>
+            <Item Name="[pair]">pair</Item>
+            <Item Name="[left]">leftChild</Item>
+            <Item Name="[right]">rightChild</Item>
+        </Expand>
+    </Type>
+    <Type Name="Seele::Map&lt;*&gt;::IteratorBase&lt;*&gt;">
+        <DisplayString Condition="nodeContainer.arraySize==0">empty</DisplayString>
+        <DisplayString>[{nodeContainer._data[node].pair}]</DisplayString>
+        <Expand>
+            <ExpandedItem>nodeContainer._data[node].pair</ExpandedItem>
+        </Expand>
+    </Type>
+    <Type Name="Seele::RefPtr&lt;*&gt;">
+        <DisplayString Condition="object == nullptr">empty</DisplayString>
+        <DisplayString>RefPtr {*object}</DisplayString>
+        <Expand>
+            <ExpandedItem>object</ExpandedItem>
+        </Expand>
+    </Type>
+    <Type Name="Seele::UniquePtr&lt;*&gt;">
+        <DisplayString>UniquePtr {*handle}</DisplayString>
+        <Expand>
+            <ExpandedItem>handle</ExpandedItem>
+        </Expand>
+    </Type>
 </AutoVisualizer>

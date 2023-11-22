@@ -17,6 +17,10 @@ struct MeshId
     {
         return id <=> other.id;
     }
+    bool operator==(const MeshId& other) const
+    {
+        return id == other.id;
+    }
 };
 struct Meshlet
 {
@@ -26,6 +30,7 @@ struct Meshlet
     uint32 numPrimitives;
     void save(ArchiveBuffer& buffer) const;
     void load(ArchiveBuffer& buffer);
+    static void buildFromIndexBuffer(const Array<uint32>& indices, Array<Meshlet>& meshlets);
 };
 class VertexData
 {
@@ -47,7 +52,7 @@ public:
         Gfx::OShaderBuffer instanceBuffer;
         Gfx::OShaderBuffer meshDataBuffer;
         Gfx::PDescriptorSet descriptorSet;
-        uint32 numMeshes; // not necessarily equal to meshes.size() if a MeshId has multiple meshes
+        uint32 numMeshes = 0; // not necessarily equal to meshes.size() if a MeshId has multiple meshes
         Array<MeshInstanceData> meshes;
     };
     struct MaterialData
@@ -62,7 +67,9 @@ public:
         uint32 indicesOffset;
     };
     void resetMeshData();
-    void updateMesh(const Component::Transform& transform, PMesh mesh);
+    void addMesh(PMesh mesh);
+    void removeMesh(PMesh mesh);
+    void updateInstances();
     void createDescriptors();
     void loadMesh(MeshId id, Array<Meshlet> meshlets);
     MeshId allocateVertexData(uint64 numVertices);

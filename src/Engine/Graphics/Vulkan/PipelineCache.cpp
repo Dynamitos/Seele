@@ -358,7 +358,6 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::MeshPipelineCreateInfo gfxI
 
     if (graphicsPipelines.contains(hash))
     {
-        std::cout << "Caching pipeline" << std::endl;
         return graphicsPipelines[hash];
     }
     VkPipeline pipelineHandle;

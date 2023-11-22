@@ -359,11 +359,15 @@ void Graphics::pickPhysicalDevice()
     vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, physicalDevices.data());
     VkPhysicalDevice bestDevice = VK_NULL_HANDLE;
     uint32 deviceRating = 0;
+    features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+    features.pNext = &features12;
+    features12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+    features12.pNext = nullptr;
     for (auto dev : physicalDevices)
     {
         uint32 currentRating = 0;
         vkGetPhysicalDeviceProperties(dev, &props);
-        vkGetPhysicalDeviceFeatures(dev, &features);
+        vkGetPhysicalDeviceFeatures2(dev, &features);
         if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
         {
             std::cout << "found dedicated gpu " << props.deviceName << std::endl;
@@ -382,8 +386,9 @@ void Graphics::pickPhysicalDevice()
         }
     }
     physicalDevice = bestDevice;
+    
     vkGetPhysicalDeviceProperties(physicalDevice, &props);
-    vkGetPhysicalDeviceFeatures(physicalDevice, &features);
+    vkGetPhysicalDeviceFeatures2(physicalDevice, &features);
     if (Gfx::useMeshShading)
     {
         uint32 count = 0;
@@ -500,31 +505,25 @@ void Graphics::createDevice(GraphicsInitializer initializer)
             *currentPriority++ = 1.0f;
         }
     }
-    VkPhysicalDeviceDescriptorIndexingFeatures descriptorIndexing = {
-        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES,
-        .shaderSampledImageArrayNonUniformIndexing = VK_TRUE,
-        .descriptorBindingPartiallyBound = VK_TRUE,
-        .descriptorBindingVariableDescriptorCount = VK_TRUE,
-        .runtimeDescriptorArray = VK_TRUE,
-    };
     VkPhysicalDeviceMeshShaderFeaturesEXT enabledMeshShaderFeatures = {
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT,
+        .pNext = nullptr,
         .taskShader = VK_TRUE,
         .meshShader = VK_TRUE,
     };
     if (supportMeshShading())
     {
-        descriptorIndexing.pNext = &enabledMeshShaderFeatures;
+        features12.pNext = &enabledMeshShaderFeatures;
         initializer.deviceExtensions.add(VK_EXT_MESH_SHADER_EXTENSION_NAME);
     }
     VkDeviceCreateInfo deviceInfo = {
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-        .pNext = &descriptorIndexing,
+        .pNext = &features12,
         .queueCreateInfoCount = (uint32)queueInfos.size(),
         .pQueueCreateInfos = queueInfos.data(),
         .enabledExtensionCount = (uint32)initializer.deviceExtensions.size(),
         .ppEnabledExtensionNames = initializer.deviceExtensions.data(),
-        .pEnabledFeatures = &features,
+        .pEnabledFeatures = &features.features,
     };
 
     VK_CHECK(vkCreateDevice(physicalDevice, &deviceInfo, nullptr, &handle));

@@ -6,10 +6,11 @@
 #include "Graphics/Descriptor.h"
 #include "Component/Mesh.h"
 #include "Graphics/Shader.h"
+#include <set>
 
 using namespace Seele;
 
-constexpr static uint64 NUM_DEFAULT_ELEMENTS = 1024 * 1024;
+constexpr static uint64 NUM_DEFAULT_ELEMENTS = 16 * 1024;
 
 void VertexData::resetMeshData()
 {
@@ -17,7 +18,6 @@ void VertexData::resetMeshData()
     {
         mat.material->getDescriptorLayout()->reset();
     }
-    materialData.clear();
     if (dirty)
     {
         updateBuffers();
@@ -25,7 +25,7 @@ void VertexData::resetMeshData()
     }
 }
 
-void VertexData::updateMesh(const Component::Transform& transform, PMesh mesh)
+void VertexData::addMesh(PMesh mesh)
 {
     PMaterial mat = mesh->referencedMaterial->getHandle()->getBaseMaterial();
     MaterialData& matData = materialData[mat->getName()];
@@ -34,13 +34,64 @@ void VertexData::updateMesh(const Component::Transform& transform, PMesh mesh)
     matInstanceData.meshes.add(MeshInstanceData{
         .id = mesh->id,
         .instance = InstanceData {
-            .transformMatrix = transform.toMatrix(),
+            .transformMatrix = Matrix4(),
         },
         .indexBuffer = mesh->indexBuffer,
     });
     matInstanceData.materialInstance = mesh->referencedMaterial->getHandle();
-    matInstanceData.materialInstance->updateDescriptor();
     matInstanceData.numMeshes += meshData[mesh->id].size();
+}
+
+void VertexData::removeMesh(PMesh mesh)
+{
+    PMaterial mat = mesh->referencedMaterial->getHandle()->getBaseMaterial();
+    MaterialData& matData = materialData[mat->getName()];
+    matData.material = mat;
+    MaterialInstanceData& matInstanceData = matData.instances[mesh->referencedMaterial->getHandle()->getId()];
+    matInstanceData.meshes.remove_if([&mesh](const MeshInstanceData& data) {
+        return data.id == mesh->id;
+        });
+    matInstanceData.materialInstance = mesh->referencedMaterial->getHandle();
+    matInstanceData.numMeshes -= meshData[mesh->id].size();
+}
+
+void VertexData::updateInstances()
+{
+    instanceDataLayout->reset();
+    for (const auto& [_, mat] : materialData)
+    {
+        for (auto& [_, matInst] : mat.instances)
+        {
+            Array<InstanceData> instanceData;
+            for (auto& inst : matInst.meshes)
+            {
+                inst.meshes = 0;
+                for (const auto& mesh : meshData[inst.id])
+                {
+                    instanceData.add(inst.instance);
+                    inst.meshes++;
+                }
+            }
+            matInst.instanceBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
+                .sourceData = {
+                    .size = sizeof(InstanceData) * instanceData.size(),
+                    .data = (uint8*)instanceData.data(),
+                },
+                .numElements = instanceData.size(),
+                .dynamic = false,
+                });
+            matInst.descriptorSet = instanceDataLayout->allocateDescriptorSet();
+            matInst.descriptorSet->updateBuffer(0, matInst.instanceBuffer);
+            if (graphics->supportMeshShading())
+            {
+                matInst.descriptorSet->updateBuffer(1, matInst.meshDataBuffer);
+                matInst.descriptorSet->updateBuffer(2, meshletBuffer);
+                matInst.descriptorSet->updateBuffer(3, primitiveIndicesBuffer);
+                matInst.descriptorSet->updateBuffer(4, vertexIndicesBuffer);
+            }
+            matInst.descriptorSet->writeChanges();
+        }
+    }
 }
 
 void VertexData::createDescriptors()
@@ -50,14 +101,12 @@ void VertexData::createDescriptors()
     {
         for (auto& [_, matInst] : mat.instances)
         {
-            Array<InstanceData> instanceData;
             Array<MeshData> meshes;
             for (auto& inst : matInst.meshes)
             {
                 inst.meshes = 0;
                 for (const auto& mesh : meshData[inst.id])
                 {
-                    instanceData.add(inst.instance);
                     meshes.add(mesh);
                     inst.meshes++;
                 }
@@ -95,6 +144,9 @@ void VertexData::createDescriptors()
 
 void VertexData::loadMesh(MeshId id, Array<Meshlet> loadedMeshlets)
 {
+    meshlets.reserve(meshlets.size() + loadedMeshlets.size());
+    vertexIndices.reserve(vertexIndices.size() + loadedMeshlets.size() * Gfx::numVerticesPerMeshlet);
+    vertexIndices.reserve(vertexIndices.size() + loadedMeshlets.size() * Gfx::numPrimitivesPerMeshlet * 3);
     meshData[id].clear();
     uint32 currentMesh = 0;
     while (currentMesh < loadedMeshlets.size())
@@ -238,4 +290,70 @@ void Meshlet::load(ArchiveBuffer& buffer)
     Serialization::load(buffer, primitiveLayout);
     Serialization::load(buffer, numVertices);
     Serialization::load(buffer, numPrimitives);
+}
+
+void Seele::Meshlet::buildFromIndexBuffer(const Array<uint32>& indices, Array<Meshlet>& meshlets)
+{
+    std::set<uint32> uniqueVertices;
+    Meshlet current = {
+        .numVertices = 0,
+        .numPrimitives = 0,
+    };
+    auto insertAndGetIndex = [&uniqueVertices, &current](uint32 index) -> int8_t
+        {
+            auto [it, inserted] = uniqueVertices.insert(index);
+            if (inserted)
+            {
+                if (current.numVertices == Gfx::numVerticesPerMeshlet)
+                {
+                    return -1;
+                }
+                current.uniqueVertices[current.numVertices] = index;
+                return current.numVertices++;
+            }
+            else
+            {
+                for (uint32 i = 0; i < current.numVertices; ++i)
+                {
+                    if (current.uniqueVertices[i] == index)
+                    {
+                        return i;
+                    }
+                }
+                assert(false);
+            }
+        };
+    auto completeMeshlet = [&meshlets, &current, &uniqueVertices]() {
+        meshlets.add(current);
+        current = {
+            .numVertices = 0,
+            .numPrimitives = 0,
+        };
+        uniqueVertices.clear();
+        };
+    for (size_t faceIndex = 0; faceIndex < indices.size() / 3; ++faceIndex)
+    {
+        auto i1 = insertAndGetIndex(indices[faceIndex * 3 + 0]);
+        auto i2 = insertAndGetIndex(indices[faceIndex * 3 + 1]);
+        auto i3 = insertAndGetIndex(indices[faceIndex * 3 + 2]);
+        if (i1 == -1 || i2 == -1 || i3 == -1)
+        {
+            completeMeshlet();
+            i1 = insertAndGetIndex(indices[faceIndex * 3 + 0]);
+            i2 = insertAndGetIndex(indices[faceIndex * 3 + 1]);
+            i3 = insertAndGetIndex(indices[faceIndex * 3 + 2]);
+        }
+        current.primitiveLayout[current.numPrimitives * 3 + 0] = i1;
+        current.primitiveLayout[current.numPrimitives * 3 + 1] = i2;
+        current.primitiveLayout[current.numPrimitives * 3 + 2] = i3;
+        current.numPrimitives++;
+        if (current.numPrimitives == Gfx::numPrimitivesPerMeshlet)
+        {
+            completeMeshlet();
+        }
+    }
+    if (!uniqueVertices.empty())
+    {
+        completeMeshlet();
+    }
 }
