@@ -2,10 +2,10 @@ import Common;
 
 struct MaterialParameter
 {
-	float3 position_TS : POSITION0;
-	float3 position_WS : POSITION1;
-	float2 texCoords : TEXCOORDS0;
-	float3 vertexColor : COLOR0;
+	float3 position_TS;
+	float3 position_WS;
+	float2 texCoords;
+	float3 vertexColor;
 };
 
 // data used by light environment

@@ -15,7 +15,7 @@ layout(set=5)
 ParameterBlock<LightCullingData> pLightCullingData;
 
 [shader("pixel")]
-float4 fragmentMain(in FragmentParameter params : PARAMETER) : SV_Target
+float4 fragmentMain(in FragmentParameter params) : SV_Target
 {
     MaterialParameter materialParams = params.getMaterialParameter();
     LightingParameter lightingParams = params.getLightingParameter();

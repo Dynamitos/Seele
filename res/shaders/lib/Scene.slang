@@ -11,9 +11,11 @@ struct MeshletDescription
 
 struct MeshData
 {
-	uint numMeshlets;
-	uint meshletOffset;
-	uint indicesOffset;
+    uint numMeshlets;
+    uint meshletOffset;
+    uint firstIndex;
+    uint numIndices;
+    uint indicesOffset;
 };
 
 static const uint MAX_VERTICES = 64;

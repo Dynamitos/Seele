@@ -76,8 +76,7 @@ struct PrimitiveAttributes
 
 struct MeshOutput
 {
-	FragmentParameter parameter : PARAMETER;
-	float4 position_CS : SV_Position;
+	FragmentParameter parameter;
 };
 
 [numthreads(MESH_GROUP_SIZE, 1, 1)]
@@ -94,10 +93,9 @@ void meshMain(
 	MeshData md = pScene.meshData[meshPayload.instanceId[groupID]];
 	MeshletDescription m = pScene.meshletInfos[meshPayload.meshletId[groupID]];
 	const uint vertexLoops = (MAX_VERTICES + MESH_GROUP_SIZE - 1) / MESH_GROUP_SIZE;
-	for(uint loop = 0; loop < vertexLoops; ++loop) 
+	for(uint i = threadID; i < MAX_VERTICES; i += MESH_GROUP_SIZE)
 	{
-		uint v = threadID + loop * MESH_GROUP_SIZE;
-		v = min(v, m.vertexCount - 1);
+		uint v = min(i, m.vertexCount - 1);
 		InterlockedMax(gs_numVertices, v + 1);
 		{
 			int vertexIndex = pScene.vertexIndices[m.vertexOffset + v];
@@ -106,10 +104,9 @@ void meshMain(
 	}
 	GroupMemoryBarrierWithGroupSync();
 	const uint primitiveLoops = (MAX_PRIMITIVES + MESH_GROUP_SIZE - 1) / MESH_GROUP_SIZE;
-	for(uint loop = 0; loop < primitiveLoops; ++loop)
+	for(uint i = threadID; i < MAX_PRIMITIVES; i += MESH_GROUP_SIZE)
 	{
-		uint p = threadID + loop * MESH_GROUP_SIZE;
-		p = min(p, m.primitiveCount - 1);
+		uint p = min(i, m.primitiveCount - 1);
 		InterlockedMax(gs_numPrimitives, p + 1);
 		{
 			uint32_t local_idx0 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 0];
@@ -128,14 +125,12 @@ void meshMain(
 	v = min(v, m.vertexCount - 1);
 	FragmentParameter parameter = gs_vertices[v].getParameter(inst.transformMatrix);
 	vertices[v].parameter = parameter;
-	vertices[v].position_CS = parameter.position_CS;
 	if(vertexLoops >= 1)
 	{
 		uint v = threadID + MESH_GROUP_SIZE;
 		v = min(v, m.vertexCount - 1);
 		FragmentParameter parameter = gs_vertices[v].getParameter(inst.transformMatrix);
 		vertices[v].parameter = parameter;
-		vertices[v].position_CS = parameter.position_CS;
 	}
 
 	uint p = threadID;
