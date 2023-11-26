@@ -195,17 +195,9 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
         Array<Meshlet> meshlets;
         meshlets.reserve(indices.size() / (3ull * Gfx::numPrimitivesPerMeshlet));
         Meshlet::buildFromIndexBuffer(indices, meshlets);
-        vertexData->loadMesh(id, meshlets);
+        vertexData->loadMesh(id, indices, meshlets);
 
         collider.physicsMesh.addCollider(positions, indices, Matrix4(1.0f));
-
-        IndexBufferCreateInfo idxInfo;
-        idxInfo.indexType = Gfx::SE_INDEX_TYPE_UINT32;
-        idxInfo.sourceData.data = (uint8*)indices.data();
-        idxInfo.sourceData.owner = Gfx::QueueType::DEDICATED_TRANSFER;
-        idxInfo.sourceData.size = sizeof(uint32) * indices.size();
-        Gfx::OIndexBuffer indexBuffer = graphics->createIndexBuffer(idxInfo);
-        indexBuffer->transferOwnership(Gfx::QueueType::GRAPHICS);
 
         globalMeshes[meshIndex] = new Mesh();
         globalMeshes[meshIndex]->vertexData = vertexData;
@@ -214,7 +206,6 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
         globalMeshes[meshIndex]->meshlets = std::move(meshlets);
         globalMeshes[meshIndex]->indices = std::move(indices);
         globalMeshes[meshIndex]->vertexCount = mesh->mNumVertices;
-        globalMeshes[meshIndex]->indexBuffer = std::move(indexBuffer);
     }
 }
 

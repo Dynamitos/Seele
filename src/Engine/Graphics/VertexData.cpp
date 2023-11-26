@@ -32,15 +32,16 @@ void VertexData::updateMesh(PMesh mesh, Component::Transform& transform)
     MaterialData& matData = materialData[mat->getName()];
     matData.material = mat;
     MaterialInstanceData& matInstanceData = matData.instances[mesh->referencedMaterial->getHandle()->getId()];
-    matInstanceData.meshes.add(MeshInstanceData{
-        .id = mesh->id,
-        .instance = InstanceData {
-            .transformMatrix = transform.toMatrix(),
-        },
-        .indexBuffer = mesh->indexBuffer,
-        });
+    for (auto& data : meshData[mesh->id])
+    {
+        matInstanceData.meshes.add(MeshInstanceData{
+            .instance = InstanceData {
+                .transformMatrix = transform.toMatrix(),
+            },
+            .data = data
+            });
+    }
     matInstanceData.materialInstance = mesh->referencedMaterial->getHandle();
-    matInstanceData.numMeshes += meshData[mesh->id].size();
 }
 
 void VertexData::createDescriptors()
@@ -54,13 +55,8 @@ void VertexData::createDescriptors()
             Array<MeshData> meshes;
             for (auto& inst : matInst.meshes)
             {
-                inst.meshes = 0;
-                for (const auto& mesh : meshData[inst.id])
-                {
-                    meshes.add(mesh);
-                    instanceData.add(inst.instance);
-                    inst.meshes++;
-                }
+                meshes.add(inst.data);
+                instanceData.add(inst.instance);
             }
             matInst.instanceBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
                 .sourceData = {
@@ -71,7 +67,6 @@ void VertexData::createDescriptors()
                 .dynamic = false,
                 });
             matInst.descriptorSet = instanceDataLayout->allocateDescriptorSet();
-            matInst.descriptorSet->updateBuffer(0, matInst.instanceBuffer);
             
             matInst.meshDataBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
                 .sourceData = {
@@ -81,23 +76,22 @@ void VertexData::createDescriptors()
                 .numElements = meshes.size(),
                 .dynamic = false,
             });
+            matInst.descriptorSet->updateBuffer(0, matInst.instanceBuffer);
             matInst.descriptorSet->updateBuffer(1, matInst.meshDataBuffer);
             matInst.descriptorSet->updateBuffer(2, meshletBuffer);
             matInst.descriptorSet->updateBuffer(3, primitiveIndicesBuffer);
             matInst.descriptorSet->updateBuffer(4, vertexIndicesBuffer);
             
             matInst.descriptorSet->writeChanges();
-            matInst.numMeshes = meshes.size();
         }
     }
 }
 
-void VertexData::loadMesh(MeshId id, Array<Meshlet> loadedMeshlets)
+void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet> loadedMeshlets)
 {
     meshlets.reserve(meshlets.size() + loadedMeshlets.size());
     vertexIndices.reserve(vertexIndices.size() + loadedMeshlets.size() * Gfx::numVerticesPerMeshlet);
-    vertexIndices.reserve(vertexIndices.size() + loadedMeshlets.size() * Gfx::numPrimitivesPerMeshlet * 3);
-    meshData[id].clear();
+    primitiveIndices.reserve(primitiveIndices.size() + loadedMeshlets.size() * Gfx::numPrimitivesPerMeshlet * 3);
     uint32 currentMesh = 0;
     while (currentMesh < loadedMeshlets.size())
     {
@@ -127,13 +121,24 @@ void VertexData::loadMesh(MeshId id, Array<Meshlet> loadedMeshlets)
             });
         currentMesh += numMeshlets;
     }
+    meshData[id][0].firstIndex = indices.size();
+    meshData[id][0].numIndices = loadedIndices.size();
+    indices.resize(indices.size() + loadedIndices.size());
+    std::memcpy(indices.data() + meshData[id][0].firstIndex, loadedIndices.data(), loadedIndices.size() * sizeof(uint32));
+    indexBuffer = graphics->createIndexBuffer(IndexBufferCreateInfo{
+        .sourceData = {
+            .size = sizeof(uint32) * indices.size(),
+            .data = (uint8*)indices.data(),
+        },
+        .indexType = Gfx::SE_INDEX_TYPE_UINT32,
+    });
     meshletBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
         .sourceData = {
             .size = sizeof(MeshletDescription) * meshlets.size(),
             .data = (uint8*)meshlets.data()
         },
         .numElements = meshlets.size(),
-        .dynamic = true,
+        .dynamic = false,
     });
     vertexIndicesBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
         .sourceData = {
@@ -141,7 +146,7 @@ void VertexData::loadMesh(MeshId id, Array<Meshlet> loadedMeshlets)
             .data = (uint8*)vertexIndices.data(),
         },
         .numElements = vertexIndices.size(),
-        .dynamic = true,
+        .dynamic = false,
     });
     primitiveIndicesBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
         .sourceData = {
@@ -149,7 +154,7 @@ void VertexData::loadMesh(MeshId id, Array<Meshlet> loadedMeshlets)
             .data = (uint8*)primitiveIndices.data(),
         },
         .numElements = primitiveIndices.size(),
-        .dynamic = true,
+        .dynamic = false,
     });
 }
 
@@ -269,7 +274,8 @@ void Seele::Meshlet::buildFromIndexBuffer(const Array<uint32>& indices, Array<Me
                         return i;
                     }
                 }
-                assert(false);
+                // it could be in unique vertices but not in meshlet vertices
+                return -1;
             }
         };
     auto completeMeshlet = [&meshlets, &current, &uniqueVertices]() {

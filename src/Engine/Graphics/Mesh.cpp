@@ -29,18 +29,11 @@ void Mesh::load(ArchiveBuffer& buffer)
     Serialization::load(buffer, vertexCount);
     vertexData = VertexData::findByTypeName(typeName);
     Serialization::load(buffer, indices);
-    indexBuffer = buffer.getGraphics()->createIndexBuffer(IndexBufferCreateInfo{
-        .sourceData = {
-            .size = sizeof(uint32) * indices.size(),
-            .data = (uint8*)indices.data(),
-        },
-        .indexType = Gfx::SeIndexType::SE_INDEX_TYPE_UINT32,
-    });
     Serialization::load(buffer, meshlets);
     std::string refId;
     Serialization::load(buffer, refId);
     referencedMaterial = AssetRegistry::findMaterialInstance(refId);
     id = vertexData->allocateVertexData(vertexCount);
-    vertexData->loadMesh(id, meshlets);
+    vertexData->loadMesh(id, indices, meshlets);
     vertexData->deserializeMesh(id, buffer);
 }

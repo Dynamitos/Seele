@@ -112,26 +112,20 @@ void DepthPrepass::render()
                 //descriptorSets[INDEX_MATERIAL] = instance.materialInstance->getDescriptorSet();
                 descriptorSets[INDEX_SCENE_DATA] = instance.descriptorSet;
                 command->bindDescriptor(descriptorSets);
-                if(graphics->supportMeshShading())
+                if (graphics->supportMeshShading())
                 {
-                    command->dispatch(instance.numMeshes, 1, 1);
+                    command->dispatch(instance.meshes.size(), 1, 1);
                 }
                 else
                 {
+                    command->bindIndexBuffer(vertexData->getIndexBuffer());
                     uint32 instanceOffset = 0;
-                    for(const auto& mesh : instance.meshes)
+                    for (const auto& [instance, meshData] : instance.meshes)
                     {
-                        uint32 vertexOffset = vertexData->getMeshOffset(mesh.id);
-                        if (mesh.indexBuffer != nullptr)
+                        if (meshData.numIndices > 0)
                         {
-                            command->bindIndexBuffer(mesh.indexBuffer);
-                            command->drawIndexed(mesh.indexBuffer->getNumIndices(), 1, 0, vertexOffset, instanceOffset);
+                            command->drawIndexed(meshData.numIndices, 1, meshData.firstIndex, meshData.indicesOffset, instanceOffset++);
                         }
-                        else
-                        {
-                            command->draw(vertexData->getMeshVertexCount(mesh.id), 1, vertexOffset, instanceOffset);
-                        }
-                        instanceOffset+=mesh.meshes;
                     }
                 }
             }

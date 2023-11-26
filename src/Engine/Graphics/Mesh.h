@@ -14,7 +14,6 @@ public:
     VertexData* vertexData;
     MeshId id;
     uint64 vertexCount;
-    Gfx::OIndexBuffer indexBuffer;
     PMaterialInstanceAsset referencedMaterial;
     Array<uint32> indices;
     Array<Meshlet> meshlets;

@@ -143,7 +143,6 @@ Gfx::PComputeCommand Graphics::createComputeCommand(const std::string& name)
     return getComputeCommands()->createComputeCommand(name);
 }
 
-
 Gfx::OVertexShader Graphics::createVertexShader(const ShaderCreateInfo& createInfo)
 {
     OVertexShader shader = new VertexShader(this);
@@ -179,6 +178,7 @@ Gfx::PGraphicsPipeline Graphics::createGraphicsPipeline(Gfx::LegacyPipelineCreat
 {
     return pipelineCache->createPipeline(std::move(createInfo));
 }
+
 Gfx::PGraphicsPipeline Graphics::createGraphicsPipeline(Gfx::MeshPipelineCreateInfo createInfo)
 {
     return pipelineCache->createPipeline(std::move(createInfo));
@@ -399,7 +399,7 @@ void Graphics::pickPhysicalDevice()
         {
             if (std::strcmp(VK_EXT_MESH_SHADER_EXTENSION_NAME, extensionProps[i].extensionName) == 0)
             {
-                meshShadingEnabled = true;
+                //meshShadingEnabled = true;
                 break;
             }
         }

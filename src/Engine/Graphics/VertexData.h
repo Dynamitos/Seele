@@ -39,12 +39,18 @@ public:
     {
         Matrix4 transformMatrix;
     };
+    struct MeshData
+    {
+        uint32 numMeshlets = 0;
+        uint32 meshletOffset = 0;
+        uint32 firstIndex = 0;
+        uint32 numIndices = 0;
+        uint32 indicesOffset = 0;
+    };
     struct MeshInstanceData
     {
-        MeshId id;
         InstanceData instance;
-        Gfx::PIndexBuffer indexBuffer;
-        uint32 meshes;
+        MeshData data;
     };
     struct MaterialInstanceData
     {
@@ -52,7 +58,6 @@ public:
         Gfx::OShaderBuffer instanceBuffer;
         Gfx::OShaderBuffer meshDataBuffer;
         Gfx::PDescriptorSet descriptorSet;
-        uint32 numMeshes = 0; // not necessarily equal to meshes.size() if a MeshId has multiple meshes
         Array<MeshInstanceData> meshes;
     };
     struct MaterialData
@@ -60,16 +65,10 @@ public:
         PMaterial material;
         Map<uint64, MaterialInstanceData> instances;
     };
-    struct MeshData
-    {
-        uint32 numMeshlets;
-        uint32 meshletOffset;
-        uint32 indicesOffset;
-    };
     void resetMeshData();
     void updateMesh(PMesh mesh, Component::Transform& transform);
     void createDescriptors();
-    void loadMesh(MeshId id, Array<Meshlet> meshlets);
+    void loadMesh(MeshId id, Array<uint32> indices, Array<Meshlet> meshlets);
     MeshId allocateVertexData(uint64 numVertices);
     uint64 getMeshOffset(MeshId id);
     uint64 getMeshVertexCount(MeshId id);
@@ -79,6 +78,7 @@ public:
     virtual Gfx::PDescriptorLayout getVertexDataLayout() = 0;
     virtual Gfx::PDescriptorSet getVertexDataSet() = 0;
     virtual std::string getTypeName() const = 0;
+    Gfx::PIndexBuffer getIndexBuffer() { return indexBuffer; }
     Gfx::PDescriptorLayout getInstanceDataLayout() { return instanceDataLayout; }
     const Map<std::string, MaterialData>& getMaterialData() const { return materialData; }
     const Array<MeshData>& getMeshData(MeshId id) { return meshData[id]; }
@@ -111,6 +111,7 @@ protected:
     Array<MeshletDescription> meshlets;
     Array<uint8> primitiveIndices;
     Array<uint32> vertexIndices;
+    Array<uint32> indices;
     Gfx::PGraphics graphics;
     Gfx::ODescriptorLayout instanceDataLayout;
     // for mesh shading
