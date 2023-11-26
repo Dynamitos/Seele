@@ -18,6 +18,7 @@ void VertexData::resetMeshData()
     {
         mat.material->getDescriptorLayout()->reset();
     }
+    materialData.clear();
     if (dirty)
     {
         updateBuffers();
@@ -25,7 +26,7 @@ void VertexData::resetMeshData()
     }
 }
 
-void VertexData::addMesh(PMesh mesh)
+void VertexData::updateMesh(PMesh mesh, Component::Transform& transform)
 {
     PMaterial mat = mesh->referencedMaterial->getHandle()->getBaseMaterial();
     MaterialData& matData = materialData[mat->getName()];
@@ -34,28 +35,15 @@ void VertexData::addMesh(PMesh mesh)
     matInstanceData.meshes.add(MeshInstanceData{
         .id = mesh->id,
         .instance = InstanceData {
-            .transformMatrix = Matrix4(),
+            .transformMatrix = transform.toMatrix(),
         },
         .indexBuffer = mesh->indexBuffer,
-    });
+        });
     matInstanceData.materialInstance = mesh->referencedMaterial->getHandle();
     matInstanceData.numMeshes += meshData[mesh->id].size();
 }
 
-void VertexData::removeMesh(PMesh mesh)
-{
-    PMaterial mat = mesh->referencedMaterial->getHandle()->getBaseMaterial();
-    MaterialData& matData = materialData[mat->getName()];
-    matData.material = mat;
-    MaterialInstanceData& matInstanceData = matData.instances[mesh->referencedMaterial->getHandle()->getId()];
-    matInstanceData.meshes.remove_if([&mesh](const MeshInstanceData& data) {
-        return data.id == mesh->id;
-        });
-    matInstanceData.materialInstance = mesh->referencedMaterial->getHandle();
-    matInstanceData.numMeshes -= meshData[mesh->id].size();
-}
-
-void VertexData::updateInstances()
+void VertexData::createDescriptors()
 {
     instanceDataLayout->reset();
     for (const auto& [_, mat] : materialData)
@@ -63,11 +51,13 @@ void VertexData::updateInstances()
         for (auto& [_, matInst] : mat.instances)
         {
             Array<InstanceData> instanceData;
+            Array<MeshData> meshes;
             for (auto& inst : matInst.meshes)
             {
                 inst.meshes = 0;
                 for (const auto& mesh : meshData[inst.id])
                 {
+                    meshes.add(mesh);
                     instanceData.add(inst.instance);
                     inst.meshes++;
                 }
@@ -82,60 +72,20 @@ void VertexData::updateInstances()
                 });
             matInst.descriptorSet = instanceDataLayout->allocateDescriptorSet();
             matInst.descriptorSet->updateBuffer(0, matInst.instanceBuffer);
-            if (graphics->supportMeshShading())
-            {
-                matInst.descriptorSet->updateBuffer(1, matInst.meshDataBuffer);
-                matInst.descriptorSet->updateBuffer(2, meshletBuffer);
-                matInst.descriptorSet->updateBuffer(3, primitiveIndicesBuffer);
-                matInst.descriptorSet->updateBuffer(4, vertexIndicesBuffer);
-            }
-            matInst.descriptorSet->writeChanges();
-        }
-    }
-}
-
-void VertexData::createDescriptors()
-{
-    instanceDataLayout->reset();
-    for (const auto& [_, mat] : materialData)
-    {
-        for (auto& [_, matInst] : mat.instances)
-        {
-            Array<MeshData> meshes;
-            for (auto& inst : matInst.meshes)
-            {
-                inst.meshes = 0;
-                for (const auto& mesh : meshData[inst.id])
-                {
-                    meshes.add(mesh);
-                    inst.meshes++;
-                }
-            }
-            matInst.instanceBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
+            
+            matInst.meshDataBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
                 .sourceData = {
-                    .size = sizeof(InstanceData) * instanceData.size(),
-                    .data = (uint8*)instanceData.data(),
+                    .size = sizeof(MeshData) * meshes.size(),
+                    .data = (uint8*)meshes.data(),
                 },
-                .numElements = instanceData.size(),
+                .numElements = meshes.size(),
                 .dynamic = false,
             });
-            matInst.descriptorSet = instanceDataLayout->allocateDescriptorSet();
-            matInst.descriptorSet->updateBuffer(0, matInst.instanceBuffer);
-            if (graphics->supportMeshShading())
-            {
-                matInst.meshDataBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
-                    .sourceData = {
-                        .size = sizeof(MeshData) * meshes.size(),
-                        .data = (uint8*)meshes.data(),
-                    },
-                    .numElements = meshes.size(),
-                    .dynamic = false,
-                });
-                matInst.descriptorSet->updateBuffer(1, matInst.meshDataBuffer);
-                matInst.descriptorSet->updateBuffer(2, meshletBuffer);
-                matInst.descriptorSet->updateBuffer(3, primitiveIndicesBuffer);
-                matInst.descriptorSet->updateBuffer(4, vertexIndicesBuffer);
-            }
+            matInst.descriptorSet->updateBuffer(1, matInst.meshDataBuffer);
+            matInst.descriptorSet->updateBuffer(2, meshletBuffer);
+            matInst.descriptorSet->updateBuffer(3, primitiveIndicesBuffer);
+            matInst.descriptorSet->updateBuffer(4, vertexIndicesBuffer);
+            
             matInst.descriptorSet->writeChanges();
             matInst.numMeshes = meshes.size();
         }
@@ -252,17 +202,16 @@ void Seele::VertexData::init(Gfx::PGraphics graphics)
     verticesAllocated = NUM_DEFAULT_ELEMENTS;
     instanceDataLayout = graphics->createDescriptorLayout("VertexDataInstanceLayout");
     instanceDataLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
-    if (graphics->supportMeshShading())
-    {
-        // meshData
-        instanceDataLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
-        // meshletData
-        instanceDataLayout->addDescriptorBinding(2, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
-        // primitiveIndices
-        instanceDataLayout->addDescriptorBinding(3, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
-        // vetexIndices
-        instanceDataLayout->addDescriptorBinding(4, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
-    }
+
+    // meshData
+    instanceDataLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    // meshletData
+    instanceDataLayout->addDescriptorBinding(2, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    // primitiveIndices
+    instanceDataLayout->addDescriptorBinding(3, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    // vetexIndices
+    instanceDataLayout->addDescriptorBinding(4, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    
     instanceDataLayout->create();
     resizeBuffers();
     graphics->getShaderCompiler()->registerVertexData(this);

@@ -6,6 +6,7 @@ using namespace Seele::System;
 KeyboardInput::KeyboardInput(PScene scene)
     : ComponentSystem<Component::KeyboardInput>(scene)
 {
+    std::memset(keys.data(), 0, sizeof(keys));
 }
 
 KeyboardInput::~KeyboardInput()

@@ -1,18 +1,7 @@
 import Common;
 import VertexData;
 import MaterialParameter;
-
-struct InstanceData
-{
-	float4x4 transformMatrix;
-};
-
-struct Scene
-{
-	StructuredBuffer<InstanceData> instances;
-}
-layout(set=2)
-ParameterBlock<Scene> pScene;
+import Scene;
 
 struct VertexShaderOutput
 {

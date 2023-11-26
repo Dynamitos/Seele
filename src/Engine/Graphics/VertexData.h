@@ -67,9 +67,7 @@ public:
         uint32 indicesOffset;
     };
     void resetMeshData();
-    void addMesh(PMesh mesh);
-    void removeMesh(PMesh mesh);
-    void updateInstances();
+    void updateMesh(PMesh mesh, Component::Transform& transform);
     void createDescriptors();
     void loadMesh(MeshId id, Array<Meshlet> meshlets);
     MeshId allocateVertexData(uint64 numVertices);

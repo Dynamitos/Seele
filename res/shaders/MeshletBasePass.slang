@@ -1,6 +1,6 @@
 import Common;
 import BRDF;
-import Meshlet;
+import Scene;
 import VertexData;
 import MaterialParameter;
 
