@@ -51,28 +51,31 @@ struct FragmentParameter
 // data retrieved from VertexData
 struct VertexAttributes
 {
+	float3 position_MS;
 	float3 normal_MS;
 	float3 tangent_MS;
 	float3 biTangent_MS;
-	float3 position_WS;
-	float4 position_CS;
 	float2 texCoords;
 	float3 vertexColor;
 	FragmentParameter getParameter(float4x4 transformMatrix)
 	{
+		float4 modelPos = float4(position_MS, 1);
+		float4 worldPos = mul(transformMatrix, modelPos);
+		float4 viewPos = mul(pViewParams.viewMatrix, worldPos);
+		float4 clipPos = mul(pViewParams.projectionMatrix, viewPos);
 		float3 tangent_WS = mul(transformMatrix, float4(normalize(tangent_MS), 0)).xyz;
 		float3 biTangent_WS = mul(transformMatrix, float4(normalize(biTangent_MS), 0)).xyz;
 		float3 normal_WS = mul(transformMatrix, float4(normalize(normal_MS), 0)).xyz;
 		// Transforms from world space into tangent space
 		float3x3 tbn = transpose(float3x3(tangent_WS, biTangent_WS, normal_WS));
 		FragmentParameter result;
-		result.position_TS = mul(tbn, position_WS);
-		result.viewDir_TS = mul(tbn, pViewParams.cameraPos_WS.xyz - position_WS);
+		result.position_TS = mul(tbn, worldPos.xyz);
+		result.viewDir_TS = mul(tbn, pViewParams.cameraPos_WS.xyz - worldPos.xyz);
 		result.normal_WS = normal_WS;
 		result.tangent_WS = tangent_WS;
 		result.biTangent_WS = biTangent_WS;
-		result.position_WS = position_WS;
-		result.position_CS = position_CS;
+		result.position_WS = worldPos.xyz;
+		result.position_CS = clipPos;
 		result.texCoords = texCoords;
 		result.vertexColor = vertexColor;
 		return result;

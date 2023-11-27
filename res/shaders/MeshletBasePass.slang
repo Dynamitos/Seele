@@ -64,19 +64,9 @@ void taskMain(
 	DispatchMesh(head, 1, 1, p);
 }
 
-groupshared VertexAttributes gs_vertices[MAX_VERTICES];
-groupshared uint3 gs_indices[MAX_PRIMITIVES];
-groupshared uint gs_numVertices;
-groupshared uint gs_numPrimitives;
-
 struct PrimitiveAttributes
 {
 	uint cull: SV_CullPrimitive;
-};
-
-struct MeshOutput
-{
-	FragmentParameter parameter;
 };
 
 [numthreads(MESH_GROUP_SIZE, 1, 1)]
@@ -86,73 +76,50 @@ void meshMain(
 	in uint threadID: SV_GroupIndex,
 	in uint groupID: SV_GroupID,
 	in payload MeshPayload meshPayload,
-	out Vertices<MeshOutput, MAX_VERTICES> vertices, 
+	out Vertices<FragmentParameter, MAX_VERTICES> vertices, 
 	out Indices<uint3, MAX_PRIMITIVES> indices
 ){
 	InstanceData inst = pScene.instances[meshPayload.instanceId[groupID]];
 	MeshData md = pScene.meshData[meshPayload.instanceId[groupID]];
 	MeshletDescription m = pScene.meshletInfos[meshPayload.meshletId[groupID]];
-	const uint vertexLoops = (MAX_VERTICES + MESH_GROUP_SIZE - 1) / MESH_GROUP_SIZE;
-	for(uint i = threadID; i < MAX_VERTICES; i += MESH_GROUP_SIZE)
+	SetMeshOutputCounts(m.vertexCount, m.primitiveCount);
+	
+	uint p = min(threadID, m.primitiveCount - 1);
+	{
+		uint local_idx0 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 0];
+		uint local_idx1 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 1];
+		uint local_idx2 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 2];
+		indices[p] = uint3(local_idx0, local_idx1, local_idx2);
+	}
+	p = min(threadID + 32, m.primitiveCount - 1);
+	{
+		uint local_idx0 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 0];
+		uint local_idx1 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 1];
+		uint local_idx2 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 2];
+		indices[p] = uint3(local_idx0, local_idx1, local_idx2);
+	}
+	p = min(threadID + 64, m.primitiveCount - 1);
+	{
+		uint local_idx0 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 0];
+		uint local_idx1 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 1];
+		uint local_idx2 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 2];
+		indices[p] = uint3(local_idx0, local_idx1, local_idx2);
+	}
+	p = min(threadID + 96, m.primitiveCount - 1);
+	{
+		uint local_idx0 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 0];
+		uint local_idx1 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 1];
+		uint local_idx2 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 2];
+		indices[p] = uint3(local_idx0, local_idx1, local_idx2);
+	}
+	
+	GroupMemoryBarrierWithGroupSync();
+	for(uint i = threadID; i < MAX_VERTICES; i+=MESH_GROUP_SIZE)
 	{
 		uint v = min(i, m.vertexCount - 1);
-		InterlockedMax(gs_numVertices, v + 1);
 		{
 			int vertexIndex = pScene.vertexIndices[m.vertexOffset + v];
-			gs_vertices[v] = pVertexData.getAttributes(md.indicesOffset + vertexIndex, inst.transformMatrix);
+			vertices[v] = pVertexData.getAttributes(md.indicesOffset + vertexIndex).getParameter(inst.transformMatrix);
 		}
-	}
-	GroupMemoryBarrierWithGroupSync();
-	const uint primitiveLoops = (MAX_PRIMITIVES + MESH_GROUP_SIZE - 1) / MESH_GROUP_SIZE;
-	for(uint i = threadID; i < MAX_PRIMITIVES; i += MESH_GROUP_SIZE)
-	{
-		uint p = min(i, m.primitiveCount - 1);
-		InterlockedMax(gs_numPrimitives, p + 1);
-		{
-			uint32_t local_idx0 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 0];
-			uint32_t local_idx1 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 1];
-			uint32_t local_idx2 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 2];
-			gs_indices[p].x = local_idx0;
-			gs_indices[p].y = local_idx1;
-			gs_indices[p].z = local_idx2;
-		}
-	}
-	GroupMemoryBarrierWithGroupSync();
-	SetMeshOutputCounts(gs_numVertices, gs_numPrimitives);
-	GroupMemoryBarrierWithGroupSync();
-	
-	uint v = threadID;
-	v = min(v, m.vertexCount - 1);
-	FragmentParameter parameter = gs_vertices[v].getParameter(inst.transformMatrix);
-	vertices[v].parameter = parameter;
-	if(vertexLoops >= 1)
-	{
-		uint v = threadID + MESH_GROUP_SIZE;
-		v = min(v, m.vertexCount - 1);
-		FragmentParameter parameter = gs_vertices[v].getParameter(inst.transformMatrix);
-		vertices[v].parameter = parameter;
-	}
-
-	uint p = threadID;
-	p = min(p, m.primitiveCount - 1);
-	indices[p] = gs_indices[p];
-	
-	if(primitiveLoops >= 1)
-	{
-		p += MESH_GROUP_SIZE;
-		p = min(p, m.primitiveCount - 1);
-		indices[p] = gs_indices[p];
-	}
-	if(primitiveLoops >= 2)
-	{
-		p += MESH_GROUP_SIZE;
-		p = min(p, m.primitiveCount - 1);
-		indices[p] = gs_indices[p];
-	}
-	if(primitiveLoops >= 3)
-	{
-		p += MESH_GROUP_SIZE;
-		p = min(p, m.primitiveCount - 1);
-		indices[p] = gs_indices[p];
 	}
 }

@@ -55,8 +55,12 @@ void Shader::create(const ShaderCreateInfo& createInfo)
     slang::TargetDesc vulkan;
     vulkan.profile = globalSession->findProfile("sm_6_6");
     vulkan.format = SLANG_SPIRV;
-    sessionDesc.targetCount = 1;
-    sessionDesc.targets = &vulkan;
+    slang::TargetDesc glsl;
+    glsl.profile = globalSession->findProfile("sm_6_6");
+    glsl.format = SLANG_GLSL;
+    slang::TargetDesc targets[2] = { vulkan, glsl };
+    sessionDesc.targetCount = 2;
+    sessionDesc.targets = targets;
     StaticArray<const char*, 3> searchPaths = {"shaders/", "shaders/lib/", "shaders/generated/"};
     sessionDesc.searchPaths = searchPaths.data();
     sessionDesc.searchPathCount = searchPaths.size();
@@ -132,4 +136,15 @@ void Shader::create(const ShaderCreateInfo& createInfo)
 
     hash = CRC::Calculate(entryPointName.data(), entryPointName.size(), CRC::CRC_32());
     hash = CRC::Calculate(kernelBlob->getBufferPointer(), kernelBlob->getBufferSize(), CRC::CRC_32(), hash);
+
+    specializedComponent->getEntryPointCode(
+        0,
+        1,
+        kernelBlob.writeRef(),
+        diagnostics.writeRef()
+    );
+    CHECK_DIAGNOSTICS();
+    std::ofstream shaderStream(createInfo.name + createInfo.entryPoint + ".glsl");
+    shaderStream << (char*)kernelBlob->getBufferPointer();
+    shaderStream.close();
 }
