@@ -47,6 +47,9 @@ int main()
     //    .filePath = sourcePath / "old_resources/models/arena.fbx",
     //    });
     AssetImporter::importMesh(MeshImportArgs{
+        .filePath = sourcePath / "old_resources/models/frog.fbx",
+        });
+    AssetImporter::importMesh(MeshImportArgs{
         .filePath = sourcePath / "old_resources/models/train.fbx",
         });
     //AssetImporter::importMesh(MeshImportArgs{

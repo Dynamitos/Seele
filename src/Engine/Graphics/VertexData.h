@@ -24,12 +24,10 @@ struct MeshId
 };
 struct Meshlet
 {
-    StaticArray<uint32, Gfx::numVerticesPerMeshlet> uniqueVertices; // unique vertiex indices in the vertex data
-    StaticArray<uint8, Gfx::numPrimitivesPerMeshlet * 3> primitiveLayout; // indices into the uniqueVertices array, only uint8 needed
+    uint32 uniqueVertices[Gfx::numVerticesPerMeshlet]; // unique vertiex indices in the vertex data
+    uint8 primitiveLayout[Gfx::numPrimitivesPerMeshlet * 3]; // indices into the uniqueVertices array, only uint8 needed
     uint32 numVertices;
     uint32 numPrimitives;
-    void save(ArchiveBuffer& buffer) const;
-    void load(ArchiveBuffer& buffer);
     static void buildFromIndexBuffer(const Array<uint32>& indices, Array<Meshlet>& meshlets);
 };
 class VertexData

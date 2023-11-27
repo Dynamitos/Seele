@@ -96,14 +96,14 @@ namespace Serialization
         buffer.readBytes(type.data(), length * sizeof(char));
     }
     template<typename T>
-    static void save(ArchiveBuffer& buffer, const Array<T>& type) requires (std::is_integral_v<T> || std::is_floating_point_v<T>)
+    static void save(ArchiveBuffer& buffer, const Array<T>& type) requires (std::is_trivially_copyable_v<T>)
     {
         uint64 length = type.size();
         buffer.writeBytes(&length, sizeof(uint64));
         buffer.writeBytes(type.data(), sizeof(T) * type.size());
     }
     template<typename T>
-    static void load(ArchiveBuffer& buffer, Array<T>& type) requires (std::is_integral_v<T> || std::is_floating_point_v<T>)
+    static void load(ArchiveBuffer& buffer, Array<T>& type) requires (std::is_trivially_copyable_v<T>)
     {
         uint64 length = 0;
         buffer.readBytes(&length, sizeof(uint64));
@@ -111,12 +111,12 @@ namespace Serialization
         buffer.readBytes(type.data(), sizeof(T) * type.size());
     }
     template<typename T, size_t N>
-    static void save(ArchiveBuffer& buffer, const StaticArray<T, N>& type) requires (std::is_integral_v<T> || std::is_floating_point_v<T>)
+    static void save(ArchiveBuffer& buffer, const StaticArray<T, N>& type) requires (std::is_trivially_copyable_v<T>)
     {
         buffer.writeBytes(type.data(), sizeof(T) * N);
     }
     template<typename T, size_t N>
-    static void load(ArchiveBuffer& buffer, StaticArray<T, N>& type) requires (std::is_integral_v<T> || std::is_floating_point_v<T>)
+    static void load(ArchiveBuffer& buffer, StaticArray<T, N>& type) requires (std::is_trivially_copyable_v<T>)
     {
         buffer.readBytes(type.data(), sizeof(T) * N);
     }

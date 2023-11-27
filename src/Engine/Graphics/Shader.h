@@ -57,7 +57,7 @@ struct ShaderPermutation
     char vertexMeshFile[32];
     char fragmentFile[32];
     char vertexDataName[32];
-    char materialName[32];
+    char materialName[64];
     uint8 hasFragment : 1;
     uint8 useMeshShading : 1;
     uint8 hasTaskShader : 1;

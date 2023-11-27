@@ -102,10 +102,10 @@ void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet>
             Meshlet& m = loadedMeshlets[currentMesh + i];
             uint32 vertexOffset = vertexIndices.size();
             vertexIndices.resize(vertexOffset + m.numVertices);
-            std::memcpy(vertexIndices.data() + vertexOffset, m.uniqueVertices.data(), m.numVertices * sizeof(uint32));
+            std::memcpy(vertexIndices.data() + vertexOffset, m.uniqueVertices, m.numVertices * sizeof(uint32));
             uint32 primitiveOffset = primitiveIndices.size();
             primitiveIndices.resize(primitiveOffset + (m.numPrimitives * 3));
-            std::memcpy(primitiveIndices.data() + primitiveOffset, m.primitiveLayout.data(), m.numPrimitives * 3 * sizeof(uint8));
+            std::memcpy(primitiveIndices.data() + primitiveOffset, m.primitiveLayout, m.numPrimitives * 3 * sizeof(uint8));
             meshlets.add(MeshletDescription{
                 .boundingBox = MeshletAABB(),
                 .vertexCount = m.numVertices,
@@ -228,22 +228,6 @@ VertexData::VertexData()
     , verticesAllocated(0)
     , dirty(false)
 {
-}
-
-void Meshlet::save(ArchiveBuffer& buffer) const
-{
-    Serialization::save(buffer, uniqueVertices);
-    Serialization::save(buffer, primitiveLayout);
-    Serialization::save(buffer, numVertices);
-    Serialization::save(buffer, numPrimitives);
-}
-
-void Meshlet::load(ArchiveBuffer& buffer)
-{
-    Serialization::load(buffer, uniqueVertices);
-    Serialization::load(buffer, primitiveLayout);
-    Serialization::load(buffer, numVertices);
-    Serialization::load(buffer, numPrimitives);
 }
 
 void Seele::Meshlet::buildFromIndexBuffer(const Array<uint32>& indices, Array<Meshlet>& meshlets)

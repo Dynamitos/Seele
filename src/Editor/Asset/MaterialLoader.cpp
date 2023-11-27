@@ -48,7 +48,8 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
     Gfx::ODescriptorLayout layout = graphics->createDescriptorLayout(materialName + "Layout");
     //Shader file needs to conform to the slang standard, which prohibits _
     materialName.erase(std::remove(materialName.begin(), materialName.end(), '_'), materialName.end());
-    
+    materialName.erase(std::remove(materialName.begin(), materialName.end(), '-'), materialName.end());
+
     uint32 uniformBufferOffset = 0;
     uint32 bindingCounter = 0; // Uniform buffers are always binding 0
     int32 uniformBinding = -1;
