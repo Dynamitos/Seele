@@ -213,6 +213,7 @@ public:
     }
     constexpr ~Map() noexcept
     {
+        clear();
     }
     constexpr Map& operator=(const Map& other)
     {
@@ -337,7 +338,7 @@ public:
     }
     constexpr void clear()
     {
-        while (_size > 0)
+        while(_size > 0)
         {
             root = remove(root, root->pair.key);
         }
@@ -426,7 +427,7 @@ private:
     void verifyTree()
     {
         size_t numElems = 0;
-        for (const auto& [_, _] : *this)
+        for (const auto& it : *this)
         {
             numElems++;
         }
