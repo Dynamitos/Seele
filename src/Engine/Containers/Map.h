@@ -197,11 +197,15 @@ public:
     }
     constexpr Map(const Map& other)
         : alloc(other.alloc)
-        , root(other.root)
+        , root(nullptr)
         , iteratorsDirty(true)
-        , _size(other._size)
+        , _size(0)
         , comp(other.comp)
     {
+        for(const auto& [key, val] : other)
+        {
+            this->operator[](key) = val;
+        }
     }
     constexpr Map(Map&& other) noexcept
         : alloc(std::move(other.alloc))
@@ -220,9 +224,13 @@ public:
         if(this != &other)
         {
             alloc = other.alloc;
-            root = other.root;
-            _size = other._size;
             comp = other.comp;
+            root = nullptr;
+            _size = 0;
+            for(const auto& [key, val] : other)
+            {
+                this->operator[](key) = val;
+            }
             markIteratorsDirty();
         }
         return *this;
