@@ -10,7 +10,7 @@
 
 using namespace Seele;
 
-constexpr static uint64 NUM_DEFAULT_ELEMENTS = 16 * 1024;
+constexpr static uint64 NUM_DEFAULT_ELEMENTS = 1024 * 1024;
 
 void VertexData::resetMeshData()
 {
@@ -166,7 +166,7 @@ MeshId VertexData::allocateVertexData(uint64 numVertices)
     head += numVertices;
     if (head > verticesAllocated)
     {
-        verticesAllocated = head;
+        verticesAllocated = std::max(head, verticesAllocated + NUM_DEFAULT_ELEMENTS);
         resizeBuffers();
     }
     return res;

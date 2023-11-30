@@ -109,7 +109,7 @@ void MeshLoader::loadMaterials(const aiScene* scene, const std::string& baseName
         if(material->GetTexture(aiTextureType_NORMALS, 0, &texPath) == AI_SUCCESS)
         {
         }
-        std::string outMatFilename = matCode["name"].get<std::string>().append(".asset");
+        std::string outMatFilename = matCode["name"].get<std::string>().append(".json");
         std::ofstream outMatFile = std::ofstream(meshDirectory / outMatFilename);
         outMatFile << std::setw(4) << matCode;
         outMatFile.flush();

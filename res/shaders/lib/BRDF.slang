@@ -2,7 +2,7 @@ import Common;
 
 interface IBRDF
 {
-    float3 evaluate(float3 viewDir_TS, float3 lightDir_TS, float3 lightColor);
+    float3 evaluate(float3x3 tbn, float3 viewDir_WS, float3 lightDir_WS, float3 lightColor);
 };
 
 struct BlinnPhong : IBRDF
@@ -23,13 +23,14 @@ struct BlinnPhong : IBRDF
         sheen = 1;
     }
 
-    float3 evaluate(float3 viewDir_TS, float3 lightDir_TS, float3 lightColor)
+    float3 evaluate(float3x3 tbn, float3 viewDir_WS, float3 lightDir_WS, float3 lightColor)
     {
-        float nDotL = saturate(dot(normal, lightDir_TS));
-        float3 h = normalize(lightDir_TS + viewDir_TS);
-        float nDotH = saturate(dot(normal, h));
+        float3 normal_WS = mul(tbn, normal);
+        float diffuse = max(dot(normal_WS, lightDir_WS), 0);
+        float3 h = lightDir_WS + viewDir_WS;
+        float specular = dot(normal_WS, h);
 		
-        return baseColor;
+        return lightDir_WS * 2 + float3(1, 1, 1);//baseColor * (diffuse + specular) * lightColor;
     }
 };
 
@@ -48,7 +49,7 @@ struct DisneyBRDF : IBRDF
     float clearCoat = 0;
     float clearCoatGloss = 1;
 
-    float3 evaluate(float3 viewDir_TS, float3 lightDir_TS, float3 lightColor)
+    float3 evaluate(float3x3 tbn, float3 viewDir_TS, float3 lightDir_TS, float3 lightColor)
     {
         return baseColor;
     }

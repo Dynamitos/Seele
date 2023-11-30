@@ -217,14 +217,14 @@ int main()
 
     WindowCreateInfo mainWindowInfo;
     mainWindowInfo.title = "SeeleEngine";
-    mainWindowInfo.width = 1280;
-    mainWindowInfo.height = 720;
+    mainWindowInfo.width = 1920;
+    mainWindowInfo.height = 1080;
     mainWindowInfo.numSamples = 1;
     mainWindowInfo.preferredFormat = Gfx::SE_FORMAT_B8G8R8A8_SRGB;
     auto window = windowManager->addWindow(graphics, mainWindowInfo);
     ViewportCreateInfo sceneViewInfo;
-    sceneViewInfo.dimensions.size.x = 1280;
-    sceneViewInfo.dimensions.size.y = 720;
+    sceneViewInfo.dimensions.size.x = 1920;
+    sceneViewInfo.dimensions.size.y = 1080;
     sceneViewInfo.dimensions.offset.x = 0;
     sceneViewInfo.dimensions.offset.y = 0;
     OGameView sceneView = new Editor::PlayView(graphics, window, sceneViewInfo, binaryPath.generic_string());

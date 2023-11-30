@@ -21,7 +21,7 @@ struct Camera
     }
     Vector getCameraPosition() const
     {
-        return Vector(viewMatrix[3]);
+        return cameraPos;
     }
     void mouseMove(float deltaX, float deltaY);
     void mouseScroll(float x);
@@ -29,6 +29,8 @@ struct Camera
     void moveY(float amount);
     void buildViewMatrix();
     Matrix4 viewMatrix;
+    Vector cameraPos;
+    Vector cameraDirection;
     //Transforms relative to actor
     float yaw;
     float pitch;

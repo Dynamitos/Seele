@@ -1,5 +1,6 @@
 #include "Transform.h"
 #include <glm/gtx/quaternion.hpp>
+#include "Transform.h"
 
 using namespace Seele;
 using namespace Seele::Math;

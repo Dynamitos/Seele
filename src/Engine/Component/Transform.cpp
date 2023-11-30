@@ -4,7 +4,6 @@ using namespace Seele::Component;
 
 DEFINE_COMPONENT(Transform)
 
-
 void Transform::setPosition(Vector pos)
 {
     transform.setPosition(pos);
@@ -19,32 +18,15 @@ void Transform::setScale(Vector scale)
 {
     transform.setScale(scale);
 }
-
-void Transform::setRelativeLocation(Vector location)
+void Transform::translate(Vector direction)
 {
-    transform = Math::Transform(location, transform.getRotation(), transform.getScale());
+    transform.setPosition(transform.getPosition() + direction);
 }
-void Transform::setRelativeRotation(Vector rotation)
+void Transform::rotate(Quaternion quat)
 {
-    transform = Math::Transform(transform.getPosition(), Quaternion(rotation), transform.getScale());
+    transform.setRotation(transform.getRotation() * quat);
 }
-void Transform::setRelativeRotation(Quaternion rotation)
+void Transform::scale(Vector scale)
 {
-    transform = Math::Transform(transform.getPosition(), rotation, transform.getScale());
-}
-void Transform::setRelativeScale(Vector scale)
-{
-    transform = Math::Transform(transform.getPosition(), transform.getRotation(), scale);
-}
-void Transform::addRelativeLocation(Vector translation)
-{
-    transform = Math::Transform(transform.getPosition() + translation, transform.getRotation(), transform.getScale());
-}
-void Transform::addRelativeRotation(Vector rotation)
-{
-    transform = Math::Transform(transform.getPosition(), transform.getRotation() * Quaternion(rotation), transform.getScale());
-}
-void Transform::addRelativeRotation(Quaternion rotation)
-{
-    transform = Math::Transform(transform.getPosition(), transform.getRotation() * rotation, transform.getScale());
+    transform.setScale(transform.getScale() + scale);
 }

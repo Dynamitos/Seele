@@ -11,8 +11,8 @@ Camera::Camera()
     : viewMatrix(Matrix4())
     , bNeedsViewBuild(false)
 {
-    yaw = 0;
-    pitch = 0.2;
+    yaw = 3.1415f/2;
+    pitch = 0;
 }
 
 Camera::~Camera()
@@ -21,40 +21,37 @@ Camera::~Camera()
 
 void Camera::mouseMove(float deltaYaw, float deltaPitch) 
 {
-    yaw -= deltaYaw / 500.f;
+    yaw += deltaYaw / 500.f;
     pitch += deltaPitch / 500.f;
-    //std::cout << "Yaw: " << yaw << " Pitch: " << pitch << std::endl;
     Vector cameraDirection = glm::normalize(Vector(cos(yaw) * cos(pitch), sin(pitch), sin(yaw) * cos(pitch)));
-    Vector xyz = glm::cross(cameraDirection, Vector(0, 0, 1));
-    Quaternion result = Quaternion(glm::dot(cameraDirection, Vector(0, 0, 1)) + 1, xyz.x, xyz.y, xyz.z);
-    //std::cout << "Result " << Vector(0, 0, 1) * glm::normalize(result) << " cameraDirection: " << cameraDirection << std::endl;
-    getTransform().setRelativeRotation(result);
+    Matrix4 viewMat = glm::lookAt(getTransform().getPosition(), getTransform().getPosition() + cameraDirection, Vector(0, 1, 0));
+    getTransform().setRotation(viewMat); // quaternion from matrix, janky but im bad at math
     bNeedsViewBuild = true;
 }
 
 void Camera::mouseScroll(float x) 
 {
-    getTransform().addRelativeLocation(getTransform().getForward()*x);
+    getTransform().translate(getTransform().getForward()*x);
     bNeedsViewBuild = true;
 }
 
 void Camera::moveX(float amount)
 {
-    getTransform().addRelativeLocation(getTransform().getForward()*amount);
+    getTransform().translate(getTransform().getForward()*amount);
     bNeedsViewBuild = true;
 }
 
 void Camera::moveY(float amount)
 {
-    getTransform().addRelativeLocation(getTransform().getRight()*amount);
+    getTransform().translate(getTransform().getRight()*amount);
     bNeedsViewBuild = true;
 }
 
 void Camera::buildViewMatrix() 
 {
-    Vector eyePos = getTransform().getPosition();//getAbsoluteTransform().getPosition();
-    Vector lookAt = eyePos + glm::normalize(Vector(cos(yaw) * cos(pitch), sin(pitch), sin(yaw) * cos(pitch)));
+    Vector eyePos = getTransform().getPosition();
+    Vector lookAt = eyePos + getTransform().getForward();
     viewMatrix = glm::lookAt(eyePos, lookAt, Vector(0, 1, 0));
-
+    cameraPos = eyePos;
     bNeedsViewBuild = false;
 }

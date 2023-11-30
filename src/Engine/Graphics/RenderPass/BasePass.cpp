@@ -165,8 +165,9 @@ void BasePass::render()
                     {
                         if (meshData.numIndices > 0)
                         {
-                            command->drawIndexed(meshData.numIndices, 1, meshData.firstIndex, meshData.indicesOffset, instanceOffset++);
+                            command->drawIndexed(meshData.numIndices, 1, meshData.firstIndex, meshData.indicesOffset, instanceOffset);
                         }
+                        instanceOffset++;
                     }
                 }
             }

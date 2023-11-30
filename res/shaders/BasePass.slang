@@ -19,6 +19,7 @@ float4 fragmentMain(in FragmentParameter params) : SV_Target
 {
     MaterialParameter materialParams = params.getMaterialParameter();
     LightingParameter lightingParams = params.getLightingParameter();
+    
 	let brdf = pMaterial.prepare(materialParams);
     float3 result = float3(0, 0, 0);
     for(int i = 0; i < pLightEnv.numDirectionalLights; ++i)

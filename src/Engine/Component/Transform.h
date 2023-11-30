@@ -21,15 +21,9 @@ struct Transform
     void setPosition(Vector pos);
     void setRotation(Quaternion quat);
     void setScale(Vector scale);
-
-    void setRelativeLocation(Vector location);
-    void setRelativeRotation(Quaternion rotation);
-    void setRelativeRotation(Vector rotation);
-    void setRelativeScale(Vector scale);
-
-    void addRelativeLocation(Vector translation);
-    void addRelativeRotation(Quaternion rotation);
-    void addRelativeRotation(Vector rotation);
+    void translate(Vector direction);
+    void rotate(Quaternion quat);
+    void scale(Vector scale);
 private:
     Math::Transform transform;
 };

@@ -15,7 +15,7 @@
         {
             "name": "Release",
             "generator": "Visual Studio 17 2022 Win64",
-            "configurationType": "RelWithDebInfo",
+            "configurationType": "Release",
             "buildRoot": "C:/Users/Dynamitos/Seele/bin/",
             "cmakeCommandArgs": "-DCMAKE_DEBUG_POSTFIX=\"\" -DCMAKE_PLATFORM=x64",
             "buildCommandArgs": "",
@@ -23,6 +23,19 @@
             "inheritEnvironments": [ "msvc_x64" ],
             "intelliSenseMode": "windows-msvc-x64",
             "installRoot": "C:/Program Files/Seele"
+        },
+        {
+            "name": "RelWithDebInfo",
+            "generator": "Visual Studio 17 2022 Win64",
+            "configurationType": "RelWithDebInfo",
+            "buildRoot": "C:/Users/Dynamitos/Seele/bin/",
+            "installRoot": "C:/Program Files/Seele",
+            "cmakeCommandArgs": "-DCMAKE_DEBUG_POSTFIX=\"\" -DCMAKE_PLATFORM=x64",
+            "buildCommandArgs": "",
+            "ctestCommandArgs": "",
+            "inheritEnvironments": [ "msvc_x64" ],
+            "intelliSenseMode": "windows-msvc-x64",
+            "variables": []
         }
     ]
 }

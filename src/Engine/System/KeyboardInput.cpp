@@ -22,6 +22,10 @@ void KeyboardInput::update(Component::KeyboardInput& input)
     input.mouseY = mouseY;
     input.mouse1 = mouse1;
     input.mouse2 = mouse2;
+    deltaX = mouseX - lastMouseX;
+    deltaY = mouseY - lastMouseY;
+    lastMouseX = mouseX;
+    lastMouseY = mouseY;
 }
 
 void KeyboardInput::keyCallback(KeyCode code, InputAction action, KeyModifier modifier)
@@ -33,10 +37,6 @@ void KeyboardInput::mouseCallback(double x, double y)
 {
     mouseX = x;
     mouseY = y;
-    deltaX = x - lastMouseX;
-    deltaY = y - lastMouseY;
-    lastMouseX = x;
-    lastMouseY = y;
 }
 
 void KeyboardInput::mouseButtonCallback(MouseButton button, InputAction action, KeyModifier modifier)

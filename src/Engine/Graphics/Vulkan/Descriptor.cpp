@@ -62,11 +62,9 @@ void DescriptorLayout::create()
 
 PipelineLayout::~PipelineLayout()
 {
-    if (layoutHandle != VK_NULL_HANDLE)
-    {
-        vkDestroyPipelineLayout(graphics->getDevice(), layoutHandle, nullptr);
-    }
 }
+
+Map<uint32, VkPipelineLayout> cachedLayouts;
 
 void PipelineLayout::create()
 {
@@ -105,7 +103,14 @@ void PipelineLayout::create()
     layoutHash = CRC::Calculate(createInfo.pPushConstantRanges, sizeof(VkPushConstantRange) * createInfo.pushConstantRangeCount, CRC::CRC_32());
     layoutHash = CRC::Calculate(createInfo.pSetLayouts, sizeof(VkDescriptorSetLayout) * createInfo.setLayoutCount, CRC::CRC_32(), layoutHash);
 
+    if (cachedLayouts.contains(layoutHash))
+    {
+        layoutHandle = cachedLayouts[layoutHash];
+        return;
+    }
+
     VK_CHECK(vkCreatePipelineLayout(graphics->getDevice(), &createInfo, nullptr, &layoutHandle));
+    cachedLayouts[layoutHash] = layoutHandle;
 }
 
 void PipelineLayout::reset()
@@ -391,7 +396,6 @@ Gfx::PDescriptorSet DescriptorPool::allocateDescriptorSet()
         {
             //If it hasnt been initialized, allocate it
             VK_CHECK(vkAllocateDescriptorSets(graphics->getDevice(), &allocInfo, &cachedHandles[setIndex]->setHandle));
-            std::cout << "New descriptor " << cachedHandles[setIndex]->setHandle << std::endl;
         }
         cachedHandles[setIndex]->allocate();
         
