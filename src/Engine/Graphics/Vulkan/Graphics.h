@@ -85,7 +85,6 @@ protected:
     OQueue computeQueue;
     OQueue transferQueue;
     OQueue dedicatedTransferQueue;
-    OPipelineCache pipelineCache;
     thread_local static OCommandPool graphicsCommands;
     thread_local static OCommandPool computeCommands;
     thread_local static OCommandPool transferCommands;
@@ -96,6 +95,7 @@ protected:
     VkDebugReportCallbackEXT callback;
     Map<uint32, OFramebuffer> allocatedFramebuffers;
     OAllocator allocator;
+    OPipelineCache pipelineCache;
     OStagingManager stagingManager;
     ODestructionManager destructionManager;
 

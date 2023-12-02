@@ -30,7 +30,7 @@ struct BlinnPhong : IBRDF
         float3 h = lightDir_WS + viewDir_WS;
         float specular = dot(normal_WS, h);
 		
-        return lightDir_WS * 2 + float3(1, 1, 1);//baseColor * (diffuse + specular) * lightColor;
+        return baseColor * (diffuse + specular) * lightColor;
     }
 };
 

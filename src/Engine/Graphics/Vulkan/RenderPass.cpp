@@ -2,7 +2,8 @@
 #include "Graphics.h"
 #include "Framebuffer.h"
 #include "Texture.h"
-#include "RenderPass.h"
+#include "Resources.h"
+#include "Command.h"
 
 using namespace Seele;
 using namespace Seele::Vulkan;
@@ -125,7 +126,7 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::ORenderTargetLayout _layout, Gfx
 
 RenderPass::~RenderPass()
 {
-    vkDestroyRenderPass(graphics->getDevice(), renderPass, nullptr);
+    graphics->getDestructionManager()->queueRenderPass(graphics->getGraphicsCommands()->getCommands(), renderPass);
 }
 
 uint32 RenderPass::getFramebufferHash()

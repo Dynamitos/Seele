@@ -22,19 +22,16 @@ void Window::addView(PView view)
 
 void Window::render() 
 {
-    while(owner->isActive())
+    gfxHandle->beginFrame();
+    for(auto& view : views)
     {
-        gfxHandle->beginFrame();
-        for(auto& view : views)
-        {
-            view->beginUpdate();
-            view->update();
-            view->commitUpdate();
-            view->prepareRender();
-            view->render();
-        }
-        gfxHandle->endFrame();
+        view->beginUpdate();
+        view->update();
+        view->commitUpdate();
+        view->prepareRender();
+        view->render();
     }
+    gfxHandle->endFrame();
 }
 
 Gfx::PWindow Window::getGfxHandle()

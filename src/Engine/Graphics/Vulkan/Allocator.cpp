@@ -66,7 +66,6 @@ Allocation::Allocation(PGraphics graphics, PAllocator pool, VkDeviceSize size, u
 Allocation::~Allocation()
 {
     vkFreeMemory(device, allocatedMemory, nullptr);
-    assert(bytesUsed == 0);
 }
 
 OSubAllocation Allocation::getSuballocation(VkDeviceSize requestedSize, VkDeviceSize alignment)
@@ -177,16 +176,6 @@ Allocator::Allocator(PGraphics graphics)
 
 Allocator::~Allocator()
 {
-    for (auto& heap : heaps)
-    {
-        for (auto& alloc : heap.allocations)
-        {
-            assert(alloc->activeAllocations.empty());
-            assert(alloc->freeRanges.size() == 1);
-        }
-        heap.allocations.clear();
-    }
-    graphics = nullptr;
 }
 
 OSubAllocation Allocator::allocate(const VkMemoryRequirements2 &memRequirements2, VkMemoryPropertyFlags properties, VkMemoryDedicatedAllocateInfo *dedicatedInfo)
@@ -272,6 +261,7 @@ StagingBuffer::~StagingBuffer()
         graphics->getDedicatedTransferCommands()->getCommands(), buffer);
     graphics->getDestructionManager()->queueAllocation(
         graphics->getDedicatedTransferCommands()->getCommands(), std::move(allocation));
+    graphics->getDedicatedTransferCommands()->submitCommands();
 }
 
 void* StagingBuffer::map()

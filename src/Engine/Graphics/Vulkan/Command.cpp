@@ -469,6 +469,10 @@ CommandPool::CommandPool(PGraphics graphics, PQueue queue)
 CommandPool::~CommandPool()
 {
     vkDeviceWaitIdle(graphics->getDevice());
+    for (auto& command : allocatedBuffers)
+    {
+        command->checkFence();
+    }
     allocatedRenderCommands.clear();
     allocatedComputeCommands.clear();
     allocatedBuffers.clear();

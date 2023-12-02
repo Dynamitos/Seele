@@ -6,17 +6,13 @@ namespace Seele
 {
 namespace Gfx
 {
-class DescriptorBinding
+struct DescriptorBinding
 {
-public:
-    DescriptorBinding();
-    DescriptorBinding(const DescriptorBinding& other);
-    DescriptorBinding& operator=(const DescriptorBinding& other);
-    uint32 binding;
-    SeDescriptorType descriptorType;
-    uint32 descriptorCount;
+    uint32 binding = 0;
+    SeDescriptorType descriptorType = SE_DESCRIPTOR_TYPE_MAX_ENUM;
+    uint32 descriptorCount = 0x7fff;
     SeDescriptorBindingFlags bindingFlags = 0;
-    SeShaderStageFlags shaderStages;
+    SeShaderStageFlags shaderStages = SE_SHADER_STAGE_ALL;
 };
 DEFINE_REF(DescriptorBinding)
 

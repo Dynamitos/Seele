@@ -48,48 +48,67 @@ void MeshLoader::loadMaterials(const aiScene* scene, const std::string& baseName
     {
         aiMaterial* material = scene->mMaterials[i];
         json matCode;
-        std::string materialName = std::format("{0}{1}", baseName, material->GetName().C_Str());
+        std::string materialName = std::format("{0}{1}{2}", baseName, material->GetName().C_Str(), char(i+'a'));
         materialName.erase(std::remove(materialName.begin(), materialName.end(), '.'), materialName.end()); // dots break adding the .asset extension later
         matCode["name"] = materialName;
         matCode["profile"] = "BlinnPhong"; //TODO: other shading models
         aiString texPath;
-        //TODO make samplers based on used textures
         if(material->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS)
         {
-            std::string texFilename = std::filesystem::path(texPath.C_Str()).stem().string();
-            matCode["params"]["diffuseTexture"] = 
-                {
-                    {"type", "Texture2D"}, 
-                    {"default", texFilename}
-                };
-            matCode["params"]["diffuseSampler"] =
+            auto texFilename = std::filesystem::path(texPath.C_Str()).stem();
+            if (texFilename == "white")
             {
-                {"type", "SamplerState"}
-            };
-            matCode["code"].push_back(
+                matCode["code"].push_back(
+                    {
+                        { "exp", "BRDF" },
+                        { "profile", "BlinnPhong" },
+                        { "values", {
+                            {"baseColor", "float3(1, 1, 1)"}
+                        }}
+                    }
+                );
+            }
+            else
+            {
+                AssetImporter::importTexture(TextureImportArgs{
+                .filePath = meshDirectory / texPath.C_Str(),
+                .importPath = importPath,
+                    });
+                matCode["params"]["diffuseTexture"] =
                 {
-                    { "exp",  "Sample" },
-                    { "texture", "diffuseTexture" },
-                    { "sampler", "diffuseSampler" },
-                    { "coords", "input.texCoords[0]"}
-                }
-            );
-            matCode["code"].push_back(
+                    {"type", "Texture2D"},
+                    {"default", texFilename.string()}
+                };
+                matCode["params"]["diffuseSampler"] =
                 {
-                    { "exp", "Swizzle" },
-                    { "target", 0 },
-                    { "comp", json::array({0, 1, 2}) },
-                }
-            );
-            matCode["code"].push_back(
-                {
-                    { "exp", "BRDF" },
-                    { "profile", "BlinnPhong" },
-                    { "values", {
-                        {"baseColor", 1}
-                    }}
-                }
-            );
+                    {"type", "Sampler"}
+                };
+                matCode["code"].push_back(
+                    {
+                        { "exp",  "Sample" },
+                        { "texture", "diffuseTexture" },
+                        { "sampler", "diffuseSampler" },
+                        { "coords", "input.texCoords[0]"}
+                    }
+                );
+                matCode["code"].push_back(
+                    {
+                        { "exp", "Swizzle" },
+                        { "target", 0 },
+                        { "comp", json::array({0, 1, 2}) },
+                    }
+                );
+                matCode["code"].push_back(
+                    {
+                        { "exp", "BRDF" },
+                        { "profile", "BlinnPhong" },
+                        { "values", {
+                            {"baseColor", 1}
+                        }}
+                    }
+                );
+            }
+            
         }
         else
         {
@@ -109,7 +128,7 @@ void MeshLoader::loadMaterials(const aiScene* scene, const std::string& baseName
         if(material->GetTexture(aiTextureType_NORMALS, 0, &texPath) == AI_SUCCESS)
         {
         }
-        std::string outMatFilename = matCode["name"].get<std::string>().append(".json");
+        std::string outMatFilename = materialName.append(".json");
         std::ofstream outMatFile = std::ofstream(meshDirectory / outMatFilename);
         outMatFile << std::setw(4) << matCode;
         outMatFile.flush();

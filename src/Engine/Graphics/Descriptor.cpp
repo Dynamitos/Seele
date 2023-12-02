@@ -3,34 +3,6 @@
 using namespace Seele;
 using namespace Seele::Gfx;
 
-DescriptorBinding::DescriptorBinding()
-	: binding(0)
-	, descriptorType(SE_DESCRIPTOR_TYPE_MAX_ENUM)
-	, descriptorCount(0x7fff)
-	, shaderStages(SE_SHADER_STAGE_ALL)
-{
-}
-
-DescriptorBinding::DescriptorBinding(const DescriptorBinding& other)
-	: binding(other.binding)
-	, descriptorType(other.descriptorType)
-	, descriptorCount(other.descriptorCount)
-	, shaderStages(other.shaderStages)
-{
-}
-
-DescriptorBinding& DescriptorBinding::operator=(const DescriptorBinding& other)
-{
-	if (this != &other)
-	{
-		binding = other.binding;
-		descriptorType = other.descriptorType;
-		descriptorCount = other.descriptorCount;
-		shaderStages = other.shaderStages;
-	}
-	return *this;
-}
-
 DescriptorPool::DescriptorPool()
 {
 }
@@ -77,12 +49,13 @@ void DescriptorLayout::addDescriptorBinding(uint32 bindingIndex, SeDescriptorTyp
 	{
 		descriptorBindings.resize(bindingIndex + 1);
 	}
-	DescriptorBinding& binding = descriptorBindings[bindingIndex];
-	binding.binding = bindingIndex;
-	binding.descriptorType = type;
-	binding.descriptorCount = arrayCount;
-	binding.bindingFlags = bindingFlags;
-	binding.shaderStages = shaderStages;
+	descriptorBindings[bindingIndex] = DescriptorBinding{
+		.binding = bindingIndex,
+		.descriptorType = type,
+		.descriptorCount = arrayCount,
+		.bindingFlags = bindingFlags,
+		.shaderStages = shaderStages,
+	};
 }
 
 PDescriptorSet DescriptorLayout::allocateDescriptorSet()

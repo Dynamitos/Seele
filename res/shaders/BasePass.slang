@@ -17,10 +17,9 @@ ParameterBlock<LightCullingData> pLightCullingData;
 [shader("pixel")]
 float4 fragmentMain(in FragmentParameter params) : SV_Target
 {
-    MaterialParameter materialParams = params.getMaterialParameter();
     LightingParameter lightingParams = params.getLightingParameter();
     
-	let brdf = pMaterial.prepare(materialParams);
+	let brdf = pMaterial.prepare(params.getMaterialParameter());
     float3 result = float3(0, 0, 0);
     for(int i = 0; i < pLightEnv.numDirectionalLights; ++i)
     {

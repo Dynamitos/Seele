@@ -20,7 +20,7 @@ Semaphore::Semaphore(PGraphics graphics)
 
 Semaphore::~Semaphore()
 {
-    graphics->getDestructionManager()->queueSemaphore(graphics->getGraphicsCommands()->getCommands(), handle);
+    vkDestroySemaphore(graphics->getDevice(), handle, nullptr);
 }
 
 Fence::Fence(PGraphics graphics)
@@ -114,6 +114,21 @@ void DestructionManager::queueSemaphore(PCommand cmd, VkSemaphore sem)
     sems[cmd].add(sem);
 }
 
+void DestructionManager::queueRenderPass(PCommand cmd, VkRenderPass renderPass)
+{
+    renderPasses[cmd].add(renderPass);
+}
+
+void DestructionManager::queueDescriptorPool(PCommand cmd, VkDescriptorPool pool)
+{
+    pools[cmd].add(pool);
+}
+
+void DestructionManager::queueDescriptorSet(PCommand cmd, Pair<VkDescriptorSet, VkDescriptorPool> set)
+{
+    sets[cmd].add(set);
+}
+
 void DestructionManager::queueAllocation(PCommand cmd, OSubAllocation alloc)
 {
     allocs[cmd].add(std::move(alloc));
@@ -137,9 +152,22 @@ void DestructionManager::notifyCmdComplete(PCommand cmd)
     {
         vkDestroySemaphore(graphics->getDevice(), sem, nullptr);
     }
+    for (auto [set, pool] : sets[cmd])
+    {
+        vkFreeDescriptorSets(graphics->getDevice(), pool, 1, &set);
+    }
+    for (auto pool : pools[cmd])
+    {
+        vkDestroyDescriptorPool(graphics->getDevice(), pool, nullptr);
+    }
+    for (auto renderPass : renderPasses[cmd])
+    {
+        vkDestroyRenderPass(graphics->getDevice(), renderPass, nullptr);
+    }
     buffers[cmd].clear();
     images[cmd].clear();
     views[cmd].clear();
     sems[cmd].clear();
+    renderPasses[cmd].clear();
     allocs[cmd].clear();
 }

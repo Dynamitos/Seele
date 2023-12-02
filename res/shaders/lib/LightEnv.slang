@@ -28,7 +28,7 @@ struct PointLight : ILightEnv
         float3 lightDir_WS = position_WS.xyz - params.position_WS;
         float d = length(lightDir_WS);
         float illuminance = max(1 - d / colorRange.w, 0);
-        return brdf.evaluate(params.tbn, params.viewDir_WS, normalize(lightDir_WS), colorRange.xyz);
+        return illuminance * brdf.evaluate(params.tbn, params.viewDir_WS, normalize(lightDir_WS), colorRange.xyz);
     }
 
     bool insidePlane(Plane plane)

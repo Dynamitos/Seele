@@ -32,6 +32,17 @@ Graphics::Graphics()
 
 Graphics::~Graphics()
 {
+    vkDeviceWaitIdle(handle);
+    graphicsCommands = nullptr;
+    computeCommands = nullptr;
+    transferCommands = nullptr;
+    dedicatedTransferCommands = nullptr;
+    pipelineCache = nullptr;
+    allocator = nullptr;
+    destructionManager = nullptr;
+    stagingManager = nullptr;
+    allocatedFramebuffers.clear();
+    shaderCompiler = nullptr;
     vkDestroyDevice(handle, nullptr);
     DestroyDebugReportCallbackEXT(instance, nullptr, callback);
     vkDestroyInstance(instance, nullptr);

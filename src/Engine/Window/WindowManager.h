@@ -10,15 +10,16 @@ class WindowManager
 public:
 	WindowManager();
 	~WindowManager();
-	PWindow addWindow(Gfx::PGraphics graphics, const WindowCreateInfo &createInfo);
+	OWindow addWindow(Gfx::PGraphics graphics, const WindowCreateInfo &createInfo);
+	void render();
 	void notifyWindowClosed(PWindow window);
-	inline bool isActive() const
+	bool isActive() const
 	{
 		return windows.size();
 	}
 
 private:
-	Array<OWindow> windows;
+	Array<PWindow> windows;
 };
 DEFINE_REF(WindowManager)
 } // namespace Seele

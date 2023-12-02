@@ -58,6 +58,9 @@ int main()
     AssetImporter::importMesh(MeshImportArgs{
         .filePath= sourcePath / "old_resources/models/cube.fbx",
         });
+    AssetImporter::importMesh(MeshImportArgs{
+        .filePath = sourcePath / "old_resources/models/sponza/sponza.gltf",
+        });
     //AssetImporter::importMesh(MeshImportArgs{
     //    .filePath= sourcePath / "old_resources/models/flameThrower.fbx",
     //    });
@@ -238,21 +241,28 @@ int main()
     //window->addView(inspectorView);
     sceneView->setFocused();
 
-    window->render();
-    //export game
 
-    std::filesystem::create_directories(outputPath);
-    std::system(std::format("cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGAME_TITLE=\"{}\" -DGAME_DESTINATION=\"{}\" -DGAME_BINARY=\"{}\" -P ./cmake/ExportProject.cmake", gameName, outputPath.generic_string(), binaryPath.generic_string()).c_str());
-    std::system(std::format("cmake -S {} -B {}", cmakePath.generic_string(), cmakePath.generic_string()).c_str());
-    std::system(std::format("cmake --build {}", cmakePath.generic_string()).c_str());
-    std::filesystem::copy(sourcePath / "Assets", outputPath / "Assets", std::filesystem::copy_options::recursive);
-    std::filesystem::copy("shaders", outputPath / "shaders", std::filesystem::copy_options::recursive);
-    std::filesystem::copy("textures", outputPath / "textures", std::filesystem::copy_options::recursive);
+    while (windowManager->isActive())
+    {
+        windowManager->render();
+    }
+    vd->~StaticMeshVertexData();
+    //export game
+    if (false)
+    {
+        std::filesystem::create_directories(outputPath);
+        std::system(std::format("cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGAME_TITLE=\"{}\" -DGAME_DESTINATION=\"{}\" -DGAME_BINARY=\"{}\" -P ./cmake/ExportProject.cmake", gameName, outputPath.generic_string(), binaryPath.generic_string()).c_str());
+        std::system(std::format("cmake -S {} -B {}", cmakePath.generic_string(), cmakePath.generic_string()).c_str());
+        std::system(std::format("cmake --build {}", cmakePath.generic_string()).c_str());
+        std::filesystem::copy(sourcePath / "Assets", outputPath / "Assets", std::filesystem::copy_options::recursive);
+        std::filesystem::copy("shaders", outputPath / "shaders", std::filesystem::copy_options::recursive);
+        std::filesystem::copy("textures", outputPath / "textures", std::filesystem::copy_options::recursive);
 #ifdef WIN32
-    std::filesystem::copy_file("assimp-vc143-mt.dll", outputPath / "assimp-vc143-mt.dll");
-    std::filesystem::copy_file("slang.dll", outputPath / "slang.dll");
-    std::filesystem::copy_file("slang-glslang.dll", outputPath / "slang-glslang.dll");
-    std::filesystem::copy_file("slang-llvm.dll", outputPath / "slang-llvm.dll");
+        std::filesystem::copy_file("assimp-vc143-mt.dll", outputPath / "assimp-vc143-mt.dll");
+        std::filesystem::copy_file("slang.dll", outputPath / "slang.dll");
+        std::filesystem::copy_file("slang-glslang.dll", outputPath / "slang-glslang.dll");
+        std::filesystem::copy_file("slang-llvm.dll", outputPath / "slang-llvm.dll");
 #endif
+    }
     return 0;
 }

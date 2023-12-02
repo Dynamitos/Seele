@@ -2,6 +2,7 @@
 #include "Graphics.h"
 #include "Texture.h"
 #include "Buffer.h"
+#include "Command.h"
 
 using namespace Seele;
 using namespace Seele::Vulkan;
@@ -345,8 +346,14 @@ DescriptorPool::DescriptorPool(PGraphics graphics, DescriptorLayout &layout)
 
 DescriptorPool::~DescriptorPool()
 {
-    vkDestroyDescriptorPool(graphics->getDevice(), poolHandle, nullptr);
-    graphics = nullptr;
+    for (uint32 setIndex = 0; setIndex < cachedHandles.size(); ++setIndex)
+    {
+        if (cachedHandles[setIndex] != nullptr && cachedHandles[setIndex]->setHandle != VK_NULL_HANDLE)
+        {
+            graphics->getDestructionManager()->queueDescriptorSet(graphics->getGraphicsCommands()->getCommands(), Pair<VkDescriptorSet, VkDescriptorPool>(cachedHandles[setIndex]->setHandle, poolHandle));
+        }
+    }
+    graphics->getDestructionManager()->queueDescriptorPool(graphics->getGraphicsCommands()->getCommands(), poolHandle);
     if(nextAlloc)
     {
         delete nextAlloc;
