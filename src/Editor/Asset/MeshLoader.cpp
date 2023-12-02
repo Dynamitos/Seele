@@ -48,11 +48,14 @@ void MeshLoader::loadMaterials(const aiScene* scene, const std::string& baseName
     {
         aiMaterial* material = scene->mMaterials[i];
         json matCode;
-        std::string materialName = std::format("{0}{1}{2}", baseName, material->GetName().C_Str(), char(i+'a'));
+        std::string materialName = std::format("{0}{1}{2}", baseName, material->GetName().C_Str(), i);
         materialName.erase(std::remove(materialName.begin(), materialName.end(), '.'), materialName.end()); // dots break adding the .asset extension later
         matCode["name"] = materialName;
         matCode["profile"] = "BlinnPhong"; //TODO: other shading models
         aiString texPath;
+        uint32 baseColorIndex = 0;
+        uint32 normalIndex = 0;
+        int32 codeIndex = -1;
         if(material->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS)
         {
             auto texFilename = std::filesystem::path(texPath.C_Str()).stem();
@@ -60,13 +63,11 @@ void MeshLoader::loadMaterials(const aiScene* scene, const std::string& baseName
             {
                 matCode["code"].push_back(
                     {
-                        { "exp", "BRDF" },
-                        { "profile", "BlinnPhong" },
-                        { "values", {
-                            {"baseColor", "float3(1, 1, 1)"}
-                        }}
+                        { "exp", "Const" },
+                        { "value", "float3(1, 1, 1)"}
                     }
                 );
+                baseColorIndex = ++codeIndex;
             }
             else
             {
@@ -88,46 +89,100 @@ void MeshLoader::loadMaterials(const aiScene* scene, const std::string& baseName
                         { "exp",  "Sample" },
                         { "texture", "diffuseTexture" },
                         { "sampler", "diffuseSampler" },
-                        { "coords", "input.texCoords[0]"}
+                        { "coords", "input.texCoords"}
                     }
                 );
+                ++codeIndex;
                 matCode["code"].push_back(
                     {
                         { "exp", "Swizzle" },
-                        { "target", 0 },
+                        { "target", codeIndex },
                         { "comp", json::array({0, 1, 2}) },
                     }
                 );
-                matCode["code"].push_back(
-                    {
-                        { "exp", "BRDF" },
-                        { "profile", "BlinnPhong" },
-                        { "values", {
-                            {"baseColor", 1}
-                        }}
-                    }
-                );
+                baseColorIndex = ++codeIndex;
             }
-            
         }
         else
         {
             matCode["code"].push_back(
                 {
-                    { "exp", "BRDF" },
-                    { "profile", "BlinnPhong" },
-                    { "values", {
-                        {"baseColor", "input.vertexColor.xyz"}
-                    }}
+                    { "exp", "Const" },
+                    { "value", "input.vertexColor.xyz" }
                 }
             );
-        }
-        if(material->GetTexture(aiTextureType_SPECULAR, 0, &texPath) == AI_SUCCESS)
-        {
+            baseColorIndex = ++codeIndex;
         }
         if(material->GetTexture(aiTextureType_NORMALS, 0, &texPath) == AI_SUCCESS)
         {
+            auto texFilename = std::filesystem::path(texPath.C_Str()).stem();
+            AssetImporter::importTexture(TextureImportArgs{
+            .filePath = meshDirectory / texPath.C_Str(),
+            .importPath = importPath,
+                });
+            matCode["params"]["normalTexture"] =
+            {
+                {"type", "Texture2D"},
+                {"default", texFilename.string()}
+            };
+            matCode["params"]["normalSampler"] =
+            {
+                {"type", "Sampler"}
+            };
+            matCode["code"].push_back(
+                {
+                    { "exp", "Sample" },
+                    { "texture", "normalTexture" },
+                    { "sampler", "normalSampler" },
+                    { "coords", "input.texCoords" }
+                }
+            );
+            ++codeIndex;
+            matCode["code"].push_back(
+                {
+                    { "exp", "Swizzle" },
+                    { "target", codeIndex },
+                    { "comp", json::array({0, 1, 2}) },
+                }
+            );
+            ++codeIndex;
+            matCode["code"].push_back(
+                {
+                    { "exp", "Mul" },
+                    { "lhs", "2" },
+                    { "rhs", codeIndex },
+                }
+            );
+            ++codeIndex;
+            matCode["code"].push_back(
+                {
+                    { "exp", "Sub" },
+                    { "lhs", codeIndex },
+                    { "rhs", "float3(1, 1, 1)"},
+                }
+            );
+            normalIndex = ++codeIndex;
         }
+        else
+        {
+            matCode["code"].push_back(
+                {
+                    { "exp", "Const" },
+                    { "value", "float3(0, 0, 1)" }
+                }
+            );
+            normalIndex = ++codeIndex;
+        }
+        matCode["code"].push_back(
+            {
+                { "exp", "BRDF" },
+                { "profile", "BlinnPhong" },
+                { "values", {
+                    { "baseColor", baseColorIndex },
+                    { "normal", normalIndex },
+                }}
+            }
+        );
         std::string outMatFilename = materialName.append(".json");
         std::ofstream outMatFile = std::ofstream(meshDirectory / outMatFilename);
         outMatFile << std::setw(4) << matCode;
@@ -181,7 +236,7 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
         for (uint32 i = 0; i < mesh->mNumVertices; ++i)
         {
             positions[i] = Vector(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
-            texCoords[i] = Vector2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].x);
+            texCoords[i] = Vector2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
             normals[i] = Vector(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z);
             tangents[i] = Vector(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z);
             biTangents[i] = Vector(mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z);

@@ -137,7 +137,7 @@ public:
         assert(_data != nullptr);
         for (size_type i = 0; i < size; ++i)
         {
-            _data[i] = value;
+            std::allocator_traits<allocator_type>::construct(allocator, &_data[i], value);
         }
     }
     constexpr explicit Array(size_type size, const allocator_type& alloc = allocator_type())
@@ -147,9 +147,16 @@ public:
     {
         _data = allocateArray(size);
         assert(_data != nullptr);
-        for (size_type i = 0; i < size; ++i)
+        if constexpr (std::is_integral_v<T> || std::is_floating_point_v<T>)
         {
-            std::allocator_traits<allocator_type>::construct(allocator, &_data[i]);
+            std::memset(_data, 0, size * sizeof(T));
+        }
+        else
+        {
+            for (size_type i = 0; i < size; ++i)
+            {
+                std::allocator_traits<allocator_type>::construct(allocator, &_data[i]);
+            }
         }
     }
     constexpr Array(std::initializer_list<T> init, const allocator_type& alloc = allocator_type())

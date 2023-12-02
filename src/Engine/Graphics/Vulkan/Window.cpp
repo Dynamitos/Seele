@@ -16,6 +16,10 @@ double Gfx::getCurrentFrameDelta()
 
 void glfwKeyCallback(GLFWwindow* handle, int key, int, int action, int modifier)
 {
+    if (key == -1)
+    {
+        return;
+    }
     Window* window = (Window*)glfwGetWindowUserPointer(handle);
     window->keyPress((KeyCode)key, (InputAction)action, (KeyModifier)modifier);
 }

@@ -21,7 +21,7 @@ struct Camera
     }
     Vector getCameraPosition() const
     {
-        return cameraPos;
+        return -viewMatrix[3];
     }
     void mouseMove(float deltaX, float deltaY);
     void mouseScroll(float x);

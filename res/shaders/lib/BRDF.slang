@@ -25,12 +25,12 @@ struct BlinnPhong : IBRDF
 
     float3 evaluate(float3x3 tbn, float3 viewDir_WS, float3 lightDir_WS, float3 lightColor)
     {
-        float3 normal_WS = mul(tbn, normal);
+        float3 normal_WS = mul(normal, tbn);
         float diffuse = max(dot(normal_WS, lightDir_WS), 0);
         float3 h = lightDir_WS + viewDir_WS;
         float specular = dot(normal_WS, h);
 		
-        return baseColor * (diffuse + specular) * lightColor;
+        return (viewDir_WS + float3(1, 1, 1)) / 2;//baseColor * (diffuse + specular) * lightColor;
     }
 };
 

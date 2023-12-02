@@ -71,8 +71,8 @@ string(TOLOWER ${SLANG_ROOT}/bin/windows-x64/release SLANG_BINARY_DIR)
 ExternalProject_Add(slang-build
     SOURCE_DIR ${SLANG_ROOT}
     BINARY_DIR ${SLANG_ROOT}
-    CONFIGURE_COMMAND ${SLANG_ROOT}/premake.bat vs2019 --file=${SLANG_ROOT}/premake5.lua gmake --arch=x64 --deps=true
-    BUILD_COMMAND msbuild -p:PlatformToolset=v143 -p:Configuration=Release -p:Platform=x64 build/visual-studio/slang/slang.vcxproj
+    CONFIGURE_COMMAND ${SLANG_ROOT}/premake.bat vs2019 --file=${SLANG_ROOT}/premake5.lua --arch=x64 --deps=true
+    BUILD_COMMAND msbuild -p:PlatformToolset=v143 -p:Configuration=Release -p:Platform=x64 slang.sln
     INSTALL_COMMAND ""
 )
 elseif(UNIX)

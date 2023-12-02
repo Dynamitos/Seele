@@ -39,7 +39,7 @@ struct FragmentParameter
 		LightingParameter result;
 		result.tbn = float3x3(normalize(tangent_WS), normalize(biTangent_WS), normalize(normal_WS));
 		result.position_WS = position_WS;
-		result.viewDir_WS = viewDir_WS;
+		result.viewDir_WS = normalize(viewDir_WS);
 		return result;
 	}
 };

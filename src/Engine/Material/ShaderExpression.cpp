@@ -346,7 +346,7 @@ std::string MulExpression::evaluate(Map<std::string, std::string>& varState) con
 {
     std::string varName = std::format("exp_{}", key);
     varState[key] = varName;
-    return std::format("let {} = mul({}, {});\n", varName, varState[inputs.at("lhs").source], varState[inputs.at("rhs").source]);
+    return std::format("let {} = {} * {};\n", varName, varState[inputs.at("lhs").source], varState[inputs.at("rhs").source]);
 }
 
 void MulExpression::save(ArchiveBuffer& buffer) const 

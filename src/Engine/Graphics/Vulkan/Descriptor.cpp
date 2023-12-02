@@ -418,7 +418,7 @@ Gfx::PDescriptorSet DescriptorPool::allocateDescriptorSet()
     {
         nextAlloc = new DescriptorPool(graphics, layout);
     }
-    std::cout << "Out of descriptors, forwarding" << std::endl;
+    //std::cout << "Out of descriptors, forwarding" << std::endl;
     return nextAlloc->allocateDescriptorSet();
     //throw std::logic_error("Out of descriptor sets");
 }

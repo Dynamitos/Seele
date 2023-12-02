@@ -130,12 +130,8 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
         if(obj.is_string())
         {
             std::string str = obj.get<std::string>();
-            if (expressions.find([&str, &expressions](const OShaderExpression& exp) {return exp->key == str; }) != expressions.end())
-            {
-                return str;
-            }
             OConstantExpression c = new ConstantExpression(str, ExpressionType::UNKNOWN);
-            std::string name = std::format("Const{0}", auxKey++);
+            std::string name = std::format("const_{0}", auxKey++);
             c->key = name;
             expressions.add(std::move(c));
             return name;
@@ -151,6 +147,14 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
     {
         auto& obj = param.value();
         std::string exp = obj["exp"].get<std::string>();
+        if (exp.compare("Const") == 0)
+        {
+            OConstantExpression p = new ConstantExpression();
+            std::string name = std::format("{0}", key++);
+            p->key = name;
+            p->expr = obj["value"];
+            expressions.add(std::move(p));
+        }
         if(exp.compare("Add") == 0)
         {
             OAddExpression p = new AddExpression();
