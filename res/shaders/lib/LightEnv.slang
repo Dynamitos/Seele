@@ -14,7 +14,8 @@ struct DirectionalLight : ILightEnv
 
     float3 illuminate<B:IBRDF>(LightingParameter params, B brdf)
     {
-        return brdf.evaluate(params.tbn, params.viewDir_WS, -normalize(direction.xyz), color.xyz);
+        float3 lightDir_TS = mul(params.tbn, direction.xyz);
+        return brdf.evaluate(params.tbn, params.viewDir_TS, -normalize(lightDir_TS), color.xyz);
     }
 };
 
@@ -26,9 +27,10 @@ struct PointLight : ILightEnv
     float3 illuminate<B:IBRDF>(LightingParameter params, B brdf)
     {
         float3 lightDir_WS = position_WS.xyz - params.position_WS;
-        float d = length(lightDir_WS);
+        float3 lightDir_TS = mul(params.tbn, lightDir_WS);
+        float d = length(lightDir_TS);
         float illuminance = max(1 - d / colorRange.w, 0);
-        return brdf.evaluate(params.tbn, params.viewDir_WS, normalize(lightDir_WS), colorRange.xyz);
+        return brdf.evaluate(params.tbn, params.viewDir_TS, normalize(lightDir_TS), colorRange.xyz);
     }
 
     bool insidePlane(Plane plane)

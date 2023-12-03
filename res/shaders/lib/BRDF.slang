@@ -23,14 +23,14 @@ struct BlinnPhong : IBRDF
         sheen = 1;
     }
 
-    float3 evaluate(float3x3 tbn, float3 viewDir_WS, float3 lightDir_WS, float3 lightColor)
+    float3 evaluate(float3x3 tbn, float3 viewDir_TS, float3 lightDir_TS, float3 lightColor)
     {
-        float3 normal_WS = mul(normal, tbn);
-        float diffuse = max(dot(normal_WS, lightDir_WS), 0);
-        float3 h = lightDir_WS + viewDir_WS;
-        float specular = dot(normal_WS, h);
+        float3 normal_TS = normalize(normal);
+        float diffuse = max(dot(normal_TS, lightDir_TS), 0);
+        float3 h = normalize(lightDir_TS + viewDir_TS);
+        float specular = saturate(dot(normal_TS, h));
 		
-        return (viewDir_WS + float3(1, 1, 1)) / 2;//baseColor * (diffuse + specular) * lightColor;
+        return baseColor * (diffuse + specular) * lightColor;
     }
 };
 

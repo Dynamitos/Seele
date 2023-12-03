@@ -12,7 +12,7 @@ struct LightingParameter
 {
 	float3x3 tbn;
 	float3 position_WS;
-	float3 viewDir_WS;
+	float3 viewDir_TS;
 };
 
 // data passed to fragment shader
@@ -39,7 +39,7 @@ struct FragmentParameter
 		LightingParameter result;
 		result.tbn = float3x3(normalize(tangent_WS), normalize(biTangent_WS), normalize(normal_WS));
 		result.position_WS = position_WS;
-		result.viewDir_WS = normalize(viewDir_WS);
+		result.viewDir_TS = normalize(mul(result.tbn, viewDir_WS));
 		return result;
 	}
 };
