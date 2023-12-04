@@ -64,7 +64,6 @@ Window::Window(PGraphics graphics, const WindowCreateInfo &createInfo)
     , preferences(createInfo)
     , instance(graphics->getInstance())
     , swapchain(VK_NULL_HANDLE)
-    , numSamples(createInfo.numSamples)
 {
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     GLFWwindow *handle = glfwCreateWindow(createInfo.width, createInfo.height, createInfo.title, nullptr, nullptr);
@@ -88,7 +87,6 @@ Window::Window(PGraphics graphics, const WindowCreateInfo &createInfo)
     chooseSwapExtent();
     framebufferWidth = extent.width;
     framebufferHeight = extent.height;
-    sampleFlags = createInfo.numSamples;
     createSwapChain();
 }
 

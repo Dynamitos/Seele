@@ -36,10 +36,10 @@ public:
     { 
         return texture->getHeight(); 
     }
-    inline SeAttachmentLoadOp getLoadOp() const { return loadOp; }
-    inline SeAttachmentStoreOp getStoreOp() const { return storeOp; }
-    inline SeAttachmentLoadOp getStencilLoadOp() const { return stencilLoadOp; }
-    inline SeAttachmentStoreOp getStencilStoreOp() const { return stencilStoreOp; }
+    constexpr SeAttachmentLoadOp getLoadOp() const { return loadOp; }
+    constexpr SeAttachmentStoreOp getStoreOp() const { return storeOp; }
+    constexpr SeAttachmentLoadOp getStencilLoadOp() const { return stencilLoadOp; }
+    constexpr SeAttachmentStoreOp getStencilStoreOp() const { return stencilStoreOp; }
     SeClearValue clear;
     SeColorComponentFlags componentFlags;
     SeAttachmentLoadOp loadOp;
@@ -70,7 +70,7 @@ public:
     }
     virtual SeSampleCountFlags getNumSamples() const override
     {
-        return owner->getNumSamples();
+        return Gfx::SE_SAMPLE_COUNT_1_BIT;
     }
     virtual uint32 getWidth() const 
     { 
@@ -93,6 +93,7 @@ public:
     RenderTargetLayout(PRenderTargetAttachment colorAttachment, PRenderTargetAttachment depthAttachment);
     RenderTargetLayout(Array<PRenderTargetAttachment> colorAttachments, PRenderTargetAttachment depthAttachmet);
     RenderTargetLayout(Array<PRenderTargetAttachment> inputAttachments, Array<PRenderTargetAttachment> colorAttachments, PRenderTargetAttachment depthAttachment);
+    RenderTargetLayout(PRenderTargetAttachment colorAttachment, PRenderTargetAttachment depthAttachment, PRenderTargetAttachment resolveAttachment);
     Array<PRenderTargetAttachment> inputAttachments;
     Array<PRenderTargetAttachment> colorAttachments;
     Array<PRenderTargetAttachment> resolveAttachments;

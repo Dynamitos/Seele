@@ -184,17 +184,23 @@ void BasePass::endFrame()
 
 void BasePass::publishOutputs() 
 {
-	colorAttachment = new Gfx::SwapchainAttachment(viewport->getOwner());
-    resources->registerRenderPassOutput("BASEPASS_COLOR", colorAttachment);
+    colorBuffer = graphics->createTexture2D(TextureCreateInfo{
+        .width = viewport->getWidth(),
+        .height = viewport->getHeight(),
+        .samples = viewport->getSamples(),
+        .usage = Gfx::SE_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT,
+        .memoryProps = Gfx::SE_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | Gfx::SE_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT,
+        });
+    colorAttachment = new Gfx::RenderTargetAttachment(colorBuffer, Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_DONT_CARE);
+	resolveAttachment = new Gfx::SwapchainAttachment(viewport->getOwner(), Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
+    resources->registerRenderPassOutput("BASEPASS_COLOR", resolveAttachment);
 }
 
 void BasePass::createRenderPass() 
 {
     Gfx::PRenderTargetAttachment depthAttachment = resources->requestRenderTarget("DEPTHPREPASS_DEPTH");
     depthAttachment->loadOp = Gfx::SE_ATTACHMENT_LOAD_OP_LOAD;
-    colorAttachment->loadOp = Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR;
-    colorAttachment->storeOp = Gfx::SE_ATTACHMENT_STORE_OP_STORE;
-    Gfx::ORenderTargetLayout layout = new Gfx::RenderTargetLayout(colorAttachment, depthAttachment);
+    Gfx::ORenderTargetLayout layout = new Gfx::RenderTargetLayout(colorAttachment, depthAttachment, resolveAttachment);
     renderPass = graphics->createRenderPass(std::move(layout), viewport);
     oLightIndexList = resources->requestBuffer("LIGHTCULLING_OLIGHTLIST");
     tLightIndexList = resources->requestBuffer("LIGHTCULLING_TLIGHTLIST");

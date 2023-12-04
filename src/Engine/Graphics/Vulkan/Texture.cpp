@@ -112,7 +112,7 @@ TextureBase::TextureBase(PGraphics graphics, VkImageViewType viewType,
         };
         vkGetImageMemoryRequirements2(graphics->getDevice(), &reqInfo, &requirements);
 
-        allocation = pool->allocate(requirements, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, image);
+        allocation = pool->allocate(requirements, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT, image);
         vkBindImageMemory(graphics->getDevice(), image, allocation->getHandle(), allocation->getOffset());
     }
 

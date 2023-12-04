@@ -60,12 +60,11 @@ RenderTargetLayout::RenderTargetLayout(PRenderTargetAttachment depthAttachment)
 }
 
 RenderTargetLayout::RenderTargetLayout(PRenderTargetAttachment colorAttachment, PRenderTargetAttachment depthAttachment)
-	: inputAttachments()
+	: colorAttachments({colorAttachment})
 	, depthAttachment(depthAttachment)
 	, width(depthAttachment->getTexture()->getWidth())
 	, height(depthAttachment->getTexture()->getHeight())
 {
-	colorAttachments.add(colorAttachment);
 }
 RenderTargetLayout::RenderTargetLayout(Array<PRenderTargetAttachment> colorAttachments, PRenderTargetAttachment depthAttachment)
 	: inputAttachments()
@@ -79,6 +78,15 @@ RenderTargetLayout::RenderTargetLayout(Array<PRenderTargetAttachment> inputAttac
 	: inputAttachments(inputAttachments)
 	, colorAttachments(colorAttachments)
 	, depthAttachment(depthAttachment)
+	, width(depthAttachment->getTexture()->getWidth())
+	, height(depthAttachment->getTexture()->getHeight())
+{
+}
+
+RenderTargetLayout::RenderTargetLayout(PRenderTargetAttachment colorAttachment, PRenderTargetAttachment depthAttachment, PRenderTargetAttachment resolveAttachment)
+	: colorAttachments({ colorAttachment })
+	, depthAttachment(depthAttachment)
+	, resolveAttachments({ resolveAttachment })
 	, width(depthAttachment->getTexture()->getWidth())
 	, height(depthAttachment->getTexture()->getHeight())
 {

@@ -18,6 +18,7 @@ Viewport::Viewport(PWindow owner, const ViewportCreateInfo& viewportInfo)
 	, offsetX(viewportInfo.dimensions.offset.x)
 	, offsetY(viewportInfo.dimensions.offset.y)
 	, fieldOfView(viewportInfo.fieldOfView)
+	, samples(viewportInfo.numSamples)
 	, owner(owner)
 {
 }

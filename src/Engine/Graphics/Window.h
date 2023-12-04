@@ -26,10 +26,6 @@ public:
     {
         return framebufferFormat;
     }
-    constexpr SeSampleCountFlags getNumSamples() const
-    {
-        return sampleFlags;
-    }
     constexpr uint32 getFramebufferWidth() const
     {
         return framebufferWidth;
@@ -41,7 +37,6 @@ public:
 
 protected:
     SeFormat framebufferFormat;
-    SeSampleCountFlags sampleFlags;
     uint32 framebufferWidth;
     uint32 framebufferHeight;
 };
@@ -59,6 +54,7 @@ public:
     constexpr uint32 getHeight() const { return sizeY; }
     constexpr uint32 getOffsetX() const { return offsetX; }
     constexpr uint32 getOffsetY() const { return offsetY; }
+    constexpr Gfx::SeSampleCountFlags getSamples() const { return samples; }
     Matrix4 getProjectionMatrix() const;
 protected:
     uint32 sizeX;
@@ -66,6 +62,7 @@ protected:
     uint32 offsetX;
     uint32 offsetY;
     float fieldOfView;
+    Gfx::SeSampleCountFlags samples;
     PWindow owner;
 };
 DEFINE_REF(Viewport)

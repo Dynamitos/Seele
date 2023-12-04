@@ -36,7 +36,6 @@ struct WindowCreateInfo
     int32 width;
     int32 height;
     const char *title;
-    Gfx::SeSampleCountFlags numSamples;
     Gfx::SeFormat preferredFormat = Gfx::SE_FORMAT_MAX_ENUM;
     void *windowHandle;
 };
@@ -44,6 +43,7 @@ struct ViewportCreateInfo
 {
     URect dimensions;
     float fieldOfView = 1.222f; // 70 deg
+    Gfx::SeSampleCountFlags numSamples;
 };
 // doesnt own the data, only proxy it
 struct DataSource
@@ -65,6 +65,7 @@ struct TextureCreateInfo
     uint32                      elements = 1;
     uint32                      samples = 1;
     Gfx::SeImageUsageFlagBits   usage = Gfx::SE_IMAGE_USAGE_SAMPLED_BIT;
+    Gfx::SeMemoryPropertyFlags  memoryProps = Gfx::SE_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 };
 struct SamplerCreateInfo
 {
