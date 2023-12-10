@@ -12,9 +12,12 @@ struct FramebufferDescription
 {
     StaticArray<VkImageView, 16> inputAttachments;
     StaticArray<VkImageView, 16> colorAttachments;
+    StaticArray<VkImageView, 16> resolveAttachments;
     VkImageView depthAttachment;
+    VkImageView depthResolveAttachment;
     uint32 numInputAttachments;
     uint32 numColorAttachments;
+    uint32 numResolveAttachments;
 };
 class Framebuffer
 {

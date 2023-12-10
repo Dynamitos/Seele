@@ -237,6 +237,42 @@ Gfx::OPipelineLayout Graphics::createPipelineLayout(Gfx::PPipelineLayout baseLay
     return new PipelineLayout(this, baseLayout);
 }
 
+void Graphics::resolveTexture(Gfx::PTexture source, Gfx::PTexture destination)
+{
+    PTextureBase sourceTex = source.cast<TextureBase>();
+    PTextureBase destinationTex = destination.cast<TextureBase>();
+    VkImageResolve resolve = {
+        .srcSubresource = VkImageSubresourceLayers {
+            .aspectMask = sourceTex->getAspect(),
+            .mipLevel = 0,
+            .baseArrayLayer = 0,
+            .layerCount = 1,
+        },
+        .srcOffset = VkOffset3D {
+            .x = 0,
+            .y = 0,
+            .z = 0,
+        },
+        .dstSubresource = VkImageSubresourceLayers {
+            .aspectMask = sourceTex->getAspect(),
+            .mipLevel = 0,
+            .baseArrayLayer = 0,
+            .layerCount = 1,
+        },
+        .dstOffset = VkOffset3D {
+            .x = 0,
+            .y = 0,
+            .z = 0,
+        },
+        .extent = VkExtent3D {
+            .width = sourceTex->getWidth(),
+            .height = sourceTex->getHeight(),
+            .depth = sourceTex->getDepth(),
+        },
+    };
+    vkCmdResolveImage(getGraphicsCommands()->getCommands()->getHandle(), sourceTex->getImage(), cast(sourceTex->getLayout()), destinationTex->getImage(), cast(destinationTex->getLayout()), 1, &resolve);
+}
+
 void Graphics::vkCmdDrawMeshTasksEXT(VkCommandBuffer handle, uint32 groupX, uint32 groupY, uint32 groupZ)
 {
     cmdDrawMeshTasks(handle, groupX, groupY, groupZ);
@@ -410,7 +446,7 @@ void Graphics::pickPhysicalDevice()
         {
             if (std::strcmp(VK_EXT_MESH_SHADER_EXTENSION_NAME, extensionProps[i].extensionName) == 0)
             {
-                //meshShadingEnabled = true;
+                meshShadingEnabled = true;
                 break;
             }
         }

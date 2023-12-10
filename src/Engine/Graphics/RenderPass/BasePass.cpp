@@ -71,6 +71,7 @@ void BasePass::render()
     tLightGrid->pipelineBarrier(
         Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
         Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+    colorBuffer->changeLayout(Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
     descriptorSets[INDEX_VIEW_PARAMS] = viewParamsSet;
     descriptorSets[INDEX_LIGHT_ENV] = scene->getLightEnvironment()->getDescriptorSet();
@@ -131,7 +132,7 @@ void BasePass::render()
                 pipelineInfo.pipelineLayout = std::move(layout);
                 pipelineInfo.renderPass = renderPass;
                 pipelineInfo.depthStencilState.depthCompareOp = Gfx::SE_COMPARE_OP_LESS_OR_EQUAL;
-                pipelineInfo.rasterizationState.lineWidth = 10.f;
+                pipelineInfo.multisampleState.samples = viewport->getSamples();
                 Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
                 command->bindPipeline(pipeline);
             }
@@ -143,6 +144,7 @@ void BasePass::render()
                 pipelineInfo.pipelineLayout = std::move(layout);
                 pipelineInfo.renderPass = renderPass;
                 pipelineInfo.depthStencilState.depthCompareOp = Gfx::SE_COMPARE_OP_LESS_OR_EQUAL;
+                pipelineInfo.multisampleState.samples = viewport->getSamples();
                 Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
                 command->bindPipeline(pipeline);
             }
@@ -185,22 +187,24 @@ void BasePass::endFrame()
 void BasePass::publishOutputs() 
 {
     colorBuffer = graphics->createTexture2D(TextureCreateInfo{
+        .format = viewport->getOwner()->getBackBuffer()->getFormat(),
         .width = viewport->getWidth(),
         .height = viewport->getHeight(),
         .samples = viewport->getSamples(),
-        .usage = Gfx::SE_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT,
-        .memoryProps = Gfx::SE_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | Gfx::SE_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT,
+        .usage = Gfx::SE_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
         });
-    colorAttachment = new Gfx::RenderTargetAttachment(colorBuffer, Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_DONT_CARE);
-	resolveAttachment = new Gfx::SwapchainAttachment(viewport->getOwner(), Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
-    resources->registerRenderPassOutput("BASEPASS_COLOR", resolveAttachment);
+    colorAttachment = new Gfx::RenderTargetAttachment(colorBuffer, Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
+    resources->registerRenderPassOutput("BASEPASS_COLOR", colorAttachment);
 }
 
 void BasePass::createRenderPass() 
 {
     Gfx::PRenderTargetAttachment depthAttachment = resources->requestRenderTarget("DEPTHPREPASS_DEPTH");
     depthAttachment->loadOp = Gfx::SE_ATTACHMENT_LOAD_OP_LOAD;
-    Gfx::ORenderTargetLayout layout = new Gfx::RenderTargetLayout(colorAttachment, depthAttachment, resolveAttachment);
+    Gfx::ORenderTargetLayout layout = new Gfx::RenderTargetLayout{
+        .colorAttachments = { colorAttachment }, 
+        .depthAttachment = depthAttachment,
+    };
     renderPass = graphics->createRenderPass(std::move(layout), viewport);
     oLightIndexList = resources->requestBuffer("LIGHTCULLING_OLIGHTLIST");
     tLightIndexList = resources->requestBuffer("LIGHTCULLING_TLIGHTLIST");

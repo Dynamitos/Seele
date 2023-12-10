@@ -223,7 +223,7 @@ void SamplerParameter::save(ArchiveBuffer& buffer) const
 void SamplerParameter::load(ArchiveBuffer& buffer)
 {
     ShaderParameter::load(buffer);
-    data = buffer.getGraphics()->createSampler({});
+    data = buffer.getGraphics()->createSampler(SamplerCreateInfo{});
 }
 
 CombinedTextureParameter::CombinedTextureParameter(std::string name, uint32 byteOffset, uint32 binding) 

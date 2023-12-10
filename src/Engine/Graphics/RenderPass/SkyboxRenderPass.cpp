@@ -25,13 +25,6 @@ void SkyboxRenderPass::beginFrame(const Component::Camera& cam)
     RenderPass::beginFrame(cam);
     DataSource uniformUpdate;
 
-    viewParams.viewMatrix = cam.getViewMatrix();
-    viewParams.projectionMatrix = viewport->getProjectionMatrix();
-    viewParams.cameraPosition = Vector4(cam.getCameraPosition(), 1);
-    viewParams.screenDimensions = Vector2(static_cast<float>(viewport->getWidth()), static_cast<float>(viewport->getHeight()));
-    uniformUpdate.size = sizeof(ViewParameter);
-    uniformUpdate.data = (uint8*)&viewParams;
-    viewParamsBuffer->updateContents(uniformUpdate);
     skyboxDataLayout->reset();
     textureLayout->reset();
     skyboxDataSet = skyboxDataLayout->allocateDescriptorSet();
@@ -54,6 +47,8 @@ void SkyboxRenderPass::render()
     renderCommand->draw(36, 1, 0, 0);
     graphics->executeCommands(Array{ renderCommand });
     graphics->endRenderPass();
+    baseColorAttachment->getTexture()->changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+    graphics->resolveTexture(baseColorAttachment->getTexture(), viewport->getOwner()->getBackBuffer());
 }
 
 void SkyboxRenderPass::endFrame()
@@ -63,15 +58,6 @@ void SkyboxRenderPass::endFrame()
 
 void SkyboxRenderPass::publishOutputs()
 {
-    UniformBufferCreateInfo viewCreateInfo = {
-        .sourceData = DataSource {
-            .size = sizeof(ViewParameter),
-            .data = nullptr,
-        },
-        .dynamic = true
-    };
-    viewParamsBuffer = graphics->createUniformBuffer(viewCreateInfo);
-
     skyboxDataLayout = graphics->createDescriptorLayout("SkyboxDescLayout");
     skyboxDataLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
     skyboxDataLayout->create();
@@ -86,11 +72,14 @@ void SkyboxRenderPass::publishOutputs()
 
 void SkyboxRenderPass::createRenderPass()
 {
-    Gfx::PRenderTargetAttachment baseColorAttachment = resources->requestRenderTarget("BASEPASS_COLOR");
+    baseColorAttachment = resources->requestRenderTarget("BASEPASS_COLOR");
     baseColorAttachment->loadOp = Gfx::SE_ATTACHMENT_LOAD_OP_LOAD;
     Gfx::PRenderTargetAttachment depthAttachment = resources->requestRenderTarget("DEPTHPREPASS_DEPTH");
     depthAttachment->loadOp = Gfx::SE_ATTACHMENT_LOAD_OP_LOAD;
-    Gfx::ORenderTargetLayout layout = new Gfx::RenderTargetLayout(baseColorAttachment, depthAttachment);
+    Gfx::ORenderTargetLayout layout = new Gfx::RenderTargetLayout{
+        .colorAttachments = { baseColorAttachment },
+        .depthAttachment = depthAttachment
+    };
     renderPass = graphics->createRenderPass(std::move(layout), viewport);
 
     ShaderCreateInfo createInfo;
@@ -118,5 +107,6 @@ void SkyboxRenderPass::createRenderPass()
     gfxInfo.topology = Gfx::SE_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     gfxInfo.pipelineLayout = std::move(pipelineLayout);
     gfxInfo.renderPass = renderPass;
+    gfxInfo.multisampleState.samples = viewport->getSamples();
     pipeline = graphics->createGraphicsPipeline(std::move(gfxInfo));
 }

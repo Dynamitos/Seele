@@ -10,6 +10,7 @@ using namespace Seele::Math;
 Camera::Camera()
     : viewMatrix(Matrix4())
     , bNeedsViewBuild(false)
+    , cameraPos(Vector())
 {
     yaw = 3.1415f/2;
     pitch = 0;

@@ -82,6 +82,8 @@ public:
   	virtual ODescriptorLayout createDescriptorLayout(const std::string& name = "") = 0;
   	virtual OPipelineLayout createPipelineLayout(PPipelineLayout baseLayout = nullptr) = 0;
 
+    virtual void resolveTexture(Gfx::PTexture source, Gfx::PTexture destination) = 0;
+
     bool supportMeshShading() const { return meshShadingEnabled; }
 protected:
     QueueFamilyMapping queueMapping;

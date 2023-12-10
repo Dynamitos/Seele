@@ -91,6 +91,7 @@ void DepthPrepass::render()
                 pipelineInfo.pipelineLayout = std::move(layout);
                 pipelineInfo.renderPass = renderPass;
                 pipelineInfo.depthStencilState.depthCompareOp = Gfx::SE_COMPARE_OP_LESS_OR_EQUAL;
+                pipelineInfo.multisampleState.samples = viewport->getSamples();
                 Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
                 command->bindPipeline(pipeline);
             }
@@ -102,6 +103,7 @@ void DepthPrepass::render()
                 pipelineInfo.pipelineLayout = std::move(layout);
                 pipelineInfo.renderPass = renderPass;
                 pipelineInfo.depthStencilState.depthCompareOp = Gfx::SE_COMPARE_OP_LESS_OR_EQUAL;
+                pipelineInfo.multisampleState.samples = viewport->getSamples();
                 Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
                 command->bindPipeline(pipeline);
             }
@@ -120,7 +122,7 @@ void DepthPrepass::render()
                 {
                     command->bindIndexBuffer(vertexData->getIndexBuffer());
                     uint32 instanceOffset = 0;
-                    for (const auto& [instance, meshData] : instance.meshes)
+                    for (const auto& [_, meshData] : instance.meshes)
                     {
                         if (meshData.numIndices > 0)
                         {
@@ -148,25 +150,30 @@ void DepthPrepass::publishOutputs()
         .format = Gfx::SE_FORMAT_D32_SFLOAT,
         .width = viewport->getOwner()->getFramebufferWidth(),
         .height = viewport->getOwner()->getFramebufferHeight(),
+        .samples = viewport->getSamples(),
         .usage = Gfx::SE_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
     };
     depthBuffer = graphics->createTexture2D(depthBufferInfo);
     depthAttachment = 
         new Gfx::RenderTargetAttachment(depthBuffer, Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
     depthAttachment->clear.depthStencil.depth = 1.0f;
+    depthBufferInfo.samples = Gfx::SE_SAMPLE_COUNT_1_BIT;
+    depthResolveBuffer = graphics->createTexture2D(depthBufferInfo);
+    depthResolveAttachment =
+        new Gfx::RenderTargetAttachment(depthResolveBuffer, Gfx::SE_ATTACHMENT_LOAD_OP_DONT_CARE, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
     resources->registerRenderPassOutput("DEPTHPREPASS_DEPTH", depthAttachment);
+    resources->registerRenderPassOutput("DEPTHPREPASS_RESOLVED_DEPTH", depthResolveAttachment);
 }
 
 void DepthPrepass::createRenderPass() 
 {
-    Gfx::ORenderTargetLayout layout = new Gfx::RenderTargetLayout(depthAttachment);
+    Gfx::ORenderTargetLayout layout = new Gfx::RenderTargetLayout{
+        .depthAttachment = depthAttachment,
+        .depthResolveAttachment = depthResolveAttachment,
+    };
     renderPass = graphics->createRenderPass(std::move(layout), viewport);
 }
 
 void DepthPrepass::modifyRenderPassMacros(Map<const char*, const char*>& defines) 
 {
-    defines["INDEX_VIEW_PARAMS"] = "0";
-    defines["INDEX_MATERIAL"] = "1";
-    defines["INDEX_VERTEX_DATA"] = "2";
-    defines["INDEX_SCENE_DATA"] = "3";
 }

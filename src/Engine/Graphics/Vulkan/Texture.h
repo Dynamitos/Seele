@@ -14,7 +14,18 @@ public:
     TextureBase(PGraphics graphics, VkImageViewType viewType,
         const TextureCreateInfo& createInfo, Gfx::QueueType& owner, VkImage existingImage = VK_NULL_HANDLE);
     virtual ~TextureBase();
-
+    uint32 getWidth() const
+    {
+        return width;
+    }
+    uint32 getHeight() const
+    {
+        return height;
+    }
+    uint32 getDepth() const
+    {
+        return depth;
+    }
     constexpr VkImage getImage() const
     {
         return image;
@@ -78,6 +89,7 @@ protected:
     uint8 ownsImage;
     friend class Graphics;
 };
+DEFINE_REF(TextureBase)
 
 class Texture2D : public Gfx::Texture2D, public TextureBase
 {

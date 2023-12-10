@@ -158,7 +158,10 @@ void TextPass::createRenderPass()
         .size = sizeof(TextData)});
     pipelineLayout->create();
 
-    Gfx::ORenderTargetLayout layout = new Gfx::RenderTargetLayout(renderTarget, depthAttachment);
+    Gfx::ORenderTargetLayout layout = new Gfx::RenderTargetLayout{
+        .colorAttachments = {renderTarget},
+        .depthAttachment = depthAttachment
+    };
     renderPass = graphics->createRenderPass(std::move(layout), viewport);
     
     Gfx::LegacyPipelineCreateInfo pipelineInfo;

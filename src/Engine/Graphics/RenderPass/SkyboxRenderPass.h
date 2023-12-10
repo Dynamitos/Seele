@@ -18,8 +18,8 @@ public:
     virtual void publishOutputs() override;
     virtual void createRenderPass() override;
 private:
+    Gfx::PRenderTargetAttachment baseColorAttachment;
     Gfx::OVertexBuffer cubeBuffer;
-    Gfx::OUniformBuffer viewParamsBuffer;
     Gfx::ODescriptorLayout skyboxDataLayout;
     Gfx::PDescriptorSet skyboxDataSet;
     Gfx::ODescriptorLayout textureLayout;

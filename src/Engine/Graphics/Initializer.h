@@ -64,7 +64,7 @@ struct TextureCreateInfo
     uint32                      layers = 1;
     uint32                      elements = 1;
     uint32                      samples = 1;
-    Gfx::SeImageUsageFlagBits   usage = Gfx::SE_IMAGE_USAGE_SAMPLED_BIT;
+    Gfx::SeImageUsageFlags      usage = Gfx::SE_IMAGE_USAGE_SAMPLED_BIT;
     Gfx::SeMemoryPropertyFlags  memoryProps = Gfx::SE_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 };
 struct SamplerCreateInfo

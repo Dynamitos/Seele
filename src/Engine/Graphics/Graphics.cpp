@@ -1,5 +1,6 @@
 #include "Graphics.h"
 #include "Shader.h"
+#include "Graphics.h"
 
 using namespace Seele::Gfx;
 
@@ -11,4 +12,3 @@ Graphics::Graphics()
 Graphics::~Graphics()
 {
 }
-

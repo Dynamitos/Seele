@@ -1,0 +1,15 @@
+{
+    "dependencies": [
+        "assimp",
+        "entt",
+        "stb",
+        "dp-thread-pool",
+        "entt",
+        "freetype",
+        "glfw3",
+        "glm",
+        "ktx",
+        "nlohmann-json",
+        "shader-slang"
+    ]
+}

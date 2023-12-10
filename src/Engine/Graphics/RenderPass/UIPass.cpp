@@ -136,7 +136,10 @@ void UIPass::createRenderPass()
     pipelineLayout->addDescriptorLayout(0, descriptorLayout);
     pipelineLayout->create();
 
-    Gfx::ORenderTargetLayout layout = new Gfx::RenderTargetLayout(std::move(renderTarget), std::move(depthAttachment));
+    Gfx::ORenderTargetLayout layout = new Gfx::RenderTargetLayout{
+        .colorAttachments = { renderTarget }, 
+        .depthAttachment = depthAttachment
+    };
     renderPass = graphics->createRenderPass(std::move(layout), viewport);
     
     Gfx::LegacyPipelineCreateInfo pipelineInfo;

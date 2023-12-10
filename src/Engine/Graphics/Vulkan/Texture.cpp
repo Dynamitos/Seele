@@ -71,6 +71,13 @@ TextureBase::TextureBase(PGraphics graphics, VkImageViewType viewType,
         default:
             break;
         }
+        if ((usage & VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT) == 0)
+        {
+            usage = usage
+                | VK_IMAGE_USAGE_TRANSFER_DST_BIT
+                | VK_IMAGE_USAGE_TRANSFER_SRC_BIT
+                | VK_IMAGE_USAGE_SAMPLED_BIT;
+        }
         VkImageCreateInfo info = {
             .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
             .pNext = nullptr,
@@ -86,10 +93,7 @@ TextureBase::TextureBase(PGraphics graphics, VkImageViewType viewType,
             .arrayLayers = arrayCount * layerCount,
             .samples = (VkSampleCountFlagBits)samples,
             .tiling = VK_IMAGE_TILING_OPTIMAL,
-            .usage = usage
-                | VK_IMAGE_USAGE_TRANSFER_DST_BIT
-                | VK_IMAGE_USAGE_TRANSFER_SRC_BIT
-                | VK_IMAGE_USAGE_SAMPLED_BIT,
+            .usage = usage,
             .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
             .initialLayout = cast(layout),
         };
@@ -112,7 +116,7 @@ TextureBase::TextureBase(PGraphics graphics, VkImageViewType viewType,
         };
         vkGetImageMemoryRequirements2(graphics->getDevice(), &reqInfo, &requirements);
 
-        allocation = pool->allocate(requirements, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT, image);
+        allocation = pool->allocate(requirements, createInfo.memoryProps, image);
         vkBindImageMemory(graphics->getDevice(), image, allocation->getHandle(), allocation->getOffset());
     }
 
@@ -157,6 +161,10 @@ TextureBase::TextureBase(PGraphics graphics, VkImageViewType viewType,
     else if(usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
     {
         changeLayout(Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+    }
+    else if (usage & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
+    {
+        changeLayout(Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
     }
     else
     {

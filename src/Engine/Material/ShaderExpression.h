@@ -31,8 +31,9 @@ struct ExpressionOutput
     void load(ArchiveBuffer& buffer);
 };
 DECLARE_REF(ShaderExpression);
-struct ShaderExpression
+class ShaderExpression
 {
+public:
     Map<std::string, ExpressionInput> inputs;
     ExpressionOutput output;
     std::string key;

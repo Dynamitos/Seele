@@ -71,36 +71,36 @@ struct ShaderPermutation
     {
         std::memset(taskFile, 0, sizeof(taskFile));
         hasTaskShader = 1;
-        std::strncpy(taskFile, name.data(), 32);
+        strncpy_s(taskFile, sizeof(taskFile), name.data(), 32);
     }
     void setVertexFile(std::string_view name)
     {
         std::memset(vertexMeshFile, 0, sizeof(vertexMeshFile));
         useMeshShading = 0;
-        std::strncpy(vertexMeshFile, name.data(), 32);
+        strncpy_s(vertexMeshFile, sizeof(vertexMeshFile), name.data(), 32);
     }
     void setMeshFile(std::string_view name)
     {
         std::memset(vertexMeshFile, 0, sizeof(vertexMeshFile));
         useMeshShading = 1;
-        std::strncpy(vertexMeshFile, name.data(), 32);
+        strncpy_s(vertexMeshFile, sizeof(vertexMeshFile), name.data(), 32);
     }
     void setFragmentFile(std::string_view name)
     {
         std::memset(fragmentFile, 0, sizeof(fragmentFile));
         hasFragment = 1;
-        std::strncpy(fragmentFile, name.data(), 32);
+        strncpy_s(fragmentFile, sizeof(fragmentFile), name.data(), 32);
     }
     void setVertexData(std::string_view name)
     {
         std::memset(vertexDataName, 0, sizeof(vertexDataName));
-        std::strncpy(vertexDataName, name.data(), 32);
+        strncpy_s(vertexDataName, sizeof(vertexDataName), name.data(), 32);
     }
     void setMaterial(std::string_view name)
     {
         std::memset(materialName, 0, sizeof(materialName));
         useMaterial = 1;
-        std::strncpy(materialName, name.data(), 32);
+        strncpy_s(materialName, sizeof(materialName), name.data(), 32);
     }
 };
 //Hashed ShaderPermutation for fast lookup

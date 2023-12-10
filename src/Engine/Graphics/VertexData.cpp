@@ -201,9 +201,9 @@ VertexData* Seele::VertexData::findByTypeName(std::string name)
     return nullptr;
 }
 
-void Seele::VertexData::init(Gfx::PGraphics graphics)
+void Seele::VertexData::init(Gfx::PGraphics _graphics)
 {
-    this->graphics = graphics;
+    graphics = _graphics;
     verticesAllocated = NUM_DEFAULT_ELEMENTS;
     instanceDataLayout = graphics->createDescriptorLayout("VertexDataInstanceLayout");
     instanceDataLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);

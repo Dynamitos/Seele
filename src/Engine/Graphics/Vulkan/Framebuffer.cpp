@@ -33,11 +33,27 @@ Framebuffer::Framebuffer(PGraphics graphics, PRenderPass renderPass, Gfx::PRende
         width = std::max(width, vkColorAttachment->getWidth());
         height = std::max(height, vkColorAttachment->getHeight());
     }
+    for (auto resolveAttachment : layout->resolveAttachments)
+    {
+        PTexture2D vkResolveAttachment = resolveAttachment->getTexture().cast<Texture2D>();
+        attachments.add(vkResolveAttachment->getView());
+        description.resolveAttachments[description.numResolveAttachments++] = vkResolveAttachment->getView();
+        width = std::max(width, vkResolveAttachment->getWidth());
+        height = std::max(height, vkResolveAttachment->getHeight());
+    }
     if (layout->depthAttachment != nullptr)
     {
         PTexture2D vkDepthAttachment = layout->depthAttachment->getTexture().cast<Texture2D>();
         attachments.add(vkDepthAttachment->getView());
         description.depthAttachment = vkDepthAttachment->getView();
+        width = std::max(width, vkDepthAttachment->getWidth());
+        height = std::max(height, vkDepthAttachment->getHeight());
+    }
+    if (layout->depthResolveAttachment != nullptr)
+    {
+        PTexture2D vkDepthAttachment = layout->depthResolveAttachment->getTexture().cast<Texture2D>();
+        attachments.add(vkDepthAttachment->getView());
+        description.depthResolveAttachment = vkDepthAttachment->getView();
         width = std::max(width, vkDepthAttachment->getWidth());
         height = std::max(height, vkDepthAttachment->getHeight());
     }

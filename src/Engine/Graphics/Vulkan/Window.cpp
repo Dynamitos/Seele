@@ -101,7 +101,7 @@ void Window::beginFrame()
 {
     glfwPollEvents();
     vkAcquireNextImageKHR(graphics->getDevice(), swapchain, std::numeric_limits<uint64>::max(), imageAvailableSemaphores[currentSemaphoreIndex]->getHandle(), VK_NULL_HANDLE, &currentImageIndex);
-    swapChainTextures[currentImageIndex]->changeLayout(Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+    swapChainTextures[currentImageIndex]->changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
     graphics->getGraphicsCommands()->getCommands()->waitForSemaphore(VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, imageAvailableSemaphores[currentSemaphoreIndex]);
 }
 
@@ -299,7 +299,7 @@ void Window::createSwapChain()
         .imageColorSpace = format.colorSpace,
         .imageExtent = extent,
         .imageArrayLayers = 1,
-        .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+        .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
         .imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
         .preTransform = capabilities.currentTransform,
         .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
@@ -322,7 +322,7 @@ void Window::createSwapChain()
                 .layers = 1,
                 .elements = 1,
                 .samples = 1,
-                .usage = Gfx::SE_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+                .usage = Gfx::SE_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | Gfx::SE_IMAGE_USAGE_TRANSFER_DST_BIT,
             }, swapChainImages[i]);
         imageAvailableSemaphores[i] = new Semaphore(graphics);
         renderingDoneSemaphores[i] = new Semaphore(graphics);

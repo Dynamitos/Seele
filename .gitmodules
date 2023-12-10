@@ -40,3 +40,6 @@
 [submodule "external/odeint"]
 	path = external/odeint
 	url = https://github.com/headmyshoulder/odeint-v2.git
+[submodule "external/vcpkg"]
+	path = external/vcpkg
+	url = https://github.com/Microsoft/vcpkg.git

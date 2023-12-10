@@ -17,24 +17,24 @@ public:
 private:
     struct Body
     {
-        entt::entity id;
-        float inverseMass;
-        Vector centerOfMass;
-        Matrix3 iBody, iBodyInv;
-        Vector scale;
+        entt::entity id = entt::entity();
+        float inverseMass = 0.0f;
+        Vector centerOfMass = Vector();
+        Matrix3 iBody = Matrix3(), iBodyInv = Matrix3();
+        Vector scale = Vector();
 
-        Vector x;
-        Quaternion q;
-        Vector P;
-        Vector L;
+        Vector x = Vector();
+        Quaternion q = Quaternion();
+        Vector P = Vector();
+        Vector L = Vector();
 
-        Matrix3 iInv;
-        Matrix3 R;
-        Vector v;
-        Vector omega;
-        Vector force;
-        Vector torque;
-        Matrix4 matrix;
+        Matrix3 iInv = Matrix3();
+        Matrix3 R = Matrix3();
+        Vector v = Vector();
+        Vector omega = Vector();
+        Vector force = Vector();
+        Vector torque = Vector();
+        Matrix4 matrix = Matrix4();
         Vector ptVelocity(Vector p) const {return v + glm::cross(omega, p - x + centerOfMass);}
         void updateMatrix() {
             Matrix4 scaleMatrix = glm::scale(Matrix4(1), scale);

@@ -1,5 +1,4 @@
 #include "PhysicsSystem.h"
-#include <boost/numeric/odeint.hpp>
 #include <random>
 
 using namespace Seele;
@@ -214,8 +213,9 @@ Array<PhysicsSystem::Body> PhysicsSystem::integratePhysics(const Array<Body>& bo
             *xdot++ = result[i].torque.z;
         }
     };
-    boost::numeric::odeint::stepper_rk4<Array<float>, float> stepper;
-    boost::numeric::odeint::integrate_const(stepper, dxdt, buffer, t0, tdelta, tdelta);
+    //TODO
+    //boost::numeric::odeint::runge_kutta4<Array<float>, float> stepper;
+    //boost::numeric::odeint::integrate_const(stepper, dxdt, buffer, t0, tdelta, tdelta);
     deserializeArray(result, buffer);
     return result;
 }

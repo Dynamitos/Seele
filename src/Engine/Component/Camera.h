@@ -30,7 +30,6 @@ struct Camera
     void buildViewMatrix();
     Matrix4 viewMatrix;
     Vector cameraPos;
-    Vector cameraDirection;
     //Transforms relative to actor
     float yaw;
     float pitch;
