@@ -1,6 +1,5 @@
 target_sources(Engine
     PRIVATE
-        AABB.h
         BoxCollider.h
         Camera.h
         Camera.cpp
@@ -24,7 +23,6 @@ target_sources(Engine
 target_sources(Engine
     PUBLIC FILE_SET HEADERS
         FILES
-            AABB.h
             BoxCollider.h
             Camera.h
             Collider.h

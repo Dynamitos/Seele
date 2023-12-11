@@ -456,9 +456,12 @@ public:
         {
             return;
         }
-        for(size_type i = 0; i < arraySize; ++i)
+        if constexpr (!std::is_trivially_destructible_v<T>)
         {
-            std::allocator_traits<allocator_type>::destroy(allocator, &_data[i]);
+            for (size_type i = 0; i < arraySize; ++i)
+            {
+                std::allocator_traits<allocator_type>::destroy(allocator, &_data[i]);
+            }
         }
         deallocateArray(_data, allocated);
         _data = nullptr;
@@ -596,9 +599,13 @@ private:
             if(newSize < arraySize)
             {
                 // But since we are sizing down we destruct some of them
-                for(size_type i = newSize; i < arraySize; ++i)
+
+                if constexpr (!std::is_trivially_destructible_v<T>)
                 {
-                    std::allocator_traits<allocator_type>::destroy(allocator, &_data[i]);
+                    for (size_type i = newSize; i < arraySize; ++i)
+                    {
+                        std::allocator_traits<allocator_type>::destroy(allocator, &_data[i]);
+                    }
                 }
             }
             else

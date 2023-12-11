@@ -70,21 +70,21 @@ struct TextureCreateInfo
 struct SamplerCreateInfo
 {
     Gfx::SeSamplerCreateFlags flags;
-    Gfx::SeFilter             magFilter;
-    Gfx::SeFilter             minFilter;
-    Gfx::SeSamplerMipmapMode  mipmapMode;
-    Gfx::SeSamplerAddressMode addressModeU;
-    Gfx::SeSamplerAddressMode addressModeV;
-    Gfx::SeSamplerAddressMode addressModeW;
-    float                     mipLodBias;
-    uint32                    anisotropyEnable;
-    float                     maxAnisotropy;
-    uint32                    compareEnable;
-    Gfx::SeCompareOp          compareOp;
-    float                     minLod;
-    float                     maxLod;
-    Gfx::SeBorderColor        borderColor;
-    uint32                    unnormalizedCoordinates;
+    Gfx::SeFilter             magFilter = Gfx::SE_FILTER_LINEAR;
+    Gfx::SeFilter             minFilter = Gfx::SE_FILTER_LINEAR;
+    Gfx::SeSamplerMipmapMode  mipmapMode = Gfx::SE_SAMPLER_MIPMAP_MODE_LINEAR;
+    Gfx::SeSamplerAddressMode addressModeU = Gfx::SE_SAMPLER_ADDRESS_MODE_REPEAT;
+    Gfx::SeSamplerAddressMode addressModeV = Gfx::SE_SAMPLER_ADDRESS_MODE_REPEAT;
+    Gfx::SeSamplerAddressMode addressModeW = Gfx::SE_SAMPLER_ADDRESS_MODE_REPEAT;
+    float                     mipLodBias = 0.0f;
+    uint32                    anisotropyEnable = 0;
+    float                     maxAnisotropy = 0.0f;
+    uint32                    compareEnable = 0;
+    Gfx::SeCompareOp          compareOp = Gfx::SE_COMPARE_OP_NEVER;
+    float                     minLod = 0.0f;
+    float                     maxLod = 0.0f;
+    Gfx::SeBorderColor        borderColor = Gfx::SE_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
+    uint32                    unnormalizedCoordinates = 0;
 };
 struct VertexBufferCreateInfo
 {

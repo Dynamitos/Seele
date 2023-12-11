@@ -1,7 +1,7 @@
 #pragma once
 #include <entt/entt.hpp>
 #include "Containers/Array.h"
-#include "Component/AABB.h"
+#include "Math/AABB.h"
 #include "Component/Collider.h"
 #include "Containers/Pair.h"
 

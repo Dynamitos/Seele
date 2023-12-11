@@ -97,9 +97,11 @@ void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet>
     {
         uint32 numMeshlets = std::min<uint32>(512, loadedMeshlets.size() - currentMesh);
         uint32 meshletOffset = meshlets.size();
+        AABB meshAABB;
         for (uint32 i = 0; i < numMeshlets; ++i)
         {
             Meshlet& m = loadedMeshlets[currentMesh + i];
+            meshAABB = meshAABB.combine(m.boundingBox);
             uint32 vertexOffset = vertexIndices.size();
             vertexIndices.resize(vertexOffset + m.numVertices);
             std::memcpy(vertexIndices.data() + vertexOffset, m.uniqueVertices, m.numVertices * sizeof(uint32));
@@ -107,7 +109,7 @@ void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet>
             primitiveIndices.resize(primitiveOffset + (m.numPrimitives * 3));
             std::memcpy(primitiveIndices.data() + primitiveOffset, m.primitiveLayout, m.numPrimitives * 3 * sizeof(uint8));
             meshlets.add(MeshletDescription{
-                .boundingBox = MeshletAABB(),
+                .boundingBox = m.boundingBox,
                 .vertexCount = m.numVertices,
                 .primitiveCount = m.numPrimitives,
                 .vertexOffset = vertexOffset,
@@ -115,6 +117,7 @@ void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet>
                 });
         }
         meshData[id].add(MeshData{
+            .boundingBox = meshAABB,
             .numMeshlets = numMeshlets,
             .meshletOffset = meshletOffset,
             .indicesOffset = static_cast<uint32>(meshOffsets[id]),
@@ -230,14 +233,14 @@ VertexData::VertexData()
 {
 }
 
-void Seele::Meshlet::buildFromIndexBuffer(const Array<uint32>& indices, Array<Meshlet>& meshlets)
+void Meshlet::build(const Array<Vector>& positions, const Array<uint32>& indices, Array<Meshlet>& meshlets)
 {
     std::set<uint32> uniqueVertices;
     Meshlet current = {
         .numVertices = 0,
         .numPrimitives = 0,
     };
-    auto insertAndGetIndex = [&uniqueVertices, &current](uint32 index) -> int8_t
+    auto insertAndGetIndex = [&positions, &uniqueVertices, &current](uint32 index) -> int8_t
         {
             auto [it, inserted] = uniqueVertices.insert(index);
             if (inserted)
@@ -247,6 +250,7 @@ void Seele::Meshlet::buildFromIndexBuffer(const Array<uint32>& indices, Array<Me
                     return -1;
                 }
                 current.uniqueVertices[current.numVertices] = index;
+                current.boundingBox.adjust(positions[index]);
                 return current.numVertices++;
             }
             else

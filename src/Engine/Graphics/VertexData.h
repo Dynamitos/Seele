@@ -6,6 +6,7 @@
 #include "Graphics/Command.h"
 #include "Graphics/Descriptor.h"
 #include "Graphics/Buffer.h"
+#include "Math/AABB.h"
 
 namespace Seele
 {
@@ -24,11 +25,12 @@ struct MeshId
 };
 struct Meshlet
 {
+    AABB boundingBox;
     uint32 uniqueVertices[Gfx::numVerticesPerMeshlet]; // unique vertiex indices in the vertex data
     uint8 primitiveLayout[Gfx::numPrimitivesPerMeshlet * 3]; // indices into the uniqueVertices array, only uint8 needed
     uint32 numVertices;
     uint32 numPrimitives;
-    static void buildFromIndexBuffer(const Array<uint32>& indices, Array<Meshlet>& meshlets);
+    static void build(const Array<Vector>& positions, const Array<uint32>& indices, Array<Meshlet>& meshlets);
 };
 class VertexData
 {
@@ -39,6 +41,7 @@ public:
     };
     struct MeshData
     {
+        AABB boundingBox;
         uint32 numMeshlets = 0;
         uint32 meshletOffset = 0;
         uint32 firstIndex = 0;
@@ -87,16 +90,9 @@ protected:
     virtual void resizeBuffers() = 0;
     virtual void updateBuffers() = 0;
     VertexData();
-    struct MeshletAABB
-    {
-        Vector min;
-        float pad0;
-        Vector max;
-        float pad1;
-    };
     struct MeshletDescription
     {
-        MeshletAABB boundingBox;
+        AABB boundingBox;
         uint32_t vertexCount;
         uint32_t primitiveCount;
         uint32_t vertexOffset;

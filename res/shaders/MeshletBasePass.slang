@@ -29,16 +29,16 @@ void taskMain(
 		localToClip = mul(pViewParams.projectionMatrix, mul(pViewParams.viewMatrix, instance.transformMatrix));
 		// Left
 		viewFrustum.sides[0].n = float3(1, 0, 0);
-		viewFrustum.sides[0].d = -1;
+		viewFrustum.sides[0].d = -0.8;
 		// Right
 		viewFrustum.sides[1].n = float3(-1, 0, 0);
-		viewFrustum.sides[1].d = 1;
+		viewFrustum.sides[1].d = 0.8;
 		// Top
 		viewFrustum.sides[2].n = float3(0, -1, 0);
-		viewFrustum.sides[2].d = 1;
+		viewFrustum.sides[2].d = 0.8;
 		// Bottom
 		viewFrustum.sides[1].n = float3(0, 1, 0);
-		viewFrustum.sides[1].d = -1;
+		viewFrustum.sides[1].d = -0.8;
 		// Base
 		viewFrustum.basePlane.n = float3(0, 0, 1);
 		viewFrustum.basePlane.d = 0;
@@ -51,7 +51,7 @@ void taskMain(
 		{
 			uint m = mesh.meshletOffset + i;
 			MeshletDescription meshlet = pScene.meshletInfos[m];
-			//if(meshlet.boundingBox.insideFrustum(localToClip, viewFrustum))
+			if(meshlet.boundingBox.insideFrustum(localToClip, viewFrustum))
 			{
 				uint index;
 				InterlockedAdd(head, 1, index);
@@ -75,13 +75,13 @@ struct PrimitiveAttributes
 void meshMain(
 	in uint threadID: SV_GroupIndex,
 	in uint groupID: SV_GroupID,
-	//in payload MeshPayload meshPayload,
+	in payload MeshPayload meshPayload,
 	out Vertices<FragmentParameter, MAX_VERTICES> vertices, 
 	out Indices<uint3, MAX_PRIMITIVES> indices
 ){
-	InstanceData inst = pScene.instances[0];//meshPayload.instanceId[groupID]];
-	MeshData md = pScene.meshData[0];//meshPayload.instanceId[groupID]];
-	MeshletDescription m = pScene.meshletInfos[0];//meshPayload.meshletId[groupID]];
+	InstanceData inst = pScene.instances[meshPayload.instanceId[groupID]];
+	MeshData md = pScene.meshData[meshPayload.instanceId[groupID]];
+	MeshletDescription m = pScene.meshletInfos[meshPayload.meshletId[groupID]];
 	SetMeshOutputCounts(m.vertexCount, m.primitiveCount);
 	
 	uint p = min(threadID, m.primitiveCount - 1);

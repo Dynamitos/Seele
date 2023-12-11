@@ -11,6 +11,7 @@ struct MeshletDescription
 
 struct MeshData
 {
+	AABB boundingBox;
     uint numMeshlets;
     uint meshletOffset;
     uint firstIndex;

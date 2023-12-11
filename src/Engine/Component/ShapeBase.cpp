@@ -1,5 +1,5 @@
 #include "ShapeBase.h"
-#include "AABB.h"
+#include "Math/AABB.h"
 
 using namespace Seele;
 using namespace Seele::Component;

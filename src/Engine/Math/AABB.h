@@ -1,6 +1,6 @@
 #pragma once
-#include "Math/Vector.h"
-#include "Math/Matrix.h"
+#include "Vector.h"
+#include "Matrix.h"
 #include "Containers/Array.h"
 #include "Graphics/DebugVertex.h"
 namespace Seele
@@ -8,7 +8,9 @@ namespace Seele
 struct AABB
 {
     Vector min = Vector(std::numeric_limits<float>::max());
+    float pad0; // So that it can be used directly in shaders
     Vector max = Vector(std::numeric_limits<float>::lowest());// cause of reasons
+    float pad1;
     void visualize(Array<DebugVertex>& vertices) const
     {
         StaticArray<DebugVertex, 8> corners;

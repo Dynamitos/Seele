@@ -1,5 +1,6 @@
 target_sources(Engine
 	PRIVATE
+		AABB.h
 		Math.h
 		Matrix.h
 		Transform.h
@@ -10,6 +11,7 @@ target_sources(Engine
 target_sources(Engine
 	PUBLIC FILE_SET HEADERS
 		FILES
+			AABB.h
 			Math.h
 			Matrix.h
 			Transform.h
