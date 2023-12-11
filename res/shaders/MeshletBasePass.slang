@@ -75,13 +75,13 @@ struct PrimitiveAttributes
 void meshMain(
 	in uint threadID: SV_GroupIndex,
 	in uint groupID: SV_GroupID,
-	in payload MeshPayload meshPayload,
+	//in payload MeshPayload meshPayload,
 	out Vertices<FragmentParameter, MAX_VERTICES> vertices, 
 	out Indices<uint3, MAX_PRIMITIVES> indices
 ){
-	InstanceData inst = pScene.instances[meshPayload.instanceId[groupID]];
-	MeshData md = pScene.meshData[meshPayload.instanceId[groupID]];
-	MeshletDescription m = pScene.meshletInfos[meshPayload.meshletId[groupID]];
+	InstanceData inst = pScene.instances[0];//meshPayload.instanceId[groupID]];
+	MeshData md = pScene.meshData[0];//meshPayload.instanceId[groupID]];
+	MeshletDescription m = pScene.meshletInfos[0];//meshPayload.meshletId[groupID]];
 	SetMeshOutputCounts(m.vertexCount, m.primitiveCount);
 	
 	uint p = min(threadID, m.primitiveCount - 1);
@@ -118,7 +118,7 @@ void meshMain(
 	{
 		uint v = min(i, m.vertexCount - 1);
 		{
-			int vertexIndex = pScene.vertexIndices[m.vertexOffset + v];
+			uint vertexIndex = pScene.vertexIndices[m.vertexOffset + v];
 			vertices[v] = pVertexData.getAttributes(md.indicesOffset + vertexIndex).getParameter(inst.transformMatrix);
 		}
 	}

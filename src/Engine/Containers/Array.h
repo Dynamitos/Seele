@@ -495,7 +495,14 @@ public:
         if(new_cap > allocated)
         {
             T* temp = allocateArray(new_cap);
-            std::uninitialized_move_n(begin(), arraySize, temp);
+            if constexpr (std::is_trivially_copyable_v<T>)
+            {
+                std::memcpy(temp, _data, sizeof(T) * arraySize);
+            }
+            else
+            {
+                std::uninitialized_move_n(begin(), arraySize, temp);
+            }
             _data = temp;
         }
         allocated = new_cap;
