@@ -267,7 +267,6 @@ void Buffer::unmap()
                 .size = pending.size,
             };
             vkCmdCopyBuffer(cmdHandle, stagingBuffer->getHandle(), buffers[currentBuffer].buffer, 1, &region);
-            graphics->getQueueCommands(owner)->submitCommands();
         }
         //requestOwnershipTransfer(pending.prevQueue);
         pendingBuffers.erase(this);
@@ -328,7 +327,6 @@ void UniformBuffer::unmap()
         std::memset(&region, 0, sizeof(VkBufferCopy));
         region.size = Vulkan::Buffer::size;
         vkCmdCopyBuffer(cmdHandle, dedicatedStagingBuffer->getHandle(), buffers[currentBuffer].buffer, 1, &region);
-        graphics->getQueueCommands(currentOwner)->submitCommands();
     }
     else
     {
@@ -416,7 +414,6 @@ void ShaderBuffer::unmap()
             .size = Vulkan::Buffer::size,
         };
         vkCmdCopyBuffer(cmdHandle, dedicatedStagingBuffer->getHandle(), buffers[currentBuffer].buffer, 1, &region);
-        graphics->getQueueCommands(currentOwner)->submitCommands();
     }
     else
     {

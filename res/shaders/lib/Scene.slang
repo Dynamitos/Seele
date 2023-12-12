@@ -2,7 +2,6 @@ import AABB;
 
 struct MeshletDescription
 {
-	AABB boundingBox;
 	uint32_t vertexCount;
 	uint32_t primitiveCount;
 	uint32_t vertexOffset;
@@ -11,12 +10,11 @@ struct MeshletDescription
 
 struct MeshData
 {
-	AABB boundingBox;
-    uint numMeshlets;
-    uint meshletOffset;
-    uint firstIndex;
-    uint numIndices;
-    uint indicesOffset;
+    uint32_t meshletOffset = 0;
+    uint16_t numMeshlets = 0;
+    uint16_t indicesOffset = 0;
+    uint32_t firstIndex = 0;
+    uint32_t numIndices = 0;
 };
 
 static const uint MAX_VERTICES = 64;

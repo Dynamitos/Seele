@@ -97,11 +97,11 @@ void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet>
     {
         uint32 numMeshlets = std::min<uint32>(512, loadedMeshlets.size() - currentMesh);
         uint32 meshletOffset = meshlets.size();
-        AABB meshAABB;
+        //AABB meshAABB;
         for (uint32 i = 0; i < numMeshlets; ++i)
         {
             Meshlet& m = loadedMeshlets[currentMesh + i];
-            meshAABB = meshAABB.combine(m.boundingBox);
+            //meshAABB = meshAABB.combine(m.boundingBox);
             uint32 vertexOffset = vertexIndices.size();
             vertexIndices.resize(vertexOffset + m.numVertices);
             std::memcpy(vertexIndices.data() + vertexOffset, m.uniqueVertices, m.numVertices * sizeof(uint32));
@@ -109,7 +109,6 @@ void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet>
             primitiveIndices.resize(primitiveOffset + (m.numPrimitives * 3));
             std::memcpy(primitiveIndices.data() + primitiveOffset, m.primitiveLayout, m.numPrimitives * 3 * sizeof(uint8));
             meshlets.add(MeshletDescription{
-                .boundingBox = m.boundingBox,
                 .vertexCount = m.numVertices,
                 .primitiveCount = m.numPrimitives,
                 .vertexOffset = vertexOffset,
@@ -117,10 +116,9 @@ void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet>
                 });
         }
         meshData[id].add(MeshData{
-            .boundingBox = meshAABB,
-            .numMeshlets = numMeshlets,
             .meshletOffset = meshletOffset,
-            .indicesOffset = static_cast<uint32>(meshOffsets[id]),
+            .numMeshlets = (uint16)numMeshlets,
+            .indicesOffset = (uint16)meshOffsets[id],
             });
         currentMesh += numMeshlets;
     }
@@ -223,6 +221,17 @@ void Seele::VertexData::init(Gfx::PGraphics _graphics)
     instanceDataLayout->create();
     resizeBuffers();
     graphics->getShaderCompiler()->registerVertexData(this);
+}
+
+void VertexData::destroy()
+{
+    instanceDataLayout = nullptr;
+    meshletBuffer = nullptr;
+    vertexIndicesBuffer = nullptr;
+    primitiveIndicesBuffer = nullptr;
+    indexBuffer = nullptr;
+    meshData.clear();
+    materialData.clear();
 }
 
 VertexData::VertexData()

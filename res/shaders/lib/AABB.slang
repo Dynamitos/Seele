@@ -5,7 +5,7 @@ struct AABB
 	float3 min;
     float pad0;
 	float3 max;
-    float3 pad1;
+    float pad1;
 	bool insideFrustum(float4x4 transform, Frustum frustum)
 	{
 		float3 corners[8];

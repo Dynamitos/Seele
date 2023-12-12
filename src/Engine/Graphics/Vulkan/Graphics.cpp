@@ -407,7 +407,9 @@ void Graphics::pickPhysicalDevice()
     VkPhysicalDevice bestDevice = VK_NULL_HANDLE;
     uint32 deviceRating = 0;
     features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-    features.pNext = &features12;
+    features.pNext = &features11;
+    features11.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
+    features11.pNext = &features12;
     features12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
     features12.pNext = nullptr;
     for (auto dev : physicalDevices)
@@ -446,7 +448,7 @@ void Graphics::pickPhysicalDevice()
         {
             if (std::strcmp(VK_EXT_MESH_SHADER_EXTENSION_NAME, extensionProps[i].extensionName) == 0)
             {
-                meshShadingEnabled = true;
+                //meshShadingEnabled = true;
                 break;
             }
         }
@@ -565,7 +567,7 @@ void Graphics::createDevice(GraphicsInitializer initializer)
     }
     VkDeviceCreateInfo deviceInfo = {
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-        .pNext = &features12,
+        .pNext = &features11,
         .queueCreateInfoCount = (uint32)queueInfos.size(),
         .pQueueCreateInfos = queueInfos.data(),
         .enabledExtensionCount = (uint32)initializer.deviceExtensions.size(),

@@ -6,7 +6,6 @@ using namespace Seele;
 
 extern List<VertexData*> vertexDataList;
 
-
 StaticMeshVertexData::StaticMeshVertexData()
 {
     vertexDataList.add(this);
@@ -126,6 +125,18 @@ void StaticMeshVertexData::init(Gfx::PGraphics graphics)
     descriptorLayout->addDescriptorBinding(5, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
     descriptorLayout->create();
     descriptorSet = descriptorLayout->allocateDescriptorSet();
+}
+
+void StaticMeshVertexData::destroy()
+{
+    VertexData::destroy();
+    positions = nullptr;
+    texCoords = nullptr;
+    normals = nullptr;
+    tangents = nullptr;
+    biTangents = nullptr;
+    colors = nullptr;
+    descriptorLayout = nullptr;
 }
 
 void StaticMeshVertexData::bindBuffers(Gfx::PRenderCommand)

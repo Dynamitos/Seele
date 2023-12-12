@@ -93,6 +93,7 @@ protected:
     thread_local static OCommandPool dedicatedTransferCommands;
     VkPhysicalDeviceProperties props;
     VkPhysicalDeviceFeatures2 features;
+    VkPhysicalDeviceVulkan11Features features11;
     VkPhysicalDeviceVulkan12Features features12;
     VkDebugReportCallbackEXT callback;
     Map<uint32, OFramebuffer> allocatedFramebuffers;

@@ -17,6 +17,9 @@
 using namespace Seele;
 using namespace Seele::Editor;
 
+// make it global so it gets deleted last and automatically
+static Gfx::OGraphics graphics;
+
 int main()
 {
 #ifdef WIN32
@@ -31,7 +34,7 @@ int main()
     std::string gameName = "TrackClear";
     std::filesystem::path cmakePath = outputPath / "cmake";
 
-    Gfx::OGraphics graphics = new Vulkan::Graphics();
+    graphics = new Vulkan::Graphics();
 
     GraphicsInitializer initializer;
     graphics->init(initializer);
@@ -246,7 +249,7 @@ int main()
     {
         windowManager->render();
     }
-    vd->~StaticMeshVertexData();
+    vd->destroy();
     //export game
     if (false)
     {

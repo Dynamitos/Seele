@@ -21,6 +21,7 @@ public:
 	virtual void serializeMesh(MeshId id, uint64 numVertices, ArchiveBuffer& buffer) override;
 	virtual void deserializeMesh(MeshId id, ArchiveBuffer& buffer) override;
 	virtual void init(Gfx::PGraphics graphics) override;
+	virtual void destroy() override;
 	virtual void bindBuffers(Gfx::PRenderCommand command) override;
 	virtual Gfx::PDescriptorLayout getVertexDataLayout() override;
 	virtual Gfx::PDescriptorSet getVertexDataSet() override;
