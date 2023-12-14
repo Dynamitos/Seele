@@ -52,7 +52,7 @@ void Queue::submitCommandBuffer(PCommand command, const Array<VkSemaphore>& sign
 
     if (Gfx::waitIdleOnSubmit)
     {
-        command->fence->wait(200 * 1000ull);
+        command->fence->wait(1000 * 1000ull);
     }
 
     command->checkFence();

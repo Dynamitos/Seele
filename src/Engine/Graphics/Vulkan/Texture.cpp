@@ -124,7 +124,7 @@ TextureBase::TextureBase(PGraphics graphics, VkImageViewType viewType,
     if(sourceData.size > 0)
     {
         changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-        OStagingBuffer staging = graphics->getStagingManager()->create(sourceData.size);
+        OStagingBuffer staging = graphics->getStagingManager()->create(sourceData.size, owner);
         void* data = staging->map();
         std::memcpy(data, sourceData.data, sourceData.size);
         staging->flush();
@@ -228,7 +228,7 @@ void TextureBase::download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Arra
 {
     uint64 imageSize = width * height * depth * Gfx::getFormatInfo(format).blockSize;
 
-    OStagingBuffer stagingbuffer = graphics->getStagingManager()->create(imageSize);
+    OStagingBuffer stagingbuffer = graphics->getStagingManager()->create(imageSize, currentOwner);
     auto prevlayout = layout;
     changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
     PCommand cmdBuffer = graphics->getQueueCommands(currentOwner)->getCommands();

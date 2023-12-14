@@ -145,7 +145,7 @@ DEFINE_REF(Allocator)
 class StagingBuffer : public Gfx::QueueOwnedResource
 {
 public:
-	StagingBuffer(PGraphics graphics, OSubAllocation allocation, VkBuffer buffer, VkDeviceSize size);
+	StagingBuffer(PGraphics graphics, OSubAllocation allocation, VkBuffer buffer, VkDeviceSize size, Gfx::QueueType owner);
 	~StagingBuffer();
 	void* map();
 	void flush();
@@ -176,7 +176,7 @@ class StagingManager
 public:
 	StagingManager(PGraphics graphics, PAllocator pool);
 	~StagingManager();
-	OStagingBuffer create(uint64 size);
+	OStagingBuffer create(uint64 size, Gfx::QueueType owner);
 
 private:
 	PGraphics graphics;

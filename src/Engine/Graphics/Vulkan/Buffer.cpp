@@ -176,20 +176,6 @@ void * Buffer::mapRegion(uint64 regionOffset, uint64 regionSize, bool writeOnly)
 {
     void *data = nullptr;
 
-    /*if (bVolatile)
-    {
-        if (lockMode == RLM_ReadOnly)
-        {
-            assert(0);
-        }
-        else
-        {
-            throw new std::logic_error("TODO implement volatile buffers");
-            //device->getRHIDevice()->getTemp
-        }
-    }*/
-    //assert(bStatic || bDynamic || bUAV);
-
     PendingBuffer pending;
     pending.writeOnly = writeOnly;
     pending.prevQueue = owner;
@@ -198,7 +184,7 @@ void * Buffer::mapRegion(uint64 regionOffset, uint64 regionSize, bool writeOnly)
     if (writeOnly)
     {
         //requestOwnershipTransfer(Gfx::QueueType::DEDICATED_TRANSFER);
-        OStagingBuffer stagingBuffer = graphics->getStagingManager()->create(regionSize);
+        OStagingBuffer stagingBuffer = graphics->getStagingManager()->create(regionSize, owner);
         data = stagingBuffer->map();
         pending.stagingBuffer = std::move(stagingBuffer);
     }
@@ -223,7 +209,7 @@ void * Buffer::mapRegion(uint64 regionOffset, uint64 regionSize, bool writeOnly)
         };
         vkCmdPipelineBarrier(handle, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 1, &barrier, 0, nullptr);
 
-        OStagingBuffer stagingBuffer = graphics->getStagingManager()->create(size);
+        OStagingBuffer stagingBuffer = graphics->getStagingManager()->create(size, owner);
 
         VkBufferCopy regions = {
             .srcOffset = 0,
@@ -280,7 +266,7 @@ UniformBuffer::UniformBuffer(PGraphics graphics, const UniformBufferCreateInfo &
 {
     if(createInfo.dynamic)
     {
-        dedicatedStagingBuffer = graphics->getStagingManager()->create(createInfo.sourceData.size);
+        dedicatedStagingBuffer = graphics->getStagingManager()->create(createInfo.sourceData.size, owner);
     }
     if (createInfo.sourceData.data != nullptr)
     {
@@ -367,7 +353,7 @@ ShaderBuffer::ShaderBuffer(PGraphics graphics, const ShaderBufferCreateInfo &sou
 {
     if(sourceData.dynamic)
     {
-        dedicatedStagingBuffer = graphics->getStagingManager()->create(sourceData.sourceData.size);
+        dedicatedStagingBuffer = graphics->getStagingManager()->create(sourceData.sourceData.size, currentOwner);
     }
     if (sourceData.sourceData.data != nullptr)
     {

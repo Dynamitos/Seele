@@ -41,13 +41,13 @@ public:
     };
     struct MeshData
     {
+        uint32 numMeshlets = 0;
         uint32 meshletOffset = 0;
-        uint16 numMeshlets = 0;
-        uint16 indicesOffset = 0;
         uint32 firstIndex = 0;
         uint32 numIndices = 0;
+        uint32 indicesOffset = 0;
+        uint32 pad0[3];
     };
-    static_assert(sizeof(MeshData) == 16);
     struct MeshInstanceData
     {
         InstanceData instance;
@@ -93,6 +93,7 @@ protected:
     VertexData();
     struct MeshletDescription
     {
+        AABB boundingBox;
         uint32_t vertexCount;
         uint32_t primitiveCount;
         uint32_t vertexOffset;

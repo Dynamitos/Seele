@@ -116,9 +116,9 @@ void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet>
                 });
         }
         meshData[id].add(MeshData{
+            .numMeshlets = numMeshlets,
             .meshletOffset = meshletOffset,
-            .numMeshlets = (uint16)numMeshlets,
-            .indicesOffset = (uint16)meshOffsets[id],
+            .indicesOffset = (uint32)meshOffsets[id],
             });
         currentMesh += numMeshlets;
     }

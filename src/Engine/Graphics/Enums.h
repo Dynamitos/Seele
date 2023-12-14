@@ -4,6 +4,7 @@
 
 namespace Seele
 {
+// Input codes matching GLFW for convenience, since its the primary windowing system
 enum class KeyCode : size_t
 {
     /* Printable keys */
@@ -164,7 +165,7 @@ typedef uint32 KeyModifierFlags;
 namespace Gfx
 {
 static constexpr bool useAsyncCompute = true;
-static constexpr bool waitIdleOnSubmit = false;
+static constexpr bool waitIdleOnSubmit = true;
 static constexpr bool useMeshShading = true;
 static constexpr uint32 numFramesBuffered = 3;
 

@@ -246,8 +246,8 @@ uint32 Allocator::findMemoryType(uint32 typeFilter, VkMemoryPropertyFlags proper
     throw std::runtime_error("error finding memory");
 }
 
-StagingBuffer::StagingBuffer(PGraphics graphics, OSubAllocation allocation, VkBuffer buffer, VkDeviceSize size)
-    : QueueOwnedResource(graphics->getFamilyMapping(), Gfx::QueueType::DEDICATED_TRANSFER)
+StagingBuffer::StagingBuffer(PGraphics graphics, OSubAllocation allocation, VkBuffer buffer, VkDeviceSize size, Gfx::QueueType owner)
+    : QueueOwnedResource(graphics->getFamilyMapping(), owner)
     , graphics(graphics)
     , allocation(std::move(allocation))
     , buffer(buffer)
@@ -258,10 +258,9 @@ StagingBuffer::StagingBuffer(PGraphics graphics, OSubAllocation allocation, VkBu
 StagingBuffer::~StagingBuffer()
 {
     graphics->getDestructionManager()->queueBuffer(
-        graphics->getDedicatedTransferCommands()->getCommands(), buffer);
+        graphics->getQueueCommands(currentOwner)->getCommands(), buffer);
     graphics->getDestructionManager()->queueAllocation(
-        graphics->getDedicatedTransferCommands()->getCommands(), std::move(allocation));
-    graphics->getDedicatedTransferCommands()->submitCommands();
+        graphics->getQueueCommands(currentOwner)->getCommands(), std::move(allocation));
 }
 
 void* StagingBuffer::map()
@@ -296,7 +295,19 @@ void StagingBuffer::executeOwnershipBarrier(Gfx::QueueType newOwner)
 void StagingBuffer::executePipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage,
     Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage)
 {
-    assert(false);
+    PCommand commandBuffer = graphics->getQueueCommands(currentOwner)->getCommands();
+    VkBufferMemoryBarrier barrier = {
+        .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
+        .pNext = nullptr,
+        .srcAccessMask = srcAccess,
+        .dstAccessMask = dstAccess,
+        .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+        .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+        .buffer = buffer,
+        .offset = 0,
+        .size = size,
+    };
+    vkCmdPipelineBarrier(commandBuffer->getHandle(), srcStage, dstStage, 0, 0, nullptr, 1, &barrier, 0, nullptr);
 }
 
 StagingManager::StagingManager(PGraphics graphics, PAllocator pool)
@@ -308,7 +319,7 @@ StagingManager::~StagingManager()
 {
 }
 
-OStagingBuffer StagingManager::create(uint64 size)
+OStagingBuffer StagingManager::create(uint64 size, Gfx::QueueType owner)
 {
     //std::cout << "Creating new stagingbuffer" << std::endl;
     uint32 queueIndex = graphics->getFamilyMapping().getQueueTypeFamilyIndex(Gfx::QueueType::DEDICATED_TRANSFER);
@@ -345,7 +356,8 @@ OStagingBuffer StagingManager::create(uint64 size)
         graphics,
         pool->allocate(memReqs, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT, buffer),
         buffer,
-        size
+        size,
+        owner
     );
     vkBindBufferMemory(graphics->getDevice(), buffer, stagingBuffer->getMemory(), stagingBuffer->getOffset());
     
