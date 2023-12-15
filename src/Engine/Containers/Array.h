@@ -587,8 +587,8 @@ private:
             deallocateArray(_data, arraySize);
             _data = tempArray;
         }
-        std::allocator_traits<allocator_type>::construct(allocator, &_data[arraySize++], std::forward<Type>(t));
-        return _data[arraySize - 1];
+        std::allocator_traits<allocator_type>::construct(allocator, &_data[arraySize], std::forward<Type>(t));
+        return _data[arraySize++];
     }
     template<typename Type>
     void resizeInternal(size_type newSize, const Type& value) noexcept

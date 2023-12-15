@@ -114,7 +114,6 @@ void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet>
                 .primitiveCount = m.numPrimitives,
                 .vertexOffset = vertexOffset,
                 .primitiveOffset = primitiveOffset,
-                .color = Vector((float)rand() / RAND_MAX, (float)rand() / RAND_MAX, (float)rand() / RAND_MAX),
                 });
         }
         meshData[id].add(MeshData{
@@ -244,70 +243,66 @@ VertexData::VertexData()
 {
 }
 
-void Meshlet::build(const Array<Vector>& positions, const Array<uint32>& indices, Array<Meshlet>& meshlets)
+void Meshlet::build(const Array<uint32>& indices, Array<Meshlet>& meshlets)
 {
-    std::set<uint32> uniqueVertices;
     Meshlet current = {
         .numVertices = 0,
         .numPrimitives = 0,
     };
-    auto insertAndGetIndex = [&positions, &uniqueVertices, &current](uint32 index) -> int8_t
+    auto findIndex = [&current](uint32 index) -> int {
+        for (uint32 i = 0; i < current.numVertices; ++i)
         {
-            auto [it, inserted] = uniqueVertices.insert(index);
-            if (inserted)
+            if (current.uniqueVertices[i] == index)
             {
-                if (current.numVertices == Gfx::numVerticesPerMeshlet)
-                {
-                    return -1;
-                }
-                current.uniqueVertices[current.numVertices] = index;
-                current.boundingBox.adjust(positions[index]);
-                return current.numVertices++;
+                return i;
             }
-            else
-            {
-                for (uint32 i = 0; i < current.numVertices; ++i)
-                {
-                    if (current.uniqueVertices[i] == index)
-                    {
-                        return i;
-                    }
-                }
-                // it could be in unique vertices but not in meshlet vertices
-                return -1;
-            }
+        }
+        if (current.numVertices == Gfx::numVerticesPerMeshlet)
+        {
+            return -1;
+        }
+        current.uniqueVertices[current.numVertices] = index;
+        return current.numVertices++;
         };
-    auto completeMeshlet = [&meshlets, &current, &uniqueVertices]() {
+    auto completeMeshlet = [&meshlets, &current]() {
         meshlets.add(current);
         current = {
             .numVertices = 0,
             .numPrimitives = 0,
         };
-        uniqueVertices.clear();
         };
     for (size_t faceIndex = 0; faceIndex < indices.size() / 3; ++faceIndex)
     {
-        auto i1 = insertAndGetIndex(indices[faceIndex * 3 + 0]);
-        auto i2 = insertAndGetIndex(indices[faceIndex * 3 + 1]);
-        auto i3 = insertAndGetIndex(indices[faceIndex * 3 + 2]);
-        if (i1 == -1 || i2 == -1 || i3 == -1)
+        int f1 = findIndex(indices[faceIndex * 3 + 0]);
+        int f2 = findIndex(indices[faceIndex * 3 + 1]);
+        int f3 = findIndex(indices[faceIndex * 3 + 2]);
+
+        if (f1 == -1 || f2 == -1 || f1 == -1)
         {
             completeMeshlet();
-            i1 = insertAndGetIndex(indices[faceIndex * 3 + 0]);
-            i2 = insertAndGetIndex(indices[faceIndex * 3 + 1]);
-            i3 = insertAndGetIndex(indices[faceIndex * 3 + 2]);
+            f1 = findIndex(indices[faceIndex * 3 + 0]);
+            f2 = findIndex(indices[faceIndex * 3 + 1]);
+            f3 = findIndex(indices[faceIndex * 3 + 2]);
         }
-        current.primitiveLayout[current.numPrimitives * 3 + 0] = i1;
-        current.primitiveLayout[current.numPrimitives * 3 + 1] = i2;
-        current.primitiveLayout[current.numPrimitives * 3 + 2] = i3;
+        current.primitiveLayout[current.numPrimitives * 3 + 0] = uint8(f1);
+        current.primitiveLayout[current.numPrimitives * 3 + 1] = uint8(f2);
+        current.primitiveLayout[current.numPrimitives * 3 + 2] = uint8(f3);
         current.numPrimitives++;
         if (current.numPrimitives == Gfx::numPrimitivesPerMeshlet)
         {
             completeMeshlet();
         }
     }
-    if (!uniqueVertices.empty())
+    if (current.numVertices > 0)
     {
         completeMeshlet();
+    }
+}
+
+void Meshlet::calcBoundingBox(const Array<Vector>& positions)
+{
+    for (uint32 i = 0; i < numVertices; ++i)
+    {
+        boundingBox.adjust(positions[uniqueVertices[i]]);
     }
 }

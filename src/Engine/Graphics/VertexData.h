@@ -30,7 +30,8 @@ struct Meshlet
     uint8 primitiveLayout[Gfx::numPrimitivesPerMeshlet * 3]; // indices into the uniqueVertices array, only uint8 needed
     uint32 numVertices;
     uint32 numPrimitives;
-    static void build(const Array<Vector>& positions, const Array<uint32>& indices, Array<Meshlet>& meshlets);
+    static void build(const Array<uint32>& indices, Array<Meshlet>& meshlets);
+    void calcBoundingBox(const Array<Vector>& positions);
 };
 class VertexData
 {
@@ -98,8 +99,6 @@ protected:
         uint32_t primitiveCount;
         uint32_t vertexOffset;
         uint32_t primitiveOffset;
-        Vector color;
-        float pad0;
     };
     Map<std::string, MaterialData> materialData;
     Map<MeshId, Array<MeshData>> meshData;

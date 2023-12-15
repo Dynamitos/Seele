@@ -29,18 +29,18 @@ void taskMain(
 		localToClip = mul(pViewParams.projectionMatrix, mul(pViewParams.viewMatrix, instance.transformMatrix));
 		// Left
 		viewFrustum.sides[0].n = float3(1, 0, 0);
-		viewFrustum.sides[0].d = 1;
+		viewFrustum.sides[0].d = -1;
 		// Right
 		viewFrustum.sides[1].n = float3(-1, 0, 0);
-		viewFrustum.sides[1].d = 1;
+		viewFrustum.sides[1].d = -1;
 		// Top
 		viewFrustum.sides[2].n = float3(0, -1, 0);
-		viewFrustum.sides[2].d = 1;
+		viewFrustum.sides[2].d = -1;
 		// Bottom
 		viewFrustum.sides[3].n = float3(0, 1, 0);
-		viewFrustum.sides[3].d = 1;
+		viewFrustum.sides[3].d = -1;
 		// Base
-		viewFrustum.basePlane.n = float3(0, 0, 1);
+		viewFrustum.basePlane.n = float3(0, 0, -1);
 		viewFrustum.basePlane.d = 0;
 	}
 	GroupMemoryBarrierWithGroupSync();

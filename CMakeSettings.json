@@ -10,7 +10,8 @@
             "inheritEnvironments": [ "msvc_x64" ],
             "cmakeCommandArgs": "-DCMAKE_DEBUG_POSTFIX=\"\" -DCMAKE_PLATFORM=x64",
             "buildRoot": "C:/Users/Dynamitos/Seele/bin/",
-            "installRoot": "C:/Program Files/Seele"
+            "installRoot": "C:/Program Files/Seele",
+            "addressSanitizerEnabled": true
         },
         {
             "name": "Release",
