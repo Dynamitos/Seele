@@ -29,19 +29,19 @@ void taskMain(
 		localToClip = mul(pViewParams.projectionMatrix, mul(pViewParams.viewMatrix, instance.transformMatrix));
 		// Left
 		viewFrustum.sides[0].n = float3(1, 0, 0);
-		viewFrustum.sides[0].d = 0.7;
+		viewFrustum.sides[0].d = 1;
 		// Right
 		viewFrustum.sides[1].n = float3(-1, 0, 0);
-		viewFrustum.sides[1].d = 0.7;
+		viewFrustum.sides[1].d = 1;
 		// Top
 		viewFrustum.sides[2].n = float3(0, -1, 0);
-		viewFrustum.sides[2].d = 0.7;
+		viewFrustum.sides[2].d = 1;
 		// Bottom
 		viewFrustum.sides[3].n = float3(0, 1, 0);
-		viewFrustum.sides[3].d = 0.7;
+		viewFrustum.sides[3].d = 1;
 		// Base
 		viewFrustum.basePlane.n = float3(0, 0, 1);
-		viewFrustum.basePlane.d = 0.2;
+		viewFrustum.basePlane.d = 0;
 	}
 	GroupMemoryBarrierWithGroupSync();
 	MeshData mesh = pScene.meshData[groupID];
@@ -120,7 +120,6 @@ void meshMain(
 		{
 			uint vertexIndex = pScene.vertexIndices[m.vertexOffset + v];
 			VertexAttributes attr = pVertexData.getAttributes(md.indicesOffset + vertexIndex);
-			attr.vertexColor = m.color;
 			vertices[v] = attr.getParameter(inst.transformMatrix);
 		}
 	}
