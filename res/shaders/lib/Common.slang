@@ -35,15 +35,13 @@ struct Frustum
     Plane basePlane;
     bool pointInside(float3 point)
     {
-        float result = dot(basePlane.n, point) + basePlane.d;
-        if (0.0f > result)
+        if (dot(basePlane.n, point) + basePlane.d < 0.0f)
         {
             return false;
         }
         for(int p = 0; p < 4; ++p)
         {
-            result = dot(sides[p].n, point) + sides[p].d;
-            if(0.0f > result)
+            if(dot(sides[p].n, point) + sides[p].d < 0.0f)
             {
                 return false;
             }

@@ -29,19 +29,19 @@ void taskMain(
 		localToClip = mul(pViewParams.projectionMatrix, mul(pViewParams.viewMatrix, instance.transformMatrix));
 		// Left
 		viewFrustum.sides[0].n = float3(1, 0, 0);
-		viewFrustum.sides[0].d = -0.8;
+		viewFrustum.sides[0].d = 0.7;
 		// Right
 		viewFrustum.sides[1].n = float3(-1, 0, 0);
-		viewFrustum.sides[1].d = 0.8;
+		viewFrustum.sides[1].d = 0.7;
 		// Top
 		viewFrustum.sides[2].n = float3(0, -1, 0);
-		viewFrustum.sides[2].d = 0.8;
+		viewFrustum.sides[2].d = 0.7;
 		// Bottom
-		viewFrustum.sides[1].n = float3(0, 1, 0);
-		viewFrustum.sides[1].d = -0.8;
+		viewFrustum.sides[3].n = float3(0, 1, 0);
+		viewFrustum.sides[3].d = 0.7;
 		// Base
 		viewFrustum.basePlane.n = float3(0, 0, 1);
-		viewFrustum.basePlane.d = 0;
+		viewFrustum.basePlane.d = 0.2;
 	}
 	GroupMemoryBarrierWithGroupSync();
 	MeshData mesh = pScene.meshData[groupID];
@@ -51,7 +51,7 @@ void taskMain(
 		{
 			uint m = mesh.meshletOffset + i;
 			MeshletDescription meshlet = pScene.meshletInfos[m];
-			//if(meshlet.boundingBox.insideFrustum(localToClip, viewFrustum))
+			if(meshlet.boundingBox.insideFrustum(localToClip, viewFrustum))
 			{
 				uint index;
 				InterlockedAdd(head, 1, index);
@@ -119,7 +119,9 @@ void meshMain(
 		uint v = min(i, m.vertexCount - 1);
 		{
 			uint vertexIndex = pScene.vertexIndices[m.vertexOffset + v];
-			vertices[v] = pVertexData.getAttributes(md.indicesOffset + vertexIndex).getParameter(inst.transformMatrix);
+			VertexAttributes attr = pVertexData.getAttributes(md.indicesOffset + vertexIndex);
+			attr.vertexColor = m.color;
+			vertices[v] = attr.getParameter(inst.transformMatrix);
 		}
 	}
 }

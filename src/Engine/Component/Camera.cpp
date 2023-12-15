@@ -12,7 +12,7 @@ Camera::Camera()
     , bNeedsViewBuild(false)
     , cameraPos(Vector())
 {
-    yaw = 3.1415f/2;
+    yaw = -3.1415f/2;
     pitch = 0;
 }
 

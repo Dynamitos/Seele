@@ -38,7 +38,7 @@ void VertexData::updateMesh(PMesh mesh, Component::Transform& transform)
             .instance = InstanceData {
                 .transformMatrix = transform.toMatrix(),
             },
-            .data = data
+            .data = data,
             });
     }
     matInstanceData.materialInstance = mesh->referencedMaterial->getHandle();
@@ -109,10 +109,12 @@ void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet>
             primitiveIndices.resize(primitiveOffset + (m.numPrimitives * 3));
             std::memcpy(primitiveIndices.data() + primitiveOffset, m.primitiveLayout, m.numPrimitives * 3 * sizeof(uint8));
             meshlets.add(MeshletDescription{
+                .boundingBox = m.boundingBox,
                 .vertexCount = m.numVertices,
                 .primitiveCount = m.numPrimitives,
                 .vertexOffset = vertexOffset,
                 .primitiveOffset = primitiveOffset,
+                .color = Vector((float)rand() / RAND_MAX, (float)rand() / RAND_MAX, (float)rand() / RAND_MAX),
                 });
         }
         meshData[id].add(MeshData{

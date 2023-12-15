@@ -216,23 +216,35 @@ OSubAllocation Allocator::allocate(const VkMemoryRequirements2 &memRequirements2
     return heaps[heapIndex].allocations.back()->getSuballocation(requirements.size, requirements.alignment);
 }
 
-void Allocator::free(PAllocation allocation)
+void Allocator::free()
 {
-    //std::cout << "Freeing allocation" << std::endl;
     for (uint32 heapIndex = 0; heapIndex < heaps.size(); ++heapIndex)
     {
         for (uint32 alloc = 0; alloc < heaps[heapIndex].allocations.size(); ++alloc)
         {
-            if (heaps[heapIndex].allocations[alloc] == allocation)
+            if (heaps[heapIndex].allocations[alloc]->bytesUsed == 0)
             {
-                heaps[heapIndex].inUse -= allocation->bytesAllocated;
+                heaps[heapIndex].inUse -= heaps[heapIndex].allocations[alloc]->bytesAllocated;
                 std::cout << "Heap " << heapIndex << ": " << (float)heaps[heapIndex].inUse / heaps[heapIndex].maxSize * 100 << "%" << std::endl;
                 heaps[heapIndex].allocations.removeAt(alloc, false);
-                return;
+                alloc--;
             }
         }
     }
 }
+
+void Allocator::print()
+{
+    for (uint32 heapIndex = 0; heapIndex < heaps.size(); ++heapIndex)
+    {
+        std::cout << "Heap " << heapIndex << std::endl;
+        for (uint32 alloc = 0; alloc < heaps[heapIndex].allocations.size(); ++alloc)
+        {
+            std::cout << "[" << alloc << "]: " << (float)heaps[heapIndex].allocations[alloc]->bytesUsed / heaps[heapIndex].allocations[alloc]->bytesAllocated << std::endl;
+        }
+    }
+}
+
 uint32 Allocator::findMemoryType(uint32 typeFilter, VkMemoryPropertyFlags properties)
 {
     for (uint32 i = 0; i < memProperties.memoryTypeCount; i++) 

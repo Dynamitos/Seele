@@ -329,6 +329,7 @@ void MeshLoader::import(MeshImportArgs args, PMeshAsset meshAsset)
     meshAsset->setStatus(Asset::Status::Loading);
     Assimp::Importer importer;
     importer.ReadFile(args.filePath.string().c_str(), (uint32)(
+        aiProcess_ImproveCacheLocality |
         aiProcess_FlipUVs |
         aiProcess_Triangulate |
         aiProcess_SortByPType |

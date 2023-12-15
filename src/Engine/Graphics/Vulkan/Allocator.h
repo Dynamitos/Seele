@@ -122,7 +122,8 @@ public:
 		return allocate(requirements, props, &allocInfo);
 	}
 
-	void free(PAllocation allocation);
+	void free();
+	void print();
 private:
 	static constexpr VkDeviceSize DEFAULT_ALLOCATION = 16 * 1024 * 1024; // 16MB
 	struct HeapInfo

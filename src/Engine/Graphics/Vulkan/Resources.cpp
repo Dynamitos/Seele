@@ -170,4 +170,5 @@ void DestructionManager::notifyCmdComplete(PCommand cmd)
     sems[cmd].clear();
     renderPasses[cmd].clear();
     allocs[cmd].clear();
+    //graphics->getAllocator()->free();
 }

@@ -448,7 +448,7 @@ void Graphics::pickPhysicalDevice()
         {
             if (std::strcmp(VK_EXT_MESH_SHADER_EXTENSION_NAME, extensionProps[i].extensionName) == 0)
             {
-                //meshShadingEnabled = true;
+                meshShadingEnabled = true;
                 break;
             }
         }

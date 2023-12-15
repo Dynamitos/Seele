@@ -7,6 +7,8 @@
 #include "System/LightGather.h"
 #include "System/MeshUpdater.h"
 #include "System/CameraUpdater.h"
+#include "Graphics/Vulkan/Graphics.h"
+#include "Graphics/Vulkan/Allocator.h"
 
 using namespace Seele;
 
@@ -96,6 +98,10 @@ void GameView::reloadGame()
 
 void GameView::keyCallback(KeyCode code, InputAction action, KeyModifier modifier)
 {
+    if (code == KeyCode::KEY_P && action == InputAction::PRESS)
+    {
+        ((Vulkan::Graphics*)graphics.getHandle())->getAllocator()->print();
+    }
     keyboardSystem->keyCallback(code, action, modifier);
 }
 

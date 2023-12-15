@@ -98,6 +98,8 @@ protected:
         uint32_t primitiveCount;
         uint32_t vertexOffset;
         uint32_t primitiveOffset;
+        Vector color;
+        float pad0;
     };
     Map<std::string, MaterialData> materialData;
     Map<MeshId, Array<MeshData>> meshData;

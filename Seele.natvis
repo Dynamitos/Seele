@@ -39,15 +39,18 @@
             <Item Name="[value]">value</Item>
         </Expand>
     </Type>
-    <Type Name="Seele::Map&lt;*,*&gt;">
+    <Type Name="Seele::Map&lt;*&gt;">
         <DisplayString>{{ size={_size} }</DisplayString>
         <Expand>
             <Item Name="[size]">_size</Item>
             <Item Name="[comp]">comp</Item>
-            <ArrayItems>
+            <TreeItems>
                 <Size>_size</Size>
-                <ValuePointer>nodeContainer._data</ValuePointer>
-            </ArrayItems>
+                <HeadPointer>root</HeadPointer>
+                <LeftPointer>left</LeftPointer>
+                <RightPointer>right</RightPointer>
+                <ValueNode Condition="!((bool)_Isnil)">pair</ValueNode>
+            </TreeItems>
         </Expand>
     </Type>
     <Type Name="Seele::Map&lt;*&gt;::Node">

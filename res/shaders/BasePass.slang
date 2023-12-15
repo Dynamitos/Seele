@@ -18,8 +18,8 @@ ParameterBlock<LightCullingData> pLightCullingData;
 float4 fragmentMain(in FragmentParameter params) : SV_Target
 {
     LightingParameter lightingParams = params.getLightingParameter();
-    
-	let brdf = pMaterial.prepare(params.getMaterialParameter());
+    MaterialParameter materialParams = params.getMaterialParameter();
+	let brdf = pMaterial.prepare(materialParams);
     float3 result = float3(0, 0, 0);
     for(int i = 0; i < pLightEnv.numDirectionalLights; ++i)
     {
@@ -29,5 +29,5 @@ float4 fragmentMain(in FragmentParameter params) : SV_Target
     {
         result += pLightEnv.pointLights[i].illuminate(lightingParams, brdf);
     }
-    return float4(result, 1.0f);
+    return float4(materialParams.vertexColor, 1.0f);
 }
