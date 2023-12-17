@@ -40,7 +40,7 @@ private:
 
 	PSystemGraph systemGraph;
 	System::PKeyboardInput keyboardSystem;
-	dp::thread_pool<> threadPool;
+	ThreadPool threadPool;
 	float updateTime = 0;
 
 	virtual void keyCallback(Seele::KeyCode code, Seele::InputAction action, Seele::KeyModifier modifier) override;

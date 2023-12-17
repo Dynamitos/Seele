@@ -14,6 +14,7 @@ constexpr static uint64 NUM_DEFAULT_ELEMENTS = 1024 * 1024;
 
 void VertexData::resetMeshData()
 {
+    std::unique_lock l(materialDataLock);
     for (auto& [_, mat] : materialData)
     {
         mat.material->getDescriptorLayout()->reset();
@@ -28,11 +29,12 @@ void VertexData::resetMeshData()
 
 void VertexData::updateMesh(PMesh mesh, Component::Transform& transform)
 {
+    std::unique_lock l(materialDataLock);
     PMaterial mat = mesh->referencedMaterial->getHandle()->getBaseMaterial();
     MaterialData& matData = materialData[mat->getName()];
     matData.material = mat;
     MaterialInstanceData& matInstanceData = matData.instances[mesh->referencedMaterial->getHandle()->getId()];
-    for (auto& data : meshData[mesh->id])
+    for (const auto& data : meshData[mesh->id])
     {
         matInstanceData.meshes.add(MeshInstanceData{
             .instance = InstanceData {
@@ -46,6 +48,7 @@ void VertexData::updateMesh(PMesh mesh, Component::Transform& transform)
 
 void VertexData::createDescriptors()
 {
+    std::unique_lock l(materialDataLock);
     instanceDataLayout->reset();
     for (const auto& [_, mat] : materialData)
     {

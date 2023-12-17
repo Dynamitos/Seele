@@ -1,5 +1,5 @@
 #pragma once
-#include <thread_pool/thread_pool.h>
+#include "ThreadPool.h"
 #include "Window/View.h"
 #include "Graphics/RenderPass/DepthPrepass.h"
 #include "Graphics/RenderPass/LightCullingPass.h"
@@ -34,7 +34,7 @@ private:
 		LightCullingPass,
 		BasePass> renderGraph;
 
-	dp::thread_pool<> pool;
+	ThreadPool pool;
 	ViewportControl cameraSystem;
 
 	virtual void keyCallback(KeyCode code, InputAction action, KeyModifier modifier) override;

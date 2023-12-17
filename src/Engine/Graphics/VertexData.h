@@ -100,6 +100,7 @@ protected:
         uint32_t vertexOffset;
         uint32_t primitiveOffset;
     };
+    std::mutex materialDataLock;
     Map<std::string, MaterialData> materialData;
     Map<MeshId, Array<MeshData>> meshData;
     Map<MeshId, uint64> meshOffsets;

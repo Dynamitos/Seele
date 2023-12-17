@@ -179,6 +179,7 @@ public:
         , _size(std::move(other._size))
         , allocator(std::move(other.allocator))
     {
+        other._size = 0;
     }
     List(List&& other, const Allocator& alloc)
         : root(std::move(other.root))
@@ -188,7 +189,7 @@ public:
         , _size(std::move(other._size))
         , allocator(allocator)
     {
-        other.clear();
+        other._size = 0;
     }
     ~List()
     {

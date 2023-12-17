@@ -3,7 +3,6 @@
         "assimp",
         "entt",
         "stb",
-        "dp-thread-pool",
         "entt",
         "freetype",
         "glfw3",

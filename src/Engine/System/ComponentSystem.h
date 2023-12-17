@@ -28,25 +28,29 @@ public:
     {
         return (deps | ...);
     }
-    void setupView(Dependencies<>, dp::thread_pool<>&)
+    void setupView(Dependencies<>, ThreadPool& pool)
     {
+        List<std::function<void()>> work;
         registry.view<Components...>().each([&](Components&... comp){
-            //pool.enqueue_detach([&](){
+            work.add([&](){
                 update(comp...);
-            //});
+            });
         });
+        pool.runAndWait(std::move(work));
     }
     template<typename... Deps>
-    void setupView(Dependencies<Deps...>, dp::thread_pool<>&)
+    void setupView(Dependencies<Deps...>, ThreadPool& pool)
     {
+        List<std::function<void()>> work;
         registry.view<Components..., Deps...>().each([&](Components&... comp, Deps&... deps){
-            //pool.enqueue_detach([&](){
+            work.add([&]() {
                 (accessComponent(deps) + ...);
                 update((comp,...));
-            //});
+            });
         });
+        pool.runAndWait(std::move(work));
     }
-    virtual void run(dp::thread_pool<>& pool, double delta) override
+    virtual void run(ThreadPool& pool, double delta) override
     {
         SystemBase::run(pool, delta);
         setupView(mergeDependencies((getDependencies<Components>(),...)), pool);

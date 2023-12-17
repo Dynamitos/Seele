@@ -1,4 +1,5 @@
 #pragma once
+#include "ThreadPool.h"
 #include "Containers/Array.h"
 #include "SystemBase.h"
 
@@ -8,7 +9,7 @@ class SystemGraph
 {
 public:
     void addSystem(System::OSystemBase system);
-    void run(dp::thread_pool<>& threadPool, float deltaTime);
+    void run(ThreadPool& threadPool, float deltaTime);
 private:
     Array<System::OSystemBase> systems;
 };

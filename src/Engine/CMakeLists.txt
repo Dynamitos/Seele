@@ -3,7 +3,9 @@ target_sources(Engine
         Concepts.h
         EngineTypes.h
         Game.h
-        MinimalEngine.h)
+        MinimalEngine.h
+        ThreadPool.h
+        ThreadPool.cpp)
 
 target_sources(Engine
     PUBLIC FILE_SET HEADERS
@@ -11,7 +13,8 @@ target_sources(Engine
             Concepts.h
             Game.h
             EngineTypes.h
-            MinimalEngine.h)
+            MinimalEngine.h
+            ThreadPool.h)
 
 add_subdirectory(Actor/)
 add_subdirectory(Asset/)

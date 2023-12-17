@@ -1,6 +1,6 @@
 #pragma once
-#include <thread_pool/thread_pool.h>
 #include <entt/entt.hpp>
+#include "ThreadPool.h"
 #include "Scene/Scene.h"
 
 namespace Seele
@@ -12,7 +12,7 @@ class SystemBase
 public:
     SystemBase(PScene scene) : registry(scene->registry), scene(scene) {}
     virtual ~SystemBase() {}
-    virtual void run(dp::thread_pool<>&, double delta)
+    virtual void run(ThreadPool& pool, double delta)
     {
         deltaTime = delta;
         update();
