@@ -1,4 +1,4 @@
-target_sources(Seele_unit_tests
+target_sources(SeeleUnitTests
 	PRIVATE
 		Array.cpp
 		Map.cpp

@@ -9,6 +9,7 @@
         "glm",
         "ktx",
         "nlohmann-json",
-        "shader-slang"
+        "shader-slang",
+        "gtest"
     ]
 }
