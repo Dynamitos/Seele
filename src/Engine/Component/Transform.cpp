@@ -2,7 +2,7 @@
 
 using namespace Seele::Component;
 
-DEFINE_COMPONENT(Transform)
+DEFINE_COMPONENT(Transform);
 
 void Transform::setPosition(Vector pos)
 {

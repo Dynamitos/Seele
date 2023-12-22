@@ -113,10 +113,10 @@ void StaticMeshVertexData::deserializeMesh(MeshId id, ArchiveBuffer& buffer)
     loadColors(id, col);
 }
 
-void StaticMeshVertexData::init(Gfx::PGraphics graphics)
+void StaticMeshVertexData::init(Gfx::PGraphics _graphics)
 {
-    VertexData::init(graphics);
-    descriptorLayout = graphics->createDescriptorLayout("StaticMeshDescriptorLayout");
+    VertexData::init(_graphics);
+    descriptorLayout = _graphics->createDescriptorLayout("StaticMeshDescriptorLayout");
     descriptorLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
     descriptorLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
     descriptorLayout->addDescriptorBinding(2, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);

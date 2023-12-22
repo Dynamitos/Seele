@@ -3,7 +3,9 @@ target_sources(Engine
 		Array.h
 		List.h
 		Map.h
-		Pair.h)
+		Pair.h
+		Set.h
+		Tree.h)
 
 target_sources(Engine
 	PUBLIC FILE_SET HEADERS
@@ -11,4 +13,6 @@ target_sources(Engine
 			Array.h
 			List.h
 			Map.h
-			Pair.h)
+			Pair.h
+			Set.h
+			Tree.h)

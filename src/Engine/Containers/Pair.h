@@ -6,20 +6,21 @@ template <typename K, typename V>
 struct Pair
 {
 public:
-    Pair()
+    constexpr Pair()
         : key(K()), value(V())
     {}
+    constexpr Pair(const K & key, const V & value)
+        : key(key), value(value)
+    {}
+    template<class U1 = K, class U2 = V>
+    constexpr Pair(U1&& x, U2&& y)
+        : key(std::forward<U1>(x))
+        , value(std::forward<U2>(y))
+    {
+    }
     Pair(const Pair& other) = default;
     Pair(Pair&& other) = default;
     ~Pair(){}
-    template<class KeyType>
-    explicit Pair(KeyType&& key)
-        : key(std::forward<KeyType>(key)), value(V())
-    {}
-    template<class KeyType, class ValueType>
-    explicit Pair(KeyType&& key, ValueType&& value)
-        : key(std::forward<KeyType>(key)), value(std::forward<ValueType>(value))
-    {}
     Pair& operator=(const Pair& other) = default;
     Pair& operator=(Pair&& other) = default;
     constexpr friend bool operator<(const Pair& left, const Pair& right)

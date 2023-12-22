@@ -12,7 +12,7 @@ class SystemBase
 public:
     SystemBase(PScene scene) : registry(scene->registry), scene(scene) {}
     virtual ~SystemBase() {}
-    virtual void run(ThreadPool& pool, double delta)
+    virtual void run(ThreadPool&, double delta)
     {
         deltaTime = delta;
         update();

@@ -21,7 +21,6 @@ private:
     Array<std::thread> workers;
     std::mutex taskLock;
     std::condition_variable taskCV;
-    std::mutex completedLock;
     std::condition_variable completedCV;
     Task currentTask;
     bool running = true;

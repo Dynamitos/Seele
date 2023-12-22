@@ -25,16 +25,14 @@ ThreadPool::~ThreadPool()
 
 void ThreadPool::runAndWait(List<std::function<void()>> functions)
 {
-    {
-        std::unique_lock l(taskLock);
-        currentTask.numRemaining = functions.size();
-        currentTask.functions = std::move(functions);
-        taskCV.notify_all();
-    }
+    std::unique_lock l(taskLock);
+    currentTask.numRemaining = functions.size();
+    currentTask.functions = std::move(functions);
+    taskCV.notify_all();
+    
     while (currentTask.numRemaining > 0)
     {
-        std::unique_lock l2(completedLock);
-        completedCV.wait(l2);
+        completedCV.wait(l);
     }
 }
 
@@ -59,7 +57,6 @@ void ThreadPool::work()
         currentTask.numRemaining--;
         if (currentTask.numRemaining == 0)
         {
-            std::unique_lock l2(completedLock);
             completedCV.notify_one();
         }
     }

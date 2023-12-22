@@ -10,6 +10,11 @@ template<>
 struct Dependencies<>
 {
     int x;
+    template<typename... Right>
+    Dependencies<Right...> operator|(const Dependencies<Right...>& other)
+    {
+        return Dependencies<Right...>();
+    }
 };
 template<typename This, typename... Rest>
 struct Dependencies<This, Rest...> : public Dependencies<Rest...>
@@ -24,25 +29,31 @@ struct Dependencies<This, Rest...> : public Dependencies<Rest...>
 
 namespace Component
 {
-template<typename Comp>
-static int accessComponent(Comp& comp);
+    template<typename Comp>
+    Comp& getComponent();
 }
+
 template<typename Comp>
 concept has_dependencies = requires(Comp) { Comp::dependencies; };
 
 #define REQUIRE_COMPONENT(x) \
     private: \
-    x& get##x() { return *tl_##x; } \
-    const x& get##x() const { return *tl_##x; }; \
+    x& get##x() { return getComponent<##x>(); } \
+    const x& get##x() const { return getComponent<##x>(); } \
     public: \
     constexpr static Dependencies<x> dependencies = {};
 
 #define DECLARE_COMPONENT(x) \
-    thread_local extern x* tl_##x; \
+    void accessComponent(x& val); \
     template<> \
-    int accessComponent<x>(x& val) { tl_##x = &val; return 0; }
+    x& getComponent<x>();
+    
 
 #define DEFINE_COMPONENT(x) \
-    thread_local x* Seele::Component::tl_##x;
+    thread_local x* tl_##x = nullptr; \
+    void Seele::Component::accessComponent(x& ref) { tl_##x = &ref; } \
+    template<> \
+    x& Seele::Component::getComponent<x>() { return *tl_##x; }
+
 
 } // namespace Seele

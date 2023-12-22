@@ -6,7 +6,7 @@
 #include "Graphics/Descriptor.h"
 #include "Component/Mesh.h"
 #include "Graphics/Shader.h"
-#include <set>
+#include "Containers/Set.h"
 
 using namespace Seele;
 
@@ -248,6 +248,12 @@ VertexData::VertexData()
 
 void Meshlet::build(const Array<uint32>& indices, Array<Meshlet>& meshlets)
 {
+    Map<uint32, Set<uint32>> connectivity;
+    for (uint32 i = 0; i < indices.size(); i+=3)
+    {
+        connectivity[indices[i]].insert(indices[i + 1]);
+        connectivity[indices[i]].insert(indices[i + 2]);
+    }
     Meshlet current = {
         .numVertices = 0,
         .numPrimitives = 0,

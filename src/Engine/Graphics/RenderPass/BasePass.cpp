@@ -157,7 +157,6 @@ void BasePass::render()
                 command->bindDescriptor(descriptorSets);
                 if (graphics->supportMeshShading())
                 {
-                    std::cout << "Num Meshes: " << instance.meshes.size() << std::endl;
                     command->dispatch(instance.meshes.size(), 1, 1);
                 }
                 else
