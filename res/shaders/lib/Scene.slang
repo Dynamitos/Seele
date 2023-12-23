@@ -7,6 +7,8 @@ struct MeshletDescription
 	uint32_t primitiveCount;
 	uint32_t vertexOffset;
 	uint32_t primitiveOffset;
+	float3 color;
+	float pad;
 };
 
 struct MeshData

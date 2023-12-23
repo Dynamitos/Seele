@@ -120,6 +120,7 @@ void meshMain(
 		{
 			uint vertexIndex = pScene.vertexIndices[m.vertexOffset + v];
 			VertexAttributes attr = pVertexData.getAttributes(md.indicesOffset + vertexIndex);
+			attr.vertexColor = m.color;
 			vertices[v] = attr.getParameter(inst.transformMatrix);
 		}
 	}

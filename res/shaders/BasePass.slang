@@ -29,5 +29,5 @@ float4 fragmentMain(in FragmentParameter params) : SV_Target
     {
         result += pLightEnv.pointLights[i].illuminate(lightingParams, brdf);
     }
-    return float4(result, 1.0f);
+    return float4(params.vertexColor, 1.0f);
 }

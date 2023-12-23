@@ -185,7 +185,10 @@ public:
         , _size()
         , comp(other.comp)
     {
-        std::copy(other.begin(), other.end(), begin());
+        for (const auto& elem : other)
+        {
+            insert(elem);
+        }
     }
     constexpr Tree(Tree&& other) noexcept
         : alloc(std::move(other.alloc))
@@ -204,11 +207,14 @@ public:
         if (this != &other)
         {
             clear();
-            alloc = other.alloc;
-            comp = other.comp;
-            root = nullptr;
-            _size = 0;
-            std::copy(other.begin(), other.end(), begin());
+            if constexpr (std::allocator_traits<allocator_type>::propagate_on_container_copy_assignment::value)
+            {
+                alloc = other.alloc;
+            }
+            for (const auto& elem : other)
+            {
+                insert(elem);
+            }
             markIteratorsDirty();
         }
         return *this;
@@ -405,7 +411,7 @@ private:
         Node* newNode = alloc.allocate(1);
         std::allocator_traits<NodeAlloc>::construct(alloc, newNode, nullptr, nullptr, std::forward<NodeDataType>(data));
 
-        if (comp(keyFun(r->data), keyFun(newNode->data)))
+        if (comp(keyFun(newNode->data), keyFun(r->data)))
         {
             newNode->rightChild = r;
             newNode->leftChild = r->leftChild;
@@ -456,12 +462,12 @@ private:
         {
             return r;
         }
-        if (comp(keyFun(r->data), key))
+        if (comp(key, keyFun(r->data)))
         {
             if (r->leftChild == nullptr)
                 return r;
 
-            if (comp(keyFun(r->leftChild->data), key))
+            if (comp(key, keyFun(r->leftChild->data)))
             {
                 r->leftChild->leftChild = _splay(r->leftChild->leftChild, key);
 
@@ -483,7 +489,7 @@ private:
             if (r->rightChild == nullptr)
                 return r;
 
-            if (comp(keyFun(r->rightChild->data), key))
+            if (comp(key, keyFun(r->rightChild->data)))
             {
                 r->rightChild->leftChild = _splay(r->rightChild->leftChild, key);
 

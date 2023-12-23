@@ -268,11 +268,7 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
 
         Array<Meshlet> meshlets;
         meshlets.reserve(indices.size() / (3ull * Gfx::numPrimitivesPerMeshlet));
-        Meshlet::build(indices, meshlets);
-        for (auto& meshlet : meshlets)
-        {
-            meshlet.calcBoundingBox(positions);
-        }
+        Meshlet::build(positions, indices, meshlets);
         vertexData->loadMesh(id, indices, meshlets);
 
         collider.physicsMesh.addCollider(positions, indices, Matrix4(1.0f));

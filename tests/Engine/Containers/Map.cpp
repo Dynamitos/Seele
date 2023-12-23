@@ -82,10 +82,34 @@ TEST(CachedMap, custom_key)
 
 TEST(CachedMap, string_key)
 {
-    std::map<std::string, int> map;
+    Map<std::string, int> map;
     map["Test"] = 2;
     map["Test2"] = 3;
     ASSERT_EQ(map["Test"], 2);
     ASSERT_EQ(map["Test2"], 3);
+}
+
+TEST(CachedMap, copy)
+{
+    Map<int, int> map;
+    map[54] = 14;
+    map[5123] = 51;
+    map[262] = 14;
+    map[9620] = 91283;
+    map[141] = 415;
+    Map<int, int> map2 = map;
+    Map<int, int> map3;
+    map3 = map;
+    Map<int, int>::iterator i1 = map.begin();
+    Map<int, int>::iterator i2 = map2.begin();
+    Map<int, int>::iterator i3 = map3.begin();
+    while(i1 != map.end())
+    {
+        ASSERT_EQ(i1->key, i2->key);
+        ASSERT_EQ(i1->value, i2->value);
+        ASSERT_EQ(i1->key, i3->key);
+        ASSERT_EQ(i1->value, i3->value);
+        i1++; i2++; i3++;
+    }
 }
 

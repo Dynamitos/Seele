@@ -15,6 +15,8 @@ target_sources(Engine
         Initializer.cpp
         Mesh.h
         Mesh.cpp
+        Meshlet.h
+        Meshlet.cpp
         Pipeline.h
         Pipeline.cpp
         RenderTarget.h
@@ -43,6 +45,7 @@ target_sources(Engine
             Graphics.h
             Initializer.h
             Mesh.h
+            Meshlet.h
             Pipeline.h
             RenderTarget.h
             Resources.h
