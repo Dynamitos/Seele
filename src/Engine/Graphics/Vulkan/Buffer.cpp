@@ -13,7 +13,7 @@ struct PendingBuffer
     bool writeOnly;
 };
 
-static std::map<Vulkan::Buffer*, PendingBuffer> pendingBuffers;
+static Map<Vulkan::Buffer*, PendingBuffer> pendingBuffers;
 
 Buffer::Buffer(PGraphics graphics, uint64 size, VkBufferUsageFlags usage, Gfx::QueueType& queueType, bool dynamic)
     : graphics(graphics)
@@ -239,7 +239,7 @@ void Buffer::unmap()
     auto found = pendingBuffers.find(this);
     if (found != pendingBuffers.end())
     {
-        PendingBuffer& pending = found->second;
+        PendingBuffer& pending = found->value;
         pending.stagingBuffer->flush();
         if (pending.writeOnly)
         {

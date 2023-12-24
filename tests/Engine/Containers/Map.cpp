@@ -31,7 +31,7 @@ TEST(CachedMap, for_each)
     map[6] = 4;
     map[4] = 7;
     int count = 0;
-    for(auto it : map)
+    for(auto [key, val] : map)
     {
         count++;
     }
@@ -111,5 +111,28 @@ TEST(CachedMap, copy)
         ASSERT_EQ(i1->value, i3->value);
         i1++; i2++; i3++;
     }
+}
+
+TEST(CachedMap, move)
+{
+    Map<int, int> map;
+    map[54] = 14;
+    map[5123] = 51;
+    map[262] = 14;
+    map[9620] = 91283;
+    map[141] = 415;
+    Map<int, int> map2 = std::move(map);
+    ASSERT_EQ(map2[54], 14);
+    ASSERT_EQ(map2[5123], 51);
+    ASSERT_EQ(map2[262], 14);
+    ASSERT_EQ(map2[9620], 91283);
+    ASSERT_EQ(map2[141], 415);
+    Map<int, int> map3;
+    map3 = std::move(map2);
+    ASSERT_EQ(map3[54], 14);
+    ASSERT_EQ(map3[5123], 51);
+    ASSERT_EQ(map3[262], 14);
+    ASSERT_EQ(map3[9620], 91283);
+    ASSERT_EQ(map3[141], 415);
 }
 

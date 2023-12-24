@@ -39,7 +39,7 @@ public:
             : node(i.node), traversal(i.traversal)
         {
         }
-        constexpr IteratorBase(IteratorBase&& i)
+        constexpr IteratorBase(IteratorBase&& i) noexcept
             : node(std::move(i.node)), traversal(std::move(i.traversal))
         {
         }
@@ -52,7 +52,7 @@ public:
             }
             return *this;
         }
-        constexpr IteratorBase& operator=(IteratorBase&& other)
+        constexpr IteratorBase& operator=(IteratorBase&& other) noexcept
         {
             if (this != &other)
             {
@@ -150,7 +150,8 @@ public:
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
     constexpr Tree() noexcept
-        : root(nullptr)
+        : alloc(NodeAlloc())
+        , root(nullptr)
         , beginIt(nullptr)
         , endIt(nullptr)
         , iteratorsDirty(true)
@@ -197,6 +198,7 @@ public:
         , _size(std::move(other._size))
         , comp(std::move(other.comp))
     {
+        other._size = 0;
     }
     constexpr ~Tree() noexcept
     {
@@ -219,15 +221,19 @@ public:
         }
         return *this;
     }
-    constexpr Tree& operator=(Tree&& other)
+    constexpr Tree& operator=(Tree&& other) noexcept
     {
         if (this != &other)
         {
             clear();
-            alloc = std::move(other.alloc);
+            if constexpr (std::allocator_traits<allocator_type>::propagate_on_container_move_assignment::value)
+            {
+                alloc = std::move(other.alloc);
+            }
             root = std::move(other.root);
             _size = std::move(other._size);
             comp = std::move(other.comp);
+            other._size = 0;
             markIteratorsDirty();
         }
         return *this;
@@ -396,6 +402,7 @@ private:
     template<class NodeDataType>
     Pair<Node*, bool> _insert(Node* r, NodeDataType&& data)
     {
+        markIteratorsDirty();
         if (r == nullptr)
         {
             root = alloc.allocate(1);
@@ -429,6 +436,7 @@ private:
     template<class KeyType>
     Node* _remove(Node* r, KeyType&& key)
     {
+        markIteratorsDirty();
         Node* temp;
         if (r == nullptr)
             return nullptr;
@@ -458,6 +466,7 @@ private:
     template<class KeyType>
     Node* _splay(Node* r, KeyType&& key)
     {
+        markIteratorsDirty();
         if (r == nullptr || equal(r->data, key))
         {
             return r;

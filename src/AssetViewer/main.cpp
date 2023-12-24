@@ -8,7 +8,7 @@
 
 using namespace Seele;
 
-AssetRegistry * instance = new AssetRegistry();
+AssetRegistry * _instance = new AssetRegistry();
 
 int main(int, char**)
 {

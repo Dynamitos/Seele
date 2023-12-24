@@ -38,7 +38,7 @@ void ThreadPool::runAndWait(List<std::function<void()>> functions)
 
 void ThreadPool::work()
 {
-    while (true)
+    while (running)
     {
         std::unique_lock l(taskLock);
         while(currentTask.functions.empty())

@@ -14,7 +14,7 @@
 
 using namespace Seele;
 
-AssetRegistry* instance = new AssetRegistry();
+AssetRegistry* _instance = new AssetRegistry();
 
 AssetRegistry::~AssetRegistry()
 {
@@ -103,7 +103,7 @@ std::ifstream AssetRegistry::createReadStream(const std::filesystem::path& relat
 
 AssetRegistry &AssetRegistry::get()
 {
-    return *instance;
+    return *_instance;
 }
 
 AssetRegistry::AssetRegistry()
@@ -113,7 +113,7 @@ AssetRegistry::AssetRegistry()
 
 AssetRegistry* AssetRegistry::getInstance()
 {
-    return instance;
+    return _instance;
 }
 
 void AssetRegistry::loadRegistry()
@@ -409,7 +409,7 @@ AssetRegistry::AssetFolder::AssetFolder(std::string_view folderPath)
 
 AssetRegistry::AssetFolder::~AssetFolder()
 {
-    for (const auto& [_, child] : children)
+    for (auto [_, child] : children)
     {
         delete child;
     }

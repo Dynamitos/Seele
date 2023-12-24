@@ -39,7 +39,7 @@
             <Item Name="[value]">value</Item>
         </Expand>
     </Type>
-    <Type Name="Seele::Map&lt;*&gt;">
+    <Type Name="Seele::Tree&lt;*&gt;">
         <DisplayString>{{ size={_size} }</DisplayString>
         <Expand>
             <Item Name="[size]">_size</Item>
@@ -47,25 +47,10 @@
             <TreeItems>
                 <Size>_size</Size>
                 <HeadPointer>root</HeadPointer>
-                <LeftPointer>left</LeftPointer>
-                <RightPointer>right</RightPointer>
-                <ValueNode Condition="!((bool)_Isnil)">pair</ValueNode>
+                <LeftPointer>leftChild</LeftPointer>
+                <RightPointer>rightChild</RightPointer>
+                <ValueNode>data</ValueNode>
             </TreeItems>
-        </Expand>
-    </Type>
-    <Type Name="Seele::Map&lt;*&gt;::Node">
-        <DisplayString>[{pair}]</DisplayString>
-        <Expand>
-            <Item Name="[pair]">pair</Item>
-            <Item Name="[left]">leftChild</Item>
-            <Item Name="[right]">rightChild</Item>
-        </Expand>
-    </Type>
-    <Type Name="Seele::Map&lt;*&gt;::IteratorBase&lt;*&gt;">
-        <DisplayString Condition="nodeContainer.arraySize==0">empty</DisplayString>
-        <DisplayString>[{nodeContainer._data[node].pair}]</DisplayString>
-        <Expand>
-            <ExpandedItem>nodeContainer._data[node].pair</ExpandedItem>
         </Expand>
     </Type>
     <Type Name="Seele::RefPtr&lt;*&gt;">

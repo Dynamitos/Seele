@@ -32,6 +32,7 @@ public:
     };
     struct MeshData
     {
+        AABB boundingBox;
         uint32 numMeshlets = 0;
         uint32 meshletOffset = 0;
         uint32 firstIndex = 0;
