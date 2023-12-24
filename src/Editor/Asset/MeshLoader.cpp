@@ -329,7 +329,7 @@ void MeshLoader::import(MeshImportArgs args, PMeshAsset meshAsset)
     meshAsset->setStatus(Asset::Status::Loading);
     Assimp::Importer importer;
     importer.ReadFile(args.filePath.string().c_str(), (uint32)(
-        aiProcess_ImproveCacheLocality |
+        aiProcess_JoinIdenticalVertices |
         aiProcess_FlipUVs |
         aiProcess_Triangulate |
         aiProcess_SortByPType |
@@ -337,7 +337,7 @@ void MeshLoader::import(MeshImportArgs args, PMeshAsset meshAsset)
         aiProcess_GenSmoothNormals |
         aiProcess_GenUVCoords |
         aiProcess_FindDegenerates));
-    const aiScene *scene = importer.ApplyPostProcessing(aiProcess_CalcTangentSpace);
+    const aiScene *scene = importer.ApplyPostProcessing(aiProcess_CalcTangentSpace | aiProcess_ImproveCacheLocality);
     
     Array<PMaterialInstanceAsset> globalMaterials(scene->mNumMaterials);
     loadTextures(scene, args.filePath.parent_path(), args.importPath);
