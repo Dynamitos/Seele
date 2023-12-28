@@ -69,16 +69,13 @@ void GameView::render()
     Component::Camera cam;
     scene->view<Component::Camera>([&cam](Component::Camera& c) {
         if (c.mainCamera) 
-            cam = c; 
+            cam = c;
     });
     renderGraph.render(cam);
 }
 
 void GameView::applyArea(URect rect)
 {
-    viewport = graphics->createViewport(owner->getGfxHandle(), ViewportCreateInfo{
-        .dimensions = rect,
-        });
     renderGraph.updateViewport(viewport);
 }
 

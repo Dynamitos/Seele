@@ -49,6 +49,8 @@ class Allocation
 public:
 	Allocation(PGraphics graphics, PAllocator pool, VkDeviceSize size, uint8 memoryTypeIndex,
 			   VkMemoryPropertyFlags properties, VkMemoryDedicatedAllocateInfo *dedicatedInfo = nullptr);
+	Allocation(const Allocation& other) = delete;
+	Allocation& operator=(const Allocation& other) = delete;
 	~Allocation();
 	OSubAllocation getSuballocation(VkDeviceSize size, VkDeviceSize alignment);
 	void markFree(PSubAllocation alloc);
@@ -122,7 +124,7 @@ public:
 		return allocate(requirements, props, &allocInfo);
 	}
 
-	void free();
+	void free(PAllocation allocation);
 	void print();
 private:
 	static constexpr VkDeviceSize DEFAULT_ALLOCATION = 16 * 1024 * 1024; // 16MB
@@ -143,7 +145,7 @@ private:
 	VkPhysicalDeviceMemoryProperties memProperties;
 };
 DEFINE_REF(Allocator)
-class StagingBuffer : public Gfx::QueueOwnedResource
+class StagingBuffer
 {
 public:
 	StagingBuffer(PGraphics graphics, OSubAllocation allocation, VkBuffer buffer, VkDeviceSize size, Gfx::QueueType owner);
@@ -161,10 +163,12 @@ public:
 	{
 		return size;
 	}
+	constexpr Gfx::QueueType getOwner() const
+	{
+		return owner;
+	}
 private:
-	virtual void executeOwnershipBarrier(Gfx::QueueType newOwner) override;
-	virtual void executePipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage,
-		Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage) override;
+	Gfx::QueueType owner;
 	OSubAllocation allocation;
 	PGraphics graphics;
 	VkBuffer buffer;
@@ -178,10 +182,11 @@ public:
 	StagingManager(PGraphics graphics, PAllocator pool);
 	~StagingManager();
 	OStagingBuffer create(uint64 size, Gfx::QueueType owner);
-
+	void release(OStagingBuffer buffer);
 private:
 	PGraphics graphics;
 	PAllocator pool;
+	Array<OStagingBuffer> freeBuffers;
 };
 DEFINE_REF(StagingManager)
 } // namespace Vulkan

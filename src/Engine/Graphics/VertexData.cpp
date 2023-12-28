@@ -100,11 +100,11 @@ void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet>
     {
         uint32 numMeshlets = std::min<uint32>(512, loadedMeshlets.size() - currentMesh);
         uint32 meshletOffset = meshlets.size();
-        //AABB meshAABB;
+        AABB meshAABB;
         for (uint32 i = 0; i < numMeshlets; ++i)
         {
             Meshlet& m = loadedMeshlets[currentMesh + i];
-            //meshAABB = meshAABB.combine(m.boundingBox);
+            meshAABB = meshAABB.combine(m.boundingBox);
             uint32 vertexOffset = vertexIndices.size();
             vertexIndices.resize(vertexOffset + m.numVertices);
             std::memcpy(vertexIndices.data() + vertexOffset, m.uniqueVertices, m.numVertices * sizeof(uint32));
@@ -121,6 +121,7 @@ void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet>
                 });
         }
         meshData[id].add(MeshData{
+            .boundingBox = meshAABB,
             .numMeshlets = numMeshlets,
             .meshletOffset = meshletOffset,
             .indicesOffset = (uint32)meshOffsets[id],

@@ -97,9 +97,13 @@ Window::~Window()
     glfwDestroyWindow(static_cast<GLFWwindow *>(windowHandle));
 }
 
-void Window::beginFrame()
+void Window::pollInput()
 {
     glfwPollEvents();
+}
+
+void Window::beginFrame()
+{
     vkAcquireNextImageKHR(graphics->getDevice(), swapchain, std::numeric_limits<uint64>::max(), imageAvailableSemaphores[currentSemaphoreIndex]->getHandle(), VK_NULL_HANDLE, &currentImageIndex);
     swapChainTextures[currentImageIndex]->changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
     graphics->getGraphicsCommands()->getCommands()->waitForSemaphore(VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, imageAvailableSemaphores[currentSemaphoreIndex]);
@@ -210,6 +214,12 @@ void Window::close()
 
 void Window::resize(int width, int height)
 {
+    if (width == 0 || height == 0)
+    {
+        paused = true;
+        return;
+    }
+    paused = false;
     querySurface();
     chooseSwapSurfaceFormat();
     framebufferFormat = cast(format.format);

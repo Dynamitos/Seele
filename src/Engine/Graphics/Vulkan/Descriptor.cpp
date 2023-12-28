@@ -346,13 +346,6 @@ DescriptorPool::DescriptorPool(PGraphics graphics, DescriptorLayout &layout)
 
 DescriptorPool::~DescriptorPool()
 {
-    for (uint32 setIndex = 0; setIndex < cachedHandles.size(); ++setIndex)
-    {
-        if (cachedHandles[setIndex] != nullptr && cachedHandles[setIndex]->setHandle != VK_NULL_HANDLE)
-        {
-            graphics->getDestructionManager()->queueDescriptorSet(graphics->getGraphicsCommands()->getCommands(), Pair<VkDescriptorSet, VkDescriptorPool>(cachedHandles[setIndex]->setHandle, poolHandle));
-        }
-    }
     graphics->getDestructionManager()->queueDescriptorPool(graphics->getGraphicsCommands()->getCommands(), poolHandle);
     if(nextAlloc)
     {

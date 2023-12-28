@@ -20,6 +20,11 @@ void Window::addView(PView view)
     views.add(view);
 }
 
+void Window::pollInputs()
+{
+    gfxHandle->pollInput();
+}
+
 void Window::render() 
 {
     gfxHandle->beginFrame();
@@ -61,7 +66,7 @@ void Window::onResize(uint32 width, uint32 height)
     for (auto& view : views)
     {
         // TODO: some sort of layouting algorithm should do this
-        view->applyArea(URect{
+        view->resize(URect{
             .size = UVector2(width, height),
             .offset = UVector2(0, 0),
             });

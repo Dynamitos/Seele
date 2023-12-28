@@ -12,10 +12,15 @@ public:
     Window(PWindowManager owner, Gfx::OWindow handle);
     ~Window();
     void addView(PView view);
+    void pollInputs();
     void render();
     Gfx::PWindow getGfxHandle();
     void setFocused(PView view);
     void onResize(uint32 width, uint32 height);
+    constexpr bool isPaused() const
+    {
+        return gfxHandle->isPaused();
+    }
 protected:
     PWindowManager owner;
     Array<PView> views;

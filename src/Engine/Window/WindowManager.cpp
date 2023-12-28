@@ -22,6 +22,9 @@ void WindowManager::render()
 {
     for (auto& window : windows)
     {
+        window->pollInputs();
+        if (window->isPaused())
+            continue;
         window->render();
     }
 }

@@ -17,14 +17,16 @@ public:
 
 	virtual void prepareRender() = 0;
 	virtual void render() = 0;
-	virtual void applyArea(URect area) = 0;
+	void resize(URect area);
 	void setFocused();
 
 	const std::string& getName();
 
 protected:
+	virtual void applyArea(URect area) = 0;
 	Gfx::PGraphics graphics;
 	Gfx::OViewport viewport;
+	ViewportCreateInfo createInfo;
 	PWindow owner;
 	std::string name;
 	

@@ -157,6 +157,7 @@ TextureBase::TextureBase(PGraphics graphics, VkImageViewType viewType,
         
         // When loading a texture from a file, we will almost always use it as a texture map for fragment shaders
         changeLayout(Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        graphics->getStagingManager()->release(std::move(staging));
     }
     else if(usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
     {

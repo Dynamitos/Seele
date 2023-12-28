@@ -11,6 +11,7 @@ class Window
 public:
     Window();
     virtual ~Window();
+    virtual void pollInput() = 0;
     virtual void beginFrame() = 0;
     virtual void endFrame() = 0;
     virtual void onWindowCloseEvent() = 0;
@@ -34,11 +35,15 @@ public:
     {
         return framebufferHeight;
     }
-
+    constexpr bool isPaused() const
+    {
+        return paused;
+    }
 protected:
     SeFormat framebufferFormat;
     uint32 framebufferWidth;
     uint32 framebufferHeight;
+    bool paused = false;
 };
 DEFINE_REF(Window)
 

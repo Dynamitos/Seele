@@ -10,7 +10,7 @@
 
 
 #ifndef ENABLE_VALIDATION
-#define ENABLE_VALIDATION 0
+#define ENABLE_VALIDATION 1
 #endif
 
 namespace Seele

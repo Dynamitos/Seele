@@ -31,7 +31,7 @@ Matrix4 Viewport::getProjectionMatrix() const
 {
 	if (fieldOfView > 0.0f)
 	{
-		return glm::perspective(fieldOfView, sizeX / static_cast<float>(sizeY), 0.1f, 1000.0f);
+		return glm::perspective(fieldOfView, sizeX / static_cast<float>(sizeY), 0.1f, 10000.0f);
 	}
 	else
 	{

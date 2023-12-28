@@ -255,6 +255,7 @@ void Buffer::unmap()
             vkCmdCopyBuffer(cmdHandle, stagingBuffer->getHandle(), buffers[currentBuffer].buffer, 1, &region);
         }
         //requestOwnershipTransfer(pending.prevQueue);
+        graphics->getStagingManager()->release(std::move(pending.stagingBuffer));
         pendingBuffers.erase(this);
     }
 }
@@ -278,6 +279,10 @@ UniformBuffer::UniformBuffer(PGraphics graphics, const UniformBufferCreateInfo &
 
 UniformBuffer::~UniformBuffer()
 {
+    if (dedicatedStagingBuffer != nullptr)
+    {
+        graphics->getStagingManager()->release(std::move(dedicatedStagingBuffer));
+    }
 }
 
 bool UniformBuffer::updateContents(const DataSource &sourceData) 
@@ -365,6 +370,10 @@ ShaderBuffer::ShaderBuffer(PGraphics graphics, const ShaderBufferCreateInfo &sou
 
 ShaderBuffer::~ShaderBuffer()
 {
+    if (dedicatedStagingBuffer != nullptr)
+    {
+        graphics->getStagingManager()->release(std::move(dedicatedStagingBuffer));
+    }
 }
 
 bool ShaderBuffer::updateContents(const DataSource &sourceData) 

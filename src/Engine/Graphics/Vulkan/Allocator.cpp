@@ -134,6 +134,10 @@ void Allocation::markFree(PSubAllocation allocation)
     }
     activeAllocations.remove(allocation, false);
     bytesUsed -= allocation->allocatedSize;
+    //if (activeAllocations.size() == 0)
+    //{
+    //    pool->free(this);
+    //}
 }
 
 void Allocation::flushMemory()
@@ -203,7 +207,7 @@ OSubAllocation Allocator::allocate(const VkMemoryRequirements2 &memRequirements2
             OSubAllocation suballoc = alloc->getSuballocation(requirements.size, requirements.alignment);
             if (suballoc != nullptr)
             {
-                return std::move(suballoc);
+                return suballoc;
             }
         }
     }
@@ -216,18 +220,15 @@ OSubAllocation Allocator::allocate(const VkMemoryRequirements2 &memRequirements2
     return heaps[heapIndex].allocations.back()->getSuballocation(requirements.size, requirements.alignment);
 }
 
-void Allocator::free()
+void Allocator::free(PAllocation allocation)
 {
     for (uint32 heapIndex = 0; heapIndex < heaps.size(); ++heapIndex)
     {
         for (uint32 alloc = 0; alloc < heaps[heapIndex].allocations.size(); ++alloc)
         {
-            if (heaps[heapIndex].allocations[alloc]->bytesUsed == 0)
+            if (heaps[heapIndex].allocations[alloc] == allocation)
             {
-                heaps[heapIndex].inUse -= heaps[heapIndex].allocations[alloc]->bytesAllocated;
-                std::cout << "Heap " << heapIndex << ": " << (float)heaps[heapIndex].inUse / heaps[heapIndex].maxSize * 100 << "%" << std::endl;
                 heaps[heapIndex].allocations.removeAt(alloc, false);
-                alloc--;
             }
         }
     }
@@ -259,7 +260,7 @@ uint32 Allocator::findMemoryType(uint32 typeFilter, VkMemoryPropertyFlags proper
 }
 
 StagingBuffer::StagingBuffer(PGraphics graphics, OSubAllocation allocation, VkBuffer buffer, VkDeviceSize size, Gfx::QueueType owner)
-    : QueueOwnedResource(graphics->getFamilyMapping(), owner)
+    : owner(owner)
     , graphics(graphics)
     , allocation(std::move(allocation))
     , buffer(buffer)
@@ -270,9 +271,9 @@ StagingBuffer::StagingBuffer(PGraphics graphics, OSubAllocation allocation, VkBu
 StagingBuffer::~StagingBuffer()
 {
     graphics->getDestructionManager()->queueBuffer(
-        graphics->getQueueCommands(currentOwner)->getCommands(), buffer);
+        graphics->getQueueCommands(owner)->getCommands(), buffer);
     graphics->getDestructionManager()->queueAllocation(
-        graphics->getQueueCommands(currentOwner)->getCommands(), std::move(allocation));
+        graphics->getQueueCommands(owner)->getCommands(), std::move(allocation));
 }
 
 void* StagingBuffer::map()
@@ -300,28 +301,6 @@ VkDeviceSize StagingBuffer::getOffset() const
     return allocation->getOffset();
 }
 
-void StagingBuffer::executeOwnershipBarrier(Gfx::QueueType newOwner)
-{
-    assert(false);
-}
-void StagingBuffer::executePipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage,
-    Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage)
-{
-    PCommand commandBuffer = graphics->getQueueCommands(currentOwner)->getCommands();
-    VkBufferMemoryBarrier barrier = {
-        .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
-        .pNext = nullptr,
-        .srcAccessMask = srcAccess,
-        .dstAccessMask = dstAccess,
-        .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-        .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-        .buffer = buffer,
-        .offset = 0,
-        .size = size,
-    };
-    vkCmdPipelineBarrier(commandBuffer->getHandle(), srcStage, dstStage, 0, 0, nullptr, 1, &barrier, 0, nullptr);
-}
-
 StagingManager::StagingManager(PGraphics graphics, PAllocator pool)
     : graphics(graphics), pool(pool)
 {
@@ -333,8 +312,18 @@ StagingManager::~StagingManager()
 
 OStagingBuffer StagingManager::create(uint64 size, Gfx::QueueType owner)
 {
+    //vkDeviceWaitIdle(graphics->getDevice());
     //std::cout << "Creating new stagingbuffer" << std::endl;
-    uint32 queueIndex = graphics->getFamilyMapping().getQueueTypeFamilyIndex(Gfx::QueueType::DEDICATED_TRANSFER);
+    for (uint32 i = 0; i < freeBuffers.size(); ++i)
+    {
+        if (size <= freeBuffers[i]->getSize() && owner == freeBuffers[i]->getOwner())
+        {
+            OStagingBuffer result = std::move(freeBuffers[i]);
+            freeBuffers.removeAt(i);
+            return result;
+        }
+    }
+    uint32 queueIndex = graphics->getFamilyMapping().getQueueTypeFamilyIndex(owner);
     VkBufferCreateInfo stagingBufferCreateInfo = {
         .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
         .pNext = nullptr,
@@ -374,4 +363,9 @@ OStagingBuffer StagingManager::create(uint64 size, Gfx::QueueType owner)
     vkBindBufferMemory(graphics->getDevice(), buffer, stagingBuffer->getMemory(), stagingBuffer->getOffset());
     
     return stagingBuffer;
+}
+
+void StagingManager::release(OStagingBuffer buffer)
+{
+    freeBuffers.add(std::move(buffer));
 }

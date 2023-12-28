@@ -63,7 +63,6 @@ public:
     void queueSemaphore(PCommand cmd, VkSemaphore sem);
     void queueRenderPass(PCommand cmd, VkRenderPass renderPass);
     void queueDescriptorPool(PCommand cmd, VkDescriptorPool pool);
-    void queueDescriptorSet(PCommand cmd, Pair<VkDescriptorSet, VkDescriptorPool> set);
     void queueAllocation(PCommand cmd, OSubAllocation alloc);
     void notifyCmdComplete(PCommand cmdbuffer);
 private:
@@ -74,7 +73,6 @@ private:
     Map<PCommand, List<VkSemaphore>> sems;
     Map<PCommand, List<VkRenderPass>> renderPasses;
     Map<PCommand, List<VkDescriptorPool>> pools;
-    Map<PCommand, List<Pair<VkDescriptorSet, VkDescriptorPool>>> sets;
     Map<PCommand, List<OSubAllocation>> allocs;
 };
 DEFINE_REF(DestructionManager)

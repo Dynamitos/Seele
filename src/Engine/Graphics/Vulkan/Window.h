@@ -13,6 +13,7 @@ class Window : public Gfx::Window
 public:
     Window(PGraphics graphics, const WindowCreateInfo &createInfo);
     virtual ~Window();
+    virtual void pollInput() override;
     virtual void beginFrame() override;
     virtual void endFrame() override;
     virtual Gfx::PTexture2D getBackBuffer() override;

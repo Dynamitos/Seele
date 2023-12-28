@@ -46,14 +46,19 @@ bool Fence::isSignaled()
     {
         return true;
     }
-    VkResult res = vkGetFenceStatus(graphics->getDevice(), fence);
-    if (res == VK_SUCCESS)
+    VkResult r = vkGetFenceStatus(graphics->getDevice(), fence);
+    if (r == VK_SUCCESS)
     {
         signaled = true;
         return true;
     }
-    if (res == VK_NOT_READY)
+    if (r == VK_NOT_READY)
     {
+        return false;
+    }
+    else
+    {
+        VK_CHECK(r);
         return false;
     }
 }
@@ -124,11 +129,6 @@ void DestructionManager::queueDescriptorPool(PCommand cmd, VkDescriptorPool pool
     pools[cmd].add(pool);
 }
 
-void DestructionManager::queueDescriptorSet(PCommand cmd, Pair<VkDescriptorSet, VkDescriptorPool> set)
-{
-    sets[cmd].add(set);
-}
-
 void DestructionManager::queueAllocation(PCommand cmd, OSubAllocation alloc)
 {
     allocs[cmd].add(std::move(alloc));
@@ -152,10 +152,6 @@ void DestructionManager::notifyCmdComplete(PCommand cmd)
     {
         vkDestroySemaphore(graphics->getDevice(), sem, nullptr);
     }
-    for (auto [set, pool] : sets[cmd])
-    {
-        vkFreeDescriptorSets(graphics->getDevice(), pool, 1, &set);
-    }
     for (auto pool : pools[cmd])
     {
         vkDestroyDescriptorPool(graphics->getDevice(), pool, nullptr);
@@ -168,7 +164,7 @@ void DestructionManager::notifyCmdComplete(PCommand cmd)
     images[cmd].clear();
     views[cmd].clear();
     sems[cmd].clear();
+    pools[cmd].clear();
     renderPasses[cmd].clear();
     allocs[cmd].clear();
-    //graphics->getAllocator()->free();
 }

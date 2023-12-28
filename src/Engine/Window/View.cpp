@@ -7,6 +7,7 @@ using namespace Seele;
 View::View(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo &viewportInfo, std::string name)
 	: graphics(graphics)
 	, owner(window)
+	, createInfo(viewportInfo)
 	, name(name)
 {
 	viewport = graphics->createViewport(owner->getGfxHandle(), viewportInfo);
@@ -18,7 +19,14 @@ View::~View()
 {
 }
 
-void View::setFocused() 
+void View::resize(URect area)
+{
+	createInfo.dimensions = area;
+	viewport = graphics->createViewport(owner->getGfxHandle(), createInfo);
+	applyArea(area);
+}
+
+void View::setFocused()
 {
 	owner->setFocused(this);	
 }

@@ -25,10 +25,10 @@ public:
 
 	virtual void prepareRender() override;
 	virtual void render() override;
-	virtual void applyArea(URect rect) override;
 
 	void reloadGame();
-private:
+protected:
+	virtual void applyArea(URect rect) override;
 	OScene scene;
 	GameInterface gameInterface;
     RenderGraph<
