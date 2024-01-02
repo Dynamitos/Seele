@@ -360,29 +360,31 @@ Array<const char *> Graphics::getRequiredExtensions()
 void Graphics::initInstance(GraphicsInitializer initInfo)
 {
     glfwInit();
-    VkApplicationInfo appInfo = {};
-    appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-    appInfo.pApplicationName = initInfo.applicationName;
-    appInfo.applicationVersion = VK_MAKE_VERSION(0, 0, 1);
-    appInfo.pEngineName = initInfo.engineName;
-    appInfo.engineVersion = VK_MAKE_VERSION(0, 0, 1);
-    appInfo.apiVersion = VK_API_VERSION_1_2;
-
-    VkInstanceCreateInfo info = {};
-    info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-    info.pApplicationInfo = &appInfo;
-    Array<const char *> extensions = getRequiredExtensions();
+    VkApplicationInfo appInfo = {
+        .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
+        .pApplicationName = initInfo.applicationName,
+        .applicationVersion = VK_MAKE_VERSION(0, 0, 1),
+        .pEngineName = initInfo.engineName,
+        .engineVersion = VK_MAKE_VERSION(0, 0, 1),
+        .apiVersion = VK_API_VERSION_1_2,
+    };
+    
+    Array<const char*> extensions = getRequiredExtensions();
     for (uint32 i = 0; i < initInfo.instanceExtensions.size(); ++i)
     {
         extensions.add(initInfo.instanceExtensions[i]);
     }
-    info.enabledExtensionCount = (uint32)extensions.size();
-    info.ppEnabledExtensionNames = extensions.data();
 #if ENABLE_VALIDATION
     initInfo.layers.add("VK_LAYER_KHRONOS_validation");
 #endif
-    info.enabledLayerCount = (uint32)initInfo.layers.size();
-    info.ppEnabledLayerNames = initInfo.layers.data();
+    VkInstanceCreateInfo info = {
+        .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+        .pApplicationInfo = &appInfo,
+        .enabledLayerCount = (uint32)initInfo.layers.size(),
+        .ppEnabledLayerNames = initInfo.layers.data(),
+        .enabledExtensionCount = (uint32)extensions.size(),
+        .ppEnabledExtensionNames = extensions.data(),
+    };
     VK_CHECK(vkCreateInstance(&info, nullptr, &instance));
 }
 void Graphics::setupDebugCallback()
@@ -438,6 +440,7 @@ void Graphics::pickPhysicalDevice()
     
     vkGetPhysicalDeviceProperties(physicalDevice, &props);
     vkGetPhysicalDeviceFeatures2(physicalDevice, &features);
+    features.features.robustBufferAccess = 0;
     if (Gfx::useMeshShading)
     {
         uint32 count = 0;
@@ -448,7 +451,7 @@ void Graphics::pickPhysicalDevice()
         {
             if (std::strcmp(VK_EXT_MESH_SHADER_EXTENSION_NAME, extensionProps[i].extensionName) == 0)
             {
-                meshShadingEnabled = true;
+                //meshShadingEnabled = true;
                 break;
             }
         }

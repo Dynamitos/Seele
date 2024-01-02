@@ -204,6 +204,8 @@ void TextureBase::changeLayout(Gfx::SeImageLayout newLayout)
     VkImageMemoryBarrier barrier = {
         .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
         .pNext = nullptr,
+        .srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT,
+        .dstAccessMask = VK_ACCESS_MEMORY_READ_BIT,
         .oldLayout = cast(layout),
         .newLayout = cast(newLayout),
         .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,

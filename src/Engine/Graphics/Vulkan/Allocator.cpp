@@ -367,5 +367,5 @@ OStagingBuffer StagingManager::create(uint64 size, Gfx::QueueType owner)
 
 void StagingManager::release(OStagingBuffer buffer)
 {
-    freeBuffers.add(std::move(buffer));
+    //freeBuffers.add(std::move(buffer));
 }

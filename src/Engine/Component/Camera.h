@@ -28,13 +28,15 @@ struct Camera
     void moveX(float amount);
     void moveY(float amount);
     void buildViewMatrix();
-    Matrix4 viewMatrix;
-    Vector cameraPos;
-    //Transforms relative to actor
-    float yaw;
-    float pitch;
+    
     bool mainCamera = false;
 private:
+    float yaw;
+    float pitch;
+    // Spring arm transform
+    Math::Transform relativeTransform;
+    Matrix4 viewMatrix;
+    Vector cameraPos;
     bool bNeedsViewBuild;
 };
 } // namespace Component

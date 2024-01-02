@@ -51,7 +51,7 @@ void taskMain(
 		{
 			uint m = mesh.meshletOffset + i;
 			MeshletDescription meshlet = pScene.meshletInfos[m];
-			if(meshlet.boundingBox.insideFrustum(localToClip, viewFrustum))
+			//if(meshlet.boundingBox.insideFrustum(localToClip, viewFrustum))
 			{
 				uint index;
 				InterlockedAdd(head, 1, index);
@@ -120,7 +120,6 @@ void meshMain(
 		{
 			uint vertexIndex = pScene.vertexIndices[m.vertexOffset + v];
 			VertexAttributes attr = pVertexData.getAttributes(md.indicesOffset + vertexIndex);
-			attr.vertexColor = m.color;
 			vertices[v] = attr.getParameter(inst.transformMatrix);
 		}
 	}

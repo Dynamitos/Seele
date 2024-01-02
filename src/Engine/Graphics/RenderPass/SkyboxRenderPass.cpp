@@ -11,7 +11,7 @@ SkyboxRenderPass::SkyboxRenderPass(Gfx::PGraphics graphics, PScene scene)
     skybox = Seele::Component::Skybox{
         .day = AssetRegistry::findTexture("FS000_Day_01")->getTexture().cast<Gfx::TextureCube>(),
         .night = AssetRegistry::findTexture("FS000_Night_01")->getTexture().cast<Gfx::TextureCube>(),
-        .fogColor = Vector(0.2, 0.1, 0.6),
+        .fogColor = Vector(0.1, 0.1, 0.8),
         .blendFactor = 0,
     };
 }
@@ -27,8 +27,13 @@ void SkyboxRenderPass::beginFrame(const Component::Camera& cam)
 
     skyboxDataLayout->reset();
     textureLayout->reset();
+    skyboxData.transformMatrix = glm::rotate(skyboxData.transformMatrix, (float)(Gfx::getCurrentFrameDelta()), Vector(0, 1, 0));
+    skyboxBuffer->updateContents(DataSource{
+        .size = sizeof(SkyboxData),
+        .data = (uint8*)&skyboxData,
+        });
     skyboxDataSet = skyboxDataLayout->allocateDescriptorSet();
-    skyboxDataSet->updateBuffer(0, viewParamsBuffer);
+    skyboxDataSet->updateBuffer(0, skyboxBuffer);
     skyboxDataSet->writeChanges();
     textureSet = textureLayout->allocateDescriptorSet();
     textureSet->updateTexture(0, skybox.day);
@@ -82,11 +87,24 @@ void SkyboxRenderPass::createRenderPass()
     };
     renderPass = graphics->createRenderPass(std::move(layout), viewport);
 
-    ShaderCreateInfo createInfo;
-    createInfo.name = "SkyboxVertex";
-    createInfo.additionalModules.add("Skybox");
-    createInfo.mainModule = "Skybox";
-    createInfo.entryPoint = "vertexMain";
+    skyboxData.transformMatrix = Matrix4(1);
+    skyboxData.fogColor = skybox.fogColor;
+    skyboxData.blendFactor = skybox.blendFactor;
+
+    skyboxBuffer = graphics->createUniformBuffer(UniformBufferCreateInfo{
+        .sourceData = {
+            .size = sizeof(SkyboxData),
+            .data = (uint8*)&skyboxData,
+        },
+        .dynamic = true,
+        });
+
+    ShaderCreateInfo createInfo = {
+        .mainModule = "Skybox",
+        .additionalModules = {"Skybox"},
+        .name = "SkyboxVertex",
+        .entryPoint = "vertexMain",
+    };
     vertexShader = graphics->createVertexShader(createInfo);
 
     createInfo.name = "SkyboxFragment";
@@ -103,7 +121,6 @@ void SkyboxRenderPass::createRenderPass()
     gfxInfo.vertexShader = vertexShader;
     gfxInfo.fragmentShader = fragmentShader;
     gfxInfo.rasterizationState.polygonMode = Gfx::SE_POLYGON_MODE_FILL;
-    gfxInfo.rasterizationState.lineWidth = 5.f;
     gfxInfo.topology = Gfx::SE_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     gfxInfo.pipelineLayout = std::move(pipelineLayout);
     gfxInfo.renderPass = renderPass;

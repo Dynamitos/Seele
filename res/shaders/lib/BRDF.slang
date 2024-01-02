@@ -34,23 +34,30 @@ struct BlinnPhong : IBRDF
     }
 };
 
-struct DisneyBRDF : IBRDF
+struct CelShading : IBRDF
 {
     float3 baseColor;
-    float metallic = 0;
-    float3 normal = float3(0, 1, 0);
-    float subsurface = 0;
-    float specular = 0.5;
-    float roughness = 0.5;
-    float specularTint = 0;
-    float anisotropic = 0;
-    float sheen = 0;
-    float sheenTint = 0.5f;
-    float clearCoat = 0;
-    float clearCoatGloss = 1;
+    float3 normal;
+
+    __init()
+    {
+        normal = float3(0, 0, 1);
+    }
 
     float3 evaluate(float3x3 tbn, float3 viewDir_TS, float3 lightDir_TS, float3 lightColor)
     {
-        return baseColor;
+        float3 normal_TS = normalize(normal);
+        float nDotL = dot(normal_TS, lightDir_TS);
+        float diffuse = max(nDotL, 0);
+
+        float3 darkenedBase = baseColor * 0.8;
+        if(diffuse > 0.5)
+        {
+            return baseColor * lightColor;
+        }
+        else
+        {
+            return darkenedBase * lightColor;
+        }
     }
 };

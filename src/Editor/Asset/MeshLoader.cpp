@@ -51,7 +51,7 @@ void MeshLoader::loadMaterials(const aiScene* scene, const std::string& baseName
         std::string materialName = std::format("{0}{1}{2}", baseName, material->GetName().C_Str(), i);
         materialName.erase(std::remove(materialName.begin(), materialName.end(), '.'), materialName.end()); // dots break adding the .asset extension later
         matCode["name"] = materialName;
-        matCode["profile"] = "BlinnPhong"; //TODO: other shading models
+        matCode["profile"] = "CelShading";
         aiString texPath;
         uint32 baseColorIndex = 0;
         uint32 normalIndex = 0;
@@ -176,7 +176,7 @@ void MeshLoader::loadMaterials(const aiScene* scene, const std::string& baseName
         matCode["code"].push_back(
             {
                 { "exp", "BRDF" },
-                { "profile", "BlinnPhong" },
+                { "profile", matCode["profile"]},
                 { "values", {
                     { "baseColor", baseColorIndex },
                     { "normal", normalIndex },

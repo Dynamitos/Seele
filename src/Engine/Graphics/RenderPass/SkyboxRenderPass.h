@@ -28,6 +28,13 @@ private:
     Gfx::OFragmentShader fragmentShader;
     Gfx::PGraphicsPipeline pipeline;
     Gfx::OSampler skyboxSampler;
+    struct SkyboxData
+    {
+        Matrix4 transformMatrix;
+        Vector fogColor;
+        float blendFactor;
+    } skyboxData;
+    Gfx::OUniformBuffer skyboxBuffer;
     Component::Skybox skybox;
 };
 DEFINE_REF(SkyboxRenderPass)
