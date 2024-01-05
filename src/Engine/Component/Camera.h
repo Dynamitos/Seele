@@ -33,8 +33,6 @@ struct Camera
 private:
     float yaw;
     float pitch;
-    // Spring arm transform
-    Math::Transform relativeTransform;
     Matrix4 viewMatrix;
     Vector cameraPos;
     bool bNeedsViewBuild;

@@ -10,12 +10,12 @@ public:
     GameInterface(std::string dllPath);
     ~GameInterface();
     Game* getGame();
-    void reload(AssetRegistry* registry);
+    void reload();
 private:
     HMODULE lib = NULL;
     std::string dllPath;
     Game* game;
-    Game* (*createInstance)(AssetRegistry*) = nullptr;
+    Game* (*createInstance)() = nullptr;
     void (*destroyInstance)(Game*) = nullptr;
 };
 } // namespace Seele

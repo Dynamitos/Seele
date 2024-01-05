@@ -22,11 +22,6 @@ SceneView::SceneView(Gfx::PGraphics graphics, PWindow owner, const ViewportCreat
     ))
     , cameraSystem(createInfo.dimensions, Vector(0, 0, 10))
 {
-
-    //AssetRegistry::importFile("D:\\Private\\Programming\\Unreal Engine\\Assets\\Ely\\Ely.fbx");
-    //AssetRegistry::importFile("D:\\Private\\Programming\\Unreal Engine\\Assets\\Cube\\cube.obj");
-    //AssetRegistry::importFile("D:\\Private\\Programming\\Unreal Engine\\Assets\\Plane\\plane.fbx");
-    
     cameraSystem.update(viewportCamera, static_cast<float>(Gfx::getCurrentFrameDelta()));
     
     renderGraph.updateViewport(viewport);

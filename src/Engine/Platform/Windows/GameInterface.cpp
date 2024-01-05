@@ -17,7 +17,7 @@ Game* GameInterface::getGame()
     return game;
 }
 
-void GameInterface::reload(AssetRegistry* registry)
+void GameInterface::reload()
 {
     if(lib != NULL)
     {
@@ -27,5 +27,5 @@ void GameInterface::reload(AssetRegistry* registry)
     lib = LoadLibraryA(dllPath.c_str());
     createInstance = (decltype(createInstance))GetProcAddress(lib, "createInstance");
     destroyInstance = (decltype(destroyInstance))GetProcAddress(lib, "destroyInstance");
-    game = createInstance(registry);
+    game = createInstance();
 }

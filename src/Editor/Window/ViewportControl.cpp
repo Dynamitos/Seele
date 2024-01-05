@@ -53,24 +53,7 @@ void ViewportControl::update(Component::Camera& camera, float deltaTime)
     {
         moveVector += glm::vec3(0, -cameraMove, 0);
     }
-    position += moveVector;
-    static float lastX, lastY;
-    if(mouse2)
-    {
-        float deltaX = mouseX - lastX;
-        float deltaY = mouseY - lastY;
-        yaw += deltaX / 500.f;
-        pitch -= deltaY / 500.f;
-    }
-    lastX = mouseX;
-    lastY = mouseY;
-    springArm = glm::normalize(
-        Vector(
-            cos(yaw) * cos(pitch),
-            sin(pitch),
-            sin(yaw) * cos(pitch)));
-    camera.viewMatrix = glm::lookAt(position, position + springArm, Vector(0, 1, 0));
-    std::cout << yaw << " " << pitch << std::endl;
+    throw std::logic_error("Not implemented");
 }
 
 void ViewportControl::keyCallback(KeyCode key, InputAction action)
