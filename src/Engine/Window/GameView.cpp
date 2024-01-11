@@ -81,7 +81,7 @@ void GameView::applyArea(URect rect)
 
 void GameView::reloadGame()
 {
-    gameInterface.reload(AssetRegistry::getInstance());
+    gameInterface.reload();
     
     systemGraph = new SystemGraph();
     gameInterface.getGame()->setupScene(scene, systemGraph);
