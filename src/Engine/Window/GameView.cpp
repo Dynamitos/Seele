@@ -74,7 +74,7 @@ void GameView::render()
     renderGraph.render(cam);
 }
 
-void GameView::applyArea(URect rect)
+void GameView::applyArea(URect)
 {
     renderGraph.updateViewport(viewport);
 }

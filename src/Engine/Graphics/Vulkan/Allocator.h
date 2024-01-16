@@ -58,7 +58,10 @@ public:
 	{
 		return allocatedMemory;
 	}
-	
+	constexpr VkMemoryPropertyFlags getProperties() const
+	{
+		return properties;
+	}
 	constexpr void* map()
 	{
 		if (!canMap)

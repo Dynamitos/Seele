@@ -3,7 +3,7 @@
 
 using namespace Seele::Vulkan;
 
-VkBool32 Seele::Vulkan::debugCallback(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT, uint64_t, size_t, int32_t, const char *layerPrefix, const char *msg, void *)
+VkBool32 Seele::Vulkan::debugCallback(VkDebugReportFlagsEXT, VkDebugReportObjectTypeEXT, uint64_t, size_t, int32_t, const char *layerPrefix, const char *msg, void *)
 {
 	std::cerr << layerPrefix << ": " << msg << std::endl;
 	return VK_FALSE;

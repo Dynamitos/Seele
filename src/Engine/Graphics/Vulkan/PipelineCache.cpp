@@ -135,8 +135,8 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo gf
         .depthWriteEnable = gfxInfo.depthStencilState.depthWriteEnable,
         .depthCompareOp = cast(gfxInfo.depthStencilState.depthCompareOp),
         .depthBoundsTestEnable = gfxInfo.depthStencilState.depthBoundsTestEnable,
-        .front = (VkStencilOp)gfxInfo.depthStencilState.front,
-        .back = (VkStencilOp)gfxInfo.depthStencilState.back,
+        .front = {(VkStencilOp)gfxInfo.depthStencilState.front},
+        .back = {(VkStencilOp)gfxInfo.depthStencilState.back},
         .minDepthBounds = gfxInfo.depthStencilState.minDepthBounds,
         .maxDepthBounds = gfxInfo.depthStencilState.maxDepthBounds,
     };
@@ -307,8 +307,8 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::MeshPipelineCreateInfo gfxI
         .depthWriteEnable = gfxInfo.depthStencilState.depthWriteEnable,
         .depthCompareOp = cast(gfxInfo.depthStencilState.depthCompareOp),
         .depthBoundsTestEnable = gfxInfo.depthStencilState.depthBoundsTestEnable,
-        .front = (VkStencilOp)gfxInfo.depthStencilState.front,
-        .back = (VkStencilOp)gfxInfo.depthStencilState.back,
+        .front = {(VkStencilOp)gfxInfo.depthStencilState.front},
+        .back = {(VkStencilOp)gfxInfo.depthStencilState.back},
         .minDepthBounds = gfxInfo.depthStencilState.minDepthBounds,
         .maxDepthBounds = gfxInfo.depthStencilState.maxDepthBounds,
     };

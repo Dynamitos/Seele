@@ -3,7 +3,7 @@
 #include "slang.h"
 #include "slang-com-ptr.h"
 #include "stdlib.h"
-#include <format>
+#include <fmt/core.h>
 
 using namespace Seele;
 using namespace Seele::Vulkan;
@@ -28,7 +28,7 @@ uint32 Seele::Vulkan::Shader::getShaderHash() const
     return hash;
 }
 
-#define CHECK_RESULT(x) {SlangResult r = x; if(r != 0) {throw std::runtime_error(std::format("Error: {0}", r));}}
+#define CHECK_RESULT(x) {SlangResult r = x; if(r != 0) {throw std::runtime_error(fmt::format("Error: {0}", r));}}
 #define CHECK_DIAGNOSTICS() {if(diagnostics) {std::cout << (const char*)diagnostics->getBufferPointer() << std::endl; assert(false);}}
 
 void Shader::create(const ShaderCreateInfo& createInfo)
@@ -115,11 +115,6 @@ void Shader::create(const ShaderCreateInfo& createInfo)
     );
     CHECK_DIAGNOSTICS();
 
-    for (uint32 i = 0; i < reflection->getParameterCount(); ++i)
-    {
-        slang::VariableLayoutReflection* varLayout = reflection->getParameterByIndex(i);
-        //std::cout << varLayout->getName() << " in space " << varLayout->getBindingSpace() << " index " << varLayout->getBindingIndex() << std::endl;
-    }
     VkShaderModuleCreateInfo moduleInfo =
     {
         .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,

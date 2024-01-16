@@ -82,7 +82,11 @@ if(WIN32)
         ${SLANG_ROOT}/lib/slang.lib
     DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 elseif(APPLE)
-    
+    set(SLANG_ROOT ${EXTERNAL_ROOT}/vcpkg/packages/shader-slang_arm64-osx/)
+    set_target_properties(shader-slang PROPERTIES IMPORTED_LOCATION ${SLANG_ROOT}/bin/libslang.dylib)
+    install(FILES
+        ${SLANG_ROOT}/bin/libslang.dylib
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 endif()
 target_include_directories(shader-slang INTERFACE 
     $<BUILD_INTERFACE:${SLANG_ROOT}/include/>

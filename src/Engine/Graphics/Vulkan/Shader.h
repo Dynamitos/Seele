@@ -17,14 +17,22 @@ public:
 
     void create(const ShaderCreateInfo& createInfo);
 
-    VkShaderModule getModuleHandle() const
+    constexpr VkShaderModule getModuleHandle() const
     {
         return module;
     }
-    const char* getEntryPointName() const
+    constexpr const char* getEntryPointName() const
     {
         //SLang renames all entry points to main, so we dont need that
         return "main";//entryPointName.c_str();
+    }
+    constexpr ShaderType getShaderType() const
+    {
+        return type;
+    }
+    constexpr VkShaderStageFlags getStage() const
+    {
+        return stage;
     }
     //Map<uint32, PDescriptorLayout> getDescriptorLayouts();
     uint32 getShaderHash() const;

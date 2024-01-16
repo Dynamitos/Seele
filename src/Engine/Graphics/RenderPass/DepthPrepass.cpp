@@ -16,8 +16,6 @@ DepthPrepass::DepthPrepass(Gfx::PGraphics graphics, PScene scene)
     : RenderPass(graphics, scene)
     , descriptorSets(3)
 {
-    UniformBufferCreateInfo uniformInitializer;
-
     depthPrepassLayout = graphics->createPipelineLayout();
     depthPrepassLayout->addDescriptorLayout(INDEX_VIEW_PARAMS, viewParamsLayout);
     if (graphics->supportMeshShading())
@@ -174,6 +172,6 @@ void DepthPrepass::createRenderPass()
     renderPass = graphics->createRenderPass(std::move(layout), viewport);
 }
 
-void DepthPrepass::modifyRenderPassMacros(Map<const char*, const char*>& defines) 
+void DepthPrepass::modifyRenderPassMacros(Map<const char*, const char*>&) 
 {
 }

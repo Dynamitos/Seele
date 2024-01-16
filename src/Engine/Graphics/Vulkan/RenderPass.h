@@ -33,7 +33,6 @@ public:
         return subpassContents;
     }
 private:
-    uint32 framebufferHash;
     PGraphics graphics;
     VkRenderPass renderPass;
     Array<VkClearValue> clearValues;
