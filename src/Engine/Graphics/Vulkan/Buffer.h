@@ -59,19 +59,19 @@ class UniformBuffer : public Gfx::UniformBuffer, public Buffer
 public:
     UniformBuffer(PGraphics graphics, const UniformBufferCreateInfo &sourceData);
     virtual ~UniformBuffer();
-    virtual bool updateContents(const DataSource &sourceData);
+    virtual bool updateContents(const DataSource &sourceData) override;
     
     virtual void* map(bool writeOnly = true) override;
     virtual void unmap() override;
 protected:
     // Inherited via Vulkan::Buffer
-    virtual VkAccessFlags getSourceAccessMask();
-    virtual VkAccessFlags getDestAccessMask();
-    virtual void requestOwnershipTransfer(Gfx::QueueType newOwner);
+    virtual VkAccessFlags getSourceAccessMask() override;
+    virtual VkAccessFlags getDestAccessMask() override;
+    virtual void requestOwnershipTransfer(Gfx::QueueType newOwner) override;
     // Inherited via QueueOwnedResource
-    virtual void executeOwnershipBarrier(Gfx::QueueType newOwner);
+    virtual void executeOwnershipBarrier(Gfx::QueueType newOwner) override;
     virtual void executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, 
-        VkAccessFlags dstAccess, VkPipelineStageFlags dstStage);
+        VkAccessFlags dstAccess, VkPipelineStageFlags dstStage) override;
 
 private:
     OStagingBuffer dedicatedStagingBuffer;
@@ -83,19 +83,19 @@ class ShaderBuffer : public Gfx::ShaderBuffer, public Buffer
 public:
     ShaderBuffer(PGraphics graphics, const ShaderBufferCreateInfo &sourceData);
     virtual ~ShaderBuffer();
-    virtual bool updateContents(const DataSource &sourceData);
+    virtual bool updateContents(const DataSource &sourceData) override;
 
     virtual void* map(bool writeOnly = true) override;
     virtual void unmap() override;
 protected:
     // Inherited via Vulkan::Buffer
-    virtual VkAccessFlags getSourceAccessMask();
-    virtual VkAccessFlags getDestAccessMask();
-    virtual void requestOwnershipTransfer(Gfx::QueueType newOwner);
+    virtual VkAccessFlags getSourceAccessMask() override;
+    virtual VkAccessFlags getDestAccessMask() override;
+    virtual void requestOwnershipTransfer(Gfx::QueueType newOwner) override;
     // Inherited via QueueOwnedResource
-    virtual void executeOwnershipBarrier(Gfx::QueueType newOwner);
+    virtual void executeOwnershipBarrier(Gfx::QueueType newOwner) override;
     virtual void executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, 
-        VkAccessFlags dstAccess, VkPipelineStageFlags dstStage);
+        VkAccessFlags dstAccess, VkPipelineStageFlags dstStage) override;
 private:
     OStagingBuffer dedicatedStagingBuffer;
 };
@@ -111,13 +111,13 @@ public:
     virtual void download(Array<uint8>& buffer) override;
 protected:
     // Inherited via Vulkan::Buffer
-    virtual VkAccessFlags getSourceAccessMask();
-    virtual VkAccessFlags getDestAccessMask();
-    virtual void requestOwnershipTransfer(Gfx::QueueType newOwner);
+    virtual VkAccessFlags getSourceAccessMask() override;
+    virtual VkAccessFlags getDestAccessMask() override;
+    virtual void requestOwnershipTransfer(Gfx::QueueType newOwner) override;
     // Inherited via QueueOwnedResource
-    virtual void executeOwnershipBarrier(Gfx::QueueType newOwner);
+    virtual void executeOwnershipBarrier(Gfx::QueueType newOwner) override;
     virtual void executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, 
-        VkAccessFlags dstAccess, VkPipelineStageFlags dstStage);
+        VkAccessFlags dstAccess, VkPipelineStageFlags dstStage) override;
 };
 DEFINE_REF(VertexBuffer)
 
@@ -130,13 +130,13 @@ public:
     virtual void download(Array<uint8>& buffer) override;
 protected:
     // Inherited via Vulkan::Buffer
-    virtual VkAccessFlags getSourceAccessMask();
-    virtual VkAccessFlags getDestAccessMask();
-    virtual void requestOwnershipTransfer(Gfx::QueueType newOwner);
+    virtual VkAccessFlags getSourceAccessMask() override;
+    virtual VkAccessFlags getDestAccessMask() override;
+    virtual void requestOwnershipTransfer(Gfx::QueueType newOwner) override;
     // Inherited via QueueOwnedResource
-    virtual void executeOwnershipBarrier(Gfx::QueueType newOwner);
+    virtual void executeOwnershipBarrier(Gfx::QueueType newOwner) override;
     virtual void executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, 
-        VkAccessFlags dstAccess, VkPipelineStageFlags dstStage);
+        VkAccessFlags dstAccess, VkPipelineStageFlags dstStage) override;
 };
 DEFINE_REF(IndexBuffer)
 }

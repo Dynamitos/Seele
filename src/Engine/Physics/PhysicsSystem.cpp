@@ -1,5 +1,6 @@
 #include "PhysicsSystem.h"
 #include <random>
+#include <iostream>
 
 using namespace Seele;
 using namespace Seele::Component;

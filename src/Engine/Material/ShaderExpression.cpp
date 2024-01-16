@@ -4,7 +4,8 @@
 #include "Asset/AssetRegistry.h"
 #include "Graphics/Graphics.h"
 #include "Graphics/Descriptor.h"
-#include <format>
+#include <fstream>
+#include <fmt/core.h>
 
 using namespace Seele;
 
@@ -281,9 +282,9 @@ ConstantExpression::~ConstantExpression()
 
 std::string ConstantExpression::evaluate(Map<std::string, std::string>& varState) const
 {
-    std::string varName = std::format("const_exp_{}", key);
+    std::string varName = fmt::format("const_exp_{}", key);
     varState[key] = varName;
-    return std::format("let {} = {};\n", varName, expr);
+    return fmt::format("let {} = {};\n", varName, expr);
 }
 
 void ConstantExpression::save(ArchiveBuffer& buffer) const 
@@ -310,9 +311,9 @@ AddExpression::~AddExpression()
 
 std::string AddExpression::evaluate(Map<std::string, std::string>& varState) const
 {
-    std::string varName = std::format("exp_{}", key);
+    std::string varName = fmt::format("exp_{}", key);
     varState[key] = varName;
-    return std::format("let {} = {} + {};\n", varName, varState[inputs.at("lhs").source], varState[inputs.at("rhs").source]);
+    return fmt::format("let {} = {} + {};\n", varName, varState[inputs.at("lhs").source], varState[inputs.at("rhs").source]);
 }
 
 void AddExpression::save(ArchiveBuffer& buffer) const 
@@ -327,9 +328,9 @@ void AddExpression::load(ArchiveBuffer& buffer)
 
 std::string SubExpression::evaluate(Map<std::string, std::string>& varState) const
 {
-    std::string varName = std::format("exp_{}", key);
+    std::string varName = fmt::format("exp_{}", key);
     varState[key] = varName;
-    return std::format("let {} = {} - {};\n", varName, varState[inputs.at("lhs").source], varState[inputs.at("rhs").source]);
+    return fmt::format("let {} = {} - {};\n", varName, varState[inputs.at("lhs").source], varState[inputs.at("rhs").source]);
 }
 
 void SubExpression::save(ArchiveBuffer& buffer) const 
@@ -344,9 +345,9 @@ void SubExpression::load(ArchiveBuffer& buffer)
 
 std::string MulExpression::evaluate(Map<std::string, std::string>& varState) const 
 {
-    std::string varName = std::format("exp_{}", key);
+    std::string varName = fmt::format("exp_{}", key);
     varState[key] = varName;
-    return std::format("let {} = {} * {};\n", varName, varState[inputs.at("lhs").source], varState[inputs.at("rhs").source]);
+    return fmt::format("let {} = {} * {};\n", varName, varState[inputs.at("lhs").source], varState[inputs.at("rhs").source]);
 }
 
 void MulExpression::save(ArchiveBuffer& buffer) const 
@@ -361,7 +362,7 @@ void MulExpression::load(ArchiveBuffer& buffer)
 
 std::string SwizzleExpression::evaluate(Map<std::string, std::string>& varState) const
 {
-    std::string varName = std::format("exp_{}", key);
+    std::string varName = fmt::format("exp_{}", key);
     std::string swizzle = "";
     for(uint32 i = 0; i < 4; ++i)
     {
@@ -388,7 +389,7 @@ std::string SwizzleExpression::evaluate(Map<std::string, std::string>& varState)
         }
     }
     varState[key] = varName;
-    return std::format("let {} = {}.{};\n", varName, varState[inputs.at("target").source], swizzle);
+    return fmt::format("let {} = {}.{};\n", varName, varState[inputs.at("target").source], swizzle);
 }
 
 void SwizzleExpression::save(ArchiveBuffer& buffer) const 
@@ -405,9 +406,9 @@ void SwizzleExpression::load(ArchiveBuffer& buffer)
 
 std::string SampleExpression::evaluate(Map<std::string, std::string>& varState) const 
 {
-    std::string varName = std::format("exp_{}", key);
+    std::string varName = fmt::format("exp_{}", key);
     varState[key] = varName;
-    return std::format("let {} = {}.Sample({}, {});\n", varName, varState[inputs.at("texture").source], varState[inputs.at("sampler").source], varState[inputs.at("coords").source]);
+    return fmt::format("let {} = {}.Sample({}, {});\n", varName, varState[inputs.at("texture").source], varState[inputs.at("sampler").source], varState[inputs.at("coords").source]);
 }
 
 void SampleExpression::save(ArchiveBuffer& buffer) const 

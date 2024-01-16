@@ -13,6 +13,7 @@
 #include <stb_image_write.h>
 #pragma GCC diagnostic pop
 #include "ktx.h"
+#include <fstream>
 
 using namespace Seele;
 

@@ -1,5 +1,6 @@
 #include "ViewportControl.h"
 #include "Component/Camera.h"
+#include <iostream>
 
 using namespace Seele;
 using namespace Seele::Editor;

@@ -3,6 +3,7 @@
 #include "MaterialInstance.h"
 #include "Graphics/Graphics.h"
 #include "Graphics/Shader.h"
+#include <fstream>
 
 using namespace Seele;
 

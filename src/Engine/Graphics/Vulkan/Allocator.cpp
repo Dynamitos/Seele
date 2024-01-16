@@ -261,8 +261,8 @@ uint32 Allocator::findMemoryType(uint32 typeFilter, VkMemoryPropertyFlags proper
 
 StagingBuffer::StagingBuffer(PGraphics graphics, OSubAllocation allocation, VkBuffer buffer, VkDeviceSize size, Gfx::QueueType owner)
     : owner(owner)
-    , graphics(graphics)
     , allocation(std::move(allocation))
+    , graphics(graphics)
     , buffer(buffer)
     , size(size)
 {

@@ -5,6 +5,8 @@
 #include "Asset/MaterialAsset.h"
 #include "Asset/MaterialInstanceAsset.h"
 #include "Asset/AssetRegistry.h"
+#include <fstream>
+#include <iostream>
 
 using namespace Seele;
 
@@ -16,7 +18,7 @@ int main(int, char**)
     //{
     //    return -1;
     //}
-    std::filesystem::path path = "C:\\Users\\Dynamitos\\TrackClear\\Assets\\Dirt.asset";
+    std::filesystem::path path = std::filesystem::path("C:\\Users\\Dynamitos\\TrackClear\\Assets\\Dirt.asset");
     std::ifstream stream = std::ifstream(path, std::ios::binary);
 
     ArchiveBuffer buffer;

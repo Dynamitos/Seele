@@ -25,8 +25,9 @@ private:
     Gfx::OUniformBuffer viewParamsBuffer;
     Gfx::ODescriptorLayout descriptorLayout;
     Gfx::PDescriptorSet descriptorSet;
-    Gfx::OPipelineLayout pipelineLayout;
-    Gfx::OGraphicsPipeline pipeline;
+    Gfx::OVertexShader vertexShader;
+    Gfx::OFragmentShader fragmentShader;
+    Gfx::PGraphicsPipeline pipeline;
 };
 DEFINE_REF(DebugPass)
 } // namespace Seele

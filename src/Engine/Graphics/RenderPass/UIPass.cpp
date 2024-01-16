@@ -83,7 +83,7 @@ void UIPass::publishOutputs()
     colorBuffer = graphics->createTexture2D(colorBufferInfo);
     renderTarget =
         new Gfx::RenderTargetAttachment(colorBuffer, Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
-    renderTarget->clear.color = { 0.0f, 0.0f, 0.0f, 1.0f };
+    renderTarget->clear.color = { {0.0f, 0.0f, 0.0f, 1.0f} };
     resources->registerRenderPassOutput("UIPASS_COLOR", renderTarget);
 }
 

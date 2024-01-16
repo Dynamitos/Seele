@@ -2,6 +2,7 @@
 #include "Queue.h"
 #include "Graphics/Command.h"
 #include "Buffer.h"
+#include <thread>
 
 namespace Seele
 {

@@ -40,7 +40,7 @@ public:
         SystemBase::run(pool, delta);
         setupView((getDependencies<Components>() | ...), pool);
     }
-    virtual void update() {}
+    virtual void update() override {}
     virtual void update(Components&... components) = 0;
 };
 } // namespace System

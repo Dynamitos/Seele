@@ -15,6 +15,16 @@ struct Tree
 protected:
     struct Node
     {
+        Node(Node* left, Node* right, const NodeData& nodeData)
+            : leftChild(left)
+            , rightChild(right)
+            , data(nodeData)
+        {}
+        Node(Node* left, Node* right, NodeData&& nodeData)
+            : leftChild(left)
+            , rightChild(right)
+            , data(std::move(nodeData))
+        {}
         Node* leftChild;
         Node* rightChild;
         NodeData data;
@@ -71,9 +81,13 @@ public:
         }
         constexpr bool operator!=(const IteratorBase& other)
         {
-            return node != other.node;
+            return node == other.node;
         }
         constexpr bool operator==(const IteratorBase& other)
+        {
+            return node == other.node;
+        }
+        constexpr std::strong_ordering operator<=>(const IteratorBase& other)
         {
             return node == other.node;
         }
@@ -433,8 +447,8 @@ private:
         _size++;
         return Pair<Node*, bool>(newNode, true);
     }
-    template<class KeyType>
-    Node* _remove(Node* r, KeyType&& key)
+    template<class K>
+    Node* _remove(Node* r, K&& key)
     {
         markIteratorsDirty();
         Node* temp;
@@ -463,8 +477,8 @@ private:
         _size--;
         return r;
     }
-    template<class KeyType>
-    Node* _splay(Node* r, KeyType&& key)
+    template<class K>
+    Node* _splay(Node* r, K&& key)
     {
         markIteratorsDirty();
         if (r == nullptr || equal(r->data, key))
@@ -516,8 +530,8 @@ private:
             return (r->rightChild == nullptr) ? r : rotateLeft(r);
         }
     }
-    template<typename KeyType>
-    bool equal(const NodeData& a, KeyType&& b) const
+    template<typename K>
+    bool equal(const NodeData& a, K&& b) const
     {
         return !comp(keyFun(a), b) && !comp(b, keyFun(a));
     }

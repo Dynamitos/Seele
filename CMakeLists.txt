@@ -12,6 +12,8 @@ set(CMAKE_INSTALL_MESSAGE LAZY)
 set(BUILD_SHARED_LIBS OFF)
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
+set(VCPKG_INSTALL_OPTIONS "--allow-unsupported")
+
 set(ENGINE_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/src/Engine)
 set(EXTERNAL_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/external)
 
@@ -45,6 +47,7 @@ find_package(glfw3 CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(Ktx CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
+find_package(fmt CONFIG REQUIRED)
 
 if(UNIX)
     find_package(Threads REQUIRED)
@@ -67,7 +70,8 @@ target_link_libraries(Engine PUBLIC assimp::assimp)
 target_link_libraries(Engine PUBLIC KTX::ktx)
 target_link_libraries(Engine PUBLIC nlohmann_json::nlohmann_json)
 target_link_libraries(Engine PUBLIC crcpp)
-target_link_libraries(Engine PUBLIC shader-slang)
+target_link_libraries(Engine PUBLIC slang)
+target_link_libraries(Engine PUBLIC fmt::fmt)
 if(UNIX)
     target_link_libraries(Engine PUBLIC Threads::Threads)
     target_link_libraries(Engine PUBLIC dl)
@@ -82,22 +86,6 @@ target_compile_definitions(Editor PRIVATE EDITOR=1)
 add_executable(AssetViewer "")
 target_link_libraries(AssetViewer PRIVATE Engine)
 target_include_directories(AssetViewer PRIVATE src/AssetViewer)
-
-target_precompile_headers(Engine 
-  PUBLIC    
-    <assert.h>
-    <atomic>
-    <condition_variable>
-    <coroutine>
-    <cstring>
-    <filesystem>
-    <functional>
-    <fstream>
-    <iostream>
-    <memory>
-    <mutex>
-    <string>
-    <thread>)
     
 if(MSVC)
     set(_CRT_SECURE_NO_WARNINGS)

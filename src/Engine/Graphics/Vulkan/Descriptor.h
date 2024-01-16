@@ -126,7 +126,7 @@ public:
     DescriptorPool(PGraphics graphics, DescriptorLayout &layout);
     virtual ~DescriptorPool();
     virtual Gfx::PDescriptorSet allocateDescriptorSet() override;
-    virtual void reset();
+    virtual void reset() override;
 
     constexpr VkDescriptorPool getHandle() const
     {

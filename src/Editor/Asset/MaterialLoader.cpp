@@ -8,7 +8,9 @@
 #include "Material/ShaderExpression.h"
 #include "Asset/TextureAsset.h"
 #include <nlohmann/json.hpp>
-#include <format>
+#include <fmt/core.h>
+#include <iostream>
+#include <fstream>
 
 using namespace Seele;
 using json = nlohmann::json;
@@ -131,14 +133,14 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
         {
             std::string str = obj.get<std::string>();
             OConstantExpression c = new ConstantExpression(str, ExpressionType::UNKNOWN);
-            std::string name = std::format("const_{0}", auxKey++);
+            std::string name = fmt::format("const_{0}", auxKey++);
             c->key = name;
             expressions.add(std::move(c));
             return name;
         }
         else
         {
-            return std::format("{0}", obj.get<uint32>());
+            return fmt::format("{0}", obj.get<uint32>());
         }
     };
     MaterialNode mat;
@@ -150,7 +152,7 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
         if (exp.compare("Const") == 0)
         {
             OConstantExpression p = new ConstantExpression();
-            std::string name = std::format("{0}", key++);
+            std::string name = fmt::format("{0}", key++);
             p->key = name;
             p->expr = obj["value"];
             expressions.add(std::move(p));
@@ -158,7 +160,7 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
         if(exp.compare("Add") == 0)
         {
             OAddExpression p = new AddExpression();
-            std::string name = std::format("{0}", key++);
+            std::string name = fmt::format("{0}", key++);
             p->key = name;
             p->inputs["lhs"].source = referenceExpression(obj["lhs"]);
             p->inputs["rhs"].source = referenceExpression(obj["rhs"]);
@@ -167,7 +169,7 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
         if(exp.compare("Sub") == 0)
         {
             OSubExpression p = new SubExpression();
-            std::string name = std::format("{0}", key++);
+            std::string name = fmt::format("{0}", key++);
             p->key = name;
             p->inputs["lhs"].source = referenceExpression(obj["lhs"]);
             p->inputs["rhs"].source = referenceExpression(obj["rhs"]);
@@ -176,7 +178,7 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
         if(exp.compare("Mul") == 0)
         {
             OMulExpression p = new MulExpression();
-            std::string name = std::format("{0}", key++);
+            std::string name = fmt::format("{0}", key++);
             p->key = name;
             p->inputs["lhs"].source = referenceExpression(obj["lhs"]);
             p->inputs["rhs"].source = referenceExpression(obj["rhs"]);
@@ -185,7 +187,7 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
         if(exp.compare("Swizzle") == 0)
         {
             OSwizzleExpression p = new SwizzleExpression();
-            std::string name = std::format("{0}", key++);
+            std::string name = fmt::format("{0}", key++);
             p->key = name;
             p->inputs["target"].source = referenceExpression(obj["target"]);
             int32 i = 0;
@@ -198,7 +200,7 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
         if(exp.compare("Sample") == 0)
         {
             OSampleExpression p = new SampleExpression();
-            std::string name = std::format("{0}", key++);
+            std::string name = fmt::format("{0}", key++);
             p->key = name;
             p->inputs["texture"].source = referenceExpression(obj["texture"]);
             p->inputs["sampler"].source = referenceExpression(obj["sampler"]);

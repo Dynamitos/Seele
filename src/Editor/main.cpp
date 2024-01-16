@@ -12,7 +12,7 @@
 #include "Asset/FontLoader.h"
 #include "Asset/AssetImporter.h"
 #include "Graphics/StaticMeshVertexData.h"
-#include <format>
+#include <fmt/core.h>
 
 using namespace Seele;
 using namespace Seele::Editor;
@@ -254,9 +254,9 @@ int main()
     if (false)
     {
         std::filesystem::create_directories(outputPath);
-        std::system(std::format("cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGAME_TITLE=\"{}\" -DGAME_DESTINATION=\"{}\" -DGAME_BINARY=\"{}\" -P ./cmake/ExportProject.cmake", gameName, outputPath.generic_string(), binaryPath.generic_string()).c_str());
-        std::system(std::format("cmake -S {} -B {}", cmakePath.generic_string(), cmakePath.generic_string()).c_str());
-        std::system(std::format("cmake --build {}", cmakePath.generic_string()).c_str());
+        std::system(fmt::format("cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DGAME_TITLE=\"{}\" -DGAME_DESTINATION=\"{}\" -DGAME_BINARY=\"{}\" -P ./cmake/ExportProject.cmake", gameName, outputPath.generic_string(), binaryPath.generic_string()).c_str());
+        std::system(fmt::format("cmake -S {} -B {}", cmakePath.generic_string(), cmakePath.generic_string()).c_str());
+        std::system(fmt::format("cmake --build {}", cmakePath.generic_string()).c_str());
         std::filesystem::copy(sourcePath / "Assets", outputPath / "Assets", std::filesystem::copy_options::recursive);
         std::filesystem::copy("shaders", outputPath / "shaders", std::filesystem::copy_options::recursive);
         std::filesystem::copy("textures", outputPath / "textures", std::filesystem::copy_options::recursive);

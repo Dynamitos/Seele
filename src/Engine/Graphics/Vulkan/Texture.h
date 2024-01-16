@@ -125,9 +125,9 @@ public:
 
 protected:
     // Inherited via QueueOwnedResource
-    virtual void executeOwnershipBarrier(Gfx::QueueType newOwner);
+    virtual void executeOwnershipBarrier(Gfx::QueueType newOwner) override;
     virtual void executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, 
-        VkAccessFlags dstAccess, VkPipelineStageFlags dstStage);
+        VkAccessFlags dstAccess, VkPipelineStageFlags dstStage) override;
 
 };
 DEFINE_REF(Texture2D)
@@ -166,9 +166,9 @@ public:
 
 protected:
     // Inherited via QueueOwnedResource
-    virtual void executeOwnershipBarrier(Gfx::QueueType newOwner);
+    virtual void executeOwnershipBarrier(Gfx::QueueType newOwner) override;
     virtual void executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, 
-        VkAccessFlags dstAccess, VkPipelineStageFlags dstStage);
+        VkAccessFlags dstAccess, VkPipelineStageFlags dstStage) override;
 
 };
 DEFINE_REF(Texture3D)
@@ -206,9 +206,9 @@ public:
     virtual void download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<uint8>& buffer) override;
 protected:
     // Inherited via QueueOwnedResource
-    virtual void executeOwnershipBarrier(Gfx::QueueType newOwner);
+    virtual void executeOwnershipBarrier(Gfx::QueueType newOwner) override;
     virtual void executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, 
-        VkAccessFlags dstAccess, VkPipelineStageFlags dstStage);
+        VkAccessFlags dstAccess, VkPipelineStageFlags dstStage) override;
 };
 DEFINE_REF(TextureCube)
 }

@@ -583,28 +583,28 @@ void Graphics::createDevice(GraphicsInitializer initializer)
 
     cmdDrawMeshTasks = (PFN_vkCmdDrawMeshTasksEXT)vkGetDeviceProcAddr(handle, "vkCmdDrawMeshTasksEXT");
 
-    graphicsQueue = new Queue(this, Gfx::QueueType::GRAPHICS, graphicsQueueInfo.familyIndex, 0);
+    graphicsQueue = new Queue(this, graphicsQueueInfo.familyIndex, 0);
     if (Gfx::useAsyncCompute && asyncComputeInfo.familyIndex != -1)
     {
         if (asyncComputeInfo.familyIndex == graphicsQueueInfo.familyIndex)
         {
             // Same family as graphics, but different queue
-            computeQueue = new Queue(this, Gfx::QueueType::COMPUTE, asyncComputeInfo.familyIndex, 1);
+            computeQueue = new Queue(this, asyncComputeInfo.familyIndex, 1);
         }
         else
         {
             // Different family
-            computeQueue = new Queue(this, Gfx::QueueType::COMPUTE, asyncComputeInfo.familyIndex, 0);
+            computeQueue = new Queue(this, asyncComputeInfo.familyIndex, 0);
         }
     }
     else
     {
-        computeQueue = new Queue(this, Gfx::QueueType::COMPUTE, computeQueueInfo.familyIndex, 0);
+        computeQueue = new Queue(this, computeQueueInfo.familyIndex, 0);
     }
-    transferQueue = new Queue(this, Gfx::QueueType::TRANSFER, transferQueueInfo.familyIndex, 0);
+    transferQueue = new Queue(this, transferQueueInfo.familyIndex, 0);
     if (dedicatedTransferQueueInfo.familyIndex != -1)
     {
-        dedicatedTransferQueue = new Queue(this, Gfx::QueueType::DEDICATED_TRANSFER, dedicatedTransferQueueInfo.familyIndex, 0);
+        dedicatedTransferQueue = new Queue(this, dedicatedTransferQueueInfo.familyIndex, 0);
     }
     queueMapping.graphicsFamily = graphicsQueue->getFamilyIndex();
     queueMapping.computeFamily = computeQueue->getFamilyIndex();

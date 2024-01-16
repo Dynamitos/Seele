@@ -3,6 +3,7 @@
 #include "Asset.h"
 #include "Containers/Map.h"
 #include <string>
+#include <filesystem>
 
 namespace Seele
 {

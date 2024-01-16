@@ -23,7 +23,7 @@ public:
     virtual void setMouseButtonCallback(std::function<void(MouseButton, InputAction, KeyModifier)> callback) override;
     virtual void setScrollCallback(std::function<void(double, double)> callback) override;
     virtual void setFileCallback(std::function<void(int, const char**)> callback) override;
-    virtual void setCloseCallback(std::function<void()> callback);
+    virtual void setCloseCallback(std::function<void()> callback) override;
     virtual void setResizeCallback(std::function<void(uint32, uint32)> callback) override;
     
     void keyPress(KeyCode code, InputAction action, KeyModifier modifier);

@@ -50,7 +50,7 @@ void FontAsset::save(ArchiveBuffer& buffer) const
             {
                 // technically, downloading cant be const, because we have to allocate temporary buffers and change layouts
                 // but practically the texture stays the same
-                usedTextures[x]->download(0, depth, face, textureData);
+                const_cast<Gfx::Texture2D*>(*(usedTextures[x]))->download(0, depth, face, textureData);
                 ktxTexture_SetImageFromMemory(ktxTexture(kTexture), 0, depth, face, textureData.data(), textureData.size());
             }
         }

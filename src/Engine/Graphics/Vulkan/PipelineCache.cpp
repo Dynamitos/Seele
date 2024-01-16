@@ -36,7 +36,7 @@ PipelineCache::PipelineCache(PGraphics graphics, const std::string& cacheFilePat
 
 PipelineCache::~PipelineCache()
 {
-    VkDeviceSize cacheSize;
+    size_t cacheSize;
     VK_CHECK(vkGetPipelineCacheData(graphics->getDevice(), cache, &cacheSize, nullptr));
     Array<uint8> cacheData(cacheSize);
     VK_CHECK(vkGetPipelineCacheData(graphics->getDevice(), cache, &cacheSize, cacheData.data()));

@@ -6,7 +6,7 @@
 #include "Asset/AssetImporter.h"
 #include "Asset/MaterialAsset.h"
 #include <set>
-#include <format>
+#include <fmt/core.h>
 #include <fstream>
 #include <iostream>
 #include <nlohmann/json.hpp>
@@ -48,7 +48,7 @@ void MeshLoader::loadMaterials(const aiScene* scene, const std::string& baseName
     {
         aiMaterial* material = scene->mMaterials[i];
         json matCode;
-        std::string materialName = std::format("{0}{1}{2}", baseName, material->GetName().C_Str(), i);
+        std::string materialName = fmt::format("{0}{1}{2}", baseName, material->GetName().C_Str(), i);
         materialName.erase(std::remove(materialName.begin(), materialName.end(), '.'), materialName.end()); // dots break adding the .asset extension later
         matCode["name"] = materialName;
         matCode["profile"] = "CelShading";
@@ -196,7 +196,7 @@ void MeshLoader::loadMaterials(const aiScene* scene, const std::string& baseName
             });
         PMaterialAsset baseMat = AssetRegistry::findMaterial(matCode["name"].get<std::string>());
         globalMaterials[i] = baseMat->instantiate(InstantiationParameter{
-            .name = std::format("{0}_Inst_0", baseMat->getName()),
+            .name = fmt::format("{0}_Inst_0", baseMat->getName()),
             .folderPath = baseMat->getFolderPath(),
             });
     }

@@ -38,13 +38,13 @@ public:
         {
             return p;
         }
-        constexpr bool operator!=(const IteratorBase &other) const
-        {
-            return p != other.p;
-        }
         constexpr bool operator==(const IteratorBase &other) const
         {
             return p == other.p;
+        }
+        constexpr std::strong_ordering operator<=>(const IteratorBase &other) const
+        {
+            return p <=> other.p;
         }
         constexpr IteratorBase operator+(size_t other) const
         {
@@ -60,10 +60,6 @@ public:
         {
             p+=other;
             return *this;
-        }
-        constexpr bool operator<(const IteratorBase& other) const
-        {
-            return p < other.p;
         }
         constexpr IteratorBase operator-(difference_type diff) const
         {
@@ -537,7 +533,7 @@ public:
         assert(index < arraySize);
         return _data[index];
     }
-    constexpr const reference operator[](size_type index) const
+    constexpr const_reference operator[](size_type index) const
     {
         assert(index < arraySize);
         return _data[index];
@@ -674,7 +670,7 @@ constexpr bool operator==(const Array<Type, Alloc> &lhs, const Array<Type, Alloc
 template<class Type, class Alloc>
 constexpr auto operator<=>(const Array<Type, Alloc>& lhs, const Array<Type, Alloc>& rhs)
 {
-    return std::lexicographical_compare_three_way(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
+    return std::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
 }
 
 template <typename T, size_t N>

@@ -1,5 +1,7 @@
 if(WIN32)
     add_subdirectory(Windows/)
+elseif(APPLE)
+    add_subdirectory(Mac/)
 else()
     add_subdirectory(Linux/)
 endif()

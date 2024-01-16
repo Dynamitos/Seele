@@ -1,6 +1,8 @@
 #include "DebugPass.h"
 #include "Graphics/Graphics.h"
 #include "Graphics/RenderTarget.h"
+#include "Graphics/Pipeline.h"
+#include "Graphics/Shader.h"
 
 using namespace Seele;
 
@@ -74,10 +76,6 @@ void DebugPass::publishOutputs()
     descriptorLayout = graphics->createDescriptorLayout("DebugDescLayout");
     descriptorLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
     descriptorLayout->create();
-
-    pipelineLayout = graphics->createPipelineLayout();
-    pipelineLayout->addDescriptorLayout(0, descriptorLayout);
-    pipelineLayout->create();
 }
 
 void DebugPass::createRenderPass()
@@ -92,43 +90,29 @@ void DebugPass::createRenderPass()
     };
     renderPass = graphics->createRenderPass(std::move(layout), viewport);
     
+    Gfx::OPipelineLayout pipelineLayout = graphics->createPipelineLayout();
+    pipelineLayout->addDescriptorLayout(0, descriptorLayout);
+    pipelineLayout->create();
+
     ShaderCreateInfo createInfo;
     createInfo.name = "DebugVertex";
     createInfo.mainModule = "Debug";
     createInfo.entryPoint = "vertexMain";
     createInfo.defines["INDEX_VIEW_PARAMS"] = "0";
-    Gfx::PVertexShader vertexShader = graphics->createVertexShader(createInfo);
+    vertexShader = graphics->createVertexShader(createInfo);
 
     createInfo.name = "DebugFragment";
 
     createInfo.entryPoint = "fragmentMain";
-    Gfx::PFragmentShader fragmentShader = graphics->createFragmentShader(createInfo);
+    fragmentShader = graphics->createFragmentShader(createInfo);
 
-    Gfx::OVertexDeclaration vertexDecl = graphics->createVertexDeclaration({
-        Gfx::VertexElement {
-            .streamIndex = 0,
-            .offset = offsetof(DebugVertex, position),
-            .vertexFormat = Gfx::SE_FORMAT_R32G32B32_SFLOAT,
-            .attributeIndex = 0,
-            .stride = sizeof(DebugVertex),
-        },
-        Gfx::VertexElement {
-            .streamIndex = 0,
-            .offset = offsetof(DebugVertex, color),
-            .vertexFormat = Gfx::SE_FORMAT_R32G32B32_SFLOAT,
-            .attributeIndex = 1,
-            .stride = sizeof(DebugVertex),
-        }
-    });
-
-    GraphicsPipelineCreateInfo gfxInfo;
-    gfxInfo.vertexDeclaration = vertexDecl;
+    Gfx::LegacyPipelineCreateInfo gfxInfo;
     gfxInfo.vertexShader = vertexShader;
     gfxInfo.fragmentShader = fragmentShader;
     gfxInfo.rasterizationState.polygonMode = Gfx::SE_POLYGON_MODE_LINE;
     gfxInfo.rasterizationState.lineWidth = 5.f;
     gfxInfo.topology = Gfx::SE_PRIMITIVE_TOPOLOGY_LINE_LIST;
-    gfxInfo.pipelineLayout = pipelineLayout;
+    gfxInfo.pipelineLayout = std::move(pipelineLayout);
     gfxInfo.renderPass = renderPass;
-    pipeline = graphics->createGraphicsPipeline(gfxInfo);
+    pipeline = graphics->createGraphicsPipeline(std::move(gfxInfo));
 }

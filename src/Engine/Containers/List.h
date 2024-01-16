@@ -1,5 +1,6 @@
 #pragma once
 #include <memory_resource>
+#include <assert.h>
 
 namespace Seele
 {
@@ -9,6 +10,16 @@ class List
 private:
     struct Node
     {
+        Node(Node* prev, Node* next, const T& data)
+            : prev(prev)
+            , next(next)
+            , data(std::move(data))
+        {}
+        Node(Node* prev, Node* next, T&& data)
+            : prev(prev)
+            , next(next)
+            , data(std::move(data))
+        {}
         Node *prev;
         Node *next;
         T data;
@@ -57,39 +68,43 @@ public:
             }
             return *this;
         }
-        reference operator*() const
+        constexpr reference operator*() const
         {
             return node->data;
         }
-        pointer operator->() const
+        constexpr pointer operator->() const
         {
             return &node->data;
         }
-        inline bool operator!=(const IteratorBase &other)
+        constexpr bool operator!=(const IteratorBase &other)
         {
             return node != other.node;
         }
-        inline bool operator==(const IteratorBase &other)
+        constexpr bool operator==(const IteratorBase &other)
         {
             return node == other.node;
         }
-        IteratorBase &operator--()
+        constexpr std::strong_ordering operator<=>(const IteratorBase& other)
+        {
+            return node <=> other.node;
+        }
+        constexpr IteratorBase &operator--()
         {
             node = node->prev;
             return *this;
         }
-        IteratorBase operator--(int)
+        constexpr IteratorBase operator--(int)
         {
             IteratorBase tmp(*this);
             --*this;
             return tmp;
         }
-        IteratorBase &operator++()
+        constexpr IteratorBase &operator++()
         {
             node = node->next;
             return *this;
         }
-        IteratorBase operator++(int)
+        constexpr IteratorBase operator++(int)
         {
             IteratorBase tmp(*this);
             ++*this;
@@ -187,7 +202,7 @@ public:
         , beginIt(std::move(other.beginIt))
         , endIt(std::move(other.endIt))
         , _size(std::move(other._size))
-        , allocator(allocator)
+        , allocator(alloc)
     {
         other._size = 0;
     }

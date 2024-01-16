@@ -11,7 +11,7 @@ struct Dependencies<>
 {
     int x;
     template<typename... Right>
-    Dependencies<Right...> operator|(const Dependencies<Right...>& other)
+    Dependencies<Right...> operator|(const Dependencies<Right...>&)
     {
         return Dependencies<Right...>();
     }
@@ -20,7 +20,7 @@ template<typename This, typename... Rest>
 struct Dependencies<This, Rest...> : public Dependencies<Rest...>
 {
     template<typename... Right>
-    Dependencies<This, Rest..., Right...> operator|(const Dependencies<Right...>& other)
+    Dependencies<This, Rest..., Right...> operator|(const Dependencies<Right...>&)
     {
         return Dependencies<This, Rest..., Right...>();
     }
@@ -38,8 +38,8 @@ concept has_dependencies = requires(Comp) { Comp::dependencies; };
 
 #define REQUIRE_COMPONENT(x) \
     private: \
-    x& get##x() { return getComponent<##x>(); } \
-    const x& get##x() const { return getComponent<##x>(); } \
+    x& get##x() { return getComponent<x>(); } \
+    const x& get##x() const { return getComponent<x>(); } \
     public: \
     constexpr static Dependencies<x> dependencies = {};
 

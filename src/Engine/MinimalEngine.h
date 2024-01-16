@@ -1,6 +1,9 @@
 #pragma once
 #include "EngineTypes.h"
-#include <map>
+#include <assert.h>
+#include <cstddef>
+#include <utility>
+#include <memory>
 
 #define DEFINE_REF(x)           \
     typedef ::Seele::RefPtr<x> P##x;     \

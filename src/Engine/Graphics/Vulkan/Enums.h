@@ -2,6 +2,7 @@
 #include "Graphics/Enums.h"
 #include <vulkan/vulkan.h>
 #include <iostream>
+#include <thread>
 
 #define VK_CHECK(f)                                                                                                       \
 	{                                                                                                                       \

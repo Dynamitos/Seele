@@ -2,7 +2,7 @@
 #include "Graphics/Initializer.h"
 #include "Graphics/RenderPass/DepthPrepass.h"
 #include "Graphics/RenderPass/BasePass.h"
-#include <format>
+#include <fmt/core.h>
 
 using namespace Seele;
 using namespace Seele::Gfx;
@@ -97,7 +97,7 @@ void ShaderCompiler::createShaders(ShaderPermutation permutation)
 	ShaderCollection collection;
 
 	ShaderCreateInfo createInfo;
-	createInfo.name = std::format("Material {0}", permutation.materialName);
+	createInfo.name = fmt::format("Material {0}", permutation.materialName);
 	if (std::strlen(permutation.materialName) > 0)
 	{
 		createInfo.additionalModules.add(permutation.materialName);

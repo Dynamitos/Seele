@@ -81,8 +81,8 @@ if(WIN32)
     install(FILES 
         ${SLANG_ROOT}/lib/slang.lib
     DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
-else()
-
+elseif(APPLE)
+    
 endif()
 target_include_directories(shader-slang INTERFACE 
     $<BUILD_INTERFACE:${SLANG_ROOT}/include/>

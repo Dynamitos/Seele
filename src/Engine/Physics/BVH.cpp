@@ -339,7 +339,16 @@ int32 BVH::splitNode(Array<AABBCenter> aabbs)
     {
         longestAxis = 2;
     }
-    std::sort(aabbs.begin(), aabbs.end(), [longestAxis](AABBCenter lhs, AABBCenter rhs){ return lhs.center[longestAxis] < rhs.center[longestAxis];});
+    struct
+    {
+        bool operator()(const AABBCenter& lhs, const AABBCenter& rhs)
+        { 
+            return lhs.center[longestAxis] < rhs.center[longestAxis];
+        }
+        int32 longestAxis;
+    } compare = {longestAxis};
+    
+    std::sort(aabbs.begin(), aabbs.end(), compare);
     Array<AABBCenter> left((aabbs.size()+1)/2);
     Array<AABBCenter> right(aabbs.size()/2);
     std::copy(aabbs.begin(), aabbs.begin()+left.size(), left.begin());

@@ -1,6 +1,7 @@
 #include "Vector.h"
 #include <regex>
-#include <format>
+#include <fmt/core.h>
+#include <sstream>
 #include <nlohmann/json.hpp>
 #include "Serialization/ArchiveBuffer.h"
 
@@ -8,7 +9,7 @@ using namespace Seele;
 
 void to_json(nlohmann::json& j, const Vector& vec)
 {
-    j = nlohmann::json{std::format("({}, {}, {})", vec.x, vec.y, vec.z)};
+    j = nlohmann::json{fmt::format("({}, {}, {})", vec.x, vec.y, vec.z)};
 }
 
 void from_json(const nlohmann::json& j, Vector& vec)

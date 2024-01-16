@@ -23,7 +23,6 @@ SkyboxRenderPass::~SkyboxRenderPass()
 void SkyboxRenderPass::beginFrame(const Component::Camera& cam)
 {
     RenderPass::beginFrame(cam);
-    DataSource uniformUpdate;
 
     skyboxDataLayout->reset();
     textureLayout->reset();

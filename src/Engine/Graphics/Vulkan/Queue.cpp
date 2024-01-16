@@ -6,10 +6,9 @@
 using namespace Seele;
 using namespace Seele::Vulkan;
 
-Queue::Queue(PGraphics graphics, Gfx::QueueType queueType, uint32 familyIndex, uint32 queueIndex)
+Queue::Queue(PGraphics graphics, uint32 familyIndex, uint32 queueIndex)
     : graphics(graphics)
     , familyIndex(familyIndex)
-    , queueType(queueType)
 {
     vkGetDeviceQueue(graphics->getDevice(), familyIndex, queueIndex, &queue);
 }

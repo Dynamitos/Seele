@@ -1,5 +1,7 @@
 #include "ArchiveBuffer.h"
 #include "Graphics/Graphics.h"
+#include <ostream>
+#include <istream>
 
 using namespace Seele;
 
