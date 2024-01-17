@@ -46,7 +46,6 @@ TextureBase::TextureBase(PGraphics graphics, VkImageViewType viewType,
     if (existingImage == VK_NULL_HANDLE)
     {
         ownsImage = true;
-        PAllocator pool = graphics->getAllocator();
         VkImageType type = VK_IMAGE_TYPE_MAX_ENUM;
         VkImageCreateFlags flags = 0;
         switch (viewType)
@@ -97,69 +96,79 @@ TextureBase::TextureBase(PGraphics graphics, VkImageViewType viewType,
             .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
             .initialLayout = cast(layout),
         };
-
+        VmaAllocationCreateInfo allocInfo = {
+            .usage = VMA_MEMORY_USAGE_AUTO,
+        };
+        VK_CHECK(vmaCreateImage(graphics->getAllocator(), &info, &allocInfo, &image, &allocation, nullptr));
         
-        VK_CHECK(vkCreateImage(graphics->getDevice(), &info, nullptr, &image));
+        const DataSource& sourceData = createInfo.sourceData;
+        if(sourceData.size > 0)
+        {
+            changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+            void* data;
+            VkMemoryPropertyFlags memProps;
+            VkBuffer stagingBuffer = VK_NULL_HANDLE;
+            VmaAllocation stagingAlloc = VK_NULL_HANDLE;
+            vmaGetAllocationMemoryProperties(graphics->getAllocator(), allocation, &memProps);
+            if(memProps & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)
+            {
+                vmaMapMemory(graphics->getAllocator(), allocation, &data);
+            }
+            else
+            {
+                VkBufferCreateInfo stagingInfo = {
+                    .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+                    .pNext = nullptr,
+                    .flags = 0,
+                    .size = sourceData.size,
+                    .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                    .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+                };
+                VmaAllocationCreateInfo alloc = {
+                    .usage = VMA_MEMORY_USAGE_AUTO,
+                };
+                VK_CHECK(vmaCreateBuffer(graphics->getAllocator(), &stagingInfo, &alloc, &stagingBuffer, &stagingAlloc, nullptr));
+                vmaMapMemory(graphics->getAllocator(), stagingAlloc, &data);
+            }
+            std::memcpy(data, sourceData.data, sourceData.size);
+            vmaFlushAllocation(graphics->getAllocator(), stagingAlloc, 0, VK_WHOLE_SIZE);
 
-        VkMemoryDedicatedRequirements memDedicatedRequirements = {
-            .sType = VK_STRUCTURE_TYPE_MEMORY_DEDICATED_REQUIREMENTS,
-            .pNext = nullptr,
-        };
-        VkImageMemoryRequirementsInfo2 reqInfo = {
-            .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_REQUIREMENTS_INFO_2,
-            .pNext = nullptr,
-            .image = image,
-        };
-        VkMemoryRequirements2 requirements = {
-            .sType = VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2,
-            .pNext = &memDedicatedRequirements,
-        };
-        vkGetImageMemoryRequirements2(graphics->getDevice(), &reqInfo, &requirements);
-
-        allocation = pool->allocate(requirements, createInfo.memoryProps, image);
-        vkBindImageMemory(graphics->getDevice(), image, allocation->getHandle(), allocation->getOffset());
+            PCommandPool commandPool = graphics->getQueueCommands(currentOwner);
+            VkBufferImageCopy region = {
+                .bufferOffset = 0,
+                .bufferRowLength = 0,
+                .bufferImageHeight = 0,
+                .imageSubresource = {
+                    .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                    .mipLevel = 0,
+                    .baseArrayLayer = 0,
+                    .layerCount = arrayCount * layerCount,
+                },
+                .imageOffset = {
+                    .x = 0, 
+                    .y = 0, 
+                    .z = 0,
+                },
+                .imageExtent = {
+                    .width = width, 
+                    .height = height, 
+                    .depth = depth
+                },
+            };
+            
+            vkCmdCopyBufferToImage(commandPool->getCommands()->getHandle(), 
+                stagingBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+            
+            // When loading a texture from a file, we will almost always use it as a texture map for fragment shaders
+            changeLayout(Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            if(stagingBuffer != VK_NULL_HANDLE)
+            {
+                vmaDestroyBuffer(graphics->getAllocator(), stagingBuffer, stagingAlloc);
+            }
+        }
     }
 
-    const DataSource& sourceData = createInfo.sourceData;
-    if(sourceData.size > 0)
-    {
-        changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-        OStagingBuffer staging = graphics->getStagingManager()->create(sourceData.size, owner);
-        void* data = staging->map();
-        std::memcpy(data, sourceData.data, sourceData.size);
-        staging->flush();
-        
-        PCommandPool commandPool = graphics->getQueueCommands(currentOwner);
-        VkBufferImageCopy region = {
-            .bufferOffset = 0,
-            .bufferRowLength = 0,
-            .bufferImageHeight = 0,
-            .imageSubresource = {
-                .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-                .mipLevel = 0,
-                .baseArrayLayer = 0,
-                .layerCount = arrayCount * layerCount,
-            },
-            .imageOffset = {
-                .x = 0, 
-                .y = 0, 
-                .z = 0,
-            },
-            .imageExtent = {
-                .width = width, 
-                .height = height, 
-                .depth = depth
-            },
-        };
-        
-        vkCmdCopyBufferToImage(commandPool->getCommands()->getHandle(), 
-            staging->getHandle(), image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
-        
-        // When loading a texture from a file, we will almost always use it as a texture map for fragment shaders
-        changeLayout(Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-        graphics->getStagingManager()->release(std::move(staging));
-    }
-    else if(usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
+    if(usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
     {
         changeLayout(Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
     }
@@ -231,9 +240,25 @@ void TextureBase::download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Arra
 {
     uint64 imageSize = width * height * depth * Gfx::getFormatInfo(format).blockSize;
 
-    OStagingBuffer stagingbuffer = graphics->getStagingManager()->create(imageSize, currentOwner);
-    auto prevlayout = layout;
+    auto prevLayout = layout;
     changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+    void* data;
+    VkBuffer stagingBuffer = VK_NULL_HANDLE;
+    VmaAllocation stagingAlloc;
+
+    VkBufferCreateInfo stagingInfo = {
+        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .size = imageSize,
+        .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+    };
+    VmaAllocationCreateInfo alloc = {
+        .usage = VMA_MEMORY_USAGE_AUTO,
+    };
+    VK_CHECK(vmaCreateBuffer(graphics->getAllocator(), &stagingInfo, &alloc, &stagingBuffer, &stagingAlloc, nullptr));
+
     PCommand cmdBuffer = graphics->getQueueCommands(currentOwner)->getCommands();
     //Gfx::FormatCompatibilityInfo formatInfo = Gfx::getFormatInfo(format);
     VkBufferImageCopy region = {
@@ -257,11 +282,12 @@ void TextureBase::download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Arra
             .depth = depth
         },
     };
-    vkCmdCopyImageToBuffer(cmdBuffer->getHandle(), image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, stagingbuffer->getHandle(), 1, &region);
-    changeLayout(prevlayout);
-    buffer.resize(stagingbuffer->getSize());
-    void* data = stagingbuffer->map();
+    vkCmdCopyImageToBuffer(cmdBuffer->getHandle(), image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, stagingBuffer, 1, &region);
+    changeLayout(prevLayout);
+    buffer.resize(imageSize);
     std::memcpy(buffer.data(), data, buffer.size());
+    vmaUnmapMemory(graphics->getAllocator(), stagingAlloc);
+    vmaDestroyBuffer(graphics->getAllocator(), stagingBuffer, stagingAlloc);
 }
 
 void TextureBase::executeOwnershipBarrier(Gfx::QueueType newOwner)

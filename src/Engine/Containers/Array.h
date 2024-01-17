@@ -42,6 +42,10 @@ public:
         {
             return p == other.p;
         }
+        constexpr bool operator!=(const IteratorBase &other) const
+        {
+            return p != other.p;
+        }
         constexpr std::strong_ordering operator<=>(const IteratorBase &other) const
         {
             return p <=> other.p;

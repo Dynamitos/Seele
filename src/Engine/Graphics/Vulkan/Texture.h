@@ -1,13 +1,11 @@
 #pragma once
 #include "Graphics/Texture.h"
 #include "Graphics.h"
-#include "Allocator.h"
 
 namespace Seele
 {
 namespace Vulkan
 {
-
 class TextureBase
 {
 public:
@@ -72,7 +70,7 @@ protected:
     //Updates via reference
     Gfx::QueueType& currentOwner;
     PGraphics graphics;
-    OSubAllocation allocation;
+    VmaAllocation allocation;
     uint32 width;
     uint32 height;
     uint32 depth;

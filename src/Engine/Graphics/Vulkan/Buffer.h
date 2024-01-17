@@ -1,7 +1,6 @@
 #pragma once
 #include "Graphics/Buffer.h"
 #include "Graphics.h"
-#include "Allocator.h"
 
 namespace Seele
 {
@@ -20,20 +19,21 @@ public:
     {
         return size;
     }
-    VkDeviceSize getOffset() const;
     void advanceBuffer()
     {
         currentBuffer = (currentBuffer + 1) % numBuffers;
     }
-    virtual void *map(bool writeOnly = true);
-    virtual void *mapRegion(uint64 regionOffset, uint64 regionSize, bool writeOnly = true);
-    virtual void unmap();
+    void *map(bool writeOnly = true);
+    void *mapRegion(uint64 regionOffset, uint64 regionSize, bool writeOnly = true);
+    void unmap();
 
 protected:
     struct BufferAllocation
     {
         VkBuffer buffer;
-        OSubAllocation allocation;
+        VmaAllocation allocation;
+        VmaAllocationInfo info;
+        VkMemoryPropertyFlags properties;
     };
     PGraphics graphics;
     uint32 currentBuffer;
@@ -53,7 +53,6 @@ protected:
 };
 DEFINE_REF(Buffer)
 
-DECLARE_REF(StagingBuffer)
 class UniformBuffer : public Gfx::UniformBuffer, public Buffer
 {
 public:
@@ -61,8 +60,6 @@ public:
     virtual ~UniformBuffer();
     virtual bool updateContents(const DataSource &sourceData) override;
     
-    virtual void* map(bool writeOnly = true) override;
-    virtual void unmap() override;
 protected:
     // Inherited via Vulkan::Buffer
     virtual VkAccessFlags getSourceAccessMask() override;
@@ -74,7 +71,6 @@ protected:
         VkAccessFlags dstAccess, VkPipelineStageFlags dstStage) override;
 
 private:
-    OStagingBuffer dedicatedStagingBuffer;
 };
 DEFINE_REF(UniformBuffer)
 
@@ -85,8 +81,6 @@ public:
     virtual ~ShaderBuffer();
     virtual bool updateContents(const DataSource &sourceData) override;
 
-    virtual void* map(bool writeOnly = true) override;
-    virtual void unmap() override;
 protected:
     // Inherited via Vulkan::Buffer
     virtual VkAccessFlags getSourceAccessMask() override;
@@ -97,7 +91,6 @@ protected:
     virtual void executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, 
         VkAccessFlags dstAccess, VkPipelineStageFlags dstStage) override;
 private:
-    OStagingBuffer dedicatedStagingBuffer;
 };
 DEFINE_REF(ShaderBuffer)
 

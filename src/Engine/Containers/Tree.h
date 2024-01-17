@@ -81,7 +81,7 @@ public:
         }
         constexpr bool operator!=(const IteratorBase& other)
         {
-            return node == other.node;
+            return node != other.node;
         }
         constexpr bool operator==(const IteratorBase& other)
         {
@@ -89,7 +89,7 @@ public:
         }
         constexpr std::strong_ordering operator<=>(const IteratorBase& other)
         {
-            return node == other.node;
+            return node <=> other.node;
         }
         constexpr IteratorBase& operator++()
         {

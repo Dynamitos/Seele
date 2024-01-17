@@ -95,10 +95,6 @@ void GameView::reloadGame()
 
 void GameView::keyCallback(KeyCode code, InputAction action, KeyModifier modifier)
 {
-    if (code == KeyCode::KEY_P && action == InputAction::PRESS)
-    {
-        ((Vulkan::Graphics*)graphics.getHandle())->getAllocator()->print();
-    }
     keyboardSystem->keyCallback(code, action, modifier);
 }
 

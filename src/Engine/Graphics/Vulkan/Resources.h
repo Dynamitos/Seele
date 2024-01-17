@@ -12,7 +12,6 @@ DECLARE_REF(DescriptorPool)
 DECLARE_REF(CommandPool)
 DECLARE_REF(Command)
 DECLARE_REF(Graphics)
-DECLARE_REF(SubAllocation)
 class Semaphore
 {
 public:
@@ -63,7 +62,6 @@ public:
     void queueSemaphore(PCommand cmd, VkSemaphore sem);
     void queueRenderPass(PCommand cmd, VkRenderPass renderPass);
     void queueDescriptorPool(PCommand cmd, VkDescriptorPool pool);
-    void queueAllocation(PCommand cmd, OSubAllocation alloc);
     void notifyCmdComplete(PCommand cmdbuffer);
 private:
     PGraphics graphics;
@@ -73,7 +71,6 @@ private:
     Map<PCommand, List<VkSemaphore>> sems;
     Map<PCommand, List<VkRenderPass>> renderPasses;
     Map<PCommand, List<VkDescriptorPool>> pools;
-    Map<PCommand, List<OSubAllocation>> allocs;
 };
 DEFINE_REF(DestructionManager)
 

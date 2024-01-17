@@ -13,6 +13,8 @@
 #include <GLFW/glfw3.h>
 #include <cstring>
 #include <vulkan/vulkan_core.h>
+#define VMA_IMPLEMENTATION
+#include "vk_mem_alloc.h"
 
 using namespace Seele;
 using namespace Seele::Vulkan;
@@ -40,7 +42,6 @@ Graphics::~Graphics()
     pipelineCache = nullptr;
     allocator = nullptr;
     destructionManager = nullptr;
-    stagingManager = nullptr;
     allocatedFramebuffers.clear();
     shaderCompiler = nullptr;
     vkDestroyDevice(handle, nullptr);
@@ -56,8 +57,19 @@ void Graphics::init(GraphicsInitializer initInfo)
 #endif
     pickPhysicalDevice();
     createDevice(initInfo);
-    allocator = new Allocator(this);
-    stagingManager = new StagingManager(this, allocator);
+    VmaAllocatorCreateInfo createInfo = {
+        .device = handle,
+        .instance = instance,
+        .pAllocationCallbacks = nullptr,
+        .pDeviceMemoryCallbacks = nullptr,
+        .pHeapSizeLimit = nullptr,
+        .physicalDevice = physicalDevice,
+        .preferredLargeHeapBlockSize = 0,
+        .pTypeExternalMemoryHandleTypes = nullptr,
+        .pVulkanFunctions = nullptr,
+        .vulkanApiVersion = VK_API_VERSION_1_3,
+    };
+    vmaCreateAllocator(&createInfo, &allocator);
     pipelineCache = new PipelineCache(this, "pipeline.cache");
     destructionManager = new DestructionManager(this);
 }
@@ -326,14 +338,10 @@ PCommandPool Graphics::getDedicatedTransferCommands()
     }
     return dedicatedTransferCommands;
 }
-PAllocator Graphics::getAllocator()
+
+VmaAllocator Graphics::getAllocator()
 {
     return allocator;
-}
-
-PStagingManager Graphics::getStagingManager()
-{
-    return stagingManager;
 }
 
 PDestructionManager Graphics::getDestructionManager()
@@ -374,11 +382,17 @@ void Graphics::initInstance(GraphicsInitializer initInfo)
     {
         extensions.add(initInfo.instanceExtensions[i]);
     }
+#ifdef __APPLE__
+    extensions.add("VK_KHR_portability_enumeration");
+#endif
 #if ENABLE_VALIDATION
     initInfo.layers.add("VK_LAYER_KHRONOS_validation");
 #endif
     VkInstanceCreateInfo info = {
         .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+#if __APPLE__
+        .flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR,
+#endif
         .pApplicationInfo = &appInfo,
         .enabledLayerCount = (uint32)initInfo.layers.size(),
         .ppEnabledLayerNames = initInfo.layers.data(),
@@ -437,7 +451,7 @@ void Graphics::pickPhysicalDevice()
         }
     }
     physicalDevice = bestDevice;
-    
+
     vkGetPhysicalDeviceProperties(physicalDevice, &props);
     vkGetPhysicalDeviceFeatures2(physicalDevice, &features);
     features.features.robustBufferAccess = 0;
@@ -480,6 +494,13 @@ void Graphics::createDevice(GraphicsInitializer initializer)
     auto checkFamilyProperty = [](VkQueueFamilyProperties currProps, uint32 checkBit){
         return (currProps.queueFlags & checkBit) == checkBit;
     };
+    auto updateQueueInfo = [&queueProperties](uint32 familyIndex, QueueCreateInfo& info, uint32& numQueues) {
+        if(info.familyIndex == -1) {
+            info.familyIndex = familyIndex;
+            numQueues = std::min(numQueues + 1, queueProperties[familyIndex].queueCount);
+            info.queueIndex = numQueues - 1;
+        }
+    };
     for (uint32 familyIndex = 0; familyIndex < queueProperties.size(); ++familyIndex)
     {
         uint32 numQueuesForFamily = 0;
@@ -487,11 +508,7 @@ void Graphics::createDevice(GraphicsInitializer initializer)
 
         if (checkFamilyProperty(currProps, VK_QUEUE_GRAPHICS_BIT))
         {
-            if (graphicsQueueInfo.familyIndex == -1)
-            {
-                graphicsQueueInfo.familyIndex = familyIndex;
-                numQueuesForFamily++;
-            }
+            updateQueueInfo(familyIndex, graphicsQueueInfo, numQueueFamilies);
         }
         if (currProps.queueFlags & VK_QUEUE_COMPUTE_BIT)
         {
@@ -568,6 +585,9 @@ void Graphics::createDevice(GraphicsInitializer initializer)
         features12.pNext = &enabledMeshShaderFeatures;
         initializer.deviceExtensions.add(VK_EXT_MESH_SHADER_EXTENSION_NAME);
     }
+#ifdef __APPLE__
+    initializer.deviceExtensions.add("VK_KHR_portability_subset");
+#endif
     VkDeviceCreateInfo deviceInfo = {
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
         .pNext = &features11,

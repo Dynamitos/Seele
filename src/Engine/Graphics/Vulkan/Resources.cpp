@@ -129,11 +129,6 @@ void DestructionManager::queueDescriptorPool(PCommand cmd, VkDescriptorPool pool
     pools[cmd].add(pool);
 }
 
-void DestructionManager::queueAllocation(PCommand cmd, OSubAllocation alloc)
-{
-    allocs[cmd].add(std::move(alloc));
-}
-
 void DestructionManager::notifyCmdComplete(PCommand cmd)
 {
     for(auto buf : buffers[cmd])
@@ -166,5 +161,4 @@ void DestructionManager::notifyCmdComplete(PCommand cmd)
     sems[cmd].clear();
     pools[cmd].clear();
     renderPasses[cmd].clear();
-    allocs[cmd].clear();
 }

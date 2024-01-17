@@ -26,6 +26,10 @@ int main()
     std::filesystem::path outputPath = "C:/Users/Dynamitos/TrackClearGame";
     std::filesystem::path sourcePath= "C:/Users/Dynamitos/TrackClear";
     std::filesystem::path binaryPath = sourcePath / "bin" / "TrackClear.dll";
+#elif __APPLE__
+    std::filesystem::path outputPath = "/dynamitos/TrackClearGame";
+    std::filesystem::path sourcePath= "/dynamitos/TrackClear";
+    std::filesystem::path binaryPath = sourcePath / "cmake" / "libTrackClear.dynlib";
 #else
     std::filesystem::path outputPath = "/home/dynamitos/TrackClearGame";
     std::filesystem::path sourcePath= "/home/dynamitos/TrackClear";

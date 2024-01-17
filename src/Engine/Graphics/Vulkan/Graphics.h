@@ -1,13 +1,12 @@
 #pragma once
 #include "Enums.h"
 #include "Graphics/Graphics.h"
+#include <vk_mem_alloc.h>
 
 namespace Seele
 {
 namespace Vulkan
 {
-DECLARE_REF(Allocator)
-DECLARE_REF(StagingManager)
 DECLARE_REF(DestructionManager)
 DECLARE_REF(CommandPool)
 DECLARE_REF(Queue)
@@ -28,8 +27,7 @@ public:
     PCommandPool getTransferCommands();
     PCommandPool getDedicatedTransferCommands();
 
-    PAllocator getAllocator();
-    PStagingManager getStagingManager();
+    VmaAllocator getAllocator();
     PDestructionManager getDestructionManager();
 
     // Inherited via Graphics
@@ -71,6 +69,7 @@ public:
     virtual void resolveTexture(Gfx::PTexture source, Gfx::PTexture destination) override;
 
     void vkCmdDrawMeshTasksEXT(VkCommandBuffer handle, uint32 groupX, uint32 groupY, uint32 groupZ);
+
 protected:
     PFN_vkCmdDrawMeshTasksEXT cmdDrawMeshTasks;
     Array<const char *> getRequiredExtensions();
@@ -97,9 +96,8 @@ protected:
     VkPhysicalDeviceVulkan12Features features12;
     VkDebugReportCallbackEXT callback;
     Map<uint32, OFramebuffer> allocatedFramebuffers;
-    OAllocator allocator;
+    VmaAllocator allocator;
     OPipelineCache pipelineCache;
-    OStagingManager stagingManager;
     ODestructionManager destructionManager;
 
     friend class Window;
