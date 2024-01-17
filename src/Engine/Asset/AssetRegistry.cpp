@@ -159,7 +159,10 @@ void AssetRegistry::peekFolder(AssetFolder* folder)
             peekFolder(folder->children[stem]);
             continue;
         }
-
+        if(entry.path().filename().compare(".DS_Store") == 0)
+        {
+            continue;
+        }
         auto stream = std::ifstream(entry.path(), std::ios::binary);
 
         ArchiveBuffer buffer(graphics);
@@ -180,6 +183,10 @@ void AssetRegistry::loadFolder(AssetFolder* folder)
             continue;
         }
 
+        if(entry.path().filename().compare(".DS_Store") == 0)
+        {
+            continue;
+        }
         auto stream = std::ifstream(path, std::ios::binary);
 
         ArchiveBuffer buffer(graphics);

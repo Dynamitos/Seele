@@ -126,6 +126,7 @@ TextureBase::TextureBase(PGraphics graphics, VkImageViewType viewType,
                 };
                 VmaAllocationCreateInfo alloc = {
                     .usage = VMA_MEMORY_USAGE_AUTO,
+                    .flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
                 };
                 VK_CHECK(vmaCreateBuffer(graphics->getAllocator(), &stagingInfo, &alloc, &stagingBuffer, &stagingAlloc, nullptr));
                 vmaMapMemory(graphics->getAllocator(), stagingAlloc, &data);
@@ -163,7 +164,8 @@ TextureBase::TextureBase(PGraphics graphics, VkImageViewType viewType,
             changeLayout(Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
             if(stagingBuffer != VK_NULL_HANDLE)
             {
-                vmaDestroyBuffer(graphics->getAllocator(), stagingBuffer, stagingAlloc);
+                vmaUnmapMemory(graphics->getAllocator(), stagingAlloc);
+                graphics->getDestructionManager()->queueBuffer(commandPool->getCommands(), stagingBuffer, stagingAlloc);
             }
         }
     }
@@ -202,7 +204,7 @@ TextureBase::~TextureBase()
 {
     if (ownsImage)
     {
-        graphics->getDestructionManager()->queueImage(graphics->getQueueCommands(currentOwner)->getCommands(), image);
+        graphics->getDestructionManager()->queueImage(graphics->getQueueCommands(currentOwner)->getCommands(), image, allocation);
     }
     graphics->getDestructionManager()->queueImageView(graphics->getQueueCommands(currentOwner)->getCommands(), imageView);
 }
@@ -251,7 +253,7 @@ void TextureBase::download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Arra
         .pNext = nullptr,
         .flags = 0,
         .size = imageSize,
-        .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        .usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT,
         .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
     };
     VmaAllocationCreateInfo alloc = {

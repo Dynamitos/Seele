@@ -99,14 +99,14 @@ DestructionManager::~DestructionManager()
 {
 }
 
-void DestructionManager::queueBuffer(PCommand cmd, VkBuffer buffer)
+void DestructionManager::queueBuffer(PCommand cmd, VkBuffer buffer, VmaAllocation alloc)
 {
-    buffers[cmd].add(buffer);
+    buffers[cmd].add({buffer, alloc});
 }
 
-void DestructionManager::queueImage(PCommand cmd, VkImage image)
+void DestructionManager::queueImage(PCommand cmd, VkImage image, VmaAllocation alloc)
 {
-    images[cmd].add(image);
+    images[cmd].add({image, alloc});
 }
 
 void DestructionManager::queueImageView(PCommand cmd, VkImageView image)
@@ -131,17 +131,17 @@ void DestructionManager::queueDescriptorPool(PCommand cmd, VkDescriptorPool pool
 
 void DestructionManager::notifyCmdComplete(PCommand cmd)
 {
-    for(auto buf : buffers[cmd])
+    for(auto [buf, alloc] : buffers[cmd])
     {
-        vkDestroyBuffer(graphics->getDevice(), buf, nullptr);
+        vmaDestroyBuffer(graphics->getAllocator(), buf, alloc);
     }
     for(auto view : views[cmd])
     {
         vkDestroyImageView(graphics->getDevice(), view, nullptr);
     }
-    for(auto img : images[cmd])
+    for(auto [img, alloc] : images[cmd])
     {
-        vkDestroyImage(graphics->getDevice(), img, nullptr);
+        vmaDestroyImage(graphics->getAllocator(), img, alloc);
     }
     for (auto sem : sems[cmd])
     {

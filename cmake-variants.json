@@ -30,6 +30,13 @@
                 "settings": {
                     "CMAKE_PLATFORM": "x64"
                 }
+            },
+            "arm64": {
+                "short": "arm64",
+                "long": "arm64 platform",
+                "settings": {
+                    "CMAKE_PLATFORM": "arm64"
+                }
             }
         }
     }

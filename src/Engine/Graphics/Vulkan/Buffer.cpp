@@ -50,7 +50,7 @@ Buffer::~Buffer()
 {
     for (uint32 i = 0; i < numBuffers; ++i)
     {
-        graphics->getDestructionManager()->queueBuffer(graphics->getQueueCommands(owner)->getCommands(), buffers[i].buffer);
+        graphics->getDestructionManager()->queueBuffer(graphics->getQueueCommands(owner)->getCommands(), buffers[i].buffer, buffers[i].allocation);
     }
 }
 
@@ -241,7 +241,7 @@ void Buffer::unmap()
                     .size = size,
                 };
                 vkCmdPipelineBarrier(cmdHandle, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, 0, 0, nullptr, 1, &barrier, 0, nullptr);
-                vmaDestroyBuffer(graphics->getAllocator(), pending.stagingBuffer, pending.allocation);
+                graphics->getDestructionManager()->queueBuffer(command, pending.stagingBuffer, pending.allocation);
             }
         }
         // requestOwnershipTransfer(pending.prevQueue);

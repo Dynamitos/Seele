@@ -1,8 +1,8 @@
 #pragma once
 #include <vulkan/vulkan.h>
+#include <vk_mem_alloc.h>
 #include "Containers/List.h"
 #include "Graphics/Resources.h"
-#include "Allocator.h"
 
 namespace Seele
 {
@@ -56,8 +56,8 @@ class DestructionManager
 public:
     DestructionManager(PGraphics graphics);
     ~DestructionManager();
-    void queueBuffer(PCommand cmd, VkBuffer buffer);
-    void queueImage(PCommand cmd, VkImage image);
+    void queueBuffer(PCommand cmd, VkBuffer buffer, VmaAllocation alloc);
+    void queueImage(PCommand cmd, VkImage image, VmaAllocation alloc);
     void queueImageView(PCommand cmd, VkImageView view);
     void queueSemaphore(PCommand cmd, VkSemaphore sem);
     void queueRenderPass(PCommand cmd, VkRenderPass renderPass);
@@ -65,8 +65,8 @@ public:
     void notifyCmdComplete(PCommand cmdbuffer);
 private:
     PGraphics graphics;
-    Map<PCommand, List<VkBuffer>> buffers;
-    Map<PCommand, List<VkImage>> images;
+    Map<PCommand, List<Pair<VkBuffer, VmaAllocation>>> buffers;
+    Map<PCommand, List<Pair<VkImage, VmaAllocation>>> images;
     Map<PCommand, List<VkImageView>> views;
     Map<PCommand, List<VkSemaphore>> sems;
     Map<PCommand, List<VkRenderPass>> renderPasses;
