@@ -25,6 +25,19 @@
             }
         },
         {
+            "name": "Editor (Mac)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceRoot}/bin/Editor",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceRoot}/bin",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "lldb",
+            "targetArchitecture": "arm64"
+        },
+        {
             "name": "Editor (Linux)",
             "type": "cppdbg",
             "request": "launch",
