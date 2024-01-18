@@ -35,6 +35,7 @@ private:
     Gfx::PDescriptorSet descriptor;
     PMaterialAsset baseMaterial;
     uint64 id;
+    bool dirty = true;
 };
 DEFINE_REF(MaterialInstance)
 } // namespace Seele

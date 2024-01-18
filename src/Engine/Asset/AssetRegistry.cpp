@@ -257,7 +257,7 @@ void AssetRegistry::loadAsset(ArchiveBuffer& buffer)
     Serialization::load(buffer, folderPath);
 
     AssetFolder* folder = getOrCreateFolder(folderPath);
-
+        
     PAsset asset;
     switch (identifier)
     {

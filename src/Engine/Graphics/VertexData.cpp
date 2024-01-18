@@ -30,10 +30,11 @@ void VertexData::resetMeshData()
 void VertexData::updateMesh(PMesh mesh, Component::Transform& transform)
 {
     std::unique_lock l(materialDataLock);
-    PMaterial mat = mesh->referencedMaterial->getHandle()->getBaseMaterial();
+    PMaterialInstance referencedInstance = mesh->referencedMaterial->getHandle();
+    PMaterial mat = referencedInstance->getBaseMaterial();
     MaterialData& matData = materialData[mat->getName()];
     matData.material = mat;
-    MaterialInstanceData& matInstanceData = matData.instances[mesh->referencedMaterial->getHandle()->getId()];
+    MaterialInstanceData& matInstanceData = matData.instances[referencedInstance->getId()];
     for (const auto& data : meshData[mesh->id])
     {
         matInstanceData.meshes.add(MeshInstanceData{
@@ -43,7 +44,8 @@ void VertexData::updateMesh(PMesh mesh, Component::Transform& transform)
             .data = data,
             });
     }
-    matInstanceData.materialInstance = mesh->referencedMaterial->getHandle();
+    matInstanceData.materialInstance = referencedInstance;
+    referencedInstance->updateDescriptor();
 }
 
 void VertexData::createDescriptors()

@@ -10,7 +10,6 @@ struct PendingBuffer
     uint64 size;
     VkBuffer stagingBuffer;
     VmaAllocation allocation;
-    void *mappedMemory;
     Gfx::QueueType prevQueue;
     bool writeOnly;
 };
@@ -163,7 +162,7 @@ void *Buffer::mapRegion(uint64 regionOffset, uint64 regionSize, bool writeOnly)
     {
         if (buffers[currentBuffer].properties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)
         {
-            VK_CHECK(vmaMapMemory(graphics->getAllocator(), buffers[currentBuffer].allocation, &pending.mappedMemory));
+            VK_CHECK(vmaMapMemory(graphics->getAllocator(), buffers[currentBuffer].allocation, &data));
         }
         else
         {
@@ -177,9 +176,10 @@ void *Buffer::mapRegion(uint64 regionOffset, uint64 regionSize, bool writeOnly)
             };
             VmaAllocationCreateInfo allocInfo = {
                 .usage = VMA_MEMORY_USAGE_AUTO,
+                .requiredFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
             };
             VK_CHECK(vmaCreateBuffer(graphics->getAllocator(), &stagingInfo, &allocInfo, &pending.stagingBuffer, &pending.allocation, nullptr));
-            vmaMapMemory(graphics->getAllocator(), pending.allocation, &pending.mappedMemory);
+            vmaMapMemory(graphics->getAllocator(), pending.allocation, &data);
         }
     }
     else

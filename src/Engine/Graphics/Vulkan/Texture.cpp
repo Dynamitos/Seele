@@ -247,7 +247,7 @@ void TextureBase::download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Arra
     void* data;
     VkBuffer stagingBuffer = VK_NULL_HANDLE;
     VmaAllocation stagingAlloc;
-
+    // always create a staging buffer since we do buffer -> image copy and the image may be in any tiling format
     VkBufferCreateInfo stagingInfo = {
         .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
         .pNext = nullptr,
@@ -258,6 +258,7 @@ void TextureBase::download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Arra
     };
     VmaAllocationCreateInfo alloc = {
         .usage = VMA_MEMORY_USAGE_AUTO,
+        .flags = VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT,
     };
     VK_CHECK(vmaCreateBuffer(graphics->getAllocator(), &stagingInfo, &alloc, &stagingBuffer, &stagingAlloc, nullptr));
 
@@ -286,10 +287,11 @@ void TextureBase::download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Arra
     };
     vkCmdCopyImageToBuffer(cmdBuffer->getHandle(), image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, stagingBuffer, 1, &region);
     changeLayout(prevLayout);
+    VK_CHECK(vmaMapMemory(graphics->getAllocator(), stagingAlloc, &data));
     buffer.resize(imageSize);
     std::memcpy(buffer.data(), data, buffer.size());
     vmaUnmapMemory(graphics->getAllocator(), stagingAlloc);
-    vmaDestroyBuffer(graphics->getAllocator(), stagingBuffer, stagingAlloc);
+    graphics->getDestructionManager()->queueBuffer(cmdBuffer, stagingBuffer, stagingAlloc);
 }
 
 void TextureBase::executeOwnershipBarrier(Gfx::QueueType newOwner)
