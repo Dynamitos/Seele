@@ -32,7 +32,12 @@
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceRoot}/bin",
-            "environment": [],
+            "environment": [
+                {
+                    "name": "VK_LAYER_PATH",
+                    "value": "/opt/homebrew/opt/vulkan-validationlayers/share/vulkan/explicit_layer.d"
+                }
+            ],
             "externalConsole": false,
             "MIMode": "lldb",
             "targetArchitecture": "arm64"

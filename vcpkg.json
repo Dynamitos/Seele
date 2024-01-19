@@ -10,7 +10,6 @@
         "ktx",
         "nlohmann-json",
         "fmt",
-        "shader-slang",
         "gtest",
         "vulkan-memory-allocator"
     ]

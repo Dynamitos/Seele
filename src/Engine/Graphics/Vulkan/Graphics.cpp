@@ -373,6 +373,7 @@ Array<const char *> Graphics::getRequiredExtensions()
 void Graphics::initInstance(GraphicsInitializer initInfo)
 {
     glfwInit();
+    assert(glfwVulkanSupported());
     VkApplicationInfo appInfo = {
         .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
         .pApplicationName = initInfo.applicationName,
