@@ -118,7 +118,24 @@ struct ShaderCreateInfo
     Array<Pair<const char*, const char*>>   typeParameter;
     Map<const char*, const char*>           defines;
 };
-
+struct VertexInputBinding
+{
+    uint32 binding;
+    uint32 stride;
+    Gfx::SeVertexInputRate inputRate;
+};
+struct VertexInputAttribute
+{
+    uint32 location;
+    uint32 binding;
+    Gfx::SeFormat format;
+    uint32 offset;
+};
+struct VertexInputStateCreateInfo
+{
+    Array<VertexInputBinding> bindings;
+    Array<VertexInputAttribute> attributes;
+};
 namespace Gfx
 {
 struct SePushConstantRange
@@ -180,6 +197,7 @@ struct ColorBlendState
     StaticArray<float, 4>               blendConstants;
 };
 
+DECLARE_REF(VertexInput)
 DECLARE_REF(VertexShader)
 DECLARE_REF(TaskShader)
 DECLARE_REF(MeshShader)
@@ -190,6 +208,7 @@ DECLARE_REF(PipelineLayout)
 struct LegacyPipelineCreateInfo
 {
     SePrimitiveTopology topology;
+    PVertexInput        vertexInput;
     PVertexShader       vertexShader;
     PFragmentShader     fragmentShader;
     PRenderPass         renderPass;

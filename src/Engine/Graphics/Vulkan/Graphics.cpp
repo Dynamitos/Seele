@@ -249,6 +249,11 @@ Gfx::OPipelineLayout Graphics::createPipelineLayout(Gfx::PPipelineLayout baseLay
     return new PipelineLayout(this, baseLayout);
 }
 
+Gfx::OVertexInput Graphics::createVertexInput(VertexInputStateCreateInfo createInfo)
+{
+    return new VertexInput(createInfo);
+}
+
 void Graphics::resolveTexture(Gfx::PTexture source, Gfx::PTexture destination)
 {
     PTextureBase sourceTex = source.cast<TextureBase>();

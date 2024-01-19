@@ -338,7 +338,7 @@ void MeshLoader::import(MeshImportArgs args, PMeshAsset meshAsset)
         aiProcess_GenUVCoords |
         aiProcess_FindDegenerates));
     const aiScene *scene = importer.ApplyPostProcessing(aiProcess_CalcTangentSpace | aiProcess_ImproveCacheLocality);
-    
+
     Array<PMaterialInstanceAsset> globalMaterials(scene->mNumMaterials);
     loadTextures(scene, args.filePath.parent_path(), args.importPath);
     loadMaterials(scene, args.filePath.stem().string(), args.filePath.parent_path(), args.importPath, globalMaterials);

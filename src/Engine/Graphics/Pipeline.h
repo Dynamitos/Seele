@@ -6,6 +6,15 @@ namespace Seele
 {
 namespace Gfx
 {
+class VertexInput
+{
+public:
+    VertexInput(VertexInputStateCreateInfo createInfo);
+    virtual ~VertexInput();
+    const VertexInputStateCreateInfo& getInfo() const { return createInfo; }
+private:
+    VertexInputStateCreateInfo createInfo;
+};
 class GraphicsPipeline
 {
 public:

@@ -5,6 +5,15 @@
 using namespace Seele;
 using namespace Seele::Vulkan;
 
+VertexInput::VertexInput(VertexInputStateCreateInfo createInfo)
+    : Gfx::VertexInput(createInfo)
+{
+}
+
+VertexInput::~VertexInput()
+{
+}
+
 GraphicsPipeline::GraphicsPipeline(PGraphics graphics, VkPipeline handle, Gfx::OPipelineLayout pipelineLayout)
     : Gfx::GraphicsPipeline(std::move(pipelineLayout))
     , graphics(graphics)

@@ -4,11 +4,10 @@ import MaterialParameter;
 import Scene;
 
 [shader("vertex")]
-FragmentParameter vertexMain(	
-	uint vertexId: SV_VertexID,
-	uint instanceId: SV_InstanceID,
+FragmentParameter vertexMain(
+	VertexInput input
 ){
-	InstanceData inst = pScene.instances[instanceId];
-	VertexAttributes attr = pVertexData.getAttributes(vertexId);
+	InstanceData inst = pScene.instances[input.instanceId];
+	VertexAttributes attr = pVertexData.getAttributes(input.vertexId);
 	return attr.getParameter(inst.transformMatrix);
 }

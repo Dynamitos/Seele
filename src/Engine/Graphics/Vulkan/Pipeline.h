@@ -6,6 +6,13 @@ namespace Seele
 {
 namespace Vulkan
 {
+class VertexInput : public Gfx::VertexInput
+{
+public:
+    VertexInput(VertexInputStateCreateInfo createInfo);
+    virtual ~VertexInput();
+private:
+};
 DECLARE_REF(PipelineLayout)
 DECLARE_REF(Graphics)
 class GraphicsPipeline : public Gfx::GraphicsPipeline

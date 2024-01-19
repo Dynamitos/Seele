@@ -66,6 +66,8 @@ public:
     virtual Gfx::ODescriptorLayout createDescriptorLayout(const std::string& name = "") override;
     virtual Gfx::OPipelineLayout createPipelineLayout(Gfx::PPipelineLayout baseLayout = nullptr) override;
 
+    virtual Gfx::OVertexInput createVertexInput(VertexInputStateCreateInfo createInfo) override;
+
     virtual void resolveTexture(Gfx::PTexture source, Gfx::PTexture destination) override;
 
     void vkCmdDrawMeshTasksEXT(VkCommandBuffer handle, uint32 groupX, uint32 groupY, uint32 groupZ);

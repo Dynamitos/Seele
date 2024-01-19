@@ -65,9 +65,6 @@ int main()
     AssetImporter::importMesh(MeshImportArgs{
         .filePath= sourcePath / "old_resources/models/cube.fbx",
         });
-    AssetImporter::importMesh(MeshImportArgs{
-        .filePath = sourcePath / "old_resources/models/sponza/sponza.gltf",
-        });
     //AssetImporter::importMesh(MeshImportArgs{
     //    .filePath= sourcePath / "old_resources/models/flameThrower.fbx",
     //    });

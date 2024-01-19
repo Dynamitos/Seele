@@ -3,6 +3,15 @@
 using namespace Seele;
 using namespace Seele::Gfx;
 
+VertexInput::VertexInput(VertexInputStateCreateInfo createInfo)
+    : createInfo(createInfo)
+{
+}
+
+VertexInput::~VertexInput()
+{
+}
+
 GraphicsPipeline::GraphicsPipeline(OPipelineLayout layout) 
     : layout(std::move(layout))
 {

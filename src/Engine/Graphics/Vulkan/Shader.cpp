@@ -63,7 +63,6 @@ void Shader::create(const ShaderCreateInfo& createInfo)
 
     Slang::ComPtr<slang::ISession> session;
     CHECK_RESULT(globalSession->createSession(sessionDesc, session.writeRef()));
-
     Slang::ComPtr<slang::IBlob> diagnostics;
     Array<slang::IComponentType*> modules;
     Slang::ComPtr<slang::IEntryPoint> entrypoint;
