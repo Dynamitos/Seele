@@ -2,7 +2,7 @@ import MaterialParameter;
 
 struct VertexInput
 {
-	uint vertexId;
+	uint vertexId : SV_VertexID;
 	uint instanceId: SV_InstanceID;
 }
 

@@ -52,28 +52,31 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo gf
 {
     PPipelineLayout layout = Gfx::PPipelineLayout(gfxInfo.pipelineLayout).cast<PipelineLayout>();
     uint32 hash = layout->getHash();
-    const VertexInputStateCreateInfo& vertexInputDesc = gfxInfo.vertexInput->getInfo();
-    Array<VkVertexInputBindingDescription> bindings(vertexInputDesc.bindings.size());
-    Array<VkVertexInputAttributeDescription> attributes(vertexInputDesc.attributes.size());
-    for (size_t i = 0; i < bindings.size(); i++)
+    Array<VkVertexInputBindingDescription> bindings;
+    Array<VkVertexInputAttributeDescription> attributes;
+    if (gfxInfo.vertexInput != nullptr)
     {
-        bindings[i] = {
-            .binding = vertexInputDesc.bindings[i].binding,
-            .stride = vertexInputDesc.bindings[i].stride,
-            .inputRate = VkVertexInputRate(vertexInputDesc.bindings[i].inputRate),
-        };
+        const VertexInputStateCreateInfo& vertexInputDesc = gfxInfo.vertexInput->getInfo();
+        for (const auto& b : vertexInputDesc.bindings)
+        {
+            bindings.add() = {
+                .binding = b.binding,
+                .stride = b.stride,
+                .inputRate = VkVertexInputRate(b.inputRate),
+            };
+        }
+        for (const auto& a : vertexInputDesc.attributes)
+        {
+            attributes.add() = {
+                .location = a.location,
+                .binding = a.binding,
+                .format = cast(a.format),
+                .offset = a.offset,
+            };
+        }
+        hash = CRC::Calculate(bindings.data(), sizeof(VkVertexInputBindingDescription) * bindings.size(), CRC::CRC_32(), hash);
+        hash = CRC::Calculate(attributes.data(), sizeof(VkVertexInputAttributeDescription) * attributes.size(), CRC::CRC_32(), hash);
     }
-    for (size_t i = 0; i < attributes.size(); i++)
-    {
-        attributes[i] = {
-            .location = vertexInputDesc.attributes[i].location,
-            .binding = vertexInputDesc.attributes[i].binding,
-            .format = cast(vertexInputDesc.attributes[i].format),
-            .offset = vertexInputDesc.attributes[i].offset,
-        };
-    }
-    hash = CRC::Calculate(bindings.data(), sizeof(VkVertexInputBindingDescription) * bindings.size(), CRC::CRC_32(), hash);
-    hash = CRC::Calculate(attributes.data(), sizeof(VkVertexInputAttributeDescription) * attributes.size(), CRC::CRC_32(), hash);
     VkPipelineVertexInputStateCreateInfo vertexInput = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
         .pNext = nullptr,
