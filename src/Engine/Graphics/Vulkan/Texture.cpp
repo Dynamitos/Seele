@@ -125,8 +125,8 @@ TextureBase::TextureBase(PGraphics graphics, VkImageViewType viewType,
                     .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
                 };
                 VmaAllocationCreateInfo alloc = {
-                    .usage = VMA_MEMORY_USAGE_AUTO,
                     .flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
+                    .usage = VMA_MEMORY_USAGE_AUTO,
                 };
                 VK_CHECK(vmaCreateBuffer(graphics->getAllocator(), &stagingInfo, &alloc, &stagingBuffer, &stagingAlloc, nullptr));
                 vmaMapMemory(graphics->getAllocator(), stagingAlloc, &data);
@@ -257,8 +257,8 @@ void TextureBase::download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Arra
         .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
     };
     VmaAllocationCreateInfo alloc = {
-        .usage = VMA_MEMORY_USAGE_AUTO,
         .flags = VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT,
+        .usage = VMA_MEMORY_USAGE_AUTO,
     };
     VK_CHECK(vmaCreateBuffer(graphics->getAllocator(), &stagingInfo, &alloc, &stagingBuffer, &stagingAlloc, nullptr));
 

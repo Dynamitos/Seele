@@ -35,8 +35,8 @@ Buffer::Buffer(PGraphics graphics, uint64 size, VkBufferUsageFlags usage, Gfx::Q
         .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
     };
     VmaAllocationCreateInfo allocInfo = {
-        .usage = VMA_MEMORY_USAGE_AUTO,
         .flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
+        .usage = VMA_MEMORY_USAGE_AUTO,
     };
     for (uint32 i = 0; i < numBuffers; ++i)
     {
@@ -170,8 +170,8 @@ void *Buffer::mapRegion(uint64 regionOffset, uint64 regionSize, bool writeOnly)
                 .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
                 .pNext = nullptr,
                 .flags = 0,
-                .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                 .size = regionSize,
+                .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                 .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
             };
             VmaAllocationCreateInfo allocInfo = {
@@ -198,7 +198,6 @@ void Buffer::unmap()
     if (found != pendingBuffers.end())
     {
         PendingBuffer &pending = found->value;
-        vmaFlushAllocation(graphics->getAllocator(), pending.allocation, 0, VK_WHOLE_SIZE);
         if (pending.writeOnly)
         {
             if (buffers[currentBuffer].properties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)
@@ -207,6 +206,7 @@ void Buffer::unmap()
             }
             else
             {
+                vmaFlushAllocation(graphics->getAllocator(), pending.allocation, 0, VK_WHOLE_SIZE);
                 vmaUnmapMemory(graphics->getAllocator(), pending.allocation);
                 PCommand command = graphics->getQueueCommands(owner)->getCommands();
                 VkCommandBuffer cmdHandle = command->getHandle();

@@ -1,4 +1,5 @@
 #include "Enums.h"
+#include <stdexcept>
 
 using namespace Seele;
 using namespace Seele::Gfx;

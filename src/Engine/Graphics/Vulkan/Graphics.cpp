@@ -58,16 +58,16 @@ void Graphics::init(GraphicsInitializer initInfo)
     pickPhysicalDevice();
     createDevice(initInfo);
     VmaAllocatorCreateInfo createInfo = {
+        .physicalDevice = physicalDevice,
         .device = handle,
-        .instance = instance,
+        .preferredLargeHeapBlockSize = 0,
         .pAllocationCallbacks = nullptr,
         .pDeviceMemoryCallbacks = nullptr,
         .pHeapSizeLimit = nullptr,
-        .physicalDevice = physicalDevice,
-        .preferredLargeHeapBlockSize = 0,
-        .pTypeExternalMemoryHandleTypes = nullptr,
         .pVulkanFunctions = nullptr,
+        .instance = instance,
         .vulkanApiVersion = VK_API_VERSION_1_3,
+        .pTypeExternalMemoryHandleTypes = nullptr,
     };
     vmaCreateAllocator(&createInfo, &allocator);
     pipelineCache = new PipelineCache(this, "pipeline.cache");

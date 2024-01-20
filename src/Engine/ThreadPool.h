@@ -1,5 +1,6 @@
 #pragma once
 #include <thread>
+#include <functional>
 #include "Containers/Array.h"
 #include "Containers/List.h"
 
