@@ -380,8 +380,9 @@ void Graphics::initInstance(GraphicsInitializer initInfo)
         .applicationVersion = VK_MAKE_VERSION(0, 0, 1),
         .pEngineName = initInfo.engineName,
         .engineVersion = VK_MAKE_VERSION(0, 0, 1),
-        .apiVersion = VK_API_VERSION_1_2,
+        .apiVersion = VK_API_VERSION_1_3,
     };
+    
     
     Array<const char*> extensions = getRequiredExtensions();
     for (uint32 i = 0; i < initInfo.instanceExtensions.size(); ++i)

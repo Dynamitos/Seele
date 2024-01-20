@@ -1,5 +1,6 @@
 {
     "telemetry.enableTelemetry": false,
+    "cmake.cmakePath": "cmake",
     "cmake.buildDirectory": "${workspaceFolder}/bin",
     "files.associations": {
         "*.h": "cpp",
