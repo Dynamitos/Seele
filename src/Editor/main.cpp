@@ -233,7 +233,7 @@ int main()
     sceneViewInfo.dimensions.size.y = 1080;
     sceneViewInfo.dimensions.offset.x = 0;
     sceneViewInfo.dimensions.offset.y = 0;
-    sceneViewInfo.numSamples = Gfx::SE_SAMPLE_COUNT_4_BIT;
+    sceneViewInfo.numSamples = Gfx::SE_SAMPLE_COUNT_1_BIT;
     OGameView sceneView = new Editor::PlayView(graphics, window, sceneViewInfo, binaryPath.generic_string());
     
     //ViewportCreateInfo inspectorViewInfo;

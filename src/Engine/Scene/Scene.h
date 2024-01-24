@@ -5,6 +5,7 @@
 #include "Physics/PhysicsSystem.h"
 #include "Component/Skybox.h"
 #include "LightEnvironment.h"
+#include <iostream>
 
 namespace Seele
 {
@@ -18,7 +19,9 @@ public:
     void update(float deltaTime);
     entt::entity createEntity()
     {
-        return registry.create();
+        auto result = registry.create();
+        std::cout << "Created " << (uint64_t)result << " at " << this << std::endl;
+        return result;
     }
     void destroyEntity(entt::entity identifier)
     {
@@ -27,6 +30,8 @@ public:
     template<typename Component, typename... Args>
     Component& attachComponent(entt::entity entity, Args&&... args)
     {
+        std::cout << "Emplace " << (uint64_t)entity << std::endl;
+        std::cout << "Exists " << registry.valid(entity) << std::endl;
         return registry.emplace<Component>(entity, std::forward<Args>(args)...);
     }
     template<typename Component>

@@ -71,7 +71,6 @@ void BasePass::render()
     tLightGrid->pipelineBarrier(
         Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
         Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
-    colorBuffer->changeLayout(Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
     descriptorSets[INDEX_VIEW_PARAMS] = viewParamsSet;
     descriptorSets[INDEX_LIGHT_ENV] = scene->getLightEnvironment()->getDescriptorSet();
@@ -186,14 +185,7 @@ void BasePass::endFrame()
 
 void BasePass::publishOutputs() 
 {
-    colorBuffer = graphics->createTexture2D(TextureCreateInfo{
-        .format = viewport->getOwner()->getBackBuffer()->getFormat(),
-        .width = viewport->getWidth(),
-        .height = viewport->getHeight(),
-        .samples = viewport->getSamples(),
-        .usage = Gfx::SE_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-        });
-    colorAttachment = new Gfx::RenderTargetAttachment(colorBuffer, Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
+    colorAttachment = new Gfx::SwapchainAttachment(viewport, Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
     resources->registerRenderPassOutput("BASEPASS_COLOR", colorAttachment);
 }
 

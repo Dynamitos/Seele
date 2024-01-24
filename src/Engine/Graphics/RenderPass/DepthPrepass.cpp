@@ -148,26 +148,19 @@ void DepthPrepass::publishOutputs()
         .format = Gfx::SE_FORMAT_D32_SFLOAT,
         .width = viewport->getOwner()->getFramebufferWidth(),
         .height = viewport->getOwner()->getFramebufferHeight(),
-        .samples = viewport->getSamples(),
         .usage = Gfx::SE_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
     };
     depthBuffer = graphics->createTexture2D(depthBufferInfo);
     depthAttachment = 
         new Gfx::RenderTargetAttachment(depthBuffer, Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
     depthAttachment->clear.depthStencil.depth = 1.0f;
-    depthBufferInfo.samples = Gfx::SE_SAMPLE_COUNT_1_BIT;
-    depthResolveBuffer = graphics->createTexture2D(depthBufferInfo);
-    depthResolveAttachment =
-        new Gfx::RenderTargetAttachment(depthResolveBuffer, Gfx::SE_ATTACHMENT_LOAD_OP_DONT_CARE, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
     resources->registerRenderPassOutput("DEPTHPREPASS_DEPTH", depthAttachment);
-    resources->registerRenderPassOutput("DEPTHPREPASS_RESOLVED_DEPTH", depthResolveAttachment);
 }
 
 void DepthPrepass::createRenderPass() 
 {
     Gfx::ORenderTargetLayout layout = new Gfx::RenderTargetLayout{
         .depthAttachment = depthAttachment,
-        .depthResolveAttachment = depthResolveAttachment,
     };
     renderPass = graphics->createRenderPass(std::move(layout), viewport);
 }

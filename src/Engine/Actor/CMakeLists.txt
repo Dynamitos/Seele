@@ -9,7 +9,9 @@ target_sources(Engine
         Entity.cpp
         Entity.h
         PointLightActor.cpp
-        PointLightActor.h)
+        PointLightActor.h
+        StaticMeshActor.h
+        StaticMeshActor.cpp)
 
 target_sources(Engine
     PUBLIC FILE_SET HEADERS
@@ -18,4 +20,5 @@ target_sources(Engine
             CameraActor.h
             DirectionalLightActor.h
             Entity.h
-            PointLightActor.h)
+            PointLightActor.h
+            StaticMeshActor.h)

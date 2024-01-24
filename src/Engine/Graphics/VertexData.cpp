@@ -6,6 +6,7 @@
 #include "Graphics/Descriptor.h"
 #include "Component/Mesh.h"
 #include "Graphics/Shader.h"
+#include "Graphics/Mesh.h"
 #include "Containers/Set.h"
 
 using namespace Seele;

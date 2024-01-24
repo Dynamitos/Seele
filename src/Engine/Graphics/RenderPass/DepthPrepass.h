@@ -19,9 +19,7 @@ public:
     static void modifyRenderPassMacros(Map<const char*, const char*>& defines);
 private:
     Gfx::ORenderTargetAttachment depthAttachment;
-    Gfx::ORenderTargetAttachment depthResolveAttachment;
     Gfx::OTexture2D depthBuffer;
-    Gfx::OTexture2D depthResolveBuffer;
 
     Array<Gfx::PDescriptorSet> descriptorSets;
     

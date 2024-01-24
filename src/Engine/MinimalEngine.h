@@ -26,7 +26,6 @@
         typedef OwningPtr<x> O##x;  \
     }
 
-
 namespace Seele
 {
 template <typename T>

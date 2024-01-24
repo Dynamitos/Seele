@@ -55,6 +55,7 @@ protected:
     void *windowHandle;
     StaticArray<VkImage, Gfx::numFramesBuffered> swapChainImages;
     StaticArray<OTexture2D, Gfx::numFramesBuffered> swapChainTextures;
+    StaticArray<OFence, Gfx::numFramesBuffered> imageAvailableFences;
     StaticArray<OSemaphore, Gfx::numFramesBuffered> imageAvailableSemaphores;
     StaticArray<OSemaphore, Gfx::numFramesBuffered> renderingDoneSemaphores;
     uint32 currentImageIndex = 0;

@@ -20,7 +20,6 @@ public:
     static void modifyRenderPassMacros(Map<const char*, const char*>& defines);
 private:
     Gfx::ORenderTargetAttachment colorAttachment;
-    Gfx::OTexture2D colorBuffer;
     Gfx::PTexture2D depthBuffer;
     Gfx::PShaderBuffer oLightIndexList;
     Gfx::PShaderBuffer tLightIndexList;

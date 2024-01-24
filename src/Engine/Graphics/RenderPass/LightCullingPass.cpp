@@ -174,7 +174,7 @@ void LightCullingPass::publishOutputs()
 
 void LightCullingPass::createRenderPass()
 {
-    depthAttachment = resources->requestRenderTarget("DEPTHPREPASS_RESOLVED_DEPTH")->getTexture();
+    depthAttachment = resources->requestRenderTarget("DEPTHPREPASS_DEPTH")->getTexture();
 }
 
 void LightCullingPass::modifyRenderPassMacros(Map<const char*, const char*>&) 

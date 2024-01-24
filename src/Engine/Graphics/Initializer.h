@@ -155,7 +155,7 @@ struct RasterizationState
     float               depthBiasConstantFactor = 0;
     float               depthBiasClamp = 0;
     float               depthBiasSlopeFactor = 0;
-    float               lineWidth = 0;
+    float               lineWidth = 1.0;
 };
 struct MultisampleState
 {

@@ -20,7 +20,7 @@ Semaphore::Semaphore(PGraphics graphics)
 
 Semaphore::~Semaphore()
 {
-    vkDestroySemaphore(graphics->getDevice(), handle, nullptr);
+    graphics->getDestructionManager()->queueSemaphore(graphics->getGraphicsCommands()->getCommands(), handle);
 }
 
 Fence::Fence(PGraphics graphics)

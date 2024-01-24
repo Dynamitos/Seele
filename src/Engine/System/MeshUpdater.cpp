@@ -1,5 +1,6 @@
 #include "MeshUpdater.h"
 #include "Component/Mesh.h"
+#include "Graphics/Mesh.h"
 
 using namespace Seele;
 using namespace Seele::System;

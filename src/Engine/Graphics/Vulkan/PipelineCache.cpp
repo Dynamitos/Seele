@@ -140,7 +140,7 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo gf
         .depthBiasConstantFactor = gfxInfo.rasterizationState.depthBiasConstantFactor,
         .depthBiasClamp = gfxInfo.rasterizationState.depthBiasClamp,
         .depthBiasSlopeFactor = gfxInfo.rasterizationState.depthBiasSlopeFactor,
-        .lineWidth = 0,
+        .lineWidth = gfxInfo.rasterizationState.lineWidth,
     };
     hash = CRC::Calculate(&rasterizationState, sizeof(rasterizationState), CRC::CRC_32(), hash);
 

@@ -53,7 +53,8 @@ void glfwCloseCallback(GLFWwindow* handle)
     Window* window = (Window*)glfwGetWindowUserPointer(handle);
     window->close();
 }
-void glfwResizeCallback(GLFWwindow* handle, int width, int height)
+
+void glfwFramebufferResizeCallback(GLFWwindow* handle, int width, int height)
 {
     Window* window = (Window*)glfwGetWindowUserPointer(handle);
     window->resize(width, height);
@@ -69,6 +70,8 @@ Window::Window(PGraphics graphics, const WindowCreateInfo &createInfo)
     GLFWwindow *handle = glfwCreateWindow(createInfo.width, createInfo.height, createInfo.title, nullptr, nullptr);
     windowHandle = handle;
     glfwSetWindowUserPointer(handle, this);
+    int w, h;
+    glfwGetWindowSize(handle, &w, &h);
 
     glfwSetKeyCallback(handle, &glfwKeyCallback);
     glfwSetCursorPosCallback(handle, &glfwMouseMoveCallback);
@@ -76,7 +79,8 @@ Window::Window(PGraphics graphics, const WindowCreateInfo &createInfo)
     glfwSetScrollCallback(handle, &glfwScrollCallback);
     glfwSetDropCallback(handle, &glfwFileCallback);
     glfwSetWindowCloseCallback(handle, &glfwCloseCallback);
-    glfwSetWindowSizeCallback(handle, &glfwResizeCallback);
+    glfwSetFramebufferSizeCallback(handle, &glfwFramebufferResizeCallback);
+    //glfwSetWindowSizeCallback(handle, &glfwResizeCallback);
 
     glfwCreateWindowSurface(instance, handle, nullptr, &surface);
     
@@ -104,8 +108,10 @@ void Window::pollInput()
 
 void Window::beginFrame()
 {
-    vkAcquireNextImageKHR(graphics->getDevice(), swapchain, std::numeric_limits<uint64>::max(), imageAvailableSemaphores[currentSemaphoreIndex]->getHandle(), VK_NULL_HANDLE, &currentImageIndex);
-    swapChainTextures[currentImageIndex]->changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+    imageAvailableFences[currentSemaphoreIndex]->wait(100000);
+    imageAvailableFences[currentSemaphoreIndex]->reset();
+    vkAcquireNextImageKHR(graphics->getDevice(), swapchain, std::numeric_limits<uint64>::max(), imageAvailableSemaphores[currentSemaphoreIndex]->getHandle(), imageAvailableFences[currentSemaphoreIndex]->getHandle(), &currentImageIndex);
+    swapChainTextures[currentImageIndex]->changeLayout(Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
     graphics->getGraphicsCommands()->getCommands()->waitForSemaphore(VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, imageAvailableSemaphores[currentSemaphoreIndex]);
 }
 
@@ -334,6 +340,12 @@ void Window::createSwapChain()
                 .samples = 1,
                 .usage = Gfx::SE_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | Gfx::SE_IMAGE_USAGE_TRANSFER_DST_BIT,
             }, swapChainImages[i]);
+        if(imageAvailableFences[i] != nullptr)
+        {
+            imageAvailableFences[i]->wait(100000);
+            imageAvailableFences[i]->reset();
+        }
+        imageAvailableFences[i] = new Fence(graphics);
         imageAvailableSemaphores[i] = new Semaphore(graphics);
         renderingDoneSemaphores[i] = new Semaphore(graphics);
     }

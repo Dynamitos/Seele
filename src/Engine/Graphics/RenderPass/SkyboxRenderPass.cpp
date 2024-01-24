@@ -51,8 +51,6 @@ void SkyboxRenderPass::render()
     renderCommand->draw(36, 1, 0, 0);
     graphics->executeCommands(Array{ renderCommand });
     graphics->endRenderPass();
-    baseColorAttachment->getTexture()->changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
-    graphics->resolveTexture(baseColorAttachment->getTexture(), viewport->getOwner()->getBackBuffer());
 }
 
 void SkyboxRenderPass::endFrame()

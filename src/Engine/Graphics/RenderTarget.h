@@ -15,24 +15,24 @@ public:
         SeAttachmentStoreOp storeOp = SE_ATTACHMENT_STORE_OP_STORE,
         SeAttachmentLoadOp stencilLoadOp = SE_ATTACHMENT_LOAD_OP_DONT_CARE,
         SeAttachmentStoreOp stencilStoreOp = SE_ATTACHMENT_STORE_OP_DONT_CARE);
-    ~RenderTargetAttachment();
-    PTexture2D getTexture()
+    virtual ~RenderTargetAttachment();
+    virtual PTexture2D getTexture()
     {
         return texture;
     }
-    SeFormat getFormat() const
+    virtual SeFormat getFormat() const
     {
         return texture->getFormat();
     }
-    SeSampleCountFlags getNumSamples() const
+    virtual SeSampleCountFlags getNumSamples() const
     {
         return texture->getNumSamples();
     }
-    uint32 getWidth() const 
+    virtual uint32 getWidth() const 
     { 
         return texture->getWidth(); 
     }
-    uint32 getHeight() const 
+    virtual uint32 getHeight() const 
     { 
         return texture->getHeight(); 
     }
@@ -50,6 +50,44 @@ protected:
     PTexture2D texture;
 };
 DEFINE_REF(RenderTargetAttachment)
+
+class SwapchainAttachment : public RenderTargetAttachment
+{
+public:
+    SwapchainAttachment(PViewport viewport,
+        SeAttachmentLoadOp loadOp = SE_ATTACHMENT_LOAD_OP_LOAD,
+        SeAttachmentStoreOp storeOp = SE_ATTACHMENT_STORE_OP_STORE,
+        SeAttachmentLoadOp stencilLoadOp = SE_ATTACHMENT_LOAD_OP_DONT_CARE,
+        SeAttachmentStoreOp stencilStoreOp = SE_ATTACHMENT_STORE_OP_DONT_CARE)
+        : RenderTargetAttachment(nullptr, loadOp, storeOp, stencilLoadOp, stencilStoreOp)
+        , viewport(viewport)
+    {}
+    virtual ~SwapchainAttachment()
+    {
+    }
+    virtual PTexture2D getTexture()
+    {
+        return viewport->getOwner()->getBackBuffer();
+    }
+    virtual SeFormat getFormat() const
+    {
+        return viewport->getOwner()->getSwapchainFormat();
+    }
+    virtual SeSampleCountFlags getNumSamples() const
+    {
+        return viewport->getSamples();
+    }
+    virtual uint32 getWidth() const 
+    { 
+        return viewport->getWidth(); 
+    }
+    virtual uint32 getHeight() const 
+    { 
+        return viewport->getHeight(); 
+    }
+private:
+    PViewport viewport;
+};
 
 class RenderTargetLayout
 {
