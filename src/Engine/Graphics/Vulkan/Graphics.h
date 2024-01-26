@@ -88,10 +88,12 @@ protected:
     OQueue computeQueue;
     OQueue transferQueue;
     OQueue dedicatedTransferQueue;
-    thread_local static OCommandPool graphicsCommands;
-    thread_local static OCommandPool computeCommands;
-    thread_local static OCommandPool transferCommands;
-    thread_local static OCommandPool dedicatedTransferCommands;
+    thread_local static PCommandPool graphicsCommands;
+    thread_local static PCommandPool computeCommands;
+    thread_local static PCommandPool transferCommands;
+    thread_local static PCommandPool dedicatedTransferCommands;
+    std::mutex poolLock;
+    Array<OCommandPool> pools;
     VkPhysicalDeviceProperties props;
     VkPhysicalDeviceFeatures2 features;
     VkPhysicalDeviceVulkan11Features features11;

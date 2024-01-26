@@ -72,6 +72,12 @@ void VertexData::createDescriptors()
                 .numElements = instanceData.size(),
                 .dynamic = false,
                 });
+            matInst.instanceBuffer->pipelineBarrier(
+                Gfx::SE_ACCESS_TRANSFER_WRITE_BIT,
+                Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
+                Gfx::SE_ACCESS_MEMORY_READ_BIT,
+                Gfx::SE_PIPELINE_STAGE_VERTEX_SHADER_BIT
+            );
             matInst.descriptorSet = instanceDataLayout->allocateDescriptorSet();
             
             matInst.meshDataBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
@@ -82,6 +88,12 @@ void VertexData::createDescriptors()
                 .numElements = meshes.size(),
                 .dynamic = false,
             });
+            matInst.meshDataBuffer->pipelineBarrier(
+                Gfx::SE_ACCESS_TRANSFER_WRITE_BIT,
+                Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
+                Gfx::SE_ACCESS_MEMORY_READ_BIT,
+                Gfx::SE_PIPELINE_STAGE_VERTEX_SHADER_BIT
+            );
             matInst.descriptorSet->updateBuffer(0, matInst.instanceBuffer);
             matInst.descriptorSet->updateBuffer(1, matInst.meshDataBuffer);
             matInst.descriptorSet->updateBuffer(2, meshletBuffer);

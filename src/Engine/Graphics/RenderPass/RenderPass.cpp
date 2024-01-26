@@ -36,6 +36,11 @@ void RenderPass::beginFrame(const Component::Camera& cam)
         .data = (uint8*)&viewParams,
     };
     viewParamsBuffer->updateContents(uniformUpdate);
+    viewParamsBuffer->pipelineBarrier(
+        Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, 
+        Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, 
+        Gfx::SE_ACCESS_MEMORY_READ_BIT,
+        Gfx::SE_PIPELINE_STAGE_ALL_COMMANDS_BIT);
     viewParamsLayout->reset();
     viewParamsSet = viewParamsLayout->allocateDescriptorSet();
     viewParamsSet->updateBuffer(0, viewParamsBuffer);

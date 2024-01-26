@@ -124,7 +124,6 @@ void DebugPass::createRenderPass()
     gfxInfo.vertexShader = vertexShader;
     gfxInfo.fragmentShader = fragmentShader;
     gfxInfo.rasterizationState.polygonMode = Gfx::SE_POLYGON_MODE_LINE;
-    gfxInfo.rasterizationState.lineWidth = 5.f;
     gfxInfo.topology = Gfx::SE_PRIMITIVE_TOPOLOGY_LINE_LIST;
     gfxInfo.pipelineLayout = std::move(pipelineLayout);
     gfxInfo.renderPass = renderPass;

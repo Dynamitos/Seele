@@ -19,10 +19,10 @@
 using namespace Seele;
 using namespace Seele::Vulkan;
 
-thread_local OCommandPool Seele::Vulkan::Graphics::graphicsCommands = nullptr;
-thread_local OCommandPool Seele::Vulkan::Graphics::computeCommands = nullptr;
-thread_local OCommandPool Seele::Vulkan::Graphics::transferCommands = nullptr;
-thread_local OCommandPool Seele::Vulkan::Graphics::dedicatedTransferCommands = nullptr;
+thread_local PCommandPool Seele::Vulkan::Graphics::graphicsCommands = nullptr;
+thread_local PCommandPool Seele::Vulkan::Graphics::computeCommands = nullptr;
+thread_local PCommandPool Seele::Vulkan::Graphics::transferCommands = nullptr;
+thread_local PCommandPool Seele::Vulkan::Graphics::dedicatedTransferCommands = nullptr;
 
 Graphics::Graphics()
     : instance(VK_NULL_HANDLE)
@@ -35,15 +35,12 @@ Graphics::Graphics()
 Graphics::~Graphics()
 {
     vkDeviceWaitIdle(handle);
-    graphicsCommands = nullptr;
-    computeCommands = nullptr;
-    transferCommands = nullptr;
-    dedicatedTransferCommands = nullptr;
     pipelineCache = nullptr;
     allocator = nullptr;
     destructionManager = nullptr;
     allocatedFramebuffers.clear();
     shaderCompiler = nullptr;
+    pools.clear();
     vkDestroyDevice(handle, nullptr);
     DestroyDebugReportCallbackEXT(instance, nullptr, callback);
     vkDestroyInstance(instance, nullptr);
@@ -315,7 +312,8 @@ PCommandPool Graphics::getGraphicsCommands()
 {
     if(graphicsCommands == nullptr)
     {
-        graphicsCommands = new CommandPool(this, graphicsQueue);
+        std::unique_lock l(poolLock);
+        graphicsCommands = pools.add(new CommandPool(this, graphicsQueue));
     }
     return graphicsCommands;
 }
@@ -323,7 +321,8 @@ PCommandPool Graphics::getComputeCommands()
 {
     if(computeCommands == nullptr)
     {
-        computeCommands = new CommandPool(this, computeQueue);
+        std::unique_lock l(poolLock);
+        computeCommands = pools.add(new CommandPool(this, computeQueue));
     }
     return computeCommands;
 }
@@ -331,7 +330,8 @@ PCommandPool Graphics::getTransferCommands()
 {
     if(transferCommands == nullptr)
     {
-        transferCommands = new CommandPool(this, transferQueue);
+        std::unique_lock l(poolLock);
+        transferCommands = pools.add(new CommandPool(this, transferQueue));
     }
     return transferCommands;
 }
@@ -339,7 +339,8 @@ PCommandPool Graphics::getDedicatedTransferCommands()
 {
     if(dedicatedTransferCommands == nullptr)
     {
-        dedicatedTransferCommands = new CommandPool(this, dedicatedTransferQueue != nullptr ? dedicatedTransferQueue : transferQueue);
+        std::unique_lock l(poolLock);
+        dedicatedTransferCommands = pools.add(new CommandPool(this, dedicatedTransferQueue != nullptr ? dedicatedTransferQueue : transferQueue));
     }
     return dedicatedTransferCommands;
 }
