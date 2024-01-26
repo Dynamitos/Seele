@@ -34,6 +34,10 @@ void SkyboxRenderPass::beginFrame(const Component::Camera& cam)
     skyboxDataSet = skyboxDataLayout->allocateDescriptorSet();
     skyboxDataSet->updateBuffer(0, skyboxBuffer);
     skyboxDataSet->writeChanges();
+    skyboxBuffer->pipelineBarrier(
+        Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
+        Gfx::SE_ACCESS_MEMORY_READ_BIT, Gfx::SE_PIPELINE_STAGE_VERTEX_SHADER_BIT
+    );
     textureSet = textureLayout->allocateDescriptorSet();
     textureSet->updateTexture(0, skybox.day);
     textureSet->updateTexture(1, skybox.night);
@@ -43,6 +47,14 @@ void SkyboxRenderPass::beginFrame(const Component::Camera& cam)
 
 void SkyboxRenderPass::render()
 {
+    colorAttachment->getTexture()->pipelineBarrier(
+        Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+        Gfx::SE_ACCESS_COLOR_ATTACHMENT_READ_BIT, Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT
+    );
+    depthAttachment->getTexture()->pipelineBarrier(
+        Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+        Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT, Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT
+    );
     graphics->beginRenderPass(renderPass);
     Gfx::PRenderCommand renderCommand = graphics->createRenderCommand("SkyboxRender");
     renderCommand->setViewport(viewport);
@@ -74,12 +86,12 @@ void SkyboxRenderPass::publishOutputs()
 
 void SkyboxRenderPass::createRenderPass()
 {
-    baseColorAttachment = resources->requestRenderTarget("BASEPASS_COLOR");
-    baseColorAttachment->loadOp = Gfx::SE_ATTACHMENT_LOAD_OP_LOAD;
-    Gfx::PRenderTargetAttachment depthAttachment = resources->requestRenderTarget("DEPTHPREPASS_DEPTH");
+    colorAttachment = resources->requestRenderTarget("BASEPASS_COLOR");
+    colorAttachment->loadOp = Gfx::SE_ATTACHMENT_LOAD_OP_LOAD;
+    depthAttachment = resources->requestRenderTarget("DEPTHPREPASS_DEPTH");
     depthAttachment->loadOp = Gfx::SE_ATTACHMENT_LOAD_OP_LOAD;
     Gfx::ORenderTargetLayout layout = new Gfx::RenderTargetLayout{
-        .colorAttachments = { baseColorAttachment },
+        .colorAttachments = { colorAttachment },
         .depthAttachment = depthAttachment
     };
     renderPass = graphics->createRenderPass(std::move(layout), viewport);

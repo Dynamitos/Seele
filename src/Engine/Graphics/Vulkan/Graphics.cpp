@@ -42,7 +42,7 @@ Graphics::~Graphics()
     shaderCompiler = nullptr;
     pools.clear();
     vkDestroyDevice(handle, nullptr);
-    DestroyDebugReportCallbackEXT(instance, nullptr, callback);
+    DestroyDebugUtilsMessengerEXT(instance, nullptr, callback);
     vkDestroyInstance(instance, nullptr);
 }
 
@@ -367,7 +367,7 @@ Array<const char *> Graphics::getRequiredExtensions()
         extensions.add(glfwExtensions[i]);
     }
 #if ENABLE_VALIDATION
-    extensions.add(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+    extensions.add(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 #endif // ENABLE_VALIDATION
     return extensions;
 }
@@ -381,7 +381,7 @@ void Graphics::initInstance(GraphicsInitializer initInfo)
         .applicationVersion = VK_MAKE_VERSION(0, 0, 1),
         .pEngineName = initInfo.engineName,
         .engineVersion = VK_MAKE_VERSION(0, 0, 1),
-        .apiVersion = VK_API_VERSION_1_3,
+        .apiVersion = VK_API_VERSION_1_2,
     };
     
     
@@ -411,15 +411,16 @@ void Graphics::initInstance(GraphicsInitializer initInfo)
 }
 void Graphics::setupDebugCallback()
 {
-    VkDebugReportCallbackCreateInfoEXT createInfo = {
-        .sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT,
+    VkDebugUtilsMessengerCreateInfoEXT createInfo = {
+        .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
         .pNext = nullptr,
-        .flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT,
-        .pfnCallback = &debugCallback,
+        .flags = 0,
+        .messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT,
+        .messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT,
+        .pfnUserCallback = &debugCallback,
         .pUserData = nullptr,
     };
-
-    VK_CHECK(CreateDebugReportCallbackEXT(instance, &createInfo, nullptr, &callback));
+    VK_CHECK(CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &callback));
 }
 
 void Graphics::pickPhysicalDevice()

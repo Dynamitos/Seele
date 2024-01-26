@@ -459,7 +459,7 @@ CommandPool::CommandPool(PGraphics graphics, PQueue queue)
         .queueFamilyIndex = queue->getFamilyIndex(),
     };
     VK_CHECK(vkCreateCommandPool(graphics->getDevice(), &info, nullptr, &commandPool));
-
+    // TODO: dont reset individual commands, reset pool instead
     allocatedBuffers.add(new Command(graphics, commandPool, this));
     
     command = allocatedBuffers.back();

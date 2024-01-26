@@ -98,7 +98,7 @@ protected:
     VkPhysicalDeviceFeatures2 features;
     VkPhysicalDeviceVulkan11Features features11;
     VkPhysicalDeviceVulkan12Features features12;
-    VkDebugReportCallbackEXT callback;
+    VkDebugUtilsMessengerEXT callback;
     Map<uint32, OFramebuffer> allocatedFramebuffers;
     VmaAllocator allocator;
     OPipelineCache pipelineCache;

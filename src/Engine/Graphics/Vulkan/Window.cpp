@@ -111,8 +111,8 @@ void Window::beginFrame()
     imageAvailableFences[currentSemaphoreIndex]->wait(100000);
     imageAvailableFences[currentSemaphoreIndex]->reset();
     vkAcquireNextImageKHR(graphics->getDevice(), swapchain, std::numeric_limits<uint64>::max(), imageAvailableSemaphores[currentSemaphoreIndex]->getHandle(), imageAvailableFences[currentSemaphoreIndex]->getHandle(), &currentImageIndex);
-    swapChainTextures[currentImageIndex]->changeLayout(Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
     graphics->getGraphicsCommands()->getCommands()->waitForSemaphore(VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, imageAvailableSemaphores[currentSemaphoreIndex]);
+    swapChainTextures[currentImageIndex]->changeLayout(Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 }
 
 void Window::endFrame()

@@ -16,6 +16,7 @@ public:
 private:
     Map<uint32, OGraphicsPipeline> graphicsPipelines;
     Map<uint32, OComputePipeline> computePipelines;
+    std::mutex cacheLock;
     VkPipelineCache cache;
     PGraphics graphics;
     std::string cacheFile;

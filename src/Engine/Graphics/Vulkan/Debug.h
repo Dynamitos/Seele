@@ -6,9 +6,13 @@ namespace Seele
 {
 namespace Vulkan
 {
-VkBool32 debugCallback(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objType, uint64_t obj, size_t location, int32_t code, const char *layerPrefix, const char *msg, void *userData);
+VkBool32 debugCallback(
+    VkDebugUtilsMessageSeverityFlagBitsEXT           messageSeverity,
+    VkDebugUtilsMessageTypeFlagsEXT                  messageTypes,
+    const VkDebugUtilsMessengerCallbackDataEXT*      pCallbackData,
+    void*                                            pUserData);
 
-VkResult CreateDebugReportCallbackEXT(VkInstance instance, const VkDebugReportCallbackCreateInfoEXT *pCreateInfo, const VkAllocationCallbacks *pAllocator, VkDebugReportCallbackEXT *pCallback);
-void DestroyDebugReportCallbackEXT(VkInstance instance, const VkAllocationCallbacks *pAllocator, VkDebugReportCallbackEXT pCallback);
+VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo, const VkAllocationCallbacks *pAllocator, VkDebugUtilsMessengerEXT *pCallback);
+void DestroyDebugUtilsMessengerEXT(VkInstance instance, const VkAllocationCallbacks *pAllocator, VkDebugUtilsMessengerEXT pCallback);
 } // namespace Vulkan
 } // namespace Seele

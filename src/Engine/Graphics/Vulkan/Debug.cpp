@@ -3,15 +3,19 @@
 
 using namespace Seele::Vulkan;
 
-VkBool32 Seele::Vulkan::debugCallback(VkDebugReportFlagsEXT, VkDebugReportObjectTypeEXT, uint64_t, size_t, int32_t, const char *layerPrefix, const char *msg, void *)
+VkBool32 Seele::Vulkan::debugCallback(
+    VkDebugUtilsMessageSeverityFlagBitsEXT           messageSeverity,
+    VkDebugUtilsMessageTypeFlagsEXT                  messageTypes,
+    const VkDebugUtilsMessengerCallbackDataEXT*      pCallbackData,
+    void*                                            pUserData)
 {
-	std::cerr << layerPrefix << ": " << msg << std::endl;
+	std::cerr << pCallbackData->pMessage << std::endl;
 	return VK_FALSE;
 }
 
-VkResult Seele::Vulkan::CreateDebugReportCallbackEXT(VkInstance instance, const VkDebugReportCallbackCreateInfoEXT *pCreateInfo, const VkAllocationCallbacks *pAllocator, VkDebugReportCallbackEXT *pCallback)
+VkResult Seele::Vulkan::CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo, const VkAllocationCallbacks *pAllocator, VkDebugUtilsMessengerEXT *pCallback)
 {
-	auto func = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugReportCallbackEXT");
+	auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
 	if (func != nullptr)
 	{
 		return func(instance, pCreateInfo, pAllocator, pCallback);
@@ -22,9 +26,9 @@ VkResult Seele::Vulkan::CreateDebugReportCallbackEXT(VkInstance instance, const 
 	}
 }
 
-void Seele::Vulkan::DestroyDebugReportCallbackEXT(VkInstance instance, const VkAllocationCallbacks *pAllocator, VkDebugReportCallbackEXT pCallback)
+void Seele::Vulkan::DestroyDebugUtilsMessengerEXT(VkInstance instance, const VkAllocationCallbacks *pAllocator, VkDebugUtilsMessengerEXT pCallback)
 {
-	auto func = (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugReportCallbackEXT");
+	auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
 	if (func != nullptr)
 	{
 		func(instance, pCallback, pAllocator);

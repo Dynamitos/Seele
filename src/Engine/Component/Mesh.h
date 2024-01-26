@@ -8,8 +8,6 @@ namespace Component
 struct Mesh
 {
     PMeshAsset asset;
-    Mesh() {}
-    Mesh(PMeshAsset asset) : asset(asset) {}
 };
 } // namespace Component
 } // namespace Seele
