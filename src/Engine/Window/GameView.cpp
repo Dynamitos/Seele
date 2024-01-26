@@ -20,6 +20,7 @@ GameView::GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreate
         DepthPrepass(graphics, scene),
         LightCullingPass(graphics, scene),
         BasePass(graphics, scene),
+        DebugPass(graphics, scene),
         SkyboxRenderPass(graphics, scene)
     ))
 {

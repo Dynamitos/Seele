@@ -37,6 +37,7 @@ Fence::Fence(PGraphics graphics)
 
 Fence::~Fence()
 {
+    vkWaitForFences(graphics->getDevice(), 1, &fence, true, 100000);
     vkDestroyFence(graphics->getDevice(), fence, nullptr);
 }
 

@@ -19,9 +19,7 @@ public:
     void update(float deltaTime);
     entt::entity createEntity()
     {
-        auto result = registry.create();
-        std::cout << "Created " << (uint64_t)result << " at " << this << std::endl;
-        return result;
+        return registry.create();
     }
     void destroyEntity(entt::entity identifier)
     {
@@ -30,8 +28,6 @@ public:
     template<typename Component, typename... Args>
     Component& attachComponent(entt::entity entity, Args&&... args)
     {
-        std::cout << "Emplace " << (uint64_t)entity << std::endl;
-        std::cout << "Exists " << registry.valid(entity) << std::endl;
         return registry.emplace<Component>(entity, std::forward<Args>(args)...);
     }
     template<typename Component>

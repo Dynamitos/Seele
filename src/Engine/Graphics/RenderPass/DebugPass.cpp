@@ -23,6 +23,7 @@ DebugPass::DebugPass(Gfx::PGraphics graphics, PScene scene)
 {
     
 }
+
 DebugPass::~DebugPass()
 {
     
@@ -50,7 +51,7 @@ void DebugPass::render()
     Gfx::PRenderCommand renderCommand = graphics->createRenderCommand("DebugRender");
     renderCommand->setViewport(viewport);
     renderCommand->bindPipeline(pipeline);
-    renderCommand->bindDescriptor(descriptorSet);
+    renderCommand->bindDescriptor(viewParamsSet);
     renderCommand->bindVertexBuffer({ debugVertices });
     renderCommand->draw((uint32)gDebugVertices.size(), 1, 0, 0);
     graphics->executeCommands(Array{renderCommand});
@@ -64,18 +65,6 @@ void DebugPass::endFrame()
 
 void DebugPass::publishOutputs()
 {
-    UniformBufferCreateInfo viewCreateInfo = {
-        .sourceData = DataSource {
-            .size = sizeof(ViewParameter),
-            .data = nullptr,
-        },
-        .dynamic = true
-    };
-    viewParamsBuffer = graphics->createUniformBuffer(viewCreateInfo);
-
-    descriptorLayout = graphics->createDescriptorLayout("DebugDescLayout");
-    descriptorLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-    descriptorLayout->create();
 }
 
 void DebugPass::createRenderPass()
@@ -91,22 +80,47 @@ void DebugPass::createRenderPass()
     renderPass = graphics->createRenderPass(std::move(layout), viewport);
     
     Gfx::OPipelineLayout pipelineLayout = graphics->createPipelineLayout();
-    pipelineLayout->addDescriptorLayout(0, descriptorLayout);
+    pipelineLayout->addDescriptorLayout(0, viewParamsLayout);
     pipelineLayout->create();
 
-    ShaderCreateInfo createInfo;
-    createInfo.name = "DebugVertex";
-    createInfo.mainModule = "Debug";
-    createInfo.entryPoint = "vertexMain";
-    createInfo.defines["INDEX_VIEW_PARAMS"] = "0";
+    ShaderCreateInfo createInfo = {
+        .mainModule = "Debug",
+        .additionalModules = { "Debug" },
+        .name = "DebugVertex",
+        .entryPoint = "vertexMain",
+    };
     vertexShader = graphics->createVertexShader(createInfo);
 
     createInfo.name = "DebugFragment";
-
     createInfo.entryPoint = "fragmentMain";
     fragmentShader = graphics->createFragmentShader(createInfo);
 
+    VertexInputStateCreateInfo inputCreate = {
+        .bindings = {
+            VertexInputBinding {
+                .binding = 0,
+                .stride = sizeof(DebugVertex),
+                .inputRate = Gfx::SE_VERTEX_INPUT_RATE_VERTEX,
+            },
+        },
+        .attributes = {
+            VertexInputAttribute {
+                .location = 0,
+                .binding = 0,
+                .format = Gfx::SE_FORMAT_R32G32B32_SFLOAT,
+                .offset = 0,
+            },
+            VertexInputAttribute {
+                .location = 1,
+                .binding = 0,
+                .format = Gfx::SE_FORMAT_R32G32B32_SFLOAT,
+                .offset = sizeof(Vector)
+            }
+        },
+    };
+    vertexInput = graphics->createVertexInput(inputCreate);
     Gfx::LegacyPipelineCreateInfo gfxInfo;
+    gfxInfo.vertexInput = vertexInput;
     gfxInfo.vertexShader = vertexShader;
     gfxInfo.fragmentShader = fragmentShader;
     gfxInfo.rasterizationState.polygonMode = Gfx::SE_POLYGON_MODE_LINE;

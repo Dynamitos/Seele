@@ -2,6 +2,7 @@
 #include "RenderPass.h"
 #include "Scene/Scene.h"
 #include "Graphics/DebugVertex.h"
+#include "Graphics/Pipeline.h"
 
 namespace Seele
 {
@@ -21,10 +22,8 @@ public:
     virtual void publishOutputs() override;
     virtual void createRenderPass() override;
 private:
+    Gfx::OVertexInput vertexInput;
     Gfx::OVertexBuffer debugVertices;
-    Gfx::OUniformBuffer viewParamsBuffer;
-    Gfx::ODescriptorLayout descriptorLayout;
-    Gfx::PDescriptorSet descriptorSet;
     Gfx::OVertexShader vertexShader;
     Gfx::OFragmentShader fragmentShader;
     Gfx::PGraphicsPipeline pipeline;

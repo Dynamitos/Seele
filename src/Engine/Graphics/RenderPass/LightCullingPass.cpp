@@ -64,8 +64,6 @@ void LightCullingPass::render()
     //computeCommand->dispatch(dispatchParams.numThreadGroups.x, dispatchParams.numThreadGroups.y, dispatchParams.numThreadGroups.z);
     Array<Gfx::PComputeCommand> commands = {computeCommand};
     graphics->executeCommands(commands);
-    depthAttachment->changeLayout(Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
-    depthAttachment->transferOwnership(Gfx::QueueType::GRAPHICS);
     //std::cout << "LightCulling render()" << std::endl;
     //co_return;
 }

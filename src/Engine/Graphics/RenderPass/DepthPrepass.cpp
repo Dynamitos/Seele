@@ -40,10 +40,6 @@ void DepthPrepass::beginFrame(const Component::Camera& cam)
 
 void DepthPrepass::render() 
 {
-    depthAttachment->getTexture()->pipelineBarrier(
-        Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-        Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT);
-    depthAttachment->getTexture()->transferOwnership(Gfx::QueueType::GRAPHICS);
     Gfx::ShaderPermutation permutation;
     if(graphics->supportMeshShading())
     {

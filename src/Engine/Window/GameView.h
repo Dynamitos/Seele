@@ -5,6 +5,7 @@
 #include "Graphics/RenderPass/LightCullingPass.h"
 #include "Graphics/RenderPass/BasePass.h"
 #include "Graphics/RenderPass/SkyboxRenderPass.h"
+#include "Graphics/RenderPass/DebugPass.h"
 #include "System/KeyboardInput.h"
 #ifdef WIN32
 #include "Platform/Windows/GameInterface.h" // TODO
@@ -35,6 +36,7 @@ protected:
         DepthPrepass,
 		LightCullingPass,
         BasePass,
+		DebugPass,
 		SkyboxRenderPass
 		> renderGraph;
 
