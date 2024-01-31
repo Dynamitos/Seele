@@ -9,7 +9,12 @@ namespace Vulkan
 class Buffer
 {
 public:
-    Buffer(PGraphics graphics, uint64 size, VkBufferUsageFlags usage, Gfx::QueueType& queueType, bool dynamic = false);
+    Buffer(PGraphics graphics, 
+        uint64 size, 
+        VkBufferUsageFlags usage, 
+        Gfx::QueueType& queueType, 
+        bool dynamic,
+        std::string name);
     virtual ~Buffer();
     VkBuffer getHandle() const
     {
@@ -41,6 +46,7 @@ protected:
     Gfx::QueueType& owner;
     BufferAllocation buffers[Gfx::numFramesBuffered];
     uint32 numBuffers;
+    std::string name;
 
     void executeOwnershipBarrier(Gfx::QueueType newOwner);
     void executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, 

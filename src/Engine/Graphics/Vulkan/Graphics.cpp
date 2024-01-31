@@ -293,6 +293,12 @@ void Graphics::vkCmdDrawMeshTasksEXT(VkCommandBuffer handle, uint32 groupX, uint
     cmdDrawMeshTasks(handle, groupX, groupY, groupZ);
 }
 
+void Graphics::vkDebugMarkerSetObjectNameEXT(VkDebugMarkerObjectNameInfoEXT* info)
+{
+    VK_CHECK(cmdDebugMarkerSetObjectName(handle, info));
+}
+
+
 PCommandPool Graphics::getQueueCommands(Gfx::QueueType queueType)
 {
     switch (queueType)
@@ -422,6 +428,7 @@ void Graphics::setupDebugCallback()
         .pUserData = nullptr,
     };
     VK_CHECK(CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &callback));
+    cmdDebugMarkerSetObjectName = (PFN_vkDebugMarkerSetObjectNameEXT)vkGetInstanceProcAddr(instance, "vkDebugMarkerSetObjectNameEXT");
 }
 
 void Graphics::pickPhysicalDevice()

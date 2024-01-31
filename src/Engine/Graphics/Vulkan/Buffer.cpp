@@ -16,8 +16,13 @@ struct PendingBuffer
 
 static Map<Vulkan::Buffer *, PendingBuffer> pendingBuffers;
 
-Buffer::Buffer(PGraphics graphics, uint64 size, VkBufferUsageFlags usage, Gfx::QueueType &queueType, bool dynamic)
-    : graphics(graphics), currentBuffer(0), size(size), owner(queueType)
+Buffer::Buffer(PGraphics graphics, 
+    uint64 size, 
+    VkBufferUsageFlags usage, 
+    Gfx::QueueType &queueType, 
+    bool dynamic,
+    std::string name)
+    : graphics(graphics), currentBuffer(0), size(size), owner(queueType), name(name)
 {
     if (dynamic)
     {
@@ -42,6 +47,17 @@ Buffer::Buffer(PGraphics graphics, uint64 size, VkBufferUsageFlags usage, Gfx::Q
     {
         vmaCreateBuffer(graphics->getAllocator(), &info, &allocInfo, &buffers[i].buffer, &buffers[i].allocation, &buffers[i].info);
         vmaGetAllocationMemoryProperties(graphics->getAllocator(), buffers[i].allocation, &buffers[i].properties);
+        if (!name.empty())
+        {
+            VkDebugMarkerObjectNameInfoEXT nameInfo = {
+                .sType = VK_STRUCTURE_TYPE_DEBUG_MARKER_OBJECT_NAME_INFO_EXT,
+                .pNext = nullptr,
+                .objectType = VK_DEBUG_REPORT_OBJECT_TYPE_BUFFER_EXT,
+                .object = (uint64)buffers[i].buffer,
+                .pObjectName = this->name.c_str()
+            };
+            graphics->vkDebugMarkerSetObjectNameEXT(&nameInfo);
+        }
     }
 }
 
@@ -251,7 +267,8 @@ void Buffer::unmap()
 }
 
 UniformBuffer::UniformBuffer(PGraphics graphics, const UniformBufferCreateInfo &createInfo)
-    : Gfx::UniformBuffer(graphics->getFamilyMapping(), createInfo.sourceData), Vulkan::Buffer(graphics, createInfo.sourceData.size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, currentOwner, createInfo.dynamic)
+    : Gfx::UniformBuffer(graphics->getFamilyMapping(), createInfo.sourceData), 
+    Vulkan::Buffer(graphics, createInfo.sourceData.size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, currentOwner, createInfo.dynamic, createInfo.name)
 {
     if (createInfo.sourceData.data != nullptr)
     {
@@ -310,7 +327,7 @@ VkAccessFlags UniformBuffer::getDestAccessMask()
 }
 
 ShaderBuffer::ShaderBuffer(PGraphics graphics, const ShaderBufferCreateInfo &sourceData)
-    : Gfx::ShaderBuffer(graphics->getFamilyMapping(), sourceData.numElements, sourceData.sourceData), Vulkan::Buffer(graphics, sourceData.sourceData.size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, currentOwner, sourceData.dynamic)
+    : Gfx::ShaderBuffer(graphics->getFamilyMapping(), sourceData.numElements, sourceData.sourceData), Vulkan::Buffer(graphics, sourceData.sourceData.size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, currentOwner, sourceData.dynamic, sourceData.name)
 {
     if (sourceData.sourceData.data != nullptr)
     {
@@ -367,7 +384,7 @@ VkAccessFlags ShaderBuffer::getDestAccessMask()
 }
 
 VertexBuffer::VertexBuffer(PGraphics graphics, const VertexBufferCreateInfo &sourceData)
-    : Gfx::VertexBuffer(graphics->getFamilyMapping(), sourceData.numVertices, sourceData.vertexSize, sourceData.sourceData.owner), Vulkan::Buffer(graphics, sourceData.sourceData.size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, currentOwner)
+    : Gfx::VertexBuffer(graphics->getFamilyMapping(), sourceData.numVertices, sourceData.vertexSize, sourceData.sourceData.owner), Vulkan::Buffer(graphics, sourceData.sourceData.size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, currentOwner, false, sourceData.name)
 {
     if (sourceData.sourceData.data != nullptr)
     {
@@ -428,7 +445,7 @@ VkAccessFlags VertexBuffer::getDestAccessMask()
 }
 
 IndexBuffer::IndexBuffer(PGraphics graphics, const IndexBufferCreateInfo &sourceData)
-    : Gfx::IndexBuffer(graphics->getFamilyMapping(), sourceData.sourceData.size, sourceData.indexType, sourceData.sourceData.owner), Vulkan::Buffer(graphics, sourceData.sourceData.size, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, currentOwner)
+    : Gfx::IndexBuffer(graphics->getFamilyMapping(), sourceData.sourceData.size, sourceData.indexType, sourceData.sourceData.owner), Vulkan::Buffer(graphics, sourceData.sourceData.size, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, currentOwner, false, sourceData.name)
 {
     if (sourceData.sourceData.data != nullptr)
     {

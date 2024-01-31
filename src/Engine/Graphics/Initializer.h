@@ -66,6 +66,7 @@ struct TextureCreateInfo
     uint32                      samples = 1;
     Gfx::SeImageUsageFlags      usage = Gfx::SE_IMAGE_USAGE_SAMPLED_BIT;
     Gfx::SeMemoryPropertyFlags  memoryProps = Gfx::SE_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+    std::string name;
 };
 struct SamplerCreateInfo
 {
@@ -85,6 +86,7 @@ struct SamplerCreateInfo
     float                     maxLod = 0.0f;
     Gfx::SeBorderColor        borderColor = Gfx::SE_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
     uint32                    unnormalizedCoordinates = 0;
+    std::string name;
 };
 struct VertexBufferCreateInfo
 {
@@ -92,22 +94,26 @@ struct VertexBufferCreateInfo
     // bytes per vertex
     uint32      vertexSize = 0;
     uint32      numVertices = 0;
+    std::string name;
 };
 struct IndexBufferCreateInfo
 {
     DataSource          sourceData = DataSource();
     Gfx::SeIndexType    indexType = Gfx::SeIndexType::SE_INDEX_TYPE_UINT16;
+    std::string name;
 };
 struct UniformBufferCreateInfo
 {
     DataSource  sourceData = DataSource();
     uint8       dynamic = 0;
+    std::string name;
 };
 struct ShaderBufferCreateInfo
 {
     DataSource  sourceData = DataSource();
     uint64      numElements = 1;
     uint8       dynamic = 0;
+    std::string name;
 };
 struct ShaderCreateInfo
 {

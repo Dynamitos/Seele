@@ -71,9 +71,11 @@ public:
     virtual void resolveTexture(Gfx::PTexture source, Gfx::PTexture destination) override;
 
     void vkCmdDrawMeshTasksEXT(VkCommandBuffer handle, uint32 groupX, uint32 groupY, uint32 groupZ);
+    void vkDebugMarkerSetObjectNameEXT(VkDebugMarkerObjectNameInfoEXT* info);
 
 protected:
     PFN_vkCmdDrawMeshTasksEXT cmdDrawMeshTasks;
+    PFN_vkDebugMarkerSetObjectNameEXT cmdDebugMarkerSetObjectName;
     Array<const char *> getRequiredExtensions();
     void initInstance(GraphicsInitializer initInfo);
     void setupDebugCallback();
