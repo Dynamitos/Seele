@@ -35,7 +35,7 @@ public:
     virtual Gfx::OWindow createWindow(const WindowCreateInfo &createInfo) override;
     virtual Gfx::OViewport createViewport(Gfx::PWindow owner, const ViewportCreateInfo &createInfo) override;
 
-    virtual Gfx::ORenderPass createRenderPass(Gfx::ORenderTargetLayout layout, Gfx::PViewport renderArea) override;
+    virtual Gfx::ORenderPass createRenderPass(Gfx::RenderTargetLayout layout, Array<Gfx::SubPassDependency> dependencies, Gfx::PViewport renderArea) override;
     virtual void beginRenderPass(Gfx::PRenderPass renderPass) override;
     virtual void endRenderPass() override;
 

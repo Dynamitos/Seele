@@ -6,6 +6,8 @@
 using namespace Seele;
 using namespace Seele::Vulkan;
 
+static constexpr bool waitIdleOnSubmit = false;
+
 Queue::Queue(PGraphics graphics, uint32 familyIndex, uint32 queueIndex)
     : graphics(graphics)
     , familyIndex(familyIndex)
@@ -49,7 +51,7 @@ void Queue::submitCommandBuffer(PCommand command, const Array<VkSemaphore>& sign
     command->waitFlags.clear();
     command->waitSemaphores.clear();
 
-    if (Gfx::waitIdleOnSubmit)
+    if (waitIdleOnSubmit)
     {
         command->fence->wait(1000 * 1000ull);
     }

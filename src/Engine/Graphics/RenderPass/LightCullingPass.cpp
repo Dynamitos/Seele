@@ -22,6 +22,14 @@ void LightCullingPass::beginFrame(const Component::Camera& cam)
 {
     RenderPass::beginFrame(cam);
 
+    oLightIndexCounter->pipelineBarrier(
+        Gfx::SE_ACCESS_MEMORY_WRITE_BIT | Gfx::SE_ACCESS_MEMORY_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+        Gfx::SE_ACCESS_MEMORY_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT
+    );
+    tLightIndexCounter->pipelineBarrier(
+        Gfx::SE_ACCESS_MEMORY_WRITE_BIT | Gfx::SE_ACCESS_MEMORY_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+        Gfx::SE_ACCESS_MEMORY_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT
+    );
     uint32 reset = 0;
     DataSource counterReset = {
         .size = sizeof(uint32),
@@ -45,23 +53,36 @@ void LightCullingPass::beginFrame(const Component::Camera& cam)
 
 void LightCullingPass::render() 
 {
+    oLightIndexCounter->pipelineBarrier(
+        Gfx::SE_ACCESS_MEMORY_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
+        Gfx::SE_ACCESS_MEMORY_WRITE_BIT | Gfx::SE_ACCESS_MEMORY_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT
+    );
     oLightIndexList->pipelineBarrier( 
         Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
         Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
     oLightGrid->pipelineBarrier( 
         Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
         Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
+    tLightIndexCounter->pipelineBarrier(
+        Gfx::SE_ACCESS_MEMORY_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
+        Gfx::SE_ACCESS_MEMORY_WRITE_BIT | Gfx::SE_ACCESS_MEMORY_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT
+    );
+    tLightIndexList->pipelineBarrier( 
+        Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+        Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
+    tLightGrid->pipelineBarrier( 
+        Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+        Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
     depthAttachment->pipelineBarrier(
         Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
         Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
-    depthAttachment->changeLayout(Gfx::SE_IMAGE_LAYOUT_GENERAL);
     depthAttachment->transferOwnership(Gfx::QueueType::COMPUTE);
     cullingDescriptorSet->updateTexture(0, depthAttachment);
     cullingDescriptorSet->writeChanges();
     Gfx::PComputeCommand computeCommand = graphics->createComputeCommand("CullingCommand");
     computeCommand->bindPipeline(cullingPipeline);
     computeCommand->bindDescriptor({ viewParamsSet, dispatchParamsSet, cullingDescriptorSet, lightEnv->getDescriptorSet() });
-    //computeCommand->dispatch(dispatchParams.numThreadGroups.x, dispatchParams.numThreadGroups.y, dispatchParams.numThreadGroups.z);
+    computeCommand->dispatch(dispatchParams.numThreadGroups.x, dispatchParams.numThreadGroups.y, dispatchParams.numThreadGroups.z);
     Array<Gfx::PComputeCommand> commands = {computeCommand};
     graphics->executeCommands(commands);
     //std::cout << "LightCulling render()" << std::endl;

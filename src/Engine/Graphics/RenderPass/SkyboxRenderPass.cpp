@@ -87,14 +87,14 @@ void SkyboxRenderPass::publishOutputs()
 void SkyboxRenderPass::createRenderPass()
 {
     colorAttachment = resources->requestRenderTarget("BASEPASS_COLOR");
-    colorAttachment->loadOp = Gfx::SE_ATTACHMENT_LOAD_OP_LOAD;
+    //colorAttachment->loadOp = Gfx::SE_ATTACHMENT_LOAD_OP_LOAD;
     depthAttachment = resources->requestRenderTarget("DEPTHPREPASS_DEPTH");
-    depthAttachment->loadOp = Gfx::SE_ATTACHMENT_LOAD_OP_LOAD;
-    Gfx::ORenderTargetLayout layout = new Gfx::RenderTargetLayout{
-        .colorAttachments = { colorAttachment },
-        .depthAttachment = depthAttachment
-    };
-    renderPass = graphics->createRenderPass(std::move(layout), viewport);
+    //depthAttachment->loadOp = Gfx::SE_ATTACHMENT_LOAD_OP_LOAD;
+    //Gfx::ORenderTargetLayout layout = new Gfx::RenderTargetLayout{
+    //    .colorAttachments = { colorAttachment },
+    //    .depthAttachment = depthAttachment
+    //};
+    //renderPass = graphics->createRenderPass(std::move(layout), viewport);
 
     skyboxData.transformMatrix = Matrix4(1);
     skyboxData.fogColor = skybox.fogColor;

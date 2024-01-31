@@ -5,19 +5,12 @@ namespace Seele
 {
 namespace Gfx
 {
-
-// IMPORTANT!! 
-// WHEN DERIVING FROM ANY Gfx:: BASE CLASSES WITH MULTIPLE INHERITANCE
-// ALWAYS PUT THE Gfx:: BASE CLASS FIRST
-// This is because the refcounting object is unique per allocation, so
-// the base address of both the Gfx:: and the implementation class
-// need to match for it to work
 class Buffer : public QueueOwnedResource
 {
 public:
     Buffer(QueueFamilyMapping mapping, QueueType startQueueType);
     virtual ~Buffer();
-
+    virtual void beginFrame() = 0;
 protected:
     // Inherited via QueueOwnedResource
     virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
@@ -40,6 +33,7 @@ public:
 
     virtual void updateRegion(DataSource update) = 0;
     virtual void download(Array<uint8>& buffer) = 0;
+    virtual void beginFrame() = 0;
 protected:
     // Inherited via QueueOwnedResource
     virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
@@ -65,6 +59,7 @@ public:
     }
 
     virtual void download(Array<uint8>& buffer) = 0;
+    virtual void beginFrame() = 0;
 protected:
     // Inherited via QueueOwnedResource
     virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
@@ -99,6 +94,7 @@ public:
         }
         return true;
     }
+    virtual void beginFrame() = 0;
 protected:
     Array<uint8> contents;
     // Inherited via QueueOwnedResource
@@ -133,6 +129,7 @@ public:
     {
         return numElements;
     }
+    virtual void beginFrame() = 0;
 protected:
     // Inherited via QueueOwnedResource
     virtual void executeOwnershipBarrier(QueueType newOwner) = 0;

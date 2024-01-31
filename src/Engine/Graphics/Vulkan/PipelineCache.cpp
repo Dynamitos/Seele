@@ -171,12 +171,11 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo gf
     };
     hash = CRC::Calculate(&depthStencilState, sizeof(depthStencilState), CRC::CRC_32(), hash);
 
-    const auto& colorAttachments = gfxInfo.renderPass->getLayout()->colorAttachments;
-    Array<VkPipelineColorBlendAttachmentState> blendAttachments(colorAttachments.size());
-    for(uint32 i = 0; i < colorAttachments.size(); ++i)
+    Array<VkPipelineColorBlendAttachmentState> blendAttachments;
+    for(uint32 i = 0; i < gfxInfo.colorBlend.attachmentCount; ++i)
     {
         const Gfx::ColorBlendState::BlendAttachment& attachment = gfxInfo.colorBlend.blendAttachments[i];
-        blendAttachments[i] = {
+        blendAttachments.add() = {
             .blendEnable = attachment.blendEnable,
             .srcColorBlendFactor = (VkBlendFactor)attachment.srcColorBlendFactor,
             .dstColorBlendFactor = (VkBlendFactor)attachment.dstColorBlendFactor,
@@ -343,12 +342,11 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::MeshPipelineCreateInfo gfxI
     };
     hash = CRC::Calculate(&depthStencilState, sizeof(depthStencilState), CRC::CRC_32(), hash);
 
-    const auto& colorAttachments = gfxInfo.renderPass->getLayout()->colorAttachments;
-    Array<VkPipelineColorBlendAttachmentState> blendAttachments(colorAttachments.size());
-    for (uint32 i = 0; i < colorAttachments.size(); ++i)
+    Array<VkPipelineColorBlendAttachmentState> blendAttachments;
+    for (uint32 i = 0; i < gfxInfo.colorBlend.attachmentCount; ++i)
     {
         const Gfx::ColorBlendState::BlendAttachment& attachment = gfxInfo.colorBlend.blendAttachments[i];
-        blendAttachments[i] = {
+        blendAttachments.add() = {
             .blendEnable = attachment.blendEnable,
             .srcColorBlendFactor = (VkBlendFactor)attachment.srcColorBlendFactor,
             .dstColorBlendFactor = (VkBlendFactor)attachment.dstColorBlendFactor,

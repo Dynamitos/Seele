@@ -2,6 +2,7 @@
 #include "MinimalEngine.h"
 #include "Initializer.h"
 #include "Resources.h"
+#include "RenderTarget.h"
 #include "Containers/Array.h"
 
 namespace Seele
@@ -10,7 +11,6 @@ namespace Gfx
 {
 DECLARE_REF(Window)
 DECLARE_REF(Viewport)
-DECLARE_REF(RenderTargetLayout)
 DECLARE_REF(ShaderCompiler)
 DECLARE_REF(Texture)
 DECLARE_REF(Texture2D)
@@ -51,7 +51,7 @@ public:
     virtual OWindow createWindow(const WindowCreateInfo &createInfo) = 0;
     virtual OViewport createViewport(PWindow owner, const ViewportCreateInfo &createInfo) = 0;
 
-    virtual ORenderPass createRenderPass(ORenderTargetLayout layout, PViewport renderArea) = 0;
+    virtual ORenderPass createRenderPass(RenderTargetLayout layout, Array<SubPassDependency> dependencies, PViewport renderArea) = 0;
     virtual void beginRenderPass(PRenderPass renderPass) = 0;
     virtual void endRenderPass() = 0;
 

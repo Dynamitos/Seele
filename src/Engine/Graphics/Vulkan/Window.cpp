@@ -66,12 +66,12 @@ Window::Window(PGraphics graphics, const WindowCreateInfo &createInfo)
     , instance(graphics->getInstance())
     , swapchain(VK_NULL_HANDLE)
 {
+    float xscale, yscale;
+    glfwGetMonitorContentScale(glfwGetPrimaryMonitor(), &xscale, &yscale);
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    GLFWwindow *handle = glfwCreateWindow(createInfo.width, createInfo.height, createInfo.title, nullptr, nullptr);
+    GLFWwindow *handle = glfwCreateWindow(createInfo.width / xscale, createInfo.height / yscale, createInfo.title, nullptr, nullptr);
     windowHandle = handle;
     glfwSetWindowUserPointer(handle, this);
-    int w, h;
-    glfwGetWindowSize(handle, &w, &h);
 
     glfwSetKeyCallback(handle, &glfwKeyCallback);
     glfwSetCursorPosCallback(handle, &glfwMouseMoveCallback);
@@ -111,13 +111,14 @@ void Window::beginFrame()
     imageAvailableFences[currentSemaphoreIndex]->wait(100000);
     imageAvailableFences[currentSemaphoreIndex]->reset();
     vkAcquireNextImageKHR(graphics->getDevice(), swapchain, std::numeric_limits<uint64>::max(), imageAvailableSemaphores[currentSemaphoreIndex]->getHandle(), imageAvailableFences[currentSemaphoreIndex]->getHandle(), &currentImageIndex);
-    graphics->getGraphicsCommands()->getCommands()->waitForSemaphore(VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, imageAvailableSemaphores[currentSemaphoreIndex]);
-    swapChainTextures[currentImageIndex]->changeLayout(Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+    graphics->getGraphicsCommands()->getCommands()->waitForSemaphore(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, imageAvailableSemaphores[currentSemaphoreIndex]);
 }
 
 void Window::endFrame()
 {
-    swapChainTextures[currentImageIndex]->changeLayout(Gfx::SE_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+    swapChainTextures[currentImageIndex]->changeLayout(Gfx::SE_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+        Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+        Gfx::SE_ACCESS_MEMORY_READ_BIT, Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
     graphics->getGraphicsCommands()->submitCommands(renderingDoneSemaphores[currentSemaphoreIndex]);
     VkSemaphore renderDoneHandle = renderingDoneSemaphores[currentSemaphoreIndex]->getHandle();
     VkPresentInfoKHR presentInfo = {

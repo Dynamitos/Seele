@@ -70,14 +70,25 @@ void DebugPass::publishOutputs()
 void DebugPass::createRenderPass()
 {
     Gfx::PRenderTargetAttachment baseColorAttachment = resources->requestRenderTarget("BASEPASS_COLOR");
-    baseColorAttachment->loadOp = Gfx::SE_ATTACHMENT_LOAD_OP_LOAD;
+    baseColorAttachment->setLoadOp(Gfx::SE_ATTACHMENT_LOAD_OP_LOAD);
+    baseColorAttachment->setInitialLayout(Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
     Gfx::PRenderTargetAttachment depthAttachment = resources->requestRenderTarget("DEPTHPREPASS_DEPTH");
-    depthAttachment->loadOp = Gfx::SE_ATTACHMENT_LOAD_OP_LOAD;
-    Gfx::ORenderTargetLayout layout = new Gfx::RenderTargetLayout{
+    depthAttachment->setLoadOp(Gfx::SE_ATTACHMENT_LOAD_OP_LOAD);
+    depthAttachment->setInitialLayout(Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+    Gfx::RenderTargetLayout layout = Gfx::RenderTargetLayout{
         .colorAttachments = {baseColorAttachment}, 
         .depthAttachment = depthAttachment,
     };
-    renderPass = graphics->createRenderPass(std::move(layout), viewport);
+
+    Gfx::SubPassDependency dependency = {
+        .srcSubpass = ~0U,
+        .dstSubpass = 0,
+        .srcStage = Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+        .dstStage = Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+        .srcAccess = Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+        .dstAccess = Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+    };
+    renderPass = graphics->createRenderPass(std::move(layout), {dependency}, viewport);
     
     Gfx::OPipelineLayout pipelineLayout = graphics->createPipelineLayout();
     pipelineLayout->addDescriptorLayout(0, viewParamsLayout);

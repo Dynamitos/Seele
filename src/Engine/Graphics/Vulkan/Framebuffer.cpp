@@ -7,7 +7,7 @@
 using namespace Seele;
 using namespace Seele::Vulkan;
 
-Framebuffer::Framebuffer(PGraphics graphics, PRenderPass renderPass, Gfx::PRenderTargetLayout renderTargetLayout)
+Framebuffer::Framebuffer(PGraphics graphics, PRenderPass renderPass, Gfx::RenderTargetLayout renderTargetLayout)
     : graphics(graphics)
     , layout(renderTargetLayout)
     , renderPass(renderPass)
@@ -17,7 +17,7 @@ Framebuffer::Framebuffer(PGraphics graphics, PRenderPass renderPass, Gfx::PRende
     Array<VkImageView> attachments;
     uint32 width = 0;
     uint32 height = 0;
-    for (auto inputAttachment : layout->inputAttachments)
+    for (auto inputAttachment : layout.inputAttachments)
     {
         PTexture2D vkInputAttachment = inputAttachment->getTexture().cast<Texture2D>();
         attachments.add(vkInputAttachment->getView());
@@ -25,7 +25,7 @@ Framebuffer::Framebuffer(PGraphics graphics, PRenderPass renderPass, Gfx::PRende
         width = std::max(width, vkInputAttachment->getWidth());
         height = std::max(height, vkInputAttachment->getHeight());
     }
-    for (auto colorAttachment : layout->colorAttachments)
+    for (auto colorAttachment : layout.colorAttachments)
     {
         PTexture2D vkColorAttachment = colorAttachment->getTexture().cast<Texture2D>();
         attachments.add(vkColorAttachment->getView());
@@ -33,7 +33,7 @@ Framebuffer::Framebuffer(PGraphics graphics, PRenderPass renderPass, Gfx::PRende
         width = std::max(width, vkColorAttachment->getWidth());
         height = std::max(height, vkColorAttachment->getHeight());
     }
-    for (auto resolveAttachment : layout->resolveAttachments)
+    for (auto resolveAttachment : layout.resolveAttachments)
     {
         PTexture2D vkResolveAttachment = resolveAttachment->getTexture().cast<Texture2D>();
         attachments.add(vkResolveAttachment->getView());
@@ -41,17 +41,17 @@ Framebuffer::Framebuffer(PGraphics graphics, PRenderPass renderPass, Gfx::PRende
         width = std::max(width, vkResolveAttachment->getWidth());
         height = std::max(height, vkResolveAttachment->getHeight());
     }
-    if (layout->depthAttachment != nullptr)
+    if (layout.depthAttachment != nullptr)
     {
-        PTexture2D vkDepthAttachment = layout->depthAttachment->getTexture().cast<Texture2D>();
+        PTexture2D vkDepthAttachment = layout.depthAttachment->getTexture().cast<Texture2D>();
         attachments.add(vkDepthAttachment->getView());
         description.depthAttachment = vkDepthAttachment->getView();
         width = std::max(width, vkDepthAttachment->getWidth());
         height = std::max(height, vkDepthAttachment->getHeight());
     }
-    if (layout->depthResolveAttachment != nullptr)
+    if (layout.depthResolveAttachment != nullptr)
     {
-        PTexture2D vkDepthAttachment = layout->depthResolveAttachment->getTexture().cast<Texture2D>();
+        PTexture2D vkDepthAttachment = layout.depthResolveAttachment->getTexture().cast<Texture2D>();
         attachments.add(vkDepthAttachment->getView());
         description.depthResolveAttachment = vkDepthAttachment->getView();
         width = std::max(width, vkDepthAttachment->getWidth());

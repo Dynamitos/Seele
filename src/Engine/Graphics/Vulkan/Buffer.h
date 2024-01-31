@@ -60,6 +60,7 @@ public:
     virtual ~UniformBuffer();
     virtual bool updateContents(const DataSource &sourceData) override;
     
+    virtual void beginFrame() override;
 protected:
     // Inherited via Vulkan::Buffer
     virtual VkAccessFlags getSourceAccessMask() override;
@@ -80,6 +81,7 @@ public:
     ShaderBuffer(PGraphics graphics, const ShaderBufferCreateInfo &sourceData);
     virtual ~ShaderBuffer();
     virtual bool updateContents(const DataSource &sourceData) override;
+    virtual void beginFrame() override;
 
 protected:
     // Inherited via Vulkan::Buffer
@@ -102,6 +104,7 @@ public:
 
     virtual void updateRegion(DataSource update) override;
     virtual void download(Array<uint8>& buffer) override;
+    virtual void beginFrame() override;
 protected:
     // Inherited via Vulkan::Buffer
     virtual VkAccessFlags getSourceAccessMask() override;
@@ -121,6 +124,7 @@ public:
     virtual ~IndexBuffer();
 
     virtual void download(Array<uint8>& buffer) override;
+    virtual void beginFrame() override;
 protected:
     // Inherited via Vulkan::Buffer
     virtual VkAccessFlags getSourceAccessMask() override;

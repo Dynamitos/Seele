@@ -278,6 +278,11 @@ bool UniformBuffer::updateContents(const DataSource &sourceData)
     return true;
 }
 
+void UniformBuffer::beginFrame()
+{
+    Vulkan::Buffer::advanceBuffer();
+}
+
 void UniformBuffer::requestOwnershipTransfer(Gfx::QueueType newOwner)
 {
     Gfx::QueueOwnedResource::transferOwnership(newOwner);
@@ -328,6 +333,11 @@ bool ShaderBuffer::updateContents(const DataSource &sourceData)
     std::memcpy(data, sourceData.data, sourceData.size);
     unmap();
     return true;
+}
+
+void ShaderBuffer::beginFrame()
+{
+    Vulkan::Buffer::advanceBuffer();
 }
 
 void ShaderBuffer::requestOwnershipTransfer(Gfx::QueueType newOwner)
@@ -386,6 +396,11 @@ void VertexBuffer::download(Array<uint8> &buffer)
     unmap();
 }
 
+void VertexBuffer::beginFrame()
+{
+    Vulkan::Buffer::advanceBuffer();
+}
+
 void VertexBuffer::requestOwnershipTransfer(Gfx::QueueType newOwner)
 {
     Gfx::QueueOwnedResource::transferOwnership(newOwner);
@@ -433,6 +448,11 @@ void IndexBuffer::download(Array<uint8> &buffer)
     buffer.resize(size);
     std::memcpy(buffer.data(), data, size);
     unmap();
+}
+
+void IndexBuffer::beginFrame()
+{
+    Vulkan::Buffer::advanceBuffer();
 }
 
 void IndexBuffer::requestOwnershipTransfer(Gfx::QueueType newOwner)

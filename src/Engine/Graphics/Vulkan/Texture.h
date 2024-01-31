@@ -36,6 +36,10 @@ public:
     {
         return layout;
     }
+    void setLayout(Gfx::SeImageLayout val)
+    {
+        layout = val;
+    }
     constexpr VkImageAspectFlags getAspect() const
     {
         return aspect;
@@ -63,7 +67,9 @@ public:
     void executeOwnershipBarrier(Gfx::QueueType newOwner);
     void executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage,
         VkAccessFlags dstAccess, VkPipelineStageFlags dstStage);
-    void changeLayout(Gfx::SeImageLayout newLayout);
+    void changeLayout(Gfx::SeImageLayout newLayout, 
+        VkAccessFlags srcAccess, VkPipelineStageFlags srcStage,
+        VkAccessFlags dstAccess, VkPipelineStageFlags dstStage);
     void download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<uint8>& buffer);
 
 protected:
@@ -118,7 +124,9 @@ public:
     {
         return mipLevels;
     }
-    virtual void changeLayout(Gfx::SeImageLayout newLayout) override;
+    virtual void changeLayout(Gfx::SeImageLayout newLayout, 
+        Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage,
+        Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage) override;
     virtual void download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<uint8>& buffer) override;
 
 protected:
@@ -159,7 +167,9 @@ public:
     {
         return mipLevels;
     }
-    virtual void changeLayout(Gfx::SeImageLayout newLayout) override;
+    virtual void changeLayout(Gfx::SeImageLayout newLayout, 
+        Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage,
+        Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage) override;
     virtual void download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<uint8>& buffer) override;
 
 protected:
@@ -200,7 +210,9 @@ public:
     {
         return mipLevels;
     }
-    virtual void changeLayout(Gfx::SeImageLayout newLayout) override;
+    virtual void changeLayout(Gfx::SeImageLayout newLayout, 
+        Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage,
+        Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage) override;
     virtual void download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<uint8>& buffer) override;
 protected:
     // Inherited via QueueOwnedResource

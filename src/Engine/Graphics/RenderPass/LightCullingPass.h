@@ -52,7 +52,6 @@ private:
     
     PLightEnvironment lightEnv;
     Gfx::PTexture2D depthAttachment;
-    Gfx::OShaderBuffer frustums;
     Gfx::OShaderBuffer oLightIndexCounter;
     Gfx::OShaderBuffer tLightIndexCounter;
     Gfx::OShaderBuffer oLightIndexList;

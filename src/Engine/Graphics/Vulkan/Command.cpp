@@ -76,6 +76,7 @@ void Command::beginRenderPass(PRenderPass renderPass, PFramebuffer framebuffer)
 
 void Command::endRenderPass()
 {
+    boundRenderPass->endRenderPass();
     boundRenderPass = nullptr;
     boundFramebuffer = nullptr;
     vkCmdEndRenderPass(handle);

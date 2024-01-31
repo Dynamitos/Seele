@@ -10,6 +10,10 @@ VkBool32 Seele::Vulkan::debugCallback(
     void*                                            pUserData)
 {
 	std::cerr << pCallbackData->pMessage << std::endl;
+	if(messageSeverity == VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
+	{
+		return VK_FALSE;
+	}
 	return VK_FALSE;
 }
 

@@ -70,7 +70,9 @@ void UIPass::publishOutputs()
 
     depthBuffer = graphics->createTexture2D(depthBufferInfo);
     depthAttachment = 
-        new Gfx::RenderTargetAttachment(depthBuffer, Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
+        new Gfx::RenderTargetAttachment(depthBuffer, 
+            Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+            Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
     depthAttachment->clear.depthStencil.depth = 1.0f;
     resources->registerRenderPassOutput("UIPASS_DEPTH", depthAttachment);
 
@@ -82,7 +84,9 @@ void UIPass::publishOutputs()
     };
     colorBuffer = graphics->createTexture2D(colorBufferInfo);
     renderTarget =
-        new Gfx::RenderTargetAttachment(colorBuffer, Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
+        new Gfx::RenderTargetAttachment(colorBuffer, 
+            Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+            Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
     renderTarget->clear.color = { {0.0f, 0.0f, 0.0f, 1.0f} };
     resources->registerRenderPassOutput("UIPASS_COLOR", renderTarget);
 }
@@ -136,11 +140,11 @@ void UIPass::createRenderPass()
     pipelineLayout->addDescriptorLayout(0, descriptorLayout);
     pipelineLayout->create();
 
-    Gfx::ORenderTargetLayout layout = new Gfx::RenderTargetLayout{
+    Gfx::RenderTargetLayout layout = Gfx::RenderTargetLayout{
         .colorAttachments = { renderTarget }, 
         .depthAttachment = depthAttachment
     };
-    renderPass = graphics->createRenderPass(std::move(layout), viewport);
+    renderPass = graphics->createRenderPass(std::move(layout), {}, viewport);
     
     Gfx::LegacyPipelineCreateInfo pipelineInfo;
     pipelineInfo.vertexShader = vertexShader;

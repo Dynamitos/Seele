@@ -104,7 +104,9 @@ TextureBase::TextureBase(PGraphics graphics, VkImageViewType viewType,
         const DataSource& sourceData = createInfo.sourceData;
         if(sourceData.size > 0)
         {
-            changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+            changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                VK_ACCESS_NONE, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                VK_ACCESS_MEMORY_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
             void* data;
             VkMemoryPropertyFlags memProps;
             VkBuffer stagingBuffer = VK_NULL_HANDLE;
@@ -161,7 +163,9 @@ TextureBase::TextureBase(PGraphics graphics, VkImageViewType viewType,
                 stagingBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
             
             // When loading a texture from a file, we will almost always use it as a texture map for fragment shaders
-            changeLayout(Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            changeLayout(Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
             if(stagingBuffer != VK_NULL_HANDLE)
             {
                 vmaUnmapMemory(graphics->getAllocator(), stagingAlloc);
@@ -169,20 +173,24 @@ TextureBase::TextureBase(PGraphics graphics, VkImageViewType viewType,
             }
         }
     }
-
     if(usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
     {
-        changeLayout(Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+        changeLayout(Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+            VK_ACCESS_NONE, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+            VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT);
     }
     else if (usage & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
     {
-        changeLayout(Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+        changeLayout(Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+            VK_ACCESS_NONE, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+            VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
     }
     else
     {
-        changeLayout(Gfx::SE_IMAGE_LAYOUT_GENERAL);
+        changeLayout(Gfx::SE_IMAGE_LAYOUT_GENERAL,
+            VK_ACCESS_NONE, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+            VK_ACCESS_MEMORY_WRITE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
     }
-
     VkImageViewCreateInfo viewInfo = {
         .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
         .pNext = nullptr,
@@ -210,13 +218,15 @@ TextureBase::~TextureBase()
 }
 
 
-void TextureBase::changeLayout(Gfx::SeImageLayout newLayout)
+void TextureBase::changeLayout(Gfx::SeImageLayout newLayout, 
+        VkAccessFlags srcAccess, VkPipelineStageFlags srcStage,
+        VkAccessFlags dstAccess, VkPipelineStageFlags dstStage)
 {
     VkImageMemoryBarrier barrier = {
         .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
         .pNext = nullptr,
-        .srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT,
-        .dstAccessMask = VK_ACCESS_MEMORY_READ_BIT,
+        .srcAccessMask = srcAccess,
+        .dstAccessMask = dstAccess,
         .oldLayout = cast(layout),
         .newLayout = cast(newLayout),
         .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
@@ -225,14 +235,14 @@ void TextureBase::changeLayout(Gfx::SeImageLayout newLayout)
         .subresourceRange = {
             .aspectMask = aspect,
             .baseMipLevel = 0,
-            .levelCount = 1,
+            .levelCount = mipLevels,
             .baseArrayLayer = 0,
             .layerCount = layerCount,
         },
     };
     PCommandPool commandPool = graphics->getQueueCommands(currentOwner);
     vkCmdPipelineBarrier(commandPool->getCommands()->getHandle(),
-                            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+                            srcStage, dstStage,
                             0, 0, nullptr, 0, nullptr, 1, &barrier);
     commandPool->submitCommands();
     layout = newLayout;
@@ -243,7 +253,9 @@ void TextureBase::download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Arra
     uint64 imageSize = width * height * depth * Gfx::getFormatInfo(format).blockSize;
 
     auto prevLayout = layout;
-    changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+    changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+        VK_ACCESS_MEMORY_WRITE_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+        VK_ACCESS_TRANSFER_READ_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
     void* data;
     VkBuffer stagingBuffer = VK_NULL_HANDLE;
     VmaAllocation stagingAlloc;
@@ -286,7 +298,9 @@ void TextureBase::download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Arra
         },
     };
     vkCmdCopyImageToBuffer(cmdBuffer->getHandle(), image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, stagingBuffer, 1, &region);
-    changeLayout(prevLayout);
+    changeLayout(prevLayout,
+        VK_ACCESS_TRANSFER_READ_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+        VK_ACCESS_MEMORY_READ_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
     VK_CHECK(vmaMapMemory(graphics->getAllocator(), stagingAlloc, &data));
     buffer.resize(imageSize);
     std::memcpy(buffer.data(), data, buffer.size());
@@ -397,9 +411,11 @@ Texture2D::~Texture2D()
 {
 }
 
-void Texture2D::changeLayout(Gfx::SeImageLayout newLayout) 
+void Texture2D::changeLayout(Gfx::SeImageLayout newLayout, 
+        Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage,
+        Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage) 
 {
-    TextureBase::changeLayout(newLayout);
+    TextureBase::changeLayout(newLayout, srcAccess, srcStage, dstAccess, dstStage);
 }
 
 void Texture2D::download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<uint8>& buffer)
@@ -429,9 +445,11 @@ Texture3D::~Texture3D()
 {
 }
 
-void Texture3D::changeLayout(Gfx::SeImageLayout newLayout) 
+void Texture3D::changeLayout(Gfx::SeImageLayout newLayout, 
+        Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage,
+        Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage) 
 {
-    TextureBase::changeLayout(newLayout);
+    TextureBase::changeLayout(newLayout, srcAccess, srcStage, dstAccess, dstStage);
 }
 
 void Texture3D::download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<uint8>& buffer)
@@ -460,9 +478,11 @@ TextureCube::~TextureCube()
 {
 }
 
-void TextureCube::changeLayout(Gfx::SeImageLayout newLayout) 
+void TextureCube::changeLayout(Gfx::SeImageLayout newLayout, 
+        Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage,
+        Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage) 
 {
-    TextureBase::changeLayout(newLayout);
+    TextureBase::changeLayout(newLayout, srcAccess, srcStage, dstAccess, dstStage);
 }
 
 void TextureCube::download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<uint8>& buffer)

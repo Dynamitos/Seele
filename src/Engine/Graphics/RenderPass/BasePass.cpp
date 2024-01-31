@@ -72,10 +72,8 @@ void BasePass::render()
         Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
         Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
     depthAttachment->getTexture()->pipelineBarrier(
-        Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-        Gfx::SE_ACCESS_MEMORY_READ_BIT, Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT);
-    depthAttachment->getTexture()->transferOwnership(Gfx::QueueType::GRAPHICS);
-    depthAttachment->getTexture()->changeLayout(Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+        Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+        Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT);
 
     descriptorSets[INDEX_VIEW_PARAMS] = viewParamsSet;
     descriptorSets[INDEX_LIGHT_ENV] = scene->getLightEnvironment()->getDescriptorSet();
@@ -137,6 +135,7 @@ void BasePass::render()
                 pipelineInfo.renderPass = renderPass;
                 pipelineInfo.depthStencilState.depthCompareOp = Gfx::SE_COMPARE_OP_LESS_OR_EQUAL;
                 pipelineInfo.multisampleState.samples = viewport->getSamples();
+                pipelineInfo.colorBlend.attachmentCount = 1;
                 Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
                 command->bindPipeline(pipeline);
             }
@@ -149,6 +148,7 @@ void BasePass::render()
                 pipelineInfo.renderPass = renderPass;
                 pipelineInfo.depthStencilState.depthCompareOp = Gfx::SE_COMPARE_OP_LESS_OR_EQUAL;
                 pipelineInfo.multisampleState.samples = viewport->getSamples();
+                pipelineInfo.colorBlend.attachmentCount = 1;
                 Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
                 command->bindPipeline(pipeline);
             }
@@ -190,19 +190,40 @@ void BasePass::endFrame()
 
 void BasePass::publishOutputs() 
 {
-    colorAttachment = new Gfx::SwapchainAttachment(viewport, Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
+    colorAttachment = new Gfx::SwapchainAttachment(viewport,
+        Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+        Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
     resources->registerRenderPassOutput("BASEPASS_COLOR", colorAttachment);
 }
 
 void BasePass::createRenderPass() 
 {
     depthAttachment = resources->requestRenderTarget("DEPTHPREPASS_DEPTH");
-    depthAttachment->loadOp = Gfx::SE_ATTACHMENT_LOAD_OP_LOAD;
-    Gfx::ORenderTargetLayout layout = new Gfx::RenderTargetLayout{
+    depthAttachment->setLoadOp(Gfx::SE_ATTACHMENT_LOAD_OP_LOAD);
+    depthAttachment->setInitialLayout(Gfx::SE_IMAGE_LAYOUT_GENERAL);
+    Gfx::RenderTargetLayout layout = Gfx::RenderTargetLayout{
         .colorAttachments = { colorAttachment }, 
         .depthAttachment = depthAttachment,
     };
-    renderPass = graphics->createRenderPass(std::move(layout), viewport);
+    Array<Gfx::SubPassDependency> dependency = {
+        {
+            .srcSubpass = ~0U,
+            .dstSubpass = 0,
+            .srcStage = Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+            .dstStage = Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+            .srcAccess = Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+            .dstAccess = Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+        },
+        {
+            .srcSubpass = ~0U,
+            .dstSubpass = 0,
+            .srcStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+            .dstStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+            .srcAccess = Gfx::SE_ACCESS_NONE,
+            .dstAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+        }
+    };
+    renderPass = graphics->createRenderPass(std::move(layout), {dependency}, viewport);
     oLightIndexList = resources->requestBuffer("LIGHTCULLING_OLIGHTLIST");
     tLightIndexList = resources->requestBuffer("LIGHTCULLING_TLIGHTLIST");
     oLightGrid = resources->requestTexture("LIGHTCULLING_OLIGHTGRID");

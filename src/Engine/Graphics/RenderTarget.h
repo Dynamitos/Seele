@@ -11,6 +11,8 @@ class RenderTargetAttachment
 {
 public:
     RenderTargetAttachment(PTexture2D texture,
+        SeImageLayout initialLayout,
+        SeImageLayout finalLayout,
         SeAttachmentLoadOp loadOp = SE_ATTACHMENT_LOAD_OP_LOAD,
         SeAttachmentStoreOp storeOp = SE_ATTACHMENT_STORE_OP_STORE,
         SeAttachmentLoadOp stencilLoadOp = SE_ATTACHMENT_LOAD_OP_DONT_CARE,
@@ -40,14 +42,24 @@ public:
     constexpr SeAttachmentStoreOp getStoreOp() const { return storeOp; }
     constexpr SeAttachmentLoadOp getStencilLoadOp() const { return stencilLoadOp; }
     constexpr SeAttachmentStoreOp getStencilStoreOp() const { return stencilStoreOp; }
+    constexpr SeImageLayout getInitialLayout() const { return initialLayout; }
+    constexpr SeImageLayout getFinalLayout() const { return finalLayout; }
+    constexpr void setLoadOp(SeAttachmentLoadOp val) { loadOp = val; }
+    constexpr void setStoreOp(SeAttachmentStoreOp val) { storeOp = val; }
+    constexpr void setStencilLoadOp(SeAttachmentLoadOp val) { stencilLoadOp = val; }
+    constexpr void setStencilStoreOp(SeAttachmentStoreOp val) { stencilStoreOp = val; }
+    constexpr void setInitialLayout(SeImageLayout val) { initialLayout = val; }
+    constexpr void setFinalLayout(SeImageLayout val) { finalLayout = val; }
     SeClearValue clear;
     SeColorComponentFlags componentFlags;
+protected:
+    PTexture2D texture;
+    SeImageLayout initialLayout;
+    SeImageLayout finalLayout;
     SeAttachmentLoadOp loadOp;
     SeAttachmentStoreOp storeOp;
     SeAttachmentLoadOp stencilLoadOp;
     SeAttachmentStoreOp stencilStoreOp;
-protected:
-    PTexture2D texture;
 };
 DEFINE_REF(RenderTargetAttachment)
 
@@ -55,11 +67,13 @@ class SwapchainAttachment : public RenderTargetAttachment
 {
 public:
     SwapchainAttachment(PViewport viewport,
+        SeImageLayout initialLayout,
+        SeImageLayout finalLayout,
         SeAttachmentLoadOp loadOp = SE_ATTACHMENT_LOAD_OP_LOAD,
         SeAttachmentStoreOp storeOp = SE_ATTACHMENT_STORE_OP_STORE,
         SeAttachmentLoadOp stencilLoadOp = SE_ATTACHMENT_LOAD_OP_DONT_CARE,
         SeAttachmentStoreOp stencilStoreOp = SE_ATTACHMENT_STORE_OP_DONT_CARE)
-        : RenderTargetAttachment(nullptr, loadOp, storeOp, stencilLoadOp, stencilStoreOp)
+        : RenderTargetAttachment(nullptr, initialLayout, finalLayout, loadOp, storeOp, stencilLoadOp, stencilStoreOp)
         , viewport(viewport)
     {}
     virtual ~SwapchainAttachment()
@@ -89,30 +103,40 @@ private:
     PViewport viewport;
 };
 
-class RenderTargetLayout
+struct RenderTargetLayout
 {
-public:
     Array<PRenderTargetAttachment> inputAttachments;
     Array<PRenderTargetAttachment> colorAttachments;
     Array<PRenderTargetAttachment> resolveAttachments;
     PRenderTargetAttachment depthAttachment;
     PRenderTargetAttachment depthResolveAttachment;
-    uint32 width;
-    uint32 height;
 };
-DEFINE_REF(RenderTargetLayout)
+
+struct SubPassDependency
+{
+    uint32 srcSubpass;
+    uint32 dstSubpass;
+    SePipelineStageFlags srcStage;
+    SePipelineStageFlags dstStage;
+    SeAccessFlags srcAccess;
+    SeAccessFlags dstAccess;
+};
 
 class RenderPass
 {
 public:
-    RenderPass(ORenderTargetLayout layout) : layout(std::move(layout)) {}
+    RenderPass(RenderTargetLayout layout, Array<SubPassDependency> dependencies) 
+        : layout(std::move(layout))
+        , dependencies(std::move(dependencies))
+    {}
     virtual ~RenderPass() {}
     RenderPass(RenderPass&&) = default;
     RenderPass& operator=(RenderPass&&) = default;
-    PRenderTargetLayout getLayout() const { return layout; }
+    const RenderTargetLayout& getLayout() const { return layout; }
 
 protected:
-    ORenderTargetLayout layout;
+    RenderTargetLayout layout;
+    Array<SubPassDependency> dependencies;
 };
 DEFINE_REF(RenderPass)
 }

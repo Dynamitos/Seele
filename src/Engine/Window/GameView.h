@@ -35,9 +35,9 @@ protected:
     RenderGraph<
         DepthPrepass,
 		LightCullingPass,
-        BasePass,
-		DebugPass,
-		SkyboxRenderPass
+        BasePass
+		//DebugPass,
+		//SkyboxRenderPass
 		> renderGraph;
 
 	PSystemGraph systemGraph;

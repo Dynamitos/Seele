@@ -5,12 +5,6 @@ namespace Seele
 {
 namespace Gfx
 {
-// IMPORTANT!! 
-// WHEN DERIVING FROM ANY Gfx:: BASE CLASSES WITH MULTIPLE INHERITANCE
-// ALWAYS PUT THE Gfx:: BASE CLASS FIRST
-// This is because the refcounting object is unique per allocation, so
-// the base address of both the Gfx:: and the implementation class
-// need to match for it to work
 class Texture : public QueueOwnedResource
 {
 public:
@@ -24,7 +18,9 @@ public:
     virtual uint32 getNumFaces() const { return 1; }
     virtual SeSampleCountFlags getNumSamples() const = 0;
     virtual uint32 getMipLevels() const = 0;
-    virtual void changeLayout(SeImageLayout newLayout) = 0;
+    virtual void changeLayout(SeImageLayout newLayout, 
+        SeAccessFlags srcAccess, SePipelineStageFlags srcStage,
+        SeAccessFlags dstAccess, SePipelineStageFlags dstStage) = 0;
     virtual void download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<uint8>& buffer) = 0;
 protected:
     // Inherited via QueueOwnedResource
@@ -46,7 +42,9 @@ public:
     virtual uint32 getDepth() const = 0;
     virtual SeSampleCountFlags getNumSamples() const = 0;
     virtual uint32 getMipLevels() const = 0;
-    virtual void changeLayout(SeImageLayout newLayout) = 0;
+    virtual void changeLayout(SeImageLayout newLayout, 
+        SeAccessFlags srcAccess, SePipelineStageFlags srcStage,
+        SeAccessFlags dstAccess, SePipelineStageFlags dstStage) = 0;
 protected:
     //Inherited via QueueOwnedResource
     virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
@@ -67,7 +65,9 @@ public:
     virtual uint32 getDepth() const = 0;
     virtual SeSampleCountFlags getNumSamples() const = 0;
     virtual uint32 getMipLevels() const = 0;
-    virtual void changeLayout(SeImageLayout newLayout) = 0;
+    virtual void changeLayout(SeImageLayout newLayout, 
+        SeAccessFlags srcAccess, SePipelineStageFlags srcStage,
+        SeAccessFlags dstAccess, SePipelineStageFlags dstStage) = 0;
 protected:
     //Inherited via QueueOwnedResource
     virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
@@ -89,7 +89,9 @@ public:
     virtual uint32 getNumFaces() const { return 6; }
     virtual SeSampleCountFlags getNumSamples() const = 0;
     virtual uint32 getMipLevels() const = 0;
-    virtual void changeLayout(SeImageLayout newLayout) = 0;
+    virtual void changeLayout(SeImageLayout newLayout, 
+        SeAccessFlags srcAccess, SePipelineStageFlags srcStage,
+        SeAccessFlags dstAccess, SePipelineStageFlags dstStage) = 0;
 protected:
     //Inherited via QueueOwnedResource
     virtual void executeOwnershipBarrier(QueueType newOwner) = 0;

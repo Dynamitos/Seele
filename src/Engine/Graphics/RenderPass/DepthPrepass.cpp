@@ -86,7 +86,7 @@ void DepthPrepass::render()
                 pipelineInfo.fragmentShader = collection->fragmentShader;
                 pipelineInfo.pipelineLayout = std::move(layout);
                 pipelineInfo.renderPass = renderPass;
-                pipelineInfo.depthStencilState.depthCompareOp = Gfx::SE_COMPARE_OP_LESS_OR_EQUAL;
+                pipelineInfo.depthStencilState.depthCompareOp = Gfx::SE_COMPARE_OP_LESS;
                 pipelineInfo.multisampleState.samples = viewport->getSamples();
                 Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
                 command->bindPipeline(pipeline);
@@ -98,6 +98,7 @@ void DepthPrepass::render()
                 pipelineInfo.fragmentShader = collection->fragmentShader;
                 pipelineInfo.pipelineLayout = std::move(layout);
                 pipelineInfo.renderPass = renderPass;
+                //pipelineInfo.depthStencilState.depthWriteEnable = false;
                 pipelineInfo.depthStencilState.depthCompareOp = Gfx::SE_COMPARE_OP_LESS_OR_EQUAL;
                 pipelineInfo.multisampleState.samples = viewport->getSamples();
                 Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
@@ -151,17 +152,27 @@ void DepthPrepass::publishOutputs()
     };
     depthBuffer = graphics->createTexture2D(depthBufferInfo);
     depthAttachment = 
-        new Gfx::RenderTargetAttachment(depthBuffer, Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
+        new Gfx::RenderTargetAttachment(depthBuffer,
+            Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_GENERAL,
+            Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
     depthAttachment->clear.depthStencil.depth = 1.0f;
     resources->registerRenderPassOutput("DEPTHPREPASS_DEPTH", depthAttachment);
 }
 
 void DepthPrepass::createRenderPass() 
 {
-    Gfx::ORenderTargetLayout layout = new Gfx::RenderTargetLayout{
+    Gfx::RenderTargetLayout layout = Gfx::RenderTargetLayout{
         .depthAttachment = depthAttachment,
     };
-    renderPass = graphics->createRenderPass(std::move(layout), viewport);
+    Gfx::SubPassDependency dependency = {
+        .srcSubpass = ~0U,
+        .dstSubpass = 0,
+        .srcStage = Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+        .dstStage = Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+        .srcAccess = Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+        .dstAccess = Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+    };
+    renderPass = graphics->createRenderPass(std::move(layout), {dependency}, viewport);
 }
 
 void DepthPrepass::modifyRenderPassMacros(Map<const char*, const char*>&) 

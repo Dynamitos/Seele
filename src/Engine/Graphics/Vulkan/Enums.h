@@ -62,5 +62,9 @@ VkFilter cast(const Gfx::SeFilter &filter);
 Gfx::SeFilter cast(const VkFilter &filter);
 VkSamplerMipmapMode cast(const Gfx::SeSamplerMipmapMode &filter);
 Gfx::SeSamplerMipmapMode cast(const VkSamplerMipmapMode &filter);
+VkAccessFlagBits cast(const Gfx::SeAccessFlagBits &flags);
+Gfx::SeAccessFlagBits cast(const VkAccessFlagBits &flags);
+VkPipelineStageFlagBits cast(const Gfx::SePipelineStageFlagBits &flags);
+Gfx::SePipelineStageFlagBits cast(const VkPipelineStageFlagBits &flags);
 } // namespace Vulkan
 } // namespace Seele

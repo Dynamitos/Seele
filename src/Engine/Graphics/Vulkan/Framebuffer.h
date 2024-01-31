@@ -22,7 +22,7 @@ struct FramebufferDescription
 class Framebuffer
 {
 public:
-    Framebuffer(PGraphics graphics, PRenderPass renderpass, Gfx::PRenderTargetLayout renderTargetLayout);
+    Framebuffer(PGraphics graphics, PRenderPass renderpass, Gfx::RenderTargetLayout renderTargetLayout);
     virtual ~Framebuffer();
     constexpr VkFramebuffer getHandle() const
     {
@@ -37,7 +37,7 @@ private:
     uint32 hash;
     PGraphics graphics;
     VkFramebuffer handle;
-    Gfx::PRenderTargetLayout layout;
+    Gfx::RenderTargetLayout layout;
     PRenderPass renderPass;
 };
 DEFINE_REF(Framebuffer)
