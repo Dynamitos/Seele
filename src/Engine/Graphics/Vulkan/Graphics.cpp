@@ -36,10 +36,11 @@ Graphics::~Graphics()
     vkDeviceWaitIdle(handle);
     pipelineCache = nullptr;
     allocator = nullptr;
-    destructionManager = nullptr;
     allocatedFramebuffers.clear();
     shaderCompiler = nullptr;
     pools.clear();
+    queues.clear();
+    destructionManager = nullptr;
     vkDestroyDevice(handle, nullptr);
     DestroyDebugUtilsMessengerEXT(instance, nullptr, callback);
     vkDestroyInstance(instance, nullptr);
@@ -483,7 +484,7 @@ void Graphics::pickPhysicalDevice()
         {
             if (std::strcmp(VK_EXT_MESH_SHADER_EXTENSION_NAME, extensionProps[i].extensionName) == 0)
             {
-                //meshShadingEnabled = true;
+                meshShadingEnabled = true;
                 break;
             }
         }

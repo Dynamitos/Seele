@@ -27,6 +27,10 @@ struct Plane
 {
     float3 n;
     float d;
+    bool pointInside(float3 point)
+    {
+        return dot(n, point) - d > 0.0f;
+    }
 };
 
 struct Frustum
@@ -35,13 +39,13 @@ struct Frustum
     Plane basePlane;
     bool pointInside(float3 point)
     {
-        if (dot(basePlane.n, point) + basePlane.d > 0.0f)
+        if (basePlane.pointInside(point))
         {
             return false;
         }
         for(int p = 0; p < 4; ++p)
         {
-            if(dot(sides[p].n, point) + sides[p].d > 0.0f)
+            if(sides[p].pointInside(point))
             {
                 return false;
             }

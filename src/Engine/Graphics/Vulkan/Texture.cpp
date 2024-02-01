@@ -321,10 +321,10 @@ void TextureBase::executeOwnershipBarrier(Gfx::QueueType newOwner)
         .image = image,
         .subresourceRange = {
             .aspectMask = aspect,
-            .baseArrayLayer = 0,
-            .layerCount = arrayCount,
             .baseMipLevel = 0,
             .levelCount = mipLevels,
+            .baseArrayLayer = 0,
+            .layerCount = arrayCount,
         },
     };
     PCommandPool sourcePool = graphics->getQueueCommands(currentOwner);
