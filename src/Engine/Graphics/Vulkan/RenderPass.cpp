@@ -27,18 +27,18 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Arra
     uint32 attachmentCounter = 0;
     for (auto& inputAttachment : layout.inputAttachments)
     {
-        PTexture2D image = inputAttachment->getTexture().cast<Texture2D>();
+        PTexture2D image = inputAttachment.getTexture().cast<Texture2D>();
         VkAttachmentDescription2& desc = attachments.add() = {
             .sType = VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2,
             .pNext = nullptr,
             .flags = 0,
             .format = cast(image->getFormat()),
-            .loadOp = cast(inputAttachment->getLoadOp()),
-            .storeOp = cast(inputAttachment->getStoreOp()),
-            .stencilLoadOp = cast(inputAttachment->getStencilLoadOp()),
-            .stencilStoreOp = cast(inputAttachment->getStencilStoreOp()),
-            .initialLayout = cast(inputAttachment->getInitialLayout()),
-            .finalLayout = cast(inputAttachment->getFinalLayout()),
+            .loadOp = cast(inputAttachment.getLoadOp()),
+            .storeOp = cast(inputAttachment.getStoreOp()),
+            .stencilLoadOp = cast(inputAttachment.getStencilLoadOp()),
+            .stencilStoreOp = cast(inputAttachment.getStencilStoreOp()),
+            .initialLayout = cast(inputAttachment.getInitialLayout()),
+            .finalLayout = cast(inputAttachment.getFinalLayout()),
         };
         
         inputRefs.add() = {
@@ -52,20 +52,20 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Arra
             .sType = VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2,
             .pNext = nullptr,
             .flags = 0,
-            .format = cast(colorAttachment->getFormat()),
-            .samples = (VkSampleCountFlagBits)colorAttachment->getNumSamples(),
-            .loadOp = cast(colorAttachment->getLoadOp()),
-            .storeOp = cast(colorAttachment->getStoreOp()),
-            .stencilLoadOp = cast(colorAttachment->getStencilLoadOp()),
-            .stencilStoreOp = cast(colorAttachment->getStencilStoreOp()),
-            .initialLayout = cast(colorAttachment->getInitialLayout()),
-            .finalLayout = cast(colorAttachment->getFinalLayout()),
+            .format = cast(colorAttachment.getFormat()),
+            .samples = (VkSampleCountFlagBits)colorAttachment.getNumSamples(),
+            .loadOp = cast(colorAttachment.getLoadOp()),
+            .storeOp = cast(colorAttachment.getStoreOp()),
+            .stencilLoadOp = cast(colorAttachment.getStencilLoadOp()),
+            .stencilStoreOp = cast(colorAttachment.getStencilStoreOp()),
+            .initialLayout = cast(colorAttachment.getInitialLayout()),
+            .finalLayout = cast(colorAttachment.getFinalLayout()),
         };
         
         VkClearValue& clearValue = clearValues.add();
         if(attachments.back().loadOp == VK_ATTACHMENT_LOAD_OP_CLEAR)
         {
-            clearValue = cast(colorAttachment->clear);
+            clearValue = cast(colorAttachment.clear);
         }
 
         colorRefs.add() = {
@@ -81,20 +81,20 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Arra
             .sType = VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2,
             .pNext = nullptr,
             .flags = 0,
-            .format = cast(resolveAttachment->getFormat()),
-            .samples = (VkSampleCountFlagBits)resolveAttachment->getNumSamples(),
-            .loadOp = cast(resolveAttachment->getLoadOp()),
-            .storeOp = cast(resolveAttachment->getStoreOp()),
-            .stencilLoadOp = cast(resolveAttachment->getStencilLoadOp()),
-            .stencilStoreOp = cast(resolveAttachment->getStencilStoreOp()),
-            .initialLayout = cast(resolveAttachment->getInitialLayout()),
-            .finalLayout = cast(resolveAttachment->getFinalLayout()),
+            .format = cast(resolveAttachment.getFormat()),
+            .samples = (VkSampleCountFlagBits)resolveAttachment.getNumSamples(),
+            .loadOp = cast(resolveAttachment.getLoadOp()),
+            .storeOp = cast(resolveAttachment.getStoreOp()),
+            .stencilLoadOp = cast(resolveAttachment.getStencilLoadOp()),
+            .stencilStoreOp = cast(resolveAttachment.getStencilStoreOp()),
+            .initialLayout = cast(resolveAttachment.getInitialLayout()),
+            .finalLayout = cast(resolveAttachment.getFinalLayout()),
         };
 
         VkClearValue& clearValue = clearValues.add();
         if (attachments.back().loadOp == VK_ATTACHMENT_LOAD_OP_CLEAR)
         {
-            clearValue = cast(resolveAttachment->clear);
+            clearValue = cast(resolveAttachment.clear);
         }
 
         resolveRefs.add() = {
@@ -104,27 +104,27 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Arra
             .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
         };
     }
-    if (layout.depthAttachment != nullptr)
+    if (layout.depthAttachment.getTexture() != nullptr)
     {
-        PTexture2D image = layout.depthAttachment->getTexture().cast<Texture2D>();
+        PTexture2D image = layout.depthAttachment.getTexture().cast<Texture2D>();
         attachments.add() = {
             .sType = VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2,
             .pNext = nullptr,
             .flags = 0,
             .format = cast(image->getFormat()),
             .samples = (VkSampleCountFlagBits)image->getNumSamples(),
-            .loadOp = cast(layout.depthAttachment->getLoadOp()),
-            .storeOp = cast(layout.depthAttachment->getStoreOp()),
-            .stencilLoadOp = cast(layout.depthAttachment->getStencilLoadOp()),
-            .stencilStoreOp = cast(layout.depthAttachment->getStencilStoreOp()),
-            .initialLayout = cast(layout.depthAttachment->getInitialLayout()),
-            .finalLayout = cast(layout.depthAttachment->getFinalLayout()),
+            .loadOp = cast(layout.depthAttachment.getLoadOp()),
+            .storeOp = cast(layout.depthAttachment.getStoreOp()),
+            .stencilLoadOp = cast(layout.depthAttachment.getStencilLoadOp()),
+            .stencilStoreOp = cast(layout.depthAttachment.getStencilStoreOp()),
+            .initialLayout = cast(layout.depthAttachment.getInitialLayout()),
+            .finalLayout = cast(layout.depthAttachment.getFinalLayout()),
         };
 
         VkClearValue& clearValue = clearValues.add();
         if (attachments.back().loadOp == VK_ATTACHMENT_LOAD_OP_CLEAR)
         {
-            clearValue = cast(layout.depthAttachment->clear);
+            clearValue = cast(layout.depthAttachment.clear);
         }
 
         depthRef = {
@@ -134,21 +134,21 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Arra
             .layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
         };
     }
-    if (layout.depthResolveAttachment != nullptr)
+    if (layout.depthResolveAttachment.getTexture() != nullptr)
     {
-        PTexture2D image = layout.depthResolveAttachment->getTexture().cast<Texture2D>();
+        PTexture2D image = layout.depthResolveAttachment.getTexture().cast<Texture2D>();
         attachments.add() = {
             .sType = VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2,
             .pNext = nullptr,
             .flags = 0,
             .format = cast(image->getFormat()),
             .samples = (VkSampleCountFlagBits)image->getNumSamples(),
-            .loadOp = cast(layout.depthResolveAttachment->getLoadOp()),
-            .storeOp = cast(layout.depthResolveAttachment->getStoreOp()),
-            .stencilLoadOp = cast(layout.depthResolveAttachment->getStencilLoadOp()),
-            .stencilStoreOp = cast(layout.depthResolveAttachment->getStencilStoreOp()),
-            .initialLayout = cast(layout.depthResolveAttachment->getInitialLayout()),
-            .finalLayout = cast(layout.depthResolveAttachment->getFinalLayout()),
+            .loadOp = cast(layout.depthResolveAttachment.getLoadOp()),
+            .storeOp = cast(layout.depthResolveAttachment.getStoreOp()),
+            .stencilLoadOp = cast(layout.depthResolveAttachment.getStencilLoadOp()),
+            .stencilStoreOp = cast(layout.depthResolveAttachment.getStencilStoreOp()),
+            .initialLayout = cast(layout.depthResolveAttachment.getInitialLayout()),
+            .finalLayout = cast(layout.depthResolveAttachment.getFinalLayout()),
         };
         depthResolveRef = {
             .sType = VK_STRUCTURE_TYPE_ATTACHMENT_REFERENCE_2,
@@ -167,7 +167,7 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Arra
     };
     VkSubpassDescription2 subPassDesc = {
         .sType = VK_STRUCTURE_TYPE_SUBPASS_DESCRIPTION_2,
-        .pNext = layout.depthResolveAttachment != nullptr ? &depthResolve : nullptr,
+        .pNext = layout.depthResolveAttachment.getTexture() != nullptr ? &depthResolve : nullptr,
         .flags = 0,
         .pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
         .inputAttachmentCount = (uint32)inputRefs.size(),
@@ -216,17 +216,17 @@ uint32 RenderPass::getFramebufferHash()
     std::memset(&description, 0, sizeof(FramebufferDescription));
     for (auto& inputAttachment : layout.inputAttachments)
     {
-        PTexture2D tex = inputAttachment->getTexture().cast<Texture2D>();
+        PTexture2D tex = inputAttachment.getTexture().cast<Texture2D>();
         description.inputAttachments[description.numInputAttachments++] = tex->getView();
     }
     for (auto& colorAttachment : layout.colorAttachments)
     {
-        PTexture2D tex = colorAttachment->getTexture().cast<Texture2D>();
+        PTexture2D tex = colorAttachment.getTexture().cast<Texture2D>();
         description.colorAttachments[description.numColorAttachments++] = tex->getView();
     }
-    if (layout.depthAttachment != nullptr)
+    if (layout.depthAttachment.getTexture() != nullptr)
     {
-        PTexture2D tex = layout.depthAttachment->getTexture().cast<Texture2D>();
+        PTexture2D tex = layout.depthAttachment.getTexture().cast<Texture2D>();
         description.depthAttachment = tex->getView();
     }
     return CRC::Calculate(&description, sizeof(FramebufferDescription), CRC::CRC_32());
@@ -236,17 +236,17 @@ void Vulkan::RenderPass::endRenderPass()
 {
     for (auto& inputAttachment : layout.inputAttachments)
     {
-        PTexture2D tex = inputAttachment->getTexture().cast<Texture2D>();
-        tex->setLayout(inputAttachment->getFinalLayout());
+        PTexture2D tex = inputAttachment.getTexture().cast<Texture2D>();
+        tex->setLayout(inputAttachment.getFinalLayout());
     }
     for (auto& colorAttachment : layout.colorAttachments)
     {
-        PTexture2D tex = colorAttachment->getTexture().cast<Texture2D>();
-        tex->setLayout(colorAttachment->getFinalLayout());
+        PTexture2D tex = colorAttachment.getTexture().cast<Texture2D>();
+        tex->setLayout(colorAttachment.getFinalLayout());
     }
-    if (layout.depthAttachment != nullptr)
+    if (layout.depthAttachment.getTexture() != nullptr)
     {
-        PTexture2D tex = layout.depthAttachment->getTexture().cast<Texture2D>();
-        tex->setLayout(layout.depthAttachment->getFinalLayout());
+        PTexture2D tex = layout.depthAttachment.getTexture().cast<Texture2D>();
+        tex->setLayout(layout.depthAttachment.getFinalLayout());
     }
 }

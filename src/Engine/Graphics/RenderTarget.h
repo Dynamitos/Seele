@@ -10,6 +10,8 @@ namespace Gfx
 class RenderTargetAttachment
 {
 public:
+    RenderTargetAttachment()
+    {}
     RenderTargetAttachment(PTexture2D texture,
         SeImageLayout initialLayout,
         SeImageLayout finalLayout,
@@ -17,25 +19,53 @@ public:
         SeAttachmentStoreOp storeOp = SE_ATTACHMENT_STORE_OP_STORE,
         SeAttachmentLoadOp stencilLoadOp = SE_ATTACHMENT_LOAD_OP_DONT_CARE,
         SeAttachmentStoreOp stencilStoreOp = SE_ATTACHMENT_STORE_OP_DONT_CARE);
-    virtual ~RenderTargetAttachment();
-    virtual PTexture2D getTexture()
+
+    RenderTargetAttachment(PViewport viewport,
+        SeImageLayout initialLayout,
+        SeImageLayout finalLayout,
+        SeAttachmentLoadOp loadOp = SE_ATTACHMENT_LOAD_OP_LOAD,
+        SeAttachmentStoreOp storeOp = SE_ATTACHMENT_STORE_OP_STORE,
+        SeAttachmentLoadOp stencilLoadOp = SE_ATTACHMENT_LOAD_OP_DONT_CARE,
+        SeAttachmentStoreOp stencilStoreOp = SE_ATTACHMENT_STORE_OP_DONT_CARE);
+    ~RenderTargetAttachment();
+    PTexture2D getTexture()
     {
+        if(viewport != nullptr)
+        {
+            return viewport->getOwner()->getBackBuffer();
+        }
         return texture;
     }
-    virtual SeFormat getFormat() const
+    SeFormat getFormat() const
     {
+        if(viewport != nullptr)
+        {
+            return viewport->getOwner()->getSwapchainFormat();
+        }
         return texture->getFormat();
     }
-    virtual SeSampleCountFlags getNumSamples() const
+    SeSampleCountFlags getNumSamples() const
     {
+        if(viewport != nullptr)
+        {
+            return viewport->getSamples();
+        }
         return texture->getNumSamples();
     }
-    virtual uint32 getWidth() const 
+    uint32 getWidth() const 
     { 
+        if(viewport != nullptr)
+        {
+            return viewport->getWidth();
+        }
         return texture->getWidth(); 
     }
-    virtual uint32 getHeight() const 
+    uint32 getHeight() const 
     { 
+        if(viewport != nullptr)
+        {
+            return viewport->getHeight();
+        }
         return texture->getHeight(); 
     }
     constexpr SeAttachmentLoadOp getLoadOp() const { return loadOp; }
@@ -53,7 +83,8 @@ public:
     SeClearValue clear;
     SeColorComponentFlags componentFlags;
 protected:
-    PTexture2D texture;
+    PTexture2D texture = nullptr;
+    PViewport viewport = nullptr;
     SeImageLayout initialLayout;
     SeImageLayout finalLayout;
     SeAttachmentLoadOp loadOp;
@@ -61,55 +92,14 @@ protected:
     SeAttachmentLoadOp stencilLoadOp;
     SeAttachmentStoreOp stencilStoreOp;
 };
-DEFINE_REF(RenderTargetAttachment)
-
-class SwapchainAttachment : public RenderTargetAttachment
-{
-public:
-    SwapchainAttachment(PViewport viewport,
-        SeImageLayout initialLayout,
-        SeImageLayout finalLayout,
-        SeAttachmentLoadOp loadOp = SE_ATTACHMENT_LOAD_OP_LOAD,
-        SeAttachmentStoreOp storeOp = SE_ATTACHMENT_STORE_OP_STORE,
-        SeAttachmentLoadOp stencilLoadOp = SE_ATTACHMENT_LOAD_OP_DONT_CARE,
-        SeAttachmentStoreOp stencilStoreOp = SE_ATTACHMENT_STORE_OP_DONT_CARE)
-        : RenderTargetAttachment(nullptr, initialLayout, finalLayout, loadOp, storeOp, stencilLoadOp, stencilStoreOp)
-        , viewport(viewport)
-    {}
-    virtual ~SwapchainAttachment()
-    {
-    }
-    virtual PTexture2D getTexture()
-    {
-        return viewport->getOwner()->getBackBuffer();
-    }
-    virtual SeFormat getFormat() const
-    {
-        return viewport->getOwner()->getSwapchainFormat();
-    }
-    virtual SeSampleCountFlags getNumSamples() const
-    {
-        return viewport->getSamples();
-    }
-    virtual uint32 getWidth() const 
-    { 
-        return viewport->getWidth(); 
-    }
-    virtual uint32 getHeight() const 
-    { 
-        return viewport->getHeight(); 
-    }
-private:
-    PViewport viewport;
-};
 
 struct RenderTargetLayout
 {
-    Array<PRenderTargetAttachment> inputAttachments;
-    Array<PRenderTargetAttachment> colorAttachments;
-    Array<PRenderTargetAttachment> resolveAttachments;
-    PRenderTargetAttachment depthAttachment;
-    PRenderTargetAttachment depthResolveAttachment;
+    Array<RenderTargetAttachment> inputAttachments;
+    Array<RenderTargetAttachment> colorAttachments;
+    Array<RenderTargetAttachment> resolveAttachments;
+    RenderTargetAttachment depthAttachment;
+    RenderTargetAttachment depthResolveAttachment;
 };
 
 struct SubPassDependency

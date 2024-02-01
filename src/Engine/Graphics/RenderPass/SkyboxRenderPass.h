@@ -18,8 +18,8 @@ public:
     virtual void publishOutputs() override;
     virtual void createRenderPass() override;
 private:
-    Gfx::PRenderTargetAttachment colorAttachment;
-    Gfx::PRenderTargetAttachment depthAttachment;
+    Gfx::RenderTargetAttachment colorAttachment;
+    Gfx::RenderTargetAttachment depthAttachment;
     Gfx::ODescriptorLayout skyboxDataLayout;
     Gfx::PDescriptorSet skyboxDataSet;
     Gfx::ODescriptorLayout textureLayout;

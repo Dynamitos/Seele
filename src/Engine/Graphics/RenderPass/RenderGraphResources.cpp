@@ -13,47 +13,27 @@ RenderGraphResources::~RenderGraphResources()
     
 }
 
-Gfx::PRenderTargetAttachment RenderGraphResources::requestRenderTarget(const std::string& outputName) 
+Gfx::RenderTargetAttachment RenderGraphResources::requestRenderTarget(const std::string& outputName) 
 {
-    if(registeredAttachments.find(outputName) == registeredAttachments.end())
-    {
-        std::cout << "Attachment " << outputName << " not found" << std::endl; 
-        return nullptr;
-    }
-    return registeredAttachments[outputName];
+    return registeredAttachments.at(outputName);
 }
 
 Gfx::PTexture RenderGraphResources::requestTexture(const std::string& outputName) 
 {
-    if(registeredTextures.find(outputName) == registeredTextures.end())
-    {
-        std::cout << "Attachment " << outputName << " not found" << std::endl; 
-        return nullptr;
-    }
-    return registeredTextures[outputName];
+    return registeredTextures.at(outputName);
 }
 
 Gfx::PShaderBuffer RenderGraphResources::requestBuffer(const std::string& outputName) 
 {
-    if(registeredBuffers.find(outputName) == registeredBuffers.end())
-    {
-        std::cout << "Attachment " << outputName << " not found" << std::endl; 
-        return nullptr;
-    }
-    return registeredBuffers[outputName];
+    return registeredBuffers.at(outputName);
 }
 
 Gfx::PUniformBuffer RenderGraphResources::requestUniform(const std::string& outputName) 
 {
-    if(registeredUniforms.find(outputName) == registeredUniforms.end())
-    {
-        std::cout << "Attachment " << outputName << " not found" << std::endl; 
-        return nullptr;
-    }
-    return registeredUniforms[outputName];
+    return registeredUniforms.at(outputName);
 }
 
-void RenderGraphResources::registerRenderPassOutput(const std::string& outputName, Gfx::PRenderTargetAttachment attachment) 
+void RenderGraphResources::registerRenderPassOutput(const std::string& outputName, Gfx::RenderTargetAttachment attachment) 
 {
     registeredAttachments[outputName] = attachment;
 }

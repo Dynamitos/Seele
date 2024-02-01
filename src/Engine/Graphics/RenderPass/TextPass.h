@@ -7,7 +7,6 @@
 namespace Seele
 {
 DECLARE_NAME_REF(Gfx, Texture2D)
-DECLARE_NAME_REF(Gfx, RenderTargetAttachment)
 DECLARE_NAME_REF(Gfx, ShaderBuffer)
 struct TextRender
 {
@@ -64,8 +63,8 @@ private:
     };
     Map<PFontAsset, Array<TextResources>> textResources;
 
-    Gfx::PRenderTargetAttachment renderTarget;
-    Gfx::PRenderTargetAttachment depthAttachment;
+    Gfx::RenderTargetAttachment renderTarget;
+    Gfx::RenderTargetAttachment depthAttachment;
 
     Gfx::ODescriptorLayout generalLayout;
     Gfx::ODescriptorLayout textureArrayLayout;

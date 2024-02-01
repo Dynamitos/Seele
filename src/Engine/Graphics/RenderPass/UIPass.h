@@ -20,9 +20,9 @@ public:
     virtual void publishOutputs() override;
     virtual void createRenderPass() override;
 private:
-    Gfx::ORenderTargetAttachment renderTarget;
+    Gfx::RenderTargetAttachment renderTarget;
     Gfx::OTexture2D colorBuffer;
-    Gfx::ORenderTargetAttachment depthAttachment;
+    Gfx::RenderTargetAttachment depthAttachment;
     Gfx::OTexture2D depthBuffer;
 
     Gfx::ODescriptorLayout descriptorLayout;

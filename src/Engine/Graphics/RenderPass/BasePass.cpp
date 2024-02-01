@@ -71,7 +71,7 @@ void BasePass::render()
     tLightGrid->pipelineBarrier(
         Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
         Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
-    depthAttachment->getTexture()->pipelineBarrier(
+    depthAttachment.getTexture()->pipelineBarrier(
         Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
         Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT);
 
@@ -190,7 +190,7 @@ void BasePass::endFrame()
 
 void BasePass::publishOutputs() 
 {
-    colorAttachment = new Gfx::SwapchainAttachment(viewport,
+    colorAttachment = Gfx::RenderTargetAttachment(viewport,
         Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
         Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
     resources->registerRenderPassOutput("BASEPASS_COLOR", colorAttachment);
@@ -199,9 +199,9 @@ void BasePass::publishOutputs()
 void BasePass::createRenderPass() 
 {
     depthAttachment = resources->requestRenderTarget("DEPTHPREPASS_DEPTH");
-    depthAttachment->setLoadOp(Gfx::SE_ATTACHMENT_LOAD_OP_LOAD);
-    depthAttachment->setInitialLayout(Gfx::SE_IMAGE_LAYOUT_GENERAL);
-    depthAttachment->setFinalLayout(Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+    depthAttachment.setLoadOp(Gfx::SE_ATTACHMENT_LOAD_OP_LOAD);
+    depthAttachment.setInitialLayout(Gfx::SE_IMAGE_LAYOUT_GENERAL);
+    depthAttachment.setFinalLayout(Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
     Gfx::RenderTargetLayout layout = Gfx::RenderTargetLayout{
         .colorAttachments = { colorAttachment }, 
         .depthAttachment = depthAttachment,

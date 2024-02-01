@@ -69,12 +69,12 @@ void DebugPass::publishOutputs()
 
 void DebugPass::createRenderPass()
 {
-    Gfx::PRenderTargetAttachment baseColorAttachment = resources->requestRenderTarget("BASEPASS_COLOR");
-    baseColorAttachment->setLoadOp(Gfx::SE_ATTACHMENT_LOAD_OP_LOAD);
-    baseColorAttachment->setInitialLayout(Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-    Gfx::PRenderTargetAttachment depthAttachment = resources->requestRenderTarget("DEPTHPREPASS_DEPTH");
-    depthAttachment->setLoadOp(Gfx::SE_ATTACHMENT_LOAD_OP_LOAD);
-    depthAttachment->setInitialLayout(Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+    Gfx::RenderTargetAttachment baseColorAttachment = resources->requestRenderTarget("BASEPASS_COLOR");
+    baseColorAttachment.setLoadOp(Gfx::SE_ATTACHMENT_LOAD_OP_LOAD);
+    baseColorAttachment.setInitialLayout(Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+    Gfx::RenderTargetAttachment depthAttachment = resources->requestRenderTarget("DEPTHPREPASS_DEPTH");
+    depthAttachment.setLoadOp(Gfx::SE_ATTACHMENT_LOAD_OP_LOAD);
+    depthAttachment.setInitialLayout(Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
     Gfx::RenderTargetLayout layout = Gfx::RenderTargetLayout{
         .colorAttachments = {baseColorAttachment}, 
         .depthAttachment = depthAttachment,

@@ -152,10 +152,10 @@ void DepthPrepass::publishOutputs()
     };
     depthBuffer = graphics->createTexture2D(depthBufferInfo);
     depthAttachment = 
-        new Gfx::RenderTargetAttachment(depthBuffer,
+        Gfx::RenderTargetAttachment(depthBuffer,
             Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_GENERAL,
             Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
-    depthAttachment->clear.depthStencil.depth = 1.0f;
+    depthAttachment.clear.depthStencil.depth = 1.0f;
     resources->registerRenderPassOutput("DEPTHPREPASS_DEPTH", depthAttachment);
 }
 
