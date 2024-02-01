@@ -89,7 +89,7 @@ void TextureAsset::load(ArchiveBuffer& buffer)
             .sourceData = {
                 .size = ktxTexture_GetDataSize(ktxTexture(kTexture)),
                 .data = ktxTexture_GetData(ktxTexture(kTexture)),
-                .owner = Gfx::QueueType::DEDICATED_TRANSFER,
+                .owner = Gfx::QueueType::TRANSFER,
             },
             .format = Vulkan::cast((VkFormat)kTexture->vkFormat),
             .width = kTexture->baseWidth,

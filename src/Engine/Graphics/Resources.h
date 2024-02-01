@@ -38,7 +38,6 @@ struct QueueFamilyMapping
     uint32 graphicsFamily;
     uint32 computeFamily;
     uint32 transferFamily;
-    uint32 dedicatedTransferFamily;
     uint32 getQueueTypeFamilyIndex(Gfx::QueueType type) const
     {
         switch (type)
@@ -49,8 +48,6 @@ struct QueueFamilyMapping
             return computeFamily;
         case Gfx::QueueType::TRANSFER:
             return transferFamily;
-        case Gfx::QueueType::DEDICATED_TRANSFER:
-            return dedicatedTransferFamily;
         default:
             return 0x7fff;
         }

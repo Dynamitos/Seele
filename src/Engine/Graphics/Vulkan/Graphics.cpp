@@ -22,7 +22,6 @@ using namespace Seele::Vulkan;
 thread_local PCommandPool Seele::Vulkan::Graphics::graphicsCommands = nullptr;
 thread_local PCommandPool Seele::Vulkan::Graphics::computeCommands = nullptr;
 thread_local PCommandPool Seele::Vulkan::Graphics::transferCommands = nullptr;
-thread_local PCommandPool Seele::Vulkan::Graphics::dedicatedTransferCommands = nullptr;
 
 Graphics::Graphics()
     : instance(VK_NULL_HANDLE)
@@ -309,8 +308,6 @@ PCommandPool Graphics::getQueueCommands(Gfx::QueueType queueType)
         return getComputeCommands();
     case Gfx::QueueType::TRANSFER:
         return getTransferCommands();
-    case Gfx::QueueType::DEDICATED_TRANSFER:
-        return getDedicatedTransferCommands();
     default:
         throw new std::logic_error("invalid queue type");
     }
@@ -320,7 +317,7 @@ PCommandPool Graphics::getGraphicsCommands()
     if(graphicsCommands == nullptr)
     {
         std::unique_lock l(poolLock);
-        graphicsCommands = pools.add(new CommandPool(this, graphicsQueue));
+        graphicsCommands = pools.add(new CommandPool(this, queues[graphicsQueue]));
     }
     return graphicsCommands;
 }
@@ -328,8 +325,15 @@ PCommandPool Graphics::getComputeCommands()
 {
     if(computeCommands == nullptr)
     {
-        std::unique_lock l(poolLock);
-        computeCommands = pools.add(new CommandPool(this, computeQueue));
+        if(graphicsQueue == computeQueue)
+        {
+            computeCommands = getGraphicsCommands();
+        }
+        else
+        {
+            std::unique_lock l(poolLock);
+            computeCommands = pools.add(new CommandPool(this, queues[computeQueue]));
+        }
     }
     return computeCommands;
 }
@@ -337,19 +341,17 @@ PCommandPool Graphics::getTransferCommands()
 {
     if(transferCommands == nullptr)
     {
-        std::unique_lock l(poolLock);
-        transferCommands = pools.add(new CommandPool(this, transferQueue));
+        if(graphicsQueue == transferQueue)
+        {
+            transferCommands = getGraphicsCommands();
+        }
+        else
+        {
+            std::unique_lock l(poolLock);
+            transferCommands = pools.add(new CommandPool(this, queues[transferQueue]));
+        }
     }
     return transferCommands;
-}
-PCommandPool Graphics::getDedicatedTransferCommands()
-{
-    if(dedicatedTransferCommands == nullptr)
-    {
-        std::unique_lock l(poolLock);
-        dedicatedTransferCommands = pools.add(new CommandPool(this, dedicatedTransferQueue != nullptr ? dedicatedTransferQueue : transferQueue));
-    }
-    return dedicatedTransferCommands;
 }
 
 VmaAllocator Graphics::getAllocator()
@@ -428,7 +430,6 @@ void Graphics::setupDebugCallback()
         .pUserData = nullptr,
     };
     VK_CHECK(CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &callback));
-    cmdDebugMarkerSetObjectName = (PFN_vkDebugMarkerSetObjectNameEXT)vkGetInstanceProcAddr(instance, "vkDebugMarkerSetObjectNameEXT");
 }
 
 void Graphics::pickPhysicalDevice()
@@ -504,18 +505,19 @@ void Graphics::createDevice(GraphicsInitializer initializer)
     };
     QueueCreateInfo graphicsQueueInfo;
     QueueCreateInfo transferQueueInfo;
-    QueueCreateInfo dedicatedTransferQueueInfo;
     QueueCreateInfo computeQueueInfo;
-    QueueCreateInfo asyncComputeInfo;
     uint32 numPriorities = 0;
     auto checkFamilyProperty = [](VkQueueFamilyProperties currProps, uint32 checkBit){
         return (currProps.queueFlags & checkBit) == checkBit;
     };
     auto updateQueueInfo = [&queueProperties](uint32 familyIndex, QueueCreateInfo& info, uint32& numQueues) {
         if(info.familyIndex == -1) {
+            if(queueProperties[familyIndex].queueCount == numQueues)
+            {
+                return;
+            }
             info.familyIndex = familyIndex;
-            numQueues = std::min(numQueues + 1, queueProperties[familyIndex].queueCount);
-            info.queueIndex = numQueues - 1;
+            info.queueIndex = numQueues++;
         }
     };
     for (uint32 familyIndex = 0; familyIndex < queueProperties.size(); ++familyIndex)
@@ -525,46 +527,20 @@ void Graphics::createDevice(GraphicsInitializer initializer)
 
         if (checkFamilyProperty(currProps, VK_QUEUE_GRAPHICS_BIT))
         {
-            updateQueueInfo(familyIndex, graphicsQueueInfo, numQueueFamilies);
+            updateQueueInfo(familyIndex, graphicsQueueInfo, numQueuesForFamily);
         }
-        if (currProps.queueFlags & VK_QUEUE_COMPUTE_BIT)
+        if(Gfx::useAsyncCompute)
         {
-            if (computeQueueInfo.familyIndex == -1)
+            if(checkFamilyProperty(currProps, VK_QUEUE_COMPUTE_BIT))
             {
-                computeQueueInfo.familyIndex = familyIndex;
-            }
-            if (Gfx::useAsyncCompute && numQueueFamilies > 1)
-            {
-                if (asyncComputeInfo.familyIndex == -1)
-                {
-                    if (familyIndex == (uint32)graphicsQueueInfo.familyIndex)
-                    {
-                        if (currProps.queueCount > 1)
-                        {
-                            asyncComputeInfo.familyIndex = familyIndex;
-                            numQueuesForFamily++;
-                        }
-                    }
-                    else
-                    {
-                        asyncComputeInfo.familyIndex = familyIndex;
-                    }
-                }
+                updateQueueInfo(familyIndex, computeQueueInfo, numQueuesForFamily);
             }
         }
-        if (currProps.queueFlags & VK_QUEUE_TRANSFER_BIT)
+        if ((currProps.queueFlags ^ VK_QUEUE_TRANSFER_BIT) == 0)
         {
-            if (transferQueueInfo.familyIndex == -1)
-            {
-                transferQueueInfo.familyIndex = familyIndex;
-                numQueuesForFamily++;
-            }
-            if ((currProps.queueFlags ^ VK_QUEUE_TRANSFER_BIT) == 0)
-            {
-                dedicatedTransferQueueInfo.familyIndex = familyIndex;
-                numQueuesForFamily++;
-            }
+            updateQueueInfo(familyIndex, transferQueueInfo, numQueuesForFamily);
         }
+        
         if (numQueuesForFamily > 0)
         {
             VkDeviceQueueCreateInfo info = {
@@ -616,35 +592,50 @@ void Graphics::createDevice(GraphicsInitializer initializer)
     };
 
     VK_CHECK(vkCreateDevice(physicalDevice, &deviceInfo, nullptr, &handle));
-    std::cout << "Vulkan handle: " << handle << std::endl;
+    //std::cout << "Vulkan handle: " << handle << std::endl;
 
     cmdDrawMeshTasks = (PFN_vkCmdDrawMeshTasksEXT)vkGetDeviceProcAddr(handle, "vkCmdDrawMeshTasksEXT");
 
-    graphicsQueue = new Queue(this, graphicsQueueInfo.familyIndex, 0);
-    if (Gfx::useAsyncCompute && asyncComputeInfo.familyIndex != -1)
+    graphicsQueue = 0;
+    computeQueue = 0;
+    transferQueue = 0;
+    queues.add(new Queue(this, graphicsQueueInfo.familyIndex, graphicsQueueInfo.queueIndex));
+    if(computeQueueInfo.familyIndex != -1)
     {
-        if (asyncComputeInfo.familyIndex == graphicsQueueInfo.familyIndex)
-        {
-            // Same family as graphics, but different queue
-            computeQueue = new Queue(this, asyncComputeInfo.familyIndex, 1);
-        }
-        else
-        {
-            // Different family
-            computeQueue = new Queue(this, asyncComputeInfo.familyIndex, 0);
-        }
+        computeQueue = queues.size();
+        queues.add(new Queue(this, computeQueueInfo.familyIndex, computeQueueInfo.queueIndex));
     }
-    else
+    if(transferQueueInfo.familyIndex != -1)
     {
-        computeQueue = new Queue(this, computeQueueInfo.familyIndex, 0);
+        transferQueue = queues.size();
+        queues.add(new Queue(this, transferQueueInfo.familyIndex, transferQueueInfo.queueIndex));
     }
-    transferQueue = new Queue(this, transferQueueInfo.familyIndex, 0);
-    if (dedicatedTransferQueueInfo.familyIndex != -1)
-    {
-        dedicatedTransferQueue = new Queue(this, dedicatedTransferQueueInfo.familyIndex, 0);
-    }
-    queueMapping.graphicsFamily = graphicsQueue->getFamilyIndex();
-    queueMapping.computeFamily = computeQueue->getFamilyIndex();
-    queueMapping.transferFamily = transferQueue->getFamilyIndex();
-    queueMapping.dedicatedTransferFamily = dedicatedTransferQueue != nullptr ? dedicatedTransferQueue->getFamilyIndex() : transferQueue->getFamilyIndex();
+    
+    // if (Gfx::useAsyncCompute && asyncComputeInfo.familyIndex != -1)
+    // {
+    //     if (asyncComputeInfo.familyIndex == graphicsQueueInfo.familyIndex)
+    //     {
+    //         // Same family as graphics, but different queue
+    //         computeQueue = new Queue(this, asyncComputeInfo.familyIndex, 1);
+    //     }
+    //     else
+    //     {
+    //         // Different family
+    //         computeQueue = new Queue(this, asyncComputeInfo.familyIndex, 0);
+    //     }
+    // }
+    // else
+    // {
+    //     computeQueue = new Queue(this, computeQueueInfo.familyIndex, 0);
+    // }
+    // transferQueue = new Queue(this, transferQueueInfo.familyIndex, 0);
+    // if (dedicatedTransferQueueInfo.familyIndex != -1)
+    // {
+    //     dedicatedTransferQueue = new Queue(this, dedicatedTransferQueueInfo.familyIndex, 0);
+    // }
+    queueMapping.graphicsFamily = queues[graphicsQueue]->getFamilyIndex();
+    queueMapping.computeFamily = queues[computeQueue]->getFamilyIndex();
+    queueMapping.transferFamily = queues[transferQueue]->getFamilyIndex();
+    cmdDebugMarkerSetObjectName = (PFN_vkDebugMarkerSetObjectNameEXT)vkGetInstanceProcAddr(instance, "vkDebugMarkerSetObjectNameEXT");
+
 }

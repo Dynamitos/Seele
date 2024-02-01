@@ -37,6 +37,12 @@ void LightCullingPass::beginFrame(const Component::Camera& cam)
     };
     oLightIndexCounter->updateContents(counterReset);
     tLightIndexCounter->updateContents(counterReset);
+    oLightIndexCounter->pipelineBarrier(
+        Gfx::SE_ACCESS_MEMORY_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
+        Gfx::SE_ACCESS_MEMORY_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
+    tLightIndexCounter->pipelineBarrier(
+        Gfx::SE_ACCESS_MEMORY_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
+        Gfx::SE_ACCESS_MEMORY_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 
     cullingDescriptorLayout->reset();
     cullingDescriptorSet = cullingDescriptorLayout->allocateDescriptorSet();
@@ -47,24 +53,6 @@ void LightCullingPass::beginFrame(const Component::Camera& cam)
 
 void LightCullingPass::render() 
 {
-    oLightIndexCounter->pipelineBarrier(
-        Gfx::SE_ACCESS_MEMORY_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
-        Gfx::SE_ACCESS_MEMORY_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
-    oLightIndexList->pipelineBarrier( 
-        Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-        Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
-    oLightGrid->pipelineBarrier( 
-        Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-        Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
-    tLightIndexCounter->pipelineBarrier(
-        Gfx::SE_ACCESS_MEMORY_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
-        Gfx::SE_ACCESS_MEMORY_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
-    tLightIndexList->pipelineBarrier( 
-        Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-        Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
-    tLightGrid->pipelineBarrier( 
-        Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-        Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
     depthAttachment->pipelineBarrier(
         Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT | Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
         Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
@@ -82,7 +70,7 @@ void LightCullingPass::render()
     computeCommand->bindDescriptor({ viewParamsSet, dispatchParamsSet, cullingDescriptorSet, lightEnv->getDescriptorSet() });
     computeCommand->dispatch(dispatchParams.numThreadGroups.x, dispatchParams.numThreadGroups.y, dispatchParams.numThreadGroups.z);
     Array<Gfx::PComputeCommand> commands = {computeCommand};
-    std::cout << "Execute" << std::endl;
+    //std::cout << "Execute" << std::endl;
     graphics->executeCommands(commands);
     //std::cout << "LightCulling render()" << std::endl;
     //co_return;
@@ -157,10 +145,10 @@ void LightCullingPass::publishOutputs()
         },
         .numElements = 1,
         .dynamic = true,
-        //.name = "oLightIndexCounter",
+        .name = "oLightIndexCounter",
     };
     oLightIndexCounter = graphics->createShaderBuffer(structInfo);
-    //structInfo.name = "tLightIndexCounter";
+    structInfo.name = "tLightIndexCounter";
     tLightIndexCounter = graphics->createShaderBuffer(structInfo);
     structInfo = {
         .sourceData = {
@@ -172,10 +160,10 @@ void LightCullingPass::publishOutputs()
             .owner = Gfx::QueueType::COMPUTE
         },
         .dynamic = false,
-        //.name = "oLightIndexList",
+        .name = "oLightIndexList",
     };
     oLightIndexList = graphics->createShaderBuffer(structInfo);
-    //structInfo.name = "tLightIndexList";
+    structInfo.name = "tLightIndexList";
     tLightIndexList = graphics->createShaderBuffer(structInfo);
     resources->registerBufferOutput("LIGHTCULLING_OLIGHTLIST", oLightIndexList);
     resources->registerBufferOutput("LIGHTCULLING_TLIGHTLIST", tLightIndexList);

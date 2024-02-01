@@ -25,7 +25,6 @@ public:
     PCommandPool getGraphicsCommands();
     PCommandPool getComputeCommands();
     PCommandPool getTransferCommands();
-    PCommandPool getDedicatedTransferCommands();
 
     VmaAllocator getAllocator();
     PDestructionManager getDestructionManager();
@@ -86,14 +85,13 @@ protected:
     VkDevice handle;
     VkPhysicalDevice physicalDevice;
 
-    OQueue graphicsQueue;
-    OQueue computeQueue;
-    OQueue transferQueue;
-    OQueue dedicatedTransferQueue;
+    Array<OQueue> queues;
+    uint32 graphicsQueue;
+    uint32 computeQueue;
+    uint32 transferQueue;
     thread_local static PCommandPool graphicsCommands;
     thread_local static PCommandPool computeCommands;
     thread_local static PCommandPool transferCommands;
-    thread_local static PCommandPool dedicatedTransferCommands;
     std::mutex poolLock;
     Array<OCommandPool> pools;
     VkPhysicalDeviceProperties props;

@@ -38,6 +38,9 @@
                     "value": "/opt/homebrew/opt/vulkan-validationlayers/share/vulkan/explicit_layer.d"
                 }
             ],
+            "logging": {
+                "moduleLoad": false
+            },
             "externalConsole": false,
             "MIMode": "lldb",
             "targetArchitecture": "arm64"

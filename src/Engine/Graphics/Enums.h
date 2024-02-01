@@ -164,7 +164,7 @@ typedef uint32 KeyModifierFlags;
 
 namespace Gfx
 {
-static constexpr bool useAsyncCompute = true;
+static constexpr bool useAsyncCompute = false;
 static constexpr bool useMeshShading = true;
 static constexpr uint32 numFramesBuffered = 3;
 
@@ -179,7 +179,6 @@ enum class QueueType
     GRAPHICS = 1,
     COMPUTE = 2,
     TRANSFER = 3,
-    DEDICATED_TRANSFER = 4
 };
 
 typedef uint32_t SeFlags;

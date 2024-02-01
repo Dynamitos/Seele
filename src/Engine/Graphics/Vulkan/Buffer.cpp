@@ -56,7 +56,7 @@ Buffer::Buffer(PGraphics graphics,
                 .object = (uint64)buffers[i].buffer,
                 .pObjectName = this->name.c_str()
             };
-            graphics->vkDebugMarkerSetObjectNameEXT(&nameInfo);
+            //graphics->vkDebugMarkerSetObjectNameEXT(&nameInfo);
         }
     }
 }
@@ -85,7 +85,7 @@ void Buffer::executeOwnershipBarrier(Gfx::QueueType newOwner)
     VkPipelineStageFlags srcStage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
     VkPipelineStageFlags dstStage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
     assert(barrier.srcQueueFamilyIndex != barrier.dstQueueFamilyIndex);
-    if (owner == Gfx::QueueType::TRANSFER || owner == Gfx::QueueType::DEDICATED_TRANSFER)
+    if (owner == Gfx::QueueType::TRANSFER)
     {
         barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
         srcStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
@@ -105,12 +105,6 @@ void Buffer::executeOwnershipBarrier(Gfx::QueueType newOwner)
         barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
         dstStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
         dstPool = graphics->getTransferCommands();
-    }
-    else if (newOwner == Gfx::QueueType::DEDICATED_TRANSFER)
-    {
-        barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-        dstStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-        dstPool = graphics->getDedicatedTransferCommands();
     }
     else if (newOwner == Gfx::QueueType::COMPUTE)
     {
