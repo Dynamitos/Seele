@@ -12,6 +12,8 @@
 #include "Material/MaterialInstance.h"
 #include "Graphics/Descriptor.h"
 #include "Graphics/Command.h"
+#include <vulkan/vulkan.h>
+#include "Graphics/Vulkan/Graphics.h"
 
 using namespace Seele;
 
@@ -182,6 +184,7 @@ void BasePass::render()
     }
     graphics->executeCommands(commands);
     graphics->endRenderPass();
+    vkDeviceWaitIdle(((Vulkan::Graphics*)graphics.getHandle())->getDevice());
 }
 
 void BasePass::endFrame() 
@@ -222,7 +225,23 @@ void BasePass::createRenderPass()
             .dstStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
             .srcAccess = Gfx::SE_ACCESS_NONE,
             .dstAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-        }
+        },
+        {
+            .srcSubpass = 0,
+            .dstSubpass = ~0U,
+            .srcStage = Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+            .dstStage = Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+            .srcAccess = Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+            .dstAccess = Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+        },
+        {
+            .srcSubpass = 0,
+            .dstSubpass = ~0U,
+            .srcStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+            .dstStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+            .srcAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+            .dstAccess = Gfx::SE_ACCESS_NONE,
+        },
     };
     renderPass = graphics->createRenderPass(std::move(layout), {dependency}, viewport);
     oLightIndexList = resources->requestBuffer("LIGHTCULLING_OLIGHTLIST");
