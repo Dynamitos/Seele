@@ -8,6 +8,12 @@ DirectionalLightActor::DirectionalLightActor(PScene scene)
     attachComponent<Component::DirectionalLight>();
 }
 
+DirectionalLightActor::DirectionalLightActor(PScene scene, Vector color, Vector direction)
+    : Actor(scene)
+{
+    attachComponent<Component::DirectionalLight>(Vector4(color, 0), Vector4(direction, 0));
+}
+
 DirectionalLightActor::~DirectionalLightActor()
 {
     

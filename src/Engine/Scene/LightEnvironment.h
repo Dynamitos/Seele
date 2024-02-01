@@ -18,8 +18,8 @@ public:
     const Gfx::PDescriptorLayout getDescriptorLayout() const;
     Gfx::PDescriptorSet getDescriptorSet();
 private:
-    #define MAX_DIRECTIONAL_LIGHTS 4
-    #define MAX_POINT_LIGHTS 256
+    #define INIT_DIRECTIONAL_LIGHTS 4
+    #define INIT_POINT_LIGHTS 256
     struct LightEnv
     {
         uint32 numDirectionalLights;

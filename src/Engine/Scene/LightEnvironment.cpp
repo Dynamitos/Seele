@@ -20,18 +20,18 @@ LightEnvironment::LightEnvironment(Gfx::PGraphics graphics)
     });
     directionalLights = graphics->createShaderBuffer(ShaderBufferCreateInfo{
         .sourceData = {
-            .size = sizeof(Component::DirectionalLight) * MAX_DIRECTIONAL_LIGHTS,
+            .size = sizeof(Component::DirectionalLight) * INIT_DIRECTIONAL_LIGHTS,
             .data = nullptr,
         },
-        .numElements = MAX_DIRECTIONAL_LIGHTS,
+        .numElements = INIT_DIRECTIONAL_LIGHTS,
         .dynamic = true,
     });
     pointLights = graphics->createShaderBuffer(ShaderBufferCreateInfo{
         .sourceData = {
-            .size = sizeof(Component::PointLight) * MAX_POINT_LIGHTS,
+            .size = sizeof(Component::PointLight) * INIT_POINT_LIGHTS,
             .data = nullptr,
         },
-        .numElements = MAX_POINT_LIGHTS,
+        .numElements = INIT_POINT_LIGHTS,
         .dynamic = true,
     });
 }
@@ -66,14 +66,42 @@ void LightEnvironment::commit()
         .size = sizeof(LightEnv),
         .data = (uint8*) & lightEnv,
         });
-    directionalLights->updateContents(DataSource{
-        .size = sizeof(Component::DirectionalLight) * dirs.size(),
-        .data = (uint8*)dirs.data(),
+    if(directionalLights->getNumElements() < dirs.size())
+    {
+        directionalLights = graphics->createShaderBuffer({
+            .sourceData = {
+                .size = sizeof(Component::DirectionalLight) * dirs.size(),
+                .data = (uint8*)dirs.data(),
+            },
+            .numElements = dirs.size(),
+            .dynamic = true,
         });
-    pointLights->updateContents(DataSource{
-        .size = sizeof(Component::PointLight) * points.size(),
-        .data = (uint8*)points.data(),
+    }
+    else
+    {
+        directionalLights->updateContents(DataSource{
+            .size = sizeof(Component::DirectionalLight) * dirs.size(),
+            .data = (uint8*)dirs.data(),
+            });
+    }
+    if(pointLights->getNumElements() < points.size())
+    {
+        pointLights = graphics->createShaderBuffer({
+            .sourceData = {
+                .size = sizeof(Component::PointLight) * points.size(),
+                .data = (uint8*)points.data()
+            },
+            .numElements = points.size(),
+            .dynamic = true
         });
+    }
+    else
+    {
+        pointLights->updateContents(DataSource{
+            .size = sizeof(Component::PointLight) * points.size(),
+            .data = (uint8*)points.data(),
+            });
+    }
     set->updateBuffer(0, lightEnvBuffer);
     set->updateBuffer(1, directionalLights);
     set->updateBuffer(2, pointLights);

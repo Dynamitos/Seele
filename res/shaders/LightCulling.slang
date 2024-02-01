@@ -99,7 +99,7 @@ void cullLights(ComputeShaderInput in)
     {
         PointLight light = pLightEnv.pointLights[i];
         //TODO: why doesn't this check go through?
-        //if(light.insideFrustum(groupFrustum, nearClipVS, maxDepthVS))
+        if(light.insideFrustum(groupFrustum, nearClipVS, maxDepthVS))
         {
             tAppendLight(i);
             if(!light.insidePlane(minPlane))
@@ -131,6 +131,4 @@ void cullLights(ComputeShaderInput in)
     {
         pCullingParams.tLightIndexList[tLightIndexStartOffset + k] = tLightList[k];
     }
-
-    
 }

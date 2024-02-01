@@ -8,6 +8,7 @@ class DirectionalLightActor : public Actor
 {
 public:
     DirectionalLightActor(PScene scene);
+    DirectionalLightActor(PScene scene, Vector color, Vector direction);
     virtual ~DirectionalLightActor();
     Component::DirectionalLight& getDirectionalLightComponent();
     const Component::DirectionalLight& getDirectionalLightComponent() const;
