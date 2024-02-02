@@ -23,6 +23,7 @@ struct PointLight : ILightEnv
 {
     float4 position_WS;
     float4 colorRange;
+    float4 position_CS;
     
     float3 illuminate<B:IBRDF>(LightingParameter params, B brdf)
     {
@@ -32,16 +33,19 @@ struct PointLight : ILightEnv
         float illuminance = max(1 - d / colorRange.w, 0);
         return illuminance * brdf.evaluate(params.tbn, params.viewDir_TS, normalize(lightDir_TS), colorRange.xyz);
     }
-
-    bool insidePlane(Plane plane, float3 center_CS)
+    void updatePosition()
     {
-        float3 position_CS = center_CS + plane.n * colorRange.w;
-        return plane.pointInside(position_CS);
+        position_CS = mul(pViewParams.projectionMatrix, mul(pViewParams.viewMatrix, position_WS));
+    }
+
+    bool insidePlane(Plane plane)
+    {
+        float3 edge_CS = position_CS + plane.n * colorRange.w;
+        return plane.pointInside(edge_CS);
     }
 
     bool insideFrustum(Frustum frustum, float nearClipVS, float maxDepthVS)
     {
-        float4 clipPos = mul(pViewParams.projectionMatrix, mul(pViewParams.viewMatrix, position_WS));
         float3 center_CS = clipPos.xyz / clipPos.w;
         if(insidePlane(frustum.basePlane, center_CS))
         {

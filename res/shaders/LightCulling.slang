@@ -11,7 +11,7 @@ struct ComputeShaderInput
 };
 struct CullingParams
 {
-    Texture2D depthTextureVS;
+    Texture2D depthTexture;
 
     globallycoherent RWStructuredBuffer<uint> oLightIndexCounter;
     globallycoherent RWStructuredBuffer<uint> tLightIndexCounter;
@@ -67,7 +67,7 @@ void tAppendLight(uint lightIndex)
 void cullLights(ComputeShaderInput in)
 {
     int2 texCoord = int2(in.dispatchThreadID.xy);
-    float fDepth = pCullingParams.depthTextureVS.Load(int3(texCoord, 0)).r;
+    float fDepth = pCullingParams.depthTexture.Load(int3(texCoord, 0)).r;
 
     uint uDepth = asuint(fDepth);
     if(in.groupIndex == 0)
@@ -98,8 +98,9 @@ void cullLights(ComputeShaderInput in)
     for ( uint i = in.groupIndex; i < pLightEnv.numPointLights; i += BLOCK_SIZE * BLOCK_SIZE )
     {
         PointLight light = pLightEnv.pointLights[i];
+        light.updatePosition();
         //TODO: why doesn't this check go through?
-        if(light.insideFrustum(groupFrustum, nearClipVS))
+        if(light.insideFrustum(groupFrustum, nearClipVS, maxDepthVS))
         {
             tAppendLight(i);
             if(!light.insidePlane(minPlane))
