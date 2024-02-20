@@ -59,9 +59,9 @@ struct VertexAttributes
 		float4 worldPos = mul(transformMatrix, modelPos);
 		float4 viewPos = mul(pViewParams.viewMatrix, worldPos);
 		float4 clipPos = mul(pViewParams.projectionMatrix, viewPos);
-		float3 tangent_WS = mul(float3x3(transformMatrix), normalize(tangent_MS));
-		float3 biTangent_WS = mul(float3x3(transformMatrix), normalize(biTangent_MS));
-		float3 normal_WS = mul(float3x3(transformMatrix), normalize(normal_MS));
+		float3 tangent_WS = mul(float3x3(transformMatrix), tangent_MS);
+		float3 biTangent_WS = mul(float3x3(transformMatrix), biTangent_MS);
+		float3 normal_WS = mul(float3x3(transformMatrix), normal_MS);
 		FragmentParameter result;
 		result.viewDir_WS = pViewParams.cameraPos_WS.xyz - worldPos.xyz;
 		result.normal_WS = normal_WS;

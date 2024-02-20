@@ -98,12 +98,12 @@ void cullLights(ComputeShaderInput in)
     for ( uint i = in.groupIndex; i < pLightEnv.numPointLights; i += BLOCK_SIZE * BLOCK_SIZE )
     {
         PointLight light = pLightEnv.pointLights[i];
-        light.updatePosition();
+        float3 lightClip = light.getClipPosition();
         //TODO: why doesn't this check go through?
-        if(light.insideFrustum(groupFrustum, nearClipVS, maxDepthVS))
+        if(light.insideFrustum(groupFrustum, lightClip, nearClipVS, maxDepthVS))
         {
             tAppendLight(i);
-            if(!light.insidePlane(minPlane))
+            if(!light.insidePlane(minPlane, lightClip))
             {
                 oAppendLight(i);
             }

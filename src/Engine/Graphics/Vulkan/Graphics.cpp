@@ -293,9 +293,9 @@ void Graphics::vkCmdDrawMeshTasksEXT(VkCommandBuffer handle, uint32 groupX, uint
     cmdDrawMeshTasks(handle, groupX, groupY, groupZ);
 }
 
-void Graphics::vkDebugMarkerSetObjectNameEXT(VkDebugMarkerObjectNameInfoEXT* info)
+void Graphics::vkSetDebugUtilsObjectNameEXT(VkDebugUtilsObjectNameInfoEXT* info)
 {
-    VK_CHECK(cmdDebugMarkerSetObjectName(handle, info));
+    VK_CHECK(setDebugUtilsObjectName(handle, info));
 }
 
 
@@ -484,7 +484,7 @@ void Graphics::pickPhysicalDevice()
         {
             if (std::strcmp(VK_EXT_MESH_SHADER_EXTENSION_NAME, extensionProps[i].extensionName) == 0)
             {
-                meshShadingEnabled = true;
+                //meshShadingEnabled = true;
                 break;
             }
         }
@@ -637,6 +637,6 @@ void Graphics::createDevice(GraphicsInitializer initializer)
     queueMapping.graphicsFamily = queues[graphicsQueue]->getFamilyIndex();
     queueMapping.computeFamily = queues[computeQueue]->getFamilyIndex();
     queueMapping.transferFamily = queues[transferQueue]->getFamilyIndex();
-    cmdDebugMarkerSetObjectName = (PFN_vkDebugMarkerSetObjectNameEXT)vkGetInstanceProcAddr(instance, "vkDebugMarkerSetObjectNameEXT");
+    setDebugUtilsObjectName = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(instance, "vkSetDebugUtilsObjectNameEXT");
 
 }

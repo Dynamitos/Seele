@@ -23,7 +23,6 @@ struct PointLight : ILightEnv
 {
     float4 position_WS;
     float4 colorRange;
-    float4 position_CS;
     
     float3 illuminate<B:IBRDF>(LightingParameter params, B brdf)
     {
@@ -33,33 +32,32 @@ struct PointLight : ILightEnv
         float illuminance = max(1 - d / colorRange.w, 0);
         return illuminance * brdf.evaluate(params.tbn, params.viewDir_TS, normalize(lightDir_TS), colorRange.xyz);
     }
-    void updatePosition()
+    float3 getClipPosition()
     {
-        position_CS = mul(pViewParams.projectionMatrix, mul(pViewParams.viewMatrix, position_WS));
+        float4 position_CS = mul(pViewParams.projectionMatrix, mul(pViewParams.viewMatrix, position_WS));
+        return position_CS.xyz / position_CS.w;
     }
 
-    bool insidePlane(Plane plane)
+    bool insidePlane(Plane plane, float3 position_CS)
     {
-        float3 edge_CS = position_CS + plane.n * colorRange.w;
-        return plane.pointInside(edge_CS);
+        return dot(plane.n, position_CS) - plane.d < -colorRange.w;
     }
 
-    bool insideFrustum(Frustum frustum, float nearClipVS, float maxDepthVS)
+    bool insideFrustum(Frustum frustum, float3 position_CS, float minDepth, float maxDepth)
     {
-        float3 center_CS = clipPos.xyz / clipPos.w;
-        if(insidePlane(frustum.basePlane, center_CS))
+        bool result = true;
+        if(position_CS.z - colorRange.w > minDepth || position_CS.z + colorRange.w < maxDepth)
         {
-            return true;
+            result = false;
         }
-        uint result = 0;
-        for(int i = 0; i < 4; ++i)
+        for(int i = 0; i < 4 && result; ++i)
         {
-            if(insidePlane(frustum.sides[i], center_CS))
+            if(insidePlane(frustum.sides[i], position_CS))
             {
-                result++;
+                result = false;
             }
         }
-        return result > 0;
+        return result;
     }
 };
 

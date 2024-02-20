@@ -19,9 +19,13 @@ struct AABB
         corners[7] = mul(transform, float4(max.x, max.y, max.z, 1.0f));
         for(int i = 0; i < 8; ++i)
         {
-            if(frustum.pointInside(corners[i].xyz / corners[i].w))
+            float3 adjusted = corners[i].xyz / corners[i].w;
+            if(adjusted.z > 0)
             {
-                return true;
+                if(frustum.pointInside(adjusted))
+                {
+                    return true;
+                }
             }
         }
         return false;

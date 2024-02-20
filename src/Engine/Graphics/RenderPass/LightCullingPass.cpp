@@ -34,6 +34,7 @@ void LightCullingPass::beginFrame(const Component::Camera& cam)
     DataSource counterReset = {
         .size = sizeof(uint32),
         .data = (uint8*)&reset,
+        .owner = Gfx::QueueType::COMPUTE
     };
     oLightIndexCounter->updateContents(counterReset);
     tLightIndexCounter->updateContents(counterReset);
@@ -46,9 +47,6 @@ void LightCullingPass::beginFrame(const Component::Camera& cam)
 
     cullingDescriptorLayout->reset();
     cullingDescriptorSet = cullingDescriptorLayout->allocateDescriptorSet();
-
-    //std::cout << "LightCulling beginFrame()" << std::endl;
-    //co_return;
 }
 
 void LightCullingPass::render() 
@@ -72,14 +70,10 @@ void LightCullingPass::render()
     Array<Gfx::PComputeCommand> commands = {computeCommand};
     //std::cout << "Execute" << std::endl;
     graphics->executeCommands(commands);
-    //std::cout << "LightCulling render()" << std::endl;
-    //co_return;
 }
 
 void LightCullingPass::endFrame() 
 {
-    //std::cout << "LightCulling endFrame()" << std::endl;
-    //co_return;
 }
 
 void LightCullingPass::publishOutputs() 
@@ -94,9 +88,16 @@ void LightCullingPass::publishOutputs()
         .sourceData = {
             .size = sizeof(DispatchParams),
             .data = (uint8*)&dispatchParams,
+            .owner = Gfx::QueueType::COMPUTE
         },
         .dynamic = false,
+        .name = "DispatchParams",
         });
+
+    dispatchParamsSet = dispatchParamsLayout->allocateDescriptorSet();
+    dispatchParamsSet->updateBuffer(0, dispatchParamsBuffer);
+    dispatchParamsSet->updateBuffer(1, frustumBuffer);
+    dispatchParamsSet->writeChanges();
 
     cullingDescriptorLayout = graphics->createDescriptorLayout("CullingLayout");
 
@@ -226,20 +227,24 @@ void LightCullingPass::setupFrustums()
         .sourceData = {
             .size = sizeof(DispatchParams),
             .data = (uint8*) & dispatchParams,
+            .owner = Gfx::QueueType::COMPUTE
         },
         .dynamic = false,
+        .name = "FrustumDispatch"
     });
     
     frustumBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
         .sourceData = {
             .size = sizeof(Frustum) * numThreads.x * numThreads.y * numThreads.z,
             .data = nullptr,
+            .owner = Gfx::QueueType::COMPUTE
         },
         .numElements = numThreads.x * numThreads.y * numThreads.z,
         .dynamic = false,
+        .name = "FrustumBuffer"
     });
     
-    dispatchParamsSet = dispatchParamsLayout->allocateDescriptorSet();
+    Gfx::PDescriptorSet dispatchParamsSet = dispatchParamsLayout->allocateDescriptorSet();
     dispatchParamsSet->updateBuffer(0, frustumDispatchParamsBuffer);
     dispatchParamsSet->updateBuffer(1, frustumBuffer);
     dispatchParamsSet->writeChanges();

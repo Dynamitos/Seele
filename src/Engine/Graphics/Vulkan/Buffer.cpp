@@ -47,17 +47,20 @@ Buffer::Buffer(PGraphics graphics,
     {
         vmaCreateBuffer(graphics->getAllocator(), &info, &allocInfo, &buffers[i].buffer, &buffers[i].allocation, &buffers[i].info);
         vmaGetAllocationMemoryProperties(graphics->getAllocator(), buffers[i].allocation, &buffers[i].properties);
+        //std::cout << "Create buffer " << std::hex << (uint64)buffers[i].buffer << std::dec;
         if (!name.empty())
         {
-            VkDebugMarkerObjectNameInfoEXT nameInfo = {
-                .sType = VK_STRUCTURE_TYPE_DEBUG_MARKER_OBJECT_NAME_INFO_EXT,
+            VkDebugUtilsObjectNameInfoEXT nameInfo = {
+                .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
                 .pNext = nullptr,
-                .objectType = VK_DEBUG_REPORT_OBJECT_TYPE_BUFFER_EXT,
-                .object = (uint64)buffers[i].buffer,
+                .objectType = VK_OBJECT_TYPE_BUFFER,
+                .objectHandle = (uint64)buffers[i].buffer,
                 .pObjectName = this->name.c_str()
             };
-            //graphics->vkDebugMarkerSetObjectNameEXT(&nameInfo);
+            graphics->vkSetDebugUtilsObjectNameEXT(&nameInfo);
+            //std::cout << ": " << name;
         }
+        //std::cout << std::endl;
     }
 }
 

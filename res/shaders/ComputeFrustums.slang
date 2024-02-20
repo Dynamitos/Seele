@@ -26,9 +26,6 @@ void computeFrustums(ComputeShaderInput in)
 		topLeft + (in.dispatchThreadID.x + 1) * xStep + (in.dispatchThreadID.y + 1) * yStep
 	};
 	Frustum frustum;
-	frustum.basePlane.n = float3(0, 0, -1);
-	frustum.basePlane.d = 0;
-
 	frustum.sides[0] = computePlane(origin, corners[0], corners[2]);
 	frustum.sides[1] = computePlane(origin, corners[3], corners[1]);
 	frustum.sides[2] = computePlane(origin, corners[1], corners[0]);

@@ -39,9 +39,6 @@ void taskMain(
 		// Bottom
 		viewFrustum.sides[3].n = float3(0, 1, 0);
 		viewFrustum.sides[3].d = -1;
-		// Base
-		viewFrustum.basePlane.n = float3(0, 0, -1);
-		viewFrustum.basePlane.d = 0;
 	}
 	GroupMemoryBarrierWithGroupSync();
 	MeshData mesh = pScene.meshData[groupID];

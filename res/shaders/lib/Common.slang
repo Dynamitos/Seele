@@ -36,13 +36,8 @@ struct Plane
 struct Frustum
 {
     Plane sides[4];
-    Plane basePlane;
     bool pointInside(float3 point)
     {
-        if (!basePlane.pointInside(point))
-        {
-            return false;
-        }
         for(int p = 0; p < 4; ++p)
         {
             if(!sides[p].pointInside(point))
