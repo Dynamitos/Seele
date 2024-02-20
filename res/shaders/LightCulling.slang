@@ -89,18 +89,18 @@ void cullLights(ComputeShaderInput in)
     float fMinDepth = asfloat(uMinDepth);
     float fMaxDepth = asfloat(uMaxDepth);
 
-    float minDepthVS = fMinDepth;
-    float maxDepthVS = fMaxDepth;
-    float nearClipVS = 0.1f;
+    float minDepth = fMinDepth;
+    float maxDepth = fMaxDepth;
+    float nearClip = 0.1f;
 
-    Plane minPlane = {float3(0, 0, -1), -minDepthVS};
+    Plane minPlane = {float3(0, 0, -1), -minDepth};
 
     for ( uint i = in.groupIndex; i < pLightEnv.numPointLights; i += BLOCK_SIZE * BLOCK_SIZE )
     {
         PointLight light = pLightEnv.pointLights[i];
         float3 lightClip = light.getClipPosition();
         //TODO: why doesn't this check go through?
-        if(light.insideFrustum(groupFrustum, lightClip, nearClipVS, maxDepthVS))
+        if(light.insideFrustum(groupFrustum, lightClip, nearClip, maxDepth))
         {
             tAppendLight(i);
             if(!light.insidePlane(minPlane, lightClip))

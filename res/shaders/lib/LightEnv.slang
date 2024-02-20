@@ -26,7 +26,7 @@ struct PointLight : ILightEnv
     
     float3 illuminate<B:IBRDF>(LightingParameter params, B brdf)
     {
-        float3 lightDir_WS = position_WS.xyz - params.position_WS;
+        float3 lightDir_WS = params.position_WS - position_WS.xyz;
         float3 lightDir_TS = mul(params.tbn, lightDir_WS);
         float d = length(lightDir_TS);
         float illuminance = max(1 - d / colorRange.w, 0);

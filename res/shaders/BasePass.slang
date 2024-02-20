@@ -20,14 +20,18 @@ float4 fragmentMain(in FragmentParameter params) : SV_Target
     LightingParameter lightingParams = params.getLightingParameter();
     MaterialParameter materialParams = params.getMaterialParameter();
 	let brdf = pMaterial.prepare(materialParams);
+    uint2 tileIndex = uint2(floor(params.position_CS.xy / BLOCK_SIZE));
+    uint startOffset = pLightCullingData.oLightGrid[tileIndex].x;
+    uint lightCount = pLightCullingData.oLightGrid[tileIndex].y;
     float3 result = float3(0, 0, 0);
     for(int i = 0; i < pLightEnv.numDirectionalLights; ++i)
     {
         result += pLightEnv.directionalLights[i].illuminate(lightingParams, brdf);
     }
-    for(int i = 0; i < pLightEnv.numPointLights; ++i)
+    for(uint i = 0; i < lightCount; ++i)
     {
-        result += pLightEnv.pointLights[i].illuminate(lightingParams, brdf);
+        uint lightIndex = pLightCullingData.oLightIndexList[startOffset + lightCount];
+        result += pLightEnv.pointLights[lightIndex].illuminate(lightingParams, brdf);
     }
     return float4(result, 1.0f);
 }
