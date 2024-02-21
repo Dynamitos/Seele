@@ -5,11 +5,9 @@ import MaterialParameter;
 
 struct LightCullingData
 {
-    RWStructuredBuffer<uint> oLightIndexList;
-    RWStructuredBuffer<uint> tLightIndexList;
+    RWStructuredBuffer<uint> lightIndexList;
 
-    RWTexture2D<uint2> oLightGrid;
-    RWTexture2D<uint2> tLightGrid;
+    RWTexture2D<uint2> lightGrid;
 };
 layout(set=5)
 ParameterBlock<LightCullingData> pLightCullingData;
@@ -21,8 +19,8 @@ float4 fragmentMain(in FragmentParameter params) : SV_Target
     MaterialParameter materialParams = params.getMaterialParameter();
 	let brdf = pMaterial.prepare(materialParams);
     uint2 tileIndex = uint2(floor(params.position_CS.xy / BLOCK_SIZE));
-    uint startOffset = pLightCullingData.oLightGrid[tileIndex].x;
-    uint lightCount = pLightCullingData.oLightGrid[tileIndex].y;
+    uint startOffset = pLightCullingData.lightGrid[tileIndex].x;
+    uint lightCount = pLightCullingData.lightGrid[tileIndex].y;
     float3 result = float3(0, 0, 0);
     for(int i = 0; i < pLightEnv.numDirectionalLights; ++i)
     {
@@ -30,7 +28,7 @@ float4 fragmentMain(in FragmentParameter params) : SV_Target
     }
     for(uint i = 0; i < lightCount; ++i)
     {
-        uint lightIndex = pLightCullingData.oLightIndexList[startOffset + lightCount];
+        uint lightIndex = pLightCullingData.lightIndexList[startOffset + i];
         result += pLightEnv.pointLights[lightIndex].illuminate(lightingParams, brdf);
     }
     return float4(result, 1.0f);

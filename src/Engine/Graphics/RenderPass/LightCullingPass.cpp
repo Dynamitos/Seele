@@ -156,7 +156,7 @@ void LightCullingPass::publishOutputs()
             .size = (uint32)sizeof(uint32) 
                 * dispatchParams.numThreadGroups.x 
                 * dispatchParams.numThreadGroups.y 
-                * dispatchParams.numThreadGroups.z * 200,
+                * dispatchParams.numThreadGroups.z * 1024 * 16,
             .data = nullptr,
             .owner = Gfx::QueueType::COMPUTE
         },

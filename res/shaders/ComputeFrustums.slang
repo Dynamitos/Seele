@@ -13,23 +13,18 @@ struct ComputeShaderInput
 [shader("compute")]
 void computeFrustums(ComputeShaderInput in)
 {
-	const float3 topLeft = float3(-1, -1, -1);
-	const float3 topRight = float3(1, -1, -1);
-	const float3 bottomLeft = float3(-1, 1, -1);
-	const float3 origin = float3(0, 0, 0);
-	float3 xStep = (topRight - topLeft) / pDispatchParams.numThreads.x;
-	float3 yStep = (bottomLeft - topLeft) / pDispatchParams.numThreads.y;
+	float3 origin = float3(0, 0, 0);
 	float3 corners[4] = {
-		topLeft + (in.dispatchThreadID.x + 0) * xStep + (in.dispatchThreadID.y + 0) * yStep,
-		topLeft + (in.dispatchThreadID.x + 1) * xStep + (in.dispatchThreadID.y + 0) * yStep,
-		topLeft + (in.dispatchThreadID.x + 0) * xStep + (in.dispatchThreadID.y + 1) * yStep,
-		topLeft + (in.dispatchThreadID.x + 1) * xStep + (in.dispatchThreadID.y + 1) * yStep
+		screenToClip(float3(float2(in.dispatchThreadID.x + 0, in.dispatchThreadID.y + 0) * BLOCK_SIZE, -1.0f)),
+		screenToClip(float3(float2(in.dispatchThreadID.x + 1, in.dispatchThreadID.y + 0) * BLOCK_SIZE, -1.0f)),
+		screenToClip(float3(float2(in.dispatchThreadID.x + 0, in.dispatchThreadID.y + 1) * BLOCK_SIZE, -1.0f)),
+		screenToClip(float3(float2(in.dispatchThreadID.x + 1, in.dispatchThreadID.y + 1) * BLOCK_SIZE, -1.0f))
 	};
 	Frustum frustum;
-	frustum.sides[0] = computePlane(origin, corners[0], corners[2]);
-	frustum.sides[1] = computePlane(origin, corners[3], corners[1]);
-	frustum.sides[2] = computePlane(origin, corners[1], corners[0]);
-	frustum.sides[3] = computePlane(origin, corners[2], corners[3]);
+	frustum.sides[0] = computePlane(origin, corners[2], corners[1]);
+	frustum.sides[1] = computePlane(origin, corners[1], corners[3]);
+	frustum.sides[2] = computePlane(origin, corners[0], corners[1]);
+	frustum.sides[3] = computePlane(origin, corners[3], corners[2]);
 	if(in.dispatchThreadID.x < pDispatchParams.numThreads.x && in.dispatchThreadID.y < pDispatchParams.numThreads.y)
 	{
 		uint index = in.dispatchThreadID.x + (in.dispatchThreadID.y * pDispatchParams.numThreads.x);

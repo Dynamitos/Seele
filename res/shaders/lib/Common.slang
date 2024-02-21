@@ -12,15 +12,12 @@ struct ViewParameter
 layout(set = 0)
 ParameterBlock<ViewParameter> pViewParams;
 
- 
-// Convert screen space coordinates to view space.
-float4 screenToClip( float4 screen )
+float3 screenToClip(float3 screen)
 {
-    // Convert to normalized texture coordinates
     float2 texCoord = screen.xy / pViewParams.screenDimensions;
  
     // Convert to clip space 
-    return float4( float2( texCoord.x, 1.0f-texCoord.y ) * 2.0f - 1.0f, screen.z, screen.w );
+    return float3( float2( texCoord.x, 1.0f-texCoord.y ) * 2.0f - 1.0f, screen.z);
 }
 
 struct Plane

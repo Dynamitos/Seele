@@ -21,23 +21,6 @@ BasePass::BasePass(Gfx::PGraphics graphics, PScene scene)
     : RenderPass(graphics, scene)
     , descriptorSets(6)
 {
-    basePassLayout = graphics->createPipelineLayout();
-
-    basePassLayout->addDescriptorLayout(INDEX_VIEW_PARAMS, viewParamsLayout);
-    basePassLayout->addDescriptorLayout(INDEX_LIGHT_ENV, scene->getLightEnvironment()->getDescriptorLayout());
-
-    lightCullingLayout = graphics->createDescriptorLayout("BasePassLightCulling");
-    // oLightIndexList
-    lightCullingLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
-    // tLightIndexList
-    lightCullingLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
-    // oLightGrid
-    lightCullingLayout->addDescriptorBinding(2, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_IMAGE);
-    // tLightGrid
-    lightCullingLayout->addDescriptorBinding(3, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_IMAGE);
-    lightCullingLayout->create();
-
-    basePassLayout->addDescriptorLayout(INDEX_LIGHT_CULLING, lightCullingLayout);
     if (graphics->supportMeshShading())
     {
         graphics->getShaderCompiler()->registerRenderPass("BasePass", "MeshletBasePass", true, true, "BasePass", true, true, "MeshletBasePass");
@@ -57,6 +40,8 @@ void BasePass::beginFrame(const Component::Camera& cam)
     RenderPass::beginFrame(cam);
 
     lightCullingLayout->reset();
+    opaqueCulling = lightCullingLayout->allocateDescriptorSet();
+    transparentCulling = lightCullingLayout->allocateDescriptorSet();
 }
 
 void BasePass::render() 
@@ -79,13 +64,14 @@ void BasePass::render()
 
     descriptorSets[INDEX_VIEW_PARAMS] = viewParamsSet;
     descriptorSets[INDEX_LIGHT_ENV] = scene->getLightEnvironment()->getDescriptorSet();
-    descriptorSets[INDEX_LIGHT_CULLING] = lightCullingLayout->allocateDescriptorSet();
 
-    descriptorSets[INDEX_LIGHT_CULLING]->updateBuffer(0, oLightIndexList);
-    descriptorSets[INDEX_LIGHT_CULLING]->updateBuffer(1, tLightIndexList);
-    descriptorSets[INDEX_LIGHT_CULLING]->updateTexture(2, oLightGrid);
-    descriptorSets[INDEX_LIGHT_CULLING]->updateTexture(3, tLightGrid);
-    descriptorSets[INDEX_LIGHT_CULLING]->writeChanges();
+    opaqueCulling->updateBuffer(0, oLightIndexList);
+    opaqueCulling->updateTexture(1, oLightGrid);
+    transparentCulling->updateBuffer(0, tLightIndexList);
+    transparentCulling->updateTexture(1, tLightGrid);
+    opaqueCulling->writeChanges();
+    transparentCulling->writeChanges();
+    descriptorSets[INDEX_LIGHT_CULLING] = opaqueCulling;
 
     Gfx::ShaderPermutation permutation;
     if (graphics->supportMeshShading())
@@ -154,7 +140,6 @@ void BasePass::render()
                 Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
                 command->bindPipeline(pipeline);
             }
-
             descriptorSets[INDEX_VERTEX_DATA] = vertexData->getVertexDataSet();
             for (const auto& [_, instance] : materialData.instances)
             {
@@ -193,6 +178,19 @@ void BasePass::endFrame()
 
 void BasePass::publishOutputs() 
 {
+    basePassLayout = graphics->createPipelineLayout();
+
+    basePassLayout->addDescriptorLayout(INDEX_VIEW_PARAMS, viewParamsLayout);
+    basePassLayout->addDescriptorLayout(INDEX_LIGHT_ENV, scene->getLightEnvironment()->getDescriptorLayout());
+
+    lightCullingLayout = graphics->createDescriptorLayout("BasePassLightCulling");
+    // oLightIndexList
+    lightCullingLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    // oLightGrid
+    lightCullingLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_IMAGE);
+    lightCullingLayout->create();
+
+    basePassLayout->addDescriptorLayout(INDEX_LIGHT_CULLING, lightCullingLayout);
     colorAttachment = Gfx::RenderTargetAttachment(viewport,
         Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
         Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);

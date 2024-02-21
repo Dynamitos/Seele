@@ -24,7 +24,7 @@ struct GraphicsInitializer
         : applicationName("SeeleEngine")
         , engineName("SeeleEngine")
         , windowLayoutFile(nullptr)
-        , layers{}
+        , layers{"VK_LAYER_LUNARG_monitor"}
         , instanceExtensions{}
         , deviceExtensions{"VK_KHR_swapchain"}
         , windowHandle(nullptr)

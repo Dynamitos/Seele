@@ -26,6 +26,8 @@ private:
     Gfx::PTexture2D oLightGrid;
     Gfx::PTexture2D tLightGrid;
     
+    Gfx::PDescriptorSet opaqueCulling;
+    Gfx::PDescriptorSet transparentCulling;
     Array<Gfx::PDescriptorSet> descriptorSets;
     PCameraActor source;
     Gfx::OPipelineLayout basePassLayout;

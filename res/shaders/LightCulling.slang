@@ -99,7 +99,6 @@ void cullLights(ComputeShaderInput in)
     {
         PointLight light = pLightEnv.pointLights[i];
         float3 lightClip = light.getClipPosition();
-        //TODO: why doesn't this check go through?
         if(light.insideFrustum(groupFrustum, lightClip, nearClip, maxDepth))
         {
             tAppendLight(i);
