@@ -31,6 +31,7 @@ protected:
     {
         Matrix4 viewMatrix;
         Matrix4 projectionMatrix;
+        Matrix4 inverseProjection;
         Vector4 cameraPosition;
         Vector2 screenDimensions;
     } viewParams;

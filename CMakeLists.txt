@@ -94,7 +94,7 @@ target_link_libraries(AssetViewer PRIVATE Engine)
 target_include_directories(AssetViewer PRIVATE src/AssetViewer)
     
 if(MSVC)
-    set(_CRT_SECURE_NO_WARNINGS)
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
     target_compile_options(Engine PUBLIC /std:c++20 /Zi /MP14 /W4 /DEBUG /wd4505)
     target_compile_options(Editor PUBLIC /std:c++20 /Zi /MP14 /W4 /DEBUG)
     target_sources(Engine INTERFACE   

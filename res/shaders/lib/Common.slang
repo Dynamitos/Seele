@@ -6,18 +6,30 @@ struct ViewParameter
 {
     float4x4 viewMatrix;
     float4x4 projectionMatrix;
+    float4x4 inverseProjection;
     float4 cameraPos_WS;
     float2 screenDimensions;
 }
 layout(set = 0)
 ParameterBlock<ViewParameter> pViewParams;
 
-float3 screenToClip(float3 screen)
+float4 clipToView(float4 clip)
+{
+    float4 view = mul(pViewParams.inverseProjection, clip);
+
+    view = view / view.w;
+
+    return view;
+}
+
+float4 screenToView(float4 screen)
 {
     float2 texCoord = screen.xy / pViewParams.screenDimensions;
  
     // Convert to clip space 
-    return float3( float2( texCoord.x, 1.0f-texCoord.y ) * 2.0f - 1.0f, screen.z);
+    float4 clip = float4( float2( texCoord.x, 1.0f-texCoord.y ) * 2.0f - 1.0f, screen.z, screen.w);
+
+    return clipToView(clip);
 }
 
 struct Plane

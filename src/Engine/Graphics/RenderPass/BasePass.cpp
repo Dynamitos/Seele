@@ -169,7 +169,6 @@ void BasePass::render()
     }
     graphics->executeCommands(commands);
     graphics->endRenderPass();
-    vkDeviceWaitIdle(((Vulkan::Graphics*)graphics.getHandle())->getDevice());
 }
 
 void BasePass::endFrame() 

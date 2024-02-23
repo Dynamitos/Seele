@@ -89,20 +89,20 @@ void cullLights(ComputeShaderInput in)
     float fMinDepth = asfloat(uMinDepth);
     float fMaxDepth = asfloat(uMaxDepth);
 
-    float minDepth = fMinDepth;
-    float maxDepth = fMaxDepth;
-    float nearClip = 0.1f;
+    float minDepthVS = clipToView(float4(0, 0, fMinDepth, 1)).z;
+    float maxDepthVS = clipToView(float4(0, 0, fMaxDepth, 1)).z;
+    float nearClipVS = clipToView(float4(0, 0, 0, 1)).z;
 
-    Plane minPlane = {float3(0, 0, -1), -minDepth};
+    Plane minPlane = {float3(0, 0, -1), -minDepthVS};
 
     for ( uint i = in.groupIndex; i < pLightEnv.numPointLights; i += BLOCK_SIZE * BLOCK_SIZE )
     {
         PointLight light = pLightEnv.pointLights[i];
-        float3 lightClip = light.getClipPosition();
-        if(light.insideFrustum(groupFrustum, lightClip, nearClip, maxDepth))
+        float3 light_VS = light.getViewPosition();
+        if(light.insideFrustum(groupFrustum, light_VS, nearClipVS, maxDepthVS))
         {
             tAppendLight(i);
-            if(!light.insidePlane(minPlane, lightClip))
+            if(!light.insidePlane(minPlane, light_VS))
             {
                 oAppendLight(i);
             }

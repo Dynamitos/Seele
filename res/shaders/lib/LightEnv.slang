@@ -32,27 +32,27 @@ struct PointLight : ILightEnv
         float illuminance = max(1 - d / colorRange.w, 0);
         return illuminance * brdf.evaluate(params.tbn, params.viewDir_TS, -normalize(lightDir_TS), colorRange.xyz);
     }
-    float3 getClipPosition()
+    float3 getViewPosition()
     {
-        float4 position_CS = mul(pViewParams.projectionMatrix, mul(pViewParams.viewMatrix, position_WS));
-        return position_CS.xyz / position_CS.w;
+        float4 position_VS = mul(pViewParams.viewMatrix, position_WS);
+        return position_VS.xyz / position_VS.w;
     }
 
-    bool insidePlane(Plane plane, float3 position_CS)
+    bool insidePlane(Plane plane, float3 position_VS)
     {
-        return dot(plane.n, position_CS) - plane.d < -colorRange.w;
+        return dot(plane.n, position_VS) - plane.d < -colorRange.w;
     }
 
-    bool insideFrustum(Frustum frustum, float3 position_CS, float minDepth, float maxDepth)
+    bool insideFrustum(Frustum frustum, float3 position_VS, float minDepth, float maxDepth)
     {
         bool result = true;
-        if(position_CS.z - colorRange.w > minDepth || position_CS.z + colorRange.w < maxDepth)
+        if(position_VS.z - colorRange.w > minDepth || position_VS.z + colorRange.w < maxDepth)
         {
             result = false;
         }
         for(int i = 0; i < 4 && result; ++i)
         {
-            if(insidePlane(frustum.sides[i], position_CS))
+            if(insidePlane(frustum.sides[i], position_VS))
             {
                 result = false;
             }
