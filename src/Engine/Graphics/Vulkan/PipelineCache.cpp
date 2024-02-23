@@ -94,9 +94,12 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo gf
     PVertexShader vertexShader = gfxInfo.vertexShader.cast<VertexShader>();
     stageInfos[stageCount++] = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
         .stage = VK_SHADER_STAGE_VERTEX_BIT,
         .module = vertexShader->getModuleHandle(),
         .pName = vertexShader->getEntryPointName(),
+        .pSpecializationInfo = nullptr,
     };
 
     if (gfxInfo.fragmentShader != nullptr)
@@ -105,9 +108,12 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo gf
 
         stageInfos[stageCount++] = {
             .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+            .pNext = nullptr,
+            .flags = 0,
             .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
             .module = fragment->getModuleHandle(),
             .pName = fragment->getEntryPointName(),
+            .pSpecializationInfo = nullptr,
         };
     }
     hash = CRC::Calculate(stageInfos, sizeof(stageInfos), CRC::CRC_32(), hash);
@@ -124,7 +130,9 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo gf
         .pNext = nullptr,
         .flags = 0,
         .viewportCount = 1,
+        .pViewports = nullptr,
         .scissorCount = 1,
+        .pScissors = nullptr,
     };
     hash = CRC::Calculate(&viewportInfo, sizeof(viewportInfo), CRC::CRC_32(), hash);
     VkPipelineRasterizationStateCreateInfo rasterizationState = {
@@ -198,6 +206,7 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo gf
         .pAttachments = blendAttachments.data(),
     };
     std::memcpy(blendState.blendConstants, gfxInfo.colorBlend.blendConstants.data(), sizeof(blendState.blendConstants));
+    hash = CRC::Calculate(&blendState, sizeof(blendState), CRC::CRC_32(), hash);
 
     uint32 numDynamicEnabled = 0;
     StaticArray<VkDynamicState, 2> dynamicEnabled;
@@ -208,6 +217,7 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo gf
     VkPipelineDynamicStateCreateInfo dynamicState = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
         .pNext = nullptr,
+        .flags = 0,
         .dynamicStateCount = (uint32)dynamicEnabled.size(),
         .pDynamicStates = dynamicEnabled.data(),
     };

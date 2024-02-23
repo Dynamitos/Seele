@@ -13,4 +13,5 @@ public:
     const Component::Mesh& getMesh() const;
 private:
 };
+DEFINE_REF(StaticMeshActor)
 } // namespace Seele

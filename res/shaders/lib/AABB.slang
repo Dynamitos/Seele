@@ -20,13 +20,11 @@ struct AABB
         for(int i = 0; i < 8; ++i)
         {
             float3 adjusted = corners[i].xyz / corners[i].w;
-            if(adjusted.z > 0)
+            if(frustum.pointInside(adjusted))
             {
-                if(frustum.pointInside(adjusted))
-                {
-                    return true;
-                }
+                return true;
             }
+            
         }
         return false;
 	}

@@ -48,7 +48,7 @@ void taskMain(
 		{
 			uint m = mesh.meshletOffset + i;
 			MeshletDescription meshlet = pScene.meshletInfos[m];
-			if(meshlet.boundingBox.insideFrustum(localToClip, viewFrustum))
+			//if(meshlet.boundingBox.insideFrustum(localToClip, viewFrustum))
 			{
 				uint index;
 				InterlockedAdd(head, 1, index);

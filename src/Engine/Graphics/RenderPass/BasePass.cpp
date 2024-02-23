@@ -103,7 +103,7 @@ void BasePass::render()
             permutation.setMaterial(materialData.material->getName());
             Gfx::PermutationId id(permutation);
 
-            Gfx::PRenderCommand command = graphics->createRenderCommand("DepthRender");
+            Gfx::PRenderCommand command = graphics->createRenderCommand("BaseRender");
             command->setViewport(viewport);
             Gfx::OPipelineLayout layout = graphics->createPipelineLayout(basePassLayout);
             layout->addDescriptorLayout(INDEX_MATERIAL, materialData.material->getDescriptorLayout());
