@@ -111,6 +111,11 @@ void Graphics::endRenderPass()
     getGraphicsCommands()->submitCommands();
 }
 
+void Graphics::waitDeviceIdle()
+{
+    vkDeviceWaitIdle(handle);    
+}
+
 void Graphics::executeCommands(const Array<Gfx::PRenderCommand>& commands)
 {
     getGraphicsCommands()->getCommands()->executeCommands(commands);

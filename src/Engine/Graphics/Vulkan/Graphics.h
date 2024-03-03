@@ -37,6 +37,7 @@ public:
     virtual Gfx::ORenderPass createRenderPass(Gfx::RenderTargetLayout layout, Array<Gfx::SubPassDependency> dependencies, Gfx::PViewport renderArea) override;
     virtual void beginRenderPass(Gfx::PRenderPass renderPass) override;
     virtual void endRenderPass() override;
+    virtual void waitDeviceIdle() override;
 
     virtual void executeCommands(const Array<Gfx::PRenderCommand>& commands) override;
     virtual void executeCommands(const Array<Gfx::PComputeCommand>& commands) override;

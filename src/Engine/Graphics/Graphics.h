@@ -54,6 +54,7 @@ public:
     virtual ORenderPass createRenderPass(RenderTargetLayout layout, Array<SubPassDependency> dependencies, PViewport renderArea) = 0;
     virtual void beginRenderPass(PRenderPass renderPass) = 0;
     virtual void endRenderPass() = 0;
+    virtual void waitDeviceIdle() = 0;
 
     virtual void executeCommands(const Array<PRenderCommand>& commands) = 0;
     virtual void executeCommands(const Array<PComputeCommand>& commands) = 0;

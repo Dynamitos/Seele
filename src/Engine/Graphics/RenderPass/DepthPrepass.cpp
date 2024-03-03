@@ -9,8 +9,6 @@
 #include "Math/Vector.h"
 #include "RenderGraph.h"
 #include "Graphics/Command.h"
-#include <vulkan/vulkan.h>
-#include "Graphics/Vulkan/Graphics.h"
 
 using namespace Seele;
 
@@ -131,9 +129,8 @@ void DepthPrepass::render()
             commands.add(command);
         }
     }
-    graphics->executeCommands(commands);
+    //graphics->executeCommands(commands);
     graphics->endRenderPass();
-    //vkDeviceWaitIdle(((Vulkan::Graphics*)graphics.getHandle())->getDevice());
 }
 
 void DepthPrepass::endFrame() 

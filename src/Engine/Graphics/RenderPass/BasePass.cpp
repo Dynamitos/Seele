@@ -12,8 +12,6 @@
 #include "Material/MaterialInstance.h"
 #include "Graphics/Descriptor.h"
 #include "Graphics/Command.h"
-#include <vulkan/vulkan.h>
-#include "Graphics/Vulkan/Graphics.h"
 
 using namespace Seele;
 
