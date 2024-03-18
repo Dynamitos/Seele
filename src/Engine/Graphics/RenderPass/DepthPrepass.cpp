@@ -129,7 +129,7 @@ void DepthPrepass::render()
             commands.add(command);
         }
     }
-    //graphics->executeCommands(commands);
+    graphics->executeCommands(commands);
     graphics->endRenderPass();
 }
 

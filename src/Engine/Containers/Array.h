@@ -60,6 +60,11 @@ public:
         {
             return (int)(p - other.p);
         }
+        constexpr IteratorBase& operator-=(difference_type other)
+        {
+            p-=other;
+            return *this;
+        }
         constexpr IteratorBase& operator+=(difference_type other)
         {
             p+=other;

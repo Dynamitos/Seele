@@ -20,7 +20,7 @@ set(EXTERNAL_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/external)
 set(CMAKE_TOOLCHAIN_FILE ${EXTERNAL_ROOT}/vcpkg/scripts/buildsystems/vcpkg.cmake)
 
 set(CRCPP_ROOT ${EXTERNAL_ROOT}/CRCpp)
-set(TTFPARSER_ROOT ${EXTERNAL_ROOT}/ttf-parser)
+set(METAL_ROOT ${EXTERNAL_ROOT}/metal-cpp)
 
 set(Boost_NO_WARN_NEW_VERSIONS 1)
 
@@ -77,6 +77,7 @@ target_link_libraries(Engine PUBLIC GPUOpen::VulkanMemoryAllocator)
 target_link_libraries(Engine PUBLIC shader-slang)
 if(APPLE)
     target_link_directories(Engine PUBLIC /usr/local/lib)
+    target_link_libraries(Engine PUBLIC metal)
 endif()
 if(UNIX)
     target_link_libraries(Engine PUBLIC Threads::Threads)
@@ -142,6 +143,7 @@ install(
         Editor
         Engine
         crcpp
+        metal
     EXPORT 
         EngineTargets
     FILE_SET HEADERS

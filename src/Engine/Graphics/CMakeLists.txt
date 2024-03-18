@@ -57,3 +57,6 @@ target_sources(Engine
 
 add_subdirectory(RenderPass/)
 add_subdirectory(Vulkan/)
+if(APPLE)
+    add_subdirectory(Metal/)
+endif()
