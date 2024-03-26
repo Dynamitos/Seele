@@ -1,4 +1,6 @@
 #include "Graphics.h"
+#include "Metal/MTLDevice.hpp"
+#include "Metal/MTLRenderCommandEncoder.hpp"
 #define NS_PRIVATE_IMPLEMENTATION
 #define CA_PRIVATE_IMPLEMENTATION
 #define MTL_PRIVATE_IMPLEMENTATION
@@ -19,6 +21,7 @@ Graphics::~Graphics()
 }
 void Graphics::init(GraphicsInitializer initializer)
 {
+  device = MTL::CreateSystemDefaultDevice();
 }
 
 Gfx::OWindow Graphics::createWindow(const WindowCreateInfo &createInfo)

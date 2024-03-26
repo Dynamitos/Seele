@@ -1,5 +1,4 @@
 #pragma once
-#include "Foundation/Foundation.hpp"
 #include "Metal/Metal.hpp"
 #include "Graphics/Graphics.h"
 
@@ -54,7 +53,6 @@ public:
     virtual void resolveTexture(Gfx::PTexture source, Gfx::PTexture destination) = 0;
 protected:
     MTL::Device* device;
-    NS::Application* app;
 };
 } // namespace Metal  
 } // namespace Seele
