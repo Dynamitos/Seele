@@ -60,6 +60,19 @@ void LightEnvironment::addPointLight(Component::PointLight pointLight)
 
 void LightEnvironment::commit()
 {
+
+    lightEnvBuffer->pipelineBarrier(
+        Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+        Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT
+    );
+    pointLights->pipelineBarrier( 
+        Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+        Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT
+    );
+    directionalLights->pipelineBarrier(
+        Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+        Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT
+    );
     lightEnv.numDirectionalLights = dirs.size();
     lightEnv.numPointLights = points.size();
     lightEnvBuffer->updateContents(DataSource{
@@ -102,6 +115,18 @@ void LightEnvironment::commit()
             .data = (uint8*)points.data(),
             });
     }
+    lightEnvBuffer->pipelineBarrier(
+        Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
+        Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_ALL_COMMANDS_BIT
+    );
+    pointLights->pipelineBarrier(
+        Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
+        Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_ALL_COMMANDS_BIT
+    );
+    directionalLights->pipelineBarrier(
+        Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
+        Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_ALL_COMMANDS_BIT
+    );
     set->updateBuffer(0, lightEnvBuffer);
     set->updateBuffer(1, directionalLights);
     set->updateBuffer(2, pointLights);
