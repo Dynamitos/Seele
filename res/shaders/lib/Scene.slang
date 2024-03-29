@@ -1,8 +1,8 @@
-import AABB;
+import Bounding;
 
 struct MeshletDescription
 {
-	AABB boundingBox;
+	BoundingSphere bounding;
 	uint32_t vertexCount;
 	uint32_t primitiveCount;
 	uint32_t vertexOffset;
@@ -13,7 +13,7 @@ struct MeshletDescription
 
 struct MeshData
 {
-	AABB boundingBox;
+	BoundingSphere bounding;
     uint32_t numMeshlets;
     uint32_t meshletOffset;
     uint32_t firstIndex;

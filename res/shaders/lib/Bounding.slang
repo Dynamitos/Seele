@@ -1,5 +1,30 @@
 import Common;
 
+struct BoundingSphere
+{
+    float4 centerRadius;
+    float3 getCenter()
+    {
+        return centerRadius.xyz;
+    }
+    float getRadius()
+    {
+        return centerRadius.w;
+    }
+    bool pointInside(float3 p)
+    {
+        if(abs(getCenter() - p) > getRadius())
+        {
+            return false;
+        }
+        return true;
+    }
+    bool insideFrustum(float4x4 transform, Frustum frustum)
+    {
+        
+    }
+};
+
 struct AABB
 {
 	float3 min;
