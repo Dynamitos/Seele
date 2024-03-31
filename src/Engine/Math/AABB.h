@@ -5,12 +5,39 @@
 #include "Graphics/DebugVertex.h"
 namespace Seele
 {
+struct BoundingSphere
+{
+    Vector center;
+    float radius;
+};
 struct AABB
 {
     Vector min = Vector(std::numeric_limits<float>::max());
     float pad0; // So that it can be used directly in shaders
     Vector max = Vector(std::numeric_limits<float>::lowest());// cause of reasons
     float pad1;
+    BoundingSphere toSphere() const
+    {
+        Vector center = (min + max) / 2.f;
+        StaticArray<Vector, 8> corners;
+        corners[0] = Vector(min.x, min.y, min.z);
+        corners[1] = Vector(min.x, min.y, max.z);
+        corners[2] = Vector(min.x, max.y, min.z);
+        corners[3] = Vector(min.x, max.y, max.z);
+        corners[4] = Vector(max.x, min.y, min.z);
+        corners[5] = Vector(max.x, min.y, max.z);
+        corners[6] = Vector(max.x, max.y, min.z);
+        corners[7] = Vector(max.x, max.y, max.z);
+        float radius = 0;
+        for (const auto& corner : corners)
+        {
+            radius = std::max<float>(radius, glm::length(center - corner));
+        }
+        return BoundingSphere{
+            .center = center,
+            .radius = radius,
+        };
+    }
     void visualize(Array<DebugVertex>& vertices) const
     {
         StaticArray<DebugVertex, 8> corners;

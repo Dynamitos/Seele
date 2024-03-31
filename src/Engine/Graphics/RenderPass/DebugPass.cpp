@@ -56,6 +56,7 @@ void DebugPass::render()
     renderCommand->draw((uint32)gDebugVertices.size(), 1, 0, 0);
     graphics->executeCommands(Array{renderCommand});
     graphics->endRenderPass();
+    gDebugVertices.clear();
 }
 
 void DebugPass::endFrame()
@@ -80,15 +81,41 @@ void DebugPass::createRenderPass()
         .depthAttachment = depthAttachment,
     };
 
-    Gfx::SubPassDependency dependency = {
-        .srcSubpass = ~0U,
-        .dstSubpass = 0,
-        .srcStage = Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-        .dstStage = Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
-        .srcAccess = Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-        .dstAccess = Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+    Array<Gfx::SubPassDependency> dependency = {
+        {
+            .srcSubpass = ~0U,
+            .dstSubpass = 0,
+            .srcStage = Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+            .dstStage = Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+            .srcAccess = Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+            .dstAccess = Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+        },
+        {
+            .srcSubpass = ~0U,
+            .dstSubpass = 0,
+            .srcStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+            .dstStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+            .srcAccess = Gfx::SE_ACCESS_NONE,
+            .dstAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+        },
+        {
+            .srcSubpass = 0,
+            .dstSubpass = ~0U,
+            .srcStage = Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+            .dstStage = Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+            .srcAccess = Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+            .dstAccess = Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+        },
+        {
+            .srcSubpass = 0,
+            .dstSubpass = ~0U,
+            .srcStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+            .dstStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+            .srcAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+            .dstAccess = Gfx::SE_ACCESS_NONE,
+        },
     };
-    renderPass = graphics->createRenderPass(std::move(layout), {dependency}, viewport);
+    renderPass = graphics->createRenderPass(std::move(layout), dependency, viewport);
     
     Gfx::OPipelineLayout pipelineLayout = graphics->createPipelineLayout();
     pipelineLayout->addDescriptorLayout(0, viewParamsLayout);
@@ -138,5 +165,7 @@ void DebugPass::createRenderPass()
     gfxInfo.topology = Gfx::SE_PRIMITIVE_TOPOLOGY_LINE_LIST;
     gfxInfo.pipelineLayout = std::move(pipelineLayout);
     gfxInfo.renderPass = renderPass;
+    gfxInfo.colorBlend.attachmentCount = 1;
+    gfxInfo.rasterizationState.lineWidth = 5.f;
     pipeline = graphics->createGraphicsPipeline(std::move(gfxInfo));
 }

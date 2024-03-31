@@ -44,6 +44,43 @@ void VertexData::updateMesh(PMesh mesh, Component::Transform& transform)
             },
             .data = data,
             });
+        for (size_t i = 0; i < data.numMeshlets; ++i)
+        {
+            auto bounding = meshlets[data.meshletOffset + i].bounding;
+            StaticArray<Vector, 8> corners;
+            corners[0] = transform.toMatrix() * Vector4(bounding.min.x, bounding.min.y, bounding.min.z, 1);
+            corners[1] = transform.toMatrix() * Vector4(bounding.min.x, bounding.min.y, bounding.max.z, 1);
+            corners[2] = transform.toMatrix() * Vector4(bounding.min.x, bounding.max.y, bounding.min.z, 1);
+            corners[3] = transform.toMatrix() * Vector4(bounding.min.x, bounding.max.y, bounding.max.z, 1);
+            corners[4] = transform.toMatrix() * Vector4(bounding.max.x, bounding.min.y, bounding.min.z, 1);
+            corners[5] = transform.toMatrix() * Vector4(bounding.max.x, bounding.min.y, bounding.max.z, 1);
+            corners[6] = transform.toMatrix() * Vector4(bounding.max.x, bounding.max.y, bounding.min.z, 1);
+            corners[7] = transform.toMatrix() * Vector4(bounding.max.x, bounding.max.y, bounding.max.z, 1);
+            addDebugVertex(DebugVertex{ .position = corners[0], .color = meshlets[data.meshletOffset + i].color });
+            addDebugVertex(DebugVertex{ .position = corners[1], .color = meshlets[data.meshletOffset + i].color });
+            addDebugVertex(DebugVertex{ .position = corners[0], .color = meshlets[data.meshletOffset + i].color });
+            addDebugVertex(DebugVertex{ .position = corners[2], .color = meshlets[data.meshletOffset + i].color });
+            addDebugVertex(DebugVertex{ .position = corners[1], .color = meshlets[data.meshletOffset + i].color });
+            addDebugVertex(DebugVertex{ .position = corners[3], .color = meshlets[data.meshletOffset + i].color });
+            addDebugVertex(DebugVertex{ .position = corners[2], .color = meshlets[data.meshletOffset + i].color });
+            addDebugVertex(DebugVertex{ .position = corners[3], .color = meshlets[data.meshletOffset + i].color });
+            addDebugVertex(DebugVertex{ .position = corners[0], .color = meshlets[data.meshletOffset + i].color });
+            addDebugVertex(DebugVertex{ .position = corners[4], .color = meshlets[data.meshletOffset + i].color });
+            addDebugVertex(DebugVertex{ .position = corners[1], .color = meshlets[data.meshletOffset + i].color });
+            addDebugVertex(DebugVertex{ .position = corners[5], .color = meshlets[data.meshletOffset + i].color });
+            addDebugVertex(DebugVertex{ .position = corners[2], .color = meshlets[data.meshletOffset + i].color });
+            addDebugVertex(DebugVertex{ .position = corners[6], .color = meshlets[data.meshletOffset + i].color });
+            addDebugVertex(DebugVertex{ .position = corners[3], .color = meshlets[data.meshletOffset + i].color });
+            addDebugVertex(DebugVertex{ .position = corners[7], .color = meshlets[data.meshletOffset + i].color });
+            addDebugVertex(DebugVertex{ .position = corners[4], .color = meshlets[data.meshletOffset + i].color });
+            addDebugVertex(DebugVertex{ .position = corners[5], .color = meshlets[data.meshletOffset + i].color });
+            addDebugVertex(DebugVertex{ .position = corners[4], .color = meshlets[data.meshletOffset + i].color });
+            addDebugVertex(DebugVertex{ .position = corners[6], .color = meshlets[data.meshletOffset + i].color });
+            addDebugVertex(DebugVertex{ .position = corners[6], .color = meshlets[data.meshletOffset + i].color });
+            addDebugVertex(DebugVertex{ .position = corners[7], .color = meshlets[data.meshletOffset + i].color });
+            addDebugVertex(DebugVertex{ .position = corners[5], .color = meshlets[data.meshletOffset + i].color });
+            addDebugVertex(DebugVertex{ .position = corners[7], .color = meshlets[data.meshletOffset + i].color });
+        }
     }
     matInstanceData.materialInstance = referencedInstance;
     referencedInstance->updateDescriptor();
@@ -127,7 +164,7 @@ void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet>
             primitiveIndices.resize(primitiveOffset + (m.numPrimitives * 3));
             std::memcpy(primitiveIndices.data() + primitiveOffset, m.primitiveLayout, m.numPrimitives * 3 * sizeof(uint8));
             meshlets.add(MeshletDescription{
-                .boundingBox = m.boundingBox,
+                .bounding = m.boundingBox,
                 .vertexCount = m.numVertices,
                 .primitiveCount = m.numPrimitives,
                 .vertexOffset = vertexOffset,
@@ -136,7 +173,7 @@ void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet>
                 });
         }
         meshData[id].add(MeshData{
-            .boundingBox = meshAABB,
+            .bounding = meshAABB,
             .numMeshlets = numMeshlets,
             .meshletOffset = meshletOffset,
             .indicesOffset = (uint32)meshOffsets[id],

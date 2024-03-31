@@ -2,7 +2,7 @@ import Common;
 import VertexData;
 import MaterialParameter;
 
-struct StaticMeshVertexData : IVertexData
+struct DebugVertexData : IVertexData
 {
 	VertexAttributes getAttributes(uint index)
 	{

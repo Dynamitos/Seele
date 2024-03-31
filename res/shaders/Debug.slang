@@ -4,25 +4,26 @@ struct DebugVertex
 {
 	float3 position;
 	float3 color;
-}
-
-struct VertexOutput
-{
-	float4 clipPosition : SV_Position;
-	float3 color : COLOR0;
 };
 
-[shader("vertex")]
-VertexOutput vertexMain(DebugVertex input)
+struct Params
 {
-	VertexOutput output;
-	output.clipPosition = mul(pViewParams.projectionMatrix, mul(pViewParams.viewMatrix, float4(input.position, 1.0f)));
-	output.color = input.color;
-	return output;
+	float4 pos: SV_Position;
+	float3 color: COLOR0;
+}
+
+[shader("vertex")]
+Params vertexMain(
+	DebugVertex vert
+){
+	Params result;
+	result.pos = mul(pViewParams.projectionMatrix, mul(pViewParams.viewMatrix, float4(vert.position, 1)));
+	result.color = vert.color;
+	return result;
 }
 
 [shader("pixel")]
-float4 fragmentMain(VertexOutput input)
+float4 fragmentMain(in Params params) : SV_Target
 {
-	return float4(input.color, 1.0f);
+	return float4(params.color, 1);
 }

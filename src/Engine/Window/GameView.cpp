@@ -19,8 +19,8 @@ GameView::GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreate
     , renderGraph(RenderGraphBuilder::build(
         DepthPrepass(graphics, scene),
         LightCullingPass(graphics, scene),
-        BasePass(graphics, scene)
-        //DebugPass(graphics, scene),
+        BasePass(graphics, scene),
+        DebugPass(graphics, scene)
         //SkyboxRenderPass(graphics, scene)
     ))
 {

@@ -12,7 +12,7 @@ struct MeshPayload
 
 groupshared MeshPayload p;
 groupshared uint head;
-groupshared float4x4 localToClip;
+groupshared float4x4 localToView;
 groupshared Frustum viewFrustum;
 
 [numthreads(TASK_GROUP_SIZE, 1, 1)]
@@ -26,19 +26,18 @@ void taskMain(
 	if(threadID == 0)
 	{
 		head = 0;
-		localToClip = mul(pViewParams.projectionMatrix, mul(pViewParams.viewMatrix, instance.transformMatrix));
-		// Left
-		viewFrustum.sides[0].n = float3(1, 0, 0);
-		viewFrustum.sides[0].d = -1;
-		// Right
-		viewFrustum.sides[1].n = float3(-1, 0, 0);
-		viewFrustum.sides[1].d = -1;
-		// Top
-		viewFrustum.sides[2].n = float3(0, -1, 0);
-		viewFrustum.sides[2].d = -1;
-		// Bottom
-		viewFrustum.sides[3].n = float3(0, 1, 0);
-		viewFrustum.sides[3].d = -1;
+		localToView = mul(pViewParams.viewMatrix, instance.transformMatrix);
+		float3 origin = float3(0, 0, 0);
+		float3 corners[4] = {
+			screenToView(float4(pViewParams.screenDimensions, -1.0f, 1.0f)).xyz,
+			screenToView(float4(pViewParams.screenDimensions, -1.0f, 1.0f)).xyz,
+			screenToView(float4(pViewParams.screenDimensions, -1.0f, 1.0f)).xyz,
+			screenToView(float4(pViewParams.screenDimensions, -1.0f, 1.0f)).xyz
+		};
+		viewFrustum.sides[0] = computePlane(origin, corners[2], corners[0]);
+		viewFrustum.sides[1] = computePlane(origin, corners[1], corners[3]);
+		viewFrustum.sides[2] = computePlane(origin, corners[0], corners[1]);
+		viewFrustum.sides[3] = computePlane(origin, corners[3], corners[2]);
 	}
 	GroupMemoryBarrierWithGroupSync();
 	MeshData mesh = pScene.meshData[groupID];
@@ -48,7 +47,7 @@ void taskMain(
 		{
 			uint m = mesh.meshletOffset + i;
 			MeshletDescription meshlet = pScene.meshletInfos[m];
-			//if(meshlet.boundingBox.insideFrustum(localToClip, viewFrustum))
+			if(meshlet.bounding.insideFrustum(localToView, viewFrustum))
 			{
 				uint index;
 				InterlockedAdd(head, 1, index);

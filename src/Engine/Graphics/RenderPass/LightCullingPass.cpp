@@ -52,7 +52,7 @@ void LightCullingPass::beginFrame(const Component::Camera& cam)
 void LightCullingPass::render() 
 {
     depthAttachment->pipelineBarrier(
-        Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT | Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+        Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
         Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
     depthAttachment->transferOwnership(Gfx::QueueType::COMPUTE);
     cullingDescriptorSet->updateTexture(0, depthAttachment);
@@ -70,6 +70,7 @@ void LightCullingPass::render()
     Array<Gfx::PComputeCommand> commands = {computeCommand};
     //std::cout << "Execute" << std::endl;
     graphics->executeCommands(commands);
+    graphics->waitDeviceIdle();
 }
 
 void LightCullingPass::endFrame() 

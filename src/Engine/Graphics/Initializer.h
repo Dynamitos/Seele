@@ -194,7 +194,7 @@ struct ColorBlendState
         SeBlendFactor           srcAlphaBlendFactor = Gfx::SE_BLEND_FACTOR_SRC_ALPHA;
         SeBlendFactor           dstAlphaBlendFactor = Gfx::SE_BLEND_FACTOR_SRC_ALPHA;
         SeBlendOp               alphaBlendOp = Gfx::SE_BLEND_OP_ADD;
-        SeColorComponentFlags   colorWriteMask = 0;
+        SeColorComponentFlags   colorWriteMask = Gfx::SE_COLOR_COMPONENT_R_BIT | Gfx::SE_COLOR_COMPONENT_G_BIT | Gfx::SE_COLOR_COMPONENT_B_BIT | Gfx::SE_COLOR_COMPONENT_A_BIT;
     };
     uint32                              logicOpEnable;
     SeLogicOp                           logicOp = Gfx::SE_LOGIC_OP_OR;

@@ -11,17 +11,20 @@ struct BoundingSphere
     {
         return centerRadius.w;
     }
-    bool pointInside(float3 p)
-    {
-        if(abs(getCenter() - p) > getRadius())
-        {
-            return false;
-        }
-        return true;
-    }
     bool insideFrustum(float4x4 transform, Frustum frustum)
     {
-        
+        float3 transformed = mul(transform, float4(getCenter(), 1)).xyz;
+        float maxScale = max(max(transform[0][0], transform[1][1]), transform[2][2]);
+        float scaledRange = getRadius() * maxScale;
+        bool result = true;
+        for(int i = 0; i < 4 && result; ++i)
+        {
+            if(dot(frustum.sides[i].n, transformed) - frustum.sides[i].d < scaledRange)
+            {
+                result = false;
+            }
+        }
+        return result;
     }
 };
 
@@ -45,7 +48,7 @@ struct AABB
         for(int i = 0; i < 8; ++i)
         {
             float3 adjusted = corners[i].xyz / corners[i].w;
-            if(frustum.pointInside(adjusted))
+            if(frustum.pointInside(corners[i].xyz))
             {
                 return true;
             }

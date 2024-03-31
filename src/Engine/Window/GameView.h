@@ -35,8 +35,8 @@ protected:
     RenderGraph<
         DepthPrepass,
 		LightCullingPass,
-        BasePass
-		//DebugPass,
+        BasePass,
+		DebugPass
 		//SkyboxRenderPass
 		> renderGraph;
 
