@@ -47,7 +47,7 @@ void taskMain(
 		{
 			uint m = mesh.meshletOffset + i;
 			MeshletDescription meshlet = pScene.meshletInfos[m];
-			if(meshlet.bounding.insideFrustum(localToView, viewFrustum))
+			//if(meshlet.bounding.insideFrustum(localToView, viewFrustum))
 			{
 				uint index;
 				InterlockedAdd(head, 1, index);
@@ -72,41 +72,23 @@ void meshMain(
 	in uint threadID: SV_GroupIndex,
 	in uint groupID: SV_GroupID,
 	in payload MeshPayload meshPayload,
-	out Vertices<FragmentParameter, MAX_VERTICES> vertices, 
-	out Indices<uint3, MAX_PRIMITIVES> indices
+	OutputVertices<FragmentParameter, MAX_VERTICES> vertices, 
+	OutputIndices<uint3, MAX_PRIMITIVES> indices
 ){
 	InstanceData inst = pScene.instances[meshPayload.instanceId[groupID]];
 	MeshData md = pScene.meshData[meshPayload.instanceId[groupID]];
 	MeshletDescription m = pScene.meshletInfos[meshPayload.meshletId[groupID]];
 	SetMeshOutputCounts(m.vertexCount, m.primitiveCount);
 	
-	uint p = min(threadID, m.primitiveCount - 1);
+	for(uint i = threadID; i < MAX_PRIMITIVES; i += MESH_GROUP_SIZE)
 	{
-		uint local_idx0 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 0];
-		uint local_idx1 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 1];
-		uint local_idx2 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 2];
-		indices[p] = uint3(local_idx0, local_idx1, local_idx2);
-	}
-	p = min(threadID + 32, m.primitiveCount - 1);
-	{
-		uint local_idx0 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 0];
-		uint local_idx1 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 1];
-		uint local_idx2 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 2];
-		indices[p] = uint3(local_idx0, local_idx1, local_idx2);
-	}
-	p = min(threadID + 64, m.primitiveCount - 1);
-	{
-		uint local_idx0 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 0];
-		uint local_idx1 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 1];
-		uint local_idx2 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 2];
-		indices[p] = uint3(local_idx0, local_idx1, local_idx2);
-	}
-	p = min(threadID + 96, m.primitiveCount - 1);
-	{
-		uint local_idx0 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 0];
-		uint local_idx1 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 1];
-		uint local_idx2 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 2];
-		indices[p] = uint3(local_idx0, local_idx1, local_idx2);
+		uint p = min(i, m.primitiveCount - 1);
+		{
+			uint local_idx0 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 0];
+			uint local_idx1 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 1];
+			uint local_idx2 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 2];
+			indices[p] = uint3(local_idx0, local_idx1, local_idx2);
+		}
 	}
 	
 	GroupMemoryBarrierWithGroupSync();

@@ -32,11 +32,6 @@ struct PointLight : ILightEnv
         float illuminance = max(1 - d / colorRange.w, 0);
         return illuminance * brdf.evaluate(params.tbn, params.viewDir_TS, -normalize(lightDir_TS), colorRange.xyz);
     }
-    float3 getViewPosition()
-    {
-        float4 position_VS = mul(pViewParams.viewMatrix, position_WS);
-        return position_VS.xyz / position_VS.w;
-    }
 
     bool insidePlane(Plane plane, float3 position_VS)
     {

@@ -11,6 +11,7 @@
         "nlohmann-json",
         "fmt",
         "gtest",
-        "vulkan-memory-allocator"
+        "vulkan-memory-allocator",
+        "shader-slang"
     ]
 }

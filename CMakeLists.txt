@@ -50,7 +50,6 @@ find_package(nlohmann_json CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 find_package(VulkanMemoryAllocator CONFIG REQUIRED)
 
-
 if(UNIX)
     find_package(Threads REQUIRED)
 endif()

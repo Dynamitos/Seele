@@ -5,21 +5,21 @@ include (ExternalProject)
 add_library(shader-slang-glslang SHARED IMPORTED)
 add_library(shader-slang SHARED IMPORTED)
 if(WIN32)
-    set(SLANG_ROOT ${EXTERNAL_ROOT}/slang/bin/windows-x64/release)
-    set_target_properties(shader-slang-glslang PROPERTIES IMPORTED_LOCATION ${SLANG_ROOT}/slang-glslang.dll)
-    set_target_properties(shader-slang-glslang PROPERTIES IMPORTED_IMPLIB ${SLANG_ROOT}/slang.lib)
-    set_target_properties(shader-slang PROPERTIES IMPORTED_LOCATION ${SLANG_ROOT}/slang.dll)
-    set_target_properties(shader-slang PROPERTIES IMPORTED_IMPLIB ${SLANG_ROOT}/slang.lib)
+    set(SLANG_ROOT ${EXTERNAL_ROOT}/vcpkg/packages/shader-slang_x64-windows/)
+    set_target_properties(shader-slang-glslang PROPERTIES IMPORTED_LOCATION ${SLANG_ROOT}/bin/slang-glslang.dll)
+    set_target_properties(shader-slang-glslang PROPERTIES IMPORTED_IMPLIB ${SLANG_ROOT}/lib/slang.lib)
+    set_target_properties(shader-slang PROPERTIES IMPORTED_LOCATION ${SLANG_ROOT}/bin/slang.dll)
+    set_target_properties(shader-slang PROPERTIES IMPORTED_IMPLIB ${SLANG_ROOT}/lib/slang.lib)
     target_link_libraries(shader-slang INTERFACE shader-slang-glslang)
     install(FILES 
-        ${SLANG_ROOT}/slang-glslang.dll
-        ${SLANG_ROOT}/slang.dll
+        ${SLANG_ROOT}/bin/slang-glslang.dll
+        ${SLANG_ROOT}/bin/slang.dll
     DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
     install(FILES 
-        ${SLANG_ROOT}/slang.lib
+        ${SLANG_ROOT}/lib/slang.lib
     DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 elseif(APPLE)
-    set(SLANG_ROOT ${EXTERNAL_ROOT}/slang/bin/macosx-aarch64/release)
+    set(SLANG_ROOT ${EXTERNAL_ROOT}/vcpkg/packages/shader-slang_${CMAKE_PLATFORM}-macos/)
     set_target_properties(shader-slang-glslang PROPERTIES IMPORTED_LOCATION ${SLANG_ROOT}/libslang-glslang.dylib)
     set_target_properties(shader-slang PROPERTIES IMPORTED_LOCATION ${SLANG_ROOT}/libslang.dylib)
     target_link_libraries(shader-slang INTERFACE shader-slang-glslang)
@@ -29,7 +29,7 @@ elseif(APPLE)
     DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 endif()
 target_include_directories(shader-slang INTERFACE 
-    $<BUILD_INTERFACE:${EXTERNAL_ROOT}/slang/>
+    $<BUILD_INTERFACE:${SLANG_ROOT}/include/>
     $<INSTALL_INTERFACE:include>
 )
 
