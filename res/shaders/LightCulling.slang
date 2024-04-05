@@ -101,10 +101,10 @@ void cullLights(ComputeShaderInput in)
     {
         PointLight light = pLightEnv.pointLights[i];
         float3 light_VS = mul(viewMatrix, float4(light.position_WS.xyz, 1.0f)).xyz;
-        //if(light.insideFrustum(groupFrustum, light_VS, nearClipVS, maxDepthVS))
+        if(light.insideFrustum(groupFrustum, light_VS, nearClipVS, maxDepthVS))
         {
             tAppendLight(i);
-            //if(!light.insidePlane(minPlane, light_VS))
+            if(!light.insidePlane(minPlane, light_VS))
             {
                 oAppendLight(i);
             }

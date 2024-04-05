@@ -29,10 +29,7 @@ private:
 	OScene scene;
 	Component::Camera viewportCamera;
 	
-	RenderGraph<
-		DepthPrepass,
-		LightCullingPass,
-		BasePass> renderGraph;
+	RenderGraph renderGraph;
 
 	ThreadPool pool;
 	ViewportControl cameraSystem;

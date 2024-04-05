@@ -44,6 +44,7 @@ protected:
     Gfx::PViewport viewport;
     PScene scene;
 };
+DEFINE_REF(RenderPass)
 template<typename RP>
 concept RenderPassType = std::derived_from<RP, RenderPass>;
 

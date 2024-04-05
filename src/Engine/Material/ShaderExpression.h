@@ -50,8 +50,8 @@ DEFINE_REF(ShaderExpression)
 DECLARE_NAME_REF(Gfx, DescriptorSet)
 struct ShaderParameter : public ShaderExpression
 {
-    uint32 byteOffset;
-    uint32 binding;
+    uint32 byteOffset = 0;
+    uint32 binding = 0;
     ShaderParameter() {}
     ShaderParameter(std::string name, uint32 byteOffset, uint32 binding);
     virtual ~ShaderParameter();
@@ -67,7 +67,7 @@ DEFINE_REF(ShaderParameter)
 struct FloatParameter : public ShaderParameter
 {
     static constexpr uint64 IDENTIFIER = 0x01;
-    float data;
+    float data = 0.0f;
     FloatParameter() {}
     FloatParameter(std::string name, uint32 byteOffset, uint32 binding);
     virtual ~FloatParameter();
@@ -81,7 +81,7 @@ DEFINE_REF(FloatParameter)
 struct VectorParameter : public ShaderParameter
 {
     static constexpr uint64 IDENTIFIER = 0x02;
-    Vector data;
+    Vector data = Vector();
     VectorParameter() {}
     VectorParameter(std::string name, uint32 byteOffset, uint32 binding);
     virtual ~VectorParameter();
@@ -95,7 +95,7 @@ DEFINE_REF(VectorParameter)
 struct TextureParameter : public ShaderParameter
 {
     static constexpr uint64 IDENTIFIER = 0x04;
-    PTextureAsset data;
+    PTextureAsset data = nullptr;
     TextureParameter() {}
     TextureParameter(std::string name, uint32 byteOffset, uint32 binding);
     virtual ~TextureParameter();
@@ -110,7 +110,7 @@ DECLARE_NAME_REF(Gfx, Sampler)
 struct SamplerParameter : public ShaderParameter
 {
     static constexpr uint64 IDENTIFIER = 0x08;
-    Gfx::OSampler data;
+    Gfx::OSampler data = nullptr;
     SamplerParameter() {}
     SamplerParameter(std::string name, uint32 byteOffset, uint32 binding);
     virtual ~SamplerParameter();
@@ -124,8 +124,8 @@ DEFINE_REF(SamplerParameter)
 struct CombinedTextureParameter : public ShaderParameter
 {
     static constexpr uint64 IDENTIFIER = 0x10;
-    PTextureAsset data;
-    Gfx::PSampler sampler;
+    PTextureAsset data = nullptr;
+    Gfx::PSampler sampler = nullptr;
     CombinedTextureParameter() {}
     CombinedTextureParameter(std::string name, uint32 byteOffset, uint32 binding);
     virtual ~CombinedTextureParameter();

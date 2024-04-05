@@ -32,13 +32,7 @@ protected:
 	virtual void applyArea(URect rect) override;
 	OScene scene;
 	GameInterface gameInterface;
-    RenderGraph<
-        DepthPrepass,
-		LightCullingPass,
-        BasePass,
-		DebugPass
-		//SkyboxRenderPass
-		> renderGraph;
+    RenderGraph renderGraph;
 
 	PSystemGraph systemGraph;
 	System::PKeyboardInput keyboardSystem;

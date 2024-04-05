@@ -177,6 +177,14 @@ void DepthPrepass::createRenderPass()
             .dstStage = Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
             .srcAccess = Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
             .dstAccess = Gfx::SE_ACCESS_SHADER_READ_BIT,
+        },
+        {
+            .srcSubpass = 0,
+            .dstSubpass = ~0U,
+            .srcStage = Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+            .dstStage = Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+            .srcAccess = Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+            .dstAccess = Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT,
         }
     };
     renderPass = graphics->createRenderPass(std::move(layout), dependency, viewport);

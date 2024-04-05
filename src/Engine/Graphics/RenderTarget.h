@@ -80,17 +80,17 @@ public:
     constexpr void setStencilStoreOp(SeAttachmentStoreOp val) { stencilStoreOp = val; }
     constexpr void setInitialLayout(SeImageLayout val) { initialLayout = val; }
     constexpr void setFinalLayout(SeImageLayout val) { finalLayout = val; }
-    SeClearValue clear;
-    SeColorComponentFlags componentFlags;
+    SeClearValue clear = { 0 };
+    SeColorComponentFlags componentFlags = 0;
 protected:
     PTexture2D texture = nullptr;
     PViewport viewport = nullptr;
-    SeImageLayout initialLayout;
-    SeImageLayout finalLayout;
-    SeAttachmentLoadOp loadOp;
-    SeAttachmentStoreOp storeOp;
-    SeAttachmentLoadOp stencilLoadOp;
-    SeAttachmentStoreOp stencilStoreOp;
+    SeImageLayout initialLayout = SE_IMAGE_LAYOUT_BEGIN_RANGE;
+    SeImageLayout finalLayout = SE_IMAGE_LAYOUT_BEGIN_RANGE;
+    SeAttachmentLoadOp loadOp = SE_ATTACHMENT_LOAD_OP_BEGIN_RANGE;
+    SeAttachmentStoreOp storeOp = SE_ATTACHMENT_STORE_OP_BEGIN_RANGE;
+    SeAttachmentLoadOp stencilLoadOp = SE_ATTACHMENT_LOAD_OP_BEGIN_RANGE;
+    SeAttachmentStoreOp stencilStoreOp = SE_ATTACHMENT_STORE_OP_BEGIN_RANGE;
 };
 
 struct RenderTargetLayout

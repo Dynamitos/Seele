@@ -13,7 +13,7 @@ private:
         Node(Node* prev, Node* next, const T& data)
             : prev(prev)
             , next(next)
-            , data(std::move(data))
+            , data(data)
         {}
         Node(Node* prev, Node* next, T&& data)
             : prev(prev)
@@ -133,7 +133,7 @@ public:
     using reverse_iterator = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
     
-    List()
+    constexpr List()
         : root(nullptr)
         , tail(nullptr)
         , beginIt(Iterator(root))
@@ -142,7 +142,7 @@ public:
         , allocator(Allocator())
     {
     }
-    explicit List(const Allocator& alloc)
+    constexpr explicit List(const Allocator& alloc)
         : root(nullptr)
         , tail(nullptr)
         , beginIt(Iterator(root))
@@ -151,7 +151,7 @@ public:
         , allocator(alloc)
     {
     }
-    List(size_type count, const T& value = T(), const Allocator& alloc = Allocator())
+    constexpr List(size_type count, const T& value = T(), const Allocator& alloc = Allocator())
         : List(alloc)
     {
         for(size_type i = 0; i < count; ++i)
@@ -159,7 +159,7 @@ public:
             add(value);
         }
     }
-    List(size_type count, const Allocator& alloc = Allocator())
+    constexpr List(size_type count, const Allocator& alloc = Allocator())
         : List(alloc)
     {
         for(size_type i = 0; i < count; ++i)
@@ -167,7 +167,7 @@ public:
             add(T());
         }
     }
-    List(const List& other)
+    constexpr List(const List& other)
         : List(std::allocator_traits<allocator_type>::select_on_container_copy_construction(other.allocator))
     {
         //TODO: improve
@@ -177,7 +177,7 @@ public:
         }
     }
     
-    List(const List& other, const Allocator& alloc)
+    constexpr List(const List& other, const Allocator& alloc)
         : List(alloc)
     {
         //TODO: improve
@@ -186,7 +186,7 @@ public:
             add(it);
         }
     }
-    List(List&& other)
+    constexpr List(List&& other)
         : root(std::move(other.root))
         , tail(std::move(other.tail))
         , beginIt(std::move(other.beginIt))
@@ -196,7 +196,7 @@ public:
     {
         other._size = 0;
     }
-    List(List&& other, const Allocator& alloc)
+    constexpr List(List&& other, const Allocator& alloc)
         : root(std::move(other.root))
         , tail(std::move(other.tail))
         , beginIt(std::move(other.beginIt))
@@ -206,11 +206,11 @@ public:
     {
         other._size = 0;
     }
-    ~List()
+    constexpr ~List()
     {
         clear();
     }
-    List& operator=(const List& other)
+    constexpr List& operator=(const List& other)
     {
         if(this != &other)
         {
@@ -232,7 +232,7 @@ public:
         }
         return *this;
     }
-    List& operator=(List&& other)
+    constexpr List& operator=(List&& other)
     {
         if(this != &other)
         {
@@ -252,15 +252,15 @@ public:
         return *this;
     }
     
-    reference front()
+    constexpr reference front()
     {
         return root->data;
     }
-    reference back()
+    constexpr reference back()
     {
         return tail->prev->data;
     }
-    void clear()
+    constexpr void clear()
     {
         if (empty())
         {
@@ -279,17 +279,17 @@ public:
         _size = 0;
     }
     //Insert at the end
-    iterator add(const T &value)
+    constexpr iterator add(const T &value)
     {
         return addInternal(value);
     }
-    iterator add(T&& value)
+    constexpr iterator add(T&& value)
     {
         return addInternal(std::move(value));
     }
     // takes all elements from other and move-inserts them into
     // this, clearing other in the process
-    void moveElements(List&& other)
+    constexpr void moveElements(List&& other)
     {
         tail->prev->next = other.root;
         other.root->prev = tail->prev;
@@ -326,13 +326,13 @@ public:
         return insertedElement;
     }
     // front + popFront
-    value_type retrieve()
+    constexpr value_type retrieve()
     {
         value_type temp = std::move(root->data);
         popFront();
         return temp;
     }
-    iterator remove(iterator pos)
+    constexpr iterator remove(iterator pos)
     {
         _size--;
         Node *prev = pos.node->prev;
@@ -358,17 +358,27 @@ public:
         markIteratorDirty();
         return Iterator(next);
     }
-    void popBack()
+    constexpr void popBack()
     {
         assert(_size > 0);
         remove(Iterator(tail->prev));
     }
-    void popFront()
+    constexpr void pop_back()
+    {
+        assert(_size > 0);
+        remove(Iterator(tail->prev));
+    }
+    constexpr void popFront()
     {
         assert(_size > 0);
         remove(Iterator(root));
     }
-    iterator insert(iterator pos, const T &value)
+    constexpr void pop_front()
+    {
+        assert(_size > 0);
+        remove(Iterator(root));
+    }
+    constexpr iterator insert(iterator pos, const T &value)
     {
         _size++;
         if (root == nullptr)
@@ -393,7 +403,7 @@ public:
         markIteratorDirty();
         return Iterator(newNode);
     }
-    iterator find(const T &value)
+    constexpr iterator find(const T &value)
     {
         for (Node *i = root; i != tail; i = i->next)
         {
@@ -404,33 +414,33 @@ public:
         }
         return endIt;
     }
-    bool empty() const
+    constexpr bool empty() const
     {
         return _size == 0;
     }
-    size_type size() const
+    constexpr size_type size() const
     {
         return _size;
     }
-    iterator begin()
+    constexpr iterator begin()
     {
         return beginIt;
     }
-    const_iterator begin() const
+    constexpr const_iterator begin() const
     {
         return cbeginIt;
     }
-    iterator end()
+    constexpr iterator end()
     {
         return endIt;
     }
-    const_iterator end() const
+    constexpr const_iterator end() const
     {
         return cendIt;
     }
 
 private:
-    Node* allocateNode()
+    constexpr Node* allocateNode()
     {
         Node* node = allocator.allocate(1);
         assert(node != nullptr);
@@ -439,7 +449,7 @@ private:
         return node;
     }
     template<typename Type>
-    void initializeNode(Node* node, Type&& data)
+    constexpr void initializeNode(Node* node, Type&& data)
     {
         std::allocator_traits<NodeAllocator>::construct(allocator, 
             node, 
@@ -447,16 +457,16 @@ private:
             node->next, 
             std::forward<Type>(data));
     }
-    void destroyNode(Node* node)
+    constexpr void destroyNode(Node* node)
     {
         std::allocator_traits<NodeAllocator>::destroy(allocator, node);
     }
-    void deallocateNode(Node* node)
+    constexpr void deallocateNode(Node* node)
     {
         allocator.deallocate(node, 1);
     }
     template<typename ValueType>
-    iterator addInternal(ValueType&& value)
+    constexpr iterator addInternal(ValueType&& value)
     {
         if (root == nullptr)
         {
@@ -474,7 +484,7 @@ private:
         _size++;
         return insertedElement;
     }
-    void markIteratorDirty()
+    constexpr void markIteratorDirty()
     {
         beginIt = Iterator(root);
         endIt = Iterator(tail);

@@ -15,16 +15,14 @@ using namespace Seele::Editor;
 SceneView::SceneView(Gfx::PGraphics graphics, PWindow owner, const ViewportCreateInfo &createInfo)
     : View(graphics, owner, createInfo, "SceneView")
     , scene(new Scene(graphics))
-    , renderGraph(RenderGraphBuilder::build(
-        DepthPrepass(graphics, scene),
-        LightCullingPass(graphics, scene),
-        BasePass(graphics, scene)
-    ))
     , cameraSystem(createInfo.dimensions, Vector(0, 0, 10))
 {
     cameraSystem.update(viewportCamera, static_cast<float>(Gfx::getCurrentFrameDelta()));
-    
-    renderGraph.updateViewport(viewport);
+    renderGraph.addPass(new DepthPrepass(graphics, scene));
+    renderGraph.addPass(new LightCullingPass(graphics, scene));
+    renderGraph.addPass(new BasePass(graphics, scene));
+    renderGraph.setViewport(viewport);
+    renderGraph.createRenderPass();
 }
 
 SceneView::~SceneView()

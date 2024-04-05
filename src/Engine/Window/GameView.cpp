@@ -16,16 +16,15 @@ GameView::GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreate
     : View(graphics, window, createInfo, "Game")
     , scene(new Scene(graphics))
     , gameInterface(dllPath)
-    , renderGraph(RenderGraphBuilder::build(
-        DepthPrepass(graphics, scene),
-        LightCullingPass(graphics, scene),
-        BasePass(graphics, scene),
-        DebugPass(graphics, scene)
-        //SkyboxRenderPass(graphics, scene)
-    ))
 {
     reloadGame();
-    renderGraph.updateViewport(viewport);
+    renderGraph.addPass(new DepthPrepass(graphics, scene));
+    renderGraph.addPass(new LightCullingPass(graphics, scene));
+    renderGraph.addPass(new BasePass(graphics, scene));
+    //renderGraph.addPass(new DebugPass(graphics, scene));
+    //renderGraph.addPass(new SkyboxRenderPass(graphics, scene));
+    renderGraph.setViewport(viewport);
+    renderGraph.createRenderPass();
 }
 
 GameView::~GameView()
@@ -77,7 +76,7 @@ void GameView::render()
 
 void GameView::applyArea(URect)
 {
-    renderGraph.updateViewport(viewport);
+    renderGraph.setViewport(viewport);
 }
 
 void GameView::reloadGame()

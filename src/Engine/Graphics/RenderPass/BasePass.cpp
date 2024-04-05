@@ -194,7 +194,7 @@ void BasePass::publishOutputs()
 void BasePass::createRenderPass() 
 {
     depthAttachment = resources->requestRenderTarget("DEPTHPREPASS_DEPTH");
-    depthAttachment.setLoadOp(Gfx::SE_ATTACHMENT_LOAD_OP_LOAD);
+    depthAttachment.setLoadOp(Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR);
     depthAttachment.setInitialLayout(Gfx::SE_IMAGE_LAYOUT_GENERAL);
     depthAttachment.setFinalLayout(Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
     Gfx::RenderTargetLayout layout = Gfx::RenderTargetLayout{

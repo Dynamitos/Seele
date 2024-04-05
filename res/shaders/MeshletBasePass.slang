@@ -29,10 +29,10 @@ void taskMain(
 		localToView = mul(pViewParams.viewMatrix, instance.transformMatrix);
 		float3 origin = float3(0, 0, 0);
 		float3 corners[4] = {
-			screenToView(float4(pViewParams.screenDimensions, -1.0f, 1.0f)).xyz,
-			screenToView(float4(pViewParams.screenDimensions, -1.0f, 1.0f)).xyz,
-			screenToView(float4(pViewParams.screenDimensions, -1.0f, 1.0f)).xyz,
-			screenToView(float4(pViewParams.screenDimensions, -1.0f, 1.0f)).xyz
+			screenToView(float4(100.0f, 100.0f, -1.0f, 1.0f)).xyz,
+			screenToView(float4(pViewParams.screenDimensions.x - 100.0f, 100.0f, -1.0f, 1.0f)).xyz,
+			screenToView(float4(100.0f, pViewParams.screenDimensions.y - 100.0f, -1.0f, 1.0f)).xyz,
+			screenToView(float4(pViewParams.screenDimensions - float2(100.0f, 100.0f), -1.0f, 1.0f)).xyz
 		};
 		viewFrustum.sides[0] = computePlane(origin, corners[2], corners[0]);
 		viewFrustum.sides[1] = computePlane(origin, corners[1], corners[3]);
@@ -47,7 +47,7 @@ void taskMain(
 		{
 			uint m = mesh.meshletOffset + i;
 			MeshletDescription meshlet = pScene.meshletInfos[m];
-			//if(meshlet.bounding.insideFrustum(localToView, viewFrustum))
+			if(meshlet.bounding.insideFrustum(localToView, viewFrustum))
 			{
 				uint index;
 				InterlockedAdd(head, 1, index);
@@ -99,6 +99,7 @@ void meshMain(
 			uint vertexIndex = pScene.vertexIndices[m.vertexOffset + v];
 			VertexAttributes attr = pVertexData.getAttributes(md.indicesOffset + vertexIndex);
 			vertices[v] = attr.getParameter(inst.transformMatrix);
+			vertices[v].vertexColor = m.color;
 		}
 	}
 }

@@ -19,7 +19,7 @@ struct BoundingSphere
         bool result = true;
         for(int i = 0; i < 4 && result; ++i)
         {
-            if(dot(frustum.sides[i].n, transformed) - frustum.sides[i].d < scaledRange)
+            if(dot(frustum.sides[i].n, transformed) - frustum.sides[i].d < -scaledRange)
             {
                 result = false;
             }
@@ -48,7 +48,7 @@ struct AABB
         for(int i = 0; i < 8; ++i)
         {
             float3 adjusted = corners[i].xyz / corners[i].w;
-            if(frustum.pointInside(corners[i].xyz))
+            if(frustum.pointInside(adjusted))
             {
                 return true;
             }
