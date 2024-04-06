@@ -2,7 +2,7 @@ import Bounding;
 
 struct MeshletDescription
 {
-	BoundingSphere bounding;
+	AABB bounding;
 	uint32_t vertexCount;
 	uint32_t primitiveCount;
 	uint32_t vertexOffset;
@@ -13,7 +13,7 @@ struct MeshletDescription
 
 struct MeshData
 {
-	BoundingSphere bounding;
+	AABB bounding;
     uint32_t numMeshlets;
     uint32_t meshletOffset;
     uint32_t firstIndex;
@@ -39,7 +39,7 @@ struct Scene
 	StructuredBuffer<MeshData> meshData;
 	StructuredBuffer<MeshletDescription> meshletInfos;
 	StructuredBuffer<uint8_t> primitiveIndices;
-	StructuredBuffer<uint32_t> vertexIndices;
+	StructuredBuffer<uint16_t> vertexIndices;
 };
 
 ParameterBlock<Scene> pScene;

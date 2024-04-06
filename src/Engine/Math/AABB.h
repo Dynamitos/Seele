@@ -140,8 +140,8 @@ struct AABB
         corners[5] = Vector(max.x, min.y, max.z);
         corners[6] = Vector(max.x, max.y, min.z);
         corners[7] = Vector(max.x, max.y, max.z);
-        Vector tmin = Vector(1, 1, 1) * std::numeric_limits<float>::max();
-        Vector tmax = Vector(1, 1, 1) * std::numeric_limits<float>::lowest();
+        Vector tmin = Vector(std::numeric_limits<float>::max());
+        Vector tmax = Vector(std::numeric_limits<float>::lowest());
         for(int i = 0; i < 8; ++i)
         {
             Vector transformed = matrix * Vector4(corners[i], 1.0f);

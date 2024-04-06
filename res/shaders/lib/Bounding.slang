@@ -35,7 +35,7 @@ struct AABB
 	float3 max;
     float pad1;
 	bool insideFrustum(float4x4 transform, Frustum frustum)
-	{
+    {
 		float4 corners[8];
         corners[0] = mul(transform, float4(min.x, min.y, min.z, 1.0f));
         corners[1] = mul(transform, float4(min.x, min.y, max.z, 1.0f));
@@ -47,12 +47,10 @@ struct AABB
         corners[7] = mul(transform, float4(max.x, max.y, max.z, 1.0f));
         for(int i = 0; i < 8; ++i)
         {
-            float3 adjusted = corners[i].xyz / corners[i].w;
-            if(frustum.pointInside(adjusted))
+            if(frustum.pointInside(corners[i].xyz))
             {
                 return true;
             }
-            
         }
         return false;
 	}

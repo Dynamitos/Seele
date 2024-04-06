@@ -32,7 +32,7 @@ public:
     };
     struct MeshData
     {
-        BoundingSphere bounding;
+        AABB bounding;
         uint32 numMeshlets = 0;
         uint32 meshletOffset = 0;
         uint32 firstIndex = 0;
@@ -61,7 +61,7 @@ public:
     void resetMeshData();
     void updateMesh(PMesh mesh, Component::Transform& transform);
     void createDescriptors();
-    void loadMesh(MeshId id, Array<uint32> indices, Array<Meshlet> meshlets);
+    void loadMesh(MeshId id, Array<uint16> indices, Array<Meshlet> meshlets);
     MeshId allocateVertexData(uint64 numVertices);
     uint64 getMeshOffset(MeshId id);
     uint64 getMeshVertexCount(MeshId id);
@@ -85,7 +85,7 @@ protected:
     VertexData();
     struct MeshletDescription
     {
-        BoundingSphere bounding;
+        AABB bounding;
         uint32_t vertexCount;
         uint32_t primitiveCount;
         uint32_t vertexOffset;
@@ -100,8 +100,8 @@ protected:
     Map<MeshId, uint64> meshVertexCounts;
     Array<MeshletDescription> meshlets;
     Array<uint8> primitiveIndices;
-    Array<uint32> vertexIndices;
-    Array<uint32> indices;
+    Array<uint16> vertexIndices;
+    Array<uint16> indices;
     Gfx::PGraphics graphics;
     Gfx::ODescriptorLayout instanceDataLayout;
     // for mesh shading

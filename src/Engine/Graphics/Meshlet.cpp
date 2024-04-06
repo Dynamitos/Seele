@@ -32,6 +32,7 @@ void completeMeshlet(Array<Meshlet>& meshlets, Meshlet& current)
 {
     meshlets.add(current);
     current = {
+        .boundingBox = AABB(),
         .numVertices = 0,
         .numPrimitives = 0,
     };
@@ -60,40 +61,20 @@ void addTriangle(Array<Meshlet>& meshlets, Meshlet& current, Triangle tri)
     }
 }
 
-void Meshlet::build(const Array<Vector>& positions, const Array<uint32>& indices, Array<Meshlet>& meshlets)
+void Meshlet::build(const Array<Vector>& positions, const Array<uint16>& indices, Array<Meshlet>& meshlets)
 {
     Meshlet current = {
         .numVertices = 0,
         .numPrimitives = 0,
     };
-    Array<Triangle> triangles(indices.size() / 3);
-    for (size_t i = 0; i < triangles.size(); ++i)
+    for (size_t i = 0; i < indices.size() / 3; ++i)
     {
-        triangles[i].indices[0] = indices[i * 3 + 0];
-        triangles[i].indices[1] = indices[i * 3 + 1];
-        triangles[i].indices[2] = indices[i * 3 + 2];
-    }
-    while (!triangles.empty())
-    {
-        uint32 best = 0;
-        float lowestSurface = std::numeric_limits<float>::max();
-        AABB newAABB;
-        for (uint32 i = 0; i < triangles.size(); ++i)
-        {
-            AABB adjusted = current.boundingBox;
-            adjusted.adjust(positions[triangles[i].indices[0]]);
-            adjusted.adjust(positions[triangles[i].indices[1]]);
-            adjusted.adjust(positions[triangles[i].indices[2]]);
-            float surface = adjusted.surfaceArea();
-            if (surface < lowestSurface)
-            {
-                lowestSurface = surface;
-                best = i;
-                newAABB = adjusted;
-            }
-        }
-        current.boundingBox = newAABB;
-        addTriangle(meshlets, current, triangles[best]);
-        triangles.removeAt(best);
+        addTriangle(meshlets, current, Triangle{
+            .indices = {
+                indices[i * 3 + 0],
+                indices[i * 3 + 1],
+                indices[i * 3 + 2],
+            },
+            });
     }
 }
