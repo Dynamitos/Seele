@@ -121,11 +121,6 @@ if(WIN32)
         COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:Engine> $<TARGET_FILE_DIR:Editor>
         COMMAND_EXPAND_LISTS
         DEPENDS Editor)
-elseif(APPLE)
-    add_custom_target(dll_copy ALL
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SLANG_ROOT}/libslang.dylib $<TARGET_FILE_DIR:Editor>
-        COMMAND_EXPAND_LISTS
-        DEPENDS Editor)
 else()
     add_custom_target(dll_copy ALL
         COMMAND ${CMAKE_COMMAND} -E true)
