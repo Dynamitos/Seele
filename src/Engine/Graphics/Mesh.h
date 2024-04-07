@@ -15,7 +15,7 @@ public:
     MeshId id;
     uint64 vertexCount;
     PMaterialInstanceAsset referencedMaterial;
-    Array<uint16> indices;
+    Array<uint32> indices;
     Array<Meshlet> meshlets;
     void save(ArchiveBuffer& buffer) const;
     void load(ArchiveBuffer& buffer);

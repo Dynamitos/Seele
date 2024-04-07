@@ -10,15 +10,15 @@ namespace Component
 struct ShapeBase
 {
     ShapeBase();
-    ShapeBase(Array<Vector> vertices, Array<uint16> indices);
+    ShapeBase(Array<Vector> vertices, Array<uint32> indices);
     ShapeBase transform(const Component::Transform& transform) const;
-    void addCollider(Array<Vector> vertices, Array<uint16> indices, Matrix4 matrix);
+    void addCollider(Array<Vector> vertices, Array<uint32> indices, Matrix4 matrix);
     void visualize() const;
     Vector centerOfMass;
     float mass;
     Matrix3 bodyInertia;
     Array<Vector> vertices;
-    Array<uint16> indices;
+    Array<uint32> indices;
 };
 } // namespace Component
 } // namespace Seele

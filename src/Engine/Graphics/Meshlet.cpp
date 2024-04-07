@@ -61,20 +61,26 @@ void addTriangle(Array<Meshlet>& meshlets, Meshlet& current, Triangle tri)
     }
 }
 
-void Meshlet::build(const Array<Vector>& positions, const Array<uint16>& indices, Array<Meshlet>& meshlets)
+void Meshlet::build(const Array<Vector>& positions, const Array<uint32>& indices, Array<Meshlet>& meshlets)
 {
     Meshlet current = {
         .numVertices = 0,
         .numPrimitives = 0,
     };
-    for (size_t i = 0; i < indices.size() / 3; ++i)
+    Array<Triangle> triangles(indices.size() / 3);
+    for (size_t i = 0; i < triangles.size(); ++i)
     {
-        addTriangle(meshlets, current, Triangle{
+        triangles.add(Triangle{
             .indices = {
                 indices[i * 3 + 0],
                 indices[i * 3 + 1],
                 indices[i * 3 + 2],
             },
             });
+
+    }
+    if (current.numVertices > 0)
+    {
+        completeMeshlet(meshlets, current);
     }
 }

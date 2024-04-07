@@ -127,7 +127,7 @@ void computeFaceIntegrals(Face& f, ComputationState& state)
         + w * (2 * (n[state.A] * state.Paa + n[state.B] * state.Pab) + w * state.Pa));
 }
 
-void computeVolumeIntegrals(const Array<Vector> vertices, const Array<uint16>& indices, ComputationState& state)
+void computeVolumeIntegrals(const Array<Vector> vertices, const Array<uint32>& indices, ComputationState& state)
 {
     std::memset(&state, 0, sizeof(ComputationState));
     for (size_t i = 0; i < indices.size(); i+=3)
@@ -172,7 +172,7 @@ void computeVolumeIntegrals(const Array<Vector> vertices, const Array<uint16>& i
     state.TP /= 2.0f;
 }
 
-void computePhysicsParamsForMesh(Array<Vector>& vertices, const Array<uint16>& indices, Matrix3& bodyInertia, Vector& centerOfMass, float& mass)
+void computePhysicsParamsForMesh(Array<Vector>& vertices, const Array<uint32>& indices, Matrix3& bodyInertia, Vector& centerOfMass, float& mass)
 {
     ComputationState state;
     computeVolumeIntegrals(vertices, indices, state);
@@ -200,7 +200,7 @@ ShapeBase::ShapeBase()
     
 }
 
-ShapeBase::ShapeBase(Array<Vector> vertices, Array<uint16> indices)
+ShapeBase::ShapeBase(Array<Vector> vertices, Array<uint32> indices)
     : vertices(vertices)
     , indices(indices)
 {
@@ -217,7 +217,7 @@ ShapeBase ShapeBase::transform(const Component::Transform& transform) const
     return result;
 }
 
-void ShapeBase::addCollider(Array<Vector> verts, Array<uint16> inds, Matrix4 matrix)
+void ShapeBase::addCollider(Array<Vector> verts, Array<uint32> inds, Matrix4 matrix)
 {
     size_t indOffset = vertices.size();
     for(auto vert : verts)

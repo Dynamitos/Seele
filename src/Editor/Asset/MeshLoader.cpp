@@ -258,12 +258,9 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
         vertexData->loadBiTangents(id, biTangents);
         vertexData->loadColors(id, colors);
 
-        Array<uint16> indices(mesh->mNumFaces * 3);
+        Array<uint32> indices(mesh->mNumFaces * 3);
         for (size_t faceIndex = 0; faceIndex < mesh->mNumFaces; ++faceIndex)
         {
-            assert(mesh->mFaces[faceIndex].mIndices[0] < std::numeric_limits<uint16>::max());
-            assert(mesh->mFaces[faceIndex].mIndices[1] < std::numeric_limits<uint16>::max());
-            assert(mesh->mFaces[faceIndex].mIndices[2] < std::numeric_limits<uint16>::max());
             indices[faceIndex * 3 + 0] = mesh->mFaces[faceIndex].mIndices[0];
             indices[faceIndex * 3 + 1] = mesh->mFaces[faceIndex].mIndices[1];
             indices[faceIndex * 3 + 2] = mesh->mFaces[faceIndex].mIndices[2];

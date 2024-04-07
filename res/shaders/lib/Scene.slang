@@ -39,7 +39,7 @@ struct Scene
 	StructuredBuffer<MeshData> meshData;
 	StructuredBuffer<MeshletDescription> meshletInfos;
 	StructuredBuffer<uint8_t> primitiveIndices;
-	StructuredBuffer<uint16_t> vertexIndices;
+	StructuredBuffer<uint32_t> vertexIndices;
 };
 
 ParameterBlock<Scene> pScene;

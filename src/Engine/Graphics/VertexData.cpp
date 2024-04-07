@@ -142,7 +142,7 @@ void VertexData::createDescriptors()
     }
 }
 
-void VertexData::loadMesh(MeshId id, Array<uint16> loadedIndices, Array<Meshlet> loadedMeshlets)
+void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet> loadedMeshlets)
 {
     meshlets.reserve(meshlets.size() + loadedMeshlets.size());
     vertexIndices.reserve(vertexIndices.size() + loadedMeshlets.size() * Gfx::numVerticesPerMeshlet);
@@ -183,13 +183,13 @@ void VertexData::loadMesh(MeshId id, Array<uint16> loadedIndices, Array<Meshlet>
     meshData[id][0].firstIndex = indices.size();
     meshData[id][0].numIndices = loadedIndices.size();
     indices.resize(indices.size() + loadedIndices.size());
-    std::memcpy(indices.data() + meshData[id][0].firstIndex, loadedIndices.data(), loadedIndices.size() * sizeof(uint16));
+    std::memcpy(indices.data() + meshData[id][0].firstIndex, loadedIndices.data(), loadedIndices.size() * sizeof(uint32));
     indexBuffer = graphics->createIndexBuffer(IndexBufferCreateInfo{
         .sourceData = {
-            .size = sizeof(uint16) * indices.size(),
+            .size = sizeof(uint32) * indices.size(),
             .data = (uint8*)indices.data(),
         },
-        .indexType = Gfx::SE_INDEX_TYPE_UINT16,
+        .indexType = Gfx::SE_INDEX_TYPE_UINT32,
     });
     meshletBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
         .sourceData = {
@@ -201,7 +201,7 @@ void VertexData::loadMesh(MeshId id, Array<uint16> loadedIndices, Array<Meshlet>
     });
     vertexIndicesBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
         .sourceData = {
-            .size = sizeof(uint16) * vertexIndices.size(),
+            .size = sizeof(uint32) * vertexIndices.size(),
             .data = (uint8*)vertexIndices.data(),
         },
         .numElements = vertexIndices.size(),
