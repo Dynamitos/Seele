@@ -44,43 +44,43 @@ void VertexData::updateMesh(PMesh mesh, Component::Transform& transform)
             },
             .data = data,
             });
-        for (size_t i = 0; i < data.numMeshlets; ++i)
-        {
-            auto bounding = meshlets[data.meshletOffset + i].bounding;
-            StaticArray<Vector, 8> corners;
-            corners[0] = transform.toMatrix() * Vector4(bounding.min.x, bounding.min.y, bounding.min.z, 1);
-            corners[1] = transform.toMatrix() * Vector4(bounding.min.x, bounding.min.y, bounding.max.z, 1);
-            corners[2] = transform.toMatrix() * Vector4(bounding.min.x, bounding.max.y, bounding.min.z, 1);
-            corners[3] = transform.toMatrix() * Vector4(bounding.min.x, bounding.max.y, bounding.max.z, 1);
-            corners[4] = transform.toMatrix() * Vector4(bounding.max.x, bounding.min.y, bounding.min.z, 1);
-            corners[5] = transform.toMatrix() * Vector4(bounding.max.x, bounding.min.y, bounding.max.z, 1);
-            corners[6] = transform.toMatrix() * Vector4(bounding.max.x, bounding.max.y, bounding.min.z, 1);
-            corners[7] = transform.toMatrix() * Vector4(bounding.max.x, bounding.max.y, bounding.max.z, 1);
-            addDebugVertex(DebugVertex{ .position = corners[0], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[1], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[0], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[2], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[1], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[3], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[2], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[3], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[0], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[4], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[1], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[5], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[2], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[6], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[3], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[7], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[4], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[5], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[4], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[6], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[6], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[7], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[5], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[7], .color = meshlets[data.meshletOffset + i].color });
-        }
+        //for (size_t i = 0; i < data.numMeshlets; ++i)
+        //{
+        //    auto bounding = meshlets[data.meshletOffset + i].bounding;
+        //    StaticArray<Vector, 8> corners;
+        //    corners[0] = transform.toMatrix() * Vector4(bounding.min.x, bounding.min.y, bounding.min.z, 1);
+        //    corners[1] = transform.toMatrix() * Vector4(bounding.min.x, bounding.min.y, bounding.max.z, 1);
+        //    corners[2] = transform.toMatrix() * Vector4(bounding.min.x, bounding.max.y, bounding.min.z, 1);
+        //    corners[3] = transform.toMatrix() * Vector4(bounding.min.x, bounding.max.y, bounding.max.z, 1);
+        //    corners[4] = transform.toMatrix() * Vector4(bounding.max.x, bounding.min.y, bounding.min.z, 1);
+        //    corners[5] = transform.toMatrix() * Vector4(bounding.max.x, bounding.min.y, bounding.max.z, 1);
+        //    corners[6] = transform.toMatrix() * Vector4(bounding.max.x, bounding.max.y, bounding.min.z, 1);
+        //    corners[7] = transform.toMatrix() * Vector4(bounding.max.x, bounding.max.y, bounding.max.z, 1);
+        //    addDebugVertex(DebugVertex{ .position = corners[0], .color = meshlets[data.meshletOffset + i].color });
+        //    addDebugVertex(DebugVertex{ .position = corners[1], .color = meshlets[data.meshletOffset + i].color });
+        //    addDebugVertex(DebugVertex{ .position = corners[0], .color = meshlets[data.meshletOffset + i].color });
+        //    addDebugVertex(DebugVertex{ .position = corners[2], .color = meshlets[data.meshletOffset + i].color });
+        //    addDebugVertex(DebugVertex{ .position = corners[1], .color = meshlets[data.meshletOffset + i].color });
+        //    addDebugVertex(DebugVertex{ .position = corners[3], .color = meshlets[data.meshletOffset + i].color });
+        //    addDebugVertex(DebugVertex{ .position = corners[2], .color = meshlets[data.meshletOffset + i].color });
+        //    addDebugVertex(DebugVertex{ .position = corners[3], .color = meshlets[data.meshletOffset + i].color });
+        //    addDebugVertex(DebugVertex{ .position = corners[0], .color = meshlets[data.meshletOffset + i].color });
+        //    addDebugVertex(DebugVertex{ .position = corners[4], .color = meshlets[data.meshletOffset + i].color });
+        //    addDebugVertex(DebugVertex{ .position = corners[1], .color = meshlets[data.meshletOffset + i].color });
+        //    addDebugVertex(DebugVertex{ .position = corners[5], .color = meshlets[data.meshletOffset + i].color });
+        //    addDebugVertex(DebugVertex{ .position = corners[2], .color = meshlets[data.meshletOffset + i].color });
+        //    addDebugVertex(DebugVertex{ .position = corners[6], .color = meshlets[data.meshletOffset + i].color });
+        //    addDebugVertex(DebugVertex{ .position = corners[3], .color = meshlets[data.meshletOffset + i].color });
+        //    addDebugVertex(DebugVertex{ .position = corners[7], .color = meshlets[data.meshletOffset + i].color });
+        //    addDebugVertex(DebugVertex{ .position = corners[4], .color = meshlets[data.meshletOffset + i].color });
+        //    addDebugVertex(DebugVertex{ .position = corners[5], .color = meshlets[data.meshletOffset + i].color });
+        //    addDebugVertex(DebugVertex{ .position = corners[4], .color = meshlets[data.meshletOffset + i].color });
+        //    addDebugVertex(DebugVertex{ .position = corners[6], .color = meshlets[data.meshletOffset + i].color });
+        //    addDebugVertex(DebugVertex{ .position = corners[6], .color = meshlets[data.meshletOffset + i].color });
+        //    addDebugVertex(DebugVertex{ .position = corners[7], .color = meshlets[data.meshletOffset + i].color });
+        //    addDebugVertex(DebugVertex{ .position = corners[5], .color = meshlets[data.meshletOffset + i].color });
+        //    addDebugVertex(DebugVertex{ .position = corners[7], .color = meshlets[data.meshletOffset + i].color });
+        //}
     }
     matInstanceData.materialInstance = referencedInstance;
     referencedInstance->updateDescriptor();
