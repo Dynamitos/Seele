@@ -32,7 +32,7 @@ public:
     };
     struct MeshData
     {
-        AABB bounding;
+        BoundingSphere bounding;
         uint32 numMeshlets = 0;
         uint32 meshletOffset = 0;
         uint32 firstIndex = 0;
@@ -85,7 +85,7 @@ protected:
     VertexData();
     struct MeshletDescription
     {
-        AABB bounding;
+        BoundingSphere bounding;
         uint32_t vertexCount;
         uint32_t primitiveCount;
         uint32_t vertexOffset;

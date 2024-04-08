@@ -29,10 +29,10 @@ void taskMain(
 		localToView = mul(pViewParams.viewMatrix, instance.transformMatrix);
 		float3 origin = float3(0, 0, 0);
 		float3 corners[4] = {
-			screenToView(float4(100.0f, 100.0f, -1.0f, 1.0f)).xyz,
-			screenToView(float4(pViewParams.screenDimensions.x - 100.0f, 100.0f, -1.0f, 1.0f)).xyz,
-			screenToView(float4(100.0f, pViewParams.screenDimensions.y - 100.0f, -1.0f, 1.0f)).xyz,
-			screenToView(float4(pViewParams.screenDimensions - float2(100.0f, 100.0f), -1.0f, 1.0f)).xyz
+			screenToView(float4(0.0f, 0.0f, -1.0f, 1.0f)).xyz,
+			screenToView(float4(pViewParams.screenDimensions.x, 0.0f, -1.0f, 1.0f)).xyz,
+			screenToView(float4(0.0f, pViewParams.screenDimensions.y, -1.0f, 1.0f)).xyz,
+			screenToView(float4(pViewParams.screenDimensions, -1.0f, 1.0f)).xyz
 		};
 		viewFrustum.sides[0] = computePlane(origin, corners[2], corners[0]);
 		viewFrustum.sides[1] = computePlane(origin, corners[1], corners[3]);
@@ -90,8 +90,6 @@ void meshMain(
 			indices[p] = uint3(local_idx0, local_idx1, local_idx2);
 		}
 	}
-	
-	GroupMemoryBarrierWithGroupSync();
 	for(uint i = threadID; i < MAX_VERTICES; i+=MESH_GROUP_SIZE)
 	{
 		uint v = min(i, m.vertexCount - 1);

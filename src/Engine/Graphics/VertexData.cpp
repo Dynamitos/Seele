@@ -164,7 +164,7 @@ void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet>
             primitiveIndices.resize(primitiveOffset + (m.numPrimitives * 3));
             std::memcpy(primitiveIndices.data() + primitiveOffset, m.primitiveLayout, m.numPrimitives * 3 * sizeof(uint8));
             meshlets.add(MeshletDescription{
-                .bounding = m.boundingBox,//.toSphere(),
+                .bounding = m.boundingBox.toSphere(),
                 .vertexCount = m.numVertices,
                 .primitiveCount = m.numPrimitives,
                 .vertexOffset = vertexOffset,
@@ -173,7 +173,7 @@ void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet>
                 });
         }
         meshData[id].add(MeshData{
-            .bounding = meshAABB,//.toSphere(),
+            .bounding = meshAABB.toSphere(),
             .numMeshlets = numMeshlets,
             .meshletOffset = meshletOffset,
             .indicesOffset = (uint32)meshOffsets[id],
