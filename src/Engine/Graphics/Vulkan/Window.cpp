@@ -184,7 +184,7 @@ void Window::setCloseCallback(std::function<void()> callback)
     closeCallback = callback;
 }
 
-void Seele::Vulkan::Window::setResizeCallback(std::function<void(uint32, uint32)> callback)
+void Window::setResizeCallback(std::function<void(uint32, uint32)> callback)
 {
     resizeCallback = callback;
 }
@@ -352,8 +352,8 @@ void Window::createSwapChain()
     }
 }
 
-Viewport::Viewport(PGraphics graphics, PWindow owner, const ViewportCreateInfo &viewportInfo)
-    : Gfx::Viewport(owner, viewportInfo), graphics(graphics)
+Viewport::Viewport(PWindow owner, const ViewportCreateInfo &viewportInfo)
+    : Gfx::Viewport(owner, viewportInfo)
 {
     handle.width = static_cast<float>(sizeX);
     handle.height = static_cast<float>(sizeY);

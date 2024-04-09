@@ -78,7 +78,7 @@ Gfx::OWindow Graphics::createWindow(const WindowCreateInfo &createInfo)
 
 Gfx::OViewport Graphics::createViewport(Gfx::PWindow owner, const ViewportCreateInfo &viewportInfo)
 {
-    return new Viewport(this, owner, viewportInfo);
+    return new Viewport(owner, viewportInfo);
 }
 
 Gfx::ORenderPass Graphics::createRenderPass(Gfx::RenderTargetLayout layout, Array<Gfx::SubPassDependency> dependencies, Gfx::PViewport renderArea)

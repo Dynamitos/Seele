@@ -1,17 +1,25 @@
 #pragma once
-#include "Graphics/RenderTarget.h"
 #include "Graphics.h"
-#include "Texture.h"
+#include "Graphics/Window.h"
 #include "Resources.h"
+
+#define GLFW_INCLUDE_NONE
+#include <GLFW/glfw3.h>
+#define GLFW_EXPOSE_NATIVE_COCOA
+#include <GLFW/glfw3native.h>
+
+#include <Metal/Metal.hpp>
+#include <QuartzCore/CAMetalLayer.hpp>
+#include <QuartzCore/QuartzCore.hpp>
 
 namespace Seele
 {
-namespace Vulkan
+namespace Metal
 {
 class Window : public Gfx::Window
 {
 public:
-    Window(PGraphics graphics, const WindowCreateInfo &createInfo);
+    Window(PGraphics graphics, const WindowCreateInfo& createInfo);
     virtual ~Window();
     virtual void pollInput() override;
     virtual void beginFrame() override;
@@ -33,33 +41,13 @@ public:
     void fileDrop(int num, const char** files);
     void close();
     void resize(int width, int height);
-protected:
-    void querySurface();
-    void chooseSwapSurfaceFormat();
-    void chooseSwapPresentMode();
-    void chooseSwapExtent();
-    void createSwapChain();
+private:
     PGraphics graphics;
     WindowCreateInfo preferences;
-    VkInstance instance;
-    VkSwapchainKHR swapchain;
-    VkSampleCountFlags numSamples;
-    VkSurfaceKHR surface;
-    VkSurfaceCapabilitiesKHR capabilities;
-    Array<VkSurfaceFormatKHR> supportedFormats;
-    Array<VkPresentModeKHR> supportedPresentModes;
-    // the values used for the current swapchain
-    VkSurfaceFormatKHR format;
-    VkPresentModeKHR presentMode;
-    VkExtent2D extent;
-    void *windowHandle;
-    StaticArray<VkImage, Gfx::numFramesBuffered> swapChainImages;
-    StaticArray<OTexture2D, Gfx::numFramesBuffered> swapChainTextures;
-    StaticArray<OFence, Gfx::numFramesBuffered> imageAvailableFences;
-    StaticArray<OSemaphore, Gfx::numFramesBuffered> imageAvailableSemaphores;
-    StaticArray<OSemaphore, Gfx::numFramesBuffered> renderingDoneSemaphores;
-    uint32 currentImageIndex = 0;
-    uint32 currentSemaphoreIndex = 0;
+    GLFWwindow* windowHandle;
+    NSWindow* metalWindow;
+    CAMetalLayer* metalLayer;
+    CA::MetalDrawable* drawable;
 
     std::function<void(KeyCode, InputAction, KeyModifier)> keyCallback;
     std::function<void(double, double)> mouseMoveCallback;
@@ -69,19 +57,16 @@ protected:
     std::function<void()> closeCallback;
     std::function<void(uint32, uint32)> resizeCallback;
 };
-DEFINE_REF(Window)
-
+DEFINE_REF(Window);
 class Viewport : public Gfx::Viewport
 {
 public:
-    Viewport(PWindow owner, const ViewportCreateInfo &createInfo);
+    Viewport(PWindow owner, const ViewportCreateInfo& createInfo);
     virtual ~Viewport();
     virtual void resize(uint32 newX, uint32 newY);
-    virtual void move(uint32 newOffsetX, uint32 newOffsetY);
-    VkViewport getHandle() const { return handle; }
+    virtual void move(uint32 newOffset, uint32 newOffsetY);
 private:
-    VkViewport handle;
+    Rect viewport;
 };
-DECLARE_REF(Viewport)
-}
-}
+} // namespace Metal
+} // namespace Seele

@@ -15,13 +15,13 @@ struct AdjacencyInfo
 void buildAdjacency(const uint32 numVerts, const Array<uint32>& indices, AdjacencyInfo& info)
 {
     info.trianglesPerVertex.resize(numVerts, 0);
-    for (int i = 0; i < indices.size(); ++i)
+    for (size_t i = 0; i < indices.size(); ++i)
     {
         info.trianglesPerVertex[indices[i]]++;
     }
     uint32 triangleOffset = 0;
     info.indexBufferOffset.resize(numVerts, 0);
-    for (int j = 0; j < numVerts; ++j)
+    for (size_t j = 0; j < numVerts; ++j)
     {
         info.indexBufferOffset[j] = triangleOffset;
         triangleOffset += info.trianglesPerVertex[j];
@@ -42,7 +42,7 @@ void buildAdjacency(const uint32 numVerts, const Array<uint32>& indices, Adjacen
     }
 }
 
-uint32 skipDeadEnd(const Array<uint32>& liveTriCount, List<uint32>& deadEndStack, uint32& cursor)
+int32 skipDeadEnd(const Array<uint32>& liveTriCount, List<uint32>& deadEndStack, uint32& cursor)
 {
     while (!deadEndStack.empty())
     {
@@ -64,7 +64,7 @@ uint32 skipDeadEnd(const Array<uint32>& liveTriCount, List<uint32>& deadEndStack
     return -1;
 }
 
-uint32 getNextVertex(const int cacheSize, const Array<uint32>& oneRing, const Array<uint32>& cacheTimeStamps, const uint32 timeStamp, const Array<uint32>& liveTriCount, List<uint32>& deadEndStack, uint32& cursor)
+int32 getNextVertex(const uint32 cacheSize, const Array<uint32>& oneRing, const Array<uint32>& cacheTimeStamps, const uint32 timeStamp, const Array<uint32>& liveTriCount, List<uint32>& deadEndStack, uint32& cursor)
 {
     uint32 bestCandidate = std::numeric_limits<uint32>::max();
     int highestPriority = -1;
@@ -91,7 +91,7 @@ uint32 getNextVertex(const int cacheSize, const Array<uint32>& oneRing, const Ar
     return bestCandidate;
 }
 
-void tipsifyIndexBuffer(const Array<uint32>& indices, const uint32 numVerts, const int cacheSize, Array<uint32>& outIndices)
+void tipsifyIndexBuffer(const Array<uint32>& indices, const uint32 numVerts, const uint32 cacheSize, Array<uint32>& outIndices)
 {
     AdjacencyInfo adjacencyStruct;
     buildAdjacency(numVerts, indices, adjacencyStruct);
@@ -104,7 +104,7 @@ void tipsifyIndexBuffer(const Array<uint32>& indices, const uint32 numVerts, con
 
     Array<bool> emittedTriangles(indices.size() / 3);
 
-    uint32 curVert = 0;
+    int32 curVert = 0;
     uint32 timeStamp = cacheSize + 1;
     uint32 cursor = 1;
     while (curVert != -1)

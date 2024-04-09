@@ -51,8 +51,13 @@ public:
     virtual Gfx::OVertexInput createVertexInput(VertexInputStateCreateInfo createInfo) = 0;
 
     virtual void resolveTexture(Gfx::PTexture source, Gfx::PTexture destination) = 0;
+    
+    MTL::Device* getDevice() const { return device; }
 protected:
     MTL::Device* device;
+    MTL::Library* library;
+    MTL::CommandQueue* queue;
 };
+DEFINE_REF(Graphics)
 } // namespace Metal  
 } // namespace Seele

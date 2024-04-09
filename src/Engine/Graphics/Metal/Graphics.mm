@@ -1,12 +1,5 @@
 #include "Graphics.h"
-#include "Metal/MTLDevice.hpp"
-#include "Metal/MTLRenderCommandEncoder.hpp"
-#define NS_PRIVATE_IMPLEMENTATION
-#define CA_PRIVATE_IMPLEMENTATION
-#define MTL_PRIVATE_IMPLEMENTATION
-#include "Foundation/Foundation.hpp"
-#include "Metal/Metal.hpp"
-#include "QuartzCore/QuartzCore.hpp"
+#include "Window.h"
 
 using namespace Seele;
 using namespace Seele::Metal;
@@ -15,28 +8,35 @@ Graphics::Graphics()
 {
   
 }
+
 Graphics::~Graphics()
 {
   
 }
-void Graphics::init(GraphicsInitializer initializer)
+
+void Graphics::init(GraphicsInitializer)
 {
   device = MTL::CreateSystemDefaultDevice();
+  library = device->newDefaultLibrary();
+  assert(library);
+  queue = device->newCommandQueue();
 }
 
 Gfx::OWindow Graphics::createWindow(const WindowCreateInfo &createInfo)
 {
-  
+  return new Window(this, createInfo);
 }
+
 Gfx::OViewport Graphics::createViewport(Gfx::PWindow owner, const ViewportCreateInfo &createInfo)
 {
-  
+  return new Viewport(owner, createInfo);
 }
 
 Gfx::ORenderPass Graphics::createRenderPass(Gfx::RenderTargetLayout layout, Array<Gfx::SubPassDependency> dependencies, Gfx::PViewport renderArea)
 {
   
 }
+
 void Graphics::beginRenderPass(Gfx::PRenderPass renderPass)
 {
   

@@ -80,7 +80,7 @@ public:
     constexpr void setStencilStoreOp(SeAttachmentStoreOp val) { stencilStoreOp = val; }
     constexpr void setInitialLayout(SeImageLayout val) { initialLayout = val; }
     constexpr void setFinalLayout(SeImageLayout val) { finalLayout = val; }
-    SeClearValue clear = { 0 };
+    SeClearValue clear = { { { 0 } } };
     SeColorComponentFlags componentFlags = 0;
 protected:
     PTexture2D texture = nullptr;

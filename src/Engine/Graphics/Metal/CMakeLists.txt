@@ -1,4 +1,14 @@
 target_sources(Engine
     PRIVATE
+        Enums.h
+        Enums.mm
         Graphics.h
-        Graphics.cpp)    
+        Graphics.mm
+        PrivateImpl.mm
+        RenderPass.h
+        RenderPass.mm
+        Resources.h
+        Texture.h
+        Texture.mm
+        Window.h
+        Window.mm)

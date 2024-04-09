@@ -1,6 +1,5 @@
 #include "FontAsset.h"
 #include "Graphics/Graphics.h"
-#include "Graphics/Vulkan/Enums.h"
 #include "Graphics/Texture.h"
 #include <ktx.h>
 
@@ -100,7 +99,7 @@ void FontAsset::load(ArchiveBuffer& buffer)
                 .data = ktxTexture_GetData(ktxTexture(kTexture)),
                 .owner = Gfx::QueueType::GRAPHICS,
             },
-            .format = Vulkan::cast((VkFormat)kTexture->vkFormat),
+            .format = (Gfx::SeFormat)kTexture->vkFormat,
             .width = kTexture->baseWidth,
             .height = kTexture->baseHeight,
             .depth = kTexture->baseDepth,

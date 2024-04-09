@@ -56,7 +56,8 @@ target_sources(Engine
             Window.h)
 
 add_subdirectory(RenderPass/)
-add_subdirectory(Vulkan/)
-#if(APPLE)
-#    add_subdirectory(Metal/)
-#endif()
+if(APPLE)
+    add_subdirectory(Metal/)
+else()
+    add_subdirectory(Vulkan/)
+endif()
