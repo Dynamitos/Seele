@@ -1,3 +1,4 @@
+#include "Graphics/Metal/Graphics.h"
 #include "Window/WindowManager.h"
 #include "Window/SceneView.h"
 #include "Window/PlayView.h"
@@ -6,6 +7,7 @@
 #include "Asset/AssetImporter.h"
 #include "Asset/TextureLoader.h"
 #include "Graphics/Vulkan/Graphics.h"
+#include "Graphics/Metal/Graphics.h"
 #include "Asset/MeshLoader.h"
 #include "Asset/TextureLoader.h"
 #include "Asset/MaterialLoader.h"
@@ -38,8 +40,11 @@ int main()
     std::string gameName = "TrackClear";
     std::filesystem::path cmakePath = outputPath / "cmake";
 
+#ifdef __APPLE__
+    graphics = new Metal::Graphics();
+#else
     graphics = new Vulkan::Graphics();
-
+#endif
     GraphicsInitializer initializer;
     graphics->init(initializer);
     StaticMeshVertexData* vd = StaticMeshVertexData::getInstance();
