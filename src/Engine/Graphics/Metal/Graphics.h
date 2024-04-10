@@ -1,5 +1,4 @@
 #pragma once
-#include "Metal/MTLRenderCommandEncoder.hpp"
 #include "Metal/Metal.hpp"
 #include "Graphics/Graphics.h"
 
@@ -7,6 +6,7 @@ namespace Seele
 {
 namespace Metal
 {
+DECLARE_REF(CommandQueue)
 class Graphics : public Gfx::Graphics
 {
 public:
@@ -54,11 +54,11 @@ public:
     virtual void resolveTexture(Gfx::PTexture source, Gfx::PTexture destination) override;
     
     MTL::Device* getDevice() const { return device; }
+    PCommandQueue getQueue() const { return queue; }
 protected:
     MTL::Device* device;
     MTL::Library* library;
-    MTL::CommandQueue* queue;
-    MTL::RenderCommandEncoder* encoder;
+    OCommandQueue queue;
 };
 DEFINE_REF(Graphics)
 } // namespace Metal  

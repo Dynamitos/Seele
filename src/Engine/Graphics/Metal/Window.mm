@@ -1,8 +1,8 @@
 #include "Window.h"
-#include "Foundation/NSSharedPtr.hpp"
 #include "Graphics/Initializer.h"
 #include "Graphics/Metal/Enums.h"
 #include "Graphics/Texture.h"
+#include "Command.h"
 #include "Metal/MTLTexture.hpp"
 using namespace Seele;
 using namespace Seele::Metal;
@@ -117,6 +117,7 @@ void Window::beginFrame()
 
 void Window::endFrame()
 {
+    graphics->getQueue()->getCommands()->present(drawable);
 }
 
 void Window::onWindowCloseEvent()

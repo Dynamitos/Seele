@@ -1,5 +1,6 @@
 #include "Graphics.h"
-#include "Graphics/Metal/RenderPass.h"
+#include "RenderPass.h"
+#include "Command.h"
 #include "Window.h"
 
 using namespace Seele;
@@ -20,7 +21,7 @@ void Graphics::init(GraphicsInitializer)
   device = MTL::CreateSystemDefaultDevice();
   library = device->newDefaultLibrary();
   assert(library);
-  queue = device->newCommandQueue();
+  queue = new CommandQueue(this);
 }
 
 Gfx::OWindow Graphics::createWindow(const WindowCreateInfo &createInfo)
@@ -40,37 +41,41 @@ Gfx::ORenderPass Graphics::createRenderPass(Gfx::RenderTargetLayout layout, Arra
 
 void Graphics::beginRenderPass(Gfx::PRenderPass renderPass)
 {
+  queue->getCommands()->beginRenderPass(renderPass.cast<RenderPass>());
 }
 
 void Graphics::endRenderPass()
 {
-  
+  queue->getCommands()->endRenderPass();
 }
+
 void Graphics::waitDeviceIdle()
 {
-  
+  queue->getCommands()->waitDeviceIdle();
 }
 
 void Graphics::executeCommands(const Array<Gfx::PRenderCommand>& commands)
 {
-  
+  queue->getCommands()->executeCommands(commands);  
 }
+
 void Graphics::executeCommands(const Array<Gfx::PComputeCommand>& commands)
 {
-  
+  queue->getCommands()->executeCommands(commands);
 }
 
 Gfx::OTexture2D Graphics::createTexture2D(const TextureCreateInfo &createInfo)
 {
-  
+  return new Texture2D(this, createInfo);
 }
 Gfx::OTexture3D Graphics::createTexture3D(const TextureCreateInfo &createInfo)
 {
   
+  return new Texture3D(this, createInfo);
 }
 Gfx::OTextureCube Graphics::createTextureCube(const TextureCreateInfo &createInfo)
 {
-  
+  return new TextureCube(this, createInfo);
 }
 Gfx::OUniformBuffer Graphics::createUniformBuffer(const UniformBufferCreateInfo &bulkData)
 {

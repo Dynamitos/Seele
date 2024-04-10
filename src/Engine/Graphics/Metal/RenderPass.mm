@@ -36,7 +36,6 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout layout,
       desc->setResolveTexture(
           resolve.getTexture().cast<TextureBase>()->getTexture());
     }
-    colorAttachments->setObject(desc, i);
   }
   if (layout.depthAttachment.getTexture() != nullptr) {
     depth = MTL::RenderPassDepthAttachmentDescriptor::alloc()->init();

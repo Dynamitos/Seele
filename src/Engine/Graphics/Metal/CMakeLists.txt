@@ -10,6 +10,7 @@ target_sources(Engine
         RenderPass.h
         RenderPass.mm
         Resources.h
+        Resources.mm
         Texture.h
         Texture.mm
         Window.h

@@ -1,6 +1,7 @@
 #pragma once
 #include "Graphics/Command.h"
 #include "Metal/MTLComputeCommandEncoder.hpp"
+#include "Metal/MTLDrawable.hpp"
 #include "Metal/MTLRenderCommandEncoder.hpp"
 #include "MinimalEngine.h"
 #include "RenderPass.h"
@@ -19,15 +20,22 @@ public:
     ~Command();
     void beginRenderPass(PRenderPass renderPass);
     void endRenderPass();
+    void present(MTL::Drawable* drawable);
+    void end(PEvent signal);
     void executeCommands(const Array<Gfx::PRenderCommand>& commands);
     void executeCommands(const Array<Gfx::PComputeCommand>& commands);
+    void waitDeviceIdle();
+    void signalEvent(PEvent event);
+    void waitForEvent(PEvent event);
+    MTL::RenderCommandEncoder* createRenderEncoder() { return renderEncoder->renderCommandEncoder(); }
+    MTL::ComputeCommandEncoder* createComputeEncoder() { return cmdBuffer->computeCommandEncoder(); }
+    PEvent getCompletedEvent() const { return completed; }
 private:
     PGraphics graphics;
     PCommandQueue owner;
+    OEvent completed;
     MTL::CommandBuffer* cmdBuffer;
     MTL::ParallelRenderCommandEncoder* renderEncoder;
-    PFence fence;
-    PSemaphore semaphore;
 };
 DEFINE_REF(Command)
 class RenderCommand : public Gfx::RenderCommand
@@ -77,11 +85,10 @@ public:
     PCommand getCommands();
     PRenderCommand getRenderCommand(const std::string& name);
     PComputeCommand getComputeCommand(const std::string& name);
-    void submitCommands(PSemaphore signalSemaphore = nullptr);
+    void submitCommands(PEvent signal = nullptr);
 private:
     PGraphics graphics;
     MTL::CommandQueue* queue;
-    Array<OCommand> allocatedCommands;
     OCommand activeCommand;
 };
 }
