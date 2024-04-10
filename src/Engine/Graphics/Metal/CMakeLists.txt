@@ -2,10 +2,14 @@ target_sources(Engine
     PRIVATE
         Command.h
         Command.mm
+        Descriptor.h
+        Descriptor.mm
         Enums.h
         Enums.mm
         Graphics.h
         Graphics.mm
+        Pipeline.h
+        Pipeline.mm
         PrivateImpl.mm
         RenderPass.h
         RenderPass.mm
