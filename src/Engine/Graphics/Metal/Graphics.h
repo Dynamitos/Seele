@@ -1,4 +1,5 @@
 #pragma once
+#include "Graphics/Metal/Command.h"
 #include "Metal/Metal.hpp"
 #include "Graphics/Graphics.h"
 
@@ -55,10 +56,12 @@ public:
     
     MTL::Device* getDevice() const { return device; }
     PCommandQueue getQueue() const { return queue; }
+    PIOCommandQueue getIOQueue() const { return ioQueue; }
 protected:
     MTL::Device* device;
     MTL::Library* library;
     OCommandQueue queue;
+    OIOCommandQueue ioQueue;
 };
 DEFINE_REF(Graphics)
 } // namespace Metal  

@@ -22,6 +22,7 @@ void Graphics::init(GraphicsInitializer)
   library = device->newDefaultLibrary();
   assert(library);
   queue = new CommandQueue(this);
+  ioQueue = new IOCommandQueue(this);
 }
 
 Gfx::OWindow Graphics::createWindow(const WindowCreateInfo &createInfo)

@@ -1,6 +1,7 @@
 #include "Command.h"
 #include "Graphics/Graphics.h"
 #include "Graphics/Metal/Resources.h"
+#include "Metal/MTLIOCommandQueue.hpp"
 #include "Metal/MTLRenderCommandEncoder.hpp"
 #include "Window.h"
 
@@ -33,22 +34,20 @@ void Command::end(PEvent signal) {
 }
 
 void Command::executeCommands(Array<Gfx::ORenderCommand> commands) {
-  for (auto& command : commands) {
+  for (auto &command : commands) {
     auto cmd = Gfx::PRenderCommand(command).cast<RenderCommand>();
     cmd->end();
   }
 }
 
 void Command::executeCommands(Array<Gfx::OComputeCommand> commands) {
-  for (auto& command : commands) {
+  for (auto &command : commands) {
     auto cmd = Gfx::PComputeCommand(command).cast<ComputeCommand>();
     cmd->end();
   }
 }
 
-void Command::waitDeviceIdle() {
-  cmdBuffer->waitUntilCompleted();
-}
+void Command::waitDeviceIdle() { cmdBuffer->waitUntilCompleted(); }
 
 void Command::signalEvent(PEvent event) {
   cmdBuffer->encodeSignalEvent(event->getHandle(), 1);
@@ -167,7 +166,26 @@ OComputeCommand CommandQueue::getComputeCommand(const std::string &name) {
 
 void CommandQueue::submitCommands(PEvent signalSemaphore) {
     activeCommand->end(signalSemaphore);
-    MTL::Event* prevCmdEvent = activeCommand->getCompletedEvent();
+    MTL::Event *prevCmdEvent = activeCommand->getCompletedEvent();
+    activeCommand = new Command(graphics, this);
+    activeCommand->waitForEvent(prevCmdEvent);
+}
+
+IOCommandQueue::IOCommandQueue(PGraphics graphics) : graphics(graphics) {
+  MTL::IOCommandQueueDescriptor* desc = MTL::IOCommandQueueDescriptor::alloc()->init();
+  desc->setType(MTL::IOCommandQueueTypeConcurrent);
+  desc->setPriority(MTL::IOPriorityNormal);
+  queue = graphics->getDevice()->newIOCommandQueue(desc);
+  activeCommand = new Command(graphics, this);
+  desc->release();
+}
+
+IOCommandQueue::~IOCommandQueue() { queue->release(); }
+
+void IOCommandQueue::submitCommands(PEvent signalSemaphore) {
+  //TODO: scratch buffer
+    activeCommand->end(signalSemaphore);
+    MTL::Event *prevCmdEvent = activeCommand->getCompletedEvent();
     activeCommand = new Command(graphics, this);
     activeCommand->waitForEvent(prevCmdEvent);
 }

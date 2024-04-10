@@ -3,6 +3,7 @@
 #include "Graphics/Enums.h"
 #include "Graphics/Initializer.h"
 #include "Graphics/Metal/Graphics.h"
+#include "Metal/MTLTypes.hpp"
 
 using namespace Seele;
 using namespace Seele::Metal;
@@ -44,6 +45,11 @@ TextureBase::TextureBase(PGraphics graphics, MTL::TextureType type,
 
     descriptor->release();
   }
+  if(createInfo.sourceData.data != nullptr)
+  {
+    MTL::Region region(0, 0, 0, width, height, depth);
+    texture->replaceRegion(region, 0, createInfo.sourceData.data, createInfo.sourceData.size / (depth / height));
+  }
 }
 
 TextureBase::~TextureBase() {
@@ -55,7 +61,10 @@ TextureBase::~TextureBase() {
 void TextureBase::executePipelineBarrier(Gfx::SeAccessFlags,
                                          Gfx::SePipelineStageFlags,
                                          Gfx::SeAccessFlags,
-                                         Gfx::SePipelineStageFlags) {}
+                                         Gfx::SePipelineStageFlags) {
+
+  
+}
 
 void TextureBase::changeLayout(Gfx::SeImageLayout, Gfx::SeAccessFlags,
                                Gfx::SePipelineStageFlags, Gfx::SeAccessFlags,

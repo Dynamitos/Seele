@@ -2,6 +2,7 @@
 #include "Graphics/Command.h"
 #include "Metal/MTLComputeCommandEncoder.hpp"
 #include "Metal/MTLDrawable.hpp"
+#include "Metal/MTLIOCommandQueue.hpp"
 #include "Metal/MTLRenderCommandEncoder.hpp"
 #include "MinimalEngine.h"
 #include "RenderPass.h"
@@ -30,6 +31,10 @@ public:
     MTL::RenderCommandEncoder* createRenderEncoder() { return renderEncoder->renderCommandEncoder(); }
     MTL::ComputeCommandEncoder* createComputeEncoder() { return cmdBuffer->computeCommandEncoder(); }
     PEvent getCompletedEvent() const { return completed; }
+    constexpr MTL::CommandBuffer* getHandle() const
+    {
+      return cmdBuffer;
+    }
 private:
     PGraphics graphics;
     PCommandQueue owner;
@@ -91,5 +96,22 @@ private:
     MTL::CommandQueue* queue;
     OCommand activeCommand;
 };
+class IOCommandQueue
+{
+public:
+  IOCommandQueue(PGraphics graphics);
+  ~IOCommandQueue();
+  constexpr MTL::IOCommandQueue* getHandle()
+  {
+    return queue;
+  }
+  PCommand getCommands();
+  void submitCommands(PEvent signal = nullptr);
+private:
+  PGraphics graphics;
+  MTL::IOCommandQueue* queue;
+  OCommand activeCommand;
+};
+DEFINE_REF(IOCommandQueue)
 }
 }

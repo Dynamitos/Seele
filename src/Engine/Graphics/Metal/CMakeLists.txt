@@ -1,5 +1,7 @@
 target_sources(Engine
     PRIVATE
+        Buffer.h
+        Buffer.mm
         Command.h
         Command.mm
         Descriptor.h

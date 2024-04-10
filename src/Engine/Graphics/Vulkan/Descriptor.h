@@ -14,7 +14,7 @@ class DescriptorLayout : public Gfx::DescriptorLayout
 public:
     DescriptorLayout(PGraphics graphics, const std::string& name);
     virtual ~DescriptorLayout();
-    virtual void create();
+    virtual void create() override;
     constexpr VkDescriptorSetLayout getHandle() const
     {
         return layoutHandle;
