@@ -1,4 +1,5 @@
 #include "Enums.h"
+#include "Graphics/Enums.h"
 #include <stdexcept>
 
 using namespace Seele;
@@ -534,6 +535,54 @@ Gfx::SeFormat Seele::Metal::cast(MTL::PixelFormat format) {
     return Gfx::SE_FORMAT_UNDEFINED;
   case MTL::PixelFormatX24_Stencil8:
     return Gfx::SE_FORMAT_UNDEFINED;
+  default:
+    throw std::logic_error("Not implemented");
+  }
+}
+
+MTL::LoadAction Seele::Metal::cast(Gfx::SeAttachmentLoadOp loadOp) {
+  switch (loadOp) {
+  case Seele::Gfx::SE_ATTACHMENT_LOAD_OP_LOAD:
+    return MTL::LoadActionLoad;
+  case Seele::Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR:
+    return MTL::LoadActionClear;
+  case Seele::Gfx::SE_ATTACHMENT_LOAD_OP_DONT_CARE:
+    return MTL::LoadActionDontCare;
+  default:
+    throw std::logic_error("Not implemented");
+  }
+}
+
+Gfx::SeAttachmentLoadOp Seele::Metal::cast(MTL::LoadAction loadOp) {
+  switch (loadOp) {
+  case MTL::LoadActionDontCare:
+    return Gfx::SE_ATTACHMENT_LOAD_OP_DONT_CARE;
+  case MTL::LoadActionLoad:
+    return Gfx::SE_ATTACHMENT_LOAD_OP_LOAD;
+  case MTL::LoadActionClear:
+    return Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR;
+  default:
+    throw std::logic_error("Not implemented");
+  }
+}
+
+MTL::StoreAction Seele::Metal::cast(Gfx::SeAttachmentStoreOp storeOp) {
+  switch (storeOp) {
+  case Seele::Gfx::SE_ATTACHMENT_STORE_OP_STORE:
+    return MTL::StoreActionStore;
+  case Seele::Gfx::SE_ATTACHMENT_STORE_OP_DONT_CARE:
+    return MTL::StoreActionDontCare;
+  default:
+    throw std::logic_error("Not implemented");
+  }
+}
+
+Gfx::SeAttachmentStoreOp Seele::Metal::cast(MTL::StoreAction storeOp) {
+  switch (storeOp) {
+  case MTL::StoreActionDontCare:
+    return Gfx::SE_ATTACHMENT_STORE_OP_DONT_CARE;
+  case MTL::StoreActionStore:
+    return Gfx::SE_ATTACHMENT_STORE_OP_STORE;
   default:
     throw std::logic_error("Not implemented");
   }

@@ -1,6 +1,9 @@
 #include "Window.h"
 #include "Foundation/NSSharedPtr.hpp"
+#include "Graphics/Initializer.h"
+#include "Graphics/Metal/Enums.h"
 #include "Graphics/Texture.h"
+#include "Metal/MTLTexture.hpp"
 using namespace Seele;
 using namespace Seele::Metal;
 
@@ -98,6 +101,17 @@ void Window::beginFrame()
 {
     @autoreleasepool {
         drawable = (__bridge CA::MetalDrawable*)[metalLayer nextDrawable];
+        MTL::Texture* buf = drawable->texture();
+        backBuffer = new Texture2D(graphics, TextureCreateInfo {
+            .width = static_cast<uint32>(buf->width()),
+            .height = static_cast<uint32>(buf->height()),
+            .depth = static_cast<uint32>(buf->depth()),
+            .elements = static_cast<uint32>(buf->arrayLength()),
+            .mipLevels = static_cast<uint32>(buf->mipmapLevelCount()),
+            .format = cast(buf->pixelFormat()),
+            .usage = MTL::TextureUsageRenderTarget,
+            .samples = static_cast<uint32>(buf->sampleCount()),
+        }, buf);
     }
 }
 
@@ -109,9 +123,9 @@ void Window::onWindowCloseEvent()
 {
 }
 
-Gfx::PTexture2D Window::getBackBuffer()
+Gfx::PTexture2D Window::getBackBuffer() const
 {
-    return nullptr; //drawable->texture()
+    return PTexture2D(backBuffer);
 }
 
 void Window::setKeyCallback(std::function<void(KeyCode, InputAction, KeyModifier)> callback)
@@ -193,10 +207,12 @@ void Window::resize(int width, int height)
 Viewport::Viewport(PWindow owner, const ViewportCreateInfo& createInfo)
     : Gfx::Viewport(owner, createInfo)
 {
-    viewport.size.x = sizeX;
-    viewport.size.y = sizeY;
-    viewport.offset.x = offsetX;
-    viewport.offset.y = offsetY;
+    viewport.width = sizeX;
+    viewport.height = sizeY;
+    viewport.originX = offsetX;
+    viewport.originY = offsetY;
+    viewport.znear = 0.0f;
+    viewport.zfar = 1.0f;
 }
 
 Viewport::~Viewport()
@@ -206,12 +222,12 @@ Viewport::~Viewport()
 
 void Viewport::resize(uint32 newX, uint32 newY)
 {
-    viewport.size.x = newX;
-    viewport.size.y = newY;
+    viewport.width = newX;
+    viewport.height = newY;
 }
 
 void Viewport::move(uint32 newOffset, uint32 newOffsetY)
 {
-    viewport.offset.x = newOffset;
-    viewport.offset.y = newOffsetY;
+    viewport.originX = newOffset;
+    viewport.originY = newOffsetY;
 }

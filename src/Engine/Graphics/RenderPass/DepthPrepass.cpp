@@ -111,7 +111,7 @@ void DepthPrepass::render()
                 command->bindDescriptor(descriptorSets);
                 if (graphics->supportMeshShading())
                 {
-                    command->dispatch(instance.meshes.size(), 1, 1);
+                    command->drawMesh(instance.meshes.size(), 1, 1);
                 }
                 else
                 {

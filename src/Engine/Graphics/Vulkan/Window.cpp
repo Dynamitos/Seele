@@ -149,7 +149,7 @@ void Window::onWindowCloseEvent()
 {
 }
 
-Gfx::PTexture2D Window::getBackBuffer()
+Gfx::PTexture2D Window::getBackBuffer() const
 {
     return PTexture2D(swapChainTextures[currentImageIndex]);
 }

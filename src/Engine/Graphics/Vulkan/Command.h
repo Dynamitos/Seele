@@ -6,7 +6,6 @@
 
 namespace Seele
 {
-struct VertexInputStream;
 namespace Vulkan
 {
 DECLARE_REF(RenderPass)
@@ -18,8 +17,8 @@ DECLARE_REF(CommandPool)
 class Command
 {
 public:
-	Command(PGraphics graphics, VkCommandPool cmdPool, PCommandPool pool);
-	virtual ~Command();
+	Command(PGraphics graphics, PCommandPool pool);
+	~Command();
 	constexpr VkCommandBuffer getHandle()
 	{
 		return handle;
@@ -54,7 +53,6 @@ private:
 	VkViewport currentViewport;
 	VkRect2D currentScissor;
 	VkCommandBuffer handle;
-	VkCommandPool owner;
 	PRenderPass boundRenderPass;
 	PFramebuffer boundFramebuffer;
 	Array<PSemaphore> waitSemaphores;
@@ -82,7 +80,7 @@ public:
 	void begin(PRenderPass renderPass, PFramebuffer framebuffer);
 	void end();
 	void reset();
-	virtual bool isReady() override;
+	bool isReady();
 	virtual void setViewport(Gfx::PViewport viewport) override;
 	virtual void bindPipeline(Gfx::PGraphicsPipeline pipeline) override;
 	virtual void bindDescriptor(Gfx::PDescriptorSet descriptorSet) override;
@@ -92,7 +90,7 @@ public:
 	virtual void pushConstants(Gfx::PPipelineLayout layout, Gfx::SeShaderStageFlags stage, uint32 offset, uint32 size, const void* data) override;
 	virtual void draw(uint32 vertexCount, uint32 instanceCount, int32 firstVertex, uint32 firstInstance) override;
 	virtual void drawIndexed(uint32 indexCount, uint32 instanceCount, int32 firstIndex, uint32 vertexOffset, uint32 firstInstance) override; 
-	virtual void dispatch(uint32 groupX, uint32 groupY, uint32 groupZ) override;
+	virtual void drawMesh(uint32 groupX, uint32 groupY, uint32 groupZ) override;
 private:
 	PGraphicsPipeline pipeline;
 	bool ready;
@@ -119,7 +117,7 @@ public:
 	void begin();
 	void end();
 	void reset();
-	virtual bool isReady() override;
+	bool isReady();
 	virtual void bindPipeline(Gfx::PComputePipeline pipeline) override;
 	virtual void bindDescriptor(Gfx::PDescriptorSet set) override;
 	virtual void bindDescriptor(const Array<Gfx::PDescriptorSet>& sets) override;

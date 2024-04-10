@@ -28,7 +28,7 @@ public:
         SeAttachmentLoadOp stencilLoadOp = SE_ATTACHMENT_LOAD_OP_DONT_CARE,
         SeAttachmentStoreOp stencilStoreOp = SE_ATTACHMENT_STORE_OP_DONT_CARE);
     ~RenderTargetAttachment();
-    PTexture2D getTexture()
+    PTexture2D getTexture() const
     {
         if(viewport != nullptr)
         {

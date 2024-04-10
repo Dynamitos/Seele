@@ -1,7 +1,9 @@
 #pragma once
 #include "Graphics.h"
 #include "Graphics/Window.h"
+#include "Metal/MTLRenderCommandEncoder.hpp"
 #include "Resources.h"
+#include "Texture.h"
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -24,7 +26,7 @@ public:
     virtual void pollInput() override;
     virtual void beginFrame() override;
     virtual void endFrame() override;
-    virtual Gfx::PTexture2D getBackBuffer() override;
+    virtual Gfx::PTexture2D getBackBuffer() const override;
     virtual void onWindowCloseEvent() override;
     virtual void setKeyCallback(std::function<void(KeyCode, InputAction, KeyModifier)> callback) override;
     virtual void setMouseMoveCallback(std::function<void(double, double)> callback) override;
@@ -48,6 +50,7 @@ private:
     NSWindow* metalWindow;
     CAMetalLayer* metalLayer;
     CA::MetalDrawable* drawable;
+    OTexture2D backBuffer;
 
     std::function<void(KeyCode, InputAction, KeyModifier)> keyCallback;
     std::function<void(double, double)> mouseMoveCallback;
@@ -63,10 +66,14 @@ class Viewport : public Gfx::Viewport
 public:
     Viewport(PWindow owner, const ViewportCreateInfo& createInfo);
     virtual ~Viewport();
+    constexpr MTL::Viewport getHandle() const
+    {
+        return viewport;
+    }
     virtual void resize(uint32 newX, uint32 newY);
     virtual void move(uint32 newOffset, uint32 newOffsetY);
 private:
-    Rect viewport;
+    MTL::Viewport viewport;
 };
 } // namespace Metal
 } // namespace Seele

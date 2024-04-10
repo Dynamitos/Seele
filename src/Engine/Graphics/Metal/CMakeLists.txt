@@ -1,5 +1,7 @@
 target_sources(Engine
     PRIVATE
+        Command.h
+        Command.mm
         Enums.h
         Enums.mm
         Graphics.h

@@ -1,4 +1,5 @@
 #include "Graphics.h"
+#include "Graphics/Metal/RenderPass.h"
 #include "Window.h"
 
 using namespace Seele;
@@ -34,13 +35,13 @@ Gfx::OViewport Graphics::createViewport(Gfx::PWindow owner, const ViewportCreate
 
 Gfx::ORenderPass Graphics::createRenderPass(Gfx::RenderTargetLayout layout, Array<Gfx::SubPassDependency> dependencies, Gfx::PViewport renderArea)
 {
-  
+  return new RenderPass(this, layout, dependencies, renderArea);
 }
 
 void Graphics::beginRenderPass(Gfx::PRenderPass renderPass)
 {
-  
 }
+
 void Graphics::endRenderPass()
 {
   

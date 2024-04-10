@@ -3,8 +3,6 @@
 #include "Graphics/Enums.h"
 #include "Graphics/Initializer.h"
 #include "Graphics/Metal/Graphics.h"
-#include "Metal/MTLCommandEncoder.hpp"
-#include "Metal/MTLTexture.hpp"
 
 using namespace Seele;
 using namespace Seele::Metal;

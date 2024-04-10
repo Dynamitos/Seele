@@ -1,4 +1,5 @@
 #pragma once
+#include "Metal/MTLRenderCommandEncoder.hpp"
 #include "Metal/Metal.hpp"
 #include "Graphics/Graphics.h"
 
@@ -57,6 +58,7 @@ protected:
     MTL::Device* device;
     MTL::Library* library;
     MTL::CommandQueue* queue;
+    MTL::RenderCommandEncoder* encoder;
 };
 DEFINE_REF(Graphics)
 } // namespace Metal  

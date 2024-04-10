@@ -12,15 +12,14 @@ using namespace Seele;
 using namespace Seele::Vulkan;
 
 
-Command::Command(PGraphics graphics, VkCommandPool cmdPool, PCommandPool pool)
+Command::Command(PGraphics graphics, PCommandPool pool)
     : graphics(graphics)
     , pool(pool)
-    , owner(cmdPool)
 {
     VkCommandBufferAllocateInfo allocInfo = {
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
         .pNext = nullptr,
-        .commandPool = owner,
+        .commandPool = pool->getHandle(),
         .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
         .commandBufferCount = 1,
     };
@@ -34,7 +33,7 @@ Command::Command(PGraphics graphics, VkCommandPool cmdPool, PCommandPool pool)
 
 Command::~Command()
 {
-    vkFreeCommandBuffers(graphics->getDevice(), owner, 1, &handle);
+    vkFreeCommandBuffers(graphics->getDevice(), pool->getHandle(), 1, &handle);
     waitSemaphores.clear();
 }
 
@@ -335,7 +334,7 @@ void RenderCommand::drawIndexed(uint32 indexCount, uint32 instanceCount, int32 f
     assert(threadId == std::this_thread::get_id());
     vkCmdDrawIndexed(handle, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
 }
-void RenderCommand::dispatch(uint32 groupX, uint32 groupY, uint32 groupZ)
+void RenderCommand::drawMesh(uint32 groupX, uint32 groupY, uint32 groupZ)
 {
     assert(threadId == std::this_thread::get_id());
     graphics->vkCmdDrawMeshTasksEXT(handle, groupX, groupY, groupZ);
@@ -461,7 +460,7 @@ CommandPool::CommandPool(PGraphics graphics, PQueue queue)
     };
     VK_CHECK(vkCreateCommandPool(graphics->getDevice(), &info, nullptr, &commandPool));
     // TODO: dont reset individual commands, reset pool instead
-    allocatedBuffers.add(new Command(graphics, commandPool, this));
+    allocatedBuffers.add(new Command(graphics, this));
     
     command = allocatedBuffers.back();
     command->begin();
@@ -554,7 +553,7 @@ void CommandPool::submitCommands(PSemaphore signalSemaphore)
             assert(cmdBuffer->state == Command::State::Submit);
         }
     }
-    allocatedBuffers.add(new Command(graphics, commandPool, this));
+    allocatedBuffers.add(new Command(graphics, this));
     command = allocatedBuffers.back();
     command->begin();
     command->waitForSemaphore(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, waitSemaphore);
