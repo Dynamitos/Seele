@@ -22,8 +22,8 @@ public:
     virtual void endRenderPass() override;
     virtual void waitDeviceIdle() override;
 
-    virtual void executeCommands(const Array<Gfx::PRenderCommand>& commands) override;
-    virtual void executeCommands(const Array<Gfx::PComputeCommand>& commands) override;
+    virtual void executeCommands(Array<Gfx::ORenderCommand> commands) override;
+    virtual void executeCommands(Array<Gfx::OComputeCommand> commands) override;
 
     virtual Gfx::OTexture2D createTexture2D(const TextureCreateInfo &createInfo) override;
     virtual Gfx::OTexture3D createTexture3D(const TextureCreateInfo &createInfo) override;
@@ -33,8 +33,8 @@ public:
     virtual Gfx::OVertexBuffer createVertexBuffer(const VertexBufferCreateInfo &bulkData) override;
     virtual Gfx::OIndexBuffer createIndexBuffer(const IndexBufferCreateInfo &bulkData) override;
     
-    virtual Gfx::PRenderCommand createRenderCommand(const std::string& name = "") override;
-    virtual Gfx::PComputeCommand createComputeCommand(const std::string& name = "") override;
+    virtual Gfx::ORenderCommand createRenderCommand(const std::string& name = "") override;
+    virtual Gfx::OComputeCommand createComputeCommand(const std::string& name = "") override;
     
     virtual Gfx::OVertexShader createVertexShader(const ShaderCreateInfo& createInfo) override;
     virtual Gfx::OFragmentShader createFragmentShader(const ShaderCreateInfo& createInfo) override;

@@ -42,13 +42,13 @@ void UIPass::beginFrame(const Component::Camera& cam)
 void UIPass::render() 
 {
     graphics->beginRenderPass(renderPass);
-    Gfx::PRenderCommand command = graphics->createRenderCommand("UIPassCommand");
+    Gfx::ORenderCommand command = graphics->createRenderCommand("UIPassCommand");
     command->setViewport(viewport);
     command->bindPipeline(pipeline);
     command->bindVertexBuffer({elementBuffer});
     command->bindDescriptor(descriptorSet);
     command->draw(4, static_cast<uint32>(renderElements.size()), 0, 0);
-    graphics->executeCommands(Array<Gfx::PRenderCommand>({command}));
+    graphics->executeCommands(Array{std::move(command)});
     graphics->endRenderPass();
     
     //co_return;

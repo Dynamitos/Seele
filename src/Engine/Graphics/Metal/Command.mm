@@ -1,4 +1,5 @@
 #include "Command.h"
+#include "Graphics/Graphics.h"
 #include "Graphics/Metal/Resources.h"
 #include "Metal/MTLRenderCommandEncoder.hpp"
 #include "Window.h"
@@ -7,7 +8,7 @@ using namespace Seele;
 using namespace Seele::Metal;
 
 Command::Command(PGraphics graphics, PCommandQueue owner)
-    : graphics(graphics), owner(owner), signalEvent(new Event(graphics)),
+    : graphics(graphics), owner(owner), completed(new Event(graphics)),
       cmdBuffer(owner->getHandle()->commandBuffer()), renderEncoder(nullptr) {}
 
 Command::~Command() { cmdBuffer->release(); }
@@ -31,16 +32,16 @@ void Command::end(PEvent signal) {
   cmdBuffer->commit();
 }
 
-void Command::executeCommands(const Array<Gfx::PRenderCommand> &commands) {
-  for (auto command : commands) {
-    auto cmd = command.cast<RenderCommand>();
+void Command::executeCommands(Array<Gfx::ORenderCommand> commands) {
+  for (auto& command : commands) {
+    auto cmd = Gfx::PRenderCommand(command).cast<RenderCommand>();
     cmd->end();
   }
 }
 
-void Command::executeCommands(const Array<Gfx::PComputeCommand> &commands) {
-  for (auto command : commands) {
-    auto cmd = command.cast<ComputeCommand>();
+void Command::executeCommands(Array<Gfx::OComputeCommand> commands) {
+  for (auto& command : commands) {
+    auto cmd = Gfx::PComputeCommand(command).cast<ComputeCommand>();
     cmd->end();
   }
 }
@@ -156,11 +157,11 @@ CommandQueue::CommandQueue(PGraphics graphics) : graphics(graphics) {
 
 CommandQueue::~CommandQueue() { queue->release(); }
 
-PRenderCommand CommandQueue::getRenderCommand(const std::string &name) {
+ORenderCommand CommandQueue::getRenderCommand(const std::string &name) {
     return new RenderCommand(activeCommand->createRenderEncoder());
 }
 
-PComputeCommand CommandQueue::getComputeCommand(const std::string &name) {
+OComputeCommand CommandQueue::getComputeCommand(const std::string &name) {
     return new ComputeCommand(activeCommand->createComputeEncoder());
 }
 

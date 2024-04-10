@@ -377,12 +377,19 @@ public:
     {
         return addInternal(std::forward<T>(item));
     }
-    constexpr void addAll(Array other)
+    constexpr void addAll(const Array& other)
     {
-        for(auto value : other)
+        for(const auto& value : other)
         {
             addInternal(value);
         }
+    }
+    constexpr void addAll(Array&& other)
+    {
+      for(auto&& value : other)
+      {
+        addInternal(value);
+      }
     }
     constexpr reference addUnique(const value_type &item = value_type())
     {

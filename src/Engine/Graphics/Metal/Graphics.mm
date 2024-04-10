@@ -54,53 +54,60 @@ void Graphics::waitDeviceIdle()
   queue->getCommands()->waitDeviceIdle();
 }
 
-void Graphics::executeCommands(const Array<Gfx::PRenderCommand>& commands)
+void Graphics::executeCommands(Array<Gfx::ORenderCommand> commands)
 {
-  queue->getCommands()->executeCommands(commands);  
+  queue->getCommands()->executeCommands(std::move(commands));  
 }
 
-void Graphics::executeCommands(const Array<Gfx::PComputeCommand>& commands)
+void Graphics::executeCommands(Array<Gfx::OComputeCommand> commands)
 {
-  queue->getCommands()->executeCommands(commands);
+  queue->getCommands()->executeCommands(std::move(commands));
 }
 
 Gfx::OTexture2D Graphics::createTexture2D(const TextureCreateInfo &createInfo)
 {
   return new Texture2D(this, createInfo);
 }
+
 Gfx::OTexture3D Graphics::createTexture3D(const TextureCreateInfo &createInfo)
 {
   
   return new Texture3D(this, createInfo);
 }
+
 Gfx::OTextureCube Graphics::createTextureCube(const TextureCreateInfo &createInfo)
 {
   return new TextureCube(this, createInfo);
 }
+
 Gfx::OUniformBuffer Graphics::createUniformBuffer(const UniformBufferCreateInfo &bulkData)
 {
   
 }
+
 Gfx::OShaderBuffer Graphics::createShaderBuffer(const ShaderBufferCreateInfo &bulkData)
 {
   
 }
+
 Gfx::OVertexBuffer Graphics::createVertexBuffer(const VertexBufferCreateInfo &bulkData)
 {
   
 }
+
 Gfx::OIndexBuffer Graphics::createIndexBuffer(const IndexBufferCreateInfo &bulkData)
 {
   
 }
 
-Gfx::PRenderCommand Graphics::createRenderCommand(const std::string& name)
+Gfx::ORenderCommand Graphics::createRenderCommand(const std::string& name)
 {
-  
+  return queue->getRenderCommand(name);
 }
-Gfx::PComputeCommand Graphics::createComputeCommand(const std::string& name)
+
+Gfx::OComputeCommand Graphics::createComputeCommand(const std::string& name)
 {
-  
+  return queue->getComputeCommand(name);
 }
 
 Gfx::OVertexShader Graphics::createVertexShader(const ShaderCreateInfo& createInfo)

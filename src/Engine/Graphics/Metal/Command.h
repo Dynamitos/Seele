@@ -22,8 +22,8 @@ public:
     void endRenderPass();
     void present(MTL::Drawable* drawable);
     void end(PEvent signal);
-    void executeCommands(const Array<Gfx::PRenderCommand>& commands);
-    void executeCommands(const Array<Gfx::PComputeCommand>& commands);
+    void executeCommands(Array<Gfx::ORenderCommand> commands);
+    void executeCommands(Array<Gfx::OComputeCommand> commands);
     void waitDeviceIdle();
     void signalEvent(PEvent event);
     void waitForEvent(PEvent event);
@@ -83,8 +83,8 @@ public:
         return queue;
     }
     PCommand getCommands();
-    PRenderCommand getRenderCommand(const std::string& name);
-    PComputeCommand getComputeCommand(const std::string& name);
+    ORenderCommand getRenderCommand(const std::string& name);
+    OComputeCommand getComputeCommand(const std::string& name);
     void submitCommands(PEvent signal = nullptr);
 private:
     PGraphics graphics;

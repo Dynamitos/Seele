@@ -82,7 +82,7 @@ void Command::endRenderPass()
     state = State::Begin;
 }
 
-void Command::executeCommands(const Array<Gfx::PRenderCommand>& commands)
+void Command::executeCommands(const Array<Gfx::ORenderCommand>& commands)
 {
     assert(state == State::RenderPass);
     if(commands.size() == 0)
@@ -93,7 +93,7 @@ void Command::executeCommands(const Array<Gfx::PRenderCommand>& commands)
     Array<VkCommandBuffer> cmdBuffers(commands.size());
     for (uint32 i = 0; i < commands.size(); ++i)
     {
-        auto command = commands[i].cast<RenderCommand>();
+        auto command = Gfx::PRenderCommand(commands[i]).cast<RenderCommand>();
         command->end();
         executingRenders.add(command);
         for(auto& descriptor : command->boundDescriptors)
@@ -106,7 +106,7 @@ void Command::executeCommands(const Array<Gfx::PRenderCommand>& commands)
     vkCmdExecuteCommands(handle, (uint32)cmdBuffers.size(), cmdBuffers.data());
 }
 
-void Command::executeCommands(const Array<Gfx::PComputeCommand>& commands) 
+void Command::executeCommands(const Array<Gfx::OComputeCommand>& commands) 
 {
     if(commands.size() == 0)
     {
@@ -115,7 +115,7 @@ void Command::executeCommands(const Array<Gfx::PComputeCommand>& commands)
     Array<VkCommandBuffer> cmdBuffers(commands.size());
     for (uint32 i = 0; i < commands.size(); ++i)
     {
-        auto command = commands[i].cast<ComputeCommand>();
+        auto command = Gfx::PComputeCommand(commands[i]).cast<ComputeCommand>();
         command->end();
         executingComputes.add(command);
         for(auto& descriptor : command->boundDescriptors)
@@ -485,40 +485,49 @@ PCommand CommandPool::getCommands()
 {
     return command;
 }
+void CommandPool::cacheCommands(Array<ORenderCommand> commands)
+{
+  allocatedRenderCommands.addAll(commands);
+}
 
-PRenderCommand CommandPool::createRenderCommand(const std::string& name)
+void CommandPool::cacheCommands(Array<OComputeCommand> commands)
+{
+  allocatedComputeCommands.addAll(commands);
+}
+
+ORenderCommand CommandPool::createRenderCommand(const std::string& name)
 {
     for (uint32 i = 0; i < allocatedRenderCommands.size(); ++i)
     {
-        PRenderCommand cmdBuffer = allocatedRenderCommands[i];
-        if (cmdBuffer->isReady())
+        if (allocatedRenderCommands[i]->isReady())
         {
+            ORenderCommand cmdBuffer = std::move(allocatedRenderCommands[i]);
+            allocatedRenderCommands.removeAt(i, false);
             cmdBuffer->name = name;
             cmdBuffer->begin(command->boundRenderPass, command->boundFramebuffer);
             return cmdBuffer;
         }
     }
-    allocatedRenderCommands.add(new RenderCommand(graphics, commandPool));
-    PRenderCommand result = allocatedRenderCommands.back();
+    ORenderCommand result = new RenderCommand(graphics, commandPool);
     result->name = name;
     result->begin(command->boundRenderPass, command->boundFramebuffer);
     return result;
 }
 
-PComputeCommand CommandPool::createComputeCommand(const std::string& name)
+OComputeCommand CommandPool::createComputeCommand(const std::string& name)
 {
     for (uint32 i = 0; i < allocatedComputeCommands.size(); ++i)
     {
-        PComputeCommand cmdBuffer = allocatedComputeCommands[i];
-        if (cmdBuffer->isReady())
+        if (allocatedComputeCommands[i]->isReady())
         {
+            OComputeCommand cmdBuffer = std::move(allocatedComputeCommands[i]);
+            allocatedComputeCommands.removeAt(i, false);
             cmdBuffer->name = name;
             cmdBuffer->begin();
             return cmdBuffer;
         }
     }
-    allocatedComputeCommands.add(new ComputeCommand(graphics, commandPool));
-    PComputeCommand result = allocatedComputeCommands.back();
+    OComputeCommand result = new ComputeCommand(graphics, commandPool);
     result->name = name;
     result->begin();
     return result;

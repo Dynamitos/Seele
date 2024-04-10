@@ -116,12 +116,12 @@ void Graphics::waitDeviceIdle()
     vkDeviceWaitIdle(handle);    
 }
 
-void Graphics::executeCommands(const Array<Gfx::PRenderCommand>& commands)
+void Graphics::executeCommands(Array<Gfx::ORenderCommand> commands)
 {
     getGraphicsCommands()->getCommands()->executeCommands(commands);
 }
 
-void Graphics::executeCommands(const Array<Gfx::PComputeCommand>& commands) 
+void Graphics::executeCommands(Array<Gfx::OComputeCommand> commands) 
 {
     getComputeCommands()->getCommands()->executeCommands(commands);
 }
@@ -159,12 +159,12 @@ Gfx::OIndexBuffer Graphics::createIndexBuffer(const IndexBufferCreateInfo &bulkD
 {
     return new IndexBuffer(this, bulkData);
 }
-Gfx::PRenderCommand Graphics::createRenderCommand(const std::string& name)
+Gfx::ORenderCommand Graphics::createRenderCommand(const std::string& name)
 {
     return getGraphicsCommands()->createRenderCommand(name);
 }
 
-Gfx::PComputeCommand Graphics::createComputeCommand(const std::string& name) 
+Gfx::OComputeCommand Graphics::createComputeCommand(const std::string& name) 
 {
     return getComputeCommands()->createComputeCommand(name);
 }

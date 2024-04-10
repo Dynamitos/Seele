@@ -56,8 +56,8 @@ public:
     virtual void endRenderPass() = 0;
     virtual void waitDeviceIdle() = 0;
 
-    virtual void executeCommands(const Array<PRenderCommand>& commands) = 0;
-    virtual void executeCommands(const Array<PComputeCommand>& commands) = 0;
+    virtual void executeCommands(Array<ORenderCommand> commands) = 0;
+    virtual void executeCommands(Array<OComputeCommand> commands) = 0;
 
     virtual OTexture2D createTexture2D(const TextureCreateInfo &createInfo) = 0;
     virtual OTexture3D createTexture3D(const TextureCreateInfo &createInfo) = 0;
@@ -67,8 +67,8 @@ public:
     virtual OVertexBuffer createVertexBuffer(const VertexBufferCreateInfo &bulkData) = 0;
     virtual OIndexBuffer createIndexBuffer(const IndexBufferCreateInfo &bulkData) = 0;
     
-    virtual PRenderCommand createRenderCommand(const std::string& name = "") = 0;
-    virtual PComputeCommand createComputeCommand(const std::string& name = "") = 0;
+    virtual ORenderCommand createRenderCommand(const std::string& name = "") = 0;
+    virtual OComputeCommand createComputeCommand(const std::string& name = "") = 0;
     
     virtual OVertexShader createVertexShader(const ShaderCreateInfo& createInfo) = 0;
     virtual OFragmentShader createFragmentShader(const ShaderCreateInfo& createInfo) = 0;

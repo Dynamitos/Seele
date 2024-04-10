@@ -48,13 +48,13 @@ void DebugPass::beginFrame(const Component::Camera& cam)
 void DebugPass::render()
 {
     graphics->beginRenderPass(renderPass);
-    Gfx::PRenderCommand renderCommand = graphics->createRenderCommand("DebugRender");
+    Gfx::ORenderCommand renderCommand = graphics->createRenderCommand("DebugRender");
     renderCommand->setViewport(viewport);
     renderCommand->bindPipeline(pipeline);
     renderCommand->bindDescriptor(viewParamsSet);
     renderCommand->bindVertexBuffer({ debugVertices });
     renderCommand->draw((uint32)gDebugVertices.size(), 1, 0, 0);
-    graphics->executeCommands(Array{renderCommand});
+    graphics->executeCommands(Array{std::move(renderCommand)});
     graphics->endRenderPass();
     gDebugVertices.clear();
 }
