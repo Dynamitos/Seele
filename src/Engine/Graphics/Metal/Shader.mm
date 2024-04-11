@@ -1,13 +1,16 @@
 #include "Shader.h"
 #include "Graphics.h"
+#include "Graphics/Enums.h"
 #include "Graphics/slang-compile.h"
 #include "Metal/MTLLibrary.hpp"
+#include "metal_irconverter/metal_irconverter.h"
 #include <slang.h>
 
 using namespace Seele;
 using namespace Seele::Metal;
 
-Shader::Shader(PGraphics graphics) : graphics(graphics) {}
+Shader::Shader(PGraphics graphics, Gfx::SeShaderStageFlags stage)
+    : stage(stage), graphics(graphics) {}
 Shader::~Shader() {
   if (function) {
     function->release();
@@ -16,42 +19,52 @@ Shader::~Shader() {
 }
 
 void Shader::create(const ShaderCreateInfo &createInfo) {
-  Slang::ComPtr<slang::IBlob> kernelBlob = generateShader(createInfo, SLANG_DXIL);
-  thread_local IRCompiler* pCompiler = nullptr;
-  if(pCompiler == nullptr)
-  {
+  Slang::ComPtr<slang::IBlob> kernelBlob =
+      generateShader(createInfo, SLANG_DXIL);
+  thread_local IRCompiler *pCompiler = nullptr;
+  if (pCompiler == nullptr) {
     pCompiler = IRCompilerCreate();
   }
   IRCompilerSetEntryPointName(pCompiler, "main");
 
-  IRObject* pDXIL = IRObjectCreateFromDXIL(kernelBlob->getBufferPointer(), kernelBlob->getBufferSize(), IRBytecodeOwnershipNone);
+  IRObject *pDXIL = IRObjectCreateFromDXIL(
+      (const uint8 *)kernelBlob->getBufferPointer(),
+      kernelBlob->getBufferSize(), IRBytecodeOwnershipNone);
 
   // Compile DXIL to Metal IR:
-  IRError* pError = nullptr;
-  IRObject* pOutIR = IRCompilerAllocCompileAndLink(pCompiler, NULL,  pDXIL, &pError);
+  IRError *pError = nullptr;
+  IRObject *pOutIR =
+      IRCompilerAllocCompileAndLink(pCompiler, NULL, pDXIL, &pError);
 
-  if (!pOutIR)
-  {
+  if (!pOutIR) {
     // Inspect pError to determine cause.
-    IRErrorDestroy( pError );
+    IRErrorDestroy(pError);
   }
-
+  IRShaderStage irStage;
+  switch (stage) {
+  case Gfx::SE_SHADER_STAGE_VERTEX_BIT: irStage = IRShaderStageVertex;
+  case Gfx::SE_SHADER_STAGE_FRAGMENT_BIT: irStage = IRShaderStageFragment;
+  case Gfx::SE_SHADER_STAGE_COMPUTE_BIT: irStage = IRShaderStageCompute;
+  case Gfx::SE_SHADER_STAGE_TASK_BIT_NV: irStage = IRShaderStageAmplification;
+  case Gfx::SE_SHADER_STAGE_MESH_BIT_NV: irStage = IRShaderStageMesh;
+  }
   // Retrieve Metallib:
-  MetaLibBinary* pMetallib = IRMetalLibBinaryCreate();
-  IRObjectGetMetalLibBinary(pOutIR, stage, pMetallib);
+  IRMetalLibBinary *pMetallib = IRMetalLibBinaryCreate();
+  IRObjectGetMetalLibBinary(pOutIR, irStage, pMetallib);
   size_t metallibSize = IRMetalLibGetBytecodeSize(pMetallib);
-  uint8_t* metallib = new uint8_t[metallibSize];
+  uint8_t *metallib = new uint8_t[metallibSize];
   IRMetalLibGetBytecode(pMetallib, metallib);
 
   // Store the metallib to custom format or disk, or use to create a MTLLibrary.
-  NS::Error* __autoreleasing error = nil;
-  dispatch_data_t data = 
-    dispatch_data_create(metallib, metallibSize, dispatch_get_main_queue(), NULL);
+  NS::Error *__autoreleasing error = nil;
+  dispatch_data_t data = dispatch_data_create(metallib, metallibSize,
+                                              dispatch_get_main_queue(), NULL);
 
   library = graphics->getDevice()->newLibrary(data, &error);
-  function = library->newFunction(NS::String::string("main", NS::ASCIIStringEncoding));
-  
-  delete [] metallib;
+  function =
+      library->newFunction(NS::String::string("main", NS::ASCIIStringEncoding));
+
+  delete[] metallib;
   IRMetalLibBinaryDestroy(pMetallib);
   IRObjectDestroy(pDXIL);
   IRObjectDestroy(pOutIR);

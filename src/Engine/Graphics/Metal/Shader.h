@@ -1,12 +1,14 @@
 #pragma once
+#include "Graphics/Enums.h"
 #include "Graphics/Shader.h"
 #include "Resources.h"
 
 namespace Seele {
 namespace Metal {
+
 class Shader {
 public:
-  Shader(PGraphics graphics);
+  Shader(PGraphics graphics, Gfx::SeShaderStageFlags stage);
   virtual ~Shader();
 
   void create(const ShaderCreateInfo &createInfo);
@@ -19,6 +21,7 @@ public:
   uint32 getShaderHash() const;
 
 private:
+  Gfx::SeShaderStageFlags stage;
   PGraphics graphics;
   MTL::Library* library;
   MTL::Function *function;
@@ -26,16 +29,16 @@ private:
 };
 DEFINE_REF(Shader)
 
-template <typename Base> class ShaderBase : public Base, public Shader {
+template <typename Base, Gfx::SeShaderStageFlags flags> class ShaderBase : public Base, public Shader {
 public:
-  ShaderBase(PGraphics graphics) : Shader(graphics) {}
+  ShaderBase(PGraphics graphics) : Shader(graphics, flags) {}
   virtual ~ShaderBase() {}
 };
-using VertexShader = ShaderBase<Gfx::VertexShader>;
-using FragmentShader = ShaderBase<Gfx::FragmentShader>;
-using ComputeShader = ShaderBase<Gfx::ComputeShader>;
-using TaskShader = ShaderBase<Gfx::TaskShader>;
-using MeshShader = ShaderBase<Gfx::MeshShader>;
+using VertexShader = ShaderBase<Gfx::VertexShader, Gfx::SE_SHADER_STAGE_VERTEX_BIT>;
+using FragmentShader = ShaderBase<Gfx::FragmentShader, Gfx::SE_SHADER_STAGE_FRAGMENT_BIT>;
+using ComputeShader = ShaderBase<Gfx::ComputeShader, Gfx::SE_SHADER_STAGE_COMPUTE_BIT>;
+using TaskShader = ShaderBase<Gfx::TaskShader, Gfx::SE_SHADER_STAGE_TASK_BIT_NV>;
+using MeshShader = ShaderBase<Gfx::MeshShader, Gfx::SE_SHADER_STAGE_MESH_BIT_NV>;
 
 DEFINE_REF(VertexShader)
 DEFINE_REF(FragmentShader)
