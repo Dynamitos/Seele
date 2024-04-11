@@ -1,8 +1,7 @@
 #pragma once
 #include "Graphics/Initializer.h"
 #include "Graphics/Pipeline.h"
-#include "Metal/MTLComputePipeline.hpp"
-#include "Metal/MTLRenderPipeline.hpp"
+#include "Resources.h"
 #include "MinimalEngine.h"
 
 namespace Seele {

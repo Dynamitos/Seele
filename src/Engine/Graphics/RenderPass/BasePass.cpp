@@ -80,7 +80,7 @@ void BasePass::render()
     }
     permutation.setFragmentFile("BasePass");
     graphics->beginRenderPass(renderPass);
-    Array<Gfx::PRenderCommand> commands;
+    Array<Gfx::ORenderCommand> commands;
     for (VertexData* vertexData : VertexData::getList())
     {
         permutation.setVertexData(vertexData->getTypeName());
@@ -98,7 +98,7 @@ void BasePass::render()
             permutation.setMaterial(materialData.material->getName());
             Gfx::PermutationId id(permutation);
 
-            Gfx::PRenderCommand command = graphics->createRenderCommand("BaseRender");
+            Gfx::ORenderCommand command = graphics->createRenderCommand("BaseRender");
             command->setViewport(viewport);
             Gfx::OPipelineLayout layout = graphics->createPipelineLayout(basePassLayout);
             layout->addDescriptorLayout(INDEX_MATERIAL, materialData.material->getDescriptorLayout());
@@ -159,10 +159,10 @@ void BasePass::render()
                     }
                 }
             }
-            commands.add(command);
+            commands.add(std::move(command));
         }
     }
-    graphics->executeCommands(commands);
+    graphics->executeCommands(std::move(commands));
     graphics->endRenderPass();
 }
 

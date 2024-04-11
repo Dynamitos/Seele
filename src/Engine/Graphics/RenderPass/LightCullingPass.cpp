@@ -60,13 +60,14 @@ void LightCullingPass::render()
     cullingDescriptorSet->updateTexture(5, Gfx::PTexture2D(oLightGrid));
     cullingDescriptorSet->updateTexture(6, Gfx::PTexture2D(tLightGrid));
     cullingDescriptorSet->writeChanges();
-    Gfx::PComputeCommand computeCommand = graphics->createComputeCommand("CullingCommand");
+    Gfx::OComputeCommand computeCommand = graphics->createComputeCommand("CullingCommand");
     computeCommand->bindPipeline(cullingPipeline);
     computeCommand->bindDescriptor({ viewParamsSet, dispatchParamsSet, cullingDescriptorSet, lightEnv->getDescriptorSet() });
     computeCommand->dispatch(dispatchParams.numThreadGroups.x, dispatchParams.numThreadGroups.y, dispatchParams.numThreadGroups.z);
-    Array<Gfx::PComputeCommand> commands = {computeCommand};
+    Array<Gfx::OComputeCommand> commands;
+    commands.add(std::move(computeCommand));
     //std::cout << "Execute" << std::endl;
-    graphics->executeCommands(commands);
+    graphics->executeCommands(std::move(commands));
 }
 
 void LightCullingPass::endFrame() 
@@ -246,12 +247,13 @@ void LightCullingPass::setupFrustums()
     dispatchParamsSet->updateBuffer(1, frustumBuffer);
     dispatchParamsSet->writeChanges();
     
-    Gfx::PComputeCommand command = graphics->createComputeCommand("FrustumCommand");
+    Gfx::OComputeCommand command = graphics->createComputeCommand("FrustumCommand");
     command->bindPipeline(frustumPipeline);
     command->bindDescriptor({ viewParamsSet, dispatchParamsSet });
     command->dispatch(numThreadGroups.x, numThreadGroups.y, numThreadGroups.z);
-    Array<Gfx::PComputeCommand> commands = {command};
-    graphics->executeCommands(commands);
+    Array<Gfx::OComputeCommand> commands;
+    commands.add(std::move(command));
+    graphics->executeCommands(std::move(commands));
     frustumBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 
         Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 }

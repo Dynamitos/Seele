@@ -1,7 +1,6 @@
 #pragma once
 #include "Graphics.h"
 #include "Graphics/Window.h"
-#include "Metal/MTLRenderCommandEncoder.hpp"
 #include "Resources.h"
 #include "Texture.h"
 

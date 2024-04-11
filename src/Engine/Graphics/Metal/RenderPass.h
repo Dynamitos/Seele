@@ -1,12 +1,12 @@
 #pragma once
 #include "Graphics/RenderTarget.h"
-#include "Graphics.h"
-#include "Metal/MTLRenderPass.hpp"
+#include "Resources.h"
 
 namespace Seele 
 {
 namespace Metal 
 {
+DECLARE_REF(Graphics)
 class RenderPass : public Gfx::RenderPass
 {
 public:

@@ -12,7 +12,7 @@ DECLARE_REF(DescriptorLayout)
 class Shader
 {
 public:
-    Shader(PGraphics graphics, ShaderType shaderType, VkShaderStageFlags stage);
+    Shader(PGraphics graphics, VkShaderStageFlags stage);
     virtual ~Shader();
 
     void create(const ShaderCreateInfo& createInfo);
@@ -26,44 +26,36 @@ public:
         //SLang renames all entry points to main, so we dont need that
         return "main";//entryPointName.c_str();
     }
-    constexpr ShaderType getShaderType() const
-    {
-        return type;
-    }
     constexpr VkShaderStageFlags getStage() const
     {
         return stage;
     }
-    //Map<uint32, PDescriptorLayout> getDescriptorLayouts();
     uint32 getShaderHash() const;
 private:
     PGraphics graphics;
-    //Map<uint32, PDescriptorLayout> descriptorSets;
     VkShaderModule module;
-    ShaderType type;
     VkShaderStageFlags stage;
-    std::string entryPointName;
     uint32 hash;
 };
 DEFINE_REF(Shader)
 
-template <typename Base, ShaderType shaderType, VkShaderStageFlags stageFlags>
+template <typename Base, VkShaderStageFlags stageFlags>
 class ShaderBase : public Base, public Shader
 {
 public:
     ShaderBase(PGraphics graphics)
-        : Shader(graphics, shaderType, stageFlags)
+        : Shader(graphics, stageFlags)
     {
     }
     virtual ~ShaderBase()
     {
     }
 };
-typedef ShaderBase<Gfx::VertexShader, ShaderType::VERTEX, VK_SHADER_STAGE_VERTEX_BIT> VertexShader;
-typedef ShaderBase<Gfx::FragmentShader, ShaderType::FRAGMENT, VK_SHADER_STAGE_FRAGMENT_BIT> FragmentShader;
-typedef ShaderBase<Gfx::ComputeShader, ShaderType::COMPUTE, VK_SHADER_STAGE_COMPUTE_BIT> ComputeShader;
-typedef ShaderBase<Gfx::TaskShader, ShaderType::TASK, VK_SHADER_STAGE_TASK_BIT_EXT> TaskShader;
-typedef ShaderBase<Gfx::MeshShader, ShaderType::MESH, VK_SHADER_STAGE_MESH_BIT_EXT> MeshShader;
+using VertexShader = ShaderBase<Gfx::VertexShader, VK_SHADER_STAGE_VERTEX_BIT>;
+using FragmentShader = ShaderBase<Gfx::FragmentShader, VK_SHADER_STAGE_FRAGMENT_BIT>;
+using ComputeShader = ShaderBase<Gfx::ComputeShader, VK_SHADER_STAGE_COMPUTE_BIT>;
+using TaskShader = ShaderBase<Gfx::TaskShader, VK_SHADER_STAGE_TASK_BIT_EXT>;
+using MeshShader = ShaderBase<Gfx::MeshShader, VK_SHADER_STAGE_MESH_BIT_EXT>;
 
 DEFINE_REF(VertexShader)
 DEFINE_REF(FragmentShader)

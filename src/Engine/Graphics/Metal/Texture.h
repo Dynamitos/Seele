@@ -1,7 +1,6 @@
 #pragma once
 #include "Graphics/Texture.h"
 #include "Graphics.h"
-#include "Metal/MTLTexture.hpp"
 
 namespace Seele
 {

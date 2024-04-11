@@ -22,16 +22,6 @@ namespace Seele
 {
 namespace Vulkan
 {
-
-enum class ShaderType
-{
-	VERTEX = 0,
-	FRAGMENT = 1,
-	COMPUTE = 2,
-	TASK = 3,
-	MESH = 4,
-};
-
 VkDescriptorType cast(const Gfx::SeDescriptorType &descriptorType);
 Gfx::SeDescriptorType cast(const VkDescriptorType &descriptorType);
 VkShaderStageFlagBits cast(const Gfx::SeShaderStageFlagBits &stage);

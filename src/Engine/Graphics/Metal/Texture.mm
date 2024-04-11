@@ -61,10 +61,7 @@ TextureBase::~TextureBase() {
 void TextureBase::executePipelineBarrier(Gfx::SeAccessFlags,
                                          Gfx::SePipelineStageFlags,
                                          Gfx::SeAccessFlags,
-                                         Gfx::SePipelineStageFlags) {
-
-  
-}
+                                         Gfx::SePipelineStageFlags) {}
 
 void TextureBase::changeLayout(Gfx::SeImageLayout, Gfx::SeAccessFlags,
                                Gfx::SePipelineStageFlags, Gfx::SeAccessFlags,

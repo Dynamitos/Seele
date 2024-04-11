@@ -17,6 +17,8 @@ target_sources(Engine
         RenderPass.mm
         Resources.h
         Resources.mm
+        Shader.h
+        Shader.mm
         Texture.h
         Texture.mm
         Window.h

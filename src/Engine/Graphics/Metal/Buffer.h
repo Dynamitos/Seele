@@ -7,7 +7,8 @@ namespace Metal {
 DECLARE_REF(Graphics)
 class Buffer
 {
-
+public:
+private:
 };
 DEFINE_REF(Buffer)
 class VertexBuffer : public Gfx::VertexBuffer, public Buffer

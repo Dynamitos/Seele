@@ -56,12 +56,14 @@ void SkyboxRenderPass::render()
         Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT, Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT
     );
     graphics->beginRenderPass(renderPass);
-    Gfx::PRenderCommand renderCommand = graphics->createRenderCommand("SkyboxRender");
+    Gfx::ORenderCommand renderCommand = graphics->createRenderCommand("SkyboxRender");
     renderCommand->setViewport(viewport);
     renderCommand->bindPipeline(pipeline);
     renderCommand->bindDescriptor({viewParamsSet, skyboxDataSet, textureSet});
     renderCommand->draw(36, 1, 0, 0);
-    graphics->executeCommands(Array{ renderCommand });
+    Array<Gfx::ORenderCommand> commands;
+    commands.add(std::move(renderCommand));
+    graphics->executeCommands(std::move(commands));
     graphics->endRenderPass();
 }
 

@@ -54,7 +54,9 @@ void DebugPass::render()
     renderCommand->bindDescriptor(viewParamsSet);
     renderCommand->bindVertexBuffer({ debugVertices });
     renderCommand->draw((uint32)gDebugVertices.size(), 1, 0, 0);
-    graphics->executeCommands(Array{std::move(renderCommand)});
+    Array<Gfx::ORenderCommand> commands;
+    commands.add(std::move(renderCommand));
+    graphics->executeCommands({std::move(commands)});
     graphics->endRenderPass();
     gDebugVertices.clear();
 }

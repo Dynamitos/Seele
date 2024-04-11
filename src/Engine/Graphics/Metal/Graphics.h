@@ -1,5 +1,4 @@
 #pragma once
-#include "Graphics/Metal/Command.h"
 #include "Metal/Metal.hpp"
 #include "Graphics/Graphics.h"
 
@@ -8,6 +7,7 @@ namespace Seele
 namespace Metal
 {
 DECLARE_REF(CommandQueue)
+DECLARE_REF(IOCommandQueue)
 class Graphics : public Gfx::Graphics
 {
 public:

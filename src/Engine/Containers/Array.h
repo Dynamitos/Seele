@@ -171,7 +171,7 @@ public:
     {
         _data = allocateArray(init.size());
         assert(_data != nullptr);
-        std::uninitialized_copy(init.begin(), init.end(), begin());
+        std::uninitialized_move(init.begin(), init.end(), begin());
     }
     
     constexpr Array(const Array &other)

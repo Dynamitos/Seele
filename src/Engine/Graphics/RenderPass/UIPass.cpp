@@ -48,7 +48,9 @@ void UIPass::render()
     command->bindVertexBuffer({elementBuffer});
     command->bindDescriptor(descriptorSet);
     command->draw(4, static_cast<uint32>(renderElements.size()), 0, 0);
-    graphics->executeCommands(Array{std::move(command)});
+    Array<Gfx::ORenderCommand> commands;
+    commands.add(std::move(command));
+    graphics->executeCommands(std::move(commands));
     graphics->endRenderPass();
     
     //co_return;

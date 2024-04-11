@@ -73,10 +73,10 @@ void TextPass::beginFrame(const Component::Camera& cam)
 void TextPass::render() 
 {
     graphics->beginRenderPass(renderPass);
-    Array<Gfx::PRenderCommand> commands;
+    Array<Gfx::ORenderCommand> commands;
     for(const auto& [fontAsset, res] : textResources)
     {
-        Gfx::PRenderCommand command = graphics->createRenderCommand("TextPassCommand");
+        Gfx::ORenderCommand command = graphics->createRenderCommand("TextPassCommand");
         command->setViewport(viewport);
         command->bindPipeline(pipeline);
         for(const auto& resource : res)
@@ -87,9 +87,9 @@ void TextPass::render()
             command->pushConstants(layoutRef, Gfx::SE_SHADER_STAGE_VERTEX_BIT | Gfx::SE_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(TextData), &resource.textData);
             //command->draw(4, static_cast<uint32>(resource.vertexBuffer->getNumVertices()), 0, 0);
         }
-        commands.add(command);
+        commands.add(std::move(command));
     }
-    graphics->executeCommands(commands);
+    graphics->executeCommands(std::move(commands));
     graphics->endRenderPass();
     textResources.clear();
     //co_return;

@@ -1,19 +1,14 @@
 #pragma once
 #include "Graphics/Command.h"
-#include "Metal/MTLComputeCommandEncoder.hpp"
-#include "Metal/MTLDrawable.hpp"
-#include "Metal/MTLIOCommandQueue.hpp"
-#include "Metal/MTLRenderCommandEncoder.hpp"
-#include "MinimalEngine.h"
 #include "RenderPass.h"
 #include "Resources.h"
-#include "Graphics.h"
 
 namespace Seele {
 namespace Metal {
 DECLARE_REF(CommandQueue)
 DECLARE_REF(ComputeCommand)
 DECLARE_REF(RenderCommand)
+DECLARE_REF(Graphics)
 class Command
 {
 public:

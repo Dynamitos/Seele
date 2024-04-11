@@ -25,6 +25,8 @@ target_sources(Engine
         Resources.cpp
         Shader.h
         Shader.cpp
+        slang-compile.h
+        slang-compile.cpp
         StaticMeshVertexData.h
         StaticMeshVertexData.cpp
         Texture.h
