@@ -75,9 +75,12 @@ target_link_libraries(Engine PUBLIC fmt::fmt)
 target_link_libraries(Engine PUBLIC GPUOpen::VulkanMemoryAllocator)
 target_link_libraries(Engine PUBLIC shader-slang)
 if(APPLE)
-    target_link_directories(Engine PUBLIC /usr/local/lib)
+    target_link_libraries(Engine PUBLIC /usr/local/lib/libmetalirconverter.dylib)
     target_link_libraries(Engine PUBLIC metal)
     SET(CMAKE_OSX_DEPLOYMENT_TARGET 14.3)
+    install(FILES
+      ${EXTERNAL_ROOT}/dxc
+      DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 endif()
 if(UNIX)
     target_link_libraries(Engine PUBLIC Threads::Threads)
@@ -111,6 +114,11 @@ else()
     target_link_options(Engine PUBLIC -fsanitize=address)
     target_link_options(Editor PUBLIC -fsanitize=address)
 endif()
+if(APPLE)
+  #Metal lib throws that internally for some reason
+  target_compile_options(Engine PUBLIC -Wno-gnu-anonymous-struct)
+  target_compile_options(Editor PUBLIC -Wno-gnu-anonymous-struct)
+endif()
 target_compile_options(Engine PUBLIC "$<$<CONFIG:DEBUG>:-DENABLE_VALIDATION>")
 target_compile_options(Engine PUBLIC "$<$<CONFIG:DEBUG>:-DSEELE_DEBUG>")
 
@@ -120,6 +128,12 @@ add_subdirectory(tests/)
 if(WIN32)
     add_custom_target(dll_copy ALL
         COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:Engine> $<TARGET_FILE_DIR:Editor>
+        COMMAND_EXPAND_LISTS
+        DEPENDS Editor)
+elseif(APPLE)
+    add_custom_target(dll_copy ALL
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SLANG_ROOT}bin/libslang.dylib $<TARGET_FILE_DIR:Editor>
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/dxc $<TARGET_FILE_DIR:Editor>
         COMMAND_EXPAND_LISTS
         DEPENDS Editor)
 else()

@@ -2,8 +2,8 @@
 #include "Graphics.h"
 #include "Graphics/Enums.h"
 #include "Graphics/slang-compile.h"
-#include "Metal/MTLLibrary.hpp"
-#include "metal_irconverter/metal_irconverter.h"
+#include <iostream>
+#include </usr/local/include/metal_irconverter/metal_irconverter.h>
 #include <slang.h>
 
 using namespace Seele;
@@ -54,6 +54,17 @@ void Shader::create(const ShaderCreateInfo &createInfo) {
   size_t metallibSize = IRMetalLibGetBytecodeSize(pMetallib);
   uint8_t *metallib = new uint8_t[metallibSize];
   IRMetalLibGetBytecode(pMetallib, metallib);
+
+  IRShaderReflection* reflection = IRShaderReflectionCreate();
+  IRObjectGetReflection(pOutIR, irStage, reflection);
+  Array<IRResourceLocation> locations(
+  IRShaderReflectionGetResourceCount(reflection));
+  IRShaderReflectionGetResourceLocations(reflection, locations.data());
+  for(auto l : locations)
+  {
+    std::cout << "Resource " << l.resourceName << " Type " << l.resourceType << " size " << l.sizeBytes << " slot " << l.slot << " space " << l.space << " offset " << l.topLevelOffset << std::endl;
+  }
+  IRShaderReflectionDestroy(reflection);
 
   // Store the metallib to custom format or disk, or use to create a MTLLibrary.
   NS::Error *__autoreleasing error = nil;

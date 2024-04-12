@@ -19,7 +19,7 @@ if(WIN32)
         ${SLANG_ROOT}/lib/slang.lib
     DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 elseif(APPLE)
-    set(SLANG_ROOT ${EXTERNAL_ROOT}/vcpkg/packages/shader-slang_${CMAKE_PLATFORM}-osx)
+    set(SLANG_ROOT ${EXTERNAL_ROOT}/vcpkg/packages/shader-slang_arm64-osx/)
     set_target_properties(shader-slang-glslang PROPERTIES IMPORTED_LOCATION ${SLANG_ROOT}/bin/libslang-glslang.dylib)
     set_target_properties(shader-slang PROPERTIES IMPORTED_LOCATION ${SLANG_ROOT}/bin/libslang.dylib)
     target_link_libraries(shader-slang INTERFACE shader-slang-glslang)

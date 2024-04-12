@@ -22,8 +22,8 @@ public:
   void end();
   void beginRenderPass(PRenderPass renderPass, PFramebuffer framebuffer);
   void endRenderPass();
-  void executeCommands(const Array<Gfx::ORenderCommand> &secondaryCommands);
-  void executeCommands(const Array<Gfx::OComputeCommand> &secondaryCommands);
+  void executeCommands(Array<Gfx::ORenderCommand> secondaryCommands);
+  void executeCommands(Array<Gfx::OComputeCommand> secondaryCommands);
   void waitForSemaphore(VkPipelineStageFlags stages, PSemaphore waitSemaphore);
   void checkFence();
   void waitForCommand(uint32 timeToWait = 1000000u);
@@ -50,8 +50,8 @@ private:
   PFramebuffer boundFramebuffer;
   Array<PSemaphore> waitSemaphores;
   Array<VkPipelineStageFlags> waitFlags;
-  Array<PRenderCommand> executingRenders;
-  Array<PComputeCommand> executingComputes;
+  Array<ORenderCommand> executingRenders;
+  Array<OComputeCommand> executingComputes;
   Array<PDescriptorSet> boundDescriptors;
   friend class RenderCommand;
   friend class CommandPool;
@@ -123,7 +123,7 @@ public:
 private:
   PComputePipeline pipeline;
   bool ready;
-  Array<DescriptorSet *> boundDescriptors;
+  Array<PDescriptorSet> boundDescriptors;
   VkViewport currentViewport;
   VkRect2D currentScissor;
   PGraphics graphics;

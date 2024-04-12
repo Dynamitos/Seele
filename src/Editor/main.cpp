@@ -1,3 +1,4 @@
+#include "Graphics/Initializer.h"
 #include "Graphics/Metal/Graphics.h"
 #include "Window/WindowManager.h"
 #include "Window/SceneView.h"
@@ -47,6 +48,12 @@ int main()
 #endif
     GraphicsInitializer initializer;
     graphics->init(initializer);
+    graphics->createComputeShader(ShaderCreateInfo {
+      .entryPoint = "cullLights",
+      .mainModule = "LightCulling",
+      .additionalModules = {"LightCulling"},
+      .name = "Test",
+    });
     StaticMeshVertexData* vd = StaticMeshVertexData::getInstance();
     vd->init(graphics);
     OWindowManager windowManager = new WindowManager();

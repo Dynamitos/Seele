@@ -82,7 +82,7 @@ void Command::endRenderPass()
     state = State::Begin;
 }
 
-void Command::executeCommands(const Array<Gfx::ORenderCommand>& commands)
+void Command::executeCommands(Array<Gfx::ORenderCommand> commands)
 {
     assert(state == State::RenderPass);
     if(commands.size() == 0)
@@ -95,18 +95,18 @@ void Command::executeCommands(const Array<Gfx::ORenderCommand>& commands)
     {
         auto command = Gfx::PRenderCommand(commands[i]).cast<RenderCommand>();
         command->end();
-        executingRenders.add(command);
         for(auto& descriptor : command->boundDescriptors)
         {
             boundDescriptors.add(descriptor);
             //std::cout << "Cmd " << handle << " bound descriptor " << descriptor->getHandle() << std::endl;
         }
         cmdBuffers[i] = command->getHandle();
+        executingRenders.add(std::move(commands[i]));
     }
     vkCmdExecuteCommands(handle, (uint32)cmdBuffers.size(), cmdBuffers.data());
 }
 
-void Command::executeCommands(const Array<Gfx::OComputeCommand>& commands) 
+void Command::executeCommands(Array<Gfx::OComputeCommand> commands) 
 {
     if(commands.size() == 0)
     {
@@ -117,13 +117,13 @@ void Command::executeCommands(const Array<Gfx::OComputeCommand>& commands)
     {
         auto command = Gfx::PComputeCommand(commands[i]).cast<ComputeCommand>();
         command->end();
-        executingComputes.add(command);
         for(auto& descriptor : command->boundDescriptors)
         {
             boundDescriptors.add(descriptor);
             //std::cout << "Cmd " << handle << " bound descriptor " << descriptor->getHandle() << std::endl;
         }
         cmdBuffers[i] = command->getHandle();
+        executingComputes.add(std::move(commands[i]));
     }
     vkCmdExecuteCommands(handle, (uint32)cmdBuffers.size(), cmdBuffers.data());
 }
@@ -487,12 +487,18 @@ PCommand CommandPool::getCommands()
 }
 void CommandPool::cacheCommands(Array<ORenderCommand> commands)
 {
-  allocatedRenderCommands.addAll(commands);
+  for(auto&& command : commands)
+  {
+    allocatedRenderCommands.add(std::move(command));
+  }
 }
 
 void CommandPool::cacheCommands(Array<OComputeCommand> commands)
 {
-  allocatedComputeCommands.addAll(commands);
+  for(auto&& command : commands)
+  {
+    allocatedComputeCommands.add(std::move(command));
+  }
 }
 
 ORenderCommand CommandPool::createRenderCommand(const std::string& name)

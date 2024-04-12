@@ -59,7 +59,6 @@ public:
     PIOCommandQueue getIOQueue() const { return ioQueue; }
 protected:
     MTL::Device* device;
-    MTL::Library* library;
     OCommandQueue queue;
     OIOCommandQueue ioQueue;
 };

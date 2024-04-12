@@ -1,4 +1,5 @@
 #include "Graphics.h"
+#include "Graphics/Metal/Shader.h"
 #include "RenderPass.h"
 #include "Command.h"
 #include "Window.h"
@@ -19,8 +20,6 @@ Graphics::~Graphics()
 void Graphics::init(GraphicsInitializer)
 {
   device = MTL::CreateSystemDefaultDevice();
-  library = device->newDefaultLibrary();
-  assert(library);
   queue = new CommandQueue(this);
   ioQueue = new IOCommandQueue(this);
 }
@@ -121,11 +120,16 @@ Gfx::OFragmentShader Graphics::createFragmentShader(const ShaderCreateInfo& crea
 }
 Gfx::OComputeShader Graphics::createComputeShader(const ShaderCreateInfo& createInfo)
 {
-  
+  OComputeShader result = new ComputeShader(this);
+  result->create(createInfo);
+  return result;
 }
+
 Gfx::OMeshShader Graphics::createMeshShader(const ShaderCreateInfo& createInfo)
 {
-  
+  OMeshShader result = new MeshShader(this);
+  result->create(createInfo);
+  return result;
 }
 Gfx::OTaskShader Graphics::createTaskShader(const ShaderCreateInfo& createInfo)
 {

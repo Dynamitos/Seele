@@ -1,5 +1,6 @@
 #pragma once
 #include "Graphics/Command.h"
+#include "Metal/MTLCommandBuffer.hpp"
 #include "RenderPass.h"
 #include "Resources.h"
 
@@ -12,7 +13,7 @@ DECLARE_REF(Graphics)
 class Command
 {
 public:
-    Command(PGraphics graphics, PCommandQueue owner);
+    Command(PGraphics graphics, MTL::CommandBuffer* cmdBuffer);
     ~Command();
     void beginRenderPass(PRenderPass renderPass);
     void endRenderPass();
@@ -32,7 +33,6 @@ public:
     }
 private:
     PGraphics graphics;
-    PCommandQueue owner;
     OEvent completed;
     MTL::CommandBuffer* cmdBuffer;
     MTL::ParallelRenderCommandEncoder* renderEncoder;
@@ -82,7 +82,7 @@ public:
     {
         return queue;
     }
-    PCommand getCommands();
+    PCommand getCommands() {return activeCommand;} //TODO
     ORenderCommand getRenderCommand(const std::string& name);
     OComputeCommand getComputeCommand(const std::string& name);
     void submitCommands(PEvent signal = nullptr);
@@ -100,7 +100,7 @@ public:
   {
     return queue;
   }
-  PCommand getCommands();
+  PCommand getCommands() {return activeCommand;} // TODO
   void submitCommands(PEvent signal = nullptr);
 private:
   PGraphics graphics;

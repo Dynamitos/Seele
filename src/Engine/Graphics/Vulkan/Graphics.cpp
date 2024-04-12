@@ -118,12 +118,12 @@ void Graphics::waitDeviceIdle()
 
 void Graphics::executeCommands(Array<Gfx::ORenderCommand> commands)
 {
-    getGraphicsCommands()->getCommands()->executeCommands(commands);
+    getGraphicsCommands()->getCommands()->executeCommands(std::move(commands));
 }
 
 void Graphics::executeCommands(Array<Gfx::OComputeCommand> commands) 
 {
-    getComputeCommands()->getCommands()->executeCommands(commands);
+    getComputeCommands()->getCommands()->executeCommands(std::move(commands));
 }
 
 Gfx::OTexture2D Graphics::createTexture2D(const TextureCreateInfo &createInfo)

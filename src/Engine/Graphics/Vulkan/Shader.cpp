@@ -1,5 +1,6 @@
 #include "Shader.h"
 #include "Graphics.h"
+#include "Graphics/slang-compile.h"
 #include "slang.h"
 #include "slang-com-ptr.h"
 #include "stdlib.h"
@@ -29,7 +30,7 @@ uint32 Seele::Vulkan::Shader::getShaderHash() const
 
 void Shader::create(const ShaderCreateInfo& createInfo)
 {
-
+  Slang::ComPtr<slang::IBlob> kernelBlob = generateShader(createInfo, SLANG_SPIRV);
     VkShaderModuleCreateInfo moduleInfo =
     {
         .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
@@ -40,7 +41,6 @@ void Shader::create(const ShaderCreateInfo& createInfo)
     };
     VK_CHECK(vkCreateShaderModule(graphics->getDevice(), &moduleInfo, nullptr, &module));
 
-    hash = CRC::Calculate(entryPointName.data(), entryPointName.size(), CRC::CRC_32());
     hash = CRC::Calculate(kernelBlob->getBufferPointer(), kernelBlob->getBufferSize(), CRC::CRC_32(), hash);
     /*
     specializedComponent->getEntryPointCode(
