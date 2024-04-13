@@ -8,8 +8,7 @@
 using namespace Seele;
 using namespace Seele::Metal;
 
-Buffer::Buffer(PGraphics graphics, uint64 size, void *data, bool dynamic)
-    : graphics(graphics), size(size) {
+Buffer::Buffer(PGraphics graphics, uint64 size, void* data, bool dynamic) : graphics(graphics), size(size) {
   if (dynamic) {
     numBuffers = Gfx::numFramesBuffered;
   } else {
@@ -17,11 +16,9 @@ Buffer::Buffer(PGraphics graphics, uint64 size, void *data, bool dynamic)
   }
   for (size_t i = 0; i < numBuffers; ++i) {
     if (data != nullptr) {
-      buffers[i] = graphics->getDevice()->newBuffer(
-          data, size, MTL::ResourceOptionCPUCacheModeDefault);
+      buffers[i] = graphics->getDevice()->newBuffer(data, size, MTL::ResourceOptionCPUCacheModeDefault);
     } else {
-      buffers[i] = graphics->getDevice()->newBuffer(
-          size, MTL::ResourceOptionCPUCacheModeDefault);
+      buffers[i] = graphics->getDevice()->newBuffer(size, MTL::ResourceOptionCPUCacheModeDefault);
     }
   }
 }
@@ -32,45 +29,83 @@ Buffer::~Buffer() {
   }
 }
 
-void *Buffer::map(bool) { return getHandle()->contents(); }
+void* Buffer::map(bool) { return getHandle()->contents(); }
 
-void *Buffer::mapRegion(uint64 regionOffset, uint64, bool) {
-  return (char *)getHandle()->contents() + regionOffset;
-}
+void* Buffer::mapRegion(uint64 regionOffset, uint64, bool) { return (char*)getHandle()->contents() + regionOffset; }
 
 void unmap() {}
 
-VertexBuffer::VertexBuffer(PGraphics graphics,
-                           const VertexBufferCreateInfo &createInfo)
-    : Gfx::VertexBuffer(graphics->getFamilyMapping(), createInfo.numVertices,
-                        createInfo.vertexSize, createInfo.sourceData.owner),
-      Seele::Metal::Buffer(graphics, createInfo.sourceData.size,
-                           createInfo.sourceData.data, false) {}
+VertexBuffer::VertexBuffer(PGraphics graphics, const VertexBufferCreateInfo& createInfo)
+    : Gfx::VertexBuffer(graphics->getFamilyMapping(), createInfo.numVertices, createInfo.vertexSize,
+                        createInfo.sourceData.owner),
+      Seele::Metal::Buffer(graphics, createInfo.sourceData.size, createInfo.sourceData.data, false) {}
 
 VertexBuffer::~VertexBuffer() {}
 
-IndexBuffer::IndexBuffer(PGraphics graphics,
-                         const IndexBufferCreateInfo &createInfo)
-    : Gfx::IndexBuffer(graphics->getFamilyMapping(), createInfo.sourceData.size,
-                       createInfo.indexType, createInfo.sourceData.owner),
-      Seele::Metal::Buffer(graphics, createInfo.sourceData.size,
-                           createInfo.sourceData.data, false) {}
+void VertexBuffer::updateRegion(DataSource update) {
+  void* data = getHandle()->contents();
+  std::memcpy((char*)data + update.offset, update.data, update.size);
+}
+
+void VertexBuffer::download(Array<uint8>& buffer) {
+  void* data = getHandle()->contents();
+  buffer.resize(size);
+  std::memcpy(buffer.data(), data, size);
+}
+
+void VertexBuffer::executeOwnershipBarrier(Gfx::QueueType newOwner) { currentOwner = newOwner; }
+
+void VertexBuffer::executePipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage,
+                                          Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage) {}
+
+IndexBuffer::IndexBuffer(PGraphics graphics, const IndexBufferCreateInfo& createInfo)
+    : Gfx::IndexBuffer(graphics->getFamilyMapping(), createInfo.sourceData.size, createInfo.indexType,
+                       createInfo.sourceData.owner),
+      Seele::Metal::Buffer(graphics, createInfo.sourceData.size, createInfo.sourceData.data, false) {}
 
 IndexBuffer::~IndexBuffer() {}
 
-UniformBuffer::UniformBuffer(PGraphics graphics,
-                             const UniformBufferCreateInfo &createInfo)
+void IndexBuffer::download(Array<uint8>& buffer) {
+  void* data = getHandle()->contents();
+  buffer.resize(size);
+  std::memcpy(buffer.data(), data, size);
+}
+void IndexBuffer::executeOwnershipBarrier(Gfx::QueueType newOwner) { currentOwner = newOwner; }
+
+void IndexBuffer::executePipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage,
+                                          Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage) {}
+
+UniformBuffer::UniformBuffer(PGraphics graphics, const UniformBufferCreateInfo& createInfo)
     : Gfx::UniformBuffer(graphics->getFamilyMapping(), createInfo.sourceData),
-      Seele::Metal::Buffer(graphics, createInfo.sourceData.size,
-                           createInfo.sourceData.data, createInfo.dynamic) {}
+      Seele::Metal::Buffer(graphics, createInfo.sourceData.size, createInfo.sourceData.data, createInfo.dynamic) {}
 
 UniformBuffer::~UniformBuffer() {}
 
-ShaderBuffer::ShaderBuffer(PGraphics graphics,
-                           const ShaderBufferCreateInfo &createInfo)
-    : Gfx::ShaderBuffer(graphics->getFamilyMapping(), createInfo.numElements,
-                        createInfo.sourceData),
-      Seele::Metal::Buffer(graphics, createInfo.sourceData.size,
-                           createInfo.sourceData.data, createInfo.dynamic) {}
+bool UniformBuffer::updateContents(const DataSource& sourceData) {
+  void* data = getHandle()->contents();
+  std::memcpy((char*)data + sourceData.offset, sourceData.data, sourceData.size);
+  return true;
+}
+
+void UniformBuffer::executeOwnershipBarrier(Gfx::QueueType newOwner) { currentOwner = newOwner; }
+
+void UniformBuffer::executePipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage,
+                                          Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage) {}
+
+ShaderBuffer::ShaderBuffer(PGraphics graphics, const ShaderBufferCreateInfo& createInfo)
+    : Gfx::ShaderBuffer(graphics->getFamilyMapping(), createInfo.numElements, createInfo.sourceData),
+      Seele::Metal::Buffer(graphics, createInfo.sourceData.size, createInfo.sourceData.data, createInfo.dynamic) {}
 
 ShaderBuffer::~ShaderBuffer() {}
+
+bool ShaderBuffer::updateContents(const DataSource& sourceData) {
+  void* data = getHandle()->contents();
+  std::memcpy((char*)data + sourceData.offset, sourceData.data, sourceData.size);
+  return true;
+}
+
+void ShaderBuffer::executeOwnershipBarrier(Gfx::QueueType newOwner) { currentOwner = newOwner; }
+
+
+void ShaderBuffer::executePipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage,
+                                          Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage) {}

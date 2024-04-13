@@ -14,7 +14,7 @@ public:
     PGraphicsPipeline createPipeline(Gfx::MeshPipelineCreateInfo createInfo);
     PComputePipeline createPipeline(Gfx::ComputePipelineCreateInfo createInfo);
 private:
-    std::map<uint32, OGraphicsPipeline> graphicsPipelines;
+    Map<uint32, OGraphicsPipeline> graphicsPipelines;
     Map<uint32, OComputePipeline> computePipelines;
     std::mutex cacheLock;
     VkPipelineCache cache;

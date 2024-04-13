@@ -1,4 +1,5 @@
 #include "Enums.h"
+#include <stdexcept>
 
 using namespace Seele;
 using namespace Seele::Vulkan;
@@ -76,9 +77,8 @@ Seele::Gfx::SeDescriptorType Seele::Vulkan::cast(const VkDescriptorType &descrip
         return SE_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_NV;
 #endif
     default:
-        break;
+    throw std::logic_error("Not implemented");
     }
-    return SE_DESCRIPTOR_TYPE_MAX_ENUM;
 }
 
 VkShaderStageFlagBits Seele::Vulkan::cast(const Seele::Gfx::SeShaderStageFlagBits &stage)
@@ -120,10 +120,9 @@ VkShaderStageFlagBits Seele::Vulkan::cast(const Seele::Gfx::SeShaderStageFlagBit
     case SE_SHADER_STAGE_MESH_BIT_NV:
         return VK_SHADER_STAGE_MESH_BIT_NV;
 #endif
-    default:
-        break;
+    default:    throw std::logic_error("Not implemented");
+
     }
-    return VK_SHADER_STAGE_ALL;
 }
 
 Seele::Gfx::SeShaderStageFlagBits Seele::Vulkan::cast(const VkShaderStageFlagBits &stage)
@@ -164,10 +163,10 @@ Seele::Gfx::SeShaderStageFlagBits Seele::Vulkan::cast(const VkShaderStageFlagBit
     case VK_SHADER_STAGE_MESH_BIT_NV:
         return SE_SHADER_STAGE_MESH_BIT_NV;
 #endif
-    default:
-        break;
+    default:    throw std::logic_error("Not implemented");
+
     }
-    return SE_SHADER_STAGE_ALL;
+    
 }
 
 VkFormat Seele::Vulkan::cast(const Seele::Gfx::SeFormat &format)
@@ -1090,8 +1089,8 @@ Seele::Gfx::SeFormat Seele::Vulkan::cast(const VkFormat &format)
         return SE_FORMAT_PVRTC2_2BPP_SRGB_BLOCK_IMG;
     case VK_FORMAT_PVRTC2_4BPP_SRGB_BLOCK_IMG:
         return SE_FORMAT_PVRTC2_4BPP_SRGB_BLOCK_IMG;
-    default:
-        return SE_FORMAT_MAX_ENUM;
+    default:    throw std::logic_error("Not implemented");
+
     }
 }
 
@@ -1129,8 +1128,8 @@ VkImageLayout Seele::Vulkan::cast(const Gfx::SeImageLayout &imageLayout)
         return VK_IMAGE_LAYOUT_SHADING_RATE_OPTIMAL_NV;
     case SE_IMAGE_LAYOUT_FRAGMENT_DENSITY_MAP_OPTIMAL_EXT:
         return VK_IMAGE_LAYOUT_FRAGMENT_DENSITY_MAP_OPTIMAL_EXT;
-    default:
-        return VK_IMAGE_LAYOUT_MAX_ENUM;
+    default:    throw std::logic_error("Not implemented");
+
     }
 }
 Gfx::SeImageLayout Seele::Vulkan::cast(const VkImageLayout &imageLayout)
@@ -1167,8 +1166,8 @@ Gfx::SeImageLayout Seele::Vulkan::cast(const VkImageLayout &imageLayout)
         return SE_IMAGE_LAYOUT_SHADING_RATE_OPTIMAL_NV;
     case VK_IMAGE_LAYOUT_FRAGMENT_DENSITY_MAP_OPTIMAL_EXT:
         return SE_IMAGE_LAYOUT_FRAGMENT_DENSITY_MAP_OPTIMAL_EXT;
-    default:
-        return SE_IMAGE_LAYOUT_MAX_ENUM;
+    default:    throw std::logic_error("Not implemented");
+
     }
 }
 VkAttachmentStoreOp Seele::Vulkan::cast(const Gfx::SeAttachmentStoreOp &storeOp)
@@ -1179,8 +1178,8 @@ VkAttachmentStoreOp Seele::Vulkan::cast(const Gfx::SeAttachmentStoreOp &storeOp)
         return VK_ATTACHMENT_STORE_OP_STORE;
     case SE_ATTACHMENT_STORE_OP_DONT_CARE:
         return VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    default:
-        return VK_ATTACHMENT_STORE_OP_MAX_ENUM;
+    default:    throw std::logic_error("Not implemented");
+
     }
 }
 Gfx::SeAttachmentStoreOp Seele::Vulkan::cast(const VkAttachmentStoreOp &storeOp)
@@ -1191,8 +1190,8 @@ Gfx::SeAttachmentStoreOp Seele::Vulkan::cast(const VkAttachmentStoreOp &storeOp)
         return SE_ATTACHMENT_STORE_OP_STORE;
     case VK_ATTACHMENT_STORE_OP_DONT_CARE:
         return SE_ATTACHMENT_STORE_OP_DONT_CARE;
-    default:
-        return SE_ATTACHMENT_STORE_OP_MAX_ENUM;
+    default:    throw std::logic_error("Not implemented");
+
     }
 }
 VkAttachmentLoadOp Seele::Vulkan::cast(const Gfx::SeAttachmentLoadOp &loadOp)
@@ -1205,8 +1204,8 @@ VkAttachmentLoadOp Seele::Vulkan::cast(const Gfx::SeAttachmentLoadOp &loadOp)
         return VK_ATTACHMENT_LOAD_OP_CLEAR;
     case SE_ATTACHMENT_LOAD_OP_DONT_CARE:
         return VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    default:
-        return VK_ATTACHMENT_LOAD_OP_MAX_ENUM;
+    default:    throw std::logic_error("Not implemented");
+
     }
 }
 Gfx::SeAttachmentLoadOp Seele::Vulkan::cast(const VkAttachmentLoadOp &loadOp)
@@ -1219,8 +1218,8 @@ Gfx::SeAttachmentLoadOp Seele::Vulkan::cast(const VkAttachmentLoadOp &loadOp)
         return SE_ATTACHMENT_LOAD_OP_CLEAR;
     case VK_ATTACHMENT_LOAD_OP_DONT_CARE:
         return SE_ATTACHMENT_LOAD_OP_DONT_CARE;
-    default:
-        return SE_ATTACHMENT_LOAD_OP_MAX_ENUM;
+    default:    throw std::logic_error("Not implemented");
+
     }
 }
 
@@ -1244,8 +1243,8 @@ Gfx::SeIndexType Seele::Vulkan::cast(const VkIndexType &indexType)
         return Gfx::SE_INDEX_TYPE_UINT16;
     case VK_INDEX_TYPE_UINT32:
         return Gfx::SE_INDEX_TYPE_UINT32;
-    default:
-        return Gfx::SE_INDEX_TYPE_MAX_ENUM;
+    default:    throw std::logic_error("Not implemented");
+
     }
 }
 
@@ -1305,8 +1304,8 @@ Gfx::SePrimitiveTopology Seele::Vulkan::cast(const VkPrimitiveTopology &topology
         return SE_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP_WITH_ADJACENCY;
     case VK_PRIMITIVE_TOPOLOGY_PATCH_LIST:
         return SE_PRIMITIVE_TOPOLOGY_PATCH_LIST;
-    default:
-        return SE_PRIMITIVE_TOPOLOGY_MAX_ENUM;
+    default:    throw std::logic_error("Not implemented");
+
     }
 }
 
@@ -1334,8 +1333,8 @@ Gfx::SePolygonMode Seele::Vulkan::cast(const VkPolygonMode &mode)
         return SE_POLYGON_MODE_LINE;
     case VK_POLYGON_MODE_POINT:
         return SE_POLYGON_MODE_POINT;
-    default:
-        return SE_POLYGON_MODE_MAX_ENUM;
+    default:    throw std::logic_error("Not implemented");
+
     }
 }
 VkCompareOp Seele::Vulkan::cast(const Gfx::SeCompareOp &op)
@@ -1358,8 +1357,8 @@ VkCompareOp Seele::Vulkan::cast(const Gfx::SeCompareOp &op)
         return VK_COMPARE_OP_GREATER_OR_EQUAL;
     case SE_COMPARE_OP_ALWAYS:
         return VK_COMPARE_OP_ALWAYS;
-    default:
-        return VK_COMPARE_OP_MAX_ENUM;
+    default:    throw std::logic_error("Not implemented");
+
     }
 }
 Gfx::SeCompareOp Seele::Vulkan::cast(const VkCompareOp &op)
@@ -1382,8 +1381,8 @@ Gfx::SeCompareOp Seele::Vulkan::cast(const VkCompareOp &op)
         return SE_COMPARE_OP_GREATER_OR_EQUAL;
     case VK_COMPARE_OP_ALWAYS:
         return SE_COMPARE_OP_ALWAYS;
-    default:
-        return SE_COMPARE_OP_MAX_ENUM;
+    default:    throw std::logic_error("Not implemented");
+
     }
 }
 
@@ -1455,8 +1454,8 @@ Gfx::SeSamplerAddressMode Seele::Vulkan::cast(const VkSamplerAddressMode &mode)
         return SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
     case VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE: 
         return SE_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE;
-    default:
-        return SE_SAMPLER_ADDRESS_MODE_MAX_ENUM;
+    default:    throw std::logic_error("Not implemented");
+
     }
 }
 VkBorderColor Seele::Vulkan::cast(const Gfx::SeBorderColor &color)
@@ -1495,8 +1494,8 @@ Gfx::SeBorderColor Seele::Vulkan::cast(const VkBorderColor &color)
             return SE_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
         case VK_BORDER_COLOR_INT_OPAQUE_WHITE: 
             return SE_BORDER_COLOR_INT_OPAQUE_WHITE;
-        default:
-            return SE_BORDER_COLOR_MAX_ENUM;
+        default:    throw std::logic_error("Not implemented");
+
     }
 }
 
@@ -1510,8 +1509,8 @@ VkFilter Seele::Vulkan::cast(const Gfx::SeFilter &filter)
         return VK_FILTER_LINEAR;
     case SE_FILTER_CUBIC_IMG: 
         return VK_FILTER_CUBIC_IMG;
-    default:
-        return VK_FILTER_MAX_ENUM;
+    default:    throw std::logic_error("Not implemented");
+
     }
 }
 Gfx::SeFilter Seele::Vulkan::cast(const VkFilter &filter)
@@ -1524,8 +1523,8 @@ Gfx::SeFilter Seele::Vulkan::cast(const VkFilter &filter)
         return SE_FILTER_LINEAR;
     case VK_FILTER_CUBIC_IMG: 
         return SE_FILTER_CUBIC_IMG;
-    default:
-        return SE_FILTER_MAX_ENUM;
+    default:    throw std::logic_error("Not implemented");
+
     }
 }
 
@@ -1537,8 +1536,8 @@ VkSamplerMipmapMode Seele::Vulkan::cast(const Gfx::SeSamplerMipmapMode &filter)
         return VK_SAMPLER_MIPMAP_MODE_NEAREST;
     case SE_SAMPLER_MIPMAP_MODE_LINEAR:
         return VK_SAMPLER_MIPMAP_MODE_LINEAR;
-    default:
-        return VK_SAMPLER_MIPMAP_MODE_MAX_ENUM;
+    default:    throw std::logic_error("Not implemented");
+
     }
 }
 Gfx::SeSamplerMipmapMode Seele::Vulkan::cast(const VkSamplerMipmapMode &filter)
@@ -1549,8 +1548,8 @@ Gfx::SeSamplerMipmapMode Seele::Vulkan::cast(const VkSamplerMipmapMode &filter)
         return SE_SAMPLER_MIPMAP_MODE_NEAREST;
     case VK_SAMPLER_MIPMAP_MODE_LINEAR:
         return SE_SAMPLER_MIPMAP_MODE_LINEAR;
-    default:
-        return SE_SAMPLER_MIPMAP_MODE_MAX_ENUM;
+    default:    throw std::logic_error("Not implemented");
+
     }
 }
 VkAccessFlagBits Seele::Vulkan::cast(const Gfx::SeAccessFlagBits &flags)

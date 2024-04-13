@@ -49,6 +49,10 @@ find_package(Ktx CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 find_package(VulkanMemoryAllocator CONFIG REQUIRED)
+find_package(spirv_cross_core CONFIG REQUIRED)
+find_package(spirv_cross_glsl CONFIG REQUIRED)
+find_package(spirv_cross_msl CONFIG REQUIRED)
+find_package(glslang CONFIG REQUIRED)
 
 if(UNIX)
     find_package(Threads REQUIRED)
@@ -74,8 +78,9 @@ target_link_libraries(Engine PUBLIC crcpp)
 target_link_libraries(Engine PUBLIC fmt::fmt)
 target_link_libraries(Engine PUBLIC GPUOpen::VulkanMemoryAllocator)
 target_link_libraries(Engine PUBLIC shader-slang)
+target_link_libraries(Engine PUBLIC spirv-cross-glsl spirv-cross-msl)
+target_link_libraries(Engine PUBLIC glslang::glslang)
 if(APPLE)
-    target_link_libraries(Engine PUBLIC /usr/local/lib/libmetalirconverter.dylib)
     target_link_libraries(Engine PUBLIC metal)
     SET(CMAKE_OSX_DEPLOYMENT_TARGET 14.3)
     install(FILES
@@ -133,7 +138,6 @@ if(WIN32)
 elseif(APPLE)
     add_custom_target(dll_copy ALL
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SLANG_ROOT}bin/libslang.dylib $<TARGET_FILE_DIR:Editor>
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_ROOT}/dxc $<TARGET_FILE_DIR:Editor>
         COMMAND_EXPAND_LISTS
         DEPENDS Editor)
 else()

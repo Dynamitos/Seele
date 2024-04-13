@@ -7,65 +7,80 @@
 namespace Seele {
 namespace Metal {
 DECLARE_REF(Graphics)
-class Buffer
-{
+class Buffer {
 public:
-  Buffer(PGraphics graphics, uint64 size, void* data, bool dynamic);
+  Buffer(PGraphics graphics, uint64 size, void *data, bool dynamic);
   virtual ~Buffer();
-  MTL::Buffer* getHandle() const
-  {
-    return buffers[currentBuffer];
-  }
-  uint64 getSize() const
-  {
-    return size;
-  }
-  void advanceBuffer()
-  {
-    currentBuffer = (currentBuffer + 1) % numBuffers;
-  }
-  void* map(bool writeOnly = true);
-  void* mapRegion(uint64 regionOffset, uint64 regionSize, bool writeOnly);
+  MTL::Buffer *getHandle() const { return buffers[currentBuffer]; }
+  uint64 getSize() const { return size; }
+  void advanceBuffer() { currentBuffer = (currentBuffer + 1) % numBuffers; }
+  void *map(bool writeOnly = true);
+  void *mapRegion(uint64 regionOffset, uint64 regionSize, bool writeOnly);
   void unmap();
-private:
+
+protected:
   PGraphics graphics;
   uint32 currentBuffer;
   uint64 size;
-  MTL::Buffer* buffers[Gfx::numFramesBuffered];
+  MTL::Buffer *buffers[Gfx::numFramesBuffered];
   uint32 numBuffers;
 };
 DEFINE_REF(Buffer)
-class VertexBuffer : public Gfx::VertexBuffer, public Buffer
-{
+class VertexBuffer : public Gfx::VertexBuffer, public Buffer {
 public:
-  VertexBuffer(PGraphics graphics, const VertexBufferCreateInfo& createInfo);
+  VertexBuffer(PGraphics graphics, const VertexBufferCreateInfo &createInfo);
   virtual ~VertexBuffer();
-private:
+  virtual void updateRegion(DataSource update) override;
+  virtual void download(Array<uint8> &buffer) override;
+
+protected:
+  // Inherited via QueueOwnedResource
+  virtual void executeOwnershipBarrier(Gfx::QueueType newOwner) override;
+  virtual void executePipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage,
+                                      Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage) override;
 };
 DEFINE_REF(VertexBuffer)
-class IndexBuffer : public Gfx::IndexBuffer, public Buffer
-{
+class IndexBuffer : public Gfx::IndexBuffer, public Buffer {
 public:
-  IndexBuffer(PGraphics graphics, const IndexBufferCreateInfo& createInfo);
+  IndexBuffer(PGraphics graphics, const IndexBufferCreateInfo &createInfo);
   virtual ~IndexBuffer();
-private:
+
+  virtual void download(Array<uint8> &buffer) override;
+protected:
+  // Inherited via QueueOwnedResource
+  virtual void executeOwnershipBarrier(Gfx::QueueType newOwner) override;
+  virtual void executePipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage,
+                                      Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage) override;
 };
 DEFINE_REF(IndexBuffer)
-class UniformBuffer : public Gfx::UniformBuffer, public Buffer
-{
+DEFINE_REF(IndexBuffer)
+class UniformBuffer : public Gfx::UniformBuffer, public Buffer {
 public:
-  UniformBuffer(PGraphics graphics, const UniformBufferCreateInfo& createInfo);
+  UniformBuffer(PGraphics graphics, const UniformBufferCreateInfo &createInfo);
   virtual ~UniformBuffer();
-private:
+
+  virtual bool updateContents(const DataSource &sourceData) override;
+
+protected:
+  // Inherited via QueueOwnedResource
+  virtual void executeOwnershipBarrier(Gfx::QueueType newOwner) override;
+  virtual void executePipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage,
+                                      Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage) override;
 };
 DEFINE_REF(UniformBuffer)
-class ShaderBuffer : public Gfx::ShaderBuffer, public Buffer
-{
+class ShaderBuffer : public Gfx::ShaderBuffer, public Buffer {
 public:
-  ShaderBuffer(PGraphics graphics, const ShaderBufferCreateInfo& createInfo);
+  ShaderBuffer(PGraphics graphics, const ShaderBufferCreateInfo &createInfo);
   virtual ~ShaderBuffer();
-private:
+
+  virtual bool updateContents(const DataSource &sourceData) override;
+
+protected:
+  // Inherited via QueueOwnedResource
+  virtual void executeOwnershipBarrier(Gfx::QueueType newOwner) override;
+  virtual void executePipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage,
+                                      Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage) override;
 };
 DEFINE_REF(ShaderBuffer)
-}
-}
+} // namespace Metal
+} // namespace Seele

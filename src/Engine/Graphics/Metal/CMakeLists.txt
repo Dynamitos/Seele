@@ -12,6 +12,8 @@ target_sources(Engine
         Graphics.mm
         Pipeline.h
         Pipeline.mm
+        PipelineCache.h
+        PipelineCache.mm
         PrivateImpl.mm
         RenderPass.h
         RenderPass.mm

@@ -36,7 +36,7 @@ struct WindowCreateInfo
     int32 width;
     int32 height;
     const char *title;
-    Gfx::SeFormat preferredFormat = Gfx::SE_FORMAT_MAX_ENUM;
+    Gfx::SeFormat preferredFormat = Gfx::SE_FORMAT_B8G8R8A8_UNORM;
     void *windowHandle;
 };
 struct ViewportCreateInfo
@@ -178,8 +178,8 @@ struct DepthStencilState
     SeCompareOp depthCompareOp = Gfx::SE_COMPARE_OP_LESS;
     uint32      depthBoundsTestEnable = 0;
     uint32      stencilTestEnable = 0;
-    SeStencilOp front = Gfx::SE_STENCIL_OP_END_RANGE;
-    SeStencilOp back = Gfx::SE_STENCIL_OP_END_RANGE;
+    SeStencilOp front = Gfx::SE_STENCIL_OP_ZERO;
+    SeStencilOp back = Gfx::SE_STENCIL_OP_ZERO;
     float       minDepthBounds;
     float       maxDepthBounds;
 };

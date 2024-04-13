@@ -1,5 +1,6 @@
 #pragma once
 #include "Graphics/Resources.h"
+#include "Metal/MTLSampler.hpp"
 #include <Foundation/Foundation.hpp>
 #include <Metal/Metal.hpp>
 #include <QuartzCore/CAMetalLayer.h>
@@ -29,5 +30,18 @@ private:
   MTL::Event *handle;
 };
 DEFINE_REF(Event)
+class Sampler : public Gfx::Sampler
+{
+public:
+  Sampler(PGraphics graphics, const SamplerCreateInfo& createInfo);
+  virtual ~Sampler();
+  MTL::SamplerState* getHandle() const
+  {
+    return sampler;
+  }
+private:
+  MTL::SamplerState* sampler;
+};
+DEFINE_REF(Sampler)
 } // namespace Metal
 } // namespace Seele

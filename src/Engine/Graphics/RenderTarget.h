@@ -1,4 +1,5 @@
 #pragma once
+#include "Graphics/Enums.h"
 #include "Resources.h"
 #include "Texture.h"
 #include "Window.h"
@@ -85,12 +86,12 @@ public:
 protected:
     PTexture2D texture = nullptr;
     PViewport viewport = nullptr;
-    SeImageLayout initialLayout = SE_IMAGE_LAYOUT_BEGIN_RANGE;
-    SeImageLayout finalLayout = SE_IMAGE_LAYOUT_BEGIN_RANGE;
-    SeAttachmentLoadOp loadOp = SE_ATTACHMENT_LOAD_OP_BEGIN_RANGE;
-    SeAttachmentStoreOp storeOp = SE_ATTACHMENT_STORE_OP_BEGIN_RANGE;
-    SeAttachmentLoadOp stencilLoadOp = SE_ATTACHMENT_LOAD_OP_BEGIN_RANGE;
-    SeAttachmentStoreOp stencilStoreOp = SE_ATTACHMENT_STORE_OP_BEGIN_RANGE;
+    SeImageLayout initialLayout = SE_IMAGE_LAYOUT_UNDEFINED;
+    SeImageLayout finalLayout = SE_IMAGE_LAYOUT_UNDEFINED;
+    SeAttachmentLoadOp loadOp = SE_ATTACHMENT_LOAD_OP_DONT_CARE;
+    SeAttachmentStoreOp storeOp = SE_ATTACHMENT_STORE_OP_DONT_CARE;
+    SeAttachmentLoadOp stencilLoadOp = SE_ATTACHMENT_LOAD_OP_DONT_CARE;
+    SeAttachmentStoreOp stencilStoreOp = SE_ATTACHMENT_STORE_OP_DONT_CARE;
 };
 
 struct RenderTargetLayout

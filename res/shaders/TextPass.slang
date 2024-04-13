@@ -9,10 +9,18 @@ struct TextData
     float4 textColor;
     float scale;
 }
-ParameterBlock<SamplerState> glyphSampler;
+struct GlyphSampler
+{
+  SamplerState s;
+}
+ParameterBlock<GlyphSampler> glyphSampler;
 //layout(set = 1)
 //ShaderBuffer<GlyphData> glyphData;
-ParameterBuffer<Texture2D<uint>[]> pGlyphTextures;
+struct GlyphTextures
+{
+  Texture2D[256] textures;
+}
+ParameterBlock<GlyphTextures> pGlyphTextures;
 
 struct GlyphInstanceData
 {
@@ -25,7 +33,7 @@ struct TextRender
     StructuredBuffer<GlyphInstanceData> instances;
     TextData textData;
 }
-ParameterBuffer<TextRender> pRender;
+ParameterBlock<TextRender> pRender;
 
 struct VertexInput
 {
@@ -56,9 +64,9 @@ VertexOutput vertexMain(VertexInput input)
         float4(xpos + w, ypos + h, 1, 0)
     };
     float4 vertex = coordinates[input.vertexId];
-    VertexStageOutput output;
+    VertexOutput output;
     output.texCoords = vertex.zw;
-    output.position = mul(viewData.projectionMatrix, float4(vertex.xy, 0, 1));
+    output.position = mul(pViewParams.projectionMatrix, float4(vertex.xy, 0, 1));
     output.glyphIndex = pRender.instances[input.instanceId].glyphIndex;
     return output;
 }
@@ -70,5 +78,5 @@ float4 fragmentMain(
     uint glyphIndex : GLYPHINDEX
 ) : SV_Target
 {
-    return textData.textColor * pGlyphTextures[glyphIndex].Sample(glyphSampler, texCoords);
+    return pRender.textData.textColor * pGlyphTextures.textures[glyphIndex].Sample(glyphSampler.s, texCoords);
 }

@@ -1,5 +1,8 @@
 #include "Enums.h"
 #include "Graphics/Enums.h"
+#include "Metal/MTLArgument.hpp"
+#include "Metal/MTLDepthStencil.hpp"
+#include "Metal/MTLSampler.hpp"
 #include <stdexcept>
 
 using namespace Seele;
@@ -585,5 +588,183 @@ Gfx::SeAttachmentStoreOp Seele::Metal::cast(MTL::StoreAction storeOp) {
     return Gfx::SE_ATTACHMENT_STORE_OP_STORE;
   default:
     throw std::logic_error("Not implemented");
+  }
+}
+
+MTL::BindingAccess Seele::Metal::cast(Gfx::SeDescriptorAccessTypeFlags access) {
+  switch (access) {
+  case Gfx::SE_DESCRIPTOR_ACCESS_READ_ONLY_BIT:
+    return MTL::ArgumentAccessReadOnly;
+  case Gfx::SE_DESCRIPTOR_ACCESS_READ_WRITE_BIT:
+    return MTL::ArgumentAccessReadWrite;
+  case Gfx::SE_DESCRIPTOR_ACCESS_WRITE_ONLY_BIT:
+    return MTL::ArgumentAccessWriteOnly;
+  default:
+    throw std::logic_error("Not implemented");
+  }
+}
+
+Gfx::SeDescriptorAccessTypeFlags Seele::Metal::cast(MTL::BindingAccess access) {
+  switch (access) {
+  case MTL::ArgumentAccessReadOnly:
+    return Gfx::SE_DESCRIPTOR_ACCESS_READ_ONLY_BIT;
+  case MTL::ArgumentAccessReadWrite:
+    return Gfx::SE_DESCRIPTOR_ACCESS_READ_WRITE_BIT;
+  case MTL::ArgumentAccessWriteOnly:
+    return Gfx::SE_DESCRIPTOR_ACCESS_WRITE_ONLY_BIT;
+  default:
+    throw std::logic_error("Not implemented");
+  }
+}
+
+MTL::SamplerBorderColor Seele::Metal::cast(Gfx::SeBorderColor color) {
+  switch (color) {
+  case Gfx::SE_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK:
+    return MTL::SamplerBorderColorTransparentBlack;
+  case Gfx::SE_BORDER_COLOR_INT_TRANSPARENT_BLACK:
+    return MTL::SamplerBorderColorTransparentBlack;
+  case Gfx::SE_BORDER_COLOR_FLOAT_OPAQUE_BLACK:
+    return MTL::SamplerBorderColorOpaqueBlack;
+  case Gfx::SE_BORDER_COLOR_INT_OPAQUE_BLACK:
+    return MTL::SamplerBorderColorOpaqueBlack;
+  case Gfx::SE_BORDER_COLOR_FLOAT_OPAQUE_WHITE:
+    return MTL::SamplerBorderColorOpaqueWhite;
+  case Gfx::SE_BORDER_COLOR_INT_OPAQUE_WHITE:
+    return MTL::SamplerBorderColorOpaqueWhite;
+  default:
+    throw std::logic_error("Not implemented");
+  }
+}
+
+Gfx::SeBorderColor Seele::Metal::cast(MTL::SamplerBorderColor color) {
+  switch (color) {
+  case MTL::SamplerBorderColorTransparentBlack:
+    return Gfx::SE_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
+  case MTL::SamplerBorderColorOpaqueBlack:
+    return Gfx::SE_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
+  case MTL::SamplerBorderColorOpaqueWhite:
+    return Gfx::SE_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+  default:
+    throw std::logic_error("Not implemented");
+  }
+}
+
+MTL::CompareFunction Seele::Metal::cast(Gfx::SeCompareOp compare) {
+  switch (compare) {
+  case Gfx::SE_COMPARE_OP_NEVER:
+    return MTL::CompareFunctionNever;
+  case Gfx::SE_COMPARE_OP_LESS:
+    return MTL::CompareFunctionLess;
+  case Gfx::SE_COMPARE_OP_EQUAL:
+    return MTL::CompareFunctionEqual;
+  case Gfx::SE_COMPARE_OP_LESS_OR_EQUAL:
+    return MTL::CompareFunctionLessEqual;
+  case Gfx::SE_COMPARE_OP_GREATER:
+    return MTL::CompareFunctionGreater;
+  case Gfx::SE_COMPARE_OP_NOT_EQUAL:
+    return MTL::CompareFunctionNotEqual;
+  case Gfx::SE_COMPARE_OP_GREATER_OR_EQUAL:
+    return MTL::CompareFunctionGreaterEqual;
+  case Gfx::SE_COMPARE_OP_ALWAYS:
+    return MTL::CompareFunctionAlways;
+  default:
+    throw std::logic_error("Not implemented");
+  }
+}
+
+Gfx::SeCompareOp Seele::Metal::cast(MTL::CompareFunction compare) {
+  switch (compare) {
+  case MTL::CompareFunctionNever:
+    return Gfx::SE_COMPARE_OP_NEVER;
+  case MTL::CompareFunctionLess:
+    return Gfx::SE_COMPARE_OP_LESS;
+  case MTL::CompareFunctionEqual:
+    return Gfx::SE_COMPARE_OP_EQUAL;
+  case MTL::CompareFunctionLessEqual:
+    return Gfx::SE_COMPARE_OP_LESS_OR_EQUAL;
+  case MTL::CompareFunctionGreater:
+    return Gfx::SE_COMPARE_OP_GREATER;
+  case MTL::CompareFunctionNotEqual:
+    return Gfx::SE_COMPARE_OP_NOT_EQUAL;
+  case MTL::CompareFunctionGreaterEqual:
+    return Gfx::SE_COMPARE_OP_GREATER_OR_EQUAL;
+  case MTL::CompareFunctionAlways:
+    return Gfx::SE_COMPARE_OP_ALWAYS;
+  }
+}
+
+MTL::SamplerMinMagFilter Seele::Metal::cast(Gfx::SeFilter filter) {
+  switch (filter) {
+  case Gfx::SE_FILTER_NEAREST:
+    return MTL::SamplerMinMagFilterNearest;
+  case Gfx::SE_FILTER_LINEAR:
+    return MTL::SamplerMinMagFilterLinear;
+  case Gfx::SE_FILTER_CUBIC_IMG:
+    return MTL::SamplerMinMagFilterLinear;
+  default:
+    throw std::logic_error("Not implemented");
+  }
+}
+
+Gfx::SeFilter Seele::Metal::cast(MTL::SamplerMinMagFilter filter) {
+  switch (filter) {
+  case MTL::SamplerMinMagFilterNearest:
+    return Gfx::SE_FILTER_NEAREST;
+  case MTL::SamplerMinMagFilterLinear:
+    return Gfx::SE_FILTER_LINEAR;
+  }
+}
+
+MTL::SamplerMipFilter Seele::Metal::cast(Gfx::SeSamplerMipmapMode filter) {
+  switch (filter) {
+  case Seele::Gfx::SE_SAMPLER_MIPMAP_MODE_NEAREST:
+    return MTL::SamplerMipFilterNearest;
+  case Seele::Gfx::SE_SAMPLER_MIPMAP_MODE_LINEAR:
+    return MTL::SamplerMipFilterLinear;
+  default:
+    throw std::logic_error("Not implemented");
+  }
+}
+
+Gfx::SeSamplerMipmapMode Seele::Metal::cast(MTL::SamplerMipFilter filter) {
+  switch (filter) {
+  case MTL::SamplerMipFilterNotMipmapped:
+    return Gfx::SE_SAMPLER_MIPMAP_MODE_LINEAR;
+  case MTL::SamplerMipFilterNearest:
+    return Gfx::SE_SAMPLER_MIPMAP_MODE_NEAREST;
+  case MTL::SamplerMipFilterLinear:
+    return Gfx::SE_SAMPLER_MIPMAP_MODE_LINEAR;
+  }
+}
+
+MTL::SamplerAddressMode Seele::Metal::cast(Gfx::SeSamplerAddressMode mode) {
+  switch (mode) {
+  case Gfx::SE_SAMPLER_ADDRESS_MODE_REPEAT:
+    return MTL::SamplerAddressModeRepeat;
+  case Gfx::SE_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT:
+    return MTL::SamplerAddressModeMirrorRepeat;
+  case Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE:
+    return MTL::SamplerAddressModeMirrorClampToEdge;
+  case Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER:
+    return MTL::SamplerAddressModeClampToBorderColor;
+  case Gfx::SE_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE:
+    return MTL::SamplerAddressModeMirrorClampToEdge;
+  }
+}
+
+Gfx::SeSamplerAddressMode Seele::Metal::cast(MTL::SamplerAddressMode mode) {
+  switch (mode) {
+  case MTL::SamplerAddressModeClampToEdge:
+    return Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+  case MTL::SamplerAddressModeMirrorClampToEdge:
+    return Gfx::SE_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE;
+  case MTL::SamplerAddressModeRepeat:
+    return Gfx::SE_SAMPLER_ADDRESS_MODE_REPEAT;
+  case MTL::SamplerAddressModeMirrorRepeat:
+    return Gfx::SE_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+  case MTL::SamplerAddressModeClampToZero:
+    return Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+  case MTL::SamplerAddressModeClampToBorderColor:
+    return Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
   }
 }

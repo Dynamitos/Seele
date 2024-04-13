@@ -12,6 +12,8 @@
         "fmt",
         "gtest",
         "vulkan-memory-allocator",
-        "shader-slang"
+        "shader-slang",
+        "spirv-cross",
+        "glslang"
     ]
 }

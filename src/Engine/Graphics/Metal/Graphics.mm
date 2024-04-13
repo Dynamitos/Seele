@@ -1,8 +1,10 @@
 #include "Graphics.h"
-#include "Graphics/Metal/Shader.h"
+#include "Graphics/Initializer.h"
+#include "Shader.h"
 #include "RenderPass.h"
 #include "Command.h"
 #include "Window.h"
+#include "Buffer.h"
 
 using namespace Seele;
 using namespace Seele::Metal;
@@ -82,22 +84,22 @@ Gfx::OTextureCube Graphics::createTextureCube(const TextureCreateInfo &createInf
 
 Gfx::OUniformBuffer Graphics::createUniformBuffer(const UniformBufferCreateInfo &bulkData)
 {
-  
+  return new UniformBuffer(this, bulkData);
 }
 
 Gfx::OShaderBuffer Graphics::createShaderBuffer(const ShaderBufferCreateInfo &bulkData)
 {
-  
+  return new ShaderBuffer(this, bulkData);
 }
 
 Gfx::OVertexBuffer Graphics::createVertexBuffer(const VertexBufferCreateInfo &bulkData)
 {
-  
+  return new VertexBuffer(this, bulkData);
 }
 
 Gfx::OIndexBuffer Graphics::createIndexBuffer(const IndexBufferCreateInfo &bulkData)
 {
-  
+  return new IndexBuffer(this, bulkData);
 }
 
 Gfx::ORenderCommand Graphics::createRenderCommand(const std::string& name)
@@ -112,11 +114,15 @@ Gfx::OComputeCommand Graphics::createComputeCommand(const std::string& name)
 
 Gfx::OVertexShader Graphics::createVertexShader(const ShaderCreateInfo& createInfo)
 {
-  
+  OVertexShader result = new VertexShader(this);
+  result->create(createInfo);
+  return result;
 }
 Gfx::OFragmentShader Graphics::createFragmentShader(const ShaderCreateInfo& createInfo)
 {
-  
+  OFragmentShader result = new FragmentShader(this);
+  result->create(createInfo);
+  return result;
 }
 Gfx::OComputeShader Graphics::createComputeShader(const ShaderCreateInfo& createInfo)
 {
@@ -133,12 +139,16 @@ Gfx::OMeshShader Graphics::createMeshShader(const ShaderCreateInfo& createInfo)
 }
 Gfx::OTaskShader Graphics::createTaskShader(const ShaderCreateInfo& createInfo)
 {
-  
+  OTaskShader result = new TaskShader(this);
+  result->create(createInfo);
+  return result;
 }
+
 Gfx::PGraphicsPipeline Graphics::createGraphicsPipeline(Gfx::LegacyPipelineCreateInfo createInfo)
 {
   
 }
+
 Gfx::PGraphicsPipeline Graphics::createGraphicsPipeline(Gfx::MeshPipelineCreateInfo createInfo)
 {
   

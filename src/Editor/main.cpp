@@ -48,10 +48,10 @@ int main()
 #endif
     GraphicsInitializer initializer;
     graphics->init(initializer);
-    graphics->createComputeShader(ShaderCreateInfo {
-      .entryPoint = "cullLights",
-      .mainModule = "LightCulling",
-      .additionalModules = {"LightCulling"},
+    graphics->createVertexShader(ShaderCreateInfo {
+      .entryPoint = "fragmentMain",
+      .mainModule = "TextPass",
+      .additionalModules = {"TextPass"},
       .name = "Test",
     });
     StaticMeshVertexData* vd = StaticMeshVertexData::getInstance();
