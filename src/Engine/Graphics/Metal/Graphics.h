@@ -8,6 +8,7 @@ namespace Metal
 {
 DECLARE_REF(CommandQueue)
 DECLARE_REF(IOCommandQueue)
+DECLARE_REF(PipelineCache)
 class Graphics : public Gfx::Graphics
 {
 public:
@@ -61,6 +62,7 @@ protected:
     MTL::Device* device;
     OCommandQueue queue;
     OIOCommandQueue ioQueue;
+    OPipelineCache cache;
 };
 DEFINE_REF(Graphics)
 } // namespace Metal  

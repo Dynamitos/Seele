@@ -1,9 +1,8 @@
 #pragma once
-#include "Foundation/NSArray.hpp"
 #include "Graphics/Descriptor.h"
 #include "Graphics/Initializer.h"
-#include "Metal/MTLArgumentEncoder.hpp"
 #include "MinimalEngine.h"
+#include "Buffer.h"
 
 namespace Seele {
 namespace Metal {
@@ -57,6 +56,8 @@ public:
   constexpr void unbind() { bindCount--; }
   constexpr void allocate() { currentlyInUse = true; }
   constexpr void free() { currentlyInUse = false; }
+
+  constexpr MTL::Buffer* getBuffer() const { return buffer; }
 
 private:
   PGraphics graphics;

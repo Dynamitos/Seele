@@ -15,7 +15,7 @@ public:
 private:
   PGraphics graphics;
   Map<uint32, OGraphicsPipeline> graphicsPipelines;
-  Map<uint32, OComputePipeline> computePipeline;
+  Map<uint32, OComputePipeline> computePipelines;
   std::string cacheFile;
 };
 DEFINE_REF(PipelineCache)

@@ -1,7 +1,12 @@
 #include "Graphics.h"
 #include "Graphics/Initializer.h"
+#include "Graphics/Metal/Descriptor.h"
+#include "Graphics/Metal/Pipeline.h"
+#include "Graphics/Metal/PipelineCache.h"
+#include "Graphics/Metal/Resources.h"
 #include "Shader.h"
 #include "RenderPass.h"
+#include "Resources.h"
 #include "Command.h"
 #include "Window.h"
 #include "Buffer.h"
@@ -24,6 +29,7 @@ void Graphics::init(GraphicsInitializer)
   device = MTL::CreateSystemDefaultDevice();
   queue = new CommandQueue(this);
   ioQueue = new IOCommandQueue(this);
+  cache = new PipelineCache(this, "pipelines.metal");
 }
 
 Gfx::OWindow Graphics::createWindow(const WindowCreateInfo &createInfo)
@@ -118,12 +124,14 @@ Gfx::OVertexShader Graphics::createVertexShader(const ShaderCreateInfo& createIn
   result->create(createInfo);
   return result;
 }
+
 Gfx::OFragmentShader Graphics::createFragmentShader(const ShaderCreateInfo& createInfo)
 {
   OFragmentShader result = new FragmentShader(this);
   result->create(createInfo);
   return result;
 }
+
 Gfx::OComputeShader Graphics::createComputeShader(const ShaderCreateInfo& createInfo)
 {
   OComputeShader result = new ComputeShader(this);
@@ -137,6 +145,7 @@ Gfx::OMeshShader Graphics::createMeshShader(const ShaderCreateInfo& createInfo)
   result->create(createInfo);
   return result;
 }
+
 Gfx::OTaskShader Graphics::createTaskShader(const ShaderCreateInfo& createInfo)
 {
   OTaskShader result = new TaskShader(this);
@@ -146,39 +155,41 @@ Gfx::OTaskShader Graphics::createTaskShader(const ShaderCreateInfo& createInfo)
 
 Gfx::PGraphicsPipeline Graphics::createGraphicsPipeline(Gfx::LegacyPipelineCreateInfo createInfo)
 {
-  
+  return cache->createPipeline(std::move(createInfo));
 }
 
 Gfx::PGraphicsPipeline Graphics::createGraphicsPipeline(Gfx::MeshPipelineCreateInfo createInfo)
 {
-  
+  return cache->createPipeline(std::move(createInfo));
 }
+
 Gfx::PComputePipeline Graphics::createComputePipeline(Gfx::ComputePipelineCreateInfo createInfo)
 {
-  
+  return cache->createPipeline(std::move(createInfo));
 }
+
 Gfx::OSampler Graphics::createSampler(const SamplerCreateInfo& createInfo)
 {
-  
+  return new Sampler(this, createInfo);
 }
 
 Gfx::ODescriptorLayout Graphics::createDescriptorLayout(const std::string& name)
 {
-  
+  return new DescriptorLayout(this, name);
 }
+
 Gfx::OPipelineLayout Graphics::createPipelineLayout(Gfx::PPipelineLayout baseLayout)
 {
-  
+  return new PipelineLayout(this, baseLayout);
 }
 
 Gfx::OVertexInput Graphics::createVertexInput(VertexInputStateCreateInfo createInfo)
 {
-  
+  return new VertexInput(createInfo);
 }
 
 void Graphics::resolveTexture(Gfx::PTexture source, Gfx::PTexture destination)
 {
-  
 }
 
 

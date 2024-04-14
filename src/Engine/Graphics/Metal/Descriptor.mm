@@ -47,6 +47,7 @@ void DescriptorLayout::create() {
     descriptors.add(desc);
   }
   arguments = NS::Array::array(descriptors.data(), descriptors.size());
+  pool = new DescriptorPool(graphics, this);
 }
 
 DescriptorPool::DescriptorPool(PGraphics graphics, PDescriptorLayout layout) : graphics(graphics), layout(layout) {}

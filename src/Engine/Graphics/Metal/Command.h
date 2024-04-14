@@ -1,6 +1,6 @@
 #pragma once
 #include "Graphics/Command.h"
-#include "Metal/MTLCommandBuffer.hpp"
+#include "Buffer.h"
 #include "RenderPass.h"
 #include "Resources.h"
 
@@ -10,6 +10,8 @@ DECLARE_REF(CommandQueue)
 DECLARE_REF(ComputeCommand)
 DECLARE_REF(RenderCommand)
 DECLARE_REF(Graphics)
+DECLARE_REF(IndexBuffer)
+DECLARE_REF(GraphicsPipeline)
 class Command
 {
 public:
@@ -56,6 +58,8 @@ public:
 	virtual void drawMesh(uint32 groupX, uint32 groupY, uint32 groupZ) override;
 private:
     MTL::RenderCommandEncoder* encoder;
+    PIndexBuffer boundIndexBuffer;
+    PGraphicsPipeline boundPipeline;
 };
 DEFINE_REF(RenderCommand)
 class ComputeCommand : public Gfx::ComputeCommand

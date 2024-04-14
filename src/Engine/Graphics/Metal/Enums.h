@@ -1,7 +1,6 @@
 #pragma once
 #include "Graphics/Enums.h"
-#include "Metal/MTLDepthStencil.hpp"
-#include "Metal/MTLSampler.hpp"
+#include "Metal/MTLStageInputOutputDescriptor.hpp"
 #include "Resources.h"
 
 namespace Seele
@@ -26,5 +25,9 @@ MTL::SamplerMipFilter cast(Gfx::SeSamplerMipmapMode filter);
 Gfx::SeSamplerMipmapMode cast(MTL::SamplerMipFilter filter);
 MTL::SamplerAddressMode cast(Gfx::SeSamplerAddressMode mode);
 Gfx::SeSamplerAddressMode cast(MTL::SamplerAddressMode mode);
+MTL::PrimitiveTopologyClass cast(Gfx::SePrimitiveTopology topology);
+Gfx::SePrimitiveTopology cast(MTL::PrimitiveTopologyClass topology);
+MTL::IndexType cast(Gfx::SeIndexType indexType);
+Gfx::SeIndexType cast(MTL::IndexType indexType);
 }
 }

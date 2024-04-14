@@ -3,8 +3,6 @@
 #include "Graphics/Buffer.h"
 #include "Graphics/Enums.h"
 #include "Graphics/Initializer.h"
-#include "Metal/MTLResource.hpp"
-
 using namespace Seele;
 using namespace Seele::Metal;
 

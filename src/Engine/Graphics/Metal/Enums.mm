@@ -1,8 +1,6 @@
 #include "Enums.h"
 #include "Graphics/Enums.h"
-#include "Metal/MTLArgument.hpp"
-#include "Metal/MTLDepthStencil.hpp"
-#include "Metal/MTLSampler.hpp"
+#include "Metal/MTLStageInputOutputDescriptor.hpp"
 #include <stdexcept>
 
 using namespace Seele;
@@ -766,5 +764,52 @@ Gfx::SeSamplerAddressMode Seele::Metal::cast(MTL::SamplerAddressMode mode) {
     return Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
   case MTL::SamplerAddressModeClampToBorderColor:
     return Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+  }
+}
+
+MTL::PrimitiveTopologyClass Seele::Metal::cast(Gfx::SePrimitiveTopology topology) {
+  switch (topology) {
+  case Gfx::SE_PRIMITIVE_TOPOLOGY_POINT_LIST:
+    return MTL::PrimitiveTopologyClassPoint;
+  case Gfx::SE_PRIMITIVE_TOPOLOGY_LINE_LIST:
+    return MTL::PrimitiveTopologyClassLine;
+  case Gfx::SE_PRIMITIVE_TOPOLOGY_LINE_STRIP:
+    return MTL::PrimitiveTopologyClassLine;
+  case Gfx::SE_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST:
+    return MTL::PrimitiveTopologyClassTriangle;
+  case Gfx::SE_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP:
+    return MTL::PrimitiveTopologyClassTriangle;
+  case Gfx::SE_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN:
+    return MTL::PrimitiveTopologyClassTriangle;
+  case Gfx::SE_PRIMITIVE_TOPOLOGY_LINE_LIST_WITH_ADJACENCY:
+    return MTL::PrimitiveTopologyClassLine;
+  case Gfx::SE_PRIMITIVE_TOPOLOGY_LINE_STRIP_WITH_ADJACENCY:
+    return MTL::PrimitiveTopologyClassLine;
+  case Gfx::SE_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST_WITH_ADJACENCY:
+    return MTL::PrimitiveTopologyClassTriangle;
+  case Gfx::SE_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP_WITH_ADJACENCY:
+    return MTL::PrimitiveTopologyClassTriangle;
+  case Gfx::SE_PRIMITIVE_TOPOLOGY_PATCH_LIST:
+    return MTL::PrimitiveTopologyClassUnspecified;
+  }
+}
+
+MTL::IndexType Seele::Metal::cast(Gfx::SeIndexType indexType) {
+  switch (indexType) {
+  case Gfx::SE_INDEX_TYPE_UINT16:
+    return MTL::IndexTypeUInt16;
+  case Gfx::SE_INDEX_TYPE_UINT32:
+    return MTL::IndexTypeUInt32;
+  default:
+    throw std::logic_error("Not implemented");
+  }
+}
+
+Gfx::SeIndexType Seele::Metal::cast(MTL::IndexType indexType) {
+  switch (indexType) {
+  case MTL::IndexTypeUInt16:
+    return Gfx::SE_INDEX_TYPE_UINT16;
+  case MTL::IndexTypeUInt32:
+    return Gfx::SE_INDEX_TYPE_UINT32;
   }
 }
