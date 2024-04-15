@@ -1,18 +1,28 @@
 #include "Descriptor.h"
 #include "Buffer.h"
 #include "Enums.h"
+#include "Graphics/Descriptor.h"
 #include "Graphics/Initializer.h"
+#include "Metal/MTLArgument.hpp"
+#include "Metal/MTLDevice.hpp"
+#include "Metal/MTLResource.hpp"
+#include "Metal/MTLTexture.hpp"
 #include "Texture.h"
+#include <Foundation/Foundation.h>
+#include <iostream>
 
 using namespace Seele;
 using namespace Seele::Metal;
 
 DescriptorLayout::DescriptorLayout(PGraphics graphics, const std::string& name)
-    : Gfx::DescriptorLayout(name), graphics(graphics) {}
+    : Gfx::DescriptorLayout(name), graphics(graphics), arguments(nullptr) {}
 
 DescriptorLayout::~DescriptorLayout() {}
 
 void DescriptorLayout::create() {
+  if (arguments != nullptr) {
+    return;
+  }
   Array<NS::Object*> descriptors;
   for (size_t i = 0; i < descriptorBindings.size(); ++i) {
     const auto& binding = descriptorBindings[i];
@@ -35,7 +45,7 @@ void DescriptorLayout::create() {
     case Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC:
     case Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:
     case Gfx::SE_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK_EXT:
-      dataType = MTL::DataTypeStruct;
+      dataType = MTL::DataTypePointer;
       break;
     case Gfx::SE_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_NV:
       dataType = MTL::DataTypePrimitiveAccelerationStructure;
@@ -44,10 +54,38 @@ void DescriptorLayout::create() {
       throw std::logic_error("Nooo");
     }
     desc->setDataType(dataType);
+    desc->setIndex(i);
+    if (dataType == MTL::DataTypeTexture) {
+      switch (binding.textureType) {
+      case Gfx::SE_IMAGE_VIEW_TYPE_1D:
+        desc->setTextureType(MTL::TextureType1D);
+        break;
+      case Gfx::SE_IMAGE_VIEW_TYPE_2D:
+        desc->setTextureType(MTL::TextureType2D);
+        break;
+      case Gfx::SE_IMAGE_VIEW_TYPE_3D:
+        desc->setTextureType(MTL::TextureType3D);
+        break;
+      case Gfx::SE_IMAGE_VIEW_TYPE_CUBE:
+        desc->setTextureType(MTL::TextureTypeCube);
+        break;
+      case Gfx::SE_IMAGE_VIEW_TYPE_1D_ARRAY:
+        desc->setTextureType(MTL::TextureType1DArray);
+        break;
+      case Gfx::SE_IMAGE_VIEW_TYPE_2D_ARRAY:
+        desc->setTextureType(MTL::TextureType2DArray);
+        break;
+      case Gfx::SE_IMAGE_VIEW_TYPE_CUBE_ARRAY:
+        desc->setTextureType(MTL::TextureTypeCubeArray);
+        break;
+      }
+    }
     descriptors.add(desc);
   }
   arguments = NS::Array::array(descriptors.data(), descriptors.size());
   pool = new DescriptorPool(graphics, this);
+  hash = CRC::Calculate(descriptorBindings.data(), sizeof(Gfx::DescriptorBinding) * descriptorBindings.size(),
+                        CRC::CRC_32());
 }
 
 DescriptorPool::DescriptorPool(PGraphics graphics, PDescriptorLayout layout) : graphics(graphics), layout(layout) {}
@@ -66,6 +104,7 @@ Gfx::PDescriptorSet DescriptorPool::allocateDescriptorSet() {
     return PDescriptorSet(allocatedSets[setIndex]);
   }
   allocatedSets.add(new DescriptorSet(graphics, this));
+  allocatedSets.back()->allocate();
   return PDescriptorSet(allocatedSets.back());
 }
 
@@ -77,9 +116,16 @@ void DescriptorPool::reset() {
 
 DescriptorSet::DescriptorSet(PGraphics graphics, PDescriptorPool owner)
     : Gfx::DescriptorSet(owner->getLayout()), graphics(graphics), owner(owner), bindCount(0), currentlyInUse(false) {
-  encoder = graphics->getDevice()->newArgumentEncoder(owner->getArguments());
-  buffer = graphics->getDevice()->newBuffer(encoder->encodedLength(), MTL::ResourceOptionCPUCacheModeDefault);
-  encoder->setArgumentBuffer(buffer, 0);
+  // auto desc = (MTL::ArgumentDescriptor*)owner->getArguments()->object(0);
+  // std::cout << desc->access() << " " << desc->arrayLength() << " " << desc->index() << " " << desc->textureType() <<
+  // " " << desc->dataType() << std::endl;
+  if (owner->getArguments()->count() == 0) {
+    buffer = graphics->getDevice()->newBuffer(0, MTL::ResourceOptionCPUCacheModeDefault);
+  } else {
+    encoder = graphics->getDevice()->newArgumentEncoder(owner->getArguments());
+    buffer = graphics->getDevice()->newBuffer(encoder->encodedLength(), MTL::ResourceOptionCPUCacheModeDefault);
+    encoder->setArgumentBuffer(buffer, 0);
+  }
 }
 
 DescriptorSet::~DescriptorSet() {}
@@ -100,9 +146,11 @@ void DescriptorSet::updateSampler(uint32_t binding, Gfx::PSampler samplerState) 
 }
 void DescriptorSet::updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::PSampler samplerState) {
   PTextureBase base = texture.cast<TextureBase>();
-  PSampler sampler = samplerState.cast<Sampler>();
   encoder->setTexture(base->getTexture(), binding);
-  encoder->setSamplerState(sampler->getHandle(), binding);
+  if (samplerState != nullptr) {
+    PSampler sampler = samplerState.cast<Sampler>();
+    encoder->setSamplerState(sampler->getHandle(), binding);
+  }
 }
 
 void DescriptorSet::updateTextureArray(uint32_t binding, Array<Gfx::PTexture> array) {
@@ -115,14 +163,13 @@ void DescriptorSet::updateTextureArray(uint32_t binding, Array<Gfx::PTexture> ar
 bool DescriptorSet::operator<(Gfx::PDescriptorSet other) { return this < other.getHandle(); }
 
 PipelineLayout::PipelineLayout(PGraphics graphics, Gfx::PPipelineLayout baseLayout)
-      : Gfx::PipelineLayout(baseLayout), graphics(graphics) {}
+    : Gfx::PipelineLayout(baseLayout), graphics(graphics) {}
 
-PipelineLayout::~PipelineLayout(){}
+PipelineLayout::~PipelineLayout() {}
 
-void PipelineLayout::create() 
-{
-  for(auto& set : descriptorSetLayouts)
-  {
+void PipelineLayout::create() {
+  for (auto& set : descriptorSetLayouts) {
+    set->create();
     uint32 setHash = set->getHash();
     layoutHash = CRC::Calculate(&setHash, sizeof(uint32), CRC::CRC_32(), layoutHash);
   }

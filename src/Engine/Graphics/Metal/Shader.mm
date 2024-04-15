@@ -6,6 +6,7 @@
 #include "Graphics/slang-compile.h"
 #include "Metal/MTLDevice.hpp"
 #include "Metal/MTLLibrary.hpp"
+#include <fstream>
 #include <iostream>
 #include <slang.h>
 #include <spirv_cross.hpp>
@@ -42,7 +43,14 @@ void Shader::create(const ShaderCreateInfo& createInfo) {
     std::cout << error->debugDescription() << std::endl;
     assert(false);
   }
-  function = library->newFunction(NS::String::string("main", NS::ASCIIStringEncoding));
+  function = library->newFunction(NS::String::string("main0", NS::ASCIIStringEncoding));
+  if(!function)
+  {
+    std::ofstream shaderFile("error.metal");
+    shaderFile << metalCode;
+    shaderFile.close();
+    assert(!function);
+  }
   mtlOptions->release();
 }
 

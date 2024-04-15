@@ -1,4 +1,5 @@
 #include "UIPass.h"
+#include "Graphics/Enums.h"
 #include "RenderGraph.h"
 #include "Graphics/Graphics.h"
 #include "Graphics/RenderTarget.h"
@@ -109,7 +110,7 @@ void UIPass::createRenderPass()
     descriptorLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
     descriptorLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_SAMPLER);
     descriptorLayout->addDescriptorBinding(2, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-    descriptorLayout->addDescriptorBinding(3, Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 256, Gfx::SE_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT | Gfx::SE_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT);
+    descriptorLayout->addDescriptorBinding(3, Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE, Gfx::SE_IMAGE_VIEW_TYPE_2D_ARRAY, 256, Gfx::SE_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT | Gfx::SE_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT);
     descriptorLayout->create();
 
     Matrix4 projectionMatrix = glm::ortho(0, 1, 1, 0);

@@ -26,6 +26,7 @@ Graphics::~Graphics()
 
 void Graphics::init(GraphicsInitializer)
 {
+  glfwInit();
   device = MTL::CreateSystemDefaultDevice();
   queue = new CommandQueue(this);
   ioQueue = new IOCommandQueue(this);

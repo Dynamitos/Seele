@@ -1,4 +1,6 @@
 #include "Material.h"
+#include "Graphics/Enums.h"
+#include "Serialization/Serialization.h"
 #include "Window/WindowManager.h"
 #include "MaterialInstance.h"
 #include "Graphics/Graphics.h"
@@ -61,9 +63,10 @@ void Material::save(ArchiveBuffer& buffer) const
     for (const auto& binding : bindings)
     {
         Serialization::save(buffer, binding.binding);
-        Serialization::save(buffer, binding.bindingFlags);
-        Serialization::save(buffer, binding.descriptorCount);
         Serialization::save(buffer, binding.descriptorType);
+        Serialization::save(buffer, binding.textureType);
+        Serialization::save(buffer, binding.descriptorCount);
+        Serialization::save(buffer, binding.bindingFlags);
         Serialization::save(buffer, binding.shaderStages);
     }
 }
@@ -88,19 +91,22 @@ void Material::load(ArchiveBuffer& buffer)
         uint32 binding;
         Serialization::load(buffer, binding);
 
-        Gfx::SeDescriptorBindingFlags bindingFlags;
-        Serialization::load(buffer, bindingFlags);
+        Gfx::SeDescriptorType descriptorType;
+        Serialization::load(buffer, descriptorType);
+
+        Gfx::SeImageViewType textureType;
+        Serialization::load(buffer, textureType);
 
         uint32 descriptorCount;
         Serialization::load(buffer, descriptorCount);
 
-        Gfx::SeDescriptorType descriptorType;
-        Serialization::load(buffer, descriptorType);
+        Gfx::SeDescriptorBindingFlags bindingFlags;
+        Serialization::load(buffer, bindingFlags);
 
         Gfx::SeShaderStageFlags shaderStages;
         Serialization::load(buffer, shaderStages);
 
-        layout->addDescriptorBinding(binding, descriptorType, descriptorCount, bindingFlags, shaderStages);
+        layout->addDescriptorBinding(binding, descriptorType, textureType, descriptorCount, bindingFlags, shaderStages);
     }
     layout->create();
 }

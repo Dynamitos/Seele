@@ -48,12 +48,6 @@ int main()
 #endif
     GraphicsInitializer initializer;
     graphics->init(initializer);
-    graphics->createVertexShader(ShaderCreateInfo {
-      .entryPoint = "fragmentMain",
-      .mainModule = "TextPass",
-      .additionalModules = {"TextPass"},
-      .name = "Test",
-    });
     StaticMeshVertexData* vd = StaticMeshVertexData::getInstance();
     vd->init(graphics);
     OWindowManager windowManager = new WindowManager();

@@ -20,7 +20,7 @@ public:
 
 protected:
   PGraphics graphics;
-  uint32 currentBuffer;
+  uint32 currentBuffer = 0;
   uint64 size;
   MTL::Buffer *buffers[Gfx::numFramesBuffered];
   uint32 numBuffers;

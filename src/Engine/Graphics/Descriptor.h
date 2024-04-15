@@ -8,6 +8,7 @@ namespace Gfx {
 struct DescriptorBinding {
   uint32 binding = 0;
   SeDescriptorType descriptorType = SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  SeImageViewType textureType;
   uint32 descriptorCount = 0x7fff;
   SeDescriptorBindingFlags bindingFlags = 0;
   SeShaderStageFlags shaderStages = SE_SHADER_STAGE_ALL;
@@ -22,7 +23,8 @@ public:
   DescriptorLayout(const DescriptorLayout& other);
   DescriptorLayout& operator=(const DescriptorLayout& other);
   virtual ~DescriptorLayout();
-  void addDescriptorBinding(uint32 binding, SeDescriptorType type, uint32 arrayCount = 1,
+  void addDescriptorBinding(uint32 binding, SeDescriptorType type,
+                            SeImageViewType textureType = Gfx::SE_IMAGE_VIEW_TYPE_2D, uint32 arrayCount = 1,
                             SeDescriptorBindingFlags bindingFlags = 0,
                             SeShaderStageFlags shaderStages = SeShaderStageFlagBits::SE_SHADER_STAGE_ALL);
   void reset();

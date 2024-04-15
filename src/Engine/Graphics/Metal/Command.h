@@ -94,6 +94,7 @@ private:
     PGraphics graphics;
     MTL::CommandQueue* queue;
     OCommand activeCommand;
+    Array<OCommand> pendingCommands;
 };
 class IOCommandQueue
 {

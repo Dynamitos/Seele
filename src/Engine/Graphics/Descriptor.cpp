@@ -24,7 +24,7 @@ DescriptorLayout& DescriptorLayout::operator=(const DescriptorLayout& other) {
 
 DescriptorLayout::~DescriptorLayout() {}
 
-void DescriptorLayout::addDescriptorBinding(uint32 bindingIndex, SeDescriptorType type, uint32 arrayCount,
+void DescriptorLayout::addDescriptorBinding(uint32 bindingIndex, SeDescriptorType type, SeImageViewType textureType, uint32 arrayCount,
                                             SeDescriptorBindingFlags bindingFlags, SeShaderStageFlags shaderStages) {
   if (descriptorBindings.size() <= bindingIndex) {
     descriptorBindings.resize(bindingIndex + 1);
@@ -32,6 +32,7 @@ void DescriptorLayout::addDescriptorBinding(uint32 bindingIndex, SeDescriptorTyp
   descriptorBindings[bindingIndex] = DescriptorBinding{
       .binding = bindingIndex,
       .descriptorType = type,
+      .textureType = textureType,
       .descriptorCount = arrayCount,
       .bindingFlags = bindingFlags,
       .shaderStages = shaderStages,

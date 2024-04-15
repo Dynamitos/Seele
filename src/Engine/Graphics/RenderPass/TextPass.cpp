@@ -1,4 +1,5 @@
 #include "TextPass.h"
+#include "Graphics/Enums.h"
 #include "RenderGraph.h"
 #include "Graphics/Graphics.h"
 #include "Graphics/RenderTarget.h"
@@ -125,7 +126,7 @@ void TextPass::createRenderPass()
     generalLayout->create();
 
     textureArrayLayout = graphics->createDescriptorLayout("TextTextureArray");
-    textureArrayLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 256, Gfx::SE_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT);
+    textureArrayLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE, Gfx::SE_IMAGE_VIEW_TYPE_2D_ARRAY, 256, Gfx::SE_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT);
     textureArrayLayout->create();
 
     projectionBuffer = graphics->createUniformBuffer({

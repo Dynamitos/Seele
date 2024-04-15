@@ -4,6 +4,7 @@
 #include "Enums.h"
 #include "Graphics/Enums.h"
 #include "Graphics/Graphics.h"
+#include "Metal/MTLCommandBuffer.hpp"
 #include "Pipeline.h"
 #include "Resources.h"
 #include "Window.h"
@@ -120,7 +121,7 @@ void RenderCommand::drawIndexed(uint32 indexCount, uint32 instanceCount, int32 f
 }
 
 void RenderCommand::drawMesh(uint32 groupX, uint32 groupY, uint32 groupZ) {
-  //TODO:
+  // TODO:
   encoder->drawMeshThreadgroups(MTL::Size(groupX, groupY, groupZ), MTL::Size(128, 128, 128), MTL::Size(32, 32, 32));
 }
 
@@ -135,7 +136,9 @@ void ComputeCommand::bindPipeline(Gfx::PComputePipeline pipeline) {
 }
 
 void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet set) {
-  encoder->setBuffer(set.cast<DescriptorSet>()->getBuffer(), 0, set->getSetIndex());
+  auto metalSet = set.cast<DescriptorSet>();
+  metalSet->bind();
+  encoder->setBuffer(metalSet->getBuffer(), 0, set->getSetIndex());
 }
 
 void ComputeCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& sets) {
@@ -144,13 +147,13 @@ void ComputeCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& sets) {
   }
 }
 
-void ComputeCommand::pushConstants(Gfx::PPipelineLayout, Gfx::SeShaderStageFlags, uint32 offset,
-                                   uint32 size, const void* data) {
+void ComputeCommand::pushConstants(Gfx::PPipelineLayout, Gfx::SeShaderStageFlags, uint32 offset, uint32 size,
+                                   const void* data) {
   encoder->setBytes((char*)data + offset, size, 0);
 }
 
 void ComputeCommand::dispatch(uint32 threadX, uint32 threadY, uint32 threadZ) {
-  //TODO
+  // TODO
   encoder->dispatchThreadgroups(MTL::Size(threadX, threadY, threadZ), MTL::Size(32, 32, 32));
 }
 
@@ -170,8 +173,19 @@ OComputeCommand CommandQueue::getComputeCommand(const std::string& name) {
 }
 
 void CommandQueue::submitCommands(PEvent signalSemaphore) {
+  activeCommand->getHandle()->addCompletedHandler(MTL::CommandBufferHandler([&](MTL::CommandBuffer* cmdBuffer) {
+    for(auto it = pendingCommands.begin(); it != pendingCommands.end(); it++)
+    {
+      if((*it)->getHandle() == cmdBuffer)
+      {
+        pendingCommands.remove(it);
+        return;
+      }
+    }
+  }));
   activeCommand->end(signalSemaphore);
   PEvent prevCmdEvent = activeCommand->getCompletedEvent();
+  pendingCommands.add(std::move(activeCommand));
   activeCommand = new Command(graphics, queue->commandBuffer());
   activeCommand->waitForEvent(prevCmdEvent);
 }

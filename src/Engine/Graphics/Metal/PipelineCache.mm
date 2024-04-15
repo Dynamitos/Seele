@@ -28,35 +28,38 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo cr
 
   MTL::VertexDescriptor* vertexDescriptor = MTL::VertexDescriptor::alloc()->init();
   MTL::VertexAttributeDescriptorArray* attributes = vertexDescriptor->attributes();
-  const auto& vertexInfo = createInfo.vertexInput->getInfo();
-  for (size_t attr = 0; attr < vertexInfo.attributes.size(); ++attr) {
-    MTL::VertexAttributeDescriptor* attribute = MTL::VertexAttributeDescriptor::alloc()->init();
-    attribute->setBufferIndex(vertexInfo.attributes[attr].binding);
-    switch (vertexInfo.attributes[attr].format) {
-    case Gfx::SE_FORMAT_R32G32B32_SFLOAT:
-      attribute->setFormat(MTL::VertexFormatFloat3);
-      break;
-    default:
-      throw std::logic_error("TODO");
+  if(createInfo.vertexInput != nullptr)
+  {
+    const auto& vertexInfo = createInfo.vertexInput->getInfo();
+    for (size_t attr = 0; attr < vertexInfo.attributes.size(); ++attr) {
+      MTL::VertexAttributeDescriptor* attribute = MTL::VertexAttributeDescriptor::alloc()->init();
+      attribute->setBufferIndex(vertexInfo.attributes[attr].binding);
+      switch (vertexInfo.attributes[attr].format) {
+      case Gfx::SE_FORMAT_R32G32B32_SFLOAT:
+        attribute->setFormat(MTL::VertexFormatFloat3);
+        break;
+      default:
+        throw std::logic_error("TODO");
+      }
+      attribute->setOffset(vertexInfo.attributes[attr].offset);
+      attributes->setObject(attribute, attr);
     }
-    attribute->setOffset(vertexInfo.attributes[attr].offset);
-    attributes->setObject(attribute, attr);
-  }
 
-  MTL::VertexBufferLayoutDescriptorArray* bufferLayout = vertexDescriptor->layouts();
-  for (size_t binding = 0; binding < vertexInfo.bindings.size(); ++binding) {
-    MTL::VertexBufferLayoutDescriptor* buffer = MTL::VertexBufferLayoutDescriptor::alloc()->init();
-    buffer->setStride(vertexInfo.bindings[binding].stride);
-    buffer->setStepRate(1);
-    switch (vertexInfo.bindings[binding].inputRate) {
-    case Gfx::SE_VERTEX_INPUT_RATE_VERTEX:
-      buffer->setStepFunction(MTL::VertexStepFunctionPerVertex);
-      break;
-    case Gfx::SE_VERTEX_INPUT_RATE_INSTANCE:
-      buffer->setStepFunction(MTL::VertexStepFunctionPerInstance);
-      break;
+    MTL::VertexBufferLayoutDescriptorArray* bufferLayout = vertexDescriptor->layouts();
+    for (size_t binding = 0; binding < vertexInfo.bindings.size(); ++binding) {
+      MTL::VertexBufferLayoutDescriptor* buffer = MTL::VertexBufferLayoutDescriptor::alloc()->init();
+      buffer->setStride(vertexInfo.bindings[binding].stride);
+      buffer->setStepRate(1);
+      switch (vertexInfo.bindings[binding].inputRate) {
+      case Gfx::SE_VERTEX_INPUT_RATE_VERTEX:
+        buffer->setStepFunction(MTL::VertexStepFunctionPerVertex);
+        break;
+      case Gfx::SE_VERTEX_INPUT_RATE_INSTANCE:
+        buffer->setStepFunction(MTL::VertexStepFunctionPerInstance);
+        break;
+      }
+      bufferLayout->setObject(buffer, binding);
     }
-    bufferLayout->setObject(buffer, binding);
   }
   pipelineDescriptor->setVertexDescriptor(vertexDescriptor);
 
