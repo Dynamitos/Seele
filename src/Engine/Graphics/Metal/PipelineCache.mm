@@ -2,6 +2,7 @@
 #include "Descriptor.h"
 #include "Enums.h"
 #include "Foundation/NSError.hpp"
+#include "Foundation/NSString.hpp"
 #include "Graphics.h"
 #include "Graphics/Descriptor.h"
 #include "Graphics/Enums.h"
@@ -13,6 +14,7 @@
 #include "Metal/MTLVertexDescriptor.hpp"
 #include "Shader.h"
 #include "Texture.h"
+#include <iostream>
 
 using namespace Seele;
 using namespace Seele::Metal;
@@ -26,14 +28,13 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo cr
 
   MTL::RenderPipelineDescriptor* pipelineDescriptor = MTL::RenderPipelineDescriptor::alloc()->init();
 
-  MTL::VertexDescriptor* vertexDescriptor = MTL::VertexDescriptor::alloc()->init();
-  MTL::VertexAttributeDescriptorArray* attributes = vertexDescriptor->attributes();
-  if(createInfo.vertexInput != nullptr)
-  {
+  MTL::VertexDescriptor* vertexDescriptor = pipelineDescriptor->vertexDescriptor()->init();
+  MTL::VertexAttributeDescriptorArray* attributes = vertexDescriptor->attributes()->init();
+  if (createInfo.vertexInput != nullptr) {
     const auto& vertexInfo = createInfo.vertexInput->getInfo();
     for (size_t attr = 0; attr < vertexInfo.attributes.size(); ++attr) {
-      MTL::VertexAttributeDescriptor* attribute = MTL::VertexAttributeDescriptor::alloc()->init();
-      attribute->setBufferIndex(vertexInfo.attributes[attr].binding);
+      MTL::VertexAttributeDescriptor* attribute = attributes->object(attr + METAL_VERTEXATTRIBUTE_OFFSET)->init();
+      attribute->setBufferIndex(vertexInfo.attributes[attr].binding + METAL_VERTEXBUFFER_OFFSET);
       switch (vertexInfo.attributes[attr].format) {
       case Gfx::SE_FORMAT_R32G32B32_SFLOAT:
         attribute->setFormat(MTL::VertexFormatFloat3);
@@ -42,12 +43,11 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo cr
         throw std::logic_error("TODO");
       }
       attribute->setOffset(vertexInfo.attributes[attr].offset);
-      attributes->setObject(attribute, attr);
     }
 
-    MTL::VertexBufferLayoutDescriptorArray* bufferLayout = vertexDescriptor->layouts();
+    MTL::VertexBufferLayoutDescriptorArray* bufferLayout = vertexDescriptor->layouts()->init();
     for (size_t binding = 0; binding < vertexInfo.bindings.size(); ++binding) {
-      MTL::VertexBufferLayoutDescriptor* buffer = MTL::VertexBufferLayoutDescriptor::alloc()->init();
+      MTL::VertexBufferLayoutDescriptor* buffer = bufferLayout->object(binding + METAL_VERTEXBUFFER_OFFSET)->init();
       buffer->setStride(vertexInfo.bindings[binding].stride);
       buffer->setStepRate(1);
       switch (vertexInfo.bindings[binding].inputRate) {
@@ -58,7 +58,6 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo cr
         buffer->setStepFunction(MTL::VertexStepFunctionPerInstance);
         break;
       }
-      bufferLayout->setObject(buffer, binding);
     }
   }
   pipelineDescriptor->setVertexDescriptor(vertexDescriptor);
@@ -118,14 +117,15 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo cr
     type = MTL::PrimitiveTypeTriangle;
     break;
   }
-
   NS::Error* error;
   graphicsPipelines[hash] =
       new GraphicsPipeline(graphics, type, graphics->getDevice()->newRenderPipelineState(pipelineDescriptor, &error),
                            std::move(createInfo.pipelineLayout));
-  assert(!error);
+  if (error) {
+    std::cout << error->localizedDescription()->cString(NS::ASCIIStringEncoding) << std::endl;
+    assert(false);
+  }
 
-  vertexDescriptor->release();
   pipelineDescriptor->release();
   return graphicsPipelines[hash];
 }
@@ -133,7 +133,7 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo cr
 PGraphicsPipeline PipelineCache::createPipeline(Gfx::MeshPipelineCreateInfo createInfo) {
   MTL::MeshRenderPipelineDescriptor* pipelineDescriptor = MTL::MeshRenderPipelineDescriptor::alloc()->init();
 
-  pipelineDescriptor->setMeshFunction(createInfo.meshShader.cast<VertexShader>()->getFunction());
+  pipelineDescriptor->setMeshFunction(createInfo.meshShader.cast<MeshShader>()->getFunction());
   if (createInfo.taskShader != nullptr) {
     pipelineDescriptor->setObjectFunction(createInfo.taskShader.cast<TaskShader>()->getFunction());
   }
@@ -154,14 +154,12 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::MeshPipelineCreateInfo crea
   if (graphicsPipelines.contains(hash)) {
     return graphicsPipelines[hash];
   }
-
-  graphics->getDevice()->newRenderPipelineState(
-      pipelineDescriptor, MTL::PipelineOptionNone,
-      [&](MTL::RenderPipelineState* state, MTL::RenderPipelineReflection*, NS::Error* error) {
-        assert(!error);
-        graphicsPipelines[hash] =
-            new GraphicsPipeline(graphics, MTL::PrimitiveTypeLine, state, std::move(createInfo.pipelineLayout));
-      });
+  NS::Error* error = nullptr;
+  MTL::AutoreleasedRenderPipelineReflection reflection;
+  graphicsPipelines[hash] = new GraphicsPipeline(
+      graphics, MTL::PrimitiveTypeTriangle,
+      graphics->getDevice()->newRenderPipelineState(pipelineDescriptor, MTL::PipelineOptionNone, &reflection, &error),
+      std::move(createInfo.pipelineLayout));
 
   pipelineDescriptor->release();
   return graphicsPipelines[hash];

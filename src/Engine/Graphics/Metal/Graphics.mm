@@ -31,6 +31,7 @@ void Graphics::init(GraphicsInitializer)
   queue = new CommandQueue(this);
   ioQueue = new IOCommandQueue(this);
   cache = new PipelineCache(this, "pipelines.metal");
+  meshShadingEnabled = true;
 }
 
 Gfx::OWindow Graphics::createWindow(const WindowCreateInfo &createInfo)
@@ -65,12 +66,12 @@ void Graphics::waitDeviceIdle()
 
 void Graphics::executeCommands(Array<Gfx::ORenderCommand> commands)
 {
-  queue->getCommands()->executeCommands(std::move(commands));  
+  queue->executeCommands(std::move(commands));  
 }
 
 void Graphics::executeCommands(Array<Gfx::OComputeCommand> commands)
 {
-  queue->getCommands()->executeCommands(std::move(commands));
+  queue->executeCommands(std::move(commands));
 }
 
 Gfx::OTexture2D Graphics::createTexture2D(const TextureCreateInfo &createInfo)

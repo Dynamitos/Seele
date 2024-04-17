@@ -7,6 +7,9 @@ namespace Seele
 {
 namespace Metal
 {
+constexpr uint64 METAL_VERTEXBUFFER_OFFSET = 6;// something about metal vertex fetch
+constexpr uint64 METAL_VERTEXATTRIBUTE_OFFSET = 11;
+
 MTL::PixelFormat cast(Gfx::SeFormat format);
 Gfx::SeFormat cast(MTL::PixelFormat format);
 MTL::LoadAction cast(Gfx::SeAttachmentLoadOp loadOp);

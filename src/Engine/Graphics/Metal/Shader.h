@@ -37,8 +37,8 @@ public:
 using VertexShader = ShaderBase<Gfx::VertexShader, Gfx::SE_SHADER_STAGE_VERTEX_BIT>;
 using FragmentShader = ShaderBase<Gfx::FragmentShader, Gfx::SE_SHADER_STAGE_FRAGMENT_BIT>;
 using ComputeShader = ShaderBase<Gfx::ComputeShader, Gfx::SE_SHADER_STAGE_COMPUTE_BIT>;
-using TaskShader = ShaderBase<Gfx::TaskShader, Gfx::SE_SHADER_STAGE_TASK_BIT_NV>;
-using MeshShader = ShaderBase<Gfx::MeshShader, Gfx::SE_SHADER_STAGE_MESH_BIT_NV>;
+using TaskShader = ShaderBase<Gfx::TaskShader, Gfx::SE_SHADER_STAGE_TASK_BIT_EXT>;
+using MeshShader = ShaderBase<Gfx::MeshShader, Gfx::SE_SHADER_STAGE_MESH_BIT_EXT>;
 
 DEFINE_REF(VertexShader)
 DEFINE_REF(FragmentShader)

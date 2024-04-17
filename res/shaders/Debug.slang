@@ -2,8 +2,8 @@ import Common;
 
 struct DebugVertex
 {
-	float3 position;
-	float3 color;
+	float3 position : POSITION;
+	float3 color : COLOR0;
 };
 
 struct Params

@@ -14,12 +14,12 @@ struct MeshletDescription
 struct MeshData
 {
 	BoundingSphere bounding;
-    uint32_t numMeshlets;
-    uint32_t meshletOffset;
-    uint32_t firstIndex;
-    uint32_t numIndices;
-    uint32_t indicesOffset;
-    uint32_t pad0[3];
+  uint32_t numMeshlets;
+  uint32_t meshletOffset;
+  uint32_t firstIndex;
+  uint32_t numIndices;
+  uint32_t indicesOffset;
+  uint32_t pad0[3];
 };
 
 static const uint MAX_VERTICES = 64;
@@ -38,7 +38,8 @@ struct Scene
 	StructuredBuffer<InstanceData> instances;
 	StructuredBuffer<MeshData> meshData;
 	StructuredBuffer<MeshletDescription> meshletInfos;
-	StructuredBuffer<uint8_t> primitiveIndices;
+  // uint8_t is not valid in DXIL
+	StructuredBuffer<uint32_t> primitiveIndices;
 	StructuredBuffer<uint32_t> vertexIndices;
 };
 

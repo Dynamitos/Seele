@@ -8,9 +8,8 @@
 #include "Metal/MTLLibrary.hpp"
 #include <fstream>
 #include <iostream>
+#include <metal_irconverter/metal_irconverter.h>
 #include <slang.h>
-#include <spirv_cross.hpp>
-#include <spirv_cross/spirv_msl.hpp>
 
 using namespace Seele;
 using namespace Seele::Metal;
@@ -25,33 +24,58 @@ Shader::~Shader() {
 }
 
 void Shader::create(const ShaderCreateInfo& createInfo) {
-  Slang::ComPtr<slang::IBlob> kernelBlob = generateShader(createInfo, SLANG_SPIRV);
-  hash = CRC::Calculate(kernelBlob->getBufferPointer(), kernelBlob->getBufferSize(), CRC::CRC_32());
-  spirv_cross::CompilerMSL comp((const uint32*)kernelBlob->getBufferPointer(), kernelBlob->getBufferSize() / 4);
-  auto options = comp.get_msl_options();
-  options.argument_buffers = true;
-  options.argument_buffers_tier = spirv_cross::CompilerMSL::Options::ArgumentBuffersTier::Tier2;
-  options.set_msl_version(3);
-  comp.set_msl_options(options);
-  std::string metalCode = comp.compile();
-  NS::Error* error = nullptr;
-  MTL::CompileOptions* mtlOptions = MTL::CompileOptions::alloc()->init();
+  Slang::ComPtr<slang::IBlob> kernelBlob = generateShader(createInfo, SLANG_DXIL);
 
-  library = graphics->getDevice()->newLibrary(NS::String::string(metalCode.c_str(), NS::ASCIIStringEncoding),
-                                              mtlOptions, &error);
-  if (error) {
-    std::cout << error->debugDescription() << std::endl;
-    assert(false);
+  hash = CRC::Calculate(kernelBlob->getBufferPointer(), kernelBlob->getBufferSize(), CRC::CRC_32());
+  IRCompiler* pCompiler = IRCompilerCreate();
+  IRCompilerSetEntryPointName(pCompiler, "main");
+
+  IRObject* pDXIL = IRObjectCreateFromDXIL((const uint8*)kernelBlob->getBufferPointer(), kernelBlob->getBufferSize(),
+                                           IRBytecodeOwnershipNone);
+
+  // Compile DXIL to Metal IR:
+  IRError* pError = nullptr;
+  IRObject* pOutIR = IRCompilerAllocCompileAndLink(pCompiler, NULL, pDXIL, &pError);
+
+  if (!pOutIR) {
+    // Inspect pError to determine cause.
+    IRErrorDestroy(pError);
   }
-  function = library->newFunction(NS::String::string("main0", NS::ASCIIStringEncoding));
+  IRShaderStage irStage;
+  switch (stage) {
+  case Gfx::SE_SHADER_STAGE_VERTEX_BIT:
+    irStage = IRShaderStageVertex;
+    break;
+  case Gfx::SE_SHADER_STAGE_FRAGMENT_BIT:
+    irStage = IRShaderStageFragment;
+    break;
+  case Gfx::SE_SHADER_STAGE_COMPUTE_BIT:
+    irStage = IRShaderStageCompute;
+    break;
+  case Gfx::SE_SHADER_STAGE_TASK_BIT_EXT:
+    irStage = IRShaderStageAmplification;
+    break;
+  case Gfx::SE_SHADER_STAGE_MESH_BIT_EXT:
+    irStage = IRShaderStageMesh;
+    break;
+  }
+  // Retrieve Metallib:
+  IRMetalLibBinary* pMetallib = IRMetalLibBinaryCreate();
+  IRObjectGetMetalLibBinary(pOutIR, irStage, pMetallib);
+  dispatch_data_t data = IRMetalLibGetBytecodeData(pMetallib);
+
+  // Store the metallib to custom format or disk, or use to create a MTLLibrary.
+  NS::Error* error;
+  library = graphics->getDevice()->newLibrary(data, &error);
+  function = library->newFunction(NS::String::string("main", NS::ASCIIStringEncoding));
   if(!function)
   {
-    std::ofstream shaderFile("error.metal");
-    shaderFile << metalCode;
-    shaderFile.close();
-    assert(!function);
+    assert(false);
   }
-  mtlOptions->release();
+  IRMetalLibBinaryDestroy(pMetallib);
+  IRObjectDestroy(pDXIL);
+  IRObjectDestroy(pOutIR);
+  IRCompilerDestroy(pCompiler);
 }
 
 uint32 Shader::getShaderHash() const { return hash; }

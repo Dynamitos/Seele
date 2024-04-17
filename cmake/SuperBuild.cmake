@@ -2,36 +2,37 @@ include (ExternalProject)
 
 
 #--------------SLang------------------------------
-add_library(shader-slang-glslang SHARED IMPORTED)
-add_library(shader-slang SHARED IMPORTED)
-if(WIN32)
-    set(SLANG_ROOT ${EXTERNAL_ROOT}/vcpkg/packages/shader-slang_x64-windows/)
-    set_target_properties(shader-slang-glslang PROPERTIES IMPORTED_LOCATION ${SLANG_ROOT}/bin/slang-glslang.dll)
-    set_target_properties(shader-slang-glslang PROPERTIES IMPORTED_IMPLIB ${SLANG_ROOT}/lib/slang.lib)
-    set_target_properties(shader-slang PROPERTIES IMPORTED_LOCATION ${SLANG_ROOT}/bin/slang.dll)
-    set_target_properties(shader-slang PROPERTIES IMPORTED_IMPLIB ${SLANG_ROOT}/lib/slang.lib)
-    target_link_libraries(shader-slang INTERFACE shader-slang-glslang)
-    install(FILES 
-        ${SLANG_ROOT}/bin/slang-glslang.dll
-        ${SLANG_ROOT}/bin/slang.dll
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
-    install(FILES 
-        ${SLANG_ROOT}/lib/slang.lib
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
-elseif(APPLE)
-    set(SLANG_ROOT ${EXTERNAL_ROOT}/vcpkg/packages/shader-slang_arm64-osx/)
-    set_target_properties(shader-slang-glslang PROPERTIES IMPORTED_LOCATION ${SLANG_ROOT}/bin/libslang-glslang.dylib)
-    set_target_properties(shader-slang PROPERTIES IMPORTED_LOCATION ${SLANG_ROOT}/bin/libslang.dylib)
-    target_link_libraries(shader-slang INTERFACE shader-slang-glslang)
-    install(FILES
-        ${SLANG_ROOT}/bin/libslang.dylib
-        ${SLANG_ROOT}/bin/libslang-glslang.dylib
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
-endif()
-target_include_directories(shader-slang INTERFACE 
-    $<BUILD_INTERFACE:${SLANG_ROOT}/include/>
-    $<INSTALL_INTERFACE:include>
-)
+set(SLANG_ROOT ${EXTERNAL_ROOT}/slang)
+#add_library(shader-slang SHARED IMPORTED)
+#if(WIN32)
+#    add_library(shader-slang-glslang SHARED IMPORTED)
+#    set(SLANG_ROOT ${EXTERNAL_ROOT}/slang/bin/windows-x64/release/)
+#    set_target_properties(shader-slang-glslang PROPERTIES IMPORTED_LOCATION ${SLANG_ROOT}/bin/slang-glslang.dll)
+#    set_target_properties(shader-slang-glslang PROPERTIES IMPORTED_IMPLIB ${SLANG_ROOT}/lib/slang.lib)
+#    set_target_properties(shader-slang PROPERTIES IMPORTED_LOCATION ${SLANG_ROOT}/bin/slang.dll)
+#    set_target_properties(shader-slang PROPERTIES IMPORTED_IMPLIB ${SLANG_ROOT}/lib/slang.lib)
+#    target_link_libraries(shader-slang INTERFACE shader-slang-glslang)
+#    install(FILES 
+#        ${SLANG_ROOT}/bin/slang-glslang.dll
+#        ${SLANG_ROOT}/bin/slang.dll
+#    DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+#    install(FILES 
+#        ${SLANG_ROOT}/lib/slang.lib
+#    DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+#elseif(APPLE)
+#    set(BINARY_ROOT ${SLANG_ROOT}/bin/macosx-aarch64/release/)
+#    set_target_properties(shader-slang PROPERTIES IMPORTED_LOCATION ${BINARY_ROOT}/libslang.dylib)
+#    install(FILES
+#        ${BINARY_ROOT}/libslang.dylib
+#    DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+#endif()
+#target_include_directories(shader-slang INTERFACE 
+#    $<BUILD_INTERFACE:${SLANG_ROOT}/>
+#    $<INSTALL_INTERFACE:include>
+#)
+
+add_subdirectory(${SLANG_ROOT})
+target_compile_definitions(compiler-core PUBLIC SLANG_ENABLE_DXIL_SUPPORT=1)
 
 #--------------CRC++------------------------------
 add_library(crcpp INTERFACE)

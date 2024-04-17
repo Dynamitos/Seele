@@ -54,7 +54,9 @@ void VertexBuffer::download(Array<uint8>& buffer) {
 void VertexBuffer::executeOwnershipBarrier(Gfx::QueueType newOwner) { currentOwner = newOwner; }
 
 void VertexBuffer::executePipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage,
-                                          Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage) {}
+                                          Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage) {
+  
+}
 
 IndexBuffer::IndexBuffer(PGraphics graphics, const IndexBufferCreateInfo& createInfo)
     : Gfx::IndexBuffer(graphics->getFamilyMapping(), createInfo.sourceData.size, createInfo.indexType,

@@ -1,50 +1,48 @@
 #include "Command.h"
 #include "Buffer.h"
+#include "Containers/Array.h"
 #include "Descriptor.h"
 #include "Enums.h"
+#include "Graphics/Command.h"
 #include "Graphics/Enums.h"
 #include "Graphics/Graphics.h"
-#include "Metal/MTLCommandBuffer.hpp"
+#include "Graphics/Resources.h"
 #include "Pipeline.h"
 #include "Resources.h"
 #include "Window.h"
+#include <Metal/Metal.h>
 
 using namespace Seele;
 using namespace Seele::Metal;
 
 Command::Command(PGraphics graphics, MTL::CommandBuffer* cmdBuffer)
-    : graphics(graphics), completed(new Event(graphics)), cmdBuffer(cmdBuffer), renderEncoder(nullptr) {}
+    : graphics(graphics), completed(new Event(graphics)), cmdBuffer(cmdBuffer) {}
 
-Command::~Command() { cmdBuffer->release(); }
+Command::~Command() {}
 
 void Command::beginRenderPass(PRenderPass renderPass) {
-  renderEncoder = cmdBuffer->parallelRenderCommandEncoder(renderPass->getDescriptor());
+  if (blitEncoder) {
+    blitEncoder->endEncoding();
+    blitEncoder = nullptr;
+  }
+  parallelEncoder = cmdBuffer->parallelRenderCommandEncoder(renderPass->getDescriptor());
 }
 
-void Command::endRenderPass() { renderEncoder->endEncoding(); }
+void Command::endRenderPass() {
+  parallelEncoder->endEncoding();
+  parallelEncoder = nullptr;
+}
 
 void Command::present(MTL::Drawable* drawable) { cmdBuffer->presentDrawable(drawable); }
 
 void Command::end(PEvent signal) {
+  assert(!parallelEncoder);
+  blitEncoder->endEncoding();
   if (signal != nullptr) {
     cmdBuffer->encodeSignalEvent(signal->getHandle(), 1);
   }
   cmdBuffer->encodeSignalEvent(completed->getHandle(), 1);
   cmdBuffer->commit();
-}
-
-void Command::executeCommands(Array<Gfx::ORenderCommand> commands) {
-  for (auto& command : commands) {
-    auto cmd = Gfx::PRenderCommand(command).cast<RenderCommand>();
-    cmd->end();
-  }
-}
-
-void Command::executeCommands(Array<Gfx::OComputeCommand> commands) {
-  for (auto& command : commands) {
-    auto cmd = Gfx::PComputeCommand(command).cast<ComputeCommand>();
-    cmd->end();
-  }
 }
 
 void Command::waitDeviceIdle() { cmdBuffer->waitUntilCompleted(); }
@@ -53,9 +51,10 @@ void Command::signalEvent(PEvent event) { cmdBuffer->encodeSignalEvent(event->ge
 
 void Command::waitForEvent(PEvent event) { cmdBuffer->encodeWait(event->getHandle(), 1); }
 
-RenderCommand::RenderCommand(MTL::RenderCommandEncoder* encoder) : encoder(encoder) {}
+RenderCommand::RenderCommand(MTL::RenderCommandEncoder* encoder, const std::string& name)
+    : encoder(encoder), name(name) {}
 
-RenderCommand::~RenderCommand() { encoder->release(); }
+RenderCommand::~RenderCommand() {}
 
 void RenderCommand::end() { encoder->endEncoding(); }
 
@@ -88,11 +87,10 @@ void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorS
     bindDescriptor(set);
   }
 }
-
 void RenderCommand::bindVertexBuffer(const Array<Gfx::PVertexBuffer>& buffers) {
   uint32 i = 0;
   for (auto buffer : buffers) {
-    encoder->setVertexBuffer(buffer.cast<VertexBuffer>()->getHandle(), 0, i++);
+    encoder->setVertexBuffer(buffer.cast<VertexBuffer>()->getHandle(), 0, METAL_VERTEXBUFFER_OFFSET + i++);
   }
 }
 
@@ -125,11 +123,15 @@ void RenderCommand::drawMesh(uint32 groupX, uint32 groupY, uint32 groupZ) {
   encoder->drawMeshThreadgroups(MTL::Size(groupX, groupY, groupZ), MTL::Size(128, 128, 128), MTL::Size(32, 32, 32));
 }
 
-ComputeCommand::ComputeCommand(MTL::ComputeCommandEncoder* encoder) : encoder(encoder) {}
+ComputeCommand::ComputeCommand(MTL::CommandBuffer* cmdBuffer, const std::string& name)
+    : commandBuffer(cmdBuffer), encoder(cmdBuffer->computeCommandEncoder()), name(name) {}
 
-ComputeCommand::~ComputeCommand() { encoder->release(); }
+ComputeCommand::~ComputeCommand() {}
 
-void ComputeCommand::end() { encoder->endEncoding(); }
+void ComputeCommand::end() {
+  encoder->endEncoding();
+  commandBuffer->commit();
+}
 
 void ComputeCommand::bindPipeline(Gfx::PComputePipeline pipeline) {
   encoder->setComputePipelineState(pipeline.cast<ComputePipeline>()->getHandle());
@@ -159,34 +161,52 @@ void ComputeCommand::dispatch(uint32 threadX, uint32 threadY, uint32 threadZ) {
 
 CommandQueue::CommandQueue(PGraphics graphics) : graphics(graphics) {
   queue = graphics->getDevice()->newCommandQueue();
-  activeCommand = new Command(graphics, queue->commandBuffer());
+  MTL::CommandBufferDescriptor* descriptor = MTL::CommandBufferDescriptor::alloc()->init();
+  descriptor->setErrorOptions(MTL::CommandBufferErrorOptionEncoderExecutionStatus);
+  activeCommand = new Command(graphics, queue->commandBuffer(descriptor));
 }
 
 CommandQueue::~CommandQueue() { queue->release(); }
 
 ORenderCommand CommandQueue::getRenderCommand(const std::string& name) {
-  return new RenderCommand(activeCommand->createRenderEncoder());
+  return new RenderCommand(activeCommand->createRenderEncoder(), name);
 }
 
 OComputeCommand CommandQueue::getComputeCommand(const std::string& name) {
-  return new ComputeCommand(activeCommand->createComputeEncoder());
+  return new ComputeCommand(queue->commandBuffer(), name);
+}
+
+void CommandQueue::executeCommands(Array<Gfx::ORenderCommand> commands) {
+  for (auto& command : commands) {
+    auto metalCmd = Gfx::PRenderCommand(command).cast<RenderCommand>();
+    metalCmd->end();
+  }
+}
+
+void CommandQueue::executeCommands(Array<Gfx::OComputeCommand> commands) {
+  submitCommands();
+  for (auto& command : commands) {
+    auto metalCmd = Gfx::PComputeCommand(command).cast<ComputeCommand>();
+    metalCmd->end();
+  }
 }
 
 void CommandQueue::submitCommands(PEvent signalSemaphore) {
   activeCommand->getHandle()->addCompletedHandler(MTL::CommandBufferHandler([&](MTL::CommandBuffer* cmdBuffer) {
-    for(auto it = pendingCommands.begin(); it != pendingCommands.end(); it++)
-    {
-      if((*it)->getHandle() == cmdBuffer)
-      {
+    for (auto it = pendingCommands.begin(); it != pendingCommands.end(); it++) {
+      if ((*it)->getHandle() == cmdBuffer) {
         pendingCommands.remove(it);
         return;
       }
     }
   }));
   activeCommand->end(signalSemaphore);
+  activeCommand->waitDeviceIdle();
   PEvent prevCmdEvent = activeCommand->getCompletedEvent();
   pendingCommands.add(std::move(activeCommand));
-  activeCommand = new Command(graphics, queue->commandBuffer());
+  MTL::CommandBufferDescriptor* descriptor = MTL::CommandBufferDescriptor::alloc()->init();
+  descriptor->setErrorOptions(MTL::CommandBufferErrorOptionEncoderExecutionStatus);
+  activeCommand = new Command(graphics, queue->commandBuffer(descriptor));
   activeCommand->waitForEvent(prevCmdEvent);
 }
 
