@@ -25,6 +25,7 @@ void Command::beginRenderPass(PRenderPass renderPass) {
     blitEncoder->endEncoding();
     blitEncoder = nullptr;
   }
+  renderPass->updateRenderPass();
   parallelEncoder = cmdBuffer->parallelRenderCommandEncoder(renderPass->getDescriptor());
 }
 

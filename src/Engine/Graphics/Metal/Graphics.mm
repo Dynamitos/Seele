@@ -31,7 +31,7 @@ void Graphics::init(GraphicsInitializer)
   queue = new CommandQueue(this);
   ioQueue = new IOCommandQueue(this);
   cache = new PipelineCache(this, "pipelines.metal");
-  meshShadingEnabled = true;
+  meshShadingEnabled = false;
 }
 
 Gfx::OWindow Graphics::createWindow(const WindowCreateInfo &createInfo)

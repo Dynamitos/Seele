@@ -1,4 +1,5 @@
 #pragma once
+#include "Foundation/NSAutoreleasePool.hpp"
 #include "Graphics.h"
 #include "Graphics/Window.h"
 #include "Resources.h"

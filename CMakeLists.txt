@@ -78,7 +78,6 @@ target_link_libraries(Engine PUBLIC crcpp)
 target_link_libraries(Engine PUBLIC fmt::fmt)
 target_link_libraries(Engine PUBLIC GPUOpen::VulkanMemoryAllocator)
 target_link_libraries(Engine PUBLIC slang)
-target_link_libraries(Engine PUBLIC spirv-cross-glsl spirv-cross-msl)
 target_link_libraries(Engine PUBLIC glslang::glslang)
 if(APPLE)
     target_include_directories(Engine PUBLIC /usr/local/include)
@@ -108,11 +107,11 @@ if(MSVC)
     target_compile_options(Editor PUBLIC /std:c++20 /Zi /MP14 /W4 /DEBUG)
     target_sources(Engine INTERFACE   
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Seele.natvis>
-        $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/Seele.natvis>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/Seele/Seele.natvis>
     )
     install(FILES
         Seele.natvis
-        DESTINATION .)
+        DESTINATION Seele/)
 else()
     target_compile_options(Engine PUBLIC -g -Wall -Wextra -Wno-error -pedantic -std=c++20 -Wno-missing-field-initializers -Wno-unused-function -fsanitize=address)
     target_compile_options(Editor PUBLIC -g -Wall -Wextra -Wno-error -pedantic -std=c++20 -fsanitize=address)
@@ -161,7 +160,7 @@ install(
     EXPORT 
         EngineTargets
     FILE_SET HEADERS
-    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/include/Seele)
 
 export(EXPORT EngineTargets
     FILE "${CMAKE_BINARY_DIR}/EngineTargets.cmake"
@@ -179,19 +178,22 @@ install(EXPORT EngineTargets
     NAMESPACE
         Seele::
     DESTINATION
-        ${CMAKE_INSTALL_PREFIX}
+        ${CMAKE_INSTALL_PREFIX}/lib/cmake/Seele
 )
 
 install(
     FILES
         ${CMAKE_BINARY_DIR}/SeeleConfig.cmake
     DESTINATION
-        ${CMAKE_INSTALL_PREFIX}
+        ${CMAKE_INSTALL_PREFIX}/lib/cmake/Seele
 )
 
 install(
     DIRECTORY
-        ${CMAKE_SOURCE_DIR}/res
+        ${CMAKE_SOURCE_DIR}/res/cmake
+        ${CMAKE_SOURCE_DIR}/res/fonts
+        ${CMAKE_SOURCE_DIR}/res/shaders
+        ${CMAKE_SOURCE_DIR}/res/textures
     DESTINATION
-        ${CMAKE_INSTALL_PREFIX}
+        ${CMAKE_INSTALL_PREFIX}/bin
 )

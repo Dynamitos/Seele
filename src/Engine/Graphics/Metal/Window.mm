@@ -1,5 +1,6 @@
 #include "Window.h"
 #include "Command.h"
+#include "Foundation/NSAutoreleasePool.hpp"
 #include "Graphics/Initializer.h"
 #include "Graphics/Metal/Enums.h"
 #include "Graphics/Texture.h"
@@ -80,8 +81,6 @@ Window::Window(PGraphics graphics, const WindowCreateInfo& createInfo) : graphic
   metalLayer.drawableSize = CGSizeMake(createInfo.width, createInfo.height);
   metalWindow.contentView.layer = metalLayer;
   metalWindow.contentView.wantsLayer = YES;
-  drawable = (__bridge CA::MetalDrawable*)[metalLayer nextDrawable];
-  createBackBuffer();
 }
 
 Window::~Window() { glfwDestroyWindow(static_cast<GLFWwindow*>(windowHandle)); }
@@ -89,9 +88,6 @@ Window::~Window() { glfwDestroyWindow(static_cast<GLFWwindow*>(windowHandle)); }
 void Window::pollInput() { glfwPollEvents(); }
 
 void Window::beginFrame() {
-  if (drawable) {
-    drawable->release();
-  }
   drawable = (__bridge CA::MetalDrawable*)[metalLayer nextDrawable];
   createBackBuffer();
 }
@@ -146,7 +142,7 @@ void Window::resize(int width, int height) {
   framebufferWidth = width;
   framebufferHeight = height;
   // Deallocate the textures if they have been created
-  drawable = (__bridge CA::MetalDrawable*)[metalLayer nextDrawable];
+  drawable = (__bridge CA::MetalDrawable*)[[metalLayer nextDrawable] autorelease];
   createBackBuffer();
   resizeCallback(width, height);
 }

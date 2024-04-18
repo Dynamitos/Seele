@@ -31,5 +31,5 @@ float4 fragmentMain(in FragmentParameter params) : SV_Target
         //uint lightIndex = pLightCullingData.lightIndexList[startOffset + i];
         result += pLightEnv.pointLights[i].illuminate(lightingParams, brdf);
     }
-    return float4(params.vertexColor, 1.0f);
+    return float4(1.0f, 0.1f, 0.5f, 1.0f);
 }

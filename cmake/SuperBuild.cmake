@@ -39,12 +39,12 @@ add_library(crcpp INTERFACE)
 
 target_include_directories(crcpp INTERFACE 
     $<BUILD_INTERFACE:${CRCPP_ROOT}/inc>
-    $<INSTALL_INTERFACE:include>
+    $<INSTALL_INTERFACE:include/Seele/>
 )
     
 install(FILES
     ${CRCPP_ROOT}/inc/CRC.h
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/include
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/include/Seele
 )
 
 add_library(metal INTERFACE)
