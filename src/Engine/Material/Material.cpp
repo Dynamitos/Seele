@@ -106,7 +106,7 @@ void Material::load(ArchiveBuffer& buffer)
         Gfx::SeShaderStageFlags shaderStages;
         Serialization::load(buffer, shaderStages);
 
-        layout->addDescriptorBinding(binding, descriptorType, textureType, descriptorCount, bindingFlags, shaderStages);
+        layout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = binding, .descriptorType = descriptorType, .textureType = textureType, .descriptorCount = descriptorCount, .bindingFlags = bindingFlags, .shaderStages = shaderStages,});
     }
     layout->create();
 }

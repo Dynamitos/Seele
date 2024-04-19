@@ -265,16 +265,16 @@ void Seele::VertexData::init(Gfx::PGraphics _graphics)
     graphics = _graphics;
     verticesAllocated = NUM_DEFAULT_ELEMENTS;
     instanceDataLayout = graphics->createDescriptorLayout("pScene");
-    instanceDataLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding =0, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,});
 
     // meshData
-    instanceDataLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 1, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,});
     // meshletData
-    instanceDataLayout->addDescriptorBinding(2, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding =2, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
     // primitiveIndices
-    instanceDataLayout->addDescriptorBinding(3, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding =3, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
     // vetexIndices
-    instanceDataLayout->addDescriptorBinding(4, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding =4, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
     
     instanceDataLayout->create();
     resizeBuffers();

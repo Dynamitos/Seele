@@ -51,7 +51,6 @@ private:
   CAMetalLayer* metalLayer;
   CA::MetalDrawable* drawable;
   OTexture2D backBuffer;
-  MTL::CaptureDescriptor* capture = nullptr;
 
   std::function<void(KeyCode, InputAction, KeyModifier)> keyCallback;
   std::function<void(double, double)> mouseMoveCallback;

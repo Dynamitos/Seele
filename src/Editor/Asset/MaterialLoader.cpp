@@ -69,7 +69,7 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
             OFloatParameter p = new FloatParameter(param.key(), uniformBufferOffset, uniformBinding);
             if(uniformBinding == -1)
             {
-                layout->addDescriptorBinding(bindingCounter, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+                layout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = bindingCounter, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER,});
                 uniformBinding = bindingCounter++;
             }
             uniformBufferOffset += 4;
@@ -86,7 +86,7 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
             OVectorParameter p = new VectorParameter(param.key(), uniformBufferOffset, uniformBinding);
             if(uniformBinding == -1)
             {
-                layout->addDescriptorBinding(bindingCounter, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+                layout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = bindingCounter, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER,});
                 uniformBinding = bindingCounter++;
             }
             uniformBufferOffset += 12;
@@ -100,7 +100,7 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
         else if(type.compare("Texture2D") == 0)
         {
             OTextureParameter p = new TextureParameter(param.key(), 0, bindingCounter);
-            layout->addDescriptorBinding(bindingCounter++, Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
+            layout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = bindingCounter++, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,});
             if(defaultValue != param.value().end())
             {
                 std::string defaultString = defaultValue.value().get<std::string>();
@@ -116,7 +116,7 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
         else if(type.compare("Sampler") == 0)
         {
             OSamplerParameter p = new SamplerParameter(param.key(), 0, bindingCounter);
-            layout->addDescriptorBinding(bindingCounter++, Gfx::SE_DESCRIPTOR_TYPE_SAMPLER);
+            layout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = bindingCounter++, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLER,});
             p->data = graphics->createSampler({});
             parameters.add(p->key);
             expressions.add(std::move(p));

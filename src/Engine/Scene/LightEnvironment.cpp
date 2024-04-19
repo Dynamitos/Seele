@@ -7,9 +7,9 @@ LightEnvironment::LightEnvironment(Gfx::PGraphics graphics)
     : graphics(graphics)
 {
     layout = graphics->createDescriptorLayout("pLightEnv");
-    layout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-    layout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
-    layout->addDescriptorBinding(2, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    layout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 0, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER,});
+    layout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 1, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,});
+    layout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 2, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,});
     layout->create();
     lightEnvBuffer = graphics->createUniformBuffer(UniformBufferCreateInfo{
         .sourceData = {

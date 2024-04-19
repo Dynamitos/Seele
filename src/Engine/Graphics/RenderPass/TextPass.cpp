@@ -121,12 +121,12 @@ void TextPass::createRenderPass()
     createInfo.entryPoint =  "fragmentMain";
     fragmentShader = graphics->createFragmentShader(createInfo);
     generalLayout = graphics->createDescriptorLayout("pRender");
-    generalLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-    generalLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_SAMPLER);
+    generalLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 0, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER,});
+    generalLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 1, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLER,});
     generalLayout->create();
 
     textureArrayLayout = graphics->createDescriptorLayout("pGlyphTextures");
-    textureArrayLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE, Gfx::SE_IMAGE_VIEW_TYPE_2D_ARRAY, 256, Gfx::SE_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT);
+    textureArrayLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 0, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE, .textureType = Gfx::SE_IMAGE_VIEW_TYPE_2D_ARRAY, .descriptorCount = 256, .bindingFlags = Gfx::SE_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT,});
     textureArrayLayout->create();
 
     projectionBuffer = graphics->createUniformBuffer({

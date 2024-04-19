@@ -49,16 +49,12 @@ void BasePass::render()
         Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
         Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
 
-    descriptorSets[INDEX_VIEW_PARAMS] = viewParamsSet;
-    descriptorSets[INDEX_LIGHT_ENV] = scene->getLightEnvironment()->getDescriptorSet();
-
     opaqueCulling->updateBuffer(0, oLightIndexList);
     opaqueCulling->updateTexture(1, oLightGrid);
     transparentCulling->updateBuffer(0, tLightIndexList);
     transparentCulling->updateTexture(1, tLightGrid);
     opaqueCulling->writeChanges();
     transparentCulling->writeChanges();
-    descriptorSets[INDEX_LIGHT_CULLING] = opaqueCulling;
 
     Gfx::ShaderPermutation permutation;
     if (graphics->supportMeshShading())
@@ -122,12 +118,14 @@ void BasePass::render()
                 Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
                 command->bindPipeline(pipeline);
             }
-            descriptorSets[INDEX_VERTEX_DATA] = vertexData->getVertexDataSet();
+            command->bindDescriptor(vertexData->getVertexDataSet());
+            command->bindDescriptor(viewParamsSet);
+            command->bindDescriptor(scene->getLightEnvironment()->getDescriptorSet());
+            command->bindDescriptor(opaqueCulling);
             for (const auto& [_, instance] : materialData.instances)
             {
-                descriptorSets[INDEX_MATERIAL] = instance.materialInstance->getDescriptorSet();
-                descriptorSets[INDEX_SCENE_DATA] = instance.descriptorSet;
-                command->bindDescriptor(descriptorSets);
+                command->bindDescriptor(instance.materialInstance->getDescriptorSet());
+                command->bindDescriptor(instance.descriptorSet);
                 if (graphics->supportMeshShading())
                 {
                     command->drawMesh(instance.meshes.size(), 1, 1);
@@ -166,9 +164,9 @@ void BasePass::publishOutputs()
 
     lightCullingLayout = graphics->createDescriptorLayout("pLightCullingData");
     // oLightIndexList
-    lightCullingLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    lightCullingLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 0, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,});
     // oLightGrid
-    lightCullingLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_IMAGE);
+    lightCullingLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 1, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_IMAGE,});
     lightCullingLayout->create();
 
     basePassLayout->addDescriptorLayout(lightCullingLayout);

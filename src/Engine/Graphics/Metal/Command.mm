@@ -11,7 +11,6 @@
 #include "Pipeline.h"
 #include "Resources.h"
 #include "Window.h"
-#include <Metal/Metal.h>
 
 using namespace Seele;
 using namespace Seele::Metal;
@@ -123,7 +122,7 @@ void RenderCommand::drawIndexed(uint32 indexCount, uint32 instanceCount, int32 f
 
 void RenderCommand::drawMesh(uint32 groupX, uint32 groupY, uint32 groupZ) {
   // TODO:
-  encoder->drawMeshThreadgroups(MTL::Size(groupX, groupY, groupZ), MTL::Size(128, 128, 128), MTL::Size(32, 32, 32));
+  encoder->drawMeshThreadgroups(MTL::Size(groupX, groupY, groupZ), MTL::Size(128, 1, 1), MTL::Size(32, 1, 1));
 }
 
 ComputeCommand::ComputeCommand(MTL::CommandBuffer* cmdBuffer, const std::string& name)
@@ -139,13 +138,15 @@ void ComputeCommand::end() {
 void ComputeCommand::bindPipeline(Gfx::PComputePipeline pipeline) {
     boundPipeline = pipeline.cast<ComputePipeline>();
     encoder->setComputePipelineState(boundPipeline->getHandle());
+    argumentBuffer = boundPipeline->graphics->getDevice()->newBuffer(sizeof(uint64) * boundPipeline->getPipelineLayout()->getLayouts().size(), MTL::ResourceOptionCPUCacheModeDefault);
 }
 
 void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet set) {
   auto metalSet = set.cast<DescriptorSet>();
   metalSet->bind();
     uint32 parameterIndex = boundPipeline->getPipelineLayout()->findParameter(set->getLayout()->getName());
-encoder->setBuffer(metalSet->getBuffer(), 0, parameterIndex);
+    uint64* topLevelTable = (uint64*)argumentBuffer->contents();
+    topLevelTable[parameterIndex] = metalSet->getBuffer()->gpuAddress();
     auto bindings =metalSet->getLayout()->getBindings();
     for(size_t i = 0; i < bindings.size(); ++i)
     {
@@ -190,6 +191,7 @@ void ComputeCommand::pushConstants(Gfx::PPipelineLayout, Gfx::SeShaderStageFlags
 
 void ComputeCommand::dispatch(uint32 threadX, uint32 threadY, uint32 threadZ) {
   // TODO
+    encoder->setBuffer(argumentBuffer, 0, 2);
   encoder->dispatchThreadgroups(MTL::Size(threadX, threadY, threadZ), MTL::Size(32, 32, 1));
 }
 

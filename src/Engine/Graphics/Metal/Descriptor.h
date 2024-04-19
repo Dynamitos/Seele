@@ -62,7 +62,7 @@ public:
 private:
   PGraphics graphics;
   PDescriptorPool owner;
-  MTL::Buffer* buffer;
+  MTL::Buffer* buffer = nullptr;
   MTL::ArgumentEncoder* encoder;
     Array<MTL::Resource*> boundResources;
   uint32 bindCount;

@@ -23,10 +23,7 @@ public:
   DescriptorLayout(const DescriptorLayout& other);
   DescriptorLayout& operator=(const DescriptorLayout& other);
   virtual ~DescriptorLayout();
-  void addDescriptorBinding(uint32 binding, SeDescriptorType type,
-                            SeImageViewType textureType = Gfx::SE_IMAGE_VIEW_TYPE_2D, uint32 arrayCount = 1,
-                            SeDescriptorBindingFlags bindingFlags = 0,
-                            SeShaderStageFlags shaderStages = SeShaderStageFlagBits::SE_SHADER_STAGE_ALL);
+  void addDescriptorBinding(DescriptorBinding binding);
   void reset();
   PDescriptorSet allocateDescriptorSet();
   virtual void create() = 0;

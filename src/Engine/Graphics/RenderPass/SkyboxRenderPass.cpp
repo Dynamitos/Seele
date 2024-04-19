@@ -75,12 +75,12 @@ void SkyboxRenderPass::endFrame()
 void SkyboxRenderPass::publishOutputs()
 {
     skyboxDataLayout = graphics->createDescriptorLayout("pSkyboxData");
-    skyboxDataLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+    skyboxDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 0, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER,});
     skyboxDataLayout->create();
     textureLayout = graphics->createDescriptorLayout("pSkyboxTextures");
-    textureLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
-    textureLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
-    textureLayout->addDescriptorBinding(2, Gfx::SE_DESCRIPTOR_TYPE_SAMPLER);
+    textureLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 0, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,});
+    textureLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 1, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,});
+    textureLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 2, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLER,});
     textureLayout->create();
 
     skyboxSampler = graphics->createSampler({});

@@ -226,8 +226,6 @@ struct LegacyPipelineCreateInfo
     DepthStencilState   depthStencilState;
     ColorBlendState     colorBlend;
     LegacyPipelineCreateInfo();
-    LegacyPipelineCreateInfo(LegacyPipelineCreateInfo&& rhs) = default;
-    LegacyPipelineCreateInfo& operator=(LegacyPipelineCreateInfo&& rhs) = default;
     ~LegacyPipelineCreateInfo();
 };
 
@@ -243,8 +241,6 @@ struct MeshPipelineCreateInfo
     DepthStencilState   depthStencilState;
     ColorBlendState     colorBlend;
     MeshPipelineCreateInfo();
-    MeshPipelineCreateInfo(MeshPipelineCreateInfo&& rhs) = default;
-    MeshPipelineCreateInfo& operator=(MeshPipelineCreateInfo&& rhs) = default;
     ~MeshPipelineCreateInfo();
 };
 struct ComputePipelineCreateInfo
@@ -252,8 +248,6 @@ struct ComputePipelineCreateInfo
     Gfx::PComputeShader     computeShader;
     Gfx::PPipelineLayout    pipelineLayout;
     ComputePipelineCreateInfo();
-    ComputePipelineCreateInfo(ComputePipelineCreateInfo&& rhs) = default;
-    ComputePipelineCreateInfo& operator=(ComputePipelineCreateInfo&& rhs) = default;
     ~ComputePipelineCreateInfo();
 };
 } // namespace Gfx

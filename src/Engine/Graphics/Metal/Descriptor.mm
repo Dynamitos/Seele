@@ -116,16 +116,14 @@ void DescriptorPool::reset() {
 
 DescriptorSet::DescriptorSet(PGraphics graphics, PDescriptorPool owner)
     : Gfx::DescriptorSet(owner->getLayout()), graphics(graphics), owner(owner), bindCount(0), currentlyInUse(false) {
-  // auto desc = (MTL::ArgumentDescriptor*)owner->getArguments()->object(0);
-  // std::cout << desc->access() << " " << desc->arrayLength() << " " << desc->index() << " " << desc->textureType() <<
-  // " " << desc->dataType() << std::endl;
-  if (owner->getArguments()->count() == 0) {
-    buffer = graphics->getDevice()->newBuffer(0, MTL::ResourceOptionCPUCacheModeDefault);
-  } else {
-    boundResources.resize(owner->getArguments()->count());
-    encoder = graphics->getDevice()->newArgumentEncoder(owner->getArguments());
-    buffer = graphics->getDevice()->newBuffer(encoder->encodedLength(), MTL::ResourceOptionCPUCacheModeDefault);
-    encoder->setArgumentBuffer(buffer, 0);
+  if (owner->getArguments()->count() > 0) {
+      boundResources.resize(owner->getArguments()->count());
+      encoder = graphics->getDevice()->newArgumentEncoder(owner->getArguments());
+      buffer = graphics->getDevice()->newBuffer(encoder->encodedLength(), MTL::ResourceOptionCPUCacheModeDefault);
+      encoder->setArgumentBuffer(buffer, 0);
+  } else
+  {
+      buffer = graphics->getDevice()->newBuffer(8, MTL::ResourceOptionCPUCacheModeDefault);
   }
 }
 
@@ -149,7 +147,13 @@ void DescriptorSet::updateSampler(uint32_t binding, Gfx::PSampler samplerState) 
 }
 void DescriptorSet::updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::PSampler samplerState) {
   PTextureBase base = texture.cast<TextureBase>();
-  encoder->setTexture(base->getTexture(), binding);
+    if(layout->getBindings()[binding].access == Gfx::SE_DESCRIPTOR_ACCESS_READ_ONLY_BIT)
+    {
+        encoder->setTexture(base->getTexture(), binding);
+        
+    }else{
+        encoder->setBuffer(base->getTexture()->buffer(), 0, binding);
+    }
     boundResources[binding] = base->getTexture();
 }
 

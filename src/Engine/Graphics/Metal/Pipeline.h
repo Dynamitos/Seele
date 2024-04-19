@@ -31,8 +31,8 @@ public:
   virtual ~ComputePipeline();
   constexpr MTL::ComputePipelineState* getHandle() const { return state; }
 
-private:
   PGraphics graphics;
+private:
   MTL::ComputePipelineState* state;
 };
 DEFINE_REF(ComputePipeline)

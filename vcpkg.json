@@ -13,7 +13,6 @@
         "gtest",
         "vulkan-memory-allocator",
         "shader-slang",
-        "spirv-cross",
         "glslang"
     ]
 }

@@ -68,9 +68,10 @@ public:
   virtual void drawMesh(uint32 groupX, uint32 groupY, uint32 groupZ) override;
 
 private:
+    PGraphicsPipeline boundPipeline;
+    PIndexBuffer boundIndexBuffer;
+    MTL::Buffer* argumentBuffer;
   MTL::RenderCommandEncoder* encoder;
-  PIndexBuffer boundIndexBuffer;
-  PGraphicsPipeline boundPipeline;
   std::string name;
 };
 DEFINE_REF(RenderCommand)
@@ -90,6 +91,7 @@ private:
   PComputePipeline boundPipeline;
   MTL::CommandBuffer* commandBuffer;
   MTL::ComputeCommandEncoder* encoder;
+    MTL::Buffer* argumentBuffer;
   std::string name;
 };
 DEFINE_REF(ComputeCommand)

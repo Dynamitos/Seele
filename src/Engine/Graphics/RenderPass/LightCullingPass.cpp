@@ -100,19 +100,19 @@ void LightCullingPass::publishOutputs()
     cullingDescriptorLayout = graphics->createDescriptorLayout("pCullingParams");
 
     //DepthTexture
-    cullingDescriptorLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
+    cullingDescriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 0, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,});
     //o_lightIndexCounter
-    cullingDescriptorLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    cullingDescriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 1, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER, .access = Gfx::SE_DESCRIPTOR_ACCESS_READ_WRITE_BIT});
     //t_lightIndexCounter
-    cullingDescriptorLayout->addDescriptorBinding(2, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    cullingDescriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 2, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER, .access = Gfx::SE_DESCRIPTOR_ACCESS_READ_WRITE_BIT});
     //o_lightIndexList
-    cullingDescriptorLayout->addDescriptorBinding(3, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    cullingDescriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 3, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER, .access = Gfx::SE_DESCRIPTOR_ACCESS_READ_WRITE_BIT});
     //t_lightIndexList
-    cullingDescriptorLayout->addDescriptorBinding(4, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    cullingDescriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 4, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER, .access = Gfx::SE_DESCRIPTOR_ACCESS_READ_WRITE_BIT});
     //o_lightGrid
-    cullingDescriptorLayout->addDescriptorBinding(5, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_IMAGE);
+    cullingDescriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 5, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_IMAGE, .access = Gfx::SE_DESCRIPTOR_ACCESS_READ_WRITE_BIT});
     //t_lightGrid
-    cullingDescriptorLayout->addDescriptorBinding(6, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_IMAGE);
+    cullingDescriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 6, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_IMAGE, .access = Gfx::SE_DESCRIPTOR_ACCESS_READ_WRITE_BIT});
 
     lightEnv = scene->getLightEnvironment();
 
@@ -122,8 +122,10 @@ void LightCullingPass::publishOutputs()
     cullingLayout->addDescriptorLayout(cullingDescriptorLayout);
     cullingLayout->addDescriptorLayout(lightEnv->getDescriptorLayout());
     Map<std::string, uint32> mapping;
-    mapping["pViewParams"] = 0;
-    mapping["pDispatchParams"] = 1;
+    mapping["pViewParams"] = 1;
+    mapping["pDispatchParams"] = 2;
+    mapping["pCullingParams"] = 0;
+    mapping["pLightEnv"] = 3;
     cullingLayout->addMapping(mapping);
     cullingLayout->create();
     
@@ -209,8 +211,8 @@ void LightCullingPass::setupFrustums()
     dispatchParams.numThreadGroups = numThreadGroups;
 
     dispatchParamsLayout = graphics->createDescriptorLayout("pDispatchParams");
-    dispatchParamsLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-    dispatchParamsLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    dispatchParamsLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 0, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER, });
+    dispatchParamsLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 1, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER, .access = Gfx::SE_DESCRIPTOR_ACCESS_WRITE_ONLY_BIT });
     frustumLayout = graphics->createPipelineLayout();
     frustumLayout->addDescriptorLayout(viewParamsLayout);
     frustumLayout->addDescriptorLayout(dispatchParamsLayout);
@@ -231,8 +233,8 @@ void LightCullingPass::setupFrustums()
 
     Gfx::ComputePipelineCreateInfo pipelineInfo;
     pipelineInfo.computeShader = frustumShader;
-    pipelineInfo.pipelineLayout = std::move(frustumLayout);
-    frustumPipeline = graphics->createComputePipeline(std::move(pipelineInfo));
+    pipelineInfo.pipelineLayout = frustumLayout;
+    frustumPipeline = graphics->createComputePipeline(pipelineInfo);
     
     Gfx::OUniformBuffer frustumDispatchParamsBuffer = graphics->createUniformBuffer(UniformBufferCreateInfo{
         .sourceData = {

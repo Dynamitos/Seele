@@ -24,19 +24,11 @@ DescriptorLayout& DescriptorLayout::operator=(const DescriptorLayout& other) {
 
 DescriptorLayout::~DescriptorLayout() {}
 
-void DescriptorLayout::addDescriptorBinding(uint32 bindingIndex, SeDescriptorType type, SeImageViewType textureType, uint32 arrayCount,
-                                            SeDescriptorBindingFlags bindingFlags, SeShaderStageFlags shaderStages) {
-  if (descriptorBindings.size() <= bindingIndex) {
-    descriptorBindings.resize(bindingIndex + 1);
+void DescriptorLayout::addDescriptorBinding(DescriptorBinding binding) {
+  if (descriptorBindings.size() <= binding.binding) {
+    descriptorBindings.resize(binding.binding + 1);
   }
-  descriptorBindings[bindingIndex] = DescriptorBinding{
-      .binding = bindingIndex,
-      .descriptorType = type,
-      .textureType = textureType,
-      .descriptorCount = arrayCount,
-      .bindingFlags = bindingFlags,
-      .shaderStages = shaderStages,
-  };
+    descriptorBindings[binding.binding] = binding;
 }
 
 PDescriptorSet DescriptorLayout::allocateDescriptorSet() { return pool->allocateDescriptorSet(); }

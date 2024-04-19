@@ -81,6 +81,14 @@ void ShaderCompiler::compile()
                     layout->addDescriptorLayout(vd->getVertexDataLayout());
                     layout->addDescriptorLayout(vd->getInstanceDataLayout());
                     layout->addDescriptorLayout(mat->getDescriptorLayout());
+                    Map<std::string, uint32> mapping;
+                    mapping["pLightCullingData"] = 1;
+                    mapping["pMaterial"] = 2;
+                    mapping["pViewParams"] = 3;
+                    mapping["pVertexData"] = 4;
+                    mapping["pScene"] = 5;
+                    mapping["pLightEnv"] = 6;
+                    layout->addMapping(mapping);
 					permutation.setMaterial(mat->getName());
                     createShaders(permutation, std::move(layout));
 				}
