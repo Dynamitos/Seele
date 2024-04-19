@@ -124,6 +124,7 @@ struct PermutationId
 };
 struct ShaderCollection
 {
+    OPipelineLayout pipelineLayout;
     OVertexShader vertexShader;
     OTaskShader taskShader;
     OMeshShader meshShader;
@@ -137,7 +138,8 @@ public:
     const ShaderCollection* findShaders(PermutationId id) const;
     void registerMaterial(PMaterial material);
     void registerVertexData(VertexData* vertexData);
-    void registerRenderPass(std::string name,
+    void registerRenderPass(Gfx::PPipelineLayout baseLayout,
+        std::string name,
         std::string mainFile,
         bool useMaterials = false,
         bool hasFragmentShader = false,
@@ -147,13 +149,14 @@ public:
         std::string taskFile = "");
 private:
     void compile();
-    void createShaders(ShaderPermutation permutation);
+    void createShaders(ShaderPermutation permutation, OPipelineLayout layout);
     std::mutex shadersLock;
     Map<PermutationId, ShaderCollection> shaders;
     Map<std::string, PMaterial> materials;
     Map<std::string, VertexData*> vertexData;
     struct PassConfig
     {
+        Gfx::PPipelineLayout baseLayout;
         std::string taskFile;
         std::string mainFile;
         std::string fragmentFile;

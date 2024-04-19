@@ -6,7 +6,7 @@ using namespace Seele;
 LightEnvironment::LightEnvironment(Gfx::PGraphics graphics)
     : graphics(graphics)
 {
-    layout = graphics->createDescriptorLayout("LightEnvironment");
+    layout = graphics->createDescriptorLayout("pLightEnv");
     layout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
     layout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
     layout->addDescriptorBinding(2, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);

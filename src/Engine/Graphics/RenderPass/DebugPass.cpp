@@ -119,8 +119,8 @@ void DebugPass::createRenderPass()
     };
     renderPass = graphics->createRenderPass(std::move(layout), dependency, viewport);
     
-    Gfx::OPipelineLayout pipelineLayout = graphics->createPipelineLayout();
-    pipelineLayout->addDescriptorLayout(0, viewParamsLayout);
+    pipelineLayout = graphics->createPipelineLayout();
+    pipelineLayout->addDescriptorLayout(viewParamsLayout);
     pipelineLayout->create();
 
     ShaderCreateInfo createInfo = {

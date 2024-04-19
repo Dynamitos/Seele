@@ -115,6 +115,7 @@ struct ShaderBufferCreateInfo
     uint8       dynamic = 0;
     std::string name;
 };
+DECLARE_NAME_REF(Gfx, PipelineLayout)
 struct ShaderCreateInfo
 {
     std::string                             mainModule;
@@ -123,6 +124,7 @@ struct ShaderCreateInfo
     std::string                             entryPoint;
     Array<Pair<const char*, const char*>>   typeParameter;
     Map<const char*, const char*>           defines;
+    Gfx::PPipelineLayout                    rootSignature;
 };
 struct VertexInputBinding
 {
@@ -218,7 +220,7 @@ struct LegacyPipelineCreateInfo
     PVertexShader       vertexShader;
     PFragmentShader     fragmentShader;
     PRenderPass         renderPass;
-    OPipelineLayout     pipelineLayout;
+    PPipelineLayout     pipelineLayout;
     MultisampleState    multisampleState;
     RasterizationState  rasterizationState;
     DepthStencilState   depthStencilState;
@@ -235,7 +237,7 @@ struct MeshPipelineCreateInfo
     PMeshShader         meshShader;
     PFragmentShader     fragmentShader;
     PRenderPass         renderPass;
-    OPipelineLayout     pipelineLayout;
+    PPipelineLayout     pipelineLayout;
     MultisampleState    multisampleState;
     RasterizationState  rasterizationState;
     DepthStencilState   depthStencilState;
@@ -248,7 +250,7 @@ struct MeshPipelineCreateInfo
 struct ComputePipelineCreateInfo
 {
     Gfx::PComputeShader     computeShader;
-    Gfx::OPipelineLayout    pipelineLayout;
+    Gfx::PPipelineLayout    pipelineLayout;
     ComputePipelineCreateInfo();
     ComputePipelineCreateInfo(ComputePipelineCreateInfo&& rhs) = default;
     ComputePipelineCreateInfo& operator=(ComputePipelineCreateInfo&& rhs) = default;

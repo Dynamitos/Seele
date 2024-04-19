@@ -1,11 +1,15 @@
 #include "Window.h"
 #include "Command.h"
 #include "Foundation/NSAutoreleasePool.hpp"
+#include "Foundation/NSString.hpp"
+#include "Graphics/Enums.h"
 #include "Graphics/Initializer.h"
 #include "Graphics/Metal/Enums.h"
 #include "Graphics/Texture.h"
+#include "Metal/MTLCaptureManager.hpp"
 #include "Metal/MTLTexture.hpp"
 #include <GLFW/glfw3.h>
+#include <fmt/core.h>
 #include <iostream>
 
 using namespace Seele;
@@ -13,6 +17,8 @@ using namespace Seele::Metal;
 
 double currentFrameDelta = 0;
 double Gfx::getCurrentFrameDelta() { return currentFrameDelta; }
+uint32 currentFrameIndex = 0;
+uint32 Gfx::getCurrentFrameIndex() { return currentFrameIndex; }
 
 void glfwKeyCallback(GLFWwindow* handle, int key, int, int action, int modifier) {
   if (key == -1) {
@@ -88,6 +94,17 @@ Window::~Window() { glfwDestroyWindow(static_cast<GLFWwindow*>(windowHandle)); }
 void Window::pollInput() { glfwPollEvents(); }
 
 void Window::beginFrame() {
+  auto captureManager = MTL::CaptureManager::sharedCaptureManager();
+  capture = MTL::CaptureDescriptor::alloc()->init();
+  capture->setCaptureObject((__bridge id<MTLDevice>)graphics->getDevice());
+  capture->setDestination(MTL::CaptureDestinationDeveloperTools);
+  capture->setOutputURL(NS::URL::fileURLWithPath(NS::String::string(fmt::format("frame{0}.trace", Gfx::getCurrentFrameIndex()).c_str(), NS::ASCIIStringEncoding)));
+  NS::Error* error;
+  captureManager->startCapture(capture, &error);
+  if(error)
+  {
+    std::cout << error->localizedDescription()->cString(NS::ASCIIStringEncoding) << std::endl;
+  }
   drawable = (__bridge CA::MetalDrawable*)[metalLayer nextDrawable];
   createBackBuffer();
 }
@@ -95,6 +112,8 @@ void Window::beginFrame() {
 void Window::endFrame() {
   graphics->getQueue()->getCommands()->present(drawable);
   graphics->getQueue()->submitCommands();
+  MTL::CaptureManager::sharedCaptureManager()->stopCapture();
+  currentFrameIndex++;
 }
 
 void Window::onWindowCloseEvent() {}

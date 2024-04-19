@@ -116,7 +116,7 @@ void StaticMeshVertexData::deserializeMesh(MeshId id, ArchiveBuffer& buffer)
 void StaticMeshVertexData::init(Gfx::PGraphics _graphics)
 {
     VertexData::init(_graphics);
-    descriptorLayout = _graphics->createDescriptorLayout("StaticMeshDescriptorLayout");
+    descriptorLayout = _graphics->createDescriptorLayout("pVertexData");
     descriptorLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
     descriptorLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
     descriptorLayout->addDescriptorBinding(2, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);

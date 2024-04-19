@@ -106,7 +106,7 @@ void UIPass::createRenderPass()
     createInfo.entryPoint =  "fragmentMain";
     fragmentShader = graphics->createFragmentShader(createInfo);
 
-    descriptorLayout = graphics->createDescriptorLayout("UIDescriptorLayout");
+    descriptorLayout = graphics->createDescriptorLayout("pParams");
     descriptorLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
     descriptorLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_SAMPLER);
     descriptorLayout->addDescriptorBinding(2, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
@@ -140,7 +140,7 @@ void UIPass::createRenderPass()
     descriptorSet->writeChanges();
 
     Gfx::OPipelineLayout pipelineLayout = graphics->createPipelineLayout();
-    pipelineLayout->addDescriptorLayout(0, descriptorLayout);
+    pipelineLayout->addDescriptorLayout(descriptorLayout);
     pipelineLayout->create();
 
     Gfx::RenderTargetLayout layout = Gfx::RenderTargetLayout{

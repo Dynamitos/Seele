@@ -7,6 +7,7 @@
 #include "Graphics/Enums.h"
 #include "Graphics/Graphics.h"
 #include "Graphics/Resources.h"
+#include "Metal/MTLCaptureManager.hpp"
 #include "Pipeline.h"
 #include "Resources.h"
 #include "Window.h"
@@ -77,10 +78,11 @@ void RenderCommand::bindPipeline(Gfx::PGraphicsPipeline pipeline) {
 }
 
 void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet) {
-  encoder->setVertexBuffer(descriptorSet.cast<DescriptorSet>()->getBuffer(), 0, descriptorSet->getSetIndex());
-  encoder->setFragmentBuffer(descriptorSet.cast<DescriptorSet>()->getBuffer(), 0, descriptorSet->getSetIndex());
-  encoder->setMeshBuffer(descriptorSet.cast<DescriptorSet>()->getBuffer(), 0, descriptorSet->getSetIndex());
-  encoder->setObjectBuffer(descriptorSet.cast<DescriptorSet>()->getBuffer(), 0, descriptorSet->getSetIndex());
+    uint32 parameterIndex = boundPipeline->getPipelineLayout()->findParameter(descriptorSet->getLayout()->getName());
+  encoder->setVertexBuffer(descriptorSet.cast<DescriptorSet>()->getBuffer(), 0, parameterIndex);
+  encoder->setFragmentBuffer(descriptorSet.cast<DescriptorSet>()->getBuffer(), 0, parameterIndex);
+  encoder->setMeshBuffer(descriptorSet.cast<DescriptorSet>()->getBuffer(), 0, parameterIndex);
+  encoder->setObjectBuffer(descriptorSet.cast<DescriptorSet>()->getBuffer(), 0, parameterIndex);
 }
 
 void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorSets) {
@@ -135,13 +137,44 @@ void ComputeCommand::end() {
 }
 
 void ComputeCommand::bindPipeline(Gfx::PComputePipeline pipeline) {
-  encoder->setComputePipelineState(pipeline.cast<ComputePipeline>()->getHandle());
+    boundPipeline = pipeline.cast<ComputePipeline>();
+    encoder->setComputePipelineState(boundPipeline->getHandle());
 }
 
 void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet set) {
   auto metalSet = set.cast<DescriptorSet>();
   metalSet->bind();
-  encoder->setBuffer(metalSet->getBuffer(), 0, set->getSetIndex());
+    uint32 parameterIndex = boundPipeline->getPipelineLayout()->findParameter(set->getLayout()->getName());
+encoder->setBuffer(metalSet->getBuffer(), 0, parameterIndex);
+    auto bindings =metalSet->getLayout()->getBindings();
+    for(size_t i = 0; i < bindings.size(); ++i)
+    {
+        auto binding = bindings[i];
+        if(binding.descriptorType == Gfx::SE_DESCRIPTOR_TYPE_SAMPLER)
+        {
+            continue;
+        }
+        MTL::ResourceUsage usage;
+        switch(binding.access) {
+            case Gfx::SE_DESCRIPTOR_ACCESS_READ_ONLY_BIT:
+                if(binding.descriptorType == Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE)
+                {
+                    usage = MTL::ResourceUsageSample;
+                    break;
+                }else
+                {
+                    usage = MTL::ResourceUsageRead;
+                    break;
+                }
+            case Gfx::SE_DESCRIPTOR_ACCESS_READ_WRITE_BIT:
+                usage = MTL::ResourceUsageRead | MTL::ResourceUsageWrite;
+                break;
+            case Gfx::SE_DESCRIPTOR_ACCESS_WRITE_ONLY_BIT:
+                usage = MTL::ResourceUsageWrite;
+                break;
+        }
+        encoder->useResource(metalSet->getBoundResources()[i], usage);
+    }
 }
 
 void ComputeCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& sets) {
@@ -157,7 +190,7 @@ void ComputeCommand::pushConstants(Gfx::PPipelineLayout, Gfx::SeShaderStageFlags
 
 void ComputeCommand::dispatch(uint32 threadX, uint32 threadY, uint32 threadZ) {
   // TODO
-  encoder->dispatchThreadgroups(MTL::Size(threadX, threadY, threadZ), MTL::Size(32, 32, 32));
+  encoder->dispatchThreadgroups(MTL::Size(threadX, threadY, threadZ), MTL::Size(32, 32, 1));
 }
 
 CommandQueue::CommandQueue(PGraphics graphics) : graphics(graphics) {

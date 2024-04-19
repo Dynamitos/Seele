@@ -3,7 +3,7 @@
 using namespace Seele;
 using namespace Seele::Gfx;
 
-DescriptorLayout::DescriptorLayout(const std::string& name) : setIndex(0), name(name) {}
+DescriptorLayout::DescriptorLayout(const std::string& name) : name(name) {}
 
 DescriptorLayout::DescriptorLayout(const DescriptorLayout& other) {
   descriptorBindings.resize(other.descriptorBindings.size());
@@ -62,12 +62,20 @@ PipelineLayout::PipelineLayout(PPipelineLayout baseLayout) {
 
 PipelineLayout::~PipelineLayout() {}
 
-void PipelineLayout::addDescriptorLayout(uint32 setIndex, PDescriptorLayout layout) {
-  if (descriptorSetLayouts.size() <= setIndex) {
-    descriptorSetLayouts.resize(setIndex + 1);
-  }
-  descriptorSetLayouts[setIndex] = layout;
-  layout->setIndex = setIndex;
+void PipelineLayout::addDescriptorLayout(PDescriptorLayout layout) {
+  descriptorSetLayouts[layout->getName()] = layout;
 }
 
 void PipelineLayout::addPushConstants(const SePushConstantRange& pushConstant) { pushConstants.add(pushConstant); }
+
+void PipelineLayout::addMapping(Map<std::string, uint32> mapping)
+{
+    for(const auto& [name, index] : mapping)
+    {
+        if(parameterMapping.contains(name))
+        {
+            assert(parameterMapping[name] == index);
+        }
+        parameterMapping[name] = index;
+    }
+}

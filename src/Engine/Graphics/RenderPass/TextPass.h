@@ -76,7 +76,7 @@ private:
 
     Gfx::OVertexShader vertexShader;
     Gfx::OFragmentShader fragmentShader;
-    Gfx::PPipelineLayout layoutRef;
+    Gfx::OPipelineLayout pipelineLayout;
     Gfx::PGraphicsPipeline pipeline;
     Array<TextRender> texts;
 };

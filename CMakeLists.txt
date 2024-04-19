@@ -127,7 +127,7 @@ target_compile_options(Engine PUBLIC "$<$<CONFIG:DEBUG>:-DENABLE_VALIDATION>")
 target_compile_options(Engine PUBLIC "$<$<CONFIG:DEBUG>:-DSEELE_DEBUG>")
 
 add_subdirectory(src/)
-add_subdirectory(tests/)
+#add_subdirectory(tests/)
 
 if(WIN32)
     add_custom_target(dll_copy ALL

@@ -26,6 +26,7 @@ private:
     Gfx::PDescriptorSet textureSet;
     Gfx::OVertexShader vertexShader;
     Gfx::OFragmentShader fragmentShader;
+    Gfx::OPipelineLayout pipelineLayout;
     Gfx::PGraphicsPipeline pipeline;
     Gfx::OSampler skyboxSampler;
     struct SkyboxData

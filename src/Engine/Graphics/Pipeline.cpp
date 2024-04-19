@@ -12,8 +12,8 @@ VertexInput::~VertexInput()
 {
 }
 
-GraphicsPipeline::GraphicsPipeline(OPipelineLayout layout) 
-    : layout(std::move(layout))
+GraphicsPipeline::GraphicsPipeline(PPipelineLayout layout)
+    : layout(layout)
 {
 }
 
@@ -26,8 +26,8 @@ PPipelineLayout GraphicsPipeline::getPipelineLayout() const
     return layout;
 }
 
-ComputePipeline::ComputePipeline(OPipelineLayout layout)
-    : layout(std::move(layout))
+ComputePipeline::ComputePipeline(PPipelineLayout layout)
+    : layout(layout)
 {
 }
 

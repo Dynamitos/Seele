@@ -8,7 +8,7 @@
 #define CHECK_RESULT(x) {SlangResult r = x; if(r != 0) {throw std::runtime_error(fmt::format("Error: {0}", r));}}
 #define CHECK_DIAGNOSTICS() {if(diagnostics) {std::cout << (const char*)diagnostics->getBufferPointer() << std::endl; assert(false);}}
 
-Slang::ComPtr<slang::IBlob> Seele::generateShader(const ShaderCreateInfo& createInfo, SlangCompileTarget target)
+Slang::ComPtr<slang::IBlob> Seele::generateShader(const ShaderCreateInfo& createInfo, SlangCompileTarget target, Map<std::string, uint32>& paramMapping)
 {
     thread_local Slang::ComPtr<slang::IGlobalSession> globalSession;
     if(!globalSession)
@@ -89,5 +89,14 @@ Slang::ComPtr<slang::IBlob> Seele::generateShader(const ShaderCreateInfo& create
         diagnostics.writeRef()
     );
     CHECK_DIAGNOSTICS();
+    slang::ProgramLayout* signature = specializedComponent->getLayout(0, diagnostics.writeRef());
+    CHECK_DIAGNOSTICS();
+    auto entry = signature->findEntryPointByName(createInfo.entryPoint.c_str());
+    for(size_t i = 0; i < signature->getParameterCount(); ++i)
+    {
+        auto param = signature->getParameterByIndex(i);
+        paramMapping[param->getName()] = param->getBindingIndex();
+        std::cout << param->getName() << " " << param->getBindingIndex() << " " << param->getSemanticIndex() << std::endl;
+    }
     return kernelBlob;
 }

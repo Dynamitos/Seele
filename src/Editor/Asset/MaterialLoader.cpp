@@ -47,7 +47,7 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
     json j;
     jsonstream >> j;
     std::string materialName = j["name"].get<std::string>() + "Material";
-    Gfx::ODescriptorLayout layout = graphics->createDescriptorLayout(materialName + "Layout");
+    Gfx::ODescriptorLayout layout = graphics->createDescriptorLayout("pMaterial");
     //Shader file needs to conform to the slang standard, which prohibits _
     materialName.erase(std::remove(materialName.begin(), materialName.end(), '_'), materialName.end());
     materialName.erase(std::remove(materialName.begin(), materialName.end(), '-'), materialName.end());

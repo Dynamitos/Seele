@@ -27,6 +27,7 @@ private:
     Gfx::OVertexShader vertexShader;
     Gfx::OFragmentShader fragmentShader;
     Gfx::PGraphicsPipeline pipeline;
+    Gfx::OPipelineLayout pipelineLayout;
 };
 DEFINE_REF(DebugPass)
 } // namespace Seele

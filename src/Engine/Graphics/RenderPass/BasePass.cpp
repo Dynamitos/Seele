@@ -19,14 +19,6 @@ BasePass::BasePass(Gfx::PGraphics graphics, PScene scene)
     : RenderPass(graphics, scene)
     , descriptorSets(6)
 {
-    if (graphics->supportMeshShading())
-    {
-        graphics->getShaderCompiler()->registerRenderPass("BasePass", "MeshletBasePass", true, true, "BasePass", true, true, "MeshletBasePass");
-    }
-    else
-    {
-        graphics->getShaderCompiler()->registerRenderPass("BasePass", "LegacyBasePass", true, true, "BasePass");
-    }
 }
 
 BasePass::~BasePass()
@@ -100,11 +92,6 @@ void BasePass::render()
 
             Gfx::ORenderCommand command = graphics->createRenderCommand("BaseRender");
             command->setViewport(viewport);
-            Gfx::OPipelineLayout layout = graphics->createPipelineLayout(basePassLayout);
-            layout->addDescriptorLayout(INDEX_MATERIAL, materialData.material->getDescriptorLayout());
-            layout->addDescriptorLayout(INDEX_VERTEX_DATA, vertexData->getVertexDataLayout());
-            layout->addDescriptorLayout(INDEX_SCENE_DATA, vertexData->getInstanceDataLayout());
-            layout->create();
 
             const Gfx::ShaderCollection* collection = graphics->getShaderCompiler()->findShaders(id);
             assert(collection != nullptr);
@@ -114,7 +101,7 @@ void BasePass::render()
                 pipelineInfo.taskShader = collection->taskShader;
                 pipelineInfo.meshShader = collection->meshShader;
                 pipelineInfo.fragmentShader = collection->fragmentShader;
-                pipelineInfo.pipelineLayout = std::move(layout);
+                pipelineInfo.pipelineLayout = collection->pipelineLayout;
                 pipelineInfo.renderPass = renderPass;
                 pipelineInfo.depthStencilState.depthCompareOp = Gfx::SE_COMPARE_OP_LESS_OR_EQUAL;
                 pipelineInfo.multisampleState.samples = viewport->getSamples();
@@ -127,7 +114,7 @@ void BasePass::render()
                 Gfx::LegacyPipelineCreateInfo pipelineInfo;
                 pipelineInfo.vertexShader = collection->vertexShader;
                 pipelineInfo.fragmentShader = collection->fragmentShader;
-                pipelineInfo.pipelineLayout = std::move(layout);
+                pipelineInfo.pipelineLayout = collection->pipelineLayout;
                 pipelineInfo.renderPass = renderPass;
                 pipelineInfo.depthStencilState.depthCompareOp = Gfx::SE_COMPARE_OP_LESS_OR_EQUAL;
                 pipelineInfo.multisampleState.samples = viewport->getSamples();
@@ -174,21 +161,30 @@ void BasePass::publishOutputs()
 {
     basePassLayout = graphics->createPipelineLayout();
 
-    basePassLayout->addDescriptorLayout(INDEX_VIEW_PARAMS, viewParamsLayout);
-    basePassLayout->addDescriptorLayout(INDEX_LIGHT_ENV, scene->getLightEnvironment()->getDescriptorLayout());
+    basePassLayout->addDescriptorLayout(viewParamsLayout);
+    basePassLayout->addDescriptorLayout(scene->getLightEnvironment()->getDescriptorLayout());
 
-    lightCullingLayout = graphics->createDescriptorLayout("BasePassLightCulling");
+    lightCullingLayout = graphics->createDescriptorLayout("pLightCullingData");
     // oLightIndexList
     lightCullingLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
     // oLightGrid
     lightCullingLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_IMAGE);
     lightCullingLayout->create();
 
-    basePassLayout->addDescriptorLayout(INDEX_LIGHT_CULLING, lightCullingLayout);
+    basePassLayout->addDescriptorLayout(lightCullingLayout);
     colorAttachment = Gfx::RenderTargetAttachment(viewport,
         Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
         Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
     resources->registerRenderPassOutput("BASEPASS_COLOR", colorAttachment);
+    
+    if (graphics->supportMeshShading())
+    {
+        graphics->getShaderCompiler()->registerRenderPass(basePassLayout, "BasePass", "MeshletBasePass", true, true, "BasePass", true, true, "MeshletBasePass");
+    }
+    else
+    {
+        graphics->getShaderCompiler()->registerRenderPass(basePassLayout, "BasePass", "LegacyBasePass", true, true, "BasePass");
+    }
 }
 
 void BasePass::createRenderPass() 

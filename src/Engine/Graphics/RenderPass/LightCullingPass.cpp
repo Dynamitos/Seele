@@ -97,7 +97,7 @@ void LightCullingPass::publishOutputs()
     dispatchParamsSet->updateBuffer(1, frustumBuffer);
     dispatchParamsSet->writeChanges();
 
-    cullingDescriptorLayout = graphics->createDescriptorLayout("CullingLayout");
+    cullingDescriptorLayout = graphics->createDescriptorLayout("pCullingParams");
 
     //DepthTexture
     cullingDescriptorLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
@@ -116,18 +116,24 @@ void LightCullingPass::publishOutputs()
 
     lightEnv = scene->getLightEnvironment();
 
-    Gfx::OPipelineLayout cullingLayout = graphics->createPipelineLayout();
-    cullingLayout->addDescriptorLayout(0, viewParamsLayout);
-    cullingLayout->addDescriptorLayout(1, dispatchParamsLayout);
-    cullingLayout->addDescriptorLayout(2, cullingDescriptorLayout);
-    cullingLayout->addDescriptorLayout(3, lightEnv->getDescriptorLayout());
+    cullingLayout = graphics->createPipelineLayout();
+    cullingLayout->addDescriptorLayout(viewParamsLayout);
+    cullingLayout->addDescriptorLayout(dispatchParamsLayout);
+    cullingLayout->addDescriptorLayout(cullingDescriptorLayout);
+    cullingLayout->addDescriptorLayout(lightEnv->getDescriptorLayout());
+    Map<std::string, uint32> mapping;
+    mapping["pViewParams"] = 0;
+    mapping["pDispatchParams"] = 1;
+    cullingLayout->addMapping(mapping);
     cullingLayout->create();
     
-    ShaderCreateInfo createInfo;
-    createInfo.name = "Culling";
-    createInfo.additionalModules.add("LightCulling");
-    createInfo.mainModule = "LightCulling";
-    createInfo.entryPoint = "cullLights";
+    ShaderCreateInfo createInfo = {
+        .name = "Culling",
+        .additionalModules = {"LightCulling"},
+        .mainModule = "LightCulling",
+        .entryPoint = "cullLights",
+        .rootSignature = cullingLayout,
+    };
     cullingShader = graphics->createComputeShader(createInfo);
 
     Gfx::ComputePipelineCreateInfo pipelineInfo;
@@ -202,18 +208,25 @@ void LightCullingPass::setupFrustums()
     dispatchParams.numThreads = numThreads;
     dispatchParams.numThreadGroups = numThreadGroups;
 
-    dispatchParamsLayout = graphics->createDescriptorLayout("FrustumLayout");
+    dispatchParamsLayout = graphics->createDescriptorLayout("pDispatchParams");
     dispatchParamsLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
     dispatchParamsLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER);
-    Gfx::OPipelineLayout frustumLayout = graphics->createPipelineLayout();
-    frustumLayout->addDescriptorLayout(0, viewParamsLayout);
-    frustumLayout->addDescriptorLayout(1, dispatchParamsLayout);
+    frustumLayout = graphics->createPipelineLayout();
+    frustumLayout->addDescriptorLayout(viewParamsLayout);
+    frustumLayout->addDescriptorLayout(dispatchParamsLayout);
+    Map<std::string, uint32> mapping;
+    mapping["pViewParams"] = 0;
+    mapping["pDispatchParams"] = 1;
+    frustumLayout->addMapping(mapping);
     frustumLayout->create();
-    ShaderCreateInfo createInfo;
-    createInfo.name = "Frustum";
-    createInfo.additionalModules.add("ComputeFrustums");
-    createInfo.mainModule = "ComputeFrustums";
-    createInfo.entryPoint = "computeFrustums";
+    ShaderCreateInfo createInfo = {
+        .name = "Frustum",
+        .additionalModules = {"ComputeFrustums"},
+        .mainModule = "ComputeFrustums",
+        .entryPoint = "computeFrustums",
+        .rootSignature = frustumLayout,
+    };
+    std::cout << "Compiling frustumShader" << std::endl;
     frustumShader = graphics->createComputeShader(createInfo);
 
     Gfx::ComputePipelineCreateInfo pipelineInfo;

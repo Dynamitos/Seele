@@ -57,7 +57,7 @@ void Material::save(ArchiveBuffer& buffer) const
     Serialization::save(buffer, codeExpressions);
     Serialization::save(buffer, parameters);
     Serialization::save(buffer, brdf);
-    Serialization::save(buffer, layout->getSetIndex());
+    Serialization::save(buffer, layout->getName());
     const auto& bindings = layout->getBindings();
     Serialization::save(buffer, bindings.size());
     for (const auto& binding : bindings)
@@ -81,11 +81,11 @@ void Material::load(ArchiveBuffer& buffer)
     Serialization::load(buffer, codeExpressions);
     Serialization::load(buffer, parameters);
     Serialization::load(buffer, brdf);
-    uint32 setIndex;
-    Serialization::load(buffer, setIndex);
+    std::string descriptorName;
+    Serialization::load(buffer, descriptorName);
     uint64 numBindings;
     Serialization::load(buffer, numBindings);
-    layout = graphics->createDescriptorLayout();
+    layout = graphics->createDescriptorLayout(descriptorName);
     for (uint64 i = 0; i < numBindings; ++i)
     {
         uint32 binding;

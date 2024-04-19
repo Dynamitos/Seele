@@ -31,14 +31,12 @@ public:
   PDescriptorSet allocateDescriptorSet();
   virtual void create() = 0;
   constexpr const Array<DescriptorBinding>& getBindings() const { return descriptorBindings; }
-  constexpr uint32 getSetIndex() const { return setIndex; }
-  constexpr void setSetIndex(uint32 _setIndex) { setIndex = _setIndex; }
   constexpr uint32 getHash() const { return hash; }
+  constexpr const std::string& getName() const { return name; }
 
 protected:
   Array<DescriptorBinding> descriptorBindings;
   ODescriptorPool pool;
-  uint32 setIndex;
   std::string name;
   uint32 hash = 0;
   friend class PipelineLayout;
@@ -71,7 +69,7 @@ public:
   virtual void updateTextureArray(uint32_t binding, Array<PTexture> texture) = 0;
   bool operator<(PDescriptorSet other);
 
-  constexpr uint32 getSetIndex() const { return layout->getSetIndex(); }
+  constexpr PDescriptorLayout getLayout() const { return layout; }
 
 protected:
   PDescriptorLayout layout;
@@ -84,13 +82,17 @@ public:
   PipelineLayout(PPipelineLayout baseLayout);
   virtual ~PipelineLayout();
   virtual void create() = 0;
-  void addDescriptorLayout(uint32 setIndex, PDescriptorLayout layout);
+  void addDescriptorLayout(PDescriptorLayout layout);
   void addPushConstants(const SePushConstantRange& pushConstants);
   constexpr uint32 getHash() const { return layoutHash; }
-
+  constexpr const Map<std::string, PDescriptorLayout>& getLayouts() const { return descriptorSetLayouts; }
+  constexpr uint32 findParameter(const std::string& name) const { return parameterMapping[name]; }
+    void addMapping(Map<std::string, uint32> mapping);
+    
 protected:
   uint32 layoutHash = 0;
-  Array<PDescriptorLayout> descriptorSetLayouts;
+  Map<std::string, PDescriptorLayout> descriptorSetLayouts;
+    Map<std::string, uint32> parameterMapping;
   Array<SePushConstantRange> pushConstants;
 };
 DEFINE_REF(PipelineLayout)

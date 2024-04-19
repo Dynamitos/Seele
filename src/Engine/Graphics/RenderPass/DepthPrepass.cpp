@@ -17,14 +17,14 @@ DepthPrepass::DepthPrepass(Gfx::PGraphics graphics, PScene scene)
     , descriptorSets(3)
 {
     depthPrepassLayout = graphics->createPipelineLayout();
-    depthPrepassLayout->addDescriptorLayout(INDEX_VIEW_PARAMS, viewParamsLayout);
+    depthPrepassLayout->addDescriptorLayout(viewParamsLayout);
     if (graphics->supportMeshShading())
     {
-        graphics->getShaderCompiler()->registerRenderPass("DepthPass", "MeshletBasePass", false, false, "", true, true, "MeshletBasePass");
+        graphics->getShaderCompiler()->registerRenderPass(depthPrepassLayout, "DepthPass", "MeshletBasePass", false, false, "", true, true, "MeshletBasePass");
     }
     else
     {
-        graphics->getShaderCompiler()->registerRenderPass("DepthPass", "LegacyBasePass");
+        graphics->getShaderCompiler()->registerRenderPass(depthPrepassLayout, "DepthPass", "LegacyBasePass");
     }
 }
 
@@ -68,12 +68,7 @@ void DepthPrepass::render()
             
             Gfx::ORenderCommand command = graphics->createRenderCommand("DepthRender");
             command->setViewport(viewport);
-            Gfx::OPipelineLayout layout = graphics->createPipelineLayout(depthPrepassLayout);
-            //layout->addDescriptorLayout(INDEX_MATERIAL, materialData.material->getDescriptorLayout());
-            layout->addDescriptorLayout(INDEX_VERTEX_DATA, vertexData->getVertexDataLayout());
-            layout->addDescriptorLayout(INDEX_SCENE_DATA, vertexData->getInstanceDataLayout());
-            layout->create();
-
+            
             const Gfx::ShaderCollection* collection = graphics->getShaderCompiler()->findShaders(id);
             assert(collection != nullptr);
             if(graphics->supportMeshShading())
@@ -82,7 +77,7 @@ void DepthPrepass::render()
                 pipelineInfo.taskShader = collection->taskShader;
                 pipelineInfo.meshShader = collection->meshShader;
                 pipelineInfo.fragmentShader = collection->fragmentShader;
-                pipelineInfo.pipelineLayout = std::move(layout);
+                pipelineInfo.pipelineLayout = collection->pipelineLayout;
                 pipelineInfo.renderPass = renderPass;
                 pipelineInfo.depthStencilState.depthCompareOp = Gfx::SE_COMPARE_OP_LESS;
                 pipelineInfo.multisampleState.samples = viewport->getSamples();
@@ -94,7 +89,7 @@ void DepthPrepass::render()
                 Gfx::LegacyPipelineCreateInfo pipelineInfo;
                 pipelineInfo.vertexShader = collection->vertexShader;
                 pipelineInfo.fragmentShader = collection->fragmentShader;
-                pipelineInfo.pipelineLayout = std::move(layout);
+                pipelineInfo.pipelineLayout = collection->pipelineLayout;
                 pipelineInfo.renderPass = renderPass;
                 //pipelineInfo.depthStencilState.depthWriteEnable = false;
                 pipelineInfo.depthStencilState.depthCompareOp = Gfx::SE_COMPARE_OP_LESS_OR_EQUAL;

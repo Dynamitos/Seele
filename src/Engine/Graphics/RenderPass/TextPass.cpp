@@ -85,7 +85,7 @@ void TextPass::render()
             command->bindDescriptor({generalSet, resource.textureArraySet});
             //command->bindVertexBuffer({resource.vertexBuffer});
             
-            command->pushConstants(layoutRef, Gfx::SE_SHADER_STAGE_VERTEX_BIT | Gfx::SE_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(TextData), &resource.textData);
+            command->pushConstants(pipelineLayout, Gfx::SE_SHADER_STAGE_VERTEX_BIT | Gfx::SE_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(TextData), &resource.textData);
             //command->draw(4, static_cast<uint32>(resource.vertexBuffer->getNumVertices()), 0, 0);
         }
         commands.add(std::move(command));
@@ -120,12 +120,12 @@ void TextPass::createRenderPass()
     createInfo.name = "TextFragment";
     createInfo.entryPoint =  "fragmentMain";
     fragmentShader = graphics->createFragmentShader(createInfo);
-    generalLayout = graphics->createDescriptorLayout("TextGeneral");
+    generalLayout = graphics->createDescriptorLayout("pRender");
     generalLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
     generalLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_SAMPLER);
     generalLayout->create();
 
-    textureArrayLayout = graphics->createDescriptorLayout("TextTextureArray");
+    textureArrayLayout = graphics->createDescriptorLayout("pGlyphTextures");
     textureArrayLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE, Gfx::SE_IMAGE_VIEW_TYPE_2D_ARRAY, 256, Gfx::SE_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT);
     textureArrayLayout->create();
 
@@ -149,10 +149,9 @@ void TextPass::createRenderPass()
     generalSet->updateSampler(1, glyphSampler);
     generalSet->writeChanges();
     
-    Gfx::OPipelineLayout pipelineLayout = graphics->createPipelineLayout();
-    layoutRef = pipelineLayout;
-    pipelineLayout->addDescriptorLayout(0, generalLayout);
-    pipelineLayout->addDescriptorLayout(1, textureArrayLayout);
+    pipelineLayout = graphics->createPipelineLayout();
+    pipelineLayout->addDescriptorLayout(generalLayout);
+    pipelineLayout->addDescriptorLayout(textureArrayLayout);
     pipelineLayout->addPushConstants({
         .stageFlags = Gfx::SE_SHADER_STAGE_VERTEX_BIT | Gfx::SE_SHADER_STAGE_FRAGMENT_BIT, 
         .offset = 0, 
@@ -169,7 +168,7 @@ void TextPass::createRenderPass()
     pipelineInfo.vertexShader = vertexShader;
     pipelineInfo.fragmentShader = fragmentShader;
     pipelineInfo.renderPass = renderPass;
-    pipelineInfo.pipelineLayout = std::move(pipelineLayout);
+    pipelineInfo.pipelineLayout = pipelineLayout;
     pipelineInfo.rasterizationState.cullMode = Gfx::SE_CULL_MODE_NONE;
     pipelineInfo.colorBlend.attachmentCount = 1;
     pipelineInfo.colorBlend.blendAttachments[0].blendEnable = true;

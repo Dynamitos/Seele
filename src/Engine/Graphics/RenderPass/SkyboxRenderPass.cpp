@@ -74,10 +74,10 @@ void SkyboxRenderPass::endFrame()
 
 void SkyboxRenderPass::publishOutputs()
 {
-    skyboxDataLayout = graphics->createDescriptorLayout("SkyboxDescLayout");
+    skyboxDataLayout = graphics->createDescriptorLayout("pSkyboxData");
     skyboxDataLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
     skyboxDataLayout->create();
-    textureLayout = graphics->createDescriptorLayout();
+    textureLayout = graphics->createDescriptorLayout("pSkyboxTextures");
     textureLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
     textureLayout->addDescriptorBinding(1, Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
     textureLayout->addDescriptorBinding(2, Gfx::SE_DESCRIPTOR_TYPE_SAMPLER);
@@ -122,10 +122,10 @@ void SkyboxRenderPass::createRenderPass()
     createInfo.entryPoint = "fragmentMain";
     fragmentShader = graphics->createFragmentShader(createInfo);
 
-    Gfx::OPipelineLayout pipelineLayout = graphics->createPipelineLayout();
-    pipelineLayout->addDescriptorLayout(0, viewParamsLayout);
-    pipelineLayout->addDescriptorLayout(1, skyboxDataLayout);
-    pipelineLayout->addDescriptorLayout(2, textureLayout);
+    pipelineLayout = graphics->createPipelineLayout();
+    pipelineLayout->addDescriptorLayout(viewParamsLayout);
+    pipelineLayout->addDescriptorLayout(skyboxDataLayout);
+    pipelineLayout->addDescriptorLayout(textureLayout);
     pipelineLayout->create();
 
     Gfx::LegacyPipelineCreateInfo gfxInfo;
@@ -133,7 +133,7 @@ void SkyboxRenderPass::createRenderPass()
     gfxInfo.fragmentShader = fragmentShader;
     gfxInfo.rasterizationState.polygonMode = Gfx::SE_POLYGON_MODE_FILL;
     gfxInfo.topology = Gfx::SE_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-    gfxInfo.pipelineLayout = std::move(pipelineLayout);
+    gfxInfo.pipelineLayout = pipelineLayout;
     gfxInfo.renderPass = renderPass;
     gfxInfo.multisampleState.samples = viewport->getSamples();
     pipeline = graphics->createGraphicsPipeline(std::move(gfxInfo));

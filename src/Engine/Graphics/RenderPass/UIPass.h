@@ -34,6 +34,7 @@ private:
     Gfx::OVertexShader vertexShader;
     Gfx::OFragmentShader fragmentShader;
     Gfx::PGraphicsPipeline pipeline;
+    Gfx::OPipelineLayout pipelineLayout;
 
     Array<UI::RenderElementStyle> renderElements;
     Array<Gfx::PTexture> usedTextures;

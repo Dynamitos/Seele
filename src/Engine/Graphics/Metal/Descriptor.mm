@@ -122,6 +122,7 @@ DescriptorSet::DescriptorSet(PGraphics graphics, PDescriptorPool owner)
   if (owner->getArguments()->count() == 0) {
     buffer = graphics->getDevice()->newBuffer(0, MTL::ResourceOptionCPUCacheModeDefault);
   } else {
+    boundResources.resize(owner->getArguments()->count());
     encoder = graphics->getDevice()->newArgumentEncoder(owner->getArguments());
     buffer = graphics->getDevice()->newBuffer(encoder->encodedLength(), MTL::ResourceOptionCPUCacheModeDefault);
     encoder->setArgumentBuffer(buffer, 0);
@@ -135,10 +136,12 @@ void DescriptorSet::writeChanges() {}
 void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PUniformBuffer uniformBuffer) {
   PUniformBuffer metalBuffer = uniformBuffer.cast<UniformBuffer>();
   encoder->setBuffer(metalBuffer->getHandle(), 0, binding);
+    boundResources[binding] = metalBuffer->getHandle();
 }
 void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PShaderBuffer uniformBuffer) {
   PShaderBuffer metalBuffer = uniformBuffer.cast<ShaderBuffer>();
   encoder->setBuffer(metalBuffer->getHandle(), 0, binding);
+    boundResources[binding] = metalBuffer->getHandle();
 }
 void DescriptorSet::updateSampler(uint32_t binding, Gfx::PSampler samplerState) {
   PSampler sampler = samplerState.cast<Sampler>();
@@ -147,20 +150,16 @@ void DescriptorSet::updateSampler(uint32_t binding, Gfx::PSampler samplerState) 
 void DescriptorSet::updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::PSampler samplerState) {
   PTextureBase base = texture.cast<TextureBase>();
   encoder->setTexture(base->getTexture(), binding);
-  if (samplerState != nullptr) {
-    PSampler sampler = samplerState.cast<Sampler>();
-    encoder->setSamplerState(sampler->getHandle(), binding);
-  }
+    boundResources[binding] = base->getTexture();
 }
 
 void DescriptorSet::updateTextureArray(uint32_t binding, Array<Gfx::PTexture> array) {
   for (auto& t : array) {
     PTextureBase metalTexture = t.cast<TextureBase>();
-    encoder->setTexture(metalTexture->getTexture(), binding++);
+    encoder->setTexture(metalTexture->getTexture(), binding);
+      boundResources[binding++] = metalTexture->getTexture();
   }
 }
-
-bool DescriptorSet::operator<(Gfx::PDescriptorSet other) { return this < other.getHandle(); }
 
 PipelineLayout::PipelineLayout(PGraphics graphics, Gfx::PPipelineLayout baseLayout)
     : Gfx::PipelineLayout(baseLayout), graphics(graphics) {}
@@ -168,7 +167,7 @@ PipelineLayout::PipelineLayout(PGraphics graphics, Gfx::PPipelineLayout baseLayo
 PipelineLayout::~PipelineLayout() {}
 
 void PipelineLayout::create() {
-  for (auto& set : descriptorSetLayouts) {
+  for (auto& [_, set] : descriptorSetLayouts) {
     set->create();
     uint32 setHash = set->getHash();
     layoutHash = CRC::Calculate(&setHash, sizeof(uint32), CRC::CRC_32(), layoutHash);

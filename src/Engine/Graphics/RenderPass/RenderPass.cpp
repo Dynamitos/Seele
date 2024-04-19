@@ -7,7 +7,7 @@ RenderPass::RenderPass(Gfx::PGraphics graphics, PScene scene)
     , scene(scene)
 {
 
-    viewParamsLayout = graphics->createDescriptorLayout("ViewLayout");
+    viewParamsLayout = graphics->createDescriptorLayout("pViewParams");
     viewParamsLayout->addDescriptorBinding(0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
     UniformBufferCreateInfo uniformInitializer = {
         .sourceData = {

@@ -2,6 +2,7 @@
 #include "Buffer.h"
 #include "Graphics/Command.h"
 #include "Metal/MTLBlitCommandEncoder.hpp"
+#include "Metal/MTLCaptureManager.hpp"
 #include "Metal/MTLCommandBuffer.hpp"
 #include "Metal/MTLComputeCommandEncoder.hpp"
 #include "Metal/MTLRenderCommandEncoder.hpp"
@@ -16,6 +17,7 @@ DECLARE_REF(RenderCommand)
 DECLARE_REF(Graphics)
 DECLARE_REF(IndexBuffer)
 DECLARE_REF(GraphicsPipeline)
+DECLARE_REF(ComputePipeline)
 class Command {
 public:
   Command(PGraphics graphics, MTL::CommandBuffer* cmdBuffer);
@@ -85,6 +87,7 @@ public:
   virtual void dispatch(uint32 threadX, uint32 threadY, uint32 threadZ) override;
 
 private:
+  PComputePipeline boundPipeline;
   MTL::CommandBuffer* commandBuffer;
   MTL::ComputeCommandEncoder* encoder;
   std::string name;

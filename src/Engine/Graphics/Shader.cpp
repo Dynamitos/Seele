@@ -33,9 +33,10 @@ void ShaderCompiler::registerVertexData(VertexData* vd)
 	compile();
 }
 
-void ShaderCompiler::registerRenderPass(std::string name, std::string mainFile, bool useMaterials, bool hasFragmentShader, std::string fragmentFile, bool useMeshShading, bool hasTaskShader, std::string taskFile)
+void ShaderCompiler::registerRenderPass(Gfx::PPipelineLayout layout, std::string name, std::string mainFile, bool useMaterials, bool hasFragmentShader, std::string fragmentFile, bool useMeshShading, bool hasTaskShader, std::string taskFile)
 {
 	passes[name] = PassConfig{
+        .baseLayout = layout,
 		.taskFile = taskFile,
 		.mainFile = mainFile,
 		.fragmentFile = fragmentFile,
@@ -52,57 +53,71 @@ void ShaderCompiler::compile()
 {
 	for (const auto& [name, pass] : passes)
 	{
-		ShaderPermutation permutation;
-		if (pass.useMeshShading)
-		{
-			permutation.setMeshFile(pass.mainFile);
-		}
-		else
-		{
-			permutation.setVertexFile(pass.mainFile);
-		}
-		if (pass.hasFragmentShader)
-		{
-			permutation.setFragmentFile(pass.fragmentFile);
-		}
-		if (pass.hasTaskShader)
-		{
-			permutation.setTaskFile(pass.taskFile);
-		}
+        ShaderPermutation permutation;
+        if (pass.useMeshShading)
+        {
+            permutation.setMeshFile(pass.mainFile);
+        }
+        else
+        {
+            permutation.setVertexFile(pass.mainFile);
+        }
+        if (pass.hasFragmentShader)
+        {
+            permutation.setFragmentFile(pass.fragmentFile);
+        }
+        if (pass.hasTaskShader)
+        {
+            permutation.setTaskFile(pass.taskFile);
+        }
 		for (const auto& [vdName, vd] : vertexData)
 		{
-			permutation.setVertexData(vd->getTypeName());
+            permutation.setVertexData(vd->getTypeName());
 			if (pass.useMaterial)
 			{
 				for (const auto& [matName, mat] : materials)
 				{
+                    OPipelineLayout layout = graphics->createPipelineLayout(pass.baseLayout);
+                    layout->addDescriptorLayout(vd->getVertexDataLayout());
+                    layout->addDescriptorLayout(vd->getInstanceDataLayout());
+                    layout->addDescriptorLayout(mat->getDescriptorLayout());
 					permutation.setMaterial(mat->getName());
-					createShaders(permutation);
+                    createShaders(permutation, std::move(layout));
 				}
 			}
 			else
 			{
-				createShaders(permutation);
+                OPipelineLayout layout = graphics->createPipelineLayout(pass.baseLayout);
+                layout->addDescriptorLayout(vd->getVertexDataLayout());
+                layout->addDescriptorLayout(vd->getInstanceDataLayout());
+                Map<std::string, uint32> mapping;
+                mapping["pViewParams"] = 1;
+                mapping["pVertexData"] = 2;
+                mapping["pScene"] = 3;
+                layout->addMapping(mapping);
+                createShaders(permutation, std::move(layout));
 			}
 		}
 	}
 }
 
-void ShaderCompiler::createShaders(ShaderPermutation permutation)
+void ShaderCompiler::createShaders(ShaderPermutation permutation, Gfx::OPipelineLayout layout)
 {
 	std::scoped_lock lock(shadersLock);
 	PermutationId perm = PermutationId(permutation);
 	if (shaders.contains(perm))
 		return;
 	ShaderCollection collection;
+    collection.pipelineLayout = std::move(layout);
 
 	ShaderCreateInfo createInfo;
 	createInfo.name = fmt::format("Material {0}", permutation.materialName);
+    createInfo.rootSignature = collection.pipelineLayout;
 	if (std::strlen(permutation.materialName) > 0)
-	{
-		createInfo.additionalModules.add(permutation.materialName);
-		createInfo.typeParameter.add(Pair<const char*, const char*>("IMaterial", permutation.materialName));
-	}
+    {
+        createInfo.additionalModules.add(permutation.materialName);
+        createInfo.typeParameter.add(Pair<const char*, const char*>("IMaterial", permutation.materialName));
+    }
 	createInfo.typeParameter.add({ Pair<const char*, const char*>("IVertexData", permutation.vertexDataName) });
 	createInfo.additionalModules.add(permutation.vertexDataName);
 	createInfo.additionalModules.add(permutation.vertexMeshFile);

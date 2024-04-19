@@ -49,6 +49,7 @@ private:
     Gfx::PDescriptorSet dispatchParamsSet;
     Gfx::OComputeShader frustumShader;
     Gfx::PComputePipeline frustumPipeline;
+    Gfx::OPipelineLayout frustumLayout;
     
     PLightEnvironment lightEnv;
     Gfx::PTexture2D depthAttachment;
@@ -62,6 +63,7 @@ private:
     Gfx::ODescriptorLayout cullingDescriptorLayout;
     Gfx::OComputeShader cullingShader;
     Gfx::PComputePipeline cullingPipeline;
+    Gfx::OPipelineLayout cullingLayout;
 };
 DEFINE_REF(LightCullingPass)
 } // namespace Seele

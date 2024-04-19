@@ -18,22 +18,22 @@ private:
 class GraphicsPipeline
 {
 public:
-    GraphicsPipeline(OPipelineLayout layout);
+    GraphicsPipeline(PPipelineLayout layout);
     virtual ~GraphicsPipeline();
     PPipelineLayout getPipelineLayout() const;
 protected:
-    OPipelineLayout layout;
+    PPipelineLayout layout;
 };
 DEFINE_REF(GraphicsPipeline)
 
 class ComputePipeline
 {
 public:
-    ComputePipeline(OPipelineLayout layout);
+    ComputePipeline(PPipelineLayout layout);
     virtual ~ComputePipeline();
     PPipelineLayout getPipelineLayout() const;
 protected:
-    OPipelineLayout layout;
+    PPipelineLayout layout;
 };
 DEFINE_REF(ComputePipeline)
 }

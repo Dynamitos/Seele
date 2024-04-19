@@ -45,11 +45,11 @@ TextureBase::TextureBase(PGraphics graphics, MTL::TextureType type,
 
     descriptor->release();
   }
-  if(createInfo.sourceData.data != nullptr)
-  {
-    MTL::Region region(0, 0, 0, width, height, depth);
-    texture->replaceRegion(region, 0, createInfo.sourceData.data, createInfo.sourceData.size / (depth / height));
-  }
+//  if(createInfo.sourceData.data != nullptr)
+//  {
+//    MTL::Region region(0, 0, 0, width, height, depth);
+//    texture->replaceRegion(region, 0, createInfo.sourceData.data, createInfo.sourceData.size / (depth * height));
+//  }
 }
 
 TextureBase::~TextureBase() {

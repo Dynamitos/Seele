@@ -42,6 +42,6 @@ struct Scene
 	StructuredBuffer<uint32_t> primitiveIndices;
 	StructuredBuffer<uint32_t> vertexIndices;
 };
-
+layout(set=2)
 ParameterBlock<Scene> pScene;
 

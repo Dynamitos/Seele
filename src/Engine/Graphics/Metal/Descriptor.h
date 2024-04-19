@@ -48,7 +48,6 @@ public:
   virtual void updateSampler(uint32_t binding, Gfx::PSampler samplerState);
   virtual void updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::PSampler sampler = nullptr);
   virtual void updateTextureArray(uint32_t binding, Array<Gfx::PTexture> texture);
-  virtual bool operator<(Gfx::PDescriptorSet other);
 
   constexpr bool isCurrentlyBound() const { return bindCount > 0; }
   constexpr bool isCurrentlyInUse() const { return currentlyInUse; }
@@ -58,12 +57,14 @@ public:
   constexpr void free() { currentlyInUse = false; }
 
   constexpr MTL::Buffer* getBuffer() const { return buffer; }
+    constexpr const Array<MTL::Resource*>& getBoundResources() const { return boundResources; }
 
 private:
   PGraphics graphics;
   PDescriptorPool owner;
   MTL::Buffer* buffer;
   MTL::ArgumentEncoder* encoder;
+    Array<MTL::Resource*> boundResources;
   uint32 bindCount;
   bool currentlyInUse;
 };
