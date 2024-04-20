@@ -81,7 +81,7 @@ public:
     virtual OSampler createSampler(const SamplerCreateInfo& createInfo) = 0;
 
   	virtual ODescriptorLayout createDescriptorLayout(const std::string& name = "") = 0;
-  	virtual OPipelineLayout createPipelineLayout(PPipelineLayout baseLayout = nullptr) = 0;
+  	virtual OPipelineLayout createPipelineLayout(const std::string& name = "", PPipelineLayout baseLayout = nullptr) = 0;
 
     virtual OVertexInput createVertexInput(VertexInputStateCreateInfo createInfo) = 0;
 

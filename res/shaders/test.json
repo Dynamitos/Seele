@@ -1,0 +1,77 @@
+{
+  "EntryPoint": "taskMain",
+  "FunctionConstants": [],
+  "NeedsFunctionConstants": false,
+  "Resources": [
+    {
+      "abIndex": 0,
+      "slot": 0,
+      "type": "SRV"
+    },
+    {
+      "abIndex": 1,
+      "slot": 1,
+      "type": "SRV"
+    },
+    {
+      "abIndex": 2,
+      "slot": 2,
+      "type": "SRV"
+    },
+    {
+      "abIndex": 3,
+      "slot": 3,
+      "type": "SRV"
+    },
+    {
+      "abIndex": 4,
+      "slot": 0,
+      "type": "CBV"
+    }
+  ],
+  "ShaderID": "2266638404583382645",
+  "ShaderType": "Amplification",
+  "TopLevelArgumentBuffer": [
+    {
+      "EltOffset": 0,
+      "Size": 24,
+      "Slot": 0,
+      "Space": 2,
+      "Type": "SRV"
+    },
+    {
+      "EltOffset": 24,
+      "Size": 24,
+      "Slot": 1,
+      "Space": 2,
+      "Type": "SRV"
+    },
+    {
+      "EltOffset": 48,
+      "Size": 24,
+      "Slot": 2,
+      "Space": 2,
+      "Type": "SRV"
+    },
+    {
+      "EltOffset": 72,
+      "Size": 24,
+      "Slot": 3,
+      "Space": 2,
+      "Type": "SRV"
+    },
+    {
+      "EltOffset": 96,
+      "Size": 24,
+      "Slot": 0,
+      "Space": 1,
+      "Type": "CBV"
+    }
+  ],
+  "max_payload_size_in_bytes": 4096,
+  "num_threads": [
+    128,
+    1,
+    1
+  ]
+}

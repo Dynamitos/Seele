@@ -77,7 +77,7 @@ void ShaderCompiler::compile()
 			{
 				for (const auto& [matName, mat] : materials)
 				{
-                    OPipelineLayout layout = graphics->createPipelineLayout(pass.baseLayout);
+                    OPipelineLayout layout = graphics->createPipelineLayout(pass.baseLayout->getName(), pass.baseLayout);
                     layout->addDescriptorLayout(vd->getVertexDataLayout());
                     layout->addDescriptorLayout(vd->getInstanceDataLayout());
                     layout->addDescriptorLayout(mat->getDescriptorLayout());
@@ -95,7 +95,7 @@ void ShaderCompiler::compile()
 			}
 			else
 			{
-                OPipelineLayout layout = graphics->createPipelineLayout(pass.baseLayout);
+                OPipelineLayout layout = graphics->createPipelineLayout(pass.baseLayout->getName(), pass.baseLayout);
                 layout->addDescriptorLayout(vd->getVertexDataLayout());
                 layout->addDescriptorLayout(vd->getInstanceDataLayout());
                 Map<std::string, uint32> mapping;

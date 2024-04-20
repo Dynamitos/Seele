@@ -28,11 +28,11 @@ Slang::ComPtr<slang::IBlob> Seele::generateShader(const ShaderCreateInfo& create
     }
     sessionDesc.preprocessorMacroCount = macros.size();
     sessionDesc.preprocessorMacros = macros.data();
-    slang::TargetDesc vulkan;
-    vulkan.profile = globalSession->findProfile("sm_6_6");
-    vulkan.format = target;
+    slang::TargetDesc targetDesc;
+    targetDesc.profile = globalSession->findProfile("sm_6_6");
+    targetDesc.format = target;
     sessionDesc.targetCount = 1;
-    sessionDesc.targets = &vulkan;
+    sessionDesc.targets = &targetDesc;
     StaticArray<const char*, 3> searchPaths = {"shaders/", "shaders/lib/", "shaders/generated/"};
     sessionDesc.searchPaths = searchPaths.data();
     sessionDesc.searchPathCount = searchPaths.size();
@@ -92,11 +92,14 @@ Slang::ComPtr<slang::IBlob> Seele::generateShader(const ShaderCreateInfo& create
     slang::ProgramLayout* signature = specializedComponent->getLayout(0, diagnostics.writeRef());
     CHECK_DIAGNOSTICS();
     auto entry = signature->findEntryPointByName(createInfo.entryPoint.c_str());
+    uint32 offset = 0;
+    if(target == SLANG_DXIL)
+    {
+      offset = 1;// idk why
+    }
     for(size_t i = 0; i < signature->getParameterCount(); ++i)
     {
-        auto param = signature->getParameterByIndex(i);
-        paramMapping[param->getName()] = param->getBindingIndex();
-        std::cout << param->getName() << " " << param->getBindingIndex() << " " << param->getSemanticIndex() << std::endl;
+        paramMapping[param->getName()] = offset++;
     }
     return kernelBlob;
 }

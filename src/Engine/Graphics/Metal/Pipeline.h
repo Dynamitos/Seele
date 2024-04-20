@@ -19,10 +19,10 @@ public:
   virtual ~GraphicsPipeline();
   constexpr MTL::RenderPipelineState* getHandle() const { return state; }
   constexpr MTL::PrimitiveType getPrimitive() const { return primitiveType; }
-private:
   PGraphics graphics;
   MTL::RenderPipelineState* state;
   MTL::PrimitiveType primitiveType;
+private:
 };
 DEFINE_REF(GraphicsPipeline)
 class ComputePipeline : public Gfx::ComputePipeline {

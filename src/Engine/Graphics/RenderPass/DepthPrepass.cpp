@@ -16,7 +16,7 @@ DepthPrepass::DepthPrepass(Gfx::PGraphics graphics, PScene scene)
     : RenderPass(graphics, scene)
     , descriptorSets(3)
 {
-    depthPrepassLayout = graphics->createPipelineLayout();
+    depthPrepassLayout = graphics->createPipelineLayout("DepthPrepassLayout");
     depthPrepassLayout->addDescriptorLayout(viewParamsLayout);
     if (graphics->supportMeshShading())
     {

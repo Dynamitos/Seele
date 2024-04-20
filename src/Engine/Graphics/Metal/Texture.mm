@@ -21,7 +21,7 @@ TextureBase::TextureBase(PGraphics graphics, MTL::TextureType type,
       ownsImage(existingImage == nullptr) {
   if (existingImage == nullptr) {
     MTL::TextureUsage mtlUsage = 0;
-    if(usage & Gfx::SE_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
+    if(usage & Gfx::SE_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT || usage & Gfx::SE_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
     {
         mtlUsage |= MTL::TextureUsageRenderTarget;
     }
@@ -29,6 +29,10 @@ TextureBase::TextureBase(PGraphics graphics, MTL::TextureType type,
     {
         mtlUsage |= MTL::TextureUsageShaderRead;
     }
+      if(usage & Gfx::SE_IMAGE_USAGE_STORAGE_BIT)
+      {
+          mtlUsage |= MTL::TextureUsageShaderWrite;
+      }
     MTL::TextureDescriptor *descriptor =
         MTL::TextureDescriptor::alloc()->init();
     descriptor->setPixelFormat(cast(format));

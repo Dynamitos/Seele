@@ -25,15 +25,15 @@ Shader::~Shader() {
 }
 
 void Shader::create(const ShaderCreateInfo& createInfo) {
-    std::cout << "Compiling " << createInfo.name << std::endl;
-  Map<std::string, uint32> test;
-  Slang::ComPtr<slang::IBlob> kernelBlob = generateShader(createInfo, SLANG_DXIL, test);
+  std::cout << "Compiling " << createInfo.name << std::endl;
+  Map<std::string, uint32> paramMapping;
+  Slang::ComPtr<slang::IBlob> kernelBlob = generateShader(createInfo, SLANG_DXIL, paramMapping);
   hash = CRC::Calculate(kernelBlob->getBufferPointer(), kernelBlob->getBufferSize(), CRC::CRC_32());
   IRCompiler* pCompiler = IRCompilerCreate();
   IRCompilerSetMinimumGPUFamily(pCompiler, IRGPUFamilyMetal3);
   IRCompilerIgnoreRootSignature(pCompiler, true);
   IRCompilerSetEntryPointName(pCompiler, "main");
-    IRCompilerSetValidationFlags(pCompiler, IRCompilerValidationFlagAll);
+  IRCompilerSetValidationFlags(pCompiler, IRCompilerValidationFlagAll);
 
   IRObject* pDXIL = IRObjectCreateFromDXIL((const uint8*)kernelBlob->getBufferPointer(), kernelBlob->getBufferSize(),
                                            IRBytecodeOwnershipNone);
@@ -100,8 +100,8 @@ void Shader::create(const ShaderCreateInfo& createInfo) {
   descriptor.desc_1_1.pParameters = parameters.data();
   IRRootSignature* rootSignature = IRRootSignatureCreateFromDescriptor(&descriptor, &signatureError);
   assert(rootSignature);
-  IRCompilerSetGlobalRootSignature(pCompiler, rootSignature);
-  // Compile DXIL to Metal IR:
+  // IRCompilerSetGlobalRootSignature(pCompiler, rootSignature);
+  //  Compile DXIL to Metal IR:
   IRError* pError = nullptr;
   IRObject* pOutIR = IRCompilerAllocCompileAndLink(pCompiler, NULL, pDXIL, &pError);
 
@@ -131,7 +131,7 @@ void Shader::create(const ShaderCreateInfo& createInfo) {
   IRMetalLibBinary* pMetallib = IRMetalLibBinaryCreate();
   IRObjectGetMetalLibBinary(pOutIR, irStage, pMetallib);
   dispatch_data_t data = IRMetalLibGetBytecodeData(pMetallib);
-    
+
   IRShaderReflection* reflection = IRShaderReflectionCreate();
   IRObjectGetReflection(pOutIR, irStage, reflection);
   std::cout << IRShaderReflectionAllocStringAndSerialize(reflection) << std::endl;

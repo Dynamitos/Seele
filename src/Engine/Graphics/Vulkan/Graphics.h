@@ -64,7 +64,7 @@ public:
     virtual Gfx::OSampler createSampler(const SamplerCreateInfo& createInfo) override;
 
     virtual Gfx::ODescriptorLayout createDescriptorLayout(const std::string& name = "") override;
-    virtual Gfx::OPipelineLayout createPipelineLayout(Gfx::PPipelineLayout baseLayout = nullptr) override;
+    virtual Gfx::OPipelineLayout createPipelineLayout(const std::string& name = "", Gfx::PPipelineLayout baseLayout = nullptr) override;
 
     virtual Gfx::OVertexInput createVertexInput(VertexInputStateCreateInfo createInfo) override;
 

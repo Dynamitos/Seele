@@ -122,7 +122,7 @@ void SkyboxRenderPass::createRenderPass()
     createInfo.entryPoint = "fragmentMain";
     fragmentShader = graphics->createFragmentShader(createInfo);
 
-    pipelineLayout = graphics->createPipelineLayout();
+    pipelineLayout = graphics->createPipelineLayout("SkyboxLayout");
     pipelineLayout->addDescriptorLayout(viewParamsLayout);
     pipelineLayout->addDescriptorLayout(skyboxDataLayout);
     pipelineLayout->addDescriptorLayout(textureLayout);

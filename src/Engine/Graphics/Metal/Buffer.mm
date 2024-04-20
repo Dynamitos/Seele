@@ -3,10 +3,12 @@
 #include "Graphics/Buffer.h"
 #include "Graphics/Enums.h"
 #include "Graphics/Initializer.h"
+#include <iostream>
+
 using namespace Seele;
 using namespace Seele::Metal;
 
-Buffer::Buffer(PGraphics graphics, uint64 size, void* data, bool dynamic) : graphics(graphics), size(size) {
+Buffer::Buffer(PGraphics graphics, uint64 size, void* data, bool dynamic, const std::string& name) : graphics(graphics), size(size) {
   if (dynamic) {
     numBuffers = Gfx::numFramesBuffered;
   } else {
@@ -14,10 +16,11 @@ Buffer::Buffer(PGraphics graphics, uint64 size, void* data, bool dynamic) : grap
   }
   for (size_t i = 0; i < numBuffers; ++i) {
     if (data != nullptr) {
-      buffers[i] = graphics->getDevice()->newBuffer(data, size, MTL::ResourceOptionCPUCacheModeDefault);
+      buffers[i] = graphics->getDevice()->newBuffer(data, size, MTL::StorageModeShared);
     } else {
-      buffers[i] = graphics->getDevice()->newBuffer(size, MTL::ResourceOptionCPUCacheModeDefault);
+      buffers[i] = graphics->getDevice()->newBuffer(size, MTL::StorageModeShared);
     }
+      buffers[i]->setLabel(NS::String::string(name.c_str(), NS::ASCIIStringEncoding));
   }
 }
 
@@ -31,12 +34,12 @@ void* Buffer::map(bool) { return getHandle()->contents(); }
 
 void* Buffer::mapRegion(uint64 regionOffset, uint64, bool) { return (char*)getHandle()->contents() + regionOffset; }
 
-void unmap() {}
+void Buffer::unmap() {}
 
 VertexBuffer::VertexBuffer(PGraphics graphics, const VertexBufferCreateInfo& createInfo)
     : Gfx::VertexBuffer(graphics->getFamilyMapping(), createInfo.numVertices, createInfo.vertexSize,
                         createInfo.sourceData.owner),
-      Seele::Metal::Buffer(graphics, createInfo.sourceData.size, createInfo.sourceData.data, false) {}
+      Seele::Metal::Buffer(graphics, createInfo.sourceData.size, createInfo.sourceData.data, false, createInfo.name) {}
 
 VertexBuffer::~VertexBuffer() {}
 
@@ -61,7 +64,7 @@ void VertexBuffer::executePipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::SeP
 IndexBuffer::IndexBuffer(PGraphics graphics, const IndexBufferCreateInfo& createInfo)
     : Gfx::IndexBuffer(graphics->getFamilyMapping(), createInfo.sourceData.size, createInfo.indexType,
                        createInfo.sourceData.owner),
-      Seele::Metal::Buffer(graphics, createInfo.sourceData.size, createInfo.sourceData.data, false) {}
+      Seele::Metal::Buffer(graphics, createInfo.sourceData.size, createInfo.sourceData.data, false, createInfo.name) {}
 
 IndexBuffer::~IndexBuffer() {}
 
@@ -77,7 +80,7 @@ void IndexBuffer::executePipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::SePi
 
 UniformBuffer::UniformBuffer(PGraphics graphics, const UniformBufferCreateInfo& createInfo)
     : Gfx::UniformBuffer(graphics->getFamilyMapping(), createInfo.sourceData),
-      Seele::Metal::Buffer(graphics, createInfo.sourceData.size, createInfo.sourceData.data, createInfo.dynamic) {}
+      Seele::Metal::Buffer(graphics, createInfo.sourceData.size, createInfo.sourceData.data, createInfo.dynamic, createInfo.name) {}
 
 UniformBuffer::~UniformBuffer() {}
 
@@ -94,7 +97,7 @@ void UniformBuffer::executePipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::Se
 
 ShaderBuffer::ShaderBuffer(PGraphics graphics, const ShaderBufferCreateInfo& createInfo)
     : Gfx::ShaderBuffer(graphics->getFamilyMapping(), createInfo.numElements, createInfo.sourceData),
-      Seele::Metal::Buffer(graphics, createInfo.sourceData.size, createInfo.sourceData.data, createInfo.dynamic) {}
+      Seele::Metal::Buffer(graphics, createInfo.sourceData.size, createInfo.sourceData.data, createInfo.dynamic, createInfo.name) {}
 
 ShaderBuffer::~ShaderBuffer() {}
 

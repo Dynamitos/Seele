@@ -162,13 +162,19 @@ void StaticMeshVertexData::resizeBuffers()
         },
         .numElements = verticesAllocated * 3,
         .dynamic = true,
+        .name = "Positions",
     };
     positions = graphics->createShaderBuffer(createInfo);
+    createInfo.name = "Normals";
     normals = graphics->createShaderBuffer(createInfo);
+    createInfo.name = "Tangents";
     tangents = graphics->createShaderBuffer(createInfo);
+    createInfo.name = "BiTangents";
     biTangents = graphics->createShaderBuffer(createInfo);
+    createInfo.name = "Colors";
     colors = graphics->createShaderBuffer(createInfo);
     createInfo.sourceData.size = verticesAllocated * sizeof(Vector2);
+    createInfo.name = "TexCoords";
     createInfo.numElements = verticesAllocated * 2;
     texCoords = graphics->createShaderBuffer(createInfo);
     

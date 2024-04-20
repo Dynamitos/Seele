@@ -119,7 +119,7 @@ void DebugPass::createRenderPass()
     };
     renderPass = graphics->createRenderPass(std::move(layout), dependency, viewport);
     
-    pipelineLayout = graphics->createPipelineLayout();
+    pipelineLayout = graphics->createPipelineLayout("DebugPassLayout");
     pipelineLayout->addDescriptorLayout(viewParamsLayout);
     pipelineLayout->create();
 

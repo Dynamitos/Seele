@@ -52,7 +52,7 @@ void taskMain(
 				uint index;
 				InterlockedAdd(head, 1, index);
 				p.meshletId[index] = m;
-				p.instanceId[index] = groupID;
+				p.instanceId[index] = groupID + pScene.primitiveIndices[m];
 			}
 		}
 	}
@@ -90,9 +90,9 @@ void meshMain(
 	{
 		uint p = min(i, m.primitiveCount - 1);
 		{
-			uint local_idx0 = unpackPrimitiveIndices(m.primitiveOffset + (p * 3) + 0);
-			uint local_idx1 = unpackPrimitiveIndices(m.primitiveOffset + (p * 3) + 1);
-			uint local_idx2 = unpackPrimitiveIndices(m.primitiveOffset + (p * 3) + 2);
+			uint local_idx0 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 0];
+			uint local_idx1 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 1];
+			uint local_idx2 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 2];
 			indices[p] = uint3(local_idx0, local_idx1, local_idx2);
 		}
 	}

@@ -43,9 +43,9 @@ DescriptorSet::DescriptorSet(PDescriptorLayout layout) : layout(layout) {}
 
 DescriptorSet::~DescriptorSet() {}
 
-PipelineLayout::PipelineLayout() {}
+PipelineLayout::PipelineLayout(const std::string& name) : name(name) {}
 
-PipelineLayout::PipelineLayout(PPipelineLayout baseLayout) {
+PipelineLayout::PipelineLayout(const std::string& name, PPipelineLayout baseLayout) : name(name){
   if (baseLayout != nullptr) {
     descriptorSetLayouts = baseLayout->descriptorSetLayouts;
     pushConstants = baseLayout->pushConstants;

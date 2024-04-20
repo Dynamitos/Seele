@@ -15,6 +15,7 @@ RenderPass::RenderPass(Gfx::PGraphics graphics, PScene scene)
             .data = (uint8*)&viewParams,
         },
         .dynamic = true,
+        .name = "viewParamsBuffer",
     };
     viewParamsBuffer = graphics->createUniformBuffer(uniformInitializer);
     viewParamsLayout->create();

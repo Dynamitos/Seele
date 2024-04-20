@@ -9,7 +9,7 @@ namespace Metal {
 DECLARE_REF(Graphics)
 class Buffer {
 public:
-  Buffer(PGraphics graphics, uint64 size, void *data, bool dynamic);
+  Buffer(PGraphics graphics, uint64 size, void *data, bool dynamic, const std::string& name);
   virtual ~Buffer();
   MTL::Buffer *getHandle() const { return buffers[currentBuffer]; }
   uint64 getSize() const { return size; }

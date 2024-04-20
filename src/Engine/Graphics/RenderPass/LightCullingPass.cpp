@@ -114,9 +114,11 @@ void LightCullingPass::publishOutputs()
     //t_lightGrid
     cullingDescriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 6, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_IMAGE, .access = Gfx::SE_DESCRIPTOR_ACCESS_READ_WRITE_BIT});
 
+    cullingDescriptorLayout->create();
+    
     lightEnv = scene->getLightEnvironment();
 
-    cullingLayout = graphics->createPipelineLayout();
+    cullingLayout = graphics->createPipelineLayout("CullingLayout");
     cullingLayout->addDescriptorLayout(viewParamsLayout);
     cullingLayout->addDescriptorLayout(dispatchParamsLayout);
     cullingLayout->addDescriptorLayout(cullingDescriptorLayout);
@@ -213,7 +215,8 @@ void LightCullingPass::setupFrustums()
     dispatchParamsLayout = graphics->createDescriptorLayout("pDispatchParams");
     dispatchParamsLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 0, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER, });
     dispatchParamsLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 1, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER, .access = Gfx::SE_DESCRIPTOR_ACCESS_WRITE_ONLY_BIT });
-    frustumLayout = graphics->createPipelineLayout();
+    dispatchParamsLayout->create();
+    frustumLayout = graphics->createPipelineLayout("FrustumLayout");
     frustumLayout->addDescriptorLayout(viewParamsLayout);
     frustumLayout->addDescriptorLayout(dispatchParamsLayout);
     Map<std::string, uint32> mapping;

@@ -94,26 +94,26 @@ struct VertexBufferCreateInfo
     // bytes per vertex
     uint32      vertexSize = 0;
     uint32      numVertices = 0;
-    std::string name;
+    std::string name = "";
 };
 struct IndexBufferCreateInfo
 {
     DataSource          sourceData = DataSource();
     Gfx::SeIndexType    indexType = Gfx::SeIndexType::SE_INDEX_TYPE_UINT16;
-    std::string name;
+    std::string name = "";
 };
 struct UniformBufferCreateInfo
 {
     DataSource  sourceData = DataSource();
     uint8       dynamic = 0;
-    std::string name;
+    std::string name = "";
 };
 struct ShaderBufferCreateInfo
 {
     DataSource  sourceData = DataSource();
     uint64      numElements = 1;
     uint8       dynamic = 0;
-    std::string name;
+    std::string name = "";
 };
 DECLARE_NAME_REF(Gfx, PipelineLayout)
 struct ShaderCreateInfo

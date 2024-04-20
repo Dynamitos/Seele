@@ -108,6 +108,7 @@ void VertexData::createDescriptors()
                 },
                 .numElements = instanceData.size(),
                 .dynamic = false,
+                .name = "InstanceBuffer"
                 });
             matInst.instanceBuffer->pipelineBarrier(
                 Gfx::SE_ACCESS_TRANSFER_WRITE_BIT,
@@ -124,6 +125,7 @@ void VertexData::createDescriptors()
                 },
                 .numElements = meshes.size(),
                 .dynamic = false,
+                .name = "MeshDataBuffer"
             });
             matInst.meshDataBuffer->pipelineBarrier(
                 Gfx::SE_ACCESS_TRANSFER_WRITE_BIT,
@@ -162,7 +164,11 @@ void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet>
             std::memcpy(vertexIndices.data() + vertexOffset, m.uniqueVertices, m.numVertices * sizeof(uint32));
             uint32 primitiveOffset = primitiveIndices.size();
             primitiveIndices.resize(primitiveOffset + (m.numPrimitives * 3));
-            std::memcpy(primitiveIndices.data() + primitiveOffset, m.primitiveLayout, m.numPrimitives * 3 * sizeof(uint8));
+            for(size_t x = 0; x < m.numPrimitives*3; ++x)
+            {
+                primitiveIndices[primitiveOffset + x] = m.primitiveLayout[x];
+            }
+            //std::memcpy(primitiveIndices.data() + primitiveOffset, m.primitiveLayout, m.numPrimitives * 3 * sizeof(uint8));
             meshlets.add(MeshletDescription{
                 .bounding = m.boundingBox.toSphere(),
                 .vertexCount = m.numVertices,
@@ -190,6 +196,7 @@ void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet>
             .data = (uint8*)indices.data(),
         },
         .indexType = Gfx::SE_INDEX_TYPE_UINT32,
+        .name = "IndexBuffer",
     });
     meshletBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
         .sourceData = {
@@ -198,6 +205,7 @@ void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet>
         },
         .numElements = meshlets.size(),
         .dynamic = false,
+        .name = "MeshletBuffer"
     });
     vertexIndicesBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
         .sourceData = {
@@ -206,14 +214,16 @@ void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet>
         },
         .numElements = vertexIndices.size(),
         .dynamic = false,
+        .name = "VertexIndicesBuffer"
     });
     primitiveIndicesBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
         .sourceData = {
-            .size = sizeof(uint8) * primitiveIndices.size(),
+            .size = sizeof(uint32) * primitiveIndices.size(),
             .data = (uint8*)primitiveIndices.data(),
         },
         .numElements = primitiveIndices.size(),
         .dynamic = false,
+        .name = "PrimitiveIndicesBuffer",
     });
 }
 

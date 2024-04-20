@@ -157,7 +157,7 @@ void BasePass::endFrame()
 
 void BasePass::publishOutputs() 
 {
-    basePassLayout = graphics->createPipelineLayout();
+    basePassLayout = graphics->createPipelineLayout("BasePassLayout");
 
     basePassLayout->addDescriptorLayout(viewParamsLayout);
     basePassLayout->addDescriptorLayout(scene->getLightEnvironment()->getDescriptorLayout());

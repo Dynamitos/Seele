@@ -13,11 +13,8 @@ public:
   virtual ~DescriptorLayout();
   virtual void create() override;
 
-  NS::Array* getArguments() const { return arguments; }
-
 private:
   PGraphics graphics;
-  NS::Array* arguments;
 };
 DEFINE_REF(DescriptorLayout)
 
@@ -28,7 +25,6 @@ public:
   virtual ~DescriptorPool();
   virtual Gfx::PDescriptorSet allocateDescriptorSet() override;
   virtual void reset() override;
-  constexpr NS::Array* getArguments() const { return layout->getArguments(); }
   constexpr PDescriptorLayout getLayout() const { return layout; }
 
 private:
@@ -63,7 +59,7 @@ private:
   PGraphics graphics;
   PDescriptorPool owner;
   MTL::Buffer* buffer = nullptr;
-  MTL::ArgumentEncoder* encoder;
+    uint64* argumentBuffer = nullptr;
     Array<MTL::Resource*> boundResources;
   uint32 bindCount;
   bool currentlyInUse;
@@ -72,10 +68,10 @@ DEFINE_REF(DescriptorSet)
 
 class PipelineLayout : public Gfx::PipelineLayout {
 public:
-  PipelineLayout(PGraphics graphics, Gfx::PPipelineLayout baseLayout);
+  PipelineLayout(PGraphics graphics, const std::string& name, Gfx::PPipelineLayout baseLayout);
   virtual ~PipelineLayout();
   virtual void create() override;
-
+  Array<Array<uint32>> 
 private:
   PGraphics graphics;
 };

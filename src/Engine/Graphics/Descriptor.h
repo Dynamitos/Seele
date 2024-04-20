@@ -75,8 +75,8 @@ DEFINE_REF(DescriptorSet)
 
 class PipelineLayout {
 public:
-  PipelineLayout();
-  PipelineLayout(PPipelineLayout baseLayout);
+  PipelineLayout(const std::string& name);
+  PipelineLayout(const std::string& name, PPipelineLayout baseLayout);
   virtual ~PipelineLayout();
   virtual void create() = 0;
   void addDescriptorLayout(PDescriptorLayout layout);
@@ -85,12 +85,14 @@ public:
   constexpr const Map<std::string, PDescriptorLayout>& getLayouts() const { return descriptorSetLayouts; }
   constexpr uint32 findParameter(const std::string& name) const { return parameterMapping[name]; }
     void addMapping(Map<std::string, uint32> mapping);
-    
+    constexpr std::string getName() const {return name;};
+
 protected:
   uint32 layoutHash = 0;
   Map<std::string, PDescriptorLayout> descriptorSetLayouts;
     Map<std::string, uint32> parameterMapping;
   Array<SePushConstantRange> pushConstants;
+    std::string name;
 };
 DEFINE_REF(PipelineLayout)
 } // namespace Gfx
