@@ -17,6 +17,13 @@ Slang::ComPtr<slang::IBlob> Seele::generateShader(const ShaderCreateInfo& create
     }
     slang::SessionDesc sessionDesc;
     sessionDesc.flags = 0;
+    slang::CompilerOptionEntry option;
+    option.name = slang::CompilerOptionName::IgnoreCapabilities;
+    option.value = slang::CompilerOptionValue();
+    option.value.kind = slang::CompilerOptionValueKind::Int;
+    option.value.intValue0 = 1;
+    sessionDesc.compilerOptionEntries = &option;
+    sessionDesc.compilerOptionEntryCount = 1;
     sessionDesc.defaultMatrixLayoutMode = SLANG_MATRIX_LAYOUT_COLUMN_MAJOR;
     Array<slang::PreprocessorMacroDesc> macros;
     for(const auto& [key, val] : createInfo.defines)
@@ -28,14 +35,7 @@ Slang::ComPtr<slang::IBlob> Seele::generateShader(const ShaderCreateInfo& create
     }
     sessionDesc.preprocessorMacroCount = macros.size();
     sessionDesc.preprocessorMacros = macros.data();
-    slang::CompilerOptionEntry option;
-    option.name = slang::CompilerOptionName::IgnoreCapabilities;
-    option.value = slang::CompilerOptionValue();
-    option.value.kind = slang::CompilerOptionValueKind::Int;
-    option.value.intValue0 = 1;
     slang::TargetDesc targetDesc;
-    targetDesc.compilerOptionEntries = &option;
-    targetDesc.compilerOptionEntryCount = 1;
     targetDesc.profile = globalSession->findProfile("sm_6_6");
     targetDesc.format = target;
     targetDesc.compilerOptionEntryCount = 1;

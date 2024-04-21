@@ -5,4 +5,4 @@
 	path = external/vcpkg
 	url = https://github.com/Microsoft/vcpkg.git
 [submodule "external/slang"]
-	url = https://github.com/shader-slang/slang.git
+	url = git@github.com:Dynamitos/slang.git

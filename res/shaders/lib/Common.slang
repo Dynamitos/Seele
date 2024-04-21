@@ -10,8 +10,7 @@ struct ViewParameter
     float4 cameraPos_WS;
     float2 screenDimensions;
 }
-layout(set = 0)
-ParameterBlock<ViewParameter> pViewParams;
+uniform ParameterBlock<ViewParameter> pViewParams;
 
 float4 clipToView(float4 clip)
 {
