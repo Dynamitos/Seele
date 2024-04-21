@@ -28,9 +28,18 @@ Slang::ComPtr<slang::IBlob> Seele::generateShader(const ShaderCreateInfo& create
     }
     sessionDesc.preprocessorMacroCount = macros.size();
     sessionDesc.preprocessorMacros = macros.data();
+    slang::CompilerOptionEntry option;
+    option.name = slang::CompilerOptionName::IgnoreCapabilities;
+    option.value = slang::CompilerOptionValue();
+    option.value.kind = slang::CompilerOptionValueKind::Int;
+    option.value.intValue0 = 1;
     slang::TargetDesc targetDesc;
+    targetDesc.compilerOptionEntries = &option;
+    targetDesc.compilerOptionEntryCount = 1;
     targetDesc.profile = globalSession->findProfile("sm_6_6");
     targetDesc.format = target;
+    targetDesc.compilerOptionEntryCount = 1;
+    targetDesc.compilerOptionEntries = &option;
     sessionDesc.targetCount = 1;
     sessionDesc.targets = &targetDesc;
     StaticArray<const char*, 3> searchPaths = {"shaders/", "shaders/lib/", "shaders/generated/"};
@@ -80,7 +89,7 @@ Slang::ComPtr<slang::IBlob> Seele::generateShader(const ShaderCreateInfo& create
     Slang::ComPtr<slang::IComponentType> specializedComponent;
     linkedProgram->specialize(specialization.data(), specialization.size(), specializedComponent.writeRef(), diagnostics.writeRef());
     CHECK_DIAGNOSTICS();
-
+  
     Slang::ComPtr<slang::IBlob> kernelBlob;
     specializedComponent->getEntryPointCode(
         0,
@@ -99,6 +108,7 @@ Slang::ComPtr<slang::IBlob> Seele::generateShader(const ShaderCreateInfo& create
     }
     for(size_t i = 0; i < signature->getParameterCount(); ++i)
     {
+        auto param = signature->getParameterByIndex(i);
         paramMapping[param->getName()] = offset++;
     }
     return kernelBlob;

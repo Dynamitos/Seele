@@ -71,7 +71,7 @@ public:
   PipelineLayout(PGraphics graphics, const std::string& name, Gfx::PPipelineLayout baseLayout);
   virtual ~PipelineLayout();
   virtual void create() override;
-  Array<Array<uint32>> 
+    
 private:
   PGraphics graphics;
 };
