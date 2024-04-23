@@ -18,16 +18,11 @@ static Map<Vulkan::Buffer*, PendingBuffer> pendingBuffers;
 Buffer::Buffer(PGraphics graphics, uint64 size, VkBufferUsageFlags usage, Gfx::QueueType& queueType, bool dynamic,
                std::string name)
     : graphics(graphics), currentBuffer(0), size(size), owner(queueType), usage(usage), name(name) {
-  if (dynamic) {
-    numBuffers = Gfx::numFramesBuffered;
-  } else {
-    numBuffers = 1;
-  }
   createBuffer();
 }
 
 Buffer::~Buffer() {
-  for (uint32 i = 0; i < numBuffers; ++i) {
+  for (uint32 i = 0; i < buffers.size(); ++i) {
     graphics->getDestructionManager()->queueBuffer(graphics->getQueueCommands(owner)->getCommands(), buffers[i].buffer,
                                                    buffers[i].allocation);
   }
@@ -74,12 +69,12 @@ void Buffer::executeOwnershipBarrier(Gfx::QueueType newOwner) {
   VkCommandBuffer srcCommand = sourcePool->getCommands()->getHandle();
   VkCommandBuffer dstCommand = dstPool->getCommands()->getHandle();
   VkBufferMemoryBarrier dynamicBarriers[Gfx::numFramesBuffered];
-  for (uint32 i = 0; i < numBuffers; ++i) {
+  for (uint32 i = 0; i < buffers.size(); ++i) {
     dynamicBarriers[i] = barrier;
     dynamicBarriers[i].buffer = buffers[i].buffer;
   }
-  vkCmdPipelineBarrier(srcCommand, srcStage, srcStage, 0, 0, nullptr, numBuffers, dynamicBarriers, 0, nullptr);
-  vkCmdPipelineBarrier(dstCommand, dstStage, dstStage, 0, 0, nullptr, numBuffers, dynamicBarriers, 0, nullptr);
+  vkCmdPipelineBarrier(srcCommand, srcStage, srcStage, 0, 0, nullptr, buffers.size(), dynamicBarriers, 0, nullptr);
+  vkCmdPipelineBarrier(dstCommand, dstStage, dstStage, 0, 0, nullptr, buffers.size(), dynamicBarriers, 0, nullptr);
   sourcePool->submitCommands();
 }
 
@@ -97,14 +92,13 @@ void Buffer::executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlag
       .size = size,
   };
   VkBufferMemoryBarrier dynamicBarriers[Gfx::numFramesBuffered];
-  for (uint32 i = 0; i < numBuffers; ++i) {
+  for (uint32 i = 0; i < buffers.size(); ++i) {
     dynamicBarriers[i] = barrier;
     dynamicBarriers[i].buffer = buffers[i].buffer;
   }
-  vkCmdPipelineBarrier(commandBuffer->getHandle(), srcStage, dstStage, 0, 0, nullptr, numBuffers, dynamicBarriers, 0,
+  vkCmdPipelineBarrier(commandBuffer->getHandle(), srcStage, dstStage, 0, 0, nullptr, buffers.size(), dynamicBarriers, 0,
                        nullptr);
 }
-
 
 void* Buffer::map(bool writeOnly) { return mapRegion(0, size, writeOnly); }
 

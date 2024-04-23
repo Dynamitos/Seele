@@ -194,7 +194,16 @@ void MeshLoader::loadMaterials(const aiScene* scene, const std::string& baseName
             .filePath = meshDirectory / outMatFilename,
             .importPath = importPath,
             });
-        PMaterialAsset baseMat = AssetRegistry::findMaterial(matCode["name"].get<std::string>());
+        std::string materialAsset;
+        if (importPath.empty())
+        {
+            materialAsset = matCode["name"].get<std::string>();
+        }
+        else
+        {
+            materialAsset = fmt::format("{0}/{1}", importPath, matCode["name"].get<std::string>());
+        }
+        PMaterialAsset baseMat = AssetRegistry::findMaterial(materialAsset);
         globalMaterials[i] = baseMat->instantiate(InstantiationParameter{
             .name = fmt::format("{0}_Inst_0", baseMat->getName()),
             .folderPath = baseMat->getFolderPath(),
@@ -220,6 +229,8 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
     for (uint32 meshIndex = 0; meshIndex < scene->mNumMeshes; ++meshIndex)
     {
         aiMesh* mesh = scene->mMeshes[meshIndex];
+        if (!(mesh->mPrimitiveTypes & aiPrimitiveType_TRIANGLE))
+            continue;
         collider.boundingbox.adjust(Vector(mesh->mAABB.mMin.x, mesh->mAABB.mMin.y, mesh->mAABB.mMin.z));
         collider.boundingbox.adjust(Vector(mesh->mAABB.mMax.x, mesh->mAABB.mMax.y, mesh->mAABB.mMax.z));
 
@@ -236,10 +247,25 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
         for (uint32 i = 0; i < mesh->mNumVertices; ++i)
         {
             positions[i] = Vector(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
-            texCoords[i] = Vector2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
+            if (mesh->HasTextureCoords(0))
+            {
+                texCoords[i] = Vector2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
+            }
+            else
+            {
+                texCoords[i] = Vector2(0, 0);
+            }
             normals[i] = Vector(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z);
-            tangents[i] = Vector(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z);
-            biTangents[i] = Vector(mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z);
+            if (mesh->HasTangentsAndBitangents())
+            {
+                tangents[i] = Vector(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z);
+                biTangents[i] = Vector(mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z);
+            }
+            else
+            {
+                tangents[i] = Vector(0, 0, 1);
+                biTangents[i] = Vector(1, 0, 0);
+            }
             if(mesh->HasVertexColors(0))
             {
                 colors[i] = Vector(mesh->mColors[0][i].r, mesh->mColors[0][i].g, mesh->mColors[0][i].b);
@@ -336,8 +362,9 @@ void MeshLoader::import(MeshImportArgs args, PMeshAsset meshAsset)
         aiProcess_GenBoundingBoxes |
         aiProcess_GenSmoothNormals |
         aiProcess_GenUVCoords |
+        aiProcess_SortByPType |
         aiProcess_FindDegenerates));
-    const aiScene *scene = importer.ApplyPostProcessing(aiProcess_CalcTangentSpace | aiProcess_ImproveCacheLocality);
+    const aiScene *scene = importer.ApplyPostProcessing(aiProcess_CalcTangentSpace);
 
     Array<PMaterialInstanceAsset> globalMaterials(scene->mNumMaterials);
     loadTextures(scene, args.filePath.parent_path(), args.importPath);

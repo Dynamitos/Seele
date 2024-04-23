@@ -57,9 +57,10 @@ int main() {
   AssetImporter::importMesh(MeshImportArgs{
       .filePath = sourcePath / "import/models/cube.fbx",
   });
-  AssetImporter::importMesh(MeshImportArgs{
-      .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.blend"
-      });
+  //AssetImporter::importMesh(MeshImportArgs{
+  //    .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.blend",
+  //    .importPath = "Whitechapel"
+  //    });
   WindowCreateInfo mainWindowInfo;
   mainWindowInfo.title = "SeeleEngine";
   mainWindowInfo.width = 1920;

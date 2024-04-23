@@ -74,7 +74,6 @@ private:
     std::filesystem::path rootFolder;
     AssetFolder* assetRoot;
     Gfx::PGraphics graphics;
-    ArchiveBuffer assetBuffer;
     bool release = false;
     friend class MaterialAsset;
     friend class TextureLoader;

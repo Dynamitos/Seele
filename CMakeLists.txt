@@ -151,7 +151,7 @@ install(
     EXPORT 
         EngineTargets
     FILE_SET HEADERS
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/include/Seele)
+    DESTINATION include/Seele)
 
 export(EXPORT EngineTargets
     FILE "${CMAKE_BINARY_DIR}/EngineTargets.cmake"
@@ -169,14 +169,14 @@ install(EXPORT EngineTargets
     NAMESPACE
         Seele::
     DESTINATION
-        ${CMAKE_INSTALL_PREFIX}/lib/cmake/Seele
+        lib/cmake/Seele
 )
 
 install(
     FILES
         ${CMAKE_BINARY_DIR}/SeeleConfig.cmake
     DESTINATION
-        ${CMAKE_INSTALL_PREFIX}/lib/cmake/Seele
+        lib/cmake/Seele
 )
 
 install(
@@ -186,5 +186,5 @@ install(
         ${CMAKE_SOURCE_DIR}/res/shaders
         ${CMAKE_SOURCE_DIR}/res/textures
     DESTINATION
-        ${CMAKE_INSTALL_PREFIX}/bin
+        bin
 )

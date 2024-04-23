@@ -31,7 +31,6 @@ protected:
   Gfx::QueueType &owner;
   Array<BufferAllocation> buffers;
   VkBufferUsageFlags usage;
-  uint32 numBuffers;
   std::string name;
   void createBuffer();
 

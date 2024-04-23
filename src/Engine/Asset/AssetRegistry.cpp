@@ -209,9 +209,6 @@ void AssetRegistry::peekAsset(ArchiveBuffer& buffer)
     std::string folderPath;
     Serialization::load(buffer, folderPath);
 
-    uint64 assetSize;
-    Serialization::load(buffer, assetSize);
-
     AssetFolder* folder = getOrCreateFolder(folderPath);
 
     OAsset asset;
@@ -332,7 +329,7 @@ void AssetRegistry::saveAsset(PAsset asset, uint64 identifier, const std::filesy
     Serialization::save(buffer, folderPath.string());
     // write asset data
     asset->save(buffer);
-    assetBuffer.writeToStream(assetStream);
+    buffer.writeToStream(assetStream);
 }
 
 std::filesystem::path AssetRegistry::getRootFolder()

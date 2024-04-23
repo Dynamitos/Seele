@@ -78,8 +78,8 @@ void meshMain(
 	in uint threadID: SV_GroupIndex,
 	in uint groupID: SV_GroupID,
 	in payload MeshPayload meshPayload,
-	OutputVertices<FragmentParameter, MAX_VERTICES> vertices, 
-	OutputIndices<uint3, MAX_PRIMITIVES> indices
+	out vertices FragmentParameter vertices[MAX_VERTICES], 
+	out indices uint3 indices[MAX_PRIMITIVES]
 ){
 	InstanceData inst = pScene.instances[meshPayload.instanceId[groupID]];
 	MeshData md = pScene.meshData[meshPayload.instanceId[groupID]];
