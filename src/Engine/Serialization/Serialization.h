@@ -1,6 +1,7 @@
 #pragma once
 #include "ArchiveBuffer.h"
 #include "Math/Vector.h"
+#include "Math/Matrix.h"
 
 namespace Seele
 {
@@ -51,6 +52,44 @@ namespace Serialization
         save(buffer, vec.x);
         save(buffer, vec.y);
         save(buffer, vec.z);
+    }
+    static void load(ArchiveBuffer& buffer, Matrix4& mat)
+    {
+        load(buffer, mat[0][0]);
+        load(buffer, mat[0][1]);
+        load(buffer, mat[0][2]);
+        load(buffer, mat[0][3]);
+        load(buffer, mat[1][0]);
+        load(buffer, mat[1][1]);
+        load(buffer, mat[1][2]);
+        load(buffer, mat[1][3]);
+        load(buffer, mat[2][0]);
+        load(buffer, mat[2][1]);
+        load(buffer, mat[2][2]);
+        load(buffer, mat[2][3]);
+        load(buffer, mat[3][0]);
+        load(buffer, mat[3][1]);
+        load(buffer, mat[3][2]);
+        load(buffer, mat[3][3]);
+    }
+    static void save(ArchiveBuffer& buffer, const Matrix4& mat)
+    {
+        save(buffer, mat[0][0]);
+        save(buffer, mat[0][1]);
+        save(buffer, mat[0][2]);
+        save(buffer, mat[0][3]);
+        save(buffer, mat[1][0]);
+        save(buffer, mat[1][1]);
+        save(buffer, mat[1][2]);
+        save(buffer, mat[1][3]);
+        save(buffer, mat[2][0]);
+        save(buffer, mat[2][1]);
+        save(buffer, mat[2][2]);
+        save(buffer, mat[2][3]);
+        save(buffer, mat[3][0]);
+        save(buffer, mat[3][1]);
+        save(buffer, mat[3][2]);
+        save(buffer, mat[3][3]);
     }
     static void load(ArchiveBuffer& buffer, Vector& vec)
     {

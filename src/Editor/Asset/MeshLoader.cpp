@@ -243,8 +243,8 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
         Array<Vector> colors(mesh->mNumVertices);
 
         StaticMeshVertexData* vertexData = StaticMeshVertexData::getInstance();
-
-        for (uint32 i = 0; i < mesh->mNumVertices; ++i)
+#pragma omp parallel for
+        for (int32 i = 0; i < mesh->mNumVertices; ++i)
         {
             positions[i] = Vector(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
             if (mesh->HasTextureCoords(0))
@@ -275,7 +275,6 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
                 colors[i] = Vector(1, 1, 1);
             }
         }
-
         MeshId id = vertexData->allocateVertexData(mesh->mNumVertices);
         vertexData->loadPositions(id, positions);
         vertexData->loadTexCoords(id, texCoords);
@@ -285,7 +284,8 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
         vertexData->loadColors(id, colors);
 
         Array<uint32> indices(mesh->mNumFaces * 3);
-        for (size_t faceIndex = 0; faceIndex < mesh->mNumFaces; ++faceIndex)
+#pragma omp parallel for
+        for (int32 faceIndex = 0; faceIndex < mesh->mNumFaces; ++faceIndex)
         {
             indices[faceIndex * 3 + 0] = mesh->mFaces[faceIndex].mIndices[0];
             indices[faceIndex * 3 + 1] = mesh->mFaces[faceIndex].mIndices[1];
@@ -349,6 +349,27 @@ void MeshLoader::loadTextures(const aiScene* scene, const std::filesystem::path&
             });
     }
 }
+
+Matrix4 convertMatrix(aiMatrix4x4 matrix)
+{
+    return Matrix4(
+        matrix.a1, matrix.a2, matrix.a3, matrix.a4,
+        matrix.b1, matrix.b2, matrix.b3, matrix.b4,
+        matrix.c1, matrix.c2, matrix.c3, matrix.c4,
+        matrix.d1, matrix.d2, matrix.d3, matrix.d4
+    );
+}
+
+Matrix4 MeshLoader::loadNodeTransform(aiNode* node)
+{
+    Matrix4 parent = Matrix4(1);
+    if (node->mParent != nullptr)
+    {
+        parent = loadNodeTransform(node->mParent);
+    }
+    return parent * convertMatrix(node->mTransformation);
+}
+
 void MeshLoader::import(MeshImportArgs args, PMeshAsset meshAsset)
 {
     std::cout << "Starting to import "<<args.filePath<< std::endl;
@@ -382,12 +403,16 @@ void MeshLoader::import(MeshImportArgs args, PMeshAsset meshAsset)
     {
         for(uint32 i = 0; i < meshNode->mNumMeshes; ++i)
         {
+            if (globalMeshes[meshNode->mMeshes[i]] == nullptr)
+            {
+                continue;
+            }
             meshes.add(std::move(globalMeshes[meshNode->mMeshes[i]]));
+            meshes.back()->transform = loadNodeTransform(meshNode);
         }
     }
     meshAsset->meshes = std::move(meshes);
     meshAsset->physicsMesh = std::move(collider);
-
 
     auto stream = AssetRegistry::createWriteStream((std::filesystem::path(meshAsset->getFolderPath()) / meshAsset->getName()).replace_extension("asset").string(), std::ios::binary);
 

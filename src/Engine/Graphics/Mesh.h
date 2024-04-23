@@ -11,6 +11,8 @@ public:
     Mesh();
     ~Mesh();
 
+    // transform from importing
+    Matrix4 transform = Matrix4(1);
     VertexData* vertexData;
     MeshId id;
     uint64 vertexCount;

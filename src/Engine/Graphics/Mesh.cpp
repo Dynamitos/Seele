@@ -14,6 +14,7 @@ Mesh::~Mesh()
 
 void Mesh::save(ArchiveBuffer& buffer) const
 {
+    Serialization::save(buffer, transform);
     Serialization::save(buffer, vertexData->getTypeName());
     Serialization::save(buffer, vertexCount);
     Serialization::save(buffer, indices);
@@ -25,6 +26,7 @@ void Mesh::save(ArchiveBuffer& buffer) const
 void Mesh::load(ArchiveBuffer& buffer)
 {
     std::string typeName;
+    Serialization::load(buffer, transform);
     Serialization::load(buffer, typeName);
     Serialization::load(buffer, vertexCount);
     vertexData = VertexData::findByTypeName(typeName);

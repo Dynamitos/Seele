@@ -40,7 +40,7 @@ void VertexData::updateMesh(PMesh mesh, Component::Transform& transform)
     {
         matInstanceData.meshes.add(MeshInstanceData{
             .instance = InstanceData {
-                .transformMatrix = transform.toMatrix(),
+                .transformMatrix = mesh->transform * transform.toMatrix(),
             },
             .data = data,
             });

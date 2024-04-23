@@ -150,5 +150,6 @@ void ShaderCompiler::createShaders(ShaderPermutation permutation, Gfx::OPipeline
 		createInfo.entryPoint = "fragmentMain";
 		collection.fragmentShader = graphics->createFragmentShader(createInfo);
 	}
+	collection.pipelineLayout->create();
 	shaders[perm] = std::move(collection);
 }

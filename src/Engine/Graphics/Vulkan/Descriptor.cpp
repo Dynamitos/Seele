@@ -324,11 +324,15 @@ PipelineLayout::~PipelineLayout() {}
 Map<uint32, VkPipelineLayout> cachedLayouts;
 
 void PipelineLayout::create() {
-  vulkanDescriptorLayouts.resize(descriptorSetLayouts.size());
   for (auto [name, desc] : descriptorSetLayouts) {
     PDescriptorLayout layout = desc.cast<DescriptorLayout>();
     layout->create();
-    vulkanDescriptorLayouts[parameterMapping[layout->getName()]] = layout->getHandle();
+    uint32 parameterIndex = parameterMapping[layout->getName()];
+    if (parameterIndex > vulkanDescriptorLayouts.size())
+    {
+        vulkanDescriptorLayouts.resize(parameterIndex + 1);
+    }
+    vulkanDescriptorLayouts[parameterIndex] = layout->getHandle();
   }
 
   Array<VkPushConstantRange> vkPushConstants(pushConstants.size());
