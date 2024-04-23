@@ -84,7 +84,7 @@ DEFINE_REF(DescriptorSet)
 
 class PipelineLayout : public Gfx::PipelineLayout {
 public:
-  PipelineLayout(PGraphics graphics, Gfx::PPipelineLayout baseLayout);
+  PipelineLayout(PGraphics graphics, const std::string& name, Gfx::PPipelineLayout baseLayout);
   virtual ~PipelineLayout();
   virtual void create();
   constexpr VkPipelineLayout getHandle() const { return layoutHandle; }

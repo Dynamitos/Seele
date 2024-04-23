@@ -143,6 +143,7 @@ void Window::endFrame()
         VK_CHECK(r);
     }
     currentSemaphoreIndex = (currentSemaphoreIndex + 1) % Gfx::numFramesBuffered;
+    graphics->waitDeviceIdle();
 }
 
 void Window::onWindowCloseEvent()

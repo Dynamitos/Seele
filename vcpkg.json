@@ -12,7 +12,6 @@
         "fmt",
         "gtest",
         "vulkan-memory-allocator",
-        "shader-slang",
-        "glslang"
+        "shader-slang"
     ]
 }

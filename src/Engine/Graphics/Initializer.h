@@ -118,9 +118,9 @@ struct ShaderBufferCreateInfo
 DECLARE_NAME_REF(Gfx, PipelineLayout)
 struct ShaderCreateInfo
 {
+    std::string                             name; // Debug info
     std::string                             mainModule;
     Array<std::string>                      additionalModules;
-    std::string                             name; // Debug info
     std::string                             entryPoint;
     Array<Pair<const char*, const char*>>   typeParameter;
     Map<const char*, const char*>           defines;

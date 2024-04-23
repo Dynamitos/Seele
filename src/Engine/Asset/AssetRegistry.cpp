@@ -323,15 +323,15 @@ void AssetRegistry::saveAsset(PAsset asset, uint64 identifier, const std::filesy
 
     std::string path = (folderPath / name).replace_extension("asset").string();
     auto assetStream = createWriteStream(std::move(path), std::ios::binary);
-    ArchiveBuffer assetBuffer(graphics);
+    ArchiveBuffer buffer(graphics);
     // write identifier
-    Serialization::save(assetBuffer, identifier);
+    Serialization::save(buffer, identifier);
     // write name
-    Serialization::save(assetBuffer, name);
+    Serialization::save(buffer, name);
     // write folder
-    Serialization::save(assetBuffer, folderPath.string());
+    Serialization::save(buffer, folderPath.string());
     // write asset data
-    asset->save(assetBuffer);
+    asset->save(buffer);
     assetBuffer.writeToStream(assetStream);
 }
 

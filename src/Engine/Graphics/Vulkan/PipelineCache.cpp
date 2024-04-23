@@ -252,7 +252,7 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo gf
     int64 delta = std::chrono::duration_cast<std::chrono::microseconds>(endTime - beginTime).count();
     std::cout << "Gfx creation time: " << delta << std::endl;
     
-    OGraphicsPipeline pipeline = new GraphicsPipeline(graphics, pipelineHandle, std::move(gfxInfo.pipelineLayout));
+    OGraphicsPipeline pipeline = new GraphicsPipeline(graphics, pipelineHandle, gfxInfo.pipelineLayout);
     PGraphicsPipeline result = pipeline;
     graphicsPipelines[hash] = std::move(pipeline);
     return result;
@@ -423,7 +423,7 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::MeshPipelineCreateInfo gfxI
     int64 delta = std::chrono::duration_cast<std::chrono::microseconds>(endTime - beginTime).count();
     std::cout << "Gfx creation time: " << delta << std::endl;
 
-    OGraphicsPipeline pipeline = new GraphicsPipeline(graphics, pipelineHandle, std::move(gfxInfo.pipelineLayout));
+    OGraphicsPipeline pipeline = new GraphicsPipeline(graphics, pipelineHandle, gfxInfo.pipelineLayout);
     PGraphicsPipeline result = pipeline;
     graphicsPipelines[hash] = std::move(pipeline);
     return result;
@@ -462,7 +462,7 @@ PComputePipeline PipelineCache::createPipeline(Gfx::ComputePipelineCreateInfo co
     int64 delta = std::chrono::duration_cast<std::chrono::microseconds>(endTime - beginTime).count();
     std::cout << "Compute creation time: " << delta << std::endl;
 
-    OComputePipeline pipeline = new ComputePipeline(graphics, pipelineHandle, std::move(computeInfo.pipelineLayout));
+    OComputePipeline pipeline = new ComputePipeline(graphics, pipelineHandle, computeInfo.pipelineLayout);
     PComputePipeline result = pipeline;
     graphicsPipelines[hash] = std::move(pipeline);
     return result;

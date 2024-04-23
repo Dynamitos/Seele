@@ -279,7 +279,7 @@ void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet)
     descriptor->bind();
 
     VkDescriptorSet setHandle = descriptor->getHandle();
-    vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getLayout(), descriptorSet->getSetIndex(), 1, &setHandle, 0, nullptr);
+    vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getLayout(), pipeline->getPipelineLayout()->findParameter(descriptorSet->getName()), 1, &setHandle, 0, nullptr);
 }
 void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorSets)
 {
@@ -292,7 +292,7 @@ void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorS
         descriptorSet->bind();
 
         boundDescriptors.add(descriptorSet.getHandle());
-        sets[descriptorSet->getSetIndex()] = descriptorSet->getHandle();
+        sets[pipeline->getPipelineLayout()->findParameter(descriptorSet->getName())] = descriptorSet->getHandle();
     }
     vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getLayout(), 0, (uint32)descriptorSets.size(), sets, 0, nullptr);
     delete[] sets;
@@ -416,7 +416,7 @@ void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet)
     descriptor->bind();
     
     VkDescriptorSet setHandle = descriptor->getHandle();
-    vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->getLayout(), descriptorSet->getSetIndex(), 1, &setHandle, 0, nullptr);
+    vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->getLayout(), pipeline->getPipelineLayout()->findParameter(descriptorSet->getName()), 1, &setHandle, 0, nullptr);
 }
 
 void ComputeCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorSets) 
@@ -431,7 +431,7 @@ void ComputeCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptor
 
         //std::cout << "Binding descriptor " << descriptorSet->getHandle() << " to cmd " << handle << std::endl;
         boundDescriptors.add(descriptorSet.getHandle());
-        sets[descriptorSet->getSetIndex()] = descriptorSet->getHandle();
+        sets[pipeline->getPipelineLayout()->findParameter(descriptorSet->getName())] = descriptorSet->getHandle();
     }
     vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->getLayout(), 0, (uint32)descriptorSets.size(), sets, 0, nullptr);
     delete[] sets;
@@ -469,9 +469,9 @@ CommandPool::CommandPool(PGraphics graphics, PQueue queue)
 CommandPool::~CommandPool()
 {
     vkDeviceWaitIdle(graphics->getDevice());
-    for (auto& command : allocatedBuffers)
+    for (auto& cmd : allocatedBuffers)
     {
-        command->checkFence();
+        cmd->checkFence();
     }
     allocatedRenderCommands.clear();
     allocatedComputeCommands.clear();
@@ -487,17 +487,17 @@ PCommand CommandPool::getCommands()
 }
 void CommandPool::cacheCommands(Array<ORenderCommand> commands)
 {
-  for(auto&& command : commands)
+  for(auto&& cmd : commands)
   {
-    allocatedRenderCommands.add(std::move(command));
+    allocatedRenderCommands.add(std::move(cmd));
   }
 }
 
 void CommandPool::cacheCommands(Array<OComputeCommand> commands)
 {
-  for(auto&& command : commands)
+  for(auto&& cmd : commands)
   {
-    allocatedComputeCommands.add(std::move(command));
+    allocatedComputeCommands.add(std::move(cmd));
   }
 }
 

@@ -14,7 +14,7 @@ VertexInput::~VertexInput()
 {
 }
 
-GraphicsPipeline::GraphicsPipeline(PGraphics graphics, VkPipeline handle, Gfx::OPipelineLayout pipelineLayout)
+GraphicsPipeline::GraphicsPipeline(PGraphics graphics, VkPipeline handle, Gfx::PPipelineLayout pipelineLayout)
     : Gfx::GraphicsPipeline(std::move(pipelineLayout))
     , graphics(graphics)
     , pipeline(handle)
@@ -35,7 +35,7 @@ VkPipelineLayout GraphicsPipeline::getLayout() const
     return Gfx::PPipelineLayout(layout).cast<PipelineLayout>()->getHandle();  
 }
 
-ComputePipeline::ComputePipeline(PGraphics graphics, VkPipeline handle, Gfx::OPipelineLayout pipelineLayout) 
+ComputePipeline::ComputePipeline(PGraphics graphics, VkPipeline handle, Gfx::PPipelineLayout pipelineLayout) 
     : Gfx::ComputePipeline(std::move(pipelineLayout))
     , graphics(graphics)
     , pipeline(handle)

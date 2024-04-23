@@ -161,6 +161,7 @@ void DescriptorPool::reset() {
 DescriptorSet::DescriptorSet(PGraphics graphics, PDescriptorPool owner)
     : Gfx::DescriptorSet(owner->getLayout()), setHandle(VK_NULL_HANDLE), graphics(graphics), owner(owner), bindCount(0),
       currentlyInUse(false) {}
+
 DescriptorSet::~DescriptorSet() {}
 
 void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PUniformBuffer uniformBuffer) {
@@ -315,8 +316,8 @@ void DescriptorSet::writeChanges() {
   }
 }
 
-PipelineLayout::PipelineLayout(PGraphics graphics, Gfx::PPipelineLayout baseLayout)
-    : Gfx::PipelineLayout(baseLayout), graphics(graphics), layoutHandle(VK_NULL_HANDLE) {}
+PipelineLayout::PipelineLayout(PGraphics graphics, const std::string& name, Gfx::PPipelineLayout baseLayout)
+    : Gfx::PipelineLayout(name, baseLayout), graphics(graphics), layoutHandle(VK_NULL_HANDLE) {}
 
 PipelineLayout::~PipelineLayout() {}
 
@@ -324,15 +325,10 @@ Map<uint32, VkPipelineLayout> cachedLayouts;
 
 void PipelineLayout::create() {
   vulkanDescriptorLayouts.resize(descriptorSetLayouts.size());
-  for (size_t i = 0; i < descriptorSetLayouts.size(); ++i) {
-    // There could be unused descriptor set indices
-    if (descriptorSetLayouts[i] == nullptr) {
-      vulkanDescriptorLayouts[i] = VK_NULL_HANDLE;
-      continue;
-    }
-    PDescriptorLayout layout = descriptorSetLayouts[i].cast<DescriptorLayout>();
+  for (auto [name, desc] : descriptorSetLayouts) {
+    PDescriptorLayout layout = desc.cast<DescriptorLayout>();
     layout->create();
-    vulkanDescriptorLayouts[i] = layout->getHandle();
+    vulkanDescriptorLayouts[parameterMapping[layout->getName()]] = layout->getHandle();
   }
 
   Array<VkPushConstantRange> vkPushConstants(pushConstants.size());

@@ -102,24 +102,6 @@ VkShaderStageFlagBits Seele::Vulkan::cast(const Seele::Gfx::SeShaderStageFlagBit
         return VK_SHADER_STAGE_ALL_GRAPHICS;
     case SE_SHADER_STAGE_ALL:
         return VK_SHADER_STAGE_ALL;
-#ifdef USE_EXTENSIONS
-    case SE_SHADER_STAGE_RAYGEN_BIT_NV:
-        return VK_SHADER_STAGE_RAYGEN_BIT_NV;
-    case SE_SHADER_STAGE_ANY_HIT_BIT_NV:
-        return VK_SHADER_STAGE_ANY_HIT_BIT_NV;
-    case SE_SHADER_STAGE_CLOSEST_HIT_BIT_NV:
-        return VK_SHADER_STAGE_CLOSEST_HIT_BIT_NV;
-    case SE_SHADER_STAGE_MISS_BIT_NV:
-        return VK_SHADER_STAGE_MISS_BIT_NV;
-    case SE_SHADER_STAGE_INTERSECTION_BIT_NV:
-        return VK_SHADER_STAGE_INTERSECTION_BIT_NV;
-    case SE_SHADER_STAGE_CALLABLE_BIT_NV:
-        return VK_SHADER_STAGE_CALLABLE_BIT_NV;
-    case SE_SHADER_STAGE_TASK_BIT_NV:
-        return VK_SHADER_STAGE_TASK_BIT_NV;
-    case SE_SHADER_STAGE_MESH_BIT_NV:
-        return VK_SHADER_STAGE_MESH_BIT_NV;
-#endif
     default:    throw std::logic_error("Not implemented");
 
     }
@@ -145,24 +127,6 @@ Seele::Gfx::SeShaderStageFlagBits Seele::Vulkan::cast(const VkShaderStageFlagBit
         return SE_SHADER_STAGE_ALL_GRAPHICS;
     case VK_SHADER_STAGE_ALL:
         return SE_SHADER_STAGE_ALL;
-#ifdef USE_EXTENSIONS
-    case VK_SHADER_STAGE_RAYGEN_BIT_NV:
-        return SE_SHADER_STAGE_RAYGEN_BIT_NV;
-    case VK_SHADER_STAGE_ANY_HIT_BIT_NV:
-        return SE_SHADER_STAGE_ANY_HIT_BIT_NV;
-    case VK_SHADER_STAGE_CLOSEST_HIT_BIT_NV:
-        return SE_SHADER_STAGE_CLOSEST_HIT_BIT_NV;
-    case VK_SHADER_STAGE_MISS_BIT_NV:
-        return SE_SHADER_STAGE_MISS_BIT_NV;
-    case VK_SHADER_STAGE_INTERSECTION_BIT_NV:
-        return SE_SHADER_STAGE_INTERSECTION_BIT_NV;
-    case VK_SHADER_STAGE_CALLABLE_BIT_NV:
-        return SE_SHADER_STAGE_CALLABLE_BIT_NV;
-    case VK_SHADER_STAGE_TASK_BIT_NV:
-        return SE_SHADER_STAGE_TASK_BIT_NV;
-    case VK_SHADER_STAGE_MESH_BIT_NV:
-        return SE_SHADER_STAGE_MESH_BIT_NV;
-#endif
     default:    throw std::logic_error("Not implemented");
 
     }

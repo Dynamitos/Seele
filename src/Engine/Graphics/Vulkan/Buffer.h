@@ -4,6 +4,8 @@
 
 namespace Seele {
 namespace Vulkan {
+DECLARE_REF(Command)
+DECLARE_REF(Fence)
 class Buffer {
 public:
   Buffer(PGraphics graphics, uint64 size, VkBufferUsageFlags usage,
@@ -28,8 +30,10 @@ protected:
   uint64 size;
   Gfx::QueueType &owner;
   Array<BufferAllocation> buffers;
+  VkBufferUsageFlags usage;
   uint32 numBuffers;
   std::string name;
+  void createBuffer();
 
   void executeOwnershipBarrier(Gfx::QueueType newOwner);
   void executePipelineBarrier(VkAccessFlags srcAccess,

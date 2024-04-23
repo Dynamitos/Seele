@@ -5,12 +5,14 @@
 #include "Asset/MeshLoader.h"
 #include "Asset/TextureLoader.h"
 #include "Graphics/Initializer.h"
+#ifdef __APPLE__
 #include "Graphics/Metal/Graphics.h"
+#else
+#include "Graphics/Vulkan/Graphics.h"
+#endif
 #include "Graphics/StaticMeshVertexData.h"
 #include "Graphics/Vulkan/Graphics.h"
-#include "Window/InspectorView.h"
 #include "Window/PlayView.h"
-#include "Window/SceneView.h"
 #include "Window/WindowManager.h"
 #include <fmt/core.h>
 
@@ -21,6 +23,7 @@ using namespace Seele::Editor;
 static Gfx::OGraphics graphics;
 
 int main() {
+    std::string gameName = "MeshShadingDemo";
 #ifdef WIN32
   std::filesystem::path outputPath = "C:/Users/Dynamitos/MeshShadingDemoGame";
   std::filesystem::path sourcePath = "C:/Users/Dynamitos/MeshShadingDemo";
@@ -34,7 +37,6 @@ int main() {
   std::filesystem::path sourcePath = "/home/dynamitos/MeshShadingDemo";
   std::filesystem::path binaryPath = sourcePath / "cmake" / "libMeshShadingDemo.so";
 #endif
-  std::string gameName = "MeshShadingDemo";
   std::filesystem::path cmakePath = outputPath / "cmake";
 
 #ifdef __APPLE__
@@ -52,178 +54,12 @@ int main() {
   AssetImporter::importFont(FontImportArgs{
       .filePath = "./fonts/Calibri.ttf",
   });
-  // AssetImporter::importMesh(MeshImportArgs{
-  //     .filePath = sourcePath / "old_resources/models/arena.fbx",
-  //     });
-  // AssetImporter::importMesh(MeshImportArgs{
-  //     .filePath = sourcePath / "old_resources/models/frog.fbx",
-  //     });
-  // AssetImporter::importMesh(MeshImportArgs{
-  //     .filePath = sourcePath / "old_resources/models/train.fbx",
-  //     });
-  // AssetImporter::importMesh(MeshImportArgs{
-  //     .filePath= sourcePath / "old_resources/models/bird.fbx",
-  //     });
   AssetImporter::importMesh(MeshImportArgs{
       .filePath = sourcePath / "import/models/cube.fbx",
   });
-  // AssetImporter::importMesh(MeshImportArgs{
-  //     .filePath= sourcePath / "old_resources/models/flameThrower.fbx",
-  //     });
-  // AssetImporter::importMesh(MeshImportArgs{
-  //     .filePath= sourcePath / "old_resources/models/player.fbx",
-  //     });
-  // AssetImporter::importMesh(MeshImportArgs{
-  //     .filePath= sourcePath / "old_resources/models/shotgun.fbx",
-  //     });
-  // AssetImporter::importMesh(MeshImportArgs{
-  //     .filePath= sourcePath / "old_resources/models/track.fbx",
-  //     });
-  // AssetImporter::importMesh(MeshImportArgs{
-  //     .filePath= sourcePath / "old_resources/models/zombie.fbx",
-  //     });
-
-  // AssetImporter::importTexture(TextureImportArgs{
-  // .filePath= sourcePath / "old_resources/textures/Dirt.png",
-  // });
-  // AssetImporter::importTexture(TextureImportArgs{
-  // .filePath= sourcePath / "old_resources/textures/DirtGrass.png",
-  // });
-  // AssetImporter::importTexture(TextureImportArgs{
-  // .filePath= sourcePath / "old_resources/textures/Grass.png",
-  // });
-  // AssetImporter::importTexture(TextureImportArgs{
-  // .filePath= sourcePath / "old_resources/textures/Ice.png",
-  // });
-  // AssetImporter::importTexture(TextureImportArgs{
-  // .filePath= sourcePath / "old_resources/textures/Lava.png",
-  // });
-  // AssetImporter::importTexture(TextureImportArgs{
-  // .filePath= sourcePath / "old_resources/textures/Obsidian.png",
-  // });
-  // AssetImporter::importTexture(TextureImportArgs{
-  // .filePath= sourcePath / "old_resources/textures/Rocks.png",
-  // });
-  // AssetImporter::importTexture(TextureImportArgs{
-  // .filePath= sourcePath / "old_resources/textures/Sand.png",
-  // });
-  // AssetImporter::importTexture(TextureImportArgs{
-  // .filePath= sourcePath / "old_resources/textures/Water.png",
-  // });
-  // AssetImporter::importTexture(TextureImportArgs{
-  // .filePath= sourcePath / "old_resources/textures/Wood.png",
-  // });
-  //
-  // AssetImporter::importTexture(TextureImportArgs{
-  // .filePath= sourcePath / "old_resources/textures/level0/blendMap.png",
-  // .importPath = "level0",
-  // });
-  // AssetImporter::importTexture(TextureImportArgs{
-  // .filePath= sourcePath / "old_resources/textures/level0/heightMap.png",
-  // .importPath = "level0",
-  // });
-  // AssetImporter::importTexture(TextureImportArgs{
-  // .filePath= sourcePath / "old_resources/textures/level0/trackMap.png",
-  // .importPath = "level0",
-  // });
-  // AssetImporter::importMaterial(MaterialImportArgs{
-  // .filePath= sourcePath / "old_resources/shaders/TerrainMaterial.json",
-  // .importPath = "level0",
-  // });
-  // AssetImporter::importTexture(TextureImportArgs{
-  // .filePath= sourcePath / "old_resources/textures/level1/blendMap.png",
-  // .importPath = "level1",
-  // });
-  // AssetImporter::importTexture(TextureImportArgs{
-  // .filePath= sourcePath / "old_resources/textures/level1/heightMap.png",
-  // .importPath = "level1",
-  // });
-  // AssetImporter::importTexture(TextureImportArgs{
-  // .filePath= sourcePath / "old_resources/textures/level1/trackMap.png",
-  // .importPath = "level1",
-  // });
-  // AssetImporter::importTexture(TextureImportArgs{
-  // .filePath= sourcePath / "old_resources/textures/level2/blendMap.png",
-  // .importPath = "level2",
-  // });
-  // AssetImporter::importTexture(TextureImportArgs{
-  // .filePath= sourcePath / "old_resources/textures/level2/heightMap.png",
-  // .importPath = "level2",
-  // });
-  // AssetImporter::importTexture(TextureImportArgs{
-  // .filePath= sourcePath / "old_resources/textures/level2/trackMap.png",
-  // .importPath = "level2",
-  // });
-  // AssetImporter::importTexture(TextureImportArgs{
-  // .filePath= sourcePath / "old_resources/textures/level3/blendMap.png",
-  // .importPath = "level3",
-  // });
-  // AssetImporter::importTexture(TextureImportArgs{
-  // .filePath= sourcePath / "old_resources/textures/level3/heightMap.png",
-  // .importPath = "level3",
-  // });
-  // AssetImporter::importTexture(TextureImportArgs{
-  // .filePath= sourcePath / "old_resources/textures/level3/trackMap.png",
-  // .importPath = "level3",
-  // });
-  // AssetImporter::importTexture(TextureImportArgs{
-  // .filePath= sourcePath / "old_resources/textures/level4/blendMap.png",
-  // .importPath = "level4",
-  // });
-  // AssetImporter::importTexture(TextureImportArgs{
-  // .filePath= sourcePath / "old_resources/textures/level4/heightMap.png",
-  // .importPath = "level4",
-  // });
-  // AssetImporter::importTexture(TextureImportArgs{
-  // .filePath= sourcePath / "old_resources/textures/level4/trackMap.png",
-  // .importPath = "level4",
-  // });
-  // AssetImporter::importTexture(TextureImportArgs{
-  // .filePath= sourcePath / "old_resources/textures/level5/blendMap.png",
-  // .importPath = "level5",
-  // });
-  // AssetImporter::importTexture(TextureImportArgs{
-  // .filePath= sourcePath / "old_resources/textures/level5/heightMap.png",
-  // .importPath = "level5",
-  // });
-  // AssetImporter::importTexture(TextureImportArgs{
-  // .filePath= sourcePath / "old_resources/textures/level5/trackMap.png",
-  // .importPath = "level5",
-  // });
-  // AssetImporter::importTexture(TextureImportArgs{
-  // .filePath= sourcePath / "old_resources/textures/level6/blendMap.png",
-  // .importPath = "level6",
-  // });
-  // AssetImporter::importTexture(TextureImportArgs{
-  // .filePath= sourcePath / "old_resources/textures/level6/heightMap.png",
-  // .importPath = "level6",
-  // });
-  // AssetImporter::importTexture(TextureImportArgs{
-  // .filePath= sourcePath / "old_resources/textures/level6/trackMap.png",
-  // .importPath = "level6",
-  // });
-  // AssetImporter::importTexture(TextureImportArgs{
-  // .filePath= sourcePath / "old_resources/textures/level7/blendMap.png",
-  // .importPath = "level7",
-  // });
-  // AssetImporter::importTexture(TextureImportArgs{
-  // .filePath= sourcePath / "old_resources/textures/level7/heightMap.png",
-  // .importPath = "level7",
-  // });
-  // AssetImporter::importTexture(TextureImportArgs{
-  // .filePath= sourcePath / "old_resources/textures/level7/trackMap.png",
-  // .importPath = "level7",
-  // });
-  //
-  // AssetImporter::importTexture(TextureImportArgs{
-  // .filePath= sourcePath / "old_resources/skyboxes/FS000_Day_01.png",
-  // .type = TextureImportType::TEXTURE_CUBEMAP,
-  // });
-  // AssetImporter::importTexture(TextureImportArgs{
-  // .filePath= sourcePath / "old_resources/skyboxes/FS000_Night_01.png",
-  // .type = TextureImportType::TEXTURE_CUBEMAP,
-  // });
-
+  AssetImporter::importMesh(MeshImportArgs{
+      .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.blend"
+      });
   WindowCreateInfo mainWindowInfo;
   mainWindowInfo.title = "SeeleEngine";
   mainWindowInfo.width = 1920;
@@ -237,14 +73,6 @@ int main() {
   sceneViewInfo.dimensions.offset.y = 0;
   sceneViewInfo.numSamples = Gfx::SE_SAMPLE_COUNT_1_BIT;
   OGameView sceneView = new Editor::PlayView(graphics, window, sceneViewInfo, binaryPath.generic_string());
-
-  // ViewportCreateInfo inspectorViewInfo;
-  // inspectorViewInfo.dimensions.size.x = 640;
-  // inspectorViewInfo.dimensions.size.y = 720;
-  // inspectorViewInfo.dimensions.offset.x = 640;
-  // inspectorViewInfo.dimensions.offset.y = 0;
-  // PInspectorView inspectorView = new InspectorView(graphics, window, inspectorViewInfo);
-  // window->addView(inspectorView);
   sceneView->setFocused();
 
   while (windowManager->isActive()) {

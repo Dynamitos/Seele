@@ -1,5 +1,4 @@
 #include "slang-compile.h"
-#include <slang-com-ptr.h>
 #include <slang.h>
 #include "Containers/Array.h"
 #include <fmt/core.h>

@@ -73,18 +73,13 @@ public:
   virtual void setViewport(Gfx::PViewport viewport) override;
   virtual void bindPipeline(Gfx::PGraphicsPipeline pipeline) override;
   virtual void bindDescriptor(Gfx::PDescriptorSet descriptorSet) override;
-  virtual void
-  bindDescriptor(const Array<Gfx::PDescriptorSet> &descriptorSets) override;
-  virtual void
-  bindVertexBuffer(const Array<Gfx::PVertexBuffer> &buffers) override;
+  virtual void bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorSets) override;
+  virtual void bindVertexBuffer(const Array<Gfx::PVertexBuffer>& buffers) override;
   virtual void bindIndexBuffer(Gfx::PIndexBuffer indexBuffer) override;
-  virtual void pushConstants(Gfx::PPipelineLayout layout,
-                             Gfx::SeShaderStageFlags stage, uint32 offset,
-                             uint32 size, const void *data) override;
-  virtual void draw(uint32 vertexCount, uint32 instanceCount, int32 firstVertex,
-                    uint32 firstInstance) override;
-  virtual void drawIndexed(uint32 indexCount, uint32 instanceCount,
-                           int32 firstIndex, uint32 vertexOffset,
+  virtual void pushConstants(Gfx::PPipelineLayout layout, Gfx::SeShaderStageFlags stage, uint32 offset, uint32 size,
+                             const void* data) override;
+  virtual void draw(uint32 vertexCount, uint32 instanceCount, int32 firstVertex, uint32 firstInstance) override;
+  virtual void drawIndexed(uint32 indexCount, uint32 instanceCount, int32 firstIndex, uint32 vertexOffset,
                            uint32 firstInstance) override;
   virtual void drawMesh(uint32 groupX, uint32 groupY, uint32 groupZ) override;
 
@@ -113,12 +108,10 @@ public:
   bool isReady();
   virtual void bindPipeline(Gfx::PComputePipeline pipeline) override;
   virtual void bindDescriptor(Gfx::PDescriptorSet set) override;
-  virtual void bindDescriptor(const Array<Gfx::PDescriptorSet> &sets) override;
-  virtual void pushConstants(Gfx::PPipelineLayout layout,
-                             Gfx::SeShaderStageFlags stage, uint32 offset,
-                             uint32 size, const void *data) override;
-  virtual void dispatch(uint32 threadX, uint32 threadY,
-                        uint32 threadZ) override;
+  virtual void bindDescriptor(const Array<Gfx::PDescriptorSet>& sets) override;
+  virtual void pushConstants(Gfx::PPipelineLayout layout, Gfx::SeShaderStageFlags stage, uint32 offset, uint32 size,
+                             const void* data) override;
+  virtual void dispatch(uint32 threadX, uint32 threadY, uint32 threadZ) override;
 
 private:
   PComputePipeline pipeline;
@@ -141,8 +134,8 @@ public:
   PCommand getCommands();
   void cacheCommands(Array<ORenderCommand> commands);
   void cacheCommands(Array<OComputeCommand> commands);
-  ORenderCommand createRenderCommand(const std::string &name);
-  OComputeCommand createComputeCommand(const std::string &name);
+  ORenderCommand createRenderCommand(const std::string& name);
+  OComputeCommand createComputeCommand(const std::string& name);
   constexpr VkCommandPool getHandle() const { return commandPool; }
   void submitCommands(PSemaphore signalSemaphore = nullptr);
 

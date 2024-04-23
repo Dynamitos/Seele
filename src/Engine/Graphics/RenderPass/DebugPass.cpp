@@ -124,9 +124,9 @@ void DebugPass::createRenderPass()
     pipelineLayout->create();
 
     ShaderCreateInfo createInfo = {
+        .name = "DebugVertex",
         .mainModule = "Debug",
         .additionalModules = { "Debug" },
-        .name = "DebugVertex",
         .entryPoint = "vertexMain",
     };
     vertexShader = graphics->createVertexShader(createInfo);

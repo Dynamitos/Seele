@@ -67,6 +67,7 @@ public:
   bool operator<(PDescriptorSet other);
 
   constexpr PDescriptorLayout getLayout() const { return layout; }
+  constexpr const std::string& getName() const { return layout->getName(); }
 
 protected:
   PDescriptorLayout layout;
@@ -83,7 +84,7 @@ public:
   void addPushConstants(const SePushConstantRange& pushConstants);
   constexpr uint32 getHash() const { return layoutHash; }
   constexpr const Map<std::string, PDescriptorLayout>& getLayouts() const { return descriptorSetLayouts; }
-  constexpr uint32 findParameter(const std::string& name) const { return parameterMapping[name]; }
+  constexpr uint32 findParameter(const std::string& param) const { return parameterMapping[param]; }
     void addMapping(Map<std::string, uint32> mapping);
     constexpr std::string getName() const {return name;};
 

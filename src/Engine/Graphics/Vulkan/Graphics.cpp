@@ -247,9 +247,9 @@ Gfx::ODescriptorLayout Graphics::createDescriptorLayout(const std::string& name)
     return new DescriptorLayout(this, name);
 }
 
-Gfx::OPipelineLayout Graphics::createPipelineLayout(Gfx::PPipelineLayout baseLayout)
+Gfx::OPipelineLayout Graphics::createPipelineLayout(const std::string& name, Gfx::PPipelineLayout baseLayout)
 {
-    return new PipelineLayout(this, baseLayout);
+    return new PipelineLayout(this, name, baseLayout);
 }
 
 Gfx::OVertexInput Graphics::createVertexInput(VertexInputStateCreateInfo createInfo)
