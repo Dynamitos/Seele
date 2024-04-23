@@ -22,7 +22,7 @@ struct CullingParams
     RWTexture2D<uint2> oLightGrid;
     RWTexture2D<uint2> tLightGrid;
 };
-layout(set=2)
+
 ParameterBlock<CullingParams> pCullingParams;
 // Debug
 //Texture2D lightCountHeatMap;

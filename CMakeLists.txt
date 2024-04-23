@@ -125,6 +125,8 @@ add_subdirectory(src/)
 if(WIN32)
     add_custom_target(dll_copy ALL
         COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:Engine> $<TARGET_FILE_DIR:Editor>
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SLANG_ROOT}/slang.dll $<TARGET_FILE_DIR:Editor>
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SLANG_ROOT}/slang-glslang.dll $<TARGET_FILE_DIR:Editor>
         COMMAND_EXPAND_LISTS
         DEPENDS Editor)
 elseif(APPLE)

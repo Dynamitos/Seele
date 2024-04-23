@@ -38,9 +38,8 @@ struct Scene
 	StructuredBuffer<InstanceData> instances;
 	StructuredBuffer<MeshData> meshData;
 	StructuredBuffer<MeshletDescription> meshletInfos;
-  // uint8_t is not valid in DXIL
-	StructuredBuffer<uint32_t> primitiveIndices;
+	StructuredBuffer<uint8_t> primitiveIndices;
 	StructuredBuffer<uint32_t> vertexIndices;
 };
-uniform ParameterBlock<Scene> pScene;
+ParameterBlock<Scene> pScene;
 

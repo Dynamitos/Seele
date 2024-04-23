@@ -28,11 +28,11 @@ uint32 Seele::Vulkan::Shader::getShaderHash() const
     return hash;
 }
 
-void Shader::create(const ShaderCreateInfo& createInfo)
+void Shader::create(ShaderCreateInfo createInfo)
 {
   Map<std::string, uint32> paramMapping;
   Slang::ComPtr<slang::IBlob> kernelBlob = generateShader(createInfo, SLANG_SPIRV, paramMapping);
-  const_cast<Gfx::PipelineLayout*>(createInfo.rootSignature.getHandle())->addMapping(paramMapping);
+  createInfo.rootSignature->addMapping(paramMapping);
     VkShaderModuleCreateInfo moduleInfo =
     {
         .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
@@ -44,16 +44,4 @@ void Shader::create(const ShaderCreateInfo& createInfo)
     VK_CHECK(vkCreateShaderModule(graphics->getDevice(), &moduleInfo, nullptr, &module));
 
     hash = CRC::Calculate(kernelBlob->getBufferPointer(), kernelBlob->getBufferSize(), CRC::CRC_32(), hash);
-    /*
-    specializedComponent->getEntryPointCode(
-        0,
-        1,
-        kernelBlob.writeRef(),
-        diagnostics.writeRef()
-    );
-    CHECK_DIAGNOSTICS();
-    std::ofstream shaderStream(createInfo.name + createInfo.entryPoint + ".glsl");
-    shaderStream << (char*)kernelBlob->getBufferPointer();
-    shaderStream.close();
-    */
 }

@@ -123,13 +123,6 @@ void LightCullingPass::publishOutputs()
     cullingLayout->addDescriptorLayout(dispatchParamsLayout);
     cullingLayout->addDescriptorLayout(cullingDescriptorLayout);
     cullingLayout->addDescriptorLayout(lightEnv->getDescriptorLayout());
-    Map<std::string, uint32> mapping;
-    mapping["pViewParams"] = 1;
-    mapping["pDispatchParams"] = 2;
-    mapping["pCullingParams"] = 0;
-    mapping["pLightEnv"] = 3;
-    cullingLayout->addMapping(mapping);
-    cullingLayout->create();
     
     ShaderCreateInfo createInfo = {
         .name = "Culling",
@@ -139,6 +132,7 @@ void LightCullingPass::publishOutputs()
         .rootSignature = cullingLayout,
     };
     cullingShader = graphics->createComputeShader(createInfo);
+    cullingLayout->create();
 
     Gfx::ComputePipelineCreateInfo pipelineInfo;
     pipelineInfo.computeShader = cullingShader;
@@ -215,15 +209,9 @@ void LightCullingPass::setupFrustums()
     dispatchParamsLayout = graphics->createDescriptorLayout("pDispatchParams");
     dispatchParamsLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 0, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER, });
     dispatchParamsLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 1, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER, .access = Gfx::SE_DESCRIPTOR_ACCESS_WRITE_ONLY_BIT });
-    dispatchParamsLayout->create();
     frustumLayout = graphics->createPipelineLayout("FrustumLayout");
     frustumLayout->addDescriptorLayout(viewParamsLayout);
     frustumLayout->addDescriptorLayout(dispatchParamsLayout);
-    Map<std::string, uint32> mapping;
-    mapping["pViewParams"] = 0;
-    mapping["pDispatchParams"] = 1;
-    frustumLayout->addMapping(mapping);
-    frustumLayout->create();
     ShaderCreateInfo createInfo = {
         .name = "Frustum",
         .mainModule = "ComputeFrustums",
@@ -233,6 +221,9 @@ void LightCullingPass::setupFrustums()
     };
     std::cout << "Compiling frustumShader" << std::endl;
     frustumShader = graphics->createComputeShader(createInfo);
+    // Have to compile shader before finalizing layout as parameters get mapped later
+    frustumLayout->create();
+    dispatchParamsLayout->create();
 
     Gfx::ComputePipelineCreateInfo pipelineInfo;
     pipelineInfo.computeShader = frustumShader;

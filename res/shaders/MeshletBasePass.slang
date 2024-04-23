@@ -65,12 +65,6 @@ struct PrimitiveAttributes
 	uint cull: SV_CullPrimitive;
 };
 
-uint unpackPrimitiveIndices(uint index)
-{
-  uint32_t packed = pScene.primitiveIndices[index / 4];
-  return (packed >> (index % 4)) & 0xff;
-}
-
 [numthreads(MESH_GROUP_SIZE, 1, 1)]
 [outputtopology("triangle")]
 [shader("mesh")]

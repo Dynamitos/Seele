@@ -15,7 +15,7 @@ public:
     Shader(PGraphics graphics, VkShaderStageFlags stage);
     virtual ~Shader();
 
-    void create(const ShaderCreateInfo& createInfo);
+    void create(ShaderCreateInfo createInfo);
 
     constexpr VkShaderModule getModuleHandle() const
     {

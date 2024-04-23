@@ -8,5 +8,4 @@ struct DispatchParams
 	uint pad1;
 	RWStructuredBuffer<Frustum> frustums;
 }
-layout(set=1)
 ParameterBlock<DispatchParams> pDispatchParams;

@@ -16,13 +16,17 @@ Slang::ComPtr<slang::IBlob> Seele::generateShader(const ShaderCreateInfo& create
     }
     slang::SessionDesc sessionDesc;
     sessionDesc.flags = 0;
-    slang::CompilerOptionEntry option;
-    option.name = slang::CompilerOptionName::IgnoreCapabilities;
-    option.value = slang::CompilerOptionValue();
-    option.value.kind = slang::CompilerOptionValueKind::Int;
-    option.value.intValue0 = 1;
-    sessionDesc.compilerOptionEntries = &option;
-    sessionDesc.compilerOptionEntryCount = 1;
+    slang::CompilerOptionEntry option[2];
+    option[0].name = slang::CompilerOptionName::DumpIntermediates;
+    option[0].value = slang::CompilerOptionValue();
+    option[0].value.kind = slang::CompilerOptionValueKind::Int;
+    option[0].value.intValue0 = 1;
+    option[1].name = slang::CompilerOptionName::IgnoreCapabilities;
+    option[1].value = slang::CompilerOptionValue();
+    option[1].value.kind = slang::CompilerOptionValueKind::Int;
+    option[1].value.intValue0 = 1;
+    sessionDesc.compilerOptionEntries = option;
+    sessionDesc.compilerOptionEntryCount = 2;
     sessionDesc.defaultMatrixLayoutMode = SLANG_MATRIX_LAYOUT_COLUMN_MAJOR;
     Array<slang::PreprocessorMacroDesc> macros;
     for(const auto& [key, val] : createInfo.defines)
@@ -37,8 +41,8 @@ Slang::ComPtr<slang::IBlob> Seele::generateShader(const ShaderCreateInfo& create
     slang::TargetDesc targetDesc;
     targetDesc.profile = globalSession->findProfile("sm_6_6");
     targetDesc.format = target;
-    targetDesc.compilerOptionEntryCount = 1;
-    targetDesc.compilerOptionEntries = &option;
+    targetDesc.compilerOptionEntryCount = 2;
+    targetDesc.compilerOptionEntries = option;
     sessionDesc.targetCount = 1;
     sessionDesc.targets = &targetDesc;
     StaticArray<const char*, 3> searchPaths = {"shaders/", "shaders/lib/", "shaders/generated/"};
@@ -99,16 +103,11 @@ Slang::ComPtr<slang::IBlob> Seele::generateShader(const ShaderCreateInfo& create
     CHECK_DIAGNOSTICS();
     slang::ProgramLayout* signature = specializedComponent->getLayout(0, diagnostics.writeRef());
     CHECK_DIAGNOSTICS();
-    auto entry = signature->findEntryPointByName(createInfo.entryPoint.c_str());
-    uint32 offset = 0;
-    if(target == SLANG_DXIL)
-    {
-      offset = 1;// idk why
-    }
     for(size_t i = 0; i < signature->getParameterCount(); ++i)
     {
         auto param = signature->getParameterByIndex(i);
-        paramMapping[param->getName()] = offset++;
+        paramMapping[param->getName()] = param->getBindingIndex();
+        std::cout << "Parameter " << param->getName() << " index " << param->getBindingIndex() << std::endl;
     }
     return kernelBlob;
 }

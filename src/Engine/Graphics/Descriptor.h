@@ -8,8 +8,8 @@ namespace Gfx {
 struct DescriptorBinding {
   uint32 binding = 0;
   SeDescriptorType descriptorType = SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-  SeImageViewType textureType;
-  uint32 descriptorCount = 0x7fff;
+  SeImageViewType textureType = SE_IMAGE_VIEW_TYPE_2D;
+  uint32 descriptorCount = 1;
   SeDescriptorBindingFlags bindingFlags = 0;
   SeShaderStageFlags shaderStages = SE_SHADER_STAGE_ALL;
   Gfx::SeDescriptorAccessTypeFlags access = SE_DESCRIPTOR_ACCESS_READ_ONLY_BIT;
