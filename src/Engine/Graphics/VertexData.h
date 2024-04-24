@@ -99,7 +99,7 @@ protected:
     Map<MeshId, uint64> meshOffsets;
     Map<MeshId, uint64> meshVertexCounts;
     Array<MeshletDescription> meshlets;
-    Array<uint32> primitiveIndices;
+    Array<uint8> primitiveIndices;
     Array<uint32> vertexIndices;
     Array<uint32> indices;
     Gfx::PGraphics graphics;

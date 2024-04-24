@@ -30,7 +30,6 @@ private:
     void loadGlobalMeshes(const aiScene* scene, const Array<PMaterialInstanceAsset>& materials, Array<OMesh>& globalMeshes, Component::Collider& collider);
     void convertAssimpARGB(unsigned char* dst, aiTexel* src, uint32 numPixels);
 
-    Matrix4 loadNodeTransform(aiNode* node);
     void import(MeshImportArgs args, PMeshAsset meshAsset);
     Gfx::PGraphics graphics;
 };

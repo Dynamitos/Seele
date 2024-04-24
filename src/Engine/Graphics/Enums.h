@@ -169,8 +169,8 @@ static constexpr bool useMeshShading = true;
 static constexpr uint32 numFramesBuffered = 3;
 
 // meshlet dimensions curated by NVIDIA
-static constexpr uint32 numVerticesPerMeshlet = 64;
-static constexpr uint32 numPrimitivesPerMeshlet = 126;
+static constexpr uint32 numVerticesPerMeshlet = 256;
+static constexpr uint32 numPrimitivesPerMeshlet = 256;
 double getCurrentFrameDelta();
 uint32 getCurrentFrameIndex();
 

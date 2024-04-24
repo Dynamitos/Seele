@@ -2,6 +2,7 @@
 #include "Containers/Map.h"
 #include "Containers/List.h"
 #include "Containers/Set.h"
+#include <iostream>
 
 using namespace Seele;
 
@@ -194,7 +195,7 @@ bool addTriangle(const Array<Vector>& positions, Meshlet &current, Triangle& tri
     int f2 = findIndex(current, tri.indices[1]);
     int f3 = findIndex(current, tri.indices[2]);
 
-    if (f1 == -1 || f2 == -1 || f3 == -1)
+    if (f1 == -1 || f2 == -1 || f3 == -1 || current.numPrimitives == Gfx::numPrimitivesPerMeshlet)
     {
         return false;
     }
@@ -214,16 +215,16 @@ void Meshlet::build(const Array<Vector> &positions, const Array<uint32> &indices
         .numVertices = 0,
         .numPrimitives = 0,
     };
-    Array<uint32> optimizedIndices;
-    tipsifyIndexBuffer(indices, positions.size(), 25, optimizedIndices);
-    Array<Triangle> triangles(optimizedIndices.size() / 3);
+    //Array<uint32> optimizedIndices = indices;
+    //tipsifyIndexBuffer(indices, positions.size(), 25, optimizedIndices);
+    Array<Triangle> triangles(indices.size() / 3);
     for (size_t i = 0; i < triangles.size(); ++i)
     {
         triangles[i] = Triangle{
             .indices = {
-                optimizedIndices[i * 3 + 0],
-                optimizedIndices[i * 3 + 1],
-                optimizedIndices[i * 3 + 2],
+                indices[i * 3 + 0],
+                indices[i * 3 + 1],
+                indices[i * 3 + 2],
             },
         };
     }

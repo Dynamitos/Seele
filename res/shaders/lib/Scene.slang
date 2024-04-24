@@ -22,8 +22,8 @@ struct MeshData
   uint32_t pad0[3];
 };
 
-static const uint MAX_VERTICES = 64;
-static const uint MAX_PRIMITIVES = 126;
+static const uint MAX_VERTICES = 256;
+static const uint MAX_PRIMITIVES = 256;
 static const uint TASK_GROUP_SIZE = 128;
 static const uint MESH_GROUP_SIZE = 32;
 static const uint MAX_MESHLETS_PER_MESH = 512;
@@ -41,6 +41,6 @@ struct Scene
 	StructuredBuffer<uint8_t> primitiveIndices;
 	StructuredBuffer<uint32_t> vertexIndices;
 };
-layout(set=1)
+layout(set=2)
 ParameterBlock<Scene> pScene;
 

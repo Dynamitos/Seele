@@ -63,4 +63,5 @@ struct LightEnv
     StructuredBuffer<PointLight> pointLights;
     uint numPointLights;
 };
+layout(set=3)
 ParameterBlock<LightEnv> pLightEnv;

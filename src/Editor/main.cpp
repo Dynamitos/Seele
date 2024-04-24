@@ -58,7 +58,7 @@ int main() {
       .filePath = sourcePath / "import/models/cube.fbx",
   });
   AssetImporter::importMesh(MeshImportArgs{
-      .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.blend",
+      .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.obj",
       .importPath = "Whitechapel"
       });
   WindowCreateInfo mainWindowInfo;

@@ -11,5 +11,5 @@ interface IVertexData
 	VertexAttributes getAttributes(uint index);
 };
 
-layout(set=2)
+layout(set=1)
 ParameterBlock<IVertexData> pVertexData;

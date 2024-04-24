@@ -328,7 +328,7 @@ void PipelineLayout::create() {
     PDescriptorLayout layout = desc.cast<DescriptorLayout>();
     layout->create();
     uint32 parameterIndex = parameterMapping[layout->getName()];
-    if (parameterIndex > vulkanDescriptorLayouts.size())
+    if (parameterIndex >= vulkanDescriptorLayouts.size())
     {
         vulkanDescriptorLayouts.resize(parameterIndex + 1);
     }

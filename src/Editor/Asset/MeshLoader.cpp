@@ -78,7 +78,7 @@ void MeshLoader::loadMaterials(const aiScene* scene, const std::string& baseName
                 matCode["params"]["diffuseTexture"] =
                 {
                     {"type", "Texture2D"},
-                    {"default", texFilename.string()}
+                    {"default", fmt::format("{0}/{1}", importPath, texFilename.string())}
                 };
                 matCode["params"]["diffuseSampler"] =
                 {
@@ -123,7 +123,7 @@ void MeshLoader::loadMaterials(const aiScene* scene, const std::string& baseName
             matCode["params"]["normalTexture"] =
             {
                 {"type", "Texture2D"},
-                {"default", texFilename.string()}
+                {"default", fmt::format("{0}/{1}", importPath, texFilename.string())}
             };
             matCode["params"]["normalSampler"] =
             {
@@ -326,25 +326,28 @@ void MeshLoader::loadTextures(const aiScene* scene, const std::filesystem::path&
         aiTexture* tex = scene->mTextures[i];
         auto texPath = std::filesystem::path(tex->mFilename.C_Str());
         auto texPngPath = meshDirectory;
-        texPngPath.append(texPath.filename().string());
-        if(tex->mHeight == 0)
+        texPngPath.append(fmt::format("{0}.{1}", texPath.filename().string(), tex->achFormatHint));
+        if (!std::filesystem::exists(texPngPath))
         {
-            // already compressed, just dump it to the disk
-            std::ofstream file(texPngPath, std::ios::binary);
-            file.write((const char*)tex->pcData, tex->mWidth);
-            file.flush();
-        }
-        else
-        {
-            // recompress data so that the TextureLoader can read it
-            unsigned char* texData = new unsigned char[tex->mWidth * tex->mHeight * 4];
-            convertAssimpARGB(texData, tex->pcData, tex->mWidth * tex->mHeight);
-            stbi_write_png(texPngPath.string().c_str(), tex->mWidth, tex->mHeight, 4, tex->pcData, tex->mWidth * 32);
-            delete[] texData;
+            if (tex->mHeight == 0)
+            {
+                // already compressed, just dump it to the disk
+                std::ofstream file(texPngPath, std::ios::binary);
+                file.write((const char*)tex->pcData, tex->mWidth);
+                file.flush();
+            }
+            else
+            {
+                // recompress data so that the TextureLoader can read it
+                unsigned char* texData = new unsigned char[tex->mWidth * tex->mHeight * 4];
+                convertAssimpARGB(texData, tex->pcData, tex->mWidth * tex->mHeight);
+                stbi_write_png(texPngPath.string().c_str(), tex->mWidth, tex->mHeight, 4, tex->pcData, tex->mWidth * 32);
+                delete[] texData;
+            }
         }
         std::cout << "Loading model texture " << texPngPath.string() << std::endl;
         AssetImporter::importTexture(TextureImportArgs {
-            .filePath = texPath,
+            .filePath = texPngPath,
             .importPath = importPath,
             });
     }
@@ -353,21 +356,21 @@ void MeshLoader::loadTextures(const aiScene* scene, const std::filesystem::path&
 Matrix4 convertMatrix(aiMatrix4x4 matrix)
 {
     return Matrix4(
-        matrix.a1, matrix.a2, matrix.a3, matrix.a4,
-        matrix.b1, matrix.b2, matrix.b3, matrix.b4,
-        matrix.c1, matrix.c2, matrix.c3, matrix.c4,
-        matrix.d1, matrix.d2, matrix.d3, matrix.d4
+        matrix.a1, matrix.b1, matrix.c1, matrix.d1,
+        matrix.a2, matrix.b2, matrix.c2, matrix.d2,
+        matrix.a3, matrix.b3, matrix.c3, matrix.d3,
+        matrix.a4, matrix.b4, matrix.c4, matrix.d4
     );
 }
 
-Matrix4 MeshLoader::loadNodeTransform(aiNode* node)
+aiMatrix4x4 loadNodeTransform(aiNode* node)
 {
-    Matrix4 parent = Matrix4(1);
+    aiMatrix4x4 parent = aiMatrix4x4();
     if (node->mParent != nullptr)
     {
         parent = loadNodeTransform(node->mParent);
     }
-    return parent * convertMatrix(node->mTransformation);
+    return node->mTransformation * parent;
 }
 
 void MeshLoader::import(MeshImportArgs args, PMeshAsset meshAsset)
@@ -382,10 +385,11 @@ void MeshLoader::import(MeshImportArgs args, PMeshAsset meshAsset)
         aiProcess_SortByPType |
         aiProcess_GenBoundingBoxes |
         aiProcess_GenSmoothNormals |
+        aiProcess_ImproveCacheLocality | 
         aiProcess_GenUVCoords |
-        aiProcess_SortByPType |
         aiProcess_FindDegenerates));
     const aiScene *scene = importer.ApplyPostProcessing(aiProcess_CalcTangentSpace);
+    std::cout << importer.GetErrorString() << std::endl;
 
     Array<PMaterialInstanceAsset> globalMaterials(scene->mNumMaterials);
     loadTextures(scene, args.filePath.parent_path(), args.importPath);
@@ -408,7 +412,7 @@ void MeshLoader::import(MeshImportArgs args, PMeshAsset meshAsset)
                 continue;
             }
             meshes.add(std::move(globalMeshes[meshNode->mMeshes[i]]));
-            meshes.back()->transform = loadNodeTransform(meshNode);
+            meshes.back()->transform = convertMatrix(loadNodeTransform(meshNode));
         }
     }
     meshAsset->meshes = std::move(meshes);

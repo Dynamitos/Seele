@@ -16,7 +16,7 @@ Slang::ComPtr<slang::IBlob> Seele::generateShader(const ShaderCreateInfo& create
     }
     slang::SessionDesc sessionDesc;
     sessionDesc.flags = 0;
-    StaticArray<slang::CompilerOptionEntry, 4> option;
+    StaticArray<slang::CompilerOptionEntry, 2> option;
     option[0].name = slang::CompilerOptionName::DumpIntermediates;
     option[0].value = slang::CompilerOptionValue();
     option[0].value.kind = slang::CompilerOptionValueKind::Int;
@@ -25,14 +25,6 @@ Slang::ComPtr<slang::IBlob> Seele::generateShader(const ShaderCreateInfo& create
     option[1].value = slang::CompilerOptionValue();
     option[1].value.kind = slang::CompilerOptionValueKind::Int;
     option[1].value.intValue0 = 1;
-    option[2].name = slang::CompilerOptionName::DebugInformation;
-    option[2].value = slang::CompilerOptionValue();
-    option[2].value.kind = slang::CompilerOptionValueKind::Int;
-    option[2].value.intValue0 = 3;
-    option[3].name = slang::CompilerOptionName::DebugInformationFormat;
-    option[3].value = slang::CompilerOptionValue();
-    option[3].value.kind = slang::CompilerOptionValueKind::Int;
-    option[3].value.stringValue0 = "c7";
     sessionDesc.compilerOptionEntries = option.data();
     sessionDesc.compilerOptionEntryCount = option.size();
     sessionDesc.defaultMatrixLayoutMode = SLANG_MATRIX_LAYOUT_COLUMN_MAJOR;
@@ -112,8 +104,19 @@ Slang::ComPtr<slang::IBlob> Seele::generateShader(const ShaderCreateInfo& create
     for(size_t i = 0; i < signature->getParameterCount(); ++i)
     {
         auto param = signature->getParameterByIndex(i);
-        paramMapping[param->getName()] = param->getBindingIndex();
-        std::cout << "Parameter " << param->getName() << " index " << param->getBindingIndex() << std::endl;
+        // workaround
+        if (std::strcmp(param->getName(), "pVertexData") == 0)
+        {
+            paramMapping[param->getName()] = 1;
+        }
+        else if (std::strcmp(param->getName(), "pMaterial") == 0)
+        {
+            paramMapping[param->getName()] = 4;
+        }
+        else
+        {
+            paramMapping[param->getName()] = param->getBindingIndex();
+        }
     }
     return kernelBlob;
 }
