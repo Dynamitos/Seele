@@ -314,7 +314,7 @@ protected:
     constexpr iterator find(const key_type& key) const
     {
         Node* it = root;
-        while (!equal(it->data, key))
+        while (it != nullptr && !equal(it->data, key))
         {
             if (comp(key, keyFun(it->data)))
             {
@@ -324,6 +324,10 @@ protected:
             {
                 it = it->rightChild;
             }
+        }
+        if (it == nullptr)
+        {
+            return end();
         }
         return iterator(it);
     }

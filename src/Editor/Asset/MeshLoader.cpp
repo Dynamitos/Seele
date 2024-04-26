@@ -77,18 +77,13 @@ void MeshLoader::loadMaterials(const aiScene* scene, const std::string& baseName
                     });
                 matCode["params"]["diffuseTexture"] =
                 {
-                    {"type", "Texture2D"},
+                    {"type", "Sampler2D"},
                     {"default", fmt::format("{0}/{1}", importPath, texFilename.string())}
-                };
-                matCode["params"]["diffuseSampler"] =
-                {
-                    {"type", "Sampler"}
                 };
                 matCode["code"].push_back(
                     {
                         { "exp",  "Sample" },
-                        { "texture", "diffuseTexture" },
-                        { "sampler", "diffuseSampler" },
+                        { "sampler", "diffuseTexture" },
                         { "coords", "input.texCoords"}
                     }
                 );
@@ -122,18 +117,13 @@ void MeshLoader::loadMaterials(const aiScene* scene, const std::string& baseName
                 });
             matCode["params"]["normalTexture"] =
             {
-                {"type", "Texture2D"},
+                {"type", "Sampler2D"},
                 {"default", fmt::format("{0}/{1}", importPath, texFilename.string())}
-            };
-            matCode["params"]["normalSampler"] =
-            {
-                {"type", "Sampler"}
             };
             matCode["code"].push_back(
                 {
                     { "exp", "Sample" },
-                    { "texture", "normalTexture" },
-                    { "sampler", "normalSampler" },
+                    { "sampler", "normalTexture" },
                     { "coords", "input.texCoords" }
                 }
             );

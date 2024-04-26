@@ -81,9 +81,17 @@ struct Map : public Tree<K, Pair<K, V>, _KeyFun<K, Pair<K, V>>, Compare, Allocat
     {
         return Super::remove(key);	
     }
+    constexpr bool exists(const key_type& key) const
+    {
+        return Super::find(key) != Super::end();
+    }
     constexpr bool exists(const key_type& key)
     {
         return Super::find(key) != Super::end();
+    }
+    constexpr bool contains(const key_type& key) const
+    {
+        return exists(key);
     }
     constexpr bool contains(const key_type& key)
     {

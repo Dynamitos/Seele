@@ -121,6 +121,23 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
             parameters.add(p->key);
             expressions.add(std::move(p));
         }
+        else if (type.compare("Sampler2D") == 0)
+        {
+            OCombinedTextureParameter p = new CombinedTextureParameter(param.key(), 0, bindingCounter);
+            layout->addDescriptorBinding(Gfx::DescriptorBinding{ .binding = bindingCounter++, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLER, });
+            p->sampler = graphics->createSampler({});
+            if (defaultValue != param.value().end())
+            {
+                std::string defaultString = defaultValue.value().get<std::string>();
+                p->data = AssetRegistry::findTexture(defaultString);
+            }
+            if (p->data == nullptr)
+            {
+                p->data = AssetRegistry::findTexture(""); // this will return placeholder texture
+            }
+            parameters.add(p->key);
+            expressions.add(std::move(p));
+        }
         else
         {
             std::cout << "Error unsupported parameter type" << std::endl;
@@ -206,7 +223,10 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
             OSampleExpression p = new SampleExpression();
             std::string name = fmt::format("{0}", key++);
             p->key = name;
-            p->inputs["texture"].source = referenceExpression(obj["texture"]);
+            if (obj.contains("texture"))
+            {
+                p->inputs["texture"].source = referenceExpression(obj["texture"]);
+            }
             p->inputs["sampler"].source = referenceExpression(obj["sampler"]);
             p->inputs["coords"].source = referenceExpression(obj["coords"]);
             expressions.add(std::move(p));

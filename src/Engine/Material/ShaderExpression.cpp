@@ -246,7 +246,7 @@ void CombinedTextureParameter::updateDescriptorSet(Gfx::PDescriptorSet descripto
 
 void CombinedTextureParameter::generateDeclaration(std::ofstream& stream) const
 {
-    stream << "\tTexture2D " << key << ";\n";
+    stream << "\tSampler2D " << key << ";\n";
 }
 
 void CombinedTextureParameter::save(ArchiveBuffer& buffer) const
@@ -408,7 +408,14 @@ std::string SampleExpression::evaluate(Map<std::string, std::string>& varState) 
 {
     std::string varName = fmt::format("exp_{}", key);
     varState[key] = varName;
-    return fmt::format("let {} = {}.Sample({}, {});\n", varName, varState[inputs.at("texture").source], varState[inputs.at("sampler").source], varState[inputs.at("coords").source]);
+    if (inputs.contains("texture"))
+    {
+        return fmt::format("let {} = {}.Sample({}, {});\n", varName, varState[inputs.at("texture").source], varState[inputs.at("sampler").source], varState[inputs.at("coords").source]);
+    }
+    else
+    {
+        return fmt::format("let {} = {}.Sample({});\n", varName, varState[inputs.at("sampler").source], varState[inputs.at("coords").source]);
+    }
 }
 
 void SampleExpression::save(ArchiveBuffer& buffer) const 

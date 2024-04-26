@@ -28,7 +28,7 @@
             "name": "RelWithDebInfo",
             "generator": "Visual Studio 17 2022 Win64",
             "configurationType": "RelWithDebInfo",
-            "buildRoot": "${CMAKE_CURRENT_SOURCE_DIR}/cmake",
+            "buildRoot": "C:/Users/Dynamitos/Seele/build/",
             "installRoot": "C:/Program Files/Seele",
             "cmakeCommandArgs": "-DCMAKE_DEBUG_POSTFIX=\"\" -DCMAKE_PLATFORM=x64",
             "buildCommandArgs": "",
@@ -59,8 +59,7 @@
             "buildCommandArgs": "",
             "ctestCommandArgs": "",
             "inheritEnvironments": [ "msvc_x64" ],
-            "intelliSenseMode": "windows-msvc-x64",
-            "variables": []
+            "intelliSenseMode": "windows-msvc-x64"
         }
     ]
 }

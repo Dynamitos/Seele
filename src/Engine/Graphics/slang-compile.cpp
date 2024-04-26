@@ -21,7 +21,7 @@ Slang::ComPtr<slang::IBlob> Seele::generateShader(const ShaderCreateInfo& create
     option[0].value = slang::CompilerOptionValue();
     option[0].value.kind = slang::CompilerOptionValueKind::Int;
     option[0].value.intValue0 = 1;
-    option[1].name = slang::CompilerOptionName::IgnoreCapabilities;
+    option[1].name = slang::CompilerOptionName::EmitSpirvViaGLSL;
     option[1].value = slang::CompilerOptionValue();
     option[1].value.kind = slang::CompilerOptionValueKind::Int;
     option[1].value.intValue0 = 1;
