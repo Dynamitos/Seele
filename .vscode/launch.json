@@ -6,23 +6,12 @@
     "configurations": [
         {
             "name": "Editor",
-            "type": "cppvsdbg",
+            "type": "lldb",
             "request": "launch",
             "program": "${workspaceRoot}/build/Editor.exe",
             "args": [],
-            "stopAtEntry": false,
             "cwd": "${workspaceRoot}/build",
             "console": "internalConsole",
-            "environment": [],
-            "symbolSearchPath": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.25.28610\\lib\\x64",
-            "requireExactSource": false,
-            "visualizerFile": "${workspaceRoot}/Seele.natvis",
-            "logging": {
-                "moduleLoad": false,
-                "exceptions": true,
-                "trace": true,
-                "traceResponse": true
-            }
         },
         {
             "name": "Editor (Mac)",

@@ -127,11 +127,15 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
         }
     }
     uint32 uniformDataSize = uniformBufferOffset;
-    auto referenceExpression = [&auxKey, &expressions](json obj) -> std::string
+    auto referenceExpression = [&parameters, &auxKey, &expressions](json obj) -> std::string
     {
         if(obj.is_string())
         {
             std::string str = obj.get<std::string>();
+            if (parameters.find(str) != parameters.end())
+            {
+                return str;
+            }
             OConstantExpression c = new ConstantExpression(str, ExpressionType::UNKNOWN);
             std::string name = fmt::format("const_{0}", auxKey++);
             c->key = name;
