@@ -113,7 +113,6 @@ void SkyboxRenderPass::createRenderPass()
     ShaderCreateInfo createInfo = {
         .name = "SkyboxVertex",
         .mainModule = "Skybox",
-        .additionalModules = {"Skybox"},
         .entryPoint = "vertexMain",
     };
     vertexShader = graphics->createVertexShader(createInfo);

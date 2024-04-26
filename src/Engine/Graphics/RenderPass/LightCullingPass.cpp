@@ -127,7 +127,6 @@ void LightCullingPass::publishOutputs()
     ShaderCreateInfo createInfo = {
         .name = "Culling",
         .mainModule = "LightCulling",
-        .additionalModules = {"LightCulling"},
         .entryPoint = "cullLights",
         .rootSignature = cullingLayout,
     };
@@ -215,7 +214,6 @@ void LightCullingPass::setupFrustums()
     ShaderCreateInfo createInfo = {
         .name = "Frustum",
         .mainModule = "ComputeFrustums",
-        .additionalModules = {"ComputeFrustums"},
         .entryPoint = "computeFrustums",
         .rootSignature = frustumLayout,
     };

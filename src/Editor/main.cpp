@@ -48,6 +48,7 @@ int main() {
   graphics->init(initializer);
   StaticMeshVertexData* vd = StaticMeshVertexData::getInstance();
   vd->init(graphics);
+
   OWindowManager windowManager = new WindowManager();
   AssetRegistry::init(sourcePath / "Assets", graphics);
   AssetImporter::init(graphics);

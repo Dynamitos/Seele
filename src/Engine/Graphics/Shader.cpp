@@ -111,19 +111,10 @@ void ShaderCompiler::createShaders(ShaderPermutation permutation, Gfx::OPipeline
 	if (std::strlen(permutation.materialName) > 0)
     {
         createInfo.additionalModules.add(permutation.materialName);
-        createInfo.typeParameter.add(Pair<const char*, const char*>("IMaterial", permutation.materialName));
+		createInfo.defines["MATERIAL_FILE_NAME"] = permutation.materialName;
     }
 	createInfo.typeParameter.add({ Pair<const char*, const char*>("IVertexData", permutation.vertexDataName) });
 	createInfo.additionalModules.add(permutation.vertexDataName);
-	createInfo.additionalModules.add(permutation.vertexMeshFile);
-	if (permutation.hasFragment)
-	{
-		createInfo.additionalModules.add(permutation.fragmentFile);
-	}
-	if (permutation.hasTaskShader)
-	{
-		createInfo.additionalModules.add(permutation.taskFile);
-	}
 
 	if (permutation.useMeshShading)
 	{

@@ -52,17 +52,13 @@ Slang::ComPtr<slang::IBlob> Seele::generateShader(const ShaderCreateInfo& create
     Slang::ComPtr<slang::IBlob> diagnostics;
     Array<slang::IComponentType*> modules;
     Slang::ComPtr<slang::IEntryPoint> entrypoint;
-    slang::IModule* mainModule = nullptr;
     for (const auto& moduleName : createInfo.additionalModules)
     {
         modules.add(session->loadModule(moduleName.c_str(), diagnostics.writeRef()));
-        if (moduleName == createInfo.mainModule)
-        {
-            mainModule = (slang::IModule*)modules.back();
-        }
         CHECK_DIAGNOSTICS();
     }
-
+    slang::IModule* mainModule = session->loadModule(createInfo.mainModule.c_str(), diagnostics.writeRef());
+    modules.add(mainModule);
     CHECK_DIAGNOSTICS();
 
     mainModule->findEntryPointByName(createInfo.entryPoint.c_str(), entrypoint.writeRef());

@@ -1,7 +1,7 @@
 import Common;
 import LightEnv;
-import Material;
 import MaterialParameter;
+import MATERIAL_FILE_NAME;
 
 struct LightCullingData
 {

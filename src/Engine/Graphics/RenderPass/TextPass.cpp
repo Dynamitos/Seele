@@ -110,11 +110,11 @@ void TextPass::createRenderPass()
     renderTarget = resources->requestRenderTarget("UIPASS_COLOR");
     depthAttachment = resources->requestRenderTarget("UIPASS_DEPTH");
     
-    ShaderCreateInfo createInfo;
-    createInfo.mainModule = "TextPass";
-    createInfo.defines["INDEX_VIEW_PARAMS"] = "0";
-    createInfo.name = "TextVertex";
-    createInfo.entryPoint = "vertexMain";
+    ShaderCreateInfo createInfo = {
+        .name = "TextVertex",
+        .mainModule = "TextPass",
+        .entryPoint = "vertexMain",
+    };
     vertexShader = graphics->createVertexShader(createInfo);
 
     createInfo.name = "TextFragment";

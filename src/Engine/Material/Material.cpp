@@ -114,10 +114,9 @@ void Material::load(ArchiveBuffer& buffer)
 void Material::compile()
 {
     std::ofstream codeStream("./shaders/generated/"+materialName+".slang");
-    codeStream << "import Material;\n";
     codeStream << "import BRDF;\n";
     codeStream << "import MaterialParameter;\n";
-    codeStream << "struct " << materialName << " : IMaterial {\n";
+    codeStream << "struct " << materialName << "{\n";
     for(const auto& parameter : parameters)
     {
         PShaderParameter handle = PShaderExpression(*codeExpressions.find([&parameter](const OShaderExpression& exp) {return exp->key == parameter; }));
@@ -139,5 +138,7 @@ void Material::compile()
     codeStream << "\t\treturn result;\n";
     codeStream << "\t}\n";
     codeStream << "};\n";
+    codeStream << "layout(set=4)";
+    codeStream << "ParameterBlock<" << materialName << "> pMaterial;";
     graphics->getShaderCompiler()->registerMaterial(this);
 }

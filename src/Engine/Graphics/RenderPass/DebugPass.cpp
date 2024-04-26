@@ -126,7 +126,6 @@ void DebugPass::createRenderPass()
     ShaderCreateInfo createInfo = {
         .name = "DebugVertex",
         .mainModule = "Debug",
-        .additionalModules = { "Debug" },
         .entryPoint = "vertexMain",
     };
     vertexShader = graphics->createVertexShader(createInfo);

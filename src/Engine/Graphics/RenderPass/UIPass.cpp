@@ -96,10 +96,11 @@ void UIPass::publishOutputs()
 
 void UIPass::createRenderPass() 
 {
-    ShaderCreateInfo createInfo;
-    createInfo.mainModule = "UIPass";
-    createInfo.name = "UIVertex";
-    createInfo.entryPoint = "vertexMain";
+    ShaderCreateInfo createInfo = {
+        .name = "UIVertex",
+        .mainModule = "UIPass",
+        .entryPoint = "vertexMain",
+    };
     vertexShader = graphics->createVertexShader(createInfo);
 
     createInfo.name = "UIFragment";
