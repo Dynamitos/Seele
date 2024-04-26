@@ -52,7 +52,7 @@ void taskMain(
 				uint index;
 				InterlockedAdd(head, 1, index);
 				p.meshletId[index] = m;
-				p.instanceId[index] = groupID + pScene.primitiveIndices[m];
+				p.instanceId[index] = groupID;
 			}
 		}
 	}
@@ -97,7 +97,7 @@ void meshMain(
 			uint vertexIndex = pScene.vertexIndices[m.vertexOffset + v];
 			VertexAttributes attr = pVertexData.getAttributes(md.indicesOffset + vertexIndex);
 			vertices[v] = attr.getParameter(inst.transformMatrix);
-			vertices[v].vertexColor = m.color;
+			//vertices[v].vertexColor = m.color;
 		}
 	}
 }
