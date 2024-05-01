@@ -31,7 +31,6 @@ private:
 	
 	RenderGraph renderGraph;
 
-	ThreadPool pool;
 	ViewportControl cameraSystem;
 
 	virtual void keyCallback(KeyCode code, InputAction action, KeyModifier modifier) override;

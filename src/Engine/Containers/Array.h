@@ -632,13 +632,14 @@ private:
         }
         else
         {
+            allocated = calculateGrowth(newSize);
             // The array is not big enough, so we make a new one
-            T *newData = allocateArray(newSize);
+            T *newData = allocateArray(allocated);
 
             if constexpr (std::is_integral_v<T> || std::is_floating_point_v<T>)
             {
                 std::memcpy(newData, _data, sizeof(T) * arraySize);
-                std::memset(&newData[arraySize], 0, sizeof(T) * (newSize - arraySize));
+                std::memset(&newData[arraySize], 0, sizeof(T) * (allocated - arraySize));
             }
             else
             {
@@ -648,14 +649,13 @@ private:
                     newData[i] = std::forward<Type>(_data[i]);
                 }
                 // As well as default initialize the others
-                for (size_type i = arraySize; i < newSize; ++i)
+                for (size_type i = arraySize; i < allocated; ++i)
                 {
                     std::allocator_traits<allocator_type>::construct(allocator, &newData[i], value);
                 }
             }
             deallocateArray(_data, allocated);
             arraySize = newSize;
-            allocated = newSize;
             _data = newData;
         }
     }

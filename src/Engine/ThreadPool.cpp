@@ -61,3 +61,10 @@ void ThreadPool::work()
         }
     }
 }
+
+static ThreadPool threadPool;
+
+ThreadPool& Seele::getThreadPool()
+{
+    return threadPool;
+}

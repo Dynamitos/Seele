@@ -58,10 +58,10 @@ struct ShaderPermutation
     char fragmentFile[32];
     char vertexDataName[32];
     char materialName[64];
-    uint8 hasFragment : 1;
-    uint8 useMeshShading : 1;
-    uint8 hasTaskShader : 1;
-    uint8 useMaterial : 1;
+    uint8 hasFragment;
+    uint8 useMeshShading;
+    uint8 hasTaskShader;
+    uint8 useMaterial;
     //TODO: lightmapping etc
     ShaderPermutation()
     {

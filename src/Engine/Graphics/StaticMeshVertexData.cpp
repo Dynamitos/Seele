@@ -105,12 +105,12 @@ void StaticMeshVertexData::serializeMesh(MeshId id, uint64 numVertices, ArchiveB
     Array<Vector> tan(numVertices);
     Array<Vector> bit(numVertices);
     Array<Vector> col(numVertices);
-    std::memcpy(positionData.data() + offset, pos.data(), numVertices * sizeof(Vector));
-    std::memcpy(texCoordsData.data() + offset, tex.data(), numVertices * sizeof(Vector2));
-    std::memcpy(normalData.data() + offset, nor.data(), numVertices * sizeof(Vector));
-    std::memcpy(tangentData.data() + offset, tan.data(), numVertices * sizeof(Vector));
-    std::memcpy(biTangentData.data() + offset, bit.data(), numVertices * sizeof(Vector));
-    std::memcpy(colorData.data() + offset, col.data(), numVertices * sizeof(Vector));
+    std::memcpy(pos.data(), positionData.data() + offset, numVertices * sizeof(Vector));
+    std::memcpy(tex.data(), texCoordsData.data() + offset, numVertices * sizeof(Vector2));
+    std::memcpy(nor.data(), normalData.data() + offset, numVertices * sizeof(Vector));
+    std::memcpy(tan.data(), tangentData.data() + offset, numVertices * sizeof(Vector));
+    std::memcpy(bit.data(), biTangentData.data() + offset, numVertices * sizeof(Vector));
+    std::memcpy(col.data(), colorData.data() + offset, numVertices * sizeof(Vector));
     Serialization::save(buffer, pos);
     Serialization::save(buffer, tex);
     Serialization::save(buffer, nor);

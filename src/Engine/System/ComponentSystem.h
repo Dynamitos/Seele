@@ -24,7 +24,7 @@ public:
         return Dependencies<>();
     }
     template<typename... Deps>
-    void setupView(Dependencies<Deps...>, ThreadPool& pool)
+    void setupView(Dependencies<Deps...>)
     {
         List<std::function<void()>> work;
         registry.view<Components..., Deps...>().each([&](Components&... comp, Deps&... deps){
@@ -33,12 +33,12 @@ public:
                 update(comp...);
             });
         });
-        pool.runAndWait(std::move(work));
+        getThreadPool().runAndWait(std::move(work));
     }
-    virtual void run(ThreadPool& pool, double delta) override
+    virtual void run(double delta) override
     {
-        SystemBase::run(pool, delta);
-        setupView((getDependencies<Components>() | ...), pool);
+        SystemBase::run(delta);
+        setupView((getDependencies<Components>() | ...));
     }
     virtual void update() override {}
     virtual void update(Components&... components) = 0;

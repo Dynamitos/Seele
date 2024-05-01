@@ -378,8 +378,8 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Map<std::string, PTex
                 std::string subKey = "NormalSub";
                 expressions.add(new SubExpression());
                 expressions.back()->key = subKey;
-                expressions.back()->inputs["lhs"].source = "1";
-                expressions.back()->inputs["rhs"].source = mulKey;
+                expressions.back()->inputs["lhs"].source = mulKey;
+                expressions.back()->inputs["rhs"].source = "float3(1,1,1)";
 
                 outputNormal = subKey;
             }
@@ -388,7 +388,7 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Map<std::string, PTex
         MaterialNode brdf;
         brdf.profile = "BlinnPhong";
         brdf.variables["baseColor"] = outputDiffuse;
-        brdf.variables["specular"] = outputSpecular;
+        //brdf.variables["specular"] = outputSpecular;
         if (!outputNormal.empty())
         {
             brdf.variables["normal"] = outputNormal;
@@ -491,7 +491,7 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
 
         Array<uint32> indices(mesh->mNumFaces * 3);
 //#pragma omp parallel for
-        for (int32 faceIndex = 0; faceIndex < mesh->mNumFaces; ++faceIndex)
+        for (size_t faceIndex = 0; faceIndex < mesh->mNumFaces; ++faceIndex)
         {
             indices[faceIndex * 3 + 0] = mesh->mFaces[faceIndex].mIndices[0];
             indices[faceIndex * 3 + 1] = mesh->mFaces[faceIndex].mIndices[1];
@@ -503,7 +503,7 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
         Meshlet::build(positions, indices, meshlets);
         vertexData->loadMesh(id, indices, meshlets);
 
-        collider.physicsMesh.addCollider(positions, indices, Matrix4(1.0f));
+        //collider.physicsMesh.addCollider(positions, indices, Matrix4(1.0f));
 
         globalMeshes[meshIndex] = new Mesh();
         globalMeshes[meshIndex]->vertexData = vertexData;

@@ -1,11 +1,9 @@
 import Common;
 
-#define MAX_NUM_TEXCOORDS 8
-
 struct MaterialParameter
 {
 	float3 position_WS;
-	float2 texCoords[MAX_NUM_TEXCOORDS];
+	float2 texCoords[1];
 	float3 vertexColor;
 };
 
@@ -27,16 +25,13 @@ struct FragmentParameter
 	float3 biTangent_WS : TANGENT1;
 	float3 position_WS : POSITION2;
 	float3 vertexColor : COLOR0;
-	float2 texCoords[MAX_NUM_TEXCOORDS] : TEXCOORD0;
+	float2 texCoords : TEXCOORD0;
 	MaterialParameter getMaterialParameter()
 	{
 		MaterialParameter result;
 		result.position_WS = position_WS;
 		result.vertexColor = vertexColor;
-		for(int i = 0; i < MAX_NUM_TEXCOORDS; ++i)
-		{
-			result.texCoords[i] = texCoords[i];
-		}
+		result.texCoords[0] = texCoords;
 		return result;
 	}
 	LightingParameter getLightingParameter()
@@ -57,7 +52,7 @@ struct VertexAttributes
 	float3 tangent_MS;
 	float3 biTangent_MS;
 	float3 vertexColor;
-	float2 texCoords[MAX_NUM_TEXCOORDS];
+	float2 texCoords;
 	FragmentParameter getParameter(float4x4 transformMatrix)
 	{
 		float4 modelPos = float4(position_MS, 1);
@@ -75,10 +70,7 @@ struct VertexAttributes
 		result.position_WS = worldPos.xyz;
 		result.position_CS = clipPos;
 		result.vertexColor = vertexColor;
-		for(int i = 0; i < MAX_NUM_TEXCOORDS; ++i)
-		{
-			result.texCoords[i] = texCoords[i];
-		}
+		result.texCoords = texCoords;	
 		return result;
 	}
 };

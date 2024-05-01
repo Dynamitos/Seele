@@ -26,4 +26,5 @@ private:
     Task currentTask;
     bool running = true;
 };
+ThreadPool& getThreadPool();
 }

@@ -36,7 +36,6 @@ protected:
 
 	PSystemGraph systemGraph;
 	System::PKeyboardInput keyboardSystem;
-	ThreadPool threadPool;
 	float updateTime = 0;
 
 	virtual void keyCallback(Seele::KeyCode code, Seele::InputAction action, Seele::KeyModifier modifier) override;

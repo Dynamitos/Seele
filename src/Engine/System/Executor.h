@@ -11,8 +11,6 @@ class Executor
 public:
     Executor();
     ~Executor();
-private:
-    ThreadPool pool;
 };
 } // namespace System
 } // namespace Seele

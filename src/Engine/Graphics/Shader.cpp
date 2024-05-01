@@ -1,4 +1,5 @@
 #include "Shader.h"
+#include "ThreadPool.h"
 #include "Graphics/Initializer.h"
 #include "Graphics/RenderPass/DepthPrepass.h"
 #include "Graphics/RenderPass/BasePass.h"
@@ -51,57 +52,83 @@ void ShaderCompiler::registerRenderPass(Gfx::PPipelineLayout layout, std::string
 
 void ShaderCompiler::compile()
 {
+	List<std::function<void()>> work;
 	for (const auto& [name, pass] : passes)
 	{
-        ShaderPermutation permutation;
-        if (pass.useMeshShading)
-        {
-            permutation.setMeshFile(pass.mainFile);
-        }
-        else
-        {
-            permutation.setVertexFile(pass.mainFile);
-        }
-        if (pass.hasFragmentShader)
-        {
-            permutation.setFragmentFile(pass.fragmentFile);
-        }
-        if (pass.hasTaskShader)
-        {
-            permutation.setTaskFile(pass.taskFile);
-        }
 		for (const auto& [vdName, vd] : vertexData)
 		{
-            permutation.setVertexData(vd->getTypeName());
 			if (pass.useMaterial)
 			{
 				for (const auto& [matName, mat] : materials)
 				{
-                    OPipelineLayout layout = graphics->createPipelineLayout(pass.baseLayout->getName(), pass.baseLayout);
-                    layout->addDescriptorLayout(vd->getVertexDataLayout());
-                    layout->addDescriptorLayout(vd->getInstanceDataLayout());
-                    layout->addDescriptorLayout(mat->getDescriptorLayout());
-					permutation.setMaterial(mat->getName());
-                    createShaders(permutation, std::move(layout));
+					work.add([=]() {
+						ShaderPermutation permutation;
+						if (pass.useMeshShading)
+						{
+							permutation.setMeshFile(pass.mainFile);
+						}
+						else
+						{
+							permutation.setVertexFile(pass.mainFile);
+						}
+						if (pass.hasFragmentShader)
+						{
+							permutation.setFragmentFile(pass.fragmentFile);
+						}
+						if (pass.hasTaskShader)
+						{
+							permutation.setTaskFile(pass.taskFile);
+						}
+						permutation.setVertexData(vd->getTypeName());
+						OPipelineLayout layout = graphics->createPipelineLayout(pass.baseLayout->getName(), pass.baseLayout);
+						layout->addDescriptorLayout(vd->getVertexDataLayout());
+						layout->addDescriptorLayout(vd->getInstanceDataLayout());
+						layout->addDescriptorLayout(mat->getDescriptorLayout());
+						permutation.setMaterial(mat->getName());
+						createShaders(permutation, std::move(layout));
+					});
 				}
 			}
 			else
 			{
-                OPipelineLayout layout = graphics->createPipelineLayout(pass.baseLayout->getName(), pass.baseLayout);
-                layout->addDescriptorLayout(vd->getVertexDataLayout());
-                layout->addDescriptorLayout(vd->getInstanceDataLayout());
-                createShaders(permutation, std::move(layout));
+				work.add([=]() {
+					ShaderPermutation permutation;
+					if (pass.useMeshShading)
+					{
+						permutation.setMeshFile(pass.mainFile);
+					}
+					else
+					{
+						permutation.setVertexFile(pass.mainFile);
+					}
+					if (pass.hasFragmentShader)
+					{
+						permutation.setFragmentFile(pass.fragmentFile);
+					}
+					if (pass.hasTaskShader)
+					{
+						permutation.setTaskFile(pass.taskFile);
+					}
+					permutation.setVertexData(vd->getTypeName());
+					OPipelineLayout layout = graphics->createPipelineLayout(pass.baseLayout->getName(), pass.baseLayout);
+					layout->addDescriptorLayout(vd->getVertexDataLayout());
+					layout->addDescriptorLayout(vd->getInstanceDataLayout());
+					createShaders(permutation, std::move(layout));
+					});
 			}
 		}
 	}
+	getThreadPool().runAndWait(std::move(work));
 }
 
 void ShaderCompiler::createShaders(ShaderPermutation permutation, Gfx::OPipelineLayout layout)
 {
-	std::scoped_lock lock(shadersLock);
 	PermutationId perm = PermutationId(permutation);
-	if (shaders.contains(perm))
-		return;
+	{
+		std::scoped_lock lock(shadersLock);
+		if (shaders.contains(perm))
+			return;
+	}
 	ShaderCollection collection;
     collection.pipelineLayout = std::move(layout);
 
@@ -142,5 +169,8 @@ void ShaderCompiler::createShaders(ShaderPermutation permutation, Gfx::OPipeline
 		collection.fragmentShader = graphics->createFragmentShader(createInfo);
 	}
 	collection.pipelineLayout->create();
-	shaders[perm] = std::move(collection);
+	{
+		std::scoped_lock lock(shadersLock);
+		shaders[perm] = std::move(collection);
+	}
 }

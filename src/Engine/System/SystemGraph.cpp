@@ -7,9 +7,9 @@ void SystemGraph::addSystem(System::OSystemBase system)
     systems.add(std::move(system));
 }
 
-void SystemGraph::run(ThreadPool& threadPool, float deltaTime)
+void SystemGraph::run(float deltaTime)
 {
     for(auto& system : systems) {
-        system->run(threadPool, deltaTime);
+        system->run(deltaTime);
     }
 }

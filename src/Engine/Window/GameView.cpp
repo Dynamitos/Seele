@@ -43,7 +43,7 @@ void GameView::update()
     {
         vd->resetMeshData();
     }
-    systemGraph->run(threadPool, updateTime);
+    systemGraph->run(updateTime);
     scene->update(updateTime);
     for (VertexData* vd : VertexData::getList())
     {

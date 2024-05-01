@@ -9,7 +9,7 @@ class SystemGraph
 {
 public:
     void addSystem(System::OSystemBase system);
-    void run(ThreadPool& threadPool, float deltaTime);
+    void run(float deltaTime);
 private:
     Array<System::OSystemBase> systems;
 };
