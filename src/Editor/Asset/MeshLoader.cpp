@@ -110,6 +110,9 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Map<std::string, PTex
         std::string materialName = fmt::format("M{0}{1}{2}", baseName, material->GetName().C_Str(), i);
         materialName.erase(std::remove(materialName.begin(), materialName.end(), '.'), materialName.end()); // dots break adding the .asset extension later
         materialName.erase(std::remove(materialName.begin(), materialName.end(), '-'), materialName.end()); // dots break adding the .asset extension later
+        materialName.erase(std::remove(materialName.begin(), materialName.end(), ' '), materialName.end()); // dots break adding the .asset extension later
+        materialName.erase(std::remove(materialName.begin(), materialName.end(), '('), materialName.end()); // dots break adding the .asset extension later
+        materialName.erase(std::remove(materialName.begin(), materialName.end(), ')'), materialName.end()); // dots break adding the .asset extension later
         Gfx::ODescriptorLayout materialLayout = graphics->createDescriptorLayout("pMaterial");
         Array<OShaderExpression> expressions;
         Array<std::string> parameters;
@@ -157,6 +160,14 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Map<std::string, PTex
                 {
                     AssetImporter::importTexture(TextureImportArgs{
                     .filePath = texFilename,
+                    .importPath = importPath,
+                        });
+                    texture = AssetRegistry::findTexture(importPath, texFilename.stem().string());
+                }
+                else if (std::filesystem::exists(meshDirectory / texFilename))
+                {
+                    AssetImporter::importTexture(TextureImportArgs{
+                    .filePath = meshDirectory / texFilename,
                     .importPath = importPath,
                         });
                     texture = AssetRegistry::findTexture(importPath, texFilename.stem().string());

@@ -321,6 +321,7 @@ PipelineLayout::PipelineLayout(PGraphics graphics, const std::string& name, Gfx:
 
 PipelineLayout::~PipelineLayout() {}
 
+std::mutex layoutLock;
 Map<uint32, VkPipelineLayout> cachedLayouts;
 
 void PipelineLayout::create() {
@@ -357,6 +358,7 @@ void PipelineLayout::create() {
   layoutHash = CRC::Calculate(createInfo.pSetLayouts, sizeof(VkDescriptorSetLayout) * createInfo.setLayoutCount,
                               CRC::CRC_32(), layoutHash);
 
+  std::unique_lock l(layoutLock);
   if (cachedLayouts.contains(layoutHash)) {
     layoutHandle = cachedLayouts[layoutHash];
     return;
