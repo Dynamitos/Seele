@@ -21,11 +21,11 @@ public:
 
     static std::filesystem::path getRootFolder();
 
-    static PMeshAsset findMesh(const std::string& filePath);
-    static PTextureAsset findTexture(const std::string& filePath);
-    static PFontAsset findFont(const std::string& name);
-    static PMaterialAsset findMaterial(const std::string& filePath);
-    static PMaterialInstanceAsset findMaterialInstance(const std::string& filePath);
+    static PMeshAsset findMesh(std::string_view folderPath, std::string_view filePath);
+    static PTextureAsset findTexture(std::string_view folderPath, std::string_view filePath);
+    static PFontAsset findFont(std::string_view folderPath, std::string_view name);
+    static PMaterialAsset findMaterial(std::string_view folderPath, std::string_view filePath);
+    static PMaterialInstanceAsset findMaterialInstance(std::string_view folderPath, std::string_view filePath);
 
     static std::ofstream createWriteStream(const std::filesystem::path& relativePath, std::ios_base::openmode openmode = std::ios::out);
     static std::ifstream createReadStream(const std::filesystem::path& relativePath, std::ios_base::openmode openmode = std::ios::in);
@@ -46,7 +46,7 @@ public:
         AssetFolder(std::string_view folderPath);
         ~AssetFolder();
     };
-    AssetFolder* getOrCreateFolder(std::string foldername);
+    AssetFolder* getOrCreateFolder(std::string_view foldername);
     AssetRegistry();
     static AssetRegistry* getInstance();
 private:

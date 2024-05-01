@@ -29,6 +29,7 @@ public:
 private:
 	virtual void resizeBuffers() override;
 	virtual void updateBuffers() override;
+	std::mutex mutex;
     Gfx::OShaderBuffer positions;
 	Array<Vector> positionData;
     Gfx::OShaderBuffer texCoords;

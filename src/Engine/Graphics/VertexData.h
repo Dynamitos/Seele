@@ -95,6 +95,7 @@ protected:
     };
     std::mutex materialDataLock;
     Map<std::string, MaterialData> materialData;
+    std::mutex vertexDataLock;
     Map<MeshId, Array<MeshData>> meshData;
     Map<MeshId, uint64> meshOffsets;
     Map<MeshId, uint64> meshVertexCounts;

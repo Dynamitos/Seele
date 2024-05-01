@@ -1,6 +1,7 @@
 #pragma once
 #include "Asset.h"
 
+struct ktxTexture2;
 namespace Seele
 {
 DECLARE_NAME_REF(Gfx, Texture)
@@ -18,14 +19,10 @@ public:
     {
         return texture;
     }
-    const Array<uint8>& getRawPixels()
-    {
-        return rawPixels;
-    }
     uint32 getWidth();
     uint32 getHeight();
 private:
-    Array<uint8> rawPixels;
+    struct ktxTexture2* ktxHandle;
     Gfx::OTexture texture;
     friend class TextureLoader;
 };

@@ -91,9 +91,9 @@ void ShaderParameter::load(ArchiveBuffer& buffer)
     Serialization::load(buffer, binding);
 }
 
-FloatParameter::FloatParameter(std::string name, uint32 byteOffset, uint32 binding) 
+FloatParameter::FloatParameter(std::string name, float data, uint32 byteOffset, uint32 binding) 
     : ShaderParameter(name, byteOffset, binding)
-    , data(0)
+    , data(data)
 {
     output.name = name;
     output.type = ExpressionType::FLOAT;
@@ -122,12 +122,12 @@ void FloatParameter::updateDescriptorSet(Gfx::PDescriptorSet, uint8* dst)
 
 void FloatParameter::generateDeclaration(std::ofstream& stream) const
 {
-    stream << "\tlayout(offset = " << byteOffset << ") float " << key << ";\n";
+    stream << "\tfloat " << key << ";\n";
 }
 
-VectorParameter::VectorParameter(std::string name, uint32 byteOffset, uint32 binding) 
+VectorParameter::VectorParameter(std::string name, Vector data, uint32 byteOffset, uint32 binding) 
     : ShaderParameter(name, byteOffset, binding)
-    , data()
+    , data(data)
 {
     output.name = name;
     output.type = ExpressionType::FLOAT3;
@@ -144,7 +144,7 @@ void VectorParameter::updateDescriptorSet(Gfx::PDescriptorSet, uint8* dst)
 
 void VectorParameter::generateDeclaration(std::ofstream& stream) const
 {
-    stream << "\tlayout(offset = " << byteOffset << ") float3 " << key << ";\n";
+    stream << "\tfloat3 " << key << ";\n";
 }
 
 void VectorParameter::save(ArchiveBuffer& buffer) const
@@ -159,8 +159,9 @@ void VectorParameter::load(ArchiveBuffer& buffer)
     Serialization::load(buffer, data);
 }
 
-TextureParameter::TextureParameter(std::string name, uint32 byteOffset, uint32 binding) 
-    : ShaderParameter(name, byteOffset, binding)
+TextureParameter::TextureParameter(std::string name, PTextureAsset asset, uint32 binding) 
+    : ShaderParameter(name, 0, binding)
+    , data(asset)
 {
     output.name = name;
     output.type = ExpressionType::TEXTURE;
@@ -183,19 +184,23 @@ void TextureParameter::generateDeclaration(std::ofstream& stream) const
 void TextureParameter::save(ArchiveBuffer& buffer) const
 {
     ShaderParameter::save(buffer);
-    Serialization::save(buffer, data->getAssetIdentifier());
+    Serialization::save(buffer, data->getFolderPath());
+    Serialization::save(buffer, data->getName());
 }
 
 void TextureParameter::load(ArchiveBuffer& buffer)
 {
     ShaderParameter::load(buffer);
+    std::string folder;
+    Serialization::load(buffer, folder);
     std::string filename;
     Serialization::load(buffer, filename);
-    data = AssetRegistry::findTexture(filename);
+    data = AssetRegistry::findTexture(folder, filename);
 }
 
-SamplerParameter::SamplerParameter(std::string name, uint32 byteOffset, uint32 binding) 
-    : ShaderParameter(name, byteOffset, binding)
+SamplerParameter::SamplerParameter(std::string name, Gfx::OSampler sampler, uint32 binding) 
+    : ShaderParameter(name, 0, binding)
+    , data(std::move(sampler))
 {
     output.name = name;
     output.type = ExpressionType::SAMPLER;
@@ -227,8 +232,10 @@ void SamplerParameter::load(ArchiveBuffer& buffer)
     data = buffer.getGraphics()->createSampler(SamplerCreateInfo{});
 }
 
-CombinedTextureParameter::CombinedTextureParameter(std::string name, uint32 byteOffset, uint32 binding) 
-    : ShaderParameter(name, byteOffset, binding)
+CombinedTextureParameter::CombinedTextureParameter(std::string name, PTextureAsset data, Gfx::OSampler sampler, uint32 binding) 
+    : ShaderParameter(name, 0, binding)
+    , data(data)
+    , sampler(std::move(sampler))
 {
     output.name = name;
     output.type = ExpressionType::TEXTURE;
@@ -252,15 +259,18 @@ void CombinedTextureParameter::generateDeclaration(std::ofstream& stream) const
 void CombinedTextureParameter::save(ArchiveBuffer& buffer) const
 {
     ShaderParameter::save(buffer);
-    Serialization::save(buffer, data->getAssetIdentifier());
+    Serialization::save(buffer, data->getFolderPath());
+    Serialization::save(buffer, data->getName());
 }
 
 void CombinedTextureParameter::load(ArchiveBuffer& buffer)
 {
     ShaderParameter::load(buffer);
+    std::string folder;
+    Serialization::load(buffer, folder);
     std::string filename;
     Serialization::load(buffer, filename);
-    data = AssetRegistry::findTexture(filename);
+    data = AssetRegistry::findTexture(folder, filename);
     sampler = buffer.getGraphics()->createSampler({});
 }
 
@@ -313,7 +323,18 @@ std::string AddExpression::evaluate(Map<std::string, std::string>& varState) con
 {
     std::string varName = fmt::format("exp_{}", key);
     varState[key] = varName;
-    return fmt::format("let {} = {} + {};\n", varName, varState[inputs.at("lhs").source], varState[inputs.at("rhs").source]);
+    std::string lhs = inputs.at("lhs").source;
+    if (varState.contains(lhs))
+    {
+        lhs = varState[lhs];
+    }
+    std::string rhs = inputs.at("rhs").source;
+    if (varState.contains(rhs))
+    {
+        rhs = varState[rhs];
+    }
+
+    return fmt::format("let {} = {} + {};\n", varName, lhs, rhs);
 }
 
 void AddExpression::save(ArchiveBuffer& buffer) const 
@@ -330,7 +351,18 @@ std::string SubExpression::evaluate(Map<std::string, std::string>& varState) con
 {
     std::string varName = fmt::format("exp_{}", key);
     varState[key] = varName;
-    return fmt::format("let {} = {} - {};\n", varName, varState[inputs.at("lhs").source], varState[inputs.at("rhs").source]);
+    std::string lhs = inputs.at("lhs").source;
+    if (varState.contains(lhs))
+    {
+        lhs = varState[lhs];
+    }
+    std::string rhs = inputs.at("rhs").source;
+    if (varState.contains(rhs))
+    {
+        rhs = varState[rhs];
+    }
+
+    return fmt::format("let {} = {} - {};\n", varName, lhs, rhs);
 }
 
 void SubExpression::save(ArchiveBuffer& buffer) const 
@@ -347,7 +379,17 @@ std::string MulExpression::evaluate(Map<std::string, std::string>& varState) con
 {
     std::string varName = fmt::format("exp_{}", key);
     varState[key] = varName;
-    return fmt::format("let {} = {} * {};\n", varName, varState[inputs.at("lhs").source], varState[inputs.at("rhs").source]);
+    std::string lhs = inputs.at("lhs").source;
+    if (varState.contains(lhs))
+    {
+        lhs = varState[lhs];
+    }
+    std::string rhs = inputs.at("rhs").source;
+    if (varState.contains(rhs))
+    {
+        rhs = varState[rhs];
+    }
+    return fmt::format("let {} = {} * {};\n", varName, lhs, rhs);
 }
 
 void MulExpression::save(ArchiveBuffer& buffer) const 
@@ -408,13 +450,18 @@ std::string SampleExpression::evaluate(Map<std::string, std::string>& varState) 
 {
     std::string varName = fmt::format("exp_{}", key);
     varState[key] = varName;
+    std::string texCoords = inputs.at("coords").source;
+    if (varState.contains(inputs.at("coords").source))
+    {
+        texCoords = varState[inputs.at("coords").source];
+    }
     if (inputs.contains("texture"))
     {
-        return fmt::format("let {} = {}.Sample({}, {});\n", varName, varState[inputs.at("texture").source], varState[inputs.at("sampler").source], varState[inputs.at("coords").source]);
+        return fmt::format("let {} = {}.Sample({}, {});\n", varName, varState[inputs.at("texture").source], varState[inputs.at("sampler").source], texCoords);
     }
     else
     {
-        return fmt::format("let {} = {}.Sample({});\n", varName, varState[inputs.at("sampler").source], varState[inputs.at("coords").source]);
+        return fmt::format("let {} = {}.Sample({});\n", varName, varState[inputs.at("sampler").source], texCoords);
     }
 }
 

@@ -22,16 +22,19 @@ MaterialInstanceAsset::~MaterialInstanceAsset()
 
 void MaterialInstanceAsset::save(ArchiveBuffer& buffer) const
 {
-    Serialization::save(buffer, baseMaterial->getAssetIdentifier());
+    Serialization::save(buffer, baseMaterial->getFolderPath());
+    Serialization::save(buffer, baseMaterial->getName());
     material->save(buffer);
 }
 
 void MaterialInstanceAsset::load(ArchiveBuffer& buffer)
 {
+    std::string folder;
+    Serialization::load(buffer, folder);
     std::string id;
     Serialization::load(buffer, id);
     material = new MaterialInstance();
     material->load(buffer);
-    baseMaterial = AssetRegistry::findMaterial(id);
+    baseMaterial = AssetRegistry::findMaterial(folder, id);
     material->setBaseMaterial(baseMaterial);
 }

@@ -19,7 +19,8 @@ void Mesh::save(ArchiveBuffer& buffer) const
     Serialization::save(buffer, vertexCount);
     Serialization::save(buffer, indices);
     Serialization::save(buffer, meshlets);
-    Serialization::save(buffer, referencedMaterial->getAssetIdentifier());
+    Serialization::save(buffer, referencedMaterial->getFolderPath());
+    Serialization::save(buffer, referencedMaterial->getName());
     vertexData->serializeMesh(id, vertexCount, buffer);
 }
 
@@ -32,9 +33,11 @@ void Mesh::load(ArchiveBuffer& buffer)
     vertexData = VertexData::findByTypeName(typeName);
     Serialization::load(buffer, indices);
     Serialization::load(buffer, meshlets);
+    std::string refFolder;
+    Serialization::load(buffer, refFolder);
     std::string refId;
     Serialization::load(buffer, refId);
-    referencedMaterial = AssetRegistry::findMaterialInstance(refId);
+    referencedMaterial = AssetRegistry::findMaterialInstance(refFolder, refId);
     id = vertexData->allocateVertexData(vertexCount);
     vertexData->loadMesh(id, indices, meshlets);
     vertexData->deserializeMesh(id, buffer);

@@ -146,6 +146,7 @@ void VertexData::createDescriptors()
 
 void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet> loadedMeshlets)
 {
+    std::unique_lock l(vertexDataLock);
     meshlets.reserve(meshlets.size() + loadedMeshlets.size());
     vertexIndices.reserve(vertexIndices.size() + loadedMeshlets.size() * Gfx::numVerticesPerMeshlet);
     primitiveIndices.reserve(primitiveIndices.size() + loadedMeshlets.size() * Gfx::numPrimitivesPerMeshlet * 3);
@@ -225,6 +226,7 @@ void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet>
 
 MeshId VertexData::allocateVertexData(uint64 numVertices)
 {
+    std::unique_lock l(vertexDataLock);
     MeshId res{ idCounter++ };
     meshOffsets[res] = head;
     meshVertexCounts[res] = numVertices;

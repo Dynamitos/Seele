@@ -66,75 +66,93 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset)
         // TODO: ALIGNMENT RULES
         if(type.compare("float") == 0)
         {
-            OFloatParameter p = new FloatParameter(param.key(), uniformBufferOffset, uniformBinding);
+            float defaultData = 0.f;
+            if (defaultValue != param.value().end())
+            {
+                defaultData = std::stof(defaultValue.value().get<std::string>());
+            }
+            OFloatParameter p = new FloatParameter(param.key(), defaultData, uniformBufferOffset, uniformBinding);
             if(uniformBinding == -1)
             {
                 layout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = bindingCounter, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER,});
                 uniformBinding = bindingCounter++;
             }
             uniformBufferOffset += 4;
-            if(defaultValue != param.value().end())
-            {
-                p->data = std::stof(defaultValue.value().get<std::string>());
-            }
             parameters.add(p->key);
             expressions.add(std::move(p));
         }
         // TODO: ALIGNMENT RULES
         else if(type.compare("float3") == 0)
         {
-            OVectorParameter p = new VectorParameter(param.key(), uniformBufferOffset, uniformBinding);
+            Vector defaultData = Vector(0, 0, 0);
+            if (defaultValue != param.value().end())
+            {
+                defaultData = parseVector(defaultValue.value().get<std::string>().c_str());
+            }
+            OVectorParameter p = new VectorParameter(param.key(), defaultData, uniformBufferOffset, uniformBinding);
             if(uniformBinding == -1)
             {
                 layout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = bindingCounter, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER,});
                 uniformBinding = bindingCounter++;
             }
-            uniformBufferOffset += 12;
-            if(defaultValue != param.value().end())
-            {
-                p->data = parseVector(defaultValue.value().get<std::string>().c_str());
-            }
+            uniformBufferOffset += 16;
             parameters.add(p->key); 
             expressions.add(std::move(p));
         }
         else if(type.compare("Texture2D") == 0)
         {
-            OTextureParameter p = new TextureParameter(param.key(), 0, bindingCounter);
-            layout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = bindingCounter++, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,});
+            PTextureAsset texture;
             if(defaultValue != param.value().end())
             {
                 std::string defaultString = defaultValue.value().get<std::string>();
-                p->data = AssetRegistry::findTexture(defaultString);
+                auto slashPos = defaultString.rfind("/");
+                std::string folder = "";
+                if (slashPos != std::string::npos)
+                {
+                    folder = defaultString.substr(0, slashPos - 1);
+                    defaultString = defaultString.substr(slashPos, defaultString.length());
+                }
+
+                texture = AssetRegistry::findTexture(folder, defaultString);
             }
-            if(p->data == nullptr)
+            if(texture == nullptr)
             {
-                p->data = AssetRegistry::findTexture(""); // this will return placeholder texture
+                texture = AssetRegistry::findTexture("", ""); // this will return placeholder texture
             }
+            OTextureParameter p = new TextureParameter(param.key(), texture, bindingCounter);
+            layout->addDescriptorBinding(Gfx::DescriptorBinding{ .binding = bindingCounter++, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE, });
             parameters.add(p->key);
             expressions.add(std::move(p));
         }
         else if(type.compare("Sampler") == 0)
         {
-            OSamplerParameter p = new SamplerParameter(param.key(), 0, bindingCounter);
+            OSamplerParameter p = new SamplerParameter(param.key(), graphics->createSampler({}), bindingCounter);
             layout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = bindingCounter++, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLER,});
-            p->data = graphics->createSampler({});
             parameters.add(p->key);
             expressions.add(std::move(p));
         }
         else if (type.compare("Sampler2D") == 0)
         {
-            OCombinedTextureParameter p = new CombinedTextureParameter(param.key(), 0, bindingCounter);
-            layout->addDescriptorBinding(Gfx::DescriptorBinding{ .binding = bindingCounter++, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLER, });
-            p->sampler = graphics->createSampler({});
+            PTextureAsset texture;
             if (defaultValue != param.value().end())
             {
                 std::string defaultString = defaultValue.value().get<std::string>();
-                p->data = AssetRegistry::findTexture(defaultString);
+                auto slashPos = defaultString.rfind("/");
+                std::string folder = "";
+                if (slashPos != std::string::npos)
+                {
+                    folder = defaultString.substr(0, slashPos - 1);
+                    defaultString = defaultString.substr(slashPos, defaultString.length());
+                }
+
+                texture = AssetRegistry::findTexture(folder, defaultString);
             }
-            if (p->data == nullptr)
+            if (texture == nullptr)
             {
-                p->data = AssetRegistry::findTexture(""); // this will return placeholder texture
+                texture = AssetRegistry::findTexture("", ""); // this will return placeholder texture
             }
+            OCombinedTextureParameter p = new CombinedTextureParameter(param.key(), texture, graphics->createSampler({}), bindingCounter);
+            layout->addDescriptorBinding(Gfx::DescriptorBinding{ .binding = bindingCounter++, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLER, });
             parameters.add(p->key);
             expressions.add(std::move(p));
         }

@@ -35,10 +35,11 @@ TextureLoader::~TextureLoader()
 
 void TextureLoader::importAsset(TextureImportArgs args)
 {
-    std::filesystem::path assetPath = args.filePath.filename();
-    assetPath.replace_extension("asset");
+    std::string str = args.filePath.filename().string();
+    auto pos = str.rfind(".");
+    str.replace(str.begin() + pos, str.end(), "");
     
-    OTextureAsset asset = new TextureAsset(args.importPath, assetPath.stem().string());
+    OTextureAsset asset = new TextureAsset(args.importPath, str);
     PTextureAsset ref = asset;
     asset->setStatus(Asset::Status::Loading);
     AssetRegistry::get().registerTexture(std::move(asset));
@@ -55,14 +56,15 @@ void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset)
     int totalWidth = 0, totalHeight = 0, n = 0;
     unsigned char* data = stbi_load(args.filePath.string().c_str(), &totalWidth, &totalHeight, &n, 4);
     ktxTexture2* kTexture = nullptr;
-    ktxTextureCreateInfo createInfo;
-    createInfo.vkFormat = VK_FORMAT_R8G8B8A8_UNORM;
-    createInfo.baseDepth = 1;
-    createInfo.numLevels = 1;
-    createInfo.numLayers = 1;
-    createInfo.isArray = false;
-    createInfo.generateMipmaps = false;
-
+    ktxTextureCreateInfo createInfo = {
+        .vkFormat = VK_FORMAT_R8G8B8A8_UNORM,
+        .baseDepth = 1,
+        .numLevels = 1,
+        .numLayers = 1,
+        .isArray = false,
+        .generateMipmaps = false,
+    };
+    
     if (args.type == TextureImportType::TEXTURE_CUBEMAP)
     {
         uint32 faceWidth = totalWidth / 4;
@@ -113,18 +115,17 @@ void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset)
         ktxTexture_SetImageFromMemory(ktxTexture(kTexture),
             0, 0, 0, data, totalWidth * totalHeight * 4 * sizeof(unsigned char));
     }
-    std::cout << "starting compression of " << textureAsset->getAssetIdentifier() << std::endl;
 
     ktxBasisParams params2 = {
         .structSize = sizeof(ktxBasisParams),
         .uastc = false,
         .threadCount = std::thread::hardware_concurrency(),
         .compressionLevel = 0,
-        .qualityLevel = 0,
+        .qualityLevel = 1,
     };
 
-    ktx_error_code_e error = ktxTexture2_CompressBasisEx(kTexture, &params2);
-    assert(error == KTX_SUCCESS);
+    //ktx_error_code_e error = ktxTexture2_CompressBasisEx(kTexture, &params2);
+    //assert(error == KTX_SUCCESS);
 
     ktx_uint8_t* dest;
     ktx_size_t size;
@@ -134,13 +135,9 @@ void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset)
     std::memcpy(memory.data(), dest, size);
     free(dest);
     
-    Array<uint8> rawPixels(totalWidth * totalHeight * 4);
-    std::memcpy(rawPixels.data(), data, rawPixels.size());
-
     stbi_image_free(data);
 
     ArchiveBuffer temp(graphics);
-    Serialization::save(temp, rawPixels);
     Serialization::save(temp, memory);
     temp.rewind();
     textureAsset->load(temp);
@@ -148,16 +145,6 @@ void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset)
     {
         return;
     }
-    auto stream = AssetRegistry::createWriteStream((std::filesystem::path(textureAsset->folderPath) / textureAsset->getName()).replace_extension("asset").string(), std::ios::binary);
 
-    ArchiveBuffer archive;
-    Serialization::save(archive, TextureAsset::IDENTIFIER);
-    Serialization::save(archive, textureAsset->getName());
-    Serialization::save(archive, textureAsset->getFolderPath());
-    Serialization::save(archive, rawPixels);
-    Serialization::save(archive, memory);
-    archive.writeToStream(stream);
-
-
-    ////co_return;
+    AssetRegistry::get().saveAsset(textureAsset, TextureAsset::IDENTIFIER, textureAsset->getFolderPath(), textureAsset->getName());
 }

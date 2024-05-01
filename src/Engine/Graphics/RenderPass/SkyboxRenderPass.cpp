@@ -9,8 +9,8 @@ SkyboxRenderPass::SkyboxRenderPass(Gfx::PGraphics graphics, PScene scene)
     : RenderPass(graphics, scene)
 {
     skybox = Seele::Component::Skybox{
-        .day = AssetRegistry::findTexture("FS000_Day_01")->getTexture().cast<Gfx::TextureCube>(),
-        .night = AssetRegistry::findTexture("FS000_Night_01")->getTexture().cast<Gfx::TextureCube>(),
+        //.day = AssetRegistry::findTexture("FS000_Day_01")->getTexture().cast<Gfx::TextureCube>(),
+        //.night = AssetRegistry::findTexture("FS000_Night_01")->getTexture().cast<Gfx::TextureCube>(),
         .fogColor = Vector(0.1, 0.1, 0.8),
         .blendFactor = 0,
     };

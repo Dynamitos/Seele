@@ -10,7 +10,7 @@ struct BlinnPhong : IBRDF
     float3 baseColor;
     float metallic;
     float3 normal;
-    float specular;
+    float3 specular;
     float roughness;
     float sheen;
 

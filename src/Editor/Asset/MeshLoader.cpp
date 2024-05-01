@@ -5,11 +5,11 @@
 #include "Graphics/StaticMeshVertexData.h"
 #include "Asset/AssetImporter.h"
 #include "Asset/MaterialAsset.h"
+#include "Graphics/Shader.h"
 #include <set>
 #include <fmt/core.h>
 #include <fstream>
 #include <iostream>
-#include <nlohmann/json.hpp>
 #include <stb_image_write.h>
 #include <assimp/config.h>
 #include <assimp/Importer.hpp>
@@ -41,172 +41,378 @@ void MeshLoader::importAsset(MeshImportArgs args)
     import(args, ref);
 }
 
-void MeshLoader::loadMaterials(const aiScene* scene, const std::string& baseName, const std::filesystem::path& meshDirectory, const std::string& importPath, Array<PMaterialInstanceAsset>& globalMaterials)
+
+void MeshLoader::convertAssimpARGB(unsigned char* dst, aiTexel* src, uint32 numPixels)
 {
-    using json = nlohmann::json;
-    for(uint32 i = 0; i < scene->mNumMaterials; ++i)
+    for (uint32 i = 0; i < numPixels; ++i)
     {
-        aiMaterial* material = scene->mMaterials[i];
-        json matCode;
-        std::string materialName = fmt::format("{0}{1}{2}", baseName, material->GetName().C_Str(), i);
-        materialName.erase(std::remove(materialName.begin(), materialName.end(), '.'), materialName.end()); // dots break adding the .asset extension later
-        matCode["name"] = materialName;
-        matCode["profile"] = "CelShading";
-        aiString texPath;
-        uint32 baseColorIndex = 0;
-        uint32 normalIndex = 0;
-        int32 codeIndex = -1;
-        if(material->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS)
+        dst[i * 4 + 0] = src[i].r;
+        dst[i * 4 + 1] = src[i].g;
+        dst[i * 4 + 2] = src[i].b;
+        dst[i * 4 + 3] = src[i].a;
+    }
+}
+void MeshLoader::loadTextures(const aiScene* scene, const std::filesystem::path& meshDirectory, const std::string& importPath, Map<std::string, PTextureAsset>& textures)
+{
+    for (uint32 i = 0; i < scene->mNumTextures; ++i)
+    {
+        aiTexture* tex = scene->mTextures[i];
+        auto texPath = std::filesystem::path(tex->mFilename.C_Str());
+        if (std::filesystem::exists(texPath))
+        { }
+        else if(std::filesystem::exists(meshDirectory / texPath))
+        { 
+            texPath = meshDirectory / texPath;
+        }
+        else
         {
-            auto texFilename = std::filesystem::path(texPath.C_Str()).stem();
-            if (texFilename == "white")
+            if (tex->mHeight == 0)
             {
-                matCode["code"].push_back(
-                    {
-                        { "exp", "Const" },
-                        { "value", "float3(1, 1, 1)"}
-                    }
-                );
-                baseColorIndex = ++codeIndex;
+                // already compressed, just dump it to the disk
+                std::ofstream file(texPath, std::ios::binary);
+                file.write((const char*)tex->pcData, tex->mWidth);
+                file.flush();
             }
             else
             {
-                AssetImporter::importTexture(TextureImportArgs{
-                .filePath = meshDirectory / texPath.C_Str(),
-                .importPath = importPath,
-                    });
-                matCode["params"]["diffuseTexture"] =
-                {
-                    {"type", "Texture2D"},
-                    {"default", fmt::format("{0}/{1}", importPath, texFilename.string())}
-                };
-                matCode["params"]["diffuseSampler"] =
-                {
-                    {"type", "Sampler"}
-                };
-                matCode["code"].push_back(
-                    {
-                        { "exp",  "Sample" },
-                        { "texture", "diffuseTexture" },
-                        { "sampler", "diffuseSampler" },
-                        { "coords", "input.texCoords" }
-                    }
-                );
-                ++codeIndex;
-                matCode["code"].push_back(
-                    {
-                        { "exp", "Swizzle" },
-                        { "target", codeIndex },
-                        { "comp", json::array({0, 1, 2}) },
-                    }
-                );
-                baseColorIndex = ++codeIndex;
+                // recompress data so that the TextureLoader can read it
+                unsigned char* texData = new unsigned char[tex->mWidth * tex->mHeight * 4];
+                convertAssimpARGB(texData, tex->pcData, tex->mWidth * tex->mHeight);
+                stbi_write_png(texPath.string().c_str(), tex->mWidth, tex->mHeight, 4, tex->pcData, tex->mWidth * 32);
+                delete[] texData;
             }
         }
-        else
-        {
-            matCode["code"].push_back(
-                {
-                    { "exp", "Const" },
-                    { "value", "input.vertexColor.xyz" }
-                }
-            );
-            baseColorIndex = ++codeIndex;
-        }
-        if(material->GetTexture(aiTextureType_NORMALS, 0, &texPath) == AI_SUCCESS)
-        {
-            auto texFilename = std::filesystem::path(texPath.C_Str()).stem();
-            AssetImporter::importTexture(TextureImportArgs{
-            .filePath = meshDirectory / texPath.C_Str(),
-            .importPath = importPath,
-                });
-            matCode["params"]["normalTexture"] =
-            {
-                {"type", "Texture2D"},
-                {"default", fmt::format("{0}/{1}", importPath, texFilename.string())}
-            };
-            matCode["params"]["normalSampler"] = {
-                {"type", "Sampler"},
-            };
-            matCode["code"].push_back(
-                {
-                    { "exp", "Sample" },
-                    { "texture", "normalTexture" },
-                    { "sampler", "normalSampler" },
-                    { "coords", "input.texCoords" }
-                }
-            );
-            ++codeIndex;
-            matCode["code"].push_back(
-                {
-                    { "exp", "Swizzle" },
-                    { "target", codeIndex },
-                    { "comp", json::array({0, 1, 2}) },
-                }
-            );
-            ++codeIndex;
-            matCode["code"].push_back(
-                {
-                    { "exp", "Mul" },
-                    { "lhs", "2" },
-                    { "rhs", codeIndex },
-                }
-            );
-            ++codeIndex;
-            matCode["code"].push_back(
-                {
-                    { "exp", "Sub" },
-                    { "lhs", codeIndex },
-                    { "rhs", "float3(1, 1, 1)"},
-                }
-            );
-            normalIndex = ++codeIndex;
-        }
-        else
-        {
-            matCode["code"].push_back(
-                {
-                    { "exp", "Const" },
-                    { "value", "float3(0, 0, 1)" }
-                }
-            );
-            normalIndex = ++codeIndex;
-        }
-        matCode["code"].push_back(
-            {
-                { "exp", "BRDF" },
-                { "profile", matCode["profile"]},
-                { "values", {
-                    { "baseColor", baseColorIndex },
-                    { "normal", normalIndex },
-                }}
-            }
-        );
-        std::string outMatFilename = materialName.append(".json");
-        std::ofstream outMatFile = std::ofstream(meshDirectory / outMatFilename);
-        outMatFile << std::setw(4) << matCode;
-        outMatFile.flush();
-        outMatFile.close();
-
-        std::cout << "writing json to " << outMatFilename << std::endl;
-        AssetImporter::importMaterial(MaterialImportArgs{
-            .filePath = meshDirectory / outMatFilename,
+        std::cout << "Loading model texture " << texPath.string() << std::endl;
+        AssetImporter::importTexture(TextureImportArgs{
+            .filePath = texPath,
             .importPath = importPath,
             });
-        std::string materialAsset;
-        if (importPath.empty())
+        textures[texPath.string()] = AssetRegistry::findTexture(importPath, texPath.string());
+    }
+}
+
+constexpr const char* KEY_DIFFUSE_COLOR = "k_d";
+constexpr const char* KEY_SPECULAR_COLOR = "k_s";
+constexpr const char* KEY_AMBIENT_COLOR = "k_a";
+constexpr const char* KEY_NORMAL = "n";
+constexpr const char* KEY_DIFFUSE_TEXTURE = "tex_d";
+constexpr const char* KEY_SPECULAR_TEXTURE = "tex_s";
+constexpr const char* KEY_AMBIENT_TEXTURE = "tex_a";
+constexpr const char* KEY_NORMAL_TEXTURE = "tex_n";
+
+
+void MeshLoader::loadMaterials(const aiScene* scene, const Map<std::string, PTextureAsset>& textures, const std::string& baseName, const std::filesystem::path& meshDirectory, const std::string& importPath, Array<PMaterialInstanceAsset>& globalMaterials)
+{
+    for(uint32 i = 0; i < scene->mNumMaterials; ++i)
+    {
+        aiMaterial* material = scene->mMaterials[i];
+        aiString texPath;
+        std::string materialName = fmt::format("M{0}{1}{2}", baseName, material->GetName().C_Str(), i);
+        materialName.erase(std::remove(materialName.begin(), materialName.end(), '.'), materialName.end()); // dots break adding the .asset extension later
+        materialName.erase(std::remove(materialName.begin(), materialName.end(), '-'), materialName.end()); // dots break adding the .asset extension later
+        Gfx::ODescriptorLayout materialLayout = graphics->createDescriptorLayout("pMaterial");
+        Array<OShaderExpression> expressions;
+        Array<std::string> parameters;
+
+        materialLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+            .binding = 0,
+            .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            .shaderStages = Gfx::SE_SHADER_STAGE_FRAGMENT_BIT,
+            });
+
+        size_t uniformSize = 0;
+        uint32 bindingCounter = 1;
+        auto addVectorParameter = [&](std::string paramKey, const char* matKey, int type, int index)
+            {
+                aiColor3D color;
+                material->Get(matKey, type, index, color);
+                expressions.add(new VectorParameter(paramKey, Vector(color.r, color.g, color.b), uniformSize, 0));
+                uniformSize = (uniformSize + sizeof(Vector4) - 1) / sizeof(Vector4) * sizeof(Vector4);
+                uniformSize += sizeof(Vector);
+                parameters.add(paramKey);
+            };
+
+
+        auto addTextureParameter = [&](std::string paramKey, aiTextureType type, int index, std::string& result)
+            {
+                aiString texPath;
+                aiTextureMapping mapping;
+                uint32 uvIndex = 0;
+                float blend = std::numeric_limits<float>::max();
+                aiTextureOp op;
+                aiTextureMapMode mapMode;
+                if (material->GetTexture(type, index, &texPath, &mapping, &uvIndex, &blend, &op, &mapMode) != AI_SUCCESS)
+                {
+                    std::cout << "fuck" << std::endl;
+                }
+                
+                std::string textureKey = fmt::format("{0}Texture{1}", paramKey, index);
+                auto texFilename = std::filesystem::path(texPath.C_Str());
+                PTextureAsset texture;
+                if (textures.contains(texFilename.string()))
+                {
+                    texture = textures[texFilename.string()];
+                }
+                else if (std::filesystem::exists(texFilename))
+                {
+                    AssetImporter::importTexture(TextureImportArgs{
+                    .filePath = texFilename,
+                    .importPath = importPath,
+                        });
+                    texture = AssetRegistry::findTexture(importPath, texFilename.stem().string());
+                }
+                else
+                {
+                    std::cout << "couldnt find " << texPath.C_Str() << std::endl;
+                }
+                expressions.add(new TextureParameter(textureKey, texture, bindingCounter));
+                materialLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+                    .binding = bindingCounter,
+                    .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+                    .textureType = Gfx::SE_IMAGE_VIEW_TYPE_2D,
+                    .shaderStages = Gfx::SE_SHADER_STAGE_FRAGMENT_BIT,
+                    });
+                parameters.add(textureKey);
+                bindingCounter++;
+
+                std::string samplerKey = std::format("{0}Sampler{1}", paramKey, index);
+                SamplerCreateInfo samplerInfo = {};
+                switch (mapMode)
+                {
+                case aiTextureMapMode_Wrap:
+                    samplerInfo.addressModeU = Gfx::SE_SAMPLER_ADDRESS_MODE_REPEAT;
+                    samplerInfo.addressModeV = Gfx::SE_SAMPLER_ADDRESS_MODE_REPEAT;
+                    samplerInfo.addressModeW = Gfx::SE_SAMPLER_ADDRESS_MODE_REPEAT;
+                    break;
+                case aiTextureMapMode_Clamp:
+                    samplerInfo.addressModeU = Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+                    samplerInfo.addressModeV = Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+                    samplerInfo.addressModeW = Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+                    break;
+                case aiTextureMapMode_Decal:
+                    samplerInfo.addressModeU = Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+                    samplerInfo.addressModeV = Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+                    samplerInfo.addressModeW = Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+                    break;
+                case aiTextureMapMode_Mirror:
+                    samplerInfo.addressModeU = Gfx::SE_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+                    samplerInfo.addressModeV = Gfx::SE_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+                    samplerInfo.addressModeW = Gfx::SE_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+                    break;
+                }
+                expressions.add(new SamplerParameter(samplerKey, graphics->createSampler(samplerInfo), bindingCounter));
+                materialLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+                    .binding = bindingCounter,
+                    .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLER,
+                    .shaderStages = Gfx::SE_SHADER_STAGE_FRAGMENT_BIT,
+                    });
+                parameters.add(samplerKey);
+                bindingCounter++;
+
+                std::string sampleKey = fmt::format("{0}Sample{1}", paramKey, index);
+                expressions.add(new SampleExpression());
+                expressions.back()->key = sampleKey;
+                expressions.back()->inputs["texture"].source = textureKey;
+                expressions.back()->inputs["sampler"].source = samplerKey;
+                expressions.back()->inputs["coords"].source = fmt::format("input.texCoords[{0}]", uvIndex);
+
+                std::string colorExtract = fmt::format("{0}Extract{1}", paramKey, index);
+                expressions.add(new SwizzleExpression({ 0, 1, 2, -1 }));
+                expressions.back()->key = colorExtract;
+                expressions.back()->inputs["target"].source = sampleKey;
+                //TODO: extract alpha, set opacity
+
+                if (blend == std::numeric_limits<float>::max())
+                {
+                    result = colorExtract;
+                    return;
+                }
+                std::string blendFactorKey = fmt::format("{0}BlendFactor{1}", paramKey, index);
+                expressions.add(new FloatParameter(blendFactorKey, blend, uniformSize, 0));
+                uniformSize += sizeof(float);
+                parameters.add(blendFactorKey);
+
+                std::string strengthKey = fmt::format("{0}Strength{1}", paramKey, index);
+                expressions.add(new MulExpression());
+                expressions.back()->key = strengthKey;
+                expressions.back()->inputs["lhs"].source = colorExtract;
+                expressions.back()->inputs["rhs"].source = blendFactorKey;
+
+                std::string blendKey = fmt::format("{0}Blend{1}", paramKey, index);
+                switch (op) {
+                    /** T = T1 * T2 */
+                case aiTextureOp_Multiply:
+                    expressions.add(new MulExpression());
+                    break;
+
+                    /** T = T1 - T2 */
+                case aiTextureOp_Subtract:
+                    expressions.add(new SubExpression());
+                    break;
+
+                    /** T = T1 / T2 */
+                case aiTextureOp_Divide:
+                    //expressions[blendKey] = new DivExpression();
+                    throw std::logic_error("Not implemented");
+
+                    /** T = (T1 + T2) - (T1 * T2) */
+                case aiTextureOp_SmoothAdd:
+                    throw std::logic_error("Not implemented");
+
+
+                    /** T = T1 + (T2-0.5) */
+                case aiTextureOp_SignedAdd:
+                    throw std::logic_error("Not implemented");
+
+                    /** T = T1 + T2 */
+                case aiTextureOp_Add:
+                default:
+                    expressions.add(new AddExpression());
+                    break;
+                }
+                expressions.back()->key = blendKey;
+                expressions.back()->inputs["lhs"].source = result;
+                expressions.back()->inputs["rhs"].source = strengthKey;
+
+                result = blendKey;
+                
+            };
+
+
+        addVectorParameter(KEY_DIFFUSE_COLOR, AI_MATKEY_COLOR_DIFFUSE);
+        addVectorParameter(KEY_SPECULAR_COLOR, AI_MATKEY_COLOR_SPECULAR);
+        addVectorParameter(KEY_AMBIENT_COLOR, AI_MATKEY_COLOR_AMBIENT);
+
+        std::string outputDiffuse = KEY_DIFFUSE_COLOR;
+        std::string outputSpecular = KEY_SPECULAR_COLOR;
+        std::string outputAmbient = KEY_AMBIENT_COLOR;
+        std::string outputNormal = "";
+
+        
+        uint32 numDiffuseTextures = material->GetTextureCount(aiTextureType_DIFFUSE);
+        for (uint32 i = 0; i < numDiffuseTextures; ++i)
         {
-            materialAsset = matCode["name"].get<std::string>();
+            addTextureParameter(KEY_DIFFUSE_TEXTURE, aiTextureType_DIFFUSE, i, outputDiffuse);
         }
-        else
+        uint32 numSpecular = material->GetTextureCount(aiTextureType_SPECULAR);
+        for (uint32 i = 0; i < numSpecular; ++i)
         {
-            materialAsset = fmt::format("{0}/{1}", importPath, matCode["name"].get<std::string>());
+            addTextureParameter(KEY_SPECULAR_TEXTURE, aiTextureType_SPECULAR, i, outputSpecular);
         }
-        PMaterialAsset baseMat = AssetRegistry::findMaterial(materialAsset);
+
+        uint32 numAmbient = material->GetTextureCount(aiTextureType_AMBIENT);
+        for (uint32 i = 0; i < numSpecular; ++i)
+        {
+            addTextureParameter(KEY_AMBIENT_COLOR, aiTextureType_AMBIENT, i, outputAmbient);
+        }
+        uint32 numNormal = material->GetTextureCount(aiTextureType_NORMALS);
+        if (numNormal > 1)
+        {
+            std::cout << "More than 1 normal??" << std::endl;
+        }
+        else if (numNormal == 1)
+        {
+            aiString texPath;
+            aiTextureMapping mapping;
+            uint32 uvIndex;
+            if (material->GetTexture(aiTextureType_NORMALS, 0, &texPath, &mapping, &uvIndex) != AI_SUCCESS)
+            {
+                std::cout << "fuck" << std::endl;
+            }
+
+            std::string textureKey = fmt::format("NormalTexture");
+            auto texFilename = std::filesystem::path(texPath.C_Str());
+            PTextureAsset texture;
+            if (textures.contains(texFilename.string()))
+            {
+                texture = textures[texFilename.string()];
+            }
+            else if (std::filesystem::exists(texFilename))
+            {
+                AssetImporter::importTexture(TextureImportArgs{
+                .filePath = texFilename,
+                .importPath = importPath,
+                    });
+                texture = AssetRegistry::findTexture(importPath, texFilename.stem().string());
+            }
+            if (texture != nullptr)
+            {
+                expressions.add(new TextureParameter(textureKey, texture, bindingCounter));
+                materialLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+                    .binding = bindingCounter,
+                    .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+                    .shaderStages = Gfx::SE_SHADER_STAGE_FRAGMENT_BIT,
+                    });
+                parameters.add(textureKey);
+                bindingCounter++;
+
+                std::string samplerKey = "NormalSampler";
+                SamplerCreateInfo samplerInfo = {};
+                expressions.add(new SamplerParameter(samplerKey, graphics->createSampler(samplerInfo), bindingCounter));
+                materialLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+                    .binding = bindingCounter,
+                    .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLER,
+                    .shaderStages = Gfx::SE_SHADER_STAGE_FRAGMENT_BIT,
+                    });
+                parameters.add(samplerKey);
+                bindingCounter++;
+
+                std::string sampleKey = "NormalSample";
+                expressions.add(new SampleExpression());
+                expressions.back()->key = sampleKey;
+                expressions.back()->inputs["texture"].source = textureKey;
+                expressions.back()->inputs["sampler"].source = samplerKey;
+                expressions.back()->inputs["coords"].source = fmt::format("input.texCoords[{0}]", uvIndex);
+
+                std::string normalExtract = "NormalExtract";
+                expressions.add(new SwizzleExpression({ 0, 1, 2, -1 }));
+                expressions.back()->key = normalExtract;
+                expressions.back()->inputs["target"].source = sampleKey;
+
+                std::string mulKey = "NormalMul";
+                expressions.add(new MulExpression());
+                expressions.back()->key = mulKey;
+                expressions.back()->inputs["lhs"].source = "2";
+                expressions.back()->inputs["rhs"].source = normalExtract;
+
+                std::string subKey = "NormalSub";
+                expressions.add(new SubExpression());
+                expressions.back()->key = subKey;
+                expressions.back()->inputs["lhs"].source = "1";
+                expressions.back()->inputs["rhs"].source = mulKey;
+
+                outputNormal = subKey;
+            }
+        }
+        
+        MaterialNode brdf;
+        brdf.profile = "BlinnPhong";
+        brdf.variables["baseColor"] = outputDiffuse;
+        brdf.variables["specular"] = outputSpecular;
+        if (!outputNormal.empty())
+        {
+            brdf.variables["normal"] = outputNormal;
+        }
+
+        materialLayout->create();
+
+
+        OMaterialAsset baseMat = new MaterialAsset(importPath, materialName);
+        baseMat->material = new Material(graphics,
+            std::move(materialLayout), 
+            uniformSize, 0, materialName, 
+            std::move(expressions), 
+            std::move(parameters), 
+            std::move(brdf)
+        );
+        baseMat->material->compile();
+        graphics->getShaderCompiler()->registerMaterial(baseMat->material);
         globalMaterials[i] = baseMat->instantiate(InstantiationParameter{
             .name = fmt::format("{0}_Inst_0", baseMat->getName()),
             .folderPath = baseMat->getFolderPath(),
             });
+        AssetRegistry::get().saveAsset(PMaterialAsset(baseMat), MaterialAsset::IDENTIFIER, baseMat->getFolderPath(), baseMat->getName());
+        AssetRegistry::get().registerMaterial(std::move(baseMat));
     }
 }
 
@@ -225,6 +431,7 @@ void findMeshRoots(aiNode *node, List<aiNode *> &meshNodes)
 
 void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialInstanceAsset>& materials, Array<OMesh>& globalMeshes, Component::Collider& collider)
 {
+//#pragma omp parallel for
     for (uint32 meshIndex = 0; meshIndex < scene->mNumMeshes; ++meshIndex)
     {
         aiMesh* mesh = scene->mMeshes[meshIndex];
@@ -242,7 +449,7 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
         Array<Vector> colors(mesh->mNumVertices);
 
         StaticMeshVertexData* vertexData = StaticMeshVertexData::getInstance();
-#pragma omp parallel for
+//#pragma omp parallel for
         for (int32 i = 0; i < mesh->mNumVertices; ++i)
         {
             positions[i] = Vector(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
@@ -283,7 +490,7 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
         vertexData->loadColors(id, colors);
 
         Array<uint32> indices(mesh->mNumFaces * 3);
-#pragma omp parallel for
+//#pragma omp parallel for
         for (int32 faceIndex = 0; faceIndex < mesh->mNumFaces; ++faceIndex)
         {
             indices[faceIndex * 3 + 0] = mesh->mFaces[faceIndex].mIndices[0];
@@ -308,49 +515,6 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
     }
 }
 
-void MeshLoader::convertAssimpARGB(unsigned char* dst, aiTexel* src, uint32 numPixels)
-{
-    for(uint32 i = 0; i < numPixels; ++i)
-    {
-        dst[i * 4 + 0] = src[i].r;
-        dst[i * 4 + 1] = src[i].g;
-        dst[i * 4 + 2] = src[i].b;
-        dst[i * 4 + 3] = src[i].a;
-    }
-}
-void MeshLoader::loadTextures(const aiScene* scene, const std::filesystem::path& meshDirectory, const std::string& importPath)
-{
-    for (uint32 i = 0; i < scene->mNumTextures; ++i)
-    {
-        aiTexture* tex = scene->mTextures[i];
-        auto texPath = std::filesystem::path(tex->mFilename.C_Str());
-        auto texPngPath = meshDirectory;
-        texPngPath.append(fmt::format("{0}.{1}", texPath.filename().string(), tex->achFormatHint));
-        if (!std::filesystem::exists(texPngPath))
-        {
-            if (tex->mHeight == 0)
-            {
-                // already compressed, just dump it to the disk
-                std::ofstream file(texPngPath, std::ios::binary);
-                file.write((const char*)tex->pcData, tex->mWidth);
-                file.flush();
-            }
-            else
-            {
-                // recompress data so that the TextureLoader can read it
-                unsigned char* texData = new unsigned char[tex->mWidth * tex->mHeight * 4];
-                convertAssimpARGB(texData, tex->pcData, tex->mWidth * tex->mHeight);
-                stbi_write_png(texPngPath.string().c_str(), tex->mWidth, tex->mHeight, 4, tex->pcData, tex->mWidth * 32);
-                delete[] texData;
-            }
-        }
-        std::cout << "Loading model texture " << texPngPath.string() << std::endl;
-        AssetImporter::importTexture(TextureImportArgs {
-            .filePath = texPngPath,
-            .importPath = importPath,
-            });
-    }
-}
 
 Matrix4 convertMatrix(aiMatrix4x4 matrix)
 {
@@ -390,9 +554,10 @@ void MeshLoader::import(MeshImportArgs args, PMeshAsset meshAsset)
     const aiScene *scene = importer.ApplyPostProcessing(aiProcess_CalcTangentSpace);
     std::cout << importer.GetErrorString() << std::endl;
 
+    Map<std::string, PTextureAsset> textures;
+    loadTextures(scene, args.filePath.parent_path(), args.importPath, textures);
     Array<PMaterialInstanceAsset> globalMaterials(scene->mNumMaterials);
-    loadTextures(scene, args.filePath.parent_path(), args.importPath);
-    loadMaterials(scene, args.filePath.stem().string(), args.filePath.parent_path(), args.importPath, globalMaterials);
+    loadMaterials(scene, textures, args.filePath.stem().string(), args.filePath.parent_path(), args.importPath, globalMaterials);
     
     Array<OMesh> globalMeshes(scene->mNumMeshes);
     Component::Collider collider;

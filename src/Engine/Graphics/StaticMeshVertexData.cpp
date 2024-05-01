@@ -22,7 +22,11 @@ StaticMeshVertexData* StaticMeshVertexData::getInstance()
 
 void StaticMeshVertexData::loadPositions(MeshId id, const Array<Vector>& data)
 {
-    uint64 offset = meshOffsets[id];
+    uint64 offset;
+    {
+        std::unique_lock l(mutex);
+        offset = meshOffsets[id];
+    }
     assert(offset + data.size() <= head);
     std::memcpy(positionData.data() + offset, data.data(), data.size() * sizeof(Vector));
     dirty = true;
@@ -30,7 +34,11 @@ void StaticMeshVertexData::loadPositions(MeshId id, const Array<Vector>& data)
 
 void StaticMeshVertexData::loadTexCoords(MeshId id, const Array<Vector2>& data)
 {
-    uint64 offset = meshOffsets[id];
+    uint64 offset;
+    {
+        std::unique_lock l(mutex);
+        offset = meshOffsets[id];
+    }
     assert(offset + data.size() <= head);
     std::memcpy(texCoordsData.data() + offset, data.data(), data.size() * sizeof(Vector2));
     dirty = true;
@@ -38,7 +46,11 @@ void StaticMeshVertexData::loadTexCoords(MeshId id, const Array<Vector2>& data)
 
 void StaticMeshVertexData::loadNormals(MeshId id, const Array<Vector>& data)
 {
-    uint64 offset = meshOffsets[id];
+    uint64 offset;
+    {
+        std::unique_lock l(mutex);
+        offset = meshOffsets[id];
+    }
     assert(offset + data.size() <= head);
     std::memcpy(normalData.data() + offset, data.data(), data.size() * sizeof(Vector));
     dirty = true;
@@ -46,7 +58,11 @@ void StaticMeshVertexData::loadNormals(MeshId id, const Array<Vector>& data)
 
 void StaticMeshVertexData::loadTangents(MeshId id, const Array<Vector>& data)
 {
-    uint64 offset = meshOffsets[id];
+    uint64 offset;
+    {
+        std::unique_lock l(mutex);
+        offset = meshOffsets[id];
+    }
     assert(offset + data.size() <= head);
     std::memcpy(tangentData.data() + offset, data.data(), data.size() * sizeof(Vector));
     dirty = true;
@@ -54,7 +70,11 @@ void StaticMeshVertexData::loadTangents(MeshId id, const Array<Vector>& data)
 
 void StaticMeshVertexData::loadBiTangents(MeshId id, const Array<Vector>& data)
 {
-    uint64 offset = meshOffsets[id];
+    uint64 offset;
+    {
+        std::unique_lock l(mutex);
+        offset = meshOffsets[id];
+    }
     assert(offset + data.size() <= head);
     std::memcpy(biTangentData.data() + offset, data.data(), data.size() * sizeof(Vector));
     dirty = true;
@@ -62,7 +82,11 @@ void StaticMeshVertexData::loadBiTangents(MeshId id, const Array<Vector>& data)
 
 void Seele::StaticMeshVertexData::loadColors(MeshId id, const Array<Vector>& data)
 {
-    uint64 offset = meshOffsets[id];
+    uint64 offset;
+    {
+        std::unique_lock l(mutex);
+        offset = meshOffsets[id];
+    }
     assert(offset + data.size() <= head);
     std::memcpy(colorData.data() + offset, data.data(), data.size() * sizeof(Vector));
     dirty = true;
@@ -70,19 +94,23 @@ void Seele::StaticMeshVertexData::loadColors(MeshId id, const Array<Vector>& dat
 
 void StaticMeshVertexData::serializeMesh(MeshId id, uint64 numVertices, ArchiveBuffer& buffer)
 {
-    uint64 offset = meshOffsets[id];
+    uint64 offset;
+    {
+        std::unique_lock l(mutex);
+        offset = meshOffsets[id];
+    }
     Array<Vector> pos(numVertices);
     Array<Vector2> tex(numVertices);
     Array<Vector> nor(numVertices);
     Array<Vector> tan(numVertices);
     Array<Vector> bit(numVertices);
     Array<Vector> col(numVertices);
-    std::copy(positionData.begin() + offset, positionData.begin() + offset + numVertices, pos.begin());
-    std::copy(texCoordsData.begin() + offset, texCoordsData.begin() + offset + numVertices, tex.begin());
-    std::copy(normalData.begin() + offset, normalData.begin() + offset + numVertices, nor.begin());
-    std::copy(tangentData.begin() + offset, tangentData.begin() + offset + numVertices, tan.begin());
-    std::copy(biTangentData.begin() + offset, biTangentData.begin() + offset + numVertices, bit.begin());
-    std::copy(colorData.begin() + offset, colorData.begin() + offset + numVertices, col.begin());
+    std::memcpy(positionData.data() + offset, pos.data(), numVertices * sizeof(Vector));
+    std::memcpy(texCoordsData.data() + offset, tex.data(), numVertices * sizeof(Vector2));
+    std::memcpy(normalData.data() + offset, nor.data(), numVertices * sizeof(Vector));
+    std::memcpy(tangentData.data() + offset, tan.data(), numVertices * sizeof(Vector));
+    std::memcpy(biTangentData.data() + offset, bit.data(), numVertices * sizeof(Vector));
+    std::memcpy(colorData.data() + offset, col.data(), numVertices * sizeof(Vector));
     Serialization::save(buffer, pos);
     Serialization::save(buffer, tex);
     Serialization::save(buffer, nor);

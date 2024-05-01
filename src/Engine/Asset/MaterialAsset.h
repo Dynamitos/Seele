@@ -24,6 +24,7 @@ public:
 private:
     OMaterial material;
     friend class MaterialLoader;
+    friend class MeshLoader;
 };
 DEFINE_REF(MaterialAsset)
 } // namespace Seele

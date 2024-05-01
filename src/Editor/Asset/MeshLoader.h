@@ -1,6 +1,7 @@
 #pragma once
 #include "MinimalEngine.h"
 #include "Containers/List.h"
+#include "Containers/Map.h"
 #include "Component/Collider.h"
 #include <filesystem>
 
@@ -12,6 +13,7 @@ namespace Seele
 DECLARE_REF(Mesh)
 DECLARE_REF(MeshAsset)
 DECLARE_REF(MaterialInstanceAsset)
+DECLARE_REF(TextureAsset)
 DECLARE_NAME_REF(Gfx, Graphics)
 struct MeshImportArgs
 {
@@ -25,8 +27,8 @@ public:
     ~MeshLoader();
     void importAsset(MeshImportArgs args);
 private:
-    void loadMaterials(const aiScene* scene, const std::string& baseName, const std::filesystem::path& meshDirectory, const std::string& importPath, Array<PMaterialInstanceAsset>& globalMaterials);
-    void loadTextures(const aiScene* scene, const std::filesystem::path& meshDirectory, const std::string& importPath);
+    void loadTextures(const aiScene* scene, const std::filesystem::path& meshDirectory, const std::string& importPath, Map<std::string, PTextureAsset>& textures);
+    void loadMaterials(const aiScene* scene, const Map<std::string, PTextureAsset>& textures, const std::string& baseName, const std::filesystem::path& meshDirectory, const std::string& importPath, Array<PMaterialInstanceAsset>& globalMaterials);
     void loadGlobalMeshes(const aiScene* scene, const Array<PMaterialInstanceAsset>& materials, Array<OMesh>& globalMeshes, Component::Collider& collider);
     void convertAssimpARGB(unsigned char* dst, aiTexel* src, uint32 numPixels);
 

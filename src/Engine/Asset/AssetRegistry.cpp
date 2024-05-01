@@ -26,69 +26,54 @@ void AssetRegistry::init(std::filesystem::path rootFolder, Gfx::PGraphics graphi
     get().initialize(rootFolder, graphics);
 }
 
-PMeshAsset AssetRegistry::findMesh(const std::string &filePath)
+PMeshAsset AssetRegistry::findMesh(std::string_view folderPath, std::string_view filePath)
 {
     AssetFolder* folder = get().assetRoot;
-    std::string fileName = filePath;
-    size_t slashLoc = filePath.rfind("/");
-    if(slashLoc != std::string::npos)
+    if (!folderPath.empty())
     {
-        folder = get().getOrCreateFolder(filePath.substr(0, slashLoc));
-        fileName = filePath.substr(slashLoc+1, filePath.size());
+        folder = get().getOrCreateFolder(folderPath);
     }
-    return folder->meshes.at(fileName);
+    return folder->meshes.at(std::string(filePath));
 }
 
-PTextureAsset AssetRegistry::findTexture(const std::string &filePath)
+PTextureAsset AssetRegistry::findTexture(std::string_view folderPath, std::string_view filePath)
 {
     AssetFolder* folder = get().assetRoot;
-    std::string fileName = filePath;
-    size_t slashLoc = filePath.rfind("/");
-    if (slashLoc != std::string::npos)
+    if (!folderPath.empty())
     {
-        folder = get().getOrCreateFolder(filePath.substr(0, slashLoc));
-        fileName = filePath.substr(slashLoc + 1, filePath.size());
+        folder = get().getOrCreateFolder(folderPath);
     }
-    return folder->textures.at(fileName);
+    return folder->textures.at(std::string(filePath));
 }
 
-PFontAsset AssetRegistry::findFont(const std::string& filePath)
+PFontAsset AssetRegistry::findFont(std::string_view folderPath, std::string_view filePath)
 {
     AssetFolder* folder = get().assetRoot;
-    std::string fileName = filePath;
-    size_t slashLoc = filePath.rfind("/");
-    if(slashLoc != std::string::npos)
+    if (!folderPath.empty())
     {
-        folder = get().getOrCreateFolder(filePath.substr(0, slashLoc));
-        fileName = filePath.substr(slashLoc+1, filePath.size());
+        folder = get().getOrCreateFolder(folderPath);
     }
-    return folder->fonts.at(fileName);
+    return folder->fonts.at(std::string(filePath));
 }
 
-PMaterialAsset AssetRegistry::findMaterial(const std::string &filePath)
+PMaterialAsset AssetRegistry::findMaterial(std::string_view folderPath, std::string_view filePath)
 {
     AssetFolder* folder = get().assetRoot;
-    std::string fileName = filePath;
-    size_t slashLoc = filePath.rfind("/");
-    if (slashLoc != std::string::npos)
+    if (!folderPath.empty())
     {
-        folder = get().getOrCreateFolder(filePath.substr(0, slashLoc));
-        fileName = filePath.substr(slashLoc + 1, filePath.size());
+        folder = get().getOrCreateFolder(folderPath);
     }
-    return folder->materials.at(fileName);
+    return folder->materials.at(std::string(filePath));
 }
 
-PMaterialInstanceAsset AssetRegistry::findMaterialInstance(const std::string &filePath)
+PMaterialInstanceAsset AssetRegistry::findMaterialInstance(std::string_view folderPath, std::string_view filePath)
 {
     AssetFolder* folder = get().assetRoot;
-    std::string fileName = filePath;
-    size_t slashLoc = filePath.rfind("/");
-    if (slashLoc != std::string::npos)
+    if (!folderPath.empty())
     {
-        folder = get().getOrCreateFolder(filePath.substr(0, slashLoc));
-        fileName = filePath.substr(slashLoc + 1, filePath.size());
+        folder = get().getOrCreateFolder(folderPath);
     }
-    return folder->instances.at(fileName);
+    return folder->instances.at(std::string(filePath));
 }
 
 std::ofstream AssetRegistry::createWriteStream(const std::filesystem::path& relativePath, std::ios_base::openmode openmode) 
@@ -126,6 +111,31 @@ void AssetRegistry::saveRegistry()
     get().saveRegistryInternal();
 }
 
+AssetRegistry::AssetFolder* AssetRegistry::getOrCreateFolder(std::string_view fullPath)
+{
+    AssetFolder* result = assetRoot;
+    std::string temp = std::string(fullPath);
+    while (!temp.empty())
+    {
+        size_t slashLoc = temp.find("/");
+        if (slashLoc == std::string::npos)
+        {
+            if (!result->children.contains(temp))
+            {
+                result->children[temp] = new AssetFolder(temp);
+            }
+            return result->children[temp];
+        }
+        std::string folderName = temp.substr(0, slashLoc);
+        if (!result->children.contains(folderName))
+        {
+            result->children[folderName] = new AssetFolder(fullPath);
+        }
+        result = result->children[folderName];
+        temp = temp.substr(slashLoc + 1, temp.size());
+    }
+    return result;
+}
 
 void AssetRegistry::initialize(const std::filesystem::path &_rootFolder, Gfx::PGraphics _graphics)
 {
@@ -318,7 +328,7 @@ void AssetRegistry::saveAsset(PAsset asset, uint64 identifier, const std::filesy
     if (name.empty())
         return;
 
-    std::string path = (folderPath / name).replace_extension("asset").string();
+    std::string path = (folderPath / name).string().append(".asset");
     auto assetStream = createWriteStream(std::move(path), std::ios::binary);
     ArchiveBuffer buffer(graphics);
     // write identifier
@@ -367,31 +377,6 @@ void AssetRegistry::registerMaterialInstance(OMaterialInstanceAsset material)
     folder->instances[material->getName()] = std::move(material);
 }
 
-AssetRegistry::AssetFolder* AssetRegistry::getOrCreateFolder(std::string fullPath)
-{
-    AssetFolder* result = assetRoot;
-    std::string temp = fullPath;
-    while(!fullPath.empty())
-    {
-        size_t slashLoc = fullPath.find("/");
-        if(slashLoc == std::string::npos)
-        {
-            if (!result->children.contains(fullPath))
-            {
-                result->children[fullPath] = new AssetFolder(fullPath);
-            }
-            return result->children[fullPath];
-        }
-        std::string folderName = fullPath.substr(0, slashLoc);
-        if (!result->children.contains(folderName))
-        {
-            result->children[folderName] = new AssetFolder(temp);
-        }
-        result = result->children[folderName];
-        fullPath = fullPath.substr(slashLoc+1, fullPath.size());
-    }
-    return result;
-}
 
 std::ofstream AssetRegistry::internalCreateWriteStream(const std::filesystem::path& relativePath, std::ios_base::openmode openmode)
 {
