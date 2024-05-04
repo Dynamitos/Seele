@@ -94,12 +94,18 @@ void MeshLoader::loadTextures(const aiScene* scene, const std::filesystem::path&
 constexpr const char* KEY_DIFFUSE_COLOR = "k_d";
 constexpr const char* KEY_SPECULAR_COLOR = "k_s";
 constexpr const char* KEY_AMBIENT_COLOR = "k_a";
-constexpr const char* KEY_NORMAL = "n";
+constexpr const char* KEY_SHININESS = "k_shiny";
+constexpr const char* KEY_ROUGHNESS = "k_r";
+constexpr const char* KEY_METALLIC = "k_m";
+
 constexpr const char* KEY_DIFFUSE_TEXTURE = "tex_d";
 constexpr const char* KEY_SPECULAR_TEXTURE = "tex_s";
 constexpr const char* KEY_AMBIENT_TEXTURE = "tex_a";
 constexpr const char* KEY_NORMAL_TEXTURE = "tex_n";
-
+constexpr const char* KEY_SHININESS_TEXTURE = "tex_shiny";
+constexpr const char* KEY_ROUGHNESS_TEXTURE = "tex_r";
+constexpr const char* KEY_METALLIC_TEXTURE = "tex_m";
+constexpr const char* KEY_AMBIENT_OCCLUSION_TEXTURE = "tex_ao";
 
 void MeshLoader::loadMaterials(const aiScene* scene, const Map<std::string, PTextureAsset>& textures, const std::string& baseName, const std::filesystem::path& meshDirectory, const std::string& importPath, Array<PMaterialInstanceAsset>& globalMaterials)
 {
@@ -125,18 +131,26 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Map<std::string, PTex
 
         size_t uniformSize = 0;
         uint32 bindingCounter = 1;
+        auto addScalarParameter = [&](std::string paramKey, const char* matKey, int type, int index)
+            {
+                float scalar;
+                material->Get(matKey, type, index, scalar);
+                expressions.add(new FloatParameter(paramKey, scalar, uniformSize, 0));
+                uniformSize += sizeof(float);
+                parameters.add(paramKey);
+            };
+
         auto addVectorParameter = [&](std::string paramKey, const char* matKey, int type, int index)
             {
                 aiColor3D color;
                 material->Get(matKey, type, index, color);
-                expressions.add(new VectorParameter(paramKey, Vector(color.r, color.g, color.b), uniformSize, 0));
                 uniformSize = (uniformSize + sizeof(Vector4) - 1) / sizeof(Vector4) * sizeof(Vector4);
+                expressions.add(new VectorParameter(paramKey, Vector(color.r, color.g, color.b), uniformSize, 0));
                 uniformSize += sizeof(Vector);
                 parameters.add(paramKey);
             };
 
-
-        auto addTextureParameter = [&](std::string paramKey, aiTextureType type, int index, std::string& result)
+        auto addTextureParameter = [&](std::string paramKey, aiTextureType type, int index, std::string& result, StaticArray<int32, 4> extractMask = {0, 1, 2, -1})
             {
                 aiString texPath;
                 aiTextureMapping mapping;
@@ -169,12 +183,14 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Map<std::string, PTex
                     AssetImporter::importTexture(TextureImportArgs{
                     .filePath = meshDirectory / texFilename,
                     .importPath = importPath,
+                    .type = type == aiTextureType_NORMALS ? TextureImportType::TEXTURE_NORMAL : TextureImportType::TEXTURE_2D,
                         });
                     texture = AssetRegistry::findTexture(importPath, texFilename.stem().string());
                 }
                 else
                 {
                     std::cout << "couldnt find " << texPath.C_Str() << std::endl;
+                    return;
                 }
                 expressions.add(new TextureParameter(textureKey, texture, bindingCounter));
                 materialLayout->addDescriptorBinding(Gfx::DescriptorBinding{
@@ -228,7 +244,7 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Map<std::string, PTex
                 expressions.back()->inputs["coords"].source = fmt::format("input.texCoords[{0}]", uvIndex);
 
                 std::string colorExtract = fmt::format("{0}Extract{1}", paramKey, index);
-                expressions.add(new SwizzleExpression({ 0, 1, 2, -1 }));
+                expressions.add(new SwizzleExpression(extractMask));
                 expressions.back()->key = colorExtract;
                 expressions.back()->inputs["target"].source = sampleKey;
                 //TODO: extract alpha, set opacity
@@ -289,124 +305,114 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Map<std::string, PTex
                 
             };
 
-
+        // Diffuse
         addVectorParameter(KEY_DIFFUSE_COLOR, AI_MATKEY_COLOR_DIFFUSE);
-        addVectorParameter(KEY_SPECULAR_COLOR, AI_MATKEY_COLOR_SPECULAR);
-        addVectorParameter(KEY_AMBIENT_COLOR, AI_MATKEY_COLOR_AMBIENT);
-
         std::string outputDiffuse = KEY_DIFFUSE_COLOR;
-        std::string outputSpecular = KEY_SPECULAR_COLOR;
-        std::string outputAmbient = KEY_AMBIENT_COLOR;
-        std::string outputNormal = "";
-
-        
         uint32 numDiffuseTextures = material->GetTextureCount(aiTextureType_DIFFUSE);
         for (uint32 i = 0; i < numDiffuseTextures; ++i)
         {
             addTextureParameter(KEY_DIFFUSE_TEXTURE, aiTextureType_DIFFUSE, i, outputDiffuse);
         }
+
+        // Specular
+        addVectorParameter(KEY_SPECULAR_COLOR, AI_MATKEY_COLOR_SPECULAR);
+        std::string outputSpecular = KEY_SPECULAR_COLOR;
         uint32 numSpecular = material->GetTextureCount(aiTextureType_SPECULAR);
         for (uint32 i = 0; i < numSpecular; ++i)
         {
             addTextureParameter(KEY_SPECULAR_TEXTURE, aiTextureType_SPECULAR, i, outputSpecular);
         }
 
-        uint32 numAmbient = material->GetTextureCount(aiTextureType_AMBIENT);
-        for (uint32 i = 0; i < numSpecular; ++i)
-        {
-            addTextureParameter(KEY_AMBIENT_COLOR, aiTextureType_AMBIENT, i, outputAmbient);
-        }
+        // Normal
+        std::string outputNormal = "";
         uint32 numNormal = material->GetTextureCount(aiTextureType_NORMALS);
-        if (numNormal > 1)
+        for (uint32 i = 0; i < numNormal; ++i)
         {
-            std::cout << "More than 1 normal??" << std::endl;
+            addTextureParameter(KEY_NORMAL_TEXTURE, aiTextureType_NORMALS, i, outputNormal);
         }
-        else if (numNormal == 1)
+
+        // Ambient Color
+        addVectorParameter(KEY_AMBIENT_COLOR, AI_MATKEY_COLOR_AMBIENT);
+        std::string outputAmbient = KEY_AMBIENT_COLOR;
+        uint32 numAmbient = material->GetTextureCount(aiTextureType_AMBIENT);
+        for (uint32 i = 0; i < numAmbient; ++i)
         {
-            aiString texPath;
-            aiTextureMapping mapping;
-            uint32 uvIndex;
-            if (material->GetTexture(aiTextureType_NORMALS, 0, &texPath, &mapping, &uvIndex) != AI_SUCCESS)
-            {
-                std::cout << "fuck" << std::endl;
-            }
-
-            std::string textureKey = fmt::format("NormalTexture");
-            auto texFilename = std::filesystem::path(texPath.C_Str());
-            PTextureAsset texture;
-            if (textures.contains(texFilename.string()))
-            {
-                texture = textures[texFilename.string()];
-            }
-            else if (std::filesystem::exists(texFilename))
-            {
-                AssetImporter::importTexture(TextureImportArgs{
-                .filePath = texFilename,
-                .importPath = importPath,
-                    });
-                texture = AssetRegistry::findTexture(importPath, texFilename.stem().string());
-            }
-            if (texture != nullptr)
-            {
-                expressions.add(new TextureParameter(textureKey, texture, bindingCounter));
-                materialLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-                    .binding = bindingCounter,
-                    .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
-                    .shaderStages = Gfx::SE_SHADER_STAGE_FRAGMENT_BIT,
-                    });
-                parameters.add(textureKey);
-                bindingCounter++;
-
-                std::string samplerKey = "NormalSampler";
-                SamplerCreateInfo samplerInfo = {};
-                expressions.add(new SamplerParameter(samplerKey, graphics->createSampler(samplerInfo), bindingCounter));
-                materialLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-                    .binding = bindingCounter,
-                    .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLER,
-                    .shaderStages = Gfx::SE_SHADER_STAGE_FRAGMENT_BIT,
-                    });
-                parameters.add(samplerKey);
-                bindingCounter++;
-
-                std::string sampleKey = "NormalSample";
-                expressions.add(new SampleExpression());
-                expressions.back()->key = sampleKey;
-                expressions.back()->inputs["texture"].source = textureKey;
-                expressions.back()->inputs["sampler"].source = samplerKey;
-                expressions.back()->inputs["coords"].source = fmt::format("input.texCoords[{0}]", uvIndex);
-
-                std::string normalExtract = "NormalExtract";
-                expressions.add(new SwizzleExpression({ 0, 1, 2, -1 }));
-                expressions.back()->key = normalExtract;
-                expressions.back()->inputs["target"].source = sampleKey;
-
-                std::string mulKey = "NormalMul";
-                expressions.add(new MulExpression());
-                expressions.back()->key = mulKey;
-                expressions.back()->inputs["lhs"].source = "2";
-                expressions.back()->inputs["rhs"].source = normalExtract;
-
-                std::string subKey = "NormalSub";
-                expressions.add(new SubExpression());
-                expressions.back()->key = subKey;
-                expressions.back()->inputs["lhs"].source = mulKey;
-                expressions.back()->inputs["rhs"].source = "float3(1,1,1)";
-
-                outputNormal = subKey;
-            }
+            addTextureParameter(KEY_AMBIENT_TEXTURE, aiTextureType_AMBIENT, i, outputAmbient);
         }
-        
+
+        // Shininess
+        addScalarParameter(KEY_SHININESS, AI_MATKEY_SHININESS);
+        std::string outputShininess = KEY_SHININESS;
+        uint32 numShiny = material->GetTextureCount(aiTextureType_SHININESS);
+        for (uint32 i = 0; i < numShiny; ++i)
+        {
+            addTextureParameter(KEY_SHININESS_TEXTURE, aiTextureType_SHININESS, i, outputShininess, { 0, -1, -1, -1 });
+        }
+
+        // Roughness
+        addScalarParameter(KEY_ROUGHNESS, AI_MATKEY_ROUGHNESS_FACTOR);
+        std::string outputRoughness = KEY_ROUGHNESS;
+        uint32 numRoughness = material->GetTextureCount(aiTextureType_DIFFUSE_ROUGHNESS);
+        for (uint32 i = 0; i < numRoughness; ++i)
+        {
+            addTextureParameter(KEY_ROUGHNESS_TEXTURE, aiTextureType_DIFFUSE_ROUGHNESS, i, outputRoughness, { 0, -1, -1, -1 });
+        }
+
+        // Metallic
+        addScalarParameter(KEY_METALLIC, AI_MATKEY_METALLIC_FACTOR);
+        std::string outputMetallic = KEY_METALLIC;
+        uint32 numMetallic = material->GetTextureCount(aiTextureType_METALNESS);
+        for (uint32 i = 0; i < numMetallic; ++i)
+        {
+            addTextureParameter(KEY_METALLIC_TEXTURE, aiTextureType_METALNESS, i, outputMetallic, { 0, -1, -1, -1 });
+        }
+
+        // Ambient Occlusion
+        std::string outputAO = "";
+        uint32 numAO = material->GetTextureCount(aiTextureType_AMBIENT_OCCLUSION);
+        for (uint32 i = 0; i < numAO; ++i)
+        {
+            addTextureParameter(KEY_AMBIENT_OCCLUSION_TEXTURE, aiTextureType_AMBIENT_OCCLUSION, i, outputAO, { 0, -1, -1, -1 });
+        }
+
+
         MaterialNode brdf;
-        brdf.profile = "BlinnPhong";
         brdf.variables["baseColor"] = outputDiffuse;
-        //brdf.variables["specular"] = outputSpecular;
         if (!outputNormal.empty())
         {
             brdf.variables["normal"] = outputNormal;
         }
+        aiShadingMode mode;
+        material->Get(AI_MATKEY_SHADING_MODEL, mode);
+        switch (mode) {
+        case aiShadingMode_Blinn:
+            brdf.profile = "Phong";
+            brdf.variables["specular"] = outputSpecular;
+            brdf.variables["ambient"] = outputAmbient;
+            brdf.variables["shininess"] = outputShininess;
+            break;
+        case aiShadingMode_Phong:
+            brdf.profile = "BlinnPhong";
+            brdf.variables["specularColor"] = outputSpecular;
+            brdf.variables["ambient"] = outputAmbient;
+            break;
+        case aiShadingMode_Toon:
+            brdf.profile = "CelShading";
+            break;
+        case aiShadingMode_CookTorrance:
+            brdf.profile = "CookTorrance";
+            brdf.variables["roughness"] = outputRoughness;
+            brdf.variables["metallic"] = outputMetallic;
+            if (!outputAO.empty())
+            {
+                brdf.variables["ambientOcclusion"] = outputAmbient;
+            }
+            break;
+        default:
+            throw std::logic_error("Todo");
+        };
 
         materialLayout->create();
-
 
         OMaterialAsset baseMat = new MaterialAsset(importPath, materialName);
         baseMat->material = new Material(graphics,

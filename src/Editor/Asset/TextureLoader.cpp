@@ -51,100 +51,134 @@ PTextureAsset TextureLoader::getPlaceholderTexture()
     return placeholderAsset;
 }
 
+#define KTX_ASSERT(x) { auto error = x; if(error != KTX_SUCCESS) { std::cout << ktxErrorString(error) << std::endl; abort(); } }
+
 void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset)
 {
-    int totalWidth = 0, totalHeight = 0, n = 0;
-    unsigned char* data = stbi_load(args.filePath.string().c_str(), &totalWidth, &totalHeight, &n, 4);
-    ktxTexture2* kTexture = nullptr;
-    ktxTextureCreateInfo createInfo = {
-        .vkFormat = VK_FORMAT_R8G8B8A8_UNORM,
-        .baseDepth = 1,
-        .numLevels = 1,
-        .numLayers = 1,
-        .isArray = false,
-        .generateMipmaps = false,
-    };
-    
-    if (args.type == TextureImportType::TEXTURE_CUBEMAP)
+    // manually transcode ktx textures using toktx
+    if (args.filePath.extension().compare("ktx") != 0)
     {
-        uint32 faceWidth = totalWidth / 4;
-        // uint32 faceHeight = totalHeight / 3;
-        // Cube map
-        createInfo.baseWidth = totalWidth / 4;
-        createInfo.baseHeight = totalHeight / 3;
-        createInfo.numFaces = 6;
-        createInfo.numDimensions = 2;
-
-        ktxTexture2_Create(&createInfo,
-            KTX_TEXTURE_CREATE_ALLOC_STORAGE,
-            &kTexture);
-
-        auto loadCubeFace = [&kTexture, &faceWidth, &totalWidth, &data](int xPos, int yPos, int faceName)
-        {
-            std::vector<unsigned char> vec(faceWidth * faceWidth * 4);
-            for (uint32 y = 0; y < faceWidth; ++y)
-            {
-                for (uint32 x = 0; x < faceWidth; ++x)
-                {
-                    int imgX = x + (xPos * faceWidth);
-                    int imgY = y + (yPos * faceWidth);
-                    std::memcpy(&vec[(x + (faceWidth * y)) * 4], &data[(imgX + (totalWidth * imgY)) * 4], 4);
-                }
-            }
-            ktxTexture_SetImageFromMemory(ktxTexture(kTexture),
-                0, 0, faceName, vec.data(), vec.size());
-        };
-        loadCubeFace(2, 1, 0); // +X
-        loadCubeFace(0, 1, 1); // -X
-        loadCubeFace(1, 0, 2); // +Y
-        loadCubeFace(1, 2, 3); // -Y
-        loadCubeFace(1, 1, 4); // +Z
-        loadCubeFace(3, 1, 5); // -Z
-    }
-    else
-    {
-        createInfo.baseWidth = totalWidth;
-        createInfo.baseHeight = totalHeight;
-        createInfo.numFaces = 1;
-        createInfo.numDimensions = 1 + (totalHeight > 1);
-
-        ktxTexture2_Create(&createInfo,
-            KTX_TEXTURE_CREATE_ALLOC_STORAGE,
-            &kTexture);
-
-        ktxTexture_SetImageFromMemory(ktxTexture(kTexture),
-            0, 0, 0, data, totalWidth * totalHeight * 4 * sizeof(unsigned char));
+        auto ktxFile = args.filePath;
+        ktxFile.replace_extension("ktx");
+        std::stringstream ss;
+        ss << "toktx --encode etc1s " << ktxFile << " " << args.filePath;
+        system(ss.str().c_str());
+        args.filePath = ktxFile;
     }
 
-    ktxBasisParams params2 = {
-        .structSize = sizeof(ktxBasisParams),
-        .uastc = false,
-        .threadCount = std::thread::hardware_concurrency(),
-        .compressionLevel = 0,
-        .qualityLevel = 1,
-    };
+    ktxTexture2* ktxHandle;
+    KTX_ASSERT(ktxTexture_CreateFromNamedFile(args.filePath.string().c_str(), 0, (ktxTexture**) & ktxHandle));
 
-    //ktx_error_code_e error = ktxTexture2_CompressBasisEx(kTexture, &params2);
-    //assert(error == KTX_SUCCESS);
 
-    ktx_uint8_t* dest;
-    ktx_size_t size;
-    ktxTexture_WriteToMemory(ktxTexture(kTexture), &dest, &size);
+    //int totalWidth = 0, totalHeight = 0, n = 0;
+    //unsigned char* data = stbi_load(args.filePath.string().c_str(), &totalWidth, &totalHeight, &n, 4);
+    //ktxTexture2* kTexture = nullptr;
+    //VkFormat format = VK_FORMAT_R8G8B8A8_UNORM;
+    //ktxTextureCreateInfo createInfo = {
+    //    .vkFormat = (uint32)format,
+    //    .baseDepth = 1,
+    //    .numLevels = 1,
+    //    .numLayers = 1,
+    //    .isArray = false,
+    //    .generateMipmaps = false,
+    //};
+    //
+    //if (args.type == TextureImportType::TEXTURE_CUBEMAP)
+    //{
+    //    uint32 faceWidth = totalWidth / 4;
+    //    // uint32 faceHeight = totalHeight / 3;
+    //    // Cube map
+    //    createInfo.baseWidth = totalWidth / 4;
+    //    createInfo.baseHeight = totalHeight / 3;
+    //    createInfo.numFaces = 6;
+    //    createInfo.numDimensions = 2;
 
-    Array<uint8> memory(size);
-    std::memcpy(memory.data(), dest, size);
-    free(dest);
-    
-    stbi_image_free(data);
+    //    KTX_ASSERT(ktxTexture2_Create(&createInfo,
+    //        KTX_TEXTURE_CREATE_ALLOC_STORAGE,
+    //        &kTexture));
 
-    ArchiveBuffer temp(graphics);
-    Serialization::save(temp, memory);
-    temp.rewind();
-    textureAsset->load(temp);
+    //    auto loadCubeFace = [&kTexture, &faceWidth, &totalWidth, &data](int xPos, int yPos, int faceName)
+    //    {
+    //        std::vector<unsigned char> vec(faceWidth * faceWidth * 4);
+    //        for (uint32 y = 0; y < faceWidth; ++y)
+    //        {
+    //            for (uint32 x = 0; x < faceWidth; ++x)
+    //            {
+    //                int imgX = x + (xPos * faceWidth);
+    //                int imgY = y + (yPos * faceWidth);
+    //                std::memcpy(&vec[(x + (faceWidth * y)) * 4], &data[(imgX + (totalWidth * imgY)) * 4], 4);
+    //            }
+    //        }
+    //        ktxTexture_SetImageFromMemory(ktxTexture(kTexture),
+    //            0, 0, faceName, vec.data(), vec.size());
+    //    };
+    //    loadCubeFace(2, 1, 0); // +X
+    //    loadCubeFace(0, 1, 1); // -X
+    //    loadCubeFace(1, 0, 2); // +Y
+    //    loadCubeFace(1, 2, 3); // -Y
+    //    loadCubeFace(1, 1, 4); // +Z
+    //    loadCubeFace(3, 1, 5); // -Z
+    //}
+    //else
+    //{
+    //    createInfo.baseWidth = totalWidth;
+    //    createInfo.baseHeight = totalHeight;
+    //    createInfo.numFaces = 1;
+    //    createInfo.numDimensions = 1 + (totalHeight > 1);
+
+    //    ktxTexture2_Create(&createInfo,
+    //        KTX_TEXTURE_CREATE_ALLOC_STORAGE,
+    //        &kTexture);
+
+    //    ktxTexture_SetImageFromMemory(ktxTexture(kTexture),
+    //        0, 0, 0, data, totalWidth * totalHeight * n * sizeof(unsigned char));
+    //}
+    //ktxTexture_WriteToNamedFile(ktxTexture(kTexture), args.filePath.replace_extension(".ktx").string().c_str());
+
+    //ktxBasisParams basisParams = {
+    //    .structSize = sizeof(ktxBasisParams),
+    //    .uastc = true,
+    //    .threadCount = std::thread::hardware_concurrency(),
+    //    .normalMap = normalMap,
+    //    .uastcFlags = KTX_PACK_UASTC_LEVEL_VERYSLOW,
+    //    .uastcRDO = true,
+    //    .uastcRDOQualityScalar = 1,
+    //};
+    //KTX_ASSERT(ktxTexture2_CompressBasisEx(kTexture, &basisParams));
+    //KTX_ASSERT(ktxTexture2_DeflateZstd(kTexture, 3));
+
+    //char writer[100];
+    //snprintf(writer, sizeof(writer), "%s version %s", "SeeleEngine", "0.0.1");
+    //ktxHashList_AddKVPair(&kTexture->kvDataHead, KTX_WRITER_KEY,
+    //    (ktx_uint32_t)strlen(writer) + 1,
+    //    writer);
+
+    //uint8* texData;
+    //size_t texSize;
+    //KTX_ASSERT(ktxTexture_WriteToMemory(ktxTexture(kTexture), &texData, &texSize));
+    //
+    //stbi_image_free(data);
+
     if (textureAsset->getName().empty())
     {
         return;
     }
 
-    AssetRegistry::get().saveAsset(textureAsset, TextureAsset::IDENTIFIER, textureAsset->getFolderPath(), textureAsset->getName());
+    std::string path = (std::filesystem::path(args.importPath) / textureAsset->getName()).string().append(".asset");
+    auto assetStream = AssetRegistry::createWriteStream(std::move(path), std::ios::binary);
+    ArchiveBuffer buffer(graphics);
+    // write identifier
+    Serialization::save(buffer, TextureAsset::IDENTIFIER);
+    // write name
+    Serialization::save(buffer, textureAsset->getName());
+    // write folder
+    Serialization::save(buffer, textureAsset->getFolderPath());
+    // write asset data
+    Serialization::save(buffer, args.filePath.string());
+
+    buffer.writeToStream(assetStream);
+
+    buffer.rewind();
+
+    AssetRegistry::get().loadAsset(buffer);
 }

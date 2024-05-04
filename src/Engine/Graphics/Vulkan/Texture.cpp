@@ -100,96 +100,89 @@ TextureBase::TextureBase(PGraphics graphics, VkImageViewType viewType,
             .usage = VMA_MEMORY_USAGE_AUTO,
         };
         VK_CHECK(vmaCreateImage(graphics->getAllocator(), &info, &allocInfo, &image, &allocation, nullptr));
-        
-        const DataSource& sourceData = createInfo.sourceData;
-        if(sourceData.size > 0)
-        {
-            changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                VK_ACCESS_NONE, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-                VK_ACCESS_MEMORY_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
-            void* data;
-            VkMemoryPropertyFlags memProps;
-            VkBuffer stagingBuffer = VK_NULL_HANDLE;
-            VmaAllocation stagingAlloc = VK_NULL_HANDLE;
-            vmaGetAllocationMemoryProperties(graphics->getAllocator(), allocation, &memProps);
-            if(memProps & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)
-            {
-                vmaMapMemory(graphics->getAllocator(), allocation, &data);
-            }
-            else
-            {
-                VkBufferCreateInfo stagingInfo = {
-                    .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-                    .pNext = nullptr,
-                    .flags = 0,
-                    .size = sourceData.size,
-                    .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                    .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-                };
-                VmaAllocationCreateInfo alloc = {
-                    .flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
-                    .usage = VMA_MEMORY_USAGE_AUTO,
-                };
-                VK_CHECK(vmaCreateBuffer(graphics->getAllocator(), &stagingInfo, &alloc, &stagingBuffer, &stagingAlloc, nullptr));
-                vmaMapMemory(graphics->getAllocator(), stagingAlloc, &data);
-            }
-            std::memcpy(data, sourceData.data, sourceData.size);
-            vmaFlushAllocation(graphics->getAllocator(), stagingAlloc, 0, VK_WHOLE_SIZE);
+    }
 
-            PCommandPool commandPool = graphics->getQueueCommands(currentOwner);
-            VkBufferImageCopy region = {
-                .bufferOffset = 0,
-                .bufferRowLength = 0,
-                .bufferImageHeight = 0,
-                .imageSubresource = {
-                    .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-                    .mipLevel = 0,
-                    .baseArrayLayer = 0,
-                    .layerCount = arrayCount * layerCount,
-                },
-                .imageOffset = {
-                    .x = 0, 
-                    .y = 0, 
-                    .z = 0,
-                },
-                .imageExtent = {
-                    .width = width, 
-                    .height = height, 
-                    .depth = depth
-                },
-            };
-            
-            vkCmdCopyBufferToImage(commandPool->getCommands()->getHandle(), 
-                stagingBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
-            
-            // When loading a texture from a file, we will almost always use it as a texture map for fragment shaders
-            changeLayout(Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-                VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
-            if(stagingBuffer != VK_NULL_HANDLE)
-            {
-                vmaUnmapMemory(graphics->getAllocator(), stagingAlloc);
-                graphics->getDestructionManager()->queueBuffer(commandPool->getCommands(), stagingBuffer, stagingAlloc);
-            }
-        }
-    }
-    if(usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
+    const DataSource& sourceData = createInfo.sourceData;
+    if (sourceData.size > 0)
     {
-        changeLayout(Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+        changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
             VK_ACCESS_NONE, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-            VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT);
-    }
-    else if (usage & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
-    {
-        changeLayout(Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-            VK_ACCESS_NONE, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-            VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
+            VK_ACCESS_MEMORY_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
+        void* data;
+        VkMemoryPropertyFlags memProps;
+        VkBuffer stagingBuffer = VK_NULL_HANDLE;
+        VmaAllocation stagingAlloc = VK_NULL_HANDLE;
+        VkBufferCreateInfo stagingInfo = {
+            .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+            .pNext = nullptr,
+            .flags = 0,
+            .size = sourceData.size,
+            .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        };
+        VmaAllocationCreateInfo alloc = {
+            .flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT,
+            .usage = VMA_MEMORY_USAGE_AUTO,
+        };
+        VK_CHECK(vmaCreateBuffer(graphics->getAllocator(), &stagingInfo, &alloc, &stagingBuffer, &stagingAlloc, nullptr));
+        vmaMapMemory(graphics->getAllocator(), stagingAlloc, &data);
+
+        std::memcpy(data, sourceData.data, sourceData.size);
+        vmaUnmapMemory(graphics->getAllocator(), stagingAlloc);
+
+        PCommandPool commandPool = graphics->getQueueCommands(currentOwner);
+        VkBufferImageCopy region = {
+            .bufferOffset = 0,
+            .bufferRowLength = 0,
+            .bufferImageHeight = 0,
+            .imageSubresource = {
+                .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                .mipLevel = 0,
+                .baseArrayLayer = 0,
+                .layerCount = arrayCount * layerCount,
+            },
+            .imageOffset = {
+                .x = 0,
+                .y = 0,
+                .z = 0,
+            },
+            .imageExtent = {
+                .width = width,
+                .height = height,
+                .depth = depth
+            },
+        };
+
+        vkCmdCopyBufferToImage(commandPool->getCommands()->getHandle(),
+            stagingBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+
+        // When loading a texture from a file, we will almost always use it as a texture map for fragment shaders
+        changeLayout(Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+            VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+            VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+
+        graphics->getDestructionManager()->queueBuffer(commandPool->getCommands(), stagingBuffer, stagingAlloc);
     }
     else
     {
-        changeLayout(Gfx::SE_IMAGE_LAYOUT_GENERAL,
-            VK_ACCESS_NONE, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-            VK_ACCESS_MEMORY_WRITE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
+        if (usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
+        {
+            changeLayout(Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+                VK_ACCESS_NONE, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT);
+        }
+        else if (usage & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
+        {
+            changeLayout(Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                VK_ACCESS_NONE, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
+        }
+        else
+        {
+            changeLayout(Gfx::SE_IMAGE_LAYOUT_GENERAL,
+                VK_ACCESS_NONE, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                VK_ACCESS_MEMORY_WRITE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
+        }
     }
     VkImageViewCreateInfo viewInfo = {
         .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,

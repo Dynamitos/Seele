@@ -28,6 +28,7 @@ void RenderPass::beginFrame(const Component::Camera& cam)
 {
     viewParams = {
         .viewMatrix = cam.getViewMatrix(),
+        .inverseViewMatrix = glm::inverse(cam.getViewMatrix()),
         .projectionMatrix = viewport->getProjectionMatrix(),
         .inverseProjection = glm::inverse(viewport->getProjectionMatrix()),
         .cameraPosition = Vector4(cam.getCameraPosition(), 1),

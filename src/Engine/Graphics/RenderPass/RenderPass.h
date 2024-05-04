@@ -30,6 +30,7 @@ protected:
     struct ViewParameter
     {
         Matrix4 viewMatrix;
+        Matrix4 inverseViewMatrix;
         Matrix4 projectionMatrix;
         Matrix4 inverseProjection;
         Vector4 cameraPosition;

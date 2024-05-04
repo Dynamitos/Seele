@@ -22,8 +22,8 @@ public:
     uint32 getWidth();
     uint32 getHeight();
 private:
-    struct ktxTexture2* ktxHandle;
     Gfx::OTexture texture;
+    bool normalMap;
     friend class TextureLoader;
 };
 DEFINE_REF(TextureAsset)

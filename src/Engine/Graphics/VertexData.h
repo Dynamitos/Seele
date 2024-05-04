@@ -29,10 +29,11 @@ public:
     struct InstanceData
     {
         Matrix4 transformMatrix;
+        Matrix4 inverseTransformMatrix;
     };
     struct MeshData
     {
-        BoundingSphere bounding;
+        AABB bounding;
         uint32 numMeshlets = 0;
         uint32 meshletOffset = 0;
         uint32 firstIndex = 0;
@@ -85,7 +86,7 @@ protected:
     VertexData();
     struct MeshletDescription
     {
-        BoundingSphere bounding;
+        AABB bounding;
         uint32_t vertexCount;
         uint32_t primitiveCount;
         uint32_t vertexOffset;

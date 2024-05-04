@@ -123,6 +123,7 @@ void* Buffer::mapRegion(uint64 regionOffset, uint64 regionSize, bool writeOnly) 
           .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
       };
       VmaAllocationCreateInfo allocInfo = {
+          .flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT,
           .usage = VMA_MEMORY_USAGE_AUTO,
           .requiredFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
       };

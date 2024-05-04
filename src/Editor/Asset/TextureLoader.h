@@ -12,6 +12,7 @@ DECLARE_NAME_REF(Gfx, Texture2D)
 enum class TextureImportType
 {
     TEXTURE_2D,
+    TEXTURE_NORMAL,
     TEXTURE_CUBEMAP,
 };
 struct TextureImportArgs
@@ -20,6 +21,7 @@ struct TextureImportArgs
     std::string importPath;
     TextureImportType type = TextureImportType::TEXTURE_2D;
     Gfx::SeImageUsageFlagBits usage = Gfx::SE_IMAGE_USAGE_SAMPLED_BIT;
+    uint32 numChannels = 4;
 };
 class TextureLoader
 {

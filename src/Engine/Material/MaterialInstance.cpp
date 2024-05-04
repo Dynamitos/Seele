@@ -50,8 +50,6 @@ MaterialInstance::~MaterialInstance()
 
 void MaterialInstance::updateDescriptor()
 {
-    if(!dirty)
-        return;
     Gfx::PDescriptorLayout layout = baseMaterial->getMaterial()->getDescriptorLayout();
     descriptor = layout->allocateDescriptorSet();
     for (auto& param : parameters)

@@ -11,15 +11,12 @@ struct BoundingSphere
     {
         return centerRadius.w;
     }
-    bool insideFrustum(float4x4 transform, Frustum frustum)
+    bool insideFrustum(Frustum frustum)
     {
-        float3 transformed = mul(transform, float4(getCenter(), 1)).xyz;
-        float maxScale = max(max(transform[0][0], transform[1][1]), transform[2][2]);
-        float scaledRange = getRadius() * maxScale;
         bool result = true;
         for(int i = 0; i < 4 && result; ++i)
         {
-            if(dot(frustum.sides[i].n, transformed) - frustum.sides[i].d < -scaledRange)
+            if(dot(frustum.sides[i].n, centerRadius.xyz) - frustum.sides[i].d < -getRadius())
             {
                 result = false;
             }
@@ -34,20 +31,20 @@ struct AABB
     float pad0;
 	float3 max;
     float pad1;
-	bool insideFrustum(float4x4 transform, Frustum frustum)
+	bool insideFrustum(Frustum frustum)
     {
-		float4 corners[8];
-        corners[0] = mul(transform, float4(min.x, min.y, min.z, 1.0f));
-        corners[1] = mul(transform, float4(min.x, min.y, max.z, 1.0f));
-        corners[2] = mul(transform, float4(min.x, max.y, min.z, 1.0f));
-        corners[3] = mul(transform, float4(min.x, max.y, max.z, 1.0f));
-        corners[4] = mul(transform, float4(max.x, min.y, min.z, 1.0f));
-        corners[5] = mul(transform, float4(max.x, min.y, max.z, 1.0f));
-        corners[6] = mul(transform, float4(max.x, max.y, min.z, 1.0f));
-        corners[7] = mul(transform, float4(max.x, max.y, max.z, 1.0f));
+		float3 corners[8];
+        corners[0] = float3(min.x, min.y, min.z);
+        corners[1] = float3(min.x, min.y, max.z);
+        corners[2] = float3(min.x, max.y, min.z);
+        corners[3] = float3(min.x, max.y, max.z);
+        corners[4] = float3(max.x, min.y, min.z);
+        corners[5] = float3(max.x, min.y, max.z);
+        corners[6] = float3(max.x, max.y, min.z);
+        corners[7] = float3(max.x, max.y, max.z);
         for(int i = 0; i < 8; ++i)
         {
-            if(frustum.pointInside(corners[i].xyz))
+            if(frustum.pointInside(corners[i]))
             {
                 return true;
             }

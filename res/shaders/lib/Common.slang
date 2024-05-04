@@ -1,10 +1,10 @@
 const static float PI = 3.1415926535897932f;
-const static uint MAX_PARTICLES = 65536;
 const static uint BLOCK_SIZE = 32;
 
 struct ViewParameter
 {
     float4x4 viewMatrix;
+    float4x4 inverseViewMatrix;
     float4x4 projectionMatrix;
     float4x4 inverseProjection;
     float4 cameraPos_WS;
@@ -12,6 +12,24 @@ struct ViewParameter
 }
 layout(set=0)
 ParameterBlock<ViewParameter> pViewParams;
+
+float4 worldToModel(float4x4 inverseTransform, float4 world)
+{
+    float4 model = mul(inverseTransform, world);
+
+    model = model / model.w;
+
+    return model;
+}
+
+float4 viewToWorld(float4 view)
+{
+    float4 world = mul(pViewParams.inverseViewMatrix, view);
+
+    world = world / world.w;
+
+    return world;
+}
 
 float4 clipToView(float4 clip)
 {
@@ -30,6 +48,15 @@ float4 screenToView(float4 screen)
     float4 clip = float4( float2( texCoord.x, 1.0f-texCoord.y ) * 2.0f - 1.0f, screen.z, screen.w);
 
     return clipToView(clip);
+}
+
+float4 screenToModel(float4x4 inverseTransform, float4 screen)
+{
+    float4 view = screenToView(screen);
+
+    float4 world = viewToWorld(view);
+
+    return worldToModel(inverseTransform, world);
 }
 
 struct Plane

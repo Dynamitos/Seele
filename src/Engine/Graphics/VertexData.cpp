@@ -38,9 +38,11 @@ void VertexData::updateMesh(PMesh mesh, Component::Transform& transform)
     MaterialInstanceData& matInstanceData = matData.instances[referencedInstance->getId()];
     for (const auto& data : meshData[mesh->id])
     {
+        Matrix4 transformMatrix = transform.toMatrix() * mesh->transform;
         matInstanceData.meshes.add(MeshInstanceData{
             .instance = InstanceData {
-                .transformMatrix = mesh->transform * transform.toMatrix(),
+                .transformMatrix = transformMatrix,
+                .inverseTransformMatrix = glm::inverse(transformMatrix),
             },
             .data = data,
             });
@@ -167,7 +169,7 @@ void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet>
             primitiveIndices.resize(primitiveOffset + (m.numPrimitives * 3));
             std::memcpy(primitiveIndices.data() + primitiveOffset, m.primitiveLayout, m.numPrimitives * 3 * sizeof(uint8));
             meshlets.add(MeshletDescription{
-                .bounding = m.boundingBox.toSphere(),
+                .bounding = m.boundingBox,//.toSphere(),
                 .vertexCount = m.numVertices,
                 .primitiveCount = m.numPrimitives,
                 .vertexOffset = vertexOffset,
@@ -176,7 +178,7 @@ void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet>
                 });
         }
         meshData[id].add(MeshData{
-            .bounding = meshAABB.toSphere(),
+            .bounding = meshAABB,//.toSphere(),
             .numMeshlets = numMeshlets,
             .meshletOffset = meshletOffset,
             .indicesOffset = (uint32)meshOffsets[id],
@@ -185,16 +187,20 @@ void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet>
     }
     meshData[id][0].firstIndex = indices.size();
     meshData[id][0].numIndices = loadedIndices.size();
-    indices.resize(indices.size() + loadedIndices.size());
-    std::memcpy(indices.data() + meshData[id][0].firstIndex, loadedIndices.data(), loadedIndices.size() * sizeof(uint32));
-    indexBuffer = graphics->createIndexBuffer(IndexBufferCreateInfo{
-        .sourceData = {
-            .size = sizeof(uint32) * indices.size(),
-            .data = (uint8*)indices.data(),
-        },
-        .indexType = Gfx::SE_INDEX_TYPE_UINT32,
-        .name = "IndexBuffer",
-    });
+    if (!graphics->supportMeshShading())
+    {
+        indices.resize(indices.size() + loadedIndices.size());
+        std::memcpy(indices.data() + meshData[id][0].firstIndex, loadedIndices.data(), loadedIndices.size() * sizeof(uint32));
+        indexBuffer = graphics->createIndexBuffer(IndexBufferCreateInfo{
+            .sourceData = {
+                .size = sizeof(uint32) * indices.size(),
+                .data = (uint8*)indices.data(),
+            },
+            .indexType = Gfx::SE_INDEX_TYPE_UINT32,
+            .name = "IndexBuffer",
+            });
+
+    }
     meshletBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
         .sourceData = {
             .size = sizeof(MeshletDescription) * meshlets.size(),
@@ -273,7 +279,7 @@ void Seele::VertexData::init(Gfx::PGraphics _graphics)
     graphics = _graphics;
     verticesAllocated = NUM_DEFAULT_ELEMENTS;
     instanceDataLayout = graphics->createDescriptorLayout("pScene");
-    instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding =0, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,});
+    instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 0, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,});
 
     // meshData
     instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 1, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,});

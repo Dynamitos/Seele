@@ -2,7 +2,7 @@ import Bounding;
 
 struct MeshletDescription
 {
-	BoundingSphere bounding;
+	AABB bounding;
 	uint32_t vertexCount;
 	uint32_t primitiveCount;
 	uint32_t vertexOffset;
@@ -13,13 +13,13 @@ struct MeshletDescription
 
 struct MeshData
 {
-	BoundingSphere bounding;
-  uint32_t numMeshlets;
-  uint32_t meshletOffset;
-  uint32_t firstIndex;
-  uint32_t numIndices;
-  uint32_t indicesOffset;
-  uint32_t pad0[3];
+	AABB bounding;
+	uint32_t numMeshlets;
+	uint32_t meshletOffset;
+	uint32_t firstIndex;
+	uint32_t numIndices;
+	uint32_t indicesOffset;
+	uint32_t pad0[3];
 };
 
 static const uint MAX_VERTICES = 256;
@@ -31,6 +31,7 @@ static const uint MAX_MESHLETS_PER_MESH = 512;
 struct InstanceData
 {
 	float4x4 transformMatrix;
+	float4x4 inverseTransformMatrix;
 };
 
 struct Scene

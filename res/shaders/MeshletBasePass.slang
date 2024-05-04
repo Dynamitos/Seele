@@ -12,7 +12,6 @@ struct MeshPayload
 
 groupshared MeshPayload p;
 groupshared uint head;
-groupshared float4x4 localToView;
 groupshared Frustum viewFrustum;
 
 [numthreads(TASK_GROUP_SIZE, 1, 1)]
@@ -26,13 +25,13 @@ void taskMain(
 	if(threadID == 0)
 	{
 		head = 0;
-		localToView = mul(pViewParams.viewMatrix, instance.transformMatrix);
 		float3 origin = float3(0, 0, 0);
+		const float offset = 0.0f;
 		float3 corners[4] = {
-			screenToView(float4(0.0f, 0.0f, -1.0f, 1.0f)).xyz,
-			screenToView(float4(pViewParams.screenDimensions.x, 0.0f, -1.0f, 1.0f)).xyz,
-			screenToView(float4(0.0f, pViewParams.screenDimensions.y, -1.0f, 1.0f)).xyz,
-			screenToView(float4(pViewParams.screenDimensions, -1.0f, 1.0f)).xyz
+			screenToModel(instance.inverseTransformMatrix, float4(offset, offset, -1.0f, 1.0f)).xyz,
+			screenToModel(instance.inverseTransformMatrix, float4(pViewParams.screenDimensions.x - offset, offset, -1.0f, 1.0f)).xyz,
+			screenToModel(instance.inverseTransformMatrix, float4(offset, pViewParams.screenDimensions.y - offset, -1.0f, 1.0f)).xyz,
+			screenToModel(instance.inverseTransformMatrix, float4(pViewParams.screenDimensions - float2(offset, offset), -1.0f, 1.0f)).xyz
 		};
 		viewFrustum.sides[0] = computePlane(origin, corners[2], corners[0]);
 		viewFrustum.sides[1] = computePlane(origin, corners[1], corners[3]);
@@ -47,7 +46,7 @@ void taskMain(
 		{
 			uint m = mesh.meshletOffset + i;
 			MeshletDescription meshlet = pScene.meshletInfos[m];
-			if(meshlet.bounding.insideFrustum(localToView, viewFrustum))
+			//if(meshlet.bounding.insideFrustum(viewFrustum))
 			{
 				uint index;
 				InterlockedAdd(head, 1, index);

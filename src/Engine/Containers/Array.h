@@ -518,6 +518,7 @@ public:
             {
                 std::uninitialized_move_n(begin(), arraySize, temp);
             }
+            deallocateArray(_data, allocated);
             _data = temp;
         }
         allocated = new_cap;

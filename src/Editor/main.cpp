@@ -57,15 +57,18 @@ int main() {
   });
   AssetImporter::importMesh(MeshImportArgs{
       .filePath = sourcePath / "import/models/cube.fbx",
-  });
+      });
+  //AssetImporter::importMesh(MeshImportArgs{
+  //    .filePath = sourcePath / "import/models/Arissa.fbx",
+  //    });
   AssetImporter::importMesh(MeshImportArgs{
       .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.fbx",
       .importPath = "Whitechapel"
       });
-  AssetImporter::importMesh(MeshImportArgs{
-      .filePath = sourcePath / "import/models/Volvo S90/Volvo S90.fbx",
-      .importPath = "Volvo",
-      });
+  //AssetImporter::importMesh(MeshImportArgs{
+  //    .filePath = sourcePath / "import/models/Volvo S90/Volvo S90.fbx",
+  //    .importPath = "Volvo",
+  //    });
   WindowCreateInfo mainWindowInfo;
   mainWindowInfo.title = "SeeleEngine";
   mainWindowInfo.width = 1920;
