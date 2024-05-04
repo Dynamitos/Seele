@@ -121,18 +121,19 @@ void DebugPass::createRenderPass()
     
     pipelineLayout = graphics->createPipelineLayout("DebugPassLayout");
     pipelineLayout->addDescriptorLayout(viewParamsLayout);
-    pipelineLayout->create();
 
     ShaderCreateInfo createInfo = {
         .name = "DebugVertex",
         .mainModule = "Debug",
         .entryPoint = "vertexMain",
+        .rootSignature = pipelineLayout,
     };
     vertexShader = graphics->createVertexShader(createInfo);
 
     createInfo.name = "DebugFragment";
     createInfo.entryPoint = "fragmentMain";
     fragmentShader = graphics->createFragmentShader(createInfo);
+    pipelineLayout->create();
 
     VertexInputStateCreateInfo inputCreate = {
         .bindings = {

@@ -54,7 +54,7 @@ struct BlinnPhong : IBRDF
         float3 h = normalize(lightDir_TS + viewDir_TS);
         float specular = saturate(dot(normal_TS, h));
 		
-        return baseColor;//((baseColor * diffuse) + (specularColor * specular)) * lightColor;
+        return (baseColor * diffuse * lightColor) + (specularColor * specular) * lightColor;
     }
 
     float3 evaluateAmbient()
@@ -169,7 +169,7 @@ struct CookTorrance : IBRDF
         float nDotL = max(dot(n, lightDir_TS), 0.0);
 
         float3 result = (k_d * baseColor / PI + specular) * nDotL * lightColor;
-        return baseColor;//result * ambientOcclusion;
+        return result * ambientOcclusion;
     }
     float3 evaluateAmbient()
     {

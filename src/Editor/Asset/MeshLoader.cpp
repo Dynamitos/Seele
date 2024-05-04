@@ -400,6 +400,7 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Map<std::string, PTex
             brdf.profile = "CelShading";
             break;
         case aiShadingMode_CookTorrance:
+        default:
             brdf.profile = "CookTorrance";
             brdf.variables["roughness"] = outputRoughness;
             brdf.variables["metallic"] = outputMetallic;
@@ -408,8 +409,6 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Map<std::string, PTex
                 brdf.variables["ambientOcclusion"] = outputAmbient;
             }
             break;
-        default:
-            throw std::logic_error("Todo");
         };
 
         materialLayout->create();
