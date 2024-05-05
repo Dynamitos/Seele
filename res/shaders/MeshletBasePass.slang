@@ -25,8 +25,8 @@ void taskMain(
 	if(threadID == 0)
 	{
 		head = 0;
-		float3 origin = float3(0, 0, 0);
-		const float offset = 600.0f;
+		float3 origin = viewToModel(instance.inverseTransformMatrix, float4(0, 0, 0, 1)).xyz;
+		const float offset = 0.0f;
 		float3 corners[4] = {
 			screenToModel(instance.inverseTransformMatrix, float4(offset, offset, -1.0f, 1.0f)).xyz,
 			screenToModel(instance.inverseTransformMatrix, float4(pViewParams.screenDimensions.x - offset, offset, -1.0f, 1.0f)).xyz,

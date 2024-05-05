@@ -31,24 +31,24 @@ struct AABB
     float pad0;
 	float3 max;
     float pad1;
+    // modified version from https://learnopengl.com/Guest-Articles/2021/Scene/Frustum-Culling
 	bool insideFrustum(Frustum frustum)
     {
-		float3 corners[8];
-        corners[0] = float3(min.x, min.y, min.z);
-        corners[1] = float3(min.x, min.y, max.z);
-        corners[2] = float3(min.x, max.y, min.z);
-        corners[3] = float3(min.x, max.y, max.z);
-        corners[4] = float3(max.x, min.y, min.z);
-        corners[5] = float3(max.x, min.y, max.z);
-        corners[6] = float3(max.x, max.y, min.z);
-        corners[7] = float3(max.x, max.y, max.z);
-        for(int i = 0; i < 8; ++i)
+        float3 center = (min + max) * 0.5;
+        float3 extents = float3(max.x - center.x, max.y - center.y, max.z - center.z);
+        bool result = true;
+        for(int i = 0; i < 4 && result; ++i)
         {
-            if(frustum.pointInside(corners[i]))
+            const float r = extents.x * abs(frustum.sides[i].n.x) 
+                          + extents.y * abs(frustum.sides[i].n.y) 
+                          + extents.z * abs(frustum.sides[i].n.z);
+
+            const float signedDistance = dot(frustum.sides[i].n, center) - frustum.sides[i].d;
+            if(signedDistance < -r)
             {
-                return true;
+                result = false;
             }
         }
-        return false;
+        return result;
 	}
 };

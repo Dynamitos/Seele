@@ -21,7 +21,7 @@ GameView::GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreate
     renderGraph.addPass(new DepthPrepass(graphics, scene));
     renderGraph.addPass(new LightCullingPass(graphics, scene));
     renderGraph.addPass(new BasePass(graphics, scene));
-    renderGraph.addPass(new DebugPass(graphics, scene));
+    //renderGraph.addPass(new DebugPass(graphics, scene));
     //renderGraph.addPass(new SkyboxRenderPass(graphics, scene));
     renderGraph.setViewport(viewport);
     renderGraph.createRenderPass();

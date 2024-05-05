@@ -31,6 +31,13 @@ float4 viewToWorld(float4 view)
     return world;
 }
 
+float4 viewToModel(float4x4 inverseTransform, float4 view)
+{
+    float4 world = viewToWorld(view);
+
+    return worldToModel(inverseTransform, world);
+}
+
 float4 clipToView(float4 clip)
 {
     float4 view = mul(pViewParams.inverseProjection, clip);

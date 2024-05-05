@@ -46,12 +46,12 @@ void VertexData::updateMesh(PMesh mesh, Component::Transform& transform)
             },
             .data = data,
             });
-        for (size_t i = 0; i < data.numMeshlets; ++i)
+        for (size_t i = 0; i < 0; ++i)
         {
             auto bounding = meshlets[data.meshletOffset + i].bounding;
             StaticArray<Vector, 8> corners;
-            Vector min = bounding.center - bounding.radius * Vector(1, 1, 1);
-            Vector max = bounding.center + bounding.radius * Vector(1, 1, 1);
+            Vector min = bounding.min;//bounding.center - bounding.radius * Vector(1, 1, 1);
+            Vector max = bounding.max;//bounding.center + bounding.radius * Vector(1, 1, 1);
             corners[0] = transformMatrix * Vector4(min.x, min.y, min.z, 1);
             corners[1] = transformMatrix * Vector4(min.x, min.y, max.z, 1);
             corners[2] = transformMatrix * Vector4(min.x, max.y, min.z, 1);
@@ -171,7 +171,7 @@ void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet>
             primitiveIndices.resize(primitiveOffset + (m.numPrimitives * 3));
             std::memcpy(primitiveIndices.data() + primitiveOffset, m.primitiveLayout, m.numPrimitives * 3 * sizeof(uint8));
             meshlets.add(MeshletDescription{
-                .bounding = m.boundingBox.toSphere(),
+                .bounding = m.boundingBox,//.toSphere(),
                 .vertexCount = m.numVertices,
                 .primitiveCount = m.numPrimitives,
                 .vertexOffset = vertexOffset,
@@ -180,7 +180,7 @@ void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet>
                 });
         }
         meshData[id].add(MeshData{
-            .bounding = meshAABB.toSphere(),
+            .bounding = meshAABB,//.toSphere(),
             .numMeshlets = numMeshlets,
             .meshletOffset = meshletOffset,
             .indicesOffset = (uint32)meshOffsets[id],
