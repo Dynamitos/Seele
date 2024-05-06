@@ -76,7 +76,6 @@ void UIPass::publishOutputs()
         Gfx::RenderTargetAttachment(depthBuffer, 
             Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
             Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
-    depthAttachment.clear.depthStencil.depth = 1.0f;
     resources->registerRenderPassOutput("UIPASS_DEPTH", depthAttachment);
 
     TextureCreateInfo colorBufferInfo = {

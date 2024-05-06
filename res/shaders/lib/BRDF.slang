@@ -21,12 +21,12 @@ struct Phong : IBRDF
 
     float3 evaluate(float3x3 tbn, float3 viewDir_TS, float3 lightDir_TS, float3 lightColor)
     {
-        float3 n = normalize(normal);
-        float3 nDotL = dot(n, lightDir_TS);
-        float3 r = 2 * (nDotL) * n - lightDir_TS;
+        float3 normal_TS = normalize(normal);
+        float3 nDotL = dot(normal_TS, lightDir_TS);
+        float3 r = 2 * (nDotL) * normal_TS - lightDir_TS;
         float rDotV = dot(r, viewDir_TS);
 
-        return baseColor * max(nDotL, 0.0) * lightColor + specular * pow(max(rDotV, 0.0), shininess) * lightColor;
+        return baseColor * max(nDotL, 0.0) * lightColor + specular * pow(max(rDotV, 0.0), shininess);
     }
 
     float3 evaluateAmbient()
@@ -40,6 +40,7 @@ struct BlinnPhong : IBRDF
     float3 baseColor;
     float3 specularColor;
     float3 normal;
+    float shininess;
     float3 ambient;
 
     __init()
@@ -52,9 +53,9 @@ struct BlinnPhong : IBRDF
         float3 normal_TS = normalize(normal);
         float diffuse = max(dot(normal_TS, lightDir_TS), 0);
         float3 h = normalize(lightDir_TS + viewDir_TS);
-        float specular = saturate(dot(normal_TS, h));
+        float specular = pow(saturate(dot(normal_TS, h)), shininess);
 		
-        return (baseColor * diffuse * lightColor) + (specularColor * specular) * lightColor;
+        return (baseColor * diffuse * lightColor) + (specularColor * specular);
     }
 
     float3 evaluateAmbient()

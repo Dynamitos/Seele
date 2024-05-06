@@ -50,6 +50,7 @@ public:
   virtual void writeChanges() override;
   virtual void updateBuffer(uint32_t binding, Gfx::PUniformBuffer uniformBuffer) override;
   virtual void updateBuffer(uint32_t binding, Gfx::PShaderBuffer uniformBuffer) override;
+  virtual void updateBuffer(uint32_t binding, uint32 index, Gfx::PShaderBuffer uniformBuffer) override;
   virtual void updateSampler(uint32_t binding, Gfx::PSampler samplerState) override;
   virtual void updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::PSampler sampler = nullptr) override;
   virtual void updateTextureArray(uint32_t binding, Array<Gfx::PTexture> texture) override;

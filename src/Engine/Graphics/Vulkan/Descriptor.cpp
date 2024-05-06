@@ -218,6 +218,33 @@ void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PShaderBuffer shaderBuff
   cachedData[binding] = vulkanBuffer.getHandle();
 }
 
+void DescriptorSet::updateBuffer(uint32_t binding, uint32 index, Gfx::PShaderBuffer shaderBuffer) {
+    PShaderBuffer vulkanBuffer = shaderBuffer.cast<ShaderBuffer>();
+    ShaderBuffer* cachedBuffer = reinterpret_cast<ShaderBuffer*>(cachedData[binding]);
+    if (vulkanBuffer.getHandle() == cachedBuffer) {
+        return;
+    }
+
+    bufferInfos.add(VkDescriptorBufferInfo{
+        .buffer = vulkanBuffer->getHandle(),
+        .offset = 0,
+        .range = vulkanBuffer->getSize(),
+        });
+
+    writeDescriptors.add(VkWriteDescriptorSet{
+        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .pNext = nullptr,
+        .dstSet = setHandle,
+        .dstBinding = binding,
+        .dstArrayElement = index,
+        .descriptorCount = 1,
+        .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+        .pBufferInfo = &bufferInfos.back(),
+        });
+
+    cachedData[binding] = vulkanBuffer.getHandle();
+}
+
 void DescriptorSet::updateSampler(uint32_t binding, Gfx::PSampler samplerState) {
   PSampler vulkanSampler = samplerState.cast<Sampler>();
   Sampler* cachedSampler = reinterpret_cast<Sampler*>(cachedData[binding]);

@@ -52,7 +52,7 @@ void MeshLoader::convertAssimpARGB(unsigned char* dst, aiTexel* src, uint32 numP
         dst[i * 4 + 3] = src[i].a;
     }
 }
-void MeshLoader::loadTextures(const aiScene* scene, const std::filesystem::path& meshDirectory, const std::string& importPath, Map<std::string, PTextureAsset>& textures)
+void MeshLoader::loadTextures(const aiScene* scene, const std::filesystem::path& meshDirectory, const std::string& importPath, Array<PTextureAsset>& textures)
 {
     for (uint32 i = 0; i < scene->mNumTextures; ++i)
     {
@@ -66,6 +66,7 @@ void MeshLoader::loadTextures(const aiScene* scene, const std::filesystem::path&
         }
         else
         {
+            texPath = (meshDirectory / texPath).replace_extension("png");
             if (tex->mHeight == 0)
             {
                 // already compressed, just dump it to the disk
@@ -87,7 +88,7 @@ void MeshLoader::loadTextures(const aiScene* scene, const std::filesystem::path&
             .filePath = texPath,
             .importPath = importPath,
             });
-        textures[texPath.string()] = AssetRegistry::findTexture(importPath, texPath.string());
+        textures.add(AssetRegistry::findTexture(importPath, texPath.stem().string()));
     }
 }
 
@@ -107,7 +108,7 @@ constexpr const char* KEY_ROUGHNESS_TEXTURE = "tex_r";
 constexpr const char* KEY_METALLIC_TEXTURE = "tex_m";
 constexpr const char* KEY_AMBIENT_OCCLUSION_TEXTURE = "tex_ao";
 
-void MeshLoader::loadMaterials(const aiScene* scene, const Map<std::string, PTextureAsset>& textures, const std::string& baseName, const std::filesystem::path& meshDirectory, const std::string& importPath, Array<PMaterialInstanceAsset>& globalMaterials)
+void MeshLoader::loadMaterials(const aiScene* scene, const Array<PTextureAsset>& textures, const std::string& baseName, const std::filesystem::path& meshDirectory, const std::string& importPath, Array<PMaterialInstanceAsset>& globalMaterials)
 {
     for(uint32 i = 0; i < scene->mNumMaterials; ++i)
     {
@@ -150,7 +151,7 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Map<std::string, PTex
                 parameters.add(paramKey);
             };
 
-        auto addTextureParameter = [&](std::string paramKey, aiTextureType type, int index, std::string& result, StaticArray<int32, 4> extractMask = {0, 1, 2, -1})
+        auto addTextureParameter = [&](std::string paramKey, aiTextureType type, int index, std::string& result, StaticArray<int32, 4> extractMask = { 0, 1, 2, -1 })
             {
                 aiString texPath;
                 aiTextureMapping mapping;
@@ -162,13 +163,14 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Map<std::string, PTex
                 {
                     std::cout << "fuck" << std::endl;
                 }
-                
+
                 std::string textureKey = fmt::format("{0}Texture{1}", paramKey, index);
                 auto texFilename = std::filesystem::path(texPath.C_Str());
                 PTextureAsset texture;
-                if (textures.contains(texFilename.string()))
+
+                if (texFilename.string()[0] == '*')
                 {
-                    texture = textures[texFilename.string()];
+                    texture = textures[atoi(texFilename.string().substr(1).c_str())];
                 }
                 else if (std::filesystem::exists(texFilename))
                 {
@@ -380,21 +382,32 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Map<std::string, PTex
         brdf.variables["baseColor"] = outputDiffuse;
         if (!outputNormal.empty())
         {
-            brdf.variables["normal"] = outputNormal;
+            expressions.add(new MulExpression());
+            expressions.back()->key = "NormalMul";
+            expressions.back()->inputs["lhs"].source = "2";
+            expressions.back()->inputs["rhs"].source = outputNormal;
+            
+            expressions.add(new SubExpression());
+            expressions.back()->key = "NormalSub";
+            expressions.back()->inputs["lhs"].source = "NormalMul";
+            expressions.back()->inputs["rhs"].source = "float3(1,1,1)";
+
+            brdf.variables["normal"] = "NormalSub";
         }
         aiShadingMode mode;
         material->Get(AI_MATKEY_SHADING_MODEL, mode);
         switch (mode) {
         case aiShadingMode_Blinn:
-            brdf.profile = "Phong";
-            brdf.variables["specular"] = outputSpecular;
+            brdf.profile = "BlinnPhong";
+            brdf.variables["specularColor"] = outputSpecular;
             brdf.variables["ambient"] = outputAmbient;
             brdf.variables["shininess"] = outputShininess;
             break;
         case aiShadingMode_Phong:
-            brdf.profile = "BlinnPhong";
-            brdf.variables["specularColor"] = outputSpecular;
+            brdf.profile = "Phong";
+            brdf.variables["specular"] = outputSpecular;
             brdf.variables["ambient"] = outputAmbient;
+            brdf.variables["shininess"] = outputShininess;
             break;
         case aiShadingMode_Toon:
             brdf.profile = "CelShading";
@@ -458,7 +471,11 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
 
         // assume static mesh for now
         Array<Vector> positions(mesh->mNumVertices);
-        Array<Vector2> texCoords(mesh->mNumVertices);
+        StaticArray<Array<Vector2>, MAX_TEXCOORDS> texCoords;
+        for (size_t i = 0; i < MAX_TEXCOORDS; ++i)
+        {
+            texCoords[i].resize(mesh->mNumVertices);
+        }
         Array<Vector> normals(mesh->mNumVertices);
         Array<Vector> tangents(mesh->mNumVertices);
         Array<Vector> biTangents(mesh->mNumVertices);
@@ -469,13 +486,16 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
         for (int32 i = 0; i < mesh->mNumVertices; ++i)
         {
             positions[i] = Vector(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
-            if (mesh->HasTextureCoords(0))
+            for (size_t j = 0; j < MAX_TEXCOORDS; ++j)
             {
-                texCoords[i] = Vector2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
-            }
-            else
-            {
-                texCoords[i] = Vector2(0, 0);
+                if (mesh->HasTextureCoords(j))
+                {
+                    texCoords[j][i] = Vector2(mesh->mTextureCoords[j][i].x, mesh->mTextureCoords[j][i].y);
+                }
+                else
+                {
+                    texCoords[j][i] = Vector2(0, 0);
+                }
             }
             normals[i] = Vector(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z);
             if (mesh->HasTangentsAndBitangents())
@@ -499,7 +519,11 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
         }
         MeshId id = vertexData->allocateVertexData(mesh->mNumVertices);
         vertexData->loadPositions(id, positions);
-        vertexData->loadTexCoords(id, texCoords);
+
+        for (size_t i = 0; i < MAX_TEXCOORDS; ++i)
+        {
+            vertexData->loadTexCoords(id, i, texCoords[i]);
+        }
         vertexData->loadNormals(id, normals);
         vertexData->loadTangents(id, tangents);
         vertexData->loadBiTangents(id, biTangents);
@@ -570,7 +594,7 @@ void MeshLoader::import(MeshImportArgs args, PMeshAsset meshAsset)
     const aiScene *scene = importer.ApplyPostProcessing(aiProcess_CalcTangentSpace);
     std::cout << importer.GetErrorString() << std::endl;
 
-    Map<std::string, PTextureAsset> textures;
+    Array<PTextureAsset> textures;
     loadTextures(scene, args.filePath.parent_path(), args.importPath, textures);
     Array<PMaterialInstanceAsset> globalMaterials(scene->mNumMaterials);
     loadMaterials(scene, textures, args.filePath.stem().string(), args.filePath.parent_path(), args.importPath, globalMaterials);

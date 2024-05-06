@@ -27,8 +27,8 @@ public:
     ~MeshLoader();
     void importAsset(MeshImportArgs args);
 private:
-    void loadTextures(const aiScene* scene, const std::filesystem::path& meshDirectory, const std::string& importPath, Map<std::string, PTextureAsset>& textures);
-    void loadMaterials(const aiScene* scene, const Map<std::string, PTextureAsset>& textures, const std::string& baseName, const std::filesystem::path& meshDirectory, const std::string& importPath, Array<PMaterialInstanceAsset>& globalMaterials);
+    void loadTextures(const aiScene* scene, const std::filesystem::path& meshDirectory, const std::string& importPath, Array<PTextureAsset>& textures);
+    void loadMaterials(const aiScene* scene, const Array<PTextureAsset>& textures, const std::string& baseName, const std::filesystem::path& meshDirectory, const std::string& importPath, Array<PMaterialInstanceAsset>& globalMaterials);
     void loadGlobalMeshes(const aiScene* scene, const Array<PMaterialInstanceAsset>& materials, Array<OMesh>& globalMeshes, Component::Collider& collider);
     void convertAssimpARGB(unsigned char* dst, aiTexel* src, uint32 numPixels);
 

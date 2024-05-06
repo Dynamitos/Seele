@@ -361,8 +361,8 @@ Viewport::Viewport(PWindow owner, const ViewportCreateInfo &viewportInfo)
     handle.x = static_cast<float>(offsetX);
     handle.y = static_cast<float>(offsetY) + handle.height;
     handle.height = -handle.height;
-    handle.minDepth =  0.f;
-    handle.maxDepth =  1.f;
+    handle.minDepth =  1.f;
+    handle.maxDepth =  0.f;
 }
 
 Viewport::~Viewport()

@@ -79,7 +79,7 @@ void DepthPrepass::render()
                 pipelineInfo.fragmentShader = collection->fragmentShader;
                 pipelineInfo.pipelineLayout = collection->pipelineLayout;
                 pipelineInfo.renderPass = renderPass;
-                pipelineInfo.depthStencilState.depthCompareOp = Gfx::SE_COMPARE_OP_LESS;
+                pipelineInfo.depthStencilState.depthCompareOp = Gfx::SE_COMPARE_OP_GREATER;
                 pipelineInfo.multisampleState.samples = viewport->getSamples();
                 Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
                 command->bindPipeline(pipeline);
@@ -92,7 +92,7 @@ void DepthPrepass::render()
                 pipelineInfo.pipelineLayout = collection->pipelineLayout;
                 pipelineInfo.renderPass = renderPass;
                 //pipelineInfo.depthStencilState.depthWriteEnable = false;
-                pipelineInfo.depthStencilState.depthCompareOp = Gfx::SE_COMPARE_OP_LESS_OR_EQUAL;
+                pipelineInfo.depthStencilState.depthCompareOp = Gfx::SE_COMPARE_OP_GREATER;
                 pipelineInfo.multisampleState.samples = viewport->getSamples();
                 Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
                 command->bindPipeline(pipeline);
@@ -147,7 +147,6 @@ void DepthPrepass::publishOutputs()
         Gfx::RenderTargetAttachment(depthBuffer,
             Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_GENERAL,
             Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
-    depthAttachment.clear.depthStencil.depth = 1.0f;
     resources->registerRenderPassOutput("DEPTHPREPASS_DEPTH", depthAttachment);
 }
 

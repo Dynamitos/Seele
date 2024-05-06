@@ -13,7 +13,7 @@ public:
     virtual ~StaticMeshVertexData();
 	static StaticMeshVertexData* getInstance();
 	void loadPositions(MeshId id, const Array<Vector>& data);
-	void loadTexCoords(MeshId id, const Array<Vector2>& data);
+	void loadTexCoords(MeshId id, uint64 index, const Array<Vector2>& data);
 	void loadNormals(MeshId id, const Array<Vector>& data);
 	void loadTangents(MeshId id, const Array<Vector>& data);
 	void loadBiTangents(MeshId id, const Array<Vector>& data);
@@ -32,8 +32,8 @@ private:
 	std::mutex mutex;
     Gfx::OShaderBuffer positions;
 	Array<Vector> positionData;
-    Gfx::OShaderBuffer texCoords;
-	Array<Vector2> texCoordsData;
+    Gfx::OShaderBuffer texCoords[MAX_TEXCOORDS];
+	Array<Vector2> texCoordsData[MAX_TEXCOORDS];
     Gfx::OShaderBuffer normals;
 	Array<Vector> normalData;
     Gfx::OShaderBuffer tangents;

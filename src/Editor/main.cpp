@@ -62,7 +62,7 @@ int main() {
   //    .filePath = sourcePath / "import/models/Arissa.fbx",
   //    });
   AssetImporter::importMesh(MeshImportArgs{
-      .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.fbx",
+      .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.glb",
       .importPath = "Whitechapel"
       });
   //AssetImporter::importMesh(MeshImportArgs{

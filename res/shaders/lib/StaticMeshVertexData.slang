@@ -11,14 +11,17 @@ struct StaticMeshVertexData : IVertexData
 		attributes.normal_MS = float3(normals[3 * index + 0], normals[3 * index + 1], normals[3 * index + 2]);
 		attributes.tangent_MS = float3(tangents[3 * index + 0], tangents[3 * index + 1], tangents[3 * index + 2]);
 		attributes.biTangent_MS = float3(biTangents[3 * index + 0], biTangents[3 * index + 1], biTangents[3 * index + 2]);
-		attributes.texCoords = float2(texCoords[2 * index + 0], texCoords[2 * index + 1]);
+		for(uint i = 0; i < MAX_TEXCOORDS; ++i)
+		{
+			attributes.texCoords[i] = float2(texCoords[i][2 * index + 0], texCoords[i][2 * index + 1]);
+		}
 		attributes.vertexColor = float3(color[3 * index + 0], color[3 * index + 1], color[3 * index + 2]);
 		return attributes;
 	}
 	StructuredBuffer<float> positions;
-	StructuredBuffer<float> texCoords;
 	StructuredBuffer<float> normals;
 	StructuredBuffer<float> tangents;
 	StructuredBuffer<float> biTangents;
 	StructuredBuffer<float> color;
+	StructuredBuffer<float> texCoords[MAX_TEXCOORDS];
 };

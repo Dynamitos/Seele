@@ -3,7 +3,7 @@ import Common;
 struct MaterialParameter
 {
 	float3 position_WS;
-	float2 texCoords[1];
+	float2 texCoords[MAX_TEXCOORDS];
 	float3 vertexColor;
 };
 
@@ -25,13 +25,16 @@ struct FragmentParameter
 	float3 biTangent_WS : TANGENT1;
 	float3 position_WS : POSITION2;
 	float3 vertexColor : COLOR0;
-	float2 texCoords : TEXCOORD0;
+	float2 texCoords[MAX_TEXCOORDS] : TEXCOORD0;
 	MaterialParameter getMaterialParameter()
 	{
 		MaterialParameter result;
 		result.position_WS = position_WS;
 		result.vertexColor = vertexColor;
-		result.texCoords[0] = texCoords;
+		for(uint i = 0; i < MAX_TEXCOORDS; ++i)
+		{
+			result.texCoords[i] = texCoords[i];
+		}
 		return result;
 	}
 	LightingParameter getLightingParameter()
@@ -52,16 +55,16 @@ struct VertexAttributes
 	float3 tangent_MS;
 	float3 biTangent_MS;
 	float3 vertexColor;
-	float2 texCoords;
+	float2 texCoords[MAX_TEXCOORDS];
 	FragmentParameter getParameter(float4x4 transformMatrix)
 	{
 		float4 modelPos = float4(position_MS, 1);
 		float4 worldPos = mul(transformMatrix, modelPos);
 		float4 viewPos = mul(pViewParams.viewMatrix, worldPos);
 		float4 clipPos = mul(pViewParams.projectionMatrix, viewPos);
-		float3 tangent_WS = mul(float3x3(transformMatrix), tangent_MS);
-		float3 biTangent_WS = mul(float3x3(transformMatrix), biTangent_MS);
-		float3 normal_WS = mul(float3x3(transformMatrix), normal_MS);
+		float3 tangent_WS = normalize(mul(transformMatrix, float4(tangent_MS, 0.0)).xyz);
+		float3 biTangent_WS = normalize(mul(transformMatrix, float4(biTangent_MS, 0.0)).xyz);
+		float3 normal_WS = normalize(mul(transformMatrix, float4(normal_MS, 0.0)).xyz);
 		FragmentParameter result;
 		result.viewDir_WS = pViewParams.cameraPos_WS.xyz - worldPos.xyz;
 		result.normal_WS = normal_WS;
@@ -70,7 +73,10 @@ struct VertexAttributes
 		result.position_WS = worldPos.xyz;
 		result.position_CS = clipPos;
 		result.vertexColor = vertexColor;
-		result.texCoords = texCoords;	
+		for(uint i = 0; i < MAX_TEXCOORDS; ++i)
+		{
+			result.texCoords[i] = texCoords[i];
+		}
 		return result;
 	}
 };

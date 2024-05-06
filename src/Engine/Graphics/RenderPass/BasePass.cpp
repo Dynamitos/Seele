@@ -99,7 +99,7 @@ void BasePass::render()
                 pipelineInfo.fragmentShader = collection->fragmentShader;
                 pipelineInfo.pipelineLayout = collection->pipelineLayout;
                 pipelineInfo.renderPass = renderPass;
-                pipelineInfo.depthStencilState.depthCompareOp = Gfx::SE_COMPARE_OP_LESS_OR_EQUAL;
+                pipelineInfo.depthStencilState.depthCompareOp = Gfx::SE_COMPARE_OP_GREATER_OR_EQUAL;
                 pipelineInfo.multisampleState.samples = viewport->getSamples();
                 pipelineInfo.colorBlend.attachmentCount = 1;
                 Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
@@ -112,7 +112,7 @@ void BasePass::render()
                 pipelineInfo.fragmentShader = collection->fragmentShader;
                 pipelineInfo.pipelineLayout = collection->pipelineLayout;
                 pipelineInfo.renderPass = renderPass;
-                pipelineInfo.depthStencilState.depthCompareOp = Gfx::SE_COMPARE_OP_LESS_OR_EQUAL;
+                pipelineInfo.depthStencilState.depthCompareOp = Gfx::SE_COMPARE_OP_GREATER_OR_EQUAL;
                 pipelineInfo.multisampleState.samples = viewport->getSamples();
                 pipelineInfo.colorBlend.attachmentCount = 1;
                 Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));

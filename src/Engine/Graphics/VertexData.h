@@ -8,6 +8,8 @@
 #include "Graphics/Buffer.h"
 #include "Meshlet.h"
 
+constexpr uint64 MAX_TEXCOORDS = 8;
+
 namespace Seele
 {
 DECLARE_REF(Mesh)

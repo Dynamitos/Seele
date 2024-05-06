@@ -1,5 +1,6 @@
 const static float PI = 3.1415926535897932f;
 const static uint BLOCK_SIZE = 32;
+static const uint64_t MAX_TEXCOORDS = 8;
 
 struct ViewParameter
 {
