@@ -43,18 +43,12 @@ public:
         uint32 indicesOffset = 0;
         uint32 pad0[3];
     };
-    struct MeshInstanceData
-    {
-        InstanceData instance;
-        MeshData data;
-    };
     struct MaterialInstanceData
     {
         PMaterialInstance materialInstance;
-        Gfx::OShaderBuffer instanceBuffer;
-        Gfx::OShaderBuffer meshDataBuffer;
-        Gfx::PDescriptorSet descriptorSet;
-        Array<MeshInstanceData> meshes;
+        uint32 descriptorOffset;
+        uint64 numMeshes;
+        MeshId meshId;
     };
     struct MaterialData
     {
@@ -76,6 +70,7 @@ public:
     virtual std::string getTypeName() const = 0;
     Gfx::PIndexBuffer getIndexBuffer() { return indexBuffer; }
     Gfx::PDescriptorLayout getInstanceDataLayout() { return instanceDataLayout; }
+    Gfx::PDescriptorSet getInstanceDataSet() { return descriptorSet; }
     const Map<std::string, MaterialData>& getMaterialData() const { return materialData; }
     const Array<MeshData>& getMeshData(MeshId id) { return meshData[id]; }
     static List<VertexData*> getList();
@@ -89,10 +84,10 @@ protected:
     struct MeshletDescription
     {
         AABB bounding;
-        uint32_t vertexCount;
-        uint32_t primitiveCount;
-        uint32_t vertexOffset;
-        uint32_t primitiveOffset;
+        uint32 vertexCount;
+        uint32 primitiveCount;
+        uint32 vertexOffset;
+        uint32 primitiveOffset;
         Vector color;
         float pad;
     };
@@ -114,6 +109,12 @@ protected:
     Gfx::OShaderBuffer primitiveIndicesBuffer;
     // for legacy pipeline
     Gfx::OIndexBuffer indexBuffer;
+    // Material data
+    Array<InstanceData> instanceData;
+    Gfx::OShaderBuffer instanceBuffer;
+    Array<MeshData> instanceMeshData;
+    Gfx::OShaderBuffer instanceMeshDataBuffer;
+    Gfx::PDescriptorSet descriptorSet;
     uint64 idCounter;
 	uint64 head;
 	uint64 verticesAllocated;

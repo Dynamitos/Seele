@@ -8,6 +8,7 @@ namespace Component
 struct Mesh
 {
     PMeshAsset asset;
+    bool isStatic = true;
 };
 } // namespace Component
 } // namespace Seele

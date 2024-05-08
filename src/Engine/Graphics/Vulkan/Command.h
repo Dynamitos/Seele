@@ -72,8 +72,8 @@ public:
   bool isReady();
   virtual void setViewport(Gfx::PViewport viewport) override;
   virtual void bindPipeline(Gfx::PGraphicsPipeline pipeline) override;
-  virtual void bindDescriptor(Gfx::PDescriptorSet descriptorSet) override;
-  virtual void bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorSets) override;
+  virtual void bindDescriptor(Gfx::PDescriptorSet descriptorSet, Array<uint32> dynamicOffsets) override;
+  virtual void bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorSets, Array<uint32> dynamicOffsets) override;
   virtual void bindVertexBuffer(const Array<Gfx::PVertexBuffer>& buffers) override;
   virtual void bindIndexBuffer(Gfx::PIndexBuffer indexBuffer) override;
   virtual void pushConstants(Gfx::PPipelineLayout layout, Gfx::SeShaderStageFlags stage, uint32 offset, uint32 size,
@@ -107,8 +107,8 @@ public:
   void reset();
   bool isReady();
   virtual void bindPipeline(Gfx::PComputePipeline pipeline) override;
-  virtual void bindDescriptor(Gfx::PDescriptorSet set) override;
-  virtual void bindDescriptor(const Array<Gfx::PDescriptorSet>& sets) override;
+  virtual void bindDescriptor(Gfx::PDescriptorSet set, Array<uint32> dynamicOffsets) override;
+  virtual void bindDescriptor(const Array<Gfx::PDescriptorSet>& sets, Array<uint32> dynamicOffsets) override;
   virtual void pushConstants(Gfx::PPipelineLayout layout, Gfx::SeShaderStageFlags stage, uint32 offset, uint32 size,
                              const void* data) override;
   virtual void dispatch(uint32 threadX, uint32 threadY, uint32 threadZ) override;

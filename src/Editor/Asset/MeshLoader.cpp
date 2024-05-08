@@ -69,6 +69,7 @@ void MeshLoader::loadTextures(const aiScene* scene, const std::filesystem::path&
             texPath = (meshDirectory / texPath).replace_extension("png");
             if (tex->mHeight == 0)
             {
+                std::cout << "Dumping texture " << texPath << std::endl;
                 // already compressed, just dump it to the disk
                 std::ofstream file(texPath, std::ios::binary);
                 file.write((const char*)tex->pcData, tex->mWidth);
@@ -76,6 +77,7 @@ void MeshLoader::loadTextures(const aiScene* scene, const std::filesystem::path&
             }
             else
             {
+                std::cout << "Writing extracted png " << texPath << std::endl;
                 // recompress data so that the TextureLoader can read it
                 unsigned char* texData = new unsigned char[tex->mWidth * tex->mHeight * 4];
                 convertAssimpARGB(texData, tex->pcData, tex->mWidth * tex->mHeight);
@@ -412,8 +414,8 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Array<PTextureAsset>&
         case aiShadingMode_Toon:
             brdf.profile = "CelShading";
             break;
-        case aiShadingMode_CookTorrance:
         default:
+        case aiShadingMode_CookTorrance:
             brdf.profile = "CookTorrance";
             brdf.variables["roughness"] = outputRoughness;
             brdf.variables["metallic"] = outputMetallic;

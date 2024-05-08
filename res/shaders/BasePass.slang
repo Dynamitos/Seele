@@ -26,12 +26,12 @@ float4 fragmentMain(in FragmentParameter params) : SV_Target
     {
         result += pLightEnv.directionalLights[i].illuminate(lightingParams, brdf);
     }
-    for(uint i = 0; i < lightCount; ++i)
+    for(uint i = 0; i < pLightEnv.numPointLights; ++i)
     {
-        uint lightIndex = pLightCullingData.lightIndexList[startOffset + i];
-        result += pLightEnv.pointLights[lightIndex].illuminate(lightingParams, brdf);
+        //uint lightIndex = pLightCullingData.lightIndexList[startOffset + i];
+        result += pLightEnv.pointLights[i].illuminate(lightingParams, brdf);
     }
-    result += brdf.evaluateAmbient();
+    //result += brdf.evaluateAmbient();
     // gamma correction
     result = result / (result + float3(1.0));
     result = pow(result, float3(1.0/2.2));

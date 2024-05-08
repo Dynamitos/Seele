@@ -3,12 +3,19 @@
 #include "Graphics/Command.h"
 #include "Math/Vector.h"
 #include "VertexData.h"
+#include "entt/entt.hpp"
 
 namespace Seele
 {
 class StaticMeshVertexData : public VertexData
 {
 public:
+	struct StaticMeshMapping
+	{
+		MeshId original;
+		MeshId mapped;
+		PMaterialInstance material;
+	};
     StaticMeshVertexData();
     virtual ~StaticMeshVertexData();
 	static StaticMeshVertexData* getInstance();
@@ -26,9 +33,12 @@ public:
 	virtual Gfx::PDescriptorLayout getVertexDataLayout() override;
 	virtual Gfx::PDescriptorSet getVertexDataSet() override;
 	virtual std::string getTypeName() const override { return "StaticMeshVertexData"; }
+	void registerStaticMesh(const Array<OMesh>& meshes, const Component::Transform& transform);
 private:
 	virtual void resizeBuffers() override;
 	virtual void updateBuffers() override;
+	Array<MeshletDescription> staticMeshlets;
+
 	std::mutex mutex;
     Gfx::OShaderBuffer positions;
 	Array<Vector> positionData;

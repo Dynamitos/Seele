@@ -15,6 +15,7 @@ public:
     void keyCallback(KeyCode code, InputAction action, KeyModifier modifier);
     void mouseCallback(double xPos, double yPos);
     void mouseButtonCallback(MouseButton button, InputAction action, KeyModifier modifier);
+    void scrollCallback(double xScroll, double yScroll);
 private:
     Seele::StaticArray<bool, (size_t)KeyCode::KEY_LAST> keys;
     bool mouse1 = false;
@@ -25,6 +26,8 @@ private:
     float mouseY = 0;
     float deltaX = 0;
     float deltaY = 0;
+    float scrollX = 0;
+    float scrollY = 0;
 };
 DEFINE_REF(KeyboardInput)
 }

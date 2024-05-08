@@ -61,7 +61,12 @@ void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset)
         auto ktxFile = args.filePath;
         ktxFile.replace_extension("ktx");
         std::stringstream ss;
-        ss << "toktx --encode etc1s " << ktxFile << " " << args.filePath;
+        ss << "toktx --encode etc1s ";
+        if (args.type == TextureImportType::TEXTURE_NORMAL)
+        {
+            ss << "--normal_mode ";
+        }
+        ss << ktxFile << " " << args.filePath;
         system(ss.str().c_str());
         args.filePath = ktxFile;
     }

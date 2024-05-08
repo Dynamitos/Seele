@@ -270,7 +270,7 @@ void RenderCommand::bindPipeline(Gfx::PGraphicsPipeline gfxPipeline)
     pipeline = gfxPipeline.cast<GraphicsPipeline>();
     pipeline->bind(handle);
 }
-void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet)
+void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet, Array<uint32> dynamicOffsets)
 {
     assert(threadId == std::this_thread::get_id());
     auto descriptor = descriptorSet.cast<DescriptorSet>();
@@ -279,9 +279,9 @@ void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet)
     descriptor->bind();
 
     VkDescriptorSet setHandle = descriptor->getHandle();
-    vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getLayout(), pipeline->getPipelineLayout()->findParameter(descriptorSet->getName()), 1, &setHandle, 0, nullptr);
+    vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getLayout(), pipeline->getPipelineLayout()->findParameter(descriptorSet->getName()), 1, &setHandle, dynamicOffsets.size(), dynamicOffsets.data());
 }
-void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorSets)
+void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorSets, Array<uint32> dynamicOffsets)
 {
     assert(threadId == std::this_thread::get_id());
     VkDescriptorSet* sets = new VkDescriptorSet[descriptorSets.size()];
@@ -294,7 +294,7 @@ void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorS
         boundDescriptors.add(descriptorSet.getHandle());
         sets[pipeline->getPipelineLayout()->findParameter(descriptorSet->getName())] = descriptorSet->getHandle();
     }
-    vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getLayout(), 0, (uint32)descriptorSets.size(), sets, 0, nullptr);
+    vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getLayout(), 0, (uint32)descriptorSets.size(), sets, dynamicOffsets.size(), dynamicOffsets.data());
     delete[] sets;
 }
 void RenderCommand::bindVertexBuffer(const Array<Gfx::PVertexBuffer>& streams)
@@ -407,7 +407,7 @@ void ComputeCommand::bindPipeline(Gfx::PComputePipeline computePipeline)
     pipeline->bind(handle);
 }
 
-void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet) 
+void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet, Array<uint32> dynamicOffsets)
 {
     assert(threadId == std::this_thread::get_id());
     auto descriptor = descriptorSet.cast<DescriptorSet>();
@@ -416,10 +416,10 @@ void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet)
     descriptor->bind();
     
     VkDescriptorSet setHandle = descriptor->getHandle();
-    vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->getLayout(), pipeline->getPipelineLayout()->findParameter(descriptorSet->getName()), 1, &setHandle, 0, nullptr);
+    vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->getLayout(), pipeline->getPipelineLayout()->findParameter(descriptorSet->getName()), 1, &setHandle, dynamicOffsets.size(), dynamicOffsets.data());
 }
 
-void ComputeCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorSets) 
+void ComputeCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorSets, Array<uint32> dynamicOffsets)
 {
     assert(threadId == std::this_thread::get_id());
     VkDescriptorSet* sets = new VkDescriptorSet[descriptorSets.size()];
@@ -433,7 +433,7 @@ void ComputeCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptor
         boundDescriptors.add(descriptorSet.getHandle());
         sets[pipeline->getPipelineLayout()->findParameter(descriptorSet->getName())] = descriptorSet->getHandle();
     }
-    vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->getLayout(), 0, (uint32)descriptorSets.size(), sets, 0, nullptr);
+    vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->getLayout(), 0, (uint32)descriptorSets.size(), sets, dynamicOffsets.size(), dynamicOffsets.data());
     delete[] sets;
 }
 

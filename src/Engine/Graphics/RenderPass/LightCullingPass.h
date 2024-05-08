@@ -20,7 +20,6 @@ public:
     virtual void endFrame() override;
     virtual void publishOutputs() override;
     virtual void createRenderPass() override;
-    static void modifyRenderPassMacros(Map<const char*, const char*>& defines);
 private:
     void setupFrustums();
     static constexpr uint32 BLOCK_SIZE = 32;

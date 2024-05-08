@@ -15,6 +15,10 @@ target_sources(Engine
         RenderPass.cpp
         SkyboxRenderPass.h
         SkyboxRenderPass.cpp
+        StaticDepthPrepass.h
+        StaticDepthPrepass.cpp
+        StaticBasePass.h
+        StaticBasePass.cpp
         TextPass.h
         TextPass.cpp
         UIPass.h
@@ -31,5 +35,7 @@ target_sources(Engine
             RenderGraphResources.h
             RenderPass.h
             SkyboxRenderPass.h
+            StaticDepthPrepass.h
+            StaticBasePass.h
             TextPass.h
             UIPass.h)

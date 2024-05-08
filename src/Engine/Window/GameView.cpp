@@ -108,8 +108,9 @@ void GameView::mouseButtonCallback(MouseButton button, InputAction action, KeyMo
     keyboardSystem->mouseButtonCallback(button, action, modifier);
 }
 
-void GameView::scrollCallback(double, double)
+void GameView::scrollCallback(double xScroll, double yScroll)
 {
+    keyboardSystem->scrollCallback(xScroll, yScroll);
 }
 
 void GameView::fileCallback(int, const char**)

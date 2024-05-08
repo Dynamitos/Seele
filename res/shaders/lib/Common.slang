@@ -58,11 +58,16 @@ float4 screenToView(float4 screen)
     return clipToView(clip);
 }
 
-float4 screenToModel(float4x4 inverseTransform, float4 screen)
+float4 screenToWorld(float4 screen)
 {
     float4 view = screenToView(screen);
 
-    float4 world = viewToWorld(view);
+    return viewToWorld(view);
+}
+
+float4 screenToModel(float4x4 inverseTransform, float4 screen)
+{
+    float4 world = screenToWorld(screen);
 
     return worldToModel(inverseTransform, world);
 }

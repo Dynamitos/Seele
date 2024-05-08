@@ -1,16 +1,15 @@
 #pragma once
-#include "MinimalEngine.h"
 #include "RenderPass.h"
 
 namespace Seele
 {
-class DepthPrepass : public RenderPass
+class StaticDepthPrepass : public RenderPass
 {
 public:
-    DepthPrepass(Gfx::PGraphics graphics, PScene scene);
-    DepthPrepass(DepthPrepass&&) = default;
-    DepthPrepass& operator=(DepthPrepass&&) = default;
-    virtual ~DepthPrepass();
+    StaticDepthPrepass(Gfx::PGraphics graphics, PScene scene);
+    StaticDepthPrepass(StaticDepthPrepass&&) = default;
+    StaticDepthPrepass& operator=(StaticDepthPrepass&&) = default;
+    virtual ~StaticDepthPrepass();
     virtual void beginFrame(const Component::Camera& cam) override;
     virtual void render() override;
     virtual void endFrame() override;
@@ -22,5 +21,4 @@ private:
     Gfx::OPipelineLayout depthPrepassLayout;
     Gfx::ODescriptorLayout sceneDataLayout;
 };
-DEFINE_REF(DepthPrepass)
-} // namespace Seele
+}

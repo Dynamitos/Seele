@@ -22,10 +22,14 @@ void KeyboardInput::update(Component::KeyboardInput& input)
     input.mouseY = mouseY;
     input.mouse1 = mouse1;
     input.mouse2 = mouse2;
+    input.scrollX = scrollX;
+    input.scrollY = scrollY;
     deltaX = mouseX - lastMouseX;
     deltaY = mouseY - lastMouseY;
     lastMouseX = mouseX;
     lastMouseY = mouseY;
+    scrollX = 0;
+    scrollY = 0;
 }
 
 void KeyboardInput::keyCallback(KeyCode code, InputAction action, KeyModifier)
@@ -49,4 +53,10 @@ void KeyboardInput::mouseButtonCallback(MouseButton button, InputAction action, 
     {
         mouse2 = action != InputAction::RELEASE;
     }
+}
+
+void KeyboardInput::scrollCallback(double xScroll, double yScroll)
+{
+    scrollX = xScroll;
+    scrollY = yScroll;
 }

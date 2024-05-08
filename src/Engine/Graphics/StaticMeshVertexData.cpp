@@ -1,6 +1,7 @@
 #include "StaticMeshVertexData.h"
 #include "Graphics.h"
 #include "Graphics/Enums.h"
+#include "Mesh.h"
 
 using namespace Seele;
 
@@ -190,6 +191,43 @@ Gfx::PDescriptorLayout StaticMeshVertexData::getVertexDataLayout()
 Gfx::PDescriptorSet StaticMeshVertexData::getVertexDataSet()
 {
     return descriptorSet;
+}
+
+void StaticMeshVertexData::registerStaticMesh(entt::entity id, const Array<OMesh>& meshes, const Component::Transform& transform)
+{
+    std::unique_lock l(vertexDataLock);
+    std::unique_lock l2(mutex);
+    for (auto& mesh : meshes)
+    {
+        uint64 numVertices = meshVertexCounts[mesh->id];
+        uint64 offset = meshOffsets[mesh->id];
+        MeshId mapped = VertexData::allocateVertexData(numVertices);
+        Array<Vector> pos(numVertices);
+        Matrix4 matrix = transform.toMatrix();
+        for (uint64 i = 0; i < numVertices; ++i)
+        {
+            pos[i] = matrix * Vector4(positionData[offset + i], 1);
+        }
+        loadPositions(mapped, pos);
+        Array<Vector2> tex(numVertices);
+        for (size_t i = 0; i < MAX_TEXCOORDS; ++i)
+        {
+            std::memcpy(tex.data(), texCoordsData[i].data() + offset, numVertices * sizeof(Vector2));
+            loadTexCoords(mapped, i, tex);
+        }
+        Array<Vector> aux(numVertices);
+        std::memcpy(aux.data(), normalData.data() + offset, numVertices * sizeof(Vector));
+        loadNormals(mapped, aux);
+        std::memcpy(aux.data(), biTangentData.data() + offset, numVertices * sizeof(Vector));
+        loadBiTangents(mapped, aux);
+        std::memcpy(aux.data(), colorData.data() + offset, numVertices * sizeof(Vector));
+        loadColors(mapped, aux);
+        staticMeshes[id].add(StaticMeshMapping{
+            .original = mesh->id,
+            .mapped = mapped,
+            .material = mesh->referencedMaterial->getHandle(),
+            });
+    }
 }
 
 void StaticMeshVertexData::resizeBuffers()

@@ -36,16 +36,18 @@ void VertexData::updateMesh(PMesh mesh, Component::Transform& transform)
     MaterialData& matData = materialData[mat->getName()];
     matData.material = mat;
     MaterialInstanceData& matInstanceData = matData.instances[referencedInstance->getId()];
+    matInstanceData.descriptorOffset = instanceData.size();
+    matInstanceData.numMeshes = 0;
+    matInstanceData.meshId = mesh->id;
     for (const auto& data : meshData[mesh->id])
     {
         Matrix4 transformMatrix = transform.toMatrix() * mesh->transform;
-        matInstanceData.meshes.add(MeshInstanceData{
-            .instance = InstanceData {
-                .transformMatrix = transformMatrix,
-                .inverseTransformMatrix = glm::inverse(transformMatrix),
-            },
-            .data = data,
-            });
+        instanceData.add(InstanceData {
+            .transformMatrix = transformMatrix,
+            .inverseTransformMatrix = glm::inverse(transformMatrix),
+        });
+        instanceMeshData.add(data);
+        matInstanceData.numMeshes++;
         for (size_t i = 0; i < 0; ++i)
         {
             auto bounding = meshlets[data.meshletOffset + i].bounding;
@@ -94,58 +96,45 @@ void VertexData::createDescriptors()
 {
     std::unique_lock l(materialDataLock);
     instanceDataLayout->reset();
-    for (const auto& [_, mat] : materialData)
-    {
-        for (auto& [_, matInst] : mat.instances)
-        {
-            Array<InstanceData> instanceData;
-            Array<MeshData> meshes;
-            for (auto& inst : matInst.meshes)
-            {
-                meshes.add(inst.data);
-                instanceData.add(inst.instance);
-            }
-            matInst.instanceBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
-                .sourceData = {
-                    .size = sizeof(InstanceData) * instanceData.size(),
-                    .data = (uint8*)instanceData.data(),
-                },
-                .numElements = instanceData.size(),
-                .dynamic = false,
-                .name = "InstanceBuffer"
-                });
-            matInst.instanceBuffer->pipelineBarrier(
-                Gfx::SE_ACCESS_TRANSFER_WRITE_BIT,
-                Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
-                Gfx::SE_ACCESS_MEMORY_READ_BIT,
-                Gfx::SE_PIPELINE_STAGE_VERTEX_SHADER_BIT
-            );
-            matInst.descriptorSet = instanceDataLayout->allocateDescriptorSet();
-            
-            matInst.meshDataBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
-                .sourceData = {
-                    .size = sizeof(MeshData) * meshes.size(),
-                    .data = (uint8*)meshes.data(),
-                },
-                .numElements = meshes.size(),
-                .dynamic = false,
-                .name = "MeshDataBuffer"
-            });
-            matInst.meshDataBuffer->pipelineBarrier(
-                Gfx::SE_ACCESS_TRANSFER_WRITE_BIT,
-                Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
-                Gfx::SE_ACCESS_MEMORY_READ_BIT,
-                Gfx::SE_PIPELINE_STAGE_VERTEX_SHADER_BIT
-            );
-            matInst.descriptorSet->updateBuffer(0, matInst.instanceBuffer);
-            matInst.descriptorSet->updateBuffer(1, matInst.meshDataBuffer);
-            matInst.descriptorSet->updateBuffer(2, meshletBuffer);
-            matInst.descriptorSet->updateBuffer(3, primitiveIndicesBuffer);
-            matInst.descriptorSet->updateBuffer(4, vertexIndicesBuffer);
-            
-            matInst.descriptorSet->writeChanges();
-        }
-    }
+    instanceBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
+        .sourceData = {
+            .size = sizeof(InstanceData) * instanceData.size(),
+            .data = (uint8*)instanceData.data(),
+        },
+        .numElements = instanceData.size(),
+        .dynamic = false,
+        .name = "InstanceBuffer"
+        });
+    instanceBuffer->pipelineBarrier(
+        Gfx::SE_ACCESS_TRANSFER_WRITE_BIT,
+        Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
+        Gfx::SE_ACCESS_MEMORY_READ_BIT,
+        Gfx::SE_PIPELINE_STAGE_VERTEX_SHADER_BIT
+    );
+    descriptorSet = instanceDataLayout->allocateDescriptorSet();
+
+    instanceMeshDataBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
+        .sourceData = {
+            .size = sizeof(MeshData) * instanceMeshData.size(),
+            .data = (uint8*)instanceMeshData.data(),
+        },
+        .numElements = instanceMeshData.size(),
+        .dynamic = false,
+        .name = "MeshDataBuffer"
+        });
+    instanceMeshDataBuffer->pipelineBarrier(
+        Gfx::SE_ACCESS_TRANSFER_WRITE_BIT,
+        Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
+        Gfx::SE_ACCESS_MEMORY_READ_BIT,
+        Gfx::SE_PIPELINE_STAGE_VERTEX_SHADER_BIT
+    );
+    descriptorSet->updateBuffer(0, instanceBuffer);
+    descriptorSet->updateBuffer(1, instanceMeshDataBuffer);
+    descriptorSet->updateBuffer(2, meshletBuffer);
+    descriptorSet->updateBuffer(3, primitiveIndicesBuffer);
+    descriptorSet->updateBuffer(4, vertexIndicesBuffer);
+
+    descriptorSet->writeChanges();
 }
 
 void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet> loadedMeshlets)
@@ -264,7 +253,7 @@ List<VertexData*> VertexData::getList()
     return vertexDataList;
 }
 
-VertexData* Seele::VertexData::findByTypeName(std::string name)
+VertexData* VertexData::findByTypeName(std::string name)
 {
     for (auto vd : vertexDataList)
     {
@@ -276,15 +265,16 @@ VertexData* Seele::VertexData::findByTypeName(std::string name)
     return nullptr;
 }
 
-void Seele::VertexData::init(Gfx::PGraphics _graphics)
+void VertexData::init(Gfx::PGraphics _graphics)
 {
     graphics = _graphics;
     verticesAllocated = NUM_DEFAULT_ELEMENTS;
     instanceDataLayout = graphics->createDescriptorLayout("pScene");
-    instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 0, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,});
 
+    // instanceData
+    instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 0, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC,});
     // meshData
-    instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 1, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,});
+    instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 1, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC,});
     // meshletData
     instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 2, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
     // primitiveIndices
@@ -299,6 +289,8 @@ void Seele::VertexData::init(Gfx::PGraphics _graphics)
 
 void VertexData::destroy()
 {
+    instanceBuffer = nullptr;
+    instanceMeshDataBuffer = nullptr;
     instanceDataLayout = nullptr;
     meshletBuffer = nullptr;
     vertexIndicesBuffer = nullptr;
