@@ -22,6 +22,7 @@ public:
     virtual void draw(uint32 vertexCount, uint32 instanceCount, int32 firstVertex, uint32 firstInstance) = 0;
     virtual void drawIndexed(uint32 indexCount, uint32 instanceCount, int32 firstIndex, uint32 vertexOffset, uint32 firstInstance) = 0;
     virtual void drawMesh(uint32 groupX, uint32 groupY, uint32 groupZ) = 0;
+    virtual void drawMeshIndirect(Gfx::PShaderBuffer buffer, uint64 offset, uint32 drawCount, uint32 stride) = 0;
     std::string name;
 };
 DEFINE_REF(RenderCommand)

@@ -25,6 +25,7 @@ struct FragmentParameter
 	float3 biTangent_WS : TANGENT1;
 	float3 position_WS : POSITION2;
 	float3 vertexColor : COLOR0;
+	uint meshletId : POSITION3;
 	float2 texCoords[MAX_TEXCOORDS] : TEXCOORD0;
 	MaterialParameter getMaterialParameter()
 	{
@@ -55,6 +56,7 @@ struct VertexAttributes
 	float3 tangent_MS;
 	float3 biTangent_MS;
 	float3 vertexColor;
+	uint meshletId;
 	float2 texCoords[MAX_TEXCOORDS];
 	FragmentParameter getParameter(float4x4 transformMatrix)
 	{
@@ -73,6 +75,7 @@ struct VertexAttributes
 		result.position_WS = worldPos.xyz;
 		result.position_CS = clipPos;
 		result.vertexColor = vertexColor;
+		result.meshletId = meshletId;
 		for(uint i = 0; i < MAX_TEXCOORDS; ++i)
 		{
 			result.texCoords[i] = texCoords[i];

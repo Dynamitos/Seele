@@ -10,11 +10,17 @@ namespace Seele
 class StaticMeshVertexData : public VertexData
 {
 public:
-	struct StaticMeshMapping
+	struct StaticMatInstance
 	{
-		MeshId original;
-		MeshId mapped;
-		PMaterialInstance material;
+		PMaterialInstance instance;
+		Array<uint32> meshletIds;
+		Gfx::OShaderBuffer culledMeshletBuffer;
+		//Gfx::OShaderBuffer indirectDrawBuffer;
+	};
+	struct StaticMatData
+	{
+		PMaterial material;
+		Array<StaticMatInstance> staticInstance;
 	};
     StaticMeshVertexData();
     virtual ~StaticMeshVertexData();
@@ -34,10 +40,11 @@ public:
 	virtual Gfx::PDescriptorSet getVertexDataSet() override;
 	virtual std::string getTypeName() const override { return "StaticMeshVertexData"; }
 	void registerStaticMesh(const Array<OMesh>& meshes, const Component::Transform& transform);
+	constexpr const Array<StaticMatData>& getStaticMeshes() const { return staticData; }
 private:
 	virtual void resizeBuffers() override;
 	virtual void updateBuffers() override;
-	Array<MeshletDescription> staticMeshlets;
+	Array<StaticMatData> staticData;
 
 	std::mutex mutex;
     Gfx::OShaderBuffer positions;

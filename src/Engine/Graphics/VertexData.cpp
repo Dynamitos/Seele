@@ -16,7 +16,7 @@ constexpr static uint64 NUM_DEFAULT_ELEMENTS = 1024 * 1024;
 void VertexData::resetMeshData()
 {
     std::unique_lock l(materialDataLock);
-    for (auto& [_, mat] : materialData)
+    for (auto& mat : materialData)
     {
         mat.material->getDescriptorLayout()->reset();
     }
@@ -33,7 +33,11 @@ void VertexData::updateMesh(PMesh mesh, Component::Transform& transform)
     std::unique_lock l(materialDataLock);
     PMaterialInstance referencedInstance = mesh->referencedMaterial->getHandle();
     PMaterial mat = referencedInstance->getBaseMaterial();
-    MaterialData& matData = materialData[mat->getName()];
+    if (materialData.size() <= mat->getId())
+    {
+        materialData.resize(mat->getId());
+    }
+    MaterialData& matData = materialData[mat->getId()];
     matData.material = mat;
     MaterialInstanceData& matInstanceData = matData.instances[referencedInstance->getId()];
     matInstanceData.descriptorOffset = instanceData.size();
@@ -166,13 +170,13 @@ void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet>
                 .vertexOffset = vertexOffset,
                 .primitiveOffset = primitiveOffset,
                 .color = Vector((float)rand() / RAND_MAX,(float)rand() / RAND_MAX,(float)rand() / RAND_MAX),
+                .indicesOffset = (uint32)meshOffsets[id],
                 });
         }
         meshData[id].add(MeshData{
             .bounding = meshAABB,//.toSphere(),
             .numMeshlets = numMeshlets,
             .meshletOffset = meshletOffset,
-            .indicesOffset = (uint32)meshOffsets[id],
             });
         currentMesh += numMeshlets;
     }

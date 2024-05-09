@@ -18,9 +18,7 @@ public:
     virtual void createRenderPass() override;
 private:
     Gfx::RenderTargetAttachment depthAttachment;
-    Gfx::OTexture2D depthBuffer;
     Gfx::OPipelineLayout depthPrepassLayout;
-    Gfx::ODescriptorLayout sceneDataLayout;
 };
 DEFINE_REF(DepthPrepass)
 } // namespace Seele

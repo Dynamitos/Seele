@@ -20,6 +20,7 @@ public:
 private:
     Gfx::RenderTargetAttachment colorAttachment;
     Gfx::RenderTargetAttachment depthAttachment;
+    Gfx::RenderTargetAttachment meshletIdAttachment;
     Gfx::PShaderBuffer oLightIndexList;
     Gfx::PShaderBuffer tLightIndexList;
     Gfx::PTexture2D oLightGrid;
@@ -27,7 +28,7 @@ private:
     
     Gfx::PDescriptorSet opaqueCulling;
     Gfx::PDescriptorSet transparentCulling;
-    //Array<Gfx::PDescriptorSet> descriptorSets;
+
     PCameraActor source;
     Gfx::OPipelineLayout basePassLayout;
     Gfx::ODescriptorLayout lightCullingLayout;

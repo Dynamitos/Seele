@@ -19,6 +19,28 @@ using namespace Seele;
 BasePass::BasePass(Gfx::PGraphics graphics, PScene scene) 
     : RenderPass(graphics, scene)
 {
+    basePassLayout = graphics->createPipelineLayout("BasePassLayout");
+
+    basePassLayout->addDescriptorLayout(viewParamsLayout);
+    basePassLayout->addDescriptorLayout(scene->getLightEnvironment()->getDescriptorLayout());
+
+    lightCullingLayout = graphics->createDescriptorLayout("pLightCullingData");
+    // oLightIndexList
+    lightCullingLayout->addDescriptorBinding(Gfx::DescriptorBinding{ .binding = 0, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER, });
+    // oLightGrid
+    lightCullingLayout->addDescriptorBinding(Gfx::DescriptorBinding{ .binding = 1, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_IMAGE, });
+    lightCullingLayout->create();
+
+    basePassLayout->addDescriptorLayout(lightCullingLayout);
+
+    if (graphics->supportMeshShading())
+    {
+        graphics->getShaderCompiler()->registerRenderPass(basePassLayout, "BasePass", "MeshletPass", true, true, "BasePass", true, true, "MeshletPass");
+    }
+    else
+    {
+        graphics->getShaderCompiler()->registerRenderPass(basePassLayout, "BasePass", "LegacyPass", true, true, "BasePass");
+    }
 }
 
 BasePass::~BasePass()
@@ -58,90 +80,7 @@ void BasePass::render()
 
     graphics->beginRenderPass(renderPass);
     Array<Gfx::ORenderCommand> commands;
-    // Static Meshes
-    {
-        Gfx::ShaderPermutation permutation;
-        if (graphics->supportMeshShading())
-        {
-            permutation.setTaskFile("StaticMeshletPass");
-            permutation.setMeshFile("StaticMeshletPass");
-        }
-        else
-        {
-            permutation.setVertexFile("StaticLegacyPass");
-        }
-        permutation.setFragmentFile("BasePass");
-        StaticMeshVertexData* vd = StaticMeshVertexData::getInstance();
-        permutation.setVertexData(vd->getTypeName());
-        for (const auto& [_, mappings] : vd->getStaticMeshes())
-        {
-            for (const auto& mapping : mappings)
-            {
-                permutation.setMaterial(mapping.material->getBaseMaterial()->getName());
-                Gfx::PermutationId id(permutation);
 
-                Gfx::ORenderCommand command = graphics->createRenderCommand("BaseRender");
-                command->setViewport(viewport);
-
-                const Gfx::ShaderCollection* collection = graphics->getShaderCompiler()->findShaders(id);
-                assert(collection != nullptr);
-                if (graphics->supportMeshShading())
-                {
-                    Gfx::MeshPipelineCreateInfo pipelineInfo;
-                    pipelineInfo.taskShader = collection->taskShader;
-                    pipelineInfo.meshShader = collection->meshShader;
-                    pipelineInfo.fragmentShader = collection->fragmentShader;
-                    pipelineInfo.pipelineLayout = collection->pipelineLayout;
-                    pipelineInfo.renderPass = renderPass;
-                    pipelineInfo.depthStencilState.depthCompareOp = Gfx::SE_COMPARE_OP_GREATER_OR_EQUAL;
-                    pipelineInfo.multisampleState.samples = viewport->getSamples();
-                    pipelineInfo.colorBlend.attachmentCount = 1;
-                    Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
-                    command->bindPipeline(pipeline);
-                }
-                else
-                {
-                    Gfx::LegacyPipelineCreateInfo pipelineInfo;
-                    pipelineInfo.vertexShader = collection->vertexShader;
-                    pipelineInfo.fragmentShader = collection->fragmentShader;
-                    pipelineInfo.pipelineLayout = collection->pipelineLayout;
-                    pipelineInfo.renderPass = renderPass;
-                    pipelineInfo.depthStencilState.depthCompareOp = Gfx::SE_COMPARE_OP_GREATER_OR_EQUAL;
-                    pipelineInfo.multisampleState.samples = viewport->getSamples();
-                    pipelineInfo.colorBlend.attachmentCount = 1;
-                    Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
-                    command->bindPipeline(pipeline);
-                }
-                command->bindDescriptor(vd->getVertexDataSet());
-                command->bindDescriptor(viewParamsSet);
-                command->bindDescriptor(scene->getLightEnvironment()->getDescriptorSet());
-                command->bindDescriptor(opaqueCulling);
-                command->bindDescriptor(mapping.material->getDescriptorSet());
-                command->bindDescriptor(vd->getInstanceDataSet(), {0, 0});
-                if (graphics->supportMeshShading())
-                {
-                    command->drawMesh(vd->getMeshData(mapping.mapped).size(), 1, 1);
-                }
-                else
-                {
-                    command->bindIndexBuffer(vd->getIndexBuffer());
-                    uint32 instanceOffset = 0;
-                    for (const auto& meshData : vd->getMeshData(mapping.mapped))
-                    {
-                        if (meshData.numIndices > 0)
-                        {
-                            command->drawIndexed(meshData.numIndices, 1, meshData.firstIndex, meshData.indicesOffset, instanceOffset);
-                        }
-                        instanceOffset++;
-                    }
-                }
-                
-                commands.add(std::move(command));
-            }
-        }
-    }
-    // Others
-    {
         Gfx::ShaderPermutation permutation;
         if (graphics->supportMeshShading())
         {
@@ -157,7 +96,7 @@ void BasePass::render()
         {
             permutation.setVertexData(vertexData->getTypeName());
             const auto& materials = vertexData->getMaterialData();
-            for (const auto& [_, materialData] : materials)
+            for (const auto& materialData : materials)
             {
                 // Create Pipeline(Material, VertexData)
                 // Descriptors:
@@ -206,7 +145,7 @@ void BasePass::render()
                 command->bindDescriptor(viewParamsSet);
                 command->bindDescriptor(scene->getLightEnvironment()->getDescriptorSet());
                 command->bindDescriptor(opaqueCulling);
-                for (const auto& [_, instance] : materialData.instances)
+                for (const auto& instance : materialData.instances)
                 {
                     command->bindDescriptor(instance.materialInstance->getDescriptorSet());
                     command->bindDescriptor(vertexData->getInstanceDataSet(), {instance.descriptorOffset, instance.descriptorOffset});
@@ -216,22 +155,22 @@ void BasePass::render()
                     }
                     else
                     {
-                        command->bindIndexBuffer(vertexData->getIndexBuffer());
-                        uint32 instanceOffset = 0;
-                        for (const auto& meshData : vertexData->getMeshData(instance.meshId))
-                        {
-                            if (meshData.numIndices > 0)
-                            {
-                                command->drawIndexed(meshData.numIndices, 1, meshData.firstIndex, meshData.indicesOffset, instanceOffset);
-                            }
-                            instanceOffset++;
-                        }
+                        //command->bindIndexBuffer(vertexData->getIndexBuffer());
+                        //uint32 instanceOffset = 0;
+                        //for (const auto& meshData : vertexData->getMeshData(instance.meshId))
+                        //{
+                        //    if (meshData.numIndices > 0)
+                        //    {
+                        //        command->drawIndexed(meshData.numIndices, 1, meshData.firstIndex, meshData.indicesOffset, instanceOffset);
+                        //    }
+                        //    instanceOffset++;
+                        //}
                     }
                 }
                 commands.add(std::move(command));
             }
         }
-    }
+    
     
     graphics->executeCommands(std::move(commands));
     graphics->endRenderPass();
@@ -243,44 +182,21 @@ void BasePass::endFrame()
 
 void BasePass::publishOutputs() 
 {
-    basePassLayout = graphics->createPipelineLayout("BasePassLayout");
-
-    basePassLayout->addDescriptorLayout(viewParamsLayout);
-    basePassLayout->addDescriptorLayout(scene->getLightEnvironment()->getDescriptorLayout());
-
-    lightCullingLayout = graphics->createDescriptorLayout("pLightCullingData");
-    // oLightIndexList
-    lightCullingLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 0, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,});
-    // oLightGrid
-    lightCullingLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 1, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_IMAGE,});
-    lightCullingLayout->create();
-
-    basePassLayout->addDescriptorLayout(lightCullingLayout);
     colorAttachment = Gfx::RenderTargetAttachment(viewport,
-        Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-        Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
+        Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+        Gfx::SE_ATTACHMENT_LOAD_OP_LOAD, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
     resources->registerRenderPassOutput("BASEPASS_COLOR", colorAttachment);
-    
-    if (graphics->supportMeshShading())
-    {
-        graphics->getShaderCompiler()->registerRenderPass(basePassLayout, "BasePass", "MeshletPass", true, true, "BasePass", true, true, "MeshBasePass");
-        graphics->getShaderCompiler()->registerRenderPass(basePassLayout, "StaticBasePass", "StaticMeshletPass", true, true, "BasePass", true, true, "StaticMeshletPass");
-    }
-    else
-    {
-        graphics->getShaderCompiler()->registerRenderPass(basePassLayout, "BasePass", "LegacyPass", true, true, "BasePass");
-        graphics->getShaderCompiler()->registerRenderPass(basePassLayout, "StaticBasePass", "StaticLegacyPass", true, true, "BasePass");
-    }
 }
 
 void BasePass::createRenderPass() 
 {
     depthAttachment = resources->requestRenderTarget("DEPTHPREPASS_DEPTH");
+    meshletIdAttachment = resources->requestRenderTarget("BASEPASS_MESHLETID");
     depthAttachment.setLoadOp(Gfx::SE_ATTACHMENT_LOAD_OP_LOAD);
-    depthAttachment.setInitialLayout(Gfx::SE_IMAGE_LAYOUT_GENERAL);
+    depthAttachment.setInitialLayout(Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
     depthAttachment.setFinalLayout(Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
     Gfx::RenderTargetLayout layout = Gfx::RenderTargetLayout{
-        .colorAttachments = { colorAttachment }, 
+        .colorAttachments = { colorAttachment, meshletIdAttachment }, 
         .depthAttachment = depthAttachment,
     };
     Array<Gfx::SubPassDependency> dependency = {
@@ -297,7 +213,7 @@ void BasePass::createRenderPass()
             .dstSubpass = 0,
             .srcStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
             .dstStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-            .srcAccess = Gfx::SE_ACCESS_NONE,
+            .srcAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
             .dstAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
         },
         {
@@ -322,8 +238,4 @@ void BasePass::createRenderPass()
     tLightIndexList = resources->requestBuffer("LIGHTCULLING_TLIGHTLIST");
     oLightGrid = resources->requestTexture("LIGHTCULLING_OLIGHTGRID");
     tLightGrid = resources->requestTexture("LIGHTCULLING_TLIGHTGRID");
-}
-
-void BasePass::modifyRenderPassMacros(Map<const char*, const char*>&)
-{
 }

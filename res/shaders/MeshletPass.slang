@@ -94,7 +94,8 @@ void meshMain(
 		uint v = min(i, m.vertexCount - 1);
 		{
 			uint vertexIndex = pScene.vertexIndices[m.vertexOffset + v];
-			VertexAttributes attr = pVertexData.getAttributes(md.indicesOffset + vertexIndex);
+			VertexAttributes attr = pVertexData.getAttributes(m.indicesOffset + vertexIndex);
+			attr.meshletId = -1;
 			vertices[v] = attr.getParameter(inst.transformMatrix);
 			//vertices[v].vertexColor = m.color;
 		}

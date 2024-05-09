@@ -14,7 +14,7 @@
 				std::this_thread::sleep_for(std::chrono::seconds(3));                                                             \
 			}                                                                                                                   \
 			std::cout << "Fatal : VkResult is " << res << " in " << __FILE__ << " at line " << __LINE__ << std::endl;           \
-			assert(res == VK_SUCCESS);                                                                                          \
+			abort();                                                                                          \
 		}                                                                                                                     \
 	}
 

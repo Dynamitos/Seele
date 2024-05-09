@@ -9,6 +9,12 @@ struct PrimitiveAttributes
 	uint cull: SV_CullPrimitive;
 };
 
+struct CulledMeshletList
+{
+	StructuredBuffer<uint> meshletIndices;
+};
+ParameterBlock<CulledMeshletList> pCullingList;
+
 [numthreads(MESH_GROUP_SIZE, 1, 1)]
 [outputtopology("triangle")]
 [shader("mesh")]
@@ -18,7 +24,8 @@ void meshMain(
 	out vertices FragmentParameter vertices[MAX_VERTICES], 
 	out indices uint3 indices[MAX_PRIMITIVES]
 ){
-	MeshletDescription m = pScene.meshletInfos[groupID];
+	uint meshletIndex = pCullingList.meshletIndices[groupID];
+	MeshletDescription m = pScene.meshletInfos[meshletIndex];
 	SetMeshOutputCounts(m.vertexCount, m.primitiveCount);
 	
 	for(uint i = threadID; i < MAX_PRIMITIVES; i += MESH_GROUP_SIZE)
@@ -36,7 +43,8 @@ void meshMain(
 		uint v = min(i, m.vertexCount - 1);
 		{
 			uint vertexIndex = pScene.vertexIndices[m.vertexOffset + v];
-			VertexAttributes attr = pVertexData.getAttributes(md.indicesOffset + vertexIndex);
+			VertexAttributes attr = pVertexData.getAttributes(m.indicesOffset + vertexIndex);
+			attr.meshletId = meshletIndex;
 			vertices[v] = attr.getParameter(float4x4(1.0));
 		}
 	}

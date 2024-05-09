@@ -19,6 +19,6 @@ private:
     Gfx::RenderTargetAttachment depthAttachment;
     Gfx::OTexture2D depthBuffer;
     Gfx::OPipelineLayout depthPrepassLayout;
-    Gfx::ODescriptorLayout sceneDataLayout;
+    Gfx::ODescriptorLayout meshletCullingLayout;
 };
 }

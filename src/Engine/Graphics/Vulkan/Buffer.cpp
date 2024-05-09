@@ -207,16 +207,19 @@ void Buffer::createBuffer()
         .usage = VMA_MEMORY_USAGE_AUTO,
     };
     buffers.add();
-    vmaCreateBuffer(graphics->getAllocator(), &info, &allocInfo, &buffers.back().buffer, &buffers.back().allocation,
-        &buffers.back().info);
-    vmaGetAllocationMemoryProperties(graphics->getAllocator(), buffers.back().allocation, &buffers.back().properties);
-    if (!name.empty()) {
-        VkDebugUtilsObjectNameInfoEXT nameInfo = { .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
-                                                    .pNext = nullptr,
-                                                    .objectType = VK_OBJECT_TYPE_BUFFER,
-                                                    .objectHandle = (uint64)buffers.back().buffer,
-                                                    .pObjectName = this->name.c_str() };
-        graphics->vkSetDebugUtilsObjectNameEXT(&nameInfo);
+    if (size > 0)
+    {
+        VK_CHECK(vmaCreateBuffer(graphics->getAllocator(), &info, &allocInfo, &buffers.back().buffer, &buffers.back().allocation,
+            &buffers.back().info));
+        vmaGetAllocationMemoryProperties(graphics->getAllocator(), buffers.back().allocation, &buffers.back().properties);
+        if (!name.empty()) {
+            VkDebugUtilsObjectNameInfoEXT nameInfo = { .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
+                                                        .pNext = nullptr,
+                                                        .objectType = VK_OBJECT_TYPE_BUFFER,
+                                                        .objectHandle = (uint64)buffers.back().buffer,
+                                                        .pObjectName = this->name.c_str() };
+            graphics->vkSetDebugUtilsObjectNameEXT(&nameInfo);
+        }
     }
 }
 
@@ -224,7 +227,7 @@ UniformBuffer::UniformBuffer(PGraphics graphics, const UniformBufferCreateInfo& 
     : Gfx::UniformBuffer(graphics->getFamilyMapping(), createInfo.sourceData),
       Vulkan::Buffer(graphics, createInfo.sourceData.size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, currentOwner,
                      createInfo.dynamic, createInfo.name) {
-  if (createInfo.sourceData.data != nullptr) {
+  if (size > 0 && createInfo.sourceData.data != nullptr) {
     void* data = map();
     std::memcpy(data, createInfo.sourceData.data, createInfo.sourceData.size);
     unmap();
@@ -265,7 +268,7 @@ ShaderBuffer::ShaderBuffer(PGraphics graphics, const ShaderBufferCreateInfo& sou
     : Gfx::ShaderBuffer(graphics->getFamilyMapping(), sourceData.numElements, sourceData.sourceData),
       Vulkan::Buffer(graphics, sourceData.sourceData.size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, currentOwner,
                      sourceData.dynamic, sourceData.name) {
-  if (sourceData.sourceData.data != nullptr) {
+  if (size > 0 && sourceData.sourceData.data != nullptr) {
     void* data = map();
     std::memcpy(data, sourceData.sourceData.data, sourceData.sourceData.size);
     unmap();

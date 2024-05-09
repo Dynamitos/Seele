@@ -8,7 +8,7 @@ struct MeshletDescription
 	uint32_t vertexOffset;
 	uint32_t primitiveOffset;
 	float3 color;
-	float pad;
+	uint32_t indicesOffset;
 };
 
 struct MeshData
@@ -18,8 +18,6 @@ struct MeshData
 	uint32_t meshletOffset;
 	uint32_t firstIndex;
 	uint32_t numIndices;
-	uint32_t indicesOffset;
-	uint32_t pad0[3];
 };
 
 static const uint MAX_VERTICES = 256;

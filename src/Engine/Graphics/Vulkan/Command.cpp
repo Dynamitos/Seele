@@ -340,6 +340,12 @@ void RenderCommand::drawMesh(uint32 groupX, uint32 groupY, uint32 groupZ)
     graphics->vkCmdDrawMeshTasksEXT(handle, groupX, groupY, groupZ);
 }
 
+void RenderCommand::drawMeshIndirect(Gfx::PShaderBuffer buffer, uint64 offset, uint32 drawCount, uint32 stride)
+{
+    assert(threadId == std::this_thread::get_id());
+    graphics->vkCmdDrawMeshTasksIndirectEXT(handle, buffer.cast<ShaderBuffer>()->getHandle(), offset, drawCount, stride);
+}
+
 ComputeCommand::ComputeCommand(PGraphics graphics, VkCommandPool cmdPool) 
     : graphics(graphics)
     , owner(cmdPool)

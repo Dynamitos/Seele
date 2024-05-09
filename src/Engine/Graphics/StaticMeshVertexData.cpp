@@ -153,12 +153,12 @@ void StaticMeshVertexData::init(Gfx::PGraphics _graphics)
 {
     VertexData::init(_graphics);
     descriptorLayout = _graphics->createDescriptorLayout("pVertexData");
-    descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 0, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
-    descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 1, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
-    descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 2, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
-    descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 3, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
-    descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 4, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
-    descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 5, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER, .descriptorCount = MAX_TEXCOORDS });
+    descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{ .binding = 0, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER });
+    descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{ .binding = 1, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER });
+    descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{ .binding = 2, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER });
+    descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{ .binding = 3, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER });
+    descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{ .binding = 4, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER });
+    descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{ .binding = 5, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER, .descriptorCount = MAX_TEXCOORDS });
     descriptorLayout->create();
     descriptorSet = descriptorLayout->allocateDescriptorSet();
 }
@@ -193,14 +193,13 @@ Gfx::PDescriptorSet StaticMeshVertexData::getVertexDataSet()
     return descriptorSet;
 }
 
-void StaticMeshVertexData::registerStaticMesh(entt::entity id, const Array<OMesh>& meshes, const Component::Transform& transform)
+void StaticMeshVertexData::registerStaticMesh(const Array<OMesh>& meshes, const Component::Transform& transform)
 {
-    std::unique_lock l(vertexDataLock);
-    std::unique_lock l2(mutex);
     for (auto& mesh : meshes)
     {
         uint64 numVertices = meshVertexCounts[mesh->id];
         uint64 offset = meshOffsets[mesh->id];
+        // Create new mesh where transform is "embedded"
         MeshId mapped = VertexData::allocateVertexData(numVertices);
         Array<Vector> pos(numVertices);
         Matrix4 matrix = transform.toMatrix();
@@ -222,10 +221,40 @@ void StaticMeshVertexData::registerStaticMesh(entt::entity id, const Array<OMesh
         loadBiTangents(mapped, aux);
         std::memcpy(aux.data(), colorData.data() + offset, numVertices * sizeof(Vector));
         loadColors(mapped, aux);
-        staticMeshes[id].add(StaticMeshMapping{
-            .original = mesh->id,
-            .mapped = mapped,
-            .material = mesh->referencedMaterial->getHandle(),
+
+        // Load meshlets again
+        VertexData::loadMesh(mapped, mesh->indices, mesh->meshlets);
+
+        Array<uint32> ids;
+        // Get references to loaded meshlets
+        const auto& meshData = VertexData::getMeshData(mapped);
+        for (const auto& md : meshData)
+        {
+            for (size_t i = 0; i < md.numMeshlets; ++i)
+            {
+                ids.add(md.meshletOffset + i);
+            }
+        }
+
+        // Get Static instance array
+        PMaterialInstance instance = mesh->referencedMaterial->getHandle();
+        PMaterial baseMat = instance->getBaseMaterial();
+        Array<StaticMatInstance> instances;
+        instances.add(StaticMatInstance{
+            .instance = mesh->referencedMaterial->getHandle(),
+            .meshletIds = ids,
+            .culledMeshletBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
+            .sourceData = {
+                .size = ids.size() * sizeof(uint32),
+                .data = (uint8*)ids.data(),
+            },
+            .numElements = ids.size(),
+            .dynamic = true,
+            }),
+            });
+        staticData.add(StaticMatData{
+            .material = baseMat,
+            .staticInstance = std::move(instances),
             });
     }
 }
@@ -257,7 +286,7 @@ void StaticMeshVertexData::resizeBuffers()
         texCoords[i] = graphics->createShaderBuffer(createInfo);
         texCoordsData[i].resize(verticesAllocated);
     }
-    
+
     positionData.resize(verticesAllocated);
     normalData.resize(verticesAllocated);
     tangentData.resize(verticesAllocated);

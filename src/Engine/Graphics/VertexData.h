@@ -40,8 +40,6 @@ public:
         uint32 meshletOffset = 0;
         uint32 firstIndex = 0;
         uint32 numIndices = 0;
-        uint32 indicesOffset = 0;
-        uint32 pad0[3];
     };
     struct MaterialInstanceData
     {
@@ -53,7 +51,7 @@ public:
     struct MaterialData
     {
         PMaterial material;
-        Map<uint64, MaterialInstanceData> instances;
+        Array<MaterialInstanceData> instances;
     };
     void resetMeshData();
     void updateMesh(PMesh mesh, Component::Transform& transform);
@@ -71,7 +69,7 @@ public:
     Gfx::PIndexBuffer getIndexBuffer() { return indexBuffer; }
     Gfx::PDescriptorLayout getInstanceDataLayout() { return instanceDataLayout; }
     Gfx::PDescriptorSet getInstanceDataSet() { return descriptorSet; }
-    const Map<std::string, MaterialData>& getMaterialData() const { return materialData; }
+    const Array<MaterialData>& getMaterialData() const { return materialData; }
     const Array<MeshData>& getMeshData(MeshId id) { return meshData[id]; }
     static List<VertexData*> getList();
     static VertexData* findByTypeName(std::string name);
@@ -89,10 +87,10 @@ protected:
         uint32 vertexOffset;
         uint32 primitiveOffset;
         Vector color;
-        float pad;
+        uint32 indicesOffset = 0;
     };
     std::mutex materialDataLock;
-    Map<std::string, MaterialData> materialData;
+    Array<MaterialData> materialData;
     std::mutex vertexDataLock;
     Map<MeshId, Array<MeshData>> meshData;
     Map<MeshId, uint64> meshOffsets;

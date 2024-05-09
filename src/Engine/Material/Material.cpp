@@ -9,6 +9,9 @@
 
 using namespace Seele;
 
+std::atomic_uint64_t Material::materialIdCounter = 0;
+Array<PMaterial> Material::materials;
+
 Material::Material()
 {
 }
@@ -30,7 +33,9 @@ Material::Material(Gfx::PGraphics graphics,
     , codeExpressions(std::move(expressions))
     , parameters(std::move(parameter))
     , brdf(std::move(brdf))
+    , materialId(materialIdCounter++)
 {
+    materials.add(this);
 }
 
 Material::~Material()
