@@ -184,7 +184,7 @@ void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PUniformBuffer uniformBu
       .dstBinding = binding,
       .dstArrayElement = 0,
       .descriptorCount = 1,
-      .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+      .descriptorType = cast(layout->getBindings()[binding].descriptorType),
       .pBufferInfo = &bufferInfos.back(),
   });
 
@@ -203,7 +203,6 @@ void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PShaderBuffer shaderBuff
       .offset = 0,
       .range = vulkanBuffer->getSize(),
   });
-
   writeDescriptors.add(VkWriteDescriptorSet{
       .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
       .pNext = nullptr,
@@ -211,7 +210,7 @@ void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PShaderBuffer shaderBuff
       .dstBinding = binding,
       .dstArrayElement = 0,
       .descriptorCount = 1,
-      .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+      .descriptorType = cast(layout->getBindings()[binding].descriptorType),
       .pBufferInfo = &bufferInfos.back(),
   });
 
@@ -238,7 +237,7 @@ void DescriptorSet::updateBuffer(uint32_t binding, uint32 index, Gfx::PShaderBuf
         .dstBinding = binding,
         .dstArrayElement = index,
         .descriptorCount = 1,
-        .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+        .descriptorType = cast(layout->getBindings()[binding].descriptorType),
         .pBufferInfo = &bufferInfos.back(),
         });
 

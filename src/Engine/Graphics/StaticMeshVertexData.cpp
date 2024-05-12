@@ -228,13 +228,12 @@ void StaticMeshVertexData::registerStaticMesh(const Array<OMesh>& meshes, const 
         Array<uint32> ids;
         // Get references to loaded meshlets
         const auto& meshData = VertexData::getMeshData(mapped);
-        for (const auto& md : meshData)
+
+        for (size_t i = 0; i < meshData.numMeshlets; ++i)
         {
-            for (size_t i = 0; i < md.numMeshlets; ++i)
-            {
-                ids.add(md.meshletOffset + i);
-            }
+            ids.add(meshData.meshletOffset + i);
         }
+
 
         // Get Static instance array
         PMaterialInstance instance = mesh->referencedMaterial->getHandle();

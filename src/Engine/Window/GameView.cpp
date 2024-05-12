@@ -18,10 +18,10 @@ GameView::GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreate
     , gameInterface(dllPath)
 {
     reloadGame();
-    renderGraph.addPass(new StaticDepthPrepass(graphics, scene));
+    //renderGraph.addPass(new StaticDepthPrepass(graphics, scene));
     renderGraph.addPass(new DepthPrepass(graphics, scene));
     renderGraph.addPass(new LightCullingPass(graphics, scene));
-    renderGraph.addPass(new StaticBasePass(graphics, scene));
+    //renderGraph.addPass(new StaticBasePass(graphics, scene));
     renderGraph.addPass(new BasePass(graphics, scene));
     //renderGraph.addPass(new DebugPass(graphics, scene));
     //renderGraph.addPass(new SkyboxRenderPass(graphics, scene));

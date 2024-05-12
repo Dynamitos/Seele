@@ -41,17 +41,24 @@ public:
         uint32 firstIndex = 0;
         uint32 numIndices = 0;
     };
-    struct MaterialInstanceData
+    struct DrawCallOffsets
+    {
+        uint32 instanceOffset = 0;
+        uint32 cullingCounterOffset = 0;
+    };
+    struct BatchedDrawCall
     {
         PMaterialInstance materialInstance;
-        uint32 descriptorOffset;
-        uint64 numMeshes;
-        MeshId meshId;
+        uint64 numMeshes = 0;
+        uint64 numMeshlets = 0;
+        DrawCallOffsets offsets;
+        Array<InstanceData> instanceData;
+        Array<MeshData> instanceMeshData;
     };
     struct MaterialData
     {
         PMaterial material;
-        Array<MaterialInstanceData> instances;
+        Array<BatchedDrawCall> instances;
     };
     void resetMeshData();
     void updateMesh(PMesh mesh, Component::Transform& transform);
@@ -70,7 +77,7 @@ public:
     Gfx::PDescriptorLayout getInstanceDataLayout() { return instanceDataLayout; }
     Gfx::PDescriptorSet getInstanceDataSet() { return descriptorSet; }
     const Array<MaterialData>& getMaterialData() const { return materialData; }
-    const Array<MeshData>& getMeshData(MeshId id) { return meshData[id]; }
+    const MeshData& getMeshData(MeshId id) { return meshData[id]; }
     static List<VertexData*> getList();
     static VertexData* findByTypeName(std::string name);
     virtual void init(Gfx::PGraphics graphics);
@@ -92,7 +99,7 @@ protected:
     std::mutex materialDataLock;
     Array<MaterialData> materialData;
     std::mutex vertexDataLock;
-    Map<MeshId, Array<MeshData>> meshData;
+    Map<MeshId, MeshData> meshData;
     Map<MeshId, uint64> meshOffsets;
     Map<MeshId, uint64> meshVertexCounts;
     Array<MeshletDescription> meshlets;
@@ -105,6 +112,9 @@ protected:
     Gfx::OShaderBuffer meshletBuffer;
     Gfx::OShaderBuffer vertexIndicesBuffer;
     Gfx::OShaderBuffer primitiveIndicesBuffer;
+    // temporary meshlet culling buffer, passed from task to mesh shader
+    Gfx::OShaderBuffer cullingBuffer;
+    Gfx::OShaderBuffer cullingOffsetBuffer;
     // for legacy pipeline
     Gfx::OIndexBuffer indexBuffer;
     // Material data

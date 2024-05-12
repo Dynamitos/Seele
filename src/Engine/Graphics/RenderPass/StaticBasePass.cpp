@@ -163,16 +163,6 @@ void StaticBasePass::publishOutputs()
         Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
     resources->registerRenderPassOutput("BASEPASS_COLOR", colorAttachment);
 
-    meshletIdTexture = graphics->createTexture2D(TextureCreateInfo{
-        .format = Gfx::SE_FORMAT_R32_UINT,
-        .width = viewport->getWidth(),
-        .height = viewport->getHeight(),
-        .usage = Gfx::SE_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | Gfx::SE_IMAGE_USAGE_STORAGE_BIT,
-        });
-    meshletIdAttachment = Gfx::RenderTargetAttachment(meshletIdTexture,
-        Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-        Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
-    resources->registerRenderPassOutput("BASEPASS_MESHLETID", meshletIdAttachment);
 }
 
 void StaticBasePass::createRenderPass()

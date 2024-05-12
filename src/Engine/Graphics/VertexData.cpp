@@ -18,7 +18,10 @@ void VertexData::resetMeshData()
     std::unique_lock l(materialDataLock);
     for (auto& mat : materialData)
     {
-        mat.material->getDescriptorLayout()->reset();
+        if (mat.material != nullptr)
+        {
+            mat.material->getDescriptorLayout()->reset();
+        }
     }
     materialData.clear();
     if (dirty)
@@ -35,63 +38,64 @@ void VertexData::updateMesh(PMesh mesh, Component::Transform& transform)
     PMaterial mat = referencedInstance->getBaseMaterial();
     if (materialData.size() <= mat->getId())
     {
-        materialData.resize(mat->getId());
+        materialData.resize(mat->getId() + 1);
     }
     MaterialData& matData = materialData[mat->getId()];
     matData.material = mat;
-    MaterialInstanceData& matInstanceData = matData.instances[referencedInstance->getId()];
-    matInstanceData.descriptorOffset = instanceData.size();
-    matInstanceData.numMeshes = 0;
-    matInstanceData.meshId = mesh->id;
-    for (const auto& data : meshData[mesh->id])
+    if (matData.instances.size() <= referencedInstance->getId())
     {
-        Matrix4 transformMatrix = transform.toMatrix() * mesh->transform;
-        instanceData.add(InstanceData {
-            .transformMatrix = transformMatrix,
-            .inverseTransformMatrix = glm::inverse(transformMatrix),
-        });
-        instanceMeshData.add(data);
-        matInstanceData.numMeshes++;
-        for (size_t i = 0; i < 0; ++i)
-        {
-            auto bounding = meshlets[data.meshletOffset + i].bounding;
-            StaticArray<Vector, 8> corners;
-            Vector min = bounding.min;//bounding.center - bounding.radius * Vector(1, 1, 1);
-            Vector max = bounding.max;//bounding.center + bounding.radius * Vector(1, 1, 1);
-            corners[0] = transformMatrix * Vector4(min.x, min.y, min.z, 1);
-            corners[1] = transformMatrix * Vector4(min.x, min.y, max.z, 1);
-            corners[2] = transformMatrix * Vector4(min.x, max.y, min.z, 1);
-            corners[3] = transformMatrix * Vector4(min.x, max.y, max.z, 1);
-            corners[4] = transformMatrix * Vector4(max.x, min.y, min.z, 1);
-            corners[5] = transformMatrix * Vector4(max.x, min.y, max.z, 1);
-            corners[6] = transformMatrix * Vector4(max.x, max.y, min.z, 1);
-            corners[7] = transformMatrix * Vector4(max.x, max.y, max.z, 1);
-            addDebugVertex(DebugVertex{ .position = corners[0], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[1], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[0], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[2], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[1], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[3], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[2], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[3], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[0], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[4], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[1], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[5], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[2], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[6], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[3], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[7], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[4], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[5], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[4], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[6], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[6], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[7], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[5], .color = meshlets[data.meshletOffset + i].color });
-            addDebugVertex(DebugVertex{ .position = corners[7], .color = meshlets[data.meshletOffset + i].color });
-        }
+        matData.instances.resize(referencedInstance->getId() + 1);
     }
+    BatchedDrawCall& matInstanceData = matData.instances[referencedInstance->getId()];
+    const auto& data = meshData[mesh->id];
+
+    Matrix4 transformMatrix = transform.toMatrix() * mesh->transform;
+    matInstanceData.instanceData.add(InstanceData{
+        .transformMatrix = transformMatrix,
+        .inverseTransformMatrix = glm::inverse(transformMatrix),
+        });
+    matInstanceData.instanceMeshData.add(data);
+    matInstanceData.numMeshes++;
+    for (size_t i = 0; i < 0; ++i)
+    {
+        auto bounding = meshlets[data.meshletOffset + i].bounding;
+        StaticArray<Vector, 8> corners;
+        Vector min = bounding.min;//bounding.center - bounding.radius * Vector(1, 1, 1);
+        Vector max = bounding.max;//bounding.center + bounding.radius * Vector(1, 1, 1);
+        corners[0] = transformMatrix * Vector4(min.x, min.y, min.z, 1);
+        corners[1] = transformMatrix * Vector4(min.x, min.y, max.z, 1);
+        corners[2] = transformMatrix * Vector4(min.x, max.y, min.z, 1);
+        corners[3] = transformMatrix * Vector4(min.x, max.y, max.z, 1);
+        corners[4] = transformMatrix * Vector4(max.x, min.y, min.z, 1);
+        corners[5] = transformMatrix * Vector4(max.x, min.y, max.z, 1);
+        corners[6] = transformMatrix * Vector4(max.x, max.y, min.z, 1);
+        corners[7] = transformMatrix * Vector4(max.x, max.y, max.z, 1);
+        addDebugVertex(DebugVertex{ .position = corners[0], .color = meshlets[data.meshletOffset + i].color });
+        addDebugVertex(DebugVertex{ .position = corners[1], .color = meshlets[data.meshletOffset + i].color });
+        addDebugVertex(DebugVertex{ .position = corners[0], .color = meshlets[data.meshletOffset + i].color });
+        addDebugVertex(DebugVertex{ .position = corners[2], .color = meshlets[data.meshletOffset + i].color });
+        addDebugVertex(DebugVertex{ .position = corners[1], .color = meshlets[data.meshletOffset + i].color });
+        addDebugVertex(DebugVertex{ .position = corners[3], .color = meshlets[data.meshletOffset + i].color });
+        addDebugVertex(DebugVertex{ .position = corners[2], .color = meshlets[data.meshletOffset + i].color });
+        addDebugVertex(DebugVertex{ .position = corners[3], .color = meshlets[data.meshletOffset + i].color });
+        addDebugVertex(DebugVertex{ .position = corners[0], .color = meshlets[data.meshletOffset + i].color });
+        addDebugVertex(DebugVertex{ .position = corners[4], .color = meshlets[data.meshletOffset + i].color });
+        addDebugVertex(DebugVertex{ .position = corners[1], .color = meshlets[data.meshletOffset + i].color });
+        addDebugVertex(DebugVertex{ .position = corners[5], .color = meshlets[data.meshletOffset + i].color });
+        addDebugVertex(DebugVertex{ .position = corners[2], .color = meshlets[data.meshletOffset + i].color });
+        addDebugVertex(DebugVertex{ .position = corners[6], .color = meshlets[data.meshletOffset + i].color });
+        addDebugVertex(DebugVertex{ .position = corners[3], .color = meshlets[data.meshletOffset + i].color });
+        addDebugVertex(DebugVertex{ .position = corners[7], .color = meshlets[data.meshletOffset + i].color });
+        addDebugVertex(DebugVertex{ .position = corners[4], .color = meshlets[data.meshletOffset + i].color });
+        addDebugVertex(DebugVertex{ .position = corners[5], .color = meshlets[data.meshletOffset + i].color });
+        addDebugVertex(DebugVertex{ .position = corners[4], .color = meshlets[data.meshletOffset + i].color });
+        addDebugVertex(DebugVertex{ .position = corners[6], .color = meshlets[data.meshletOffset + i].color });
+        addDebugVertex(DebugVertex{ .position = corners[6], .color = meshlets[data.meshletOffset + i].color });
+        addDebugVertex(DebugVertex{ .position = corners[7], .color = meshlets[data.meshletOffset + i].color });
+        addDebugVertex(DebugVertex{ .position = corners[5], .color = meshlets[data.meshletOffset + i].color });
+        addDebugVertex(DebugVertex{ .position = corners[7], .color = meshlets[data.meshletOffset + i].color });
+    }
+
     matInstanceData.materialInstance = referencedInstance;
     referencedInstance->updateDescriptor();
 }
@@ -99,6 +103,47 @@ void VertexData::updateMesh(PMesh mesh, Component::Transform& transform)
 void VertexData::createDescriptors()
 {
     std::unique_lock l(materialDataLock);
+
+    instanceData.clear();
+    instanceMeshData.clear();
+
+    uint32 numMeshlets = 0;
+    Array<uint32> cullingOffsets;
+    for (auto& mat : materialData)
+    {
+        for (auto& instance : mat.instances)
+        {
+            instance.offsets.instanceOffset = instanceData.size();
+            instance.offsets.cullingCounterOffset = cullingOffsets.size();
+            instance.numMeshes = instance.instanceData.size();
+            instance.numMeshlets = 0;
+            for (size_t i = 0; i < instance.instanceData.size(); ++i)
+            {
+                instanceData.add(instance.instanceData[i]);
+                instanceMeshData.add(instance.instanceMeshData[i]);
+                instance.numMeshlets += instance.instanceMeshData[i].numMeshlets;
+                cullingOffsets.add(numMeshlets);
+                numMeshlets += instance.numMeshlets;
+            }
+        }
+    }
+    cullingOffsetBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
+        .sourceData = {
+            .size = cullingOffsets.size() * sizeof(uint32),
+            .data = (uint8*)cullingOffsets.data(),
+        },
+        .numElements = cullingOffsets.size(),
+        .name = "MeshletOffset"
+        });
+    cullingBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
+        .sourceData = {
+            .size = numMeshlets * sizeof(uint32),
+            },
+        .numElements = numMeshlets,
+        .name = "MeshletCulling"
+    });
+
+
     instanceDataLayout->reset();
     instanceBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
         .sourceData = {
@@ -137,6 +182,8 @@ void VertexData::createDescriptors()
     descriptorSet->updateBuffer(2, meshletBuffer);
     descriptorSet->updateBuffer(3, primitiveIndicesBuffer);
     descriptorSet->updateBuffer(4, vertexIndicesBuffer);
+    descriptorSet->updateBuffer(5, cullingOffsetBuffer);
+    descriptorSet->updateBuffer(6, cullingBuffer);
 
     descriptorSet->writeChanges();
 }
@@ -147,45 +194,40 @@ void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet>
     meshlets.reserve(meshlets.size() + loadedMeshlets.size());
     vertexIndices.reserve(vertexIndices.size() + loadedMeshlets.size() * Gfx::numVerticesPerMeshlet);
     primitiveIndices.reserve(primitiveIndices.size() + loadedMeshlets.size() * Gfx::numPrimitivesPerMeshlet * 3);
-    uint32 currentMesh = 0;
-    while (currentMesh < loadedMeshlets.size())
+    uint32 meshletOffset = meshlets.size();
+    AABB meshAABB;
+    for (uint32 i = 0; i < loadedMeshlets.size(); ++i)
     {
-        uint32 numMeshlets = std::min<uint32>(512, loadedMeshlets.size() - currentMesh);
-        uint32 meshletOffset = meshlets.size();
-        AABB meshAABB;
-        for (uint32 i = 0; i < numMeshlets; ++i)
-        {
-            Meshlet& m = loadedMeshlets[currentMesh + i];
-            meshAABB = meshAABB.combine(m.boundingBox);
-            uint32 vertexOffset = vertexIndices.size();
-            vertexIndices.resize(vertexOffset + m.numVertices);
-            std::memcpy(vertexIndices.data() + vertexOffset, m.uniqueVertices, m.numVertices * sizeof(uint32));
-            uint32 primitiveOffset = primitiveIndices.size();
-            primitiveIndices.resize(primitiveOffset + (m.numPrimitives * 3));
-            std::memcpy(primitiveIndices.data() + primitiveOffset, m.primitiveLayout, m.numPrimitives * 3 * sizeof(uint8));
-            meshlets.add(MeshletDescription{
-                .bounding = m.boundingBox,//.toSphere(),
-                .vertexCount = m.numVertices,
-                .primitiveCount = m.numPrimitives,
-                .vertexOffset = vertexOffset,
-                .primitiveOffset = primitiveOffset,
-                .color = Vector((float)rand() / RAND_MAX,(float)rand() / RAND_MAX,(float)rand() / RAND_MAX),
-                .indicesOffset = (uint32)meshOffsets[id],
-                });
-        }
-        meshData[id].add(MeshData{
-            .bounding = meshAABB,//.toSphere(),
-            .numMeshlets = numMeshlets,
-            .meshletOffset = meshletOffset,
+        Meshlet& m = loadedMeshlets[i];
+        meshAABB = meshAABB.combine(m.boundingBox);
+        uint32 vertexOffset = vertexIndices.size();
+        vertexIndices.resize(vertexOffset + m.numVertices);
+        std::memcpy(vertexIndices.data() + vertexOffset, m.uniqueVertices, m.numVertices * sizeof(uint32));
+        uint32 primitiveOffset = primitiveIndices.size();
+        primitiveIndices.resize(primitiveOffset + (m.numPrimitives * 3));
+        std::memcpy(primitiveIndices.data() + primitiveOffset, m.primitiveLayout, m.numPrimitives * 3 * sizeof(uint8));
+        meshlets.add(MeshletDescription{
+            .bounding = m.boundingBox,//.toSphere(),
+            .vertexCount = m.numVertices,
+            .primitiveCount = m.numPrimitives,
+            .vertexOffset = vertexOffset,
+            .primitiveOffset = primitiveOffset,
+            .color = Vector((float)rand() / RAND_MAX,(float)rand() / RAND_MAX,(float)rand() / RAND_MAX),
+            .indicesOffset = (uint32)meshOffsets[id],
             });
-        currentMesh += numMeshlets;
     }
-    meshData[id][0].firstIndex = indices.size();
-    meshData[id][0].numIndices = loadedIndices.size();
+    meshData[id] = MeshData{
+        .bounding = meshAABB,//.toSphere(),
+        .numMeshlets = (uint32)loadedMeshlets.size(),
+        .meshletOffset = meshletOffset,
+        };
+    
+    meshData[id].firstIndex = indices.size();
+    meshData[id].numIndices = loadedIndices.size();
     if (!graphics->supportMeshShading())
     {
         indices.resize(indices.size() + loadedIndices.size());
-        std::memcpy(indices.data() + meshData[id][0].firstIndex, loadedIndices.data(), loadedIndices.size() * sizeof(uint32));
+        std::memcpy(indices.data() + meshData[id].firstIndex, loadedIndices.data(), loadedIndices.size() * sizeof(uint32));
         indexBuffer = graphics->createIndexBuffer(IndexBufferCreateInfo{
             .sourceData = {
                 .size = sizeof(uint32) * indices.size(),
@@ -204,7 +246,7 @@ void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet>
         .numElements = meshlets.size(),
         .dynamic = false,
         .name = "MeshletBuffer"
-    });
+        });
     vertexIndicesBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
         .sourceData = {
             .size = sizeof(uint32) * vertexIndices.size(),
@@ -213,7 +255,7 @@ void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet>
         .numElements = vertexIndices.size(),
         .dynamic = false,
         .name = "VertexIndicesBuffer"
-    });
+        });
     primitiveIndicesBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
         .sourceData = {
             .size = sizeof(uint8) * primitiveIndices.size(),
@@ -222,7 +264,7 @@ void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet>
         .numElements = primitiveIndices.size(),
         .dynamic = false,
         .name = "PrimitiveIndicesBuffer",
-    });
+        });
 }
 
 MeshId VertexData::allocateVertexData(uint64 numVertices)
@@ -276,16 +318,20 @@ void VertexData::init(Gfx::PGraphics _graphics)
     instanceDataLayout = graphics->createDescriptorLayout("pScene");
 
     // instanceData
-    instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 0, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC,});
+    instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{ .binding = 0, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER, });
     // meshData
-    instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 1, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC,});
+    instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{ .binding = 1, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER, });
     // meshletData
-    instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 2, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
+    instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{ .binding = 2, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER });
     // primitiveIndices
-    instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 3, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
-    // vetexIndices
-    instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 4, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
-    
+    instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{ .binding = 3, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER });
+    // vertexIndices
+    instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{ .binding = 4, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER });
+    // cullingList
+    instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{ .binding = 5, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER });
+    // cullingOffset
+    instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{ .binding = 6, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER });
+
     instanceDataLayout->create();
     resizeBuffers();
     graphics->getShaderCompiler()->registerVertexData(this);

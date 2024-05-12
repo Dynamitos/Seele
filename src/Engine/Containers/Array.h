@@ -645,10 +645,7 @@ private:
             else
             {
                 // And move the current elements into that one
-                for(size_type i = 0; i < arraySize; ++i)
-                {
-                    newData[i] = std::forward<Type>(_data[i]);
-                }
+                std::uninitialized_move(begin(), end(), Iterator(newData));
                 // As well as default initialize the others
                 for (size_type i = arraySize; i < allocated; ++i)
                 {

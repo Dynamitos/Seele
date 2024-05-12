@@ -114,6 +114,7 @@ void Material::load(ArchiveBuffer& buffer)
         layout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = binding, .descriptorType = descriptorType, .textureType = textureType, .descriptorCount = descriptorCount, .bindingFlags = bindingFlags, .shaderStages = shaderStages,});
     }
     layout->create();
+    materialId = materialIdCounter++;
 }
 
 void Material::compile()

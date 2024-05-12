@@ -132,20 +132,7 @@ void StaticDepthPrepass::endFrame()
 
 void StaticDepthPrepass::publishOutputs()
 {
-    // If we render to a part of an image, the depth buffer itself must
-    // still match the size of the whole image or their coordinate systems go out of sync
-    TextureCreateInfo depthBufferInfo = {
-        .format = Gfx::SE_FORMAT_D32_SFLOAT,
-        .width = viewport->getOwner()->getFramebufferWidth(),
-        .height = viewport->getOwner()->getFramebufferHeight(),
-        .usage = Gfx::SE_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-    };
-    depthBuffer = graphics->createTexture2D(depthBufferInfo);
-    depthAttachment =
-        Gfx::RenderTargetAttachment(depthBuffer,
-            Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
-            Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
-    resources->registerRenderPassOutput("DEPTHPREPASS_DEPTH", depthAttachment);
+    
 }
 
 void StaticDepthPrepass::createRenderPass()

@@ -18,9 +18,6 @@ void MeshUpdater::update(Component::Transform& transform, Component::Mesh& comp)
 {
     for (auto& mesh : comp.asset->meshes)
     {
-        if (!comp.isStatic)
-        {
-            mesh->vertexData->updateMesh(mesh, transform);
-        }
+        mesh->vertexData->updateMesh(mesh, transform);
     }
 }

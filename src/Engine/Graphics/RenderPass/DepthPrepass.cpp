@@ -18,9 +18,14 @@ DepthPrepass::DepthPrepass(Gfx::PGraphics graphics, PScene scene)
 {
     depthPrepassLayout = graphics->createPipelineLayout("DepthPrepassLayout");
     depthPrepassLayout->addDescriptorLayout(viewParamsLayout);
+    depthPrepassLayout->addPushConstants(Gfx::SePushConstantRange{
+        .stageFlags = Gfx::SE_SHADER_STAGE_TASK_BIT_EXT,
+        .offset = 0,
+        .size = sizeof(VertexData::DrawCallOffsets),
+        });
     if (graphics->supportMeshShading())
     {
-        graphics->getShaderCompiler()->registerRenderPass(depthPrepassLayout, "DepthPass", "MeshletPass", false, false, "", true, true, "MeshletPass");
+        graphics->getShaderCompiler()->registerRenderPass(depthPrepassLayout, "DepthPass", "MeshletPass", false, false, "", true, true, "ViewCullingTask");
     }
     else
     {
@@ -45,7 +50,7 @@ void DepthPrepass::render()
     Gfx::ShaderPermutation permutation;
     if (graphics->supportMeshShading())
     {
-        permutation.setTaskFile("MeshletPass");
+        permutation.setTaskFile("ViewCullingTask");
         permutation.setMeshFile("MeshletPass");
     }
     else
@@ -58,14 +63,17 @@ void DepthPrepass::render()
         const auto& materials = vertexData->getMaterialData();
         for (const auto& materialData : materials)
         {
+            // material not used for any active meshes, skip
+            if (materialData.instances.size() == 0)
+                continue;
             // Create Pipeline(VertexData)
             // Descriptors:
             // ViewData => global, static
             // VertexData => per meshtype
-            // SceneData => per material instance
+            // SceneData => per meshtype
             Gfx::PermutationId id(permutation);
 
-            Gfx::ORenderCommand command = graphics->createRenderCommand("BaseRender");
+            Gfx::ORenderCommand command = graphics->createRenderCommand("DepthRender");
             command->setViewport(viewport);
 
             const Gfx::ShaderCollection* collection = graphics->getShaderCompiler()->findShaders(id);
@@ -105,12 +113,13 @@ void DepthPrepass::render()
             }
             command->bindDescriptor(vertexData->getVertexDataSet());
             command->bindDescriptor(viewParamsSet);
-            for (const auto& instance : materialData.instances)
+            for (const auto& drawCall : materialData.instances)
             {
-                command->bindDescriptor(vertexData->getInstanceDataSet(), { instance.descriptorOffset, instance.descriptorOffset });
+                command->bindDescriptor(vertexData->getInstanceDataSet());
+                command->pushConstants(Gfx::SE_SHADER_STAGE_TASK_BIT_EXT, 0, sizeof(VertexData::DrawCallOffsets), &drawCall.offsets);
                 if (graphics->supportMeshShading())
                 {
-                    command->drawMesh(vertexData->getMeshData(instance.meshId).size(), 1, 1);
+                    command->drawMesh(drawCall.numMeshes, 1, 1);
                 }
                 else
                 {
@@ -140,14 +149,24 @@ void DepthPrepass::endFrame()
 
 void DepthPrepass::publishOutputs()
 {
+    // If we render to a part of an image, the depth buffer itself must
+    // still match the size of the whole image or their coordinate systems go out of sync
+    TextureCreateInfo depthBufferInfo = {
+        .format = Gfx::SE_FORMAT_D32_SFLOAT,
+        .width = viewport->getOwner()->getFramebufferWidth(),
+        .height = viewport->getOwner()->getFramebufferHeight(),
+        .usage = Gfx::SE_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+    };
+    depthBuffer = graphics->createTexture2D(depthBufferInfo);
+    depthAttachment =
+        Gfx::RenderTargetAttachment(depthBuffer,
+            Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_GENERAL,
+            Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
+    resources->registerRenderPassOutput("DEPTHPREPASS_DEPTH", depthAttachment);
 }
 
 void DepthPrepass::createRenderPass()
 {
-    depthAttachment = resources->requestRenderTarget("DEPTHPREPASS_DEPTH");
-    depthAttachment.setLoadOp(Gfx::SE_ATTACHMENT_LOAD_OP_LOAD);
-    depthAttachment.setInitialLayout(Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
-    depthAttachment.setFinalLayout(Gfx::SE_IMAGE_LAYOUT_GENERAL);
     Gfx::RenderTargetLayout layout = Gfx::RenderTargetLayout{
         .depthAttachment = depthAttachment,
     };

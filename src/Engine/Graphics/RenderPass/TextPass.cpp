@@ -85,7 +85,7 @@ void TextPass::render()
             command->bindDescriptor({generalSet, resource.textureArraySet});
             //command->bindVertexBuffer({resource.vertexBuffer});
             
-            command->pushConstants(pipelineLayout, Gfx::SE_SHADER_STAGE_VERTEX_BIT | Gfx::SE_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(TextData), &resource.textData);
+            command->pushConstants(Gfx::SE_SHADER_STAGE_VERTEX_BIT | Gfx::SE_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(TextData), &resource.textData);
             //command->draw(4, static_cast<uint32>(resource.vertexBuffer->getNumVertices()), 0, 0);
         }
         commands.add(std::move(command));
