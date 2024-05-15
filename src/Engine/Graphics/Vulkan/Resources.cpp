@@ -20,8 +20,9 @@ Semaphore::Semaphore(PGraphics graphics)
 
 Semaphore::~Semaphore()
 {
-    graphics->getDestructionManager()->queueSemaphore(graphics->getGraphicsCommands()->getCommands(), handle);
+    //graphics->getDestructionManager()->queueSemaphore(graphics->getGraphicsCommands()->getCommands(), handle);
 }
+
 
 Fence::Fence(PGraphics graphics)
     : graphics(graphics)
@@ -100,66 +101,19 @@ DestructionManager::~DestructionManager()
 {
 }
 
-void DestructionManager::queueBuffer(PCommand cmd, VkBuffer buffer, VmaAllocation alloc)
+void DestructionManager::queueResourceForDestruction(OCommandBoundResource resource)
 {
-    buffers[cmd].add({buffer, alloc});
+    resources.add(std::move(resource));
 }
 
-void DestructionManager::queueImage(PCommand cmd, VkImage image, VmaAllocation alloc)
+void DestructionManager::notifyCommandComplete()
 {
-    images[cmd].add({image, alloc});
-}
-
-void DestructionManager::queueImageView(PCommand cmd, VkImageView image)
-{
-    views[cmd].add(image);
-}
-
-void DestructionManager::queueSemaphore(PCommand cmd, VkSemaphore sem)
-{
-    sems[cmd].add(sem);
-}
-
-void DestructionManager::queueRenderPass(PCommand cmd, VkRenderPass renderPass)
-{
-    renderPasses[cmd].add(renderPass);
-}
-
-void DestructionManager::queueDescriptorPool(PCommand cmd, VkDescriptorPool pool)
-{
-    pools[cmd].add(pool);
-}
-
-void DestructionManager::notifyCmdComplete(PCommand cmd)
-{
-    for(auto [buf, alloc] : buffers[cmd])
+    for (size_t i = 0; i < resources.size(); ++i)
     {
-        vmaDestroyBuffer(graphics->getAllocator(), buf, alloc);
+        if(!resources[i]->isCurrentlyBound())
+        {
+            resources.removeAt(i, false);
+            i--;
+        }
     }
-    for(auto view : views[cmd])
-    {
-        vkDestroyImageView(graphics->getDevice(), view, nullptr);
-    }
-    for(auto [img, alloc] : images[cmd])
-    {
-        vmaDestroyImage(graphics->getAllocator(), img, alloc);
-    }
-    for (auto sem : sems[cmd])
-    {
-        vkDestroySemaphore(graphics->getDevice(), sem, nullptr);
-    }
-    for (auto pool : pools[cmd])
-    {
-        vkDestroyDescriptorPool(graphics->getDevice(), pool, nullptr);
-    }
-    for (auto renderPass : renderPasses[cmd])
-    {
-        vkDestroyRenderPass(graphics->getDevice(), renderPass, nullptr);
-    }
-    buffers[cmd].clear();
-    images[cmd].clear();
-    views[cmd].clear();
-    sems[cmd].clear();
-    pools[cmd].clear();
-    renderPasses[cmd].clear();
 }

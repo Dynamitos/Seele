@@ -112,11 +112,11 @@ constexpr const char* KEY_AMBIENT_OCCLUSION_TEXTURE = "tex_ao";
 
 void MeshLoader::loadMaterials(const aiScene* scene, const Array<PTextureAsset>& textures, const std::string& baseName, const std::filesystem::path& meshDirectory, const std::string& importPath, Array<PMaterialInstanceAsset>& globalMaterials)
 {
-    for(uint32 i = 0; i < scene->mNumMaterials; ++i)
+    for(uint32 m = 0; m < scene->mNumMaterials; ++m)
     {
-        aiMaterial* material = scene->mMaterials[i];
+        aiMaterial* material = scene->mMaterials[m];
         aiString texPath;
-        std::string materialName = fmt::format("M{0}{1}{2}", baseName, material->GetName().C_Str(), i);
+        std::string materialName = fmt::format("M{0}{1}{2}", baseName, material->GetName().C_Str(), m);
         materialName.erase(std::remove(materialName.begin(), materialName.end(), '.'), materialName.end()); // dots break adding the .asset extension later
         materialName.erase(std::remove(materialName.begin(), materialName.end(), '-'), materialName.end()); // dots break adding the .asset extension later
         materialName.erase(std::remove(materialName.begin(), materialName.end(), ' '), materialName.end()); // dots break adding the .asset extension later
@@ -158,10 +158,10 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Array<PTextureAsset>&
                 aiString texPath;
                 aiTextureMapping mapping;
                 uint32 uvIndex = 0;
+                aiTextureMapMode mapMode = aiTextureMapMode_Clamp;
                 float blend = std::numeric_limits<float>::max();
                 aiTextureOp op;
-                aiTextureMapMode mapMode;
-                if (material->GetTexture(type, index, &texPath, &mapping, &uvIndex, &blend, &op, &mapMode) != AI_SUCCESS)
+                if (material->GetTexture(type, index, &texPath, &mapping, &uvIndex, nullptr, nullptr, nullptr) != AI_SUCCESS)
                 {
                     std::cout << "fuck" << std::endl;
                 }
@@ -438,7 +438,7 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Array<PTextureAsset>&
         );
         baseMat->material->compile();
         graphics->getShaderCompiler()->registerMaterial(baseMat->material);
-        globalMaterials[i] = baseMat->instantiate(InstantiationParameter{
+        globalMaterials[m] = baseMat->instantiate(InstantiationParameter{
             .name = fmt::format("{0}_Inst_0", baseMat->getName()),
             .folderPath = baseMat->getFolderPath(),
             });
@@ -462,8 +462,7 @@ void findMeshRoots(aiNode *node, List<aiNode *> &meshNodes)
 
 void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialInstanceAsset>& materials, Array<OMesh>& globalMeshes, Component::Collider& collider)
 {
-//#pragma omp parallel for
-    for (uint32 meshIndex = 0; meshIndex < scene->mNumMeshes; ++meshIndex)
+    for (int32 meshIndex = 0; meshIndex < scene->mNumMeshes; ++meshIndex)
     {
         aiMesh* mesh = scene->mMeshes[meshIndex];
         if (!(mesh->mPrimitiveTypes & aiPrimitiveType_TRIANGLE))
@@ -484,7 +483,6 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
         Array<Vector> colors(mesh->mNumVertices);
 
         StaticMeshVertexData* vertexData = StaticMeshVertexData::getInstance();
-//#pragma omp parallel for
         for (int32 i = 0; i < mesh->mNumVertices; ++i)
         {
             positions[i] = Vector(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
@@ -532,8 +530,7 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
         vertexData->loadColors(id, colors);
 
         Array<uint32> indices(mesh->mNumFaces * 3);
-//#pragma omp parallel for
-        for (size_t faceIndex = 0; faceIndex < mesh->mNumFaces; ++faceIndex)
+        for (int32 faceIndex = 0; faceIndex < mesh->mNumFaces; ++faceIndex)
         {
             indices[faceIndex * 3 + 0] = mesh->mFaces[faceIndex].mIndices[0];
             indices[faceIndex * 3 + 1] = mesh->mFaces[faceIndex].mIndices[1];

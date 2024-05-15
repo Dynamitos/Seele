@@ -193,71 +193,6 @@ Gfx::PDescriptorSet StaticMeshVertexData::getVertexDataSet()
     return descriptorSet;
 }
 
-void StaticMeshVertexData::registerStaticMesh(const Array<OMesh>& meshes, const Component::Transform& transform)
-{
-    for (auto& mesh : meshes)
-    {
-        uint64 numVertices = meshVertexCounts[mesh->id];
-        uint64 offset = meshOffsets[mesh->id];
-        // Create new mesh where transform is "embedded"
-        MeshId mapped = VertexData::allocateVertexData(numVertices);
-        Array<Vector> pos(numVertices);
-        Matrix4 matrix = transform.toMatrix();
-        for (uint64 i = 0; i < numVertices; ++i)
-        {
-            pos[i] = matrix * Vector4(positionData[offset + i], 1);
-        }
-        loadPositions(mapped, pos);
-        Array<Vector2> tex(numVertices);
-        for (size_t i = 0; i < MAX_TEXCOORDS; ++i)
-        {
-            std::memcpy(tex.data(), texCoordsData[i].data() + offset, numVertices * sizeof(Vector2));
-            loadTexCoords(mapped, i, tex);
-        }
-        Array<Vector> aux(numVertices);
-        std::memcpy(aux.data(), normalData.data() + offset, numVertices * sizeof(Vector));
-        loadNormals(mapped, aux);
-        std::memcpy(aux.data(), biTangentData.data() + offset, numVertices * sizeof(Vector));
-        loadBiTangents(mapped, aux);
-        std::memcpy(aux.data(), colorData.data() + offset, numVertices * sizeof(Vector));
-        loadColors(mapped, aux);
-
-        // Load meshlets again
-        VertexData::loadMesh(mapped, mesh->indices, mesh->meshlets);
-
-        Array<uint32> ids;
-        // Get references to loaded meshlets
-        const auto& meshData = VertexData::getMeshData(mapped);
-
-        for (size_t i = 0; i < meshData.numMeshlets; ++i)
-        {
-            ids.add(meshData.meshletOffset + i);
-        }
-
-
-        // Get Static instance array
-        PMaterialInstance instance = mesh->referencedMaterial->getHandle();
-        PMaterial baseMat = instance->getBaseMaterial();
-        Array<StaticMatInstance> instances;
-        instances.add(StaticMatInstance{
-            .instance = mesh->referencedMaterial->getHandle(),
-            .meshletIds = ids,
-            .culledMeshletBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
-            .sourceData = {
-                .size = ids.size() * sizeof(uint32),
-                .data = (uint8*)ids.data(),
-            },
-            .numElements = ids.size(),
-            .dynamic = true,
-            }),
-            });
-        staticData.add(StaticMatData{
-            .material = baseMat,
-            .staticInstance = std::move(instances),
-            });
-    }
-}
-
 void StaticMeshVertexData::resizeBuffers()
 {
     ShaderBufferCreateInfo createInfo = {
@@ -265,7 +200,7 @@ void StaticMeshVertexData::resizeBuffers()
             .size = verticesAllocated * sizeof(Vector),
         },
         .numElements = verticesAllocated * 3,
-        .dynamic = true,
+        .dynamic = false,
         .name = "Positions",
     };
     positions = graphics->createShaderBuffer(createInfo);
@@ -295,32 +230,50 @@ void StaticMeshVertexData::resizeBuffers()
 
 void StaticMeshVertexData::updateBuffers()
 {
-    positions->updateContents(DataSource{
-        .size = positionData.size() * sizeof(Vector),
-        .data = (uint8*)positionData.data(),
+    positions->updateContents(ShaderBufferCreateInfo{
+        .sourceData{
+            .size = positionData.size() * sizeof(Vector),
+            .data = (uint8*)positionData.data(),
+        },
+        .numElements = positionData.size(),
         });
     for (size_t i = 0; i < MAX_TEXCOORDS; ++i)
     {
-        texCoords[i]->updateContents(DataSource{
-            .size = texCoordsData[i].size() * sizeof(Vector2),
-            .data = (uint8*)texCoordsData[i].data(),
+        texCoords[i]->updateContents(ShaderBufferCreateInfo {
+            .sourceData = {
+                .size = texCoordsData[i].size() * sizeof(Vector2),
+                .data = (uint8*)texCoordsData[i].data(),
+            },
+            .numElements = texCoordsData[i].size(),
             });
     }
-    normals->updateContents(DataSource{
-        .size = normalData.size() * sizeof(Vector),
-        .data = (uint8*)normalData.data(),
+    normals->updateContents(ShaderBufferCreateInfo {
+        .sourceData = {
+            .size = normalData.size() * sizeof(Vector),
+            .data = (uint8*)normalData.data(),
+        },
+        .numElements = normalData.size(),
         });
-    tangents->updateContents(DataSource{
-        .size = tangentData.size() * sizeof(Vector),
-        .data = (uint8*)tangentData.data(),
+    tangents->updateContents(ShaderBufferCreateInfo {
+        .sourceData = {
+            .size = tangentData.size() * sizeof(Vector),
+            .data = (uint8*)tangentData.data(),
+        },
+        .numElements = tangentData.size()
         });
-    biTangents->updateContents(DataSource{
-        .size = biTangentData.size() * sizeof(Vector),
-        .data = (uint8*)biTangentData.data(),
+    biTangents->updateContents(ShaderBufferCreateInfo {
+        .sourceData = {
+            .size = biTangentData.size() * sizeof(Vector),
+            .data = (uint8*)biTangentData.data(),
+        },
+        .numElements = biTangentData.size(),
         });
-    colors->updateContents(DataSource{
-        .size = colorData.size() * sizeof(Vector),
-        .data = (uint8*)colorData.data()
+    colors->updateContents(ShaderBufferCreateInfo {
+        .sourceData = {
+            .size = colorData.size() * sizeof(Vector),
+            .data = (uint8*)colorData.data()
+        },
+        .numElements = colorData.size(),
         });
     descriptorLayout->reset();
     descriptorSet = descriptorLayout->allocateDescriptorSet();

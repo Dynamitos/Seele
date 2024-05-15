@@ -1,11 +1,23 @@
 #pragma once
 #include "Graphics/Texture.h"
 #include "Graphics.h"
+#include "Resources.h"
 
 namespace Seele
 {
 namespace Vulkan
 {
+class TextureHandle : public CommandBoundResource
+{
+public:
+    TextureHandle(PGraphics graphics);
+    virtual ~TextureHandle();
+    VkImage image;
+    VkImageView imageView;
+    VmaAllocation allocation;
+    uint8 ownsImage;
+};
+DECLARE_REF(TextureHandle)
 class TextureBase
 {
 public:
@@ -24,14 +36,12 @@ public:
     {
         return depth;
     }
-    constexpr VkImage getImage() const
+    PTextureHandle getHandle() const
     {
-        return image;
+        return handle;
     }
-    constexpr VkImageView getView() const
-    {
-        return imageView;
-    }
+    VkImage getImage() const;
+    VkImageView getView() const;
     constexpr Gfx::SeImageLayout getLayout() const
     {
         return layout;
@@ -73,10 +83,10 @@ public:
     void download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<uint8>& buffer);
 
 protected:
+    OTextureHandle handle;
     //Updates via reference
     Gfx::QueueType& currentOwner;
     PGraphics graphics;
-    VmaAllocation allocation;
     uint32 width;
     uint32 height;
     uint32 depth;
@@ -86,11 +96,8 @@ protected:
     uint32 samples;
     Gfx::SeFormat format;
     Gfx::SeImageUsageFlags usage;
-    VkImage image;
-    VkImageView imageView;
     VkImageAspectFlags aspect;
     Gfx::SeImageLayout layout;
-    uint8 ownsImage;
     friend class Graphics;
 };
 DEFINE_REF(TextureBase)

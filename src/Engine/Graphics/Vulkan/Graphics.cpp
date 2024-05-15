@@ -404,7 +404,6 @@ void Graphics::initInstance(GraphicsInitializer initInfo)
         .apiVersion = VK_API_VERSION_1_2,
     };
     
-    
     Array<const char*> extensions = getRequiredExtensions();
     for (uint32 i = 0; i < initInfo.instanceExtensions.size(); ++i)
     {
@@ -452,11 +451,16 @@ void Graphics::pickPhysicalDevice()
     VkPhysicalDevice bestDevice = VK_NULL_HANDLE;
     uint32 deviceRating = 0;
     features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-    features.pNext = &features11;
+    features.pNext = &robustness;
+    robustness.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_EXT;
+    robustness.pNext = &features11;
+    robustness.nullDescriptor = true;
     features11.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
     features11.pNext = &features12;
     features12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
-    features12.pNext = nullptr;
+    features12.pNext = &features13;
+    features13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
+    features13.pNext = nullptr;
     for (auto dev : physicalDevices)
     {
         uint32 currentRating = 0;

@@ -11,6 +11,7 @@ DescriptorLayout::DescriptorLayout(PGraphics graphics, const std::string& name)
     : Gfx::DescriptorLayout(name), graphics(graphics), layoutHandle(VK_NULL_HANDLE) {}
 
 DescriptorLayout::~DescriptorLayout() {
+    graphics->getDestructionManager()->queueResourceForDestruction(std::move(pool));
   if (layoutHandle != VK_NULL_HANDLE) {
     vkDestroyDescriptorSetLayout(graphics->getDevice(), layoutHandle, nullptr);
   }
@@ -53,7 +54,10 @@ void DescriptorLayout::create() {
   hash = CRC::Calculate(bindings.data(), sizeof(VkDescriptorSetLayoutBinding) * bindings.size(), CRC::CRC_32());
 }
 
-DescriptorPool::DescriptorPool(PGraphics graphics, PDescriptorLayout layout) : graphics(graphics), layout(layout) {
+DescriptorPool::DescriptorPool(PGraphics graphics, PDescriptorLayout layout) 
+    : CommandBoundResource(graphics)
+    , graphics(graphics)
+    , layout(layout) {
   for (uint32 i = 0; i < cachedHandles.size(); ++i) {
     cachedHandles[i] = nullptr;
   }
@@ -86,10 +90,17 @@ DescriptorPool::DescriptorPool(PGraphics graphics, PDescriptorLayout layout) : g
 }
 
 DescriptorPool::~DescriptorPool() {
-  graphics->getDestructionManager()->queueDescriptorPool(graphics->getGraphicsCommands()->getCommands(), poolHandle);
-  if (nextAlloc) {
-    delete nextAlloc;
-  }
+    for (size_t i = 0; i < maxSets; ++i)
+    {
+        if (cachedHandles[i] != nullptr)
+        {
+            cachedHandles[i] = nullptr;
+        }
+    }
+    vkDestroyDescriptorPool(graphics->getDevice(), poolHandle, nullptr);
+    if (nextAlloc) {
+        delete nextAlloc;
+    }
 }
 
 Gfx::PDescriptorSet DescriptorPool::allocateDescriptorSet() {
@@ -159,10 +170,19 @@ void DescriptorPool::reset() {
 }
 
 DescriptorSet::DescriptorSet(PGraphics graphics, PDescriptorPool owner)
-    : Gfx::DescriptorSet(owner->getLayout()), setHandle(VK_NULL_HANDLE), graphics(graphics), owner(owner), bindCount(0),
-      currentlyInUse(false) {}
+    : Gfx::DescriptorSet(owner->getLayout())
+    , CommandBoundResource(graphics)
+    , setHandle(VK_NULL_HANDLE)
+    , graphics(graphics)
+    , owner(owner)
+    , bindCount(0)
+    , currentlyInUse(false)
+{}
 
-DescriptorSet::~DescriptorSet() {}
+DescriptorSet::~DescriptorSet()
+{
+    vkFreeDescriptorSets(graphics->getDevice(), owner->getHandle(), 1, &setHandle);
+}
 
 void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PUniformBuffer uniformBuffer) {
   PUniformBuffer vulkanBuffer = uniformBuffer.cast<UniformBuffer>();
@@ -189,6 +209,8 @@ void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PUniformBuffer uniformBu
   });
 
   cachedData[binding] = vulkanBuffer.getHandle();
+  vulkanBuffer->getAlloc()->bind();
+  boundResources.add(vulkanBuffer->getAlloc());
 }
 
 void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PShaderBuffer shaderBuffer) {
@@ -215,6 +237,8 @@ void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PShaderBuffer shaderBuff
   });
 
   cachedData[binding] = vulkanBuffer.getHandle();
+  vulkanBuffer->getAlloc()->bind();
+  boundResources.add(vulkanBuffer->getAlloc());
 }
 
 void DescriptorSet::updateBuffer(uint32_t binding, uint32 index, Gfx::PShaderBuffer shaderBuffer) {
@@ -242,6 +266,8 @@ void DescriptorSet::updateBuffer(uint32_t binding, uint32 index, Gfx::PShaderBuf
         });
 
     cachedData[binding] = vulkanBuffer.getHandle();
+    vulkanBuffer->getAlloc()->bind();
+    boundResources.add(vulkanBuffer->getAlloc());
 }
 
 void DescriptorSet::updateSampler(uint32_t binding, Gfx::PSampler samplerState) {
@@ -300,6 +326,8 @@ void DescriptorSet::updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::
   });
 
   cachedData[binding] = vulkanTexture;
+  vulkanTexture->getHandle()->bind();
+  boundResources.add(vulkanTexture->getHandle());
 }
 void DescriptorSet::updateTextureArray(uint32_t binding, Array<Gfx::PTexture> textures) {
   // maybe make this a parameter?
@@ -326,6 +354,8 @@ void DescriptorSet::updateTextureArray(uint32_t binding, Array<Gfx::PTexture> te
         .descriptorType = descriptorType,
         .pImageInfo = &imageInfos.back(),
     });
+    vulkanTexture->getHandle()->bind();
+    boundResources.add(vulkanTexture->getHandle());
   }
 }
 
@@ -366,7 +396,7 @@ void PipelineLayout::create() {
   for (size_t i = 0; i < pushConstants.size(); i++) {
     vkPushConstants[i].offset = pushConstants[i].offset;
     vkPushConstants[i].size = pushConstants[i].size;
-    vkPushConstants[i].stageFlags = (VkShaderStageFlagBits)pushConstants[i].stageFlags;
+    vkPushConstants[i].stageFlags = pushConstants[i].stageFlags;
   }
 
   VkPipelineLayoutCreateInfo createInfo = {

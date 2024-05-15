@@ -7,7 +7,6 @@ class Buffer : public QueueOwnedResource {
 public:
   Buffer(QueueFamilyMapping mapping, QueueType startQueueType);
   virtual ~Buffer();
-
 protected:
   // Inherited via QueueOwnedResource
   virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
@@ -85,20 +84,11 @@ class ShaderBuffer : public Buffer {
 public:
   ShaderBuffer(QueueFamilyMapping mapping, uint32 numElements, const DataSource& bulkResourceData);
   virtual ~ShaderBuffer();
-  virtual bool updateContents(const DataSource& sourceData);
-  bool isDataEquals(ShaderBuffer* other) {
-    if (other == nullptr) {
-      return false;
-    }
-    if (contents.size() != other->contents.size()) {
-      return false;
-    }
-    if (std::memcmp(contents.data(), other->contents.data(), contents.size()) != 0) {
-      return false;
-    }
-    return true;
-  }
+  virtual void rotateBuffer(uint64 size) = 0;
+  virtual void updateContents(const ShaderBufferCreateInfo& sourceData);
   constexpr uint32 getNumElements() const { return numElements; }
+  virtual void* mapRegion(uint64 offset = 0, uint64 size = -1, bool writeOnly = true) = 0;
+  virtual void unmap() = 0;
 
 protected:
   // Inherited via QueueOwnedResource

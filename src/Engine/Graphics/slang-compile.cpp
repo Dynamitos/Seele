@@ -16,16 +16,19 @@ Slang::ComPtr<slang::IBlob> Seele::generateShader(const ShaderCreateInfo& create
     }
     slang::SessionDesc sessionDesc;
     sessionDesc.flags = 0;
-    StaticArray<slang::CompilerOptionEntry, 3> option;
+    StaticArray<slang::CompilerOptionEntry, 4> option;
     option[0].name = slang::CompilerOptionName::IgnoreCapabilities;
     option[0].value.kind = slang::CompilerOptionValueKind::Int;
     option[0].value.intValue0 = 1;
     option[1].name = slang::CompilerOptionName::EmitSpirvViaGLSL;
     option[1].value.kind = slang::CompilerOptionValueKind::Int;
     option[1].value.intValue0 = 1;
-    option[2].name = slang::CompilerOptionName::DebugInformationFormat;
+    option[2].name = slang::CompilerOptionName::DebugInformation;
     option[2].value.kind = slang::CompilerOptionValueKind::Int;
-    option[2].value.intValue0 = 0;
+    option[2].value.intValue0 = SLANG_DEBUG_INFO_LEVEL_NONE;
+    option[3].name = slang::CompilerOptionName::DebugInformationFormat;
+    option[3].value.kind = slang::CompilerOptionValueKind::Int;
+    option[3].value.intValue0 = SLANG_DEBUG_INFO_FORMAT_C7;
     sessionDesc.compilerOptionEntries = option.data();
     sessionDesc.compilerOptionEntryCount = option.size();
     sessionDesc.defaultMatrixLayoutMode = SLANG_MATRIX_LAYOUT_COLUMN_MAJOR;

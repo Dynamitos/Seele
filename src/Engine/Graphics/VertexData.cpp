@@ -127,7 +127,8 @@ void VertexData::createDescriptors()
             }
         }
     }
-    cullingOffsetBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
+    cullingOffsetBuffer->rotateBuffer(cullingOffsets.size() * sizeof(uint32));
+    cullingOffsetBuffer->updateContents(ShaderBufferCreateInfo{
         .sourceData = {
             .size = cullingOffsets.size() * sizeof(uint32),
             .data = (uint8*)cullingOffsets.data(),
@@ -135,48 +136,59 @@ void VertexData::createDescriptors()
         .numElements = cullingOffsets.size(),
         .name = "MeshletOffset"
         });
-    cullingBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
+    cullingOffsetBuffer->pipelineBarrier(
+        Gfx::SE_ACCESS_TRANSFER_WRITE_BIT,
+        Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
+        Gfx::SE_ACCESS_MEMORY_READ_BIT,
+        Gfx::SE_PIPELINE_STAGE_TASK_SHADER_BIT_EXT
+    );
+    cullingBuffer->rotateBuffer(numMeshlets * sizeof(uint32));
+    cullingBuffer->updateContents(ShaderBufferCreateInfo{
         .sourceData = {
             .size = numMeshlets * sizeof(uint32),
             },
         .numElements = numMeshlets,
         .name = "MeshletCulling"
     });
-
-
-    instanceDataLayout->reset();
-    instanceBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
+    cullingBuffer->pipelineBarrier(
+        Gfx::SE_ACCESS_TRANSFER_WRITE_BIT,
+        Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
+        Gfx::SE_ACCESS_MEMORY_WRITE_BIT,
+        Gfx::SE_PIPELINE_STAGE_MESH_SHADER_BIT_EXT
+    );
+    instanceBuffer->rotateBuffer(instanceData.size() * sizeof(InstanceData));
+    instanceBuffer->updateContents(ShaderBufferCreateInfo{
         .sourceData = {
-            .size = sizeof(InstanceData) * instanceData.size(),
+            .size = instanceData.size() * sizeof(InstanceData),
             .data = (uint8*)instanceData.data(),
         },
         .numElements = instanceData.size(),
-        .dynamic = false,
         .name = "InstanceBuffer"
         });
     instanceBuffer->pipelineBarrier(
         Gfx::SE_ACCESS_TRANSFER_WRITE_BIT,
         Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
         Gfx::SE_ACCESS_MEMORY_READ_BIT,
-        Gfx::SE_PIPELINE_STAGE_VERTEX_SHADER_BIT
+        Gfx::SE_PIPELINE_STAGE_VERTEX_SHADER_BIT | Gfx::SE_PIPELINE_STAGE_TASK_SHADER_BIT_EXT
     );
-    descriptorSet = instanceDataLayout->allocateDescriptorSet();
 
-    instanceMeshDataBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
+    instanceMeshDataBuffer->rotateBuffer(sizeof(MeshData) * instanceMeshData.size());
+    instanceMeshDataBuffer->updateContents(ShaderBufferCreateInfo{
         .sourceData = {
             .size = sizeof(MeshData) * instanceMeshData.size(),
             .data = (uint8*)instanceMeshData.data(),
         },
         .numElements = instanceMeshData.size(),
-        .dynamic = false,
         .name = "MeshDataBuffer"
         });
     instanceMeshDataBuffer->pipelineBarrier(
         Gfx::SE_ACCESS_TRANSFER_WRITE_BIT,
         Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
         Gfx::SE_ACCESS_MEMORY_READ_BIT,
-        Gfx::SE_PIPELINE_STAGE_VERTEX_SHADER_BIT
+        Gfx::SE_PIPELINE_STAGE_VERTEX_SHADER_BIT | Gfx::SE_PIPELINE_STAGE_TASK_SHADER_BIT_EXT
     );
+    instanceDataLayout->reset();
+    descriptorSet = instanceDataLayout->allocateDescriptorSet();
     descriptorSet->updateBuffer(0, instanceBuffer);
     descriptorSet->updateBuffer(1, instanceMeshDataBuffer);
     descriptorSet->updateBuffer(2, meshletBuffer);
@@ -331,7 +343,10 @@ void VertexData::init(Gfx::PGraphics _graphics)
     instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{ .binding = 5, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER });
     // cullingOffset
     instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{ .binding = 6, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER });
-
+    cullingOffsetBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{ .dynamic = true });
+    cullingBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{ .dynamic = true });
+    instanceBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{ .dynamic = true });
+    instanceMeshDataBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{ .dynamic = true });
     instanceDataLayout->create();
     resizeBuffers();
     graphics->getShaderCompiler()->registerVertexData(this);

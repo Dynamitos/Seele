@@ -14,6 +14,12 @@ double Gfx::getCurrentFrameDelta()
     return currentFrameDelta;
 }
 
+uint32 currentFrameIndex = 0;
+uint32 Gfx::getCurrentFrameIndex()
+{
+    return currentFrameIndex;
+}
+
 void glfwKeyCallback(GLFWwindow* handle, int key, int, int action, int modifier)
 {
     if (key == -1)
@@ -143,7 +149,8 @@ void Window::endFrame()
         VK_CHECK(r);
     }
     currentSemaphoreIndex = (currentSemaphoreIndex + 1) % Gfx::numFramesBuffered;
-    graphics->waitDeviceIdle();
+    currentFrameIndex = currentSemaphoreIndex;
+    //graphics->waitDeviceIdle();
 }
 
 void Window::onWindowCloseEvent()

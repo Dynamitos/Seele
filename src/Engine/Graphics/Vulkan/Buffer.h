@@ -1,38 +1,46 @@
 #pragma once
 #include "Graphics.h"
 #include "Graphics/Buffer.h"
+#include "Resources.h"
 
 namespace Seele {
 namespace Vulkan {
 DECLARE_REF(Command)
 DECLARE_REF(Fence)
+class BufferAllocation : public CommandBoundResource {
+public:
+    BufferAllocation(PGraphics graphics);
+    virtual ~BufferAllocation();
+    VkBuffer buffer = VK_NULL_HANDLE;
+    VmaAllocation allocation = VmaAllocation();
+    VmaAllocationInfo info = VmaAllocationInfo();
+    VkMemoryPropertyFlags properties = 0;
+    uint64 size = 0;
+};
+DEFINE_REF(BufferAllocation);
 class Buffer {
 public:
   Buffer(PGraphics graphics, uint64 size, VkBufferUsageFlags usage,
          Gfx::QueueType &queueType, bool dynamic, std::string name);
   virtual ~Buffer();
-  VkBuffer getHandle() const { return buffers[currentBuffer].buffer; }
-  uint64 getSize() const { return size; }
+  VkBuffer getHandle() const { return buffers[currentBuffer]->buffer; }
+  PBufferAllocation getAlloc() const { return buffers[currentBuffer]; }
+  uint64 getSize() const { return buffers[currentBuffer]->size; }
   void *map(bool writeOnly = true);
   void *mapRegion(uint64 regionOffset, uint64 regionSize,
                   bool writeOnly = true);
   void unmap();
 
 protected:
-  struct BufferAllocation {
-    VkBuffer buffer;
-    VmaAllocation allocation;
-    VmaAllocationInfo info;
-    VkMemoryPropertyFlags properties;
-  };
   PGraphics graphics;
   uint32 currentBuffer;
-  uint64 size;
   Gfx::QueueType &owner;
-  Array<BufferAllocation> buffers;
+  Array<OBufferAllocation> buffers;
   VkBufferUsageFlags usage;
+  bool dynamic;
   std::string name;
-  void createBuffer();
+  void rotateBuffer(uint64 size);
+  void createBuffer(uint64 size);
 
   void executeOwnershipBarrier(Gfx::QueueType newOwner);
   void executePipelineBarrier(VkAccessFlags srcAccess,
@@ -115,7 +123,10 @@ class ShaderBuffer : public Gfx::ShaderBuffer, public Buffer {
 public:
   ShaderBuffer(PGraphics graphics, const ShaderBufferCreateInfo &sourceData);
   virtual ~ShaderBuffer();
-  virtual bool updateContents(const DataSource &sourceData) override;
+  virtual void updateContents(const ShaderBufferCreateInfo &createInfo) override;
+  virtual void rotateBuffer(uint64 size) override;
+  virtual void* mapRegion(uint64 offset, uint64 size, bool writeOnly) override;
+  virtual void unmap() override;
 
 protected:
   // Inherited via Vulkan::Buffer

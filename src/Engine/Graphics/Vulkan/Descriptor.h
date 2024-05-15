@@ -23,7 +23,7 @@ private:
 DEFINE_REF(DescriptorLayout)
 
 DECLARE_REF(DescriptorSet)
-class DescriptorPool : public Gfx::DescriptorPool {
+class DescriptorPool : public Gfx::DescriptorPool, public CommandBoundResource {
 public:
   DescriptorPool(PGraphics graphics, PDescriptorLayout layout);
   virtual ~DescriptorPool();
@@ -43,7 +43,7 @@ private:
 };
 DEFINE_REF(DescriptorPool)
 
-class DescriptorSet : public Gfx::DescriptorSet {
+class DescriptorSet : public Gfx::DescriptorSet, public CommandBoundResource {
 public:
   DescriptorSet(PGraphics graphics, PDescriptorPool owner);
   virtual ~DescriptorSet();
@@ -55,10 +55,7 @@ public:
   virtual void updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::PSampler sampler = nullptr) override;
   virtual void updateTextureArray(uint32_t binding, Array<Gfx::PTexture> texture) override;
 
-  constexpr bool isCurrentlyBound() const { return bindCount > 0; }
   constexpr bool isCurrentlyInUse() const { return currentlyInUse; }
-  constexpr void bind() { bindCount++; }
-  constexpr void unbind() { bindCount--; }
   constexpr void allocate() { currentlyInUse = true; }
   constexpr void free() { currentlyInUse = false; }
   constexpr VkDescriptorSet getHandle() const { return setHandle; }
@@ -71,6 +68,7 @@ private:
   // since the layout is fixed, trying to bind a texture to a buffer
   // would not work anyways, so casts should be safe
   Array<void*> cachedData;
+  Array<PCommandBoundResource> boundResources;
   VkDescriptorSet setHandle;
   PGraphics graphics;
   PDescriptorPool owner;

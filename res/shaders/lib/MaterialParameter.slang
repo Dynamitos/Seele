@@ -10,16 +10,17 @@ struct MaterialParameter
 // data used by light environment
 struct LightingParameter
 {
-	float3x3 tbn;
+    float3x3 tbn;
+    float3 normal_WS;
 	float3 position_WS;
-	float3 viewDir_TS;
+	float3 viewDir_WS;
 };
 
 // data passed to fragment shader
 struct FragmentParameter
 {
-	float4 position_CS : SV_Position;
-	float3 viewDir_WS : POSITION1;
+    float4 position_CS : SV_Position;
+    float3 cameraPos_WS: POSITION0;
 	float3 normal_WS : NORMAL0;
 	float3 tangent_WS : TANGENT0;
 	float3 biTangent_WS : TANGENT1;
@@ -43,7 +44,8 @@ struct FragmentParameter
 		LightingParameter result;
 		result.tbn = float3x3(normalize(tangent_WS), normalize(biTangent_WS), normalize(normal_WS));
 		result.position_WS = position_WS;
-		result.viewDir_TS = normalize(mul(result.tbn, viewDir_WS));
+        result.viewDir_WS = normalize(cameraPos_WS - position_WS);
+        result.normal_WS = normal_WS;
 		return result;
 	}
 };
@@ -64,16 +66,17 @@ struct VertexAttributes
 		float4 worldPos = mul(transformMatrix, modelPos);
 		float4 viewPos = mul(pViewParams.viewMatrix, worldPos);
 		float4 clipPos = mul(pViewParams.projectionMatrix, viewPos);
-		float3 tangent_WS = normalize(mul(transformMatrix, float4(tangent_MS, 0.0)).xyz);
-		float3 biTangent_WS = normalize(mul(transformMatrix, float4(biTangent_MS, 0.0)).xyz);
-		float3 normal_WS = normalize(mul(transformMatrix, float4(normal_MS, 0.0)).xyz);
+		float3x3 normalMatrix = float3x3(transformMatrix);
+		float3 T = mul(normalMatrix, tangent_MS);
+		float3 N = mul(normalMatrix, normal_MS);
+		float3 B = mul(normalMatrix, biTangent_MS);
 		FragmentParameter result;
-		result.viewDir_WS = pViewParams.cameraPos_WS.xyz - worldPos.xyz;
-		result.normal_WS = normal_WS;
-		result.tangent_WS = tangent_WS;
-		result.biTangent_WS = biTangent_WS;
-		result.position_WS = worldPos.xyz;
 		result.position_CS = clipPos;
+		result.cameraPos_WS = pViewParams.cameraPos_WS.xyz;
+		result.normal_WS = N;
+		result.tangent_WS = T;
+		result.biTangent_WS = B;
+		result.position_WS = worldPos.xyz;
 		result.vertexColor = vertexColor;
 		result.meshletId = meshletId;
 		for(uint i = 0; i < MAX_TEXCOORDS; ++i)

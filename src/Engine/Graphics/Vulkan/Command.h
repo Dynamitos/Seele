@@ -2,6 +2,7 @@
 #include "Buffer.h"
 #include "Graphics/Command.h"
 #include "Queue.h"
+#include "Resources.h"
 #include <thread>
 
 namespace Seele {
@@ -25,6 +26,7 @@ public:
   void executeCommands(Array<Gfx::ORenderCommand> secondaryCommands);
   void executeCommands(Array<Gfx::OComputeCommand> secondaryCommands);
   void waitForSemaphore(VkPipelineStageFlags stages, PSemaphore waitSemaphore);
+  void bindResource(PCommandBoundResource resource);
   void checkFence();
   void waitForCommand(uint32 timeToWait = 1000000u);
   PFence getFence();
@@ -52,7 +54,7 @@ private:
   Array<VkPipelineStageFlags> waitFlags;
   Array<ORenderCommand> executingRenders;
   Array<OComputeCommand> executingComputes;
-  Array<PDescriptorSet> boundDescriptors;
+  Array<PDescriptorSet> boundResources;
   friend class RenderCommand;
   friend class CommandPool;
   friend class Queue;
@@ -87,7 +89,7 @@ public:
 private:
   PGraphicsPipeline pipeline;
   bool ready;
-  Array<PDescriptorSet> boundDescriptors;
+  Array<PCommandBoundResource> boundResources;
   VkViewport currentViewport;
   VkRect2D currentScissor;
   PGraphics graphics;
@@ -117,7 +119,7 @@ public:
 private:
   PComputePipeline pipeline;
   bool ready;
-  Array<PDescriptorSet> boundDescriptors;
+  Array<PCommandBoundResource> boundResources;
   VkViewport currentViewport;
   VkRect2D currentScissor;
   PGraphics graphics;

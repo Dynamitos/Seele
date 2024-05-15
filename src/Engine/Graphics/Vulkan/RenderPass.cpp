@@ -207,7 +207,8 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Arra
 
 RenderPass::~RenderPass()
 {
-    graphics->getDestructionManager()->queueRenderPass(graphics->getGraphicsCommands()->getCommands(), renderPass);
+    vkDestroyRenderPass(graphics->getDevice(), renderPass, nullptr);
+    //graphics->getDestructionManager()->queueRenderPass(graphics->getGraphicsCommands()->getCommands(), renderPass);
 }
 
 uint32 RenderPass::getFramebufferHash()

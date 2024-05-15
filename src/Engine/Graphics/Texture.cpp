@@ -1,4 +1,5 @@
 #include "Texture.h"
+#include "Texture.h"
 
 using namespace Seele;
 using namespace Seele::Gfx;

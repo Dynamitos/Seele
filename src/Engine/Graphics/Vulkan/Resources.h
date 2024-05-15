@@ -50,29 +50,40 @@ private:
     VkFence fence;
 };
 DEFINE_REF(Fence)
-
+DECLARE_REF(CommandBoundResource)
 class DestructionManager
 {
 public:
     DestructionManager(PGraphics graphics);
     ~DestructionManager();
-    void queueBuffer(PCommand cmd, VkBuffer buffer, VmaAllocation alloc);
-    void queueImage(PCommand cmd, VkImage image, VmaAllocation alloc);
-    void queueImageView(PCommand cmd, VkImageView view);
-    void queueSemaphore(PCommand cmd, VkSemaphore sem);
-    void queueRenderPass(PCommand cmd, VkRenderPass renderPass);
-    void queueDescriptorPool(PCommand cmd, VkDescriptorPool pool);
-    void notifyCmdComplete(PCommand cmdbuffer);
+    void queueResourceForDestruction(OCommandBoundResource resource);
+    void notifyCommandComplete();
 private:
     PGraphics graphics;
-    Map<PCommand, List<Pair<VkBuffer, VmaAllocation>>> buffers;
-    Map<PCommand, List<Pair<VkImage, VmaAllocation>>> images;
-    Map<PCommand, List<VkImageView>> views;
-    Map<PCommand, List<VkSemaphore>> sems;
-    Map<PCommand, List<VkRenderPass>> renderPasses;
-    Map<PCommand, List<VkDescriptorPool>> pools;
+    Array<OCommandBoundResource> resources;
 };
 DEFINE_REF(DestructionManager)
+
+class CommandBoundResource
+{
+public:
+    CommandBoundResource(PGraphics graphics)
+        : graphics(graphics)
+    {
+    }
+    virtual ~CommandBoundResource()
+    {
+        if (isCurrentlyBound())
+            abort();
+    }
+    constexpr bool isCurrentlyBound() const { return bindCount > 0; }
+    constexpr void bind() { bindCount++; }
+    constexpr void unbind() { bindCount--; }
+protected:
+    PGraphics graphics;
+    uint64 bindCount = 0;
+};
+DEFINE_REF(CommandBoundResource)
 
 class Sampler : public Gfx::Sampler
 {

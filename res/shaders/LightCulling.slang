@@ -24,9 +24,6 @@ struct CullingParams
 };
 
 ParameterBlock<CullingParams> pCullingParams;
-// Debug
-//Texture2D lightCountHeatMap;
-//RWTexture2D<float4> debugTexture;
 
 groupshared uint uMinDepth;
 groupshared uint uMaxDepth;

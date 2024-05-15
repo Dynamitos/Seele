@@ -39,7 +39,6 @@ public:
 	virtual Gfx::PDescriptorLayout getVertexDataLayout() override;
 	virtual Gfx::PDescriptorSet getVertexDataSet() override;
 	virtual std::string getTypeName() const override { return "StaticMeshVertexData"; }
-	void registerStaticMesh(const Array<OMesh>& meshes, const Component::Transform& transform);
 	constexpr const Array<StaticMatData>& getStaticMeshes() const { return staticData; }
 private:
 	virtual void resizeBuffers() override;

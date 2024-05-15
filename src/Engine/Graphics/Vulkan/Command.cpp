@@ -95,9 +95,9 @@ void Command::executeCommands(Array<Gfx::ORenderCommand> commands)
     {
         auto command = Gfx::PRenderCommand(commands[i]).cast<RenderCommand>();
         command->end();
-        for(auto& descriptor : command->boundDescriptors)
+        for(auto& descriptor : command->boundResources)
         {
-            boundDescriptors.add(descriptor);
+            boundResources.add(descriptor);
             //std::cout << "Cmd " << handle << " bound descriptor " << descriptor->getHandle() << std::endl;
         }
         cmdBuffers[i] = command->getHandle();
@@ -117,9 +117,9 @@ void Command::executeCommands(Array<Gfx::OComputeCommand> commands)
     {
         auto command = Gfx::PComputeCommand(commands[i]).cast<ComputeCommand>();
         command->end();
-        for(auto& descriptor : command->boundDescriptors)
+        for(auto& descriptor : command->boundResources)
         {
-            boundDescriptors.add(descriptor);
+            boundResources.add(descriptor);
             //std::cout << "Cmd " << handle << " bound descriptor " << descriptor->getHandle() << std::endl;
         }
         cmdBuffers[i] = command->getHandle();
@@ -153,17 +153,16 @@ void Command::checkFence()
             command->reset();
         }
         executingRenders.clear();
-        for(auto& descriptor : boundDescriptors)
+        for(auto& descriptor : boundResources)
         {
             descriptor->unbind();
             //std::cout << "Cmd " << handle << " unbind " << descriptor->getHandle() << std::endl;
         }
-        boundDescriptors.clear();
-        graphics->getDestructionManager()->notifyCmdComplete(this);
+        boundResources.clear();
+        graphics->getDestructionManager()->notifyCommandComplete();
         state = State::Init;
     }
 }
-
 
 void Command::waitForCommand(uint32 timeout)
 {
@@ -175,6 +174,12 @@ void Command::waitForCommand(uint32 timeout)
     }
     fence->wait(timeout);
     checkFence();
+}
+
+void Command::bindResource(PCommandBoundResource resource)
+{
+    resource->bind();
+    boundResources.add(resource);
 }
 
 PFence Command::getFence()
@@ -237,7 +242,7 @@ void RenderCommand::end()
 void RenderCommand::reset() 
 {
     vkResetCommandBuffer(handle, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
-    boundDescriptors.clear();
+    boundResources.clear();
     ready = true;
 }
 
@@ -275,12 +280,15 @@ void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet, Array<uint
     assert(threadId == std::this_thread::get_id());
     auto descriptor = descriptorSet.cast<DescriptorSet>();
     assert(descriptor->writeDescriptors.size() == 0);
-    boundDescriptors.add(descriptor.getHandle());
+    boundResources.add(descriptor.getHandle());
+    descriptor->boundResources.clear();
+    boundResources.addAll(descriptor->boundResources);
     descriptor->bind();
 
     VkDescriptorSet setHandle = descriptor->getHandle();
     vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getLayout(), pipeline->getPipelineLayout()->findParameter(descriptorSet->getName()), 1, &setHandle, dynamicOffsets.size(), dynamicOffsets.data());
 }
+
 void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorSets, Array<uint32> dynamicOffsets)
 {
     assert(threadId == std::this_thread::get_id());
@@ -291,11 +299,14 @@ void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorS
         assert(descriptorSet->writeDescriptors.size() == 0);
         descriptorSet->bind();
 
-        boundDescriptors.add(descriptorSet.getHandle());
+        boundResources.add(descriptorSet.getHandle());
+        boundResources.addAll(descriptorSet->boundResources);
+        descriptorSet->boundResources.clear();
         sets[pipeline->getPipelineLayout()->findParameter(descriptorSet->getName())] = descriptorSet->getHandle();
     }
     vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getLayout(), 0, (uint32)descriptorSets.size(), sets, dynamicOffsets.size(), dynamicOffsets.data());
     delete[] sets;
+
 }
 void RenderCommand::bindVertexBuffer(const Array<Gfx::PVertexBuffer>& streams)
 {
@@ -307,6 +318,8 @@ void RenderCommand::bindVertexBuffer(const Array<Gfx::PVertexBuffer>& streams)
         PVertexBuffer buf = streams[i].cast<VertexBuffer>();
         buffers[i] = buf->getHandle();
         offsets[i] = 0;
+        buf->getAlloc()->bind();
+        boundResources.add(buf->getAlloc());
     };
     vkCmdBindVertexBuffers(handle, 0, (uint32)streams.size(), buffers.data(), offsets.data());
 }
@@ -314,6 +327,8 @@ void RenderCommand::bindIndexBuffer(Gfx::PIndexBuffer indexBuffer)
 {
     assert(threadId == std::this_thread::get_id());
     PIndexBuffer buf = indexBuffer.cast<IndexBuffer>();
+    buf->getAlloc()->bind();
+    boundResources.add(buf->getAlloc());
     vkCmdBindIndexBuffer(handle, buf->getHandle(), 0, cast(buf->getIndexType()));
 }
 
@@ -398,7 +413,7 @@ void ComputeCommand::reset()
 {
     assert(threadId == std::this_thread::get_id());
     vkResetCommandBuffer(handle, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
-    boundDescriptors.clear();
+    boundResources.clear();
     ready = true;
 }
 bool ComputeCommand::isReady() 
@@ -418,7 +433,9 @@ void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet, Array<uin
     assert(threadId == std::this_thread::get_id());
     auto descriptor = descriptorSet.cast<DescriptorSet>();
     assert(descriptor->writeDescriptors.size() == 0);
-    boundDescriptors.add(descriptor.getHandle());
+    boundResources.add(descriptor.getHandle());
+    boundResources.addAll(descriptor->boundResources);
+    descriptor->boundResources.clear();
     descriptor->bind();
     
     VkDescriptorSet setHandle = descriptor->getHandle();
@@ -436,7 +453,9 @@ void ComputeCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptor
         descriptorSet->bind();
 
         //std::cout << "Binding descriptor " << descriptorSet->getHandle() << " to cmd " << handle << std::endl;
-        boundDescriptors.add(descriptorSet.getHandle());
+        boundResources.add(descriptorSet.getHandle());
+        boundResources.addAll(descriptorSet->boundResources);
+        descriptorSet->boundResources.clear();
         sets[pipeline->getPipelineLayout()->findParameter(descriptorSet->getName())] = descriptorSet->getHandle();
     }
     vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->getLayout(), 0, (uint32)descriptorSets.size(), sets, dynamicOffsets.size(), dynamicOffsets.data());

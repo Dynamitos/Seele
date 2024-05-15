@@ -60,7 +60,6 @@ void LightEnvironment::addPointLight(Component::PointLight pointLight)
 
 void LightEnvironment::commit()
 {
-
     lightEnvBuffer->pipelineBarrier(
         Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_ALL_COMMANDS_BIT,
         Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT
@@ -79,42 +78,23 @@ void LightEnvironment::commit()
         .size = sizeof(LightEnv),
         .data = (uint8*) & lightEnv,
         });
-    if(directionalLights->getNumElements() < dirs.size())
-    {
-        directionalLights = graphics->createShaderBuffer({
-            .sourceData = {
-                .size = sizeof(Component::DirectionalLight) * dirs.size(),
-                .data = (uint8*)dirs.data(),
-            },
-            .numElements = dirs.size(),
-            .dynamic = true,
-        });
-    }
-    else
-    {
-        directionalLights->updateContents(DataSource{
+    directionalLights->rotateBuffer(sizeof(Component::DirectionalLight) * dirs.size());
+    directionalLights->updateContents({
+        .sourceData = {
             .size = sizeof(Component::DirectionalLight) * dirs.size(),
             .data = (uint8*)dirs.data(),
-            });
-    }
-    if(pointLights->getNumElements() < points.size())
-    {
-        pointLights = graphics->createShaderBuffer({
-            .sourceData = {
-                .size = sizeof(Component::PointLight) * points.size(),
-                .data = (uint8*)points.data()
-            },
-            .numElements = points.size(),
-            .dynamic = true
-        });
-    }
-    else
-    {
-        pointLights->updateContents(DataSource{
+        },
+        .numElements = dirs.size(),
+    });
+    pointLights->rotateBuffer(sizeof(Component::PointLight) * points.size());
+    pointLights->updateContents({
+        .sourceData = {
             .size = sizeof(Component::PointLight) * points.size(),
-            .data = (uint8*)points.data(),
-            });
-    }
+            .data = (uint8*)points.data()
+        },
+        .numElements = points.size(),
+    });
+    
     lightEnvBuffer->pipelineBarrier(
         Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
         Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_ALL_COMMANDS_BIT
@@ -133,12 +113,12 @@ void LightEnvironment::commit()
     set->writeChanges();
 }
 
-const Gfx::PDescriptorLayout Seele::LightEnvironment::getDescriptorLayout() const
+const Gfx::PDescriptorLayout LightEnvironment::getDescriptorLayout() const
 {
     return layout;
 }
 
-Gfx::PDescriptorSet Seele::LightEnvironment::getDescriptorSet()
+Gfx::PDescriptorSet LightEnvironment::getDescriptorSet()
 {
     return set;
 }

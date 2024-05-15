@@ -40,6 +40,7 @@ void DebugPass::beginFrame(const Component::Camera& cam)
         },
         .vertexSize = sizeof(DebugVertex),
         .numVertices = (uint32)gDebugVertices.size(),
+        .name = "DebugVertices",
     };
     debugVertices = graphics->createVertexBuffer(vertexBufferInfo);
 
@@ -48,15 +49,18 @@ void DebugPass::beginFrame(const Component::Camera& cam)
 void DebugPass::render()
 {
     graphics->beginRenderPass(renderPass);
-    Gfx::ORenderCommand renderCommand = graphics->createRenderCommand("DebugRender");
-    renderCommand->setViewport(viewport);
-    renderCommand->bindPipeline(pipeline);
-    renderCommand->bindDescriptor(viewParamsSet);
-    renderCommand->bindVertexBuffer({ debugVertices });
-    renderCommand->draw((uint32)gDebugVertices.size(), 1, 0, 0);
-    Array<Gfx::ORenderCommand> commands;
-    commands.add(std::move(renderCommand));
-    graphics->executeCommands({std::move(commands)});
+    if (gDebugVertices.size() > 0)
+    {
+        Gfx::ORenderCommand renderCommand = graphics->createRenderCommand("DebugRender");
+        renderCommand->setViewport(viewport);
+        renderCommand->bindPipeline(pipeline);
+        renderCommand->bindDescriptor(viewParamsSet);
+        renderCommand->bindVertexBuffer({ debugVertices });
+        renderCommand->draw((uint32)gDebugVertices.size(), 1, 0, 0);
+        Array<Gfx::ORenderCommand> commands;
+        commands.add(std::move(renderCommand));
+        graphics->executeCommands({ std::move(commands) });
+    }
     graphics->endRenderPass();
     gDebugVertices.clear();
 }
@@ -75,9 +79,11 @@ void DebugPass::createRenderPass()
     Gfx::RenderTargetAttachment baseColorAttachment = resources->requestRenderTarget("BASEPASS_COLOR");
     baseColorAttachment.setLoadOp(Gfx::SE_ATTACHMENT_LOAD_OP_LOAD);
     baseColorAttachment.setInitialLayout(Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+    baseColorAttachment.setInitialLayout(Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
     Gfx::RenderTargetAttachment depthAttachment = resources->requestRenderTarget("DEPTHPREPASS_DEPTH");
     depthAttachment.setLoadOp(Gfx::SE_ATTACHMENT_LOAD_OP_LOAD);
     depthAttachment.setInitialLayout(Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+    depthAttachment.setFinalLayout(Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
     Gfx::RenderTargetLayout layout = Gfx::RenderTargetLayout{
         .colorAttachments = {baseColorAttachment}, 
         .depthAttachment = depthAttachment,
@@ -97,7 +103,7 @@ void DebugPass::createRenderPass()
             .dstSubpass = 0,
             .srcStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
             .dstStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-            .srcAccess = Gfx::SE_ACCESS_NONE,
+            .srcAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
             .dstAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
         },
         {
@@ -114,7 +120,7 @@ void DebugPass::createRenderPass()
             .srcStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
             .dstStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
             .srcAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-            .dstAccess = Gfx::SE_ACCESS_NONE,
+            .dstAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
         },
     };
     renderPass = graphics->createRenderPass(std::move(layout), dependency, viewport);

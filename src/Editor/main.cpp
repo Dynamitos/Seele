@@ -63,8 +63,8 @@ int main() {
       .importPath = "Whitechapel"
       });
   //AssetImporter::importMesh(MeshImportArgs{
-  //    .filePath = sourcePath / "import/models/Volvo S90/Volvo S90.blend",
-  //    .importPath = "Volvo",
+  //    .filePath = sourcePath / "import/models/nitra-castle-rawscan/source/Nitriansky.obj",
+  //    .importPath = "Nitriansky"
   //    });
   WindowCreateInfo mainWindowInfo;
   mainWindowInfo.title = "SeeleEngine";

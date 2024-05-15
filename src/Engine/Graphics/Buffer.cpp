@@ -1,4 +1,5 @@
 #include "Buffer.h"
+#include "Buffer.h"
 
 using namespace Seele;
 using namespace Seele::Gfx;
@@ -81,13 +82,13 @@ ShaderBuffer::~ShaderBuffer()
 {
 }
 
-bool ShaderBuffer::updateContents(const DataSource& sourceData)
+void ShaderBuffer::updateContents(const ShaderBufferCreateInfo& createInfo)
 {
-	assert(contents.size() >= sourceData.size);
-	if (std::memcmp(contents.data(), sourceData.data, sourceData.size) == 0)
+	contents.resize(createInfo.sourceData.size);
+	numElements = createInfo.numElements;
+	if (createInfo.sourceData.data != nullptr)
 	{
-		return false;
+		std::memcpy(contents.data(), createInfo.sourceData.data, createInfo.sourceData.size);
 	}
-	std::memcpy(contents.data(), sourceData.data, sourceData.size);
-	return true;
 }
+

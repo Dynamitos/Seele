@@ -3,6 +3,7 @@
 #include "RenderPass/DepthPrepass.h"
 #include "RenderPass/BasePass.h"
 #include "Material/Material.h"
+#include "Resources.h"
 
 using namespace Seele;
 using namespace Seele::Gfx;
@@ -31,3 +32,4 @@ void QueueOwnedResource::pipelineBarrier(SeAccessFlags srcAccess, SePipelineStag
 	// maybe add some checks
 	executePipelineBarrier(srcAccess, srcStage, dstAccess, dstStage);
 }
+
