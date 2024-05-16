@@ -3,7 +3,6 @@ import Scene;
 import VertexData;
 import MaterialParameter;
 
-
 struct PrimitiveAttributes
 {
 	uint cull: SV_CullPrimitive;
@@ -38,7 +37,12 @@ void meshMain(
 		uint v = min(i, m.vertexCount - 1);
 		{
 			uint vertexIndex = pScene.vertexIndices[m.vertexOffset + v];
+#ifdef POS_ONLY
+            VertexAttributes attr = pVertexData.getPosition(m.indicesOffset + vertexIndex);
+#else
 			VertexAttributes attr = pVertexData.getAttributes(m.indicesOffset + vertexIndex);
+#endif
+
 			attr.meshletId = -1;
 			vertices[v] = attr.getParameter(inst.transformMatrix);
 		}

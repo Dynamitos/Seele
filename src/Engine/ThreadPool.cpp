@@ -57,6 +57,7 @@ void ThreadPool::work()
         currentTask.numRemaining--;
         if (currentTask.numRemaining == 0)
         {
+            currentTask.functions.clear();
             completedCV.notify_one();
         }
     }

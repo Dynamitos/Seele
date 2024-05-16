@@ -3,6 +3,11 @@
         "default": "debug",
         "description": "Configuration Type",
         "choices": {
+            "asan": {
+              "short": "ASan",
+              "long": "Address Sanitizer",
+              "buildType": "Asan"
+            },
             "debug": {
                 "short": "Debug",
                 "long": "Enable debugging and validation",

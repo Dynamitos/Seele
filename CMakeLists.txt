@@ -99,8 +99,8 @@ target_include_directories(AssetViewer PRIVATE src/AssetViewer)
     
 if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-    target_compile_options(Engine PUBLIC /std:c++20 /Zi /MP14 /W4 /DEBUG /wd4505)
-    target_compile_options(Editor PUBLIC /std:c++20 /Zi /MP14 /W4 /DEBUG)
+    target_compile_options(Engine PUBLIC /std:c++20 /Zi /MP14 /W4 /wd4505 /fsanitize=address)
+    target_compile_options(Editor PUBLIC /std:c++20 /Zi /MP14 /W4 /fsanitize=address)
     target_sources(Engine INTERFACE   
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Seele.natvis>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/Seele/Seele.natvis>
@@ -108,6 +108,8 @@ if(MSVC)
     install(FILES
         Seele.natvis
         DESTINATION Seele/)
+    target_link_options(Engine PUBLIC /fsanitize=address /DEBUG)
+    target_link_options(Editor PUBLIC /fsanitize=address /DEBUG)
 else()
     target_compile_options(Engine PUBLIC -g -Wall -Wextra -Wno-error -pedantic -std=c++20 -Wno-missing-field-initializers -Wno-unused-function -fsanitize=address)
     target_compile_options(Editor PUBLIC -g -Wall -Wextra -Wno-error -pedantic -std=c++20 -fsanitize=address)

@@ -355,6 +355,12 @@ public:
         }
         destroyNode(pos.node);
         deallocateNode(pos.node);
+        if (_size == 0)
+        {
+            deallocateNode(tail);
+            root = nullptr;
+            tail = nullptr;
+        }
         markIteratorDirty();
         return Iterator(next);
     }

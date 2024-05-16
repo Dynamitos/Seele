@@ -280,10 +280,10 @@ void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet, Array<uint
     assert(threadId == std::this_thread::get_id());
     auto descriptor = descriptorSet.cast<DescriptorSet>();
     assert(descriptor->writeDescriptors.size() == 0);
-    boundResources.add(descriptor.getHandle());
-    descriptor->boundResources.clear();
-    boundResources.addAll(descriptor->boundResources);
     descriptor->bind();
+    boundResources.add(descriptor.getHandle());
+    boundResources.addAll(descriptor->boundResources);
+    descriptor->boundResources.clear();
 
     VkDescriptorSet setHandle = descriptor->getHandle();
     vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getLayout(), pipeline->getPipelineLayout()->findParameter(descriptorSet->getName()), 1, &setHandle, dynamicOffsets.size(), dynamicOffsets.data());

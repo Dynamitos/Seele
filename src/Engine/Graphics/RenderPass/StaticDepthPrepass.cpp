@@ -16,11 +16,11 @@ StaticDepthPrepass::StaticDepthPrepass(Gfx::PGraphics graphics, PScene scene)
     depthPrepassLayout->addDescriptorLayout(meshletCullingLayout);
     if (graphics->supportMeshShading())
     {
-        graphics->getShaderCompiler()->registerRenderPass(depthPrepassLayout, "DepthPass", "MeshletPass", false, false, "", true);
+        graphics->getShaderCompiler()->registerRenderPass(depthPrepassLayout, "DepthPass", "MeshletPass", true, false, false, "", true);
     }
     else
     {
-        graphics->getShaderCompiler()->registerRenderPass(depthPrepassLayout, "DepthPass", "LegacyPass");
+        graphics->getShaderCompiler()->registerRenderPass(depthPrepassLayout, "DepthPass", "LegacyPass", true);
     }
 }
 

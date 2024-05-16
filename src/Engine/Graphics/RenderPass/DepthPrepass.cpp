@@ -25,11 +25,11 @@ DepthPrepass::DepthPrepass(Gfx::PGraphics graphics, PScene scene)
         });
     if (graphics->supportMeshShading())
     {
-        graphics->getShaderCompiler()->registerRenderPass(depthPrepassLayout, "DepthPass", "MeshletPass", false, false, "", true, true, "ViewCullingTask");
+        graphics->getShaderCompiler()->registerRenderPass(depthPrepassLayout, "DepthPass", "MeshletPass", true, false, false, "", true, true, "ViewCullingTask");
     }
     else
     {
-        graphics->getShaderCompiler()->registerRenderPass(depthPrepassLayout, "DepthPass", "LegacyPass");
+        graphics->getShaderCompiler()->registerRenderPass(depthPrepassLayout, "DepthPass", "LegacyPass", true);
     }
 }
 
@@ -48,6 +48,7 @@ void DepthPrepass::render()
     Array<Gfx::ORenderCommand> commands;
 
     Gfx::ShaderPermutation permutation;
+    permutation.setPositionOnly();
     if (graphics->supportMeshShading())
     {
         permutation.setTaskFile("ViewCullingTask");

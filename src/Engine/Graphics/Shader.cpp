@@ -34,7 +34,15 @@ void ShaderCompiler::registerVertexData(VertexData* vd)
 	compile();
 }
 
-void ShaderCompiler::registerRenderPass(Gfx::PPipelineLayout layout, std::string name, std::string mainFile, bool useMaterials, bool hasFragmentShader, std::string fragmentFile, bool useMeshShading, bool hasTaskShader, std::string taskFile)
+void ShaderCompiler::registerRenderPass(Gfx::PPipelineLayout layout, 
+	std::string name, std::string mainFile, 
+	bool positionOnly,
+	bool useMaterials, 
+	bool hasFragmentShader, 
+	std::string fragmentFile, 
+	bool useMeshShading, 
+	bool hasTaskShader, 
+	std::string taskFile)
 {
 	passes[name] = PassConfig{
         .baseLayout = layout,
@@ -45,6 +53,7 @@ void ShaderCompiler::registerRenderPass(Gfx::PPipelineLayout layout, std::string
 		.useMeshShading = useMeshShading,
 		.hasTaskShader = hasTaskShader,
 		.useMaterial = useMaterials,
+		.positionOnly = positionOnly,
 	};
 	compile();
 }
@@ -63,6 +72,10 @@ void ShaderCompiler::compile()
 				{
 					work.add([=]() {
 						ShaderPermutation permutation;
+						if (pass.positionOnly)
+						{
+							permutation.setPositionOnly();
+						}
 						if (pass.useMeshShading)
 						{
 							permutation.setMeshFile(pass.mainFile);
@@ -93,6 +106,10 @@ void ShaderCompiler::compile()
 			{
 				work.add([=]() {
 					ShaderPermutation permutation;
+					if (pass.positionOnly)
+					{
+						permutation.setPositionOnly();
+					}
 					if (pass.useMeshShading)
 					{
 						permutation.setMeshFile(pass.mainFile);
@@ -140,6 +157,10 @@ void ShaderCompiler::createShaders(ShaderPermutation permutation, Gfx::OPipeline
         createInfo.additionalModules.add(permutation.materialName);
 		createInfo.defines["MATERIAL_FILE_NAME"] = permutation.materialName;
     }
+	if (permutation.positionOnly)
+	{
+		createInfo.defines["POS_ONLY"] = "1";
+	}
 	createInfo.typeParameter.add({ Pair<const char*, const char*>("IVertexData", permutation.vertexDataName) });
 	createInfo.additionalModules.add(permutation.vertexDataName);
 

@@ -18,12 +18,16 @@ void VertexData::resetMeshData()
     std::unique_lock l(materialDataLock);
     for (auto& mat : materialData)
     {
+        for (auto inst : mat.instances)
+        {
+            inst.instanceData.clear();
+            inst.instanceMeshData.clear();
+        }
         if (mat.material != nullptr)
         {
             mat.material->getDescriptorLayout()->reset();
         }
     }
-    materialData.clear();
     if (dirty)
     {
         updateBuffers();
