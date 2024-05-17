@@ -19,11 +19,11 @@ if(WIN32)
         ${SLANG_ROOT}slang.lib
     DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 elseif(APPLE)
-    set(BINARY_ROOT ${SLANG_ROOT}/bin/macosx-aarch64/release/)
-    set_target_properties(slang PROPERTIES IMPORTED_LOCATION ${BINARY_ROOT}/libslang.dylib)
+    set(BINARY_ROOT ${SLANG_ROOT}/build/Debug/)
+    set_target_properties(slang PROPERTIES IMPORTED_LOCATION ${BINARY_ROOT}/lib/libslang.dylib)
     install(FILES
-        ${BINARY_ROOT}/libslang.dylib
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+        ${BINARY_ROOT}/lib/libslang.dylib
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 endif()
 target_include_directories(slang INTERFACE 
     $<BUILD_INTERFACE:${EXTERNAL_ROOT}/slang>

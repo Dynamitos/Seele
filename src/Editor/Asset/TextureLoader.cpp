@@ -64,7 +64,7 @@ void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset)
         ss << "toktx --encode etc1s ";
         if (args.type == TextureImportType::TEXTURE_NORMAL)
         {
-            ss << "--normal_mode ";
+            //ss << "--normal_mode ";
         }
         ss << ktxFile << " " << args.filePath;
         system(ss.str().c_str());

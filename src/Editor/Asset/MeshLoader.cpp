@@ -206,7 +206,7 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Array<PTextureAsset>&
                 parameters.add(textureKey);
                 bindingCounter++;
 
-                std::string samplerKey = std::format("{0}Sampler{1}", paramKey, index);
+                std::string samplerKey = fmt::format("{0}Sampler{1}", paramKey, index);
                 SamplerCreateInfo samplerInfo = {};
                 switch (mapMode)
                 {

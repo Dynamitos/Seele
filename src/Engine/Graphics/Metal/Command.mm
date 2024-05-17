@@ -84,7 +84,7 @@ void RenderCommand::bindPipeline(Gfx::PGraphicsPipeline pipeline) {
       NS::String::string(boundPipeline->getPipelineLayout()->getName().c_str(), NS::ASCIIStringEncoding));
 }
 
-void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet) {
+void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet, Array<uint32> offsets) {
   auto metalSet = descriptorSet.cast<DescriptorSet>();
   uint32 parameterIndex = boundPipeline->getPipelineLayout()->findParameter(descriptorSet->getLayout()->getName());
   uint64* topLevelTable = (uint64*)argumentBuffer->contents();
@@ -117,9 +117,9 @@ void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet) {
   }
 }
 
-void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorSets) {
+void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorSets, Array<uint32> offsets) {
   for (auto set : descriptorSets) {
-    bindDescriptor(set);
+    bindDescriptor(set, offsets);
   }
 }
 void RenderCommand::bindVertexBuffer(const Array<Gfx::PVertexBuffer>& buffers) {
@@ -133,7 +133,7 @@ void RenderCommand::bindIndexBuffer(Gfx::PIndexBuffer gfxIndexBuffer) {
   boundIndexBuffer = gfxIndexBuffer.cast<IndexBuffer>();
 }
 
-void RenderCommand::pushConstants(Gfx::PPipelineLayout, Gfx::SeShaderStageFlags stage, uint32 offset, uint32 size,
+void RenderCommand::pushConstants(Gfx::SeShaderStageFlags stage, uint32 offset, uint32 size,
                                   const void* data) {
   if (stage & Gfx::SE_SHADER_STAGE_VERTEX_BIT) {
     encoder->setVertexBytes((char*)data + offset, size, 0);
@@ -162,6 +162,10 @@ void RenderCommand::drawMesh(uint32 groupX, uint32 groupY, uint32 groupZ) {
   encoder->drawMeshThreadgroups(MTL::Size(groupX, groupY, groupZ), MTL::Size(128, 1, 1), MTL::Size(32, 1, 1));
 }
 
+void RenderCommand::drawMeshIndirect(Gfx::PShaderBuffer buffer, uint64 offset, uint32 drawCount, uint32 stride) {
+  //encoder->drawMeshThreadgroups()
+}
+
 ComputeCommand::ComputeCommand(MTL::CommandBuffer* cmdBuffer, const std::string& name)
     : commandBuffer(cmdBuffer), encoder(cmdBuffer->computeCommandEncoder()), name(name) {}
 
@@ -181,7 +185,7 @@ void ComputeCommand::bindPipeline(Gfx::PComputePipeline pipeline) {
       NS::String::string(pipeline->getPipelineLayout()->getName().c_str(), NS::ASCIIStringEncoding));
 }
 
-void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet set) {
+void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet set, Array<uint32> offsets) {
   auto metalSet = set.cast<DescriptorSet>();
   metalSet->bind();
   uint32 parameterIndex = boundPipeline->getPipelineLayout()->findParameter(set->getLayout()->getName());
@@ -215,13 +219,13 @@ void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet set) {
   }
 }
 
-void ComputeCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& sets) {
+void ComputeCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& sets, Array<uint32> offsets) {
   for (auto& set : sets) {
-    bindDescriptor(set);
+    bindDescriptor(set, offsets);
   }
 }
 
-void ComputeCommand::pushConstants(Gfx::PPipelineLayout, Gfx::SeShaderStageFlags, uint32 offset, uint32 size,
+void ComputeCommand::pushConstants(Gfx::SeShaderStageFlags, uint32 offset, uint32 size,
                                    const void* data) {
   encoder->setBytes((char*)data + offset, size, 0);
 }

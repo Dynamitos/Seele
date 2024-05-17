@@ -22,7 +22,7 @@ public:
     Gfx::PDescriptorLayout getDescriptorLayout() { return layout; }
     OMaterialInstance instantiate();
     const std::string& getName() const { return materialName; }
-    constexpr const uint64 getId() const { return materialId; }
+    constexpr uint64 getId() const { return materialId; }
     static constexpr const PMaterial findMaterialById(uint64 id) { return materials[id]; }
 
     void save(ArchiveBuffer& buffer) const;

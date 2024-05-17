@@ -6,11 +6,10 @@ groupshared uint head;
 groupshared Frustum viewFrustum;
 
 [numthreads(TASK_GROUP_SIZE, 1, 1)]
-[outputtopology("triangle")]
 [shader("amplification")]
 void taskMain(
 	uint threadID: SV_GroupIndex,
-	uint groupID: SV_GroupID
+	uint groupID: SV_GroupThreadID
 ){
 	InstanceData instance = pScene.instances[pOffsets.instanceOffset + groupID];
 	MeshData mesh = pScene.meshData[pOffsets.instanceOffset + groupID];

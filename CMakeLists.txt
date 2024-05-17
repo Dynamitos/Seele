@@ -21,6 +21,7 @@ set(CMAKE_TOOLCHAIN_FILE ${EXTERNAL_ROOT}/vcpkg/scripts/buildsystems/vcpkg.cmake
 
 set(CRCPP_ROOT ${EXTERNAL_ROOT}/CRCpp)
 set(METAL_ROOT ${EXTERNAL_ROOT}/metal-cpp)
+set(SLANG_ROOT ${EXTERNAL_ROOT}/slang)
 
 set(Boost_NO_WARN_NEW_VERSIONS 1)
 
@@ -51,7 +52,6 @@ find_package(Ktx CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 find_package(VulkanMemoryAllocator CONFIG REQUIRED)
-find_package(OpenMP REQUIRED)
 
 if(UNIX)
     find_package(Threads REQUIRED)
@@ -77,7 +77,6 @@ target_link_libraries(Engine PUBLIC crcpp)
 target_link_libraries(Engine PUBLIC fmt::fmt)
 target_link_libraries(Engine PUBLIC GPUOpen::VulkanMemoryAllocator)
 target_link_libraries(Engine PUBLIC slang)
-target_link_libraries(Engine PUBLIC OpenMP::OpenMP_CXX)
 if(APPLE)
     target_link_libraries(Engine PUBLIC metal)
     SET(CMAKE_OSX_DEPLOYMENT_TARGET 14.3)
@@ -155,7 +154,8 @@ install(
         Editor
         Engine
         crcpp
-    EXPORT 
+        metal
+    EXPORT
         EngineTargets
     FILE_SET HEADERS
     DESTINATION include/Seele)

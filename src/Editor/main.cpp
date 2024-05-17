@@ -59,7 +59,7 @@ int main() {
       .filePath = sourcePath / "import/models/cube.fbx",
       });
   AssetImporter::importMesh(MeshImportArgs{
-      .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.glb",
+      .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.gltf",
       .importPath = "Whitechapel"
       });
   //AssetImporter::importMesh(MeshImportArgs{

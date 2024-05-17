@@ -9,13 +9,13 @@ DECLARE_REF(Command)
 DECLARE_REF(Fence)
 class BufferAllocation : public CommandBoundResource {
 public:
-    BufferAllocation(PGraphics graphics);
-    virtual ~BufferAllocation();
-    VkBuffer buffer = VK_NULL_HANDLE;
-    VmaAllocation allocation = VmaAllocation();
-    VmaAllocationInfo info = VmaAllocationInfo();
-    VkMemoryPropertyFlags properties = 0;
-    uint64 size = 0;
+  BufferAllocation(PGraphics graphics);
+  virtual ~BufferAllocation();
+  VkBuffer buffer = VK_NULL_HANDLE;
+  VmaAllocation allocation = VmaAllocation();
+  VmaAllocationInfo info = VmaAllocationInfo();
+  VkMemoryPropertyFlags properties = 0;
+  uint64 size = 0;
 };
 DEFINE_REF(BufferAllocation);
 class Buffer {
@@ -70,10 +70,11 @@ protected:
   virtual void requestOwnershipTransfer(Gfx::QueueType newOwner) override;
   // Inherited via QueueOwnedResource
   virtual void executeOwnershipBarrier(Gfx::QueueType newOwner) override;
-  virtual void executePipelineBarrier(Gfx::SeAccessFlags srcAccess,
-                                      Gfx::SePipelineStageFlags srcStage,
-                                      Gfx::SeAccessFlags dstAccess,
-                                      Gfx::SePipelineStageFlags dstStage) override;
+  virtual void
+  executePipelineBarrier(Gfx::SeAccessFlags srcAccess,
+                         Gfx::SePipelineStageFlags srcStage,
+                         Gfx::SeAccessFlags dstAccess,
+                         Gfx::SePipelineStageFlags dstStage) override;
 };
 DEFINE_REF(VertexBuffer)
 
@@ -91,10 +92,11 @@ protected:
   virtual void requestOwnershipTransfer(Gfx::QueueType newOwner) override;
   // Inherited via QueueOwnedResource
   virtual void executeOwnershipBarrier(Gfx::QueueType newOwner) override;
-  virtual void executePipelineBarrier(Gfx::SeAccessFlags srcAccess,
-                                      Gfx::SePipelineStageFlags srcStage,
-                                      Gfx::SeAccessFlags dstAccess,
-                                      Gfx::SePipelineStageFlags dstStage) override;
+  virtual void
+  executePipelineBarrier(Gfx::SeAccessFlags srcAccess,
+                         Gfx::SePipelineStageFlags srcStage,
+                         Gfx::SeAccessFlags dstAccess,
+                         Gfx::SePipelineStageFlags dstStage) override;
 };
 DEFINE_REF(IndexBuffer)
 class UniformBuffer : public Gfx::UniformBuffer, public Buffer {
@@ -110,10 +112,11 @@ protected:
   virtual void requestOwnershipTransfer(Gfx::QueueType newOwner) override;
   // Inherited via QueueOwnedResource
   virtual void executeOwnershipBarrier(Gfx::QueueType newOwner) override;
-  virtual void executePipelineBarrier(Gfx::SeAccessFlags srcAccess,
-                                      Gfx::SePipelineStageFlags srcStage,
-                                      Gfx::SeAccessFlags dstAccess,
-                                      Gfx::SePipelineStageFlags dstStage) override;
+  virtual void
+  executePipelineBarrier(Gfx::SeAccessFlags srcAccess,
+                         Gfx::SePipelineStageFlags srcStage,
+                         Gfx::SeAccessFlags dstAccess,
+                         Gfx::SePipelineStageFlags dstStage) override;
 
 private:
 };
@@ -123,9 +126,10 @@ class ShaderBuffer : public Gfx::ShaderBuffer, public Buffer {
 public:
   ShaderBuffer(PGraphics graphics, const ShaderBufferCreateInfo &sourceData);
   virtual ~ShaderBuffer();
-  virtual void updateContents(const ShaderBufferCreateInfo &createInfo) override;
+  virtual void
+  updateContents(const ShaderBufferCreateInfo &createInfo) override;
   virtual void rotateBuffer(uint64 size) override;
-  virtual void* mapRegion(uint64 offset, uint64 size, bool writeOnly) override;
+  virtual void *mapRegion(uint64 offset, uint64 size, bool writeOnly) override;
   virtual void unmap() override;
 
 protected:
@@ -135,10 +139,11 @@ protected:
   virtual void requestOwnershipTransfer(Gfx::QueueType newOwner) override;
   // Inherited via QueueOwnedResource
   virtual void executeOwnershipBarrier(Gfx::QueueType newOwner) override;
-  virtual void executePipelineBarrier(Gfx::SeAccessFlags srcAccess,
-                                      Gfx::SePipelineStageFlags srcStage,
-                                      Gfx::SeAccessFlags dstAccess,
-                                      Gfx::SePipelineStageFlags dstStage) override;
+  virtual void
+  executePipelineBarrier(Gfx::SeAccessFlags srcAccess,
+                         Gfx::SePipelineStageFlags srcStage,
+                         Gfx::SeAccessFlags dstAccess,
+                         Gfx::SePipelineStageFlags dstStage) override;
 
 private:
 };

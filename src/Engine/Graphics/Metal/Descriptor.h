@@ -1,15 +1,16 @@
 #pragma once
+#include "Buffer.h"
 #include "Graphics/Descriptor.h"
 #include "Graphics/Initializer.h"
+#include "Graphics/Metal/Resources.h"
 #include "MinimalEngine.h"
-#include "Buffer.h"
 
 namespace Seele {
 namespace Metal {
 DECLARE_REF(Graphics)
 class DescriptorLayout : public Gfx::DescriptorLayout {
 public:
-  DescriptorLayout(PGraphics graphics, const std::string& name);
+  DescriptorLayout(PGraphics graphics, const std::string &name);
   virtual ~DescriptorLayout();
   virtual void create() override;
 
@@ -34,44 +35,47 @@ private:
 };
 DEFINE_REF(DescriptorPool)
 
-class DescriptorSet : public Gfx::DescriptorSet {
+class DescriptorSet : public Gfx::DescriptorSet, public CommandBoundResource {
 public:
   DescriptorSet(PGraphics graphics, PDescriptorPool owner);
   virtual ~DescriptorSet();
-  virtual void writeChanges();
-  virtual void updateBuffer(uint32_t binding, Gfx::PUniformBuffer uniformBuffer);
-  virtual void updateBuffer(uint32_t binding, Gfx::PShaderBuffer uniformBuffer);
-  virtual void updateSampler(uint32_t binding, Gfx::PSampler samplerState);
-  virtual void updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::PSampler sampler = nullptr);
-  virtual void updateTextureArray(uint32_t binding, Array<Gfx::PTexture> texture);
+  virtual void writeChanges() override;
+  virtual void updateBuffer(uint32_t binding,
+                            Gfx::PUniformBuffer uniformBuffer) override;
+  virtual void updateBuffer(uint32_t binding, Gfx::PShaderBuffer uniformBuffer) override;
+  virtual void updateBuffer(uint32_t binding, uint32 index, Gfx::PShaderBuffer uniformBuffer) override;
+  virtual void updateSampler(uint32_t binding, Gfx::PSampler samplerState) override;
+  virtual void updateTexture(uint32_t binding, Gfx::PTexture texture,
+                             Gfx::PSampler sampler = nullptr) override;
+  virtual void updateTextureArray(uint32_t binding,
+                                  Array<Gfx::PTexture> texture) override;
 
-  constexpr bool isCurrentlyBound() const { return bindCount > 0; }
   constexpr bool isCurrentlyInUse() const { return currentlyInUse; }
-  constexpr void bind() { bindCount++; }
-  constexpr void unbind() { bindCount--; }
   constexpr void allocate() { currentlyInUse = true; }
   constexpr void free() { currentlyInUse = false; }
 
-  constexpr MTL::Buffer* getBuffer() const { return buffer; }
-    constexpr const Array<MTL::Resource*>& getBoundResources() const { return boundResources; }
+  constexpr MTL::Buffer *getBuffer() const { return buffer; }
+  constexpr const Array<MTL::Resource *> &getBoundResources() const {
+    return boundResources;
+  }
 
 private:
   PGraphics graphics;
   PDescriptorPool owner;
-  MTL::Buffer* buffer = nullptr;
-    uint64* argumentBuffer = nullptr;
-    Array<MTL::Resource*> boundResources;
-  uint32 bindCount;
+  MTL::Buffer *buffer = nullptr;
+  uint64 *argumentBuffer = nullptr;
+  Array<MTL::Resource *> boundResources;
   bool currentlyInUse;
 };
 DEFINE_REF(DescriptorSet)
 
 class PipelineLayout : public Gfx::PipelineLayout {
 public:
-  PipelineLayout(PGraphics graphics, const std::string& name, Gfx::PPipelineLayout baseLayout);
+  PipelineLayout(PGraphics graphics, const std::string &name,
+                 Gfx::PPipelineLayout baseLayout);
   virtual ~PipelineLayout();
   virtual void create() override;
-    
+
 private:
   PGraphics graphics;
 };

@@ -10,6 +10,27 @@
 namespace Seele {
 namespace Metal {
 DECLARE_REF(Graphics);
+class CommandBoundResource
+{
+public:
+    CommandBoundResource(PGraphics graphics)
+        : graphics(graphics)
+    {
+    }
+    virtual ~CommandBoundResource()
+    {
+        if (isCurrentlyBound())
+            abort();
+    }
+    constexpr bool isCurrentlyBound() const { return bindCount > 0; }
+    constexpr void bind() { bindCount++; }
+    constexpr void unbind() { bindCount--; }
+protected:
+    PGraphics graphics;
+    uint64 bindCount = 0;
+};
+DEFINE_REF(CommandBoundResource)
+
 class Fence {
 public:
   Fence(PGraphics graphics);
