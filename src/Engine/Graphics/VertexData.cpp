@@ -137,8 +137,7 @@ void VertexData::createDescriptors()
             .size = cullingOffsets.size() * sizeof(uint32),
             .data = (uint8*)cullingOffsets.data(),
         },
-        .numElements = cullingOffsets.size(),
-        .name = "MeshletOffset"
+        .numElements = cullingOffsets.size()
         });
     cullingOffsetBuffer->pipelineBarrier(
         Gfx::SE_ACCESS_TRANSFER_WRITE_BIT,
@@ -151,9 +150,8 @@ void VertexData::createDescriptors()
         .sourceData = {
             .size = numMeshlets * sizeof(uint32),
             },
-        .numElements = numMeshlets,
-        .name = "MeshletCulling"
-    });
+        .numElements = numMeshlets
+        });
     cullingBuffer->pipelineBarrier(
         Gfx::SE_ACCESS_TRANSFER_WRITE_BIT,
         Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
@@ -166,8 +164,7 @@ void VertexData::createDescriptors()
             .size = instanceData.size() * sizeof(InstanceData),
             .data = (uint8*)instanceData.data(),
         },
-        .numElements = instanceData.size(),
-        .name = "InstanceBuffer"
+        .numElements = instanceData.size()
         });
     instanceBuffer->pipelineBarrier(
         Gfx::SE_ACCESS_TRANSFER_WRITE_BIT,
@@ -182,8 +179,7 @@ void VertexData::createDescriptors()
             .size = sizeof(MeshData) * instanceMeshData.size(),
             .data = (uint8*)instanceMeshData.data(),
         },
-        .numElements = instanceMeshData.size(),
-        .name = "MeshDataBuffer"
+        .numElements = instanceMeshData.size()
         });
     instanceMeshDataBuffer->pipelineBarrier(
         Gfx::SE_ACCESS_TRANSFER_WRITE_BIT,
@@ -236,8 +232,8 @@ void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet>
         .bounding = meshAABB,//.toSphere(),
         .numMeshlets = (uint32)loadedMeshlets.size(),
         .meshletOffset = meshletOffset,
-        };
-    
+    };
+
     meshData[id].firstIndex = indices.size();
     meshData[id].numIndices = loadedIndices.size();
     if (!graphics->supportMeshShading())
@@ -347,10 +343,23 @@ void VertexData::init(Gfx::PGraphics _graphics)
     instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{ .binding = 5, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER });
     // cullingOffset
     instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{ .binding = 6, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER });
-    cullingOffsetBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{ .dynamic = true });
-    cullingBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{ .dynamic = true });
-    instanceBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{ .dynamic = true });
-    instanceMeshDataBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{ .dynamic = true });
+
+    cullingOffsetBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{ 
+        .dynamic = true,
+        .name = "MeshletOffset",
+        });
+    cullingBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{ 
+        .dynamic = true,
+        .name = "MeshletCulling",
+        });
+    instanceBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{ 
+        .dynamic = true,
+        .name = "InstanceBuffer",
+        });
+    instanceMeshDataBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{ 
+        .dynamic = true,
+        .name = "MeshDataBuffer",
+        });
     instanceDataLayout->create();
     resizeBuffers();
     graphics->getShaderCompiler()->registerVertexData(this);

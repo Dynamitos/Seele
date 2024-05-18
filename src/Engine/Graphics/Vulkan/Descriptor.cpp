@@ -142,9 +142,6 @@ Gfx::PDescriptorSet DescriptorPool::allocateDescriptorSet() {
     cachedHandles[setIndex]->allocate();
 
     PDescriptorSet vulkanSet = cachedHandles[setIndex];
-    vulkanSet->cachedData.resize(layout->bindings.size());
-    // Not really pretty, but this way the set knows which ones are valid
-    std::memset(vulkanSet->cachedData.data(), 0, sizeof(void*) * vulkanSet->cachedData.size());
 
     // Found set, stop searching
     return vulkanSet;
@@ -177,7 +174,9 @@ DescriptorSet::DescriptorSet(PGraphics graphics, PDescriptorPool owner)
     , owner(owner)
     , bindCount(0)
     , currentlyInUse(false)
-{}
+{
+    boundResources.resize(owner->getLayout()->getBindings().size());
+}
 
 DescriptorSet::~DescriptorSet()
 {
@@ -186,11 +185,6 @@ DescriptorSet::~DescriptorSet()
 
 void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PUniformBuffer uniformBuffer) {
   PUniformBuffer vulkanBuffer = uniformBuffer.cast<UniformBuffer>();
-  UniformBuffer* cachedBuffer = reinterpret_cast<UniformBuffer*>(cachedData[binding]);
-  if (vulkanBuffer->isDataEquals(cachedBuffer)) {
-    // std::cout << "uniform data equal, skip" << std::endl;
-    return;
-  }
   bufferInfos.add(VkDescriptorBufferInfo{
       .buffer = vulkanBuffer->getHandle(),
       .offset = 0,
@@ -208,17 +202,11 @@ void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PUniformBuffer uniformBu
       .pBufferInfo = &bufferInfos.back(),
   });
 
-  cachedData[binding] = vulkanBuffer.getHandle();
-  vulkanBuffer->getAlloc()->bind();
-  boundResources.add(vulkanBuffer->getAlloc());
+  boundResources[binding] = vulkanBuffer->getAlloc();
 }
 
 void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PShaderBuffer shaderBuffer) {
   PShaderBuffer vulkanBuffer = shaderBuffer.cast<ShaderBuffer>();
-  ShaderBuffer* cachedBuffer = reinterpret_cast<ShaderBuffer*>(cachedData[binding]);
-  if (vulkanBuffer.getHandle() == cachedBuffer) {
-    return;
-  }
 
   bufferInfos.add(VkDescriptorBufferInfo{
       .buffer = vulkanBuffer->getHandle(),
@@ -236,18 +224,11 @@ void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PShaderBuffer shaderBuff
       .pBufferInfo = &bufferInfos.back(),
   });
 
-  cachedData[binding] = vulkanBuffer.getHandle();
-  vulkanBuffer->getAlloc()->bind();
-  boundResources.add(vulkanBuffer->getAlloc());
+  boundResources[binding] = vulkanBuffer->getAlloc();
 }
 
 void DescriptorSet::updateBuffer(uint32_t binding, uint32 index, Gfx::PShaderBuffer shaderBuffer) {
     PShaderBuffer vulkanBuffer = shaderBuffer.cast<ShaderBuffer>();
-    ShaderBuffer* cachedBuffer = reinterpret_cast<ShaderBuffer*>(cachedData[binding]);
-    if (vulkanBuffer.getHandle() == cachedBuffer) {
-        return;
-    }
-
     bufferInfos.add(VkDescriptorBufferInfo{
         .buffer = vulkanBuffer->getHandle(),
         .offset = 0,
@@ -265,19 +246,14 @@ void DescriptorSet::updateBuffer(uint32_t binding, uint32 index, Gfx::PShaderBuf
         .pBufferInfo = &bufferInfos.back(),
         });
 
-    cachedData[binding] = vulkanBuffer.getHandle();
-    vulkanBuffer->getAlloc()->bind();
-    boundResources.add(vulkanBuffer->getAlloc());
+    boundResources[binding] = vulkanBuffer->getAlloc();
 }
 
 void DescriptorSet::updateSampler(uint32_t binding, Gfx::PSampler samplerState) {
   PSampler vulkanSampler = samplerState.cast<Sampler>();
-  Sampler* cachedSampler = reinterpret_cast<Sampler*>(cachedData[binding]);
-  if (vulkanSampler.getHandle() == cachedSampler) {
-    return;
-  }
+
   imageInfos.add(VkDescriptorImageInfo{
-      .sampler = vulkanSampler->sampler,
+      .sampler = vulkanSampler->getSampler(),
       .imageView = VK_NULL_HANDLE,
       .imageLayout = VK_IMAGE_LAYOUT_UNDEFINED,
   });
@@ -293,18 +269,15 @@ void DescriptorSet::updateSampler(uint32_t binding, Gfx::PSampler samplerState) 
       .pImageInfo = &imageInfos.back(),
   });
 
-  cachedData[binding] = vulkanSampler.getHandle();
+  boundResources[binding] = vulkanSampler->getHandle();
 }
 
 void DescriptorSet::updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::PSampler samplerState) {
   TextureBase* vulkanTexture = texture.cast<TextureBase>().getHandle();
-  TextureBase* cachedTexture = reinterpret_cast<TextureBase*>(cachedData[binding]);
-  if (vulkanTexture == cachedTexture) {
-    return;
-  }
+
   // It is assumed that the image is in the correct layout
   imageInfos.add(VkDescriptorImageInfo{
-      .sampler = samplerState != nullptr ? samplerState.cast<Sampler>()->sampler : VK_NULL_HANDLE,
+      .sampler = samplerState != nullptr ? samplerState.cast<Sampler>()->getSampler() : VK_NULL_HANDLE,
       .imageView = vulkanTexture->getView(),
       .imageLayout = cast(vulkanTexture->getLayout()),
   });
@@ -325,13 +298,12 @@ void DescriptorSet::updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::
       .pImageInfo = &imageInfos.back(),
   });
 
-  cachedData[binding] = vulkanTexture;
-  vulkanTexture->getHandle()->bind();
-  boundResources.add(vulkanTexture->getHandle());
+  boundResources[binding] = vulkanTexture->getHandle();
 }
 void DescriptorSet::updateTextureArray(uint32_t binding, Array<Gfx::PTexture> textures) {
   // maybe make this a parameter?
   uint32 arrayElement = 0;
+  boundResources.resize(binding + textures.size());
   for (auto& gfxTexture : textures) {
     TextureBase* vulkanTexture = gfxTexture.cast<TextureBase>().getHandle();
     imageInfos.add(VkDescriptorImageInfo{
@@ -344,6 +316,7 @@ void DescriptorSet::updateTextureArray(uint32_t binding, Array<Gfx::PTexture> te
     if (vulkanTexture->getUsage() & VK_IMAGE_USAGE_STORAGE_BIT) {
       descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
     }
+    boundResources[binding + arrayElement] = vulkanTexture->getHandle();
     writeDescriptors.add(VkWriteDescriptorSet{
         .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
         .pNext = nullptr,
@@ -355,7 +328,6 @@ void DescriptorSet::updateTextureArray(uint32_t binding, Array<Gfx::PTexture> te
         .pImageInfo = &imageInfos.back(),
     });
     vulkanTexture->getHandle()->bind();
-    boundResources.add(vulkanTexture->getHandle());
   }
 }
 

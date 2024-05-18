@@ -134,21 +134,21 @@ public:
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
     
     constexpr List()
-        : root(nullptr)
-        , tail(nullptr)
+        : allocator(Allocator())
+        , root(allocateNode())
+        , tail(root)
         , beginIt(Iterator(root))
         , endIt(Iterator(tail))
         , _size(0)
-        , allocator(Allocator())
     {
     }
     constexpr explicit List(const Allocator& alloc)
-        : root(nullptr)
-        , tail(nullptr)
+        : allocator(alloc)
+        , root(allocateNode())
+        , tail(root)
         , beginIt(Iterator(root))
         , endIt(Iterator(tail))
         , _size(0)
-        , allocator(alloc)
     {
     }
     constexpr List(size_type count, const T& value = T(), const Allocator& alloc = Allocator())
@@ -187,28 +187,33 @@ public:
         }
     }
     constexpr List(List&& other)
-        : root(std::move(other.root))
+        : allocator(std::move(other.allocator))
+        , root(std::move(other.root))
         , tail(std::move(other.tail))
         , beginIt(std::move(other.beginIt))
         , endIt(std::move(other.endIt))
         , _size(std::move(other._size))
-        , allocator(std::move(other.allocator))
     {
+        other.root = nullptr;
+        other.tail = nullptr;
         other._size = 0;
     }
     constexpr List(List&& other, const Allocator& alloc)
-        : root(std::move(other.root))
+        : allocator(alloc)
+        , root(std::move(other.root))
         , tail(std::move(other.tail))
         , beginIt(std::move(other.beginIt))
         , endIt(std::move(other.endIt))
         , _size(std::move(other._size))
-        , allocator(alloc)
     {
+        other.root = nullptr;
+        other.tail = nullptr;
         other._size = 0;
     }
     constexpr ~List()
     {
         clear();
+        deallocateNode(tail);
     }
     constexpr List& operator=(const List& other)
     {
@@ -246,6 +251,8 @@ public:
             beginIt = other.beginIt;
             endIt = other.endIt;
             _size = other._size;
+            other.root = nullptr;
+            other.tail = nullptr;
             other._size = 0;
             markIteratorDirty();
         }
@@ -272,9 +279,7 @@ public:
             destroyNode(tmp->prev);
             deallocateNode(tmp->prev);
         }
-        deallocateNode(tail);
-        tail = nullptr;
-        root = nullptr;
+        root = tail;
         markIteratorDirty();
         _size = 0;
     }
@@ -287,29 +292,9 @@ public:
     {
         return addInternal(std::move(value));
     }
-    // takes all elements from other and move-inserts them into
-    // this, clearing other in the process
-    constexpr void moveElements(List&& other)
-    {
-        tail->prev->next = other.root;
-        other.root->prev = tail->prev;
-        _size += other._size;
-        deallocateNode(tail);
-        tail = other.tail;
-        other._size = 0;
-        other.root = nullptr;
-        other.tail = nullptr;
-        markIteratorDirty();
-        other.markIteratorDirty();
-    }
     template<typename... args>
     constexpr reference emplace(args... arguments)
     {
-        if (root == nullptr)
-        {
-            root = allocateNode();
-            tail = root;
-        }
         std::allocator_traits<NodeAllocator>::construct(allocator, 
             tail, 
             tail->prev, 
@@ -355,12 +340,6 @@ public:
         }
         destroyNode(pos.node);
         deallocateNode(pos.node);
-        if (_size == 0)
-        {
-            deallocateNode(tail);
-            root = nullptr;
-            tail = nullptr;
-        }
         markIteratorDirty();
         return Iterator(next);
     }
@@ -387,25 +366,20 @@ public:
     constexpr iterator insert(iterator pos, const T &value)
     {
         _size++;
-        if (root == nullptr)
-        {
-            root = allocateNode();
-            root->data = value;
-            tail = allocateNode();
-            root->next = tail;
-            root->prev = nullptr;
-            tail->prev = root;
-            tail->next = nullptr;
-            markIteratorDirty();
-            return beginIt;
-        }
-        Node *tmp = pos.node->prev;
         Node *newNode = allocateNode();
         initializeNode(newNode, value);
-        tmp->next = newNode;
-        newNode->prev = tmp;
         newNode->next = pos.node;
         pos.node->prev = newNode;
+        Node *tmp = pos.node->prev;
+        if (tmp != nullptr)
+        {
+            tmp->next = newNode;
+            newNode->prev = tmp;
+        }
+        else
+        {
+            root = newNode;
+        }
         markIteratorDirty();
         return Iterator(newNode);
     }
@@ -474,11 +448,6 @@ private:
     template<typename ValueType>
     constexpr iterator addInternal(ValueType&& value)
     {
-        if (root == nullptr)
-        {
-            root = allocateNode();
-            tail = root;
-        }
         initializeNode(tail, std::forward<ValueType>(value));
         Node* newTail = allocateNode();
         newTail->prev = tail;
@@ -497,6 +466,7 @@ private:
         cbeginIt = ConstIterator(root);
         cendIt = ConstIterator(tail);
     }
+    NodeAllocator allocator;
     Node *root;
     Node *tail;
     iterator beginIt;
@@ -504,6 +474,5 @@ private:
     const_iterator cbeginIt;
     const_iterator cendIt;
     size_type _size;
-    NodeAllocator allocator;
 };
 } // namespace Seele

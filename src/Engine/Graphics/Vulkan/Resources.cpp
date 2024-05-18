@@ -117,3 +117,24 @@ void DestructionManager::notifyCommandComplete()
         }
     }
 }
+
+SamplerHandle::SamplerHandle(PGraphics graphics, VkSamplerCreateInfo createInfo)
+    : CommandBoundResource(graphics)
+{
+    vkCreateSampler(graphics->getDevice(), &createInfo, nullptr, &sampler);
+}
+
+SamplerHandle::~SamplerHandle()
+{
+    vkDestroySampler(graphics->getDevice(), sampler, nullptr);
+}
+
+Sampler::Sampler(PGraphics graphics, VkSamplerCreateInfo createInfo)
+    : graphics(graphics)
+    , handle(new SamplerHandle(graphics, createInfo))
+{}
+
+Sampler::~Sampler()
+{
+    graphics->getDestructionManager()->queueResourceForDestruction(std::move(handle));
+}

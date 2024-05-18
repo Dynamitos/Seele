@@ -23,18 +23,18 @@ ThreadPool::~ThreadPool()
     }
 }
 
-void ThreadPool::runAndWait(List<std::function<void()>> functions)
-{
-    std::unique_lock l(taskLock);
-    currentTask.numRemaining = functions.size();
-    currentTask.functions = std::move(functions);
-    taskCV.notify_all();
-    
-    while (currentTask.numRemaining > 0)
-    {
-        completedCV.wait(l);
-    }
-}
+//void ThreadPool::runAndWait(List<std::function<void()>> functions)
+//{
+//    std::unique_lock l(taskLock);
+//    currentTask.numRemaining = functions.size();
+//    currentTask.functions = std::move(functions);
+//    taskCV.notify_all();
+//    
+//    while (currentTask.numRemaining > 0)
+//    {
+//        completedCV.wait(l);
+//    }
+//}
 
 void ThreadPool::work()
 {

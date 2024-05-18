@@ -23,12 +23,13 @@ Slang::ComPtr<slang::IBlob> Seele::generateShader(const ShaderCreateInfo& create
     option[1].name = slang::CompilerOptionName::EmitSpirvViaGLSL;
     option[1].value.kind = slang::CompilerOptionValueKind::Int;
     option[1].value.intValue0 = 1;
-    option[2].name = slang::CompilerOptionName::EmitIr;
+    option[2].name = slang::CompilerOptionName::DebugInformation;
     option[2].value.kind = slang::CompilerOptionValueKind::Int;
-    option[2].value.intValue0 = 1;
+    option[2].value.intValue0 = SLANG_DEBUG_INFO_LEVEL_NONE;
     option[3].name = slang::CompilerOptionName::DebugInformationFormat;
     option[3].value.kind = slang::CompilerOptionValueKind::Int;
-    option[3].value.intValue0 = SLANG_DEBUG_INFO_FORMAT_C7;
+    option[3].value.intValue0 = SLANG_DEBUG_INFO_FORMAT_PDB;
+
     sessionDesc.compilerOptionEntries = option.data();
     sessionDesc.compilerOptionEntryCount = option.size();
     sessionDesc.defaultMatrixLayoutMode = SLANG_MATRIX_LAYOUT_COLUMN_MAJOR;
@@ -43,7 +44,7 @@ Slang::ComPtr<slang::IBlob> Seele::generateShader(const ShaderCreateInfo& create
     sessionDesc.preprocessorMacroCount = macros.size();
     sessionDesc.preprocessorMacros = macros.data();
     slang::TargetDesc targetDesc;
-    targetDesc.profile = globalSession->findProfile("sm_6_6");
+    targetDesc.profile = globalSession->findProfile("spirv_1_5");
     targetDesc.format = target;
     sessionDesc.targetCount = 1;
     sessionDesc.targets = &targetDesc;

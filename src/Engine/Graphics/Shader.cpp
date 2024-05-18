@@ -70,7 +70,7 @@ void ShaderCompiler::compile()
 			{
 				for (const auto& [matName, mat] : materials)
 				{
-					work.add([=]() {
+					//work.add([=]() {
 						ShaderPermutation permutation;
 						if (pass.positionOnly)
 						{
@@ -99,12 +99,12 @@ void ShaderCompiler::compile()
 						layout->addDescriptorLayout(mat->getDescriptorLayout());
 						permutation.setMaterial(mat->getName());
 						createShaders(permutation, std::move(layout));
-					});
+					//});
 				}
 			}
 			else
 			{
-				work.add([=]() {
+				//work.add([=]() {
 					ShaderPermutation permutation;
 					if (pass.positionOnly)
 					{
@@ -131,11 +131,11 @@ void ShaderCompiler::compile()
 					layout->addDescriptorLayout(vd->getVertexDataLayout());
 					layout->addDescriptorLayout(vd->getInstanceDataLayout());
 					createShaders(permutation, std::move(layout));
-					});
+					//});
 			}
 		}
 	}
-	getThreadPool().runAndWait(std::move(work));
+	//getThreadPool().runAndWait(std::move(work));
 }
 
 void ShaderCompiler::createShaders(ShaderPermutation permutation, Gfx::OPipelineLayout layout)

@@ -11,7 +11,7 @@ class ThreadPool
 public:
     ThreadPool(uint32 numWorkers = std::thread::hardware_concurrency());
     ~ThreadPool();
-    void runAndWait(List<std::function<void()>> functions);
+    //void runAndWait(List<std::function<void()>> functions);
 private:
     struct Task
     {

@@ -85,10 +85,25 @@ protected:
 };
 DEFINE_REF(CommandBoundResource)
 
+class SamplerHandle : public CommandBoundResource
+{
+public:
+    SamplerHandle(PGraphics graphics, VkSamplerCreateInfo createInfo);
+    virtual ~SamplerHandle();
+    VkSampler sampler;
+};
+DEFINE_REF(SamplerHandle)
+
 class Sampler : public Gfx::Sampler
 {
 public:
-    VkSampler sampler;
+    Sampler(PGraphics graphics, VkSamplerCreateInfo createInfo);
+    virtual ~Sampler();
+    PSamplerHandle getHandle() const { return handle; }
+    VkSampler getSampler() const { return handle->sampler; }
+private:
+    PGraphics graphics;
+    OSamplerHandle handle;
 };
 DEFINE_REF(Sampler)
 

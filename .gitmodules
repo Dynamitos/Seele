@@ -4,3 +4,6 @@
 [submodule "external/vcpkg"]
 	path = external/vcpkg
 	url = https://github.com/Microsoft/vcpkg.git
+[submodule "external/slang"]
+	path = external/slang
+	url = https://github.com/shader-slang/slang.git

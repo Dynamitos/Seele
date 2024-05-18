@@ -26,14 +26,14 @@ public:
     template<typename... Deps>
     void setupView(Dependencies<Deps...>)
     {
-        List<std::function<void()>> work;
+        //List<std::function<void()>> work;
         registry.view<Components..., Deps...>().each([&](Components&... comp, Deps&... deps){
-            work.add([&]() {
+            //work.add([&]() {
                 (accessComponent(deps), ...);
                 update(comp...);
-            });
+            //});
         });
-        getThreadPool().runAndWait(std::move(work));
+        //getThreadPool().runAndWait(std::move(work));
     }
     virtual void run(double delta) override
     {

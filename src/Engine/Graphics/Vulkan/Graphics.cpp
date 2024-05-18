@@ -217,7 +217,6 @@ Gfx::PComputePipeline Graphics::createComputePipeline(Gfx::ComputePipelineCreate
 
 Gfx::OSampler Graphics::createSampler(const SamplerCreateInfo& createInfo) 
 {
-    OSampler sampler = new Sampler();
     VkSamplerCreateInfo vkInfo = {
         .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
         .pNext = nullptr,
@@ -238,8 +237,7 @@ Gfx::OSampler Graphics::createSampler(const SamplerCreateInfo& createInfo)
         .borderColor = cast(createInfo.borderColor),
         .unnormalizedCoordinates = createInfo.unnormalizedCoordinates,
     };
-    VK_CHECK(vkCreateSampler(handle, &vkInfo, nullptr, &sampler->sampler));
-    return sampler;
+    return new Sampler(this, vkInfo);
 }
 
 Gfx::ODescriptorLayout Graphics::createDescriptorLayout(const std::string& name)

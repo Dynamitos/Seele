@@ -282,8 +282,11 @@ void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet, Array<uint
     assert(descriptor->writeDescriptors.size() == 0);
     descriptor->bind();
     boundResources.add(descriptor.getHandle());
-    boundResources.addAll(descriptor->boundResources);
-    descriptor->boundResources.clear();
+    for (auto binding : descriptor->boundResources)
+    {
+        binding->bind();
+        boundResources.add(binding);
+    }
 
     VkDescriptorSet setHandle = descriptor->getHandle();
     vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getLayout(), pipeline->getPipelineLayout()->findParameter(descriptorSet->getName()), 1, &setHandle, dynamicOffsets.size(), dynamicOffsets.data());
@@ -298,10 +301,13 @@ void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorS
         auto descriptorSet = descriptorSets[i].cast<DescriptorSet>();
         assert(descriptorSet->writeDescriptors.size() == 0);
         descriptorSet->bind();
-
         boundResources.add(descriptorSet.getHandle());
-        boundResources.addAll(descriptorSet->boundResources);
-        descriptorSet->boundResources.clear();
+
+        for (auto binding : descriptorSet->boundResources)
+        {
+            binding->bind();
+            boundResources.add(binding);
+        }
         sets[pipeline->getPipelineLayout()->findParameter(descriptorSet->getName())] = descriptorSet->getHandle();
     }
     vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getLayout(), 0, (uint32)descriptorSets.size(), sets, dynamicOffsets.size(), dynamicOffsets.data());
@@ -434,9 +440,12 @@ void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet, Array<uin
     auto descriptor = descriptorSet.cast<DescriptorSet>();
     assert(descriptor->writeDescriptors.size() == 0);
     boundResources.add(descriptor.getHandle());
-    boundResources.addAll(descriptor->boundResources);
-    descriptor->boundResources.clear();
-    descriptor->bind();
+
+    for (auto binding : descriptor->boundResources)
+    {
+        binding->bind();
+        boundResources.add(binding);
+    }
     
     VkDescriptorSet setHandle = descriptor->getHandle();
     vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->getLayout(), pipeline->getPipelineLayout()->findParameter(descriptorSet->getName()), 1, &setHandle, dynamicOffsets.size(), dynamicOffsets.data());
@@ -451,11 +460,14 @@ void ComputeCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptor
         auto descriptorSet = descriptorSets[i].cast<DescriptorSet>();
         assert(descriptorSet->writeDescriptors.size() == 0);
         descriptorSet->bind();
+        boundResources.add(descriptorSet.getHandle());
 
         //std::cout << "Binding descriptor " << descriptorSet->getHandle() << " to cmd " << handle << std::endl;
-        boundResources.add(descriptorSet.getHandle());
-        boundResources.addAll(descriptorSet->boundResources);
-        descriptorSet->boundResources.clear();
+        for (auto binding : descriptorSet->boundResources)
+        {
+            binding->bind();
+            boundResources.add(binding);
+        }
         sets[pipeline->getPipelineLayout()->findParameter(descriptorSet->getName())] = descriptorSet->getHandle();
     }
     vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->getLayout(), 0, (uint32)descriptorSets.size(), sets, dynamicOffsets.size(), dynamicOffsets.data());

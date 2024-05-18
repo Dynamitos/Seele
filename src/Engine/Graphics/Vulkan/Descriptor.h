@@ -67,7 +67,7 @@ private:
   // contains the previously bound resources at every binding
   // since the layout is fixed, trying to bind a texture to a buffer
   // would not work anyways, so casts should be safe
-  Array<void*> cachedData;
+  //Array<void*> cachedData;
   Array<PCommandBoundResource> boundResources;
   VkDescriptorSet setHandle;
   PGraphics graphics;
