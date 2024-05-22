@@ -9,7 +9,7 @@ groupshared Frustum viewFrustum;
 [shader("amplification")]
 void taskMain(
 	uint threadID: SV_GroupIndex,
-	uint groupID: SV_GroupThreadID
+	uint groupID: SV_GroupID
 ){
 	InstanceData instance = pScene.instances[pOffsets.instanceOffset + groupID];
 	MeshData mesh = pScene.meshData[pOffsets.instanceOffset + groupID];

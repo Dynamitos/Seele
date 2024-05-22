@@ -53,8 +53,7 @@ ParameterBlock<Scene> pScene;
 
 struct MeshPayload
 {
-	InstanceData instanceData;
-	MeshData meshData;
+	uint instanceId;
 	uint culledMeshlets[2048];
 };
 

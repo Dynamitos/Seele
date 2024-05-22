@@ -60,6 +60,7 @@ void VertexData::updateMesh(PMesh mesh, Component::Transform& transform)
         });
     const auto& data = meshData[mesh->id];
     matInstanceData.instanceMeshData.add(data);
+    referencedInstance->updateDescriptor();
     for (size_t i = 0; i < 0; ++i)
     {
         auto bounding = meshlets[data.meshletOffset + i].bounding;
@@ -100,7 +101,6 @@ void VertexData::updateMesh(PMesh mesh, Component::Transform& transform)
         addDebugVertex(DebugVertex{ .position = corners[7], .color = meshlets[data.meshletOffset + i].color });
     }
 
-    referencedInstance->updateDescriptor();
 }
 
 void VertexData::createDescriptors()

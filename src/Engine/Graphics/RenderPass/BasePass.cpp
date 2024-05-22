@@ -124,28 +124,42 @@ void BasePass::render()
             assert(collection != nullptr);
             if (graphics->supportMeshShading())
             {
-                Gfx::MeshPipelineCreateInfo pipelineInfo;
-                pipelineInfo.taskShader = collection->taskShader;
-                pipelineInfo.meshShader = collection->meshShader;
-                pipelineInfo.fragmentShader = collection->fragmentShader;
-                pipelineInfo.pipelineLayout = collection->pipelineLayout;
-                pipelineInfo.renderPass = renderPass;
-                pipelineInfo.depthStencilState.depthCompareOp = Gfx::SE_COMPARE_OP_GREATER_OR_EQUAL;
-                pipelineInfo.multisampleState.samples = viewport->getSamples();
-                pipelineInfo.colorBlend.attachmentCount = 2;
+                Gfx::MeshPipelineCreateInfo pipelineInfo = {
+                    .taskShader = collection->taskShader,
+                    .meshShader = collection->meshShader,
+                    .fragmentShader = collection->fragmentShader,
+                    .renderPass = renderPass,
+                    .pipelineLayout = collection->pipelineLayout,
+                    .multisampleState = {
+                        .samples = viewport->getSamples(),
+                    },
+                    .depthStencilState = {
+                        .depthCompareOp = Gfx::SE_COMPARE_OP_GREATER_OR_EQUAL,
+                    },
+                    .colorBlend = {
+                        .attachmentCount = 2,
+                    },
+                };
                 Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
                 command->bindPipeline(pipeline);
             }
             else
             {
-                Gfx::LegacyPipelineCreateInfo pipelineInfo;
-                pipelineInfo.vertexShader = collection->vertexShader;
-                pipelineInfo.fragmentShader = collection->fragmentShader;
-                pipelineInfo.pipelineLayout = collection->pipelineLayout;
-                pipelineInfo.renderPass = renderPass;
-                pipelineInfo.depthStencilState.depthCompareOp = Gfx::SE_COMPARE_OP_GREATER_OR_EQUAL;
-                pipelineInfo.multisampleState.samples = viewport->getSamples();
-                pipelineInfo.colorBlend.attachmentCount = 2;
+                Gfx::LegacyPipelineCreateInfo pipelineInfo = {
+                    .vertexShader = collection->vertexShader,
+                    .fragmentShader = collection->fragmentShader,
+                    .renderPass = renderPass,
+                    .pipelineLayout = collection->pipelineLayout,
+                    .multisampleState = {
+                        .samples = viewport->getSamples(),
+                    },
+                    .depthStencilState = {
+                        .depthCompareOp = Gfx::SE_COMPARE_OP_GREATER_OR_EQUAL,
+                    },
+                    .colorBlend = {
+                        .attachmentCount = 2,
+                    },
+                };
                 Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
                 command->bindPipeline(pipeline);
             }
@@ -154,9 +168,9 @@ void BasePass::render()
             command->bindDescriptor(scene->getLightEnvironment()->getDescriptorSet());
             command->bindDescriptor(opaqueCulling);
             command->bindDescriptor(vertexData->getInstanceDataSet());
+            command->bindDescriptor(vertexData->getInstanceDataSet());
             for (const auto& drawCall : materialData.instances)
             {
-                command->bindDescriptor(vertexData->getInstanceDataSet());
                 command->bindDescriptor(drawCall.materialInstance->getDescriptorSet());
                 command->pushConstants(Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_VERTEX_BIT, 0, sizeof(VertexData::DrawCallOffsets), &drawCall.offsets);
                 if (graphics->supportMeshShading())
@@ -166,10 +180,11 @@ void BasePass::render()
                 else
                 {
                     command->bindIndexBuffer(vertexData->getIndexBuffer());
+                    uint32 inst = drawCall.offsets.instanceOffset;
                     for (const auto& meshData : drawCall.instanceMeshData)
                     {
                         // all meshlets of a mesh share the same indices offset
-                        command->drawIndexed(meshData.numIndices, 1, meshData.firstIndex, vertexData->getIndicesOffset(meshData.meshletOffset), 0);
+                        command->drawIndexed(meshData.numIndices, 1, meshData.firstIndex, vertexData->getIndicesOffset(meshData.meshletOffset), inst++);
                     }
                 }
             }

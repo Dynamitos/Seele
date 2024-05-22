@@ -18,8 +18,8 @@ void meshMain(
 	out vertices FragmentParameter vertices[MAX_VERTICES], 
 	out indices uint3 indices[MAX_PRIMITIVES]
 ){
-	InstanceData inst = meshPayload.instanceData;
-	MeshData data = meshPayload.meshData;
+	InstanceData inst = pScene.instanceData[meshPayload.instanceId];
+	MeshData data = pScene.meshData[meshPayload.instanceId];
 	MeshletDescription m = pScene.meshletInfos[data.meshletOffset + groupID];
 	SetMeshOutputCounts(m.vertexCount, m.primitiveCount);
 	

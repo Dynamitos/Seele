@@ -95,7 +95,7 @@ target_compile_definitions(Editor PRIVATE EDITOR=1)
 add_executable(AssetViewer "")
 target_link_libraries(AssetViewer PRIVATE Engine)
 target_include_directories(AssetViewer PRIVATE src/AssetViewer)
-    
+
 if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
     target_compile_options(Engine PUBLIC /std:c++20 /Zi /MP14 /W4 /wd4505)

@@ -7,7 +7,7 @@ import Scene;
 FragmentParameter vertexMain(
 	VertexInput input
 ){
-	InstanceData inst = pScene.instances[pOffsets.instanceOffset + input.instanceId];
+	InstanceData inst = pScene.instances[input.instanceId];
 	VertexAttributes attr = pVertexData.getAttributes(input.vertexId);
 	return attr.getParameter(inst.transformMatrix);
 }
