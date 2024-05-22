@@ -44,13 +44,10 @@ public:
     struct DrawCallOffsets
     {
         uint32 instanceOffset = 0;
-        uint32 cullingCounterOffset = 0;
     };
     struct BatchedDrawCall
     {
         PMaterialInstance materialInstance;
-        uint64 numMeshes = 0;
-        uint64 numMeshlets = 0;
         DrawCallOffsets offsets;
         Array<InstanceData> instanceData;
         Array<MeshData> instanceMeshData;
@@ -78,6 +75,7 @@ public:
     Gfx::PDescriptorSet getInstanceDataSet() { return descriptorSet; }
     const Array<MaterialData>& getMaterialData() const { return materialData; }
     const MeshData& getMeshData(MeshId id) { return meshData[id]; }
+    uint64 getIndicesOffset(uint32 meshletIndex) { return meshlets[meshletIndex].indicesOffset; }
     static List<VertexData*> getList();
     static VertexData* findByTypeName(std::string name);
     virtual void init(Gfx::PGraphics graphics);
@@ -113,8 +111,8 @@ protected:
     Gfx::OShaderBuffer vertexIndicesBuffer;
     Gfx::OShaderBuffer primitiveIndicesBuffer;
     // temporary meshlet culling buffer, passed from task to mesh shader
-    Gfx::OShaderBuffer cullingBuffer;
-    Gfx::OShaderBuffer cullingOffsetBuffer;
+    //Gfx::OShaderBuffer cullingBuffer;
+    //Gfx::OShaderBuffer cullingOffsetBuffer;
     // for legacy pipeline
     Gfx::OIndexBuffer indexBuffer;
     // Material data

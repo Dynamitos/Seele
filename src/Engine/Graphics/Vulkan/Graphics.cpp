@@ -399,7 +399,7 @@ void Graphics::initInstance(GraphicsInitializer initInfo)
         .applicationVersion = VK_MAKE_VERSION(0, 0, 1),
         .pEngineName = initInfo.engineName,
         .engineVersion = VK_MAKE_VERSION(0, 0, 1),
-        .apiVersion = VK_API_VERSION_1_2,
+        .apiVersion = VK_API_VERSION_1_3,
     };
     
     Array<const char*> extensions = getRequiredExtensions();
@@ -496,7 +496,7 @@ void Graphics::pickPhysicalDevice()
         {
             if (std::strcmp(VK_EXT_MESH_SHADER_EXTENSION_NAME, extensionProps[i].extensionName) == 0)
             {
-                meshShadingEnabled = true;
+                //meshShadingEnabled = true;
                 break;
             }
         }

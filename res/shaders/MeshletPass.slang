@@ -18,8 +18,9 @@ void meshMain(
 	out vertices FragmentParameter vertices[MAX_VERTICES], 
 	out indices uint3 indices[MAX_PRIMITIVES]
 ){
-	InstanceData inst = pScene.instances[meshPayload.instanceId];
-	MeshletDescription m = pScene.meshletInfos[pScene.culledMeshlets[meshPayload.cullingOffset + groupID]];
+	InstanceData inst = meshPayload.instanceData;
+	MeshData data = meshPayload.meshData;
+	MeshletDescription m = pScene.meshletInfos[data.meshletOffset + groupID];
 	SetMeshOutputCounts(m.vertexCount, m.primitiveCount);
 	
 	for(uint i = threadID; i < MAX_PRIMITIVES; i += MESH_GROUP_SIZE)
@@ -32,7 +33,7 @@ void meshMain(
 			indices[p] = uint3(local_idx0, local_idx1, local_idx2);
 		}
 	}
-	for(uint i = threadID; i < MAX_VERTICES; i+=MESH_GROUP_SIZE)
+	for(uint i = threadID; i < MAX_VERTICES; i += MESH_GROUP_SIZE)
 	{
 		uint v = min(i, m.vertexCount - 1);
 		{

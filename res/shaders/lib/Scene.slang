@@ -34,7 +34,6 @@ struct InstanceData
 struct DrawCallOffsets
 {
 	uint32_t instanceOffset;
-	uint32_t cullingCounterOffset;
 };
 layout(push_constant)
 ConstantBuffer<DrawCallOffsets> pOffsets;
@@ -46,15 +45,16 @@ struct Scene
 	StructuredBuffer<MeshletDescription> meshletInfos;
 	StructuredBuffer<uint8_t> primitiveIndices;
 	StructuredBuffer<uint32_t> vertexIndices;
-	StructuredBuffer<uint32_t> cullingOffsets;
-	RWStructuredBuffer<uint32_t> culledMeshlets;
+//	StructuredBuffer<uint32_t> cullingOffsets;
+//	RWStructuredBuffer<uint32_t> culledMeshlets;
 };
 layout(set=2)
 ParameterBlock<Scene> pScene;
 
 struct MeshPayload
 {
-	uint instanceId;
-	uint cullingOffset;
+	InstanceData instanceData;
+	MeshData meshData;
+	uint culledMeshlets[2048];
 };
 

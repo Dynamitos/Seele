@@ -38,6 +38,7 @@ void RenderPass::beginFrame(const Component::Camera& cam)
         .size = sizeof(ViewParameter),
         .data = (uint8*)&viewParams,
     };
+    viewParamsBuffer->rotateBuffer(sizeof(ViewParameter));
     viewParamsBuffer->updateContents(uniformUpdate);
     viewParamsBuffer->pipelineBarrier(
         Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, 

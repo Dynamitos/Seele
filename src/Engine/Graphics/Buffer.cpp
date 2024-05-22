@@ -44,51 +44,19 @@ IndexBuffer::~IndexBuffer()
 }
 UniformBuffer::UniformBuffer(QueueFamilyMapping mapping, const DataSource& sourceData)
 	: Buffer(mapping, sourceData.owner)
-	, contents(sourceData.size)
-{
-	if (sourceData.data != nullptr)
-	{
-		std::memcpy(contents.data(), sourceData.data, contents.size());
-	}
-}
+{}
 
 UniformBuffer::~UniformBuffer()
 {
 }
 
-bool UniformBuffer::updateContents(const DataSource& sourceData)
-{
-	assert(contents.size() == sourceData.size);
-	if (std::memcmp(contents.data(), sourceData.data, contents.size()) == 0)
-	{
-		return false;
-	}
-	std::memcpy(contents.data(), sourceData.data, contents.size());
-	return true;
-}
-
 ShaderBuffer::ShaderBuffer(QueueFamilyMapping mapping, uint32 numElements, const DataSource& sourceData)
 	: Buffer(mapping, sourceData.owner)
-	, contents(sourceData.size)
 	, numElements(numElements)
 {
-	if (sourceData.data != nullptr)
-	{
-		std::memcpy(contents.data(), sourceData.data, sourceData.size);
-	}
 }
 
 ShaderBuffer::~ShaderBuffer()
 {
-}
-
-void ShaderBuffer::updateContents(const ShaderBufferCreateInfo& createInfo)
-{
-	contents.resize(createInfo.sourceData.size);
-	numElements = createInfo.numElements;
-	if (createInfo.sourceData.data != nullptr)
-	{
-		std::memcpy(contents.data(), createInfo.sourceData.data, createInfo.sourceData.size);
-	}
 }
 

@@ -103,7 +103,8 @@ class UniformBuffer : public Gfx::UniformBuffer, public Buffer {
 public:
   UniformBuffer(PGraphics graphics, const UniformBufferCreateInfo &sourceData);
   virtual ~UniformBuffer();
-  virtual bool updateContents(const DataSource &sourceData) override;
+  virtual void updateContents(const DataSource &sourceData) override;
+  virtual void rotateBuffer(uint64 size) override;
 
 protected:
   // Inherited via Vulkan::Buffer

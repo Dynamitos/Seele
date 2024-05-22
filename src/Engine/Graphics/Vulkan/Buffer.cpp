@@ -222,6 +222,7 @@ void Buffer::unmap() {
 }
 
 void Buffer::rotateBuffer(uint64 size) {
+    assert(dynamic);
   size = std::max(getSize(), size);
   for (size_t i = 0; i < buffers.size(); ++i) {
     if (buffers[i]->isCurrentlyBound()) {
@@ -316,15 +317,15 @@ UniformBuffer::UniformBuffer(PGraphics graphics,
 
 UniformBuffer::~UniformBuffer() {}
 
-bool UniformBuffer::updateContents(const DataSource &sourceData) {
-  if (!Gfx::UniformBuffer::updateContents(sourceData)) {
-    // no update was performed, skip
-    return false;
-  }
+void UniformBuffer::updateContents(const DataSource &sourceData) {
   void *data = map();
   std::memcpy(data, sourceData.data, sourceData.size);
   unmap();
-  return true;
+}
+
+void UniformBuffer::rotateBuffer(uint64 size)
+{
+    Vulkan::Buffer::rotateBuffer(size);
 }
 
 void UniformBuffer::requestOwnershipTransfer(Gfx::QueueType newOwner) {
@@ -368,11 +369,10 @@ ShaderBuffer::ShaderBuffer(PGraphics graphics,
 ShaderBuffer::~ShaderBuffer() {}
 
 void ShaderBuffer::updateContents(const ShaderBufferCreateInfo &createInfo) {
-  Gfx::ShaderBuffer::updateContents(createInfo);
-  // We always want to update, as the contents could be different on the GPU
   if (createInfo.sourceData.data == nullptr) {
     return;
   }
+  // We always want to update, as the contents could be different on the GPU
   void *data = map();
   std::memcpy((char*)data + createInfo.sourceData.offset, createInfo.sourceData.data, createInfo.sourceData.size);
   unmap();

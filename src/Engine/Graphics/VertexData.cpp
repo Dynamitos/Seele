@@ -18,7 +18,7 @@ void VertexData::resetMeshData()
     std::unique_lock l(materialDataLock);
     for (auto& mat : materialData)
     {
-        for (auto inst : mat.instances)
+        for (auto& inst : mat.instances)
         {
             inst.instanceData.clear();
             inst.instanceMeshData.clear();
@@ -51,15 +51,15 @@ void VertexData::updateMesh(PMesh mesh, Component::Transform& transform)
         matData.instances.resize(referencedInstance->getId() + 1);
     }
     BatchedDrawCall& matInstanceData = matData.instances[referencedInstance->getId()];
-    const auto& data = meshData[mesh->id];
+    matInstanceData.materialInstance = referencedInstance;
 
     Matrix4 transformMatrix = transform.toMatrix() * mesh->transform;
     matInstanceData.instanceData.add(InstanceData{
         .transformMatrix = transformMatrix,
         .inverseTransformMatrix = glm::inverse(transformMatrix),
         });
+    const auto& data = meshData[mesh->id];
     matInstanceData.instanceMeshData.add(data);
-    matInstanceData.numMeshes++;
     for (size_t i = 0; i < 0; ++i)
     {
         auto bounding = meshlets[data.meshletOffset + i].bounding;
@@ -100,7 +100,6 @@ void VertexData::updateMesh(PMesh mesh, Component::Transform& transform)
         addDebugVertex(DebugVertex{ .position = corners[7], .color = meshlets[data.meshletOffset + i].color });
     }
 
-    matInstanceData.materialInstance = referencedInstance;
     referencedInstance->updateDescriptor();
 }
 
@@ -111,53 +110,52 @@ void VertexData::createDescriptors()
     instanceData.clear();
     instanceMeshData.clear();
 
-    uint32 numMeshlets = 0;
-    Array<uint32> cullingOffsets;
+    //uint32 numMeshlets = 0;
+    //Array<uint32> cullingOffsets;
     for (auto& mat : materialData)
     {
         for (auto& instance : mat.instances)
         {
             instance.offsets.instanceOffset = instanceData.size();
-            instance.offsets.cullingCounterOffset = cullingOffsets.size();
-            instance.numMeshes = instance.instanceData.size();
-            instance.numMeshlets = 0;
+            //instance.offsets.cullingCounterOffset = cullingOffsets.size();
+            //instance.numMeshlets = 0;
             for (size_t i = 0; i < instance.instanceData.size(); ++i)
             {
                 instanceData.add(instance.instanceData[i]);
                 instanceMeshData.add(instance.instanceMeshData[i]);
-                instance.numMeshlets += instance.instanceMeshData[i].numMeshlets;
-                cullingOffsets.add(numMeshlets);
-                numMeshlets += instance.numMeshlets;
+                //instance.numMeshlets += instance.instanceMeshData[i].numMeshlets;
+                //cullingOffsets.add(numMeshlets);
+                //numMeshlets += instance.numMeshlets;
             }
         }
     }
-    cullingOffsetBuffer->rotateBuffer(cullingOffsets.size() * sizeof(uint32));
-    cullingOffsetBuffer->updateContents(ShaderBufferCreateInfo{
-        .sourceData = {
-            .size = cullingOffsets.size() * sizeof(uint32),
-            .data = (uint8*)cullingOffsets.data(),
-        },
-        .numElements = cullingOffsets.size()
-        });
-    cullingOffsetBuffer->pipelineBarrier(
-        Gfx::SE_ACCESS_TRANSFER_WRITE_BIT,
-        Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
-        Gfx::SE_ACCESS_MEMORY_READ_BIT,
-        Gfx::SE_PIPELINE_STAGE_TASK_SHADER_BIT_EXT
-    );
-    cullingBuffer->rotateBuffer(numMeshlets * sizeof(uint32));
-    cullingBuffer->updateContents(ShaderBufferCreateInfo{
-        .sourceData = {
-            .size = numMeshlets * sizeof(uint32),
-            },
-        .numElements = numMeshlets
-        });
-    cullingBuffer->pipelineBarrier(
-        Gfx::SE_ACCESS_TRANSFER_WRITE_BIT,
-        Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
-        Gfx::SE_ACCESS_MEMORY_WRITE_BIT,
-        Gfx::SE_PIPELINE_STAGE_MESH_SHADER_BIT_EXT
-    );
+    //cullingOffsetBuffer->rotateBuffer(cullingOffsets.size() * sizeof(uint32));
+    //cullingOffsetBuffer->updateContents(ShaderBufferCreateInfo{
+    //    .sourceData = {
+    //        .size = cullingOffsets.size() * sizeof(uint32),
+    //        .data = (uint8*)cullingOffsets.data(),
+    //    },
+    //    .numElements = cullingOffsets.size()
+    //    });
+    //cullingOffsetBuffer->pipelineBarrier(
+    //    Gfx::SE_ACCESS_TRANSFER_WRITE_BIT,
+    //    Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
+    //    Gfx::SE_ACCESS_MEMORY_READ_BIT,
+    //    Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT
+    //);
+    //cullingBuffer->rotateBuffer(numMeshlets * sizeof(uint32));
+    //cullingBuffer->updateContents(ShaderBufferCreateInfo{
+    //    .sourceData = {
+    //        .size = numMeshlets * sizeof(uint32),
+    //        },
+    //    .numElements = numMeshlets
+    //    });
+    //cullingBuffer->pipelineBarrier(
+    //    Gfx::SE_ACCESS_TRANSFER_WRITE_BIT,
+    //    Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
+    //    Gfx::SE_ACCESS_MEMORY_WRITE_BIT,
+    //    Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT
+    //);
     instanceBuffer->rotateBuffer(instanceData.size() * sizeof(InstanceData));
     instanceBuffer->updateContents(ShaderBufferCreateInfo{
         .sourceData = {
@@ -170,7 +168,7 @@ void VertexData::createDescriptors()
         Gfx::SE_ACCESS_TRANSFER_WRITE_BIT,
         Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
         Gfx::SE_ACCESS_MEMORY_READ_BIT,
-        Gfx::SE_PIPELINE_STAGE_VERTEX_SHADER_BIT | Gfx::SE_PIPELINE_STAGE_TASK_SHADER_BIT_EXT
+        Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT
     );
 
     instanceMeshDataBuffer->rotateBuffer(sizeof(MeshData) * instanceMeshData.size());
@@ -185,7 +183,7 @@ void VertexData::createDescriptors()
         Gfx::SE_ACCESS_TRANSFER_WRITE_BIT,
         Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
         Gfx::SE_ACCESS_MEMORY_READ_BIT,
-        Gfx::SE_PIPELINE_STAGE_VERTEX_SHADER_BIT | Gfx::SE_PIPELINE_STAGE_TASK_SHADER_BIT_EXT
+        Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT
     );
     instanceDataLayout->reset();
     descriptorSet = instanceDataLayout->allocateDescriptorSet();
@@ -194,14 +192,15 @@ void VertexData::createDescriptors()
     descriptorSet->updateBuffer(2, meshletBuffer);
     descriptorSet->updateBuffer(3, primitiveIndicesBuffer);
     descriptorSet->updateBuffer(4, vertexIndicesBuffer);
-    descriptorSet->updateBuffer(5, cullingOffsetBuffer);
-    descriptorSet->updateBuffer(6, cullingBuffer);
+    //descriptorSet->updateBuffer(5, cullingOffsetBuffer);
+    //descriptorSet->updateBuffer(6, cullingBuffer);
 
     descriptorSet->writeChanges();
 }
 
 void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet> loadedMeshlets)
 {
+    assert(loadedMeshlets.size() < 2048);
     std::unique_lock l(vertexDataLock);
     meshlets.reserve(meshlets.size() + loadedMeshlets.size());
     vertexIndices.reserve(vertexIndices.size() + loadedMeshlets.size() * Gfx::numVerticesPerMeshlet);
@@ -232,10 +231,10 @@ void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet>
         .bounding = meshAABB,//.toSphere(),
         .numMeshlets = (uint32)loadedMeshlets.size(),
         .meshletOffset = meshletOffset,
+        .firstIndex = (uint32)indices.size(),
+        .numIndices = (uint32)loadedIndices.size(),
     };
 
-    meshData[id].firstIndex = indices.size();
-    meshData[id].numIndices = loadedIndices.size();
     if (!graphics->supportMeshShading())
     {
         indices.resize(indices.size() + loadedIndices.size());
@@ -340,18 +339,18 @@ void VertexData::init(Gfx::PGraphics _graphics)
     // vertexIndices
     instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{ .binding = 4, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER });
     // cullingList
-    instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{ .binding = 5, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER });
+    //instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{ .binding = 5, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER });
     // cullingOffset
-    instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{ .binding = 6, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER });
+    //instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{ .binding = 6, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER });
 
-    cullingOffsetBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{ 
-        .dynamic = true,
-        .name = "MeshletOffset",
-        });
-    cullingBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{ 
-        .dynamic = true,
-        .name = "MeshletCulling",
-        });
+    //cullingOffsetBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{ 
+    //    .dynamic = true,
+    //    .name = "MeshletOffset",
+    //    });
+    //cullingBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{ 
+    //    .dynamic = true,
+    //    .name = "MeshletCulling",
+    //    });
     instanceBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{ 
         .dynamic = true,
         .name = "InstanceBuffer",

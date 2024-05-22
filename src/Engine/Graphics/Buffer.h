@@ -64,25 +64,11 @@ class UniformBuffer : public Buffer {
 public:
   UniformBuffer(QueueFamilyMapping mapping, const DataSource &sourceData);
   virtual ~UniformBuffer();
-  // returns true if an update was performed, false if the old contents == new
-  // contents
-  virtual bool updateContents(const DataSource &sourceData);
-  bool isDataEquals(PUniformBuffer other) {
-    if (other == nullptr) {
-      return false;
-    }
-    if (contents.size() != other->contents.size()) {
-      return false;
-    }
-    if (std::memcmp(contents.data(), other->contents.data(), contents.size()) !=
-        0) {
-      return false;
-    }
-    return true;
-  }
+
+  virtual void rotateBuffer(uint64 size) = 0;
+  virtual void updateContents(const DataSource &sourceData) = 0;
 
 protected:
-  Array<uint8> contents;
   // Inherited via QueueOwnedResource
   virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
   virtual void executePipelineBarrier(SeAccessFlags srcAccess,
@@ -97,7 +83,7 @@ public:
                const DataSource &bulkResourceData);
   virtual ~ShaderBuffer();
   virtual void rotateBuffer(uint64 size) = 0;
-  virtual void updateContents(const ShaderBufferCreateInfo &sourceData);
+  virtual void updateContents(const ShaderBufferCreateInfo &sourceData) = 0;
   constexpr uint32 getNumElements() const { return numElements; }
   virtual void *mapRegion(uint64 offset = 0, uint64 size = -1,
                           bool writeOnly = true) = 0;
@@ -111,7 +97,6 @@ protected:
                                       SeAccessFlags dstAccess,
                                       SePipelineStageFlags dstStage) = 0;
 
-  Array<uint8> contents;
   uint32 numElements;
 };
 DEFINE_REF(ShaderBuffer)

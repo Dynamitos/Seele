@@ -33,7 +33,7 @@ BasePass::BasePass(Gfx::PGraphics graphics, PScene scene)
 
     basePassLayout->addDescriptorLayout(lightCullingLayout);
     basePassLayout->addPushConstants(Gfx::SePushConstantRange{
-        .stageFlags = Gfx::SE_SHADER_STAGE_TASK_BIT_EXT,
+        .stageFlags = Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_VERTEX_BIT,
         .offset = 0,
         .size = sizeof(VertexData::DrawCallOffsets),
         });
@@ -145,7 +145,7 @@ void BasePass::render()
                 pipelineInfo.renderPass = renderPass;
                 pipelineInfo.depthStencilState.depthCompareOp = Gfx::SE_COMPARE_OP_GREATER_OR_EQUAL;
                 pipelineInfo.multisampleState.samples = viewport->getSamples();
-                pipelineInfo.colorBlend.attachmentCount = 1;
+                pipelineInfo.colorBlend.attachmentCount = 2;
                 Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
                 command->bindPipeline(pipeline);
             }
@@ -153,27 +153,24 @@ void BasePass::render()
             command->bindDescriptor(viewParamsSet);
             command->bindDescriptor(scene->getLightEnvironment()->getDescriptorSet());
             command->bindDescriptor(opaqueCulling);
+            command->bindDescriptor(vertexData->getInstanceDataSet());
             for (const auto& drawCall : materialData.instances)
             {
-                command->bindDescriptor(drawCall.materialInstance->getDescriptorSet());
                 command->bindDescriptor(vertexData->getInstanceDataSet());
-                command->pushConstants(Gfx::SE_SHADER_STAGE_TASK_BIT_EXT, 0, sizeof(VertexData::DrawCallOffsets), &drawCall.offsets);
+                command->bindDescriptor(drawCall.materialInstance->getDescriptorSet());
+                command->pushConstants(Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_VERTEX_BIT, 0, sizeof(VertexData::DrawCallOffsets), &drawCall.offsets);
                 if (graphics->supportMeshShading())
                 {
-                    command->drawMesh(drawCall.numMeshes, 1, 1);
+                    command->drawMesh(drawCall.instanceMeshData.size(), 1, 1);
                 }
                 else
                 {
-                    //command->bindIndexBuffer(vertexData->getIndexBuffer());
-                    //uint32 instanceOffset = 0;
-                    //for (const auto& meshData : vertexData->getMeshData(instance.meshId))
-                    //{
-                    //    if (meshData.numIndices > 0)
-                    //    {
-                    //        command->drawIndexed(meshData.numIndices, 1, meshData.firstIndex, meshData.indicesOffset, instanceOffset);
-                    //    }
-                    //    instanceOffset++;
-                    //}
+                    command->bindIndexBuffer(vertexData->getIndexBuffer());
+                    for (const auto& meshData : drawCall.instanceMeshData)
+                    {
+                        // all meshlets of a mesh share the same indices offset
+                        command->drawIndexed(meshData.numIndices, 1, meshData.firstIndex, vertexData->getIndicesOffset(meshData.meshletOffset), 0);
+                    }
                 }
             }
             commands.add(std::move(command));
