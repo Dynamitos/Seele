@@ -45,5 +45,5 @@ void taskMain(
 		}
 	}
 	GroupMemoryBarrierWithGroupSync();
-	DispatchMesh(mesh.numMeshlets, 1, 1, p);
+	DispatchMesh(head, 1, 1, p);
 }
