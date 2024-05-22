@@ -28,24 +28,22 @@ void taskMain(
 		viewFrustum.sides[1] = computePlane(origin, corners[1], corners[3]);
 		viewFrustum.sides[2] = computePlane(origin, corners[0], corners[1]);
 		viewFrustum.sides[3] = computePlane(origin, corners[3], corners[2]);
-		//p.instanceId = pOffsets.instanceOffset + groupID;
-		p.instanceData = instance;
-		p.meshData = mesh;
+		p.instanceId = pOffsets.instanceOffset + groupID;
 		//p.cullingOffset = pScene.cullingOffsets[pOffsets.cullingCounterOffset + groupID];
 	}
 	GroupMemoryBarrierWithGroupSync();
-	//for(uint i = threadID; i < mesh.numMeshlets; i += TASK_GROUP_SIZE)
-	//{
-	//	uint m = mesh.meshletOffset + i;
-	//	MeshletDescription meshlet = pScene.meshletInfos[m];
-	//	//if(meshlet.bounding.insideFrustum(viewFrustum))
-	//	{
-	//		uint index;
-	//		InterlockedAdd(head, 1, index);
-	//		p.culledMeshlets[index] = m;
-	//		//pScene.culledMeshlets[p.cullingOffset + index] = m;
-	//	}
-	//}
-	//GroupMemoryBarrierWithGroupSync();
+	for(uint i = threadID; i < mesh.numMeshlets; i += TASK_GROUP_SIZE)
+	{
+		uint m = mesh.meshletOffset + i;
+		MeshletDescription meshlet = pScene.meshletInfos[m];
+		if(meshlet.bounding.insideFrustum(viewFrustum))
+		{
+			uint index;
+			InterlockedAdd(head, 1, index);
+			p.culledMeshlets[index] = m;
+			//pScene.culledMeshlets[p.cullingOffset + index] = m;
+		}
+	}
+	GroupMemoryBarrierWithGroupSync();
 	DispatchMesh(mesh.numMeshlets, 1, 1, p);
 }
