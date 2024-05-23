@@ -9,9 +9,9 @@ namespace Seele
 class ThreadPool
 {
 public:
-    ThreadPool(uint32 numWorkers = std::thread::hardware_concurrency());
+    ThreadPool(uint32 numWorkers = std::thread::hardware_concurrency() - 2);
     ~ThreadPool();
-    //void runAndWait(List<std::function<void()>> functions);
+    void runAndWait(List<std::function<void()>> functions);
 private:
     struct Task
     {

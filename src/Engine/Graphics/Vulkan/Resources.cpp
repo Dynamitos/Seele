@@ -69,7 +69,8 @@ void Fence::reset()
 {
     if (signaled)
     {
-        vkResetFences(graphics->getDevice(), 1, &fence);
+        VK_CHECK(vkResetFences(graphics->getDevice(), 1, &fence));
+        //std::cout << vkGetFenceStatus(graphics->getDevice(), fence) << std::endl;
         signaled = false;
     }
 }

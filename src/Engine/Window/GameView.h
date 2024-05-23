@@ -6,8 +6,6 @@
 #include "Graphics/RenderPass/BasePass.h"
 #include "Graphics/RenderPass/SkyboxRenderPass.h"
 #include "Graphics/RenderPass/DebugPass.h"
-#include "Graphics/RenderPass/StaticDepthPrepass.h"
-#include "Graphics/RenderPass/StaticBasePass.h"
 #include "System/KeyboardInput.h"
 #ifdef WIN32
 #include "Platform/Windows/GameInterface.h" // TODO

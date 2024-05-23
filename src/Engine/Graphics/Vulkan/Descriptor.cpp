@@ -388,7 +388,7 @@ void PipelineLayout::create() {
 
   std::unique_lock l(layoutLock);
   if (cachedLayouts.contains(layoutHash)) {
-      std::cout << "New Layout" << std::endl;
+    //  std::cout << "New Layout" << std::endl;
     layoutHandle = cachedLayouts[layoutHash];
     return;
   }

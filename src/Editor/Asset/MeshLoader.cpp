@@ -38,7 +38,7 @@ void MeshLoader::importAsset(MeshImportArgs args)
     PMeshAsset ref = asset;
     asset->setStatus(Asset::Status::Loading);
     AssetRegistry::get().registerMesh(std::move(asset));
-    import(args, ref);
+import(args, ref);
 }
 
 
@@ -59,9 +59,10 @@ void MeshLoader::loadTextures(const aiScene* scene, const std::filesystem::path&
         aiTexture* tex = scene->mTextures[i];
         auto texPath = std::filesystem::path(tex->mFilename.C_Str());
         if (std::filesystem::exists(texPath))
-        { }
-        else if(std::filesystem::exists(meshDirectory / texPath))
-        { 
+        {
+        }
+        else if (std::filesystem::exists(meshDirectory / texPath))
+        {
             texPath = meshDirectory / texPath;
         }
         else
@@ -112,7 +113,7 @@ constexpr const char* KEY_AMBIENT_OCCLUSION_TEXTURE = "tex_ao";
 
 void MeshLoader::loadMaterials(const aiScene* scene, const Array<PTextureAsset>& textures, const std::string& baseName, const std::filesystem::path& meshDirectory, const std::string& importPath, Array<PMaterialInstanceAsset>& globalMaterials)
 {
-    for(uint32 m = 0; m < scene->mNumMaterials; ++m)
+    for (uint32 m = 0; m < scene->mNumMaterials; ++m)
     {
         aiMaterial* material = scene->mMaterials[m];
         aiString texPath;
@@ -186,6 +187,15 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Array<PTextureAsset>&
                 {
                     AssetImporter::importTexture(TextureImportArgs{
                     .filePath = meshDirectory / texFilename,
+                    .importPath = importPath,
+                    .type = type == aiTextureType_NORMALS ? TextureImportType::TEXTURE_NORMAL : TextureImportType::TEXTURE_2D,
+                        });
+                    texture = AssetRegistry::findTexture(importPath, texFilename.stem().string());
+                }
+                else if (std::filesystem::exists(meshDirectory.parent_path() / "textures" / texFilename))
+                {
+                    AssetImporter::importTexture(TextureImportArgs{
+                    .filePath = meshDirectory.parent_path() / "textures" / texFilename,
                     .importPath = importPath,
                     .type = type == aiTextureType_NORMALS ? TextureImportType::TEXTURE_NORMAL : TextureImportType::TEXTURE_2D,
                         });
@@ -306,7 +316,7 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Array<PTextureAsset>&
                 expressions.back()->inputs["rhs"].source = strengthKey;
 
                 result = blendKey;
-                
+
             };
 
         // Diffuse
@@ -388,7 +398,7 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Array<PTextureAsset>&
             expressions.back()->key = "NormalMul";
             expressions.back()->inputs["lhs"].source = "2";
             expressions.back()->inputs["rhs"].source = outputNormal;
-            
+
             expressions.add(new SubExpression());
             expressions.back()->key = "NormalSub";
             expressions.back()->inputs["lhs"].source = "NormalMul";
@@ -430,10 +440,10 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Array<PTextureAsset>&
 
         OMaterialAsset baseMat = new MaterialAsset(importPath, materialName);
         baseMat->material = new Material(graphics,
-            std::move(materialLayout), 
-            uniformSize, 0, materialName, 
-            std::move(expressions), 
-            std::move(parameters), 
+            std::move(materialLayout),
+            uniformSize, 0, materialName,
+            std::move(expressions),
+            std::move(parameters),
             std::move(brdf)
         );
         baseMat->material->compile();
@@ -447,7 +457,7 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Array<PTextureAsset>&
     }
 }
 
-void findMeshRoots(aiNode *node, List<aiNode *> &meshNodes)
+void findMeshRoots(aiNode* node, List<aiNode*>& meshNodes)
 {
     if (node->mNumMeshes > 0)
     {
@@ -508,7 +518,7 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
                 tangents[i] = Vector(0, 0, 1);
                 biTangents[i] = Vector(1, 0, 0);
             }
-            if(mesh->HasVertexColors(0))
+            if (mesh->HasVertexColors(0))
             {
                 colors[i] = Vector(mesh->mColors[0][i].r, mesh->mColors[0][i].g, mesh->mColors[0][i].b);
             }
@@ -577,7 +587,7 @@ aiMatrix4x4 loadNodeTransform(aiNode* node)
 
 void MeshLoader::import(MeshImportArgs args, PMeshAsset meshAsset)
 {
-    std::cout << "Starting to import "<<args.filePath<< std::endl;
+    std::cout << "Starting to import " << args.filePath << std::endl;
     meshAsset->setStatus(Asset::Status::Loading);
     Assimp::Importer importer;
     importer.ReadFile(args.filePath.string().c_str(), (uint32)(
@@ -587,28 +597,28 @@ void MeshLoader::import(MeshImportArgs args, PMeshAsset meshAsset)
         aiProcess_SortByPType |
         aiProcess_GenBoundingBoxes |
         aiProcess_GenSmoothNormals |
-        aiProcess_ImproveCacheLocality | 
+        aiProcess_ImproveCacheLocality |
         aiProcess_GenUVCoords |
         aiProcess_FindDegenerates));
-    const aiScene *scene = importer.ApplyPostProcessing(aiProcess_CalcTangentSpace);
+    const aiScene* scene = importer.ApplyPostProcessing(aiProcess_CalcTangentSpace);
     std::cout << importer.GetErrorString() << std::endl;
 
     Array<PTextureAsset> textures;
     loadTextures(scene, args.filePath.parent_path(), args.importPath, textures);
     Array<PMaterialInstanceAsset> globalMaterials(scene->mNumMaterials);
     loadMaterials(scene, textures, args.filePath.stem().string(), args.filePath.parent_path(), args.importPath, globalMaterials);
-    
+
     Array<OMesh> globalMeshes(scene->mNumMeshes);
     Component::Collider collider;
     loadGlobalMeshes(scene, globalMaterials, globalMeshes, collider);
 
-    List<aiNode *> meshNodes;
+    List<aiNode*> meshNodes;
     findMeshRoots(scene->mRootNode, meshNodes);
-    
+
     Array<OMesh> meshes;
     for (auto meshNode : meshNodes)
     {
-        for(uint32 i = 0; i < meshNode->mNumMeshes; ++i)
+        for (uint32 i = 0; i < meshNode->mNumMeshes; ++i)
         {
             if (globalMeshes[meshNode->mMeshes[i]] == nullptr)
             {

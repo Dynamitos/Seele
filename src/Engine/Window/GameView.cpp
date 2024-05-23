@@ -12,6 +12,9 @@
 
 using namespace Seele;
 
+bool usePositionOnly = false;
+bool useViewCulling = false;
+
 GameView::GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo &createInfo, std::string dllPath)
     : View(graphics, window, createInfo, "Game")
     , scene(new Scene(graphics))
@@ -98,6 +101,22 @@ void GameView::reloadGame()
 void GameView::keyCallback(KeyCode code, InputAction action, KeyModifier modifier)
 {
     keyboardSystem->keyCallback(code, action, modifier);
+    if (code == KeyCode::KEY_P && action == InputAction::RELEASE)
+    {
+        usePositionOnly = true;
+    }
+    if (code == KeyCode::KEY_O && action == InputAction::RELEASE)
+    {
+        usePositionOnly = false;
+    }
+    if (code == KeyCode::KEY_L && action == InputAction::RELEASE)
+    {
+        useViewCulling = true;
+    }
+    if (code == KeyCode::KEY_K && action == InputAction::RELEASE)
+    {
+        useViewCulling = false;
+    }
 }
 
 void GameView::mouseMoveCallback(double xPos, double yPos)

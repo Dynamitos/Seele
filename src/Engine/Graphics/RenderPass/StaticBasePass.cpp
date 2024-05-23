@@ -22,11 +22,11 @@ StaticBasePass::StaticBasePass(Gfx::PGraphics graphics, PScene scene)
     basePassLayout->addDescriptorLayout(lightCullingLayout);
     if (graphics->supportMeshShading())
     {
-        graphics->getShaderCompiler()->registerRenderPass(basePassLayout, "BasePass", "StaticMeshletPass", false, true, true, "BasePass", true);
+        graphics->getShaderCompiler()->registerRenderPass(basePassLayout, "BasePass", "StaticMeshletPass", false, true, "BasePass", true);
     }
     else
     {
-        graphics->getShaderCompiler()->registerRenderPass(basePassLayout, "StaticBasePass", "StaticLegacyPass", false, true, true, "BasePass");
+        graphics->getShaderCompiler()->registerRenderPass(basePassLayout, "StaticBasePass", "StaticLegacyPass", false, true, "BasePass");
     }
 }
 

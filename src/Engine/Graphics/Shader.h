@@ -63,6 +63,7 @@ struct ShaderPermutation
     uint8 hasTaskShader;
     uint8 useMaterial;
     uint8 positionOnly;
+    uint8 viewCulling;
     //TODO: lightmapping etc
     ShaderPermutation()
     {
@@ -103,9 +104,13 @@ struct ShaderPermutation
         useMaterial = 1;
         strncpy(materialName, name.data(), sizeof(materialName));
     }
-    void setPositionOnly()
+    void setPositionOnly(bool enable)
     {
-        positionOnly = true;
+        positionOnly = enable;
+    }
+    void setViewCulling(bool enable)
+    {
+        viewCulling = enable;
     }
 };
 //Hashed ShaderPermutation for fast lookup
@@ -146,7 +151,6 @@ public:
     void registerRenderPass(Gfx::PPipelineLayout baseLayout,
         std::string name,
         std::string mainFile,
-        bool positionOnly = true,
         bool useMaterials = false,
         bool hasFragmentShader = false,
         std::string fragmentFile = "",
@@ -170,7 +174,6 @@ private:
         bool useMeshShading;
         bool hasTaskShader;
         bool useMaterial;
-        bool positionOnly;
     };
     Map<std::string, PassConfig> passes;
     Gfx::PGraphics graphics;

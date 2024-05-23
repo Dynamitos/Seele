@@ -36,7 +36,9 @@ void taskMain(
 	{
 		uint m = mesh.meshletOffset + i;
 		MeshletDescription meshlet = pScene.meshletInfos[m];
+#ifdef VIEW_CULLING
 		if(meshlet.bounding.insideFrustum(viewFrustum))
+#endif
 		{
 			uint index;
 			InterlockedAdd(head, 1, index);

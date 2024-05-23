@@ -13,6 +13,9 @@
 
 using namespace Seele;
 
+extern bool usePositionOnly;
+extern bool useViewCulling;
+
 DepthPrepass::DepthPrepass(Gfx::PGraphics graphics, PScene scene)
     : RenderPass(graphics, scene)
 {
@@ -25,11 +28,11 @@ DepthPrepass::DepthPrepass(Gfx::PGraphics graphics, PScene scene)
         });
     if (graphics->supportMeshShading())
     {
-        graphics->getShaderCompiler()->registerRenderPass(depthPrepassLayout, "DepthPass", "MeshletPass", true, false, false, "", true, true, "ViewCullingTask");
+        graphics->getShaderCompiler()->registerRenderPass(depthPrepassLayout, "DepthPass", "MeshletPass", false, false, "", true, true, "ViewCullingTask");
     }
     else
     {
-        graphics->getShaderCompiler()->registerRenderPass(depthPrepassLayout, "DepthPass", "LegacyPass", true);
+        graphics->getShaderCompiler()->registerRenderPass(depthPrepassLayout, "DepthPass", "LegacyPass");
     }
 }
 
@@ -48,7 +51,8 @@ void DepthPrepass::render()
     Array<Gfx::ORenderCommand> commands;
 
     Gfx::ShaderPermutation permutation;
-    permutation.setPositionOnly();
+    permutation.setPositionOnly(usePositionOnly);
+    permutation.setViewCulling(useViewCulling);
     if (graphics->supportMeshShading())
     {
         permutation.setTaskFile("ViewCullingTask");

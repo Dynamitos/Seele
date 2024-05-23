@@ -114,7 +114,7 @@ void Window::pollInput()
 
 void Window::beginFrame()
 {
-    imageAvailableFences[currentSemaphoreIndex]->wait(100000);
+    imageAvailableFences[currentSemaphoreIndex]->wait(100000000);
     imageAvailableFences[currentSemaphoreIndex]->reset();
     vkAcquireNextImageKHR(graphics->getDevice(), swapchain, std::numeric_limits<uint64>::max(), imageAvailableSemaphores[currentSemaphoreIndex]->getHandle(), imageAvailableFences[currentSemaphoreIndex]->getHandle(), &currentImageIndex);
     graphics->getGraphicsCommands()->getCommands()->waitForSemaphore(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, imageAvailableSemaphores[currentSemaphoreIndex]);
@@ -284,14 +284,14 @@ void Window::chooseSwapSurfaceFormat()
 
 void Window::chooseSwapPresentMode()
 {
-    /*for (const auto& supportedPresentMode : supportedPresentModes)
+    for (const auto& supportedPresentMode : supportedPresentModes)
     {
         if (supportedPresentMode == VK_PRESENT_MODE_MAILBOX_KHR)
         {
             presentMode = supportedPresentMode;
             return;
         }
-    }*/
+    }
     presentMode = VK_PRESENT_MODE_FIFO_KHR;
 }
 

@@ -19,7 +19,6 @@ void meshMain(
 	out indices uint3 indices[MAX_PRIMITIVES]
 ){
 	InstanceData inst = pScene.instances[meshPayload.instanceId];
-	//MeshData data = pScene.meshData[meshPayload.instanceId];
 	MeshletDescription m = pScene.meshletInfos[meshPayload.culledMeshlets[groupID]];
 	SetMeshOutputCounts(m.vertexCount, m.primitiveCount);
 	

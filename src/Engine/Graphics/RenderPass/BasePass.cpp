@@ -16,6 +16,8 @@
 
 using namespace Seele;
 
+extern bool useViewCulling;
+
 BasePass::BasePass(Gfx::PGraphics graphics, PScene scene)
     : RenderPass(graphics, scene)
 {
@@ -40,11 +42,11 @@ BasePass::BasePass(Gfx::PGraphics graphics, PScene scene)
 
     if (graphics->supportMeshShading())
     {
-        graphics->getShaderCompiler()->registerRenderPass(basePassLayout, "BasePass", "MeshletPass", false, true, true, "BasePass", true, true, "ViewCullingTask");
+        graphics->getShaderCompiler()->registerRenderPass(basePassLayout, "BasePass", "MeshletPass", true, true, "BasePass", true, true, "ViewCullingTask");
     }
     else
     {
-        graphics->getShaderCompiler()->registerRenderPass(basePassLayout, "BasePass", "LegacyPass", false, true, true, "BasePass");
+        graphics->getShaderCompiler()->registerRenderPass(basePassLayout, "BasePass", "LegacyPass", true, true, "BasePass");
     }
 }
 
@@ -97,6 +99,7 @@ void BasePass::render()
         permutation.setVertexFile("LegacyPass");
     }
     permutation.setFragmentFile("BasePass");
+    permutation.setViewCulling(useViewCulling);
     for (VertexData* vertexData : VertexData::getList())
     {
         permutation.setVertexData(vertexData->getTypeName());
@@ -168,7 +171,6 @@ void BasePass::render()
             command->bindDescriptor(scene->getLightEnvironment()->getDescriptorSet());
             command->bindDescriptor(opaqueCulling);
             command->bindDescriptor(vertexData->getInstanceDataSet());
-            command->bindDescriptor(vertexData->getInstanceDataSet());
             for (const auto& drawCall : materialData.instances)
             {
                 command->bindDescriptor(drawCall.materialInstance->getDescriptorSet());
@@ -222,7 +224,7 @@ void BasePass::publishOutputs()
 void BasePass::createRenderPass()
 {
     depthAttachment = resources->requestRenderTarget("DEPTHPREPASS_DEPTH");
-    depthAttachment.setLoadOp(Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR);
+    depthAttachment.setLoadOp(Gfx::SE_ATTACHMENT_LOAD_OP_LOAD);
     depthAttachment.setInitialLayout(Gfx::SE_IMAGE_LAYOUT_GENERAL);
     depthAttachment.setFinalLayout(Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
     Gfx::RenderTargetLayout layout = Gfx::RenderTargetLayout{

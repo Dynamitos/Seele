@@ -36,7 +36,6 @@ void ShaderCompiler::registerVertexData(VertexData* vd)
 
 void ShaderCompiler::registerRenderPass(Gfx::PPipelineLayout layout, 
 	std::string name, std::string mainFile, 
-	bool positionOnly,
 	bool useMaterials, 
 	bool hasFragmentShader, 
 	std::string fragmentFile, 
@@ -53,7 +52,6 @@ void ShaderCompiler::registerRenderPass(Gfx::PPipelineLayout layout,
 		.useMeshShading = useMeshShading,
 		.hasTaskShader = hasTaskShader,
 		.useMaterial = useMaterials,
-		.positionOnly = positionOnly,
 	};
 	compile();
 }
@@ -70,12 +68,53 @@ void ShaderCompiler::compile()
 			{
 				for (const auto& [matName, mat] : materials)
 				{
-					//work.add([=]() {
-						ShaderPermutation permutation;
-						if (pass.positionOnly)
+					for (int x = 0; x < 2; x++)
+					{
+						for (int y = 0; y < 2; y++)
 						{
-							permutation.setPositionOnly();
+					work.add([=]() {
+							ShaderPermutation permutation;
+							permutation.setPositionOnly(x);	
+							permutation.setViewCulling(y);
+							if (pass.useMeshShading)
+							{
+								permutation.setMeshFile(pass.mainFile);
+							}
+							else
+							{
+								permutation.setVertexFile(pass.mainFile);
+							}
+							if (pass.hasFragmentShader)
+							{
+								permutation.setFragmentFile(pass.fragmentFile);
+							}
+							if (pass.hasTaskShader)
+							{
+								permutation.setTaskFile(pass.taskFile);
+							}
+							permutation.setVertexData(vd->getTypeName());
+							OPipelineLayout layout = graphics->createPipelineLayout(pass.baseLayout->getName(), pass.baseLayout);
+							layout->addDescriptorLayout(vd->getVertexDataLayout());
+							layout->addDescriptorLayout(vd->getInstanceDataLayout());
+							layout->addDescriptorLayout(mat->getDescriptorLayout());
+							permutation.setMaterial(mat->getName());
+							createShaders(permutation, std::move(layout));
+					});
 						}
+					}
+						
+				}
+			}
+			else
+			{
+				for (int x = 0; x < 2; x++)
+				{
+					for (int y = 0; y < 2; y++)
+					{
+						work.add([=]() {
+						ShaderPermutation permutation;
+						permutation.setPositionOnly(x);
+						permutation.setViewCulling(y);
 						if (pass.useMeshShading)
 						{
 							permutation.setMeshFile(pass.mainFile);
@@ -96,46 +135,14 @@ void ShaderCompiler::compile()
 						OPipelineLayout layout = graphics->createPipelineLayout(pass.baseLayout->getName(), pass.baseLayout);
 						layout->addDescriptorLayout(vd->getVertexDataLayout());
 						layout->addDescriptorLayout(vd->getInstanceDataLayout());
-						layout->addDescriptorLayout(mat->getDescriptorLayout());
-						permutation.setMaterial(mat->getName());
 						createShaders(permutation, std::move(layout));
-					//});
+						});
+					}
 				}
-			}
-			else
-			{
-				//work.add([=]() {
-					ShaderPermutation permutation;
-					if (pass.positionOnly)
-					{
-						permutation.setPositionOnly();
-					}
-					if (pass.useMeshShading)
-					{
-						permutation.setMeshFile(pass.mainFile);
-					}
-					else
-					{
-						permutation.setVertexFile(pass.mainFile);
-					}
-					if (pass.hasFragmentShader)
-					{
-						permutation.setFragmentFile(pass.fragmentFile);
-					}
-					if (pass.hasTaskShader)
-					{
-						permutation.setTaskFile(pass.taskFile);
-					}
-					permutation.setVertexData(vd->getTypeName());
-					OPipelineLayout layout = graphics->createPipelineLayout(pass.baseLayout->getName(), pass.baseLayout);
-					layout->addDescriptorLayout(vd->getVertexDataLayout());
-					layout->addDescriptorLayout(vd->getInstanceDataLayout());
-					createShaders(permutation, std::move(layout));
-					//});
 			}
 		}
 	}
-	//getThreadPool().runAndWait(std::move(work));
+	getThreadPool().runAndWait(std::move(work));
 }
 
 void ShaderCompiler::createShaders(ShaderPermutation permutation, Gfx::OPipelineLayout layout)
@@ -160,6 +167,10 @@ void ShaderCompiler::createShaders(ShaderPermutation permutation, Gfx::OPipeline
 	if (permutation.positionOnly)
 	{
 		createInfo.defines["POS_ONLY"] = "1";
+	}
+	if (permutation.viewCulling)
+	{
+		createInfo.defines["VIEW_CULLING"] = "1";
 	}
 	createInfo.typeParameter.add({ Pair<const char*, const char*>("IVertexData", permutation.vertexDataName) });
 	createInfo.additionalModules.add(permutation.vertexDataName);
