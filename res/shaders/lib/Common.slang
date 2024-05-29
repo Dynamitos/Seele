@@ -48,6 +48,13 @@ float4 clipToView(float4 clip)
     return view;
 }
 
+float4 clipToWorld(float4 clip)
+{
+    float4 view = clipToView(clip);
+
+    return viewToWorld(view);
+}
+
 float4 screenToView(float4 screen)
 {
     float2 texCoord = screen.xy / pViewParams.screenDimensions;

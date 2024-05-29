@@ -38,7 +38,7 @@ void MeshLoader::importAsset(MeshImportArgs args)
     PMeshAsset ref = asset;
     asset->setStatus(Asset::Status::Loading);
     AssetRegistry::get().registerMesh(std::move(asset));
-import(args, ref);
+    import(args, ref);
 }
 
 

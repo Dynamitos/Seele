@@ -29,7 +29,6 @@ groupshared uint uMinDepth;
 groupshared uint uMaxDepth;
 
 groupshared Frustum groupFrustum;
-groupshared float4x4 viewMatrix;
 
 groupshared uint oLightCount;
 groupshared uint oLightIndexStartOffset;
@@ -70,7 +69,6 @@ void cullLights(ComputeShaderInput in)
     uint uDepth = asuint(fDepth);
     if(in.groupIndex == 0)
     {
-        viewMatrix = pViewParams.viewMatrix;
         uMinDepth = 0xffffffff;
         uMaxDepth = 0x0;
         oLightCount = 0;
@@ -88,27 +86,30 @@ void cullLights(ComputeShaderInput in)
     float fMinDepth = asfloat(uMinDepth);
     float fMaxDepth = asfloat(uMaxDepth);
 
-    float minDepthVS = clipToView(float4(0, 0, fMinDepth, 1)).z;
-    float maxDepthVS = clipToView(float4(0, 0, fMaxDepth, 1)).z;
-    float nearClipVS = clipToView(float4(0, 0, 0, 1)).z;
+    float minDepthWS = clipToWorld(float4(0, 0, fMinDepth, 1)).z;
+    float maxDepthWS = clipToWorld(float4(0, 0, fMaxDepth, 1)).z;
+    float nearClipWS = clipToWorld(float4(0, 0, 0, 1)).z;
 
-    Plane minPlane = {float3(0, 0, -1), -minDepthVS};
+    Plane minPlane = {float3(0, 0, -1), -minDepthWS};
 
     for ( uint i = in.groupIndex; i < pLightEnv.numPointLights; i += BLOCK_SIZE * BLOCK_SIZE )
     {
         PointLight light = pLightEnv.pointLights[i];
-        float3 light_VS = mul(viewMatrix, float4(light.position_WS.xyz, 1.0f)).xyz;
-        //if(light.insideFrustum(groupFrustum, light_VS, nearClipVS, maxDepthVS))
+#ifdef LIGHT_CULLING
+        if(light.insideFrustum(groupFrustum, light.getPosition(), nearClipWS, maxDepthWS))
+#endif
         {
             tAppendLight(i);
-            //if(!light.insidePlane(minPlane, light_VS))
+#ifdef LIGHT_CULLING
+            if(!light.insidePlane(minPlane, light.getPosition()))
+#endif
             {
                 oAppendLight(i);
             }
         }
     }
     
-    GroupMemoryBarrierWithGroupSync();
+    GroupMemoryBarrierWithGroupSync(); 
 
     if(in.groupIndex == 0)
     {

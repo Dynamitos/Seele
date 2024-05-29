@@ -58,6 +58,10 @@ int main() {
   AssetImporter::importMesh(MeshImportArgs{
       .filePath = sourcePath / "import/models/cube.fbx",
       });
+  //AssetImporter::importMesh(MeshImportArgs{
+  //    .filePath = sourcePath / "import/models/greek-temple/source/greek-temple.fbx",
+  //    .importPath = "temple"
+  //    });
   AssetImporter::importMesh(MeshImportArgs{
       .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.fbx",
       .importPath = "Whitechapel"

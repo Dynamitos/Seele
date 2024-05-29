@@ -104,6 +104,16 @@ public:
         return object <=> rhs.object;
     }
     template<typename F>
+    constexpr bool operator==(const RefPtr<F>& rhs) const noexcept
+    {
+        return object == rhs.getHandle();
+    }
+    template<typename F>
+    constexpr auto operator<=>(const RefPtr<F>& rhs) const noexcept
+    {
+        return object <=> rhs.getHandle();
+    }
+    template<typename F>
     constexpr operator RefPtr<F>()
     {
         return RefPtr<F>(static_cast<F*>(object));

@@ -8,6 +8,8 @@
 
 using namespace Seele;
 
+extern bool useLightCulling;
+
 LightCullingPass::LightCullingPass(Gfx::PGraphics graphics, PScene scene)
     : RenderPass(graphics, scene)
 {
@@ -63,7 +65,14 @@ void LightCullingPass::render()
     cullingDescriptorSet->updateTexture(6, Gfx::PTexture2D(tLightGrid));
     cullingDescriptorSet->writeChanges();
     Gfx::OComputeCommand computeCommand = graphics->createComputeCommand("CullingCommand");
-    computeCommand->bindPipeline(cullingPipeline);
+    if (useLightCulling)
+    {
+        computeCommand->bindPipeline(cullingEnabledPipeline);
+    }
+    else
+    {
+        computeCommand->bindPipeline(cullingPipeline);
+    }
     computeCommand->bindDescriptor({ viewParamsSet, dispatchParamsSet, cullingDescriptorSet, lightEnv->getDescriptorSet() });
     computeCommand->dispatch(dispatchParams.numThreadGroups.x, dispatchParams.numThreadGroups.y, dispatchParams.numThreadGroups.z);
     Array<Gfx::OComputeCommand> commands;
@@ -120,26 +129,51 @@ void LightCullingPass::publishOutputs()
 
     lightEnv = scene->getLightEnvironment();
 
-    cullingLayout = graphics->createPipelineLayout("CullingLayout");
-    cullingLayout->addDescriptorLayout(viewParamsLayout);
-    cullingLayout->addDescriptorLayout(dispatchParamsLayout);
-    cullingLayout->addDescriptorLayout(cullingDescriptorLayout);
-    cullingLayout->addDescriptorLayout(lightEnv->getDescriptorLayout());
+    {
+        cullingLayout = graphics->createPipelineLayout("CullingLayout");
+        cullingLayout->addDescriptorLayout(viewParamsLayout);
+        cullingLayout->addDescriptorLayout(dispatchParamsLayout);
+        cullingLayout->addDescriptorLayout(cullingDescriptorLayout);
+        cullingLayout->addDescriptorLayout(lightEnv->getDescriptorLayout());
 
-    ShaderCreateInfo createInfo = {
-        .name = "Culling",
-        .mainModule = "LightCulling",
-        .entryPoint = "cullLights",
-        .rootSignature = cullingLayout,
-    };
-    cullingShader = graphics->createComputeShader(createInfo);
-    cullingLayout->create();
+        ShaderCreateInfo createInfo = {
+            .name = "Culling",
+            .mainModule = "LightCulling",
+            .entryPoint = "cullLights",
+            .rootSignature = cullingLayout,
+        };
+        cullingShader = graphics->createComputeShader(createInfo);
+        cullingLayout->create();
 
-    Gfx::ComputePipelineCreateInfo pipelineInfo;
-    pipelineInfo.computeShader = cullingShader;
-    pipelineInfo.pipelineLayout = std::move(cullingLayout);
-    cullingPipeline = graphics->createComputePipeline(std::move(pipelineInfo));
+        Gfx::ComputePipelineCreateInfo pipelineInfo;
+        pipelineInfo.computeShader = cullingShader;
+        pipelineInfo.pipelineLayout = std::move(cullingLayout);
+        cullingPipeline = graphics->createComputePipeline(std::move(pipelineInfo));
+    }
 
+    {
+        cullingEnableLayout = graphics->createPipelineLayout("CullingEnabledLayout");
+        cullingEnableLayout->addDescriptorLayout(viewParamsLayout);
+        cullingEnableLayout->addDescriptorLayout(dispatchParamsLayout);
+        cullingEnableLayout->addDescriptorLayout(cullingDescriptorLayout);
+        cullingEnableLayout->addDescriptorLayout(lightEnv->getDescriptorLayout());
+    
+        ShaderCreateInfo createInfo = {
+            .name = "Culling",
+            .mainModule = "LightCulling",
+            .entryPoint = "cullLights",
+            .rootSignature = cullingEnableLayout,
+        };
+        createInfo.defines["LIGHT_CULLING"] = "1";
+        cullingEnabledShader = graphics->createComputeShader(createInfo);
+        cullingEnableLayout->create();
+    
+        Gfx::ComputePipelineCreateInfo pipelineInfo;
+        pipelineInfo.computeShader = cullingShader;
+        pipelineInfo.pipelineLayout = std::move(cullingEnableLayout);
+        cullingEnabledPipeline = graphics->createComputePipeline(std::move(pipelineInfo));
+    }
+    
     uint32 counterReset = 0;
     ShaderBufferCreateInfo structInfo = {
         .sourceData = {

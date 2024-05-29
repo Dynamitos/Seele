@@ -52,6 +52,10 @@ struct PointLight : ILightEnv
         }
         return result;
     }
+    float3 getPosition()
+    {
+        return position_WS.xyz;
+    }
 };
 
 struct LightEnv

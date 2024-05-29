@@ -9,15 +9,15 @@
 using namespace Seele;
 using namespace Seele::Vulkan;
 
-Shader::Shader(PGraphics graphics, VkShaderStageFlags stage) 
+Shader::Shader(PGraphics graphics, VkShaderStageFlags stage)
     : graphics(graphics)
     , stage(stage)
 {
 }
 
-Shader::~Shader() 
+Shader::~Shader()
 {
-    if(module != VK_NULL_HANDLE)
+    if (module != VK_NULL_HANDLE)
     {
         vkDestroyShaderModule(graphics->getDevice(), module, nullptr);
     }
@@ -30,9 +30,9 @@ uint32 Seele::Vulkan::Shader::getShaderHash() const
 
 void Shader::create(ShaderCreateInfo createInfo)
 {
-  Map<std::string, uint32> paramMapping;
-  Slang::ComPtr<slang::IBlob> kernelBlob = generateShader(createInfo, SLANG_SPIRV, paramMapping);
-  createInfo.rootSignature->addMapping(paramMapping);
+    Map<std::string, uint32> paramMapping;
+    Slang::ComPtr<slang::IBlob> kernelBlob = generateShader(createInfo, SLANG_SPIRV, paramMapping);
+    createInfo.rootSignature->addMapping(paramMapping);
     VkShaderModuleCreateInfo moduleInfo =
     {
         .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,

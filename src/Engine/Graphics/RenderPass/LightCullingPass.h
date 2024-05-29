@@ -60,9 +60,12 @@ private:
     Gfx::OTexture2D tLightGrid;
     Gfx::PDescriptorSet cullingDescriptorSet;
     Gfx::ODescriptorLayout cullingDescriptorLayout;
-    Gfx::OComputeShader cullingShader;
-    Gfx::PComputePipeline cullingPipeline;
     Gfx::OPipelineLayout cullingLayout;
+    Gfx::OPipelineLayout cullingEnableLayout;
+    Gfx::OComputeShader cullingShader;
+    Gfx::OComputeShader cullingEnabledShader;
+    Gfx::PComputePipeline cullingPipeline;
+    Gfx::PComputePipeline cullingEnabledPipeline;
 };
 DEFINE_REF(LightCullingPass)
 } // namespace Seele

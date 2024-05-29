@@ -15,10 +15,10 @@ void computeFrustums(ComputeShaderInput in)
 {
 	float3 origin = float3(0, 0, 0);
 	float3 corners[4] = {
-		screenToView(float4(float2(in.dispatchThreadID.x + 0, in.dispatchThreadID.y + 0) * BLOCK_SIZE, -1.0f, 1.0f)).xyz,
-		screenToView(float4(float2(in.dispatchThreadID.x + 1, in.dispatchThreadID.y + 0) * BLOCK_SIZE, -1.0f, 1.0f)).xyz,
-		screenToView(float4(float2(in.dispatchThreadID.x + 0, in.dispatchThreadID.y + 1) * BLOCK_SIZE, -1.0f, 1.0f)).xyz,
-		screenToView(float4(float2(in.dispatchThreadID.x + 1, in.dispatchThreadID.y + 1) * BLOCK_SIZE, -1.0f, 1.0f)).xyz
+		screenToWorld(float4(float2(in.dispatchThreadID.x + 0, in.dispatchThreadID.y + 0) * BLOCK_SIZE, -1.0f, 1.0f)).xyz,
+		screenToWorld(float4(float2(in.dispatchThreadID.x + 1, in.dispatchThreadID.y + 0) * BLOCK_SIZE, -1.0f, 1.0f)).xyz,
+		screenToWorld(float4(float2(in.dispatchThreadID.x + 0, in.dispatchThreadID.y + 1) * BLOCK_SIZE, -1.0f, 1.0f)).xyz,
+		screenToWorld(float4(float2(in.dispatchThreadID.x + 1, in.dispatchThreadID.y + 1) * BLOCK_SIZE, -1.0f, 1.0f)).xyz
 	};
 	Frustum frustum;
 	frustum.sides[0] = computePlane(origin, corners[2], corners[0]);
