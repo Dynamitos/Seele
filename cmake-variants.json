@@ -22,6 +22,11 @@
                 "short": "RelWithDebInfo",
                 "long": "Release with debug symbols",
                 "buildType": "RelWithDebInfo"
+            },
+            "minsizerel": {
+              "short": "MinSizeRel",
+              "long": "Minimal size Release",
+              "buildType": "MinSizeRel"
             }
         }
     },

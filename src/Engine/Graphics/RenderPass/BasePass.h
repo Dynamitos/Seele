@@ -20,12 +20,11 @@ public:
 private:
     Gfx::RenderTargetAttachment colorAttachment;
     Gfx::RenderTargetAttachment depthAttachment;
-    Gfx::RenderTargetAttachment meshletIdAttachment;
+    Gfx::RenderTargetAttachment visibilityAttachment;
     Gfx::PShaderBuffer oLightIndexList;
     Gfx::PShaderBuffer tLightIndexList;
     Gfx::PTexture2D oLightGrid;
     Gfx::PTexture2D tLightGrid;
-    Gfx::OTexture2D meshletIdTexture;
     
     Gfx::PDescriptorSet opaqueCulling;
     Gfx::PDescriptorSet transparentCulling;

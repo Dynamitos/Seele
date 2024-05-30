@@ -7,8 +7,12 @@
 #include "System/LightGather.h"
 #include "System/MeshUpdater.h"
 #include "System/CameraUpdater.h"
-#include "Graphics/Vulkan/Graphics.h"
-#include "Graphics/Vulkan/Allocator.h"
+#include "Graphics/RenderPass/CachedDepthPass.h"
+#include "Graphics/RenderPass/DepthPrepass.h"
+#include "Graphics/RenderPass/LightCullingPass.h"
+#include "Graphics/RenderPass/BasePass.h"
+#include "Graphics/RenderPass/SkyboxRenderPass.h"
+#include "Graphics/RenderPass/DebugPass.h"
 
 using namespace Seele;
 
@@ -22,10 +26,9 @@ GameView::GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreate
     , gameInterface(dllPath)
 {
     reloadGame();
-    //renderGraph.addPass(new StaticDepthPrepass(graphics, scene));
+    renderGraph.addPass(new CachedDepthPass(graphics, scene));
     renderGraph.addPass(new DepthPrepass(graphics, scene));
     renderGraph.addPass(new LightCullingPass(graphics, scene));
-    //renderGraph.addPass(new StaticBasePass(graphics, scene));
     renderGraph.addPass(new BasePass(graphics, scene));
     renderGraph.addPass(new DebugPass(graphics, scene));
     //renderGraph.addPass(new SkyboxRenderPass(graphics, scene));

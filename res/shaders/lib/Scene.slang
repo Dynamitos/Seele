@@ -31,9 +31,25 @@ struct InstanceData
 	float4x4 inverseTransformMatrix;
 };
 
+struct MeshletCullingInfo
+{
+	uint64_t cull[MAX_PRIMITIVES / 64];
+	// lookup if a specific triangle is visible
+	bool triangleVisible(uint32_t primIndex)
+	{
+		uint32_t arrIdx = primIndex / 64;
+		uint32_t cullIdx = primIndex % 64;
+		return (cull[arrIdx] & (1 << cullIdx)) != 0;
+	}
+	bool anyVisible()
+	{
+		return (cull[0] | cull[1] | cull[2] | cull[3]) != 0;
+	}
+};
+
 struct DrawCallOffsets
 {
-	uint32_t instanceOffset;
+    uint32_t instanceOffset;
 };
 layout(push_constant)
 ConstantBuffer<DrawCallOffsets> pOffsets;
@@ -45,8 +61,8 @@ struct Scene
 	StructuredBuffer<MeshletDescription> meshletInfos;
 	StructuredBuffer<uint8_t> primitiveIndices;
 	StructuredBuffer<uint32_t> vertexIndices;
-//	StructuredBuffer<uint32_t> cullingOffsets;
-//	RWStructuredBuffer<uint32_t> culledMeshlets;
+  StructuredBuffer<MeshletCullingInfo> culledMeshlets;
+  StructuredBuffer<uint32_t> cullingOffsets;
 };
 layout(set=2)
 ParameterBlock<Scene> pScene;

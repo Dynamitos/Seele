@@ -38,7 +38,7 @@ public:
     {
         return fence;
     }
-    void wait(uint32 timeout);
+    void wait(uint64 timeout);
     bool operator<(const Fence &other) const
     {
         return fence < other.fence;

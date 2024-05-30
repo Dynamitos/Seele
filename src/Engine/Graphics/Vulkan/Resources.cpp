@@ -75,7 +75,7 @@ void Fence::reset()
     }
 }
 
-void Fence::wait(uint32 timeout)
+void Fence::wait(uint64 timeout)
 {
     VkFence fences[] = {fence};
     VkResult r = vkWaitForFences(graphics->getDevice(), 1, fences, true, timeout);

@@ -42,7 +42,7 @@ BasePass::BasePass(Gfx::PGraphics graphics, PScene scene)
 
     if (graphics->supportMeshShading())
     {
-        graphics->getShaderCompiler()->registerRenderPass(basePassLayout, "BasePass", "MeshletPass", true, true, "BasePass", true, true, "ViewCullingTask");
+        graphics->getShaderCompiler()->registerRenderPass(basePassLayout, "BasePass", "MeshletPass", true, true, "BasePass", true, true, "DrawListTask");
     }
     else
     {
@@ -91,7 +91,7 @@ void BasePass::render()
     Gfx::ShaderPermutation permutation;
     if (graphics->supportMeshShading())
     {
-        permutation.setTaskFile("ViewCullingTask");
+        permutation.setTaskFile("DrawListTask");
         permutation.setMeshFile("MeshletPass");
     }
     else
@@ -140,7 +140,7 @@ void BasePass::render()
                         .depthCompareOp = Gfx::SE_COMPARE_OP_GREATER_OR_EQUAL,
                     },
                     .colorBlend = {
-                        .attachmentCount = 2,
+                        .attachmentCount = 1,
                     },
                 };
                 Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
@@ -160,7 +160,7 @@ void BasePass::render()
                         .depthCompareOp = Gfx::SE_COMPARE_OP_GREATER_OR_EQUAL,
                     },
                     .colorBlend = {
-                        .attachmentCount = 2,
+                        .attachmentCount = 1,
                     },
                 };
                 Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
@@ -182,11 +182,10 @@ void BasePass::render()
                 else
                 {
                     command->bindIndexBuffer(vertexData->getIndexBuffer());
-                    uint32 inst = drawCall.offsets.instanceOffset;
                     for (const auto& meshData : drawCall.instanceMeshData)
                     {
                         // all meshlets of a mesh share the same indices offset
-                        command->drawIndexed(meshData.numIndices, 1, meshData.firstIndex, vertexData->getIndicesOffset(meshData.meshletOffset), inst++);
+                        command->drawIndexed(meshData.numIndices, 1, meshData.firstIndex, vertexData->getIndicesOffset(meshData.meshletOffset), 0);
                     }
                 }
             }
@@ -208,17 +207,6 @@ void BasePass::publishOutputs()
         Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
         Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
     resources->registerRenderPassOutput("BASEPASS_COLOR", colorAttachment);
-
-    meshletIdTexture = graphics->createTexture2D(TextureCreateInfo{
-        .format = Gfx::SE_FORMAT_R32_UINT,
-        .width = viewport->getWidth(),
-        .height = viewport->getHeight(),
-        .usage = Gfx::SE_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | Gfx::SE_IMAGE_USAGE_STORAGE_BIT,
-        });
-    meshletIdAttachment = Gfx::RenderTargetAttachment(meshletIdTexture,
-        Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-        Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
-    resources->registerRenderPassOutput("BASEPASS_MESHLETID", meshletIdAttachment);
 }
 
 void BasePass::createRenderPass()
@@ -228,7 +216,7 @@ void BasePass::createRenderPass()
     depthAttachment.setInitialLayout(Gfx::SE_IMAGE_LAYOUT_GENERAL);
     depthAttachment.setFinalLayout(Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
     Gfx::RenderTargetLayout layout = Gfx::RenderTargetLayout{
-        .colorAttachments = { colorAttachment, meshletIdAttachment },
+        .colorAttachments = { colorAttachment },
         .depthAttachment = depthAttachment,
     };
     Array<Gfx::SubPassDependency> dependency = {
@@ -245,7 +233,7 @@ void BasePass::createRenderPass()
             .dstSubpass = 0,
             .srcStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
             .dstStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-            .srcAccess = Gfx::SE_ACCESS_NONE,
+            .srcAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
             .dstAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
         },
         {
@@ -262,7 +250,7 @@ void BasePass::createRenderPass()
             .srcStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
             .dstStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
             .srcAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-            .dstAccess = Gfx::SE_ACCESS_NONE,
+            .dstAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
         },
     };
     renderPass = graphics->createRenderPass(std::move(layout), std::move(dependency), viewport);
