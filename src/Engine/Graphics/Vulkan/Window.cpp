@@ -114,9 +114,9 @@ void Window::pollInput()
 
 void Window::beginFrame()
 {
-    imageAvailableFences[currentSemaphoreIndex]->wait(10000000000);
     imageAvailableFences[currentSemaphoreIndex]->reset();
     vkAcquireNextImageKHR(graphics->getDevice(), swapchain, std::numeric_limits<uint64>::max(), imageAvailableSemaphores[currentSemaphoreIndex]->getHandle(), imageAvailableFences[currentSemaphoreIndex]->getHandle(), &currentImageIndex);
+    imageAvailableFences[currentSemaphoreIndex]->submit();
     graphics->getGraphicsCommands()->getCommands()->waitForSemaphore(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, imageAvailableSemaphores[currentSemaphoreIndex]);
 }
 

@@ -18,6 +18,7 @@ public:
     virtual void createRenderPass() override;
 private:
     Gfx::RenderTargetAttachment depthAttachment;
+    Gfx::RenderTargetAttachment visibilityAttachment;
     Gfx::OPipelineLayout depthPrepassLayout;
 };
 DEFINE_REF(DepthPrepass)

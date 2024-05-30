@@ -12,14 +12,8 @@ struct LightCullingData
 layout(set=5)
 ParameterBlock<LightCullingData> pLightCullingData;
 
-struct FragmentOutput
-{
-    float4 color : SV_Target0;
-    uint meshletId : SV_Target1;
-};
-
 [shader("pixel")]
-FragmentOutput fragmentMain(in FragmentParameter params)
+float4 fragmentMain(in FragmentParameter params) : SV_Target
 {
     LightingParameter lightingParams = params.getLightingParameter();
     MaterialParameter materialParams = params.getMaterialParameter();
@@ -41,9 +35,6 @@ FragmentOutput fragmentMain(in FragmentParameter params)
     // gamma correction
     result = result / (result + float3(1.0));
     result = pow(result, float3(1.0/2.2));
-    FragmentOutput output;
-    output.color = float4(result, 1.0f);
-    output.meshletId = params.meshletId;
-    return output;
+    return float4(result, 1.0f);
 }
             

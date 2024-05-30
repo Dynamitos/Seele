@@ -3,6 +3,7 @@ import Scene;
 
 groupshared MeshPayload p;
 groupshared uint head;
+groupshared MeshData mesh;
 
 [numthreads(TASK_GROUP_SIZE, 1, 1)]
 [shader("amplification")]
@@ -13,22 +14,25 @@ void taskMain(
     if (threadID == 0)
     {
         head = 0;
+        mesh = pScene.meshData[pOffsets.instanceOffset + groupID];
         p.instanceId = pOffsets.instanceOffset + groupID;
+        p.meshletOffset = mesh.meshletOffset;
+        p.cullingOffset = pScene.cullingOffsets[p.instanceId];
     }
     GroupMemoryBarrierWithGroupSync();
-    MeshData mesh = pScene.meshData[p.instanceId];
     for (uint i = threadID; i < mesh.numMeshlets; i += TASK_GROUP_SIZE)
     {
-        uint m = mesh.meshletOffset + i;
-        //MeshletDescription meshlet = pScene.meshletInfos[m];
-        //MeshletCullingInfo culling = pScene.culledMeshlets[pScene.cullingOffsets[p.instanceId] + i];
-        //if(culling.anyVisible())
+        uint m = p.meshletOffset + i;
+        uint cull = p.cullingOffset + i;
+        MeshletDescription meshlet = pScene.meshletInfos[m];
+        MeshletCullingInfo culling = pScene.culledMeshlets[cull];
+        if(culling.anyVisible())
         {
             uint index;
             InterlockedAdd(head, 1, index);
-            p.culledMeshlets[i] = m;
+            p.culledMeshlets[index] = i;
         }
     }
     GroupMemoryBarrierWithGroupSync();
-    DispatchMesh(mesh.numMeshlets, 1, 1, p);
+    DispatchMesh(head, 1, 1, p);
 }

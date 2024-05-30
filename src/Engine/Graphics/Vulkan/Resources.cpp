@@ -20,38 +20,40 @@ Semaphore::Semaphore(PGraphics graphics)
 
 Semaphore::~Semaphore()
 {
-    //graphics->getDestructionManager()->queueSemaphore(graphics->getGraphicsCommands()->getCommands(), handle);
+    // graphics->getDestructionManager()->queueSemaphore(graphics->getGraphicsCommands()->getCommands(), handle);
 }
 
-
 Fence::Fence(PGraphics graphics)
-    : graphics(graphics)
-    , signaled(false)
+    : graphics(graphics), status(Status::Ready)
 {
     VkFenceCreateInfo info = {
         .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
         .pNext = nullptr,
-        .flags = 0
-    };
+        .flags = 0};
     VK_CHECK(vkCreateFence(graphics->getDevice(), &info, nullptr, &fence));
 }
 
 Fence::~Fence()
 {
-    vkWaitForFences(graphics->getDevice(), 1, &fence, true, 100000);
+    vkWaitForFences(graphics->getDevice(), 1, &fence, true, 10000000);
     vkDestroyFence(graphics->getDevice(), fence, nullptr);
+}
+
+void Fence::submit()
+{
+    status = Status::InUse;
 }
 
 bool Fence::isSignaled()
 {
-    if (signaled)
+    if (status == Status::Signalled)
     {
         return true;
     }
     VkResult r = vkGetFenceStatus(graphics->getDevice(), fence);
     if (r == VK_SUCCESS)
     {
-        signaled = true;
+        status = Status::Signalled;
         return true;
     }
     if (r == VK_NOT_READY)
@@ -67,11 +69,14 @@ bool Fence::isSignaled()
 
 void Fence::reset()
 {
-    if (signaled)
+    while (status == Status::InUse)
+    {
+        wait(1000000);
+    }
+    if (status == Status::Signalled)
     {
         VK_CHECK(vkResetFences(graphics->getDevice(), 1, &fence));
-        //std::cout << vkGetFenceStatus(graphics->getDevice(), fence) << std::endl;
-        signaled = false;
+        status = Status::Ready;
     }
 }
 
@@ -81,7 +86,7 @@ void Fence::wait(uint64 timeout)
     VkResult r = vkWaitForFences(graphics->getDevice(), 1, fences, true, timeout);
     if (r == VK_SUCCESS)
     {
-        signaled = true;
+        status = Status::Signalled;
     }
     else if (r == VK_TIMEOUT)
     {
@@ -111,7 +116,7 @@ void DestructionManager::notifyCommandComplete()
 {
     for (size_t i = 0; i < resources.size(); ++i)
     {
-        if(!resources[i]->isCurrentlyBound())
+        if (!resources[i]->isCurrentlyBound())
         {
             resources.removeAt(i, false);
             i--;
@@ -131,9 +136,9 @@ SamplerHandle::~SamplerHandle()
 }
 
 Sampler::Sampler(PGraphics graphics, VkSamplerCreateInfo createInfo)
-    : graphics(graphics)
-    , handle(new SamplerHandle(graphics, createInfo))
-{}
+    : graphics(graphics), handle(new SamplerHandle(graphics, createInfo))
+{
+}
 
 Sampler::~Sampler()
 {

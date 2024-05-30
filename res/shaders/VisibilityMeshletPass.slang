@@ -5,7 +5,8 @@ import MaterialParameter;
 
 struct PrimitiveAttributes
 {
-	bool cull: SV_CullPrimitive;
+    uint32_t prim : SV_PrimitiveID;
+    bool cull: SV_CullPrimitive;
 };
 
 [numthreads(MESH_GROUP_SIZE, 1, 1)]
@@ -35,6 +36,7 @@ void meshMain(
 			uint local_idx2 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 2];
             indices[p] = uint3(local_idx0, local_idx1, local_idx2);
             prim[p].cull = cull.triangleCulled(p);
+            //prim[p].prim = encodePrimitive(p, meshletNumber, meshPayload.instanceId);
 		}
 	}
 	for(uint i = threadID; i < MAX_VERTICES; i += MESH_GROUP_SIZE)

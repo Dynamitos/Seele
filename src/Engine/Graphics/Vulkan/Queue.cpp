@@ -47,6 +47,7 @@ void Queue::submitCommandBuffer(PCommand command, const Array<VkSemaphore>& sign
     };
     
     VK_CHECK(vkQueueSubmit(queue, 1, &submitInfo, command->fence->getHandle()));
+    command->fence->submit();
     command->state = Command::State::Submit;
     command->waitFlags.clear();
     command->waitSemaphores.clear();

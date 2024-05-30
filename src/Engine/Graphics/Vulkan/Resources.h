@@ -32,6 +32,7 @@ class Fence
 public:
     Fence(PGraphics graphics);
     ~Fence();
+    void submit();
     bool isSignaled();
     void reset();
     constexpr VkFence getHandle() const
@@ -46,7 +47,13 @@ public:
 
 private:
     PGraphics graphics;
-    bool signaled;
+    enum class Status
+    {
+      Ready,
+      InUse,
+      Signalled,
+    };
+    Status status;
     VkFence fence;
 };
 DEFINE_REF(Fence)

@@ -130,7 +130,7 @@ void VertexData::createDescriptors()
     }
   }
   Array<MeshletCullingInfo> cullingData(numMeshlets);
-  std::memset(cullingData.data(), 0xff, cullingData.size());
+  std::memset(cullingData.data(), 0xffff, cullingData.size() * sizeof(MeshletCullingInfo));
   cullingOffsetBuffer->rotateBuffer(cullingOffsets.size() * sizeof(uint32));
   cullingOffsetBuffer->updateContents(ShaderBufferCreateInfo{
       .sourceData = {
@@ -144,18 +144,19 @@ void VertexData::createDescriptors()
       Gfx::SE_ACCESS_MEMORY_READ_BIT,
       Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
 
-  cullingBuffer->rotateBuffer(numMeshlets * sizeof(MeshletCullingInfo));
+  cullingBuffer->rotateBuffer(cullingData.size() * sizeof(MeshletCullingInfo));
   cullingBuffer->updateContents(ShaderBufferCreateInfo{
       .sourceData = {
-          .size = numMeshlets * sizeof(MeshletCullingInfo),
+          .size = cullingData.size() * sizeof(MeshletCullingInfo),
           .data = (uint8 *)cullingData.data(),
       },
-      .numElements = numMeshlets});
+      .numElements = cullingData.size()});
   cullingBuffer->pipelineBarrier(
       Gfx::SE_ACCESS_TRANSFER_WRITE_BIT,
       Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
       Gfx::SE_ACCESS_MEMORY_WRITE_BIT,
       Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
+
   instanceBuffer->rotateBuffer(instanceData.size() * sizeof(InstanceData));
   instanceBuffer->updateContents(ShaderBufferCreateInfo{
       .sourceData = {

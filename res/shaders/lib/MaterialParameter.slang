@@ -26,7 +26,6 @@ struct FragmentParameter
 	float3 biTangent_WS : TANGENT1;
 	float3 position_WS : POSITION2;
 	float3 vertexColor : COLOR0;
-	uint meshletId : POSITION3;
 	float2 texCoords[MAX_TEXCOORDS] : TEXCOORD0;
 	MaterialParameter getMaterialParameter()
 	{
@@ -50,6 +49,13 @@ struct FragmentParameter
 	}
 };
 
+// data passed to visibility render
+struct VisibilityParameter
+{
+    uint32_t triangleIndex : POSITION5;
+    uint32_t meshletId : POSITION6;
+};
+
 // data retrieved from VertexData
 struct VertexAttributes
 {
@@ -58,7 +64,6 @@ struct VertexAttributes
 	float3 tangent_MS;
 	float3 biTangent_MS;
 	float3 vertexColor;
-	uint meshletId;
 	float2 texCoords[MAX_TEXCOORDS];
 	FragmentParameter getParameter(float4x4 transformMatrix)
 	{
@@ -66,19 +71,18 @@ struct VertexAttributes
 		float4 worldPos = mul(transformMatrix, modelPos);
 		float4 viewPos = mul(pViewParams.viewMatrix, worldPos);
 		float4 clipPos = mul(pViewParams.projectionMatrix, viewPos);
+		FragmentParameter result;
+		result.position_CS = clipPos;
 		float3x3 normalMatrix = float3x3(transformMatrix);
 		float3 T = mul(normalMatrix, tangent_MS);
 		float3 N = mul(normalMatrix, normal_MS);
 		float3 B = mul(normalMatrix, biTangent_MS);
-		FragmentParameter result;
-		result.position_CS = clipPos;
 		result.cameraPos_WS = pViewParams.cameraPos_WS.xyz;
 		result.normal_WS = N;
 		result.tangent_WS = T;
 		result.biTangent_WS = B;
 		result.position_WS = worldPos.xyz;
 		result.vertexColor = vertexColor;
-		result.meshletId = meshletId;
 		for(uint i = 0; i < MAX_TEXCOORDS; ++i)
 		{
 			result.texCoords[i] = texCoords[i];

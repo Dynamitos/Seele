@@ -22,14 +22,6 @@ struct StaticMeshVertexData : IVertexData
     {
         VertexAttributes attributes;
         attributes.position_MS = float3(positions[3 * index + 0], positions[3 * index + 1], positions[3 * index + 2]);
-        attributes.normal_MS = float3(0, 0, 0);
-        attributes.tangent_MS = float3(0, 0, 0);
-        attributes.biTangent_MS = float3(0, 0, 0);
-        for (uint i = 0; i < MAX_TEXCOORDS; ++i)
-        {
-            attributes.texCoords[i] = float2(0, 0);
-        }
-        attributes.vertexColor = float3(0, 0, 0);
         return attributes;
 	}
 	StructuredBuffer<float> positions;

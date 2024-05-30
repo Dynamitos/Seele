@@ -20,7 +20,7 @@
         "**/external": true,
         "**/res": true,
     },
-    "editor.tabSize": 2,
+    "editor.tabSize": 4,
     "editor.detectIndentation": false,
     "lldb.displayFormat": "auto",
     "lldb.showDisassembly": "auto",
