@@ -64,6 +64,7 @@ struct ShaderPermutation
     uint8 useMaterial;
     uint8 positionOnly;
     uint8 viewCulling;
+    uint8 visibilityPass;
     //TODO: lightmapping etc
     ShaderPermutation()
     {
@@ -112,6 +113,10 @@ struct ShaderPermutation
     {
         viewCulling = enable;
     }
+    void setVisibilityPass(bool enable)
+    {
+        visibilityPass = enable;
+    }
 };
 //Hashed ShaderPermutation for fast lookup
 struct PermutationId
@@ -140,6 +145,19 @@ struct ShaderCollection
     OMeshShader meshShader;
     OFragmentShader fragmentShader;
 };
+
+struct PassConfig
+{
+    Gfx::PPipelineLayout baseLayout;
+    std::string taskFile = "";
+    std::string mainFile = "";
+    std::string fragmentFile = "";
+    bool hasFragmentShader = false;
+    bool useMeshShading = false;
+    bool hasTaskShader = false;
+    bool useMaterial = false;
+    bool useVisibility = false;
+};
 class ShaderCompiler
 {
 public:
@@ -148,15 +166,8 @@ public:
     const ShaderCollection* findShaders(PermutationId id) const;
     void registerMaterial(PMaterial material);
     void registerVertexData(VertexData* vertexData);
-    void registerRenderPass(Gfx::PPipelineLayout baseLayout,
-        std::string name,
-        std::string mainFile,
-        bool useMaterials = false,
-        bool hasFragmentShader = false,
-        std::string fragmentFile = "",
-        bool useMeshShading = false,
-        bool hasTaskShader = false,
-        std::string taskFile = "");
+    void registerRenderPass(std::string name, PassConfig config);
+    ShaderPermutation getTemplate(std::string name);
 private:
     void compile();
     void createShaders(ShaderPermutation permutation, OPipelineLayout layout);
@@ -164,17 +175,6 @@ private:
     Map<PermutationId, ShaderCollection> shaders;
     Map<std::string, PMaterial> materials;
     Map<std::string, VertexData*> vertexData;
-    struct PassConfig
-    {
-        Gfx::PPipelineLayout baseLayout;
-        std::string taskFile;
-        std::string mainFile;
-        std::string fragmentFile;
-        bool hasFragmentShader;
-        bool useMeshShading;
-        bool hasTaskShader;
-        bool useMaterial;
-    };
     Map<std::string, PassConfig> passes;
     Gfx::PGraphics graphics;
 };

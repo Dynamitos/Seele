@@ -42,11 +42,31 @@ BasePass::BasePass(Gfx::PGraphics graphics, PScene scene)
 
     if (graphics->supportMeshShading())
     {
-        graphics->getShaderCompiler()->registerRenderPass(basePassLayout, "BasePass", "MeshletPass", true, true, "BasePass", true, true, "DrawListTask");
+        graphics->getShaderCompiler()->registerRenderPass("BasePass", Gfx::PassConfig {
+            .baseLayout = basePassLayout,  
+            .taskFile = "DrawListTask",
+            .mainFile = "MeshletPass", 
+            .fragmentFile = "BasePass",
+            .hasFragmentShader = true,
+            .useMeshShading = true,
+            .hasTaskShader = true,
+            .useMaterial = true, 
+            .useVisibility = false,
+            });
     }
     else
     {
-        graphics->getShaderCompiler()->registerRenderPass(basePassLayout, "BasePass", "LegacyPass", true, true, "BasePass");
+        graphics->getShaderCompiler()->registerRenderPass("BasePass", Gfx::PassConfig {
+            .baseLayout = basePassLayout,  
+            .taskFile = "",
+            .mainFile = "LegacyPass", 
+            .fragmentFile = "BasePass",
+            .hasFragmentShader = true,
+            .useMeshShading = false,
+            .hasTaskShader = false,
+            .useMaterial = true, 
+            .useVisibility = false,
+            });
     }
 }
 
@@ -88,17 +108,7 @@ void BasePass::render()
     graphics->beginRenderPass(renderPass);
     Array<Gfx::ORenderCommand> commands;
 
-    Gfx::ShaderPermutation permutation;
-    if (graphics->supportMeshShading())
-    {
-        permutation.setTaskFile("DrawListTask");
-        permutation.setMeshFile("MeshletPass");
-    }
-    else
-    {
-        permutation.setVertexFile("LegacyPass");
-    }
-    permutation.setFragmentFile("BasePass");
+    Gfx::ShaderPermutation permutation = graphics->getShaderCompiler()->getTemplate("BasePass");
     permutation.setViewCulling(useViewCulling);
     for (VertexData* vertexData : VertexData::getList())
     {

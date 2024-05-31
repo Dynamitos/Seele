@@ -74,12 +74,7 @@ ParameterBlock<Scene> pScene;
 
 uint32_t encodePrimitive(uint32_t primitiveId, uint32_t meshletId, uint32_t instanceId)
 {
-    uint32_t encoded = instanceId;
-    encoded *= MAX_MESHLETS_PER_INSTANCE;
-    encoded += meshletId;
-    encoded *= MAX_PRIMITIVES;
-    encoded += primitiveId;
-    return encoded;
+    return primitiveId + (meshletId * uint(MAX_PRIMITIVES)) + (instanceId * uint(MAX_MESHLETS_PER_INSTANCE * MAX_PRIMITIVES));
 }
 
 uint3 decodePrimitive(uint64_t encoded)
@@ -94,9 +89,9 @@ uint3 decodePrimitive(uint64_t encoded)
 
 struct MeshPayload
 {
+    uint culledMeshlets[MAX_MESHLETS_PER_INSTANCE];
     uint instanceId;
     uint meshletOffset;
     uint cullingOffset;
-    uint culledMeshlets[MAX_MESHLETS_PER_INSTANCE];
 };
 

@@ -5,6 +5,9 @@ import MaterialParameter;
 
 struct PrimitiveAttributes
 {
+#ifdef VISIBILITY
+    uint32_t prim : SV_PrimitiveID;
+#endif
 	bool cull: SV_CullPrimitive;
 };
 
@@ -19,9 +22,10 @@ void meshMain(
     out indices uint3 indices[MAX_PRIMITIVES],
     out primitives PrimitiveAttributes prim[MAX_PRIMITIVES]
 ) {
+    uint instanceId = meshPayload.instanceId;
     // meshlet number relative to start for this instance
     uint meshletNumber = meshPayload.culledMeshlets[groupID];
-    InstanceData inst = pScene.instances[meshPayload.instanceId];
+    InstanceData inst = pScene.instances[instanceId];
     MeshletDescription m = pScene.meshletInfos[meshPayload.meshletOffset + meshletNumber];
     MeshletCullingInfo cull = pScene.culledMeshlets[meshPayload.cullingOffset + meshletNumber];
 	SetMeshOutputCounts(m.vertexCount, m.primitiveCount);
@@ -35,6 +39,9 @@ void meshMain(
 			uint local_idx2 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 2];
             indices[p] = uint3(local_idx0, local_idx1, local_idx2);
             prim[p].cull = cull.triangleCulled(p);
+#ifdef VISIBILITY
+            prim[p].prim = encodePrimitive(p, meshletNumber, instanceId);
+#endif
 		}
 	}
 	for(uint i = threadID; i < MAX_VERTICES; i += MESH_GROUP_SIZE)

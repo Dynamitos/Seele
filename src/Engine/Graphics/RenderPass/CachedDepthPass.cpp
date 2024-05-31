@@ -18,11 +18,31 @@ CachedDepthPass::CachedDepthPass(Gfx::PGraphics graphics, PScene scene)
     });
     if (graphics->supportMeshShading())
     {
-        graphics->getShaderCompiler()->registerRenderPass(depthPrepassLayout, "CachedDepthPass", "VisibilityMeshletPass", false, true, "VisibilityPass", true, true, "DrawListTask");
+        graphics->getShaderCompiler()->registerRenderPass("CachedDepthPass", Gfx::PassConfig{
+            .baseLayout = depthPrepassLayout, 
+            .taskFile = "DrawListTask",
+            .mainFile = "MeshletPass", 
+            .fragmentFile = "VisibilityPass", 
+            .hasFragmentShader = true, 
+            .useMeshShading = true, 
+            .hasTaskShader = true, 
+            .useMaterial = false, 
+            .useVisibility = true,
+        });
     }
     else
     {
-        graphics->getShaderCompiler()->registerRenderPass(depthPrepassLayout, "CachedDepthPass", "LegacyPass");
+        graphics->getShaderCompiler()->registerRenderPass("CachedDepthPass", Gfx::PassConfig{
+            .baseLayout = depthPrepassLayout, 
+            .taskFile = "",
+            .mainFile = "LegacyPass", 
+            .fragmentFile = "VisibilityPass", 
+            .hasFragmentShader = true, 
+            .useMeshShading = false, 
+            .hasTaskShader = false, 
+            .useMaterial = false, 
+            .useVisibility = true,
+        });
     }
 }
 
@@ -40,19 +60,9 @@ void CachedDepthPass::render()
     graphics->beginRenderPass(renderPass);
     Array<Gfx::ORenderCommand> commands;
 
-    Gfx::ShaderPermutation permutation;
+    Gfx::ShaderPermutation permutation = graphics->getShaderCompiler()->getTemplate("CachedDepthPass");
     permutation.setPositionOnly(usePositionOnly);
     permutation.setViewCulling(useViewCulling);
-    if (graphics->supportMeshShading())
-    {
-        permutation.setTaskFile("DrawListTask");
-        permutation.setMeshFile("VisibilityMeshletPass");
-    }
-    else
-    {
-        permutation.setVertexFile("LegacyPass");
-    }
-    permutation.setFragmentFile("VisibilityPass");
     for (VertexData *vertexData : VertexData::getList())
     {
         permutation.setVertexData(vertexData->getTypeName());

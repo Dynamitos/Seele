@@ -18,11 +18,31 @@ DepthPrepass::DepthPrepass(Gfx::PGraphics graphics, PScene scene)
     });
     if (graphics->supportMeshShading())
     {
-        graphics->getShaderCompiler()->registerRenderPass(depthPrepassLayout, "DepthPass", "VisibilityMeshletPass", false, true, "VisibilityPass", true, true, "DepthCullingTask");
+        graphics->getShaderCompiler()->registerRenderPass("DepthPass", Gfx::PassConfig{
+            .baseLayout = depthPrepassLayout, 
+            .taskFile = "DepthCullingTask",
+            .mainFile = "MeshletPass", 
+            .fragmentFile = "VisibilityPass", 
+            .hasFragmentShader = true, 
+            .useMeshShading = true, 
+            .hasTaskShader = true, 
+            .useMaterial = false, 
+            .useVisibility = true,
+        });    
     }
     else
     {
-        graphics->getShaderCompiler()->registerRenderPass(depthPrepassLayout, "DepthPass", "LegacyPass");
+        graphics->getShaderCompiler()->registerRenderPass("DepthPass", Gfx::PassConfig{
+            .baseLayout = depthPrepassLayout, 
+            .taskFile = "",
+            .mainFile = "LegacyPass", 
+            .fragmentFile = "VisibilityPass", 
+            .hasFragmentShader = true, 
+            .useMeshShading = false, 
+            .hasTaskShader = false, 
+            .useMaterial = false, 
+            .useVisibility = true,
+        });
     }
 }
 
@@ -40,19 +60,9 @@ void DepthPrepass::render()
     graphics->beginRenderPass(renderPass);
     Array<Gfx::ORenderCommand> commands;
 
-    Gfx::ShaderPermutation permutation;
+    Gfx::ShaderPermutation permutation = graphics->getShaderCompiler()->getTemplate("DepthPass");
     permutation.setPositionOnly(usePositionOnly);
     permutation.setViewCulling(useViewCulling);
-    if (graphics->supportMeshShading())
-    {
-        permutation.setTaskFile("DepthCullingTask");
-        permutation.setMeshFile("VisibilityMeshletPass");
-    }
-    else
-    {
-        permutation.setVertexFile("LegacyPass");
-    }
-    permutation.setFragmentFile("VisibilityPass");
     for (VertexData *vertexData : VertexData::getList())
     {
         permutation.setVertexData(vertexData->getTypeName());
@@ -116,7 +126,7 @@ void DepthPrepass::render()
         command->pushConstants(Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_VERTEX_BIT, 0, sizeof(VertexData::DrawCallOffsets), &offset);
         if (graphics->supportMeshShading())
         {
-            command->drawMesh(vertexData->getNumInstances(), 1, 1);
+            //command->drawMesh(vertexData->getNumInstances(), 1, 1);
         }
         else
         {
