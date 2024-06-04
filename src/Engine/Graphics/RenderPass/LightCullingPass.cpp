@@ -40,7 +40,9 @@ void LightCullingPass::beginFrame(const Component::Camera& cam)
             .owner = Gfx::QueueType::COMPUTE
         }
     };
+    oLightIndexCounter->rotateBuffer(sizeof(uint32));
     oLightIndexCounter->updateContents(counterReset);
+    tLightIndexCounter->rotateBuffer(sizeof(uint32));
     tLightIndexCounter->updateContents(counterReset);
     oLightIndexCounter->pipelineBarrier(
         Gfx::SE_ACCESS_MEMORY_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,

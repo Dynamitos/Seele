@@ -20,11 +20,11 @@ struct MeshData
     uint32_t numIndices;
 };
 
-static const uint64_t MAX_VERTICES = 256;
-static const uint64_t MAX_PRIMITIVES = 256;
-static const uint64_t TASK_GROUP_SIZE = 128;
-static const uint64_t MESH_GROUP_SIZE = 32;
-static const uint64_t MAX_MESHLETS_PER_INSTANCE = 2048;
+static const uint32_t MAX_VERTICES = 256;
+static const uint32_t MAX_PRIMITIVES = 256;
+static const uint32_t TASK_GROUP_SIZE = 128;
+static const uint32_t MESH_GROUP_SIZE = 32;
+static const uint32_t MAX_MESHLETS_PER_INSTANCE = 2048;
 
 struct InstanceData
 {
@@ -34,12 +34,12 @@ struct InstanceData
 
 struct MeshletCullingInfo
 {
-    uint64_t visible[MAX_PRIMITIVES / 64];
+    uint32_t visible[MAX_PRIMITIVES / 32];
     // lookup if a specific triangle is visible
     bool triangleVisible(uint32_t primIndex)
     {
-        uint32_t arrIdx = primIndex / 64;
-        uint32_t cullIdx = primIndex % 64;
+        uint32_t arrIdx = primIndex / 32;
+        uint32_t cullIdx = primIndex % 32;
         return (visible[arrIdx] & (1 << cullIdx)) != 0;
     }
     bool triangleCulled(uint32_t primIndex)
@@ -72,19 +72,17 @@ struct Scene
 layout(set = 2)
 ParameterBlock<Scene> pScene;
 
-uint32_t encodePrimitive(uint32_t primitiveId, uint32_t meshletId, uint32_t instanceId)
+uint32_t encodePrimitive(uint32_t primitiveId, uint32_t meshletId)
 {
-    return primitiveId + (meshletId * uint(MAX_PRIMITIVES)) + (instanceId * uint(MAX_MESHLETS_PER_INSTANCE * MAX_PRIMITIVES));
+    return primitiveId + (meshletId * uint(MAX_PRIMITIVES));
 }
 
-uint3 decodePrimitive(uint64_t encoded)
+uint2 decodePrimitive(uint32_t encoded)
 {
     uint prim = uint(encoded % MAX_PRIMITIVES);
     encoded = encoded / MAX_PRIMITIVES;
-    uint meshletId = uint(encoded % MAX_MESHLETS_PER_INSTANCE);
-    encoded = encoded / MAX_MESHLETS_PER_INSTANCE;
-    uint instanceId = uint(encoded);
-    return uint3(prim, meshletId, instanceId);
+    uint meshletId = uint(encoded);
+    return uint2(prim, meshletId);
 }
 
 struct MeshPayload

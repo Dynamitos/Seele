@@ -20,7 +20,9 @@ target_sources(Engine
         TextPass.h
         TextPass.cpp
         UIPass.h
-        UIPass.cpp)
+        UIPass.cpp
+        VisibilityPass.h
+        VisibilityPass.cpp)
 
 target_sources(Engine
     PUBLIC FILE_SET HEADERS
@@ -35,4 +37,5 @@ target_sources(Engine
             RenderPass.h
             SkyboxRenderPass.h
             TextPass.h
-            UIPass.h)
+            UIPass.h
+            VisibilityPass.h)

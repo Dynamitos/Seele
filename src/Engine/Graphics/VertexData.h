@@ -117,8 +117,6 @@ namespace Seele
     Gfx::OShaderBuffer meshletBuffer;
     Gfx::OShaderBuffer vertexIndicesBuffer;
     Gfx::OShaderBuffer primitiveIndicesBuffer;
-    // Holds culling information for every meshlet for each instance
-    Gfx::OShaderBuffer cullingBuffer;
     Gfx::OShaderBuffer cullingOffsetBuffer;
     // for legacy pipeline
     Gfx::OIndexBuffer indexBuffer;
