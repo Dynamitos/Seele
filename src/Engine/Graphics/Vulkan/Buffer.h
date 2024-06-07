@@ -39,8 +39,9 @@ protected:
   VkBufferUsageFlags usage;
   bool dynamic;
   std::string name;
-  void rotateBuffer(uint64 size);
+  void rotateBuffer(uint64 size, bool preserveContents = false);
   void createBuffer(uint64 size);
+  void copyBuffer(uint64 src, uint64 dest);
 
   void executeOwnershipBarrier(Gfx::QueueType newOwner);
   void executePipelineBarrier(VkAccessFlags srcAccess,
@@ -129,7 +130,7 @@ public:
   virtual ~ShaderBuffer();
   virtual void
   updateContents(const ShaderBufferCreateInfo &createInfo) override;
-  virtual void rotateBuffer(uint64 size) override;
+  virtual void rotateBuffer(uint64 size, bool preserveContents = false) override;
   virtual void *mapRegion(uint64 offset, uint64 size, bool writeOnly) override;
   virtual void unmap() override;
 

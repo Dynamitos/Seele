@@ -21,7 +21,7 @@ CachedDepthPass::CachedDepthPass(Gfx::PGraphics graphics, PScene scene)
         graphics->getShaderCompiler()->registerRenderPass("CachedDepthPass", Gfx::PassConfig{
             .baseLayout = depthPrepassLayout, 
             .taskFile = "DrawListTask",
-            .mainFile = "MeshletPass", 
+            .mainFile = "DrawListMesh", 
             .fragmentFile = "VisibilityPass", 
             .hasFragmentShader = true, 
             .useMeshShading = true, 
@@ -157,17 +157,17 @@ void CachedDepthPass::render()
     graphics->executeCommands(std::move(commands));
     graphics->endRenderPass();
     // Sync depth read/write with depth pass depth read
-    depthBuffer->pipelineBarrier(
-        Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-        Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-        Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT,
-        Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT);
+    //depthBuffer->pipelineBarrier(
+    //    Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+    //    Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+    //    Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT,
+    //    Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT);
     // sync visibility write with depth pass visibility write
-    visibilityBuffer->pipelineBarrier(
-        Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-        Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-        Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-        Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
+    //visibilityBuffer->pipelineBarrier(
+    //    Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+    //    Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+    //    Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+    //    Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
 }
 
 void CachedDepthPass::endFrame()
@@ -214,30 +214,22 @@ void CachedDepthPass::createRenderPass()
         .depthAttachment = depthAttachment,
     };
     Array<Gfx::SubPassDependency> dependency = {
-        //    {
-        //        .srcSubpass = 0,
-        //        .dstSubpass = ~0U,
-        //        .srcStage = Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-        //        .dstStage = Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-        //        .srcAccess = Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-        //        .dstAccess = Gfx::SE_ACCESS_SHADER_READ_BIT,
-        //    },
-        //    {
-        //        .srcSubpass = 0,
-        //        .dstSubpass = ~0U,
-        //        .srcStage = Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-        //        .dstStage = Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
-        //        .srcAccess = Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-        //        .dstAccess = Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT,
-        //    },
-        //    {
-        //        .srcSubpass = 0,
-        //        .dstSubpass = ~0U,
-        //        .srcStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-        //        .dstStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-        //        .srcAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-        //        .dstAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-        //    }
+        {
+            .srcSubpass = ~0U,
+            .dstSubpass = 0,
+            .srcStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+            .dstStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+            .srcAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+            .dstAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+        },
+        {
+            .srcSubpass = 0,
+            .dstSubpass = ~0U,
+            .srcStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+            .dstStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+            .srcAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+            .dstAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+        },
     };
     renderPass = graphics->createRenderPass(std::move(layout), std::move(dependency), viewport);
 }

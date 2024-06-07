@@ -147,12 +147,12 @@ void Command::checkFence()
         {
             command->reset();
         }
-        executingComputes.clear();
+        pool->cacheCommands(std::move(executingComputes));
         for(auto& command : executingRenders)
         {
             command->reset();
         }
-        executingRenders.clear();
+        pool->cacheCommands(std::move(executingRenders));
         for(auto& descriptor : boundResources)
         {
             descriptor->unbind();

@@ -82,7 +82,7 @@ public:
   ShaderBuffer(QueueFamilyMapping mapping, uint32 numElements,
                const DataSource &bulkResourceData);
   virtual ~ShaderBuffer();
-  virtual void rotateBuffer(uint64 size) = 0;
+  virtual void rotateBuffer(uint64 size, bool preserveContents = false) = 0;
   virtual void updateContents(const ShaderBufferCreateInfo &sourceData) = 0;
   constexpr uint32 getNumElements() const { return numElements; }
   virtual void *mapRegion(uint64 offset = 0, uint64 size = -1,

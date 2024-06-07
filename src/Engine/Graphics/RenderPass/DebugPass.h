@@ -22,6 +22,8 @@ public:
     virtual void publishOutputs() override;
     virtual void createRenderPass() override;
 private:
+    Gfx::RenderTargetAttachment colorAttachment;
+    Gfx::RenderTargetAttachment depthAttachment;
     Gfx::OVertexInput vertexInput;
     Gfx::OVertexBuffer debugVertices;
     Gfx::OVertexShader vertexShader;

@@ -48,7 +48,12 @@ struct MeshletCullingInfo
     }
     bool anyVisible()
     {
-        return (visible[0] + visible[1] + visible[2] + visible[3]) != 0;
+        uint result = 0;
+        for(uint i = 0; i < MAX_PRIMITIVES / 32; ++i)
+        {
+            result |= visible[i];
+        }
+        return result != 0;
     }
 };
 

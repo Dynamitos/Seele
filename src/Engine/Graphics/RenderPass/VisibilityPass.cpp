@@ -16,6 +16,7 @@ VisibilityPass::~VisibilityPass()
 void VisibilityPass::beginFrame(const Component::Camera& cam)
 {
     RenderPass::beginFrame(cam);
+    cullingBuffer->rotateBuffer(VertexData::getMeshletCount() * sizeof(VertexData::MeshletCullingInfo), true);
 
     //Array<VertexData::MeshletCullingInfo> cullingData(VertexData::getMeshletCount());
     //std::memset(cullingData.data(), 0xffff, cullingData.size() * sizeof(VertexData::MeshletCullingInfo));
@@ -36,8 +37,19 @@ void VisibilityPass::beginFrame(const Component::Camera& cam)
 
 void VisibilityPass::render()
 {
-    cullingBuffer->rotateBuffer(VertexData::getMeshletCount() * sizeof(VertexData::MeshletCullingInfo));
+    cullingBuffer->pipelineBarrier(
+        Gfx::SE_ACCESS_SHADER_READ_BIT,
+        Gfx::SE_PIPELINE_STAGE_MESH_SHADER_BIT_EXT,
+        Gfx::SE_ACCESS_TRANSFER_WRITE_BIT,
+        Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT
+    );
     cullingBuffer->clear();
+    cullingBuffer->pipelineBarrier(
+        Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, 
+        Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
+        Gfx::SE_ACCESS_SHADER_READ_BIT, 
+        Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT
+    );
 
     visibilityDescriptor->reset();
     visibilitySet = visibilityDescriptor->allocateDescriptorSet();
@@ -48,14 +60,18 @@ void VisibilityPass::render()
     Gfx::OComputeCommand command = graphics->createComputeCommand("VisibilityCommand");
     command->bindPipeline(visibilityPipeline);
     command->bindDescriptor({viewParamsSet, visibilitySet});
-    command->dispatch(threadGroupSize.x, threadGroupSize.y, threadGroupSize.z);
+    command->dispatch(VertexData::getMeshletCount() / BLOCK_SIZE, 1, 1);
+    //command->dispatch(threadGroupSize.x, threadGroupSize.y, threadGroupSize.z);
     Array<Gfx::OComputeCommand> commands;
     commands.add(std::move(command));
     graphics->executeCommands(std::move(commands));
 
     cullingBuffer->pipelineBarrier(
-        Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-        Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_TASK_SHADER_BIT_EXT);
+        Gfx::SE_ACCESS_SHADER_WRITE_BIT, 
+        Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+        Gfx::SE_ACCESS_SHADER_READ_BIT, 
+        Gfx::SE_PIPELINE_STAGE_TASK_SHADER_BIT_EXT | Gfx::SE_PIPELINE_STAGE_MESH_SHADER_BIT_EXT
+    );
 }
 
 void VisibilityPass::endFrame()
