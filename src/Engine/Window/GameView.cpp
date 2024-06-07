@@ -20,6 +20,8 @@ using namespace Seele;
 bool usePositionOnly = false;
 bool useViewCulling = false;
 bool useLightCulling = false;
+bool resetVisibility = false;
+
 
 GameView::GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo &createInfo, std::string dllPath)
     : View(graphics, window, createInfo, "Game")
@@ -121,6 +123,10 @@ void GameView::keyCallback(KeyCode code, InputAction action, KeyModifier modifie
     {
         useLightCulling = !useLightCulling;
         std::cout << "Use Light Culling " << useLightCulling << std::endl;
+    }
+    if (code == KeyCode::KEY_R && action == InputAction::RELEASE)
+    {
+        resetVisibility = true;
     }
 }
 

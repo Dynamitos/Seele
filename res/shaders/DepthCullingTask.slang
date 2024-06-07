@@ -26,7 +26,7 @@ void taskMain(
         uint cull = p.cullingOffset + i;
         MeshletDescription meshlet = pScene.meshletInfos[m];
         MeshletCullingInfo culling = pScene.cullingInfos[cull];
-        //if(!culling.anyVisible())
+        if(false)//if(!culling.anyVisible())
         {
             uint index;
             InterlockedAdd(head, 1, index);

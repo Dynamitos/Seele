@@ -3,6 +3,8 @@
 
 using namespace Seele;
 
+extern bool resetVisibility;
+
 VisibilityPass::VisibilityPass(Gfx::PGraphics graphics, PScene scene)
     : RenderPass(graphics, scene)
 {
@@ -17,22 +19,26 @@ void VisibilityPass::beginFrame(const Component::Camera& cam)
 {
     RenderPass::beginFrame(cam);
     cullingBuffer->rotateBuffer(VertexData::getMeshletCount() * sizeof(VertexData::MeshletCullingInfo), true);
+    if (resetVisibility)
+    {
+        Array<VertexData::MeshletCullingInfo> cullingData(VertexData::getMeshletCount());
+        std::memset(cullingData.data(), 0xffff, cullingData.size() * sizeof(VertexData::MeshletCullingInfo));
 
-    //Array<VertexData::MeshletCullingInfo> cullingData(VertexData::getMeshletCount());
-    //std::memset(cullingData.data(), 0xffff, cullingData.size() * sizeof(VertexData::MeshletCullingInfo));
+        cullingBuffer->updateContents(ShaderBufferCreateInfo{
+          .sourceData = {
+              .size = VertexData::getMeshletCount() * sizeof(VertexData::MeshletCullingInfo),
+              .data = (uint8 *)cullingData.data(),
+          },
+          .numElements = VertexData::getMeshletCount()});
+        cullingBuffer->pipelineBarrier(
+            Gfx::SE_ACCESS_TRANSFER_WRITE_BIT,
+            Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
+            Gfx::SE_ACCESS_MEMORY_WRITE_BIT,
+            Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
+
+        resetVisibility = false;
+    }
     
-    //cullingBuffer->updateContents(ShaderBufferCreateInfo{
-    //  .sourceData = {
-    //      .size = VertexData::getMeshletCount() * sizeof(VertexData::MeshletCullingInfo),
-    //      .data = (uint8 *)cullingData.data(),
-    //  },
-    //  .numElements = VertexData::getMeshletCount()});
-    //cullingBuffer->pipelineBarrier(
-    //    Gfx::SE_ACCESS_TRANSFER_WRITE_BIT,
-    //    Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
-    //    Gfx::SE_ACCESS_MEMORY_WRITE_BIT,
-    //    Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
-
 }
 
 void VisibilityPass::render()
@@ -60,8 +66,7 @@ void VisibilityPass::render()
     Gfx::OComputeCommand command = graphics->createComputeCommand("VisibilityCommand");
     command->bindPipeline(visibilityPipeline);
     command->bindDescriptor({viewParamsSet, visibilitySet});
-    command->dispatch(VertexData::getMeshletCount() / BLOCK_SIZE, 1, 1);
-    //command->dispatch(threadGroupSize.x, threadGroupSize.y, threadGroupSize.z);
+    command->dispatch(threadGroupSize.x, threadGroupSize.y, threadGroupSize.z);
     Array<Gfx::OComputeCommand> commands;
     commands.add(std::move(command));
     graphics->executeCommands(std::move(commands));
