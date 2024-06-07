@@ -36,12 +36,13 @@ void ShaderCompiler::registerVertexData(VertexData *vd)
 
 void ShaderCompiler::registerRenderPass(std::string name, PassConfig config)
 {
-    passes[name] = config;
+    passes[name] = std::move(config);
     compile();
 }
 
 ShaderPermutation ShaderCompiler::getTemplate(std::string name)
 {
+    std::scoped_lock lock(shadersLock);
     ShaderPermutation permutation;
     PassConfig &pass = passes[name];
     if (pass.useMeshShading)

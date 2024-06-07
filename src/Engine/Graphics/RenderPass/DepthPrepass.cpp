@@ -66,6 +66,8 @@ void DepthPrepass::render()
     for (VertexData *vertexData : VertexData::getList())
     {
         permutation.setVertexData(vertexData->getTypeName());
+        vertexData->getInstanceDataSet()->updateBuffer(6, cullingBuffer);
+        vertexData->getInstanceDataSet()->writeChanges();
         // Create Pipeline(VertexData)
         // Descriptors:
         // ViewData => global, static
@@ -119,14 +121,14 @@ void DepthPrepass::render()
             Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
             command->bindPipeline(pipeline);
         }
-        command->bindDescriptor(vertexData->getVertexDataSet());
         command->bindDescriptor(viewParamsSet);
+        command->bindDescriptor(vertexData->getVertexDataSet());
         command->bindDescriptor(vertexData->getInstanceDataSet());
         uint32 offset = 0;
         command->pushConstants(Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_VERTEX_BIT, 0, sizeof(VertexData::DrawCallOffsets), &offset);
         if (graphics->supportMeshShading())
         {
-            //command->drawMesh(vertexData->getNumInstances(), 1, 1);
+            command->drawMesh(vertexData->getNumInstances(), 1, 1);
         }
         else
         {
@@ -174,6 +176,13 @@ void DepthPrepass::render()
         Gfx::SE_ACCESS_SHADER_READ_BIT,
         Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT
     );
+    // Sync culling reads to compute write
+    cullingBuffer->pipelineBarrier(
+        Gfx::SE_ACCESS_SHADER_READ_BIT,
+        Gfx::SE_PIPELINE_STAGE_MESH_SHADER_BIT_EXT,
+        Gfx::SE_ACCESS_SHADER_WRITE_BIT,
+        Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT
+    );
 }
 
 void DepthPrepass::endFrame()
@@ -186,13 +195,15 @@ void DepthPrepass::publishOutputs()
 
 void DepthPrepass::createRenderPass()
 {
+    cullingBuffer = resources->requestBuffer("CULLINGBUFFER");
+
     depthAttachment = resources->requestRenderTarget("DEPTHPREPASS_DEPTH");
     depthAttachment.setInitialLayout(Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
     depthAttachment.setFinalLayout(Gfx::SE_IMAGE_LAYOUT_GENERAL);
     depthAttachment.setLoadOp(Gfx::SE_ATTACHMENT_LOAD_OP_LOAD);
     visibilityAttachment = resources->requestRenderTarget("VISIBILITY");
     visibilityAttachment.setInitialLayout(Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-    visibilityAttachment.setFinalLayout(Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+    visibilityAttachment.setFinalLayout(Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     visibilityAttachment.setLoadOp(Gfx::SE_ATTACHMENT_LOAD_OP_LOAD);
 
     Gfx::RenderTargetLayout layout = Gfx::RenderTargetLayout{

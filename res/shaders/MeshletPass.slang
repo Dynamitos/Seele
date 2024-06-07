@@ -15,7 +15,7 @@ struct PrimitiveAttributes
 [outputtopology("triangle")]
 [shader("mesh")]
 void meshMain(
-    in uint threadID: SV_GroupIndex,
+    in uint threadID: SV_GroupThreadID,
     in uint groupID: SV_GroupID,
     in payload MeshPayload meshPayload,
     out vertices FragmentParameter vertices[MAX_VERTICES],
@@ -27,7 +27,7 @@ void meshMain(
     uint meshletId = meshPayload.cullingOffset + meshletNumber;
     InstanceData inst = pScene.instances[meshPayload.instanceId];
     MeshletDescription m = pScene.meshletInfos[meshPayload.meshletOffset + meshletNumber];
-    MeshletCullingInfo cull = pScene.culledMeshlets[meshletId];
+    MeshletCullingInfo cull = pScene.cullingInfos[meshletId];
 	SetMeshOutputCounts(m.vertexCount, m.primitiveCount);
 	
 	for(uint i = threadID; i < MAX_PRIMITIVES; i += MESH_GROUP_SIZE)

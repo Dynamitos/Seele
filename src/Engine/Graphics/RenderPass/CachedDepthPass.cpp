@@ -66,6 +66,8 @@ void CachedDepthPass::render()
     for (VertexData *vertexData : VertexData::getList())
     {
         permutation.setVertexData(vertexData->getTypeName());
+        vertexData->getInstanceDataSet()->updateBuffer(6, cullingBuffer);
+        vertexData->getInstanceDataSet()->writeChanges();
 
         // Create Pipeline(VertexData)
         // Descriptors:
@@ -120,8 +122,8 @@ void CachedDepthPass::render()
             Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
             command->bindPipeline(pipeline);
         }
-        command->bindDescriptor(vertexData->getVertexDataSet());
         command->bindDescriptor(viewParamsSet);
+        command->bindDescriptor(vertexData->getVertexDataSet());
         command->bindDescriptor(vertexData->getInstanceDataSet());
         uint32 offset = 0;
         command->pushConstants(Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_VERTEX_BIT, 0, sizeof(VertexData::DrawCallOffsets), &offset);
@@ -205,6 +207,8 @@ void CachedDepthPass::publishOutputs()
 
 void CachedDepthPass::createRenderPass()
 {
+    cullingBuffer = resources->requestBuffer("CULLINGBUFFER");
+
     Gfx::RenderTargetLayout layout = Gfx::RenderTargetLayout{
         .colorAttachments = {visibilityAttachment},
         .depthAttachment = depthAttachment,

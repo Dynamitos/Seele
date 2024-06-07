@@ -89,6 +89,8 @@ public:
                           bool writeOnly = true) = 0;
   virtual void unmap() = 0;
 
+  virtual void clear() = 0;
+
 protected:
   // Inherited via QueueOwnedResource
   virtual void executeOwnershipBarrier(QueueType newOwner) = 0;

@@ -27,10 +27,11 @@ public:
     void setupView(Dependencies<Deps...>)
     {
         //List<std::function<void()>> work;
-        registry.view<Components..., Deps...>().each([&](Components&... comp, Deps&... deps){
+        registry.view<Components..., Deps...>().each([&](entt::entity id, Components&... comp, Deps&... deps){
             //work.add([&]() {
                 (accessComponent(deps), ...);
                 update(comp...);
+                update(id, comp...);
             //});
         });
         //getThreadPool().runAndWait(std::move(work));
@@ -41,7 +42,8 @@ public:
         setupView((getDependencies<Components>() | ...));
     }
     virtual void update() override {}
-    virtual void update(Components&... components) = 0;
+    virtual void update(Components&... components) {}
+    virtual void update(entt::entity id, Components&... components) {}
 };
 } // namespace System
 } // namespace Seele

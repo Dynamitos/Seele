@@ -133,6 +133,8 @@ public:
   virtual void *mapRegion(uint64 offset, uint64 size, bool writeOnly) override;
   virtual void unmap() override;
 
+  virtual void clear() override;
+
 protected:
   // Inherited via Vulkan::Buffer
   virtual VkAccessFlags getSourceAccessMask() override;

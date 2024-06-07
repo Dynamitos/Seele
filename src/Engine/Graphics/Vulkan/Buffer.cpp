@@ -389,6 +389,11 @@ void *ShaderBuffer::mapRegion(uint64 offset, uint64 size, bool writeOnly) {
 
 void ShaderBuffer::unmap() { Vulkan::Buffer::unmap(); }
 
+void ShaderBuffer::clear()
+{
+    vkCmdFillBuffer(graphics->getQueueCommands(owner)->getCommands()->getHandle(), Vulkan::Buffer::getHandle(), 0, VK_WHOLE_SIZE, 0);
+}
+
 void ShaderBuffer::requestOwnershipTransfer(Gfx::QueueType newOwner) {
   Gfx::QueueOwnedResource::transferOwnership(newOwner);
 }

@@ -21,6 +21,8 @@ private:
     Gfx::OTexture2D depthBuffer;
     Gfx::OTexture2D visibilityBuffer;
     Gfx::OPipelineLayout depthPrepassLayout;
+    
+    Gfx::PShaderBuffer cullingBuffer;
 };
 DEFINE_REF(CachedDepthPass)
 }

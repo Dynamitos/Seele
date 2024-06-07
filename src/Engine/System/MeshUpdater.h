@@ -12,7 +12,7 @@ class MeshUpdater : public ComponentSystem<Component::Transform, Component::Mesh
 public:
 	MeshUpdater(PScene scene);
 	virtual ~MeshUpdater();
-	virtual void update(Component::Transform& transform, Component::Mesh& mesh) override;
+	virtual void update(entt::entity id, Component::Transform& transform, Component::Mesh& mesh) override;
 private:
 };
 } // namespace System

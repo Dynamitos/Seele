@@ -3,17 +3,18 @@ import Scene;
 
 groupshared MeshPayload p;
 groupshared uint head;
+groupshared MeshData mesh;
 
 [numthreads(TASK_GROUP_SIZE, 1, 1)]
 [shader("amplification")]
 void taskMain(
-    uint threadID: SV_GroupIndex,
+    uint threadID: SV_GroupThreadID,
     uint groupID: SV_GroupID, )
 {
-    MeshData mesh = pScene.meshData[pOffsets.instanceOffset + groupID];
     if (threadID == 0)
     {
         head = 0;
+        mesh = pScene.meshData[pOffsets.instanceOffset + groupID];
         p.instanceId = pOffsets.instanceOffset + groupID;
         p.meshletOffset = mesh.meshletOffset;
         p.cullingOffset = pScene.cullingOffsets[p.instanceId];
@@ -24,8 +25,8 @@ void taskMain(
         uint m = p.meshletOffset + i;
         uint cull = p.cullingOffset + i;
         MeshletDescription meshlet = pScene.meshletInfos[m];
-        MeshletCullingInfo culling = pScene.culledMeshlets[cull];
-        if(false)
+        MeshletCullingInfo culling = pScene.cullingInfos[cull];
+        //if(!culling.anyVisible())
         {
             uint index;
             InterlockedAdd(head, 1, index);

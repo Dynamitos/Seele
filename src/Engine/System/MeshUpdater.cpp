@@ -14,10 +14,10 @@ MeshUpdater::~MeshUpdater()
 {
 }
 
-void MeshUpdater::update(Component::Transform& transform, Component::Mesh& comp)
+void MeshUpdater::update(entt::entity id, Component::Transform& transform, Component::Mesh& comp)
 {
-    for (auto& mesh : comp.asset->meshes)
+    for (uint32 i = 0; i < comp.asset->meshes.size(); ++i)
     {
-        mesh->vertexData->updateMesh(mesh, transform);
+        comp.asset->meshes[i]->vertexData->updateMesh(id, i, comp.asset->meshes[i], transform);
     }
 }

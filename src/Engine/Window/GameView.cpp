@@ -9,6 +9,7 @@
 #include "System/CameraUpdater.h"
 #include "Graphics/RenderPass/CachedDepthPass.h"
 #include "Graphics/RenderPass/DepthPrepass.h"
+#include "Graphics/RenderPass/VisibilityPass.h"
 #include "Graphics/RenderPass/LightCullingPass.h"
 #include "Graphics/RenderPass/BasePass.h"
 #include "Graphics/RenderPass/SkyboxRenderPass.h"
@@ -28,6 +29,7 @@ GameView::GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreate
     reloadGame();
     renderGraph.addPass(new CachedDepthPass(graphics, scene));
     renderGraph.addPass(new DepthPrepass(graphics, scene));
+    renderGraph.addPass(new VisibilityPass(graphics, scene));
     renderGraph.addPass(new LightCullingPass(graphics, scene));
     renderGraph.addPass(new BasePass(graphics, scene));
     renderGraph.addPass(new DebugPass(graphics, scene));

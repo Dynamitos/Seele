@@ -32,6 +32,8 @@ private:
     PCameraActor source;
     Gfx::OPipelineLayout basePassLayout;
     Gfx::ODescriptorLayout lightCullingLayout;
+
+    Gfx::PShaderBuffer cullingBuffer;
 };
 DEFINE_REF(BasePass)
 } // namespace Seele

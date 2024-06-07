@@ -85,19 +85,6 @@ void BasePass::beginFrame(const Component::Camera& cam)
 
 void BasePass::render()
 {
-    oLightIndexList->pipelineBarrier(
-        Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-        Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
-    tLightIndexList->pipelineBarrier(
-        Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-        Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
-    oLightGrid->pipelineBarrier(
-        Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-        Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
-    tLightGrid->pipelineBarrier(
-        Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-        Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
-
     opaqueCulling->updateBuffer(0, oLightIndexList);
     opaqueCulling->updateTexture(1, oLightGrid);
     transparentCulling->updateBuffer(0, tLightIndexList);
@@ -112,6 +99,8 @@ void BasePass::render()
     permutation.setViewCulling(useViewCulling);
     for (VertexData* vertexData : VertexData::getList())
     {
+        vertexData->getInstanceDataSet()->updateBuffer(6, cullingBuffer);
+        vertexData->getInstanceDataSet()->writeChanges();
         permutation.setVertexData(vertexData->getTypeName());
         const auto& materials = vertexData->getMaterialData();
         for (const auto& materialData : materials)
@@ -176,11 +165,11 @@ void BasePass::render()
                 Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
                 command->bindPipeline(pipeline);
             }
-            command->bindDescriptor(vertexData->getVertexDataSet());
             command->bindDescriptor(viewParamsSet);
+            command->bindDescriptor(vertexData->getVertexDataSet());
+            command->bindDescriptor(vertexData->getInstanceDataSet());
             command->bindDescriptor(scene->getLightEnvironment()->getDescriptorSet());
             command->bindDescriptor(opaqueCulling);
-            command->bindDescriptor(vertexData->getInstanceDataSet());
             for (const auto& drawCall : materialData.instances)
             {
                 command->bindDescriptor(drawCall.materialInstance->getDescriptorSet());
@@ -221,6 +210,8 @@ void BasePass::publishOutputs()
 
 void BasePass::createRenderPass()
 {
+    cullingBuffer = resources->requestBuffer("CULLINGBUFFER");
+
     depthAttachment = resources->requestRenderTarget("DEPTHPREPASS_DEPTH");
     depthAttachment.setLoadOp(Gfx::SE_ATTACHMENT_LOAD_OP_LOAD);
     depthAttachment.setInitialLayout(Gfx::SE_IMAGE_LAYOUT_GENERAL);

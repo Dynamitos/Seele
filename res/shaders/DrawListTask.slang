@@ -8,7 +8,7 @@ groupshared MeshData mesh;
 [numthreads(TASK_GROUP_SIZE, 1, 1)]
 [shader("amplification")]
 void taskMain(
-    uint threadID: SV_GroupIndex,
+    uint threadID: SV_GroupThreadID,
     uint groupID: SV_GroupID, )
 {
     if (threadID == 0)
@@ -25,7 +25,7 @@ void taskMain(
         uint m = p.meshletOffset + i;
         uint cull = p.cullingOffset + i;
         MeshletDescription meshlet = pScene.meshletInfos[m];
-        MeshletCullingInfo culling = pScene.culledMeshlets[cull];
+        MeshletCullingInfo culling = pScene.cullingInfos[cull];
         if(culling.anyVisible())
         {
             uint index;

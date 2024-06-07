@@ -7,6 +7,7 @@
 #include "Graphics/Descriptor.h"
 #include "Graphics/Buffer.h"
 #include "Meshlet.h"
+#include <entt/entt.hpp>
 
 constexpr uint64 MAX_TEXCOORDS = 8;
 
@@ -56,6 +57,7 @@ namespace Seele
       DrawCallOffsets offsets;
       Array<InstanceData> instanceData;
       Array<MeshData> instanceMeshData;
+      Array<uint32> cullingOffsets;
     };
     struct MaterialData
     {
@@ -63,7 +65,7 @@ namespace Seele
       Array<BatchedDrawCall> instances;
     };
     void resetMeshData();
-    void updateMesh(PMesh mesh, Component::Transform &transform);
+    void updateMesh(entt::entity id, uint32 meshIndex, PMesh mesh, Component::Transform &transform);
     void createDescriptors();
     void loadMesh(MeshId id, Array<uint32> indices, Array<Meshlet> meshlets);
     MeshId allocateVertexData(uint64 numVertices);
@@ -86,6 +88,15 @@ namespace Seele
     static VertexData *findByTypeName(std::string name);
     virtual void init(Gfx::PGraphics graphics);
     virtual void destroy();
+
+    struct CullingMapping
+    {
+        uint64 instanceId;
+        uint32 cullingOffset;
+    };
+    static CullingMapping getCullingMapping(entt::entity id, uint32 meshIndex, uint32 numMeshlets);
+    static uint64 getInstanceCount() { return instanceCount; }
+    static uint64 getMeshletCount() { return meshletCount; }
 
   protected:
     virtual void resizeBuffers() = 0;
@@ -111,6 +122,17 @@ namespace Seele
     Array<uint8> primitiveIndices;
     Array<uint32> vertexIndices;
     Array<uint32> indices;
+
+    struct MeshMapping
+    {
+        entt::entity id;
+        uint32 meshId;
+        auto operator<=>(const MeshMapping& other) const = default;
+    };
+    static Map<MeshMapping, CullingMapping> instanceIdMap;
+    static uint64 instanceCount;
+    static uint64 meshletCount;
+
     Gfx::PGraphics graphics;
     Gfx::ODescriptorLayout instanceDataLayout;
     // for mesh shading

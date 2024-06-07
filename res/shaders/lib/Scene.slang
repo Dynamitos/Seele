@@ -66,10 +66,10 @@ struct Scene
     StructuredBuffer<MeshletDescription> meshletInfos;
     StructuredBuffer<uint8_t> primitiveIndices;
     StructuredBuffer<uint32_t> vertexIndices;
-    StructuredBuffer<MeshletCullingInfo> culledMeshlets;
     StructuredBuffer<uint32_t> cullingOffsets;
+    StructuredBuffer<MeshletCullingInfo> cullingInfos;
 };
-layout(set = 2)
+layout(set=2)
 ParameterBlock<Scene> pScene;
 
 uint32_t encodePrimitive(uint32_t primitiveId, uint32_t meshletId)

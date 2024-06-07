@@ -20,6 +20,8 @@ private:
     Gfx::RenderTargetAttachment depthAttachment;
     Gfx::RenderTargetAttachment visibilityAttachment;
     Gfx::OPipelineLayout depthPrepassLayout;
+
+    Gfx::PShaderBuffer cullingBuffer;
 };
 DEFINE_REF(DepthPrepass)
 } // namespace Seele
