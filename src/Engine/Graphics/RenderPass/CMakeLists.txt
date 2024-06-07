@@ -10,6 +10,8 @@ target_sources(Engine
         DepthPrepass.cpp
         LightCullingPass.h
         LightCullingPass.cpp
+        RayTracingPass.h
+        RayTracingPass.cpp
         RenderGraph.h
         RenderGraphResources.h
         RenderGraphResources.cpp
@@ -32,6 +34,7 @@ target_sources(Engine
             DebugPass.h
             DepthPrepass.h
             LightCullingPass.h
+            RayTracingPass.h
             RenderGraph.h
             RenderGraphResources.h
             RenderPass.h
