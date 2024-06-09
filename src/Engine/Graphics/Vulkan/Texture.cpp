@@ -1,5 +1,6 @@
 #include "Texture.h"
 #include "Command.h"
+#include "Enums.h"
 #include <math.h>
 
 using namespace Seele;

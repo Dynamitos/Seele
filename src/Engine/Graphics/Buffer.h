@@ -1,5 +1,6 @@
 #pragma once
 #include "Resources.h"
+#include "Initializer.h"
 
 namespace Seele {
 namespace Gfx {

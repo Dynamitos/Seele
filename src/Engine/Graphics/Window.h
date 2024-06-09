@@ -1,6 +1,7 @@
 #pragma once
 #include "Initializer.h"
 #include "Texture.h"
+#include <functional>
 
 namespace Seele
 {

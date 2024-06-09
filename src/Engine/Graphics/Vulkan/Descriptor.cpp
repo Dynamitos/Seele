@@ -3,6 +3,7 @@
 #include "Command.h"
 #include "Graphics.h"
 #include "Texture.h"
+#include "CRC.h"
 
 using namespace Seele;
 using namespace Seele::Vulkan;

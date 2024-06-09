@@ -201,9 +201,11 @@ void StaticMeshVertexData::resizeBuffers()
         },
         .numElements = verticesAllocated * 3,
         .dynamic = false,
+        .vertexBuffer = 1,
         .name = "Positions",
     };
     positions = graphics->createShaderBuffer(createInfo);
+    createInfo.vertexBuffer = false;
     createInfo.name = "Normals";
     normals = graphics->createShaderBuffer(createInfo);
     createInfo.name = "Tangents";

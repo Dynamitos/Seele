@@ -2,6 +2,8 @@
 #include "Enums.h"
 #include "Containers/Map.h"
 #include "Math/Math.h"
+#include "MinimalEngine.h"
+#include "MeshData.h"
 
 namespace Seele
 {
@@ -113,6 +115,7 @@ namespace Seele
         DataSource  sourceData = DataSource();
         uint64      numElements = 1;
         uint8       dynamic = 0;
+        uint8       vertexBuffer = 0;
         std::string name = "Unnamed";
     };
     DECLARE_NAME_REF(Gfx, PipelineLayout)
@@ -144,6 +147,7 @@ namespace Seele
         Array<VertexInputBinding> bindings;
         Array<VertexInputAttribute> attributes;
     };
+    DECLARE_REF(MaterialInstance)
     namespace Gfx
     {
         struct SePushConstantRange
@@ -243,6 +247,20 @@ namespace Seele
         {
             Gfx::PComputeShader     computeShader = nullptr;
             Gfx::PPipelineLayout    pipelineLayout = nullptr;
+        };
+        DECLARE_REF(ShaderBuffer)
+        struct BottomLevelASCreateInfo
+        {
+            PShaderBuffer positionBuffer;
+            PShaderBuffer indexBuffer;
+            MeshData meshData;
+            PMaterialInstance material;
+            uint64 verticesOffset;
+            uint64 indicesOffset;
+        };
+        struct TopLevelASCreateInfo
+        {
+
         };
     } // namespace Gfx
 } // namespace Seele

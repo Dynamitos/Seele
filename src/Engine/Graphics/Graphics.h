@@ -31,6 +31,8 @@ DECLARE_REF(GraphicsPipeline)
 DECLARE_REF(ComputePipeline)
 DECLARE_REF(RenderCommand)
 DECLARE_REF(ComputeCommand)
+DECLARE_REF(BottomLevelAS)
+DECLARE_REF(TopLevelAS)
 class Graphics
 {
 public:
@@ -88,6 +90,10 @@ public:
     virtual void resolveTexture(Gfx::PTexture source, Gfx::PTexture destination) = 0;
 
     bool supportMeshShading() const { return meshShadingEnabled; }
+
+    // Ray Tracing
+    virtual OBottomLevelAS createBottomLevelAccelerationStructure(const BottomLevelASCreateInfo& createInfo) = 0;
+    virtual OTopLevelAS createTopLevelAccelerationStructure(const TopLevelASCreateInfo& createInfo) = 0;
 protected:
     QueueFamilyMapping queueMapping;
     OShaderCompiler shaderCompiler;

@@ -3,6 +3,8 @@
 #include "Allocator.h"
 #include "Buffer.h"
 #include "Graphics/Enums.h"
+#include "Graphics/Graphics.h"
+#include "Graphics/Initializer.h"
 #include "PipelineCache.h"
 #include "Command.h"
 #include "Descriptor.h"
@@ -10,6 +12,7 @@
 #include "RenderPass.h"
 #include "Framebuffer.h"
 #include "Shader.h"
+#include "RayTracing.h"
 #include <GLFW/glfw3.h>
 #include <cstring>
 #include <vulkan/vulkan_core.h>
@@ -291,14 +294,24 @@ void Graphics::resolveTexture(Gfx::PTexture source, Gfx::PTexture destination)
     vkCmdResolveImage(getGraphicsCommands()->getCommands()->getHandle(), sourceTex->getImage(), cast(sourceTex->getLayout()), destinationTex->getImage(), cast(destinationTex->getLayout()), 1, &resolve);
 }
 
-void Graphics::vkCmdDrawMeshTasksEXT(VkCommandBuffer handle, uint32 groupX, uint32 groupY, uint32 groupZ)
+Gfx::OBottomLevelAS Graphics::createBottomLevelAccelerationStructure(const Gfx::BottomLevelASCreateInfo& createInfo)
 {
-    cmdDrawMeshTasks(handle, groupX, groupY, groupZ);
+    return new BottomLevelAS(this, createInfo);
 }
 
-void Graphics::vkCmdDrawMeshTasksIndirectEXT(VkCommandBuffer handle, VkBuffer buffer, uint64 offset, uint32 drawCount, uint32 stride)
+Gfx::OTopLevelAS Graphics::createTopLevelAccelerationStructure(const Gfx::TopLevelASCreateInfo& createInfo)
 {
-    cmdDrawMeshTasksIndirect(handle, buffer, offset, drawCount, stride);
+    return new TopLevelAS(this, createInfo);
+}
+
+void Graphics::vkCmdDrawMeshTasksEXT(VkCommandBuffer cmd, uint32 groupX, uint32 groupY, uint32 groupZ)
+{
+    cmdDrawMeshTasks(cmd, groupX, groupY, groupZ);
+}
+
+void Graphics::vkCmdDrawMeshTasksIndirectEXT(VkCommandBuffer cmd, VkBuffer buffer, uint64 offset, uint32 drawCount, uint32 stride)
+{
+    cmdDrawMeshTasksIndirect(cmd, buffer, offset, drawCount, stride);
 }
 
 void Graphics::vkSetDebugUtilsObjectNameEXT(VkDebugUtilsObjectNameInfoEXT* info)
@@ -395,6 +408,7 @@ void Graphics::initInstance(GraphicsInitializer initInfo)
     assert(glfwVulkanSupported());
     VkApplicationInfo appInfo = {
         .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
+        .pNext = nullptr,
         .pApplicationName = initInfo.applicationName,
         .applicationVersion = VK_MAKE_VERSION(0, 0, 1),
         .pEngineName = initInfo.engineName,
@@ -415,6 +429,7 @@ void Graphics::initInstance(GraphicsInitializer initInfo)
 #endif
     VkInstanceCreateInfo info = {
         .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+        .pNext = nullptr,
 #if __APPLE__
         .flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR,
 #endif
@@ -562,6 +577,7 @@ void Graphics::createDevice(GraphicsInitializer initializer)
                 .flags = 0,
                 .queueFamilyIndex = familyIndex,
                 .queueCount = numQueuesForFamily,
+                .pQueuePriorities = nullptr,
             };
             numPriorities += numQueuesForFamily;
             queueInfos.add(info);

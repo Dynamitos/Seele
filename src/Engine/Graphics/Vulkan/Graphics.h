@@ -1,5 +1,4 @@
 #pragma once
-#include "Enums.h"
 #include "Graphics/Graphics.h"
 #include <vk_mem_alloc.h>
 
@@ -69,6 +68,10 @@ public:
     virtual Gfx::OVertexInput createVertexInput(VertexInputStateCreateInfo createInfo) override;
 
     virtual void resolveTexture(Gfx::PTexture source, Gfx::PTexture destination) override;
+
+    // Ray Tracing
+    virtual Gfx::OBottomLevelAS createBottomLevelAccelerationStructure(const Gfx::BottomLevelASCreateInfo& createInfo) override;
+    virtual Gfx::OTopLevelAS createTopLevelAccelerationStructure(const Gfx::TopLevelASCreateInfo& createInfo) override;
 
     void vkCmdDrawMeshTasksEXT(VkCommandBuffer handle, uint32 groupX, uint32 groupY, uint32 groupZ);
     void vkCmdDrawMeshTasksIndirectEXT(VkCommandBuffer handle, VkBuffer buffer, uint64 offset, uint32 drawCount, uint32 stride);

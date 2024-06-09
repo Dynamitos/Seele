@@ -2,6 +2,7 @@
 #include "Graphics.h"
 #include "Allocator.h"
 #include "Command.h"
+#include "Enums.h"
 
 using namespace Seele;
 using namespace Seele::Vulkan;

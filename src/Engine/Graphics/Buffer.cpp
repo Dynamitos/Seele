@@ -1,5 +1,4 @@
 #include "Buffer.h"
-#include "Buffer.h"
 
 using namespace Seele;
 using namespace Seele::Gfx;
@@ -42,6 +41,7 @@ IndexBuffer::IndexBuffer(QueueFamilyMapping mapping, uint64 size, Gfx::SeIndexTy
 IndexBuffer::~IndexBuffer()
 {
 }
+
 UniformBuffer::UniformBuffer(QueueFamilyMapping mapping, const DataSource& sourceData)
 	: Buffer(mapping, sourceData.owner)
 {}

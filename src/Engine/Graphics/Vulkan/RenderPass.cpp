@@ -4,6 +4,7 @@
 #include "Texture.h"
 #include "Resources.h"
 #include "Command.h"
+#include "CRC.h"
 
 using namespace Seele;
 using namespace Seele::Vulkan;

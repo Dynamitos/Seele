@@ -16,6 +16,7 @@ public:
   VmaAllocationInfo info = VmaAllocationInfo();
   VkMemoryPropertyFlags properties = 0;
   uint64 size = 0;
+  VkDeviceAddress deviceAddress;
 };
 DEFINE_REF(BufferAllocation);
 class Buffer {
@@ -24,6 +25,9 @@ public:
          Gfx::QueueType &queueType, bool dynamic, std::string name);
   virtual ~Buffer();
   VkBuffer getHandle() const { return buffers[currentBuffer]->buffer; }
+  VkDeviceAddress getDeviceAddress() const {
+    return buffers[currentBuffer]->deviceAddress;
+  }
   PBufferAllocation getAlloc() const { return buffers[currentBuffer]; }
   uint64 getSize() const { return buffers[currentBuffer]->size; }
   void *map(bool writeOnly = true);
@@ -130,7 +134,8 @@ public:
   virtual ~ShaderBuffer();
   virtual void
   updateContents(const ShaderBufferCreateInfo &createInfo) override;
-  virtual void rotateBuffer(uint64 size, bool preserveContents = false) override;
+  virtual void rotateBuffer(uint64 size,
+                            bool preserveContents = false) override;
   virtual void *mapRegion(uint64 offset, uint64 size, bool writeOnly) override;
   virtual void unmap() override;
 

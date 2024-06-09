@@ -22,6 +22,8 @@ target_sources(Engine
 		PipelineCache.cpp
 		Queue.h
 		Queue.cpp
+        RayTracing.h
+        RayTracing.cpp
 		RenderPass.h
 		RenderPass.cpp
 		Resources.h
@@ -47,6 +49,7 @@ target_sources(Engine
 			Pipeline.h
 			PipelineCache.h
 			Queue.h
+            RayTracing.h
 			RenderPass.h
 			Resources.h
 			Shader.h

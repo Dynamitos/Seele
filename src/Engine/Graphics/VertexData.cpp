@@ -4,10 +4,9 @@
 #include "Material/Material.h"
 #include "Graphics/Graphics.h"
 #include "Graphics/Descriptor.h"
-#include "Component/Mesh.h"
 #include "Graphics/Shader.h"
 #include "Graphics/Mesh.h"
-#include "Containers/Set.h"
+#include "Material/MaterialInstance.h"
 
 using namespace Seele;
 
@@ -114,7 +113,6 @@ void VertexData::createDescriptors()
     instanceData.clear();
     instanceMeshData.clear();
 
-    uint32 numMeshlets = 0;
     Array<uint32> cullingOffsets;
     for (auto &mat : materialData)
     {
@@ -130,7 +128,6 @@ void VertexData::createDescriptors()
                 instanceMeshData.add(instance.instanceMeshData[i]);
                 // instance.numMeshlets += instance.instanceMeshData[i].numMeshlets;
                 // cullingOffsets.add(numMeshlets);
-                numMeshlets += instance.instanceMeshData[i].numMeshlets;
             }
         }
     }

@@ -14,10 +14,13 @@ target_sources(Engine
         Initializer.h
         Mesh.h
         Mesh.cpp
+        MeshData.h
         Meshlet.h
         Meshlet.cpp
         Pipeline.h
         Pipeline.cpp
+        RayTracing.h
+        RayTracing.cpp
         RenderTarget.h
         RenderTarget.cpp
         Resources.h
@@ -47,7 +50,9 @@ target_sources(Engine
             Initializer.h
             Mesh.h
             Meshlet.h
+            MeshData.h
             Pipeline.h
+            RayTracing.h
             RenderTarget.h
             Resources.h
             Shader.h
