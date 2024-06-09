@@ -1,13 +1,12 @@
 #include "SkyboxRenderPass.h"
-#include "Graphics/Graphics.h"
 #include "Asset/AssetRegistry.h"
 #include "Graphics/Command.h"
+#include "Graphics/Graphics.h"
+
 
 using namespace Seele;
 
-SkyboxRenderPass::SkyboxRenderPass(Gfx::PGraphics graphics, PScene scene)
-    : RenderPass(graphics, scene)
-{
+SkyboxRenderPass::SkyboxRenderPass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics, scene) {
     skybox = Seele::Component::Skybox{
         //.day = AssetRegistry::findTexture("FS000_Day_01")->getTexture().cast<Gfx::TextureCube>(),
         //.night = AssetRegistry::findTexture("FS000_Night_01")->getTexture().cast<Gfx::TextureCube>(),
@@ -15,13 +14,9 @@ SkyboxRenderPass::SkyboxRenderPass(Gfx::PGraphics graphics, PScene scene)
         .blendFactor = 0,
     };
 }
-SkyboxRenderPass::~SkyboxRenderPass()
-{
+SkyboxRenderPass::~SkyboxRenderPass() {}
 
-}
-
-void SkyboxRenderPass::beginFrame(const Component::Camera& cam)
-{
+void SkyboxRenderPass::beginFrame(const Component::Camera& cam) {
     RenderPass::beginFrame(cam);
 
     skyboxDataLayout->reset();
@@ -30,14 +25,12 @@ void SkyboxRenderPass::beginFrame(const Component::Camera& cam)
     skyboxBuffer->updateContents(DataSource{
         .size = sizeof(SkyboxData),
         .data = (uint8*)&skyboxData,
-        });
+    });
     skyboxDataSet = skyboxDataLayout->allocateDescriptorSet();
     skyboxDataSet->updateBuffer(0, skyboxBuffer);
     skyboxDataSet->writeChanges();
-    skyboxBuffer->pipelineBarrier(
-        Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
-        Gfx::SE_ACCESS_MEMORY_READ_BIT, Gfx::SE_PIPELINE_STAGE_VERTEX_SHADER_BIT
-    );
+    skyboxBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, Gfx::SE_ACCESS_MEMORY_READ_BIT,
+                                  Gfx::SE_PIPELINE_STAGE_VERTEX_SHADER_BIT);
     textureSet = textureLayout->allocateDescriptorSet();
     textureSet->updateTexture(0, skybox.day);
     textureSet->updateTexture(1, skybox.night);
@@ -45,16 +38,13 @@ void SkyboxRenderPass::beginFrame(const Component::Camera& cam)
     textureSet->writeChanges();
 }
 
-void SkyboxRenderPass::render()
-{
+void SkyboxRenderPass::render() {
     colorAttachment.getTexture()->pipelineBarrier(
         Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-        Gfx::SE_ACCESS_COLOR_ATTACHMENT_READ_BIT, Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT
-    );
+        Gfx::SE_ACCESS_COLOR_ATTACHMENT_READ_BIT, Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
     depthAttachment.getTexture()->pipelineBarrier(
         Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-        Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT, Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT
-    );
+        Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT, Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT);
     graphics->beginRenderPass(renderPass);
     Gfx::ORenderCommand renderCommand = graphics->createRenderCommand("SkyboxRender");
     renderCommand->setViewport(viewport);
@@ -67,48 +57,56 @@ void SkyboxRenderPass::render()
     graphics->endRenderPass();
 }
 
-void SkyboxRenderPass::endFrame()
-{
+void SkyboxRenderPass::endFrame() {}
 
-}
-
-void SkyboxRenderPass::publishOutputs()
-{
+void SkyboxRenderPass::publishOutputs() {
     skyboxDataLayout = graphics->createDescriptorLayout("pSkyboxData");
-    skyboxDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 0, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER,});
+    skyboxDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .binding = 0,
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+    });
     skyboxDataLayout->create();
     textureLayout = graphics->createDescriptorLayout("pSkyboxTextures");
-    textureLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 0, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,});
-    textureLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 1, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,});
-    textureLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 2, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLER,});
+    textureLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .binding = 0,
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+    });
+    textureLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .binding = 1,
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+    });
+    textureLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .binding = 2,
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLER,
+    });
     textureLayout->create();
 
     skyboxSampler = graphics->createSampler({});
 }
 
-void SkyboxRenderPass::createRenderPass()
-{
+void SkyboxRenderPass::createRenderPass() {
     colorAttachment = resources->requestRenderTarget("BASEPASS_COLOR");
-    //colorAttachment->loadOp = Gfx::SE_ATTACHMENT_LOAD_OP_LOAD;
+    // colorAttachment->loadOp = Gfx::SE_ATTACHMENT_LOAD_OP_LOAD;
     depthAttachment = resources->requestRenderTarget("DEPTHPREPASS_DEPTH");
-    //depthAttachment->loadOp = Gfx::SE_ATTACHMENT_LOAD_OP_LOAD;
-    //Gfx::ORenderTargetLayout layout = new Gfx::RenderTargetLayout{
-    //    .colorAttachments = { colorAttachment },
-    //    .depthAttachment = depthAttachment
-    //};
-    //renderPass = graphics->createRenderPass(std::move(layout), viewport);
+    // depthAttachment->loadOp = Gfx::SE_ATTACHMENT_LOAD_OP_LOAD;
+    // Gfx::ORenderTargetLayout layout = new Gfx::RenderTargetLayout{
+    //     .colorAttachments = { colorAttachment },
+    //     .depthAttachment = depthAttachment
+    // };
+    // renderPass = graphics->createRenderPass(std::move(layout), viewport);
 
     skyboxData.transformMatrix = Matrix4(1);
     skyboxData.fogColor = skybox.fogColor;
     skyboxData.blendFactor = skybox.blendFactor;
 
     skyboxBuffer = graphics->createUniformBuffer(UniformBufferCreateInfo{
-        .sourceData = {
-            .size = sizeof(SkyboxData),
-            .data = (uint8*)&skyboxData,
-        },
+        .sourceData =
+            {
+                .size = sizeof(SkyboxData),
+                .data = (uint8*)&skyboxData,
+            },
         .dynamic = true,
-        });
+    });
 
     ShaderCreateInfo createInfo = {
         .name = "SkyboxVertex",

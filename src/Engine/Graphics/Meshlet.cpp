@@ -1,29 +1,26 @@
 #include "Meshlet.h"
-#include "Containers/Map.h"
 #include "Containers/List.h"
+#include "Containers/Map.h"
 #include "Containers/Set.h"
 #include <iostream>
 
+
 using namespace Seele;
 
-struct AdjacencyInfo
-{
+struct AdjacencyInfo {
     Array<uint32> trianglesPerVertex;
     Array<uint32> indexBufferOffset;
     Array<uint32> triangleData;
 };
 
-void buildAdjacency(const uint32 numVerts, const Array<uint32>& indices, AdjacencyInfo& info)
-{
+void buildAdjacency(const uint32 numVerts, const Array<uint32>& indices, AdjacencyInfo& info) {
     info.trianglesPerVertex.resize(numVerts, 0);
-    for (size_t i = 0; i < indices.size(); ++i)
-    {
+    for (size_t i = 0; i < indices.size(); ++i) {
         info.trianglesPerVertex[indices[i]]++;
     }
     uint32 triangleOffset = 0;
     info.indexBufferOffset.resize(numVerts, 0);
-    for (size_t j = 0; j < numVerts; ++j)
-    {
+    for (size_t j = 0; j < numVerts; ++j) {
         info.indexBufferOffset[j] = triangleOffset;
         triangleOffset += info.trianglesPerVertex[j];
     }
@@ -31,8 +28,7 @@ void buildAdjacency(const uint32 numVerts, const Array<uint32>& indices, Adjacen
     uint32 numTriangles = indices.size() / 3;
     info.triangleData.resize(triangleOffset);
     Array<uint32> offsets = info.indexBufferOffset;
-    for (uint32 k = 0; k < numTriangles; ++k)
-    {
+    for (uint32 k = 0; k < numTriangles; ++k) {
         int a = indices[k * 3];
         int b = indices[k * 3 + 1];
         int c = indices[k * 3 + 2];
@@ -43,21 +39,16 @@ void buildAdjacency(const uint32 numVerts, const Array<uint32>& indices, Adjacen
     }
 }
 
-int32 skipDeadEnd(const Array<uint32>& liveTriCount, List<uint32>& deadEndStack, uint32& cursor)
-{
-    while (!deadEndStack.empty())
-    {
+int32 skipDeadEnd(const Array<uint32>& liveTriCount, List<uint32>& deadEndStack, uint32& cursor) {
+    while (!deadEndStack.empty()) {
         uint32 vertIdx = deadEndStack.front();
         deadEndStack.popFront();
-        if (liveTriCount[vertIdx] > 0)
-        {
+        if (liveTriCount[vertIdx] > 0) {
             return vertIdx;
         }
     }
-    while (cursor < liveTriCount.size())
-    {
-        if (liveTriCount[cursor] > 0)
-        {
+    while (cursor < liveTriCount.size()) {
+        if (liveTriCount[cursor] > 0) {
             return cursor;
         }
         ++cursor;
@@ -65,35 +56,29 @@ int32 skipDeadEnd(const Array<uint32>& liveTriCount, List<uint32>& deadEndStack,
     return -1;
 }
 
-int32 getNextVertex(const uint32 cacheSize, const Array<uint32>& oneRing, const Array<uint32>& cacheTimeStamps, const uint32 timeStamp, const Array<uint32>& liveTriCount, List<uint32>& deadEndStack, uint32& cursor)
-{
+int32 getNextVertex(const uint32 cacheSize, const Array<uint32>& oneRing, const Array<uint32>& cacheTimeStamps, const uint32 timeStamp,
+                    const Array<uint32>& liveTriCount, List<uint32>& deadEndStack, uint32& cursor) {
     uint32 bestCandidate = std::numeric_limits<uint32>::max();
     int highestPriority = -1;
-    for (const uint32& vertIdx : oneRing)
-    {
-        if (liveTriCount[vertIdx] > 0)
-        {
+    for (const uint32& vertIdx : oneRing) {
+        if (liveTriCount[vertIdx] > 0) {
             int priority = 0;
-            if (timeStamp - cacheTimeStamps[vertIdx] + 2 * liveTriCount[vertIdx] <= cacheSize)
-            {
+            if (timeStamp - cacheTimeStamps[vertIdx] + 2 * liveTriCount[vertIdx] <= cacheSize) {
                 priority = timeStamp - cacheTimeStamps[vertIdx];
             }
-            if (priority > highestPriority)
-            {
+            if (priority > highestPriority) {
                 highestPriority = priority;
                 bestCandidate = vertIdx;
             }
         }
     }
-    if(bestCandidate == std::numeric_limits<uint32>::max())
-    {
+    if (bestCandidate == std::numeric_limits<uint32>::max()) {
         bestCandidate = skipDeadEnd(liveTriCount, deadEndStack, cursor);
     }
     return bestCandidate;
 }
 
-void tipsifyIndexBuffer(const Array<uint32>& indices, const uint32 numVerts, const uint32 cacheSize, Array<uint32>& outIndices)
-{
+void tipsifyIndexBuffer(const Array<uint32>& indices, const uint32 numVerts, const uint32 cacheSize, Array<uint32>& outIndices) {
     AdjacencyInfo adjacencyStruct;
     buildAdjacency(numVerts, indices, adjacencyStruct);
 
@@ -108,14 +93,12 @@ void tipsifyIndexBuffer(const Array<uint32>& indices, const uint32 numVerts, con
     int32 curVert = 0;
     uint32 timeStamp = cacheSize + 1;
     uint32 cursor = 1;
-    while (curVert != -1)
-    {
+    while (curVert != -1) {
         Array<uint32> oneRing;
         const uint32* startTriPointer = &adjacencyStruct.triangleData[0] + adjacencyStruct.indexBufferOffset[curVert];
         const uint32* endTriPointer = startTriPointer + adjacencyStruct.trianglesPerVertex[curVert];
 
-        for (const uint32* it = startTriPointer; it != endTriPointer; ++it)
-        {
+        for (const uint32* it = startTriPointer; it != endTriPointer; ++it) {
             uint32 triangle = *it;
 
             if (emittedTriangles[triangle])
@@ -156,22 +139,17 @@ void tipsifyIndexBuffer(const Array<uint32>& indices, const uint32 numVerts, con
     }
 }
 
-struct Triangle
-{
+struct Triangle {
     StaticArray<uint32, 3> indices;
 };
 
-int findIndex(Meshlet &current, uint32 index)
-{
-    for (uint32 i = 0; i < current.numVertices; ++i)
-    {
-        if (current.uniqueVertices[i] == index)
-        {
+int findIndex(Meshlet& current, uint32 index) {
+    for (uint32 i = 0; i < current.numVertices; ++i) {
+        if (current.uniqueVertices[i] == index) {
             return i;
         }
     }
-    if (current.numVertices == Gfx::numVerticesPerMeshlet)
-    {
+    if (current.numVertices == Gfx::numVerticesPerMeshlet) {
         return -1;
     }
     current.uniqueVertices[current.numVertices] = index;
@@ -179,8 +157,7 @@ int findIndex(Meshlet &current, uint32 index)
     return current.numVertices++;
 }
 
-void completeMeshlet(Array<Meshlet> &meshlets, Meshlet &current)
-{
+void completeMeshlet(Array<Meshlet>& meshlets, Meshlet& current) {
     meshlets.add(current);
     current = {
         .boundingBox = AABB(),
@@ -189,14 +166,12 @@ void completeMeshlet(Array<Meshlet> &meshlets, Meshlet &current)
     };
 }
 
-bool addTriangle(const Array<Vector>& positions, Meshlet &current, Triangle& tri)
-{
+bool addTriangle(const Array<Vector>& positions, Meshlet& current, Triangle& tri) {
     int f1 = findIndex(current, tri.indices[0]);
     int f2 = findIndex(current, tri.indices[1]);
     int f3 = findIndex(current, tri.indices[2]);
 
-    if (f1 == -1 || f2 == -1 || f3 == -1 || current.numPrimitives == Gfx::numPrimitivesPerMeshlet)
-    {
+    if (f1 == -1 || f2 == -1 || f3 == -1 || current.numPrimitives == Gfx::numPrimitivesPerMeshlet) {
         return false;
     }
     current.boundingBox.adjust(positions[tri.indices[0]]);
@@ -209,36 +184,32 @@ bool addTriangle(const Array<Vector>& positions, Meshlet &current, Triangle& tri
     return true;
 }
 
-void Meshlet::build(const Array<Vector> &positions, const Array<uint32> &indices, Array<Meshlet> &meshlets)
-{
+void Meshlet::build(const Array<Vector>& positions, const Array<uint32>& indices, Array<Meshlet>& meshlets) {
     Meshlet current = {
         .numVertices = 0,
         .numPrimitives = 0,
     };
-    //Array<uint32> optimizedIndices = indices;
-    //tipsifyIndexBuffer(indices, positions.size(), 25, optimizedIndices);
+    // Array<uint32> optimizedIndices = indices;
+    // tipsifyIndexBuffer(indices, positions.size(), 25, optimizedIndices);
     Array<Triangle> triangles(indices.size() / 3);
-    for (size_t i = 0; i < triangles.size(); ++i)
-    {
+    for (size_t i = 0; i < triangles.size(); ++i) {
         triangles[i] = Triangle{
-            .indices = {
-                indices[i * 3 + 0],
-                indices[i * 3 + 1],
-                indices[i * 3 + 2],
-            },
+            .indices =
+                {
+                    indices[i * 3 + 0],
+                    indices[i * 3 + 1],
+                    indices[i * 3 + 2],
+                },
         };
     }
-    while(!triangles.empty())
-    {
-        if (!addTriangle(positions, current, triangles.back()))
-        {
+    while (!triangles.empty()) {
+        if (!addTriangle(positions, current, triangles.back())) {
             completeMeshlet(meshlets, current);
             addTriangle(positions, current, triangles.back());
         }
         triangles.pop();
     }
-    if (current.numVertices > 0)
-    {
+    if (current.numVertices > 0) {
         completeMeshlet(meshlets, current);
     }
 }

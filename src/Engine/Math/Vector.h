@@ -1,7 +1,7 @@
 #pragma once
 #ifdef WIN32
 #pragma warning(push)
-#pragma warning(disable: 4201)
+#pragma warning(disable : 4201)
 #endif
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
@@ -13,8 +13,7 @@
 #endif
 #include <nlohmann/json_fwd.hpp>
 
-namespace Seele
-{
+namespace Seele {
 typedef glm::vec2 Vector2;
 typedef glm::vec3 Vector;
 typedef glm::vec4 Vector4;

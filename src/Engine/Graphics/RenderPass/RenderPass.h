@@ -1,20 +1,19 @@
 #pragma once
-#include "MinimalEngine.h"
-#include "Math/Math.h"
-#include "RenderGraphResources.h"
 #include "Component/Camera.h"
-#include "Scene/Scene.h"
-#include "Material/MaterialInstance.h"
 #include "Graphics/VertexData.h"
+#include "Material/MaterialInstance.h"
+#include "Math/Math.h"
+#include "MinimalEngine.h"
+#include "RenderGraphResources.h"
+#include "Scene/Scene.h"
 
-namespace Seele
-{
+
+namespace Seele {
 DECLARE_NAME_REF(Gfx, Viewport)
 DECLARE_NAME_REF(Gfx, Graphics)
 DECLARE_NAME_REF(Gfx, RenderPass)
-class RenderPass
-{
-public:
+class RenderPass {
+  public:
     RenderPass(Gfx::PGraphics graphics, PScene scene);
     RenderPass(RenderPass&&) = default;
     RenderPass& operator=(RenderPass&&) = default;
@@ -26,9 +25,9 @@ public:
     virtual void createRenderPass() = 0;
     void setResources(PRenderGraphResources _resources);
     void setViewport(Gfx::PViewport _viewport);
-protected:
-    struct ViewParameter
-    {
+
+  protected:
+    struct ViewParameter {
         Matrix4 viewMatrix;
         Matrix4 inverseViewMatrix;
         Matrix4 projectionMatrix;
@@ -46,7 +45,7 @@ protected:
     PScene scene;
 };
 DEFINE_REF(RenderPass)
-template<typename RP>
+template <typename RP>
 concept RenderPassType = std::derived_from<RP, RenderPass>;
 
 } // namespace Seele

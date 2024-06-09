@@ -16,9 +16,8 @@
 // class SubAllocation
 // {
 // public:
-// 	SubAllocation(PAllocation owner, VkDeviceSize requestedSize, VkDeviceSize allocatedOffset, VkDeviceSize allocatedSize, VkDeviceSize alignedOffset);
-// 	~SubAllocation();
-// 	VkDeviceMemory getHandle() const;
+// 	SubAllocation(PAllocation owner, VkDeviceSize requestedSize, VkDeviceSize allocatedOffset, VkDeviceSize allocatedSize, VkDeviceSize
+// alignedOffset); 	~SubAllocation(); 	VkDeviceMemory getHandle() const;
 
 // 	constexpr VkDeviceSize getSize() const
 // 	{

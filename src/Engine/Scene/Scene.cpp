@@ -1,30 +1,20 @@
 #include "Scene.h"
+#include "Actor/PointLightActor.h"
+#include "Asset/AssetRegistry.h"
+#include "Asset/MaterialAsset.h"
+#include "Asset/TextureAsset.h"
+#include "Component/DirectionalLight.h"
+#include "Component/Mesh.h"
+#include "Component/PointLight.h"
+#include "Component/Transform.h"
 #include "Graphics/Graphics.h"
 #include "Graphics/Mesh.h"
-#include "Component/Mesh.h"
-#include "Component/Transform.h"
-#include "Asset/AssetRegistry.h"
-#include "Asset/TextureAsset.h"
-#include "Asset/MaterialAsset.h"
-#include "Component/PointLight.h"
-#include "Component/DirectionalLight.h"
-#include "Actor/PointLightActor.h"
+
 
 using namespace Seele;
 
-Scene::Scene(Gfx::PGraphics graphics)
-    : graphics(graphics)
-    , lightEnv(new LightEnvironment(graphics))
-    , physics(registry)
-{
-}
+Scene::Scene(Gfx::PGraphics graphics) : graphics(graphics), lightEnv(new LightEnvironment(graphics)), physics(registry) {}
 
-Scene::~Scene()
-{
-}
+Scene::~Scene() {}
 
-void Scene::update(float deltaTime)
-{
-    physics.update(deltaTime);
-}
-
+void Scene::update(float deltaTime) { physics.update(deltaTime); }

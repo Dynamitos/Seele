@@ -1,77 +1,62 @@
 #include "DebugPass.h"
 #include "Graphics/Graphics.h"
-#include "Graphics/RenderTarget.h"
 #include "Graphics/Pipeline.h"
+#include "Graphics/RenderTarget.h"
 #include "Graphics/Shader.h"
+
 
 using namespace Seele;
 
 Array<DebugVertex> gDebugVertices;
 
-void Seele::addDebugVertex(DebugVertex vert)
-{
-    gDebugVertices.add(vert);
-}
+void Seele::addDebugVertex(DebugVertex vert) { gDebugVertices.add(vert); }
 
-void Seele::addDebugVertices(Array<DebugVertex> verts)
-{
-    gDebugVertices.addAll(verts);
-}
+void Seele::addDebugVertices(Array<DebugVertex> verts) { gDebugVertices.addAll(verts); }
 
-DebugPass::DebugPass(Gfx::PGraphics graphics, PScene scene)
-    : RenderPass(graphics, scene)
-{
-    
-}
+DebugPass::DebugPass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics, scene) {}
 
-DebugPass::~DebugPass()
-{
-    
-}
+DebugPass::~DebugPass() {}
 
-void DebugPass::beginFrame(const Component::Camera& cam)
-{
+void DebugPass::beginFrame(const Component::Camera& cam) {
     RenderPass::beginFrame(cam);
-    
+
     VertexBufferCreateInfo vertexBufferInfo = {
-        .sourceData = {
-            .size = sizeof(DebugVertex) * gDebugVertices.size(),
-            .data = (uint8*)gDebugVertices.data(),
-        },
+        .sourceData =
+            {
+                .size = sizeof(DebugVertex) * gDebugVertices.size(),
+                .data = (uint8*)gDebugVertices.data(),
+            },
         .vertexSize = sizeof(DebugVertex),
         .numVertices = (uint32)gDebugVertices.size(),
         .name = "DebugVertices",
     };
     debugVertices = graphics->createVertexBuffer(vertexBufferInfo);
-
 }
 
-void DebugPass::render()
-{
+void DebugPass::render() {
     graphics->beginRenderPass(renderPass);
-    if (gDebugVertices.size() > 0)
-    {
+    if (gDebugVertices.size() > 0) {
         Gfx::ORenderCommand renderCommand = graphics->createRenderCommand("DebugRender");
         renderCommand->setViewport(viewport);
         renderCommand->bindPipeline(pipeline);
         renderCommand->bindDescriptor(viewParamsSet);
-        renderCommand->bindVertexBuffer({ debugVertices });
+        renderCommand->bindVertexBuffer({debugVertices});
         renderCommand->draw((uint32)gDebugVertices.size(), 1, 0, 0);
         Array<Gfx::ORenderCommand> commands;
         commands.add(std::move(renderCommand));
-        graphics->executeCommands({ std::move(commands) });
+        graphics->executeCommands({std::move(commands)});
     }
     graphics->endRenderPass();
     gDebugVertices.clear();
     // Sync color write with next pass/swapchain present
-    //colorAttachment.getTexture()->pipelineBarrier(
+    // colorAttachment.getTexture()->pipelineBarrier(
     //    Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
     //    Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
     //    Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
     //    Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT
     //);
     // Sync depth with next pass/next frame
-    //depthAttachment.getTexture()->pipelineBarrier(
+    // depthAttachment.getTexture()->pipelineBarrier(
     //    Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
     //    Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
     //    Gfx::SE_ACCESS_MEMORY_WRITE_BIT,
@@ -79,28 +64,22 @@ void DebugPass::render()
     //);
 }
 
-void DebugPass::endFrame()
-{
-    
-}
+void DebugPass::endFrame() {}
 
-void DebugPass::publishOutputs()
-{
-}
+void DebugPass::publishOutputs() {}
 
-void DebugPass::createRenderPass()
-{
+void DebugPass::createRenderPass() {
     colorAttachment = resources->requestRenderTarget("BASEPASS_COLOR");
     colorAttachment.setLoadOp(Gfx::SE_ATTACHMENT_LOAD_OP_LOAD);
     colorAttachment.setInitialLayout(Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
     colorAttachment.setInitialLayout(Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-    
+
     depthAttachment = resources->requestRenderTarget("DEPTHPREPASS_DEPTH");
     depthAttachment.setLoadOp(Gfx::SE_ATTACHMENT_LOAD_OP_LOAD);
     depthAttachment.setInitialLayout(Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
     depthAttachment.setFinalLayout(Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
     Gfx::RenderTargetLayout layout = Gfx::RenderTargetLayout{
-        .colorAttachments = {colorAttachment}, 
+        .colorAttachments = {colorAttachment},
         .depthAttachment = depthAttachment,
     };
 
@@ -110,20 +89,24 @@ void DebugPass::createRenderPass()
             .dstSubpass = 0,
             .srcStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
             .dstStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
-            .srcAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-            .dstAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+            .srcAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT |
+                         Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+            .dstAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT |
+                         Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
         },
         {
             .srcSubpass = 0,
             .dstSubpass = ~0U,
             .srcStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
             .dstStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
-            .srcAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-            .dstAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+            .srcAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT |
+                         Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+            .dstAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT |
+                         Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
         },
     };
     renderPass = graphics->createRenderPass(std::move(layout), dependency, viewport);
-    
+
     pipelineLayout = graphics->createPipelineLayout("DebugPassLayout");
     pipelineLayout->addDescriptorLayout(viewParamsLayout);
 
@@ -141,27 +124,22 @@ void DebugPass::createRenderPass()
     pipelineLayout->create();
 
     VertexInputStateCreateInfo inputCreate = {
-        .bindings = {
-            VertexInputBinding {
-                .binding = 0,
-                .stride = sizeof(DebugVertex),
-                .inputRate = Gfx::SE_VERTEX_INPUT_RATE_VERTEX,
+        .bindings =
+            {
+                VertexInputBinding{
+                    .binding = 0,
+                    .stride = sizeof(DebugVertex),
+                    .inputRate = Gfx::SE_VERTEX_INPUT_RATE_VERTEX,
+                },
             },
-        },
-        .attributes = {
-            VertexInputAttribute {
-                .location = 0,
-                .binding = 0,
-                .format = Gfx::SE_FORMAT_R32G32B32_SFLOAT,
-                .offset = 0,
-            },
-            VertexInputAttribute {
-                .location = 1,
-                .binding = 0,
-                .format = Gfx::SE_FORMAT_R32G32B32_SFLOAT,
-                .offset = sizeof(Vector)
-            }
-        },
+        .attributes = {VertexInputAttribute{
+                           .location = 0,
+                           .binding = 0,
+                           .format = Gfx::SE_FORMAT_R32G32B32_SFLOAT,
+                           .offset = 0,
+                       },
+                       VertexInputAttribute{
+                           .location = 1, .binding = 0, .format = Gfx::SE_FORMAT_R32G32B32_SFLOAT, .offset = sizeof(Vector)}},
     };
     vertexInput = graphics->createVertexInput(inputCreate);
     Gfx::LegacyPipelineCreateInfo gfxInfo;

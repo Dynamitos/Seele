@@ -1,16 +1,15 @@
 #pragma once
-#include "RenderPass.h"
 #include "Graphics/Shader.h"
+#include "RenderPass.h"
 #include "Scene/Scene.h"
 
-namespace Seele
-{
+
+namespace Seele {
 DECLARE_REF(CameraActor)
 DECLARE_REF(Scene)
 DECLARE_REF(Viewport)
-class LightCullingPass : public RenderPass
-{
-public:
+class LightCullingPass : public RenderPass {
+  public:
     LightCullingPass(Gfx::PGraphics graphics, PScene scene);
     LightCullingPass(LightCullingPass&&) = default;
     LightCullingPass& operator=(LightCullingPass&&) = default;
@@ -20,24 +19,22 @@ public:
     virtual void endFrame() override;
     virtual void publishOutputs() override;
     virtual void createRenderPass() override;
-private:
+
+  private:
     void setupFrustums();
     static constexpr uint32 BLOCK_SIZE = 32;
     static constexpr uint32 INDEX_LIGHT_ENV = 1;
-    struct DispatchParams
-    {
+    struct DispatchParams {
         glm::uvec3 numThreadGroups;
         uint32_t pad0;
         glm::uvec3 numThreads;
         uint32_t pad1;
     } dispatchParams;
-    struct Plane
-    {
+    struct Plane {
         Vector n;
         float d;
     };
-    struct Frustum
-    {
+    struct Frustum {
         Plane planes[4];
     };
 
@@ -49,7 +46,7 @@ private:
     Gfx::OComputeShader frustumShader;
     Gfx::PComputePipeline frustumPipeline;
     Gfx::OPipelineLayout frustumLayout;
-    
+
     PLightEnvironment lightEnv;
     Gfx::PTexture2D depthAttachment;
     Gfx::OShaderBuffer oLightIndexCounter;

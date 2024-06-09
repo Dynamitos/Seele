@@ -3,13 +3,10 @@
 #include "Texture.h"
 #include <functional>
 
-namespace Seele
-{
-namespace Gfx
-{
-class Window
-{
-public:
+namespace Seele {
+namespace Gfx {
+class Window {
+  public:
     Window();
     virtual ~Window();
     virtual void pollInput() = 0;
@@ -24,23 +21,12 @@ public:
     virtual void setFileCallback(std::function<void(int, const char**)> callback) = 0;
     virtual void setCloseCallback(std::function<void()> callback) = 0;
     virtual void setResizeCallback(std::function<void(uint32, uint32)> callback) = 0;
-    constexpr SeFormat getSwapchainFormat() const
-    {
-        return framebufferFormat;
-    }
-    constexpr uint32 getFramebufferWidth() const
-    {
-        return framebufferWidth;
-    }
-    constexpr uint32 getFramebufferHeight() const
-    {
-        return framebufferHeight;
-    }
-    constexpr bool isPaused() const
-    {
-        return paused;
-    }
-protected:
+    constexpr SeFormat getSwapchainFormat() const { return framebufferFormat; }
+    constexpr uint32 getFramebufferWidth() const { return framebufferWidth; }
+    constexpr uint32 getFramebufferHeight() const { return framebufferHeight; }
+    constexpr bool isPaused() const { return paused; }
+
+  protected:
     SeFormat framebufferFormat;
     uint32 framebufferWidth;
     uint32 framebufferHeight;
@@ -48,9 +34,8 @@ protected:
 };
 DEFINE_REF(Window)
 
-class Viewport
-{
-public:
+class Viewport {
+  public:
     Viewport(PWindow owner, const ViewportCreateInfo& createInfo);
     virtual ~Viewport();
     virtual void resize(uint32 newX, uint32 newY) = 0;
@@ -62,7 +47,8 @@ public:
     constexpr uint32 getOffsetY() const { return offsetY; }
     constexpr Gfx::SeSampleCountFlags getSamples() const { return samples; }
     Matrix4 getProjectionMatrix() const;
-protected:
+
+  protected:
     uint32 sizeX;
     uint32 sizeY;
     uint32 offsetX;
@@ -73,5 +59,5 @@ protected:
 };
 DEFINE_REF(Viewport)
 
-}
-}
+} // namespace Gfx
+} // namespace Seele

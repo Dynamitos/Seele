@@ -1,14 +1,13 @@
 #pragma once
-#include <utility>
 #include "Array.h"
 #include "Tree.h"
+#include <utility>
 
-namespace Seele
-{
-template<class Key, class Compare = std::less<Key>, class Allocator = std::pmr::polymorphic_allocator<Key>>
-class Set : public Tree<Key, Key, std::identity, Compare, Allocator>
-{
-public:
+
+namespace Seele {
+template <class Key, class Compare = std::less<Key>, class Allocator = std::pmr::polymorphic_allocator<Key>>
+class Set : public Tree<Key, Key, std::identity, Compare, Allocator> {
+  public:
     using Super = Tree<Key, Key, std::identity, Compare, Allocator>;
     using key_type = Key;
     using value_type = Key;
@@ -26,21 +25,9 @@ public:
     using reverse_iterator = Super::reverse_iterator;
     using const_reverse_iterator = Super::const_reverse_iterator;
 
-    Set()
-        : Set(Compare())
-    {
-    }
-    explicit Set(const Compare& comp, const Allocator alloc = Allocator())
-        : Super(comp, alloc)
-    {
-    }
-    explicit Set(const Allocator alloc)
-        : Super(alloc)
-    {
-    }
-    constexpr Pair<iterator, bool> insert(const value_type& value)
-    {
-        return Super::insert(value);
-    }
+    Set() : Set(Compare()) {}
+    explicit Set(const Compare& comp, const Allocator alloc = Allocator()) : Super(comp, alloc) {}
+    explicit Set(const Allocator alloc) : Super(alloc) {}
+    constexpr Pair<iterator, bool> insert(const value_type& value) { return Super::insert(value); }
 };
 } // namespace Seele

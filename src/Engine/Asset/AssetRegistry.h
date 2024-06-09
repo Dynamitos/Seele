@@ -1,21 +1,20 @@
 #pragma once
-#include "MinimalEngine.h"
 #include "Asset.h"
 #include "Containers/Map.h"
-#include <string>
+#include "MinimalEngine.h"
 #include <filesystem>
+#include <string>
 
-namespace Seele
-{
+
+namespace Seele {
 DECLARE_REF(TextureAsset)
 DECLARE_REF(FontAsset)
 DECLARE_REF(MeshAsset)
 DECLARE_REF(MaterialAsset)
 DECLARE_REF(MaterialInstanceAsset)
 DECLARE_NAME_REF(Gfx, Graphics)
-class AssetRegistry
-{
-public:
+class AssetRegistry {
+  public:
     ~AssetRegistry();
     static void init(std::filesystem::path path, Gfx::PGraphics graphics);
 
@@ -34,8 +33,7 @@ public:
 
     static void loadRegistry();
     static void saveRegistry();
-    struct AssetFolder
-    {
+    struct AssetFolder {
         std::string folderPath;
         Map<std::string, AssetFolder*> children;
         Map<std::string, OTextureAsset> textures;
@@ -49,7 +47,8 @@ public:
     AssetFolder* getOrCreateFolder(std::string_view foldername);
     AssetRegistry();
     static AssetRegistry* getInstance();
-private:
+
+  private:
     static AssetRegistry& get();
 
     void initialize(const std::filesystem::path& rootFolder, Gfx::PGraphics graphics);
@@ -81,4 +80,4 @@ private:
     friend class MaterialLoader;
     friend class MeshLoader;
 };
-}
+} // namespace Seele

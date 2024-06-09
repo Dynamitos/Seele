@@ -1,14 +1,13 @@
 #pragma once
-#include "Graphics/Descriptor.h"
-#include "Graphics/Buffer.h"
 #include "Component/DirectionalLight.h"
 #include "Component/PointLight.h"
+#include "Graphics/Buffer.h"
+#include "Graphics/Descriptor.h"
 
-namespace Seele
-{
-class LightEnvironment
-{
-public:
+
+namespace Seele {
+class LightEnvironment {
+  public:
     LightEnvironment(Gfx::PGraphics graphics);
     ~LightEnvironment();
     void reset();
@@ -17,11 +16,11 @@ public:
     void commit();
     const Gfx::PDescriptorLayout getDescriptorLayout() const;
     Gfx::PDescriptorSet getDescriptorSet();
-private:
-    #define INIT_DIRECTIONAL_LIGHTS 4
-    #define INIT_POINT_LIGHTS 256
-    struct LightEnv
-    {
+
+  private:
+#define INIT_DIRECTIONAL_LIGHTS 4
+#define INIT_POINT_LIGHTS 256
+    struct LightEnv {
         uint32 numDirectionalLights;
         uint32 numPointLights;
     } lightEnv;
@@ -35,4 +34,4 @@ private:
     Gfx::PGraphics graphics;
 };
 DEFINE_REF(LightEnvironment)
-}
+} // namespace Seele

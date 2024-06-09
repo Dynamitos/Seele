@@ -1,19 +1,17 @@
 #pragma once
 #include "Pipeline.h"
 
-namespace Seele
-{
-namespace Vulkan
-{
-class PipelineCache
-{
-public:
+namespace Seele {
+namespace Vulkan {
+class PipelineCache {
+  public:
     PipelineCache(PGraphics graphics, const std::string& cacheFilePath);
     ~PipelineCache();
     PGraphicsPipeline createPipeline(Gfx::LegacyPipelineCreateInfo createInfo);
     PGraphicsPipeline createPipeline(Gfx::MeshPipelineCreateInfo createInfo);
     PComputePipeline createPipeline(Gfx::ComputePipelineCreateInfo createInfo);
-private:
+
+  private:
     Map<uint32, OGraphicsPipeline> graphicsPipelines;
     Map<uint32, OComputePipeline> computePipelines;
     std::mutex cacheLock;

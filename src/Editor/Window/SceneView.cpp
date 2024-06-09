@@ -1,22 +1,20 @@
 #include "SceneView.h"
-#include "Scene/Scene.h"
-#include "Window/Window.h"
-#include "Graphics/Mesh.h"
-#include "Graphics/Graphics.h"
-#include "Asset/MeshAsset.h"
-#include "Asset/AssetRegistry.h"
 #include "Actor/CameraActor.h"
+#include "Asset/AssetRegistry.h"
+#include "Asset/MeshAsset.h"
 #include "Component/Camera.h"
 #include "Component/Mesh.h"
+#include "Graphics/Graphics.h"
+#include "Graphics/Mesh.h"
+#include "Scene/Scene.h"
+#include "Window/Window.h"
+
 
 using namespace Seele;
 using namespace Seele::Editor;
 
-SceneView::SceneView(Gfx::PGraphics graphics, PWindow owner, const ViewportCreateInfo &createInfo)
-    : View(graphics, owner, createInfo, "SceneView")
-    , scene(new Scene(graphics))
-    , cameraSystem(createInfo.dimensions, Vector(0, 0, 10))
-{
+SceneView::SceneView(Gfx::PGraphics graphics, PWindow owner, const ViewportCreateInfo& createInfo)
+    : View(graphics, owner, createInfo, "SceneView"), scene(new Scene(graphics)), cameraSystem(createInfo.dimensions, Vector(0, 0, 10)) {
     cameraSystem.update(viewportCamera, static_cast<float>(Gfx::getCurrentFrameDelta()));
     renderGraph.addPass(new DepthPrepass(graphics, scene));
     renderGraph.addPass(new LightCullingPass(graphics, scene));
@@ -25,54 +23,31 @@ SceneView::SceneView(Gfx::PGraphics graphics, PWindow owner, const ViewportCreat
     renderGraph.createRenderPass();
 }
 
-SceneView::~SceneView()
-{
+SceneView::~SceneView() {}
+
+void SceneView::beginUpdate() {
+    // co_return;
 }
 
-void SceneView::beginUpdate() 
-{
-    //co_return;
-}
-
-void SceneView::update() 
-{
+void SceneView::update() {
     cameraSystem.update(viewportCamera, static_cast<float>(Gfx::getCurrentFrameDelta()));
-    //co_return;
+    // co_return;
 }
 
-void SceneView::commitUpdate() 
-{
-}
+void SceneView::commitUpdate() {}
 
-void SceneView::prepareRender() 
-{
-}
+void SceneView::prepareRender() {}
 
-void SceneView::render() 
-{
-    renderGraph.render(viewportCamera);
-}
+void SceneView::render() { renderGraph.render(viewportCamera); }
 
-void SceneView::keyCallback(KeyCode code, InputAction action, KeyModifier)
-{
-    cameraSystem.keyCallback(code, action);
-}
+void SceneView::keyCallback(KeyCode code, InputAction action, KeyModifier) { cameraSystem.keyCallback(code, action); }
 
-void SceneView::mouseMoveCallback(double xPos, double yPos) 
-{
-    cameraSystem.mouseMoveCallback(xPos, yPos);
-}
+void SceneView::mouseMoveCallback(double xPos, double yPos) { cameraSystem.mouseMoveCallback(xPos, yPos); }
 
-void SceneView::mouseButtonCallback(MouseButton button, InputAction action, KeyModifier) 
-{
+void SceneView::mouseButtonCallback(MouseButton button, InputAction action, KeyModifier) {
     cameraSystem.mouseButtonCallback(button, action);
 }
 
-void SceneView::scrollCallback(double, double) 
-{
-}
+void SceneView::scrollCallback(double, double) {}
 
-void SceneView::fileCallback(int, const char**) 
-{
-    
-}
+void SceneView::fileCallback(int, const char**) {}

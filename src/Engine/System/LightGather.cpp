@@ -3,23 +3,12 @@
 using namespace Seele;
 using namespace Seele::System;
 
-LightGather::LightGather(PScene scene)
-    : SystemBase(scene)
-    , lightEnv(scene->getLightEnvironment())
-{
-}
+LightGather::LightGather(PScene scene) : SystemBase(scene), lightEnv(scene->getLightEnvironment()) {}
 
-LightGather::~LightGather()
-{
-}
+LightGather::~LightGather() {}
 
-void LightGather::update()
-{
+void LightGather::update() {
     lightEnv->reset();
-    scene->view<Component::PointLight>([this](Component::PointLight& pointLight) {
-        lightEnv->addPointLight(pointLight);
-        });
-    scene->view<Component::DirectionalLight>([this](Component::DirectionalLight& dirLight) {
-        lightEnv->addDirectionalLight(dirLight);
-        });
+    scene->view<Component::PointLight>([this](Component::PointLight& pointLight) { lightEnv->addPointLight(pointLight); });
+    scene->view<Component::DirectionalLight>([this](Component::DirectionalLight& dirLight) { lightEnv->addDirectionalLight(dirLight); });
 }

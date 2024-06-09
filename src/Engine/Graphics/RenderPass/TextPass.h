@@ -1,24 +1,22 @@
 #pragma once
-#include "RenderPass.h"
-#include "UI/RenderHierarchy.h"
 #include "Asset/FontAsset.h"
 #include "Graphics/Shader.h"
+#include "RenderPass.h"
+#include "UI/RenderHierarchy.h"
 
-namespace Seele
-{
+
+namespace Seele {
 DECLARE_NAME_REF(Gfx, Texture2D)
 DECLARE_NAME_REF(Gfx, ShaderBuffer)
-struct TextRender
-{
+struct TextRender {
     std::string text;
     PFontAsset font;
     Vector4 textColor;
     Vector2 position;
     float scale;
 };
-class TextPass : public RenderPass
-{
-public:
+class TextPass : public RenderPass {
+  public:
     TextPass(Gfx::PGraphics graphics, PScene scene);
     TextPass(TextPass&&) = default;
     TextPass& operator=(TextPass&&) = default;
@@ -28,26 +26,23 @@ public:
     virtual void endFrame() override;
     virtual void publishOutputs() override;
     virtual void createRenderPass() override;
-private:
-    struct GlyphData
-    {
+
+  private:
+    struct GlyphData {
         Vector2 bearing;
         Vector2 size;
         uint32 advance;
     };
-    struct GlyphInstanceData
-    {
+    struct GlyphInstanceData {
         Vector2 position;
         Vector2 widthHeight;
         uint32 glyphIndex;
     };
-    struct TextData
-    {
+    struct TextData {
         Vector4 textColor;
         float scale;
     };
-    struct FontData
-    {
+    struct FontData {
         Gfx::PDescriptorSet textureArraySet;
         Array<GlyphData> glyphDataSet;
         Map<uint32, uint32> characterToGlyphIndex;
@@ -55,8 +50,7 @@ private:
     FontData& getFontData(PFontAsset font);
     Map<PFontAsset, FontData> fontData;
 
-    struct TextResources
-    {
+    struct TextResources {
         Gfx::PShaderBuffer instanceBuffer;
         Gfx::PDescriptorSet textureArraySet;
         TextData textData;

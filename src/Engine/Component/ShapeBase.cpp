@@ -4,14 +4,12 @@
 using namespace Seele;
 using namespace Seele::Component;
 
-
-//https://people.eecs.berkeley.edu/~jfc/mirtich/massProps.html
-struct ComputationState
-{
+// https://people.eecs.berkeley.edu/~jfc/mirtich/massProps.html
+struct ComputationState {
     // compute physics properties
-    int A;   /* alpha */
-    int B;   /* beta */
-    int C;   /* gamma */
+    int A; /* alpha */
+    int B; /* beta */
+    int C; /* gamma */
 
     /* projection integrals */
     float P1, Pa, Pb, Paa, Pab, Pbb, Paaa, Paab, Pabb, Pbbb;
@@ -24,28 +22,25 @@ struct ComputationState
     Vector T1, T2, TP;
 };
 
-struct Face
-{
+struct Face {
     StaticArray<Vector, 3> vertices;
     Vector normal;
     float w;
 };
 
-void computeProjectionIntegrals(Face& f, ComputationState& state)
-{
+void computeProjectionIntegrals(Face& f, ComputationState& state) {
     state.P1 = state.Pa = state.Pb = state.Paa = state.Pab = state.Pbb = state.Paaa = state.Paab = state.Pabb = state.Pbbb = 0.0;
-    for(uint32_t i = 0; i < 3; ++i)
-    {
+    for (uint32_t i = 0; i < 3; ++i) {
         float a0 = f.vertices[i][state.A];
         float b0 = f.vertices[i][state.B];
-        float a1 = f.vertices[(i+1)%3][state.A];
-        float b1 = f.vertices[(i+1)%3][state.B];
+        float a1 = f.vertices[(i + 1) % 3][state.A];
+        float b1 = f.vertices[(i + 1) % 3][state.B];
 
         float da = a1 - a0;
         float db = b1 - b0;
 
         float a0_2 = a0 * a0, a0_3 = a0_2 * a0, a0_4 = a0_3 * a0;
-        float b0_2 = b0 * b0, b0_3 = b0_2 * b0,  b0_4 = b0_3 * b0;
+        float b0_2 = b0 * b0, b0_3 = b0_2 * b0, b0_4 = b0_3 * b0;
         float a1_2 = a1 * a1, a1_3 = a1_2 * a1;
         float b1_2 = b1 * b1, b1_3 = b1_2 * b1;
 
@@ -87,10 +82,9 @@ void computeProjectionIntegrals(Face& f, ComputationState& state)
     state.Pabb /= -60.0;
 }
 
-void computeFaceIntegrals(Face& f, ComputationState& state)
-{
+void computeFaceIntegrals(Face& f, ComputationState& state) {
     computeProjectionIntegrals(f, state);
-    float k1 = 1.0f/f.normal[state.C];
+    float k1 = 1.0f / f.normal[state.C];
     float k2 = k1 * k1;
     float k3 = k2 * k1;
     float k4 = k3 * k1;
@@ -104,53 +98,46 @@ void computeFaceIntegrals(Face& f, ComputationState& state)
 
     state.Faa = k1 * state.Paa;
     state.Fbb = k1 * state.Pbb;
-    state.Fcc = k3 * (n[state.A] * n[state.A] * state.Paa
-        + 2 * n[state.A] * n[state.B] * state.Pab
-        + n[state.B] * n[state.B] * state.Pbb
-        + w * (2 * (n[state.A] * state.Pa + n[state.B] * state.Pb) + w * state.P1));
-    
+    state.Fcc = k3 * (n[state.A] * n[state.A] * state.Paa + 2 * n[state.A] * n[state.B] * state.Pab + n[state.B] * n[state.B] * state.Pbb +
+                      w * (2 * (n[state.A] * state.Pa + n[state.B] * state.Pb) + w * state.P1));
+
     state.Faaa = k1 * state.Paaa;
     state.Fbbb = k1 * state.Pbbb;
-    state.Fccc = -k4 * (n[state.A] * n[state.A] * n[state.A] * state.Paaa
-        + 3 * n[state.A] * n[state.A] * n[state.B] * state.Paab
-        + 3 * n[state.A] * n[state.B] * n[state.B] * state.Pabb
-        + 3 * n[state.B] * n[state.B] * n[state.B] * state.Pbbb
-        + 3 * w * (n[state.A] * n[state.A] * state.Paa
-            + 2 * n[state.A] * n[state.B] * state.Pa
-            + n[state.B] * n[state.B] * state.Pbb)
-        + w * w *(3 * (n[state.A]*state.Pa + n[state.B]*state.Pb) + w * state.P1)
-        );
-    
+    state.Fccc =
+        -k4 *
+        (n[state.A] * n[state.A] * n[state.A] * state.Paaa + 3 * n[state.A] * n[state.A] * n[state.B] * state.Paab +
+         3 * n[state.A] * n[state.B] * n[state.B] * state.Pabb + 3 * n[state.B] * n[state.B] * n[state.B] * state.Pbbb +
+         3 * w * (n[state.A] * n[state.A] * state.Paa + 2 * n[state.A] * n[state.B] * state.Pa + n[state.B] * n[state.B] * state.Pbb) +
+         w * w * (3 * (n[state.A] * state.Pa + n[state.B] * state.Pb) + w * state.P1));
+
     state.Faab = k1 * state.Paab;
     state.Fbbc = -k2 * (n[state.A] * state.Paab + n[state.B] * state.Pbbb + w * state.Pbb);
-    state.Fcca = k3 * (n[state.A] * n[state.A] * state.Paa + 2 * n[state.A] * n[state.B] * state.Paab + n[state.B] * n[state.B] * state.Pabb
-        + w * (2 * (n[state.A] * state.Paa + n[state.B] * state.Pab) + w * state.Pa));
+    state.Fcca = k3 * (n[state.A] * n[state.A] * state.Paa + 2 * n[state.A] * n[state.B] * state.Paab +
+                       n[state.B] * n[state.B] * state.Pabb + w * (2 * (n[state.A] * state.Paa + n[state.B] * state.Pab) + w * state.Pa));
 }
 
-void computeVolumeIntegrals(const Array<Vector> vertices, const Array<uint32>& indices, ComputationState& state)
-{
+void computeVolumeIntegrals(const Array<Vector> vertices, const Array<uint32>& indices, ComputationState& state) {
     std::memset(&state, 0, sizeof(ComputationState));
-    for (size_t i = 0; i < indices.size(); i+=3)
-    {
+    for (size_t i = 0; i < indices.size(); i += 3) {
         Face f;
         f.vertices = {
             vertices[indices[i]],
-            vertices[indices[i+1]],
-            vertices[indices[i+2]],
+            vertices[indices[i + 1]],
+            vertices[indices[i + 2]],
         };
-        
+
         Vector e1 = f.vertices[2] - f.vertices[0];
         Vector e2 = f.vertices[1] - f.vertices[0];
         f.normal = glm::normalize(glm::cross(e1, e2));
-        f.w = - f.normal.x * f.vertices[0].x
-              - f.normal.y * f.vertices[0].y
-              - f.normal.z * f.vertices[0].z;
-        
+        f.w = -f.normal.x * f.vertices[0].x - f.normal.y * f.vertices[0].y - f.normal.z * f.vertices[0].z;
+
         float nx = std::abs(f.normal.x);
         float ny = std::abs(f.normal.y);
         float nz = std::abs(f.normal.z);
-        if (nx > ny && nx > nz) state.C = 0;
-        else state.C = (ny > nz) ? 1 : 2;
+        if (nx > ny && nx > nz)
+            state.C = 0;
+        else
+            state.C = (ny > nz) ? 1 : 2;
         state.A = (state.C + 1) % 3;
         state.B = (state.A + 1) % 3;
 
@@ -172,8 +159,8 @@ void computeVolumeIntegrals(const Array<Vector> vertices, const Array<uint32>& i
     state.TP /= 2.0f;
 }
 
-void computePhysicsParamsForMesh(Array<Vector>& vertices, const Array<uint32>& indices, Matrix3& bodyInertia, Vector& centerOfMass, float& mass)
-{
+void computePhysicsParamsForMesh(Array<Vector>& vertices, const Array<uint32>& indices, Matrix3& bodyInertia, Vector& centerOfMass,
+                                 float& mass) {
     ComputationState state;
     computeVolumeIntegrals(vertices, indices, state);
     float density = 1;
@@ -183,9 +170,9 @@ void computePhysicsParamsForMesh(Array<Vector>& vertices, const Array<uint32>& i
     bodyInertia[0][0] = density * (state.T2.y + state.T2.z);
     bodyInertia[1][1] = density * (state.T2.z + state.T2.x);
     bodyInertia[2][2] = density * (state.T2.x + state.T2.y);
-    bodyInertia[0][1] = bodyInertia[1][0] = - density * state.TP.x;
-    bodyInertia[1][2] = bodyInertia[2][1] = - density * state.TP.y;
-    bodyInertia[2][1] = bodyInertia[1][2] = - density * state.TP.z;
+    bodyInertia[0][1] = bodyInertia[1][0] = -density * state.TP.x;
+    bodyInertia[1][2] = bodyInertia[2][1] = -density * state.TP.y;
+    bodyInertia[2][1] = bodyInertia[1][2] = -density * state.TP.z;
 
     bodyInertia[0][0] -= mass * (r.y * r.y + r.z * r.z);
     bodyInertia[1][1] -= mass * (r.z * r.z + r.x * r.x);
@@ -195,74 +182,61 @@ void computePhysicsParamsForMesh(Array<Vector>& vertices, const Array<uint32>& i
     bodyInertia[2][1] = bodyInertia[1][2] += mass * r.z * r.x;
 }
 
-ShapeBase::ShapeBase()
-{
-    
-}
+ShapeBase::ShapeBase() {}
 
-ShapeBase::ShapeBase(Array<Vector> vertices, Array<uint32> indices)
-    : vertices(vertices)
-    , indices(indices)
-{
+ShapeBase::ShapeBase(Array<Vector> vertices, Array<uint32> indices) : vertices(vertices), indices(indices) {
     computePhysicsParamsForMesh(vertices, indices, bodyInertia, centerOfMass, mass);
 }
 
-ShapeBase ShapeBase::transform(const Component::Transform& transform) const
-{
+ShapeBase ShapeBase::transform(const Component::Transform& transform) const {
     ShapeBase result = *this;
-    for(auto& vert : result.vertices)
-    {
+    for (auto& vert : result.vertices) {
         vert = transform.toMatrix() * Vector4(vert, 1.0f);
     }
     return result;
 }
 
-void ShapeBase::addCollider(Array<Vector> verts, Array<uint32> inds, Matrix4 matrix)
-{
+void ShapeBase::addCollider(Array<Vector> verts, Array<uint32> inds, Matrix4 matrix) {
     size_t indOffset = vertices.size();
-    for(auto vert : verts)
-    {
+    for (auto vert : verts) {
         vertices.add(Vector(matrix * Vector4(vert, 1.0f)));
     }
-    for(auto ind : inds)
-    {
+    for (auto ind : inds) {
         indices.add(ind + static_cast<uint32>(indOffset));
     }
     computePhysicsParamsForMesh(vertices, indices, bodyInertia, centerOfMass, mass);
 }
 
-void ShapeBase::visualize() const
-{
+void ShapeBase::visualize() const {
     Array<DebugVertex> verts;
-    for(uint32 i = 0; i < indices.size(); i+=3)
-    {
+    for (uint32 i = 0; i < indices.size(); i += 3) {
         verts.add(DebugVertex{
-            .position = Vector(vertices[indices[i+0]]),
-            .color = Vector(1, 0, 0),
-        });
-        
-        verts.add(DebugVertex{
-            .position = Vector(vertices[indices[i+1]]),
+            .position = Vector(vertices[indices[i + 0]]),
             .color = Vector(1, 0, 0),
         });
 
         verts.add(DebugVertex{
-            .position = Vector(vertices[indices[i+1]]),
+            .position = Vector(vertices[indices[i + 1]]),
             .color = Vector(1, 0, 0),
         });
 
         verts.add(DebugVertex{
-            .position = Vector(vertices[indices[i+2]]),
+            .position = Vector(vertices[indices[i + 1]]),
             .color = Vector(1, 0, 0),
         });
 
         verts.add(DebugVertex{
-            .position = Vector(vertices[indices[i+2]]),
+            .position = Vector(vertices[indices[i + 2]]),
             .color = Vector(1, 0, 0),
         });
 
         verts.add(DebugVertex{
-            .position = Vector(vertices[indices[i+0]]),
+            .position = Vector(vertices[indices[i + 2]]),
+            .color = Vector(1, 0, 0),
+        });
+
+        verts.add(DebugVertex{
+            .position = Vector(vertices[indices[i + 0]]),
             .color = Vector(1, 0, 0),
         });
     }

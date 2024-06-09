@@ -1,18 +1,15 @@
 #pragma once
 #include "Asset.h"
 
-namespace Seele
-{
+namespace Seele {
 DECLARE_REF(Material)
 DECLARE_REF(MaterialInstanceAsset)
-struct InstantiationParameter
-{
+struct InstantiationParameter {
     std::string name;
     std::string folderPath;
 };
-class MaterialAsset : public Asset
-{
-public:
+class MaterialAsset : public Asset {
+  public:
     static constexpr uint64 IDENTIFIER = 0x4;
     MaterialAsset();
     MaterialAsset(std::string_view folderPath, std::string_view name);
@@ -21,7 +18,8 @@ public:
     virtual void load(ArchiveBuffer& buffer) override;
     PMaterial getMaterial() const { return material; }
     PMaterialInstanceAsset instantiate(const InstantiationParameter& params);
-private:
+
+  private:
     OMaterial material;
     friend class MaterialLoader;
     friend class MeshLoader;

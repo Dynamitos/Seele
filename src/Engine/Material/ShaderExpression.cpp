@@ -1,195 +1,139 @@
 #include "ShaderExpression.h"
-#include "Graphics/Resources.h"
-#include "Asset/TextureAsset.h"
 #include "Asset/AssetRegistry.h"
-#include "Graphics/Graphics.h"
+#include "Asset/TextureAsset.h"
 #include "Graphics/Descriptor.h"
-#include <fstream>
+#include "Graphics/Graphics.h"
+#include "Graphics/Resources.h"
 #include <fmt/core.h>
+#include <fstream>
+
 
 using namespace Seele;
 
-void ExpressionInput::save(ArchiveBuffer& buffer) const
-{
+void ExpressionInput::save(ArchiveBuffer& buffer) const {
     Serialization::save(buffer, source);
     Serialization::save(buffer, type);
 }
 
-void ExpressionInput::load(ArchiveBuffer& buffer)
-{
+void ExpressionInput::load(ArchiveBuffer& buffer) {
     Serialization::load(buffer, source);
     Serialization::load(buffer, type);
 }
 
-void ExpressionOutput::save(ArchiveBuffer& buffer) const
-{
+void ExpressionOutput::save(ArchiveBuffer& buffer) const {
     Serialization::save(buffer, name);
     Serialization::save(buffer, type);
 }
 
-void ExpressionOutput::load(ArchiveBuffer& buffer)
-{
+void ExpressionOutput::load(ArchiveBuffer& buffer) {
     Serialization::load(buffer, name);
     Serialization::load(buffer, type);
 }
 
-ShaderExpression::ShaderExpression()
-{
-}
+ShaderExpression::ShaderExpression() {}
 
-ShaderExpression::ShaderExpression(std::string key)
-    : key(key)
-{
-}
+ShaderExpression::ShaderExpression(std::string key) : key(key) {}
 
-ShaderExpression::~ShaderExpression()
-{
-}
+ShaderExpression::~ShaderExpression() {}
 
-void ShaderExpression::save(ArchiveBuffer& buffer) const
-{
+void ShaderExpression::save(ArchiveBuffer& buffer) const {
     Serialization::save(buffer, inputs);
     Serialization::save(buffer, output);
     Serialization::save(buffer, key);
 }
 
-void ShaderExpression::load(ArchiveBuffer& buffer)
-{
+void ShaderExpression::load(ArchiveBuffer& buffer) {
     Serialization::load(buffer, inputs);
     Serialization::load(buffer, output);
     Serialization::load(buffer, key);
 }
 
-ShaderParameter::ShaderParameter(std::string name, uint32 byteOffset, uint32 binding) 
-    : ShaderExpression(name)
-    , byteOffset(byteOffset)
-    , binding(binding)
-{
-}
+ShaderParameter::ShaderParameter(std::string name, uint32 byteOffset, uint32 binding)
+    : ShaderExpression(name), byteOffset(byteOffset), binding(binding) {}
 
-ShaderParameter::~ShaderParameter() 
-{
-}
+ShaderParameter::~ShaderParameter() {}
 
-std::string ShaderParameter::evaluate(Map<std::string, std::string>& varState) const
-{
+std::string ShaderParameter::evaluate(Map<std::string, std::string>& varState) const {
     varState[key] = key;
     return "";
 }
 
-void ShaderParameter::save(ArchiveBuffer& buffer) const
-{
+void ShaderParameter::save(ArchiveBuffer& buffer) const {
     ShaderExpression::save(buffer);
     Serialization::save(buffer, byteOffset);
     Serialization::save(buffer, binding);
 }
 
-void ShaderParameter::load(ArchiveBuffer& buffer)
-{
+void ShaderParameter::load(ArchiveBuffer& buffer) {
     ShaderExpression::load(buffer);
     Serialization::load(buffer, byteOffset);
     Serialization::load(buffer, binding);
 }
 
-FloatParameter::FloatParameter(std::string name, float data, uint32 byteOffset, uint32 binding) 
-    : ShaderParameter(name, byteOffset, binding)
-    , data(data)
-{
+FloatParameter::FloatParameter(std::string name, float data, uint32 byteOffset, uint32 binding)
+    : ShaderParameter(name, byteOffset, binding), data(data) {
     output.name = name;
     output.type = ExpressionType::FLOAT;
 }
 
-FloatParameter::~FloatParameter() 
-{
-}
+FloatParameter::~FloatParameter() {}
 
-void FloatParameter::save(ArchiveBuffer& buffer) const
-{
+void FloatParameter::save(ArchiveBuffer& buffer) const {
     ShaderParameter::save(buffer);
     Serialization::save(buffer, data);
 }
 
-void FloatParameter::load(ArchiveBuffer& buffer)
-{
+void FloatParameter::load(ArchiveBuffer& buffer) {
     ShaderParameter::load(buffer);
     Serialization::load(buffer, data);
 }
 
-void FloatParameter::updateDescriptorSet(Gfx::PDescriptorSet, uint8* dst) 
-{
-    std::memcpy(dst + byteOffset, &data, sizeof(float));
-}
+void FloatParameter::updateDescriptorSet(Gfx::PDescriptorSet, uint8* dst) { std::memcpy(dst + byteOffset, &data, sizeof(float)); }
 
-void FloatParameter::generateDeclaration(std::ofstream& stream) const
-{
-    stream << "\tfloat " << key << ";\n";
-}
+void FloatParameter::generateDeclaration(std::ofstream& stream) const { stream << "\tfloat " << key << ";\n"; }
 
-VectorParameter::VectorParameter(std::string name, Vector data, uint32 byteOffset, uint32 binding) 
-    : ShaderParameter(name, byteOffset, binding)
-    , data(data)
-{
+VectorParameter::VectorParameter(std::string name, Vector data, uint32 byteOffset, uint32 binding)
+    : ShaderParameter(name, byteOffset, binding), data(data) {
     output.name = name;
     output.type = ExpressionType::FLOAT3;
 }
 
-VectorParameter::~VectorParameter() 
-{
-}
+VectorParameter::~VectorParameter() {}
 
-void VectorParameter::updateDescriptorSet(Gfx::PDescriptorSet, uint8* dst) 
-{
-    std::memcpy(dst + byteOffset, &data, sizeof(Vector));
-}
+void VectorParameter::updateDescriptorSet(Gfx::PDescriptorSet, uint8* dst) { std::memcpy(dst + byteOffset, &data, sizeof(Vector)); }
 
-void VectorParameter::generateDeclaration(std::ofstream& stream) const
-{
-    stream << "\tfloat3 " << key << ";\n";
-}
+void VectorParameter::generateDeclaration(std::ofstream& stream) const { stream << "\tfloat3 " << key << ";\n"; }
 
-void VectorParameter::save(ArchiveBuffer& buffer) const
-{
+void VectorParameter::save(ArchiveBuffer& buffer) const {
     ShaderParameter::save(buffer);
     Serialization::save(buffer, data);
 }
 
-void VectorParameter::load(ArchiveBuffer& buffer)
-{
+void VectorParameter::load(ArchiveBuffer& buffer) {
     ShaderParameter::load(buffer);
     Serialization::load(buffer, data);
 }
 
-TextureParameter::TextureParameter(std::string name, PTextureAsset asset, uint32 binding) 
-    : ShaderParameter(name, 0, binding)
-    , data(asset)
-{
+TextureParameter::TextureParameter(std::string name, PTextureAsset asset, uint32 binding) : ShaderParameter(name, 0, binding), data(asset) {
     output.name = name;
     output.type = ExpressionType::TEXTURE;
 }
 
-TextureParameter::~TextureParameter() 
-{
-}
+TextureParameter::~TextureParameter() {}
 
-void TextureParameter::updateDescriptorSet(Gfx::PDescriptorSet descriptorSet, uint8*) 
-{
+void TextureParameter::updateDescriptorSet(Gfx::PDescriptorSet descriptorSet, uint8*) {
     descriptorSet->updateTexture(binding, data->getTexture());
 }
 
-void TextureParameter::generateDeclaration(std::ofstream& stream) const
-{
-    stream << "\tTexture2D " << key << ";\n";
-}
+void TextureParameter::generateDeclaration(std::ofstream& stream) const { stream << "\tTexture2D " << key << ";\n"; }
 
-void TextureParameter::save(ArchiveBuffer& buffer) const
-{
+void TextureParameter::save(ArchiveBuffer& buffer) const {
     ShaderParameter::save(buffer);
     Serialization::save(buffer, data->getFolderPath());
     Serialization::save(buffer, data->getName());
 }
 
-void TextureParameter::load(ArchiveBuffer& buffer)
-{
+void TextureParameter::load(ArchiveBuffer& buffer) {
     ShaderParameter::load(buffer);
     std::string folder;
     Serialization::load(buffer, folder);
@@ -198,73 +142,46 @@ void TextureParameter::load(ArchiveBuffer& buffer)
     data = AssetRegistry::findTexture(folder, filename);
 }
 
-SamplerParameter::SamplerParameter(std::string name, Gfx::OSampler sampler, uint32 binding) 
-    : ShaderParameter(name, 0, binding)
-    , data(std::move(sampler))
-{
+SamplerParameter::SamplerParameter(std::string name, Gfx::OSampler sampler, uint32 binding)
+    : ShaderParameter(name, 0, binding), data(std::move(sampler)) {
     output.name = name;
     output.type = ExpressionType::SAMPLER;
 }
 
-SamplerParameter::~SamplerParameter() 
-{
-    
-}
+SamplerParameter::~SamplerParameter() {}
 
-void SamplerParameter::updateDescriptorSet(Gfx::PDescriptorSet descriptorSet, uint8*) 
-{
-    descriptorSet->updateSampler(binding, data);
-}
+void SamplerParameter::updateDescriptorSet(Gfx::PDescriptorSet descriptorSet, uint8*) { descriptorSet->updateSampler(binding, data); }
 
-void SamplerParameter::generateDeclaration(std::ofstream& stream) const
-{
-    stream << "\tSamplerState " << key << ";\n";
-}
+void SamplerParameter::generateDeclaration(std::ofstream& stream) const { stream << "\tSamplerState " << key << ";\n"; }
 
-void SamplerParameter::save(ArchiveBuffer& buffer) const
-{
-    ShaderParameter::save(buffer);
-}
+void SamplerParameter::save(ArchiveBuffer& buffer) const { ShaderParameter::save(buffer); }
 
-void SamplerParameter::load(ArchiveBuffer& buffer)
-{
+void SamplerParameter::load(ArchiveBuffer& buffer) {
     ShaderParameter::load(buffer);
     data = buffer.getGraphics()->createSampler(SamplerCreateInfo{});
 }
 
-CombinedTextureParameter::CombinedTextureParameter(std::string name, PTextureAsset data, Gfx::OSampler sampler, uint32 binding) 
-    : ShaderParameter(name, 0, binding)
-    , data(data)
-    , sampler(std::move(sampler))
-{
+CombinedTextureParameter::CombinedTextureParameter(std::string name, PTextureAsset data, Gfx::OSampler sampler, uint32 binding)
+    : ShaderParameter(name, 0, binding), data(data), sampler(std::move(sampler)) {
     output.name = name;
     output.type = ExpressionType::TEXTURE;
 }
 
-CombinedTextureParameter::~CombinedTextureParameter() 
-{
-    
-}
+CombinedTextureParameter::~CombinedTextureParameter() {}
 
-void CombinedTextureParameter::updateDescriptorSet(Gfx::PDescriptorSet descriptorSet, uint8*) 
-{
+void CombinedTextureParameter::updateDescriptorSet(Gfx::PDescriptorSet descriptorSet, uint8*) {
     descriptorSet->updateTexture(binding, data->getTexture(), sampler);
 }
 
-void CombinedTextureParameter::generateDeclaration(std::ofstream& stream) const
-{
-    stream << "\tSampler2D " << key << ";\n";
-}
+void CombinedTextureParameter::generateDeclaration(std::ofstream& stream) const { stream << "\tSampler2D " << key << ";\n"; }
 
-void CombinedTextureParameter::save(ArchiveBuffer& buffer) const
-{
+void CombinedTextureParameter::save(ArchiveBuffer& buffer) const {
     ShaderParameter::save(buffer);
     Serialization::save(buffer, data->getFolderPath());
     Serialization::save(buffer, data->getName());
 }
 
-void CombinedTextureParameter::load(ArchiveBuffer& buffer)
-{
+void CombinedTextureParameter::load(ArchiveBuffer& buffer) {
     ShaderParameter::load(buffer);
     std::string folder;
     Serialization::load(buffer, folder);
@@ -274,146 +191,99 @@ void CombinedTextureParameter::load(ArchiveBuffer& buffer)
     sampler = buffer.getGraphics()->createSampler({});
 }
 
-ConstantExpression::ConstantExpression()
-{
-}
+ConstantExpression::ConstantExpression() {}
 
-ConstantExpression::ConstantExpression(std::string expr, ExpressionType type)
-    : expr(expr)
-{
+ConstantExpression::ConstantExpression(std::string expr, ExpressionType type) : expr(expr) {
     output.name = "cexpr";
     output.type = type;
 }
 
-ConstantExpression::~ConstantExpression()
-{
-    
-}
+ConstantExpression::~ConstantExpression() {}
 
-std::string ConstantExpression::evaluate(Map<std::string, std::string>& varState) const
-{
+std::string ConstantExpression::evaluate(Map<std::string, std::string>& varState) const {
     std::string varName = fmt::format("const_exp_{}", key);
     varState[key] = varName;
     return fmt::format("let {} = {};\n", varName, expr);
 }
 
-void ConstantExpression::save(ArchiveBuffer& buffer) const 
-{
+void ConstantExpression::save(ArchiveBuffer& buffer) const {
     ShaderExpression::save(buffer);
     Serialization::save(buffer, expr);
 }
 
-void ConstantExpression::load(ArchiveBuffer& buffer)
-{
+void ConstantExpression::load(ArchiveBuffer& buffer) {
     ShaderExpression::load(buffer);
     Serialization::load(buffer, expr);
 }
 
-AddExpression::AddExpression()
-{
+AddExpression::AddExpression() {}
 
-}
+AddExpression::~AddExpression() {}
 
-AddExpression::~AddExpression()
-{
-    
-}
-
-std::string AddExpression::evaluate(Map<std::string, std::string>& varState) const
-{
+std::string AddExpression::evaluate(Map<std::string, std::string>& varState) const {
     std::string varName = fmt::format("exp_{}", key);
     varState[key] = varName;
     std::string lhs = inputs.at("lhs").source;
-    if (varState.contains(lhs))
-    {
+    if (varState.contains(lhs)) {
         lhs = varState[lhs];
     }
     std::string rhs = inputs.at("rhs").source;
-    if (varState.contains(rhs))
-    {
+    if (varState.contains(rhs)) {
         rhs = varState[rhs];
     }
 
     return fmt::format("let {} = {} + {};\n", varName, lhs, rhs);
 }
 
-void AddExpression::save(ArchiveBuffer& buffer) const 
-{
-    ShaderExpression::save(buffer);
-}
+void AddExpression::save(ArchiveBuffer& buffer) const { ShaderExpression::save(buffer); }
 
-void AddExpression::load(ArchiveBuffer& buffer)
-{
-    ShaderExpression::load(buffer);
-}
+void AddExpression::load(ArchiveBuffer& buffer) { ShaderExpression::load(buffer); }
 
-std::string SubExpression::evaluate(Map<std::string, std::string>& varState) const
-{
+std::string SubExpression::evaluate(Map<std::string, std::string>& varState) const {
     std::string varName = fmt::format("exp_{}", key);
     varState[key] = varName;
     std::string lhs = inputs.at("lhs").source;
-    if (varState.contains(lhs))
-    {
+    if (varState.contains(lhs)) {
         lhs = varState[lhs];
     }
     std::string rhs = inputs.at("rhs").source;
-    if (varState.contains(rhs))
-    {
+    if (varState.contains(rhs)) {
         rhs = varState[rhs];
     }
 
     return fmt::format("let {} = {} - {};\n", varName, lhs, rhs);
 }
 
-void SubExpression::save(ArchiveBuffer& buffer) const 
-{
-    ShaderExpression::save(buffer);
-}
+void SubExpression::save(ArchiveBuffer& buffer) const { ShaderExpression::save(buffer); }
 
-void SubExpression::load(ArchiveBuffer& buffer)
-{
-    ShaderExpression::load(buffer);
-}
+void SubExpression::load(ArchiveBuffer& buffer) { ShaderExpression::load(buffer); }
 
-std::string MulExpression::evaluate(Map<std::string, std::string>& varState) const 
-{
+std::string MulExpression::evaluate(Map<std::string, std::string>& varState) const {
     std::string varName = fmt::format("exp_{}", key);
     varState[key] = varName;
     std::string lhs = inputs.at("lhs").source;
-    if (varState.contains(lhs))
-    {
+    if (varState.contains(lhs)) {
         lhs = varState[lhs];
     }
     std::string rhs = inputs.at("rhs").source;
-    if (varState.contains(rhs))
-    {
+    if (varState.contains(rhs)) {
         rhs = varState[rhs];
     }
     return fmt::format("let {} = {} * {};\n", varName, lhs, rhs);
 }
 
-void MulExpression::save(ArchiveBuffer& buffer) const 
-{
-    ShaderExpression::save(buffer);
-}
+void MulExpression::save(ArchiveBuffer& buffer) const { ShaderExpression::save(buffer); }
 
-void MulExpression::load(ArchiveBuffer& buffer)
-{
-    ShaderExpression::load(buffer);
-}
+void MulExpression::load(ArchiveBuffer& buffer) { ShaderExpression::load(buffer); }
 
-std::string SwizzleExpression::evaluate(Map<std::string, std::string>& varState) const
-{
+std::string SwizzleExpression::evaluate(Map<std::string, std::string>& varState) const {
     std::string varName = fmt::format("exp_{}", key);
     std::string swizzle = "";
-    for(uint32 i = 0; i < 4; ++i)
-    {
-        if(comp[i] == -1)
-        {
+    for (uint32 i = 0; i < 4; ++i) {
+        if (comp[i] == -1) {
             break;
         }
-        switch (comp[i])
-        {
+        switch (comp[i]) {
         case 0:
             swizzle += "x";
             break;
@@ -434,54 +304,40 @@ std::string SwizzleExpression::evaluate(Map<std::string, std::string>& varState)
     return fmt::format("let {} = {}.{};\n", varName, varState[inputs.at("target").source], swizzle);
 }
 
-void SwizzleExpression::save(ArchiveBuffer& buffer) const 
-{
+void SwizzleExpression::save(ArchiveBuffer& buffer) const {
     ShaderExpression::save(buffer);
     Serialization::save(buffer, comp);
 }
 
-void SwizzleExpression::load(ArchiveBuffer& buffer)
-{
+void SwizzleExpression::load(ArchiveBuffer& buffer) {
     ShaderExpression::load(buffer);
     Serialization::load(buffer, comp);
 }
 
-std::string SampleExpression::evaluate(Map<std::string, std::string>& varState) const 
-{
+std::string SampleExpression::evaluate(Map<std::string, std::string>& varState) const {
     std::string varName = fmt::format("exp_{}", key);
     varState[key] = varName;
     std::string texCoords = inputs.at("coords").source;
-    if (varState.contains(inputs.at("coords").source))
-    {
+    if (varState.contains(inputs.at("coords").source)) {
         texCoords = varState[inputs.at("coords").source];
     }
-    if (inputs.contains("texture"))
-    {
-        return fmt::format("let {} = {}.Sample({}, {});\n", varName, varState[inputs.at("texture").source], varState[inputs.at("sampler").source], texCoords);
-    }
-    else
-    {
+    if (inputs.contains("texture")) {
+        return fmt::format("let {} = {}.Sample({}, {});\n", varName, varState[inputs.at("texture").source],
+                           varState[inputs.at("sampler").source], texCoords);
+    } else {
         return fmt::format("let {} = {}.Sample({});\n", varName, varState[inputs.at("sampler").source], texCoords);
     }
 }
 
-void SampleExpression::save(ArchiveBuffer& buffer) const 
-{
-    ShaderExpression::save(buffer);
-}
+void SampleExpression::save(ArchiveBuffer& buffer) const { ShaderExpression::save(buffer); }
 
-void SampleExpression::load(ArchiveBuffer& buffer)
-{
-    ShaderExpression::load(buffer);
-}
+void SampleExpression::load(ArchiveBuffer& buffer) { ShaderExpression::load(buffer); }
 
-void MaterialNode::save(ArchiveBuffer& buffer) const 
-{
+void MaterialNode::save(ArchiveBuffer& buffer) const {
     Serialization::save(buffer, profile);
     Serialization::save(buffer, variables);
 }
-void MaterialNode::load(ArchiveBuffer& buffer) 
-{
+void MaterialNode::load(ArchiveBuffer& buffer) {
     Serialization::load(buffer, profile);
     Serialization::load(buffer, variables);
 }

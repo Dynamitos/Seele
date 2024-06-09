@@ -1,20 +1,19 @@
 #pragma once
-#include <thread>
-#include <functional>
 #include "Containers/Array.h"
 #include "Containers/List.h"
+#include <functional>
+#include <thread>
 
-namespace Seele
-{
-class ThreadPool
-{
-public:
+
+namespace Seele {
+class ThreadPool {
+  public:
     ThreadPool(uint32 numWorkers = std::thread::hardware_concurrency() - 2);
     ~ThreadPool();
     void runAndWait(List<std::function<void()>> functions);
-private:
-    struct Task
-    {
+
+  private:
+    struct Task {
         uint64 numRemaining = 0;
         List<std::function<void()>> functions;
     };
@@ -27,4 +26,4 @@ private:
     bool running = true;
 };
 ThreadPool& getThreadPool();
-}
+} // namespace Seele

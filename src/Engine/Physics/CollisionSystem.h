@@ -1,26 +1,24 @@
 #pragma once
-#include <entt/entt.hpp>
 #include "BVH.h"
-#include "Containers/Map.h"
-#include "Containers/Array.h"
 #include "Component/Collider.h"
 #include "Component/Transform.h"
+#include "Containers/Array.h"
+#include "Containers/Map.h"
+#include <entt/entt.hpp>
 
-namespace Seele
-{
-struct Collision
-{
+
+namespace Seele {
+struct Collision {
     entt::entity a, b;
 };
-class CollisionSystem
-{
-public:
+class CollisionSystem {
+  public:
     CollisionSystem(entt::registry& registry);
     virtual ~CollisionSystem();
     void detectCollisions(Array<Collision>& collisions);
-private:
-    struct Witness
-    {
+
+  private:
+    struct Witness {
         Vector p;
         Vector n;
         // for finding p

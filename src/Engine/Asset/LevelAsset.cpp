@@ -2,28 +2,12 @@
 
 using namespace Seele;
 
-LevelAsset::LevelAsset()
-{
-    
-}
+LevelAsset::LevelAsset() {}
 
-LevelAsset::LevelAsset(std::string_view folderPath, std::string_view name)
-    : Asset(folderPath, name)
-{
-    
-}
+LevelAsset::LevelAsset(std::string_view folderPath, std::string_view name) : Asset(folderPath, name) {}
 
-LevelAsset::~LevelAsset()
-{
-    
-}
+LevelAsset::~LevelAsset() {}
 
-void LevelAsset::save(ArchiveBuffer&) const 
-{
-    
-}
+void LevelAsset::save(ArchiveBuffer&) const {}
 
-void LevelAsset::load(ArchiveBuffer&)
-{
-    
-}
+void LevelAsset::load(ArchiveBuffer&) {}

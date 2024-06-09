@@ -1,8 +1,9 @@
 #include "TextureLoader.h"
+#include "Asset/AssetRegistry.h"
 #include "Asset/TextureAsset.h"
 #include "Graphics/Graphics.h"
-#include "Asset/AssetRegistry.h"
 #include "Graphics/Vulkan/Enums.h"
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsign-compare"
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
@@ -17,28 +18,25 @@
 
 using namespace Seele;
 
-TextureLoader::TextureLoader(Gfx::PGraphics graphics)
-    : graphics(graphics)
-{
+TextureLoader::TextureLoader(Gfx::PGraphics graphics) : graphics(graphics) {
     OTextureAsset placeholder = new TextureAsset();
     placeholderAsset = placeholder;
-    import(TextureImportArgs{
-        .filePath = std::filesystem::absolute("textures/placeholder.png"),
-        .importPath = "",
-        }, placeholderAsset);
+    import(
+        TextureImportArgs{
+            .filePath = std::filesystem::absolute("textures/placeholder.png"),
+            .importPath = "",
+        },
+        placeholderAsset);
     AssetRegistry::get().assetRoot->textures[""] = std::move(placeholder);
 }
 
-TextureLoader::~TextureLoader()
-{
-}
+TextureLoader::~TextureLoader() {}
 
-void TextureLoader::importAsset(TextureImportArgs args)
-{
+void TextureLoader::importAsset(TextureImportArgs args) {
     std::string str = args.filePath.filename().string();
     auto pos = str.rfind(".");
     str.replace(str.begin() + pos, str.end(), "");
-    
+
     OTextureAsset asset = new TextureAsset(args.importPath, str);
     PTextureAsset ref = asset;
     asset->setStatus(Asset::Status::Loading);
@@ -46,25 +44,26 @@ void TextureLoader::importAsset(TextureImportArgs args)
     import(args, ref);
 }
 
-PTextureAsset TextureLoader::getPlaceholderTexture() 
-{
-    return placeholderAsset;
-}
+PTextureAsset TextureLoader::getPlaceholderTexture() { return placeholderAsset; }
 
-#define KTX_ASSERT(x) { auto error = x; if(error != KTX_SUCCESS) { std::cout << ktxErrorString(error) << std::endl; abort(); } }
+#define KTX_ASSERT(x)                                                                                                                      \
+    {                                                                                                                                      \
+        auto error = x;                                                                                                                    \
+        if (error != KTX_SUCCESS) {                                                                                                        \
+            std::cout << ktxErrorString(error) << std::endl;                                                                               \
+            abort();                                                                                                                       \
+        }                                                                                                                                  \
+    }
 
-void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset)
-{
+void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset) {
     // manually transcode ktx textures using toktx
-    if (args.filePath.extension().compare("ktx") != 0)
-    {
+    if (args.filePath.extension().compare("ktx") != 0) {
         auto ktxFile = args.filePath;
         ktxFile.replace_extension("ktx");
         std::stringstream ss;
         ss << "toktx --encode etc1s ";
-        if (args.type == TextureImportType::TEXTURE_NORMAL)
-        {
-            //ss << "--normal_mode ";
+        if (args.type == TextureImportType::TEXTURE_NORMAL) {
+            // ss << "--normal_mode ";
         }
         ss << ktxFile << " " << args.filePath;
         system(ss.str().c_str());
@@ -72,31 +71,30 @@ void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset)
     }
 
     ktxTexture2* ktxHandle;
-    KTX_ASSERT(ktxTexture_CreateFromNamedFile(args.filePath.string().c_str(), 0, (ktxTexture**) & ktxHandle));
+    KTX_ASSERT(ktxTexture_CreateFromNamedFile(args.filePath.string().c_str(), 0, (ktxTexture**)&ktxHandle));
 
-
-    //int totalWidth = 0, totalHeight = 0, n = 0;
-    //unsigned char* data = stbi_load(args.filePath.string().c_str(), &totalWidth, &totalHeight, &n, 4);
-    //ktxTexture2* kTexture = nullptr;
-    //VkFormat format = VK_FORMAT_R8G8B8A8_UNORM;
-    //ktxTextureCreateInfo createInfo = {
-    //    .vkFormat = (uint32)format,
-    //    .baseDepth = 1,
-    //    .numLevels = 1,
-    //    .numLayers = 1,
-    //    .isArray = false,
-    //    .generateMipmaps = false,
-    //};
+    // int totalWidth = 0, totalHeight = 0, n = 0;
+    // unsigned char* data = stbi_load(args.filePath.string().c_str(), &totalWidth, &totalHeight, &n, 4);
+    // ktxTexture2* kTexture = nullptr;
+    // VkFormat format = VK_FORMAT_R8G8B8A8_UNORM;
+    // ktxTextureCreateInfo createInfo = {
+    //     .vkFormat = (uint32)format,
+    //     .baseDepth = 1,
+    //     .numLevels = 1,
+    //     .numLayers = 1,
+    //     .isArray = false,
+    //     .generateMipmaps = false,
+    // };
     //
-    //if (args.type == TextureImportType::TEXTURE_CUBEMAP)
+    // if (args.type == TextureImportType::TEXTURE_CUBEMAP)
     //{
-    //    uint32 faceWidth = totalWidth / 4;
-    //    // uint32 faceHeight = totalHeight / 3;
-    //    // Cube map
-    //    createInfo.baseWidth = totalWidth / 4;
-    //    createInfo.baseHeight = totalHeight / 3;
-    //    createInfo.numFaces = 6;
-    //    createInfo.numDimensions = 2;
+    //     uint32 faceWidth = totalWidth / 4;
+    //     // uint32 faceHeight = totalHeight / 3;
+    //     // Cube map
+    //     createInfo.baseWidth = totalWidth / 4;
+    //     createInfo.baseHeight = totalHeight / 3;
+    //     createInfo.numFaces = 6;
+    //     createInfo.numDimensions = 2;
 
     //    KTX_ASSERT(ktxTexture2_Create(&createInfo,
     //        KTX_TEXTURE_CREATE_ALLOC_STORAGE,
@@ -124,7 +122,7 @@ void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset)
     //    loadCubeFace(1, 1, 4); // +Z
     //    loadCubeFace(3, 1, 5); // -Z
     //}
-    //else
+    // else
     //{
     //    createInfo.baseWidth = totalWidth;
     //    createInfo.baseHeight = totalHeight;
@@ -138,34 +136,33 @@ void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset)
     //    ktxTexture_SetImageFromMemory(ktxTexture(kTexture),
     //        0, 0, 0, data, totalWidth * totalHeight * n * sizeof(unsigned char));
     //}
-    //ktxTexture_WriteToNamedFile(ktxTexture(kTexture), args.filePath.replace_extension(".ktx").string().c_str());
+    // ktxTexture_WriteToNamedFile(ktxTexture(kTexture), args.filePath.replace_extension(".ktx").string().c_str());
 
-    //ktxBasisParams basisParams = {
-    //    .structSize = sizeof(ktxBasisParams),
-    //    .uastc = true,
-    //    .threadCount = std::thread::hardware_concurrency(),
-    //    .normalMap = normalMap,
-    //    .uastcFlags = KTX_PACK_UASTC_LEVEL_VERYSLOW,
-    //    .uastcRDO = true,
-    //    .uastcRDOQualityScalar = 1,
-    //};
-    //KTX_ASSERT(ktxTexture2_CompressBasisEx(kTexture, &basisParams));
-    //KTX_ASSERT(ktxTexture2_DeflateZstd(kTexture, 3));
+    // ktxBasisParams basisParams = {
+    //     .structSize = sizeof(ktxBasisParams),
+    //     .uastc = true,
+    //     .threadCount = std::thread::hardware_concurrency(),
+    //     .normalMap = normalMap,
+    //     .uastcFlags = KTX_PACK_UASTC_LEVEL_VERYSLOW,
+    //     .uastcRDO = true,
+    //     .uastcRDOQualityScalar = 1,
+    // };
+    // KTX_ASSERT(ktxTexture2_CompressBasisEx(kTexture, &basisParams));
+    // KTX_ASSERT(ktxTexture2_DeflateZstd(kTexture, 3));
 
-    //char writer[100];
-    //snprintf(writer, sizeof(writer), "%s version %s", "SeeleEngine", "0.0.1");
-    //ktxHashList_AddKVPair(&kTexture->kvDataHead, KTX_WRITER_KEY,
-    //    (ktx_uint32_t)strlen(writer) + 1,
-    //    writer);
+    // char writer[100];
+    // snprintf(writer, sizeof(writer), "%s version %s", "SeeleEngine", "0.0.1");
+    // ktxHashList_AddKVPair(&kTexture->kvDataHead, KTX_WRITER_KEY,
+    //     (ktx_uint32_t)strlen(writer) + 1,
+    //     writer);
 
-    //uint8* texData;
-    //size_t texSize;
-    //KTX_ASSERT(ktxTexture_WriteToMemory(ktxTexture(kTexture), &texData, &texSize));
+    // uint8* texData;
+    // size_t texSize;
+    // KTX_ASSERT(ktxTexture_WriteToMemory(ktxTexture(kTexture), &texData, &texSize));
     //
-    //stbi_image_free(data);
+    // stbi_image_free(data);
 
-    if (textureAsset->getName().empty())
-    {
+    if (textureAsset->getName().empty()) {
         return;
     }
 

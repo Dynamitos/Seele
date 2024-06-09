@@ -6,7 +6,8 @@
 
 // using namespace Seele::Vulkan;
 
-// SubAllocation::SubAllocation(PAllocation owner, VkDeviceSize requestedSize, VkDeviceSize allocatedOffset, VkDeviceSize allocatedSize, VkDeviceSize alignedOffset)
+// SubAllocation::SubAllocation(PAllocation owner, VkDeviceSize requestedSize, VkDeviceSize allocatedOffset, VkDeviceSize allocatedSize,
+// VkDeviceSize alignedOffset)
 //     : owner(owner)
 //     , requestedSize(requestedSize)
 //     , allocatedOffset(allocatedOffset)
@@ -112,10 +113,9 @@
 
 // void Allocation::markFree(PSubAllocation allocation)
 // {
-//     //std::cout << "Freeing " << allocation->allocatedOffset << "-" << allocation->allocatedOffset + allocation->allocatedSize << std::endl;
-//     assert(activeAllocations.find(allocation) != activeAllocations.end());
-//     VkDeviceSize lowerBound = allocation->allocatedOffset;
-//     VkDeviceSize upperBound = allocation->allocatedOffset + allocation->allocatedSize;
+//     //std::cout << "Freeing " << allocation->allocatedOffset << "-" << allocation->allocatedOffset + allocation->allocatedSize <<
+//     std::endl; assert(activeAllocations.find(allocation) != activeAllocations.end()); VkDeviceSize lowerBound =
+//     allocation->allocatedOffset; VkDeviceSize upperBound = allocation->allocatedOffset + allocation->allocatedSize;
 //     freeRanges[lowerBound] = allocation->allocatedSize;
 //     for (const auto& [lower, size] : freeRanges)
 //     {
@@ -171,7 +171,7 @@
 //     for (size_t i = 0; i < memProperties.memoryHeapCount; ++i)
 //     {
 //         VkMemoryHeap memoryHeap = memProperties.memoryHeaps[i];
-//         HeapInfo heapInfo; 
+//         HeapInfo heapInfo;
 //         heapInfo.maxSize = memoryHeap.size;
 //         //std::cout << "Creating heap " << i << " with properties " << memoryHeap.flags << " size " << memoryHeap.size << std::endl;
 //         heaps.add(std::move(heapInfo));
@@ -182,7 +182,8 @@
 // {
 // }
 
-// OSubAllocation Allocator::allocate(const VkMemoryRequirements2 &memRequirements2, VkMemoryPropertyFlags properties, VkMemoryDedicatedAllocateInfo *dedicatedInfo)
+// OSubAllocation Allocator::allocate(const VkMemoryRequirements2 &memRequirements2, VkMemoryPropertyFlags properties,
+// VkMemoryDedicatedAllocateInfo *dedicatedInfo)
 // {
 //     const VkMemoryRequirements &requirements = memRequirements2.memoryRequirements;
 //     uint32 memoryTypeIndex = findMemoryType(requirements.memoryTypeBits, properties);
@@ -195,10 +196,10 @@
 //         {
 //             OAllocation newAllocation = new Allocation(graphics, this, requirements.size, memoryTypeIndex, properties, dedicatedInfo);
 //             heaps[heapIndex].inUse += newAllocation->bytesAllocated;
-//             std::cout << "Heap " << heapIndex << ": " << (float)heaps[heapIndex].inUse / heaps[heapIndex].maxSize * 100 << "%" << std::endl; 
-//             heaps[heapIndex].allocations.add(std::move(newAllocation));
-//             return heaps[heapIndex].allocations.back()->getSuballocation(requirements.size, requirements.alignment);
-//         } 
+//             std::cout << "Heap " << heapIndex << ": " << (float)heaps[heapIndex].inUse / heaps[heapIndex].maxSize * 100 << "%" <<
+//             std::endl; heaps[heapIndex].allocations.add(std::move(newAllocation)); return
+//             heaps[heapIndex].allocations.back()->getSuballocation(requirements.size, requirements.alignment);
+//         }
 //     }
 //     for (auto& alloc : heaps[heapIndex].allocations)
 //     {
@@ -213,9 +214,9 @@
 //     }
 
 //     // no suitable allocations found, allocate new block
-//     OAllocation newAllocation = new Allocation(graphics, this, (requirements.size > DEFAULT_ALLOCATION) ? requirements.size : DEFAULT_ALLOCATION, memoryTypeIndex, properties, nullptr);
-//     heaps[heapIndex].inUse += newAllocation->bytesAllocated;
-//     std::cout << "Heap " << heapIndex << ": " << (float)heaps[heapIndex].inUse / heaps[heapIndex].maxSize * 100 << "%" << std::endl;
+//     OAllocation newAllocation = new Allocation(graphics, this, (requirements.size > DEFAULT_ALLOCATION) ? requirements.size :
+//     DEFAULT_ALLOCATION, memoryTypeIndex, properties, nullptr); heaps[heapIndex].inUse += newAllocation->bytesAllocated; std::cout <<
+//     "Heap " << heapIndex << ": " << (float)heaps[heapIndex].inUse / heaps[heapIndex].maxSize * 100 << "%" << std::endl;
 //     heaps[heapIndex].allocations.add(std::move(newAllocation));
 //     return heaps[heapIndex].allocations.back()->getSuballocation(requirements.size, requirements.alignment);
 // }
@@ -241,16 +242,17 @@
 //         std::cout << "Heap " << heapIndex << std::endl;
 //         for (uint32 alloc = 0; alloc < heaps[heapIndex].allocations.size(); ++alloc)
 //         {
-//             std::cout << "[" << alloc << "]: " << (float)heaps[heapIndex].allocations[alloc]->bytesUsed / heaps[heapIndex].allocations[alloc]->bytesAllocated << std::endl;
+//             std::cout << "[" << alloc << "]: " << (float)heaps[heapIndex].allocations[alloc]->bytesUsed /
+//             heaps[heapIndex].allocations[alloc]->bytesAllocated << std::endl;
 //         }
 //     }
 // }
 
 // uint32 Allocator::findMemoryType(uint32 typeFilter, VkMemoryPropertyFlags properties)
 // {
-//     for (uint32 i = 0; i < memProperties.memoryTypeCount; i++) 
+//     for (uint32 i = 0; i < memProperties.memoryTypeCount; i++)
 //     {
-//         if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties) 
+//         if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
 //         {
 //             return i;
 //         }
@@ -334,7 +336,7 @@
 //         .queueFamilyIndexCount = 1,
 //         .pQueueFamilyIndices = &queueIndex,
 //     };
-    
+
 //     VkBuffer buffer;
 //     VK_CHECK(vkCreateBuffer(graphics->getDevice(), &stagingBufferCreateInfo, nullptr, &buffer));
 
@@ -361,7 +363,7 @@
 //         owner
 //     );
 //     vkBindBufferMemory(graphics->getDevice(), buffer, stagingBuffer->getMemory(), stagingBuffer->getOffset());
-    
+
 //     return stagingBuffer;
 // }
 

@@ -1,11 +1,9 @@
 #pragma once
 #include "RenderPass.h"
 
-namespace Seele
-{
-class VisibilityPass : public RenderPass
-{
-public:
+namespace Seele {
+class VisibilityPass : public RenderPass {
+  public:
     VisibilityPass(Gfx::PGraphics graphics, PScene scene);
     VisibilityPass(VisibilityPass&&) = default;
     VisibilityPass& operator=(VisibilityPass&&) = default;
@@ -15,7 +13,8 @@ public:
     virtual void endFrame() override;
     virtual void publishOutputs() override;
     virtual void createRenderPass() override;
-private:
+
+  private:
     static constexpr uint32 BLOCK_SIZE = 32;
     Gfx::RenderTargetAttachment visibilityAttachment;
     Gfx::PDescriptorSet visibilitySet;
@@ -29,4 +28,4 @@ private:
     glm::uvec3 threadGroupSize;
 };
 DEFINE_REF(VisibilityPass)
-}
+} // namespace Seele

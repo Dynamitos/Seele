@@ -4,5 +4,6 @@
 #include <slang.h>
 
 namespace Seele {
-Slang::ComPtr<slang::IBlob> generateShader(const ShaderCreateInfo& createInfo, SlangCompileTarget target, Map<std::string, uint32>& paramMapping);
+Slang::ComPtr<slang::IBlob> generateShader(const ShaderCreateInfo& createInfo, SlangCompileTarget target,
+                                           Map<std::string, uint32>& paramMapping);
 }

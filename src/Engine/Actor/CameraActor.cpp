@@ -3,23 +3,13 @@
 
 using namespace Seele;
 
-CameraActor::CameraActor(PScene scene)
-    : Actor(scene)
-{
+CameraActor::CameraActor(PScene scene) : Actor(scene) {
     attachComponent<Component::Camera>();
     accessComponent<Component::Transform>().setPosition(Vector(10, 5, 14));
 }
 
-CameraActor::~CameraActor()
-{
-}
+CameraActor::~CameraActor() {}
 
-Component::Camera& CameraActor::getCameraComponent()
-{
-    return accessComponent<Component::Camera>();
-}
+Component::Camera& CameraActor::getCameraComponent() { return accessComponent<Component::Camera>(); }
 
-const Component::Camera& CameraActor::getCameraComponent() const
-{
-    return accessComponent<Component::Camera>();
-}
+const Component::Camera& CameraActor::getCameraComponent() const { return accessComponent<Component::Camera>(); }

@@ -1,9 +1,10 @@
 #include "Descriptor.h"
 #include "Buffer.h"
+#include "CRC.h"
 #include "Command.h"
 #include "Graphics.h"
 #include "Texture.h"
-#include "CRC.h"
+
 
 using namespace Seele;
 using namespace Seele::Vulkan;
@@ -56,9 +57,7 @@ void DescriptorLayout::create() {
 }
 
 DescriptorPool::DescriptorPool(PGraphics graphics, PDescriptorLayout layout)
-    : CommandBoundResource(graphics)
-    , graphics(graphics)
-    , layout(layout) {
+    : CommandBoundResource(graphics), graphics(graphics), layout(layout) {
     for (uint32 i = 0; i < cachedHandles.size(); ++i) {
         cachedHandles[i] = nullptr;
     }
@@ -91,10 +90,8 @@ DescriptorPool::DescriptorPool(PGraphics graphics, PDescriptorLayout layout)
 }
 
 DescriptorPool::~DescriptorPool() {
-    for (size_t i = 0; i < maxSets; ++i)
-    {
-        if (cachedHandles[i] != nullptr)
-        {
+    for (size_t i = 0; i < maxSets; ++i) {
+        if (cachedHandles[i] != nullptr) {
             cachedHandles[i] = nullptr;
         }
     }
@@ -168,26 +165,16 @@ void DescriptorPool::reset() {
 }
 
 DescriptorSet::DescriptorSet(PGraphics graphics, PDescriptorPool owner)
-    : Gfx::DescriptorSet(owner->getLayout())
-    , CommandBoundResource(graphics)
-    , setHandle(VK_NULL_HANDLE)
-    , graphics(graphics)
-    , owner(owner)
-    , bindCount(0)
-    , currentlyInUse(false)
-{
+    : Gfx::DescriptorSet(owner->getLayout()), CommandBoundResource(graphics), setHandle(VK_NULL_HANDLE), graphics(graphics), owner(owner),
+      bindCount(0), currentlyInUse(false) {
     boundResources.resize(owner->getLayout()->getBindings().size());
 }
 
-DescriptorSet::~DescriptorSet()
-{
-    vkFreeDescriptorSets(graphics->getDevice(), owner->getHandle(), 1, &setHandle);
-}
+DescriptorSet::~DescriptorSet() { vkFreeDescriptorSets(graphics->getDevice(), owner->getHandle(), 1, &setHandle); }
 
 void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PUniformBuffer uniformBuffer) {
     PUniformBuffer vulkanBuffer = uniformBuffer.cast<UniformBuffer>();
-    if (boundResources[binding] == vulkanBuffer->getAlloc())
-    {
+    if (boundResources[binding] == vulkanBuffer->getAlloc()) {
         return;
     }
 
@@ -195,7 +182,7 @@ void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PUniformBuffer uniformBu
         .buffer = vulkanBuffer->getHandle(),
         .offset = 0,
         .range = vulkanBuffer->getSize(),
-        });
+    });
 
     writeDescriptors.add(VkWriteDescriptorSet{
         .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
@@ -206,15 +193,14 @@ void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PUniformBuffer uniformBu
         .descriptorCount = 1,
         .descriptorType = cast(layout->getBindings()[binding].descriptorType),
         .pBufferInfo = &bufferInfos.back(),
-        });
+    });
 
     boundResources[binding] = vulkanBuffer->getAlloc();
 }
 
 void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PShaderBuffer shaderBuffer) {
     PShaderBuffer vulkanBuffer = shaderBuffer.cast<ShaderBuffer>();
-    if (boundResources[binding] == vulkanBuffer->getAlloc())
-    {
+    if (boundResources[binding] == vulkanBuffer->getAlloc()) {
         return;
     }
 
@@ -222,7 +208,7 @@ void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PShaderBuffer shaderBuff
         .buffer = vulkanBuffer->getHandle(),
         .offset = 0,
         .range = vulkanBuffer->getSize(),
-        });
+    });
     writeDescriptors.add(VkWriteDescriptorSet{
         .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
         .pNext = nullptr,
@@ -232,15 +218,14 @@ void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PShaderBuffer shaderBuff
         .descriptorCount = 1,
         .descriptorType = cast(layout->getBindings()[binding].descriptorType),
         .pBufferInfo = &bufferInfos.back(),
-        });
+    });
 
     boundResources[binding] = vulkanBuffer->getAlloc();
 }
 
 void DescriptorSet::updateBuffer(uint32_t binding, uint32 index, Gfx::PShaderBuffer shaderBuffer) {
     PShaderBuffer vulkanBuffer = shaderBuffer.cast<ShaderBuffer>();
-    if (boundResources[binding] == vulkanBuffer->getAlloc())
-    {
+    if (boundResources[binding] == vulkanBuffer->getAlloc()) {
         return;
     }
 
@@ -248,7 +233,7 @@ void DescriptorSet::updateBuffer(uint32_t binding, uint32 index, Gfx::PShaderBuf
         .buffer = vulkanBuffer->getHandle(),
         .offset = 0,
         .range = vulkanBuffer->getSize(),
-        });
+    });
 
     writeDescriptors.add(VkWriteDescriptorSet{
         .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
@@ -259,15 +244,14 @@ void DescriptorSet::updateBuffer(uint32_t binding, uint32 index, Gfx::PShaderBuf
         .descriptorCount = 1,
         .descriptorType = cast(layout->getBindings()[binding].descriptorType),
         .pBufferInfo = &bufferInfos.back(),
-        });
+    });
 
     boundResources[binding] = vulkanBuffer->getAlloc();
 }
 
 void DescriptorSet::updateSampler(uint32_t binding, Gfx::PSampler samplerState) {
     PSampler vulkanSampler = samplerState.cast<Sampler>();
-    if (boundResources[binding] == vulkanSampler->getHandle())
-    {
+    if (boundResources[binding] == vulkanSampler->getHandle()) {
         return;
     }
 
@@ -275,7 +259,7 @@ void DescriptorSet::updateSampler(uint32_t binding, Gfx::PSampler samplerState) 
         .sampler = vulkanSampler->getSampler(),
         .imageView = VK_NULL_HANDLE,
         .imageLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-        });
+    });
 
     writeDescriptors.add(VkWriteDescriptorSet{
         .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
@@ -286,15 +270,14 @@ void DescriptorSet::updateSampler(uint32_t binding, Gfx::PSampler samplerState) 
         .descriptorCount = 1,
         .descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER,
         .pImageInfo = &imageInfos.back(),
-        });
+    });
 
     boundResources[binding] = vulkanSampler->getHandle();
 }
 
 void DescriptorSet::updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::PSampler samplerState) {
     TextureBase* vulkanTexture = texture.cast<TextureBase>().getHandle();
-    if (boundResources[binding] == vulkanTexture->getHandle())
-    {
+    if (boundResources[binding] == vulkanTexture->getHandle()) {
         return;
     }
 
@@ -303,12 +286,11 @@ void DescriptorSet::updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::
         .sampler = samplerState != nullptr ? samplerState.cast<Sampler>()->getSampler() : VK_NULL_HANDLE,
         .imageView = vulkanTexture->getView(),
         .imageLayout = cast(vulkanTexture->getLayout()),
-        });
+    });
     VkDescriptorType descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
     if (samplerState != nullptr) {
         descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    }
-    else if (vulkanTexture->getUsage() & VK_IMAGE_USAGE_STORAGE_BIT) {
+    } else if (vulkanTexture->getUsage() & VK_IMAGE_USAGE_STORAGE_BIT) {
         descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
     }
     writeDescriptors.add(VkWriteDescriptorSet{
@@ -320,7 +302,7 @@ void DescriptorSet::updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::
         .descriptorCount = 1,
         .descriptorType = descriptorType,
         .pImageInfo = &imageInfos.back(),
-        });
+    });
 
     boundResources[binding] = vulkanTexture->getHandle();
 }
@@ -330,15 +312,14 @@ void DescriptorSet::updateTextureArray(uint32_t binding, Array<Gfx::PTexture> te
     boundResources.resize(binding + textures.size());
     for (auto& gfxTexture : textures) {
         TextureBase* vulkanTexture = gfxTexture.cast<TextureBase>().getHandle();
-        if (boundResources[binding + arrayElement] == vulkanTexture->getHandle())
-        {
+        if (boundResources[binding + arrayElement] == vulkanTexture->getHandle()) {
             continue;
         }
         imageInfos.add(VkDescriptorImageInfo{
             .sampler = VK_NULL_HANDLE,
             .imageView = vulkanTexture->getView(),
             .imageLayout = cast(vulkanTexture->getLayout()),
-            });
+        });
 
         VkDescriptorType descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
         if (vulkanTexture->getUsage() & VK_IMAGE_USAGE_STORAGE_BIT) {
@@ -354,7 +335,7 @@ void DescriptorSet::updateTextureArray(uint32_t binding, Array<Gfx::PTexture> te
             .descriptorCount = 1,
             .descriptorType = descriptorType,
             .pImageInfo = &imageInfos.back(),
-            });
+        });
         vulkanTexture->getHandle()->bind();
     }
 }
@@ -385,8 +366,7 @@ void PipelineLayout::create() {
         PDescriptorLayout layout = desc.cast<DescriptorLayout>();
         layout->create();
         uint32 parameterIndex = parameterMapping[layout->getName()];
-        if (parameterIndex >= vulkanDescriptorLayouts.size())
-        {
+        if (parameterIndex >= vulkanDescriptorLayouts.size()) {
             vulkanDescriptorLayouts.resize(parameterIndex + 1);
         }
         vulkanDescriptorLayouts[parameterIndex] = layout->getHandle();
@@ -409,10 +389,10 @@ void PipelineLayout::create() {
         .pPushConstantRanges = vkPushConstants.data(),
     };
 
-    layoutHash = CRC::Calculate(createInfo.pPushConstantRanges,
-        sizeof(VkPushConstantRange) * createInfo.pushConstantRangeCount, CRC::CRC_32());
-    layoutHash = CRC::Calculate(createInfo.pSetLayouts, sizeof(VkDescriptorSetLayout) * createInfo.setLayoutCount,
-        CRC::CRC_32(), layoutHash);
+    layoutHash =
+        CRC::Calculate(createInfo.pPushConstantRanges, sizeof(VkPushConstantRange) * createInfo.pushConstantRangeCount, CRC::CRC_32());
+    layoutHash =
+        CRC::Calculate(createInfo.pSetLayouts, sizeof(VkDescriptorSetLayout) * createInfo.setLayoutCount, CRC::CRC_32(), layoutHash);
 
     std::unique_lock l(layoutLock);
     if (cachedLayouts.contains(layoutHash)) {

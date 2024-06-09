@@ -1,41 +1,45 @@
 #include "RayTracing.h"
 #include "Buffer.h"
+#include "Graphics/Buffer.h"
 #include "Graphics/Initializer.h"
+#include "Graphics/Mesh.h"
+#include "Graphics/VertexData.h"
 #include <vulkan/vulkan_core.h>
 
 using namespace Seele::Vulkan;
 
-BottomLevelAS::BottomLevelAS(PGraphics graphics, const Gfx::BottomLevelASCreateInfo& createInfo)
-{
+BottomLevelAS::BottomLevelAS(PGraphics graphics, const Gfx::BottomLevelASCreateInfo& createInfo) : graphics(graphics) {
+    VertexData* vertexData = createInfo.mesh->vertexData;
+    Gfx::PShaderBuffer positionBuffer = vertexData->getPositionBuffer();
+    Gfx::PIndexBuffer indexBuffer = vertexData->getIndexBuffer();
     VkDeviceOrHostAddressConstKHR vertexDataDeviceAddress = {
-        .deviceAddress = createInfo.positionBuffer.cast<Buffer>()->getDeviceAddress() + createInfo.verticesOffset,
+        .deviceAddress = positionBuffer.cast<Buffer>()->getDeviceAddress(),
     };
     VkDeviceOrHostAddressConstKHR indexDataDeviceAddress = {
-        .deviceAddress = createInfo.indexBuffer.cast<Buffer>()->getDeviceAddress() + createInfo.indicesOffset,
+        .deviceAddress = indexBuffer.cast<Buffer>()->getDeviceAddress(),
     };
     VkAccelerationStructureGeometryKHR accelerationStructureGeometry = {
         .sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR,
         .pNext = nullptr,
         .geometryType = VK_GEOMETRY_TYPE_TRIANGLES_KHR,
-        .geometry = {.triangles = {
-            .sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR,
-            .pNext = nullptr,
-            .vertexFormat = VK_FORMAT_R32G32B32_SFLOAT,
-            .vertexData = vertexDataDeviceAddress,
-            .vertexStride = sizeof(Vector),
-            .maxVertex = createInfo.positionBuffer->getNumElements(),
-            .indexType = VK_INDEX_TYPE_UINT32,
-            .indexData = indexDataDeviceAddress,
-        }},
+        .geometry = {.triangles =
+                         {
+                             .sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR,
+                             .pNext = nullptr,
+                             .vertexFormat = VK_FORMAT_R32G32B32_SFLOAT,
+                             .vertexData = vertexDataDeviceAddress,
+                             .vertexStride = sizeof(Vector),
+                             .maxVertex = static_cast<uint32_t>(createInfo.mesh->vertexCount),
+                             .indexType = VK_INDEX_TYPE_UINT32,
+                             .indexData = indexDataDeviceAddress,
+                         }},
         .flags = VK_GEOMETRY_OPAQUE_BIT_KHR,
     };
-    
-    VkAccelerationStructureBuildRangeInfoKHR buildRangeInfo = {
-        .primitiveCount = createInfo.meshData.numIndices / 3,
-        .primitiveOffset = 0,
-        .firstVertex = 0,
-        .transformOffset = 0
-    };
+
+    VkAccelerationStructureBuildRangeInfoKHR buildRangeInfo = {.primitiveCount = static_cast<uint32_t>(createInfo.mesh->indices.size()),
+                                                               .primitiveOffset = 0,
+                                                               .firstVertex = 0,
+                                                               .transformOffset = 0};
 
     VkAccelerationStructureBuildGeometryInfoKHR buildGeometry = {
         .sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR,
@@ -51,17 +55,8 @@ BottomLevelAS::BottomLevelAS(PGraphics graphics, const Gfx::BottomLevelASCreateI
     };
 }
 
-BottomLevelAS::~BottomLevelAS()
-{
+BottomLevelAS::~BottomLevelAS() {}
 
-}
+TopLevelAS::TopLevelAS(PGraphics graphics, const Gfx::TopLevelASCreateInfo& createInfo) {}
 
-TopLevelAS::TopLevelAS(PGraphics graphics, const Gfx::TopLevelASCreateInfo& createInfo)
-{
-
-}
-
-TopLevelAS::~TopLevelAS()
-{
-
-}
+TopLevelAS::~TopLevelAS() {}

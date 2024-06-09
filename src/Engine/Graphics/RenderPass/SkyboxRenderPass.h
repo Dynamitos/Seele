@@ -1,13 +1,12 @@
 #pragma once
-#include "RenderPass.h"
-#include "Graphics/Shader.h"
 #include "Component/Skybox.h"
+#include "Graphics/Shader.h"
+#include "RenderPass.h"
 
-namespace Seele
-{
-class SkyboxRenderPass : public RenderPass
-{
-public:
+
+namespace Seele {
+class SkyboxRenderPass : public RenderPass {
+  public:
     SkyboxRenderPass(Gfx::PGraphics graphics, PScene scene);
     SkyboxRenderPass(SkyboxRenderPass&&) = default;
     SkyboxRenderPass& operator=(SkyboxRenderPass&&) = default;
@@ -17,7 +16,8 @@ public:
     virtual void endFrame() override;
     virtual void publishOutputs() override;
     virtual void createRenderPass() override;
-private:
+
+  private:
     Gfx::RenderTargetAttachment colorAttachment;
     Gfx::RenderTargetAttachment depthAttachment;
     Gfx::ODescriptorLayout skyboxDataLayout;
@@ -29,8 +29,7 @@ private:
     Gfx::OPipelineLayout pipelineLayout;
     Gfx::PGraphicsPipeline pipeline;
     Gfx::OSampler skyboxSampler;
-    struct SkyboxData
-    {
+    struct SkyboxData {
         Matrix4 transformMatrix;
         Vector fogColor;
         float blendFactor;

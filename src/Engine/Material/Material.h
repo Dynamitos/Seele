@@ -1,22 +1,15 @@
 #pragma once
-#include "ShaderExpression.h"
 #include "Graphics/Descriptor.h"
+#include "ShaderExpression.h"
 
-namespace Seele
-{
+
+namespace Seele {
 DECLARE_REF(MaterialInstance)
-class Material
-{
-public:
+class Material {
+  public:
     Material();
-    Material(Gfx::PGraphics graphics,
-        Gfx::ODescriptorLayout layout, 
-        uint32 uniformDataSize, 
-        uint32 uniformBinding, 
-        std::string materialName, 
-        Array<OShaderExpression> expressions,
-        Array<std::string> parameter,
-        MaterialNode brdf);
+    Material(Gfx::PGraphics graphics, Gfx::ODescriptorLayout layout, uint32 uniformDataSize, uint32 uniformBinding,
+             std::string materialName, Array<OShaderExpression> expressions, Array<std::string> parameter, MaterialNode brdf);
     ~Material();
     const Gfx::PDescriptorLayout getDescriptorLayout() const { return layout; }
     Gfx::PDescriptorLayout getDescriptorLayout() { return layout; }
@@ -30,7 +23,7 @@ public:
 
     void compile();
 
-private:
+  private:
     Gfx::PGraphics graphics;
     uint32 uniformDataSize;
     uint32 uniformBinding;

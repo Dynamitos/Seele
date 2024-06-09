@@ -1,14 +1,13 @@
 #pragma once
-#include "MinimalEngine.h"
-#include "Initializer.h"
-#include "Resources.h"
-#include "RenderTarget.h"
 #include "Containers/Array.h"
+#include "Initializer.h"
+#include "MinimalEngine.h"
+#include "RenderTarget.h"
+#include "Resources.h"
 
-namespace Seele
-{
-namespace Gfx
-{
+
+namespace Seele {
+namespace Gfx {
 DECLARE_REF(Window)
 DECLARE_REF(Viewport)
 DECLARE_REF(ShaderCompiler)
@@ -33,25 +32,18 @@ DECLARE_REF(RenderCommand)
 DECLARE_REF(ComputeCommand)
 DECLARE_REF(BottomLevelAS)
 DECLARE_REF(TopLevelAS)
-class Graphics
-{
-public:
+class Graphics {
+  public:
     Graphics();
     virtual ~Graphics();
     virtual void init(GraphicsInitializer initializer) = 0;
-    
-  	const QueueFamilyMapping getFamilyMapping() const
-  	{
-  		return queueMapping;
-  	}
 
-    PShaderCompiler getShaderCompiler()
-    {
-        return shaderCompiler;
-    }
-    
-    virtual OWindow createWindow(const WindowCreateInfo &createInfo) = 0;
-    virtual OViewport createViewport(PWindow owner, const ViewportCreateInfo &createInfo) = 0;
+    const QueueFamilyMapping getFamilyMapping() const { return queueMapping; }
+
+    PShaderCompiler getShaderCompiler() { return shaderCompiler; }
+
+    virtual OWindow createWindow(const WindowCreateInfo& createInfo) = 0;
+    virtual OViewport createViewport(PWindow owner, const ViewportCreateInfo& createInfo) = 0;
 
     virtual ORenderPass createRenderPass(RenderTargetLayout layout, Array<SubPassDependency> dependencies, PViewport renderArea) = 0;
     virtual void beginRenderPass(PRenderPass renderPass) = 0;
@@ -61,17 +53,17 @@ public:
     virtual void executeCommands(Array<ORenderCommand> commands) = 0;
     virtual void executeCommands(Array<OComputeCommand> commands) = 0;
 
-    virtual OTexture2D createTexture2D(const TextureCreateInfo &createInfo) = 0;
-    virtual OTexture3D createTexture3D(const TextureCreateInfo &createInfo) = 0;
-    virtual OTextureCube createTextureCube(const TextureCreateInfo &createInfo) = 0;
-    virtual OUniformBuffer createUniformBuffer(const UniformBufferCreateInfo &bulkData) = 0;
-    virtual OShaderBuffer createShaderBuffer(const ShaderBufferCreateInfo &bulkData) = 0;
-    virtual OVertexBuffer createVertexBuffer(const VertexBufferCreateInfo &bulkData) = 0;
-    virtual OIndexBuffer createIndexBuffer(const IndexBufferCreateInfo &bulkData) = 0;
-    
+    virtual OTexture2D createTexture2D(const TextureCreateInfo& createInfo) = 0;
+    virtual OTexture3D createTexture3D(const TextureCreateInfo& createInfo) = 0;
+    virtual OTextureCube createTextureCube(const TextureCreateInfo& createInfo) = 0;
+    virtual OUniformBuffer createUniformBuffer(const UniformBufferCreateInfo& bulkData) = 0;
+    virtual OShaderBuffer createShaderBuffer(const ShaderBufferCreateInfo& bulkData) = 0;
+    virtual OVertexBuffer createVertexBuffer(const VertexBufferCreateInfo& bulkData) = 0;
+    virtual OIndexBuffer createIndexBuffer(const IndexBufferCreateInfo& bulkData) = 0;
+
     virtual ORenderCommand createRenderCommand(const std::string& name = "") = 0;
     virtual OComputeCommand createComputeCommand(const std::string& name = "") = 0;
-    
+
     virtual OVertexShader createVertexShader(const ShaderCreateInfo& createInfo) = 0;
     virtual OFragmentShader createFragmentShader(const ShaderCreateInfo& createInfo) = 0;
     virtual OComputeShader createComputeShader(const ShaderCreateInfo& createInfo) = 0;
@@ -82,8 +74,8 @@ public:
     virtual PComputePipeline createComputePipeline(ComputePipelineCreateInfo createInfo) = 0;
     virtual OSampler createSampler(const SamplerCreateInfo& createInfo) = 0;
 
-  	virtual ODescriptorLayout createDescriptorLayout(const std::string& name = "") = 0;
-  	virtual OPipelineLayout createPipelineLayout(const std::string& name = "", PPipelineLayout baseLayout = nullptr) = 0;
+    virtual ODescriptorLayout createDescriptorLayout(const std::string& name = "") = 0;
+    virtual OPipelineLayout createPipelineLayout(const std::string& name = "", PPipelineLayout baseLayout = nullptr) = 0;
 
     virtual OVertexInput createVertexInput(VertexInputStateCreateInfo createInfo) = 0;
 
@@ -94,7 +86,8 @@ public:
     // Ray Tracing
     virtual OBottomLevelAS createBottomLevelAccelerationStructure(const BottomLevelASCreateInfo& createInfo) = 0;
     virtual OTopLevelAS createTopLevelAccelerationStructure(const TopLevelASCreateInfo& createInfo) = 0;
-protected:
+
+  protected:
     QueueFamilyMapping queueMapping;
     OShaderCompiler shaderCompiler;
     bool meshShadingEnabled = false;

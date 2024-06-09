@@ -1,169 +1,160 @@
 #pragma once
-#include "MinimalEngine.h"
 #include "Math/Vector.h"
+#include "MinimalEngine.h"
 
-namespace Seele
-{
+
+namespace Seele {
 // Input codes matching GLFW for convenience, since its the primary windowing system
-enum class KeyCode : size_t
-{
+enum class KeyCode : size_t {
     /* Printable keys */
-    KEY_SPACE              = 32,
-    KEY_APOSTROPHE         = 39  /* ' */,
-    KEY_COMMA              = 44  /* , */,
-    KEY_MINUS              = 45  /* - */,
-    KEY_PERIOD             = 46  /* . */,
-    KEY_SLASH              = 47  /* / */,
-    KEY_0                  = 48,
-    KEY_1                  = 49,
-    KEY_2                  = 50,
-    KEY_3                  = 51,
-    KEY_4                  = 52,
-    KEY_5                  = 53,
-    KEY_6                  = 54,
-    KEY_7                  = 55,
-    KEY_8                  = 56,
-    KEY_9                  = 57,
-    KEY_SEMICOLON          = 59  /* ; */,
-    KEY_EQUAL              = 61  /* = */,
-    KEY_A                  = 65,
-    KEY_B                  = 66,
-    KEY_C                  = 67,
-    KEY_D                  = 68,
-    KEY_E                  = 69,
-    KEY_F                  = 70,
-    KEY_G                  = 71,
-    KEY_H                  = 72,
-    KEY_I                  = 73,
-    KEY_J                  = 74,
-    KEY_K                  = 75,
-    KEY_L                  = 76,
-    KEY_M                  = 77,
-    KEY_N                  = 78,
-    KEY_O                  = 79,
-    KEY_P                  = 80,
-    KEY_Q                  = 81,
-    KEY_R                  = 82,
-    KEY_S                  = 83,
-    KEY_T                  = 84,
-    KEY_U                  = 85,
-    KEY_V                  = 86,
-    KEY_W                  = 87,
-    KEY_X                  = 88,
-    KEY_Y                  = 89,
-    KEY_Z                  = 90,
-    KEY_LEFT_BRACKET       = 91  /* [ */,
-    KEY_BACKSLASH          = 92  /* \ */,
-    KEY_RIGHT_BRACKET      = 93  /* ] */,
-    KEY_GRAVE_ACCENT       = 96  /* ` */,
-    KEY_WORLD_1            = 161 /* non-US #1 */,
-    KEY_WORLD_2            = 162 /* non-US #2 */,
+    KEY_SPACE = 32,
+    KEY_APOSTROPHE = 39 /* ' */,
+    KEY_COMMA = 44 /* , */,
+    KEY_MINUS = 45 /* - */,
+    KEY_PERIOD = 46 /* . */,
+    KEY_SLASH = 47 /* / */,
+    KEY_0 = 48,
+    KEY_1 = 49,
+    KEY_2 = 50,
+    KEY_3 = 51,
+    KEY_4 = 52,
+    KEY_5 = 53,
+    KEY_6 = 54,
+    KEY_7 = 55,
+    KEY_8 = 56,
+    KEY_9 = 57,
+    KEY_SEMICOLON = 59 /* ; */,
+    KEY_EQUAL = 61 /* = */,
+    KEY_A = 65,
+    KEY_B = 66,
+    KEY_C = 67,
+    KEY_D = 68,
+    KEY_E = 69,
+    KEY_F = 70,
+    KEY_G = 71,
+    KEY_H = 72,
+    KEY_I = 73,
+    KEY_J = 74,
+    KEY_K = 75,
+    KEY_L = 76,
+    KEY_M = 77,
+    KEY_N = 78,
+    KEY_O = 79,
+    KEY_P = 80,
+    KEY_Q = 81,
+    KEY_R = 82,
+    KEY_S = 83,
+    KEY_T = 84,
+    KEY_U = 85,
+    KEY_V = 86,
+    KEY_W = 87,
+    KEY_X = 88,
+    KEY_Y = 89,
+    KEY_Z = 90,
+    KEY_LEFT_BRACKET = 91 /* [ */,
+    KEY_BACKSLASH = 92 /* \ */,
+    KEY_RIGHT_BRACKET = 93 /* ] */,
+    KEY_GRAVE_ACCENT = 96 /* ` */,
+    KEY_WORLD_1 = 161 /* non-US #1 */,
+    KEY_WORLD_2 = 162 /* non-US #2 */,
     /* Function keys */
-    KEY_ESCAPE             = 256,
-    KEY_ENTER              = 257,
-    KEY_TAB                = 258,
-    KEY_BACKSPACE          = 259,
-    KEY_INSERT             = 260,
-    KEY_DELETE             = 261,
-    KEY_RIGHT              = 262,
-    KEY_LEFT               = 263,
-    KEY_DOWN               = 264,
-    KEY_UP                 = 265,
-    KEY_PAGE_UP            = 266,
-    KEY_PAGE_DOWN          = 267,
-    KEY_HOME               = 268,
-    KEY_END                = 269,
-    KEY_CAPS_LOCK          = 280,
-    KEY_SCROLL_LOCK        = 281,
-    KEY_NUM_LOCK           = 282,
-    KEY_PRINT_SCREEN       = 283,
-    KEY_PAUSE              = 284,
-    KEY_F1                 = 290,
-    KEY_F2                 = 291,
-    KEY_F3                 = 292,
-    KEY_F4                 = 293,
-    KEY_F5                 = 294,
-    KEY_F6                 = 295,
-    KEY_F7                 = 296,
-    KEY_F8                 = 297,
-    KEY_F9                 = 298,
-    KEY_F10                = 299,
-    KEY_F11                = 300,
-    KEY_F12                = 301,
-    KEY_F13                = 302,
-    KEY_F14                = 303,
-    KEY_F15                = 304,
-    KEY_F16                = 305,
-    KEY_F17                = 306,
-    KEY_F18                = 307,
-    KEY_F19                = 308,
-    KEY_F20                = 309,
-    KEY_F21                = 310,
-    KEY_F22                = 311,
-    KEY_F23                = 312,
-    KEY_F24                = 313,
-    KEY_F25                = 314,
-    KEY_KP_0               = 320,
-    KEY_KP_1               = 321,
-    KEY_KP_2               = 322,
-    KEY_KP_3               = 323,
-    KEY_KP_4               = 324,
-    KEY_KP_5               = 325,
-    KEY_KP_6               = 326,
-    KEY_KP_7               = 327,
-    KEY_KP_8               = 328,
-    KEY_KP_9               = 329,
-    KEY_KP_DECIMAL         = 330,
-    KEY_KP_DIVIDE          = 331,
-    KEY_KP_MULTIPLY        = 332,
-    KEY_KP_SUBTRACT        = 333,
-    KEY_KP_ADD             = 334,
-    KEY_KP_ENTER           = 335,
-    KEY_KP_EQUAL           = 336,
-    KEY_LEFT_SHIFT         = 340,
-    KEY_LEFT_CONTROL       = 341,
-    KEY_LEFT_ALT           = 342,
-    KEY_LEFT_SUPER         = 343,
-    KEY_RIGHT_SHIFT        = 344,
-    KEY_RIGHT_CONTROL      = 345,
-    KEY_RIGHT_ALT          = 346,
-    KEY_RIGHT_SUPER        = 347,
-    KEY_MENU               = 348,
-    KEY_LAST               = KEY_MENU
+    KEY_ESCAPE = 256,
+    KEY_ENTER = 257,
+    KEY_TAB = 258,
+    KEY_BACKSPACE = 259,
+    KEY_INSERT = 260,
+    KEY_DELETE = 261,
+    KEY_RIGHT = 262,
+    KEY_LEFT = 263,
+    KEY_DOWN = 264,
+    KEY_UP = 265,
+    KEY_PAGE_UP = 266,
+    KEY_PAGE_DOWN = 267,
+    KEY_HOME = 268,
+    KEY_END = 269,
+    KEY_CAPS_LOCK = 280,
+    KEY_SCROLL_LOCK = 281,
+    KEY_NUM_LOCK = 282,
+    KEY_PRINT_SCREEN = 283,
+    KEY_PAUSE = 284,
+    KEY_F1 = 290,
+    KEY_F2 = 291,
+    KEY_F3 = 292,
+    KEY_F4 = 293,
+    KEY_F5 = 294,
+    KEY_F6 = 295,
+    KEY_F7 = 296,
+    KEY_F8 = 297,
+    KEY_F9 = 298,
+    KEY_F10 = 299,
+    KEY_F11 = 300,
+    KEY_F12 = 301,
+    KEY_F13 = 302,
+    KEY_F14 = 303,
+    KEY_F15 = 304,
+    KEY_F16 = 305,
+    KEY_F17 = 306,
+    KEY_F18 = 307,
+    KEY_F19 = 308,
+    KEY_F20 = 309,
+    KEY_F21 = 310,
+    KEY_F22 = 311,
+    KEY_F23 = 312,
+    KEY_F24 = 313,
+    KEY_F25 = 314,
+    KEY_KP_0 = 320,
+    KEY_KP_1 = 321,
+    KEY_KP_2 = 322,
+    KEY_KP_3 = 323,
+    KEY_KP_4 = 324,
+    KEY_KP_5 = 325,
+    KEY_KP_6 = 326,
+    KEY_KP_7 = 327,
+    KEY_KP_8 = 328,
+    KEY_KP_9 = 329,
+    KEY_KP_DECIMAL = 330,
+    KEY_KP_DIVIDE = 331,
+    KEY_KP_MULTIPLY = 332,
+    KEY_KP_SUBTRACT = 333,
+    KEY_KP_ADD = 334,
+    KEY_KP_ENTER = 335,
+    KEY_KP_EQUAL = 336,
+    KEY_LEFT_SHIFT = 340,
+    KEY_LEFT_CONTROL = 341,
+    KEY_LEFT_ALT = 342,
+    KEY_LEFT_SUPER = 343,
+    KEY_RIGHT_SHIFT = 344,
+    KEY_RIGHT_CONTROL = 345,
+    KEY_RIGHT_ALT = 346,
+    KEY_RIGHT_SUPER = 347,
+    KEY_MENU = 348,
+    KEY_LAST = KEY_MENU
 };
 
-enum class MouseButton
-{
-    MOUSE_BUTTON_1         = 0,
-    MOUSE_BUTTON_2         = 1,
-    MOUSE_BUTTON_3         = 2,
-    MOUSE_BUTTON_4         = 3,
-    MOUSE_BUTTON_5         = 4,
-    MOUSE_BUTTON_6         = 5,
-    MOUSE_BUTTON_7         = 6,
-    MOUSE_BUTTON_8         = 7,
+enum class MouseButton {
+    MOUSE_BUTTON_1 = 0,
+    MOUSE_BUTTON_2 = 1,
+    MOUSE_BUTTON_3 = 2,
+    MOUSE_BUTTON_4 = 3,
+    MOUSE_BUTTON_5 = 4,
+    MOUSE_BUTTON_6 = 5,
+    MOUSE_BUTTON_7 = 6,
+    MOUSE_BUTTON_8 = 7,
 };
 
-enum class InputAction
-{
-    RELEASE                = 0,
-    PRESS                  = 1,
-    REPEAT                 = 2
-};
+enum class InputAction { RELEASE = 0, PRESS = 1, REPEAT = 2 };
 
-enum class KeyModifier : uint32
-{
-    MOD_SHIFT         = 0x0001,
-    MOD_CONTROL       = 0x0002,
-    MOD_ALT           = 0x0004,
-    MOD_SUPER         = 0x0008,
-    MOD_CAPS_LOCK     = 0x0010,
-    MOD_NUM_LOCK      = 0x0020
+enum class KeyModifier : uint32 {
+    MOD_SHIFT = 0x0001,
+    MOD_CONTROL = 0x0002,
+    MOD_ALT = 0x0004,
+    MOD_SUPER = 0x0008,
+    MOD_CAPS_LOCK = 0x0010,
+    MOD_NUM_LOCK = 0x0020
 };
 typedef uint32 KeyModifierFlags;
 
-namespace Gfx
-{
+namespace Gfx {
 static constexpr bool useAsyncCompute = false;
 static constexpr bool useMeshShading = true;
 static constexpr uint32 numFramesBuffered = 3;
@@ -174,8 +165,7 @@ static constexpr uint32 numPrimitivesPerMeshlet = 256;
 double getCurrentFrameDelta();
 uint32 getCurrentFrameIndex();
 
-enum class QueueType
-{
+enum class QueueType {
     GRAPHICS = 1,
     COMPUTE = 2,
     TRANSFER = 3,
@@ -185,8 +175,7 @@ typedef uint32_t SeFlags;
 typedef uint32_t SeBool32;
 typedef uint64_t SeDeviceSize;
 typedef uint32_t SeSampleMask;
-typedef enum SeResult
-{
+typedef enum SeResult {
     SE_SUCCESS = 0,
     SE_NOT_READY = 1,
     SE_TIMEOUT = 2,
@@ -221,8 +210,7 @@ typedef enum SeResult
     SE_ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT = -1000255000,
 } SeResult;
 
-typedef enum SeStructureType
-{
+typedef enum SeStructureType {
     SE_STRUCTURE_TYPE_APPLICATION_INFO = 0,
     SE_STRUCTURE_TYPE_INSTANCE_CREATE_INFO = 1,
     SE_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO = 2,
@@ -598,8 +586,7 @@ typedef enum SeStructureType
     SE_STRUCTURE_TYPE_PHYSICAL_DEVICE_TEXEL_BUFFER_ALIGNMENT_PROPERTIES_EXT = 1000281001,
 } SeStructureType;
 
-typedef enum SeSystemAllocationScope
-{
+typedef enum SeSystemAllocationScope {
     SE_SYSTEM_ALLOCATION_SCOPE_COMMAND = 0,
     SE_SYSTEM_ALLOCATION_SCOPE_OBJECT = 1,
     SE_SYSTEM_ALLOCATION_SCOPE_CACHE = 2,
@@ -607,13 +594,11 @@ typedef enum SeSystemAllocationScope
     SE_SYSTEM_ALLOCATION_SCOPE_INSTANCE = 4,
 } SeSystemAllocationScope;
 
-typedef enum SeInternalAllocationType
-{
+typedef enum SeInternalAllocationType {
     SE_INTERNAL_ALLOCATION_TYPE_EXECUTABLE = 0,
 } SeInternalAllocationType;
 
-typedef enum SeFormat
-{
+typedef enum SeFormat {
     SE_FORMAT_UNDEFINED = 0,
     SE_FORMAT_R4G4_UNORM_PACK8 = 1,
     SE_FORMAT_R4G4B4A4_UNORM_PACK16 = 2,
@@ -857,8 +842,7 @@ typedef enum SeFormat
     SE_FORMAT_ASTC_12x12_SFLOAT_BLOCK = 1000066013,
 } SeFormat;
 
-struct FormatCompatibilityInfo
-{
+struct FormatCompatibilityInfo {
     // std::string class
     uint32 blockSize;
     UVector blockExtent;
@@ -867,21 +851,18 @@ struct FormatCompatibilityInfo
 
 FormatCompatibilityInfo getFormatInfo(SeFormat format);
 
-typedef enum SeImageType
-{
+typedef enum SeImageType {
     SE_IMAGE_TYPE_1D = 0,
     SE_IMAGE_TYPE_2D = 1,
     SE_IMAGE_TYPE_3D = 2,
 } SeImageType;
 
-typedef enum SeImageTiling
-{
+typedef enum SeImageTiling {
     SE_IMAGE_TILING_OPTIMAL = 0,
     SE_IMAGE_TILING_LINEAR = 1,
 } SeImageTiling;
 
-typedef enum SePhysicalDeviceType
-{
+typedef enum SePhysicalDeviceType {
     SE_PHYSICAL_DEVICE_TYPE_OTHER = 0,
     SE_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU = 1,
     SE_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU = 2,
@@ -889,8 +870,7 @@ typedef enum SePhysicalDeviceType
     SE_PHYSICAL_DEVICE_TYPE_CPU = 4,
 } SePhysicalDeviceType;
 
-typedef enum SeQueryType
-{
+typedef enum SeQueryType {
     SE_QUERY_TYPE_OCCLUSION = 0,
     SE_QUERY_TYPE_PIPELINE_STATISTICS = 1,
     SE_QUERY_TYPE_TIMESTAMP = 2,
@@ -899,14 +879,12 @@ typedef enum SeQueryType
     SE_QUERY_TYPE_PERFORMANCE_QUERY_INTEL = 1000210000,
 } SeQueryType;
 
-typedef enum SeSharingMode
-{
+typedef enum SeSharingMode {
     SE_SHARING_MODE_EXCLUSIVE = 0,
     SE_SHARING_MODE_CONCURRENT = 1,
 } SeSharingMode;
 
-typedef enum SeImageLayout
-{
+typedef enum SeImageLayout {
     SE_IMAGE_LAYOUT_UNDEFINED = 0,
     SE_IMAGE_LAYOUT_GENERAL = 1,
     SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL = 2,
@@ -924,8 +902,7 @@ typedef enum SeImageLayout
     SE_IMAGE_LAYOUT_FRAGMENT_DENSITY_MAP_OPTIMAL_EXT = 1000218000,
 } SeImageLayout;
 
-typedef enum SeImageViewType
-{
+typedef enum SeImageViewType {
     SE_IMAGE_VIEW_TYPE_1D = 0,
     SE_IMAGE_VIEW_TYPE_2D = 1,
     SE_IMAGE_VIEW_TYPE_3D = 2,
@@ -935,8 +912,7 @@ typedef enum SeImageViewType
     SE_IMAGE_VIEW_TYPE_CUBE_ARRAY = 6,
 } SeImageViewType;
 
-typedef enum SeComponentSwizzle
-{
+typedef enum SeComponentSwizzle {
     SE_COMPONENT_SWIZZLE_IDENTITY = 0,
     SE_COMPONENT_SWIZZLE_ZERO = 1,
     SE_COMPONENT_SWIZZLE_ONE = 2,
@@ -946,14 +922,12 @@ typedef enum SeComponentSwizzle
     SE_COMPONENT_SWIZZLE_A = 6,
 } SeComponentSwizzle;
 
-typedef enum SeVertexInputRate
-{
+typedef enum SeVertexInputRate {
     SE_VERTEX_INPUT_RATE_VERTEX = 0,
     SE_VERTEX_INPUT_RATE_INSTANCE = 1,
 } SeVertexInputRate;
 
-typedef enum SePrimitiveTopology
-{
+typedef enum SePrimitiveTopology {
     SE_PRIMITIVE_TOPOLOGY_POINT_LIST = 0,
     SE_PRIMITIVE_TOPOLOGY_LINE_LIST = 1,
     SE_PRIMITIVE_TOPOLOGY_LINE_STRIP = 2,
@@ -967,22 +941,19 @@ typedef enum SePrimitiveTopology
     SE_PRIMITIVE_TOPOLOGY_PATCH_LIST = 10,
 } SePrimitiveTopology;
 
-typedef enum SePolygonMode
-{
+typedef enum SePolygonMode {
     SE_POLYGON_MODE_FILL = 0,
     SE_POLYGON_MODE_LINE = 1,
     SE_POLYGON_MODE_POINT = 2,
     SE_POLYGON_MODE_FILL_RECTANGLE_NV = 1000153000,
 } SePolygonMode;
 
-typedef enum SeFrontFace
-{
+typedef enum SeFrontFace {
     SE_FRONT_FACE_COUNTER_CLOCKWISE = 0,
     SE_FRONT_FACE_CLOCKWISE = 1,
 } SeFrontFace;
 
-typedef enum SeCompareOp
-{
+typedef enum SeCompareOp {
     SE_COMPARE_OP_NEVER = 0,
     SE_COMPARE_OP_LESS = 1,
     SE_COMPARE_OP_EQUAL = 2,
@@ -993,8 +964,7 @@ typedef enum SeCompareOp
     SE_COMPARE_OP_ALWAYS = 7,
 } SeCompareOp;
 
-typedef enum SeStencilOp
-{
+typedef enum SeStencilOp {
     SE_STENCIL_OP_KEEP = 0,
     SE_STENCIL_OP_ZERO = 1,
     SE_STENCIL_OP_REPLACE = 2,
@@ -1005,8 +975,7 @@ typedef enum SeStencilOp
     SE_STENCIL_OP_DECREMENT_AND_WRAP = 7,
 } SeStencilOp;
 
-typedef enum SeLogicOp
-{
+typedef enum SeLogicOp {
     SE_LOGIC_OP_CLEAR = 0,
     SE_LOGIC_OP_AND = 1,
     SE_LOGIC_OP_AND_REVERSE = 2,
@@ -1025,8 +994,7 @@ typedef enum SeLogicOp
     SE_LOGIC_OP_SET = 15,
 } SeLogicOp;
 
-typedef enum SeBlendFactor
-{
+typedef enum SeBlendFactor {
     SE_BLEND_FACTOR_ZERO = 0,
     SE_BLEND_FACTOR_ONE = 1,
     SE_BLEND_FACTOR_SRC_COLOR = 2,
@@ -1048,8 +1016,7 @@ typedef enum SeBlendFactor
     SE_BLEND_FACTOR_ONE_MINUS_SRC1_ALPHA = 18,
 } SeBlendFactor;
 
-typedef enum SeBlendOp
-{
+typedef enum SeBlendOp {
     SE_BLEND_OP_ADD = 0,
     SE_BLEND_OP_SUBTRACT = 1,
     SE_BLEND_OP_REVERSE_SUBTRACT = 2,
@@ -1103,8 +1070,7 @@ typedef enum SeBlendOp
     SE_BLEND_OP_BLUE_EXT = 1000148045,
 } SeBlendOp;
 
-typedef enum SeDynamicState
-{
+typedef enum SeDynamicState {
     SE_DYNAMIC_STATE_VIEWPORT = 0,
     SE_DYNAMIC_STATE_SCISSOR = 1,
     SE_DYNAMIC_STATE_LINE_WIDTH = 2,
@@ -1123,21 +1089,18 @@ typedef enum SeDynamicState
     SE_DYNAMIC_STATE_LINE_STIPPLE_EXT = 1000259000,
 } SeDynamicState;
 
-typedef enum SeFilter
-{
+typedef enum SeFilter {
     SE_FILTER_NEAREST = 0,
     SE_FILTER_LINEAR = 1,
     SE_FILTER_CUBIC_IMG = 1000015000,
 } SeFilter;
 
-typedef enum SeSamplerMipmapMode
-{
+typedef enum SeSamplerMipmapMode {
     SE_SAMPLER_MIPMAP_MODE_NEAREST = 0,
     SE_SAMPLER_MIPMAP_MODE_LINEAR = 1,
 } SeSamplerMipmapMode;
 
-typedef enum SeSamplerAddressMode
-{
+typedef enum SeSamplerAddressMode {
     SE_SAMPLER_ADDRESS_MODE_REPEAT = 0,
     SE_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT = 1,
     SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE = 2,
@@ -1145,8 +1108,7 @@ typedef enum SeSamplerAddressMode
     SE_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE = 4,
 } SeSamplerAddressMode;
 
-typedef enum SeBorderColor
-{
+typedef enum SeBorderColor {
     SE_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK = 0,
     SE_BORDER_COLOR_INT_TRANSPARENT_BLACK = 1,
     SE_BORDER_COLOR_FLOAT_OPAQUE_BLACK = 2,
@@ -1155,8 +1117,7 @@ typedef enum SeBorderColor
     SE_BORDER_COLOR_INT_OPAQUE_WHITE = 5,
 } SeBorderColor;
 
-typedef enum SeDescriptorType
-{
+typedef enum SeDescriptorType {
     SE_DESCRIPTOR_TYPE_SAMPLER = 0,
     SE_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER = 1,
     SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE = 2,
@@ -1180,47 +1141,40 @@ typedef enum SeDescriptorBindingFlagBits {
 } SeDescriptorBindingFlagBits;
 typedef SeFlags SeDescriptorBindingFlags;
 
-typedef enum SeAttachmentLoadOp
-{
+typedef enum SeAttachmentLoadOp {
     SE_ATTACHMENT_LOAD_OP_LOAD = 0,
     SE_ATTACHMENT_LOAD_OP_CLEAR = 1,
     SE_ATTACHMENT_LOAD_OP_DONT_CARE = 2,
 } SeAttachmentLoadOp;
 
-typedef enum SeAttachmentStoreOp
-{
+typedef enum SeAttachmentStoreOp {
     SE_ATTACHMENT_STORE_OP_STORE = 0,
     SE_ATTACHMENT_STORE_OP_DONT_CARE = 1,
 } SeAttachmentStoreOp;
 
-typedef enum SePipelineBindPoint
-{
+typedef enum SePipelineBindPoint {
     SE_PIPELINE_BIND_POINT_GRAPHICS = 0,
     SE_PIPELINE_BIND_POINT_COMPUTE = 1,
     SE_PIPELINE_BIND_POINT_RAY_TRACING_NV = 1000165000,
 } SePipelineBindPoint;
 
-typedef enum SeCommandBufferLevel
-{
+typedef enum SeCommandBufferLevel {
     SE_COMMAND_BUFFER_LEVEL_PRIMARY = 0,
     SE_COMMAND_BUFFER_LEVEL_SECONDARY = 1,
 } SeCommandBufferLevel;
 
-typedef enum SeIndexType
-{
+typedef enum SeIndexType {
     SE_INDEX_TYPE_UINT16 = 0,
     SE_INDEX_TYPE_UINT32 = 1,
     SE_INDEX_TYPE_NONE_NV = 1000165000,
     SE_INDEX_TYPE_UINT8_EXT = 1000265000,
 } SeIndexType;
 
-typedef enum SeSubpassContents
-{
+typedef enum SeSubpassContents {
     SE_SUBPASS_CONTENTS_INLINE = 0,
 } SeSubpassContents;
 
-typedef enum SeObjectType
-{
+typedef enum SeObjectType {
     SE_OBJECT_TYPE_UNKNOWN = 0,
     SE_OBJECT_TYPE_INSTANCE = 1,
     SE_OBJECT_TYPE_PHYSICAL_DEVICE = 2,
@@ -1262,16 +1216,14 @@ typedef enum SeObjectType
     SE_OBJECT_TYPE_PERFORMANCE_CONFIGURATION_INTEL = 1000210000,
 } SeObjectType;
 
-typedef enum SeVendorId
-{
+typedef enum SeVendorId {
     SE_VENDOR_ID_VIV = 0x10001,
     SE_VENDOR_ID_VSI = 0x10002,
     SE_VENDOR_ID_KAZAN = 0x10003,
 } SeVendorId;
 typedef SeFlags SeInstanceCreateFlags;
 
-typedef enum SeFormatFeatureFlagBits
-{
+typedef enum SeFormatFeatureFlagBits {
     SE_FORMAT_FEATURE_SAMPLED_IMAGE_BIT = 0x00000001,
     SE_FORMAT_FEATURE_STORAGE_IMAGE_BIT = 0x00000002,
     SE_FORMAT_FEATURE_STORAGE_IMAGE_ATOMIC_BIT = 0x00000004,
@@ -1300,10 +1252,14 @@ typedef enum SeFormatFeatureFlagBits
     SE_FORMAT_FEATURE_TRANSFER_SRC_BIT_KHR = SE_FORMAT_FEATURE_TRANSFER_SRC_BIT,
     SE_FORMAT_FEATURE_TRANSFER_DST_BIT_KHR = SE_FORMAT_FEATURE_TRANSFER_DST_BIT,
     SE_FORMAT_FEATURE_MIDPOINT_CHROMA_SAMPLES_BIT_KHR = SE_FORMAT_FEATURE_MIDPOINT_CHROMA_SAMPLES_BIT,
-    SE_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_LINEAR_FILTER_BIT_KHR = SE_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_LINEAR_FILTER_BIT,
-    SE_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_SEPARATE_RECONSTRUCTION_FILTER_BIT_KHR = SE_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_SEPARATE_RECONSTRUCTION_FILTER_BIT,
-    SE_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_BIT_KHR = SE_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_BIT,
-    SE_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_FORCEABLE_BIT_KHR = SE_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_FORCEABLE_BIT,
+    SE_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_LINEAR_FILTER_BIT_KHR =
+        SE_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_LINEAR_FILTER_BIT,
+    SE_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_SEPARATE_RECONSTRUCTION_FILTER_BIT_KHR =
+        SE_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_SEPARATE_RECONSTRUCTION_FILTER_BIT,
+    SE_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_BIT_KHR =
+        SE_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_BIT,
+    SE_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_FORCEABLE_BIT_KHR =
+        SE_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_FORCEABLE_BIT,
     SE_FORMAT_FEATURE_DISJOINT_BIT_KHR = SE_FORMAT_FEATURE_DISJOINT_BIT,
     SE_FORMAT_FEATURE_COSITED_CHROMA_SAMPLES_BIT_KHR = SE_FORMAT_FEATURE_COSITED_CHROMA_SAMPLES_BIT,
     SE_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_CUBIC_BIT_EXT = SE_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_CUBIC_BIT_IMG,
@@ -1311,8 +1267,7 @@ typedef enum SeFormatFeatureFlagBits
 } SeFormatFeatureFlagBits;
 typedef SeFlags SeFormatFeatureFlags;
 
-typedef enum SeImageUsageFlagBits
-{
+typedef enum SeImageUsageFlagBits {
     SE_IMAGE_USAGE_TRANSFER_SRC_BIT = 0x00000001,
     SE_IMAGE_USAGE_TRANSFER_DST_BIT = 0x00000002,
     SE_IMAGE_USAGE_SAMPLED_BIT = 0x00000004,
@@ -1327,8 +1282,7 @@ typedef enum SeImageUsageFlagBits
 } SeImageUsageFlagBits;
 typedef SeFlags SeImageUsageFlags;
 
-typedef enum SeImageCreateFlagBits
-{
+typedef enum SeImageCreateFlagBits {
     SE_IMAGE_CREATE_SPARSE_BINDING_BIT = 0x00000001,
     SE_IMAGE_CREATE_SPARSE_RESIDENCY_BIT = 0x00000002,
     SE_IMAGE_CREATE_SPARSE_ALIASED_BIT = 0x00000004,
@@ -1354,8 +1308,7 @@ typedef enum SeImageCreateFlagBits
 } SeImageCreateFlagBits;
 typedef SeFlags SeImageCreateFlags;
 
-typedef enum SeSampleCountFlagBits
-{
+typedef enum SeSampleCountFlagBits {
     SE_SAMPLE_COUNT_1_BIT = 0x00000001,
     SE_SAMPLE_COUNT_2_BIT = 0x00000002,
     SE_SAMPLE_COUNT_4_BIT = 0x00000004,
@@ -1367,8 +1320,7 @@ typedef enum SeSampleCountFlagBits
 } SeSampleCountFlagBits;
 typedef SeFlags SeSampleCountFlags;
 
-typedef enum SeQueueFlagBits
-{
+typedef enum SeQueueFlagBits {
     SE_QUEUE_GRAPHICS_BIT = 0x00000001,
     SE_QUEUE_COMPUTE_BIT = 0x00000002,
     SE_QUEUE_TRANSFER_BIT = 0x00000004,
@@ -1378,8 +1330,7 @@ typedef enum SeQueueFlagBits
 } SeQueueFlagBits;
 typedef SeFlags SeQueueFlags;
 
-typedef enum SeMemoryPropertyFlagBits
-{
+typedef enum SeMemoryPropertyFlagBits {
     SE_MEMORY_PROPERTY_DEVICE_LOCAL_BIT = 0x00000001,
     SE_MEMORY_PROPERTY_HOST_VISIBLE_BIT = 0x00000002,
     SE_MEMORY_PROPERTY_HOST_COHERENT_BIT = 0x00000004,
@@ -1392,8 +1343,7 @@ typedef enum SeMemoryPropertyFlagBits
 } SeMemoryPropertyFlagBits;
 typedef SeFlags SeMemoryPropertyFlags;
 
-typedef enum SeMemoryHeapFlagBits
-{
+typedef enum SeMemoryHeapFlagBits {
     SE_MEMORY_HEAP_DEVICE_LOCAL_BIT = 0x00000001,
     SE_MEMORY_HEAP_MULTI_INSTANCE_BIT = 0x00000002,
     SE_MEMORY_HEAP_MULTI_INSTANCE_BIT_KHR = SE_MEMORY_HEAP_MULTI_INSTANCE_BIT,
@@ -1402,15 +1352,13 @@ typedef enum SeMemoryHeapFlagBits
 typedef SeFlags SeMemoryHeapFlags;
 typedef SeFlags SeDeviceCreateFlags;
 
-typedef enum SeDeviceQueueCreateFlagBits
-{
+typedef enum SeDeviceQueueCreateFlagBits {
     SE_DEVICE_QUEUE_CREATE_PROTECTED_BIT = 0x00000001,
     SE_DEVICE_QUEUE_CREATE_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
 } SeDeviceQueueCreateFlagBits;
 typedef SeFlags SeDeviceQueueCreateFlags;
 
-typedef enum SePipelineStageFlagBits
-{ 
+typedef enum SePipelineStageFlagBits {
     SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT = 0x00000001,
     SE_PIPELINE_STAGE_DRAW_INDIRECT_BIT = 0x00000002,
     SE_PIPELINE_STAGE_VERTEX_INPUT_BIT = 0x00000004,
@@ -1443,8 +1391,7 @@ typedef enum SePipelineStageFlagBits
 typedef SeFlags SePipelineStageFlags;
 typedef SeFlags SeMemoryMapFlags;
 
-typedef enum SeImageAspectFlagBits
-{
+typedef enum SeImageAspectFlagBits {
     SE_IMAGE_ASPECT_COLOR_BIT = 0x00000001,
     SE_IMAGE_ASPECT_DEPTH_BIT = 0x00000002,
     SE_IMAGE_ASPECT_STENCIL_BIT = 0x00000004,
@@ -1463,8 +1410,7 @@ typedef enum SeImageAspectFlagBits
 } SeImageAspectFlagBits;
 typedef SeFlags SeImageAspectFlags;
 
-typedef enum SeSparseImageFormatFlagBits
-{
+typedef enum SeSparseImageFormatFlagBits {
     SE_SPARSE_IMAGE_FORMAT_SINGLE_MIPTAIL_BIT = 0x00000001,
     SE_SPARSE_IMAGE_FORMAT_ALIGNED_MIP_SIZE_BIT = 0x00000002,
     SE_SPARSE_IMAGE_FORMAT_NONSTANDARD_BLOCK_SIZE_BIT = 0x00000004,
@@ -1472,15 +1418,13 @@ typedef enum SeSparseImageFormatFlagBits
 } SeSparseImageFormatFlagBits;
 typedef SeFlags SeSparseImageFormatFlags;
 
-typedef enum SeSparseMemoryBindFlagBits
-{
+typedef enum SeSparseMemoryBindFlagBits {
     SE_SPARSE_MEMORY_BIND_METADATA_BIT = 0x00000001,
     SE_SPARSE_MEMORY_BIND_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
 } SeSparseMemoryBindFlagBits;
 typedef SeFlags SeSparseMemoryBindFlags;
 
-typedef enum SeFenceCreateFlagBits
-{
+typedef enum SeFenceCreateFlagBits {
     SE_FENCE_CREATE_SIGNALED_BIT = 0x00000001,
     SE_FENCE_CREATE_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
 } SeFenceCreateFlagBits;
@@ -1489,8 +1433,7 @@ typedef SeFlags SeSemaphoreCreateFlags;
 typedef SeFlags SeEventCreateFlags;
 typedef SeFlags SeQueryPoolCreateFlags;
 
-typedef enum SeQueryPipelineStatisticFlagBits
-{
+typedef enum SeQueryPipelineStatisticFlagBits {
     SE_QUERY_PIPELINE_STATISTIC_INPUT_ASSEMBLY_VERTICES_BIT = 0x00000001,
     SE_QUERY_PIPELINE_STATISTIC_INPUT_ASSEMBLY_PRIMITIVES_BIT = 0x00000002,
     SE_QUERY_PIPELINE_STATISTIC_VERTEX_SHADER_INVOCATIONS_BIT = 0x00000004,
@@ -1506,8 +1449,7 @@ typedef enum SeQueryPipelineStatisticFlagBits
 } SeQueryPipelineStatisticFlagBits;
 typedef SeFlags SeQueryPipelineStatisticFlags;
 
-typedef enum SeQueryResultFlagBits
-{
+typedef enum SeQueryResultFlagBits {
     SE_QUERY_RESULT_64_BIT = 0x00000001,
     SE_QUERY_RESULT_WAIT_BIT = 0x00000002,
     SE_QUERY_RESULT_WITH_AVAILABILITY_BIT = 0x00000004,
@@ -1516,8 +1458,7 @@ typedef enum SeQueryResultFlagBits
 } SeQueryResultFlagBits;
 typedef SeFlags SeQueryResultFlags;
 
-typedef enum SeBufferCreateFlagBits
-{
+typedef enum SeBufferCreateFlagBits {
     SE_BUFFER_CREATE_SPARSE_BINDING_BIT = 0x00000001,
     SE_BUFFER_CREATE_SPARSE_RESIDENCY_BIT = 0x00000002,
     SE_BUFFER_CREATE_SPARSE_ALIASED_BIT = 0x00000004,
@@ -1527,8 +1468,7 @@ typedef enum SeBufferCreateFlagBits
 } SeBufferCreateFlagBits;
 typedef SeFlags SeBufferCreateFlags;
 
-typedef enum SeBufferUsageFlagBits
-{
+typedef enum SeBufferUsageFlagBits {
     SE_BUFFER_USAGE_TRANSFER_SRC_BIT = 0x00000001,
     SE_BUFFER_USAGE_TRANSFER_DST_BIT = 0x00000002,
     SE_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT = 0x00000004,
@@ -1548,22 +1488,17 @@ typedef enum SeBufferUsageFlagBits
 typedef SeFlags SeBufferUsageFlags;
 typedef SeFlags SeBufferViewCreateFlags;
 
-typedef enum SeImageViewCreateFlagBits
-{
+typedef enum SeImageViewCreateFlagBits {
     SE_IMAGE_VIEW_CREATE_FRAGMENT_DENSITY_MAP_DYNAMIC_BIT_EXT = 0x00000001,
     SE_IMAGE_VIEW_CREATE_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
 } SeImageViewCreateFlagBits;
 typedef SeFlags SeImageViewCreateFlags;
 
-typedef enum SeShaderModuleCreateFlagBits
-{
-    SE_SHADER_MODULE_CREATE_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
-} SeShaderModuleCreateFlagBits;
+typedef enum SeShaderModuleCreateFlagBits { SE_SHADER_MODULE_CREATE_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF } SeShaderModuleCreateFlagBits;
 typedef SeFlags SeShaderModuleCreateFlags;
 typedef SeFlags SePipelineCacheCreateFlags;
 
-typedef enum SePipelineCreateFlagBits
-{
+typedef enum SePipelineCreateFlagBits {
     SE_PIPELINE_CREATE_DISABLE_OPTIMIZATION_BIT = 0x00000001,
     SE_PIPELINE_CREATE_ALLOW_DERIVATIVES_BIT = 0x00000002,
     SE_PIPELINE_CREATE_DERIVATIVE_BIT = 0x00000004,
@@ -1578,16 +1513,14 @@ typedef enum SePipelineCreateFlagBits
 } SePipelineCreateFlagBits;
 typedef SeFlags SePipelineCreateFlags;
 
-typedef enum SePipelineShaderStageCreateFlagBits
-{
+typedef enum SePipelineShaderStageCreateFlagBits {
     SE_PIPELINE_SHADER_STAGE_CREATE_ALLOW_VARYING_SUBGROUP_SIZE_BIT_EXT = 0x00000001,
     SE_PIPELINE_SHADER_STAGE_CREATE_REQUIRE_FULL_SUBGROUPS_BIT_EXT = 0x00000002,
     SE_PIPELINE_SHADER_STAGE_CREATE_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
 } SePipelineShaderStageCreateFlagBits;
 typedef SeFlags SePipelineShaderStageCreateFlags;
 
-typedef enum SeShaderStageFlagBits
-{
+typedef enum SeShaderStageFlagBits {
     SE_SHADER_STAGE_VERTEX_BIT = 0x00000001,
     SE_SHADER_STAGE_TESSELLATION_CONTROL_BIT = 0x00000002,
     SE_SHADER_STAGE_TESSELLATION_EVALUATION_BIT = 0x00000004,
@@ -1613,8 +1546,7 @@ typedef SeFlags SePipelineTessellationStateCreateFlags;
 typedef SeFlags SePipelineViewportStateCreateFlags;
 typedef SeFlags SePipelineRasterizationStateCreateFlags;
 
-typedef enum SeCullModeFlagBits
-{
+typedef enum SeCullModeFlagBits {
     SE_CULL_MODE_NONE = 0,
     SE_CULL_MODE_FRONT_BIT = 0x00000001,
     SE_CULL_MODE_BACK_BIT = 0x00000002,
@@ -1626,8 +1558,7 @@ typedef SeFlags SePipelineMultisampleStateCreateFlags;
 typedef SeFlags SePipelineDepthStencilStateCreateFlags;
 typedef SeFlags SePipelineColorBlendStateCreateFlags;
 
-typedef enum SeColorComponentFlagBits
-{
+typedef enum SeColorComponentFlagBits {
     SE_COLOR_COMPONENT_R_BIT = 0x00000001,
     SE_COLOR_COMPONENT_G_BIT = 0x00000002,
     SE_COLOR_COMPONENT_B_BIT = 0x00000004,
@@ -1639,24 +1570,21 @@ typedef SeFlags SePipelineDynamicStateCreateFlags;
 typedef SeFlags SePipelineLayoutCreateFlags;
 typedef SeFlags SeShaderStageFlags;
 
-typedef enum SeSamplerCreateFlagBits
-{
+typedef enum SeSamplerCreateFlagBits {
     SE_SAMPLER_CREATE_SUBSAMPLED_BIT_EXT = 0x00000001,
     SE_SAMPLER_CREATE_SUBSAMPLED_COARSE_RECONSTRUCTION_BIT_EXT = 0x00000002,
     SE_SAMPLER_CREATE_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
 } SeSamplerCreateFlagBits;
 typedef SeFlags SeSamplerCreateFlags;
 
-typedef enum SeDescriptorSetLayoutCreateFlagBits
-{
+typedef enum SeDescriptorSetLayoutCreateFlagBits {
     SE_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR = 0x00000001,
     SE_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT_EXT = 0x00000002,
     SE_DESCRIPTOR_SET_LAYOUT_CREATE_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
 } SeDescriptorSetLayoutCreateFlagBits;
 typedef SeFlags SeDescriptorSetLayoutCreateFlags;
 
-typedef enum SeDescriptorPoolCreateFlagBits
-{
+typedef enum SeDescriptorPoolCreateFlagBits {
     SE_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT = 0x00000001,
     SE_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT_EXT = 0x00000002,
     SE_DESCRIPTOR_POOL_CREATE_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
@@ -1664,36 +1592,29 @@ typedef enum SeDescriptorPoolCreateFlagBits
 typedef SeFlags SeDescriptorPoolCreateFlags;
 typedef SeFlags SeDescriptorPoolResetFlags;
 
-typedef enum SeFramebufferCreateFlagBits
-{
+typedef enum SeFramebufferCreateFlagBits {
     SE_FRAMEBUFFER_CREATE_IMAGELESS_BIT_KHR = 0x00000001,
     SE_FRAMEBUFFER_CREATE_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
 } SeFramebufferCreateFlagBits;
 typedef SeFlags SeFramebufferCreateFlags;
 
-typedef enum SeRenderPassCreateFlagBits
-{
-    SE_RENDER_PASS_CREATE_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
-} SeRenderPassCreateFlagBits;
+typedef enum SeRenderPassCreateFlagBits { SE_RENDER_PASS_CREATE_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF } SeRenderPassCreateFlagBits;
 typedef SeFlags SeRenderPassCreateFlags;
 
-typedef enum SeAttachmentDescriptionFlagBits
-{
+typedef enum SeAttachmentDescriptionFlagBits {
     SE_ATTACHMENT_DESCRIPTION_MAY_ALIAS_BIT = 0x00000001,
     SE_ATTACHMENT_DESCRIPTION_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
 } SeAttachmentDescriptionFlagBits;
 typedef SeFlags SeAttachmentDescriptionFlags;
 
-typedef enum SeSubpassDescriptionFlagBits
-{
+typedef enum SeSubpassDescriptionFlagBits {
     SE_SUBPASS_DESCRIPTION_PER_VIEW_ATTRIBUTES_BIT_NVX = 0x00000001,
     SE_SUBPASS_DESCRIPTION_PER_VIEW_POSITION_X_ONLY_BIT_NVX = 0x00000002,
     SE_SUBPASS_DESCRIPTION_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
 } SeSubpassDescriptionFlagBits;
 typedef SeFlags SeSubpassDescriptionFlags;
 
-typedef enum SeAccessFlagBits
-{
+typedef enum SeAccessFlagBits {
     SE_ACCESS_INDIRECT_COMMAND_READ_BIT = 0x00000001,
     SE_ACCESS_INDEX_READ_BIT = 0x00000002,
     SE_ACCESS_VERTEX_ATTRIBUTE_READ_BIT = 0x00000004,
@@ -1727,8 +1648,7 @@ typedef enum SeAccessFlagBits
 } SeAccessFlagBits;
 typedef SeFlags SeAccessFlags;
 
-typedef enum SeDependencyFlagBits
-{
+typedef enum SeDependencyFlagBits {
     SE_DEPENDENCY_BY_REGION_BIT = 0x00000001,
     SE_DEPENDENCY_DEVICE_GROUP_BIT = 0x00000004,
     SE_DEPENDENCY_VIEW_LOCAL_BIT = 0x00000002,
@@ -1738,8 +1658,7 @@ typedef enum SeDependencyFlagBits
 } SeDependencyFlagBits;
 typedef SeFlags SeDependencyFlags;
 
-typedef enum SeCommandPoolCreateFlagBits
-{
+typedef enum SeCommandPoolCreateFlagBits {
     SE_COMMAND_POOL_CREATE_TRANSIENT_BIT = 0x00000001,
     SE_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT = 0x00000002,
     SE_COMMAND_POOL_CREATE_PROTECTED_BIT = 0x00000004,
@@ -1747,15 +1666,13 @@ typedef enum SeCommandPoolCreateFlagBits
 } SeCommandPoolCreateFlagBits;
 typedef SeFlags SeCommandPoolCreateFlags;
 
-typedef enum SeCommandPoolResetFlagBits
-{
+typedef enum SeCommandPoolResetFlagBits {
     SE_COMMAND_POOL_RESET_RELEASE_RESOURCES_BIT = 0x00000001,
     SE_COMMAND_POOL_RESET_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
 } SeCommandPoolResetFlagBits;
 typedef SeFlags SeCommandPoolResetFlags;
 
-typedef enum SeCommandBufferUsageFlagBits
-{
+typedef enum SeCommandBufferUsageFlagBits {
     SE_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT = 0x00000001,
     SE_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT = 0x00000002,
     SE_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT = 0x00000004,
@@ -1763,22 +1680,19 @@ typedef enum SeCommandBufferUsageFlagBits
 } SeCommandBufferUsageFlagBits;
 typedef SeFlags SeCommandBufferUsageFlags;
 
-typedef enum SeQueryControlFlagBits
-{
+typedef enum SeQueryControlFlagBits {
     SE_QUERY_CONTROL_PRECISE_BIT = 0x00000001,
     SE_QUERY_CONTROL_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
 } SeQueryControlFlagBits;
 typedef SeFlags SeQueryControlFlags;
 
-typedef enum SeCommandBufferResetFlagBits
-{
+typedef enum SeCommandBufferResetFlagBits {
     SE_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT = 0x00000001,
     SE_COMMAND_BUFFER_RESET_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
 } SeCommandBufferResetFlagBits;
 typedef SeFlags SeCommandBufferResetFlags;
 
-typedef enum SeStencilFaceFlagBits
-{
+typedef enum SeStencilFaceFlagBits {
     SE_STENCIL_FACE_FRONT_BIT = 0x00000001,
     SE_STENCIL_FACE_BACK_BIT = 0x00000002,
     SE_STENCIL_FACE_FRONT_AND_BACK = 0x00000003,
@@ -1788,30 +1702,27 @@ typedef enum SeStencilFaceFlagBits
 typedef SeFlags SeStencilFaceFlags;
 
 typedef union SeClearColorValue {
-    float       float32[4];
-    int32_t     int32[4];
-    uint32_t    uint32[4];
+    float float32[4];
+    int32_t int32[4];
+    uint32_t uint32[4];
 } SeClearColorValue;
 
 typedef struct SeClearDepthStencilValue {
-    float       depth;
-    uint32_t    stencil;
+    float depth;
+    uint32_t stencil;
 } SeClearDepthStencilValue;
 
 typedef union SeClearValue {
-    SeClearColorValue           color;
-    SeClearDepthStencilValue    depthStencil;
+    SeClearColorValue color;
+    SeClearDepthStencilValue depthStencil;
 } SeClearValue;
 
-
 typedef enum SeDescriptorAccessTypeFlagBits {
-  SE_DESCRIPTOR_ACCESS_READ_ONLY_BIT = 0x00000001,
-  SE_DESCRIPTOR_ACCESS_READ_WRITE_BIT = 0x00000002,
-  SE_DESCRIPTOR_ACCESS_WRITE_ONLY_BIT = 0x00000004,
+    SE_DESCRIPTOR_ACCESS_READ_ONLY_BIT = 0x00000001,
+    SE_DESCRIPTOR_ACCESS_READ_WRITE_BIT = 0x00000002,
+    SE_DESCRIPTOR_ACCESS_WRITE_ONLY_BIT = 0x00000004,
 } SeDescriptorAccessTypeFlagBits;
 typedef SeFlags SeDescriptorAccessTypeFlags;
-
-
 
 } // namespace Gfx
 } // namespace Seele

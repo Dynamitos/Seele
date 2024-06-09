@@ -3,12 +3,10 @@
 #include "Containers/Map.h"
 #include "Math/Math.h"
 
-namespace Seele
-{
+namespace Seele {
 DECLARE_NAME_REF(Gfx, Texture2D)
-class FontAsset : public Asset
-{
-public:
+class FontAsset : public Asset {
+  public:
     static constexpr uint64 IDENTIFIER = 0x10;
     FontAsset();
     FontAsset(std::string_view folderPath, std::string_view name);
@@ -16,8 +14,7 @@ public:
     virtual void save(ArchiveBuffer& buffer) const override;
     virtual void load(ArchiveBuffer& buffer) override;
 
-    struct Glyph
-    {
+    struct Glyph {
         uint32 textureIndex;
         IVector2 size;
         IVector2 bearing;
@@ -28,7 +25,8 @@ public:
     const Map<uint32, Glyph> getGlyphData() const { return glyphs; }
     Gfx::PTexture2D getTexture(uint32 index) { return usedTextures[index]; }
     void setUsedTextures(Array<Gfx::OTexture2D> _usedTextures);
-private:
+
+  private:
     Array<Gfx::OTexture2D> usedTextures;
     Map<uint32, Glyph> glyphs;
     friend class FontLoader;

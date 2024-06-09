@@ -29,7 +29,7 @@ void Shader::create(const ShaderCreateInfo &createInfo) {
   Map<std::string, uint32> paramMapping;
   Slang::ComPtr<slang::IBlob> kernelBlob =
       generateShader(createInfo, SLANG_METAL, paramMapping);
-  std::cout << (char*)kernelBlob->getBufferPointer() << std::endl;
+  std::cout << (char *)kernelBlob->getBufferPointer() << std::endl;
   hash = CRC::Calculate(kernelBlob->getBufferPointer(),
                         kernelBlob->getBufferSize(), CRC::CRC_32());
   NS::Error *error;
@@ -43,8 +43,8 @@ void Shader::create(const ShaderCreateInfo &createInfo) {
     std::cout << error->localizedDescription()->cString(NS::ASCIIStringEncoding)
               << std::endl;
   }
-  function =
-      library->newFunction(NS::String::string(createInfo.entryPoint.c_str(), NS::ASCIIStringEncoding));
+  function = library->newFunction(NS::String::string(
+      createInfo.entryPoint.c_str(), NS::ASCIIStringEncoding));
   if (!function) {
     assert(false);
   }

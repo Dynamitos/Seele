@@ -4,44 +4,19 @@
 
 using namespace Seele;
 
-Asset::Asset()
-    : folderPath("")
-    , name("")
-    , status(Status::Uninitialized)
-    , byteSize(0)
-{
-}
-Asset::Asset(std::string_view _folderPath, std::string_view _name)
-    : folderPath(_folderPath)
-    , name(_name)
-    , status(Status::Uninitialized)
-{
-    if (folderPath.empty())
-    {
+Asset::Asset() : folderPath(""), name(""), status(Status::Uninitialized), byteSize(0) {}
+Asset::Asset(std::string_view _folderPath, std::string_view _name) : folderPath(_folderPath), name(_name), status(Status::Uninitialized) {
+    if (folderPath.empty()) {
         assetId = name;
-    }
-    else
-    {
+    } else {
         assetId = folderPath + "/" + name;
     }
 }
 
+Asset::~Asset() {}
 
-Asset::~Asset()
-{
-}
+std::string Asset::getFolderPath() const { return folderPath; }
 
-std::string Asset::getFolderPath() const
-{
-    return folderPath;
-}
+std::string Asset::getName() const { return name; }
 
-std::string Asset::getName() const
-{
-    return name;
-}
-
-std::string Asset::getAssetIdentifier() const
-{
-    return assetId;
-}
+std::string Asset::getAssetIdentifier() const { return assetId; }

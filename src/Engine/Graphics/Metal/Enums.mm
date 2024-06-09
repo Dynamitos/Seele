@@ -767,7 +767,8 @@ Gfx::SeSamplerAddressMode Seele::Metal::cast(MTL::SamplerAddressMode mode) {
   }
 }
 
-MTL::PrimitiveTopologyClass Seele::Metal::cast(Gfx::SePrimitiveTopology topology) {
+MTL::PrimitiveTopologyClass
+Seele::Metal::cast(Gfx::SePrimitiveTopology topology) {
   switch (topology) {
   case Gfx::SE_PRIMITIVE_TOPOLOGY_POINT_LIST:
     return MTL::PrimitiveTopologyClassPoint;

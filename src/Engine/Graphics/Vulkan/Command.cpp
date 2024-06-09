@@ -1,21 +1,17 @@
 #include "Command.h"
-#include "Graphics.h"
-#include "Pipeline.h"
+#include "Descriptor.h"
 #include "Enums.h"
 #include "Framebuffer.h"
-#include "RenderPass.h"
+#include "Graphics.h"
 #include "Pipeline.h"
-#include "Descriptor.h"
+#include "RenderPass.h"
 #include "Window.h"
+
 
 using namespace Seele;
 using namespace Seele::Vulkan;
 
-
-Command::Command(PGraphics graphics, PCommandPool pool)
-    : graphics(graphics)
-    , pool(pool)
-{
+Command::Command(PGraphics graphics, PCommandPool pool) : graphics(graphics), pool(pool) {
     VkCommandBufferAllocateInfo allocInfo = {
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
         .pNext = nullptr,
@@ -28,17 +24,15 @@ Command::Command(PGraphics graphics, PCommandPool pool)
     fence = new Fence(graphics);
     signalSemaphore = new Semaphore(graphics);
     state = State::Init;
-    //std::cout << "Cmd " << handle << " semaphore " << signalSemaphore->getHandle() << std::endl;
+    // std::cout << "Cmd " << handle << " semaphore " << signalSemaphore->getHandle() << std::endl;
 }
 
-Command::~Command()
-{
+Command::~Command() {
     vkFreeCommandBuffers(graphics->getDevice(), pool->getHandle(), 1, &handle);
     waitSemaphores.clear();
 }
 
-void Command::begin()
-{
+void Command::begin() {
     VkCommandBufferBeginInfo beginInfo = {
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
         .pNext = nullptr,
@@ -49,14 +43,12 @@ void Command::begin()
     state = State::Begin;
 }
 
-void Command::end()
-{
+void Command::end() {
     VK_CHECK(vkEndCommandBuffer(handle));
     state = State::End;
 }
 
-void Command::beginRenderPass(PRenderPass renderPass, PFramebuffer framebuffer)
-{
+void Command::beginRenderPass(PRenderPass renderPass, PFramebuffer framebuffer) {
     assert(state == State::Begin);
     boundRenderPass = renderPass;
     boundFramebuffer = framebuffer;
@@ -73,8 +65,7 @@ void Command::beginRenderPass(PRenderPass renderPass, PFramebuffer framebuffer)
     state = State::RenderPass;
 }
 
-void Command::endRenderPass()
-{
+void Command::endRenderPass() {
     boundRenderPass->endRenderPass();
     boundRenderPass = nullptr;
     boundFramebuffer = nullptr;
@@ -82,23 +73,19 @@ void Command::endRenderPass()
     state = State::Begin;
 }
 
-void Command::executeCommands(Array<Gfx::ORenderCommand> commands)
-{
+void Command::executeCommands(Array<Gfx::ORenderCommand> commands) {
     assert(state == State::RenderPass);
-    if(commands.size() == 0)
-    {
-        //std::cout << "No commands provided" << std::endl;
+    if (commands.size() == 0) {
+        // std::cout << "No commands provided" << std::endl;
         return;
     }
     Array<VkCommandBuffer> cmdBuffers(commands.size());
-    for (uint32 i = 0; i < commands.size(); ++i)
-    {
+    for (uint32 i = 0; i < commands.size(); ++i) {
         auto command = Gfx::PRenderCommand(commands[i]).cast<RenderCommand>();
         command->end();
-        for(auto& descriptor : command->boundResources)
-        {
+        for (auto& descriptor : command->boundResources) {
             boundResources.add(descriptor);
-            //std::cout << "Cmd " << handle << " bound descriptor " << descriptor->getHandle() << std::endl;
+            // std::cout << "Cmd " << handle << " bound descriptor " << descriptor->getHandle() << std::endl;
         }
         cmdBuffers[i] = command->getHandle();
         executingRenders.add(std::move(commands[i]));
@@ -106,21 +93,17 @@ void Command::executeCommands(Array<Gfx::ORenderCommand> commands)
     vkCmdExecuteCommands(handle, (uint32)cmdBuffers.size(), cmdBuffers.data());
 }
 
-void Command::executeCommands(Array<Gfx::OComputeCommand> commands) 
-{
-    if(commands.size() == 0)
-    {
+void Command::executeCommands(Array<Gfx::OComputeCommand> commands) {
+    if (commands.size() == 0) {
         return;
     }
     Array<VkCommandBuffer> cmdBuffers(commands.size());
-    for (uint32 i = 0; i < commands.size(); ++i)
-    {
+    for (uint32 i = 0; i < commands.size(); ++i) {
         auto command = Gfx::PComputeCommand(commands[i]).cast<ComputeCommand>();
         command->end();
-        for(auto& descriptor : command->boundResources)
-        {
+        for (auto& descriptor : command->boundResources) {
             boundResources.add(descriptor);
-            //std::cout << "Cmd " << handle << " bound descriptor " << descriptor->getHandle() << std::endl;
+            // std::cout << "Cmd " << handle << " bound descriptor " << descriptor->getHandle() << std::endl;
         }
         cmdBuffers[i] = command->getHandle();
         executingComputes.add(std::move(commands[i]));
@@ -128,35 +111,29 @@ void Command::executeCommands(Array<Gfx::OComputeCommand> commands)
     vkCmdExecuteCommands(handle, (uint32)cmdBuffers.size(), cmdBuffers.data());
 }
 
-void Command::waitForSemaphore(VkPipelineStageFlags flags, PSemaphore semaphore)
-{
+void Command::waitForSemaphore(VkPipelineStageFlags flags, PSemaphore semaphore) {
     waitSemaphores.add(semaphore);
     waitFlags.add(flags);
-    //std::cout << "Cmd " << handle << " wait for " << semaphore->getHandle() << std::endl;
+    // std::cout << "Cmd " << handle << " wait for " << semaphore->getHandle() << std::endl;
 }
 
-void Command::checkFence()
-{
+void Command::checkFence() {
     assert(state == State::Submit || !fence->isSignaled());
-    if (fence->isSignaled())
-    {
-        //std::cout << "Cmd " << handle << " was signaled" << std::endl;
+    if (fence->isSignaled()) {
+        // std::cout << "Cmd " << handle << " was signaled" << std::endl;
         vkResetCommandBuffer(handle, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
         fence->reset();
-        for(auto& command : executingComputes)
-        {
+        for (auto& command : executingComputes) {
             command->reset();
         }
         pool->cacheCommands(std::move(executingComputes));
-        for(auto& command : executingRenders)
-        {
+        for (auto& command : executingRenders) {
             command->reset();
         }
         pool->cacheCommands(std::move(executingRenders));
-        for(auto& descriptor : boundResources)
-        {
+        for (auto& descriptor : boundResources) {
             descriptor->unbind();
-            //std::cout << "Cmd " << handle << " unbind " << descriptor->getHandle() << std::endl;
+            // std::cout << "Cmd " << handle << " unbind " << descriptor->getHandle() << std::endl;
         }
         boundResources.clear();
         graphics->getDestructionManager()->notifyCommandComplete();
@@ -164,11 +141,9 @@ void Command::checkFence()
     }
 }
 
-void Command::waitForCommand(uint32 timeout)
-{
+void Command::waitForCommand(uint32 timeout) {
     pool->submitCommands();
-    if (state == State::Begin)
-    {
+    if (state == State::Begin) {
         // is already done
         return;
     }
@@ -176,26 +151,16 @@ void Command::waitForCommand(uint32 timeout)
     checkFence();
 }
 
-void Command::bindResource(PCommandBoundResource resource)
-{
+void Command::bindResource(PCommandBoundResource resource) {
     resource->bind();
     boundResources.add(resource);
 }
 
-PFence Command::getFence()
-{
-    return fence;
-}
+PFence Command::getFence() { return fence; }
 
-PCommandPool Command::getPool() 
-{
-    return pool;
-}
+PCommandPool Command::getPool() { return pool; }
 
-RenderCommand::RenderCommand(PGraphics graphics, VkCommandPool cmdPool)
-    : graphics(graphics)
-    , owner(cmdPool)
-{
+RenderCommand::RenderCommand(PGraphics graphics, VkCommandPool cmdPool) : graphics(graphics), owner(cmdPool) {
     VkCommandBufferAllocateInfo allocInfo = {
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
         .pNext = nullptr,
@@ -206,14 +171,9 @@ RenderCommand::RenderCommand(PGraphics graphics, VkCommandPool cmdPool)
     VK_CHECK(vkAllocateCommandBuffers(graphics->getDevice(), &allocInfo, &handle));
 }
 
+RenderCommand::~RenderCommand() { vkFreeCommandBuffers(graphics->getDevice(), owner, 1, &handle); }
 
-RenderCommand::~RenderCommand()
-{
-    vkFreeCommandBuffers(graphics->getDevice(), owner, 1, &handle);
-}
-
-void RenderCommand::begin(PRenderPass renderPass, PFramebuffer framebuffer)
-{
+void RenderCommand::begin(PRenderPass renderPass, PFramebuffer framebuffer) {
     threadId = std::this_thread::get_id();
     ready = false;
     VkCommandBufferInheritanceInfo inheritanceInfo = {
@@ -234,93 +194,81 @@ void RenderCommand::begin(PRenderPass renderPass, PFramebuffer framebuffer)
     VK_CHECK(vkBeginCommandBuffer(handle, &beginInfo));
 }
 
-void RenderCommand::end() 
-{
-    VK_CHECK(vkEndCommandBuffer(handle));
-}
+void RenderCommand::end() { VK_CHECK(vkEndCommandBuffer(handle)); }
 
-void RenderCommand::reset() 
-{
+void RenderCommand::reset() {
     vkResetCommandBuffer(handle, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
     boundResources.clear();
     ready = true;
 }
 
-bool RenderCommand::isReady() 
-{
-    return ready;
-}
+bool RenderCommand::isReady() { return ready; }
 
-void RenderCommand::setViewport(Gfx::PViewport viewport) 
-{
+void RenderCommand::setViewport(Gfx::PViewport viewport) {
     assert(threadId == std::this_thread::get_id());
     VkViewport vp = viewport.cast<Viewport>()->getHandle();
     VkRect2D scissors = {
-        .offset = {
-            .x = (int32)viewport->getOffsetX(),
-            .y = (int32)viewport->getOffsetY(),
-        },
-        .extent = {
-            .width = viewport->getWidth(),
-            .height = viewport->getHeight(),
-        },
+        .offset =
+            {
+                .x = (int32)viewport->getOffsetX(),
+                .y = (int32)viewport->getOffsetY(),
+            },
+        .extent =
+            {
+                .width = viewport->getWidth(),
+                .height = viewport->getHeight(),
+            },
     };
     vkCmdSetViewport(handle, 0, 1, &vp);
     vkCmdSetScissor(handle, 0, 1, &scissors);
 }
 
-void RenderCommand::bindPipeline(Gfx::PGraphicsPipeline gfxPipeline)
-{
+void RenderCommand::bindPipeline(Gfx::PGraphicsPipeline gfxPipeline) {
     assert(threadId == std::this_thread::get_id());
     pipeline = gfxPipeline.cast<GraphicsPipeline>();
     pipeline->bind(handle);
 }
-void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet, Array<uint32> dynamicOffsets)
-{
+void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet, Array<uint32> dynamicOffsets) {
     assert(threadId == std::this_thread::get_id());
     auto descriptor = descriptorSet.cast<DescriptorSet>();
     assert(descriptor->writeDescriptors.size() == 0);
     descriptor->bind();
     boundResources.add(descriptor.getHandle());
-    for (auto binding : descriptor->boundResources)
-    {
+    for (auto binding : descriptor->boundResources) {
         binding->bind();
         boundResources.add(binding);
     }
 
     VkDescriptorSet setHandle = descriptor->getHandle();
-    vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getLayout(), pipeline->getPipelineLayout()->findParameter(descriptorSet->getName()), 1, &setHandle, dynamicOffsets.size(), dynamicOffsets.data());
+    vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getLayout(),
+                            pipeline->getPipelineLayout()->findParameter(descriptorSet->getName()), 1, &setHandle, dynamicOffsets.size(),
+                            dynamicOffsets.data());
 }
 
-void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorSets, Array<uint32> dynamicOffsets)
-{
+void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorSets, Array<uint32> dynamicOffsets) {
     assert(threadId == std::this_thread::get_id());
     VkDescriptorSet* sets = new VkDescriptorSet[descriptorSets.size()];
-    for(uint32 i = 0; i < descriptorSets.size(); ++i)
-    {
+    for (uint32 i = 0; i < descriptorSets.size(); ++i) {
         auto descriptorSet = descriptorSets[i].cast<DescriptorSet>();
         assert(descriptorSet->writeDescriptors.size() == 0);
         descriptorSet->bind();
         boundResources.add(descriptorSet.getHandle());
 
-        for (auto binding : descriptorSet->boundResources)
-        {
+        for (auto binding : descriptorSet->boundResources) {
             binding->bind();
             boundResources.add(binding);
         }
         sets[pipeline->getPipelineLayout()->findParameter(descriptorSet->getName())] = descriptorSet->getHandle();
     }
-    vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getLayout(), 0, (uint32)descriptorSets.size(), sets, dynamicOffsets.size(), dynamicOffsets.data());
+    vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getLayout(), 0, (uint32)descriptorSets.size(), sets,
+                            dynamicOffsets.size(), dynamicOffsets.data());
     delete[] sets;
-
 }
-void RenderCommand::bindVertexBuffer(const Array<Gfx::PVertexBuffer>& streams)
-{
+void RenderCommand::bindVertexBuffer(const Array<Gfx::PVertexBuffer>& streams) {
     assert(threadId == std::this_thread::get_id());
     Array<VkBuffer> buffers(streams.size());
     Array<VkDeviceSize> offsets(streams.size());
-    for(uint32 i = 0; i < streams.size(); ++i)
-    {
+    for (uint32 i = 0; i < streams.size(); ++i) {
         PVertexBuffer buf = streams[i].cast<VertexBuffer>();
         buffers[i] = buf->getHandle();
         offsets[i] = 0;
@@ -329,8 +277,7 @@ void RenderCommand::bindVertexBuffer(const Array<Gfx::PVertexBuffer>& streams)
     };
     vkCmdBindVertexBuffers(handle, 0, (uint32)streams.size(), buffers.data(), offsets.data());
 }
-void RenderCommand::bindIndexBuffer(Gfx::PIndexBuffer indexBuffer)
-{
+void RenderCommand::bindIndexBuffer(Gfx::PIndexBuffer indexBuffer) {
     assert(threadId == std::this_thread::get_id());
     PIndexBuffer buf = indexBuffer.cast<IndexBuffer>();
     buf->getAlloc()->bind();
@@ -338,39 +285,31 @@ void RenderCommand::bindIndexBuffer(Gfx::PIndexBuffer indexBuffer)
     vkCmdBindIndexBuffer(handle, buf->getHandle(), 0, cast(buf->getIndexType()));
 }
 
-void RenderCommand::pushConstants(Gfx::SeShaderStageFlags stage, uint32 offset, uint32 size, const void* data)
-{
+void RenderCommand::pushConstants(Gfx::SeShaderStageFlags stage, uint32 offset, uint32 size, const void* data) {
     assert(threadId == std::this_thread::get_id());
     vkCmdPushConstants(handle, pipeline->getLayout(), stage, offset, size, data);
 }
 
-void RenderCommand::draw(uint32 vertexCount, uint32 instanceCount, int32 firstVertex, uint32 firstInstance) 
-{
+void RenderCommand::draw(uint32 vertexCount, uint32 instanceCount, int32 firstVertex, uint32 firstInstance) {
     assert(threadId == std::this_thread::get_id());
     vkCmdDraw(handle, vertexCount, instanceCount, firstVertex, firstInstance);
 }
 
-void RenderCommand::drawIndexed(uint32 indexCount, uint32 instanceCount, int32 firstIndex, uint32 vertexOffset, uint32 firstInstance) 
-{
+void RenderCommand::drawIndexed(uint32 indexCount, uint32 instanceCount, int32 firstIndex, uint32 vertexOffset, uint32 firstInstance) {
     assert(threadId == std::this_thread::get_id());
     vkCmdDrawIndexed(handle, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
 }
-void RenderCommand::drawMesh(uint32 groupX, uint32 groupY, uint32 groupZ)
-{
+void RenderCommand::drawMesh(uint32 groupX, uint32 groupY, uint32 groupZ) {
     assert(threadId == std::this_thread::get_id());
     graphics->vkCmdDrawMeshTasksEXT(handle, groupX, groupY, groupZ);
 }
 
-void RenderCommand::drawMeshIndirect(Gfx::PShaderBuffer buffer, uint64 offset, uint32 drawCount, uint32 stride)
-{
+void RenderCommand::drawMeshIndirect(Gfx::PShaderBuffer buffer, uint64 offset, uint32 drawCount, uint32 stride) {
     assert(threadId == std::this_thread::get_id());
     graphics->vkCmdDrawMeshTasksIndirectEXT(handle, buffer.cast<ShaderBuffer>()->getHandle(), offset, drawCount, stride);
 }
 
-ComputeCommand::ComputeCommand(PGraphics graphics, VkCommandPool cmdPool) 
-    : graphics(graphics)
-    , owner(cmdPool)
-{
+ComputeCommand::ComputeCommand(PGraphics graphics, VkCommandPool cmdPool) : graphics(graphics), owner(cmdPool) {
     VkCommandBufferAllocateInfo allocInfo = {
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
         .pNext = nullptr,
@@ -381,14 +320,9 @@ ComputeCommand::ComputeCommand(PGraphics graphics, VkCommandPool cmdPool)
     VK_CHECK(vkAllocateCommandBuffers(graphics->getDevice(), &allocInfo, &handle));
 }
 
+ComputeCommand::~ComputeCommand() { vkFreeCommandBuffers(graphics->getDevice(), owner, 1, &handle); }
 
-ComputeCommand::~ComputeCommand() 
-{
-    vkFreeCommandBuffers(graphics->getDevice(), owner, 1, &handle);
-}
-
-void ComputeCommand::begin() 
-{
+void ComputeCommand::begin() {
     threadId = std::this_thread::get_id();
     ready = false;
     VkCommandBufferInheritanceInfo inheritanceInfo = {
@@ -409,86 +343,74 @@ void ComputeCommand::begin()
     VK_CHECK(vkBeginCommandBuffer(handle, &beginInfo));
 }
 
-void ComputeCommand::end() 
-{
+void ComputeCommand::end() {
     assert(threadId == std::this_thread::get_id());
     VK_CHECK(vkEndCommandBuffer(handle));
 }
 
-void ComputeCommand::reset() 
-{
+void ComputeCommand::reset() {
     assert(threadId == std::this_thread::get_id());
     vkResetCommandBuffer(handle, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
     boundResources.clear();
     ready = true;
 }
-bool ComputeCommand::isReady() 
-{
-    return ready;
-}
+bool ComputeCommand::isReady() { return ready; }
 
-void ComputeCommand::bindPipeline(Gfx::PComputePipeline computePipeline) 
-{
+void ComputeCommand::bindPipeline(Gfx::PComputePipeline computePipeline) {
     assert(threadId == std::this_thread::get_id());
     pipeline = computePipeline.cast<ComputePipeline>();
     pipeline->bind(handle);
 }
 
-void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet, Array<uint32> dynamicOffsets)
-{
+void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet, Array<uint32> dynamicOffsets) {
     assert(threadId == std::this_thread::get_id());
     auto descriptor = descriptorSet.cast<DescriptorSet>();
     assert(descriptor->writeDescriptors.size() == 0);
     boundResources.add(descriptor.getHandle());
 
-    for (auto binding : descriptor->boundResources)
-    {
+    for (auto binding : descriptor->boundResources) {
         binding->bind();
         boundResources.add(binding);
     }
-    
+
     VkDescriptorSet setHandle = descriptor->getHandle();
-    vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->getLayout(), pipeline->getPipelineLayout()->findParameter(descriptorSet->getName()), 1, &setHandle, dynamicOffsets.size(), dynamicOffsets.data());
+    vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->getLayout(),
+                            pipeline->getPipelineLayout()->findParameter(descriptorSet->getName()), 1, &setHandle, dynamicOffsets.size(),
+                            dynamicOffsets.data());
 }
 
-void ComputeCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorSets, Array<uint32> dynamicOffsets)
-{
+void ComputeCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorSets, Array<uint32> dynamicOffsets) {
     assert(threadId == std::this_thread::get_id());
     VkDescriptorSet* sets = new VkDescriptorSet[descriptorSets.size()];
-    for(uint32 i = 0; i < descriptorSets.size(); ++i)
-    {
+    for (uint32 i = 0; i < descriptorSets.size(); ++i) {
         auto descriptorSet = descriptorSets[i].cast<DescriptorSet>();
         assert(descriptorSet->writeDescriptors.size() == 0);
         descriptorSet->bind();
         boundResources.add(descriptorSet.getHandle());
 
-        //std::cout << "Binding descriptor " << descriptorSet->getHandle() << " to cmd " << handle << std::endl;
-        for (auto binding : descriptorSet->boundResources)
-        {
+        // std::cout << "Binding descriptor " << descriptorSet->getHandle() << " to cmd " << handle << std::endl;
+        for (auto binding : descriptorSet->boundResources) {
             binding->bind();
             boundResources.add(binding);
         }
         sets[pipeline->getPipelineLayout()->findParameter(descriptorSet->getName())] = descriptorSet->getHandle();
     }
-    vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->getLayout(), 0, (uint32)descriptorSets.size(), sets, dynamicOffsets.size(), dynamicOffsets.data());
+    vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->getLayout(), 0, (uint32)descriptorSets.size(), sets,
+                            dynamicOffsets.size(), dynamicOffsets.data());
     delete[] sets;
 }
 
-void ComputeCommand::pushConstants(Gfx::SeShaderStageFlags stage, uint32 offset, uint32 size, const void* data)
-{
+void ComputeCommand::pushConstants(Gfx::SeShaderStageFlags stage, uint32 offset, uint32 size, const void* data) {
     assert(threadId == std::this_thread::get_id());
     vkCmdPushConstants(handle, pipeline->getLayout(), stage, offset, size, data);
 }
 
-void ComputeCommand::dispatch(uint32 threadX, uint32 threadY, uint32 threadZ) 
-{
+void ComputeCommand::dispatch(uint32 threadX, uint32 threadY, uint32 threadZ) {
     assert(threadId == std::this_thread::get_id());
     vkCmdDispatch(handle, threadX, threadY, threadZ);
 }
 
-CommandPool::CommandPool(PGraphics graphics, PQueue queue)
-    : graphics(graphics), queue(queue), queueFamilyIndex(queue->getFamilyIndex())
-{
+CommandPool::CommandPool(PGraphics graphics, PQueue queue) : graphics(graphics), queue(queue), queueFamilyIndex(queue->getFamilyIndex()) {
     VkCommandPoolCreateInfo info = {
         .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
         .pNext = nullptr,
@@ -498,16 +420,14 @@ CommandPool::CommandPool(PGraphics graphics, PQueue queue)
     VK_CHECK(vkCreateCommandPool(graphics->getDevice(), &info, nullptr, &commandPool));
     // TODO: dont reset individual commands, reset pool instead
     allocatedBuffers.add(new Command(graphics, this));
-    
+
     command = allocatedBuffers.back();
     command->begin();
 }
 
-CommandPool::~CommandPool()
-{
+CommandPool::~CommandPool() {
     vkDeviceWaitIdle(graphics->getDevice());
-    for (auto& cmd : allocatedBuffers)
-    {
+    for (auto& cmd : allocatedBuffers) {
         cmd->checkFence();
     }
     allocatedRenderCommands.clear();
@@ -518,32 +438,22 @@ CommandPool::~CommandPool()
     queue = nullptr;
 }
 
-PCommand CommandPool::getCommands()
-{
-    return command;
-}
-void CommandPool::cacheCommands(Array<ORenderCommand> commands)
-{
-  for(auto&& cmd : commands)
-  {
-    allocatedRenderCommands.add(std::move(cmd));
-  }
+PCommand CommandPool::getCommands() { return command; }
+void CommandPool::cacheCommands(Array<ORenderCommand> commands) {
+    for (auto&& cmd : commands) {
+        allocatedRenderCommands.add(std::move(cmd));
+    }
 }
 
-void CommandPool::cacheCommands(Array<OComputeCommand> commands)
-{
-  for(auto&& cmd : commands)
-  {
-    allocatedComputeCommands.add(std::move(cmd));
-  }
+void CommandPool::cacheCommands(Array<OComputeCommand> commands) {
+    for (auto&& cmd : commands) {
+        allocatedComputeCommands.add(std::move(cmd));
+    }
 }
 
-ORenderCommand CommandPool::createRenderCommand(const std::string& name)
-{
-    for (uint32 i = 0; i < allocatedRenderCommands.size(); ++i)
-    {
-        if (allocatedRenderCommands[i]->isReady())
-        {
+ORenderCommand CommandPool::createRenderCommand(const std::string& name) {
+    for (uint32 i = 0; i < allocatedRenderCommands.size(); ++i) {
+        if (allocatedRenderCommands[i]->isReady()) {
             ORenderCommand cmdBuffer = std::move(allocatedRenderCommands[i]);
             allocatedRenderCommands.removeAt(i, false);
             cmdBuffer->name = name;
@@ -557,12 +467,9 @@ ORenderCommand CommandPool::createRenderCommand(const std::string& name)
     return result;
 }
 
-OComputeCommand CommandPool::createComputeCommand(const std::string& name)
-{
-    for (uint32 i = 0; i < allocatedComputeCommands.size(); ++i)
-    {
-        if (allocatedComputeCommands[i]->isReady())
-        {
+OComputeCommand CommandPool::createComputeCommand(const std::string& name) {
+    for (uint32 i = 0; i < allocatedComputeCommands.size(); ++i) {
+        if (allocatedComputeCommands[i]->isReady()) {
             OComputeCommand cmdBuffer = std::move(allocatedComputeCommands[i]);
             allocatedComputeCommands.removeAt(i, false);
             cmdBuffer->name = name;
@@ -576,32 +483,26 @@ OComputeCommand CommandPool::createComputeCommand(const std::string& name)
     return result;
 }
 
-void CommandPool::submitCommands(PSemaphore signalSemaphore)
-{
+void CommandPool::submitCommands(PSemaphore signalSemaphore) {
     assert(command->state == Command::State::Begin); // Not in a renderpass
     command->end();
-    Array<VkSemaphore> semaphores = { command->signalSemaphore->getHandle() };
-    if (signalSemaphore != nullptr)
-    {
+    Array<VkSemaphore> semaphores = {command->signalSemaphore->getHandle()};
+    if (signalSemaphore != nullptr) {
         semaphores.add(signalSemaphore->getHandle());
     }
     queue->submitCommandBuffer(command, semaphores);
-    //std::cout << "Cmd " << command->getHandle() << " signalling " << command->signalSemaphore->getHandle() << std::endl;
+    // std::cout << "Cmd " << command->getHandle() << " signalling " << command->signalSemaphore->getHandle() << std::endl;
 
     PSemaphore waitSemaphore = command->signalSemaphore;
-    for (uint32 i = 0; i < allocatedBuffers.size(); ++i)
-    {
+    for (uint32 i = 0; i < allocatedBuffers.size(); ++i) {
         PCommand cmdBuffer = allocatedBuffers[i];
         cmdBuffer->checkFence();
-        if (cmdBuffer->state == Command::State::Init)
-        {
+        if (cmdBuffer->state == Command::State::Init) {
             command = cmdBuffer;
             command->begin();
             command->waitForSemaphore(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, waitSemaphore);
             return;
-        }
-        else
-        {
+        } else {
             assert(cmdBuffer->state == Command::State::Submit);
         }
     }

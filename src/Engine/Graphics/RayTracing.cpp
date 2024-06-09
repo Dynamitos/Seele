@@ -2,14 +2,10 @@
 
 using namespace Seele::Gfx;
 
-BottomLevelAS::BottomLevelAS()
-{}
+BottomLevelAS::BottomLevelAS() {}
 
-BottomLevelAS::~BottomLevelAS()
-{}
+BottomLevelAS::~BottomLevelAS() {}
 
-TopLevelAS::TopLevelAS()
-{}
+TopLevelAS::TopLevelAS() {}
 
-TopLevelAS::~TopLevelAS()
-{}
+TopLevelAS::~TopLevelAS() {}

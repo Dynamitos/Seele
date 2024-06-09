@@ -1,13 +1,12 @@
 #pragma once
-#include "MinimalEngine.h"
+#include "Asset/TextureAsset.h"
 #include "Containers/Map.h"
 #include "Math/Math.h"
-#include "Asset/TextureAsset.h"
+#include "MinimalEngine.h"
 
-namespace Seele
-{
-enum class ExpressionType
-{
+
+namespace Seele {
+enum class ExpressionType {
     UNKNOWN,
     FLOAT,
     FLOAT2,
@@ -16,24 +15,21 @@ enum class ExpressionType
     TEXTURE,
     SAMPLER,
 };
-struct ExpressionInput
-{
+struct ExpressionInput {
     std::string source;
     ExpressionType type = ExpressionType::UNKNOWN;
     void save(ArchiveBuffer& buffer) const;
     void load(ArchiveBuffer& buffer);
 };
-struct ExpressionOutput
-{
+struct ExpressionOutput {
     std::string name;
     ExpressionType type = ExpressionType::UNKNOWN;
     void save(ArchiveBuffer& buffer) const;
     void load(ArchiveBuffer& buffer);
 };
 DECLARE_REF(ShaderExpression);
-class ShaderExpression
-{
-public:
+class ShaderExpression {
+  public:
     Map<std::string, ExpressionInput> inputs;
     ExpressionOutput output;
     std::string key;
@@ -48,8 +44,7 @@ public:
 DEFINE_REF(ShaderExpression)
 
 DECLARE_NAME_REF(Gfx, DescriptorSet)
-struct ShaderParameter : public ShaderExpression
-{
+struct ShaderParameter : public ShaderExpression {
     uint32 byteOffset = 0;
     uint32 binding = 0;
     ShaderParameter() {}
@@ -64,8 +59,7 @@ struct ShaderParameter : public ShaderExpression
     virtual void load(ArchiveBuffer& buffer) override;
 };
 DEFINE_REF(ShaderParameter)
-struct FloatParameter : public ShaderParameter
-{
+struct FloatParameter : public ShaderParameter {
     static constexpr uint64 IDENTIFIER = 0x01;
     float data = 0.0f;
     FloatParameter() {}
@@ -78,8 +72,7 @@ struct FloatParameter : public ShaderParameter
     virtual void load(ArchiveBuffer& buffer) override;
 };
 DEFINE_REF(FloatParameter)
-struct VectorParameter : public ShaderParameter
-{
+struct VectorParameter : public ShaderParameter {
     static constexpr uint64 IDENTIFIER = 0x02;
     Vector data = Vector();
     VectorParameter() {}
@@ -92,8 +85,7 @@ struct VectorParameter : public ShaderParameter
     virtual void load(ArchiveBuffer& buffer) override;
 };
 DEFINE_REF(VectorParameter)
-struct TextureParameter : public ShaderParameter
-{
+struct TextureParameter : public ShaderParameter {
     static constexpr uint64 IDENTIFIER = 0x04;
     PTextureAsset data = nullptr;
     TextureParameter() {}
@@ -107,8 +99,7 @@ struct TextureParameter : public ShaderParameter
 };
 DEFINE_REF(TextureParameter)
 DECLARE_NAME_REF(Gfx, Sampler)
-struct SamplerParameter : public ShaderParameter
-{
+struct SamplerParameter : public ShaderParameter {
     static constexpr uint64 IDENTIFIER = 0x08;
     Gfx::OSampler data = nullptr;
     SamplerParameter() {}
@@ -121,8 +112,7 @@ struct SamplerParameter : public ShaderParameter
     virtual void load(ArchiveBuffer& buffer) override;
 };
 DEFINE_REF(SamplerParameter)
-struct CombinedTextureParameter : public ShaderParameter
-{
+struct CombinedTextureParameter : public ShaderParameter {
     static constexpr uint64 IDENTIFIER = 0x10;
     PTextureAsset data = nullptr;
     Gfx::OSampler sampler = nullptr;
@@ -137,9 +127,7 @@ struct CombinedTextureParameter : public ShaderParameter
 };
 DEFINE_REF(CombinedTextureParameter)
 
-
-struct ConstantExpression : public ShaderExpression
-{
+struct ConstantExpression : public ShaderExpression {
     static constexpr uint64 IDENTIFIER = 0x11;
     std::string expr;
     ConstantExpression();
@@ -151,8 +139,7 @@ struct ConstantExpression : public ShaderExpression
     virtual void load(ArchiveBuffer& buffer) override;
 };
 DEFINE_REF(ConstantExpression)
-struct AddExpression : public ShaderExpression
-{
+struct AddExpression : public ShaderExpression {
     static constexpr uint64 IDENTIFIER = 0x12;
     AddExpression();
     virtual ~AddExpression();
@@ -162,8 +149,7 @@ struct AddExpression : public ShaderExpression
     virtual void load(ArchiveBuffer& buffer) override;
 };
 DEFINE_REF(AddExpression)
-struct SubExpression : public ShaderExpression
-{
+struct SubExpression : public ShaderExpression {
     static constexpr uint64 IDENTIFIER = 0x13;
     SubExpression() {}
     virtual ~SubExpression() {}
@@ -173,8 +159,7 @@ struct SubExpression : public ShaderExpression
     virtual void load(ArchiveBuffer& buffer) override;
 };
 DEFINE_REF(SubExpression)
-struct MulExpression : public ShaderExpression
-{
+struct MulExpression : public ShaderExpression {
     static constexpr uint64 IDENTIFIER = 0x14;
     MulExpression() {}
     virtual ~MulExpression() {}
@@ -184,12 +169,11 @@ struct MulExpression : public ShaderExpression
     virtual void load(ArchiveBuffer& buffer) override;
 };
 DEFINE_REF(MulExpression)
-struct SwizzleExpression : public ShaderExpression
-{
+struct SwizzleExpression : public ShaderExpression {
     static constexpr uint64 IDENTIFIER = 0x15;
     StaticArray<int32, 4> comp = {-1, -1, -1, -1};
     SwizzleExpression() {}
-    SwizzleExpression(StaticArray<int32,4> comp) : comp(std::move(comp)) {}
+    SwizzleExpression(StaticArray<int32, 4> comp) : comp(std::move(comp)) {}
     virtual ~SwizzleExpression() {}
     virtual uint64 getIdentifier() const override { return IDENTIFIER; }
     virtual std::string evaluate(Map<std::string, std::string>& varState) const override;
@@ -197,8 +181,7 @@ struct SwizzleExpression : public ShaderExpression
     virtual void load(ArchiveBuffer& buffer) override;
 };
 DEFINE_REF(SwizzleExpression)
-struct SampleExpression : public ShaderExpression
-{
+struct SampleExpression : public ShaderExpression {
     static constexpr uint64 IDENTIFIER = 0x16;
     SampleExpression() {}
     virtual ~SampleExpression() {}
@@ -209,8 +192,7 @@ struct SampleExpression : public ShaderExpression
 };
 DEFINE_REF(SampleExpression)
 
-struct MaterialNode
-{
+struct MaterialNode {
     std::string profile;
     Map<std::string, std::string> variables;
     MaterialNode() {}
@@ -218,20 +200,15 @@ struct MaterialNode
     void save(ArchiveBuffer& buffer) const;
     void load(ArchiveBuffer& buffer);
 };
-template<>
-void Serialization::save(ArchiveBuffer& buffer, const OShaderExpression& parameter)
-{
+template <> void Serialization::save(ArchiveBuffer& buffer, const OShaderExpression& parameter) {
     Serialization::save(buffer, parameter->getIdentifier());
     parameter->save(buffer);
 }
 
-template<>
-void Serialization::load(ArchiveBuffer& buffer, OShaderExpression& parameter)
-{
+template <> void Serialization::load(ArchiveBuffer& buffer, OShaderExpression& parameter) {
     uint64 identifier = 0;
     Serialization::load(buffer, identifier);
-    switch (identifier)
-    {
+    switch (identifier) {
     case FloatParameter::IDENTIFIER:
         parameter = new FloatParameter();
         break;
@@ -271,20 +248,15 @@ void Serialization::load(ArchiveBuffer& buffer, OShaderExpression& parameter)
     parameter->load(buffer);
 }
 
-template<>
-void Serialization::save(ArchiveBuffer& buffer, const OShaderParameter& parameter)
-{
+template <> void Serialization::save(ArchiveBuffer& buffer, const OShaderParameter& parameter) {
     Serialization::save(buffer, parameter->getIdentifier());
     parameter->save(buffer);
 }
 
-template<>
-void Serialization::load(ArchiveBuffer& buffer, OShaderParameter& parameter)
-{
+template <> void Serialization::load(ArchiveBuffer& buffer, OShaderParameter& parameter) {
     uint64 identifier = 0;
     Serialization::load(buffer, identifier);
-    switch (identifier)
-    {
+    switch (identifier) {
     case FloatParameter::IDENTIFIER:
         parameter = new FloatParameter();
         break;

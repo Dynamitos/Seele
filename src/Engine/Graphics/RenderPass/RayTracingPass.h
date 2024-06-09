@@ -1,11 +1,9 @@
 #pragma once
 #include "RenderPass.h"
 
-namespace Seele
-{
-class RayTracingPass : public RenderPass
-{
-public:
+namespace Seele {
+class RayTracingPass : public RenderPass {
+  public:
     RayTracingPass(Gfx::PGraphics graphics, PScene scene);
     RayTracingPass(RayTracingPass&& other) = default;
     RayTracingPass& operator=(RayTracingPass&& other) = default;
@@ -14,7 +12,7 @@ public:
     virtual void endFrame() override;
     virtual void publishOutputs() override;
     virtual void createRenderPass() override;
-private:
-    
+
+  private:
 };
-}
+} // namespace Seele

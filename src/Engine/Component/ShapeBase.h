@@ -1,14 +1,12 @@
 #pragma once
 #include "Containers/Array.h"
-#include "Transform.h"
 #include "Graphics/DebugVertex.h"
+#include "Transform.h"
 
-namespace Seele
-{
-namespace Component
-{
-struct ShapeBase
-{
+
+namespace Seele {
+namespace Component {
+struct ShapeBase {
     ShapeBase();
     ShapeBase(Array<Vector> vertices, Array<uint32> indices);
     ShapeBase transform(const Component::Transform& transform) const;

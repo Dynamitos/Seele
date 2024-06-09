@@ -1,23 +1,23 @@
 #include "Asset/Asset.h"
-#include "Asset/MeshAsset.h"
+#include "Asset/AssetRegistry.h"
 #include "Asset/FontAsset.h"
-#include "Asset/TextureAsset.h"
 #include "Asset/MaterialAsset.h"
 #include "Asset/MaterialInstanceAsset.h"
-#include "Asset/AssetRegistry.h"
+#include "Asset/MeshAsset.h"
+#include "Asset/TextureAsset.h"
 #include <fstream>
 #include <iostream>
 
+
 using namespace Seele;
 
-AssetRegistry * _instance = new AssetRegistry();
+AssetRegistry* _instance = new AssetRegistry();
 
-int main(int, char**)
-{
-    //if(argc < 2)
+int main(int, char**) {
+    // if(argc < 2)
     //{
-    //    return -1;
-    //}
+    //     return -1;
+    // }
     std::filesystem::path path = std::filesystem::path("C:\\Users\\Dynamitos\\TrackClear\\Assets\\Dirt.asset");
     std::ifstream stream = std::ifstream(path, std::ios::binary);
 
@@ -37,8 +37,7 @@ int main(int, char**)
     Serialization::load(buffer, folderPath);
 
     PAsset asset;
-    switch (identifier)
-    {
+    switch (identifier) {
     case TextureAsset::IDENTIFIER:
         asset = new TextureAsset(folderPath, name);
         break;

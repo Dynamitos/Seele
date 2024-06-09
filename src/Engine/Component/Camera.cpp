@@ -7,21 +7,14 @@ using namespace Seele;
 using namespace Seele::Component;
 using namespace Seele::Math;
 
-Camera::Camera()
-    : viewMatrix(Matrix4())
-    , cameraPos(Vector())
-    , bNeedsViewBuild(false)
-{
-    yaw = -3.1415f/2;
+Camera::Camera() : viewMatrix(Matrix4()), cameraPos(Vector()), bNeedsViewBuild(false) {
+    yaw = -3.1415f / 2;
     pitch = 0;
 }
 
-Camera::~Camera()
-{
-}
+Camera::~Camera() {}
 
-void Camera::mouseMove(float deltaYaw, float deltaPitch) 
-{
+void Camera::mouseMove(float deltaYaw, float deltaPitch) {
     yaw += deltaYaw / 500.f;
     pitch += deltaPitch / 500.f;
     Vector cameraDirection = glm::normalize(Vector(cos(yaw) * cos(pitch), sin(pitch), sin(yaw) * cos(pitch)));
@@ -30,26 +23,22 @@ void Camera::mouseMove(float deltaYaw, float deltaPitch)
     bNeedsViewBuild = true;
 }
 
-void Camera::mouseScroll(float x) 
-{
-    getTransform().translate(getTransform().getForward()*x);
+void Camera::mouseScroll(float x) {
+    getTransform().translate(getTransform().getForward() * x);
     bNeedsViewBuild = true;
 }
 
-void Camera::moveX(float amount)
-{
-    getTransform().translate(getTransform().getForward()*amount);
+void Camera::moveX(float amount) {
+    getTransform().translate(getTransform().getForward() * amount);
     bNeedsViewBuild = true;
 }
 
-void Camera::moveY(float amount)
-{
-    getTransform().translate(getTransform().getRight()*amount);
+void Camera::moveY(float amount) {
+    getTransform().translate(getTransform().getRight() * amount);
     bNeedsViewBuild = true;
 }
 
-void Camera::buildViewMatrix() 
-{
+void Camera::buildViewMatrix() {
     Vector eyePos = getTransform().getPosition();
     Vector lookAt = eyePos + getTransform().getForward();
     viewMatrix = glm::lookAt(eyePos, lookAt, Vector(0, 1, 0));

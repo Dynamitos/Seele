@@ -1,15 +1,13 @@
 #pragma once
-#include "Enums.h"
 #include "Descriptor.h"
+#include "Enums.h"
 
-namespace Seele
-{
-namespace Gfx
-{
+
+namespace Seele {
+namespace Gfx {
 DECLARE_REF(Viewport)
-class RenderCommand
-{
-public:
+class RenderCommand {
+  public:
     RenderCommand();
     virtual ~RenderCommand();
     virtual void setViewport(Gfx::PViewport viewport) = 0;
@@ -26,9 +24,8 @@ public:
     std::string name;
 };
 DEFINE_REF(RenderCommand)
-    class ComputeCommand
-{
-public:
+class ComputeCommand {
+  public:
     ComputeCommand();
     virtual ~ComputeCommand();
     virtual void bindPipeline(Gfx::PComputePipeline pipeline) = 0;
@@ -40,5 +37,5 @@ public:
 };
 DEFINE_REF(ComputeCommand)
 
-}
-}
+} // namespace Gfx
+} // namespace Seele

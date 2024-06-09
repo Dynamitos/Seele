@@ -1,14 +1,12 @@
 #pragma once
-#include "View.h"
 #include "Graphics/RenderTarget.h"
+#include "View.h"
 
-namespace Seele
-{
+namespace Seele {
 DECLARE_REF(WindowManager)
 // The logical window, with the graphics proxy
-class Window
-{
-public:
+class Window {
+  public:
     Window(PWindowManager owner, Gfx::OWindow handle);
     ~Window();
     void addView(PView view);
@@ -17,11 +15,9 @@ public:
     Gfx::PWindow getGfxHandle();
     void setFocused(PView view);
     void onResize(uint32 width, uint32 height);
-    constexpr bool isPaused() const
-    {
-        return gfxHandle->isPaused();
-    }
-protected:
+    constexpr bool isPaused() const { return gfxHandle->isPaused(); }
+
+  protected:
     PWindowManager owner;
     Array<PView> views;
     Gfx::OWindow gfxHandle;

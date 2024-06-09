@@ -1,28 +1,23 @@
 #include "FontLoader.h"
-#include "Graphics/Graphics.h"
-#include "Asset/FontAsset.h"
 #include "Asset/AssetRegistry.h"
+#include "Asset/FontAsset.h"
+#include "Graphics/Graphics.h"
 #include "Graphics/Resources.h"
 #include "Graphics/Texture.h"
 #include <ft2build.h>
+
 #include FT_FREETYPE_H
-#include <iostream>
 #include <fstream>
+#include <iostream>
+
 
 using namespace Seele;
 
-FontLoader::FontLoader(Gfx::PGraphics graphics)
-    : graphics(graphics)
-{
-    
-}
+FontLoader::FontLoader(Gfx::PGraphics graphics) : graphics(graphics) {}
 
-FontLoader::~FontLoader()
-{
-}
+FontLoader::~FontLoader() {}
 
-void FontLoader::importAsset(FontImportArgs args)
-{
+void FontLoader::importAsset(FontImportArgs args) {
     std::filesystem::path assetPath = args.filePath.filename();
     assetPath.replace_extension("asset");
     OFontAsset asset = new FontAsset(args.importPath, assetPath.stem().string());
@@ -36,8 +31,7 @@ void FontLoader::importAsset(FontImportArgs args)
 // in case of the space character there is no bitmap
 // so we create a single pixel empty texture
 uint8 transparentPixel = 0;
-void FontLoader::import(FontImportArgs args, PFontAsset asset)
-{
+void FontLoader::import(FontImportArgs args, PFontAsset asset) {
     FT_Library ft;
     FT_Error error = FT_Init_FreeType(&ft);
     assert(!error);
@@ -46,10 +40,8 @@ void FontLoader::import(FontImportArgs args, PFontAsset asset)
     assert(!error);
     FT_Set_Pixel_Sizes(face, 0, 48);
     Array<Gfx::OTexture2D> usedTextures;
-    for(uint32 c = 0; c < 256; ++c)
-    {
-        if(FT_Load_Char(face, c, FT_LOAD_RENDER))
-        {
+    for (uint32 c = 0; c < 256; ++c) {
+        if (FT_Load_Char(face, c, FT_LOAD_RENDER)) {
             std::cout << "error loading " << (char)c << std::endl;
             continue;
         }
@@ -63,8 +55,7 @@ void FontLoader::import(FontImportArgs args, PFontAsset asset)
         imageData.height = face->glyph->bitmap.rows;
         imageData.sourceData.data = face->glyph->bitmap.buffer;
         imageData.sourceData.size = imageData.width * imageData.height;
-        if(imageData.width == 0 || imageData.height == 0)
-        {
+        if (imageData.width == 0 || imageData.height == 0) {
             glyph.size.x = 1;
             glyph.size.y = 1;
             glyph.bearing.x = 0;
@@ -81,7 +72,8 @@ void FontLoader::import(FontImportArgs args, PFontAsset asset)
     FT_Done_FreeType(ft);
     asset->setUsedTextures(std::move(usedTextures));
 
-    auto stream = AssetRegistry::createWriteStream((std::filesystem::path(asset->getFolderPath()) / asset->getName()).replace_extension("asset").string(), std::ios::binary);
+    auto stream = AssetRegistry::createWriteStream(
+        (std::filesystem::path(asset->getFolderPath()) / asset->getName()).replace_extension("asset").string(), std::ios::binary);
 
     ArchiveBuffer archive;
     Serialization::save(archive, FontAsset::IDENTIFIER);

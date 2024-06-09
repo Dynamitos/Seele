@@ -2,18 +2,19 @@
 
 using namespace Seele;
 
-RenderPass::RenderPass(Gfx::PGraphics graphics, PScene scene)
-    : graphics(graphics)
-    , scene(scene)
-{
+RenderPass::RenderPass(Gfx::PGraphics graphics, PScene scene) : graphics(graphics), scene(scene) {
 
     viewParamsLayout = graphics->createDescriptorLayout("pViewParams");
-    viewParamsLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 0, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER,});
+    viewParamsLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .binding = 0,
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+    });
     UniformBufferCreateInfo uniformInitializer = {
-        .sourceData = {
-            .size = sizeof(ViewParameter),
-            .data = (uint8*)&viewParams,
-        },
+        .sourceData =
+            {
+                .size = sizeof(ViewParameter),
+                .data = (uint8*)&viewParams,
+            },
         .dynamic = true,
         .name = "viewParamsBuffer",
     };
@@ -21,11 +22,9 @@ RenderPass::RenderPass(Gfx::PGraphics graphics, PScene scene)
     viewParamsLayout->create();
 }
 
-RenderPass::~RenderPass()
-{}
+RenderPass::~RenderPass() {}
 
-void RenderPass::beginFrame(const Component::Camera& cam)
-{
+void RenderPass::beginFrame(const Component::Camera& cam) {
     viewParams = {
         .viewMatrix = cam.getViewMatrix(),
         .inverseViewMatrix = glm::inverse(cam.getViewMatrix()),
@@ -40,23 +39,14 @@ void RenderPass::beginFrame(const Component::Camera& cam)
     };
     viewParamsBuffer->rotateBuffer(sizeof(ViewParameter));
     viewParamsBuffer->updateContents(uniformUpdate);
-    viewParamsBuffer->pipelineBarrier(
-        Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, 
-        Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, 
-        Gfx::SE_ACCESS_MEMORY_READ_BIT,
-        Gfx::SE_PIPELINE_STAGE_ALL_COMMANDS_BIT);
+    viewParamsBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
+                                      Gfx::SE_ACCESS_MEMORY_READ_BIT, Gfx::SE_PIPELINE_STAGE_ALL_COMMANDS_BIT);
     viewParamsLayout->reset();
     viewParamsSet = viewParamsLayout->allocateDescriptorSet();
     viewParamsSet->updateBuffer(0, viewParamsBuffer);
     viewParamsSet->writeChanges();
 }
 
-void RenderPass::setResources(PRenderGraphResources _resources)
-{
-    resources = _resources;
-}
+void RenderPass::setResources(PRenderGraphResources _resources) { resources = _resources; }
 
-void RenderPass::setViewport(Gfx::PViewport _viewport)
-{
-    viewport = _viewport;
-}
+void RenderPass::setViewport(Gfx::PViewport _viewport) { viewport = _viewport; }

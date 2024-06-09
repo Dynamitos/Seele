@@ -1,7 +1,8 @@
 #include "Resources.h"
+#include "Enums.h"
 #include "Graphics.h"
 #include "Metal/MTLSampler.hpp"
-#include "Enums.h"
+
 
 using namespace Seele;
 using namespace Seele::Metal;
@@ -14,9 +15,8 @@ Event::Event(PGraphics graphics) : handle(graphics->getDevice()->newEvent()) {}
 
 Event::~Event() { handle->release(); }
 
-Sampler::Sampler(PGraphics graphics, const SamplerCreateInfo& createInfo)
-{
-  MTL::SamplerDescriptor* desc = MTL::SamplerDescriptor::alloc()->init();
+Sampler::Sampler(PGraphics graphics, const SamplerCreateInfo &createInfo) {
+  MTL::SamplerDescriptor *desc = MTL::SamplerDescriptor::alloc()->init();
   desc->setBorderColor(cast(createInfo.borderColor));
   desc->setCompareFunction(cast(createInfo.compareOp));
   desc->setLodAverage(createInfo.mipLodBias);
@@ -35,7 +35,4 @@ Sampler::Sampler(PGraphics graphics, const SamplerCreateInfo& createInfo)
   desc->release();
 }
 
-Sampler::~Sampler()
-{
-  sampler->release();
-}
+Sampler::~Sampler() { sampler->release(); }

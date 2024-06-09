@@ -2,18 +2,11 @@
 #include "MinimalEngine.h"
 #include "Serialization/ArchiveBuffer.h"
 
-namespace Seele
-{
+namespace Seele {
 DECLARE_NAME_REF(Gfx, Graphics)
-class Asset
-{
-public:
-    enum class Status
-    {
-        Uninitialized,
-        Loading,
-        Ready
-    };
+class Asset {
+  public:
+    enum class Status { Uninitialized, Loading, Ready };
     Asset();
     Asset(std::string_view folderPath, std::string_view name);
     virtual ~Asset();
@@ -22,7 +15,7 @@ public:
 
     virtual void save(ArchiveBuffer& buffer) const = 0;
     virtual void load(ArchiveBuffer& buffer) = 0;
-    
+
     bool isModified() const;
     // returns the assets name
     std::string getName() const;
@@ -31,15 +24,10 @@ public:
     // returns the identifier with which it can be found from the asset registry
     std::string getAssetIdentifier() const;
 
-    constexpr Status getStatus() 
-    {
-        return status;
-    }
-    constexpr void setStatus(Status _status)
-    {
-        status = _status;
-    }
-protected:
+    constexpr Status getStatus() { return status; }
+    constexpr void setStatus(Status _status) { status = _status; }
+
+  protected:
     std::string folderPath;
     std::string name;
     std::string assetId;

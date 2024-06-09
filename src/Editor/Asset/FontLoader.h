@@ -1,24 +1,23 @@
 #pragma once
-#include "MinimalEngine.h"
 #include "Containers/List.h"
+#include "MinimalEngine.h"
 #include <filesystem>
 
-namespace Seele
-{
+
+namespace Seele {
 DECLARE_REF(FontAsset)
 DECLARE_NAME_REF(Gfx, Graphics)
-struct FontImportArgs
-{
+struct FontImportArgs {
     std::filesystem::path filePath;
     std::string importPath;
 };
-class FontLoader
-{
-public:
+class FontLoader {
+  public:
     FontLoader(Gfx::PGraphics graphic);
     ~FontLoader();
     void importAsset(FontImportArgs args);
-private:
+
+  private:
     void import(FontImportArgs args, PFontAsset asset);
     Gfx::PGraphics graphics;
 };

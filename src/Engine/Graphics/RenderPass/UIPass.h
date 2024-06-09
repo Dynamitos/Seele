@@ -1,15 +1,14 @@
 #pragma once
+#include "Graphics/Shader.h"
 #include "RenderPass.h"
 #include "UI/RenderHierarchy.h"
-#include "Graphics/Shader.h"
 
-namespace Seele
-{
+
+namespace Seele {
 DECLARE_NAME_REF(Gfx, Texture2D)
 DECLARE_NAME_REF(Gfx, RenderTargetAttachment)
-class UIPass : public RenderPass
-{
-public:
+class UIPass : public RenderPass {
+  public:
     UIPass(Gfx::PGraphics graphics, PScene scene);
     UIPass(UIPass&&) = default;
     UIPass& operator=(UIPass&&) = default;
@@ -19,7 +18,8 @@ public:
     virtual void endFrame() override;
     virtual void publishOutputs() override;
     virtual void createRenderPass() override;
-private:
+
+  private:
     Gfx::RenderTargetAttachment renderTarget;
     Gfx::OTexture2D colorBuffer;
     Gfx::RenderTargetAttachment depthAttachment;

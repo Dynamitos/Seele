@@ -1,18 +1,15 @@
 #pragma once
-#include "MinimalEngine.h"
 #include "Containers/Array.h"
 #include "Math/Math.h"
+#include "MinimalEngine.h"
 
-namespace Seele
-{
-namespace UI
-{
-//Element defines any part of the UI
+namespace Seele {
+namespace UI {
+// Element defines any part of the UI
 DECLARE_REF(Element)
 DECLARE_REF(System)
-class Element
-{
-public:
+class Element {
+  public:
     Element();
     virtual ~Element();
     void setParent(PElement element);
@@ -30,10 +27,11 @@ public:
     // relative to the total view, meaning a bounding box of (0,0), (1,1)
     // would take up the entire view
     const Rect getBoundingBox() const;
-protected:
+
+  protected:
     Rect boundingBox;
     bool dirty;
-    
+
     bool enabled;
     PSystem system;
     PElement parent;

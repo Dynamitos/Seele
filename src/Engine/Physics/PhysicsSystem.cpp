@@ -1,47 +1,36 @@
 #include "PhysicsSystem.h"
-#include <random>
 #include <iostream>
+#include <random>
+
 
 using namespace Seele;
 using namespace Seele::Component;
 
-PhysicsSystem::PhysicsSystem(entt::registry& registry)
-    : registry(registry)
-    , collisionSystem(registry)
-{
+PhysicsSystem::PhysicsSystem(entt::registry& registry) : registry(registry), collisionSystem(registry) {}
 
-}
+PhysicsSystem::~PhysicsSystem() {}
 
-PhysicsSystem::~PhysicsSystem()
-{
-    
-}
-
-void PhysicsSystem::update(float deltaTime)
-{
+void PhysicsSystem::update(float deltaTime) {
     Array<Body> initialBodies;
     readRigidBodies(initialBodies);
 
-    //std::cout << "Updating " << initialBodies.size() << " bodies" << std::endl;
+    // std::cout << "Updating " << initialBodies.size() << " bodies" << std::endl;
     Array<Body> bodies = integratePhysics(initialBodies, 0, deltaTime);
     writeRigidBodies(bodies);
 
     Array<Collision> collisions;
     collisionSystem.detectCollisions(collisions);
-    
-    if(!collisions.empty())
-    {
+
+    if (!collisions.empty()) {
         constexpr size_t numSteps = 2;
-        for (float t = 0; t < deltaTime; t += deltaTime / numSteps)
-        {
+        for (float t = 0; t < deltaTime; t += deltaTime / numSteps) {
             rewindCollisions(initialBodies, t, t + (deltaTime / numSteps), 10);
             readRigidBodies(initialBodies);
         }
     }
 }
 
-void PhysicsSystem::serializeRB(const Body& rb, float* y) const
-{
+void PhysicsSystem::serializeRB(const Body& rb, float* y) const {
     *y++ = rb.x.x;
     *y++ = rb.x.y;
     *y++ = rb.x.z;
@@ -60,8 +49,7 @@ void PhysicsSystem::serializeRB(const Body& rb, float* y) const
     *y++ = rb.L.z;
 }
 
-void PhysicsSystem::deserializeRB(Body& rb, const float* y) const
-{
+void PhysicsSystem::deserializeRB(Body& rb, const float* y) const {
     rb.x.x = *y++;
     rb.x.y = *y++;
     rb.x.z = *y++;
@@ -85,49 +73,37 @@ void PhysicsSystem::deserializeRB(Body& rb, const float* y) const
     rb.omega = rb.iInv * rb.L;
 }
 
-void PhysicsSystem::serializeArray(const Array<Body>& bodies, Array<float>& x) const
-{
+void PhysicsSystem::serializeArray(const Array<Body>& bodies, Array<float>& x) const {
     x.resize(bodies.size() * FLOATS_PER_RB);
-    for(uint32_t i = 0; i < bodies.size(); ++i)
-    {
-        serializeRB(bodies[i], x.data()+(i*FLOATS_PER_RB));
+    for (uint32_t i = 0; i < bodies.size(); ++i) {
+        serializeRB(bodies[i], x.data() + (i * FLOATS_PER_RB));
     }
 }
 
-void PhysicsSystem::deserializeArray(Array<Body>& bodies, const Array<float>& x) const
-{
+void PhysicsSystem::deserializeArray(Array<Body>& bodies, const Array<float>& x) const {
     bodies.resize(x.size() / FLOATS_PER_RB);
-    for(uint32_t i = 0; i < bodies.size(); ++i)
-    {
-        deserializeRB(bodies[i], x.data()+(i*FLOATS_PER_RB));
+    for (uint32_t i = 0; i < bodies.size(); ++i) {
+        deserializeRB(bodies[i], x.data() + (i * FLOATS_PER_RB));
     }
 }
 
-void PhysicsSystem::readRigidBodies(Array<Body>& bodies) const
-{
+void PhysicsSystem::readRigidBodies(Array<Body>& bodies) const {
     auto view = registry.view<RigidBody, Transform, Collider>();
     bodies.clear();
     bodies.reserve(view.size_hint());
-    view
-        .each([&bodies](entt::entity id, RigidBody& rb, Transform& transform, Collider& collider)
-    {
+    view.each([&bodies](entt::entity id, RigidBody& rb, Transform& transform, Collider& collider) {
         Body& rigidBody = bodies.add(Body(id, rb, collider, transform));
         rigidBody.updateMatrix();
     });
-    registry.view<Collider, Transform>(entt::exclude<RigidBody>)
-        .each([&bodies](entt::entity id, Collider& collider, Transform& transform)
-    {
+    registry.view<Collider, Transform>(entt::exclude<RigidBody>).each([&bodies](entt::entity id, Collider& collider, Transform& transform) {
         Body& rigidBody = bodies.add(Body(id, collider, transform));
         rigidBody.updateMatrix();
     });
 }
 
-void PhysicsSystem::writeRigidBodies(const Array<Body>& bodies) const
-{
-    for(auto& body : bodies)
-    {
-        if(registry.all_of<RigidBody, Transform>(body.id))
-        {
+void PhysicsSystem::writeRigidBodies(const Array<Body>& bodies) const {
+    for (auto& body : bodies) {
+        if (registry.all_of<RigidBody, Transform>(body.id)) {
             auto [physics, transform] = registry.get<RigidBody, Transform>(body.id);
             transform.setPosition(body.x);
             transform.setRotation(body.q);
@@ -139,16 +115,12 @@ void PhysicsSystem::writeRigidBodies(const Array<Body>& bodies) const
     }
 }
 
-PhysicsSystem::Body PhysicsSystem::readRigidBody(entt::entity entity) const
-{
+PhysicsSystem::Body PhysicsSystem::readRigidBody(entt::entity entity) const {
     Body rigidBody;
-    if(registry.all_of<RigidBody, Collider, Transform>(entity))
-    {
+    if (registry.all_of<RigidBody, Collider, Transform>(entity)) {
         const auto& [physics, collider, transform] = registry.get<RigidBody, Collider, Transform>(entity);
         rigidBody = Body(entity, physics, collider, transform);
-    }
-    else
-    {
+    } else {
         const auto& [collider, transform] = registry.get<Collider, Transform>(entity);
         rigidBody = Body(entity, collider, transform);
     }
@@ -156,11 +128,8 @@ PhysicsSystem::Body PhysicsSystem::readRigidBody(entt::entity entity) const
     return rigidBody;
 }
 
-
-void PhysicsSystem::writeRigidBody(const Body& body) const
-{
-    if(registry.all_of<RigidBody, Transform>(body.id))
-    {
+void PhysicsSystem::writeRigidBody(const Body& body) const {
+    if (registry.all_of<RigidBody, Transform>(body.id)) {
         const auto& [physics, transform] = registry.get<RigidBody, Transform>(body.id);
         transform.setPosition(body.x);
         transform.setRotation(body.q);
@@ -168,34 +137,29 @@ void PhysicsSystem::writeRigidBody(const Body& body) const
         physics.angularMomentum = body.L;
         physics.force = body.force;
         physics.torque = body.torque;
-    }
-    else
-    {
+    } else {
         auto& transform = registry.get<Transform>(body.id);
         assert(transform.getPosition() == body.x);
         assert(transform.getRotation() == body.q);
     }
 }
 
-Array<PhysicsSystem::Body> PhysicsSystem::integratePhysics(const Array<Body>& bodies, const float t0, const float tdelta) const
-{
+Array<PhysicsSystem::Body> PhysicsSystem::integratePhysics(const Array<Body>& bodies, const float t0, const float tdelta) const {
     Array<Body> result;
     Array<float> buffer;
     result.resize(bodies.size());
     buffer.resize(bodies.size() * FLOATS_PER_RB);
     std::memcpy(result.data(), bodies.data(), result.size() * sizeof(Body));
     serializeArray(bodies, buffer);
-    auto dxdt = [this, &result](const Array<float>& x, Array<float>& x2, const float)
-    {
+    auto dxdt = [this, &result](const Array<float>& x, Array<float>& x2, const float) {
         deserializeArray(result, x);
         float* xdot = x2.data();
-        for (size_t i = 0; i < result.size(); i++)
-        {
+        for (size_t i = 0; i < result.size(); i++) {
             // x(t)' = v(t)
             *xdot++ = result[i].v.x;
             *xdot++ = result[i].v.y;
             *xdot++ = result[i].v.z;
-            
+
             // R(t)' = omega(t)*R(t)
             Quaternion qdot = 0.5f * (Quaternion(0, result[i].omega) * result[i].q);
             *xdot++ = qdot.w;
@@ -214,54 +178,48 @@ Array<PhysicsSystem::Body> PhysicsSystem::integratePhysics(const Array<Body>& bo
             *xdot++ = result[i].torque.z;
         }
     };
-    //TODO
-    //boost::numeric::odeint::runge_kutta4<Array<float>, float> stepper;
-    //boost::numeric::odeint::integrate_const(stepper, dxdt, buffer, t0, tdelta, tdelta);
+    // TODO
+    // boost::numeric::odeint::runge_kutta4<Array<float>, float> stepper;
+    // boost::numeric::odeint::integrate_const(stepper, dxdt, buffer, t0, tdelta, tdelta);
     deserializeArray(result, buffer);
     return result;
 }
 
-
-
-void PhysicsSystem::rewindCollisions(const Array<Body>& t0Bodies, const float t0, const float t1, size_t remainingRecursionDepth)
-{
-    if(remainingRecursionDepth == 0)
-    {
-        //std::cout << "reached max recursion depth" << std::endl;
+void PhysicsSystem::rewindCollisions(const Array<Body>& t0Bodies, const float t0, const float t1, size_t remainingRecursionDepth) {
+    if (remainingRecursionDepth == 0) {
+        // std::cout << "reached max recursion depth" << std::endl;
     }
     // there are collisions happening between t0 and t1
     // we integrate until tc and see if they have already occured then
     Array<Collision> collisions;
     writeRigidBodies(integratePhysics(t0Bodies, t0, t1));
     collisionSystem.detectCollisions(collisions);
-    
-    //std::cout << "detected " << collisions.size() << " at " << tc << std::endl;
-    // now we check if there has been a contact at tc
+
+    // std::cout << "detected " << collisions.size() << " at " << tc << std::endl;
+    //  now we check if there has been a contact at tc
     Array<Contact> contacts;
     // collision occured at [tc; t1]
-    for (auto &&collision : collisions)
-    {
-        const auto&[collider1, transform1] = registry.get<Collider, Transform>(collision.a);
-        const auto&[collider2, transform2] = registry.get<Collider, Transform>(collision.b);
-        calculateContacts(collision.a, collider1.physicsMesh.transform(transform1), collision.b, collider2.physicsMesh.transform(transform2), contacts);
-        calculateContacts(collision.b, collider2.physicsMesh.transform(transform2), collision.a, collider1.physicsMesh.transform(transform1), contacts);
+    for (auto&& collision : collisions) {
+        const auto& [collider1, transform1] = registry.get<Collider, Transform>(collision.a);
+        const auto& [collider2, transform2] = registry.get<Collider, Transform>(collision.b);
+        calculateContacts(collision.a, collider1.physicsMesh.transform(transform1), collision.b,
+                          collider2.physicsMesh.transform(transform2), contacts);
+        calculateContacts(collision.b, collider2.physicsMesh.transform(transform2), collision.a,
+                          collider1.physicsMesh.transform(transform1), contacts);
     }
 
     // we then apply forces in order to counteract interpenetration
     Array<Contact> restingContacts;
-    for(const auto& contact : contacts)
-    {
+    for (const auto& contact : contacts) {
         Body a = readRigidBody(contact.a);
         Body b = readRigidBody(contact.b);
         Vector paDot = a.ptVelocity(contact.p);
         Vector pbDot = b.ptVelocity(contact.p);
         float vrel = glm::dot(contact.n, paDot - pbDot);
-        if(vrel > 0.001f)
-        {
+        if (vrel > 0.001f) {
             continue;
         }
-        if(vrel > -0.001f)
-        {
+        if (vrel > -0.001f) {
             restingContacts.add(contact);
             continue;
         }
@@ -274,10 +232,9 @@ void PhysicsSystem::rewindCollisions(const Array<Body>& t0Bodies, const float t0
     resolveRestingContacts(restingContacts);
 }
 
-void PhysicsSystem::calculateContacts(entt::entity id1, const ShapeBase& shape1, entt::entity id2, const ShapeBase& shape2, Array<Contact>& contacts) const
-{
-    for(size_t i = 0; i < shape1.indices.size(); i += 3)
-    {
+void PhysicsSystem::calculateContacts(entt::entity id1, const ShapeBase& shape1, entt::entity id2, const ShapeBase& shape2,
+                                      Array<Contact>& contacts) const {
+    for (size_t i = 0; i < shape1.indices.size(); i += 3) {
         // face - vertex contacts
         const Vector point1 = shape1.vertices[shape1.indices[i + 0]];
         const Vector point2 = shape1.vertices[shape1.indices[i + 1]];
@@ -285,24 +242,14 @@ void PhysicsSystem::calculateContacts(entt::entity id1, const ShapeBase& shape1,
         const Vector v1 = point2 - point1;
         const Vector v2 = point3 - point1;
         const Vector faceNormal = glm::normalize(glm::cross(v1, v2));
-        addDebugVertex(DebugVertex{
-            .position = (point1 + point2 + point3) / 3.f,
-            .color = Vector(1, 0, 0)
-        });
-        addDebugVertex(DebugVertex{
-            .position = faceNormal + (point1 + point2 + point3) / 3.f,
-            .color = Vector(1, 0, 0)
-        });
-        auto area = [](Vector ab, Vector ac){
-            return glm::length(glm::cross(ab, ac)) / 2.0f;
-        };
+        addDebugVertex(DebugVertex{.position = (point1 + point2 + point3) / 3.f, .color = Vector(1, 0, 0)});
+        addDebugVertex(DebugVertex{.position = faceNormal + (point1 + point2 + point3) / 3.f, .color = Vector(1, 0, 0)});
+        auto area = [](Vector ab, Vector ac) { return glm::length(glm::cross(ab, ac)) / 2.0f; };
         float faceArea = area(v1, v2);
-        for(size_t j = 0; j < shape2.vertices.size(); j++)
-        {
+        for (size_t j = 0; j < shape2.vertices.size(); j++) {
             Vector worldPos = shape2.vertices[j];
             float dot = glm::dot(faceNormal, worldPos - point1);
-            if(std::abs(dot) < 0.2f)
-            {
+            if (std::abs(dot) < 0.2f) {
                 Vector pa = point1 - worldPos;
                 Vector pb = point2 - worldPos;
                 Vector pc = point3 - worldPos;
@@ -310,27 +257,19 @@ void PhysicsSystem::calculateContacts(entt::entity id1, const ShapeBase& shape1,
                 float a2 = area(pb, pc);
                 float a3 = area(pc, pa);
 
-                if(std::abs(a1 + a2 + a3 - faceArea) > 0.2f)
-                {
+                if (std::abs(a1 + a2 + a3 - faceArea) > 0.2f) {
                     continue;
                 }
 
-                Contact c = {
-                    .a = id2,
-                    .b = id1,
-                    .p = worldPos,
-                    .n = faceNormal,
-                    .vf = true
-                };
+                Contact c = {.a = id2, .b = id1, .p = worldPos, .n = faceNormal, .vf = true};
                 contacts.add(c);
             }
         }
-        //std::cout << minTemp << std::endl;
-        // edge - edge contacts
-        auto lineLineContact = [=, &contacts](Vector p1, Vector p2, Vector p3, Vector p4)
-        {
-            //L1 = p1 + t * p2 - p1;
-            //L2 = p3 + u * p4 - p3;
+        // std::cout << minTemp << std::endl;
+        //  edge - edge contacts
+        auto lineLineContact = [=, &contacts](Vector p1, Vector p2, Vector p3, Vector p4) {
+            // L1 = p1 + t * p2 - p1;
+            // L2 = p3 + u * p4 - p3;
             Vector a = p1;
             Vector c = p3;
             Vector ab = p2 - p1;
@@ -341,12 +280,7 @@ void PhysicsSystem::calculateContacts(entt::entity id1, const ShapeBase& shape1,
             float ty = (c.x * ab.z - a.x * ab.z - c.z * ab.x + a.z * ab.x) / ty_den;
             float tz_den = cd.y * ab.x - cd.x * ab.y;
             float tz = (c.x * ab.y - a.x * ab.y - c.y * ab.x + a.y * ab.x) / tz_den;
-            if (std::abs(tx - ty) < 0.1f 
-             && std::abs(ty - tz) < 0.1f 
-             && std::abs(tz - tx) < 0.1f
-             && tx >= 0.f
-             && tx <= 1.f)
-            {
+            if (std::abs(tx - ty) < 0.1f && std::abs(ty - tz) < 0.1f && std::abs(tz - tx) < 0.1f && tx >= 0.f && tx <= 1.f) {
                 // Vector p = p1 + tx * (p2 - p1);
                 // Vector ea = p2 - p1;
                 // Vector eb = p4 - p3;
@@ -362,8 +296,7 @@ void PhysicsSystem::calculateContacts(entt::entity id1, const ShapeBase& shape1,
                 // };
             }
         };
-        for(size_t j = 0; j < shape2.indices.size(); j+=3)
-        {
+        for (size_t j = 0; j < shape2.indices.size(); j += 3) {
             const Vector point4 = shape2.vertices[shape2.indices[j + 0]];
             const Vector point5 = shape2.vertices[shape2.indices[j + 1]];
             const Vector point6 = shape2.vertices[shape2.indices[j + 2]];
@@ -383,11 +316,9 @@ void PhysicsSystem::calculateContacts(entt::entity id1, const ShapeBase& shape1,
     }
 }
 
-void PhysicsSystem::resolveRestingContacts(const Array<Contact>& contacts) const
-{
+void PhysicsSystem::resolveRestingContacts(const Array<Contact>& contacts) const {
     Array<Array<float>> amat(contacts.size());
-    for(size_t i = 0; i < contacts.size(); ++i)
-    {
+    for (size_t i = 0; i < contacts.size(); ++i) {
         amat[i] = Array<float>(contacts.size());
     }
     Array<float> bvec(contacts.size());
@@ -398,8 +329,7 @@ void PhysicsSystem::resolveRestingContacts(const Array<Contact>& contacts) const
     Array<float> fvec(bvec);
     solveQP(amat, bvec, fvec);
 
-    for(size_t y = 0; y < contacts.size(); ++y)
-    {
+    for (size_t y = 0; y < contacts.size(); ++y) {
         std::cout << "resting contact force: " << fvec[y] << std::endl;
         float f = fvec[y];
         Vector n = contacts[y].n;
@@ -415,8 +345,7 @@ void PhysicsSystem::resolveRestingContacts(const Array<Contact>& contacts) const
     }
 }
 
-void PhysicsSystem::resolvePenetratingContact(const Contact& contact, Body& a, Body& b) const
-{
+void PhysicsSystem::resolvePenetratingContact(const Contact& contact, Body& a, Body& b) const {
     Vector paDot = a.ptVelocity(contact.p);
     Vector pbDot = b.ptVelocity(contact.p);
     float vrel = glm::dot(contact.n, paDot - pbDot);
@@ -445,14 +374,10 @@ void PhysicsSystem::resolvePenetratingContact(const Contact& contact, Body& a, B
     b.omega = b.iInv * b.L;
 }
 
-Vector PhysicsSystem::computeNdot(const Contact& c, const Body& a, const Body& b) const
-{
-    if(c.vf)
-    {
+Vector PhysicsSystem::computeNdot(const Contact& c, const Body& a, const Body& b) const {
+    if (c.vf) {
         return glm::cross(b.omega, c.n);
-    }
-    else
-    {
+    } else {
         Vector eadot = glm::cross(a.omega, c.ea);
         Vector ebdot = glm::cross(b.omega, c.eb);
         Vector n1 = glm::cross(c.ea, c.eb);
@@ -464,10 +389,8 @@ Vector PhysicsSystem::computeNdot(const Contact& c, const Body& a, const Body& b
     }
 }
 
-float PhysicsSystem::computeAij(const Contact& ci, const Contact& cj) const
-{
-    if((ci.a != cj.a) && (ci.b != cj.b) &&
-       (ci.a != cj.b) && (ci.b != cj.a))
+float PhysicsSystem::computeAij(const Contact& ci, const Contact& cj) const {
+    if ((ci.a != cj.a) && (ci.b != cj.b) && (ci.a != cj.b) && (ci.b != cj.a))
         return 0.0f;
 
     Body a = readRigidBody(ci.a);
@@ -481,25 +404,19 @@ float PhysicsSystem::computeAij(const Contact& ci, const Contact& cj) const
 
     Vector forceOnA = Vector(0);
     Vector torqueOnA = Vector(0);
-    if(cj.a == ci.a)
-    {
+    if (cj.a == ci.a) {
         forceOnA = nj;
         torqueOnA = glm::cross((pj - a.x + a.centerOfMass), nj);
-    }
-    else if(cj.b == ci.a)
-    {
+    } else if (cj.b == ci.a) {
         forceOnA = -nj;
         torqueOnA = glm::cross((pj - a.x + a.centerOfMass), nj);
     }
     Vector forceOnB = Vector(0);
     Vector torqueOnB = Vector(0);
-    if(cj.a == ci.b)
-    {
+    if (cj.a == ci.b) {
         forceOnB = nj;
         torqueOnB = glm::cross((pj - b.x + b.centerOfMass), nj);
-    }
-    else if(cj.b == ci.b)
-    {
+    } else if (cj.b == ci.b) {
         forceOnB = -nj;
         torqueOnB = glm::cross((pj - b.x + b.centerOfMass), nj);
     }
@@ -513,21 +430,16 @@ float PhysicsSystem::computeAij(const Contact& ci, const Contact& cj) const
     return glm::dot(ni, ((aLinear + aAngular) - (bLinear + bAngular)));
 }
 
-void PhysicsSystem::computeAMatrix(const Array<Contact>& contacts, Array<Array<float>>& amat) const
-{
-    for(size_t x = 0; x < contacts.size(); ++x)
-    {
-        for(size_t y = 0; y < contacts.size(); ++y)
-        {
+void PhysicsSystem::computeAMatrix(const Array<Contact>& contacts, Array<Array<float>>& amat) const {
+    for (size_t x = 0; x < contacts.size(); ++x) {
+        for (size_t y = 0; y < contacts.size(); ++y) {
             amat[x][y] = computeAij(contacts[x], contacts[y]);
         }
     }
 }
 
-void PhysicsSystem::computeBVector(const Array<Contact>& contacts, Array<float>& bvec) const
-{
-    for(size_t y = 0; y < contacts.size(); ++y)
-    {
+void PhysicsSystem::computeBVector(const Array<Contact>& contacts, Array<float>& bvec) const {
+    for (size_t y = 0; y < contacts.size(); ++y) {
         Contact c = contacts[y];
         Body a = readRigidBody(c.a);
         Body b = readRigidBody(c.b);
@@ -539,7 +451,7 @@ void PhysicsSystem::computeBVector(const Array<Contact>& contacts, Array<float>&
         Vector fExtB = b.force;
         Vector tExtA = a.torque;
         Vector tExtB = b.torque;
-        
+
         Vector aExtPart = fExtA * a.inverseMass + glm::cross(a.iInv * tExtA, ra);
         Vector bExtPart = fExtB * b.inverseMass + glm::cross(b.iInv * tExtB, rb);
 
@@ -554,28 +466,22 @@ void PhysicsSystem::computeBVector(const Array<Contact>& contacts, Array<float>&
     }
 }
 
-void PhysicsSystem::solveQP(const Array<Array<float>>& CI, const Array<float>& ci0, Array<float>& sol) const
-{
+void PhysicsSystem::solveQP(const Array<Array<float>>& CI, const Array<float>& ci0, Array<float>& sol) const {
     static std::mt19937_64 generator;
     static std::uniform_real_distribution<float> dist(0.01f, 0.1f);
     sol.resize(CI.size());
     bool solved = false;
-    while(!solved)
-    {
-        for(size_t i = 0; i < sol.size(); ++i)
-        {
+    while (!solved) {
+        for (size_t i = 0; i < sol.size(); ++i) {
             sol[i] = dist(generator);
         }
         solved = true;
-        for(size_t i = 0; i < sol.size(); ++i)
-        {
+        for (size_t i = 0; i < sol.size(); ++i) {
             float res = 0;
-            for(size_t j = 0; j < sol.size(); ++j)
-            {
+            for (size_t j = 0; j < sol.size(); ++j) {
                 res += CI[i][j] * sol[j] + ci0[i];
             }
-            if(res < 0)
-            {
+            if (res < 0) {
                 solved = false;
                 std::cout << "failed to solve QP" << std::endl;
                 continue;

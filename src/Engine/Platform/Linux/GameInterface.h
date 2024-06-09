@@ -2,16 +2,15 @@
 #include "Game.h"
 #include "dlfcn.h"
 
-namespace Seele
-{
-class GameInterface
-{
-public:
+namespace Seele {
+class GameInterface {
+  public:
     GameInterface(std::string soPath);
     ~GameInterface();
     Game* getGame();
     void reload();
-private:
+
+  private:
     void* lib;
     std::string soPath;
     Game* game;

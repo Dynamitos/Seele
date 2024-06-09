@@ -1,18 +1,16 @@
 #include "PipelineCache.h"
-#include "Graphics.h"
-#include "Enums.h"
-#include "RenderPass.h"
 #include "Descriptor.h"
+#include "Enums.h"
+#include "Graphics.h"
+#include "RenderPass.h"
 #include "Shader.h"
 #include <fstream>
+
 
 using namespace Seele;
 using namespace Seele::Vulkan;
 
-PipelineCache::PipelineCache(PGraphics graphics, const std::string& cacheFilePath)
-    : graphics(graphics)
-    , cacheFile(cacheFilePath)
-{
+PipelineCache::PipelineCache(PGraphics graphics, const std::string& cacheFilePath) : graphics(graphics), cacheFile(cacheFilePath) {
     std::ifstream stream(cacheFilePath, std::ios::binary | std::ios::ate);
     VkPipelineCacheCreateInfo cacheCreateInfo = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO,
@@ -20,8 +18,7 @@ PipelineCache::PipelineCache(PGraphics graphics, const std::string& cacheFilePat
         .flags = 0,
         .initialDataSize = 0,
     };
-    if(stream.good())
-    {
+    if (stream.good()) {
         Array<uint8> cacheData;
         uint32 fileSize = static_cast<uint32>(stream.tellg());
         cacheData.resize(fileSize);
@@ -34,8 +31,7 @@ PipelineCache::PipelineCache(PGraphics graphics, const std::string& cacheFilePat
     VK_CHECK(vkCreatePipelineCache(graphics->getDevice(), &cacheCreateInfo, nullptr, &cache));
 }
 
-PipelineCache::~PipelineCache()
-{
+PipelineCache::~PipelineCache() {
     size_t cacheSize;
     VK_CHECK(vkGetPipelineCacheData(graphics->getDevice(), cache, &cacheSize, nullptr));
     Array<uint8> cacheData(cacheSize);
@@ -48,29 +44,24 @@ PipelineCache::~PipelineCache()
     std::cout << "Written " << cacheSize << " bytes to cache" << std::endl;
 }
 
-PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo gfxInfo)
-{
+PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo gfxInfo) {
     uint32 hash = CRC::Calculate(&gfxInfo, sizeof(Gfx::LegacyPipelineCreateInfo), CRC::CRC_32());
-    if (graphicsPipelines.contains(hash))
-    {
+    if (graphicsPipelines.contains(hash)) {
         return graphicsPipelines[hash];
     }
     PPipelineLayout layout = Gfx::PPipelineLayout(gfxInfo.pipelineLayout).cast<PipelineLayout>();
     Array<VkVertexInputBindingDescription> bindings;
     Array<VkVertexInputAttributeDescription> attributes;
-    if (gfxInfo.vertexInput != nullptr)
-    {
+    if (gfxInfo.vertexInput != nullptr) {
         const VertexInputStateCreateInfo& vertexInputDesc = gfxInfo.vertexInput->getInfo();
-        for (const auto& b : vertexInputDesc.bindings)
-        {
+        for (const auto& b : vertexInputDesc.bindings) {
             bindings.add() = {
                 .binding = b.binding,
                 .stride = b.stride,
                 .inputRate = VkVertexInputRate(b.inputRate),
             };
         }
-        for (const auto& a : vertexInputDesc.attributes)
-        {
+        for (const auto& a : vertexInputDesc.attributes) {
             attributes.add() = {
                 .location = a.location,
                 .binding = a.binding,
@@ -104,8 +95,7 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo gf
         .pSpecializationInfo = nullptr,
     };
 
-    if (gfxInfo.fragmentShader != nullptr)
-    {
+    if (gfxInfo.fragmentShader != nullptr) {
         PFragmentShader fragment = gfxInfo.fragmentShader.cast<FragmentShader>();
 
         stageInfos[stageCount++] = {
@@ -173,8 +163,7 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo gf
         .maxDepthBounds = gfxInfo.depthStencilState.maxDepthBounds,
     };
     Array<VkPipelineColorBlendAttachmentState> blendAttachments;
-    for(uint32 i = 0; i < gfxInfo.colorBlend.attachmentCount; ++i)
-    {
+    for (uint32 i = 0; i < gfxInfo.colorBlend.attachmentCount; ++i) {
         const Gfx::ColorBlendState::BlendAttachment& attachment = gfxInfo.colorBlend.blendAttachments[i];
         blendAttachments.add() = {
             .blendEnable = attachment.blendEnable,
@@ -235,31 +224,26 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo gf
     auto endTime = std::chrono::high_resolution_clock::now();
     int64 delta = std::chrono::duration_cast<std::chrono::microseconds>(endTime - beginTime).count();
     std::cout << "Gfx creation time: " << delta << std::endl;
-    
+
     OGraphicsPipeline pipeline = new GraphicsPipeline(graphics, pipelineHandle, gfxInfo.pipelineLayout);
     PGraphicsPipeline result = pipeline;
     graphicsPipelines[hash] = std::move(pipeline);
     return result;
 }
 
-
-PGraphicsPipeline PipelineCache::createPipeline(Gfx::MeshPipelineCreateInfo gfxInfo)
-{
+PGraphicsPipeline PipelineCache::createPipeline(Gfx::MeshPipelineCreateInfo gfxInfo) {
     uint32 hash = CRC::Calculate(&gfxInfo, sizeof(Gfx::MeshPipelineCreateInfo), CRC::CRC_32());
-    if (graphicsPipelines.contains(hash))
-    {
+    if (graphicsPipelines.contains(hash)) {
         return graphicsPipelines[hash];
     }
     PPipelineLayout layout = Gfx::PPipelineLayout(gfxInfo.pipelineLayout).cast<PipelineLayout>();
-    //uint32 hash = layout->getHash();
+    // uint32 hash = layout->getHash();
     uint32 stageCount = 0;
-
 
     VkPipelineShaderStageCreateInfo stageInfos[3];
     std::memset(stageInfos, 0, sizeof(stageInfos));
 
-    if (gfxInfo.taskShader != nullptr)
-    {
+    if (gfxInfo.taskShader != nullptr) {
         PTaskShader taskShader = gfxInfo.taskShader.cast<TaskShader>();
         stageInfos[stageCount++] = {
             .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
@@ -283,8 +267,7 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::MeshPipelineCreateInfo gfxI
         .pSpecializationInfo = nullptr,
     };
 
-    if (gfxInfo.fragmentShader != nullptr)
-    {
+    if (gfxInfo.fragmentShader != nullptr) {
         PFragmentShader fragment = gfxInfo.fragmentShader.cast<FragmentShader>();
 
         stageInfos[stageCount++] = {
@@ -297,7 +280,7 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::MeshPipelineCreateInfo gfxI
             .pSpecializationInfo = nullptr,
         };
     }
-    //hash = CRC::Calculate(stageInfos, sizeof(stageInfos), CRC::CRC_32(), hash);
+    // hash = CRC::Calculate(stageInfos, sizeof(stageInfos), CRC::CRC_32(), hash);
 
     VkPipelineViewportStateCreateInfo viewportInfo = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
@@ -308,7 +291,7 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::MeshPipelineCreateInfo gfxI
         .scissorCount = 1,
         .pScissors = nullptr,
     };
-    //hash = CRC::Calculate(&viewportInfo, sizeof(VkPipelineViewportStateCreateInfo), CRC::CRC_32(), hash);
+    // hash = CRC::Calculate(&viewportInfo, sizeof(VkPipelineViewportStateCreateInfo), CRC::CRC_32(), hash);
     VkPipelineRasterizationStateCreateInfo rasterizationState = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
         .pNext = nullptr,
@@ -324,7 +307,7 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::MeshPipelineCreateInfo gfxI
         .depthBiasSlopeFactor = gfxInfo.rasterizationState.depthBiasSlopeFactor,
         .lineWidth = 0,
     };
-    //hash = CRC::Calculate(&rasterizationState, sizeof(VkPipelineRasterizationStateCreateInfo), CRC::CRC_32(), hash);
+    // hash = CRC::Calculate(&rasterizationState, sizeof(VkPipelineRasterizationStateCreateInfo), CRC::CRC_32(), hash);
 
     VkPipelineMultisampleStateCreateInfo multisampleState = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
@@ -337,7 +320,7 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::MeshPipelineCreateInfo gfxI
         .alphaToCoverageEnable = gfxInfo.multisampleState.alphaCoverageEnable,
         .alphaToOneEnable = gfxInfo.multisampleState.alphaToOneEnable,
     };
-    //hash = CRC::Calculate(&multisampleState, sizeof(VkPipelineMultisampleStateCreateInfo), CRC::CRC_32(), hash);
+    // hash = CRC::Calculate(&multisampleState, sizeof(VkPipelineMultisampleStateCreateInfo), CRC::CRC_32(), hash);
 
     VkPipelineDepthStencilStateCreateInfo depthStencilState = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
@@ -348,32 +331,33 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::MeshPipelineCreateInfo gfxI
         .depthCompareOp = cast(gfxInfo.depthStencilState.depthCompareOp),
         .depthBoundsTestEnable = gfxInfo.depthStencilState.depthBoundsTestEnable,
         .stencilTestEnable = gfxInfo.depthStencilState.stencilTestEnable,
-        .front = VkStencilOpState{
-            .failOp = VK_STENCIL_OP_ZERO,
-            .passOp = (VkStencilOp)gfxInfo.depthStencilState.front,
-            .depthFailOp = VK_STENCIL_OP_ZERO,
-            .compareOp = VK_COMPARE_OP_ALWAYS,
-            .compareMask = 0,
-            .writeMask = 0,
-            .reference = 0,
-        },
-        .back = VkStencilOpState{
-            .failOp = VK_STENCIL_OP_ZERO,
-            .passOp = (VkStencilOp)gfxInfo.depthStencilState.back,
-            .depthFailOp = VK_STENCIL_OP_ZERO,
-            .compareOp = VK_COMPARE_OP_ALWAYS,
-            .compareMask = 0,
-            .writeMask = 0,
-            .reference = 0,
-        },
+        .front =
+            VkStencilOpState{
+                .failOp = VK_STENCIL_OP_ZERO,
+                .passOp = (VkStencilOp)gfxInfo.depthStencilState.front,
+                .depthFailOp = VK_STENCIL_OP_ZERO,
+                .compareOp = VK_COMPARE_OP_ALWAYS,
+                .compareMask = 0,
+                .writeMask = 0,
+                .reference = 0,
+            },
+        .back =
+            VkStencilOpState{
+                .failOp = VK_STENCIL_OP_ZERO,
+                .passOp = (VkStencilOp)gfxInfo.depthStencilState.back,
+                .depthFailOp = VK_STENCIL_OP_ZERO,
+                .compareOp = VK_COMPARE_OP_ALWAYS,
+                .compareMask = 0,
+                .writeMask = 0,
+                .reference = 0,
+            },
         .minDepthBounds = gfxInfo.depthStencilState.minDepthBounds,
         .maxDepthBounds = gfxInfo.depthStencilState.maxDepthBounds,
     };
-    //hash = CRC::Calculate(&depthStencilState, sizeof(VkPipelineDepthStencilStateCreateInfo), CRC::CRC_32(), hash);
+    // hash = CRC::Calculate(&depthStencilState, sizeof(VkPipelineDepthStencilStateCreateInfo), CRC::CRC_32(), hash);
 
     Array<VkPipelineColorBlendAttachmentState> blendAttachments;
-    for (uint32 i = 0; i < gfxInfo.colorBlend.attachmentCount; ++i)
-    {
+    for (uint32 i = 0; i < gfxInfo.colorBlend.attachmentCount; ++i) {
         const Gfx::ColorBlendState::BlendAttachment& attachment = gfxInfo.colorBlend.blendAttachments[i];
         blendAttachments.add() = {
             .blendEnable = attachment.blendEnable,
@@ -386,7 +370,8 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::MeshPipelineCreateInfo gfxI
             .colorWriteMask = attachment.colorWriteMask,
         };
     }
-    //hash = CRC::Calculate(blendAttachments.data(), blendAttachments.size() * sizeof(VkPipelineColorBlendAttachmentState), CRC::CRC_32(), hash);
+    // hash = CRC::Calculate(blendAttachments.data(), blendAttachments.size() * sizeof(VkPipelineColorBlendAttachmentState), CRC::CRC_32(),
+    // hash);
 
     VkPipelineColorBlendStateCreateInfo blendState = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
@@ -403,7 +388,7 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::MeshPipelineCreateInfo gfxI
     StaticArray<VkDynamicState, 2> dynamicEnabled;
     dynamicEnabled[numDynamicEnabled++] = VK_DYNAMIC_STATE_VIEWPORT;
     dynamicEnabled[numDynamicEnabled++] = VK_DYNAMIC_STATE_SCISSOR;
-    //hash = CRC::Calculate(dynamicEnabled.data(), sizeof(dynamicEnabled), CRC::CRC_32(), hash);
+    // hash = CRC::Calculate(dynamicEnabled.data(), sizeof(dynamicEnabled), CRC::CRC_32(), hash);
 
     VkPipelineDynamicStateCreateInfo dynamicState = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
@@ -443,9 +428,7 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::MeshPipelineCreateInfo gfxI
     return result;
 }
 
-
-PComputePipeline PipelineCache::createPipeline(Gfx::ComputePipelineCreateInfo computeInfo) 
-{
+PComputePipeline PipelineCache::createPipeline(Gfx::ComputePipelineCreateInfo computeInfo) {
     PPipelineLayout layout = Gfx::PPipelineLayout(computeInfo.pipelineLayout).cast<PipelineLayout>();
     auto computeStage = computeInfo.computeShader.cast<ComputeShader>();
 
@@ -455,20 +438,21 @@ PComputePipeline PipelineCache::createPipeline(Gfx::ComputePipelineCreateInfo co
         .sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO,
         .pNext = 0,
         .flags = 0,
-        .stage = {
-            .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-            .pNext = nullptr,
-            .flags = 0,
-            .stage = VK_SHADER_STAGE_COMPUTE_BIT,
-            .module = computeStage->getModuleHandle(),
-            .pName = computeStage->getEntryPointName(),
-        },
+        .stage =
+            {
+                .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+                .pNext = nullptr,
+                .flags = 0,
+                .stage = VK_SHADER_STAGE_COMPUTE_BIT,
+                .module = computeStage->getModuleHandle(),
+                .pName = computeStage->getEntryPointName(),
+            },
         .layout = layout->getHandle(),
         .basePipelineHandle = VK_NULL_HANDLE,
         .basePipelineIndex = 0,
     };
     hash = CRC::Calculate(&createInfo, sizeof(createInfo), CRC::CRC_32(), hash);
-    
+
     VkPipeline pipelineHandle;
     auto beginTime = std::chrono::high_resolution_clock::now();
     VK_CHECK(vkCreateComputePipelines(graphics->getDevice(), cache, 1, &createInfo, nullptr, &pipelineHandle));

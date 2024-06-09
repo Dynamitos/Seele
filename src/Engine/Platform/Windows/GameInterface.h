@@ -2,16 +2,15 @@
 #include "Game.h"
 #include "Windows.h"
 
-namespace Seele
-{
-class GameInterface
-{
-public:
+namespace Seele {
+class GameInterface {
+  public:
     GameInterface(std::string dllPath);
     ~GameInterface();
     Game* getGame();
     void reload();
-private:
+
+  private:
     HMODULE lib = NULL;
     std::string dllPath;
     Game* game;

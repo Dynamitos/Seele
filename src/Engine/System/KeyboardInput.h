@@ -1,14 +1,11 @@
 #pragma once
-#include "ComponentSystem.h"
 #include "Component/KeyboardInput.h"
+#include "ComponentSystem.h"
 
-namespace Seele
-{
-namespace System
-{
-class KeyboardInput : public ComponentSystem<Component::KeyboardInput>
-{
-public:
+namespace Seele {
+namespace System {
+class KeyboardInput : public ComponentSystem<Component::KeyboardInput> {
+  public:
     KeyboardInput(PScene scene);
     virtual ~KeyboardInput();
     virtual void update(Component::KeyboardInput& input) override;
@@ -16,7 +13,8 @@ public:
     void mouseCallback(double xPos, double yPos);
     void mouseButtonCallback(MouseButton button, InputAction action, KeyModifier modifier);
     void scrollCallback(double xScroll, double yScroll);
-private:
+
+  private:
     Seele::StaticArray<bool, (size_t)KeyCode::KEY_LAST> keys;
     bool mouse1 = false;
     bool mouse2 = false;
@@ -30,5 +28,5 @@ private:
     float scrollY = 0;
 };
 DEFINE_REF(KeyboardInput)
-}
-}
+} // namespace System
+} // namespace Seele

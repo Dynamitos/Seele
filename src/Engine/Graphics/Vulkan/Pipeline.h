@@ -2,39 +2,37 @@
 #include "Enums.h"
 #include "Graphics/Pipeline.h"
 
-namespace Seele
-{
-namespace Vulkan
-{
-class VertexInput : public Gfx::VertexInput
-{
-public:
+namespace Seele {
+namespace Vulkan {
+class VertexInput : public Gfx::VertexInput {
+  public:
     VertexInput(VertexInputStateCreateInfo createInfo);
     virtual ~VertexInput();
-private:
+
+  private:
 };
 DECLARE_REF(PipelineLayout)
 DECLARE_REF(Graphics)
-class GraphicsPipeline : public Gfx::GraphicsPipeline
-{
-public:
+class GraphicsPipeline : public Gfx::GraphicsPipeline {
+  public:
     GraphicsPipeline(PGraphics graphics, VkPipeline handle, Gfx::PPipelineLayout pipelineLayout);
     virtual ~GraphicsPipeline();
     void bind(VkCommandBuffer handle);
     VkPipelineLayout getLayout() const;
-private:
+
+  private:
     PGraphics graphics;
     VkPipeline pipeline;
 };
 DEFINE_REF(GraphicsPipeline)
-class ComputePipeline : public Gfx::ComputePipeline
-{
-public:
+class ComputePipeline : public Gfx::ComputePipeline {
+  public:
     ComputePipeline(PGraphics graphics, VkPipeline handle, Gfx::PPipelineLayout pipelineLayout);
     virtual ~ComputePipeline();
     void bind(VkCommandBuffer handle);
     VkPipelineLayout getLayout() const;
-private:
+
+  private:
     PGraphics graphics;
     VkPipeline pipeline;
 };

@@ -1,16 +1,15 @@
 #pragma once
-#include "MinimalEngine.h"
+#include "Graphics/Buffer.h"
 #include "Graphics/RenderTarget.h"
 #include "Graphics/Texture.h"
-#include "Graphics/Buffer.h"
+#include "MinimalEngine.h"
 
-namespace Seele
-{
+
+namespace Seele {
 DECLARE_REF(ViewFrame)
 
-class RenderGraphResources
-{
-public:
+class RenderGraphResources {
+  public:
     RenderGraphResources();
     ~RenderGraphResources();
     Gfx::RenderTargetAttachment requestRenderTarget(const std::string& outputName);
@@ -21,7 +20,8 @@ public:
     void registerTextureOutput(const std::string& outputName, Gfx::PTexture buffer);
     void registerBufferOutput(const std::string& outputName, Gfx::PShaderBuffer buffer);
     void registerUniformOutput(const std::string& outputName, Gfx::PUniformBuffer buffer);
-protected:
+
+  protected:
     Map<std::string, Gfx::RenderTargetAttachment> registeredAttachments;
     Map<std::string, Gfx::PTexture> registeredTextures;
     Map<std::string, Gfx::PShaderBuffer> registeredBuffers;

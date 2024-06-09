@@ -1,21 +1,22 @@
 #include "Graphics.h"
-#include "Debug.h"
 #include "Allocator.h"
 #include "Buffer.h"
+#include "Command.h"
+#include "Debug.h"
+#include "Descriptor.h"
+#include "Framebuffer.h"
 #include "Graphics/Enums.h"
 #include "Graphics/Graphics.h"
 #include "Graphics/Initializer.h"
 #include "PipelineCache.h"
-#include "Command.h"
-#include "Descriptor.h"
-#include "Window.h"
-#include "RenderPass.h"
-#include "Framebuffer.h"
-#include "Shader.h"
 #include "RayTracing.h"
+#include "RenderPass.h"
+#include "Shader.h"
+#include "Window.h"
 #include <GLFW/glfw3.h>
 #include <cstring>
 #include <vulkan/vulkan_core.h>
+
 #define VMA_IMPLEMENTATION
 #include "vk_mem_alloc.h"
 
@@ -26,16 +27,9 @@ thread_local PCommandPool Seele::Vulkan::Graphics::graphicsCommands = nullptr;
 thread_local PCommandPool Seele::Vulkan::Graphics::computeCommands = nullptr;
 thread_local PCommandPool Seele::Vulkan::Graphics::transferCommands = nullptr;
 
-Graphics::Graphics()
-    : instance(VK_NULL_HANDLE)
-    , handle(VK_NULL_HANDLE)
-    , physicalDevice(VK_NULL_HANDLE)
-    , callback(VK_NULL_HANDLE)
-{
-}
+Graphics::Graphics() : instance(VK_NULL_HANDLE), handle(VK_NULL_HANDLE), physicalDevice(VK_NULL_HANDLE), callback(VK_NULL_HANDLE) {}
 
-Graphics::~Graphics()
-{
+Graphics::~Graphics() {
     vkDeviceWaitIdle(handle);
     pipelineCache = nullptr;
     allocatedFramebuffers.clear();
@@ -49,8 +43,7 @@ Graphics::~Graphics()
     vkDestroyInstance(instance, nullptr);
 }
 
-void Graphics::init(GraphicsInitializer initInfo)
-{
+void Graphics::init(GraphicsInitializer initInfo) {
     initInstance(initInfo);
 #if ENABLE_VALIDATION
     setupDebugCallback();
@@ -74,152 +67,102 @@ void Graphics::init(GraphicsInitializer initInfo)
     destructionManager = new DestructionManager(this);
 }
 
-Gfx::OWindow Graphics::createWindow(const WindowCreateInfo &createInfo)
-{
-    return new Window(this, createInfo);
-}
+Gfx::OWindow Graphics::createWindow(const WindowCreateInfo& createInfo) { return new Window(this, createInfo); }
 
-Gfx::OViewport Graphics::createViewport(Gfx::PWindow owner, const ViewportCreateInfo &viewportInfo)
-{
+Gfx::OViewport Graphics::createViewport(Gfx::PWindow owner, const ViewportCreateInfo& viewportInfo) {
     return new Viewport(owner, viewportInfo);
 }
 
-Gfx::ORenderPass Graphics::createRenderPass(Gfx::RenderTargetLayout layout, Array<Gfx::SubPassDependency> dependencies, Gfx::PViewport renderArea)
-{
+Gfx::ORenderPass Graphics::createRenderPass(Gfx::RenderTargetLayout layout, Array<Gfx::SubPassDependency> dependencies,
+                                            Gfx::PViewport renderArea) {
     return new RenderPass(this, std::move(layout), std::move(dependencies), renderArea);
 }
-void Graphics::beginRenderPass(Gfx::PRenderPass renderPass)
-{
+void Graphics::beginRenderPass(Gfx::PRenderPass renderPass) {
     PRenderPass rp = renderPass.cast<RenderPass>();
     uint32 framebufferHash = rp->getFramebufferHash();
     PFramebuffer framebuffer;
     {
         auto found = allocatedFramebuffers.find(framebufferHash);
-        if (found == allocatedFramebuffers.end())
-        {
+        if (found == allocatedFramebuffers.end()) {
             allocatedFramebuffers[framebufferHash] = new Framebuffer(this, rp, rp->getLayout());
             framebuffer = allocatedFramebuffers[framebufferHash];
-        }
-        else
-        {
+        } else {
             framebuffer = std::move(found->value);
         }
     }
     getGraphicsCommands()->getCommands()->beginRenderPass(rp, framebuffer);
 }
 
-void Graphics::endRenderPass()
-{
+void Graphics::endRenderPass() {
     getGraphicsCommands()->getCommands()->endRenderPass();
     getGraphicsCommands()->submitCommands();
 }
 
-void Graphics::waitDeviceIdle()
-{
-    vkDeviceWaitIdle(handle);    
-}
+void Graphics::waitDeviceIdle() { vkDeviceWaitIdle(handle); }
 
-void Graphics::executeCommands(Array<Gfx::ORenderCommand> commands)
-{
+void Graphics::executeCommands(Array<Gfx::ORenderCommand> commands) {
     getGraphicsCommands()->getCommands()->executeCommands(std::move(commands));
 }
 
-void Graphics::executeCommands(Array<Gfx::OComputeCommand> commands) 
-{
+void Graphics::executeCommands(Array<Gfx::OComputeCommand> commands) {
     getComputeCommands()->getCommands()->executeCommands(std::move(commands));
 }
 
-Gfx::OTexture2D Graphics::createTexture2D(const TextureCreateInfo &createInfo)
-{
-    return new Texture2D(this, createInfo);
-}
+Gfx::OTexture2D Graphics::createTexture2D(const TextureCreateInfo& createInfo) { return new Texture2D(this, createInfo); }
 
-Gfx::OTexture3D Graphics::createTexture3D(const TextureCreateInfo &createInfo)
-{
-    return new Texture3D(this, createInfo);
-}
+Gfx::OTexture3D Graphics::createTexture3D(const TextureCreateInfo& createInfo) { return new Texture3D(this, createInfo); }
 
-Gfx::OTextureCube Graphics::createTextureCube(const TextureCreateInfo &createInfo)
-{
-    return new TextureCube(this, createInfo);
-}
+Gfx::OTextureCube Graphics::createTextureCube(const TextureCreateInfo& createInfo) { return new TextureCube(this, createInfo); }
 
-Gfx::OUniformBuffer Graphics::createUniformBuffer(const UniformBufferCreateInfo &bulkData)
-{
-    return new UniformBuffer(this, bulkData);
-}
+Gfx::OUniformBuffer Graphics::createUniformBuffer(const UniformBufferCreateInfo& bulkData) { return new UniformBuffer(this, bulkData); }
 
-Gfx::OShaderBuffer Graphics::createShaderBuffer(const ShaderBufferCreateInfo &bulkData)
-{
-    return new ShaderBuffer(this, bulkData);
-}
-Gfx::OVertexBuffer Graphics::createVertexBuffer(const VertexBufferCreateInfo &bulkData)
-{
-    return new VertexBuffer(this, bulkData);
-}
+Gfx::OShaderBuffer Graphics::createShaderBuffer(const ShaderBufferCreateInfo& bulkData) { return new ShaderBuffer(this, bulkData); }
+Gfx::OVertexBuffer Graphics::createVertexBuffer(const VertexBufferCreateInfo& bulkData) { return new VertexBuffer(this, bulkData); }
 
-Gfx::OIndexBuffer Graphics::createIndexBuffer(const IndexBufferCreateInfo &bulkData)
-{
-    return new IndexBuffer(this, bulkData);
-}
-Gfx::ORenderCommand Graphics::createRenderCommand(const std::string& name)
-{
-    return getGraphicsCommands()->createRenderCommand(name);
-}
+Gfx::OIndexBuffer Graphics::createIndexBuffer(const IndexBufferCreateInfo& bulkData) { return new IndexBuffer(this, bulkData); }
+Gfx::ORenderCommand Graphics::createRenderCommand(const std::string& name) { return getGraphicsCommands()->createRenderCommand(name); }
 
-Gfx::OComputeCommand Graphics::createComputeCommand(const std::string& name) 
-{
-    return getComputeCommands()->createComputeCommand(name);
-}
+Gfx::OComputeCommand Graphics::createComputeCommand(const std::string& name) { return getComputeCommands()->createComputeCommand(name); }
 
-Gfx::OVertexShader Graphics::createVertexShader(const ShaderCreateInfo& createInfo)
-{
+Gfx::OVertexShader Graphics::createVertexShader(const ShaderCreateInfo& createInfo) {
     OVertexShader shader = new VertexShader(this);
     shader->create(createInfo);
     return shader;
 }
-Gfx::OFragmentShader Graphics::createFragmentShader(const ShaderCreateInfo& createInfo)
-{
+Gfx::OFragmentShader Graphics::createFragmentShader(const ShaderCreateInfo& createInfo) {
     OFragmentShader shader = new FragmentShader(this);
     shader->create(createInfo);
     return shader;
 }
-Gfx::OComputeShader Graphics::createComputeShader(const ShaderCreateInfo& createInfo) 
-{
+Gfx::OComputeShader Graphics::createComputeShader(const ShaderCreateInfo& createInfo) {
     OComputeShader shader = new ComputeShader(this);
     shader->create(createInfo);
     return shader;
 }
-Gfx::OTaskShader Graphics::createTaskShader(const ShaderCreateInfo& createInfo)
-{
+Gfx::OTaskShader Graphics::createTaskShader(const ShaderCreateInfo& createInfo) {
     OTaskShader shader = new TaskShader(this);
     shader->create(createInfo);
     return shader;
 }
-Gfx::OMeshShader Graphics::createMeshShader(const ShaderCreateInfo& createInfo)
-{
+Gfx::OMeshShader Graphics::createMeshShader(const ShaderCreateInfo& createInfo) {
     OMeshShader shader = new MeshShader(this);
     shader->create(createInfo);
     return shader;
 }
 
-Gfx::PGraphicsPipeline Graphics::createGraphicsPipeline(Gfx::LegacyPipelineCreateInfo createInfo)
-{
+Gfx::PGraphicsPipeline Graphics::createGraphicsPipeline(Gfx::LegacyPipelineCreateInfo createInfo) {
     return pipelineCache->createPipeline(std::move(createInfo));
 }
 
-Gfx::PGraphicsPipeline Graphics::createGraphicsPipeline(Gfx::MeshPipelineCreateInfo createInfo)
-{
+Gfx::PGraphicsPipeline Graphics::createGraphicsPipeline(Gfx::MeshPipelineCreateInfo createInfo) {
     return pipelineCache->createPipeline(std::move(createInfo));
 }
 
-Gfx::PComputePipeline Graphics::createComputePipeline(Gfx::ComputePipelineCreateInfo createInfo) 
-{
+Gfx::PComputePipeline Graphics::createComputePipeline(Gfx::ComputePipelineCreateInfo createInfo) {
     return pipelineCache->createPipeline(std::move(createInfo));
 }
 
-Gfx::OSampler Graphics::createSampler(const SamplerCreateInfo& createInfo) 
-{
+Gfx::OSampler Graphics::createSampler(const SamplerCreateInfo& createInfo) {
     VkSamplerCreateInfo vkInfo = {
         .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
         .pNext = nullptr,
@@ -243,87 +186,75 @@ Gfx::OSampler Graphics::createSampler(const SamplerCreateInfo& createInfo)
     return new Sampler(this, vkInfo);
 }
 
-Gfx::ODescriptorLayout Graphics::createDescriptorLayout(const std::string& name)
-{
-    return new DescriptorLayout(this, name);
-}
+Gfx::ODescriptorLayout Graphics::createDescriptorLayout(const std::string& name) { return new DescriptorLayout(this, name); }
 
-Gfx::OPipelineLayout Graphics::createPipelineLayout(const std::string& name, Gfx::PPipelineLayout baseLayout)
-{
+Gfx::OPipelineLayout Graphics::createPipelineLayout(const std::string& name, Gfx::PPipelineLayout baseLayout) {
     return new PipelineLayout(this, name, baseLayout);
 }
 
-Gfx::OVertexInput Graphics::createVertexInput(VertexInputStateCreateInfo createInfo)
-{
-    return new VertexInput(createInfo);
-}
+Gfx::OVertexInput Graphics::createVertexInput(VertexInputStateCreateInfo createInfo) { return new VertexInput(createInfo); }
 
-void Graphics::resolveTexture(Gfx::PTexture source, Gfx::PTexture destination)
-{
+void Graphics::resolveTexture(Gfx::PTexture source, Gfx::PTexture destination) {
     PTextureBase sourceTex = source.cast<TextureBase>();
     PTextureBase destinationTex = destination.cast<TextureBase>();
     VkImageResolve resolve = {
-        .srcSubresource = VkImageSubresourceLayers {
-            .aspectMask = sourceTex->getAspect(),
-            .mipLevel = 0,
-            .baseArrayLayer = 0,
-            .layerCount = 1,
-        },
-        .srcOffset = VkOffset3D {
-            .x = 0,
-            .y = 0,
-            .z = 0,
-        },
-        .dstSubresource = VkImageSubresourceLayers {
-            .aspectMask = sourceTex->getAspect(),
-            .mipLevel = 0,
-            .baseArrayLayer = 0,
-            .layerCount = 1,
-        },
-        .dstOffset = VkOffset3D {
-            .x = 0,
-            .y = 0,
-            .z = 0,
-        },
-        .extent = VkExtent3D {
-            .width = sourceTex->getWidth(),
-            .height = sourceTex->getHeight(),
-            .depth = sourceTex->getDepth(),
-        },
+        .srcSubresource =
+            VkImageSubresourceLayers{
+                .aspectMask = sourceTex->getAspect(),
+                .mipLevel = 0,
+                .baseArrayLayer = 0,
+                .layerCount = 1,
+            },
+        .srcOffset =
+            VkOffset3D{
+                .x = 0,
+                .y = 0,
+                .z = 0,
+            },
+        .dstSubresource =
+            VkImageSubresourceLayers{
+                .aspectMask = sourceTex->getAspect(),
+                .mipLevel = 0,
+                .baseArrayLayer = 0,
+                .layerCount = 1,
+            },
+        .dstOffset =
+            VkOffset3D{
+                .x = 0,
+                .y = 0,
+                .z = 0,
+            },
+        .extent =
+            VkExtent3D{
+                .width = sourceTex->getWidth(),
+                .height = sourceTex->getHeight(),
+                .depth = sourceTex->getDepth(),
+            },
     };
-    vkCmdResolveImage(getGraphicsCommands()->getCommands()->getHandle(), sourceTex->getImage(), cast(sourceTex->getLayout()), destinationTex->getImage(), cast(destinationTex->getLayout()), 1, &resolve);
+    vkCmdResolveImage(getGraphicsCommands()->getCommands()->getHandle(), sourceTex->getImage(), cast(sourceTex->getLayout()),
+                      destinationTex->getImage(), cast(destinationTex->getLayout()), 1, &resolve);
 }
 
-Gfx::OBottomLevelAS Graphics::createBottomLevelAccelerationStructure(const Gfx::BottomLevelASCreateInfo& createInfo)
-{
+Gfx::OBottomLevelAS Graphics::createBottomLevelAccelerationStructure(const Gfx::BottomLevelASCreateInfo& createInfo) {
     return new BottomLevelAS(this, createInfo);
 }
 
-Gfx::OTopLevelAS Graphics::createTopLevelAccelerationStructure(const Gfx::TopLevelASCreateInfo& createInfo)
-{
+Gfx::OTopLevelAS Graphics::createTopLevelAccelerationStructure(const Gfx::TopLevelASCreateInfo& createInfo) {
     return new TopLevelAS(this, createInfo);
 }
 
-void Graphics::vkCmdDrawMeshTasksEXT(VkCommandBuffer cmd, uint32 groupX, uint32 groupY, uint32 groupZ)
-{
+void Graphics::vkCmdDrawMeshTasksEXT(VkCommandBuffer cmd, uint32 groupX, uint32 groupY, uint32 groupZ) {
     cmdDrawMeshTasks(cmd, groupX, groupY, groupZ);
 }
 
-void Graphics::vkCmdDrawMeshTasksIndirectEXT(VkCommandBuffer cmd, VkBuffer buffer, uint64 offset, uint32 drawCount, uint32 stride)
-{
+void Graphics::vkCmdDrawMeshTasksIndirectEXT(VkCommandBuffer cmd, VkBuffer buffer, uint64 offset, uint32 drawCount, uint32 stride) {
     cmdDrawMeshTasksIndirect(cmd, buffer, offset, drawCount, stride);
 }
 
-void Graphics::vkSetDebugUtilsObjectNameEXT(VkDebugUtilsObjectNameInfoEXT* info)
-{
-    VK_CHECK(setDebugUtilsObjectName(handle, info));
-}
+void Graphics::vkSetDebugUtilsObjectNameEXT(VkDebugUtilsObjectNameInfoEXT* info) { VK_CHECK(setDebugUtilsObjectName(handle, info)); }
 
-
-PCommandPool Graphics::getQueueCommands(Gfx::QueueType queueType)
-{
-    switch (queueType)
-    {
+PCommandPool Graphics::getQueueCommands(Gfx::QueueType queueType) {
+    switch (queueType) {
     case Gfx::QueueType::GRAPHICS:
         return getGraphicsCommands();
     case Gfx::QueueType::COMPUTE:
@@ -334,41 +265,29 @@ PCommandPool Graphics::getQueueCommands(Gfx::QueueType queueType)
         throw new std::logic_error("invalid queue type");
     }
 }
-PCommandPool Graphics::getGraphicsCommands()
-{
-    if(graphicsCommands == nullptr)
-    {
+PCommandPool Graphics::getGraphicsCommands() {
+    if (graphicsCommands == nullptr) {
         std::unique_lock l(poolLock);
         graphicsCommands = pools.add(new CommandPool(this, queues[graphicsQueue]));
     }
     return graphicsCommands;
 }
-PCommandPool Graphics::getComputeCommands()
-{
-    if(computeCommands == nullptr)
-    {
-        if(graphicsQueue == computeQueue)
-        {
+PCommandPool Graphics::getComputeCommands() {
+    if (computeCommands == nullptr) {
+        if (graphicsQueue == computeQueue) {
             computeCommands = getGraphicsCommands();
-        }
-        else
-        {
+        } else {
             std::unique_lock l(poolLock);
             computeCommands = pools.add(new CommandPool(this, queues[computeQueue]));
         }
     }
     return computeCommands;
 }
-PCommandPool Graphics::getTransferCommands()
-{
-    if(transferCommands == nullptr)
-    {
-        if(graphicsQueue == transferQueue)
-        {
+PCommandPool Graphics::getTransferCommands() {
+    if (transferCommands == nullptr) {
+        if (graphicsQueue == transferQueue) {
             transferCommands = getGraphicsCommands();
-        }
-        else
-        {
+        } else {
             std::unique_lock l(poolLock);
             transferCommands = pools.add(new CommandPool(this, queues[transferQueue]));
         }
@@ -376,25 +295,17 @@ PCommandPool Graphics::getTransferCommands()
     return transferCommands;
 }
 
-VmaAllocator Graphics::getAllocator()
-{
-    return allocator;
-}
+VmaAllocator Graphics::getAllocator() { return allocator; }
 
-PDestructionManager Graphics::getDestructionManager()
-{
-    return destructionManager;
-}
+PDestructionManager Graphics::getDestructionManager() { return destructionManager; }
 
-Array<const char *> Graphics::getRequiredExtensions()
-{
-    Array<const char *> extensions;
+Array<const char*> Graphics::getRequiredExtensions() {
+    Array<const char*> extensions;
 
     unsigned int glfwExtensionCount = 0;
-    const char **glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+    const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
-    for (unsigned int i = 0; i < glfwExtensionCount; i++)
-    {
+    for (unsigned int i = 0; i < glfwExtensionCount; i++) {
         extensions.add(glfwExtensions[i]);
     }
 #if ENABLE_VALIDATION
@@ -402,8 +313,7 @@ Array<const char *> Graphics::getRequiredExtensions()
 #endif // ENABLE_VALIDATION
     return extensions;
 }
-void Graphics::initInstance(GraphicsInitializer initInfo)
-{
+void Graphics::initInstance(GraphicsInitializer initInfo) {
     glfwInit();
     assert(glfwVulkanSupported());
     VkApplicationInfo appInfo = {
@@ -415,10 +325,9 @@ void Graphics::initInstance(GraphicsInitializer initInfo)
         .engineVersion = VK_MAKE_VERSION(0, 0, 1),
         .apiVersion = VK_API_VERSION_1_3,
     };
-    
+
     Array<const char*> extensions = getRequiredExtensions();
-    for (uint32 i = 0; i < initInfo.instanceExtensions.size(); ++i)
-    {
+    for (uint32 i = 0; i < initInfo.instanceExtensions.size(); ++i) {
         extensions.add(initInfo.instanceExtensions[i]);
     }
 #ifdef __APPLE__
@@ -441,22 +350,21 @@ void Graphics::initInstance(GraphicsInitializer initInfo)
     };
     VK_CHECK(vkCreateInstance(&info, nullptr, &instance));
 }
-void Graphics::setupDebugCallback()
-{
+void Graphics::setupDebugCallback() {
     VkDebugUtilsMessengerCreateInfoEXT createInfo = {
         .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
         .pNext = nullptr,
         .flags = 0,
-        .messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT| VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT,
-        .messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
+        .messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT,
+        .messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+                       VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
         .pfnUserCallback = &debugCallback,
         .pUserData = nullptr,
     };
     VK_CHECK(CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &callback));
 }
 
-void Graphics::pickPhysicalDevice()
-{
+void Graphics::pickPhysicalDevice() {
     uint32 physicalDeviceCount;
     vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, nullptr);
     Array<VkPhysicalDevice> physicalDevices(physicalDeviceCount);
@@ -474,26 +382,21 @@ void Graphics::pickPhysicalDevice()
     features12.pNext = &features13;
     features13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
     features13.pNext = nullptr;
-    for (auto dev : physicalDevices)
-    {
+    for (auto dev : physicalDevices) {
         uint32 currentRating = 0;
         vkGetPhysicalDeviceProperties(dev, &props);
         vkGetPhysicalDeviceFeatures2(dev, &features);
-        if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
-        {
+        if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
             std::cout << "found dedicated gpu " << props.deviceName << std::endl;
             currentRating += 100;
-        }
-        else if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)
-        {
+        } else if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU) {
             std::cout << "found integrated gpu " << props.deviceName << std::endl;
             currentRating += 10;
         }
-        if (currentRating > deviceRating)
-        {
+        if (currentRating > deviceRating) {
             deviceRating = currentRating;
             bestDevice = dev;
-            std::cout << "bestDevice: " << props.deviceName << std::endl; 
+            std::cout << "bestDevice: " << props.deviceName << std::endl;
         }
     }
     physicalDevice = bestDevice;
@@ -501,16 +404,13 @@ void Graphics::pickPhysicalDevice()
     vkGetPhysicalDeviceProperties(physicalDevice, &props);
     vkGetPhysicalDeviceFeatures2(physicalDevice, &features);
     features.features.robustBufferAccess = 0;
-    if (Gfx::useMeshShading)
-    {
+    if (Gfx::useMeshShading) {
         uint32 count = 0;
         vkEnumerateDeviceExtensionProperties(physicalDevice, NULL, &count, nullptr);
         Array<VkExtensionProperties> extensionProps(count);
         vkEnumerateDeviceExtensionProperties(physicalDevice, NULL, &count, extensionProps.data());
-        for (size_t i = 0; i < count; ++i)
-        {
-            if (std::strcmp(VK_EXT_MESH_SHADER_EXTENSION_NAME, extensionProps[i].extensionName) == 0)
-            {
+        for (size_t i = 0; i < count; ++i) {
+            if (std::strcmp(VK_EXT_MESH_SHADER_EXTENSION_NAME, extensionProps[i].extensionName) == 0) {
                 meshShadingEnabled = true;
                 break;
             }
@@ -518,16 +418,14 @@ void Graphics::pickPhysicalDevice()
     }
 }
 
-void Graphics::createDevice(GraphicsInitializer initializer)
-{
+void Graphics::createDevice(GraphicsInitializer initializer) {
     uint32_t numQueueFamilies = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &numQueueFamilies, nullptr);
     Array<VkQueueFamilyProperties> queueProperties(numQueueFamilies);
     vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &numQueueFamilies, queueProperties.data());
 
     Array<VkDeviceQueueCreateInfo> queueInfos;
-    struct QueueCreateInfo
-    {
+    struct QueueCreateInfo {
         int32 familyIndex = -1;
         int32 queueIndex = -1;
     };
@@ -535,42 +433,35 @@ void Graphics::createDevice(GraphicsInitializer initializer)
     QueueCreateInfo transferQueueInfo;
     QueueCreateInfo computeQueueInfo;
     uint32 numPriorities = 0;
-    auto checkFamilyProperty = [](VkQueueFamilyProperties currProps, uint32 checkBit){
+    auto checkFamilyProperty = [](VkQueueFamilyProperties currProps, uint32 checkBit) {
         return (currProps.queueFlags & checkBit) == checkBit;
     };
     auto updateQueueInfo = [&queueProperties](uint32 familyIndex, QueueCreateInfo& info, uint32& numQueues) {
-        if(info.familyIndex == -1) {
-            if(queueProperties[familyIndex].queueCount == numQueues)
-            {
+        if (info.familyIndex == -1) {
+            if (queueProperties[familyIndex].queueCount == numQueues) {
                 return;
             }
             info.familyIndex = familyIndex;
             info.queueIndex = numQueues++;
         }
     };
-    for (uint32 familyIndex = 0; familyIndex < queueProperties.size(); ++familyIndex)
-    {
+    for (uint32 familyIndex = 0; familyIndex < queueProperties.size(); ++familyIndex) {
         uint32 numQueuesForFamily = 0;
         VkQueueFamilyProperties currProps = queueProperties[familyIndex];
 
-        if (checkFamilyProperty(currProps, VK_QUEUE_GRAPHICS_BIT))
-        {
+        if (checkFamilyProperty(currProps, VK_QUEUE_GRAPHICS_BIT)) {
             updateQueueInfo(familyIndex, graphicsQueueInfo, numQueuesForFamily);
         }
-        if(Gfx::useAsyncCompute)
-        {
-            if(checkFamilyProperty(currProps, VK_QUEUE_COMPUTE_BIT))
-            {
+        if (Gfx::useAsyncCompute) {
+            if (checkFamilyProperty(currProps, VK_QUEUE_COMPUTE_BIT)) {
                 updateQueueInfo(familyIndex, computeQueueInfo, numQueuesForFamily);
             }
         }
-        if ((currProps.queueFlags ^ VK_QUEUE_TRANSFER_BIT) == 0)
-        {
+        if ((currProps.queueFlags ^ VK_QUEUE_TRANSFER_BIT) == 0) {
             updateQueueInfo(familyIndex, transferQueueInfo, numQueuesForFamily);
         }
-        
-        if (numQueuesForFamily > 0)
-        {
+
+        if (numQueuesForFamily > 0) {
             VkDeviceQueueCreateInfo info = {
                 .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
                 .pNext = nullptr,
@@ -585,14 +476,12 @@ void Graphics::createDevice(GraphicsInitializer initializer)
     }
     Array<float> queuePriorities;
     queuePriorities.resize(numPriorities);
-    float *currentPriority = queuePriorities.data();
-    for (uint32 index = 0; index < queueInfos.size(); ++index)
-    {
-        VkDeviceQueueCreateInfo &currQueue = queueInfos[index];
+    float* currentPriority = queuePriorities.data();
+    for (uint32 index = 0; index < queueInfos.size(); ++index) {
+        VkDeviceQueueCreateInfo& currQueue = queueInfos[index];
         currQueue.pQueuePriorities = currentPriority;
 
-        for (int32_t queueIndex = 0; queueIndex < (int32_t)currQueue.queueCount; ++queueIndex)
-        {
+        for (int32_t queueIndex = 0; queueIndex < (int32_t)currQueue.queueCount; ++queueIndex) {
             *currentPriority++ = 1.0f;
         }
     }
@@ -602,8 +491,7 @@ void Graphics::createDevice(GraphicsInitializer initializer)
         .taskShader = VK_TRUE,
         .meshShader = VK_TRUE,
     };
-    if (supportMeshShading())
-    {
+    if (supportMeshShading()) {
         features12.pNext = &enabledMeshShaderFeatures;
         initializer.deviceExtensions.add(VK_EXT_MESH_SHADER_EXTENSION_NAME);
     }
@@ -621,7 +509,7 @@ void Graphics::createDevice(GraphicsInitializer initializer)
     };
 
     VK_CHECK(vkCreateDevice(physicalDevice, &deviceInfo, nullptr, &handle));
-    //std::cout << "Vulkan handle: " << handle << std::endl;
+    // std::cout << "Vulkan handle: " << handle << std::endl;
 
     cmdDrawMeshTasks = (PFN_vkCmdDrawMeshTasksEXT)vkGetDeviceProcAddr(handle, "vkCmdDrawMeshTasksEXT");
 
@@ -629,20 +517,17 @@ void Graphics::createDevice(GraphicsInitializer initializer)
     computeQueue = 0;
     transferQueue = 0;
     queues.add(new Queue(this, graphicsQueueInfo.familyIndex, graphicsQueueInfo.queueIndex));
-    if(computeQueueInfo.familyIndex != -1)
-    {
+    if (computeQueueInfo.familyIndex != -1) {
         computeQueue = queues.size();
         queues.add(new Queue(this, computeQueueInfo.familyIndex, computeQueueInfo.queueIndex));
     }
-    if(transferQueueInfo.familyIndex != -1)
-    {
+    if (transferQueueInfo.familyIndex != -1) {
         transferQueue = queues.size();
         queues.add(new Queue(this, transferQueueInfo.familyIndex, transferQueueInfo.queueIndex));
     }
-    
+
     queueMapping.graphicsFamily = queues[graphicsQueue]->getFamilyIndex();
     queueMapping.computeFamily = queues[computeQueue]->getFamilyIndex();
     queueMapping.transferFamily = queues[transferQueue]->getFamilyIndex();
     setDebugUtilsObjectName = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(instance, "vkSetDebugUtilsObjectNameEXT");
-
 }

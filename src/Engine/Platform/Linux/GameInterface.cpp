@@ -2,26 +2,14 @@
 
 using namespace Seele;
 
-GameInterface::GameInterface(std::string soPath)
-    : lib(NULL)
-    , soPath(soPath)
-{
-}
+GameInterface::GameInterface(std::string soPath) : lib(NULL), soPath(soPath) {}
 
-GameInterface::~GameInterface()
-{
-    
-}
+GameInterface::~GameInterface() {}
 
-Game* GameInterface::getGame()
-{
-    return game;
-}
+Game* GameInterface::getGame() { return game; }
 
-void GameInterface::reload()
-{
-    if(lib != NULL)
-    {
+void GameInterface::reload() {
+    if (lib != NULL) {
         destroyInstance(game);
         dlclose(lib);
     }

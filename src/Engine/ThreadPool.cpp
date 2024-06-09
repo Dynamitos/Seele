@@ -2,50 +2,40 @@
 
 using namespace Seele;
 
-ThreadPool::ThreadPool(uint32 numWorkers)
-{
-    for (uint32 i = 0; i < numWorkers; ++i)
-    {
+ThreadPool::ThreadPool(uint32 numWorkers) {
+    for (uint32 i = 0; i < numWorkers; ++i) {
         workers.add(std::thread(&ThreadPool::work, this));
     }
 }
 
-ThreadPool::~ThreadPool()
-{
+ThreadPool::~ThreadPool() {
     {
         std::unique_lock l(taskLock);
         running = false;
         taskCV.notify_all();
     }
-    for (auto& worker : workers)
-    {
+    for (auto& worker : workers) {
         worker.join();
     }
 }
 
-void ThreadPool::runAndWait(List<std::function<void()>> functions)
-{
+void ThreadPool::runAndWait(List<std::function<void()>> functions) {
     std::unique_lock l(taskLock);
     currentTask.numRemaining = functions.size();
     currentTask.functions = std::move(functions);
     taskCV.notify_all();
-    
-    while (currentTask.numRemaining > 0)
-    {
+
+    while (currentTask.numRemaining > 0) {
         completedCV.wait(l);
     }
 }
 
-void ThreadPool::work()
-{
-    while (running)
-    {
+void ThreadPool::work() {
+    while (running) {
         std::unique_lock l(taskLock);
-        while(currentTask.functions.empty())
-        {
+        while (currentTask.functions.empty()) {
             taskCV.wait(l);
-            if (!running)
-            {
+            if (!running) {
                 return;
             }
         }
@@ -55,8 +45,7 @@ void ThreadPool::work()
         func();
         l.lock();
         currentTask.numRemaining--;
-        if (currentTask.numRemaining == 0)
-        {
+        if (currentTask.numRemaining == 0) {
             currentTask.functions.clear();
             completedCV.notify_one();
         }
@@ -65,7 +54,4 @@ void ThreadPool::work()
 
 static ThreadPool threadPool;
 
-ThreadPool& Seele::getThreadPool()
-{
-    return threadPool;
-}
+ThreadPool& Seele::getThreadPool() { return threadPool; }

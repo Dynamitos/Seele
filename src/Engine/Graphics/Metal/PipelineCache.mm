@@ -19,22 +19,30 @@
 using namespace Seele;
 using namespace Seele::Metal;
 
-PipelineCache::PipelineCache(PGraphics graphics, const std::string& name) : graphics(graphics), cacheFile(name) {}
+PipelineCache::PipelineCache(PGraphics graphics, const std::string &name)
+    : graphics(graphics), cacheFile(name) {}
 
 PipelineCache::~PipelineCache() {}
 
-PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo createInfo) {
-  PPipelineLayout layout = Gfx::PPipelineLayout(createInfo.pipelineLayout).cast<PipelineLayout>();
+PGraphicsPipeline
+PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo createInfo) {
+  PPipelineLayout layout =
+      Gfx::PPipelineLayout(createInfo.pipelineLayout).cast<PipelineLayout>();
 
-  MTL::RenderPipelineDescriptor* pipelineDescriptor = MTL::RenderPipelineDescriptor::alloc()->init();
+  MTL::RenderPipelineDescriptor *pipelineDescriptor =
+      MTL::RenderPipelineDescriptor::alloc()->init();
 
-  MTL::VertexDescriptor* vertexDescriptor = pipelineDescriptor->vertexDescriptor()->init();
-  MTL::VertexAttributeDescriptorArray* attributes = vertexDescriptor->attributes()->init();
+  MTL::VertexDescriptor *vertexDescriptor =
+      pipelineDescriptor->vertexDescriptor()->init();
+  MTL::VertexAttributeDescriptorArray *attributes =
+      vertexDescriptor->attributes()->init();
   if (createInfo.vertexInput != nullptr) {
-    const auto& vertexInfo = createInfo.vertexInput->getInfo();
+    const auto &vertexInfo = createInfo.vertexInput->getInfo();
     for (size_t attr = 0; attr < vertexInfo.attributes.size(); ++attr) {
-      MTL::VertexAttributeDescriptor* attribute = attributes->object(attr + METAL_VERTEXATTRIBUTE_OFFSET)->init();
-      attribute->setBufferIndex(vertexInfo.attributes[attr].binding + METAL_VERTEXBUFFER_OFFSET);
+      MTL::VertexAttributeDescriptor *attribute =
+          attributes->object(attr + METAL_VERTEXATTRIBUTE_OFFSET)->init();
+      attribute->setBufferIndex(vertexInfo.attributes[attr].binding +
+                                METAL_VERTEXBUFFER_OFFSET);
       switch (vertexInfo.attributes[attr].format) {
       case Gfx::SE_FORMAT_R32G32B32_SFLOAT:
         attribute->setFormat(MTL::VertexFormatFloat3);
@@ -45,9 +53,11 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo cr
       attribute->setOffset(vertexInfo.attributes[attr].offset);
     }
 
-    MTL::VertexBufferLayoutDescriptorArray* bufferLayout = vertexDescriptor->layouts()->init();
+    MTL::VertexBufferLayoutDescriptorArray *bufferLayout =
+        vertexDescriptor->layouts()->init();
     for (size_t binding = 0; binding < vertexInfo.bindings.size(); ++binding) {
-      MTL::VertexBufferLayoutDescriptor* buffer = bufferLayout->object(binding + METAL_VERTEXBUFFER_OFFSET)->init();
+      MTL::VertexBufferLayoutDescriptor *buffer =
+          bufferLayout->object(binding + METAL_VERTEXBUFFER_OFFSET)->init();
       buffer->setStride(vertexInfo.bindings[binding].stride);
       buffer->setStepRate(1);
       switch (vertexInfo.bindings[binding].inputRate) {
@@ -62,19 +72,28 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo cr
   }
   pipelineDescriptor->setVertexDescriptor(vertexDescriptor);
 
-  pipelineDescriptor->setVertexFunction(createInfo.vertexShader.cast<VertexShader>()->getFunction());
+  pipelineDescriptor->setVertexFunction(
+      createInfo.vertexShader.cast<VertexShader>()->getFunction());
   if (createInfo.fragmentShader != nullptr) {
-    pipelineDescriptor->setFragmentFunction(createInfo.fragmentShader.cast<FragmentShader>()->getFunction());
+    pipelineDescriptor->setFragmentFunction(
+        createInfo.fragmentShader.cast<FragmentShader>()->getFunction());
   }
   pipelineDescriptor->setInputPrimitiveTopology(cast(createInfo.topology));
-  if (createInfo.renderPass->getLayout().depthAttachment.getTexture() != nullptr) {
+  if (createInfo.renderPass->getLayout().depthAttachment.getTexture() !=
+      nullptr) {
     pipelineDescriptor->setDepthAttachmentPixelFormat(
-        cast(createInfo.renderPass->getLayout().depthAttachment.getTexture().cast<Texture2D>()->getFormat()));
+        cast(createInfo.renderPass->getLayout()
+                 .depthAttachment.getTexture()
+                 .cast<Texture2D>()
+                 ->getFormat()));
   }
-  pipelineDescriptor->setAlphaToCoverageEnabled(createInfo.multisampleState.alphaCoverageEnable);
-  pipelineDescriptor->setAlphaToOneEnabled(createInfo.multisampleState.alphaToOneEnable);
+  pipelineDescriptor->setAlphaToCoverageEnabled(
+      createInfo.multisampleState.alphaCoverageEnable);
+  pipelineDescriptor->setAlphaToOneEnabled(
+      createInfo.multisampleState.alphaToOneEnable);
   pipelineDescriptor->setRasterSampleCount(createInfo.multisampleState.samples);
-  pipelineDescriptor->setRasterizationEnabled(!createInfo.rasterizationState.rasterizerDiscardEnable);
+  pipelineDescriptor->setRasterizationEnabled(
+      !createInfo.rasterizationState.rasterizerDiscardEnable);
 
   uint32 hash = pipelineDescriptor->hash();
 
@@ -117,12 +136,14 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo cr
     type = MTL::PrimitiveTypeTriangle;
     break;
   }
-  NS::Error* error;
-  graphicsPipelines[hash] =
-      new GraphicsPipeline(graphics, type, graphics->getDevice()->newRenderPipelineState(pipelineDescriptor, &error),
-                           std::move(createInfo.pipelineLayout));
+  NS::Error *error;
+  graphicsPipelines[hash] = new GraphicsPipeline(
+      graphics, type,
+      graphics->getDevice()->newRenderPipelineState(pipelineDescriptor, &error),
+      std::move(createInfo.pipelineLayout));
   if (error) {
-    std::cout << error->localizedDescription()->cString(NS::ASCIIStringEncoding) << std::endl;
+    std::cout << error->localizedDescription()->cString(NS::ASCIIStringEncoding)
+              << std::endl;
     assert(false);
   }
 
@@ -130,51 +151,67 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo cr
   return graphicsPipelines[hash];
 }
 
-PGraphicsPipeline PipelineCache::createPipeline(Gfx::MeshPipelineCreateInfo createInfo) {
-  MTL::MeshRenderPipelineDescriptor* pipelineDescriptor = MTL::MeshRenderPipelineDescriptor::alloc()->init();
+PGraphicsPipeline
+PipelineCache::createPipeline(Gfx::MeshPipelineCreateInfo createInfo) {
+  MTL::MeshRenderPipelineDescriptor *pipelineDescriptor =
+      MTL::MeshRenderPipelineDescriptor::alloc()->init();
 
-  pipelineDescriptor->setMeshFunction(createInfo.meshShader.cast<MeshShader>()->getFunction());
+  pipelineDescriptor->setMeshFunction(
+      createInfo.meshShader.cast<MeshShader>()->getFunction());
   if (createInfo.taskShader != nullptr) {
-    pipelineDescriptor->setObjectFunction(createInfo.taskShader.cast<TaskShader>()->getFunction());
+    pipelineDescriptor->setObjectFunction(
+        createInfo.taskShader.cast<TaskShader>()->getFunction());
   }
   if (createInfo.fragmentShader != nullptr) {
-    pipelineDescriptor->setFragmentFunction(createInfo.fragmentShader.cast<FragmentShader>()->getFunction());
+    pipelineDescriptor->setFragmentFunction(
+        createInfo.fragmentShader.cast<FragmentShader>()->getFunction());
   }
-  if (createInfo.renderPass->getLayout().depthAttachment.getTexture() != nullptr) {
+  if (createInfo.renderPass->getLayout().depthAttachment.getTexture() !=
+      nullptr) {
     pipelineDescriptor->setDepthAttachmentPixelFormat(
-        cast(createInfo.renderPass->getLayout().depthAttachment.getTexture().cast<Texture2D>()->getFormat()));
+        cast(createInfo.renderPass->getLayout()
+                 .depthAttachment.getTexture()
+                 .cast<Texture2D>()
+                 ->getFormat()));
   }
-  pipelineDescriptor->setAlphaToCoverageEnabled(createInfo.multisampleState.alphaCoverageEnable);
-  pipelineDescriptor->setAlphaToOneEnabled(createInfo.multisampleState.alphaToOneEnable);
+  pipelineDescriptor->setAlphaToCoverageEnabled(
+      createInfo.multisampleState.alphaCoverageEnable);
+  pipelineDescriptor->setAlphaToOneEnabled(
+      createInfo.multisampleState.alphaToOneEnable);
   pipelineDescriptor->setRasterSampleCount(createInfo.multisampleState.samples);
-  pipelineDescriptor->setRasterizationEnabled(!createInfo.rasterizationState.rasterizerDiscardEnable);
+  pipelineDescriptor->setRasterizationEnabled(
+      !createInfo.rasterizationState.rasterizerDiscardEnable);
 
   uint32 hash = pipelineDescriptor->hash();
 
   if (graphicsPipelines.contains(hash)) {
     return graphicsPipelines[hash];
   }
-  NS::Error* error = nullptr;
+  NS::Error *error = nullptr;
   MTL::AutoreleasedRenderPipelineReflection reflection;
   graphicsPipelines[hash] = new GraphicsPipeline(
       graphics, MTL::PrimitiveTypeTriangle,
-      graphics->getDevice()->newRenderPipelineState(pipelineDescriptor, MTL::PipelineOptionNone, &reflection, &error),
+      graphics->getDevice()->newRenderPipelineState(
+          pipelineDescriptor, MTL::PipelineOptionNone, &reflection, &error),
       std::move(createInfo.pipelineLayout));
 
   pipelineDescriptor->release();
   return graphicsPipelines[hash];
 }
 
-PComputePipeline PipelineCache::createPipeline(Gfx::ComputePipelineCreateInfo createInfo) {
+PComputePipeline
+PipelineCache::createPipeline(Gfx::ComputePipelineCreateInfo createInfo) {
   PComputeShader shader = createInfo.computeShader.cast<ComputeShader>();
   uint32 hash = shader->getShaderHash();
   if (computePipelines.contains(hash)) {
     return computePipelines[hash];
   }
 
-  NS::Error* error;
+  NS::Error *error;
   computePipelines[hash] =
-      new ComputePipeline(graphics, graphics->getDevice()->newComputePipelineState(shader->getFunction(), &error),
+      new ComputePipeline(graphics,
+                          graphics->getDevice()->newComputePipelineState(
+                              shader->getFunction(), &error),
                           std::move(createInfo.pipelineLayout));
   assert(!error);
   return computePipelines[hash];

@@ -2,17 +2,13 @@
 #include "Math/AABB.h"
 #include "ShapeBase.h"
 
-namespace Seele
-{
-namespace Component
-{
-enum class ColliderType
-{
+namespace Seele {
+namespace Component {
+enum class ColliderType {
     STATIC,
     DYNAMIC,
 };
-struct Collider
-{
+struct Collider {
     ColliderType type = ColliderType::STATIC;
     AABB boundingbox;
     ShapeBase physicsMesh;

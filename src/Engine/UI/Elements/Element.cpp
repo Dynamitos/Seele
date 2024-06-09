@@ -1,70 +1,35 @@
 #include "Element.h"
-#include "UI/System.h"
 #include "Graphics/Graphics.h"
+#include "UI/System.h"
 
 using namespace Seele;
 using namespace Seele::UI;
 
-Element::Element()
-    : dirty(false)
-    , enabled(false)
-{
-}
+Element::Element() : dirty(false), enabled(false) {}
 
-Element::~Element() 
-{
-}
+Element::~Element() {}
 
-void Element::setParent(PElement element)
-{
-    if(parent != nullptr)
-    {
+void Element::setParent(PElement element) {
+    if (parent != nullptr) {
         parent->removeChild(this);
     }
     parent = element;
 }
 
-PElement Element::getParent() const
-{
-    return parent;
-}
+PElement Element::getParent() const { return parent; }
 
-void Element::addChild(PElement element) 
-{
-    children.add(element);
-}
+void Element::addChild(PElement element) { children.add(element); }
 
-void Element::removeChild(PElement element)
-{
-    children.remove(element, false);
-}
+void Element::removeChild(PElement element) { children.remove(element, false); }
 
-const Array<PElement> Element::getChildren()
-{
-    return children;
-}
+const Array<PElement> Element::getChildren() { return children; }
 
-void Element::clear() 
-{
-    children.clear();
-}
+void Element::clear() { children.clear(); }
 
-void Element::setEnabled(bool newEnabled) 
-{
-    enabled = newEnabled;
-}
+void Element::setEnabled(bool newEnabled) { enabled = newEnabled; }
 
-bool Element::isEnabled() const
-{
-    return enabled;
-}
+bool Element::isEnabled() const { return enabled; }
 
-Rect& Element::getBoundingBox() 
-{
-    return boundingBox;
-}
+Rect& Element::getBoundingBox() { return boundingBox; }
 
-const Rect Element::getBoundingBox() const
-{
-    return boundingBox;
-}
+const Rect Element::getBoundingBox() const { return boundingBox; }

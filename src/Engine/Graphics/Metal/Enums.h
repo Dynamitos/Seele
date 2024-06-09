@@ -3,11 +3,9 @@
 #include "Metal/MTLStageInputOutputDescriptor.hpp"
 #include "Resources.h"
 
-namespace Seele
-{
-namespace Metal
-{
-constexpr uint64 METAL_VERTEXBUFFER_OFFSET = 6;// something about metal vertex fetch
+namespace Seele {
+namespace Metal {
+constexpr uint64 METAL_VERTEXBUFFER_OFFSET = 6; // something about metal vertex fetch
 constexpr uint64 METAL_VERTEXATTRIBUTE_OFFSET = 11;
 
 MTL::PixelFormat cast(Gfx::SeFormat format);
@@ -32,5 +30,5 @@ MTL::PrimitiveTopologyClass cast(Gfx::SePrimitiveTopology topology);
 Gfx::SePrimitiveTopology cast(MTL::PrimitiveTopologyClass topology);
 MTL::IndexType cast(Gfx::SeIndexType indexType);
 Gfx::SeIndexType cast(MTL::IndexType indexType);
-}
-}
+} // namespace Metal
+} // namespace Seele

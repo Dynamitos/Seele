@@ -1,19 +1,15 @@
 #include "Mesh.h"
-#include "Graphics/Graphics.h"
 #include "Asset/AssetRegistry.h"
+#include "Graphics/Graphics.h"
+
 
 using namespace Seele;
 
-Mesh::Mesh()
-{    
-}
+Mesh::Mesh() {}
 
-Mesh::~Mesh()
-{
-}
+Mesh::~Mesh() {}
 
-void Mesh::save(ArchiveBuffer& buffer) const
-{
+void Mesh::save(ArchiveBuffer& buffer) const {
     Serialization::save(buffer, transform);
     Serialization::save(buffer, vertexData->getTypeName());
     Serialization::save(buffer, vertexCount);
@@ -24,8 +20,7 @@ void Mesh::save(ArchiveBuffer& buffer) const
     vertexData->serializeMesh(id, vertexCount, buffer);
 }
 
-void Mesh::load(ArchiveBuffer& buffer)
-{
+void Mesh::load(ArchiveBuffer& buffer) {
     std::string typeName;
     Serialization::load(buffer, transform);
     Serialization::load(buffer, typeName);

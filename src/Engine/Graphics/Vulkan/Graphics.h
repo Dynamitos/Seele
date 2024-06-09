@@ -2,18 +2,15 @@
 #include "Graphics/Graphics.h"
 #include <vk_mem_alloc.h>
 
-namespace Seele
-{
-namespace Vulkan
-{
+namespace Seele {
+namespace Vulkan {
 DECLARE_REF(DestructionManager)
 DECLARE_REF(CommandPool)
 DECLARE_REF(Queue)
 DECLARE_REF(PipelineCache)
 DECLARE_REF(Framebuffer)
-class Graphics : public Gfx::Graphics
-{
-public:
+class Graphics : public Gfx::Graphics {
+  public:
     Graphics();
     virtual ~Graphics();
     constexpr VkInstance getInstance() const { return instance; };
@@ -30,10 +27,11 @@ public:
 
     // Inherited via Graphics
     virtual void init(GraphicsInitializer initializer) override;
-    virtual Gfx::OWindow createWindow(const WindowCreateInfo &createInfo) override;
-    virtual Gfx::OViewport createViewport(Gfx::PWindow owner, const ViewportCreateInfo &createInfo) override;
+    virtual Gfx::OWindow createWindow(const WindowCreateInfo& createInfo) override;
+    virtual Gfx::OViewport createViewport(Gfx::PWindow owner, const ViewportCreateInfo& createInfo) override;
 
-    virtual Gfx::ORenderPass createRenderPass(Gfx::RenderTargetLayout layout, Array<Gfx::SubPassDependency> dependencies, Gfx::PViewport renderArea) override;
+    virtual Gfx::ORenderPass createRenderPass(Gfx::RenderTargetLayout layout, Array<Gfx::SubPassDependency> dependencies,
+                                              Gfx::PViewport renderArea) override;
     virtual void beginRenderPass(Gfx::PRenderPass renderPass) override;
     virtual void endRenderPass() override;
     virtual void waitDeviceIdle() override;
@@ -41,17 +39,17 @@ public:
     virtual void executeCommands(Array<Gfx::ORenderCommand> commands) override;
     virtual void executeCommands(Array<Gfx::OComputeCommand> commands) override;
 
-    virtual Gfx::OTexture2D createTexture2D(const TextureCreateInfo &createInfo) override;
-    virtual Gfx::OTexture3D createTexture3D(const TextureCreateInfo &createInfo) override;
-    virtual Gfx::OTextureCube createTextureCube(const TextureCreateInfo &createInfo) override;
-    virtual Gfx::OUniformBuffer createUniformBuffer(const UniformBufferCreateInfo &bulkData) override;
-    virtual Gfx::OShaderBuffer createShaderBuffer(const ShaderBufferCreateInfo &bulkData) override;
-    virtual Gfx::OVertexBuffer createVertexBuffer(const VertexBufferCreateInfo &bulkData) override;
-    virtual Gfx::OIndexBuffer createIndexBuffer(const IndexBufferCreateInfo &bulkData) override;
-    
+    virtual Gfx::OTexture2D createTexture2D(const TextureCreateInfo& createInfo) override;
+    virtual Gfx::OTexture3D createTexture3D(const TextureCreateInfo& createInfo) override;
+    virtual Gfx::OTextureCube createTextureCube(const TextureCreateInfo& createInfo) override;
+    virtual Gfx::OUniformBuffer createUniformBuffer(const UniformBufferCreateInfo& bulkData) override;
+    virtual Gfx::OShaderBuffer createShaderBuffer(const ShaderBufferCreateInfo& bulkData) override;
+    virtual Gfx::OVertexBuffer createVertexBuffer(const VertexBufferCreateInfo& bulkData) override;
+    virtual Gfx::OIndexBuffer createIndexBuffer(const IndexBufferCreateInfo& bulkData) override;
+
     virtual Gfx::ORenderCommand createRenderCommand(const std::string& name) override;
     virtual Gfx::OComputeCommand createComputeCommand(const std::string& name) override;
-    
+
     virtual Gfx::OVertexShader createVertexShader(const ShaderCreateInfo& createInfo) override;
     virtual Gfx::OFragmentShader createFragmentShader(const ShaderCreateInfo& createInfo) override;
     virtual Gfx::OComputeShader createComputeShader(const ShaderCreateInfo& createInfo) override;
@@ -77,11 +75,11 @@ public:
     void vkCmdDrawMeshTasksIndirectEXT(VkCommandBuffer handle, VkBuffer buffer, uint64 offset, uint32 drawCount, uint32 stride);
     void vkSetDebugUtilsObjectNameEXT(VkDebugUtilsObjectNameInfoEXT* info);
 
-protected:
+  protected:
     PFN_vkCmdDrawMeshTasksEXT cmdDrawMeshTasks;
     PFN_vkCmdDrawMeshTasksIndirectEXT cmdDrawMeshTasksIndirect;
     PFN_vkSetDebugUtilsObjectNameEXT setDebugUtilsObjectName;
-    Array<const char *> getRequiredExtensions();
+    Array<const char*> getRequiredExtensions();
     void initInstance(GraphicsInitializer initInfo);
     void setupDebugCallback();
     void pickPhysicalDevice();

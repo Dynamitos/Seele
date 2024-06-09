@@ -1,18 +1,18 @@
 #include "RenderPass.h"
-#include "Graphics.h"
-#include "Framebuffer.h"
-#include "Texture.h"
-#include "Resources.h"
-#include "Command.h"
 #include "CRC.h"
+#include "Command.h"
+#include "Framebuffer.h"
+#include "Graphics.h"
+#include "Resources.h"
+#include "Texture.h"
+
 
 using namespace Seele;
 using namespace Seele::Vulkan;
 
-RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Array<Gfx::SubPassDependency> _dependencies, Gfx::PViewport viewport)
-    : Gfx::RenderPass(std::move(_layout), std::move(_dependencies))
-    , graphics(graphics)
-{
+RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Array<Gfx::SubPassDependency> _dependencies,
+                       Gfx::PViewport viewport)
+    : Gfx::RenderPass(std::move(_layout), std::move(_dependencies)), graphics(graphics) {
     renderArea.extent.width = viewport->getWidth();
     renderArea.extent.height = viewport->getHeight();
     renderArea.offset.x = viewport->getOffsetX();
@@ -26,8 +26,7 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Arra
     VkAttachmentReference2 depthResolveRef;
 
     uint32 attachmentCounter = 0;
-    for (auto& inputAttachment : layout.inputAttachments)
-    {
+    for (auto& inputAttachment : layout.inputAttachments) {
         PTexture2D image = inputAttachment.getTexture().cast<Texture2D>();
         VkAttachmentDescription2& desc = attachments.add() = {
             .sType = VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2,
@@ -41,14 +40,13 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Arra
             .initialLayout = cast(inputAttachment.getInitialLayout()),
             .finalLayout = cast(inputAttachment.getFinalLayout()),
         };
-        
+
         inputRefs.add() = {
             .attachment = attachmentCounter++,
             .layout = desc.initialLayout,
         };
     }
-    for (auto& colorAttachment : layout.colorAttachments)
-    {
+    for (auto& colorAttachment : layout.colorAttachments) {
         attachments.add() = {
             .sType = VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2,
             .pNext = nullptr,
@@ -62,10 +60,9 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Arra
             .initialLayout = cast(colorAttachment.getInitialLayout()),
             .finalLayout = cast(colorAttachment.getFinalLayout()),
         };
-        
+
         VkClearValue& clearValue = clearValues.add();
-        if(attachments.back().loadOp == VK_ATTACHMENT_LOAD_OP_CLEAR)
-        {
+        if (attachments.back().loadOp == VK_ATTACHMENT_LOAD_OP_CLEAR) {
             clearValue = cast(colorAttachment.clear);
         }
 
@@ -76,8 +73,7 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Arra
             .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
         };
     }
-    for (auto& resolveAttachment : layout.resolveAttachments)
-    {
+    for (auto& resolveAttachment : layout.resolveAttachments) {
         attachments.add() = {
             .sType = VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2,
             .pNext = nullptr,
@@ -93,8 +89,7 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Arra
         };
 
         VkClearValue& clearValue = clearValues.add();
-        if (attachments.back().loadOp == VK_ATTACHMENT_LOAD_OP_CLEAR)
-        {
+        if (attachments.back().loadOp == VK_ATTACHMENT_LOAD_OP_CLEAR) {
             clearValue = cast(resolveAttachment.clear);
         }
 
@@ -105,8 +100,7 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Arra
             .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
         };
     }
-    if (layout.depthAttachment.getTexture() != nullptr)
-    {
+    if (layout.depthAttachment.getTexture() != nullptr) {
         PTexture2D image = layout.depthAttachment.getTexture().cast<Texture2D>();
         attachments.add() = {
             .sType = VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2,
@@ -123,8 +117,7 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Arra
         };
 
         VkClearValue& clearValue = clearValues.add();
-        if (attachments.back().loadOp == VK_ATTACHMENT_LOAD_OP_CLEAR)
-        {
+        if (attachments.back().loadOp == VK_ATTACHMENT_LOAD_OP_CLEAR) {
             clearValue = cast(layout.depthAttachment.clear);
         }
 
@@ -135,8 +128,7 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Arra
             .layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
         };
     }
-    if (layout.depthResolveAttachment.getTexture() != nullptr)
-    {
+    if (layout.depthResolveAttachment.getTexture() != nullptr) {
         PTexture2D image = layout.depthResolveAttachment.getTexture().cast<Texture2D>();
         attachments.add() = {
             .sType = VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2,
@@ -158,7 +150,7 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Arra
             .layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
         };
     }
-    
+
     VkSubpassDescriptionDepthStencilResolve depthResolve = {
         .sType = VK_STRUCTURE_TYPE_SUBPASS_DESCRIPTION_DEPTH_STENCIL_RESOLVE,
         .pNext = nullptr,
@@ -179,7 +171,7 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Arra
         .pDepthStencilAttachment = &depthRef,
     };
     Array<VkSubpassDependency2> dep;
-    for(const auto& d : dependencies) {
+    for (const auto& d : dependencies) {
         dep.add() = {
             .sType = VK_STRUCTURE_TYPE_SUBPASS_DEPENDENCY_2,
             .pNext = nullptr,
@@ -206,48 +198,39 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Arra
     VK_CHECK(vkCreateRenderPass2(graphics->getDevice(), &info, nullptr, &renderPass));
 }
 
-RenderPass::~RenderPass()
-{
+RenderPass::~RenderPass() {
     vkDestroyRenderPass(graphics->getDevice(), renderPass, nullptr);
-    //graphics->getDestructionManager()->queueRenderPass(graphics->getGraphicsCommands()->getCommands(), renderPass);
+    // graphics->getDestructionManager()->queueRenderPass(graphics->getGraphicsCommands()->getCommands(), renderPass);
 }
 
-uint32 RenderPass::getFramebufferHash()
-{
+uint32 RenderPass::getFramebufferHash() {
     FramebufferDescription description;
     std::memset(&description, 0, sizeof(FramebufferDescription));
-    for (auto& inputAttachment : layout.inputAttachments)
-    {
+    for (auto& inputAttachment : layout.inputAttachments) {
         PTexture2D tex = inputAttachment.getTexture().cast<Texture2D>();
         description.inputAttachments[description.numInputAttachments++] = tex->getView();
     }
-    for (auto& colorAttachment : layout.colorAttachments)
-    {
+    for (auto& colorAttachment : layout.colorAttachments) {
         PTexture2D tex = colorAttachment.getTexture().cast<Texture2D>();
         description.colorAttachments[description.numColorAttachments++] = tex->getView();
     }
-    if (layout.depthAttachment.getTexture() != nullptr)
-    {
+    if (layout.depthAttachment.getTexture() != nullptr) {
         PTexture2D tex = layout.depthAttachment.getTexture().cast<Texture2D>();
         description.depthAttachment = tex->getView();
     }
     return CRC::Calculate(&description, sizeof(FramebufferDescription), CRC::CRC_32());
 }
 
-void Vulkan::RenderPass::endRenderPass()
-{
-    for (auto& inputAttachment : layout.inputAttachments)
-    {
+void Vulkan::RenderPass::endRenderPass() {
+    for (auto& inputAttachment : layout.inputAttachments) {
         PTexture2D tex = inputAttachment.getTexture().cast<Texture2D>();
         tex->setLayout(inputAttachment.getFinalLayout());
     }
-    for (auto& colorAttachment : layout.colorAttachments)
-    {
+    for (auto& colorAttachment : layout.colorAttachments) {
         PTexture2D tex = colorAttachment.getTexture().cast<Texture2D>();
         tex->setLayout(colorAttachment.getFinalLayout());
     }
-    if (layout.depthAttachment.getTexture() != nullptr)
-    {
+    if (layout.depthAttachment.getTexture() != nullptr) {
         PTexture2D tex = layout.depthAttachment.getTexture().cast<Texture2D>();
         tex->setLayout(layout.depthAttachment.getFinalLayout());
     }

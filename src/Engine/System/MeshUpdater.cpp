@@ -5,19 +5,12 @@
 using namespace Seele;
 using namespace Seele::System;
 
-MeshUpdater::MeshUpdater(PScene scene)
-    : ComponentSystem<Component::Transform, Component::Mesh>(scene)
-{
-}
+MeshUpdater::MeshUpdater(PScene scene) : ComponentSystem<Component::Transform, Component::Mesh>(scene) {}
 
-MeshUpdater::~MeshUpdater()
-{
-}
+MeshUpdater::~MeshUpdater() {}
 
-void MeshUpdater::update(entt::entity id, Component::Transform& transform, Component::Mesh& comp)
-{
-    for (uint32 i = 0; i < comp.asset->meshes.size(); ++i)
-    {
+void MeshUpdater::update(entt::entity id, Component::Transform& transform, Component::Mesh& comp) {
+    for (uint32 i = 0; i < comp.asset->meshes.size(); ++i) {
         comp.asset->meshes[i]->vertexData->updateMesh(id, i, comp.asset->meshes[i], transform);
     }
 }

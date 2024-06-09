@@ -1,17 +1,15 @@
 #pragma once
 #include "Layout.h"
 
-namespace Seele
-{
-namespace UI
-{
-class HorizontalLayout : Layout
-{
-public:
+namespace Seele {
+namespace UI {
+class HorizontalLayout : Layout {
+  public:
     HorizontalLayout(PElement element);
     ~HorizontalLayout();
     virtual void apply() override;
-private:
+
+  private:
 };
 } // namespace UI
 } // namespace Seele

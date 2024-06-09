@@ -3,18 +3,11 @@
 using namespace Seele;
 using namespace Seele::System;
 
-KeyboardInput::KeyboardInput(PScene scene)
-    : ComponentSystem<Component::KeyboardInput>(scene)
-{
-    std::memset(keys.data(), 0, sizeof(keys));
-}
+KeyboardInput::KeyboardInput(PScene scene) : ComponentSystem<Component::KeyboardInput>(scene) { std::memset(keys.data(), 0, sizeof(keys)); }
 
-KeyboardInput::~KeyboardInput()
-{
-}
+KeyboardInput::~KeyboardInput() {}
 
-void KeyboardInput::update(Component::KeyboardInput& input)
-{
+void KeyboardInput::update(Component::KeyboardInput& input) {
     std::memcpy(input.keys.data(), keys.data(), sizeof(keys));
     input.deltaX = deltaX;
     input.deltaY = deltaY;
@@ -32,31 +25,23 @@ void KeyboardInput::update(Component::KeyboardInput& input)
     scrollY = 0;
 }
 
-void KeyboardInput::keyCallback(KeyCode code, InputAction action, KeyModifier)
-{
-    keys[code] = action != InputAction::RELEASE;
-}
+void KeyboardInput::keyCallback(KeyCode code, InputAction action, KeyModifier) { keys[code] = action != InputAction::RELEASE; }
 
-void KeyboardInput::mouseCallback(double x, double y)
-{
+void KeyboardInput::mouseCallback(double x, double y) {
     mouseX = x;
     mouseY = y;
 }
 
-void KeyboardInput::mouseButtonCallback(MouseButton button, InputAction action, KeyModifier)
-{
-    if (button == MouseButton::MOUSE_BUTTON_1)
-    {
+void KeyboardInput::mouseButtonCallback(MouseButton button, InputAction action, KeyModifier) {
+    if (button == MouseButton::MOUSE_BUTTON_1) {
         mouse1 = action != InputAction::RELEASE;
     }
-    if (button == MouseButton::MOUSE_BUTTON_2)
-    {
+    if (button == MouseButton::MOUSE_BUTTON_2) {
         mouse2 = action != InputAction::RELEASE;
     }
 }
 
-void KeyboardInput::scrollCallback(double xScroll, double yScroll)
-{
+void KeyboardInput::scrollCallback(double xScroll, double yScroll) {
     scrollX = xScroll;
     scrollY = yScroll;
 }

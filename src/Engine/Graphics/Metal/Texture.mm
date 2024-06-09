@@ -21,18 +21,16 @@ TextureBase::TextureBase(PGraphics graphics, MTL::TextureType type,
       ownsImage(existingImage == nullptr) {
   if (existingImage == nullptr) {
     MTL::TextureUsage mtlUsage = 0;
-    if(usage & Gfx::SE_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT || usage & Gfx::SE_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
-    {
-        mtlUsage |= MTL::TextureUsageRenderTarget;
+    if (usage & Gfx::SE_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT ||
+        usage & Gfx::SE_IMAGE_USAGE_COLOR_ATTACHMENT_BIT) {
+      mtlUsage |= MTL::TextureUsageRenderTarget;
     }
-    if(usage & Gfx::SE_IMAGE_USAGE_SAMPLED_BIT)
-    {
-        mtlUsage |= MTL::TextureUsageShaderRead;
+    if (usage & Gfx::SE_IMAGE_USAGE_SAMPLED_BIT) {
+      mtlUsage |= MTL::TextureUsageShaderRead;
     }
-      if(usage & Gfx::SE_IMAGE_USAGE_STORAGE_BIT)
-      {
-          mtlUsage |= MTL::TextureUsageShaderWrite;
-      }
+    if (usage & Gfx::SE_IMAGE_USAGE_STORAGE_BIT) {
+      mtlUsage |= MTL::TextureUsageShaderWrite;
+    }
     MTL::TextureDescriptor *descriptor =
         MTL::TextureDescriptor::alloc()->init();
     descriptor->setPixelFormat(cast(format));
@@ -44,16 +42,17 @@ TextureBase::TextureBase(PGraphics graphics, MTL::TextureType type,
     descriptor->setTextureType(type);
     descriptor->setSampleCount(samples);
     descriptor->setUsage(mtlUsage);
-    
+
     texture = graphics->getDevice()->newTexture(descriptor);
 
     descriptor->release();
   }
-//  if(createInfo.sourceData.data != nullptr)
-//  {
-//    MTL::Region region(0, 0, 0, width, height, depth);
-//    texture->replaceRegion(region, 0, createInfo.sourceData.data, createInfo.sourceData.size / (depth * height));
-//  }
+  //  if(createInfo.sourceData.data != nullptr)
+  //  {
+  //    MTL::Region region(0, 0, 0, width, height, depth);
+  //    texture->replaceRegion(region, 0, createInfo.sourceData.data,
+  //    createInfo.sourceData.size / (depth * height));
+  //  }
 }
 
 TextureBase::~TextureBase() {
@@ -71,8 +70,7 @@ void TextureBase::changeLayout(Gfx::SeImageLayout, Gfx::SeAccessFlags,
                                Gfx::SePipelineStageFlags, Gfx::SeAccessFlags,
                                Gfx::SePipelineStageFlags) {}
 
-void TextureBase::download(uint32, uint32, uint32, Array<uint8>&)
-{}
+void TextureBase::download(uint32, uint32, uint32, Array<uint8> &) {}
 
 Texture2D::Texture2D(PGraphics graphics, const TextureCreateInfo &createInfo,
                      MTL::Texture *exisitingTexture)
@@ -86,93 +84,95 @@ Texture2D::Texture2D(PGraphics graphics, const TextureCreateInfo &createInfo,
                                                 : MTL::TextureType2D),
                   createInfo, Gfx::Texture2D::currentOwner, exisitingTexture) {}
 
-Texture2D::~Texture2D()
-{
+Texture2D::~Texture2D() {}
+
+void Texture2D::changeLayout(Gfx::SeImageLayout newLayout,
+                             Gfx::SeAccessFlags srcAccess,
+                             Gfx::SePipelineStageFlags srcStage,
+                             Gfx::SeAccessFlags dstAccess,
+                             Gfx::SePipelineStageFlags dstStage) {
+  TextureBase::changeLayout(newLayout, srcAccess, srcStage, dstAccess,
+                            dstStage);
 }
 
-void Texture2D::changeLayout(Gfx::SeImageLayout newLayout, 
-        Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage,
-        Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage) 
-{
-    TextureBase::changeLayout(newLayout, srcAccess, srcStage, dstAccess, dstStage);
+void Texture2D::download(uint32 mipLevel, uint32 arrayLayer, uint32 face,
+                         Array<uint8> &buffer) {
+  TextureBase::download(mipLevel, arrayLayer, face, buffer);
 }
 
-void Texture2D::download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<uint8>& buffer)
-{
-    TextureBase::download(mipLevel, arrayLayer, face, buffer);
+void Texture2D::executeOwnershipBarrier(Gfx::QueueType newOwner) {
+  TextureBase::executeOwnershipBarrier(newOwner);
 }
 
-void Texture2D::executeOwnershipBarrier(Gfx::QueueType newOwner)
-{
-    TextureBase::executeOwnershipBarrier(newOwner);
+void Texture2D::executePipelineBarrier(Gfx::SeAccessFlags srcAccess,
+                                       Gfx::SePipelineStageFlags srcStage,
+                                       Gfx::SeAccessFlags dstAccess,
+                                       Gfx::SePipelineStageFlags dstStage) {
+  TextureBase::executePipelineBarrier(srcAccess, srcStage, dstAccess, dstStage);
 }
 
-void Texture2D::executePipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage, 
-        Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage) 
-{
-    TextureBase::executePipelineBarrier(srcAccess, srcStage, dstAccess, dstStage);
+Texture3D::Texture3D(PGraphics graphics, const TextureCreateInfo &createInfo)
+    : Gfx::Texture3D(graphics->getFamilyMapping(), createInfo.sourceData.owner),
+      TextureBase(graphics, MTL::TextureType3D, createInfo,
+                  Gfx::Texture3D::currentOwner) {}
+
+Texture3D::~Texture3D() {}
+
+void Texture3D::changeLayout(Gfx::SeImageLayout newLayout,
+                             Gfx::SeAccessFlags srcAccess,
+                             Gfx::SePipelineStageFlags srcStage,
+                             Gfx::SeAccessFlags dstAccess,
+                             Gfx::SePipelineStageFlags dstStage) {
+  TextureBase::changeLayout(newLayout, srcAccess, srcStage, dstAccess,
+                            dstStage);
 }
 
-Texture3D::Texture3D(PGraphics graphics, const TextureCreateInfo& createInfo)
-    : Gfx::Texture3D(graphics->getFamilyMapping(), createInfo.sourceData.owner)
-    , TextureBase(graphics, MTL::TextureType3D, createInfo, Gfx::Texture3D::currentOwner) {}
-
-
-Texture3D::~Texture3D()
-{
+void Texture3D::download(uint32 mipLevel, uint32 arrayLayer, uint32 face,
+                         Array<uint8> &buffer) {
+  TextureBase::download(mipLevel, arrayLayer, face, buffer);
+}
+void Texture3D::executeOwnershipBarrier(Gfx::QueueType newOwner) {
+  TextureBase::executeOwnershipBarrier(newOwner);
 }
 
-void Texture3D::changeLayout(Gfx::SeImageLayout newLayout, 
-        Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage,
-        Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage) 
-{
-    TextureBase::changeLayout(newLayout, srcAccess, srcStage, dstAccess, dstStage);
+void Texture3D::executePipelineBarrier(Gfx::SeAccessFlags srcAccess,
+                                       Gfx::SePipelineStageFlags srcStage,
+                                       Gfx::SeAccessFlags dstAccess,
+                                       Gfx::SePipelineStageFlags dstStage) {
+  TextureBase::executePipelineBarrier(srcAccess, srcStage, dstAccess, dstStage);
 }
 
-void Texture3D::download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<uint8>& buffer)
-{
-    TextureBase::download(mipLevel, arrayLayer, face, buffer);
-}
-void Texture3D::executeOwnershipBarrier(Gfx::QueueType newOwner)
-{
-    TextureBase::executeOwnershipBarrier(newOwner);
+TextureCube::TextureCube(PGraphics graphics,
+                         const TextureCreateInfo &createInfo)
+    : Gfx::TextureCube(graphics->getFamilyMapping(),
+                       createInfo.sourceData.owner),
+      TextureBase(graphics,
+                  createInfo.elements > 1 ? MTL::TextureTypeCubeArray
+                                          : MTL::TextureTypeCube,
+                  createInfo, Gfx::TextureCube::currentOwner) {}
+
+TextureCube::~TextureCube() {}
+
+void TextureCube::changeLayout(Gfx::SeImageLayout newLayout,
+                               Gfx::SeAccessFlags srcAccess,
+                               Gfx::SePipelineStageFlags srcStage,
+                               Gfx::SeAccessFlags dstAccess,
+                               Gfx::SePipelineStageFlags dstStage) {
+  TextureBase::changeLayout(newLayout, srcAccess, srcStage, dstAccess,
+                            dstStage);
 }
 
-void Texture3D::executePipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage, 
-        Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage) 
-{
-    TextureBase::executePipelineBarrier(srcAccess, srcStage, dstAccess, dstStage);
+void TextureCube::download(uint32 mipLevel, uint32 arrayLayer, uint32 face,
+                           Array<uint8> &buffer) {
+  TextureBase::download(mipLevel, arrayLayer, face, buffer);
+}
+void TextureCube::executeOwnershipBarrier(Gfx::QueueType newOwner) {
+  TextureBase::executeOwnershipBarrier(newOwner);
 }
 
-TextureCube::TextureCube(PGraphics graphics, const TextureCreateInfo& createInfo)
-    : Gfx::TextureCube(graphics->getFamilyMapping(), createInfo.sourceData.owner)
-    , TextureBase(graphics, createInfo.elements > 1 ? MTL::TextureTypeCubeArray : MTL::TextureTypeCube,
-        createInfo, Gfx::TextureCube::currentOwner)
-{
-}
-
-TextureCube::~TextureCube()
-{
-}
-
-void TextureCube::changeLayout(Gfx::SeImageLayout newLayout, 
-        Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage,
-        Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage) 
-{
-    TextureBase::changeLayout(newLayout, srcAccess, srcStage, dstAccess, dstStage);
-}
-
-void TextureCube::download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<uint8>& buffer)
-{
-    TextureBase::download(mipLevel, arrayLayer, face, buffer);
-}
-void TextureCube::executeOwnershipBarrier(Gfx::QueueType newOwner)
-{
-    TextureBase::executeOwnershipBarrier(newOwner);
-}
-
-void TextureCube::executePipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage, 
-        Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage) 
-{
-    TextureBase::executePipelineBarrier(srcAccess, srcStage, dstAccess, dstStage);
+void TextureCube::executePipelineBarrier(Gfx::SeAccessFlags srcAccess,
+                                         Gfx::SePipelineStageFlags srcStage,
+                                         Gfx::SeAccessFlags dstAccess,
+                                         Gfx::SePipelineStageFlags dstStage) {
+  TextureBase::executePipelineBarrier(srcAccess, srcStage, dstAccess, dstStage);
 }

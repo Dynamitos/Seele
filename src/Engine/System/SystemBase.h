@@ -1,24 +1,21 @@
 #pragma once
-#include <entt/entt.hpp>
-#include "ThreadPool.h"
 #include "Scene/Scene.h"
+#include "ThreadPool.h"
+#include <entt/entt.hpp>
 
-namespace Seele
-{
-namespace System
-{
-class SystemBase
-{
-public:
+namespace Seele {
+namespace System {
+class SystemBase {
+  public:
     SystemBase(PScene scene) : registry(scene->registry), scene(scene) {}
     virtual ~SystemBase() {}
-    virtual void run(double delta)
-    {
+    virtual void run(double delta) {
         deltaTime = delta;
         update();
     }
     virtual void update() {}
-protected:
+
+  protected:
     double deltaTime;
     entt::registry& registry;
     PScene scene;

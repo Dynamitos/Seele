@@ -2,11 +2,9 @@
 #include "MinimalEngine.h"
 #include "RenderPass.h"
 
-namespace Seele
-{
-class DepthPrepass : public RenderPass
-{
-public:
+namespace Seele {
+class DepthPrepass : public RenderPass {
+  public:
     DepthPrepass(Gfx::PGraphics graphics, PScene scene);
     DepthPrepass(DepthPrepass&&) = default;
     DepthPrepass& operator=(DepthPrepass&&) = default;
@@ -16,7 +14,8 @@ public:
     virtual void endFrame() override;
     virtual void publishOutputs() override;
     virtual void createRenderPass() override;
-private:
+
+  private:
     Gfx::RenderTargetAttachment depthAttachment;
     Gfx::RenderTargetAttachment visibilityAttachment;
     Gfx::OPipelineLayout depthPrepassLayout;

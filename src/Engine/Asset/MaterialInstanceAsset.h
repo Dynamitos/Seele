@@ -2,11 +2,9 @@
 #include "Asset.h"
 #include "Material/MaterialInstance.h"
 
-namespace Seele
-{
-class MaterialInstanceAsset : public Asset
-{
-public:
+namespace Seele {
+class MaterialInstanceAsset : public Asset {
+  public:
     static constexpr uint64 IDENTIFIER = 0x8;
     MaterialInstanceAsset();
     MaterialInstanceAsset(std::string_view folderPath, std::string_view name);
@@ -16,7 +14,8 @@ public:
     void setHandle(OMaterialInstance handle) { material = std::move(handle); }
     void setBase(PMaterialAsset base) { baseMaterial = base; }
     PMaterialInstance getHandle() const { return material; }
-private:
+
+  private:
     OMaterialInstance material;
     PMaterialAsset baseMaterial;
 };

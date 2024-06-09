@@ -1,17 +1,15 @@
 #pragma once
-#include "Graphics/RenderTarget.h"
 #include "Graphics.h"
-#include "Texture.h"
+#include "Graphics/RenderTarget.h"
 #include "Resources.h"
+#include "Texture.h"
 
-namespace Seele
-{
-namespace Vulkan
-{
-class Window : public Gfx::Window
-{
-public:
-    Window(PGraphics graphics, const WindowCreateInfo &createInfo);
+
+namespace Seele {
+namespace Vulkan {
+class Window : public Gfx::Window {
+  public:
+    Window(PGraphics graphics, const WindowCreateInfo& createInfo);
     virtual ~Window();
     virtual void pollInput() override;
     virtual void beginFrame() override;
@@ -25,7 +23,7 @@ public:
     virtual void setFileCallback(std::function<void(int, const char**)> callback) override;
     virtual void setCloseCallback(std::function<void()> callback) override;
     virtual void setResizeCallback(std::function<void(uint32, uint32)> callback) override;
-    
+
     void keyPress(KeyCode code, InputAction action, KeyModifier modifier);
     void mouseMove(double x, double y);
     void mouseButton(MouseButton button, InputAction action, KeyModifier modifier);
@@ -33,7 +31,8 @@ public:
     void fileDrop(int num, const char** files);
     void close();
     void resize(int width, int height);
-protected:
+
+  protected:
     void querySurface();
     void chooseSwapSurfaceFormat();
     void chooseSwapPresentMode();
@@ -52,7 +51,7 @@ protected:
     VkSurfaceFormatKHR format;
     VkPresentModeKHR presentMode;
     VkExtent2D extent;
-    void *windowHandle;
+    void* windowHandle;
     StaticArray<VkImage, Gfx::numFramesBuffered> swapChainImages;
     StaticArray<OTexture2D, Gfx::numFramesBuffered> swapChainTextures;
     StaticArray<OFence, Gfx::numFramesBuffered> imageAvailableFences;
@@ -71,17 +70,17 @@ protected:
 };
 DEFINE_REF(Window)
 
-class Viewport : public Gfx::Viewport
-{
-public:
-    Viewport(PWindow owner, const ViewportCreateInfo &createInfo);
+class Viewport : public Gfx::Viewport {
+  public:
+    Viewport(PWindow owner, const ViewportCreateInfo& createInfo);
     virtual ~Viewport();
     virtual void resize(uint32 newX, uint32 newY);
     virtual void move(uint32 newOffsetX, uint32 newOffsetY);
     VkViewport getHandle() const { return handle; }
-private:
+
+  private:
     VkViewport handle;
 };
 DECLARE_REF(Viewport)
-}
-}
+} // namespace Vulkan
+} // namespace Seele

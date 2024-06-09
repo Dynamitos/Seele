@@ -94,11 +94,8 @@ void DescriptorSet::updateBuffer(uint32_t binding,
   boundResources[binding] = metalBuffer->getHandle();
 }
 
-void DescriptorSet::updateBuffer(uint32_t binding, uint32 index, Gfx::PShaderBuffer uniformBuffer)
-{
-
-}
-
+void DescriptorSet::updateBuffer(uint32_t binding, uint32 index,
+                                 Gfx::PShaderBuffer uniformBuffer) {}
 
 void DescriptorSet::updateSampler(uint32_t binding,
                                   Gfx::PSampler samplerState) {

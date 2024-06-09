@@ -1,17 +1,15 @@
 #pragma once
 #include "Element.h"
 
-namespace Seele
-{
-namespace UI
-{
-class Label : public Element
-{
-public:
+namespace Seele {
+namespace UI {
+class Label : public Element {
+  public:
     Label();
     ~Label();
-private:
+
+  private:
     std::string text;
 };
-} // namespace UI  
+} // namespace UI
 } // namespace Seele

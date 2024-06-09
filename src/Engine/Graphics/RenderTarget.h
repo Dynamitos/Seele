@@ -4,70 +4,52 @@
 #include "Texture.h"
 #include "Window.h"
 
-namespace Seele
-{
-namespace Gfx
-{
-class RenderTargetAttachment
-{
-public:
-    RenderTargetAttachment()
-    {}
-    RenderTargetAttachment(PTexture2D texture,
-        SeImageLayout initialLayout,
-        SeImageLayout finalLayout,
-        SeAttachmentLoadOp loadOp = SE_ATTACHMENT_LOAD_OP_LOAD,
-        SeAttachmentStoreOp storeOp = SE_ATTACHMENT_STORE_OP_STORE,
-        SeAttachmentLoadOp stencilLoadOp = SE_ATTACHMENT_LOAD_OP_DONT_CARE,
-        SeAttachmentStoreOp stencilStoreOp = SE_ATTACHMENT_STORE_OP_DONT_CARE);
+namespace Seele {
+namespace Gfx {
+class RenderTargetAttachment {
+  public:
+    RenderTargetAttachment() {}
+    RenderTargetAttachment(PTexture2D texture, SeImageLayout initialLayout, SeImageLayout finalLayout,
+                           SeAttachmentLoadOp loadOp = SE_ATTACHMENT_LOAD_OP_LOAD,
+                           SeAttachmentStoreOp storeOp = SE_ATTACHMENT_STORE_OP_STORE,
+                           SeAttachmentLoadOp stencilLoadOp = SE_ATTACHMENT_LOAD_OP_DONT_CARE,
+                           SeAttachmentStoreOp stencilStoreOp = SE_ATTACHMENT_STORE_OP_DONT_CARE);
 
-    RenderTargetAttachment(PViewport viewport,
-        SeImageLayout initialLayout,
-        SeImageLayout finalLayout,
-        SeAttachmentLoadOp loadOp = SE_ATTACHMENT_LOAD_OP_LOAD,
-        SeAttachmentStoreOp storeOp = SE_ATTACHMENT_STORE_OP_STORE,
-        SeAttachmentLoadOp stencilLoadOp = SE_ATTACHMENT_LOAD_OP_DONT_CARE,
-        SeAttachmentStoreOp stencilStoreOp = SE_ATTACHMENT_STORE_OP_DONT_CARE);
+    RenderTargetAttachment(PViewport viewport, SeImageLayout initialLayout, SeImageLayout finalLayout,
+                           SeAttachmentLoadOp loadOp = SE_ATTACHMENT_LOAD_OP_LOAD,
+                           SeAttachmentStoreOp storeOp = SE_ATTACHMENT_STORE_OP_STORE,
+                           SeAttachmentLoadOp stencilLoadOp = SE_ATTACHMENT_LOAD_OP_DONT_CARE,
+                           SeAttachmentStoreOp stencilStoreOp = SE_ATTACHMENT_STORE_OP_DONT_CARE);
     ~RenderTargetAttachment();
-    PTexture2D getTexture() const
-    {
-        if(viewport != nullptr)
-        {
+    PTexture2D getTexture() const {
+        if (viewport != nullptr) {
             return viewport->getOwner()->getBackBuffer();
         }
         return texture;
     }
-    SeFormat getFormat() const
-    {
-        if(viewport != nullptr)
-        {
+    SeFormat getFormat() const {
+        if (viewport != nullptr) {
             return viewport->getOwner()->getSwapchainFormat();
         }
         return texture->getFormat();
     }
-    SeSampleCountFlags getNumSamples() const
-    {
-        if(viewport != nullptr)
-        {
+    SeSampleCountFlags getNumSamples() const {
+        if (viewport != nullptr) {
             return viewport->getSamples();
         }
         return texture->getNumSamples();
     }
-    uint32 getWidth() const 
-    { 
-        if(viewport != nullptr)
-        {
+    uint32 getWidth() const {
+        if (viewport != nullptr) {
             return viewport->getWidth();
         }
-        return texture->getWidth(); 
+        return texture->getWidth();
     }
-    uint32 getHeight() const 
-    { 
-        if(viewport != nullptr)
-        {
+    uint32 getHeight() const {
+        if (viewport != nullptr) {
             return viewport->getHeight();
         }
-        return texture->getHeight(); 
+        return texture->getHeight();
     }
     constexpr SeAttachmentLoadOp getLoadOp() const { return loadOp; }
     constexpr SeAttachmentStoreOp getStoreOp() const { return storeOp; }
@@ -81,9 +63,10 @@ public:
     constexpr void setStencilStoreOp(SeAttachmentStoreOp val) { stencilStoreOp = val; }
     constexpr void setInitialLayout(SeImageLayout val) { initialLayout = val; }
     constexpr void setFinalLayout(SeImageLayout val) { finalLayout = val; }
-    SeClearValue clear = { { { 0 } } };
+    SeClearValue clear = {{{0}}};
     SeColorComponentFlags componentFlags = 0;
-protected:
+
+  protected:
     PTexture2D texture = nullptr;
     PViewport viewport = nullptr;
     SeImageLayout initialLayout = SE_IMAGE_LAYOUT_UNDEFINED;
@@ -94,8 +77,7 @@ protected:
     SeAttachmentStoreOp stencilStoreOp = SE_ATTACHMENT_STORE_OP_DONT_CARE;
 };
 
-struct RenderTargetLayout
-{
+struct RenderTargetLayout {
     Array<RenderTargetAttachment> inputAttachments;
     Array<RenderTargetAttachment> colorAttachments;
     Array<RenderTargetAttachment> resolveAttachments;
@@ -103,8 +85,7 @@ struct RenderTargetLayout
     RenderTargetAttachment depthResolveAttachment;
 };
 
-struct SubPassDependency
-{
+struct SubPassDependency {
     uint32 srcSubpass;
     uint32 dstSubpass;
     SePipelineStageFlags srcStage;
@@ -113,22 +94,19 @@ struct SubPassDependency
     SeAccessFlags dstAccess;
 };
 
-class RenderPass
-{
-public:
-    RenderPass(RenderTargetLayout layout, Array<SubPassDependency> dependencies) 
-        : layout(std::move(layout))
-        , dependencies(std::move(dependencies))
-    {}
+class RenderPass {
+  public:
+    RenderPass(RenderTargetLayout layout, Array<SubPassDependency> dependencies)
+        : layout(std::move(layout)), dependencies(std::move(dependencies)) {}
     virtual ~RenderPass() {}
     RenderPass(RenderPass&&) = default;
     RenderPass& operator=(RenderPass&&) = default;
     const RenderTargetLayout& getLayout() const { return layout; }
 
-protected:
+  protected:
     RenderTargetLayout layout;
     Array<SubPassDependency> dependencies;
 };
 DEFINE_REF(RenderPass)
-}
-}
+} // namespace Gfx
+} // namespace Seele

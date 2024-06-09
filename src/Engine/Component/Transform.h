@@ -1,13 +1,11 @@
 #pragma once
-#include "Math/Transform.h"
 #include "Component.h"
+#include "Math/Transform.h"
 
-namespace Seele
-{
-namespace Component
-{
-struct Transform
-{
+
+namespace Seele {
+namespace Component {
+struct Transform {
     Vector getPosition() const { return transform.getPosition(); }
     Quaternion getRotation() const { return transform.getRotation(); }
     Vector getScale() const { return transform.getScale(); }
@@ -24,7 +22,8 @@ struct Transform
     void translate(Vector direction);
     void rotate(Quaternion quat);
     void scale(Vector scale);
-private:
+
+  private:
     Math::Transform transform;
 };
 DECLARE_COMPONENT(Transform)

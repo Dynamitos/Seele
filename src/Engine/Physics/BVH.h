@@ -1,28 +1,26 @@
 #pragma once
-#include <entt/entt.hpp>
-#include "Containers/Array.h"
-#include "Math/AABB.h"
 #include "Component/Collider.h"
+#include "Containers/Array.h"
 #include "Containers/Pair.h"
+#include "Math/AABB.h"
+#include <entt/entt.hpp>
 
-namespace Seele
-{
-class BVH
-{
-public:
+
+namespace Seele {
+class BVH {
+  public:
     void findOverlaps(Array<Pair<entt::entity, entt::entity>>& overlaps);
     void updateDynamicCollider(entt::entity entity, AABB aabb);
     void colliderCallback(entt::registry& registry, entt::entity entity);
     void visualize();
-private:
-    struct AABBCenter
-    {
+
+  private:
+    struct AABBCenter {
         AABB bb;
         Vector center;
         entt::entity id;
     };
-    struct Node
-    {
+    struct Node {
         AABB box;
         int32 parentIndex = -1;
         int32 left = -1;

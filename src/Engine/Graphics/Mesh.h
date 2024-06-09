@@ -1,13 +1,12 @@
 #pragma once
 #include "Asset/MaterialInstanceAsset.h"
-#include "VertexData.h"
 #include "Graphics/Buffer.h"
+#include "VertexData.h"
 
-namespace Seele
-{
-class Mesh
-{
-public:
+
+namespace Seele {
+class Mesh {
+  public:
     Mesh();
     ~Mesh();
 
@@ -21,21 +20,15 @@ public:
     Array<Meshlet> meshlets;
     void save(ArchiveBuffer& buffer) const;
     void load(ArchiveBuffer& buffer);
-private:
+
+  private:
 };
 DEFINE_REF(Mesh)
-namespace Serialization
-{
-    template<>
-    void save(ArchiveBuffer& buffer, const OMesh& ptr)
-    {
-        ptr->save(buffer);
-    }
-    template<>
-    void load(ArchiveBuffer& buffer, OMesh& ptr)
-    {
-        ptr = new Mesh();
-        ptr->load(buffer);
-    }
+namespace Serialization {
+template <> void save(ArchiveBuffer& buffer, const OMesh& ptr) { ptr->save(buffer); }
+template <> void load(ArchiveBuffer& buffer, OMesh& ptr) {
+    ptr = new Mesh();
+    ptr->load(buffer);
+}
 } // namespace Serialization
 } // namespace Seele

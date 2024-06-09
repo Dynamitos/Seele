@@ -5,35 +5,16 @@ using namespace Seele;
 using namespace Seele::Editor;
 
 PlayView::PlayView(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo& createInfo, std::string dllPath)
-    : GameView(graphics, window, createInfo, dllPath)
-{
-}
+    : GameView(graphics, window, createInfo, dllPath) {}
 
-PlayView::~PlayView()
-{
-}
+PlayView::~PlayView() {}
 
-void PlayView::beginUpdate()
-{
-    GameView::beginUpdate();
-}
+void PlayView::beginUpdate() { GameView::beginUpdate(); }
 
-void PlayView::update()
-{
-    GameView::update();
-}
+void PlayView::update() { GameView::update(); }
 
-void PlayView::commitUpdate()
-{
-    GameView::commitUpdate();
-}
+void PlayView::commitUpdate() { GameView::commitUpdate(); }
 
-void PlayView::prepareRender()
-{
-    GameView::prepareRender();
-}
+void PlayView::prepareRender() { GameView::prepareRender(); }
 
-void PlayView::render()
-{
-    GameView::render();
-}
+void PlayView::render() { GameView::render(); }

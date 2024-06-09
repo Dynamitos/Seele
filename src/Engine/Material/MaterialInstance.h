@@ -1,20 +1,15 @@
 #pragma once
-#include "Material.h"
-#include "Graphics/Buffer.h"
 #include "Asset/MaterialAsset.h"
+#include "Graphics/Buffer.h"
+#include "Material.h"
 
-namespace Seele
-{
-class MaterialInstance
-{
-public:
+
+namespace Seele {
+class MaterialInstance {
+  public:
     MaterialInstance();
-    MaterialInstance(uint64 id, 
-        Gfx::PGraphics graphics, 
-        Array<OShaderExpression>& expressions,
-        Array<std::string> params, 
-        uint32 uniformBinding, 
-        uint32 uniformSize);
+    MaterialInstance(uint64 id, Gfx::PGraphics graphics, Array<OShaderExpression>& expressions, Array<std::string> params,
+                     uint32 uniformBinding, uint32 uniformSize);
     ~MaterialInstance();
     void updateDescriptor();
     Gfx::PDescriptorSet getDescriptorSet() const;
@@ -26,7 +21,7 @@ public:
     void save(ArchiveBuffer& buffer) const;
     void load(ArchiveBuffer& buffer);
 
-private:
+  private:
     Gfx::PGraphics graphics;
     Array<uint8> uniformData;
     uint32 uniformBinding;

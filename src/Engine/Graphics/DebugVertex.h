@@ -1,11 +1,10 @@
 #pragma once
-#include "Math/Vector.h"
 #include "Containers/Array.h"
+#include "Math/Vector.h"
 
-namespace Seele
-{
-struct DebugVertex
-{
+
+namespace Seele {
+struct DebugVertex {
     Vector position;
     Vector color;
 };
