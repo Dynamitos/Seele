@@ -38,7 +38,7 @@ void meshMain(
 			uint local_idx1 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 1];
 			uint local_idx2 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 2];
             indices[p] = uint3(local_idx0, local_idx1, local_idx2);
-            prim[p].cull = cull.triangleCulled(p);
+            prim[p].cull = false;//cull.triangleCulled(p);
 #ifdef VISIBILITY
             prim[p].prim = encodePrimitive(p, meshletId);
 #endif

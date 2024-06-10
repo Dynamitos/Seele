@@ -170,7 +170,7 @@ DescriptorSet::DescriptorSet(PGraphics graphics, PDescriptorPool owner)
     boundResources.resize(owner->getLayout()->getBindings().size());
 }
 
-DescriptorSet::~DescriptorSet() { vkFreeDescriptorSets(graphics->getDevice(), owner->getHandle(), 1, &setHandle); }
+DescriptorSet::~DescriptorSet() {}
 
 void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PUniformBuffer uniformBuffer) {
     PUniformBuffer vulkanBuffer = uniformBuffer.cast<UniformBuffer>();

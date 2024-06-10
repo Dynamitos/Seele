@@ -51,6 +51,7 @@ void Graphics::init(GraphicsInitializer initInfo) {
     pickPhysicalDevice();
     createDevice(initInfo);
     VmaAllocatorCreateInfo createInfo = {
+        .flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT,
         .physicalDevice = physicalDevice,
         .device = handle,
         .preferredLargeHeapBlockSize = 0,
@@ -498,6 +499,8 @@ void Graphics::createDevice(GraphicsInitializer initializer) {
 #ifdef __APPLE__
     initializer.deviceExtensions.add("VK_KHR_portability_subset");
 #endif
+    initializer.deviceExtensions.add(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
+    initializer.deviceExtensions.add(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
     VkDeviceCreateInfo deviceInfo = {
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
         .pNext = &features11,

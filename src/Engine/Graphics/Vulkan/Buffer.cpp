@@ -25,7 +25,7 @@ static Map<Vulkan::Buffer*, PendingBuffer> pendingBuffers;
 
 Buffer::Buffer(PGraphics graphics, uint64 size, VkBufferUsageFlags usage, Gfx::QueueType& queueType, bool dynamic, std::string name)
     : graphics(graphics), currentBuffer(0), owner(queueType),
-      usage(usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT), dynamic(dynamic), name(name) {
+      usage(usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT), dynamic(dynamic), name(name) {
     createBuffer(size);
 }
 

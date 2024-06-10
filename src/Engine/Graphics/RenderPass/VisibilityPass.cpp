@@ -12,31 +12,15 @@ VisibilityPass::~VisibilityPass() {}
 void VisibilityPass::beginFrame(const Component::Camera& cam) {
     RenderPass::beginFrame(cam);
     cullingBuffer->rotateBuffer(VertexData::getMeshletCount() * sizeof(VertexData::MeshletCullingInfo), true);
-    if (resetVisibility) {
-        Array<VertexData::MeshletCullingInfo> cullingData(VertexData::getMeshletCount());
-        std::memset(cullingData.data(), 0xffff, cullingData.size() * sizeof(VertexData::MeshletCullingInfo));
-
-        cullingBuffer->updateContents(
-            ShaderBufferCreateInfo{.sourceData =
-                                       {
-                                           .size = VertexData::getMeshletCount() * sizeof(VertexData::MeshletCullingInfo),
-                                           .data = (uint8*)cullingData.data(),
-                                       },
-                                   .numElements = VertexData::getMeshletCount()});
-        cullingBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
-                                       Gfx::SE_ACCESS_MEMORY_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
-
-        resetVisibility = false;
-    }
 }
 
 void VisibilityPass::render() {
     cullingBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_MESH_SHADER_BIT_EXT,
                                    Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT);
     cullingBuffer->clear();
+
     cullingBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, Gfx::SE_ACCESS_SHADER_READ_BIT,
                                    Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
-
     visibilityDescriptor->reset();
     visibilitySet = visibilityDescriptor->allocateDescriptorSet();
     visibilitySet->updateTexture(0, visibilityAttachment.getTexture());
