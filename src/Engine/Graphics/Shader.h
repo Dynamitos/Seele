@@ -55,7 +55,7 @@ struct ShaderPermutation {
     uint8 hasTaskShader;
     uint8 useMaterial;
     uint8 positionOnly;
-    uint8 viewCulling;
+    uint8 depthCulling;
     uint8 visibilityPass;
     // TODO: lightmapping etc
     ShaderPermutation() { std::memset(this, 0, sizeof(ShaderPermutation)); }
@@ -89,7 +89,7 @@ struct ShaderPermutation {
         strncpy(materialName, name.data(), sizeof(materialName));
     }
     void setPositionOnly(bool enable) { positionOnly = enable; }
-    void setViewCulling(bool enable) { viewCulling = enable; }
+    void setDepthCulling(bool enable) { depthCulling = enable; }
     void setVisibilityPass(bool enable) { visibilityPass = enable; }
 };
 // Hashed ShaderPermutation for fast lookup

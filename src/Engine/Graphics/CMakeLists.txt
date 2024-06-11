@@ -19,6 +19,8 @@ target_sources(Engine
         Meshlet.cpp
         Pipeline.h
         Pipeline.cpp
+        Query.h
+        Query.cpp
         RayTracing.h
         RayTracing.cpp
         RenderTarget.h
@@ -52,6 +54,7 @@ target_sources(Engine
             Meshlet.h
             MeshData.h
             Pipeline.h
+            Query.h
             RayTracing.h
             RenderTarget.h
             Resources.h

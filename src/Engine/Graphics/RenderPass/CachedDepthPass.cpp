@@ -4,7 +4,7 @@
 using namespace Seele;
 
 extern bool usePositionOnly;
-extern bool useViewCulling;
+extern bool useDepthCulling;
 
 CachedDepthPass::CachedDepthPass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics, scene) {
     depthPrepassLayout = graphics->createPipelineLayout("CachedDepthLayout");
@@ -45,13 +45,17 @@ CachedDepthPass::~CachedDepthPass() {}
 
 void CachedDepthPass::beginFrame(const Component::Camera& cam) { RenderPass::beginFrame(cam); }
 
+uint64 numFragments = 0;
+
 void CachedDepthPass::render() {
+    occlusionQuery->resetQuery();
+    occlusionQuery->beginQuery();
     graphics->beginRenderPass(renderPass);
     Array<Gfx::ORenderCommand> commands;
 
     Gfx::ShaderPermutation permutation = graphics->getShaderCompiler()->getTemplate("CachedDepthPass");
     permutation.setPositionOnly(usePositionOnly);
-    permutation.setViewCulling(useViewCulling);
+    permutation.setDepthCulling(useDepthCulling);
     for (VertexData* vertexData : VertexData::getList()) {
         permutation.setVertexData(vertexData->getTypeName());
         vertexData->getInstanceDataSet()->updateBuffer(6, cullingBuffer);
@@ -141,11 +145,14 @@ void CachedDepthPass::render() {
 
     graphics->executeCommands(std::move(commands));
     graphics->endRenderPass();
+    occlusionQuery->endQuery();
+    numFragments = occlusionQuery->getResults();
 }
 
 void CachedDepthPass::endFrame() {}
 
 void CachedDepthPass::publishOutputs() {
+    occlusionQuery = graphics->createOcclusionQuery();
     // If we render to a part of an image, the depth buffer itself must
     // still match the size of the whole image or their coordinate systems go out of sync
     TextureCreateInfo depthBufferInfo = {

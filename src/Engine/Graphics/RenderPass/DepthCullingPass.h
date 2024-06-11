@@ -1,6 +1,7 @@
 #pragma once
 #include "MinimalEngine.h"
 #include "RenderPass.h"
+#include "Graphics/Query.h"
 
 namespace Seele {
 class DepthCullingPass : public RenderPass {
@@ -22,6 +23,7 @@ class DepthCullingPass : public RenderPass {
     Gfx::ODescriptorLayout depthTextureLayout;
     Gfx::OPipelineLayout depthPrepassLayout;
 
+    Gfx::OOcclusionQuery occlusionQuery;
     Gfx::PShaderBuffer cullingBuffer;
 };
 DEFINE_REF(DepthCullingPass)

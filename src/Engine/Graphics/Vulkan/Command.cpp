@@ -181,8 +181,8 @@ void RenderCommand::begin(PRenderPass renderPass, PFramebuffer framebuffer) {
         .renderPass = renderPass->getHandle(),
         .subpass = 0,
         .framebuffer = framebuffer->getHandle(),
-        .occlusionQueryEnable = 0,
-        .queryFlags = 0,
+        .occlusionQueryEnable = 1,
+        .queryFlags = VK_QUERY_CONTROL_PRECISE_BIT,
         .pipelineStatistics = 0,
     };
     VkCommandBufferBeginInfo beginInfo = {

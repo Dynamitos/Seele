@@ -65,6 +65,8 @@ class Graphics : public Gfx::Graphics {
 
     virtual Gfx::OVertexInput createVertexInput(VertexInputStateCreateInfo createInfo) override;
 
+    virtual Gfx::OOcclusionQuery createOcclusionQuery() override;
+
     virtual void resolveTexture(Gfx::PTexture source, Gfx::PTexture destination) override;
     virtual void copyTexture(Gfx::PTexture src, Gfx::PTexture dst) override;
 

@@ -1,5 +1,6 @@
 #pragma once
 #include "RenderPass.h"
+#include "Graphics/Query.h"
 
 namespace Seele {
 class CachedDepthPass : public RenderPass {
@@ -21,6 +22,7 @@ class CachedDepthPass : public RenderPass {
     Gfx::OTexture2D visibilityBuffer;
     Gfx::OPipelineLayout depthPrepassLayout;
 
+    Gfx::OOcclusionQuery occlusionQuery;
     Gfx::PShaderBuffer cullingBuffer;
 };
 DEFINE_REF(CachedDepthPass)

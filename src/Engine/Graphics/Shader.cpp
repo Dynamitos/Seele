@@ -60,7 +60,7 @@ void ShaderCompiler::compile() {
                             work.add([=]() {
                                 ShaderPermutation permutation = getTemplate(name);
                                 permutation.setPositionOnly(x);
-                                permutation.setViewCulling(y);
+                                permutation.setDepthCulling(y);
                                 permutation.setVertexData(vd->getTypeName());
                                 OPipelineLayout layout = graphics->createPipelineLayout(pass.baseLayout->getName(), pass.baseLayout);
                                 layout->addDescriptorLayout(vd->getVertexDataLayout());
@@ -78,7 +78,7 @@ void ShaderCompiler::compile() {
                         work.add([=]() {
                             ShaderPermutation permutation = getTemplate(name);
                             permutation.setPositionOnly(x);
-                            permutation.setViewCulling(y);
+                            permutation.setDepthCulling(y);
                             permutation.setVertexData(vd->getTypeName());
                             OPipelineLayout layout = graphics->createPipelineLayout(pass.baseLayout->getName(), pass.baseLayout);
                             layout->addDescriptorLayout(vd->getVertexDataLayout());
@@ -113,8 +113,8 @@ void ShaderCompiler::createShaders(ShaderPermutation permutation, Gfx::OPipeline
     if (permutation.positionOnly) {
         createInfo.defines["POS_ONLY"] = "1";
     }
-    if (permutation.viewCulling) {
-        createInfo.defines["VIEW_CULLING"] = "1";
+    if (permutation.depthCulling) {
+        createInfo.defines["DEPTH_CULLING"] = "1";
     }
     if (permutation.visibilityPass) {
         createInfo.defines["VISIBILITY"] = "1";

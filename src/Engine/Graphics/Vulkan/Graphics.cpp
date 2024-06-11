@@ -12,6 +12,7 @@
 #include "RayTracing.h"
 #include "RenderPass.h"
 #include "Shader.h"
+#include "Query.h"
 #include "Window.h"
 #include <GLFW/glfw3.h>
 #include <cstring>
@@ -96,7 +97,6 @@ void Graphics::beginRenderPass(Gfx::PRenderPass renderPass) {
 
 void Graphics::endRenderPass() {
     getGraphicsCommands()->getCommands()->endRenderPass();
-    getGraphicsCommands()->submitCommands();
 }
 
 void Graphics::waitDeviceIdle() { vkDeviceWaitIdle(handle); }
@@ -194,6 +194,8 @@ Gfx::OPipelineLayout Graphics::createPipelineLayout(const std::string& name, Gfx
 }
 
 Gfx::OVertexInput Graphics::createVertexInput(VertexInputStateCreateInfo createInfo) { return new VertexInput(createInfo); }
+
+Gfx::OOcclusionQuery Graphics::createOcclusionQuery() { return new OcclusionQuery(this); }
 
 void Graphics::resolveTexture(Gfx::PTexture source, Gfx::PTexture destination) {
     PTextureBase sourceTex = source.cast<TextureBase>();
@@ -396,7 +398,6 @@ void Graphics::pickPhysicalDevice() {
     features.pNext = &robustness;
     robustness.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_EXT;
     robustness.pNext = &features11;
-    robustness.nullDescriptor = true;
     features11.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
     features11.pNext = &features12;
     features12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
@@ -425,6 +426,7 @@ void Graphics::pickPhysicalDevice() {
     vkGetPhysicalDeviceProperties(physicalDevice, &props);
     vkGetPhysicalDeviceFeatures2(physicalDevice, &features);
     features.features.robustBufferAccess = 0;
+    features.features.inheritedQueries = true;
     if (Gfx::useMeshShading) {
         uint32 count = 0;
         vkEnumerateDeviceExtensionProperties(physicalDevice, NULL, &count, nullptr);

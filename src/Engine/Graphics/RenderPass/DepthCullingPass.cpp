@@ -4,7 +4,7 @@
 using namespace Seele;
 
 extern bool usePositionOnly;
-extern bool useViewCulling;
+extern bool useDepthCulling;
 
 DepthCullingPass::DepthCullingPass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics, scene) {
     depthTextureLayout = graphics->createDescriptorLayout("pDepthAttachment");
@@ -54,6 +54,8 @@ DepthCullingPass::~DepthCullingPass() {}
 
 void DepthCullingPass::beginFrame(const Component::Camera& cam) { RenderPass::beginFrame(cam); }
 
+extern uint64 numFragments;
+
 void DepthCullingPass::render() {
     depthAttachment.getTexture()->changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
                                                Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, Gfx::SE_ACCESS_TRANSFER_READ_BIT,
@@ -76,100 +78,107 @@ void DepthCullingPass::render() {
     set->updateTexture(0, Gfx::PTexture2D(depthMipTexture));
     set->writeChanges();
 
+    occlusionQuery->resetQuery();
+    occlusionQuery->beginQuery();
     graphics->beginRenderPass(renderPass);
-    Array<Gfx::ORenderCommand> commands;
+    if (useDepthCulling) {
 
-    Gfx::ShaderPermutation permutation = graphics->getShaderCompiler()->getTemplate("DepthPass");
-    permutation.setPositionOnly(usePositionOnly);
-    permutation.setViewCulling(useViewCulling);
-    for (VertexData* vertexData : VertexData::getList()) {
-        permutation.setVertexData(vertexData->getTypeName());
-        vertexData->getInstanceDataSet()->updateBuffer(6, cullingBuffer);
-        vertexData->getInstanceDataSet()->writeChanges();
-        // Create Pipeline(VertexData)
-        // Descriptors:
-        // ViewData => global, static
-        // VertexData => per meshtype
-        // SceneData => per meshtype
-        Gfx::PermutationId id(permutation);
+        Array<Gfx::ORenderCommand> commands;
 
-        Gfx::ORenderCommand command = graphics->createRenderCommand("DepthRender");
-        command->setViewport(viewport);
+        Gfx::ShaderPermutation permutation = graphics->getShaderCompiler()->getTemplate("DepthPass");
+        permutation.setPositionOnly(usePositionOnly);
+        permutation.setDepthCulling(useDepthCulling);
+        for (VertexData* vertexData : VertexData::getList()) {
+            permutation.setVertexData(vertexData->getTypeName());
+            vertexData->getInstanceDataSet()->updateBuffer(6, cullingBuffer);
+            vertexData->getInstanceDataSet()->writeChanges();
+            // Create Pipeline(VertexData)
+            // Descriptors:
+            // ViewData => global, static
+            // VertexData => per meshtype
+            // SceneData => per meshtype
+            Gfx::PermutationId id(permutation);
 
-        const Gfx::ShaderCollection* collection = graphics->getShaderCompiler()->findShaders(id);
-        assert(collection != nullptr);
-        if (graphics->supportMeshShading()) {
-            Gfx::MeshPipelineCreateInfo pipelineInfo = {
-                .taskShader = collection->taskShader,
-                .meshShader = collection->meshShader,
-                .fragmentShader = collection->fragmentShader,
-                .renderPass = renderPass,
-                .pipelineLayout = collection->pipelineLayout,
-                .multisampleState =
-                    {
-                        .samples = viewport->getSamples(),
-                    },
-                .depthStencilState =
-                    {
-                        .depthCompareOp = Gfx::SE_COMPARE_OP_GREATER,
-                    },
-                .colorBlend =
-                    {
-                        .attachmentCount = 1,
-                    },
-            };
-            Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
-            command->bindPipeline(pipeline);
-        } else {
-            Gfx::LegacyPipelineCreateInfo pipelineInfo = {
-                .vertexShader = collection->vertexShader,
-                .fragmentShader = collection->fragmentShader,
-                .renderPass = renderPass,
-                .pipelineLayout = collection->pipelineLayout,
-                .multisampleState =
-                    {
-                        .samples = viewport->getSamples(),
-                    },
-                .depthStencilState =
-                    {
-                        .depthCompareOp = Gfx::SE_COMPARE_OP_GREATER,
-                    },
-                .colorBlend =
-                    {
-                        .attachmentCount = 1,
-                    },
-            };
-            Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
-            command->bindPipeline(pipeline);
-        }
-        command->bindDescriptor({viewParamsSet, vertexData->getVertexDataSet(), vertexData->getInstanceDataSet(), set});
-        uint32 offset = 0;
-        command->pushConstants(Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_VERTEX_BIT, 0, sizeof(VertexData::DrawCallOffsets),
-                               &offset);
-        if (graphics->supportMeshShading()) {
-            command->drawMesh(vertexData->getNumInstances(), 1, 1);
-        } else {
-            const auto& materials = vertexData->getMaterialData();
-            for (const auto& materialData : materials) {
-                for (const auto& drawCall : materialData.instances) {
-                    // material not used for any active meshes, skip
-                    if (materialData.instances.size() == 0)
-                        continue;
-                    command->bindIndexBuffer(vertexData->getIndexBuffer());
-                    uint32 inst = drawCall.offsets.instanceOffset;
-                    for (const auto& meshData : drawCall.instanceMeshData) {
-                        // all meshlets of a mesh share the same indices offset
-                        command->drawIndexed(meshData.numIndices, 1, meshData.firstIndex,
-                                             vertexData->getIndicesOffset(meshData.meshletOffset), inst++);
+            Gfx::ORenderCommand command = graphics->createRenderCommand("DepthRender");
+            command->setViewport(viewport);
+
+            const Gfx::ShaderCollection* collection = graphics->getShaderCompiler()->findShaders(id);
+            assert(collection != nullptr);
+            if (graphics->supportMeshShading()) {
+                Gfx::MeshPipelineCreateInfo pipelineInfo = {
+                    .taskShader = collection->taskShader,
+                    .meshShader = collection->meshShader,
+                    .fragmentShader = collection->fragmentShader,
+                    .renderPass = renderPass,
+                    .pipelineLayout = collection->pipelineLayout,
+                    .multisampleState =
+                        {
+                            .samples = viewport->getSamples(),
+                        },
+                    .depthStencilState =
+                        {
+                            .depthCompareOp = Gfx::SE_COMPARE_OP_GREATER,
+                        },
+                    .colorBlend =
+                        {
+                            .attachmentCount = 1,
+                        },
+                };
+                Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
+                command->bindPipeline(pipeline);
+            } else {
+                Gfx::LegacyPipelineCreateInfo pipelineInfo = {
+                    .vertexShader = collection->vertexShader,
+                    .fragmentShader = collection->fragmentShader,
+                    .renderPass = renderPass,
+                    .pipelineLayout = collection->pipelineLayout,
+                    .multisampleState =
+                        {
+                            .samples = viewport->getSamples(),
+                        },
+                    .depthStencilState =
+                        {
+                            .depthCompareOp = Gfx::SE_COMPARE_OP_GREATER,
+                        },
+                    .colorBlend =
+                        {
+                            .attachmentCount = 1,
+                        },
+                };
+                Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
+                command->bindPipeline(pipeline);
+            }
+            command->bindDescriptor({viewParamsSet, vertexData->getVertexDataSet(), vertexData->getInstanceDataSet(), set});
+            uint32 offset = 0;
+            command->pushConstants(Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_VERTEX_BIT, 0,
+                                   sizeof(VertexData::DrawCallOffsets), &offset);
+            if (graphics->supportMeshShading()) {
+                command->drawMesh(vertexData->getNumInstances(), 1, 1);
+            } else {
+                const auto& materials = vertexData->getMaterialData();
+                for (const auto& materialData : materials) {
+                    for (const auto& drawCall : materialData.instances) {
+                        // material not used for any active meshes, skip
+                        if (materialData.instances.size() == 0)
+                            continue;
+                        command->bindIndexBuffer(vertexData->getIndexBuffer());
+                        uint32 inst = drawCall.offsets.instanceOffset;
+                        for (const auto& meshData : drawCall.instanceMeshData) {
+                            // all meshlets of a mesh share the same indices offset
+                            command->drawIndexed(meshData.numIndices, 1, meshData.firstIndex,
+                                                 vertexData->getIndicesOffset(meshData.meshletOffset), inst++);
+                        }
                     }
                 }
             }
+            commands.add(std::move(command));
         }
-        commands.add(std::move(command));
-    }
 
-    graphics->executeCommands(std::move(commands));
+        graphics->executeCommands(std::move(commands));
+    }
     graphics->endRenderPass();
+    occlusionQuery->endQuery();
+    std::cout << "Occlusion fragments: " << occlusionQuery->getResults() + numFragments << std::endl;
     // Sync depth read/write with compute read
     depthAttachment.getTexture()->pipelineBarrier(
         Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
@@ -183,6 +192,8 @@ void DepthCullingPass::render() {
 void DepthCullingPass::endFrame() {}
 
 void DepthCullingPass::publishOutputs() {
+    occlusionQuery = graphics->createOcclusionQuery();
+
     uint32 width = viewport->getOwner()->getFramebufferWidth();
     uint32 height = viewport->getOwner()->getFramebufferHeight();
     uint32 mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(width, height)))) + 1;

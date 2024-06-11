@@ -30,6 +30,7 @@ DECLARE_REF(GraphicsPipeline)
 DECLARE_REF(ComputePipeline)
 DECLARE_REF(RenderCommand)
 DECLARE_REF(ComputeCommand)
+DECLARE_REF(OcclusionQuery)
 DECLARE_REF(BottomLevelAS)
 DECLARE_REF(TopLevelAS)
 class Graphics {
@@ -78,6 +79,8 @@ class Graphics {
     virtual OPipelineLayout createPipelineLayout(const std::string& name = "", PPipelineLayout baseLayout = nullptr) = 0;
 
     virtual OVertexInput createVertexInput(VertexInputStateCreateInfo createInfo) = 0;
+
+    virtual Gfx::OOcclusionQuery createOcclusionQuery() = 0;
 
     virtual void resolveTexture(PTexture source, PTexture destination) = 0;
     virtual void copyTexture(PTexture src, PTexture dst) = 0;

@@ -16,8 +16,6 @@
 
 using namespace Seele;
 
-extern bool useViewCulling;
-
 BasePass::BasePass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics, scene) {
     basePassLayout = graphics->createPipelineLayout("BasePassLayout");
 
@@ -93,7 +91,7 @@ void BasePass::render() {
     Array<Gfx::ORenderCommand> commands;
 
     Gfx::ShaderPermutation permutation = graphics->getShaderCompiler()->getTemplate("BasePass");
-    permutation.setViewCulling(useViewCulling);
+    permutation.setDepthCulling(true); // always use the culling info
     for (VertexData* vertexData : VertexData::getList()) {
         vertexData->getInstanceDataSet()->updateBuffer(6, cullingBuffer);
         vertexData->getInstanceDataSet()->writeChanges();
