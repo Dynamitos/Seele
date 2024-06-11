@@ -6,8 +6,8 @@ target_sources(Engine
         CachedDepthPass.cpp
         DebugPass.h
         DebugPass.cpp
-        DepthPrepass.h
-        DepthPrepass.cpp
+        DepthCullingPass.h
+        DepthCullingPass.cpp
         LightCullingPass.h
         LightCullingPass.cpp
         RayTracingPass.h
@@ -32,7 +32,7 @@ target_sources(Engine
             BasePass.h
             CachedDepthPass.h
             DebugPass.h
-            DepthPrepass.h
+            DepthCullingPass.h
             LightCullingPass.h
             RayTracingPass.h
             RenderGraph.h

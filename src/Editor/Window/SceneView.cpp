@@ -8,7 +8,9 @@
 #include "Graphics/Mesh.h"
 #include "Scene/Scene.h"
 #include "Window/Window.h"
-
+#include "Graphics/RenderPass/BasePass.h"
+#include "Graphics/RenderPass/DepthCullingPass.h"
+#include "Graphics/RenderPass/LightCullingPass.h"
 
 using namespace Seele;
 using namespace Seele::Editor;
@@ -16,7 +18,7 @@ using namespace Seele::Editor;
 SceneView::SceneView(Gfx::PGraphics graphics, PWindow owner, const ViewportCreateInfo& createInfo)
     : View(graphics, owner, createInfo, "SceneView"), scene(new Scene(graphics)), cameraSystem(createInfo.dimensions, Vector(0, 0, 10)) {
     cameraSystem.update(viewportCamera, static_cast<float>(Gfx::getCurrentFrameDelta()));
-    renderGraph.addPass(new DepthPrepass(graphics, scene));
+    renderGraph.addPass(new DepthCullingPass(graphics, scene));
     renderGraph.addPass(new LightCullingPass(graphics, scene));
     renderGraph.addPass(new BasePass(graphics, scene));
     renderGraph.setViewport(viewport);

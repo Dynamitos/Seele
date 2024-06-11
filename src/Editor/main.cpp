@@ -15,6 +15,7 @@
 #include "Window/PlayView.h"
 #include "Window/WindowManager.h"
 #include <fmt/core.h>
+#include <random>
 
 using namespace Seele;
 using namespace Seele::Editor;

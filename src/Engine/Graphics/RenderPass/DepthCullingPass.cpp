@@ -1,4 +1,4 @@
-#include "DepthPrepass.h"
+#include "DepthCullingPass.h"
 #include "Graphics/Shader.h"
 
 using namespace Seele;
@@ -6,9 +6,18 @@ using namespace Seele;
 extern bool usePositionOnly;
 extern bool useViewCulling;
 
-DepthPrepass::DepthPrepass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics, scene) {
+DepthCullingPass::DepthCullingPass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics, scene) {
+    depthTextureLayout = graphics->createDescriptorLayout("pDepthAttachment");
+    depthTextureLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .binding = 0,
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+        .shaderStages = Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_MESH_BIT_EXT,
+    });
+    depthTextureLayout->create();
+
     depthPrepassLayout = graphics->createPipelineLayout("DepthPrepassLayout");
     depthPrepassLayout->addDescriptorLayout(viewParamsLayout);
+    depthPrepassLayout->addDescriptorLayout(depthTextureLayout);
     depthPrepassLayout->addPushConstants(Gfx::SePushConstantRange{
         .stageFlags = Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_VERTEX_BIT,
         .offset = 0,
@@ -41,11 +50,32 @@ DepthPrepass::DepthPrepass(Gfx::PGraphics graphics, PScene scene) : RenderPass(g
     }
 }
 
-DepthPrepass::~DepthPrepass() {}
+DepthCullingPass::~DepthCullingPass() {}
 
-void DepthPrepass::beginFrame(const Component::Camera& cam) { RenderPass::beginFrame(cam); }
+void DepthCullingPass::beginFrame(const Component::Camera& cam) { RenderPass::beginFrame(cam); }
 
-void DepthPrepass::render() {
+void DepthCullingPass::render() {
+    depthAttachment.getTexture()->changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+                                               Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, Gfx::SE_ACCESS_TRANSFER_READ_BIT,
+                                               Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT);
+    depthMipTexture->changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, Gfx::SE_ACCESS_SHADER_READ_BIT,
+                                  Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT, Gfx::SE_ACCESS_TRANSFER_WRITE_BIT,
+                                  Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT);
+
+    graphics->copyTexture(depthAttachment.getTexture(), Gfx::PTexture2D(depthMipTexture));
+    depthMipTexture->generateMipmaps();
+
+    depthAttachment.getTexture()->changeLayout(
+        Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, Gfx::SE_ACCESS_TRANSFER_READ_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
+        Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+        Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT);
+    depthMipTexture->changeLayout(Gfx::SE_IMAGE_LAYOUT_GENERAL, Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
+                                  Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_TASK_SHADER_BIT_EXT);
+
+    Gfx::PDescriptorSet set = depthTextureLayout->allocateDescriptorSet();
+    set->updateTexture(0, Gfx::PTexture2D(depthMipTexture));
+    set->writeChanges();
+
     graphics->beginRenderPass(renderPass);
     Array<Gfx::ORenderCommand> commands;
 
@@ -112,9 +142,7 @@ void DepthPrepass::render() {
             Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
             command->bindPipeline(pipeline);
         }
-        command->bindDescriptor(viewParamsSet);
-        command->bindDescriptor(vertexData->getVertexDataSet());
-        command->bindDescriptor(vertexData->getInstanceDataSet());
+        command->bindDescriptor({viewParamsSet, vertexData->getVertexDataSet(), vertexData->getInstanceDataSet(), set});
         uint32 offset = 0;
         command->pushConstants(Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_VERTEX_BIT, 0, sizeof(VertexData::DrawCallOffsets),
                                &offset);
@@ -146,24 +174,24 @@ void DepthPrepass::render() {
     depthAttachment.getTexture()->pipelineBarrier(
         Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
         Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
-    // Sync depth read/write with base pass read
-    // depthAttachment.getTexture()->pipelineBarrier(
-    //    Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-    //    Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-    //    Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT,
-    //    Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT
-    //);
     // Sync visibility write with compute read
     visibilityAttachment.getTexture()->pipelineBarrier(Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
                                                        Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, Gfx::SE_ACCESS_SHADER_READ_BIT,
                                                        Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 }
 
-void DepthPrepass::endFrame() {}
+void DepthCullingPass::endFrame() {}
 
-void DepthPrepass::publishOutputs() {}
+void DepthCullingPass::publishOutputs() {
+    uint32 width = viewport->getOwner()->getFramebufferWidth();
+    uint32 height = viewport->getOwner()->getFramebufferHeight();
+    uint32 mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(width, height)))) + 1;
+    TextureCreateInfo depthMipInfo = {
+        .format = Gfx::SE_FORMAT_D32_SFLOAT, .width = width, .height = height, .mipLevels = mipLevels, .name = "DepthMipTexture"};
+    depthMipTexture = graphics->createTexture2D(depthMipInfo);
+}
 
-void DepthPrepass::createRenderPass() {
+void DepthCullingPass::createRenderPass() {
     cullingBuffer = resources->requestBuffer("CULLINGBUFFER");
 
     depthAttachment = resources->requestRenderTarget("DEPTHPREPASS_DEPTH");

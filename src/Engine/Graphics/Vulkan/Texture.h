@@ -41,6 +41,7 @@ class TextureBase {
     void changeLayout(Gfx::SeImageLayout newLayout, VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, VkAccessFlags dstAccess,
                       VkPipelineStageFlags dstStage);
     void download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<uint8>& buffer);
+    void generateMipmaps();
 
   protected:
     OTextureHandle handle;
@@ -75,6 +76,7 @@ class Texture2D : public Gfx::Texture2D, public TextureBase {
     virtual void changeLayout(Gfx::SeImageLayout newLayout, Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage,
                               Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage) override;
     virtual void download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<uint8>& buffer) override;
+    virtual void generateMipmaps() override;
 
   protected:
     // Inherited via QueueOwnedResource
@@ -97,6 +99,7 @@ class Texture3D : public Gfx::Texture3D, public TextureBase {
     virtual void changeLayout(Gfx::SeImageLayout newLayout, Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage,
                               Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage) override;
     virtual void download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<uint8>& buffer) override;
+    virtual void generateMipmaps() override;
 
   protected:
     // Inherited via QueueOwnedResource
@@ -119,6 +122,7 @@ class TextureCube : public Gfx::TextureCube, public TextureBase {
     virtual void changeLayout(Gfx::SeImageLayout newLayout, Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage,
                               Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage) override;
     virtual void download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<uint8>& buffer) override;
+    virtual void generateMipmaps() override;
 
   protected:
     // Inherited via QueueOwnedResource

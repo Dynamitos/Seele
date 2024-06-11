@@ -79,7 +79,8 @@ class Graphics {
 
     virtual OVertexInput createVertexInput(VertexInputStateCreateInfo createInfo) = 0;
 
-    virtual void resolveTexture(Gfx::PTexture source, Gfx::PTexture destination) = 0;
+    virtual void resolveTexture(PTexture source, PTexture destination) = 0;
+    virtual void copyTexture(PTexture src, PTexture dst) = 0;
 
     bool supportMeshShading() const { return meshShadingEnabled; }
 

@@ -1,7 +1,4 @@
 #pragma once
-#include "Graphics/RenderPass/BasePass.h"
-#include "Graphics/RenderPass/DepthPrepass.h"
-#include "Graphics/RenderPass/LightCullingPass.h"
 #include "ThreadPool.h"
 #include "ViewportControl.h"
 #include "Window/View.h"

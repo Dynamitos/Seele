@@ -28,6 +28,9 @@ class BasePass : public RenderPass {
     Gfx::PDescriptorSet opaqueCulling;
     Gfx::PDescriptorSet transparentCulling;
 
+    // use a different texture here so we can do multisampling
+    Gfx::OTexture2D basePassDepth;
+
     PCameraActor source;
     Gfx::OPipelineLayout basePassLayout;
     Gfx::ODescriptorLayout lightCullingLayout;

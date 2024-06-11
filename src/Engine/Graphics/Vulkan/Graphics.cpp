@@ -236,6 +236,26 @@ void Graphics::resolveTexture(Gfx::PTexture source, Gfx::PTexture destination) {
                       destinationTex->getImage(), cast(destinationTex->getLayout()), 1, &resolve);
 }
 
+void Graphics::copyTexture(Gfx::PTexture source, Gfx::PTexture destination) {
+    PTextureBase src = source.cast<TextureBase>();
+    PTextureBase dst = destination.cast<TextureBase>();
+    VkImageBlit blit = {.srcSubresource = {.aspectMask = src->getAspect(), .mipLevel = 0, .baseArrayLayer = 0, .layerCount = 1},
+                        .srcOffsets =
+                            {
+                                {0, 0, 0},
+                                {(int32)src->getWidth(), (int32)src->getHeight(), (int32)src->getDepth()},
+                            },
+                        .dstSubresource = {.aspectMask = dst->aspect, .mipLevel = 0, .baseArrayLayer = 0, .layerCount = 1},
+                        .dstOffsets = {
+                            {0, 0, 0},
+                            {(int32)dst->getWidth(), (int32)dst->getHeight(), (int32)dst->getDepth()},
+                        }};
+    PCommand command = getGraphicsCommands()->getCommands();
+    vkCmdBlitImage(command->getHandle(), src->getImage(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, dst->getImage(),
+                   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blit,
+                   src->aspect & VK_IMAGE_ASPECT_DEPTH_BIT ? VK_FILTER_NEAREST : VK_FILTER_LINEAR);
+}
+
 Gfx::OBottomLevelAS Graphics::createBottomLevelAccelerationStructure(const Gfx::BottomLevelASCreateInfo& createInfo) {
     return new BottomLevelAS(this, createInfo);
 }

@@ -14,7 +14,6 @@
 #include "RenderGraph.h"
 #include "Window/Window.h"
 
-
 using namespace Seele;
 
 extern bool useViewCulling;
@@ -164,13 +163,10 @@ void BasePass::render() {
                 Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
                 command->bindPipeline(pipeline);
             }
-            command->bindDescriptor(viewParamsSet);
-            command->bindDescriptor(vertexData->getVertexDataSet());
-            command->bindDescriptor(vertexData->getInstanceDataSet());
-            command->bindDescriptor(scene->getLightEnvironment()->getDescriptorSet());
-            command->bindDescriptor(opaqueCulling);
             for (const auto& drawCall : materialData.instances) {
-                command->bindDescriptor(drawCall.materialInstance->getDescriptorSet());
+                command->bindDescriptor({viewParamsSet, vertexData->getVertexDataSet(), vertexData->getInstanceDataSet(),
+                                         scene->getLightEnvironment()->getDescriptorSet(), drawCall.materialInstance->getDescriptorSet(),
+                                         opaqueCulling});
                 command->pushConstants(Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_VERTEX_BIT, 0,
                                        sizeof(VertexData::DrawCallOffsets), &drawCall.offsets);
                 if (graphics->supportMeshShading()) {
@@ -190,37 +186,32 @@ void BasePass::render() {
 
     graphics->executeCommands(std::move(commands));
     graphics->endRenderPass();
-    // Sync color write with next pass/swapchain present
-    // colorAttachment.getTexture()->pipelineBarrier(
-    //    Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-    //    Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-    //    Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-    //    Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT
-    //);
-    // Sync depth with next pass/next frame
-    // depthAttachment.getTexture()->pipelineBarrier(
-    //    Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-    //    Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-    //    Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT,
-    //    Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT
-    //);
 }
 
 void BasePass::endFrame() {}
 
 void BasePass::publishOutputs() {
+    TextureCreateInfo depthBufferInfo = {
+        .format = Gfx::SE_FORMAT_D32_SFLOAT,
+        .width = viewport->getOwner()->getFramebufferWidth(),
+        .height = viewport->getOwner()->getFramebufferHeight(),
+        .samples = viewport->getSamples(),
+        .usage = Gfx::SE_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+    };
+    basePassDepth = graphics->createTexture2D(depthBufferInfo);
+
     colorAttachment = Gfx::RenderTargetAttachment(viewport, Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
                                                   Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
     resources->registerRenderPassOutput("BASEPASS_COLOR", colorAttachment);
+    depthAttachment =
+        Gfx::RenderTargetAttachment(basePassDepth, Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+                                    Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
+    resources->registerRenderPassOutput("BASEPASS_DEPTH", depthAttachment);
 }
 
 void BasePass::createRenderPass() {
     cullingBuffer = resources->requestBuffer("CULLINGBUFFER");
 
-    depthAttachment = resources->requestRenderTarget("DEPTHPREPASS_DEPTH");
-    depthAttachment.setLoadOp(Gfx::SE_ATTACHMENT_LOAD_OP_LOAD);
-    depthAttachment.setInitialLayout(Gfx::SE_IMAGE_LAYOUT_GENERAL);
-    depthAttachment.setFinalLayout(Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
     Gfx::RenderTargetLayout layout = Gfx::RenderTargetLayout{
         .colorAttachments = {colorAttachment},
         .depthAttachment = depthAttachment,

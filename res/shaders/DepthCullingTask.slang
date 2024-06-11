@@ -6,8 +6,14 @@ groupshared uint head;
 groupshared MeshData mesh;
 groupshared InstanceData instance;
 groupshared Frustum viewFrustum;
+groupshared float4x4 modelViewProjection;
 
-ParameterBlock<Texture2D> pDepthAttachment;
+struct DepthData
+{
+    Texture2D<float> texture;
+}
+
+ParameterBlock<DepthData> pDepthAttachment;
 
 [numthreads(TASK_GROUP_SIZE, 1, 1)]
 [shader("amplification")]
@@ -15,6 +21,7 @@ void taskMain(
     uint threadID: SV_GroupThreadID,
     uint groupID: SV_GroupID, )
 {
+    const uint mipLevels = uint(log2(max(pViewParams.screenDimensions.x, pViewParams.screenDimensions.y)));
     if (threadID == 0)
     {
         head = 0;
@@ -23,6 +30,7 @@ void taskMain(
         p.instanceId = pOffsets.instanceOffset + groupID;
         p.meshletOffset = mesh.meshletOffset;
         p.cullingOffset = pScene.cullingOffsets[p.instanceId];
+        modelViewProjection = mul(mul(pViewParams.projectionMatrix, pViewParams.viewMatrix), instance.transformMatrix);
 		float3 origin = viewToModel(instance.inverseTransformMatrix, float4(0, 0, 0, 1)).xyz;
 		const float offset = 0.0f;
 		float3 corners[4] = {
@@ -46,13 +54,60 @@ void taskMain(
         // if any triangle was visible last frame, it was drawn by the cached pass already
         if(!culling.anyVisible())
         {
-#ifdef VIEW_CULLING
+            // if the meshlet is outside of the frustum, we skip it since we cant do depth culling anyways
 		    if(meshlet.bounding.insideFrustum(viewFrustum))
-#endif
             {
-                uint index;
-                InterlockedAdd(head, 1, index);
-                p.culledMeshlets[index] = i;
+                // now we calculate what mip level we need to only sample up to 4 texels covering the entire meshlet
+                uint2 screenCornerMin = uint2(uint(pViewParams.screenDimensions.x), uint(pViewParams.screenDimensions.y));
+                uint2 screenCornerMax = uint2(0, 0);
+                // we use reverse depth, so higher values are closer
+                float maxDepth = 0;
+                {
+                    float4 corners[8];
+                    corners[0] = float4(meshlet.bounding.min.x, meshlet.bounding.min.y, meshlet.bounding.min.z, 1.0f);
+                    corners[1] = float4(meshlet.bounding.min.x, meshlet.bounding.min.y, meshlet.bounding.max.z, 1.0f);
+                    corners[2] = float4(meshlet.bounding.min.x, meshlet.bounding.max.y, meshlet.bounding.min.z, 1.0f);
+                    corners[3] = float4(meshlet.bounding.min.x, meshlet.bounding.max.y, meshlet.bounding.max.z, 1.0f);
+                    corners[4] = float4(meshlet.bounding.max.x, meshlet.bounding.min.y, meshlet.bounding.min.z, 1.0f);
+                    corners[5] = float4(meshlet.bounding.max.x, meshlet.bounding.min.y, meshlet.bounding.max.z, 1.0f);
+                    corners[6] = float4(meshlet.bounding.max.x, meshlet.bounding.max.y, meshlet.bounding.min.z, 1.0f);
+                    corners[7] = float4(meshlet.bounding.max.x, meshlet.bounding.max.y, meshlet.bounding.max.z, 1.0f);
+                    for(uint i = 0; i < 8; ++i)
+                    {
+                        float4 clipCorner = mul(modelViewProjection, corners[i]);
+                        float4 screenCorner = clipToScreen(clipCorner);
+                        screenCornerMin = uint2(min(screenCornerMin.x, uint(screenCorner.x)), min(screenCornerMin.y, uint(screenCorner.y)));
+                        screenCornerMax = uint2(max(screenCornerMax.x, uint(screenCorner.x)), max(screenCornerMax.y, uint(screenCorner.y)));
+                        maxDepth = max(maxDepth, screenCorner.z);
+                    }
+                }
+                uint mipLevel = 0;
+                // in theory this wouldnt work if no corner was in screen, as min would be greater that max, however we verified that with view culling
+                while(screenCornerMax.x - screenCornerMin.x > 1 || screenCornerMax.y - screenCornerMin.y > 1)
+                {
+                    mipLevel++;
+                    screenCornerMin /= 2;
+                    screenCornerMax /= 2;
+                }
+
+                // now we sample 4 texels from the depth at the calculated mip level, this should give us the 
+                float d1 = pDepthAttachment.texture.Load(int3(screenCornerMin.x, screenCornerMin.y, mipLevel)).r;
+                float d2 = pDepthAttachment.texture.Load(int3(screenCornerMin.x, screenCornerMax.y, mipLevel)).r;
+                float d3 = pDepthAttachment.texture.Load(int3(screenCornerMax.x, screenCornerMin.y, mipLevel)).r;
+                float d4 = pDepthAttachment.texture.Load(int3(screenCornerMax.x, screenCornerMax.y, mipLevel)).r;
+
+                // we want to check if the minimum depth (the value farthest away) is smaller than the maximum bounding box depth
+                // otherwise, there is no way for the meshlet to be visible
+                float d = min(min(d1, d2), min(d3, d4));
+                
+                // this is technically not correct, as the mipmap is generated with a linear filter, but we actually would need a min filter, but whatever
+                if(d < maxDepth)
+                {
+                    uint index;
+                    InterlockedAdd(head, 1, index);
+                    p.culledMeshlets[index] = i;
+                }
+
             }
         }
     }

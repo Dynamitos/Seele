@@ -66,6 +66,7 @@ class Graphics : public Gfx::Graphics {
     virtual Gfx::OVertexInput createVertexInput(VertexInputStateCreateInfo createInfo) override;
 
     virtual void resolveTexture(Gfx::PTexture source, Gfx::PTexture destination) override;
+    virtual void copyTexture(Gfx::PTexture src, Gfx::PTexture dst) override;
 
     // Ray Tracing
     virtual Gfx::OBottomLevelAS createBottomLevelAccelerationStructure(const Gfx::BottomLevelASCreateInfo& createInfo) override;

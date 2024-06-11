@@ -113,9 +113,7 @@ void CachedDepthPass::render() {
             Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
             command->bindPipeline(pipeline);
         }
-        command->bindDescriptor(viewParamsSet);
-        command->bindDescriptor(vertexData->getVertexDataSet());
-        command->bindDescriptor(vertexData->getInstanceDataSet());
+        command->bindDescriptor({viewParamsSet, vertexData->getVertexDataSet(), vertexData->getInstanceDataSet()});
         uint32 offset = 0;
         command->pushConstants(Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_VERTEX_BIT, 0, sizeof(VertexData::DrawCallOffsets),
                                &offset);
@@ -143,18 +141,6 @@ void CachedDepthPass::render() {
 
     graphics->executeCommands(std::move(commands));
     graphics->endRenderPass();
-    // Sync depth read/write with depth pass depth read
-    // depthBuffer->pipelineBarrier(
-    //    Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-    //    Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-    //    Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT,
-    //    Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT);
-    // sync visibility write with depth pass visibility write
-    // visibilityBuffer->pipelineBarrier(
-    //    Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-    //    Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-    //    Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-    //    Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
 }
 
 void CachedDepthPass::endFrame() {}

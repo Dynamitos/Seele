@@ -1,8 +1,6 @@
 #include "Resources.h"
 #include "Graphics.h"
 #include "Material/Material.h"
-#include "RenderPass/BasePass.h"
-#include "RenderPass/DepthPrepass.h"
 #include "Resources.h"
 
 

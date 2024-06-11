@@ -1,8 +1,8 @@
 #include "Shader.h"
 #include "Graphics/Initializer.h"
-#include "Graphics/RenderPass/BasePass.h"
-#include "Graphics/RenderPass/DepthPrepass.h"
+#include "Material/Material.h"
 #include "ThreadPool.h"
+#include "Graphics/Graphics.h"
 #include <fmt/core.h>
 
 

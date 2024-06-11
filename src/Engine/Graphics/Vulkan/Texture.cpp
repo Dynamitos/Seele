@@ -146,6 +146,7 @@ TextureBase::TextureBase(PGraphics graphics, VkImageViewType viewType, const Tex
                                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 
         commandPool->getCommands()->bindResource(PBufferAllocation(stagingAlloc));
+        generateMipmaps();
         // When loading a texture from a file, we will almost always use it as a texture map for fragment shaders
         changeLayout(Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
                      VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
@@ -270,6 +271,69 @@ void TextureBase::download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Arra
     graphics->getDestructionManager()->queueResourceForDestruction(std::move(stagingAlloc));
 }
 
+void TextureBase::generateMipmaps() {
+    PCommandPool commandPool = graphics->getQueueCommands(currentOwner);
+    VkImageMemoryBarrier barrier = {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+        .srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
+        .dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT,
+        .oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+        .newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+        .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+        .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+        .image = handle->image,
+        .subresourceRange =
+            {
+                .aspectMask = aspect,
+                .levelCount = 1,
+                .baseArrayLayer = 0,
+                .layerCount = 1,
+            },
+    };
+    int32 mipWidth = width;
+    int32 mipHeight = height;
+    for (uint32 i = 1; i < mipLevels; ++i) {
+        barrier.subresourceRange.baseMipLevel = i - 1;
+
+        vkCmdPipelineBarrier(commandPool->getCommands()->getHandle(), VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0,
+                             nullptr, 0, nullptr, 1, &barrier);
+
+        VkImageBlit blit = {
+            .srcSubresource =
+                {
+                    .aspectMask = aspect,
+                    .mipLevel = i - 1,
+                    .baseArrayLayer = 0,
+                    .layerCount = 1,
+                },
+            .srcOffsets =
+                {
+                    {0, 0, 0},
+                    {mipWidth, mipHeight, 1},
+                },
+            .dstSubresource = {.aspectMask = aspect, .mipLevel = i, .baseArrayLayer = 0, .layerCount = 1},
+            .dstOffsets =
+                {
+                    {0, 0, 0},
+                    {mipWidth > 1 ? mipWidth / 2 : 1, mipHeight > 1 ? mipHeight / 2 : 1, 1},
+                },
+        };
+        vkCmdBlitImage(commandPool->getCommands()->getHandle(), handle->image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, handle->image,
+                       VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blit, aspect & VK_IMAGE_ASPECT_DEPTH_BIT ? VK_FILTER_NEAREST : VK_FILTER_LINEAR);
+
+        if (mipWidth > 1)
+            mipWidth /= 2;
+        if (mipHeight)
+            mipHeight /= 2;
+    }
+    barrier.subresourceRange.baseMipLevel = mipLevels - 1;
+
+    // just so that all levels are in the same layout and we can transition them as one
+    vkCmdPipelineBarrier(commandPool->getCommands()->getHandle(), VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0,
+                         nullptr, 0, nullptr, 1, &barrier);
+    layout = Gfx::SE_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+}
+
 void TextureBase::executeOwnershipBarrier(Gfx::QueueType newOwner) {
     Gfx::QueueFamilyMapping mapping = graphics->getFamilyMapping();
     VkImageMemoryBarrier imageBarrier = {
@@ -343,7 +407,7 @@ void TextureBase::executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStag
             {
                 .aspectMask = aspect,
                 .baseMipLevel = 0,
-                .levelCount = 1,
+                .levelCount = mipLevels,
                 .baseArrayLayer = 0,
                 .layerCount = 1,
             },
@@ -369,6 +433,8 @@ void Texture2D::download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<
     TextureBase::download(mipLevel, arrayLayer, face, buffer);
 }
 
+void Texture2D::generateMipmaps() { TextureBase::generateMipmaps(); }
+
 void Texture2D::executeOwnershipBarrier(Gfx::QueueType newOwner) { TextureBase::executeOwnershipBarrier(newOwner); }
 
 void Texture2D::executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, VkAccessFlags dstAccess,
@@ -390,6 +456,9 @@ void Texture3D::changeLayout(Gfx::SeImageLayout newLayout, Gfx::SeAccessFlags sr
 void Texture3D::download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<uint8>& buffer) {
     TextureBase::download(mipLevel, arrayLayer, face, buffer);
 }
+
+void Texture3D::generateMipmaps() { TextureBase::generateMipmaps(); }
+
 void Texture3D::executeOwnershipBarrier(Gfx::QueueType newOwner) { TextureBase::executeOwnershipBarrier(newOwner); }
 
 void Texture3D::executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, VkAccessFlags dstAccess,
@@ -412,6 +481,9 @@ void TextureCube::changeLayout(Gfx::SeImageLayout newLayout, Gfx::SeAccessFlags 
 void TextureCube::download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<uint8>& buffer) {
     TextureBase::download(mipLevel, arrayLayer, face, buffer);
 }
+
+void TextureCube::generateMipmaps() { TextureBase::generateMipmaps(); }
+
 void TextureCube::executeOwnershipBarrier(Gfx::QueueType newOwner) { TextureBase::executeOwnershipBarrier(newOwner); }
 
 void TextureCube::executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, VkAccessFlags dstAccess,

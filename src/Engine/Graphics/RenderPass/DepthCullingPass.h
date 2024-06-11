@@ -3,12 +3,12 @@
 #include "RenderPass.h"
 
 namespace Seele {
-class DepthPrepass : public RenderPass {
+class DepthCullingPass : public RenderPass {
   public:
-    DepthPrepass(Gfx::PGraphics graphics, PScene scene);
-    DepthPrepass(DepthPrepass&&) = default;
-    DepthPrepass& operator=(DepthPrepass&&) = default;
-    virtual ~DepthPrepass();
+    DepthCullingPass(Gfx::PGraphics graphics, PScene scene);
+    DepthCullingPass(DepthCullingPass&&) = default;
+    DepthCullingPass& operator=(DepthCullingPass&&) = default;
+    virtual ~DepthCullingPass();
     virtual void beginFrame(const Component::Camera& cam) override;
     virtual void render() override;
     virtual void endFrame() override;
@@ -16,11 +16,13 @@ class DepthPrepass : public RenderPass {
     virtual void createRenderPass() override;
 
   private:
+    Gfx::OTexture2D depthMipTexture;
     Gfx::RenderTargetAttachment depthAttachment;
     Gfx::RenderTargetAttachment visibilityAttachment;
+    Gfx::ODescriptorLayout depthTextureLayout;
     Gfx::OPipelineLayout depthPrepassLayout;
 
     Gfx::PShaderBuffer cullingBuffer;
 };
-DEFINE_REF(DepthPrepass)
+DEFINE_REF(DepthCullingPass)
 } // namespace Seele

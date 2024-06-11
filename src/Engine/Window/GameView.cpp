@@ -3,13 +3,13 @@
 #include "Asset/AssetRegistry.h"
 #include "Component/KeyboardInput.h"
 #include "Graphics/Graphics.h"
-#include "Graphics/RenderPass/BasePass.h"
 #include "Graphics/RenderPass/CachedDepthPass.h"
-#include "Graphics/RenderPass/DebugPass.h"
-#include "Graphics/RenderPass/DepthPrepass.h"
-#include "Graphics/RenderPass/LightCullingPass.h"
-#include "Graphics/RenderPass/SkyboxRenderPass.h"
+#include "Graphics/RenderPass/DepthCullingPass.h"
 #include "Graphics/RenderPass/VisibilityPass.h"
+#include "Graphics/RenderPass/LightCullingPass.h"
+#include "Graphics/RenderPass/BasePass.h"
+#include "Graphics/RenderPass/SkyboxRenderPass.h"
+#include "Graphics/RenderPass/DebugPass.h"
 #include "System/CameraUpdater.h"
 #include "System/LightGather.h"
 #include "System/MeshUpdater.h"
@@ -26,7 +26,7 @@ GameView::GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreate
     : View(graphics, window, createInfo, "Game"), scene(new Scene(graphics)), gameInterface(dllPath) {
     reloadGame();
     renderGraph.addPass(new CachedDepthPass(graphics, scene));
-    renderGraph.addPass(new DepthPrepass(graphics, scene));
+    renderGraph.addPass(new DepthCullingPass(graphics, scene));
     renderGraph.addPass(new VisibilityPass(graphics, scene));
     renderGraph.addPass(new LightCullingPass(graphics, scene));
     renderGraph.addPass(new BasePass(graphics, scene));
