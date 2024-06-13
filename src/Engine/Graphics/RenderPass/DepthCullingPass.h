@@ -23,7 +23,6 @@ class DepthCullingPass : public RenderPass {
     Gfx::ODescriptorLayout depthTextureLayout;
     Gfx::OPipelineLayout depthPrepassLayout;
 
-    Gfx::OOcclusionQuery occlusionQuery;
     Gfx::PShaderBuffer cullingBuffer;
 };
 DEFINE_REF(DepthCullingPass)

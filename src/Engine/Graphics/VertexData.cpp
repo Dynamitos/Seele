@@ -8,7 +8,6 @@
 #include "Material/Material.h"
 #include "Material/MaterialInstance.h"
 
-
 using namespace Seele;
 
 constexpr static uint64 NUM_DEFAULT_ELEMENTS = 1024 * 1024;
@@ -120,32 +119,38 @@ void VertexData::createDescriptors() {
         }
     }
     cullingOffsetBuffer->rotateBuffer(cullingOffsets.size() * sizeof(uint32));
-    cullingOffsetBuffer->updateContents(ShaderBufferCreateInfo{.sourceData =
-                                                                   {
-                                                                       .size = cullingOffsets.size() * sizeof(uint32),
-                                                                       .data = (uint8*)cullingOffsets.data(),
-                                                                   },
-                                                               .numElements = cullingOffsets.size()});
+    cullingOffsetBuffer->updateContents(ShaderBufferCreateInfo{
+        .sourceData =
+            {
+                .size = cullingOffsets.size() * sizeof(uint32),
+                .data = (uint8*)cullingOffsets.data(),
+            },
+        .numElements = cullingOffsets.size(),
+    });
     cullingOffsetBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
                                          Gfx::SE_ACCESS_MEMORY_READ_BIT, Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
 
     instanceBuffer->rotateBuffer(instanceData.size() * sizeof(InstanceData));
-    instanceBuffer->updateContents(ShaderBufferCreateInfo{.sourceData =
-                                                              {
-                                                                  .size = instanceData.size() * sizeof(InstanceData),
-                                                                  .data = (uint8*)instanceData.data(),
-                                                              },
-                                                          .numElements = instanceData.size()});
+    instanceBuffer->updateContents(ShaderBufferCreateInfo{
+        .sourceData =
+            {
+                .size = instanceData.size() * sizeof(InstanceData),
+                .data = (uint8*)instanceData.data(),
+            },
+        .numElements = instanceData.size(),
+    });
     instanceBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, Gfx::SE_ACCESS_MEMORY_READ_BIT,
                                     Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
 
     instanceMeshDataBuffer->rotateBuffer(sizeof(MeshData) * instanceMeshData.size());
-    instanceMeshDataBuffer->updateContents(ShaderBufferCreateInfo{.sourceData =
-                                                                      {
-                                                                          .size = sizeof(MeshData) * instanceMeshData.size(),
-                                                                          .data = (uint8*)instanceMeshData.data(),
-                                                                      },
-                                                                  .numElements = instanceMeshData.size()});
+    instanceMeshDataBuffer->updateContents(ShaderBufferCreateInfo{
+        .sourceData =
+            {
+                .size = sizeof(MeshData) * instanceMeshData.size(),
+                .data = (uint8*)instanceMeshData.data(),
+            },
+        .numElements = instanceMeshData.size(),
+    });
     instanceMeshDataBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
                                             Gfx::SE_ACCESS_MEMORY_READ_BIT, Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
     instanceDataLayout->reset();

@@ -31,7 +31,7 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType, const
     : CommandBoundResource(graphics), image(existingImage), width(createInfo.width), height(createInfo.height), depth(createInfo.depth),
       arrayCount(createInfo.elements), layerCount(createInfo.layers), mipLevels(createInfo.mipLevels), samples(createInfo.samples),
       format(createInfo.format), usage(createInfo.usage), layout(Gfx::SE_IMAGE_LAYOUT_UNDEFINED),
-      aspect(getAspectFromFormat(createInfo.format)), ownsImage(false) {
+      aspect(getAspectFromFormat(createInfo.format)), ownsImage(false), owner(createInfo.sourceData.owner) {
     if (existingImage == VK_NULL_HANDLE) {
         VkImageType type = VK_IMAGE_TYPE_MAX_ENUM;
         VkImageCreateFlags flags = 0;
@@ -102,10 +102,8 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType, const
             .flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT,
             .usage = VMA_MEMORY_USAGE_AUTO,
         };
-        OBufferAllocation stagingAlloc = new BufferAllocation(graphics, stagingInfo, alloc, Gfx::QueueType::TRANSFER);
+        OBufferAllocation stagingAlloc = new BufferAllocation(graphics, createInfo.name, stagingInfo, alloc, Gfx::QueueType::TRANSFER);
         vmaMapMemory(graphics->getAllocator(), stagingAlloc->allocation, &data);
-        vmaSetAllocationName(graphics->getAllocator(), stagingAlloc->allocation, "TextureStaging");
-
         std::memcpy(data, sourceData.data, sourceData.size);
         vmaUnmapMemory(graphics->getAllocator(), stagingAlloc->allocation);
 
@@ -204,6 +202,8 @@ void TextureHandle::pipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlag
 
 void TextureHandle::transferOwnership(Gfx::QueueType newOwner) {
     Gfx::QueueFamilyMapping mapping = graphics->getFamilyMapping();
+    if (mapping.getQueueTypeFamilyIndex(newOwner) == mapping.getQueueTypeFamilyIndex(owner))
+        return;
     VkImageMemoryBarrier barrier = {
         .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
         .pNext = nullptr,
@@ -282,9 +282,7 @@ void TextureHandle::download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Ar
         .flags = VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT,
         .usage = VMA_MEMORY_USAGE_AUTO,
     };
-    OBufferAllocation stagingAlloc = new BufferAllocation(graphics, stagingInfo, alloc, owner);
-
-    vmaSetAllocationName(graphics->getAllocator(), stagingAlloc->allocation, "DownloadBuffer");
+    OBufferAllocation stagingAlloc = new BufferAllocation(graphics, "DownloadBuffer", stagingInfo, alloc, owner);
 
     PCommand cmdBuffer = graphics->getQueueCommands(owner)->getCommands();
     // Gfx::FormatCompatibilityInfo formatInfo = Gfx::getFormatInfo(format);

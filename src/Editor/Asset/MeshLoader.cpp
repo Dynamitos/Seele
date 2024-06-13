@@ -432,19 +432,19 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
         collider.boundingbox.adjust(Vector(mesh->mAABB.mMax.x, mesh->mAABB.mMax.y, mesh->mAABB.mMax.z));
 
         // assume static mesh for now
-        Array<Vector> positions(mesh->mNumVertices);
+        Array<Vector4> positions(mesh->mNumVertices);
         StaticArray<Array<Vector2>, MAX_TEXCOORDS> texCoords;
         for (size_t i = 0; i < MAX_TEXCOORDS; ++i) {
             texCoords[i].resize(mesh->mNumVertices);
         }
-        Array<Vector> normals(mesh->mNumVertices);
-        Array<Vector> tangents(mesh->mNumVertices);
-        Array<Vector> biTangents(mesh->mNumVertices);
-        Array<Vector> colors(mesh->mNumVertices);
+        Array<Vector4> normals(mesh->mNumVertices);
+        Array<Vector4> tangents(mesh->mNumVertices);
+        Array<Vector4> biTangents(mesh->mNumVertices);
+        Array<Vector4> colors(mesh->mNumVertices);
 
         StaticMeshVertexData* vertexData = StaticMeshVertexData::getInstance();
         for (int32 i = 0; i < mesh->mNumVertices; ++i) {
-            positions[i] = Vector(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
+            positions[i] = Vector4(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z, 1.0f);
             for (size_t j = 0; j < MAX_TEXCOORDS; ++j) {
                 if (mesh->HasTextureCoords(j)) {
                     texCoords[j][i] = Vector2(mesh->mTextureCoords[j][i].x, mesh->mTextureCoords[j][i].y);
@@ -452,18 +452,18 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
                     texCoords[j][i] = Vector2(0, 0);
                 }
             }
-            normals[i] = Vector(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z);
+            normals[i] = Vector4(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z, 1.0f);
             if (mesh->HasTangentsAndBitangents()) {
-                tangents[i] = Vector(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z);
-                biTangents[i] = Vector(mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z);
+                tangents[i] = Vector4(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z, 1.0f);
+                biTangents[i] = Vector4(mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z, 1.0f);
             } else {
-                tangents[i] = Vector(0, 0, 1);
-                biTangents[i] = Vector(1, 0, 0);
+                tangents[i] = Vector4(0, 0, 1, 1);
+                biTangents[i] = Vector4(1, 0, 0, 1);
             }
             if (mesh->HasVertexColors(0)) {
-                colors[i] = Vector(mesh->mColors[0][i].r, mesh->mColors[0][i].g, mesh->mColors[0][i].b);
+                colors[i] = Vector4(mesh->mColors[0][i].r, mesh->mColors[0][i].g, mesh->mColors[0][i].b, 1.0f);
             } else {
-                colors[i] = Vector(1, 1, 1);
+                colors[i] = Vector4(1, 1, 1, 1);
             }
         }
         MeshId id = vertexData->allocateVertexData(mesh->mNumVertices);

@@ -34,7 +34,6 @@ void VisibilityPass::render() {
     Array<Gfx::OComputeCommand> commands;
     commands.add(std::move(command));
     graphics->executeCommands(std::move(commands));
-
     cullingBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                                    Gfx::SE_ACCESS_SHADER_READ_BIT,
                                    Gfx::SE_PIPELINE_STAGE_TASK_SHADER_BIT_EXT | Gfx::SE_PIPELINE_STAGE_MESH_SHADER_BIT_EXT);

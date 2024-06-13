@@ -88,7 +88,7 @@ void Graphics::init(GraphicsInitializer initInfo) {
     pickPhysicalDevice();
     createDevice(initInfo);
     VmaAllocatorCreateInfo createInfo = {
-        .flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT,
+        .flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT | VMA_ALLOCATOR_CREATE_KHR_DEDICATED_ALLOCATION_BIT,
         .physicalDevice = physicalDevice,
         .device = handle,
         .preferredLargeHeapBlockSize = 0,
@@ -152,9 +152,11 @@ Gfx::OTextureCube Graphics::createTextureCube(const TextureCreateInfo& createInf
 Gfx::OUniformBuffer Graphics::createUniformBuffer(const UniformBufferCreateInfo& bulkData) { return new UniformBuffer(this, bulkData); }
 
 Gfx::OShaderBuffer Graphics::createShaderBuffer(const ShaderBufferCreateInfo& bulkData) { return new ShaderBuffer(this, bulkData); }
+
 Gfx::OVertexBuffer Graphics::createVertexBuffer(const VertexBufferCreateInfo& bulkData) { return new VertexBuffer(this, bulkData); }
 
 Gfx::OIndexBuffer Graphics::createIndexBuffer(const IndexBufferCreateInfo& bulkData) { return new IndexBuffer(this, bulkData); }
+
 Gfx::ORenderCommand Graphics::createRenderCommand(const std::string& name) { return getGraphicsCommands()->createRenderCommand(name); }
 
 Gfx::OComputeCommand Graphics::createComputeCommand(const std::string& name) { return getComputeCommands()->createComputeCommand(name); }
@@ -275,29 +277,32 @@ void Graphics::resolveTexture(Gfx::PTexture source, Gfx::PTexture destination) {
 void Graphics::copyTexture(Gfx::PTexture source, Gfx::PTexture destination) {
     PTextureBase src = source.cast<TextureBase>();
     PTextureBase dst = destination.cast<TextureBase>();
-    VkImageBlit blit = {.srcSubresource =
-                            {
-                                .aspectMask = src->getAspect(),
-                                .mipLevel = 0,
-                                .baseArrayLayer = 0,
-                                .layerCount = 1,
-                            },
-                        .srcOffsets =
-                            {
-                                {0, 0, 0},
-                                {(int32)src->getWidth(), (int32)src->getHeight(), (int32)src->getDepth()},
-                            },
-                        .dstSubresource =
-                            {
-                                .aspectMask = dst->getAspect(),
-                                .mipLevel = 0,
-                                .baseArrayLayer = 0,
-                                .layerCount = 1,
-                            },
-                        .dstOffsets = {
-                            {0, 0, 0},
-                            {(int32)dst->getWidth(), (int32)dst->getHeight(), (int32)dst->getDepth()},
-                        }};
+    VkImageBlit blit = {
+        .srcSubresource =
+            {
+                .aspectMask = src->getAspect(),
+                .mipLevel = 0,
+                .baseArrayLayer = 0,
+                .layerCount = 1,
+            },
+        .srcOffsets =
+            {
+                {0, 0, 0},
+                {(int32)src->getWidth(), (int32)src->getHeight(), (int32)src->getDepth()},
+            },
+        .dstSubresource =
+            {
+                .aspectMask = dst->getAspect(),
+                .mipLevel = 0,
+                .baseArrayLayer = 0,
+                .layerCount = 1,
+            },
+        .dstOffsets =
+            {
+                {0, 0, 0},
+                {(int32)dst->getWidth(), (int32)dst->getHeight(), (int32)dst->getDepth()},
+            },
+    };
     PCommand command = getGraphicsCommands()->getCommands();
     vkCmdBlitImage(command->getHandle(), src->getImage(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, dst->getImage(),
                    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blit,
@@ -430,33 +435,41 @@ void Graphics::pickPhysicalDevice() {
     vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, physicalDevices.data());
     VkPhysicalDevice bestDevice = VK_NULL_HANDLE;
     uint32 deviceRating = 0;
+    props = VkPhysicalDeviceProperties2{
+        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2,
+        .pNext = &accelerationProperties,
+    };
+    accelerationProperties = VkPhysicalDeviceAccelerationStructurePropertiesKHR{
+        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_PROPERTIES_KHR,
+        .pNext = nullptr,
+    };
     for (auto dev : physicalDevices) {
         uint32 currentRating = 0;
-        vkGetPhysicalDeviceProperties(dev, &props);
-        if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
-            std::cout << "found dedicated gpu " << props.deviceName << std::endl;
+        vkGetPhysicalDeviceProperties2(dev, &props);
+        if (props.properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
+            std::cout << "found dedicated gpu " << props.properties.deviceName << std::endl;
             currentRating += 100;
-        } else if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU) {
-            std::cout << "found integrated gpu " << props.deviceName << std::endl;
+        } else if (props.properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU) {
+            std::cout << "found integrated gpu " << props.properties.deviceName << std::endl;
             currentRating += 10;
         }
         if (currentRating > deviceRating) {
             deviceRating = currentRating;
             bestDevice = dev;
-            std::cout << "bestDevice: " << props.deviceName << std::endl;
+            std::cout << "bestDevice: " << props.properties.deviceName << std::endl;
         }
     }
     physicalDevice = bestDevice;
 
-    vkGetPhysicalDeviceProperties(physicalDevice, &props);
-    acceleration = {
+    vkGetPhysicalDeviceProperties2(physicalDevice, &props);
+    accelerationFeatures = {
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR,
         .pNext = nullptr,
         .accelerationStructure = true,
     };
     meshShaderFeatures = {
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT,
-        .pNext = &acceleration,
+        .pNext = &accelerationFeatures,
         .taskShader = true,
         .meshShader = true,
         .meshShaderQueries = true,
@@ -464,14 +477,23 @@ void Graphics::pickPhysicalDevice() {
     features12 = {
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES,
         .pNext = &meshShaderFeatures,
+        .storageBuffer8BitAccess = true,
         .bufferDeviceAddress = true,
     };
-    features = {.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
-                .pNext = &features12,
-                .features = {
-                    .occlusionQueryPrecise = true,
-                    .inheritedQueries = true,
-                }};
+    features = {
+        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
+        .pNext = &features12,
+        .features =
+            {
+                .geometryShader = true,
+                .fillModeNonSolid = true,
+                .wideLines = true,
+                .occlusionQueryPrecise = true,
+                .fragmentStoresAndAtomics = true,
+                .shaderInt64 = true,
+                .inheritedQueries = true,
+            },
+    };
     if (Gfx::useMeshShading) {
         uint32 count = 0;
         vkEnumerateDeviceExtensionProperties(physicalDevice, NULL, &count, nullptr);
@@ -562,6 +584,7 @@ void Graphics::createDevice(GraphicsInitializer initializer) {
 #endif
     initializer.deviceExtensions.add(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
     initializer.deviceExtensions.add(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
+    initializer.deviceExtensions.add(VK_KHR_DEDICATED_ALLOCATION_EXTENSION_NAME);
     VkDeviceCreateInfo deviceInfo = {
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
         .pNext = &features,

@@ -13,9 +13,10 @@ class Graphics : public Gfx::Graphics {
   public:
     Graphics();
     virtual ~Graphics();
-    constexpr VkInstance getInstance() const { return instance; };
-    constexpr VkDevice getDevice() const { return handle; };
-    constexpr VkPhysicalDevice getPhysicalDevice() const { return physicalDevice; };
+    constexpr VkInstance getInstance() const { return instance; }
+    constexpr VkDevice getDevice() const { return handle; }
+    constexpr VkPhysicalDevice getPhysicalDevice() const { return physicalDevice; }
+    constexpr VkPhysicalDeviceAccelerationStructurePropertiesKHR getAccelerationProperties() const { return accelerationProperties; }
 
     PCommandPool getQueueCommands(Gfx::QueueType queueType);
     PCommandPool getGraphicsCommands();
@@ -94,11 +95,12 @@ class Graphics : public Gfx::Graphics {
     thread_local static PCommandPool transferCommands;
     std::mutex poolLock;
     Array<OCommandPool> pools;
-    VkPhysicalDeviceProperties props;
+    VkPhysicalDeviceProperties2 props;
     VkPhysicalDeviceFeatures2 features;
     VkPhysicalDeviceVulkan12Features features12;
     VkPhysicalDeviceMeshShaderFeaturesEXT meshShaderFeatures;
-    VkPhysicalDeviceAccelerationStructureFeaturesKHR acceleration;
+    VkPhysicalDeviceAccelerationStructureFeaturesKHR accelerationFeatures;
+    VkPhysicalDeviceAccelerationStructurePropertiesKHR accelerationProperties;
     VkDebugUtilsMessengerEXT callback;
     Map<uint32, OFramebuffer> allocatedFramebuffers;
     VmaAllocator allocator;

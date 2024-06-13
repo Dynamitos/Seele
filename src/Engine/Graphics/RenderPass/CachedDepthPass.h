@@ -22,7 +22,6 @@ class CachedDepthPass : public RenderPass {
     Gfx::OTexture2D visibilityBuffer;
     Gfx::OPipelineLayout depthPrepassLayout;
 
-    Gfx::OOcclusionQuery occlusionQuery;
     Gfx::PShaderBuffer cullingBuffer;
 };
 DEFINE_REF(CachedDepthPass)

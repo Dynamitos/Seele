@@ -10,13 +10,13 @@ DECLARE_REF(Command)
 DECLARE_REF(Fence)
 class BufferAllocation : public CommandBoundResource {
   public:
-    BufferAllocation(PGraphics graphics, VkBufferCreateInfo bufferInfo, VmaAllocationCreateInfo allocInfo, Gfx::QueueType owner);
+    BufferAllocation(PGraphics graphics, const std::string& name, VkBufferCreateInfo bufferInfo, VmaAllocationCreateInfo allocInfo, Gfx::QueueType owner, uint64 alignment = 0);
     virtual ~BufferAllocation();
     void pipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, VkAccessFlags dstAccess,
                                 VkPipelineStageFlags dstStage);
     void transferOwnership(Gfx::QueueType newOwner);
-    void* mapRegion(uint64 regionOffset, uint64 regionSize, bool writeOnly = true);
-    void unmap();
+    void updateContents(uint64 regionOffset, uint64 regionSize, void* ptr);
+    void readContents(uint64 regionOffset, uint64 regionSize, void* ptr);
     VkBuffer buffer = VK_NULL_HANDLE;
     VmaAllocation allocation = VmaAllocation();
     VmaAllocationInfo info = VmaAllocationInfo();
@@ -34,9 +34,8 @@ class Buffer {
     VkDeviceAddress getDeviceAddress() const { return buffers[currentBuffer]->deviceAddress; }
     PBufferAllocation getAlloc() const { return buffers[currentBuffer]; }
     uint64 getSize() const { return buffers[currentBuffer]->size; }
-    void* map(bool writeOnly = true);
-    void* mapRegion(uint64 regionOffset, uint64 regionSize, bool writeOnly = true);
-    void unmap();
+    void updateContents(uint64 regionOffset, uint64 regionSize, void* ptr);
+    void readContents(uint64 regionOffset, uint64 regionSize, void* ptr);
 
   protected:
     PGraphics graphics;
@@ -109,8 +108,6 @@ class ShaderBuffer : public Gfx::ShaderBuffer, public Buffer {
     virtual ~ShaderBuffer();
     virtual void updateContents(const ShaderBufferCreateInfo& createInfo) override;
     virtual void rotateBuffer(uint64 size, bool preserveContents = false) override;
-    virtual void* mapRegion(uint64 offset, uint64 size, bool writeOnly) override;
-    virtual void unmap() override;
 
     virtual void clear() override;
 

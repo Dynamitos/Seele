@@ -54,8 +54,6 @@ DepthCullingPass::~DepthCullingPass() {}
 
 void DepthCullingPass::beginFrame(const Component::Camera& cam) { RenderPass::beginFrame(cam); }
 
-extern uint64 numFragments;
-
 void DepthCullingPass::render() {
     depthAttachment.getTexture()->changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
                                                Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, Gfx::SE_ACCESS_TRANSFER_READ_BIT,
@@ -78,8 +76,6 @@ void DepthCullingPass::render() {
     set->updateTexture(0, Gfx::PTexture2D(depthMipTexture));
     set->writeChanges();
 
-    occlusionQuery->resetQuery();
-    occlusionQuery->beginQuery();
     graphics->beginRenderPass(renderPass);
     if (useDepthCulling) {
 
@@ -177,8 +173,6 @@ void DepthCullingPass::render() {
         graphics->executeCommands(std::move(commands));
     }
     graphics->endRenderPass();
-    occlusionQuery->endQuery();
-    std::cout << "Occlusion fragments: " << occlusionQuery->getResults() + numFragments << std::endl;
     // Sync depth read/write with compute read
     depthAttachment.getTexture()->pipelineBarrier(
         Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
@@ -192,8 +186,6 @@ void DepthCullingPass::render() {
 void DepthCullingPass::endFrame() {}
 
 void DepthCullingPass::publishOutputs() {
-    occlusionQuery = graphics->createOcclusionQuery();
-
     uint32 width = viewport->getOwner()->getFramebufferWidth();
     uint32 height = viewport->getOwner()->getFramebufferHeight();
     uint32 mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(width, height)))) + 1;

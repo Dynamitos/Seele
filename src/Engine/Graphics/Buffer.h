@@ -79,8 +79,6 @@ class ShaderBuffer : public Buffer {
     virtual void rotateBuffer(uint64 size, bool preserveContents = false) = 0;
     virtual void updateContents(const ShaderBufferCreateInfo& sourceData) = 0;
     constexpr uint32 getNumElements() const { return numElements; }
-    virtual void* mapRegion(uint64 offset = 0, uint64 size = -1, bool writeOnly = true) = 0;
-    virtual void unmap() = 0;
 
     virtual void clear() = 0;
 

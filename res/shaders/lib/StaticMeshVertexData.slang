@@ -7,27 +7,27 @@ struct StaticMeshVertexData : IVertexData
 	VertexAttributes getAttributes(uint index)
 	{
 		VertexAttributes attributes;
-		attributes.position_MS = float3(positions[3 * index + 0], positions[3 * index + 1], positions[3 * index + 2]);
-		attributes.normal_MS = float3(normals[3 * index + 0], normals[3 * index + 1], normals[3 * index + 2]);
-		attributes.tangent_MS = float3(tangents[3 * index + 0], tangents[3 * index + 1], tangents[3 * index + 2]);
-		attributes.biTangent_MS = float3(biTangents[3 * index + 0], biTangents[3 * index + 1], biTangents[3 * index + 2]);
+		attributes.position_MS = positions[index].xyz;
+		attributes.normal_MS = normals[index].xyz;
+		attributes.tangent_MS = tangents[index].xyz;
+		attributes.biTangent_MS = biTangents[index].xyz;
 		for(uint i = 0; i < MAX_TEXCOORDS; ++i)
 		{
-			attributes.texCoords[i] = float2(texCoords[i][2 * index + 0], texCoords[i][2 * index + 1]);
+			attributes.texCoords[i] = texCoords[i][index];
 		}
-		attributes.vertexColor = float3(color[3 * index + 0], color[3 * index + 1], color[3 * index + 2]);
+		attributes.vertexColor = color[index].xyz;
 		return attributes;
 	}
     VertexAttributes getPosition(uint index)
     {
         VertexAttributes attributes;
-        attributes.position_MS = float3(positions[3 * index + 0], positions[3 * index + 1], positions[3 * index + 2]);
+        attributes.position_MS = positions[index].xyz;
         return attributes;
 	}
-	StructuredBuffer<float> positions;
-	StructuredBuffer<float> normals;
-	StructuredBuffer<float> tangents;
-	StructuredBuffer<float> biTangents;
-	StructuredBuffer<float> color;
-	StructuredBuffer<float> texCoords[MAX_TEXCOORDS];
+	StructuredBuffer<float4> positions;
+	StructuredBuffer<float4> normals;
+	StructuredBuffer<float4> tangents;
+	StructuredBuffer<float4> biTangents;
+	StructuredBuffer<float4> color;
+	StructuredBuffer<float2> texCoords[MAX_TEXCOORDS];
 };

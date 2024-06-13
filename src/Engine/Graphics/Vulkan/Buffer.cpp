@@ -2,31 +2,33 @@
 #include "Command.h"
 #include "Enums.h"
 #include "Graphics/Enums.h"
+#include <vma/vk_mem_alloc.h>
 #include <vulkan/vulkan_core.h>
 
 using namespace Seele;
 using namespace Seele::Vulkan;
 
-struct PendingBuffer {
-    OBufferAllocation allocation;
-    uint64 offset;
-    Gfx::QueueType prevQueue;
-    bool writeOnly;
-};
-
-static Map<BufferAllocation*, PendingBuffer> pendingBuffers;
-
-BufferAllocation::BufferAllocation(PGraphics graphics, VkBufferCreateInfo bufferInfo, VmaAllocationCreateInfo allocInfo,
-                                   Gfx::QueueType owner)
+BufferAllocation::BufferAllocation(PGraphics graphics, const std::string& name, VkBufferCreateInfo bufferInfo,
+                                   VmaAllocationCreateInfo allocInfo, Gfx::QueueType owner, uint64 alignment)
     : CommandBoundResource(graphics), size(bufferInfo.size), owner(owner) {
-    VK_CHECK(vmaCreateBuffer(graphics->getAllocator(), &bufferInfo, &allocInfo, &buffer, &allocation, nullptr));
+    VK_CHECK(vmaCreateBufferWithAlignment(graphics->getAllocator(), &bufferInfo, &allocInfo, alignment, &buffer, &allocation, nullptr));
     vmaGetAllocationMemoryProperties(graphics->getAllocator(), allocation, &properties);
-    VkBufferDeviceAddressInfo addrInfo = {
-        .sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO_KHR,
+    VkDebugUtilsObjectNameInfoEXT nameInfo = {
+        .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
         .pNext = nullptr,
-        .buffer = buffer,
+        .objectType = VK_OBJECT_TYPE_BUFFER,
+        .objectHandle = (uint64)buffer,
+        .pObjectName = name.c_str(),
     };
-    deviceAddress = vkGetBufferDeviceAddress(graphics->getDevice(), &addrInfo);
+    vkSetDebugUtilsObjectNameEXT(graphics->getDevice(), &nameInfo);
+    if (bufferInfo.usage & VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT) {
+        VkBufferDeviceAddressInfo addrInfo = {
+            .sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO_KHR,
+            .pNext = nullptr,
+            .buffer = buffer,
+        };
+        deviceAddress = vkGetBufferDeviceAddress(graphics->getDevice(), &addrInfo);
+    }
 }
 
 BufferAllocation::~BufferAllocation() {
@@ -58,6 +60,8 @@ void BufferAllocation::transferOwnership(Gfx::QueueType newOwner) {
     if (size == 0)
         return;
     Gfx::QueueFamilyMapping mapping = graphics->getFamilyMapping();
+    if (mapping.getQueueTypeFamilyIndex(newOwner) == mapping.getQueueTypeFamilyIndex(owner))
+        return;
     VkBufferMemoryBarrier barrier = {
         .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
         .pNext = nullptr,
@@ -80,98 +84,91 @@ void BufferAllocation::transferOwnership(Gfx::QueueType newOwner) {
     owner = newOwner;
 }
 
-void* BufferAllocation::mapRegion(uint64 regionOffset, uint64 regionSize, bool writeOnly) {
-    void* data = nullptr;
-    PendingBuffer pending;
-    pending.writeOnly = writeOnly;
-    pending.prevQueue = owner;
-    pending.offset = regionOffset;
+void BufferAllocation::updateContents(uint64 regionOffset, uint64 regionSize, void* ptr) {
+    if (regionSize == 0)
+        return;
+    VkBufferCreateInfo stagingInfo = {
+        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .size = regionSize,
+        .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+    };
+    VmaAllocationCreateInfo stagingAlloc = {
+        .flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT,
+        .usage = VMA_MEMORY_USAGE_AUTO,
+    };
+    OBufferAllocation staging = new BufferAllocation(graphics, "UpdateStaging", stagingInfo, stagingAlloc, Gfx::QueueType::TRANSFER);
+
+    uint8* data;
+    VK_CHECK(vmaMapMemory(graphics->getAllocator(), staging->allocation, (void**)&data));
+    std::memcpy(data, ptr, regionSize);
+    VK_CHECK(vmaFlushAllocation(graphics->getAllocator(), staging->allocation, 0, regionSize));
+    vmaUnmapMemory(graphics->getAllocator(), staging->allocation);
+
+    Gfx::QueueType prevOwner = owner;
     transferOwnership(Gfx::QueueType::TRANSFER);
-    if (writeOnly) {
-        if (properties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) {
-            VK_CHECK(vmaMapMemory(graphics->getAllocator(), allocation, &data));
-        } else {
-            VkBufferCreateInfo stagingInfo = {
-                .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-                .pNext = nullptr,
-                .flags = 0,
-                .size = regionSize,
-                .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-            };
-            VmaAllocationCreateInfo allocInfo = {
-                .flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT,
-                .usage = VMA_MEMORY_USAGE_AUTO,
-                .requiredFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
-            };
-            pending.allocation = new BufferAllocation(graphics, stagingInfo, allocInfo, Gfx::QueueType::TRANSFER);
-            vmaMapMemory(graphics->getAllocator(), pending.allocation->allocation, &data);
-            vmaSetAllocationName(graphics->getAllocator(), pending.allocation->allocation, "MappingStaging");
-        }
-    } else {
-        assert(false);
-    }
-    pendingBuffers[this] = std::move(pending);
-    return data;
+
+    PCommand cmd = graphics->getQueueCommands(Gfx::QueueType::TRANSFER)->getCommands();
+    VkBufferCopy copy = {
+        .srcOffset = 0,
+        .dstOffset = regionOffset,
+        .size = regionSize,
+    };
+    vkCmdCopyBuffer(cmd->getHandle(), staging->buffer, buffer, 1, &copy);
+    cmd->bindResource(PBufferAllocation(this));
+    cmd->bindResource(PBufferAllocation(staging));
+
+    transferOwnership(prevOwner);
+    graphics->getDestructionManager()->queueResourceForDestruction(std::move(staging));
 }
 
-void BufferAllocation::unmap() {
-    auto found = pendingBuffers.find(this);
-    if (found != pendingBuffers.end()) {
-        PendingBuffer& pending = found->value;
-        if (pending.writeOnly) {
-            if (properties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) {
-                vmaUnmapMemory(graphics->getAllocator(), allocation);
-            } else {
-                vmaFlushAllocation(graphics->getAllocator(), pending.allocation->allocation, 0, VK_WHOLE_SIZE);
-                vmaUnmapMemory(graphics->getAllocator(), pending.allocation->allocation);
-                PCommand command = graphics->getQueueCommands(owner)->getCommands();
-                command->bindResource(PBufferAllocation(pending.allocation));
-                VkCommandBuffer cmdHandle = command->getHandle();
+void BufferAllocation::readContents(uint64 regionOffset, uint64 regionSize, void* ptr) {
+    if (regionSize == 0)
+        return;
 
-                VkBufferCopy region = {
-                    .srcOffset = 0,
-                    .dstOffset = pending.offset,
-                    .size = pending.allocation->size,
-                };
-                VkBufferMemoryBarrier barrier = {
-                    .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
-                    .pNext = nullptr,
-                    .srcAccessMask = VK_ACCESS_MEMORY_READ_BIT,
-                    .dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
-                    .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-                    .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-                    .buffer = buffer,
-                    .offset = 0,
-                    .size = size,
-                };
-                vkCmdPipelineBarrier(cmdHandle, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 1,
-                                     &barrier, 0, nullptr);
-                vkCmdCopyBuffer(cmdHandle, pending.allocation->buffer, buffer, 1, &region);
-                barrier = {
-                    .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
-                    .pNext = nullptr,
-                    .srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
-                    .dstAccessMask = VK_ACCESS_MEMORY_READ_BIT,
-                    .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-                    .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-                    .buffer = buffer,
-                    .offset = 0,
-                    .size = size,
-                };
-                vkCmdPipelineBarrier(cmdHandle, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, 0, 0, nullptr, 1,
-                                     &barrier, 0, nullptr);
-                graphics->getDestructionManager()->queueResourceForDestruction(std::move(pending.allocation));
-            }
-        }
-        transferOwnership(pending.prevQueue);
-        pendingBuffers.erase(this);
-    }
+    VkBufferCreateInfo stagingInfo = {
+        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .size = regionSize,
+        .usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+    };
+    VmaAllocationCreateInfo stagingAlloc = {
+        .flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT,
+        .usage = VMA_MEMORY_USAGE_AUTO,
+    };
+    OBufferAllocation staging = new BufferAllocation(graphics, "ReadStaging", stagingInfo, stagingAlloc, Gfx::QueueType::TRANSFER);
+
+    Gfx::QueueType prevOwner = owner;
+    transferOwnership(Gfx::QueueType::TRANSFER);
+
+    PCommandPool pool = graphics->getQueueCommands(Gfx::QueueType::TRANSFER);
+    PCommand cmd = pool->getCommands();
+    VkBufferCopy copy = {
+        .srcOffset = regionOffset,
+        .dstOffset = 0,
+        .size = regionSize,
+    };
+    vkCmdCopyBuffer(cmd->getHandle(), buffer, staging->buffer, 1, &copy);
+    cmd->bindResource(PBufferAllocation(this));
+    cmd->bindResource(PBufferAllocation(staging));
+    pool->submitCommands();
+    cmd->getFence()->wait(1000000);
+
+    transferOwnership(prevOwner);
+
+    uint8* data;
+    VK_CHECK(vmaMapMemory(graphics->getAllocator(), staging->allocation, (void**)&data));
+    std::memcpy(buffer, data + regionOffset, regionSize);
+    VK_CHECK(vmaFlushAllocation(graphics->getAllocator(), staging->allocation, regionOffset, regionSize));
+    vmaUnmapMemory(graphics->getAllocator(), staging->allocation);
+    graphics->getDestructionManager()->queueResourceForDestruction(std::move(staging));
 }
 
 Buffer::Buffer(PGraphics graphics, uint64 size, VkBufferUsageFlags usage, Gfx::QueueType queueType, bool dynamic, std::string name)
     : graphics(graphics), currentBuffer(0), initialOwner(queueType),
-      usage(usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT),
+      usage(usage | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT),
       dynamic(dynamic), name(name) {
     createBuffer(size);
 }
@@ -182,27 +179,25 @@ Buffer::~Buffer() {
     }
 }
 
-void* Buffer::map(bool writeOnly) { return mapRegion(0, getSize(), writeOnly); }
-
-void* Buffer::mapRegion(uint64 regionOffset, uint64 regionSize, bool writeOnly) {
-    if (regionSize == 0)
-        return nullptr;
-    void* data = getAlloc()->mapRegion(regionOffset, regionSize, writeOnly);
-    assert(data);
-    return data;
+void Buffer::updateContents(uint64 regionOffset, uint64 regionSize, void* buffer) {
+    getAlloc()->updateContents(regionOffset, regionSize, buffer);
 }
 
-void Buffer::unmap() { getAlloc()->unmap(); }
+void Buffer::readContents(uint64 regionOffset, uint64 regionSize, void* buffer) {
+    getAlloc()->readContents(regionOffset, regionSize, buffer);
+}
 
 void Buffer::rotateBuffer(uint64 size, bool preserveContents) {
     assert(dynamic);
-    size = std::max(getSize(), size);
+    if (buffers.size() > 0) {
+        size = std::max(getSize(), size);
+    }
     for (uint32 i = 0; i < buffers.size(); ++i) {
         if (buffers[i]->isCurrentlyBound()) {
             continue;
         }
         if (buffers[i]->size < size) {
-            vmaDestroyBuffer(graphics->getAllocator(), buffers[i]->buffer, buffers[i]->allocation);
+            graphics->getDestructionManager()->queueResourceForDestruction(std::move(buffers[i]));
             uint32 family = graphics->getFamilyMapping().getQueueTypeFamilyIndex(initialOwner);
             VkBufferCreateInfo info = {
                 .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
@@ -215,22 +210,9 @@ void Buffer::rotateBuffer(uint64 size, bool preserveContents) {
                 .pQueueFamilyIndices = &family,
             };
             VmaAllocationCreateInfo allocInfo = {
-                .flags =
-                    VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
-                .usage = VMA_MEMORY_USAGE_AUTO,
+                .usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
             };
-            VK_CHECK(vmaCreateBuffer(graphics->getAllocator(), &info, &allocInfo, &buffers[i]->buffer, &buffers[i]->allocation,
-                                     &buffers[i]->info));
-            vmaGetAllocationMemoryProperties(graphics->getAllocator(), buffers[i]->allocation, &buffers[i]->properties);
-            if (!name.empty()) {
-                VkDebugUtilsObjectNameInfoEXT nameInfo = {.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
-                                                          .pNext = nullptr,
-                                                          .objectType = VK_OBJECT_TYPE_BUFFER,
-                                                          .objectHandle = (uint64)buffers[i]->buffer,
-                                                          .pObjectName = this->name.c_str()};
-                vkSetDebugUtilsObjectNameEXT(graphics->getDevice(), &nameInfo);
-            }
-            buffers[i]->size = size;
+            buffers[i] = new BufferAllocation(graphics, name, info, allocInfo, initialOwner);
         }
         if (preserveContents) {
             copyBuffer(currentBuffer, i);
@@ -246,33 +228,22 @@ void Buffer::rotateBuffer(uint64 size, bool preserveContents) {
 }
 
 void Buffer::createBuffer(uint64 size) {
-    uint32 family = graphics->getFamilyMapping().getQueueTypeFamilyIndex(initialOwner);
-    VkBufferCreateInfo info = {
-        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-        .pNext = nullptr,
-        .flags = 0,
-        .size = size,
-        .usage = usage,
-        .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-        .queueFamilyIndexCount = 1,
-        .pQueueFamilyIndices = &family,
-    };
-    VmaAllocationCreateInfo allocInfo = {
-        .flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
-        .usage = VMA_MEMORY_USAGE_AUTO,
-    };
-    buffers.add(new BufferAllocation(graphics, info, allocInfo, initialOwner));
     if (size > 0) {
-        VK_CHECK(vmaCreateBuffer(graphics->getAllocator(), &info, &allocInfo, &buffers.back()->buffer, &buffers.back()->allocation,
-                                 &buffers.back()->info));
-        if (!name.empty()) {
-            VkDebugUtilsObjectNameInfoEXT nameInfo = {.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
-                                                      .pNext = nullptr,
-                                                      .objectType = VK_OBJECT_TYPE_BUFFER,
-                                                      .objectHandle = (uint64)buffers.back()->buffer,
-                                                      .pObjectName = this->name.c_str()};
-            vkSetDebugUtilsObjectNameEXT(graphics->getDevice(), &nameInfo);
-        }
+        uint32 family = graphics->getFamilyMapping().getQueueTypeFamilyIndex(initialOwner);
+        VkBufferCreateInfo info = {
+            .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+            .pNext = nullptr,
+            .flags = 0,
+            .size = size,
+            .usage = usage,
+            .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+            .queueFamilyIndexCount = 1,
+            .pQueueFamilyIndices = &family,
+        };
+        VmaAllocationCreateInfo allocInfo = {
+            .usage = VMA_MEMORY_USAGE_AUTO,
+        };
+        buffers.add(new BufferAllocation(graphics, name, info, allocInfo, initialOwner));
     }
 }
 
@@ -294,7 +265,11 @@ void Buffer::copyBuffer(uint64 src, uint64 dst) {
     };
     vkCmdPipelineBarrier(command->getHandle(), VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 1,
                          &srcBarrier, 0, nullptr);
-    VkBufferCopy region = {.srcOffset = 0, .dstOffset = 0, .size = buffers[src]->size};
+    VkBufferCopy region = {
+        .srcOffset = 0,
+        .dstOffset = 0,
+        .size = buffers[src]->size,
+    };
     vkCmdCopyBuffer(command->getHandle(), buffers[src]->buffer, buffers[dst]->buffer, 1, &region);
     VkBufferMemoryBarrier dstBarrier = {
         .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
@@ -322,19 +297,17 @@ UniformBuffer::UniformBuffer(PGraphics graphics, const UniformBufferCreateInfo& 
     : Gfx::UniformBuffer(graphics->getFamilyMapping(), createInfo),
       Vulkan::Buffer(graphics, createInfo.sourceData.size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, createInfo.sourceData.owner,
                      createInfo.dynamic, createInfo.name) {
-    if (getSize() > 0 && createInfo.sourceData.data != nullptr) {
-        void* data = map();
-        std::memcpy(data, createInfo.sourceData.data, createInfo.sourceData.size);
-        unmap();
+    if (createInfo.sourceData.size > 0 && createInfo.sourceData.data != nullptr) {
+        getAlloc()->updateContents(createInfo.sourceData.offset, createInfo.sourceData.size, createInfo.sourceData.data);
     }
 }
 
 UniformBuffer::~UniformBuffer() {}
 
 void UniformBuffer::updateContents(const DataSource& sourceData) {
-    void* data = map();
-    std::memcpy(data, sourceData.data, sourceData.size);
-    unmap();
+    if (sourceData.size > 0 && sourceData.data != nullptr) {
+        getAlloc()->updateContents(sourceData.offset, sourceData.size, sourceData.data);
+    }
 }
 
 void UniformBuffer::rotateBuffer(uint64 size) { Vulkan::Buffer::rotateBuffer(size); }
@@ -354,10 +327,8 @@ ShaderBuffer::ShaderBuffer(PGraphics graphics, const ShaderBufferCreateInfo& cre
                                                         VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
                                                   : 0),
                      createInfo.sourceData.owner, createInfo.dynamic, createInfo.name) {
-    if (getSize() > 0 && createInfo.sourceData.data != nullptr) {
-        void* data = map();
-        std::memcpy(data, createInfo.sourceData.data, createInfo.sourceData.size);
-        unmap();
+    if (createInfo.sourceData.size > 0 && createInfo.sourceData.data != nullptr) {
+        getAlloc()->updateContents(createInfo.sourceData.offset, createInfo.sourceData.size, createInfo.sourceData.data);
     }
 }
 
@@ -368,19 +339,15 @@ void ShaderBuffer::updateContents(const ShaderBufferCreateInfo& createInfo) {
         return;
     }
     // We always want to update, as the contents could be different on the GPU
-    void* data = map();
-    std::memcpy((char*)data + createInfo.sourceData.offset, createInfo.sourceData.data, createInfo.sourceData.size);
-    unmap();
+    if (createInfo.sourceData.size > 0 && createInfo.sourceData.data != nullptr) {
+        getAlloc()->updateContents(createInfo.sourceData.offset, createInfo.sourceData.size, createInfo.sourceData.data);
+    }
 }
 
-void Seele::Vulkan::ShaderBuffer::rotateBuffer(uint64 size, bool preserveContents) {
+void ShaderBuffer::rotateBuffer(uint64 size, bool preserveContents) {
     assert(dynamic);
     Vulkan::Buffer::rotateBuffer(size, preserveContents);
 }
-
-void* ShaderBuffer::mapRegion(uint64 offset, uint64 size, bool writeOnly) { return Vulkan::Buffer::mapRegion(offset, size, writeOnly); }
-
-void ShaderBuffer::unmap() { Vulkan::Buffer::unmap(); }
 
 void ShaderBuffer::clear() {
     vkCmdFillBuffer(graphics->getQueueCommands(getAlloc()->owner)->getCommands()->getHandle(), Vulkan::Buffer::getHandle(), 0,
@@ -398,26 +365,18 @@ VertexBuffer::VertexBuffer(PGraphics graphics, const VertexBufferCreateInfo& cre
     : Gfx::VertexBuffer(graphics->getFamilyMapping(), createInfo),
       Vulkan::Buffer(graphics, createInfo.sourceData.size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, createInfo.sourceData.owner, false,
                      createInfo.name) {
-    if (createInfo.sourceData.data != nullptr) {
-        void* data = map();
-        std::memcpy(data, createInfo.sourceData.data, createInfo.sourceData.size);
-        unmap();
+    if (createInfo.sourceData.size > 0 && createInfo.sourceData.data != nullptr) {
+        getAlloc()->updateContents(createInfo.sourceData.offset, createInfo.sourceData.size, createInfo.sourceData.data);
     }
 }
 
 VertexBuffer::~VertexBuffer() {}
 
-void VertexBuffer::updateRegion(DataSource update) {
-    void* data = mapRegion(update.offset, update.size);
-    std::memcpy(data, update.data, update.size);
-    unmap();
-}
+void VertexBuffer::updateRegion(DataSource sourceData) { getAlloc()->updateContents(sourceData.offset, sourceData.size, sourceData.data); }
 
 void VertexBuffer::download(Array<uint8>& buffer) {
-    void* data = map(false);
     buffer.resize(getSize());
-    std::memcpy(buffer.data(), data, getSize());
-    unmap();
+    getAlloc()->readContents(0, buffer.size(), buffer.data());
 }
 
 void VertexBuffer::executeOwnershipBarrier(Gfx::QueueType newOwner) { Vulkan::Buffer::transferOwnership(newOwner); }
@@ -431,22 +390,16 @@ IndexBuffer::IndexBuffer(PGraphics graphics, const IndexBufferCreateInfo& create
     : Gfx::IndexBuffer(graphics->getFamilyMapping(), createInfo),
       Vulkan::Buffer(graphics, createInfo.sourceData.size,
                      VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR |
-                         VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+                         VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
                      createInfo.sourceData.owner, false, createInfo.name) {
-    if (createInfo.sourceData.data != nullptr) {
-        void* data = map();
-        std::memcpy(data, createInfo.sourceData.data, createInfo.sourceData.size);
-        unmap();
-    }
+    getAlloc()->updateContents(createInfo.sourceData.offset, createInfo.sourceData.size, createInfo.sourceData.data);
 }
 
 IndexBuffer::~IndexBuffer() {}
 
 void IndexBuffer::download(Array<uint8>& buffer) {
-    void* data = map(false);
     buffer.resize(getSize());
-    std::memcpy(buffer.data(), data, getSize());
-    unmap();
+    getAlloc()->readContents(0, buffer.size(), buffer.data());
 }
 
 void IndexBuffer::executeOwnershipBarrier(Gfx::QueueType newOwner) { Vulkan::Buffer::transferOwnership(newOwner); }

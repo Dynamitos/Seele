@@ -28,18 +28,21 @@ BottomLevelAS::BottomLevelAS(PGraphics graphics, const Gfx::BottomLevelASCreateI
         .pNext = nullptr,
         .flags = 0,
         .size = sizeof(VkTransformMatrixKHR),
-        .usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+        .usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT |
+                 VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR,
     };
     VmaAllocationCreateInfo transformAllocInfo = {
         .flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
         .usage = VMA_MEMORY_USAGE_AUTO,
     };
-    OBufferAllocation transformBuffer = new BufferAllocation(graphics, transformBufferInfo, transformAllocInfo, Gfx::QueueType::GRAPHICS);
+    OBufferAllocation transformBuffer =
+        new BufferAllocation(graphics, "TransformBuffer", transformBufferInfo, transformAllocInfo, Gfx::QueueType::GRAPHICS);
     VkDeviceOrHostAddressConstKHR vertexDataAddress = {
-        .deviceAddress = positionBuffer.cast<ShaderBuffer>()->getDeviceAddress() + vertexData->getMeshOffset(createInfo.mesh->id),
+        .deviceAddress =
+            positionBuffer.cast<ShaderBuffer>()->getDeviceAddress() + vertexData->getMeshOffset(createInfo.mesh->id) * sizeof(Vector4),
     };
     VkDeviceOrHostAddressConstKHR indexDataAddress = {
-        .deviceAddress = indexBuffer.cast<ShaderBuffer>()->getDeviceAddress() + meshData.firstIndex,
+        .deviceAddress = indexBuffer.cast<IndexBuffer>()->getDeviceAddress() + meshData.firstIndex * sizeof(uint32),
     };
     VkDeviceOrHostAddressConstKHR transformDataAddress = {
         .deviceAddress = transformBuffer->deviceAddress,
@@ -71,13 +74,13 @@ BottomLevelAS::BottomLevelAS(PGraphics graphics, const Gfx::BottomLevelASCreateI
         .pGeometries = &geometry,
     };
 
-    const uint32 primitiveCount = 1;
+    const uint32 primitiveCount = meshData.numIndices / 3;
 
     VkAccelerationStructureBuildSizesInfoKHR buildSizesInfo = {
         .sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR,
         .pNext = nullptr,
     };
-    vkGetAccelerationStructureBuildSizesKHR(graphics->getDevice(), VK_ACCELERATION_STRUCTURE_BUILD_TYPE_HOST_KHR, &structureBuildGeometry,
+    vkGetAccelerationStructureBuildSizesKHR(graphics->getDevice(), VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR, &structureBuildGeometry,
                                             &primitiveCount, &buildSizesInfo);
 
     VkBufferCreateInfo tempBufferInfo = {
@@ -90,7 +93,7 @@ BottomLevelAS::BottomLevelAS(PGraphics graphics, const Gfx::BottomLevelASCreateI
     VmaAllocationCreateInfo tempBufferAllocInfo = {
         .usage = VMA_MEMORY_USAGE_AUTO,
     };
-    OBufferAllocation tempAlloc = new BufferAllocation(graphics, tempBufferInfo, tempBufferAllocInfo, Gfx::QueueType::GRAPHICS);
+    OBufferAllocation tempAlloc = new BufferAllocation(graphics, "TempBuffer", tempBufferInfo, tempBufferAllocInfo, Gfx::QueueType::GRAPHICS);
 
     VkAccelerationStructureCreateInfoKHR tempInfo = {
         .sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR,
@@ -114,24 +117,19 @@ BottomLevelAS::BottomLevelAS(PGraphics graphics, const Gfx::BottomLevelASCreateI
     VmaAllocationCreateInfo scratchAllocInfo = {
         .usage = VMA_MEMORY_USAGE_AUTO,
     };
-    OBufferAllocation scratchAlloc = new BufferAllocation(graphics, scratchInfo, scratchAllocInfo, Gfx::QueueType::GRAPHICS);
+    OBufferAllocation scratchAlloc =
+        new BufferAllocation(graphics, "ScratchBuffer", scratchInfo, scratchAllocInfo, Gfx::QueueType::GRAPHICS,
+                             graphics->getAccelerationProperties().minAccelerationStructureScratchOffsetAlignment);
 
-    VkAccelerationStructureBuildGeometryInfoKHR buildGeometry = {.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR,
-                                                                 .pNext = nullptr,
-                                                                 .type = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR,
-                                                                 .flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR,
-                                                                 .mode = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR,
-                                                                 .dstAccelerationStructure = tempAS,
-                                                                 .geometryCount = 1,
-                                                                 .pGeometries = &geometry,
-                                                                 .scratchData = {.deviceAddress = scratchAlloc->deviceAddress}};
+    structureBuildGeometry.dstAccelerationStructure = tempAS;
+    structureBuildGeometry.scratchData.deviceAddress = scratchAlloc->deviceAddress;
 
     VkAccelerationStructureBuildRangeInfoKHR buildRangeInfo = {
-        .primitiveCount = meshData.numIndices / 3, .primitiveOffset = 0, .firstVertex = 0, .transformOffset = 0};
+        .primitiveCount = primitiveCount, .primitiveOffset = 0, .firstVertex = 0, .transformOffset = 0};
     Array<VkAccelerationStructureBuildRangeInfoKHR*> ranges = {&buildRangeInfo};
 
     PCommand cmd = graphics->getGraphicsCommands()->getCommands();
-    vkCmdBuildAccelerationStructuresKHR(cmd->getHandle(), 1, &buildGeometry, ranges.data());
+    vkCmdBuildAccelerationStructuresKHR(cmd->getHandle(), 1, &structureBuildGeometry, ranges.data());
     cmd->bindResource(PBufferAllocation(transformBuffer));
     cmd->bindResource(PBufferAllocation(tempAlloc));
     cmd->bindResource(PBufferAllocation(scratchAlloc));

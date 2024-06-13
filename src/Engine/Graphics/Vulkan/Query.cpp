@@ -22,7 +22,7 @@ void OcclusionQuery::beginQuery() { vkCmdBeginQuery(graphics->getGraphicsCommand
 
 void OcclusionQuery::endQuery() { vkCmdEndQuery(graphics->getGraphicsCommands()->getCommands()->getHandle(), handle, 0); }
 
-void OcclusionQuery::resetQuery() { vkResetQueryPool(graphics->getDevice(), handle, 0, 1); }
+void OcclusionQuery::resetQuery() { vkCmdResetQueryPool(graphics->getGraphicsCommands()->getCommands()->getHandle(), handle, 0, 1); }
 
 uint64 OcclusionQuery::getResults() {
     graphics->getGraphicsCommands()->submitCommands();

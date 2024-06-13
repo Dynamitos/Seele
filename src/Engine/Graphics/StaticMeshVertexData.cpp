@@ -16,14 +16,14 @@ StaticMeshVertexData* StaticMeshVertexData::getInstance() {
     return &instance;
 }
 
-void StaticMeshVertexData::loadPositions(MeshId id, const Array<Vector>& data) {
+void StaticMeshVertexData::loadPositions(MeshId id, const Array<Vector4>& data) {
     uint64 offset;
     {
         std::unique_lock l(mutex);
         offset = meshOffsets[id];
     }
     assert(offset + data.size() <= head);
-    std::memcpy(positionData.data() + offset, data.data(), data.size() * sizeof(Vector));
+    std::memcpy(positionData.data() + offset, data.data(), data.size() * sizeof(Vector4));
     dirty = true;
 }
 
@@ -38,47 +38,47 @@ void StaticMeshVertexData::loadTexCoords(MeshId id, uint64 index, const Array<Ve
     dirty = true;
 }
 
-void StaticMeshVertexData::loadNormals(MeshId id, const Array<Vector>& data) {
+void StaticMeshVertexData::loadNormals(MeshId id, const Array<Vector4>& data) {
     uint64 offset;
     {
         std::unique_lock l(mutex);
         offset = meshOffsets[id];
     }
     assert(offset + data.size() <= head);
-    std::memcpy(normalData.data() + offset, data.data(), data.size() * sizeof(Vector));
+    std::memcpy(normalData.data() + offset, data.data(), data.size() * sizeof(Vector4));
     dirty = true;
 }
 
-void StaticMeshVertexData::loadTangents(MeshId id, const Array<Vector>& data) {
+void StaticMeshVertexData::loadTangents(MeshId id, const Array<Vector4>& data) {
     uint64 offset;
     {
         std::unique_lock l(mutex);
         offset = meshOffsets[id];
     }
     assert(offset + data.size() <= head);
-    std::memcpy(tangentData.data() + offset, data.data(), data.size() * sizeof(Vector));
+    std::memcpy(tangentData.data() + offset, data.data(), data.size() * sizeof(Vector4));
     dirty = true;
 }
 
-void StaticMeshVertexData::loadBiTangents(MeshId id, const Array<Vector>& data) {
+void StaticMeshVertexData::loadBiTangents(MeshId id, const Array<Vector4>& data) {
     uint64 offset;
     {
         std::unique_lock l(mutex);
         offset = meshOffsets[id];
     }
     assert(offset + data.size() <= head);
-    std::memcpy(biTangentData.data() + offset, data.data(), data.size() * sizeof(Vector));
+    std::memcpy(biTangentData.data() + offset, data.data(), data.size() * sizeof(Vector4));
     dirty = true;
 }
 
-void Seele::StaticMeshVertexData::loadColors(MeshId id, const Array<Vector>& data) {
+void Seele::StaticMeshVertexData::loadColors(MeshId id, const Array<Vector4>& data) {
     uint64 offset;
     {
         std::unique_lock l(mutex);
         offset = meshOffsets[id];
     }
     assert(offset + data.size() <= head);
-    std::memcpy(colorData.data() + offset, data.data(), data.size() * sizeof(Vector));
+    std::memcpy(colorData.data() + offset, data.data(), data.size() * sizeof(Vector4));
     dirty = true;
 }
 
@@ -88,22 +88,22 @@ void StaticMeshVertexData::serializeMesh(MeshId id, uint64 numVertices, ArchiveB
         std::unique_lock l(mutex);
         offset = meshOffsets[id];
     }
-    Array<Vector> pos(numVertices);
+    Array<Vector4> pos(numVertices);
     Array<Vector2> tex[MAX_TEXCOORDS];
     for (size_t i = 0; i < MAX_TEXCOORDS; ++i) {
         tex[i].resize(numVertices);
         std::memcpy(tex[i].data(), texCoordsData[i].data() + offset, numVertices * sizeof(Vector2));
         Serialization::save(buffer, tex[i]);
     }
-    Array<Vector> nor(numVertices);
-    Array<Vector> tan(numVertices);
-    Array<Vector> bit(numVertices);
-    Array<Vector> col(numVertices);
-    std::memcpy(pos.data(), positionData.data() + offset, numVertices * sizeof(Vector));
-    std::memcpy(nor.data(), normalData.data() + offset, numVertices * sizeof(Vector));
-    std::memcpy(tan.data(), tangentData.data() + offset, numVertices * sizeof(Vector));
-    std::memcpy(bit.data(), biTangentData.data() + offset, numVertices * sizeof(Vector));
-    std::memcpy(col.data(), colorData.data() + offset, numVertices * sizeof(Vector));
+    Array<Vector4> nor(numVertices);
+    Array<Vector4> tan(numVertices);
+    Array<Vector4> bit(numVertices);
+    Array<Vector4> col(numVertices);
+    std::memcpy(pos.data(), positionData.data() + offset, numVertices * sizeof(Vector4));
+    std::memcpy(nor.data(), normalData.data() + offset, numVertices * sizeof(Vector4));
+    std::memcpy(tan.data(), tangentData.data() + offset, numVertices * sizeof(Vector4));
+    std::memcpy(bit.data(), biTangentData.data() + offset, numVertices * sizeof(Vector4));
+    std::memcpy(col.data(), colorData.data() + offset, numVertices * sizeof(Vector4));
     Serialization::save(buffer, pos);
     Serialization::save(buffer, nor);
     Serialization::save(buffer, tan);
@@ -112,16 +112,16 @@ void StaticMeshVertexData::serializeMesh(MeshId id, uint64 numVertices, ArchiveB
 }
 
 void StaticMeshVertexData::deserializeMesh(MeshId id, ArchiveBuffer& buffer) {
-    Array<Vector> pos;
+    Array<Vector4> pos;
     Array<Vector2> tex[MAX_TEXCOORDS];
     for (size_t i = 0; i < MAX_TEXCOORDS; ++i) {
         Serialization::load(buffer, tex[i]);
         loadTexCoords(id, i, tex[i]);
     }
-    Array<Vector> nor;
-    Array<Vector> tan;
-    Array<Vector> bit;
-    Array<Vector> col;
+    Array<Vector4> nor;
+    Array<Vector4> tan;
+    Array<Vector4> bit;
+    Array<Vector4> col;
     Serialization::load(buffer, pos);
     Serialization::load(buffer, nor);
     Serialization::load(buffer, tan);
@@ -143,7 +143,7 @@ void StaticMeshVertexData::init(Gfx::PGraphics _graphics) {
     descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 3, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
     descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 4, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
     descriptorLayout->addDescriptorBinding(
-        Gfx::DescriptorBinding{.binding = 5, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER, .descriptorCount = MAX_TEXCOORDS});
+        Gfx::DescriptorBinding{.binding = 5, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER, .descriptorCount = MAX_TEXCOORDS,});
     descriptorLayout->create();
     descriptorSet = descriptorLayout->allocateDescriptorSet();
 }
@@ -173,9 +173,9 @@ void StaticMeshVertexData::resizeBuffers() {
     ShaderBufferCreateInfo createInfo = {
         .sourceData =
             {
-                .size = verticesAllocated * sizeof(Vector),
+                .size = verticesAllocated * sizeof(Vector4),
             },
-        .numElements = verticesAllocated * 3,
+        .numElements = verticesAllocated,
         .dynamic = false,
         .vertexBuffer = 1,
         .name = "Positions",
@@ -192,7 +192,6 @@ void StaticMeshVertexData::resizeBuffers() {
     colors = graphics->createShaderBuffer(createInfo);
     createInfo.sourceData.size = verticesAllocated * sizeof(Vector2);
     createInfo.name = "TexCoords";
-    createInfo.numElements = verticesAllocated * 2;
     for (size_t i = 0; i < MAX_TEXCOORDS; ++i) {
         texCoords[i] = graphics->createShaderBuffer(createInfo);
         texCoordsData[i].resize(verticesAllocated);
@@ -208,7 +207,7 @@ void StaticMeshVertexData::resizeBuffers() {
 void StaticMeshVertexData::updateBuffers() {
     positions->updateContents(ShaderBufferCreateInfo{
         .sourceData{
-            .size = positionData.size() * sizeof(Vector),
+            .size = positionData.size() * sizeof(Vector4),
             .data = (uint8*)positionData.data(),
         },
         .numElements = positionData.size(),
@@ -226,27 +225,33 @@ void StaticMeshVertexData::updateBuffers() {
     normals->updateContents(ShaderBufferCreateInfo{
         .sourceData =
             {
-                .size = normalData.size() * sizeof(Vector),
+                .size = normalData.size() * sizeof(Vector4),
                 .data = (uint8*)normalData.data(),
             },
         .numElements = normalData.size(),
     });
-    tangents->updateContents(ShaderBufferCreateInfo{.sourceData =
-                                                        {
-                                                            .size = tangentData.size() * sizeof(Vector),
-                                                            .data = (uint8*)tangentData.data(),
-                                                        },
-                                                    .numElements = tangentData.size()});
+    tangents->updateContents(ShaderBufferCreateInfo{
+        .sourceData =
+            {
+                .size = tangentData.size() * sizeof(Vector4),
+                .data = (uint8*)tangentData.data(),
+            },
+        .numElements = tangentData.size(),
+    });
     biTangents->updateContents(ShaderBufferCreateInfo{
         .sourceData =
             {
-                .size = biTangentData.size() * sizeof(Vector),
+                .size = biTangentData.size() * sizeof(Vector4),
                 .data = (uint8*)biTangentData.data(),
             },
         .numElements = biTangentData.size(),
     });
     colors->updateContents(ShaderBufferCreateInfo{
-        .sourceData = {.size = colorData.size() * sizeof(Vector), .data = (uint8*)colorData.data()},
+        .sourceData =
+            {
+                .size = colorData.size() * sizeof(Vector4),
+                .data = (uint8*)colorData.data(),
+            },
         .numElements = colorData.size(),
     });
     descriptorLayout->reset();

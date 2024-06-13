@@ -6,7 +6,6 @@
 #include "RenderGraph.h"
 #include "Scene/Scene.h"
 
-
 using namespace Seele;
 
 extern bool useLightCulling;
@@ -184,10 +183,13 @@ void LightCullingPass::publishOutputs() {
     structInfo.name = "tLightIndexCounter";
     tLightIndexCounter = graphics->createShaderBuffer(structInfo);
     structInfo = {
-        .sourceData = {.size = (uint32)sizeof(uint32) * dispatchParams.numThreadGroups.x * dispatchParams.numThreadGroups.y *
-                               dispatchParams.numThreadGroups.z * 8192,
-                       .data = nullptr,
-                       .owner = Gfx::QueueType::COMPUTE},
+        .sourceData =
+            {
+                .size = (uint32)sizeof(uint32) * dispatchParams.numThreadGroups.x * dispatchParams.numThreadGroups.y *
+                        dispatchParams.numThreadGroups.z * 8192,
+                .data = nullptr,
+                .owner = Gfx::QueueType::COMPUTE,
+            },
         .dynamic = false,
         .name = "oLightIndexList",
     };
@@ -229,7 +231,10 @@ void LightCullingPass::setupFrustums() {
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
     });
     dispatchParamsLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 1, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER, .access = Gfx::SE_DESCRIPTOR_ACCESS_WRITE_ONLY_BIT});
+        .binding = 1,
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+        .access = Gfx::SE_DESCRIPTOR_ACCESS_WRITE_ONLY_BIT,
+    });
     frustumLayout = graphics->createPipelineLayout("FrustumLayout");
     frustumLayout->addDescriptorLayout(viewParamsLayout);
     frustumLayout->addDescriptorLayout(dispatchParamsLayout);
@@ -251,17 +256,27 @@ void LightCullingPass::setupFrustums() {
     frustumPipeline = graphics->createComputePipeline(pipelineInfo);
 
     Gfx::OUniformBuffer frustumDispatchParamsBuffer = graphics->createUniformBuffer(UniformBufferCreateInfo{
-        .sourceData = {.size = sizeof(DispatchParams), .data = (uint8*)&dispatchParams, .owner = Gfx::QueueType::COMPUTE},
+        .sourceData =
+            {
+                .size = sizeof(DispatchParams),
+                .data = (uint8*)&dispatchParams,
+                .owner = Gfx::QueueType::COMPUTE,
+            },
         .dynamic = false,
-        .name = "FrustumDispatch"});
+        .name = "FrustumDispatch",
+    });
 
-    frustumBuffer = graphics->createShaderBuffer(
-        ShaderBufferCreateInfo{.sourceData = {.size = sizeof(Frustum) * numThreads.x * numThreads.y * numThreads.z,
-                                              .data = nullptr,
-                                              .owner = Gfx::QueueType::COMPUTE},
-                               .numElements = numThreads.x * numThreads.y * numThreads.z,
-                               .dynamic = false,
-                               .name = "FrustumBuffer"});
+    frustumBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
+        .sourceData =
+            {
+                .size = sizeof(Frustum) * numThreads.x * numThreads.y * numThreads.z,
+                .data = nullptr,
+                .owner = Gfx::QueueType::COMPUTE,
+            },
+        .numElements = numThreads.x * numThreads.y * numThreads.z,
+        .dynamic = false,
+        .name = "FrustumBuffer",
+    });
 
     Gfx::PDescriptorSet dispatchParamsSet = dispatchParamsLayout->allocateDescriptorSet();
     dispatchParamsSet->updateBuffer(0, frustumDispatchParamsBuffer);

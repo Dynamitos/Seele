@@ -52,7 +52,6 @@ class VertexData {
     virtual Gfx::PDescriptorSet getVertexDataSet() = 0;
     virtual std::string getTypeName() const = 0;
     virtual Gfx::PShaderBuffer getPositionBuffer() const = 0;
-    virtual Vector* getPositionData() const = 0;
     Gfx::PIndexBuffer getIndexBuffer() const { return indexBuffer; }
     uint32* getIndexData() const { return indices.data(); }
     Gfx::PDescriptorLayout getInstanceDataLayout() { return instanceDataLayout; }
