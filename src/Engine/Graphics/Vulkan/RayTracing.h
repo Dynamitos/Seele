@@ -15,6 +15,7 @@ class BottomLevelAS : public Gfx::BottomLevelAS {
   private:
     PGraphics graphics;
     VkAccelerationStructureKHR handle;
+    Gfx::OShaderBuffer buffer;
 };
 DEFINE_REF(BottomLevelAS)
 class TopLevelAS : public Gfx::TopLevelAS {

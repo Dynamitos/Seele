@@ -1,22 +1,15 @@
 #include "Resources.h"
-#include "Graphics.h"
-#include "Material/Material.h"
-#include "Resources.h"
-
 
 using namespace Seele;
 using namespace Seele::Gfx;
 
-QueueOwnedResource::QueueOwnedResource(QueueFamilyMapping mapping, QueueType startQueueType)
-    : currentOwner(startQueueType), mapping(mapping) {}
+QueueOwnedResource::QueueOwnedResource(QueueFamilyMapping mapping)
+    : mapping(mapping) {}
 
 QueueOwnedResource::~QueueOwnedResource() {}
 
 void QueueOwnedResource::transferOwnership(QueueType newOwner) {
-    if (mapping.needsTransfer(currentOwner, newOwner)) {
-        executeOwnershipBarrier(newOwner);
-    }
-    currentOwner = newOwner;
+    executeOwnershipBarrier(newOwner);
 }
 
 void QueueOwnedResource::pipelineBarrier(SeAccessFlags srcAccess, SePipelineStageFlags srcStage, SeAccessFlags dstAccess,

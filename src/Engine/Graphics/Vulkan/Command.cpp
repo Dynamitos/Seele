@@ -302,12 +302,12 @@ void RenderCommand::drawIndexed(uint32 indexCount, uint32 instanceCount, int32 f
 }
 void RenderCommand::drawMesh(uint32 groupX, uint32 groupY, uint32 groupZ) {
     assert(threadId == std::this_thread::get_id());
-    graphics->vkCmdDrawMeshTasksEXT(handle, groupX, groupY, groupZ);
+    vkCmdDrawMeshTasksEXT(handle, groupX, groupY, groupZ);
 }
 
 void RenderCommand::drawMeshIndirect(Gfx::PShaderBuffer buffer, uint64 offset, uint32 drawCount, uint32 stride) {
     assert(threadId == std::this_thread::get_id());
-    graphics->vkCmdDrawMeshTasksIndirectEXT(handle, buffer.cast<ShaderBuffer>()->getHandle(), offset, drawCount, stride);
+    vkCmdDrawMeshTasksIndirectEXT(handle, buffer.cast<ShaderBuffer>()->getHandle(), offset, drawCount, stride);
 }
 
 ComputeCommand::ComputeCommand(PGraphics graphics, VkCommandPool cmdPool) : graphics(graphics), owner(cmdPool) {

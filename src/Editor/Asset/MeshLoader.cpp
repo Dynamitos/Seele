@@ -498,6 +498,8 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
         globalMeshes[meshIndex]->meshlets = std::move(meshlets);
         globalMeshes[meshIndex]->indices = std::move(indices);
         globalMeshes[meshIndex]->vertexCount = mesh->mNumVertices;
+        globalMeshes[meshIndex]->blas =
+            graphics->createBottomLevelAccelerationStructure(Gfx::BottomLevelASCreateInfo(globalMeshes[meshIndex]));
     }
 }
 

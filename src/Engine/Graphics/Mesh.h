@@ -2,7 +2,7 @@
 #include "Asset/MaterialInstanceAsset.h"
 #include "Graphics/Buffer.h"
 #include "VertexData.h"
-
+#include "Graphics/RayTracing.h"
 
 namespace Seele {
 class Mesh {
@@ -18,6 +18,7 @@ class Mesh {
     PMaterialInstanceAsset referencedMaterial;
     Array<uint32> indices;
     Array<Meshlet> meshlets;
+    Gfx::OBottomLevelAS blas;
     void save(ArchiveBuffer& buffer) const;
     void load(ArchiveBuffer& buffer);
 

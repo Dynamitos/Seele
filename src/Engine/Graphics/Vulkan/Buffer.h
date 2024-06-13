@@ -1,6 +1,7 @@
 #pragma once
 #include "Graphics.h"
 #include "Graphics/Buffer.h"
+#include "Graphics/Enums.h"
 #include "Resources.h"
 
 namespace Seele {
@@ -9,19 +10,25 @@ DECLARE_REF(Command)
 DECLARE_REF(Fence)
 class BufferAllocation : public CommandBoundResource {
   public:
-    BufferAllocation(PGraphics graphics);
+    BufferAllocation(PGraphics graphics, VkBufferCreateInfo bufferInfo, VmaAllocationCreateInfo allocInfo, Gfx::QueueType owner);
     virtual ~BufferAllocation();
+    void pipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, VkAccessFlags dstAccess,
+                                VkPipelineStageFlags dstStage);
+    void transferOwnership(Gfx::QueueType newOwner);
+    void* mapRegion(uint64 regionOffset, uint64 regionSize, bool writeOnly = true);
+    void unmap();
     VkBuffer buffer = VK_NULL_HANDLE;
     VmaAllocation allocation = VmaAllocation();
     VmaAllocationInfo info = VmaAllocationInfo();
     VkMemoryPropertyFlags properties = 0;
     uint64 size = 0;
     VkDeviceAddress deviceAddress;
+    Gfx::QueueType owner;
 };
 DEFINE_REF(BufferAllocation);
 class Buffer {
   public:
-    Buffer(PGraphics graphics, uint64 size, VkBufferUsageFlags usage, Gfx::QueueType& queueType, bool dynamic, std::string name);
+    Buffer(PGraphics graphics, uint64 size, VkBufferUsageFlags usage, Gfx::QueueType initialOwner, bool dynamic, std::string name);
     virtual ~Buffer();
     VkBuffer getHandle() const { return buffers[currentBuffer]->buffer; }
     VkDeviceAddress getDeviceAddress() const { return buffers[currentBuffer]->deviceAddress; }
@@ -34,7 +41,7 @@ class Buffer {
   protected:
     PGraphics graphics;
     uint32 currentBuffer;
-    Gfx::QueueType& owner;
+    Gfx::QueueType initialOwner;
     Array<OBufferAllocation> buffers;
     VkBufferUsageFlags usage;
     bool dynamic;
@@ -43,14 +50,9 @@ class Buffer {
     void createBuffer(uint64 size);
     void copyBuffer(uint64 src, uint64 dest);
 
-    void executeOwnershipBarrier(Gfx::QueueType newOwner);
-    void executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, VkAccessFlags dstAccess,
+    void transferOwnership(Gfx::QueueType newOwner);
+    void pipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, VkAccessFlags dstAccess,
                                 VkPipelineStageFlags dstStage);
-
-    virtual void requestOwnershipTransfer(Gfx::QueueType newOwner) = 0;
-
-    virtual VkAccessFlags getSourceAccessMask() = 0;
-    virtual VkAccessFlags getDestAccessMask() = 0;
 };
 DEFINE_REF(Buffer)
 
@@ -63,10 +65,6 @@ class VertexBuffer : public Gfx::VertexBuffer, public Buffer {
     virtual void download(Array<uint8>& buffer) override;
 
   protected:
-    // Inherited via Vulkan::Buffer
-    virtual VkAccessFlags getSourceAccessMask() override;
-    virtual VkAccessFlags getDestAccessMask() override;
-    virtual void requestOwnershipTransfer(Gfx::QueueType newOwner) override;
     // Inherited via QueueOwnedResource
     virtual void executeOwnershipBarrier(Gfx::QueueType newOwner) override;
     virtual void executePipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage, Gfx::SeAccessFlags dstAccess,
@@ -82,10 +80,6 @@ class IndexBuffer : public Gfx::IndexBuffer, public Buffer {
     virtual void download(Array<uint8>& buffer) override;
 
   protected:
-    // Inherited via Vulkan::Buffer
-    virtual VkAccessFlags getSourceAccessMask() override;
-    virtual VkAccessFlags getDestAccessMask() override;
-    virtual void requestOwnershipTransfer(Gfx::QueueType newOwner) override;
     // Inherited via QueueOwnedResource
     virtual void executeOwnershipBarrier(Gfx::QueueType newOwner) override;
     virtual void executePipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage, Gfx::SeAccessFlags dstAccess,
@@ -100,10 +94,6 @@ class UniformBuffer : public Gfx::UniformBuffer, public Buffer {
     virtual void rotateBuffer(uint64 size) override;
 
   protected:
-    // Inherited via Vulkan::Buffer
-    virtual VkAccessFlags getSourceAccessMask() override;
-    virtual VkAccessFlags getDestAccessMask() override;
-    virtual void requestOwnershipTransfer(Gfx::QueueType newOwner) override;
     // Inherited via QueueOwnedResource
     virtual void executeOwnershipBarrier(Gfx::QueueType newOwner) override;
     virtual void executePipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage, Gfx::SeAccessFlags dstAccess,
@@ -125,10 +115,6 @@ class ShaderBuffer : public Gfx::ShaderBuffer, public Buffer {
     virtual void clear() override;
 
   protected:
-    // Inherited via Vulkan::Buffer
-    virtual VkAccessFlags getSourceAccessMask() override;
-    virtual VkAccessFlags getDestAccessMask() override;
-    virtual void requestOwnershipTransfer(Gfx::QueueType newOwner) override;
     // Inherited via QueueOwnedResource
     virtual void executeOwnershipBarrier(Gfx::QueueType newOwner) override;
     virtual void executePipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage, Gfx::SeAccessFlags dstAccess,

@@ -5,7 +5,7 @@ namespace Seele {
 namespace Gfx {
 class Texture : public QueueOwnedResource {
   public:
-    Texture(QueueFamilyMapping mapping, QueueType startQueueType);
+    Texture(QueueFamilyMapping mapping);
     virtual ~Texture();
 
     virtual SeFormat getFormat() const = 0;
@@ -29,7 +29,7 @@ DEFINE_REF(Texture)
 
 class Texture2D : public Texture {
   public:
-    Texture2D(QueueFamilyMapping mapping, QueueType startQueueType);
+    Texture2D(QueueFamilyMapping mapping);
     virtual ~Texture2D();
 
     virtual SeFormat getFormat() const = 0;
@@ -52,7 +52,7 @@ DEFINE_REF(Texture2D)
 
 class Texture3D : public Texture {
   public:
-    Texture3D(QueueFamilyMapping mapping, QueueType startQueueType);
+    Texture3D(QueueFamilyMapping mapping);
     virtual ~Texture3D();
 
     virtual SeFormat getFormat() const = 0;
@@ -75,7 +75,7 @@ DEFINE_REF(Texture3D)
 
 class TextureCube : public Texture {
   public:
-    TextureCube(QueueFamilyMapping mapping, QueueType startQueueType);
+    TextureCube(QueueFamilyMapping mapping);
     virtual ~TextureCube();
 
     virtual SeFormat getFormat() const = 0;

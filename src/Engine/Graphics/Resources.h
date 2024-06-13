@@ -48,7 +48,7 @@ struct QueueFamilyMapping {
 
 class QueueOwnedResource {
   public:
-    QueueOwnedResource(QueueFamilyMapping mapping, QueueType startQueueType);
+    QueueOwnedResource(QueueFamilyMapping mapping);
     virtual ~QueueOwnedResource();
 
     // Preliminary checks to see if the barrier should be executed at all
@@ -59,7 +59,6 @@ class QueueOwnedResource {
     virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
     virtual void executePipelineBarrier(SeAccessFlags srcAccess, SePipelineStageFlags srcStage, SeAccessFlags dstAccess,
                                         SePipelineStageFlags dstStage) = 0;
-    Gfx::QueueType currentOwner;
     QueueFamilyMapping mapping;
 };
 DEFINE_REF(QueueOwnedResource)

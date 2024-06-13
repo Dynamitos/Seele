@@ -37,6 +37,7 @@ class StaticMeshVertexData : public VertexData {
     virtual Gfx::PDescriptorSet getVertexDataSet() override;
     virtual std::string getTypeName() const override { return "StaticMeshVertexData"; }
     virtual Gfx::PShaderBuffer getPositionBuffer() const override { return positions; }
+    virtual Vector* getPositionData() const override { return positionData.data(); }
     constexpr const Array<StaticMatData>& getStaticMeshes() const { return staticData; }
 
   private:

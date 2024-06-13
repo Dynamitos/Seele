@@ -9,10 +9,10 @@
 #include "Graphics/Graphics.h"
 #include "Graphics/Initializer.h"
 #include "PipelineCache.h"
+#include "Query.h"
 #include "RayTracing.h"
 #include "RenderPass.h"
 #include "Shader.h"
-#include "Query.h"
 #include "Window.h"
 #include <GLFW/glfw3.h>
 #include <cstring>
@@ -27,6 +27,42 @@ using namespace Seele::Vulkan;
 thread_local PCommandPool Seele::Vulkan::Graphics::graphicsCommands = nullptr;
 thread_local PCommandPool Seele::Vulkan::Graphics::computeCommands = nullptr;
 thread_local PCommandPool Seele::Vulkan::Graphics::transferCommands = nullptr;
+
+PFN_vkCmdDrawMeshTasksEXT cmdDrawMeshTasks;
+PFN_vkCmdDrawMeshTasksIndirectEXT cmdDrawMeshTasksIndirect;
+PFN_vkSetDebugUtilsObjectNameEXT setDebugUtilsObjectName;
+PFN_vkCreateAccelerationStructureKHR createAccelerationStructure;
+PFN_vkCmdBuildAccelerationStructuresKHR cmdBuildAccelerationStructures;
+PFN_vkGetAccelerationStructureBuildSizesKHR getAccelerationStructureBuildSize;
+
+void vkCmdDrawMeshTasksEXT(VkCommandBuffer command, uint32 groupX, uint32 groupY, uint32 groupZ) {
+    cmdDrawMeshTasks(command, groupX, groupY, groupZ);
+}
+
+void vkCmdDrawMeshTasksIndirectEXT(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, uint32_t drawCount,
+                                   uint32_t stride) {
+    cmdDrawMeshTasksIndirect(commandBuffer, buffer, offset, drawCount, stride);
+}
+
+VkResult vkSetDebugUtilsObjectNameEXT(VkDevice device, const VkDebugUtilsObjectNameInfoEXT* pNameInfo) {
+    return setDebugUtilsObjectName(device, pNameInfo);
+}
+
+VkResult vkCreateAccelerationStructureKHR(VkDevice device, const VkAccelerationStructureCreateInfoKHR* pCreateInfo,
+                                          const VkAllocationCallbacks* pAllocator, VkAccelerationStructureKHR* pAccelerationStructure) {
+    return createAccelerationStructure(device, pCreateInfo, pAllocator, pAccelerationStructure);
+}
+
+void vkCmdBuildAccelerationStructuresKHR(VkCommandBuffer commandBuffer, uint32_t infoCount,
+                                         const VkAccelerationStructureBuildGeometryInfoKHR* pInfos,
+                                         const VkAccelerationStructureBuildRangeInfoKHR* const* ppBuildRangeInfos) {
+    cmdBuildAccelerationStructures(commandBuffer, infoCount, pInfos, ppBuildRangeInfos);
+}
+void vkGetAccelerationStructureBuildSizesKHR(VkDevice device, VkAccelerationStructureBuildTypeKHR buildType,
+                                             const VkAccelerationStructureBuildGeometryInfoKHR* pBuildInfo,
+                                             const uint32_t* pMaxPrimitiveCounts, VkAccelerationStructureBuildSizesInfoKHR* pSizeInfo) {
+    getAccelerationStructureBuildSize(device, buildType, pBuildInfo, pMaxPrimitiveCounts, pSizeInfo);
+}
 
 Graphics::Graphics() : instance(VK_NULL_HANDLE), handle(VK_NULL_HANDLE), physicalDevice(VK_NULL_HANDLE), callback(VK_NULL_HANDLE) {}
 
@@ -95,9 +131,7 @@ void Graphics::beginRenderPass(Gfx::PRenderPass renderPass) {
     getGraphicsCommands()->getCommands()->beginRenderPass(rp, framebuffer);
 }
 
-void Graphics::endRenderPass() {
-    getGraphicsCommands()->getCommands()->endRenderPass();
-}
+void Graphics::endRenderPass() { getGraphicsCommands()->getCommands()->endRenderPass(); }
 
 void Graphics::waitDeviceIdle() { vkDeviceWaitIdle(handle); }
 
@@ -241,13 +275,25 @@ void Graphics::resolveTexture(Gfx::PTexture source, Gfx::PTexture destination) {
 void Graphics::copyTexture(Gfx::PTexture source, Gfx::PTexture destination) {
     PTextureBase src = source.cast<TextureBase>();
     PTextureBase dst = destination.cast<TextureBase>();
-    VkImageBlit blit = {.srcSubresource = {.aspectMask = src->getAspect(), .mipLevel = 0, .baseArrayLayer = 0, .layerCount = 1},
+    VkImageBlit blit = {.srcSubresource =
+                            {
+                                .aspectMask = src->getAspect(),
+                                .mipLevel = 0,
+                                .baseArrayLayer = 0,
+                                .layerCount = 1,
+                            },
                         .srcOffsets =
                             {
                                 {0, 0, 0},
                                 {(int32)src->getWidth(), (int32)src->getHeight(), (int32)src->getDepth()},
                             },
-                        .dstSubresource = {.aspectMask = dst->aspect, .mipLevel = 0, .baseArrayLayer = 0, .layerCount = 1},
+                        .dstSubresource =
+                            {
+                                .aspectMask = dst->getAspect(),
+                                .mipLevel = 0,
+                                .baseArrayLayer = 0,
+                                .layerCount = 1,
+                            },
                         .dstOffsets = {
                             {0, 0, 0},
                             {(int32)dst->getWidth(), (int32)dst->getHeight(), (int32)dst->getDepth()},
@@ -255,7 +301,7 @@ void Graphics::copyTexture(Gfx::PTexture source, Gfx::PTexture destination) {
     PCommand command = getGraphicsCommands()->getCommands();
     vkCmdBlitImage(command->getHandle(), src->getImage(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, dst->getImage(),
                    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blit,
-                   src->aspect & VK_IMAGE_ASPECT_DEPTH_BIT ? VK_FILTER_NEAREST : VK_FILTER_LINEAR);
+                   src->getAspect() & VK_IMAGE_ASPECT_DEPTH_BIT ? VK_FILTER_NEAREST : VK_FILTER_LINEAR);
 }
 
 Gfx::OBottomLevelAS Graphics::createBottomLevelAccelerationStructure(const Gfx::BottomLevelASCreateInfo& createInfo) {
@@ -265,16 +311,6 @@ Gfx::OBottomLevelAS Graphics::createBottomLevelAccelerationStructure(const Gfx::
 Gfx::OTopLevelAS Graphics::createTopLevelAccelerationStructure(const Gfx::TopLevelASCreateInfo& createInfo) {
     return new TopLevelAS(this, createInfo);
 }
-
-void Graphics::vkCmdDrawMeshTasksEXT(VkCommandBuffer cmd, uint32 groupX, uint32 groupY, uint32 groupZ) {
-    cmdDrawMeshTasks(cmd, groupX, groupY, groupZ);
-}
-
-void Graphics::vkCmdDrawMeshTasksIndirectEXT(VkCommandBuffer cmd, VkBuffer buffer, uint64 offset, uint32 drawCount, uint32 stride) {
-    cmdDrawMeshTasksIndirect(cmd, buffer, offset, drawCount, stride);
-}
-
-void Graphics::vkSetDebugUtilsObjectNameEXT(VkDebugUtilsObjectNameInfoEXT* info) { VK_CHECK(setDebugUtilsObjectName(handle, info)); }
 
 PCommandPool Graphics::getQueueCommands(Gfx::QueueType queueType) {
     switch (queueType) {
@@ -394,20 +430,9 @@ void Graphics::pickPhysicalDevice() {
     vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, physicalDevices.data());
     VkPhysicalDevice bestDevice = VK_NULL_HANDLE;
     uint32 deviceRating = 0;
-    features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-    features.pNext = &robustness;
-    robustness.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_EXT;
-    robustness.pNext = &features11;
-    features11.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
-    features11.pNext = &features12;
-    features12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
-    features12.pNext = &features13;
-    features13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
-    features13.pNext = nullptr;
     for (auto dev : physicalDevices) {
         uint32 currentRating = 0;
         vkGetPhysicalDeviceProperties(dev, &props);
-        vkGetPhysicalDeviceFeatures2(dev, &features);
         if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
             std::cout << "found dedicated gpu " << props.deviceName << std::endl;
             currentRating += 100;
@@ -424,9 +449,29 @@ void Graphics::pickPhysicalDevice() {
     physicalDevice = bestDevice;
 
     vkGetPhysicalDeviceProperties(physicalDevice, &props);
-    vkGetPhysicalDeviceFeatures2(physicalDevice, &features);
-    features.features.robustBufferAccess = 0;
-    features.features.inheritedQueries = true;
+    acceleration = {
+        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR,
+        .pNext = nullptr,
+        .accelerationStructure = true,
+    };
+    meshShaderFeatures = {
+        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT,
+        .pNext = &acceleration,
+        .taskShader = true,
+        .meshShader = true,
+        .meshShaderQueries = true,
+    };
+    features12 = {
+        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES,
+        .pNext = &meshShaderFeatures,
+        .bufferDeviceAddress = true,
+    };
+    features = {.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
+                .pNext = &features12,
+                .features = {
+                    .occlusionQueryPrecise = true,
+                    .inheritedQueries = true,
+                }};
     if (Gfx::useMeshShading) {
         uint32 count = 0;
         vkEnumerateDeviceExtensionProperties(physicalDevice, NULL, &count, nullptr);
@@ -508,14 +553,8 @@ void Graphics::createDevice(GraphicsInitializer initializer) {
             *currentPriority++ = 1.0f;
         }
     }
-    VkPhysicalDeviceMeshShaderFeaturesEXT enabledMeshShaderFeatures = {
-        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT,
-        .pNext = nullptr,
-        .taskShader = VK_TRUE,
-        .meshShader = VK_TRUE,
-    };
+
     if (supportMeshShading()) {
-        features12.pNext = &enabledMeshShaderFeatures;
         initializer.deviceExtensions.add(VK_EXT_MESH_SHADER_EXTENSION_NAME);
     }
 #ifdef __APPLE__
@@ -525,18 +564,16 @@ void Graphics::createDevice(GraphicsInitializer initializer) {
     initializer.deviceExtensions.add(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
     VkDeviceCreateInfo deviceInfo = {
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-        .pNext = &features11,
+        .pNext = &features,
         .queueCreateInfoCount = (uint32)queueInfos.size(),
         .pQueueCreateInfos = queueInfos.data(),
         .enabledExtensionCount = (uint32)initializer.deviceExtensions.size(),
         .ppEnabledExtensionNames = initializer.deviceExtensions.data(),
-        .pEnabledFeatures = &features.features,
+        .pEnabledFeatures = nullptr,
     };
 
     VK_CHECK(vkCreateDevice(physicalDevice, &deviceInfo, nullptr, &handle));
     // std::cout << "Vulkan handle: " << handle << std::endl;
-
-    cmdDrawMeshTasks = (PFN_vkCmdDrawMeshTasksEXT)vkGetDeviceProcAddr(handle, "vkCmdDrawMeshTasksEXT");
 
     graphicsQueue = 0;
     computeQueue = 0;
@@ -554,5 +591,14 @@ void Graphics::createDevice(GraphicsInitializer initializer) {
     queueMapping.graphicsFamily = queues[graphicsQueue]->getFamilyIndex();
     queueMapping.computeFamily = queues[computeQueue]->getFamilyIndex();
     queueMapping.transferFamily = queues[transferQueue]->getFamilyIndex();
+
+    cmdDrawMeshTasks = (PFN_vkCmdDrawMeshTasksEXT)vkGetDeviceProcAddr(handle, "vkCmdDrawMeshTasksEXT");
+    cmdDrawMeshTasksIndirect = (PFN_vkCmdDrawMeshTasksIndirectEXT)vkGetDeviceProcAddr(handle, "vkCmdDrawMeshTasksIndirectEXT");
     setDebugUtilsObjectName = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(instance, "vkSetDebugUtilsObjectNameEXT");
+
+    createAccelerationStructure = (PFN_vkCreateAccelerationStructureKHR)vkGetDeviceProcAddr(handle, "vkCreateAccelerationStructureKHR");
+    cmdBuildAccelerationStructures =
+        (PFN_vkCmdBuildAccelerationStructuresKHR)vkGetDeviceProcAddr(handle, "vkCmdBuildAccelerationStructuresKHR");
+    getAccelerationStructureBuildSize =
+        (PFN_vkGetAccelerationStructureBuildSizesKHR)vkGetDeviceProcAddr(handle, "vkGetAccelerationStructureBuildSizesKHR");
 }

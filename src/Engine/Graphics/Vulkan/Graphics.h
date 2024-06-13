@@ -74,14 +74,7 @@ class Graphics : public Gfx::Graphics {
     virtual Gfx::OBottomLevelAS createBottomLevelAccelerationStructure(const Gfx::BottomLevelASCreateInfo& createInfo) override;
     virtual Gfx::OTopLevelAS createTopLevelAccelerationStructure(const Gfx::TopLevelASCreateInfo& createInfo) override;
 
-    void vkCmdDrawMeshTasksEXT(VkCommandBuffer handle, uint32 groupX, uint32 groupY, uint32 groupZ);
-    void vkCmdDrawMeshTasksIndirectEXT(VkCommandBuffer handle, VkBuffer buffer, uint64 offset, uint32 drawCount, uint32 stride);
-    void vkSetDebugUtilsObjectNameEXT(VkDebugUtilsObjectNameInfoEXT* info);
-
   protected:
-    PFN_vkCmdDrawMeshTasksEXT cmdDrawMeshTasks;
-    PFN_vkCmdDrawMeshTasksIndirectEXT cmdDrawMeshTasksIndirect;
-    PFN_vkSetDebugUtilsObjectNameEXT setDebugUtilsObjectName;
     Array<const char*> getRequiredExtensions();
     void initInstance(GraphicsInitializer initInfo);
     void setupDebugCallback();
@@ -103,10 +96,9 @@ class Graphics : public Gfx::Graphics {
     Array<OCommandPool> pools;
     VkPhysicalDeviceProperties props;
     VkPhysicalDeviceFeatures2 features;
-    VkPhysicalDeviceVulkan11Features features11;
     VkPhysicalDeviceVulkan12Features features12;
-    VkPhysicalDeviceVulkan13Features features13;
-    VkPhysicalDeviceRobustness2FeaturesEXT robustness;
+    VkPhysicalDeviceMeshShaderFeaturesEXT meshShaderFeatures;
+    VkPhysicalDeviceAccelerationStructureFeaturesKHR acceleration;
     VkDebugUtilsMessengerEXT callback;
     Map<uint32, OFramebuffer> allocatedFramebuffers;
     VmaAllocator allocator;
