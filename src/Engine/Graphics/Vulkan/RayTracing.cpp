@@ -83,29 +83,29 @@ BottomLevelAS::BottomLevelAS(PGraphics graphics, const Gfx::BottomLevelASCreateI
     vkGetAccelerationStructureBuildSizesKHR(graphics->getDevice(), VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR, &structureBuildGeometry,
                                             &primitiveCount, &buildSizesInfo);
 
-    VkBufferCreateInfo tempBufferInfo = {
+    VkBufferCreateInfo bufferInfo = {
         .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
         .pNext = nullptr,
         .flags = 0,
         .size = buildSizesInfo.accelerationStructureSize,
         .usage = VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
     };
-    VmaAllocationCreateInfo tempBufferAllocInfo = {
+    VmaAllocationCreateInfo bufferAllocInfo = {
         .usage = VMA_MEMORY_USAGE_AUTO,
     };
-    OBufferAllocation tempAlloc = new BufferAllocation(graphics, "TempBuffer", tempBufferInfo, tempBufferAllocInfo, Gfx::QueueType::GRAPHICS);
+    buffer =
+        new BufferAllocation(graphics, "BLAS", bufferInfo, bufferAllocInfo, Gfx::QueueType::GRAPHICS);
 
-    VkAccelerationStructureCreateInfoKHR tempInfo = {
+    VkAccelerationStructureCreateInfoKHR blasInfo = {
         .sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR,
         .pNext = nullptr,
         .createFlags = 0,
-        .buffer = tempAlloc->buffer,
+        .buffer = buffer->buffer,
         .offset = 0,
         .size = buildSizesInfo.accelerationStructureSize,
         .type = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR,
     };
-    VkAccelerationStructureKHR tempAS;
-    VK_CHECK(vkCreateAccelerationStructureKHR(graphics->getDevice(), &tempInfo, nullptr, &tempAS));
+    VK_CHECK(vkCreateAccelerationStructureKHR(graphics->getDevice(), &blasInfo, nullptr, &handle));
 
     VkBufferCreateInfo scratchInfo = {
         .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
@@ -121,26 +121,32 @@ BottomLevelAS::BottomLevelAS(PGraphics graphics, const Gfx::BottomLevelASCreateI
         new BufferAllocation(graphics, "ScratchBuffer", scratchInfo, scratchAllocInfo, Gfx::QueueType::GRAPHICS,
                              graphics->getAccelerationProperties().minAccelerationStructureScratchOffsetAlignment);
 
-    structureBuildGeometry.dstAccelerationStructure = tempAS;
+    structureBuildGeometry.dstAccelerationStructure = handle;
     structureBuildGeometry.scratchData.deviceAddress = scratchAlloc->deviceAddress;
 
     VkAccelerationStructureBuildRangeInfoKHR buildRangeInfo = {
-        .primitiveCount = primitiveCount, .primitiveOffset = 0, .firstVertex = 0, .transformOffset = 0};
+        .primitiveCount = primitiveCount,
+        .primitiveOffset = 0,
+        .firstVertex = 0,
+        .transformOffset = 0,
+    };
     Array<VkAccelerationStructureBuildRangeInfoKHR*> ranges = {&buildRangeInfo};
 
     PCommand cmd = graphics->getGraphicsCommands()->getCommands();
     vkCmdBuildAccelerationStructuresKHR(cmd->getHandle(), 1, &structureBuildGeometry, ranges.data());
     cmd->bindResource(PBufferAllocation(transformBuffer));
-    cmd->bindResource(PBufferAllocation(tempAlloc));
+    cmd->bindResource(PBufferAllocation(buffer));
     cmd->bindResource(PBufferAllocation(scratchAlloc));
 
     graphics->getDestructionManager()->queueResourceForDestruction(std::move(transformBuffer));
-    graphics->getDestructionManager()->queueResourceForDestruction(std::move(tempAlloc));
     graphics->getDestructionManager()->queueResourceForDestruction(std::move(scratchAlloc));
+    //todo: compact
 }
 
-BottomLevelAS::~BottomLevelAS() {}
+BottomLevelAS::~BottomLevelAS() { graphics->getDestructionManager()->queueResourceForDestruction(std::move(buffer)); }
 
-TopLevelAS::TopLevelAS(PGraphics graphics, const Gfx::TopLevelASCreateInfo& createInfo) {}
+TopLevelAS::TopLevelAS(PGraphics graphics, const Gfx::TopLevelASCreateInfo& createInfo) {
+    
+}
 
 TopLevelAS::~TopLevelAS() {}

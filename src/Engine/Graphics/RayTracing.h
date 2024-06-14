@@ -3,6 +3,12 @@
 
 namespace Seele {
 namespace Gfx {
+class RayTracingPipeline
+{
+  public:
+  private:
+};
+DEFINE_REF(RayTracingPipeline)
 class BottomLevelAS {
   public:
     BottomLevelAS();

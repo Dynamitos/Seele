@@ -287,8 +287,16 @@ void Graphics::copyTexture(Gfx::PTexture source, Gfx::PTexture destination) {
             },
         .srcOffsets =
             {
-                {0, 0, 0},
-                {(int32)src->getWidth(), (int32)src->getHeight(), (int32)src->getDepth()},
+                {
+                    0,
+                    0,
+                    0,
+                },
+                {
+                    (int32)src->getWidth(),
+                    (int32)src->getHeight(),
+                    (int32)src->getDepth(),
+                },
             },
         .dstSubresource =
             {
@@ -299,8 +307,16 @@ void Graphics::copyTexture(Gfx::PTexture source, Gfx::PTexture destination) {
             },
         .dstOffsets =
             {
-                {0, 0, 0},
-                {(int32)dst->getWidth(), (int32)dst->getHeight(), (int32)dst->getDepth()},
+                {
+                    0,
+                    0,
+                    0,
+                },
+                {
+                    (int32)dst->getWidth(),
+                    (int32)dst->getHeight(),
+                    (int32)dst->getDepth(),
+                },
             },
     };
     PCommand command = getGraphicsCommands()->getCommands();
@@ -359,7 +375,7 @@ PCommandPool Graphics::getTransferCommands() {
     return transferCommands;
 }
 
-VmaAllocator Graphics::getAllocator() { return allocator; }
+VmaAllocator Graphics::getAllocator() const { return allocator; }
 
 PDestructionManager Graphics::getDestructionManager() { return destructionManager; }
 
@@ -377,6 +393,7 @@ Array<const char*> Graphics::getRequiredExtensions() {
 #endif // ENABLE_VALIDATION
     return extensions;
 }
+
 void Graphics::initInstance(GraphicsInitializer initInfo) {
     glfwInit();
     assert(glfwVulkanSupported());
@@ -414,6 +431,7 @@ void Graphics::initInstance(GraphicsInitializer initInfo) {
     };
     VK_CHECK(vkCreateInstance(&info, nullptr, &instance));
 }
+
 void Graphics::setupDebugCallback() {
     VkDebugUtilsMessengerCreateInfoEXT createInfo = {
         .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
@@ -441,6 +459,10 @@ void Graphics::pickPhysicalDevice() {
     };
     accelerationProperties = VkPhysicalDeviceAccelerationStructurePropertiesKHR{
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_PROPERTIES_KHR,
+        .pNext = &rayTracingProperties,
+    };
+    rayTracingProperties = VkPhysicalDeviceRayTracingPipelinePropertiesKHR{
+        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR,
         .pNext = nullptr,
     };
     for (auto dev : physicalDevices) {
@@ -462,9 +484,15 @@ void Graphics::pickPhysicalDevice() {
     physicalDevice = bestDevice;
 
     vkGetPhysicalDeviceProperties2(physicalDevice, &props);
+    rayTracingFeatures = {
+        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR,
+        .pNext = nullptr,
+        .rayTracingPipeline = true,
+        .rayTraversalPrimitiveCulling = true,
+    };
     accelerationFeatures = {
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR,
-        .pNext = nullptr,
+        .pNext = &rayTracingFeatures,
         .accelerationStructure = true,
     };
     meshShaderFeatures = {
@@ -584,6 +612,7 @@ void Graphics::createDevice(GraphicsInitializer initializer) {
 #endif
     initializer.deviceExtensions.add(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
     initializer.deviceExtensions.add(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
+    initializer.deviceExtensions.add(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME);
     initializer.deviceExtensions.add(VK_KHR_DEDICATED_ALLOCATION_EXTENSION_NAME);
     VkDeviceCreateInfo deviceInfo = {
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,

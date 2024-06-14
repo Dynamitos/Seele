@@ -3,7 +3,7 @@
 #include "Graphics/Initializer.h"
 #include "Graphics/RayTracing.h"
 #include <vulkan/vulkan_core.h>
-
+#include "Buffer.h"
 
 namespace Seele {
 namespace Vulkan {
@@ -15,7 +15,8 @@ class BottomLevelAS : public Gfx::BottomLevelAS {
   private:
     PGraphics graphics;
     VkAccelerationStructureKHR handle;
-    Gfx::OShaderBuffer buffer;
+    OBufferAllocation buffer;
+
 };
 DEFINE_REF(BottomLevelAS)
 class TopLevelAS : public Gfx::TopLevelAS {

@@ -42,6 +42,42 @@ class ComputeShader {
 };
 DEFINE_REF(ComputeShader)
 
+// Ray Tracing shaders
+class RayGenShader {
+  public:
+    RayGenShader() {}
+    virtual ~RayGenShader() {}
+};
+DEFINE_REF(RayGenShader)
+
+class AnyHitShader {
+  public:
+    AnyHitShader() {}
+    virtual ~AnyHitShader() {}
+};
+DEFINE_REF(AnyHitShader)
+
+class ClosestHitShader {
+  public:
+    ClosestHitShader() {}
+    virtual ~ClosestHitShader() {}
+};
+DEFINE_REF(ClosestHitShader)
+
+class MissShader {
+  public:
+    MissShader() {}
+    virtual ~MissShader() {}
+};
+DEFINE_REF(MissShader)
+
+class CallableShader {
+  public:
+    CallableShader() {}
+    virtual ~CallableShader() {}
+};
+DEFINE_REF(CallableShader)
+
 // Uniquely identifies a permutation of shaders
 // using the type parameters used to generate it
 struct ShaderPermutation {

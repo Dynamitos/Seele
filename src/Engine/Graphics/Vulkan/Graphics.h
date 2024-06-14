@@ -17,13 +17,14 @@ class Graphics : public Gfx::Graphics {
     constexpr VkDevice getDevice() const { return handle; }
     constexpr VkPhysicalDevice getPhysicalDevice() const { return physicalDevice; }
     constexpr VkPhysicalDeviceAccelerationStructurePropertiesKHR getAccelerationProperties() const { return accelerationProperties; }
+    constexpr VkPhysicalDeviceRayTracingPipelinePropertiesKHR getRayTracingProperties() const { return rayTracingProperties; }
 
     PCommandPool getQueueCommands(Gfx::QueueType queueType);
     PCommandPool getGraphicsCommands();
     PCommandPool getComputeCommands();
     PCommandPool getTransferCommands();
 
-    VmaAllocator getAllocator();
+    VmaAllocator getAllocator() const;
     PDestructionManager getDestructionManager();
 
     // Inherited via Graphics
@@ -101,6 +102,8 @@ class Graphics : public Gfx::Graphics {
     VkPhysicalDeviceMeshShaderFeaturesEXT meshShaderFeatures;
     VkPhysicalDeviceAccelerationStructureFeaturesKHR accelerationFeatures;
     VkPhysicalDeviceAccelerationStructurePropertiesKHR accelerationProperties;
+    VkPhysicalDeviceRayTracingPipelineFeaturesKHR rayTracingFeatures;
+    VkPhysicalDeviceRayTracingPipelinePropertiesKHR rayTracingProperties;
     VkDebugUtilsMessengerEXT callback;
     Map<uint32, OFramebuffer> allocatedFramebuffers;
     VmaAllocator allocator;
