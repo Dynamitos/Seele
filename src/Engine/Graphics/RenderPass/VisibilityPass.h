@@ -1,4 +1,5 @@
 #pragma once
+#include "Graphics/Query.h"
 #include "RenderPass.h"
 
 namespace Seele {
@@ -22,6 +23,7 @@ class VisibilityPass : public RenderPass {
     Gfx::OPipelineLayout visibilityLayout;
     Gfx::OComputeShader visibilityShader;
     Gfx::PComputePipeline visibilityPipeline;
+    Gfx::OPipelineStatisticsQuery query;
 
     // Holds culling information for every meshlet for each instance
     Gfx::OShaderBuffer cullingBuffer;

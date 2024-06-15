@@ -40,6 +40,7 @@ void LightCullingPass::beginFrame(const Component::Camera& cam) {
 }
 
 void LightCullingPass::render() {
+    query->beginQuery();
     depthAttachment->transferOwnership(Gfx::QueueType::COMPUTE);
     cullingDescriptorSet->updateTexture(0, depthAttachment);
     cullingDescriptorSet->updateBuffer(1, oLightIndexCounter);
@@ -61,7 +62,7 @@ void LightCullingPass::render() {
     commands.add(std::move(computeCommand));
     // std::cout << "Execute" << std::endl;
     graphics->executeCommands(std::move(commands));
-
+    query->endQuery();
     oLightIndexList->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                                      Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
     tLightIndexList->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
@@ -212,7 +213,11 @@ void LightCullingPass::publishOutputs() {
     resources->registerTextureOutput("LIGHTCULLING_TLIGHTGRID", Gfx::PTexture2D(tLightGrid));
 }
 
-void LightCullingPass::createRenderPass() { depthAttachment = resources->requestRenderTarget("DEPTHPREPASS_DEPTH").getTexture(); }
+void LightCullingPass::createRenderPass() {
+    depthAttachment = resources->requestRenderTarget("DEPTHPREPASS_DEPTH").getTexture();
+    query = graphics->createPipelineStatisticsQuery();
+    resources->registerQueryOutput("LIGHTCULL_QUERY", query);
+}
 
 void LightCullingPass::setupFrustums() {
     uint32_t viewportWidth = viewport->getWidth();

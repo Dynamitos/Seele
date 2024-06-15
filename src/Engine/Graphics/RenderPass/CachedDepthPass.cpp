@@ -46,6 +46,7 @@ CachedDepthPass::~CachedDepthPass() {}
 void CachedDepthPass::beginFrame(const Component::Camera& cam) { RenderPass::beginFrame(cam); }
 
 void CachedDepthPass::render() {
+    query->beginQuery();
     graphics->beginRenderPass(renderPass);
     Array<Gfx::ORenderCommand> commands;
 
@@ -141,6 +142,7 @@ void CachedDepthPass::render() {
 
     graphics->executeCommands(std::move(commands));
     graphics->endRenderPass();
+    query->endQuery();
 }
 
 void CachedDepthPass::endFrame() {}
@@ -171,6 +173,8 @@ void CachedDepthPass::publishOutputs() {
         Gfx::RenderTargetAttachment(visibilityBuffer, Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
                                     Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
     resources->registerRenderPassOutput("VISIBILITY", visibilityAttachment);
+    query = graphics->createPipelineStatisticsQuery();
+    resources->registerQueryOutput("CACHED_QUERY", query);
 }
 
 void CachedDepthPass::createRenderPass() {

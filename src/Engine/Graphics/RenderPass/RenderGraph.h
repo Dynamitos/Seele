@@ -1,4 +1,5 @@
 #pragma once
+#include "RenderGraphResources.h"
 #include "RenderPass.h"
 
 namespace Seele {
@@ -33,7 +34,9 @@ class RenderGraph {
             pass->endFrame();
         }
     }
-
+    PRenderGraphResources getResources() {
+        return res;
+    }
   private:
     PRenderGraphResources res;
     List<ORenderPass> passes;

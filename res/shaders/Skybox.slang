@@ -89,7 +89,7 @@ struct TextureData
     SamplerState sampler;
 };
 layout(set=2)
-ParameterBlock<TextureData> pTextures;
+ParameterBlock<TextureData> pSkyboxTextures;
 static const float lowerLimit = 0.0;
 static const float upperLimit = 0.1;
 
@@ -97,8 +97,8 @@ static const float upperLimit = 0.1;
 float4 fragmentMain(
     VertexShaderOutput output) : SV_Target
 {
-    float4 texture1 = pTextures.cubeMap.Sample(pTextures.sampler, output.texCoords);
-    float4 texture2 = pTextures.cubeMap2.Sample(pTextures.sampler, output.texCoords);
+    float4 texture1 = pSkyboxTextures.cubeMap.Sample(pSkyboxTextures.sampler, output.texCoords);
+    float4 texture2 = pSkyboxTextures.cubeMap2.Sample(pSkyboxTextures.sampler, output.texCoords);
     float4 finalColor = lerp(texture1, texture2, pSkyboxData.fogBlend.w);
 
     float factor = (output.texCoords.y - lowerLimit) / (upperLimit - lowerLimit);

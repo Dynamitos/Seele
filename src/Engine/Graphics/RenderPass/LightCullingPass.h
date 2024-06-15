@@ -1,4 +1,5 @@
 #pragma once
+#include "Graphics/Query.h"
 #include "Graphics/Shader.h"
 #include "RenderPass.h"
 #include "Scene/Scene.h"
@@ -63,6 +64,7 @@ class LightCullingPass : public RenderPass {
     Gfx::OComputeShader cullingEnabledShader;
     Gfx::PComputePipeline cullingPipeline;
     Gfx::PComputePipeline cullingEnabledPipeline;
+    Gfx::OPipelineStatisticsQuery query;
 };
 DEFINE_REF(LightCullingPass)
 } // namespace Seele

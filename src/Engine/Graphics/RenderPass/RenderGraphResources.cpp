@@ -1,5 +1,7 @@
 #include "RenderGraphResources.h"
+#include "Graphics/Query.h"
 #include <iostream>
+#include <string>
 
 using namespace Seele;
 
@@ -17,6 +19,8 @@ Gfx::PShaderBuffer RenderGraphResources::requestBuffer(const std::string& output
 
 Gfx::PUniformBuffer RenderGraphResources::requestUniform(const std::string& outputName) { return registeredUniforms.at(outputName); }
 
+Gfx::PPipelineStatisticsQuery RenderGraphResources::requestQuery(const std::string& outputName) { return registeredQueries.at(outputName); }
+
 void RenderGraphResources::registerRenderPassOutput(const std::string& outputName, Gfx::RenderTargetAttachment attachment) {
     registeredAttachments[outputName] = attachment;
 }
@@ -30,4 +34,8 @@ void RenderGraphResources::registerBufferOutput(const std::string& outputName, G
 }
 void RenderGraphResources::registerUniformOutput(const std::string& outputName, Gfx::PUniformBuffer buffer) {
     registeredUniforms[outputName] = buffer;
+}
+
+void RenderGraphResources::registerQueryOutput(const std::string& outputName, Gfx::PPipelineStatisticsQuery query) {
+    registeredQueries[outputName] = query;
 }

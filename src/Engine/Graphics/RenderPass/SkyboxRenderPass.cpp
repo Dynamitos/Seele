@@ -3,13 +3,12 @@
 #include "Graphics/Command.h"
 #include "Graphics/Graphics.h"
 
-
 using namespace Seele;
 
 SkyboxRenderPass::SkyboxRenderPass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics, scene) {
     skybox = Seele::Component::Skybox{
-        //.day = AssetRegistry::findTexture("FS000_Day_01")->getTexture().cast<Gfx::TextureCube>(),
-        //.night = AssetRegistry::findTexture("FS000_Night_01")->getTexture().cast<Gfx::TextureCube>(),
+        .day = AssetRegistry::findTexture("", "skyboxsun5deg_tn")->getTexture().cast<Gfx::TextureCube>(),
+        .night = AssetRegistry::findTexture("", "skyboxsun5deg_tn")->getTexture().cast<Gfx::TextureCube>(),
         .fogColor = Vector(0.1, 0.1, 0.8),
         .blendFactor = 0,
     };
@@ -86,14 +85,41 @@ void SkyboxRenderPass::publishOutputs() {
 
 void SkyboxRenderPass::createRenderPass() {
     colorAttachment = resources->requestRenderTarget("BASEPASS_COLOR");
-    // colorAttachment->loadOp = Gfx::SE_ATTACHMENT_LOAD_OP_LOAD;
-    depthAttachment = resources->requestRenderTarget("DEPTHPREPASS_DEPTH");
-    // depthAttachment->loadOp = Gfx::SE_ATTACHMENT_LOAD_OP_LOAD;
-    // Gfx::ORenderTargetLayout layout = new Gfx::RenderTargetLayout{
-    //     .colorAttachments = { colorAttachment },
-    //     .depthAttachment = depthAttachment
-    // };
-    // renderPass = graphics->createRenderPass(std::move(layout), viewport);
+    colorAttachment.setLoadOp(Gfx::SE_ATTACHMENT_LOAD_OP_LOAD);
+    colorAttachment.setInitialLayout(Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+    colorAttachment.setInitialLayout(Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+
+    depthAttachment = resources->requestRenderTarget("BASEPASS_DEPTH");
+    depthAttachment.setLoadOp(Gfx::SE_ATTACHMENT_LOAD_OP_LOAD);
+    depthAttachment.setInitialLayout(Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+    depthAttachment.setFinalLayout(Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+    Gfx::RenderTargetLayout layout = Gfx::RenderTargetLayout{
+        .colorAttachments = {colorAttachment},
+        .depthAttachment = depthAttachment,
+    };
+    Array<Gfx::SubPassDependency> dependency = {
+        {
+            .srcSubpass = ~0U,
+            .dstSubpass = 0,
+            .srcStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+            .dstStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+            .srcAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT |
+                         Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+            .dstAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT |
+                         Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+        },
+        {
+            .srcSubpass = 0,
+            .dstSubpass = ~0U,
+            .srcStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+            .dstStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+            .srcAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT |
+                         Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+            .dstAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT |
+                         Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+        },
+    };
+    renderPass = graphics->createRenderPass(std::move(layout), dependency, viewport);
 
     skyboxData.transformMatrix = Matrix4(1);
     skyboxData.fogColor = skybox.fogColor;
@@ -108,10 +134,16 @@ void SkyboxRenderPass::createRenderPass() {
         .dynamic = true,
     });
 
+    pipelineLayout = graphics->createPipelineLayout("SkyboxLayout");
+    pipelineLayout->addDescriptorLayout(viewParamsLayout);
+    pipelineLayout->addDescriptorLayout(skyboxDataLayout);
+    pipelineLayout->addDescriptorLayout(textureLayout);
+
     ShaderCreateInfo createInfo = {
         .name = "SkyboxVertex",
         .mainModule = "Skybox",
         .entryPoint = "vertexMain",
+        .rootSignature = pipelineLayout,
     };
     vertexShader = graphics->createVertexShader(createInfo);
 
@@ -119,19 +151,26 @@ void SkyboxRenderPass::createRenderPass() {
     createInfo.entryPoint = "fragmentMain";
     fragmentShader = graphics->createFragmentShader(createInfo);
 
-    pipelineLayout = graphics->createPipelineLayout("SkyboxLayout");
-    pipelineLayout->addDescriptorLayout(viewParamsLayout);
-    pipelineLayout->addDescriptorLayout(skyboxDataLayout);
-    pipelineLayout->addDescriptorLayout(textureLayout);
     pipelineLayout->create();
 
-    Gfx::LegacyPipelineCreateInfo gfxInfo;
-    gfxInfo.vertexShader = vertexShader;
-    gfxInfo.fragmentShader = fragmentShader;
-    gfxInfo.rasterizationState.polygonMode = Gfx::SE_POLYGON_MODE_FILL;
-    gfxInfo.topology = Gfx::SE_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-    gfxInfo.pipelineLayout = pipelineLayout;
-    gfxInfo.renderPass = renderPass;
-    gfxInfo.multisampleState.samples = viewport->getSamples();
+    Gfx::LegacyPipelineCreateInfo gfxInfo = {
+        .topology = Gfx::SE_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+        .vertexShader = vertexShader,
+        .fragmentShader = fragmentShader,
+        .renderPass = renderPass,
+        .pipelineLayout = pipelineLayout,
+        .multisampleState =
+            {
+                .samples = viewport->getSamples(),
+            },
+        .rasterizationState =
+            {
+                .polygonMode = Gfx::SE_POLYGON_MODE_FILL,
+            },
+        .colorBlend =
+            {
+                .attachmentCount = 1,
+            },
+    };
     pipeline = graphics->createGraphicsPipeline(std::move(gfxInfo));
 }

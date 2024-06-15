@@ -87,6 +87,7 @@ void BasePass::render() {
     opaqueCulling->writeChanges();
     transparentCulling->writeChanges();
 
+    query->beginQuery();
     graphics->beginRenderPass(renderPass);
     Array<Gfx::ORenderCommand> commands;
 
@@ -184,6 +185,7 @@ void BasePass::render() {
 
     graphics->executeCommands(std::move(commands));
     graphics->endRenderPass();
+    query->endQuery();
 }
 
 void BasePass::endFrame() {}
@@ -205,6 +207,9 @@ void BasePass::publishOutputs() {
         Gfx::RenderTargetAttachment(basePassDepth, Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
                                     Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
     resources->registerRenderPassOutput("BASEPASS_DEPTH", depthAttachment);
+
+    query = graphics->createPipelineStatisticsQuery();
+    resources->registerQueryOutput("BASEPASS_QUERY", query);
 }
 
 void BasePass::createRenderPass() {

@@ -65,6 +65,9 @@ void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset) {
         if (args.type == TextureImportType::TEXTURE_NORMAL) {
             // ss << "--normal_mode ";
         }
+        if (args.type == TextureImportType::TEXTURE_CUBEMAP) {
+            
+        }
         ss << ktxFile << " " << args.filePath;
         system(ss.str().c_str());
         args.filePath = ktxFile;

@@ -29,6 +29,7 @@ class Command {
     void bindResource(PCommandBoundResource resource);
     void checkFence();
     void waitForCommand(uint32 timeToWait = 1000000u);
+    void setPipelineStatisticsFlags(VkQueryPipelineStatisticFlags flags);
     PFence getFence();
     PCommandPool getPool();
     enum State {
@@ -55,6 +56,7 @@ class Command {
     Array<ORenderCommand> executingRenders;
     Array<OComputeCommand> executingComputes;
     Array<PDescriptorSet> boundResources;
+    VkQueryPipelineStatisticFlags statisticsFlags;
     friend class RenderCommand;
     friend class CommandPool;
     friend class Queue;
@@ -68,7 +70,7 @@ class RenderCommand : public Gfx::RenderCommand {
     RenderCommand(PGraphics graphics, VkCommandPool cmdPool);
     virtual ~RenderCommand();
     constexpr VkCommandBuffer getHandle() { return handle; }
-    void begin(PRenderPass renderPass, PFramebuffer framebuffer);
+    void begin(PRenderPass renderPass, PFramebuffer framebuffer, VkQueryPipelineStatisticFlags pipelineFlags);
     void end();
     void reset();
     bool isReady();
@@ -103,7 +105,7 @@ class ComputeCommand : public Gfx::ComputeCommand {
     ComputeCommand(PGraphics graphics, VkCommandPool cmdPool);
     virtual ~ComputeCommand();
     inline VkCommandBuffer getHandle() { return handle; }
-    void begin();
+    void begin(VkQueryPipelineStatisticFlags pipelineFlags);
     void end();
     void reset();
     bool isReady();

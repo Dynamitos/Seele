@@ -233,6 +233,8 @@ Gfx::OVertexInput Graphics::createVertexInput(VertexInputStateCreateInfo createI
 
 Gfx::OOcclusionQuery Graphics::createOcclusionQuery() { return new OcclusionQuery(this); }
 
+Gfx::OPipelineStatisticsQuery Graphics::createPipelineStatisticsQuery() { return new PipelineStatisticsQuery(this); }
+
 void Graphics::resolveTexture(Gfx::PTexture source, Gfx::PTexture destination) {
     PTextureBase sourceTex = source.cast<TextureBase>();
     PTextureBase destinationTex = destination.cast<TextureBase>();
@@ -287,16 +289,8 @@ void Graphics::copyTexture(Gfx::PTexture source, Gfx::PTexture destination) {
             },
         .srcOffsets =
             {
-                {
-                    0,
-                    0,
-                    0,
-                },
-                {
-                    (int32)src->getWidth(),
-                    (int32)src->getHeight(),
-                    (int32)src->getDepth(),
-                },
+                {0, 0, 0},
+                {(int32)src->getWidth(), (int32)src->getHeight(), (int32)src->getDepth()},
             },
         .dstSubresource =
             {
@@ -307,16 +301,8 @@ void Graphics::copyTexture(Gfx::PTexture source, Gfx::PTexture destination) {
             },
         .dstOffsets =
             {
-                {
-                    0,
-                    0,
-                    0,
-                },
-                {
-                    (int32)dst->getWidth(),
-                    (int32)dst->getHeight(),
-                    (int32)dst->getDepth(),
-                },
+                {0, 0, 0},
+                {(int32)dst->getWidth(), (int32)dst->getHeight(), (int32)dst->getDepth()},
             },
     };
     PCommand command = getGraphicsCommands()->getCommands();
@@ -517,6 +503,7 @@ void Graphics::pickPhysicalDevice() {
                 .fillModeNonSolid = true,
                 .wideLines = true,
                 .occlusionQueryPrecise = true,
+                .pipelineStatisticsQuery = true,
                 .fragmentStoresAndAtomics = true,
                 .shaderInt64 = true,
                 .inheritedQueries = true,

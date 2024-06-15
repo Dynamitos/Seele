@@ -75,7 +75,7 @@ void DepthCullingPass::render() {
     Gfx::PDescriptorSet set = depthTextureLayout->allocateDescriptorSet();
     set->updateTexture(0, Gfx::PTexture2D(depthMipTexture));
     set->writeChanges();
-
+    query->beginQuery();
     graphics->beginRenderPass(renderPass);
     if (useDepthCulling) {
 
@@ -173,6 +173,7 @@ void DepthCullingPass::render() {
         graphics->executeCommands(std::move(commands));
     }
     graphics->endRenderPass();
+    query->endQuery();
     // Sync depth read/write with compute read
     depthAttachment.getTexture()->pipelineBarrier(
         Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
@@ -192,6 +193,8 @@ void DepthCullingPass::publishOutputs() {
     TextureCreateInfo depthMipInfo = {
         .format = Gfx::SE_FORMAT_D32_SFLOAT, .width = width, .height = height, .mipLevels = mipLevels, .name = "DepthMipTexture"};
     depthMipTexture = graphics->createTexture2D(depthMipInfo);
+    query = graphics->createPipelineStatisticsQuery();
+    resources->registerQueryOutput("DEPTH_QUERY", query);
 }
 
 void DepthCullingPass::createRenderPass() {

@@ -2,6 +2,7 @@
 #include "Containers/Array.h"
 #include "Initializer.h"
 #include "MinimalEngine.h"
+#include "Query.h"
 #include "RenderTarget.h"
 #include "Resources.h"
 
@@ -81,6 +82,7 @@ class Graphics {
     virtual OVertexInput createVertexInput(VertexInputStateCreateInfo createInfo) = 0;
 
     virtual Gfx::OOcclusionQuery createOcclusionQuery() = 0;
+    virtual Gfx::OPipelineStatisticsQuery createPipelineStatisticsQuery() = 0;
 
     virtual void resolveTexture(PTexture source, PTexture destination) = 0;
     virtual void copyTexture(PTexture src, PTexture dst) = 0;

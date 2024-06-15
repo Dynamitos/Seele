@@ -35,5 +35,9 @@ class ComputePipeline {
     PPipelineLayout layout;
 };
 DEFINE_REF(ComputePipeline)
+class PipelineLibrary {
+
+};
+DEFINE_REF(PipelineLibrary)
 } // namespace Gfx
 } // namespace Seele

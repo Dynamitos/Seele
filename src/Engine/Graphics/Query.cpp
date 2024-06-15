@@ -8,3 +8,9 @@ OcclusionQuery::OcclusionQuery()
 
 OcclusionQuery::~OcclusionQuery()
 {}
+
+PipelineStatisticsQuery::PipelineStatisticsQuery()
+{}
+
+PipelineStatisticsQuery::~PipelineStatisticsQuery()
+{}

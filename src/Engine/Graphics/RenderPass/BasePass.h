@@ -35,6 +35,8 @@ class BasePass : public RenderPass {
     Gfx::OPipelineLayout basePassLayout;
     Gfx::ODescriptorLayout lightCullingLayout;
 
+    Gfx::OPipelineStatisticsQuery query;
+
     Gfx::PShaderBuffer cullingBuffer;
 };
 DEFINE_REF(BasePass)

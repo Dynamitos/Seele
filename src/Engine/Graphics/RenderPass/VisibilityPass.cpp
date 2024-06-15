@@ -27,6 +27,7 @@ void VisibilityPass::render() {
     visibilitySet->updateBuffer(1, cullingBuffer);
     visibilitySet->writeChanges();
 
+    query->beginQuery();
     Gfx::OComputeCommand command = graphics->createComputeCommand("VisibilityCommand");
     command->bindPipeline(visibilityPipeline);
     command->bindDescriptor({viewParamsSet, visibilitySet});
@@ -34,6 +35,7 @@ void VisibilityPass::render() {
     Array<Gfx::OComputeCommand> commands;
     commands.add(std::move(command));
     graphics->executeCommands(std::move(commands));
+    query->endQuery();
     cullingBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                                    Gfx::SE_ACCESS_SHADER_READ_BIT,
                                    Gfx::SE_PIPELINE_STAGE_TASK_SHADER_BIT_EXT | Gfx::SE_PIPELINE_STAGE_MESH_SHADER_BIT_EXT);
@@ -77,6 +79,9 @@ void VisibilityPass::publishOutputs() {
 
     cullingBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{.dynamic = true, .name = "CullingBuffer"});
     resources->registerBufferOutput("CULLINGBUFFER", cullingBuffer);
+
+    query = graphics->createPipelineStatisticsQuery();
+    resources->registerQueryOutput("VISIBILITY_QUERY", query);
 }
 
 void VisibilityPass::createRenderPass() { visibilityAttachment = resources->requestRenderTarget("VISIBILITY"); }

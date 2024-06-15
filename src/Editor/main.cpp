@@ -59,6 +59,10 @@ int main() {
     AssetImporter::importMesh(MeshImportArgs{
         .filePath = sourcePath / "import/models/cube.fbx",
     });
+    AssetImporter::importTexture(TextureImportArgs{
+        .filePath = sourcePath / "import/textures/skyboxsun5deg_tn.jpg",
+        .type = TextureImportType::TEXTURE_CUBEMAP,
+    });
     // AssetImporter::importMesh(MeshImportArgs{
     //     .filePath = sourcePath / "import/models/greek-temple/source/greek-temple.fbx",
     //     .importPath = "temple"

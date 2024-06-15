@@ -3,13 +3,15 @@
 #include "Asset/AssetRegistry.h"
 #include "Component/KeyboardInput.h"
 #include "Graphics/Graphics.h"
-#include "Graphics/RenderPass/CachedDepthPass.h"
-#include "Graphics/RenderPass/DepthCullingPass.h"
-#include "Graphics/RenderPass/VisibilityPass.h"
-#include "Graphics/RenderPass/LightCullingPass.h"
+#include "Graphics/Query.h"
 #include "Graphics/RenderPass/BasePass.h"
-#include "Graphics/RenderPass/SkyboxRenderPass.h"
+#include "Graphics/RenderPass/CachedDepthPass.h"
 #include "Graphics/RenderPass/DebugPass.h"
+#include "Graphics/RenderPass/DepthCullingPass.h"
+#include "Graphics/RenderPass/LightCullingPass.h"
+#include "Graphics/RenderPass/RenderGraphResources.h"
+#include "Graphics/RenderPass/SkyboxRenderPass.h"
+#include "Graphics/RenderPass/VisibilityPass.h"
 #include "System/CameraUpdater.h"
 #include "System/LightGather.h"
 #include "System/MeshUpdater.h"
@@ -30,9 +32,28 @@ GameView::GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreate
     renderGraph.addPass(new LightCullingPass(graphics, scene));
     renderGraph.addPass(new BasePass(graphics, scene));
     renderGraph.addPass(new DebugPass(graphics, scene));
-    // renderGraph.addPass(new SkyboxRenderPass(graphics, scene));
+    //    renderGraph.addPass(new SkyboxRenderPass(graphics, scene));
     renderGraph.setViewport(viewport);
     renderGraph.createRenderPass();
+    queryThread = std::thread([&]() {
+        PRenderGraphResources res = renderGraph.getResources();
+        Gfx::PPipelineStatisticsQuery cachedQuery = res->requestQuery("CACHED_QUERY");
+        Gfx::PPipelineStatisticsQuery depthQuery = res->requestQuery("DEPTH_QUERY");
+        Gfx::PPipelineStatisticsQuery baseQuery = res->requestQuery("BASEPASS_QUERY");
+        Gfx::PPipelineStatisticsQuery lightCullQuery = res->requestQuery("LIGHTCULL_QUERY");
+        Gfx::PPipelineStatisticsQuery visibilityQuery = res->requestQuery("VISIBILITY_QUERY");
+        while (true) {
+            auto cachedResults = cachedQuery->getResults();
+            auto depthResults = depthQuery->getResults();
+            auto baseResults = baseQuery->getResults();
+            auto lightCullResults = lightCullQuery->getResults();
+            auto visiblityResults = visibilityQuery->getResults();
+            std::cout << "Pipeline Stats: "
+                      << cachedResults.meshShaderInvocations + depthResults.meshShaderInvocations + baseResults.meshShaderInvocations +
+                             lightCullResults.meshShaderInvocations + visiblityResults.meshShaderInvocations
+                      << std::endl;
+        }
+    });
 }
 
 GameView::~GameView() {}

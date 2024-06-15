@@ -11,7 +11,7 @@
 using namespace Seele;
 using namespace Seele::Vulkan;
 
-Command::Command(PGraphics graphics, PCommandPool pool) : graphics(graphics), pool(pool) {
+Command::Command(PGraphics graphics, PCommandPool pool) : graphics(graphics), pool(pool), statisticsFlags(0) {
     VkCommandBufferAllocateInfo allocInfo = {
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
         .pNext = nullptr,
@@ -151,6 +151,9 @@ void Command::waitForCommand(uint32 timeout) {
     checkFence();
 }
 
+void Command::setPipelineStatisticsFlags(VkQueryPipelineStatisticFlags flags)
+{ statisticsFlags = flags; }
+
 void Command::bindResource(PCommandBoundResource resource) {
     resource->bind();
     boundResources.add(resource);
@@ -173,7 +176,7 @@ RenderCommand::RenderCommand(PGraphics graphics, VkCommandPool cmdPool) : graphi
 
 RenderCommand::~RenderCommand() { vkFreeCommandBuffers(graphics->getDevice(), owner, 1, &handle); }
 
-void RenderCommand::begin(PRenderPass renderPass, PFramebuffer framebuffer) {
+void RenderCommand::begin(PRenderPass renderPass, PFramebuffer framebuffer, VkQueryPipelineStatisticFlags pipelineFlags) {
     threadId = std::this_thread::get_id();
     ready = false;
     VkCommandBufferInheritanceInfo inheritanceInfo = {
@@ -181,9 +184,9 @@ void RenderCommand::begin(PRenderPass renderPass, PFramebuffer framebuffer) {
         .renderPass = renderPass->getHandle(),
         .subpass = 0,
         .framebuffer = framebuffer->getHandle(),
-        .occlusionQueryEnable = 1,
-        .queryFlags = VK_QUERY_CONTROL_PRECISE_BIT,
-        .pipelineStatistics = 0,
+        .occlusionQueryEnable = 0,
+        .queryFlags = 0,
+        .pipelineStatistics = pipelineFlags,
     };
     VkCommandBufferBeginInfo beginInfo = {
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
@@ -323,7 +326,7 @@ ComputeCommand::ComputeCommand(PGraphics graphics, VkCommandPool cmdPool) : grap
 
 ComputeCommand::~ComputeCommand() { vkFreeCommandBuffers(graphics->getDevice(), owner, 1, &handle); }
 
-void ComputeCommand::begin() {
+void ComputeCommand::begin(VkQueryPipelineStatisticFlags pipelineFlags) {
     threadId = std::this_thread::get_id();
     ready = false;
     VkCommandBufferInheritanceInfo inheritanceInfo = {
@@ -333,7 +336,7 @@ void ComputeCommand::begin() {
         .framebuffer = VK_NULL_HANDLE,
         .occlusionQueryEnable = 0,
         .queryFlags = 0,
-        .pipelineStatistics = 0,
+        .pipelineStatistics = pipelineFlags,
     };
     VkCommandBufferBeginInfo beginInfo = {
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
@@ -440,6 +443,7 @@ CommandPool::~CommandPool() {
 }
 
 PCommand CommandPool::getCommands() { return command; }
+
 void CommandPool::cacheCommands(Array<ORenderCommand> commands) {
     for (auto&& cmd : commands) {
         allocatedRenderCommands.add(std::move(cmd));
@@ -458,13 +462,13 @@ ORenderCommand CommandPool::createRenderCommand(const std::string& name) {
             ORenderCommand cmdBuffer = std::move(allocatedRenderCommands[i]);
             allocatedRenderCommands.removeAt(i, false);
             cmdBuffer->name = name;
-            cmdBuffer->begin(command->boundRenderPass, command->boundFramebuffer);
+            cmdBuffer->begin(command->boundRenderPass, command->boundFramebuffer, command->statisticsFlags);
             return cmdBuffer;
         }
     }
     ORenderCommand result = new RenderCommand(graphics, commandPool);
     result->name = name;
-    result->begin(command->boundRenderPass, command->boundFramebuffer);
+    result->begin(command->boundRenderPass, command->boundFramebuffer, command->statisticsFlags);
     return result;
 }
 
@@ -474,13 +478,13 @@ OComputeCommand CommandPool::createComputeCommand(const std::string& name) {
             OComputeCommand cmdBuffer = std::move(allocatedComputeCommands[i]);
             allocatedComputeCommands.removeAt(i, false);
             cmdBuffer->name = name;
-            cmdBuffer->begin();
+            cmdBuffer->begin(command->statisticsFlags);
             return cmdBuffer;
         }
     }
     OComputeCommand result = new ComputeCommand(graphics, commandPool);
     result->name = name;
-    result->begin();
+    result->begin(command->statisticsFlags);
     return result;
 }
 

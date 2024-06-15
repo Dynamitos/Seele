@@ -160,7 +160,7 @@ void BufferAllocation::readContents(uint64 regionOffset, uint64 regionSize, void
 
     uint8* data;
     VK_CHECK(vmaMapMemory(graphics->getAllocator(), staging->allocation, (void**)&data));
-    std::memcpy(buffer, data + regionOffset, regionSize);
+    std::memcpy(ptr, data + regionOffset, regionSize);
     VK_CHECK(vmaFlushAllocation(graphics->getAllocator(), staging->allocation, regionOffset, regionSize));
     vmaUnmapMemory(graphics->getAllocator(), staging->allocation);
     graphics->getDestructionManager()->queueResourceForDestruction(std::move(staging));

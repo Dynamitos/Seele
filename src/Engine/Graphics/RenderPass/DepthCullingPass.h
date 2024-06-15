@@ -22,6 +22,7 @@ class DepthCullingPass : public RenderPass {
     Gfx::RenderTargetAttachment visibilityAttachment;
     Gfx::ODescriptorLayout depthTextureLayout;
     Gfx::OPipelineLayout depthPrepassLayout;
+    Gfx::OPipelineStatisticsQuery query;
 
     Gfx::PShaderBuffer cullingBuffer;
 };
