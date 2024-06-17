@@ -1,5 +1,6 @@
 #include "DepthCullingPass.h"
 #include "Graphics/Shader.h"
+#include <minmax.h>
 
 using namespace Seele;
 
@@ -7,25 +8,40 @@ extern bool usePositionOnly;
 extern bool useDepthCulling;
 
 DepthCullingPass::DepthCullingPass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics, scene) {
-    depthTextureLayout = graphics->createDescriptorLayout("pDepthAttachment");
-    depthTextureLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+    depthAttachmentLayout = graphics->createDescriptorLayout("pDepthAttachment");
+    depthAttachmentLayout->addDescriptorBinding(Gfx::DescriptorBinding{
         .binding = 0,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
-        .shaderStages = Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_MESH_BIT_EXT,
+        .shaderStages = Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_MESH_BIT_EXT | Gfx::SE_SHADER_STAGE_COMPUTE_BIT,
     });
-    depthTextureLayout->create();
+    depthAttachmentLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .binding = 1,
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+        .shaderStages = Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_COMPUTE_BIT,
+    });
+    depthAttachmentLayout->create();
 
-    depthPrepassLayout = graphics->createPipelineLayout("DepthPrepassLayout");
-    depthPrepassLayout->addDescriptorLayout(viewParamsLayout);
-    depthPrepassLayout->addDescriptorLayout(depthTextureLayout);
-    depthPrepassLayout->addPushConstants(Gfx::SePushConstantRange{
+    depthCullingLayout = graphics->createPipelineLayout("DepthPrepassLayout");
+    depthCullingLayout->addDescriptorLayout(viewParamsLayout);
+    depthCullingLayout->addDescriptorLayout(depthAttachmentLayout);
+    depthCullingLayout->addPushConstants(Gfx::SePushConstantRange{
         .stageFlags = Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_VERTEX_BIT,
         .offset = 0,
         .size = sizeof(VertexData::DrawCallOffsets),
     });
+
+    depthComputeLayout = graphics->createPipelineLayout("DepthComputeLayout");
+    depthComputeLayout->addDescriptorLayout(viewParamsLayout);
+    depthComputeLayout->addDescriptorLayout(depthAttachmentLayout);
+    depthComputeLayout->addPushConstants(Gfx::SePushConstantRange{
+        .stageFlags = Gfx::SE_SHADER_STAGE_COMPUTE_BIT,
+        .offset = 0,
+        .size = sizeof(MipParam),
+    });
+
     if (graphics->supportMeshShading()) {
         graphics->getShaderCompiler()->registerRenderPass("DepthPass", Gfx::PassConfig{
-                                                                           .baseLayout = depthPrepassLayout,
+                                                                           .baseLayout = depthCullingLayout,
                                                                            .taskFile = "DepthCullingTask",
                                                                            .mainFile = "DepthCullingMesh",
                                                                            .fragmentFile = "VisibilityPass",
@@ -37,7 +53,7 @@ DepthCullingPass::DepthCullingPass(Gfx::PGraphics graphics, PScene scene) : Rend
                                                                        });
     } else {
         graphics->getShaderCompiler()->registerRenderPass("DepthPass", Gfx::PassConfig{
-                                                                           .baseLayout = depthPrepassLayout,
+                                                                           .baseLayout = depthCullingLayout,
                                                                            .taskFile = "",
                                                                            .mainFile = "LegacyPass",
                                                                            .fragmentFile = "VisibilityPass",
@@ -55,26 +71,49 @@ DepthCullingPass::~DepthCullingPass() {}
 void DepthCullingPass::beginFrame(const Component::Camera& cam) { RenderPass::beginFrame(cam); }
 
 void DepthCullingPass::render() {
-    depthAttachment.getTexture()->changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+    depthAttachment.getTexture()->changeLayout(Gfx::SE_IMAGE_LAYOUT_GENERAL, Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
                                                Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, Gfx::SE_ACCESS_TRANSFER_READ_BIT,
                                                Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT);
-    depthMipTexture->changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, Gfx::SE_ACCESS_SHADER_READ_BIT,
-                                  Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT, Gfx::SE_ACCESS_TRANSFER_WRITE_BIT,
-                                  Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT);
 
-    graphics->copyTexture(depthAttachment.getTexture(), Gfx::PTexture2D(depthMipTexture));
-    depthMipTexture->generateMipmaps();
+    Gfx::PDescriptorSet set = depthAttachmentLayout->allocateDescriptorSet();
+    set->updateTexture(0, Gfx::PTexture2D(depthAttachment.getTexture()));
+    set->updateBuffer(1, depthMipBuffer);
+    set->writeChanges();
+
+    Gfx::OComputeCommand computeCommand = graphics->createComputeCommand("DepthMipGenCommand");
+    computeCommand->bindPipeline(depthInitialReduce);
+    computeCommand->bindDescriptor({viewParamsSet, set});
+    UVector2 reduceDimensions = UVector2(viewport->getOwner()->getFramebufferWidth() + BLOCK_SIZE - 1,
+                                         viewport->getOwner()->getFramebufferHeight() + BLOCK_SIZE - 1) /
+                                uint32(BLOCK_SIZE);
+    computeCommand->dispatch(reduceDimensions.x, reduceDimensions.y, 1);
+
+    computeCommand->bindPipeline(depthMipGen);
+    computeCommand->bindDescriptor({viewParamsSet, set});
+
+    for (uint32 i = 0; i < mipOffsets.size() - 1; ++i) {
+        depthMipBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                                        Gfx::SE_ACCESS_SHADER_READ_BIT | Gfx::SE_ACCESS_SHADER_WRITE_BIT,
+                                        Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
+        MipParam params = {
+            .srcMipOffset = mipOffsets[i],
+            .dstMipOffset = mipOffsets[i + 1],
+            .srcMipDim = mipDims[i],
+            .dstMipDim = mipDims[i + 1],
+        };
+        computeCommand->pushConstants(Gfx::SE_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(MipParam), &params);
+        UVector2 threadGroups = (((mipDims[i] + UVector2(1, 1)) / 2u) + UVector2(BLOCK_SIZE - 1, BLOCK_SIZE - 1)) / uint32(BLOCK_SIZE);
+        computeCommand->dispatch(threadGroups.x, threadGroups.y, 1);
+    }
+
+    depthMipBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                                    Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_TASK_SHADER_BIT_EXT);
 
     depthAttachment.getTexture()->changeLayout(
         Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, Gfx::SE_ACCESS_TRANSFER_READ_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
         Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
         Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT);
-    depthMipTexture->changeLayout(Gfx::SE_IMAGE_LAYOUT_GENERAL, Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
-                                  Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_TASK_SHADER_BIT_EXT);
 
-    Gfx::PDescriptorSet set = depthTextureLayout->allocateDescriptorSet();
-    set->updateTexture(0, Gfx::PTexture2D(depthMipTexture));
-    set->writeChanges();
     query->beginQuery();
     graphics->beginRenderPass(renderPass);
     if (useDepthCulling) {
@@ -187,12 +226,51 @@ void DepthCullingPass::render() {
 void DepthCullingPass::endFrame() {}
 
 void DepthCullingPass::publishOutputs() {
-    uint32 width = viewport->getOwner()->getFramebufferWidth();
-    uint32 height = viewport->getOwner()->getFramebufferHeight();
-    uint32 mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(width, height)))) + 1;
-    TextureCreateInfo depthMipInfo = {
-        .format = Gfx::SE_FORMAT_D32_SFLOAT, .width = width, .height = height, .mipLevels = mipLevels, .name = "DepthMipTexture"};
-    depthMipTexture = graphics->createTexture2D(depthMipInfo);
+    uint32 width = (viewport->getOwner()->getFramebufferWidth() + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    uint32 height = (viewport->getOwner()->getFramebufferHeight() + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    uint32 bufferSize = 0;
+    while (width > 1 && height > 1) {
+        mipOffsets.add(bufferSize);
+        mipDims.add(UVector2(width, height));
+        bufferSize += width * height;
+        width = max((width + 1) / 2, 1);
+        height = max((height + 1) / 2, 1);
+    }
+    ShaderBufferCreateInfo depthMipInfo = {
+        .sourceData =
+            {
+                .size = bufferSize * sizeof(uint32),
+                .data = nullptr,
+            },
+        .numElements = bufferSize,
+        .name = "DepthMipBuffer",
+    };
+    depthMipBuffer = graphics->createShaderBuffer(depthMipInfo);
+
+    ShaderCreateInfo mipComputeInfo = {
+        .name = "DepthMipCompute",
+        .mainModule = "DepthMipGen",
+        .entryPoint = "initialReduce",
+        .rootSignature = depthComputeLayout,
+    };
+
+    depthInitialReduceShader = graphics->createComputeShader(mipComputeInfo);
+    depthComputeLayout->create();
+
+    Gfx::ComputePipelineCreateInfo pipelineCreateInfo = {
+        .computeShader = depthInitialReduceShader,
+        .pipelineLayout = depthComputeLayout,
+    };
+    depthInitialReduce = graphics->createComputePipeline(pipelineCreateInfo);
+
+    mipComputeInfo.entryPoint = "reduceLevel";
+
+    depthMipGenShader = graphics->createComputeShader(mipComputeInfo);
+
+    pipelineCreateInfo.computeShader = depthMipGenShader;
+
+    depthMipGen = graphics->createComputePipeline(pipelineCreateInfo);
+
     query = graphics->createPipelineStatisticsQuery();
     resources->registerQueryOutput("DEPTH_QUERY", query);
 }

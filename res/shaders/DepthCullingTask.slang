@@ -11,6 +11,7 @@ groupshared float4x4 modelViewProjection;
 struct DepthData
 {
     Texture2D<float> texture;
+    RWStructuredBuffer<float> buffer;
 }
 
 ParameterBlock<DepthData> pDepthAttachment;
@@ -21,7 +22,6 @@ void taskMain(
     uint threadID: SV_GroupThreadID,
     uint groupID: SV_GroupID, )
 {
-    const uint mipLevels = uint(log2(max(pViewParams.screenDimensions.x, pViewParams.screenDimensions.y)));
     if (threadID == 0)
     {
         head = 0;
@@ -57,8 +57,9 @@ void taskMain(
             // if the meshlet is outside of the frustum, we skip it since we cant do depth culling anyways
 		    if(meshlet.bounding.insideFrustum(viewFrustum))
             {
+                uint2 mipDimensions = uint2((uint(pViewParams.screenDimensions.x) + BLOCK_SIZE - 1) / BLOCK_SIZE, (uint(pViewParams.screenDimensions.y) + BLOCK_SIZE - 1) / BLOCK_SIZE);
                 // now we calculate what mip level we need to only sample up to 4 texels covering the entire meshlet
-                uint2 screenCornerMin = uint2(uint(pViewParams.screenDimensions.x), uint(pViewParams.screenDimensions.y));
+                uint2 screenCornerMin = mipDimensions;
                 uint2 screenCornerMax = uint2(0, 0);
                 // we use reverse depth, so higher values are closer
                 float maxDepth = 0;
@@ -75,26 +76,27 @@ void taskMain(
                     for(uint i = 0; i < 8; ++i)
                     {
                         float4 clipCorner = mul(modelViewProjection, corners[i]);
-                        float4 screenCorner = clipToScreen(clipCorner);
+                        float4 screenCorner = clipToScreen(clipCorner) / BLOCK_SIZE;
                         screenCornerMin = uint2(min(screenCornerMin.x, uint(screenCorner.x)), min(screenCornerMin.y, uint(screenCorner.y)));
                         screenCornerMax = uint2(max(screenCornerMax.x, uint(screenCorner.x)), max(screenCornerMax.y, uint(screenCorner.y)));
                         maxDepth = max(maxDepth, screenCorner.z);
                     }
                 }
-                uint mipLevel = 0;
+                uint mipOffset = 0;
                 // in theory this wouldnt work if no corner was in screen, as min would be greater that max, however we verified that with view culling
                 while(screenCornerMax.x - screenCornerMin.x > 1 || screenCornerMax.y - screenCornerMin.y > 1)
                 {
-                    mipLevel++;
+                    mipOffset += mipDimensions.x * mipDimensions.y;
+                    mipDimensions = uint2(mipDimensions.x + 1, mipDimensions.y + 1) / 2;
                     screenCornerMin /= 2;
                     screenCornerMax /= 2;
                 }
 
-                // now we sample 4 texels from the depth at the calculated mip level, this should give us the 
-                float d1 = pDepthAttachment.texture.Load(int3(screenCornerMin.x, screenCornerMin.y, mipLevel)).r;
-                float d2 = pDepthAttachment.texture.Load(int3(screenCornerMin.x, screenCornerMax.y, mipLevel)).r;
-                float d3 = pDepthAttachment.texture.Load(int3(screenCornerMax.x, screenCornerMin.y, mipLevel)).r;
-                float d4 = pDepthAttachment.texture.Load(int3(screenCornerMax.x, screenCornerMax.y, mipLevel)).r;
+                // now we sample 4 texels from the depth at the calculated mip level, this should give us the screen extent of the meshlet
+                float d1 = pDepthAttachment.buffer[mipOffset + (screenCornerMin.y * mipDimensions.x) + screenCornerMin.x];
+                float d2 = pDepthAttachment.buffer[mipOffset + (screenCornerMin.y * mipDimensions.x) + screenCornerMax.x];
+                float d3 = pDepthAttachment.buffer[mipOffset + (screenCornerMax.y * mipDimensions.x) + screenCornerMin.x];
+                float d4 = pDepthAttachment.buffer[mipOffset + (screenCornerMax.y * mipDimensions.x) + screenCornerMax.x];
 
                 // we want to check if the minimum depth (the value farthest away) is smaller than the maximum bounding box depth
                 // otherwise, there is no way for the meshlet to be visible
