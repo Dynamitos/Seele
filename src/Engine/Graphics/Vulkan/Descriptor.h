@@ -52,7 +52,9 @@ class DescriptorSet : public Gfx::DescriptorSet, public CommandBoundResource {
     virtual void updateBuffer(uint32_t binding, Gfx::PShaderBuffer uniformBuffer) override;
     virtual void updateBuffer(uint32_t binding, uint32 index, Gfx::PShaderBuffer uniformBuffer) override;
     virtual void updateSampler(uint32_t binding, Gfx::PSampler samplerState) override;
+    virtual void updateSampler(uint32_t binding, uint32 dstArrayIndex, Gfx::PSampler samplerState) override;
     virtual void updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::PSampler sampler = nullptr) override;
+    virtual void updateTexture(uint32 binding, uint32 dstArrayIndex, Gfx::PTexture texture) override;
     virtual void updateTextureArray(uint32_t binding, Array<Gfx::PTexture> texture) override;
 
     constexpr bool isCurrentlyInUse() const { return currentlyInUse; }

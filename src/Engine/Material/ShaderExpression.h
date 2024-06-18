@@ -43,18 +43,14 @@ class ShaderExpression {
 };
 DEFINE_REF(ShaderExpression)
 
-DECLARE_NAME_REF(Gfx, DescriptorSet)
 struct ShaderParameter : public ShaderExpression {
-    uint32 byteOffset = 0;
-    uint32 binding = 0;
+    uint32 index = 0;
     ShaderParameter() {}
-    ShaderParameter(std::string name, uint32 byteOffset, uint32 binding);
+    ShaderParameter(std::string name, uint32 index);
     virtual ~ShaderParameter();
-    // update a descriptorset, in case of a uniform buffer, copy the data to the dst + byteOffset
-    virtual void updateDescriptorSet(Gfx::PDescriptorSet descriptorSet, uint8* dst) = 0;
-    virtual void generateDeclaration(std::ofstream& stream) const = 0;
+    virtual void updateDescriptorSet(uint32 textureOffset, uint32 samplerOffset, uint32 floatOffset) = 0;
     virtual uint64 getIdentifier() const override = 0;
-    virtual std::string evaluate(Map<std::string, std::string>& varState) const override;
+    virtual std::string evaluate(Map<std::string, std::string>& varState) const = 0;
     virtual void save(ArchiveBuffer& buffer) const override;
     virtual void load(ArchiveBuffer& buffer) override;
 };
@@ -63,10 +59,10 @@ struct FloatParameter : public ShaderParameter {
     static constexpr uint64 IDENTIFIER = 0x01;
     float data = 0.0f;
     FloatParameter() {}
-    FloatParameter(std::string name, float data, uint32 byteOffset, uint32 binding);
+    FloatParameter(std::string name, float data, uint32 index);
     virtual ~FloatParameter();
-    virtual void updateDescriptorSet(Gfx::PDescriptorSet descriptorSet, uint8* dst) override;
-    virtual void generateDeclaration(std::ofstream& stream) const override;
+    virtual void updateDescriptorSet(uint32 textureOffset, uint32 samplerOffset, uint32 floatOffset) override;
+    virtual std::string evaluate(Map<std::string, std::string>& varState) const override;
     virtual uint64 getIdentifier() const override { return IDENTIFIER; }
     virtual void save(ArchiveBuffer& buffer) const override;
     virtual void load(ArchiveBuffer& buffer) override;
@@ -76,10 +72,10 @@ struct VectorParameter : public ShaderParameter {
     static constexpr uint64 IDENTIFIER = 0x02;
     Vector data = Vector();
     VectorParameter() {}
-    VectorParameter(std::string name, Vector data, uint32 byteOffset, uint32 binding);
+    VectorParameter(std::string name, Vector data, uint32 index);
     virtual ~VectorParameter();
-    virtual void updateDescriptorSet(Gfx::PDescriptorSet descriptorSet, uint8* dst) override;
-    virtual void generateDeclaration(std::ofstream& stream) const override;
+    virtual void updateDescriptorSet(uint32 textureOffset, uint32 samplerOffset, uint32 floatOffset) override;
+    virtual std::string evaluate(Map<std::string, std::string>& varState) const override;
     virtual uint64 getIdentifier() const override { return IDENTIFIER; }
     virtual void save(ArchiveBuffer& buffer) const override;
     virtual void load(ArchiveBuffer& buffer) override;
@@ -89,10 +85,10 @@ struct TextureParameter : public ShaderParameter {
     static constexpr uint64 IDENTIFIER = 0x04;
     PTextureAsset data = nullptr;
     TextureParameter() {}
-    TextureParameter(std::string name, PTextureAsset data, uint32 binding);
+    TextureParameter(std::string name, PTextureAsset data, uint32 index);
     virtual ~TextureParameter();
-    virtual void updateDescriptorSet(Gfx::PDescriptorSet descriptorSet, uint8* dst) override;
-    virtual void generateDeclaration(std::ofstream& stream) const override;
+    virtual void updateDescriptorSet(uint32 textureOffset, uint32 samplerOffset, uint32 floatOffset) override;
+    virtual std::string evaluate(Map<std::string, std::string>& varState) const override;
     virtual uint64 getIdentifier() const override { return IDENTIFIER; }
     virtual void save(ArchiveBuffer& buffer) const override;
     virtual void load(ArchiveBuffer& buffer) override;
@@ -103,10 +99,10 @@ struct SamplerParameter : public ShaderParameter {
     static constexpr uint64 IDENTIFIER = 0x08;
     Gfx::OSampler data = nullptr;
     SamplerParameter() {}
-    SamplerParameter(std::string name, Gfx::OSampler sampler, uint32 binding);
+    SamplerParameter(std::string name, Gfx::OSampler sampler, uint32 index);
     virtual ~SamplerParameter();
-    virtual void updateDescriptorSet(Gfx::PDescriptorSet descriptorSet, uint8* dst) override;
-    virtual void generateDeclaration(std::ofstream& stream) const override;
+    virtual void updateDescriptorSet(uint32 textureOffset, uint32 samplerOffset, uint32 floatOffset) override;
+    virtual std::string evaluate(Map<std::string, std::string>& varState) const override;
     virtual uint64 getIdentifier() const override { return IDENTIFIER; }
     virtual void save(ArchiveBuffer& buffer) const override;
     virtual void load(ArchiveBuffer& buffer) override;
@@ -117,10 +113,10 @@ struct CombinedTextureParameter : public ShaderParameter {
     PTextureAsset data = nullptr;
     Gfx::OSampler sampler = nullptr;
     CombinedTextureParameter() {}
-    CombinedTextureParameter(std::string name, PTextureAsset data, Gfx::OSampler sampler, uint32 binding);
+    CombinedTextureParameter(std::string name, PTextureAsset data, Gfx::OSampler sampler, uint32 index);
     virtual ~CombinedTextureParameter();
-    virtual void updateDescriptorSet(Gfx::PDescriptorSet descriptorSet, uint8* dst) override;
-    virtual void generateDeclaration(std::ofstream& stream) const override;
+    virtual void updateDescriptorSet(uint32 textureOffset, uint32 samplerOffset, uint32 floatOffset) override;
+    virtual std::string evaluate(Map<std::string, std::string>& varState) const override;
     virtual uint64 getIdentifier() const override { return IDENTIFIER; }
     virtual void save(ArchiveBuffer& buffer) const override;
     virtual void load(ArchiveBuffer& buffer) override;

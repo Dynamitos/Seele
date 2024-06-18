@@ -108,14 +108,11 @@ Slang::ComPtr<slang::IBlob> Seele::generateShader(const ShaderCreateInfo& create
     CHECK_DIAGNOSTICS();
     for (size_t i = 0; i < signature->getParameterCount(); ++i) {
         auto param = signature->getParameterByIndex(i);
-        // workaround
-        if (std::strcmp(param->getName(), "pVertexData") == 0) {
-            paramMapping[param->getName()] = 1;
-        } else if (std::strcmp(param->getName(), "pMaterial") == 0) {
-            paramMapping[param->getName()] = 4;
-        } else {
-            paramMapping[param->getName()] = param->getBindingIndex();
-        }
+        paramMapping[param->getName()] = param->getBindingIndex();
     }
+
+    // workaround
+    paramMapping["pVertexData"] = 1;
+    paramMapping["pMaterial"] = 4;
     return kernelBlob;
 }

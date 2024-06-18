@@ -45,7 +45,7 @@ void DescriptorLayout::create() {
     VkDescriptorSetLayoutCreateInfo createInfo = {
         .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
         .pNext = &bindingFlagsInfo,
-        .flags = 0,
+        .flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT,
         .bindingCount = (uint32)bindings.size(),
         .pBindings = bindings.data(),
     };
@@ -67,7 +67,7 @@ DescriptorPool::DescriptorPool(PGraphics graphics, PDescriptorLayout layout)
     for (uint32 i = 0; i < layout->getBindings().size(); ++i) {
         auto& binding = layout->getBindings()[i];
         int typeIndex = binding.descriptorType;
-        perTypeSizes[typeIndex] += 256;
+        perTypeSizes[typeIndex] += 512;
     }
     Array<VkDescriptorPoolSize> poolSizes;
     for (uint32 i = 0; i < VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT; ++i) {
@@ -81,7 +81,7 @@ DescriptorPool::DescriptorPool(PGraphics graphics, PDescriptorLayout layout)
     VkDescriptorPoolCreateInfo createInfo = {
         .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
         .pNext = nullptr,
-        .flags = 0,
+        .flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT,
         .maxSets = maxSets * Gfx::numFramesBuffered,
         .poolSizeCount = (uint32)poolSizes.size(),
         .pPoolSizes = poolSizes.data(),
@@ -275,6 +275,34 @@ void DescriptorSet::updateSampler(uint32_t binding, Gfx::PSampler samplerState) 
     boundResources[binding] = vulkanSampler->getHandle();
 }
 
+void DescriptorSet::updateSampler(uint32_t binding, uint32 dstArrayIndex, Gfx::PSampler samplerState)
+{
+    PSampler vulkanSampler = samplerState.cast<Sampler>();
+    if (boundResources[binding] == vulkanSampler->getHandle()) {
+        return;
+    }
+
+    imageInfos.add(VkDescriptorImageInfo{
+        .sampler = vulkanSampler->getSampler(),
+        .imageView = VK_NULL_HANDLE,
+        .imageLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+    });
+
+    writeDescriptors.add(VkWriteDescriptorSet{
+        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .pNext = nullptr,
+        .dstSet = setHandle,
+        .dstBinding = binding,
+        .dstArrayElement = dstArrayIndex,
+        .descriptorCount = 1,
+        .descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER,
+        .pImageInfo = &imageInfos.back(),
+    });
+
+    boundResources[binding] = vulkanSampler->getHandle();
+}
+
+
 void DescriptorSet::updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::PSampler samplerState) {
     TextureBase* vulkanTexture = texture.cast<TextureBase>().getHandle();
     if (boundResources[binding] == vulkanTexture->getHandle()) {
@@ -306,6 +334,35 @@ void DescriptorSet::updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::
 
     boundResources[binding] = vulkanTexture->getHandle();
 }
+
+void DescriptorSet::updateTexture(uint32 binding, uint32 dstArrayIndex, Gfx::PTexture texture)
+{
+    TextureBase* vulkanTexture = texture.cast<TextureBase>().getHandle();
+    if (boundResources[binding] == vulkanTexture->getHandle()) {
+        return;
+    }
+
+    // It is assumed that the image is in the correct layout
+    imageInfos.add(VkDescriptorImageInfo{
+        .sampler = VK_NULL_HANDLE,
+        .imageView = vulkanTexture->getView(),
+        .imageLayout = cast(vulkanTexture->getLayout()),
+    });
+    writeDescriptors.add(VkWriteDescriptorSet{
+        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .pNext = nullptr,
+        .dstSet = setHandle,
+        .dstBinding = binding,
+        .dstArrayElement = dstArrayIndex,
+        .descriptorCount = 1,
+        .descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+        .pImageInfo = &imageInfos.back(),
+    });
+
+    boundResources[binding] = vulkanTexture->getHandle();
+}
+
+
 void DescriptorSet::updateTextureArray(uint32_t binding, Array<Gfx::PTexture> textures) {
     // maybe make this a parameter?
     uint32 arrayElement = 0;

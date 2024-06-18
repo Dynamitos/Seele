@@ -17,7 +17,7 @@ float4 fragmentMain(in FragmentParameter params) : SV_Target
 {
     LightingParameter lightingParams = params.getLightingParameter();
     MaterialParameter materialParams = params.getMaterialParameter();
-	let brdf = pMaterial.prepare(materialParams);
+	let brdf = Material.prepare(materialParams);
     uint2 tileIndex = uint2(floor(params.position_CS.xy / BLOCK_SIZE));
     uint startOffset = pLightCullingData.lightGrid[tileIndex].x;
     uint lightCount = pLightCullingData.lightGrid[tileIndex].y;

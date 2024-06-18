@@ -111,32 +111,23 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Array<PTextureAsset>&
                            materialName.end()); // dots break adding the .asset extension later
         materialName.erase(std::remove(materialName.begin(), materialName.end(), ')'),
                            materialName.end()); // dots break adding the .asset extension later
-        Gfx::ODescriptorLayout materialLayout = graphics->createDescriptorLayout("pMaterial");
         Array<OShaderExpression> expressions;
         Array<std::string> parameters;
-
-        materialLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-            .binding = 0,
-            .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-            .shaderStages = Gfx::SE_SHADER_STAGE_FRAGMENT_BIT,
-        });
-
-        size_t uniformSize = 0;
-        uint32 bindingCounter = 1;
+        uint32 numTextures = 0;
+        uint32 numSamplers = 0;
+        uint32 numFloats = 0;
         auto addScalarParameter = [&](std::string paramKey, const char* matKey, int type, int index) {
             float scalar;
             material->Get(matKey, type, index, scalar);
-            expressions.add(new FloatParameter(paramKey, scalar, uniformSize, 0));
-            uniformSize += sizeof(float);
+            expressions.add(new FloatParameter(paramKey, scalar, numFloats++));
             parameters.add(paramKey);
         };
 
         auto addVectorParameter = [&](std::string paramKey, const char* matKey, int type, int index) {
             aiColor3D color;
             material->Get(matKey, type, index, color);
-            uniformSize = (uniformSize + sizeof(Vector4) - 1) / sizeof(Vector4) * sizeof(Vector4);
-            expressions.add(new VectorParameter(paramKey, Vector(color.r, color.g, color.b), uniformSize, 0));
-            uniformSize += sizeof(Vector);
+            expressions.add(new VectorParameter(paramKey, Vector(color.r, color.g, color.b), numFloats));
+            numFloats += 3;
             parameters.add(paramKey);
         };
 
@@ -181,15 +172,8 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Array<PTextureAsset>&
                 std::cout << "couldnt find " << texPath.C_Str() << std::endl;
                 return;
             }
-            expressions.add(new TextureParameter(textureKey, texture, bindingCounter));
-            materialLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-                .binding = bindingCounter,
-                .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
-                .textureType = Gfx::SE_IMAGE_VIEW_TYPE_2D,
-                .shaderStages = Gfx::SE_SHADER_STAGE_FRAGMENT_BIT,
-            });
+            expressions.add(new TextureParameter(textureKey, texture, numTextures++));
             parameters.add(textureKey);
-            bindingCounter++;
 
             std::string samplerKey = fmt::format("{0}Sampler{1}", paramKey, index);
             SamplerCreateInfo samplerInfo = {};
@@ -215,14 +199,8 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Array<PTextureAsset>&
                 samplerInfo.addressModeW = Gfx::SE_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
                 break;
             }
-            expressions.add(new SamplerParameter(samplerKey, graphics->createSampler(samplerInfo), bindingCounter));
-            materialLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-                .binding = bindingCounter,
-                .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLER,
-                .shaderStages = Gfx::SE_SHADER_STAGE_FRAGMENT_BIT,
-            });
+            expressions.add(new SamplerParameter(samplerKey, graphics->createSampler(samplerInfo), numSamplers++));
             parameters.add(samplerKey);
-            bindingCounter++;
 
             std::string sampleKey = fmt::format("{0}Sample{1}", paramKey, index);
             expressions.add(new SampleExpression());
@@ -242,8 +220,7 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Array<PTextureAsset>&
                 return;
             }
             std::string blendFactorKey = fmt::format("{0}BlendFactor{1}", paramKey, index);
-            expressions.add(new FloatParameter(blendFactorKey, blend, uniformSize, 0));
-            uniformSize += sizeof(float);
+            expressions.add(new FloatParameter(blendFactorKey, blend, numFloats++));
             parameters.add(blendFactorKey);
 
             std::string strengthKey = fmt::format("{0}Strength{1}", paramKey, index);
@@ -396,10 +373,8 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Array<PTextureAsset>&
             break;
         };
 
-        materialLayout->create();
-
         OMaterialAsset baseMat = new MaterialAsset(importPath, materialName);
-        baseMat->material = new Material(graphics, std::move(materialLayout), uniformSize, 0, materialName, std::move(expressions),
+        baseMat->material = new Material(graphics, numTextures, numSamplers, numFloats, materialName, std::move(expressions),
                                          std::move(parameters), std::move(brdf));
         baseMat->material->compile();
         graphics->getShaderCompiler()->registerMaterial(baseMat->material);

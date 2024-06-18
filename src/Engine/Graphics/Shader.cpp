@@ -65,7 +65,6 @@ void ShaderCompiler::compile() {
                                 OPipelineLayout layout = graphics->createPipelineLayout(pass.baseLayout->getName(), pass.baseLayout);
                                 layout->addDescriptorLayout(vd->getVertexDataLayout());
                                 layout->addDescriptorLayout(vd->getInstanceDataLayout());
-                                layout->addDescriptorLayout(mat->getDescriptorLayout());
                                 permutation.setMaterial(mat->getName());
                                 createShaders(permutation, std::move(layout));
                             });

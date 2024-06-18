@@ -60,6 +60,9 @@ struct MeshletCullingInfo
 struct DrawCallOffsets
 {
     uint32_t instanceOffset;
+	uint textureOffset;
+	uint samplerOffset;
+	uint floatOffset;
 };
 layout(push_constant)
 ConstantBuffer<DrawCallOffsets> pOffsets;

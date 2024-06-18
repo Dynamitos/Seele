@@ -4,9 +4,9 @@
 #include "Graphics/Descriptor.h"
 #include "Graphics/Graphics.h"
 #include "Graphics/Resources.h"
+#include "Material/Material.h"
 #include <fmt/core.h>
 #include <fstream>
-
 
 using namespace Seele;
 
@@ -48,35 +48,37 @@ void ShaderExpression::load(ArchiveBuffer& buffer) {
     Serialization::load(buffer, key);
 }
 
-ShaderParameter::ShaderParameter(std::string name, uint32 byteOffset, uint32 binding)
-    : ShaderExpression(name), byteOffset(byteOffset), binding(binding) {}
+ShaderParameter::ShaderParameter(std::string name, uint32 index) : ShaderExpression(name), index(index) {}
 
 ShaderParameter::~ShaderParameter() {}
 
-std::string ShaderParameter::evaluate(Map<std::string, std::string>& varState) const {
-    varState[key] = key;
-    return "";
-}
-
 void ShaderParameter::save(ArchiveBuffer& buffer) const {
     ShaderExpression::save(buffer);
-    Serialization::save(buffer, byteOffset);
-    Serialization::save(buffer, binding);
+    Serialization::save(buffer, index);
 }
 
 void ShaderParameter::load(ArchiveBuffer& buffer) {
     ShaderExpression::load(buffer);
-    Serialization::load(buffer, byteOffset);
-    Serialization::load(buffer, binding);
+    Serialization::load(buffer, index);
 }
 
-FloatParameter::FloatParameter(std::string name, float data, uint32 byteOffset, uint32 binding)
-    : ShaderParameter(name, byteOffset, binding), data(data) {
+FloatParameter::FloatParameter(std::string name, float data, uint32 index) : ShaderParameter(name, index), data(data) {
     output.name = name;
     output.type = ExpressionType::FLOAT;
 }
 
 FloatParameter::~FloatParameter() {}
+
+void FloatParameter::updateDescriptorSet(uint32 textureOffset, uint32 samplerOffset, uint32 floatOffset) {
+    Material::updateFloatData(floatOffset + index, 1, &data);
+}
+
+std::string FloatParameter::evaluate(Map<std::string, std::string>& varState) const
+{
+    std::string varName = fmt::format("exp_{}", key);
+    varState[key] = varName;
+    return fmt::format("let {} = getMaterialFloatParameter({});\n", varName, index);
+}
 
 void FloatParameter::save(ArchiveBuffer& buffer) const {
     ShaderParameter::save(buffer);
@@ -88,21 +90,23 @@ void FloatParameter::load(ArchiveBuffer& buffer) {
     Serialization::load(buffer, data);
 }
 
-void FloatParameter::updateDescriptorSet(Gfx::PDescriptorSet, uint8* dst) { std::memcpy(dst + byteOffset, &data, sizeof(float)); }
-
-void FloatParameter::generateDeclaration(std::ofstream& stream) const { stream << "\tfloat " << key << ";\n"; }
-
-VectorParameter::VectorParameter(std::string name, Vector data, uint32 byteOffset, uint32 binding)
-    : ShaderParameter(name, byteOffset, binding), data(data) {
+VectorParameter::VectorParameter(std::string name, Vector data, uint32 index)
+    : ShaderParameter(name, index), data(data) {
     output.name = name;
     output.type = ExpressionType::FLOAT3;
 }
 
 VectorParameter::~VectorParameter() {}
 
-void VectorParameter::updateDescriptorSet(Gfx::PDescriptorSet, uint8* dst) { std::memcpy(dst + byteOffset, &data, sizeof(Vector)); }
+void VectorParameter::updateDescriptorSet(uint32 textureOffset, uint32 samplerOffset, uint32 floatOffset) {
+    Material::updateFloatData(floatOffset + index, 3, (float*) & data);
+}
 
-void VectorParameter::generateDeclaration(std::ofstream& stream) const { stream << "\tfloat3 " << key << ";\n"; }
+std::string VectorParameter::evaluate(Map<std::string, std::string>& varState) const {
+    std::string varName = fmt::format("exp_{}", key);
+    varState[key] = varName;
+    return fmt::format("let {} = getMaterialVectorParameter({});\n", varName, index);
+}
 
 void VectorParameter::save(ArchiveBuffer& buffer) const {
     ShaderParameter::save(buffer);
@@ -114,18 +118,22 @@ void VectorParameter::load(ArchiveBuffer& buffer) {
     Serialization::load(buffer, data);
 }
 
-TextureParameter::TextureParameter(std::string name, PTextureAsset asset, uint32 binding) : ShaderParameter(name, 0, binding), data(asset) {
+TextureParameter::TextureParameter(std::string name, PTextureAsset asset, uint32 index) : ShaderParameter(name, index), data(asset) {
     output.name = name;
     output.type = ExpressionType::TEXTURE;
 }
 
 TextureParameter::~TextureParameter() {}
 
-void TextureParameter::updateDescriptorSet(Gfx::PDescriptorSet descriptorSet, uint8*) {
-    descriptorSet->updateTexture(binding, data->getTexture());
+void TextureParameter::updateDescriptorSet(uint32 textureOffset, uint32 samplerOffset, uint32 floatOffset) {
+    Material::updateTexture(textureOffset + index, data->getTexture());
 }
 
-void TextureParameter::generateDeclaration(std::ofstream& stream) const { stream << "\tTexture2D " << key << ";\n"; }
+std::string TextureParameter::evaluate(Map<std::string, std::string>& varState) const {
+    std::string varName = fmt::format("exp_{}", key);
+    varState[key] = varName;
+    return fmt::format("let {} = getMaterialTextureParameter({});\n", varName, index);
+}
 
 void TextureParameter::save(ArchiveBuffer& buffer) const {
     ShaderParameter::save(buffer);
@@ -142,17 +150,23 @@ void TextureParameter::load(ArchiveBuffer& buffer) {
     data = AssetRegistry::findTexture(folder, filename);
 }
 
-SamplerParameter::SamplerParameter(std::string name, Gfx::OSampler sampler, uint32 binding)
-    : ShaderParameter(name, 0, binding), data(std::move(sampler)) {
+SamplerParameter::SamplerParameter(std::string name, Gfx::OSampler sampler, uint32 index)
+    : ShaderParameter(name, index), data(std::move(sampler)) {
     output.name = name;
     output.type = ExpressionType::SAMPLER;
 }
 
 SamplerParameter::~SamplerParameter() {}
 
-void SamplerParameter::updateDescriptorSet(Gfx::PDescriptorSet descriptorSet, uint8*) { descriptorSet->updateSampler(binding, data); }
+void SamplerParameter::updateDescriptorSet(uint32 textureOffset, uint32 samplerOffset, uint32 floatOffset) {
+    Material::updateSampler(samplerOffset + index, data);
+}
 
-void SamplerParameter::generateDeclaration(std::ofstream& stream) const { stream << "\tSamplerState " << key << ";\n"; }
+std::string SamplerParameter::evaluate(Map<std::string, std::string>& varState) const {
+    std::string varName = fmt::format("exp_{}", key);
+    varState[key] = varName;
+    return fmt::format("let {} = getMaterialSamplerParameter({});\n", varName, index);
+}
 
 void SamplerParameter::save(ArchiveBuffer& buffer) const { ShaderParameter::save(buffer); }
 
@@ -161,19 +175,17 @@ void SamplerParameter::load(ArchiveBuffer& buffer) {
     data = buffer.getGraphics()->createSampler(SamplerCreateInfo{});
 }
 
-CombinedTextureParameter::CombinedTextureParameter(std::string name, PTextureAsset data, Gfx::OSampler sampler, uint32 binding)
-    : ShaderParameter(name, 0, binding), data(data), sampler(std::move(sampler)) {
+CombinedTextureParameter::CombinedTextureParameter(std::string name, PTextureAsset data, Gfx::OSampler sampler, uint32 index)
+    : ShaderParameter(name, index), data(data), sampler(std::move(sampler)) {
     output.name = name;
     output.type = ExpressionType::TEXTURE;
 }
 
 CombinedTextureParameter::~CombinedTextureParameter() {}
 
-void CombinedTextureParameter::updateDescriptorSet(Gfx::PDescriptorSet descriptorSet, uint8*) {
-    descriptorSet->updateTexture(binding, data->getTexture(), sampler);
-}
+void CombinedTextureParameter::updateDescriptorSet(uint32 textureOffset, uint32 samplerOffset, uint32 floatOffset) { assert(false); }
 
-void CombinedTextureParameter::generateDeclaration(std::ofstream& stream) const { stream << "\tSampler2D " << key << ";\n"; }
+std::string CombinedTextureParameter::evaluate(Map<std::string, std::string>& varState) const { return ""; }
 
 void CombinedTextureParameter::save(ArchiveBuffer& buffer) const {
     ShaderParameter::save(buffer);

@@ -64,7 +64,9 @@ class DescriptorSet {
     virtual void updateBuffer(uint32 binding, PShaderBuffer ShaderBuffer) = 0;
     virtual void updateBuffer(uint32_t binding, uint32 index, Gfx::PShaderBuffer uniformBuffer) = 0;
     virtual void updateSampler(uint32 binding, PSampler sampler) = 0;
+    virtual void updateSampler(uint32_t binding, uint32 dstArrayIndex, Gfx::PSampler samplerState) = 0;
     virtual void updateTexture(uint32 binding, PTexture texture, PSampler samplerState = nullptr) = 0;
+    virtual void updateTexture(uint32 binding, uint32 dstArrayIndex, PTexture texture) = 0;
     virtual void updateTextureArray(uint32_t binding, Array<PTexture> texture) = 0;
     bool operator<(PDescriptorSet other);
 

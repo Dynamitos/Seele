@@ -316,7 +316,7 @@ void RenderCommand::drawMeshIndirect(Gfx::PShaderBuffer buffer, uint64 offset, u
     vkCmdDrawMeshTasksIndirectEXT(handle, buffer.cast<ShaderBuffer>()->getHandle(), offset, drawCount, stride);
 }
 
-void RenderCommand::traceRays() { vkCmdTraceRaysKHR(handle, ); }
+void RenderCommand::traceRays() { }
 
 ComputeCommand::ComputeCommand(PGraphics graphics, VkCommandPool cmdPool) : graphics(graphics), owner(cmdPool) {
     VkCommandBufferAllocateInfo allocInfo = {

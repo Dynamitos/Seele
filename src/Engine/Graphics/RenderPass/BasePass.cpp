@@ -21,6 +21,7 @@ BasePass::BasePass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics,
 
     basePassLayout->addDescriptorLayout(viewParamsLayout);
     basePassLayout->addDescriptorLayout(scene->getLightEnvironment()->getDescriptorLayout());
+    basePassLayout->addDescriptorLayout(Material::getDescriptorLayout());
 
     lightCullingLayout = graphics->createDescriptorLayout("pLightCullingData");
     // oLightIndexList
@@ -37,7 +38,7 @@ BasePass::BasePass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics,
 
     basePassLayout->addDescriptorLayout(lightCullingLayout);
     basePassLayout->addPushConstants(Gfx::SePushConstantRange{
-        .stageFlags = Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_VERTEX_BIT,
+        .stageFlags = Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_VERTEX_BIT | Gfx::SE_SHADER_STAGE_FRAGMENT_BIT,
         .offset = 0,
         .size = sizeof(VertexData::DrawCallOffsets),
     });
@@ -162,12 +163,12 @@ void BasePass::render() {
                 Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
                 command->bindPipeline(pipeline);
             }
+            command->bindDescriptor({viewParamsSet, vertexData->getVertexDataSet(), vertexData->getInstanceDataSet(),
+                                     scene->getLightEnvironment()->getDescriptorSet(), Material::getDescriptorSet(), opaqueCulling});
             for (const auto& drawCall : materialData.instances) {
-                command->bindDescriptor({viewParamsSet, vertexData->getVertexDataSet(), vertexData->getInstanceDataSet(),
-                                         scene->getLightEnvironment()->getDescriptorSet(), drawCall.materialInstance->getDescriptorSet(),
-                                         opaqueCulling});
-                command->pushConstants(Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_VERTEX_BIT, 0,
-                                       sizeof(VertexData::DrawCallOffsets), &drawCall.offsets);
+                command->pushConstants(Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_VERTEX_BIT |
+                                           Gfx::SE_SHADER_STAGE_FRAGMENT_BIT,
+                                       0, sizeof(VertexData::DrawCallOffsets), &drawCall.offsets);
                 if (graphics->supportMeshShading()) {
                     command->drawMesh(drawCall.instanceMeshData.size(), 1, 1);
                 } else {

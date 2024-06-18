@@ -7,92 +7,141 @@
 #include "Window/WindowManager.h"
 #include <fstream>
 
-
 using namespace Seele;
 
+Array<Gfx::PTexture2D> Material::textures;
+Array<Gfx::PSampler> Material::samplers;
+Gfx::OShaderBuffer Material::floatBuffer;
+Array<float> Material::floatData;
+Gfx::ODescriptorLayout Material::layout;
+Gfx::PDescriptorSet Material::set;
 std::atomic_uint64_t Material::materialIdCounter = 0;
 Array<PMaterial> Material::materials;
 
 Material::Material() {}
 
-Material::Material(Gfx::PGraphics graphics, Gfx::ODescriptorLayout layout, uint32 uniformDataSize, uint32 uniformBinding,
-                   std::string materialName, Array<OShaderExpression> expressions, Array<std::string> parameter, MaterialNode brdf)
-    : graphics(graphics), uniformDataSize(uniformDataSize), uniformBinding(uniformBinding), instanceId(0), layout(std::move(layout)),
+Material::Material(Gfx::PGraphics graphics, uint32 numTextures, uint32 numSamplers, uint32 numFloats, std::string materialName,
+                   Array<OShaderExpression> expressions, Array<std::string> parameter, MaterialNode brdf)
+    : graphics(graphics), numTextures(numTextures), numSamplers(numSamplers), numFloats(numFloats), instanceId(0),
       materialName(materialName), codeExpressions(std::move(expressions)), parameters(std::move(parameter)), brdf(std::move(brdf)),
       materialId(materialIdCounter++) {
+    if (layout == nullptr) {
+        init(graphics);
+    }
     materials.add(this);
 }
 
 Material::~Material() {}
 
+void Material::init(Gfx::PGraphics graphics) {
+    layout = graphics->createDescriptorLayout("pMaterial");
+    layout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .binding = 0,
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+        .descriptorCount = 2000,
+        .bindingFlags = Gfx::SE_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | Gfx::SE_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT,
+        .shaderStages = Gfx::SE_SHADER_STAGE_FRAGMENT_BIT | Gfx::SE_SHADER_STAGE_CLOSEST_HIT_BIT_KHR,
+    });
+    layout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .binding = 1,
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLER,
+        .descriptorCount = 2000,
+        .bindingFlags = Gfx::SE_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | Gfx::SE_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT,
+        .shaderStages = Gfx::SE_SHADER_STAGE_FRAGMENT_BIT | Gfx::SE_SHADER_STAGE_CLOSEST_HIT_BIT_KHR,
+    });
+    layout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .binding = 2,
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+        .descriptorCount = 1,
+        .bindingFlags = Gfx::SE_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | Gfx::SE_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT,
+        .shaderStages = Gfx::SE_SHADER_STAGE_FRAGMENT_BIT | Gfx::SE_SHADER_STAGE_CLOSEST_HIT_BIT_KHR,
+    });
+    layout->create();
+    floatBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
+        .dynamic = true,
+        .name = "MaterialFloatBuffer",
+    });
+}
+
+void Material::updateDescriptor() {
+    floatBuffer->rotateBuffer(floatData.size() * sizeof(float));
+    floatBuffer->updateContents(ShaderBufferCreateInfo{
+        .sourceData =
+            {
+                .size = floatData.size() * sizeof(float),
+            },
+    });
+    floatBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, Gfx::SE_ACCESS_SHADER_READ_BIT,
+                                 Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+    layout->reset();
+    set = layout->allocateDescriptorSet();
+    for (uint32 i = 0; i < textures.size(); ++i)
+    {
+        set->updateTexture(0, i, textures[i]);
+    }
+    for (uint32 i = 0; i < samplers.size(); ++i)
+    {
+        set->updateSampler(1, i, samplers[i]);
+    }
+    set->updateBuffer(2, floatBuffer);
+    set->writeChanges();
+}
+
+void Material::updateTexture(uint32 index, Gfx::PTexture2D texture) { textures[index] = texture; }
+
+void Material::updateSampler(uint32 index, Gfx::PSampler sampler) { samplers[index] = sampler; }
+
+void Material::updateFloatData(uint32 offset, uint32 numFloats, float* data) {
+    std::memcpy(floatData.data() + offset, data, numFloats * sizeof(float));
+}
+
+uint32 Material::addTextures(uint32 numTextures) {
+    uint32 textureOffset = textures.size();
+    textures.resize(textures.size() + numTextures);
+    return textureOffset;
+}
+
+uint32 Material::addSamplers(uint32 numSamplers) {
+    uint32 samplerOffset = samplers.size();
+    samplers.resize(samplers.size() + numSamplers);
+    return samplerOffset;
+}
+
+uint32 Material::addFloats(uint32 numFloats) {
+    uint32 floatOffset = floatData.size();
+    floatData.resize(floatData.size() + numFloats);
+    return floatOffset;
+}
+
 OMaterialInstance Material::instantiate() {
-    return new MaterialInstance(instanceId++, graphics, codeExpressions, parameters, uniformBinding, uniformDataSize);
+    return new MaterialInstance(instanceId++, graphics, codeExpressions, parameters, numTextures, numSamplers, numFloats);
 }
 
 void Material::save(ArchiveBuffer& buffer) const {
-    Serialization::save(buffer, uniformDataSize);
-    Serialization::save(buffer, uniformBinding);
+    Serialization::save(buffer, numTextures);
+    Serialization::save(buffer, numSamplers);
+    Serialization::save(buffer, numFloats);
     Serialization::save(buffer, instanceId);
     Serialization::save(buffer, materialName);
     Serialization::save(buffer, codeExpressions);
     Serialization::save(buffer, parameters);
     Serialization::save(buffer, brdf);
-    Serialization::save(buffer, layout->getName());
-    const auto& bindings = layout->getBindings();
-    Serialization::save(buffer, bindings.size());
-    for (const auto& binding : bindings) {
-        Serialization::save(buffer, binding.binding);
-        Serialization::save(buffer, binding.descriptorType);
-        Serialization::save(buffer, binding.textureType);
-        Serialization::save(buffer, binding.descriptorCount);
-        Serialization::save(buffer, binding.bindingFlags);
-        Serialization::save(buffer, binding.shaderStages);
-    }
 }
 
 void Material::load(ArchiveBuffer& buffer) {
     graphics = buffer.getGraphics();
-    Serialization::load(buffer, uniformDataSize);
-    Serialization::load(buffer, uniformBinding);
+    if (layout == nullptr)
+    {
+        init(graphics);
+    }
+    Serialization::load(buffer, numTextures);
+    Serialization::load(buffer, numSamplers);
+    Serialization::load(buffer, numFloats);
     Serialization::load(buffer, instanceId);
     Serialization::load(buffer, materialName);
     Serialization::load(buffer, codeExpressions);
     Serialization::load(buffer, parameters);
     Serialization::load(buffer, brdf);
-    std::string descriptorName;
-    Serialization::load(buffer, descriptorName);
-    uint64 numBindings;
-    Serialization::load(buffer, numBindings);
-    layout = graphics->createDescriptorLayout(descriptorName);
-    for (uint64 i = 0; i < numBindings; ++i) {
-        uint32 binding;
-        Serialization::load(buffer, binding);
-
-        Gfx::SeDescriptorType descriptorType;
-        Serialization::load(buffer, descriptorType);
-
-        Gfx::SeImageViewType textureType;
-        Serialization::load(buffer, textureType);
-
-        uint32 descriptorCount;
-        Serialization::load(buffer, descriptorCount);
-
-        Gfx::SeDescriptorBindingFlags bindingFlags;
-        Serialization::load(buffer, bindingFlags);
-
-        Gfx::SeShaderStageFlags shaderStages;
-        Serialization::load(buffer, shaderStages);
-
-        layout->addDescriptorBinding(Gfx::DescriptorBinding{
-            .binding = binding,
-            .descriptorType = descriptorType,
-            .textureType = textureType,
-            .descriptorCount = descriptorCount,
-            .bindingFlags = bindingFlags,
-            .shaderStages = shaderStages,
-        });
-    }
-    layout->create();
     materialId = materialIdCounter++;
 }
 
@@ -100,14 +149,10 @@ void Material::compile() {
     std::ofstream codeStream("./shaders/generated/" + materialName + ".slang");
     codeStream << "import BRDF;\n";
     codeStream << "import MaterialParameter;\n";
-    codeStream << "struct " << materialName << "{\n";
-    for (const auto& parameter : parameters) {
-        PShaderParameter handle =
-            PShaderExpression(*codeExpressions.find([&parameter](const OShaderExpression& exp) { return exp->key == parameter; }));
-        handle->generateDeclaration(codeStream);
-    }
+    codeStream << "import Material;\n";
+    codeStream << "struct Material{\n";
     codeStream << "\ttypedef " << brdf.profile << " BRDF;\n";
-    codeStream << "\t" << brdf.profile << " prepare(MaterialParameter input) {\n";
+    codeStream << "\tstatic " << brdf.profile << " prepare(MaterialParameter input) {\n";
     codeStream << "\t\t" << brdf.profile << " result;\n";
     Map<std::string, std::string> varState;
     // initialize variable state
@@ -120,7 +165,6 @@ void Material::compile() {
     codeStream << "\t\treturn result;\n";
     codeStream << "\t}\n";
     codeStream << "};\n";
-    codeStream << "layout(set=4)";
-    codeStream << "ParameterBlock<" << materialName << "> pMaterial;";
     graphics->getShaderCompiler()->registerMaterial(this);
 }
+

@@ -107,6 +107,10 @@ void VertexData::createDescriptors() {
     for (auto& mat : materialData) {
         for (auto& instance : mat.instances) {
             instance.offsets.instanceOffset = instanceData.size();
+            MaterialOffsets offsets = instance.materialInstance->getMaterialOffsets();
+            instance.offsets.textureOffset = offsets.textureOffset;
+            instance.offsets.samplerOffset = offsets.samplerOffset;
+            instance.offsets.floatOffset = offsets.floatOffset;
             // instance.offsets.cullingCounterOffset = cullingOffsets.size();
             // instance.numMeshlets = 0;
             for (size_t i = 0; i < instance.instanceData.size(); ++i) {
@@ -161,6 +165,7 @@ void VertexData::createDescriptors() {
     descriptorSet->updateBuffer(3, primitiveIndicesBuffer);
     descriptorSet->updateBuffer(4, vertexIndicesBuffer);
     descriptorSet->updateBuffer(5, cullingOffsetBuffer);
+    Material::updateDescriptor();
 }
 
 void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet> loadedMeshlets) {

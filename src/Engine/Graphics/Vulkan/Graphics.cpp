@@ -528,6 +528,14 @@ void Graphics::pickPhysicalDevice() {
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES,
         .pNext = &meshShaderFeatures,
         .storageBuffer8BitAccess = true,
+        .shaderUniformBufferArrayNonUniformIndexing = true,
+        .shaderSampledImageArrayNonUniformIndexing = true,
+        .shaderStorageBufferArrayNonUniformIndexing = true,
+        .descriptorBindingUniformBufferUpdateAfterBind = true,
+        .descriptorBindingSampledImageUpdateAfterBind = true,
+        .descriptorBindingStorageBufferUpdateAfterBind = true,
+        .descriptorBindingPartiallyBound = true,
+        .runtimeDescriptorArray = true,
         .bufferDeviceAddress = true,
     };
     features = {

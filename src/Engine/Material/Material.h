@@ -5,14 +5,24 @@
 
 namespace Seele {
 DECLARE_REF(MaterialInstance)
+DECLARE_NAME_REF(Gfx, Texture2D)
+DECLARE_NAME_REF(Gfx, Sampler)
 class Material {
   public:
     Material();
-    Material(Gfx::PGraphics graphics, Gfx::ODescriptorLayout layout, uint32 uniformDataSize, uint32 uniformBinding,
+    Material(Gfx::PGraphics graphics, uint32 numTextures, uint32 numSamplers, uint32 numFloats,
              std::string materialName, Array<OShaderExpression> expressions, Array<std::string> parameter, MaterialNode brdf);
     ~Material();
-    const Gfx::PDescriptorLayout getDescriptorLayout() const { return layout; }
-    Gfx::PDescriptorLayout getDescriptorLayout() { return layout; }
+    static void init(Gfx::PGraphics graphics);
+    static Gfx::PDescriptorLayout getDescriptorLayout() { return layout; }
+    static Gfx::PDescriptorSet getDescriptorSet() { return set; }
+    static void updateDescriptor();
+    static void updateTexture(uint32 index, Gfx::PTexture2D texture);
+    static void updateSampler(uint32 index, Gfx::PSampler sampler);
+    static void updateFloatData(uint32 offset, uint32 numFloats, float* data);
+    static uint32 addTextures(uint32 numTextures);
+    static uint32 addSamplers(uint32 numSamplers);
+    static uint32 addFloats(uint32 numFloats);
     OMaterialInstance instantiate();
     const std::string& getName() const { return materialName; }
     constexpr uint64 getId() const { return materialId; }
@@ -25,15 +35,21 @@ class Material {
 
   private:
     Gfx::PGraphics graphics;
-    uint32 uniformDataSize;
-    uint32 uniformBinding;
+    uint32 numTextures;
+    uint32 numSamplers;
+    uint32 numFloats;
     uint64 instanceId;
     uint64 materialId;
-    Gfx::ODescriptorLayout layout;
     std::string materialName;
     Array<OShaderExpression> codeExpressions;
     Array<std::string> parameters;
     MaterialNode brdf;
+    static Array<Gfx::PTexture2D> textures;
+    static Array<Gfx::PSampler> samplers;
+    static Gfx::OShaderBuffer floatBuffer;
+    static Array<float> floatData;
+    static Gfx::ODescriptorLayout layout;
+    static Gfx::PDescriptorSet set;
     static std::atomic_uint64_t materialIdCounter;
     static Array<PMaterial> materials;
 };

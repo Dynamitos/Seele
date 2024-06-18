@@ -22,6 +22,9 @@ class VertexData {
   public:
     struct DrawCallOffsets {
         uint32 instanceOffset = 0;
+        uint32 textureOffset = 0;
+        uint32 samplerOffset = 0;
+        uint32 floatOffset = 0;
     };
 
     struct MeshletCullingInfo {

@@ -8,18 +8,11 @@ using namespace Seele;
 MaterialInstance::MaterialInstance() {}
 
 MaterialInstance::MaterialInstance(uint64 id, Gfx::PGraphics graphics, Array<OShaderExpression>& expressions, Array<std::string> params,
-                                   uint32 uniformBinding, uint32 uniformSize)
-    : graphics(graphics), uniformBinding(uniformBinding), id(id) {
-    if (uniformSize > 0) {
-        uniformBuffer = graphics->createUniformBuffer(UniformBufferCreateInfo{
-            .sourceData =
-                {
-                    .size = uniformSize,
-                },
-            .dynamic = true,
-        });
-    }
-    uniformData.resize(uniformSize);
+                                   uint32 numTextures, uint32 numSamplers, uint32 numFloats)
+    : graphics(graphics), numTextures(numTextures), numSamplers(numSamplers), numFloats(numFloats), id(id) {
+    texturesOffset = Material::addTextures(numTextures);
+    samplersOffset = Material::addSamplers(numSamplers);
+    floatBufferOffset = Material::addFloats(numFloats);
     ArchiveBuffer buffer(graphics);
     parameters.reserve(params.size());
     for (size_t i = 0; i < params.size(); ++i) {
@@ -36,47 +29,30 @@ MaterialInstance::MaterialInstance(uint64 id, Gfx::PGraphics graphics, Array<OSh
 MaterialInstance::~MaterialInstance() {}
 
 void MaterialInstance::updateDescriptor() {
-    Gfx::PDescriptorLayout layout = baseMaterial->getMaterial()->getDescriptorLayout();
-    descriptor = layout->allocateDescriptorSet();
-    for (auto& param : parameters) {
-        param->updateDescriptorSet(descriptor, uniformData.data());
+    for (auto& p : parameters) {
+        p->updateDescriptorSet(texturesOffset, samplersOffset, floatBufferOffset);
     }
-    if (uniformData.size() > 0) {
-        uniformBuffer->updateContents(DataSource{
-            .size = uniformData.size(),
-            .data = uniformData.data(),
-        });
-        descriptor->updateBuffer(uniformBinding, uniformBuffer);
-    }
-    descriptor->writeChanges();
 }
 
-Gfx::PDescriptorSet MaterialInstance::getDescriptorSet() const { return descriptor; }
-
 void MaterialInstance::setBaseMaterial(PMaterialAsset asset) {
-    if (uniformData.size() > 0) {
-        uniformBuffer = graphics->createUniformBuffer(UniformBufferCreateInfo{
-            .sourceData =
-                {
-                    .size = uniformData.size(),
-                },
-            .dynamic = true,
-        });
-    }
     baseMaterial = asset;
 }
 
 void MaterialInstance::save(ArchiveBuffer& buffer) const {
-    Serialization::save(buffer, uniformData);
-    Serialization::save(buffer, uniformBinding);
+    Serialization::save(buffer, numTextures);
+    Serialization::save(buffer, numSamplers);
+    Serialization::save(buffer, numFloats);
     Serialization::save(buffer, parameters);
     Serialization::save(buffer, id);
 }
 
 void MaterialInstance::load(ArchiveBuffer& buffer) {
-    graphics = buffer.getGraphics();
-    Serialization::load(buffer, uniformData);
-    Serialization::load(buffer, uniformBinding);
+    Serialization::load(buffer, numTextures);
+    Serialization::load(buffer, numSamplers);
+    Serialization::load(buffer, numFloats);
     Serialization::load(buffer, parameters);
     Serialization::load(buffer, id);
+    texturesOffset = Material::addTextures(numTextures);
+    samplersOffset = Material::addSamplers(numSamplers);
+    floatBufferOffset = Material::addFloats(numFloats);
 }

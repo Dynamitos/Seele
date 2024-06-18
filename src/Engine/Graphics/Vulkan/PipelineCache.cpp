@@ -466,6 +466,4 @@ PComputePipeline PipelineCache::createPipeline(Gfx::ComputePipelineCreateInfo co
     return result;
 }
 
-PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateInfo createInfo) {
-
-}
+PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateInfo createInfo) { return nullptr; }
