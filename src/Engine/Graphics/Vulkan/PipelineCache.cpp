@@ -465,3 +465,7 @@ PComputePipeline PipelineCache::createPipeline(Gfx::ComputePipelineCreateInfo co
     graphicsPipelines[hash] = std::move(pipeline);
     return result;
 }
+
+PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateInfo createInfo) {
+
+}

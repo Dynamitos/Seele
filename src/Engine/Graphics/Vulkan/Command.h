@@ -86,6 +86,8 @@ class RenderCommand : public Gfx::RenderCommand {
     virtual void drawMesh(uint32 groupX, uint32 groupY, uint32 groupZ) override;
     virtual void drawMeshIndirect(Gfx::PShaderBuffer buffer, uint64 offset, uint32 drawCount, uint32 stride) override;
 
+    virtual void traceRays();
+
   private:
     PGraphicsPipeline pipeline;
     bool ready;

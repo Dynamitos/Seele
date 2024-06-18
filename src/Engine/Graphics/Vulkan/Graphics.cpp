@@ -319,6 +319,42 @@ Gfx::OTopLevelAS Graphics::createTopLevelAccelerationStructure(const Gfx::TopLev
     return new TopLevelAS(this, createInfo);
 }
 
+Gfx::ORayGenShader Graphics::createRayGenShader(const ShaderCreateInfo& createInfo) {
+    ORayGenShader shader = new RayGenShader(this);
+    shader->create(createInfo);
+    return shader;
+}
+
+Gfx::OAnyHitShader Graphics::createAnyHitShader(const ShaderCreateInfo& createInfo) {
+    OAnyHitShader shader = new AnyHitShader(this);
+    shader->create(createInfo);
+    return shader;
+}
+
+Gfx::OClosestHitShader Graphics::createClosestHitShader(const ShaderCreateInfo& createInfo) {
+    OClosestHitShader shader = new ClosestHitShader(this);
+    shader->create(createInfo);
+    return shader;
+}
+
+Gfx::OMissShader Graphics::createMissShader(const ShaderCreateInfo& createInfo) {
+    OMissShader shader = new MissShader(this);
+    shader->create(createInfo);
+    return shader;
+}
+
+Gfx::OIntersectionShader Graphics::createIntersectionShader(const ShaderCreateInfo& createInfo) {
+    OIntersectionShader shader = new IntersectionShader(this);
+    shader->create(createInfo);
+    return shader;
+}
+
+Gfx::OCallableShader Graphics::createCallableShader(const ShaderCreateInfo& createInfo) {
+    OCallableShader shader = new CallableShader(this);
+    shader->create(createInfo);
+    return shader;
+}
+
 PCommandPool Graphics::getQueueCommands(Gfx::QueueType queueType) {
     switch (queueType) {
     case Gfx::QueueType::GRAPHICS:

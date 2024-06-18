@@ -2,7 +2,6 @@
 #include "Containers/Array.h"
 #include "Initializer.h"
 #include "MinimalEngine.h"
-#include "Query.h"
 #include "RenderTarget.h"
 #include "Resources.h"
 
@@ -32,8 +31,15 @@ DECLARE_REF(ComputePipeline)
 DECLARE_REF(RenderCommand)
 DECLARE_REF(ComputeCommand)
 DECLARE_REF(OcclusionQuery)
+DECLARE_REF(PipelineStatisticsQuery)
 DECLARE_REF(BottomLevelAS)
 DECLARE_REF(TopLevelAS)
+DECLARE_REF(RayGenShader)
+DECLARE_REF(AnyHitShader)
+DECLARE_REF(ClosestHitShader)
+DECLARE_REF(MissShader)
+DECLARE_REF(IntersectionShader)
+DECLARE_REF(CallableShader)
 class Graphics {
   public:
     Graphics();
@@ -93,6 +99,12 @@ class Graphics {
     virtual OBottomLevelAS createBottomLevelAccelerationStructure(const BottomLevelASCreateInfo& createInfo) = 0;
     virtual OTopLevelAS createTopLevelAccelerationStructure(const TopLevelASCreateInfo& createInfo) = 0;
 
+    virtual ORayGenShader createRayGenShader(const ShaderCreateInfo& createInfo) = 0;
+    virtual OAnyHitShader createAnyHitShader(const ShaderCreateInfo& createInfo) = 0;
+    virtual OClosestHitShader createClosestHitShader(const ShaderCreateInfo& createInfo) = 0;
+    virtual OMissShader createMissShader(const ShaderCreateInfo& createInfo) = 0;
+    virtual OIntersectionShader createIntersectionShader(const ShaderCreateInfo& createInfo) = 0;
+    virtual OCallableShader createCallableShader(const ShaderCreateInfo& createInfo) = 0;
   protected:
     QueueFamilyMapping queueMapping;
     OShaderCompiler shaderCompiler;

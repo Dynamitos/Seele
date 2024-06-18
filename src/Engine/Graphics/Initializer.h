@@ -224,7 +224,15 @@ struct ComputePipelineCreateInfo {
     Gfx::PComputeShader computeShader = nullptr;
     Gfx::PPipelineLayout pipelineLayout = nullptr;
 };
-DECLARE_REF(ShaderBuffer)
+struct RayTracingPipelineCreateInfo {
+    PPipelineLayout pipelineLayout = nullptr;
+    PRayGenShader rayGenShader = nullptr;
+    Array<PClosestHitShader> closestHitShaders;
+    Array<PAnyHitShader> anyHitShaders;
+    Array<PIntersectionShader> intersectionShaders;
+    Array<PMissShader> missShaders;
+    Array<PCallableShader> callableShaders;
+};
 struct BottomLevelASCreateInfo {
     PMesh mesh;
 };

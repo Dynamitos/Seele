@@ -231,6 +231,7 @@ void RenderCommand::bindPipeline(Gfx::PGraphicsPipeline gfxPipeline) {
     pipeline = gfxPipeline.cast<GraphicsPipeline>();
     pipeline->bind(handle);
 }
+
 void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet, Array<uint32> dynamicOffsets) {
     assert(threadId == std::this_thread::get_id());
     auto descriptor = descriptorSet.cast<DescriptorSet>();
@@ -268,6 +269,7 @@ void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorS
                             dynamicOffsets.size(), dynamicOffsets.data());
     delete[] sets;
 }
+
 void RenderCommand::bindVertexBuffer(const Array<Gfx::PVertexBuffer>& streams) {
     assert(threadId == std::this_thread::get_id());
     Array<VkBuffer> buffers(streams.size());
@@ -281,6 +283,7 @@ void RenderCommand::bindVertexBuffer(const Array<Gfx::PVertexBuffer>& streams) {
     };
     vkCmdBindVertexBuffers(handle, 0, (uint32)streams.size(), buffers.data(), offsets.data());
 }
+
 void RenderCommand::bindIndexBuffer(Gfx::PIndexBuffer indexBuffer) {
     assert(threadId == std::this_thread::get_id());
     PIndexBuffer buf = indexBuffer.cast<IndexBuffer>();
@@ -312,6 +315,8 @@ void RenderCommand::drawMeshIndirect(Gfx::PShaderBuffer buffer, uint64 offset, u
     assert(threadId == std::this_thread::get_id());
     vkCmdDrawMeshTasksIndirectEXT(handle, buffer.cast<ShaderBuffer>()->getHandle(), offset, drawCount, stride);
 }
+
+void RenderCommand::traceRays() { vkCmdTraceRaysKHR(handle, ); }
 
 ComputeCommand::ComputeCommand(PGraphics graphics, VkCommandPool cmdPool) : graphics(graphics), owner(cmdPool) {
     VkCommandBufferAllocateInfo allocInfo = {

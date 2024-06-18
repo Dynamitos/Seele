@@ -71,6 +71,13 @@ class MissShader {
 };
 DEFINE_REF(MissShader)
 
+class IntersectionShader {
+  public:
+    IntersectionShader() {}
+    virtual ~IntersectionShader() {}
+};
+DEFINE_REF(IntersectionShader)
+
 class CallableShader {
   public:
     CallableShader() {}

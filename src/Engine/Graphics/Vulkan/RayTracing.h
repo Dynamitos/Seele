@@ -29,5 +29,12 @@ class TopLevelAS : public Gfx::TopLevelAS {
     VkAccelerationStructureKHR handle;
 };
 DEFINE_REF(TopLevelAS)
+
+class RayTracingPipeline : public Gfx::RayTracingPipeline
+{
+  public:
+  private:
+};
+DEFINE_REF(RayTracingPipeline)
 } // namespace Vulkan
 } // namespace Seele

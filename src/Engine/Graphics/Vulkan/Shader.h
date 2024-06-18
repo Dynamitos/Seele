@@ -47,5 +47,20 @@ DEFINE_REF(FragmentShader)
 DEFINE_REF(ComputeShader)
 DEFINE_REF(TaskShader)
 DEFINE_REF(MeshShader)
+
+// Ray Tracing
+using RayGenShader = ShaderBase<Gfx::RayGenShader, VK_SHADER_STAGE_RAYGEN_BIT_KHR>;
+using AnyHitShader = ShaderBase<Gfx::AnyHitShader, VK_SHADER_STAGE_ANY_HIT_BIT_KHR>;
+using ClosestHitShader = ShaderBase<Gfx::ClosestHitShader, VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR>;
+using MissShader = ShaderBase<Gfx::MissShader, VK_SHADER_STAGE_MISS_BIT_KHR>;
+using IntersectionShader = ShaderBase<Gfx::IntersectionShader, VK_SHADER_STAGE_INTERSECTION_BIT_KHR>;
+using CallableShader = ShaderBase<Gfx::CallableShader, VK_SHADER_STAGE_CALLABLE_BIT_KHR>;
+
+DEFINE_REF(RayGenShader)
+DEFINE_REF(AnyHitShader)
+DEFINE_REF(ClosestHitShader)
+DEFINE_REF(MissShader)
+DEFINE_REF(IntersectionShader)
+DEFINE_REF(CallableShader)
 } // namespace Vulkan
 } // namespace Seele

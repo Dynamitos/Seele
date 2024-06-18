@@ -1,5 +1,6 @@
 #pragma once
 #include "Pipeline.h"
+#include "RayTracing.h"
 
 namespace Seele {
 namespace Vulkan {
@@ -10,6 +11,8 @@ class PipelineCache {
     PGraphicsPipeline createPipeline(Gfx::LegacyPipelineCreateInfo createInfo);
     PGraphicsPipeline createPipeline(Gfx::MeshPipelineCreateInfo createInfo);
     PComputePipeline createPipeline(Gfx::ComputePipelineCreateInfo createInfo);
+
+    PRayTracingPipeline createPipeline(Gfx::RayTracingPipelineCreateInfo createInfo);
 
   private:
     Map<uint32, OGraphicsPipeline> graphicsPipelines;

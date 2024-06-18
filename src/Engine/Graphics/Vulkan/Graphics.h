@@ -77,6 +77,13 @@ class Graphics : public Gfx::Graphics {
     virtual Gfx::OBottomLevelAS createBottomLevelAccelerationStructure(const Gfx::BottomLevelASCreateInfo& createInfo) override;
     virtual Gfx::OTopLevelAS createTopLevelAccelerationStructure(const Gfx::TopLevelASCreateInfo& createInfo) override;
 
+    virtual Gfx::ORayGenShader createRayGenShader(const ShaderCreateInfo& createInfo) override;
+    virtual Gfx::OAnyHitShader createAnyHitShader(const ShaderCreateInfo& createInfo) override;
+    virtual Gfx::OClosestHitShader createClosestHitShader(const ShaderCreateInfo& createInfo) override;
+    virtual Gfx::OMissShader createMissShader(const ShaderCreateInfo& createInfo) override;
+    virtual Gfx::OIntersectionShader createIntersectionShader(const ShaderCreateInfo& createInfo) override;
+    virtual Gfx::OCallableShader createCallableShader(const ShaderCreateInfo& createInfo) override;
+
   protected:
     Array<const char*> getRequiredExtensions();
     void initInstance(GraphicsInitializer initInfo);
