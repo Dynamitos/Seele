@@ -187,7 +187,7 @@ void Buffer::readContents(uint64 regionOffset, uint64 regionSize, void* buffer) 
     getAlloc()->readContents(regionOffset, regionSize, buffer);
 }
 
-void Buffer::rotateBuffer(uint64 size, bool preserveContents) {
+void Buffer::rotateBuffer(uint64 size, bool preserveContents, uint32 fillValue) {
     assert(dynamic);
     if (buffers.size() > 0) {
         size = std::max(getSize(), size);
@@ -216,6 +216,11 @@ void Buffer::rotateBuffer(uint64 size, bool preserveContents) {
         }
         if (preserveContents) {
             copyBuffer(currentBuffer, i);
+            if (buffers[i]->size > buffers[currentBuffer]->size) {
+                PCommand command = graphics->getQueueCommands(getAlloc()->owner)->getCommands();
+                vkCmdFillBuffer(command->getHandle(), buffers[i]->buffer, buffers[currentBuffer]->size,
+                                buffers[i]->size - buffers[currentBuffer]->size, fillValue);
+            }
         }
         currentBuffer = i;
         return;
@@ -344,9 +349,9 @@ void ShaderBuffer::updateContents(const ShaderBufferCreateInfo& createInfo) {
     }
 }
 
-void ShaderBuffer::rotateBuffer(uint64 size, bool preserveContents) {
+void ShaderBuffer::rotateBuffer(uint64 size, bool preserveContents, uint32 fillValue) {
     assert(dynamic);
-    Vulkan::Buffer::rotateBuffer(size, preserveContents);
+    Vulkan::Buffer::rotateBuffer(size, preserveContents, fillValue);
 }
 
 void ShaderBuffer::clear() {

@@ -34,6 +34,7 @@ PFN_vkSetDebugUtilsObjectNameEXT setDebugUtilsObjectName;
 PFN_vkCreateAccelerationStructureKHR createAccelerationStructure;
 PFN_vkCmdBuildAccelerationStructuresKHR cmdBuildAccelerationStructures;
 PFN_vkGetAccelerationStructureBuildSizesKHR getAccelerationStructureBuildSize;
+PFN_vkCreateRayTracingPipelinesKHR createRayTracingPipelines;
 
 void vkCmdDrawMeshTasksEXT(VkCommandBuffer command, uint32 groupX, uint32 groupY, uint32 groupZ) {
     cmdDrawMeshTasks(command, groupX, groupY, groupZ);
@@ -62,6 +63,13 @@ void vkGetAccelerationStructureBuildSizesKHR(VkDevice device, VkAccelerationStru
                                              const VkAccelerationStructureBuildGeometryInfoKHR* pBuildInfo,
                                              const uint32_t* pMaxPrimitiveCounts, VkAccelerationStructureBuildSizesInfoKHR* pSizeInfo) {
     getAccelerationStructureBuildSize(device, buildType, pBuildInfo, pMaxPrimitiveCounts, pSizeInfo);
+}
+
+VkResult vkCreateRayTracingPipelinesKHR(VkDevice device, VkDeferredOperationKHR deferredOperation, VkPipelineCache pipelineCache,
+                                    uint32_t createInfoCount, const VkRayTracingPipelineCreateInfoKHR* pCreateInfos,
+                                    const VkAllocationCallbacks* pAllocator, VkPipeline* pPipelines) 
+{
+    return createRayTracingPipelines(device, deferredOperation, pipelineCache, createInfoCount, pCreateInfos, pAllocator, pPipelines);
 }
 
 Graphics::Graphics() : instance(VK_NULL_HANDLE), handle(VK_NULL_HANDLE), physicalDevice(VK_NULL_HANDLE), callback(VK_NULL_HANDLE) {}
@@ -684,4 +692,5 @@ void Graphics::createDevice(GraphicsInitializer initializer) {
         (PFN_vkCmdBuildAccelerationStructuresKHR)vkGetDeviceProcAddr(handle, "vkCmdBuildAccelerationStructuresKHR");
     getAccelerationStructureBuildSize =
         (PFN_vkGetAccelerationStructureBuildSizesKHR)vkGetDeviceProcAddr(handle, "vkGetAccelerationStructureBuildSizesKHR");
+    createRayTracingPipelines = (PFN_vkCreateRayTracingPipelinesKHR)vkGetDeviceProcAddr(handle, "vkCreateRayTracingPipelinesKHR");
 }

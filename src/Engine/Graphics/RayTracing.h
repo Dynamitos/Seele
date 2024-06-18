@@ -3,10 +3,16 @@
 
 namespace Seele {
 namespace Gfx {
+DECLARE_REF(PipelineLayout)
 class RayTracingPipeline
 {
   public:
-  private:
+    RayTracingPipeline(PPipelineLayout layout);
+    virtual ~RayTracingPipeline();
+    PPipelineLayout getPipelineLayout() const;
+
+  protected:
+    PPipelineLayout layout;
 };
 DEFINE_REF(RayTracingPipeline)
 class BottomLevelAS {

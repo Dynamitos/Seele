@@ -45,7 +45,7 @@ class Buffer {
     VkBufferUsageFlags usage;
     bool dynamic;
     std::string name;
-    void rotateBuffer(uint64 size, bool preserveContents = false);
+    void rotateBuffer(uint64 size, bool preserveContents = false, uint32 fillValue = 0);
     void createBuffer(uint64 size);
     void copyBuffer(uint64 src, uint64 dest);
 
@@ -107,7 +107,7 @@ class ShaderBuffer : public Gfx::ShaderBuffer, public Buffer {
     ShaderBuffer(PGraphics graphics, const ShaderBufferCreateInfo& sourceData);
     virtual ~ShaderBuffer();
     virtual void updateContents(const ShaderBufferCreateInfo& createInfo) override;
-    virtual void rotateBuffer(uint64 size, bool preserveContents = false) override;
+    virtual void rotateBuffer(uint64 size, bool preserveContents = false, uint32 fillValue = 0) override;
 
     virtual void clear() override;
 

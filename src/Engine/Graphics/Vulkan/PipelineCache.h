@@ -17,6 +17,7 @@ class PipelineCache {
   private:
     Map<uint32, OGraphicsPipeline> graphicsPipelines;
     Map<uint32, OComputePipeline> computePipelines;
+    Map<uint32, ORayTracingPipeline> rayTracingPipelines;
     std::mutex cacheLock;
     VkPipelineCache cache;
     PGraphics graphics;

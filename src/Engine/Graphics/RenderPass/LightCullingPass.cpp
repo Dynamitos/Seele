@@ -270,7 +270,8 @@ void LightCullingPass::setupFrustums() {
         .dynamic = false,
         .name = "FrustumDispatch",
     });
-
+    frustumDispatchParamsBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
+                                                 Gfx::SE_ACCESS_UNIFORM_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
     frustumBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
         .sourceData =
             {
@@ -282,6 +283,8 @@ void LightCullingPass::setupFrustums() {
         .dynamic = false,
         .name = "FrustumBuffer",
     });
+    frustumBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, Gfx::SE_ACCESS_SHADER_WRITE_BIT,
+                                   Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 
     Gfx::PDescriptorSet dispatchParamsSet = dispatchParamsLayout->allocateDescriptorSet();
     dispatchParamsSet->updateBuffer(0, frustumDispatchParamsBuffer);

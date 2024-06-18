@@ -1,6 +1,13 @@
 #include "RayTracing.h"
+#include "RayTracing.h"
 
 using namespace Seele::Gfx;
+
+RayTracingPipeline::RayTracingPipeline(Gfx::PPipelineLayout layout) {}
+
+RayTracingPipeline::~RayTracingPipeline() {}
+
+PPipelineLayout RayTracingPipeline::getPipelineLayout() const { return layout; }
 
 BottomLevelAS::BottomLevelAS() {}
 

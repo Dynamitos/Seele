@@ -6,7 +6,6 @@
 #include "Shader.h"
 #include <fstream>
 
-
 using namespace Seele;
 using namespace Seele::Vulkan;
 
@@ -466,4 +465,156 @@ PComputePipeline PipelineCache::createPipeline(Gfx::ComputePipelineCreateInfo co
     return result;
 }
 
-PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateInfo createInfo) { return nullptr; }
+PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateInfo createInfo) {
+    Array<VkPipelineShaderStageCreateInfo> shaderStages;
+    Array<VkRayTracingShaderGroupCreateInfoKHR> shaderGroups;
+    {
+        auto rayGen = createInfo.rayGenShader.cast<RayGenShader>();
+        shaderStages.add(VkPipelineShaderStageCreateInfo{
+            .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+            .pNext = nullptr,
+            .flags = 0,
+            .stage = VK_SHADER_STAGE_RAYGEN_BIT_KHR,
+            .module = rayGen->getModuleHandle(),
+            .pName = rayGen->getEntryPointName(),
+        });
+        shaderGroups.add(VkRayTracingShaderGroupCreateInfoKHR{
+            .sType = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR,
+            .pNext = nullptr,
+            .type = VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR,
+            .generalShader = static_cast<uint32>(shaderStages.size() - 1),
+            .closestHitShader = VK_SHADER_UNUSED_KHR,
+            .anyHitShader = VK_SHADER_UNUSED_KHR,
+            .intersectionShader = VK_SHADER_UNUSED_KHR,
+        });
+    }
+    {
+        for (auto gfxHit : createInfo.closestHitShaders) {
+            auto hit = gfxHit.cast<ClosestHitShader>();
+            shaderStages.add(VkPipelineShaderStageCreateInfo{
+                .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+                .pNext = nullptr,
+                .flags = 0,
+                .stage = VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR,
+                .module = hit->getModuleHandle(),
+                .pName = hit->getEntryPointName(),
+            });
+            shaderGroups.add(VkRayTracingShaderGroupCreateInfoKHR{
+                .sType = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR,
+                .pNext = nullptr,
+                .type = VK_RAY_TRACING_SHADER_GROUP_TYPE_TRIANGLES_HIT_GROUP_KHR,
+                .generalShader = VK_SHADER_UNUSED_KHR,
+                .closestHitShader = static_cast<uint32>(shaderStages.size() - 1),
+                .anyHitShader = VK_SHADER_UNUSED_KHR,
+                .intersectionShader = VK_SHADER_UNUSED_KHR,
+            });
+        }
+    }
+    {
+        for (auto gfxHit : createInfo.anyHitShaders) {
+            auto hit = gfxHit.cast<AnyHitShader>();
+            shaderStages.add(VkPipelineShaderStageCreateInfo{
+                .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+                .pNext = nullptr,
+                .flags = 0,
+                .stage = VK_SHADER_STAGE_ANY_HIT_BIT_KHR,
+                .module = hit->getModuleHandle(),
+                .pName = hit->getEntryPointName(),
+            });
+            shaderGroups.add(VkRayTracingShaderGroupCreateInfoKHR{
+                .sType = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR,
+                .pNext = nullptr,
+                .type = VK_RAY_TRACING_SHADER_GROUP_TYPE_TRIANGLES_HIT_GROUP_KHR,
+                .generalShader = VK_SHADER_UNUSED_KHR,
+                .closestHitShader = VK_SHADER_UNUSED_KHR,
+                .anyHitShader = static_cast<uint32>(shaderStages.size() - 1),
+                .intersectionShader = VK_SHADER_UNUSED_KHR,
+            });
+        }
+    }
+    {
+        for (auto gfxIntersect : createInfo.intersectionShaders) {
+            auto intersect = gfxIntersect.cast<IntersectionShader>();
+            shaderStages.add(VkPipelineShaderStageCreateInfo{
+                .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+                .pNext = nullptr,
+                .flags = 0,
+                .stage = VK_SHADER_STAGE_INTERSECTION_BIT_KHR,
+                .module = intersect->getModuleHandle(),
+                .pName = intersect->getEntryPointName(),
+            });
+
+            shaderGroups.add(VkRayTracingShaderGroupCreateInfoKHR{
+                .sType = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR,
+                .pNext = nullptr,
+                .type = VK_RAY_TRACING_SHADER_GROUP_TYPE_TRIANGLES_HIT_GROUP_KHR,
+                .generalShader = VK_SHADER_UNUSED_KHR,
+                .closestHitShader = VK_SHADER_UNUSED_KHR,
+                .anyHitShader = VK_SHADER_UNUSED_KHR,
+                .intersectionShader = static_cast<uint32>(shaderStages.size() - 1),
+            });
+        }
+    }
+    {
+        for (auto gfxMiss : createInfo.missShaders) {
+            auto miss = gfxMiss.cast<MissShader>();
+            shaderStages.add(VkPipelineShaderStageCreateInfo{
+                .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+                .pNext = nullptr,
+                .flags = 0,
+                .stage = VK_SHADER_STAGE_MISS_BIT_KHR,
+                .module = miss->getModuleHandle(),
+                .pName = miss->getEntryPointName(),
+            });
+            shaderGroups.add(VkRayTracingShaderGroupCreateInfoKHR{
+                .sType = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR,
+                .pNext = nullptr,
+                .type = VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR,
+                .generalShader = static_cast<uint32>(shaderStages.size() - 1),
+                .closestHitShader = VK_SHADER_UNUSED_KHR,
+                .anyHitShader = VK_SHADER_UNUSED_KHR,
+                .intersectionShader = VK_SHADER_UNUSED_KHR,
+            });
+        }
+    }
+    {
+        for (auto gfxCallable : createInfo.callableShaders) {
+            auto miss = gfxCallable.cast<CallableShader>();
+            shaderStages.add(VkPipelineShaderStageCreateInfo{
+                .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+                .pNext = nullptr,
+                .flags = 0,
+                .stage = VK_SHADER_STAGE_CALLABLE_BIT_KHR,
+                .module = miss->getModuleHandle(),
+                .pName = miss->getEntryPointName(),
+            });
+            shaderGroups.add(VkRayTracingShaderGroupCreateInfoKHR{
+                .sType = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR,
+                .pNext = nullptr,
+                .type = VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR,
+                .generalShader = static_cast<uint32>(shaderStages.size() - 1),
+                .closestHitShader = VK_SHADER_UNUSED_KHR,
+                .anyHitShader = VK_SHADER_UNUSED_KHR,
+                .intersectionShader = VK_SHADER_UNUSED_KHR,
+            });
+        }
+    }
+    uint32 hash = CRC::Calculate(shaderStages.data(), sizeof(VkPipelineShaderStageCreateInfo) * shaderStages.size(), CRC::CRC_32());
+    hash = CRC::Calculate(shaderGroups.data(), sizeof(VkRayTracingShaderGroupCreateInfoKHR) * shaderGroups.size(), CRC::CRC_32(), hash);
+    VkRayTracingPipelineCreateInfoKHR pipelineInfo = {
+        .sType = VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR,
+        .pNext = nullptr,
+        .stageCount = static_cast<uint32>(shaderStages.size()),
+        .pStages = shaderStages.data(),
+        .groupCount = static_cast<uint32>(shaderGroups.size()),
+        .pGroups = shaderGroups.data(),
+        .maxPipelineRayRecursionDepth = 24,
+        .layout = createInfo.pipelineLayout.cast<PipelineLayout>()->getHandle(),
+    };
+    VkPipeline pipelineHandle;
+    VK_CHECK(vkCreateRayTracingPipelinesKHR(graphics->getDevice(), VK_NULL_HANDLE, cache, 1, &pipelineInfo, nullptr, &pipelineHandle));
+    ORayTracingPipeline pipeline = new RayTracingPipeline(graphics, pipelineHandle, createInfo.pipelineLayout);
+    PRayTracingPipeline handle = pipeline;
+    rayTracingPipelines[hash] = std::move(pipeline);
+    return handle;
+}

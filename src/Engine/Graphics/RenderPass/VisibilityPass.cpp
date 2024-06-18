@@ -11,7 +11,7 @@ VisibilityPass::~VisibilityPass() {}
 
 void VisibilityPass::beginFrame(const Component::Camera& cam) {
     RenderPass::beginFrame(cam);
-    cullingBuffer->rotateBuffer(VertexData::getMeshletCount() * sizeof(VertexData::MeshletCullingInfo), true);
+    cullingBuffer->rotateBuffer(VertexData::getMeshletCount() * sizeof(VertexData::MeshletCullingInfo), true, 0xffffffff);
 }
 
 void VisibilityPass::render() {

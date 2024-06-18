@@ -93,8 +93,7 @@ BottomLevelAS::BottomLevelAS(PGraphics graphics, const Gfx::BottomLevelASCreateI
     VmaAllocationCreateInfo bufferAllocInfo = {
         .usage = VMA_MEMORY_USAGE_AUTO,
     };
-    buffer =
-        new BufferAllocation(graphics, "BLAS", bufferInfo, bufferAllocInfo, Gfx::QueueType::GRAPHICS);
+    buffer = new BufferAllocation(graphics, "BLAS", bufferInfo, bufferAllocInfo, Gfx::QueueType::GRAPHICS);
 
     VkAccelerationStructureCreateInfoKHR blasInfo = {
         .sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR,
@@ -140,13 +139,16 @@ BottomLevelAS::BottomLevelAS(PGraphics graphics, const Gfx::BottomLevelASCreateI
 
     graphics->getDestructionManager()->queueResourceForDestruction(std::move(transformBuffer));
     graphics->getDestructionManager()->queueResourceForDestruction(std::move(scratchAlloc));
-    //todo: compact
+    // todo: compact
 }
 
 BottomLevelAS::~BottomLevelAS() { graphics->getDestructionManager()->queueResourceForDestruction(std::move(buffer)); }
 
-TopLevelAS::TopLevelAS(PGraphics graphics, const Gfx::TopLevelASCreateInfo& createInfo) {
-    
-}
+TopLevelAS::TopLevelAS(PGraphics graphics, const Gfx::TopLevelASCreateInfo& createInfo) {}
 
 TopLevelAS::~TopLevelAS() {}
+
+RayTracingPipeline::RayTracingPipeline(PGraphics graphics, VkPipeline handle, Gfx::PPipelineLayout layout)
+    : Gfx::RayTracingPipeline(layout), graphics(graphics), pipeline(handle) {}
+
+RayTracingPipeline::~RayTracingPipeline() {}

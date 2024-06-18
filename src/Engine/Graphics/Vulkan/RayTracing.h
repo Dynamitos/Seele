@@ -33,7 +33,12 @@ DEFINE_REF(TopLevelAS)
 class RayTracingPipeline : public Gfx::RayTracingPipeline
 {
   public:
+    RayTracingPipeline(PGraphics graphics, VkPipeline handle, Gfx::PPipelineLayout layout);
+    virtual ~RayTracingPipeline();
+
   private:
+    PGraphics graphics;
+    VkPipeline pipeline;
 };
 DEFINE_REF(RayTracingPipeline)
 } // namespace Vulkan
