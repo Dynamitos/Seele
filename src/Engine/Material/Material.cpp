@@ -39,21 +39,21 @@ void Material::init(Gfx::PGraphics graphics) {
         .binding = 0,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
         .descriptorCount = 2000,
-        .bindingFlags = Gfx::SE_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | Gfx::SE_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT,
+        .bindingFlags = Gfx::SE_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT,
         .shaderStages = Gfx::SE_SHADER_STAGE_FRAGMENT_BIT | Gfx::SE_SHADER_STAGE_CLOSEST_HIT_BIT_KHR,
     });
     layout->addDescriptorBinding(Gfx::DescriptorBinding{
         .binding = 1,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLER,
         .descriptorCount = 2000,
-        .bindingFlags = Gfx::SE_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | Gfx::SE_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT,
+        .bindingFlags = Gfx::SE_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT,
         .shaderStages = Gfx::SE_SHADER_STAGE_FRAGMENT_BIT | Gfx::SE_SHADER_STAGE_CLOSEST_HIT_BIT_KHR,
     });
     layout->addDescriptorBinding(Gfx::DescriptorBinding{
         .binding = 2,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
         .descriptorCount = 1,
-        .bindingFlags = Gfx::SE_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | Gfx::SE_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT,
+        .bindingFlags = Gfx::SE_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT,
         .shaderStages = Gfx::SE_SHADER_STAGE_FRAGMENT_BIT | Gfx::SE_SHADER_STAGE_CLOSEST_HIT_BIT_KHR,
     });
     layout->create();

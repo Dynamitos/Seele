@@ -45,7 +45,7 @@ void DescriptorLayout::create() {
     VkDescriptorSetLayoutCreateInfo createInfo = {
         .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
         .pNext = &bindingFlagsInfo,
-        .flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT,
+        .flags = 0,
         .bindingCount = (uint32)bindings.size(),
         .pBindings = bindings.data(),
     };
@@ -81,7 +81,7 @@ DescriptorPool::DescriptorPool(PGraphics graphics, PDescriptorLayout layout)
     VkDescriptorPoolCreateInfo createInfo = {
         .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
         .pNext = nullptr,
-        .flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT,
+        .flags = 0,
         .maxSets = maxSets * Gfx::numFramesBuffered,
         .poolSizeCount = (uint32)poolSizes.size(),
         .pPoolSizes = poolSizes.data(),
