@@ -4,7 +4,7 @@ import Scene;
 struct VisibilityCullingData
 {
     Texture2D<uint> visibilityTexture;
-    globallycoherent RWStructuredBuffer<MeshletCullingInfo> cullingInfos;
+    RWStructuredBuffer<MeshletCullingInfo> cullingInfos;
 };
 ParameterBlock<VisibilityCullingData> pVisibilityParams;
 
@@ -15,9 +15,6 @@ void computeMain(
 ){
     int3 texCoords = int3(dispatchThreadID.xy, 0);
     uint encoded = pVisibilityParams.visibilityTexture.Load(texCoords).r;
-    uint2 decoded = decodePrimitive(encoded);
-    uint arrIdx = decoded.x / 32;
-    uint bit = decoded.x % 32;
-    uint32_t orig;
-    InterlockedOr(pVisibilityParams.cullingInfos[decoded.y].visible[arrIdx], (1 << bit), orig);
+    uint meshletId = decodePrimitive(encoded);
+    pVisibilityParams.cullingInfos[meshletId].visible = 1;
 }

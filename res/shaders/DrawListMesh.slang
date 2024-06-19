@@ -40,7 +40,7 @@ void meshMain(
             indices[p] = uint3(local_idx0, local_idx1, local_idx2);
             prim[p].cull = false;//cull.triangleCulled(p);
 #ifdef VISIBILITY
-            prim[p].prim = encodePrimitive(p, meshletId);
+            prim[p].prim = encodePrimitive(meshletId);
 #endif
 		}
 	}
@@ -49,11 +49,7 @@ void meshMain(
 		uint v = min(i, m.vertexCount - 1);
 		{
 			uint vertexIndex = pScene.vertexIndices[m.vertexOffset + v];
-#ifdef POS_ONLY
-            VertexAttributes attr = pVertexData.getPosition(m.indicesOffset + vertexIndex);
-#else
 			VertexAttributes attr = pVertexData.getAttributes(m.indicesOffset + vertexIndex);
-#endif
 			vertices[v] = attr.getParameter(inst.transformMatrix);
 		}
 	}

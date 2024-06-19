@@ -27,7 +27,8 @@ void taskMain(
         MeshletDescription meshlet = pScene.meshletInfos[m];
         MeshletCullingInfo culling = pScene.cullingInfos[cull];
 #ifdef DEPTH_CULLING
-        if(culling.anyVisible())
+        // if depth culling is disabled, we draw the whole scene as if cached
+        if(culling.wasVisible())
 #endif
         {
             uint index;

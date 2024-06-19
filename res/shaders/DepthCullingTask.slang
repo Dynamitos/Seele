@@ -52,7 +52,7 @@ void taskMain(
         MeshletDescription meshlet = pScene.meshletInfos[m];
         MeshletCullingInfo culling = pScene.cullingInfos[cull];
         // if any triangle was visible last frame, it was drawn by the cached pass already
-        if(!culling.anyVisible())
+        if(!culling.wasVisible())
         {
             // if the meshlet is outside of the frustum, we skip it since we cant do depth culling anyways
 		    if(meshlet.bounding.insideFrustum(viewFrustum))

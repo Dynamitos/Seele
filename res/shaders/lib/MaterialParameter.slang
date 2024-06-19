@@ -20,6 +20,7 @@ struct LightingParameter
 struct FragmentParameter
 {
     float4 position_CS : SV_Position;
+#ifndef POS_ONLY
     float3 cameraPos_WS: POSITION0;
 	float3 normal_WS : NORMAL0;
 	float3 tangent_WS : TANGENT0;
@@ -47,6 +48,7 @@ struct FragmentParameter
         result.normal_WS = normal_WS;
 		return result;
 	}
+#endif
 };
 
 // data passed to visibility render
@@ -60,11 +62,13 @@ struct VisibilityParameter
 struct VertexAttributes
 {
 	float3 position_MS;
+#ifndef POS_ONLY
 	float3 normal_MS;
 	float3 tangent_MS;
 	float3 biTangent_MS;
 	float3 vertexColor;
 	float2 texCoords[MAX_TEXCOORDS];
+#endif
 	FragmentParameter getParameter(float4x4 transformMatrix)
 	{
 		float4 modelPos = float4(position_MS, 1);
@@ -73,6 +77,7 @@ struct VertexAttributes
 		float4 clipPos = mul(pViewParams.projectionMatrix, viewPos);
 		FragmentParameter result;
 		result.position_CS = clipPos;
+#ifndef POS_ONLY
 		float3x3 normalMatrix = float3x3(transformMatrix);
 		float3 T = mul(normalMatrix, tangent_MS);
 		float3 N = mul(normalMatrix, normal_MS);
@@ -87,6 +92,7 @@ struct VertexAttributes
 		{
 			result.texCoords[i] = texCoords[i];
 		}
+#endif
 		return result;
 	}
 };

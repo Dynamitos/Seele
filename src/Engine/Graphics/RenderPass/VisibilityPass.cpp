@@ -11,7 +11,7 @@ VisibilityPass::~VisibilityPass() {}
 
 void VisibilityPass::beginFrame(const Component::Camera& cam) {
     RenderPass::beginFrame(cam);
-    cullingBuffer->rotateBuffer(VertexData::getMeshletCount() * sizeof(VertexData::MeshletCullingInfo), true, 0xffffffff);
+    cullingBuffer->rotateBuffer(VertexData::getMeshletCount() * sizeof(VertexData::MeshletCullingInfo), true);
 }
 
 void VisibilityPass::render() {
@@ -77,7 +77,11 @@ void VisibilityPass::publishOutputs() {
     pipelineInfo.pipelineLayout = std::move(visibilityLayout);
     visibilityPipeline = graphics->createComputePipeline(std::move(pipelineInfo));
 
-    cullingBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{.dynamic = true, .name = "CullingBuffer"});
+    cullingBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
+        .clearValue = 0xffffffff,
+        .dynamic = true,
+        .name = "CullingBuffer",
+    });
     resources->registerBufferOutput("CULLINGBUFFER", cullingBuffer);
 
     query = graphics->createPipelineStatisticsQuery();

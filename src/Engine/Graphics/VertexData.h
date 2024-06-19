@@ -28,7 +28,7 @@ class VertexData {
     };
 
     struct MeshletCullingInfo {
-        uint64_t cull[256 / 64];
+        uint32_t cull;
     };
     struct BatchedDrawCall {
         PMaterialInstance materialInstance;

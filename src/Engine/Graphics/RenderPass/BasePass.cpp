@@ -94,6 +94,7 @@ void BasePass::render() {
 
     Gfx::ShaderPermutation permutation = graphics->getShaderCompiler()->getTemplate("BasePass");
     permutation.setDepthCulling(true); // always use the culling info
+    permutation.setPositionOnly(false);
     for (VertexData* vertexData : VertexData::getList()) {
         vertexData->getInstanceDataSet()->updateBuffer(6, cullingBuffer);
         vertexData->getInstanceDataSet()->writeChanges();

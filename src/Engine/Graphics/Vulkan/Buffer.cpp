@@ -166,11 +166,15 @@ void BufferAllocation::readContents(uint64 regionOffset, uint64 regionSize, void
     graphics->getDestructionManager()->queueResourceForDestruction(std::move(staging));
 }
 
-Buffer::Buffer(PGraphics graphics, uint64 size, VkBufferUsageFlags usage, Gfx::QueueType queueType, bool dynamic, std::string name)
+Buffer::Buffer(PGraphics graphics, uint64 size, VkBufferUsageFlags usage, Gfx::QueueType queueType, bool dynamic, std::string name,
+               uint32 clearValue)
     : graphics(graphics), currentBuffer(0), initialOwner(queueType),
       usage(usage | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT),
-      dynamic(dynamic), name(name) {
-    createBuffer(size);
+      dynamic(dynamic), name(name), clearValue(clearValue) {
+    if (size > 0) {
+        buffers.add(nullptr);
+        createBuffer(size, 0);
+    }
 }
 
 Buffer::~Buffer() {
@@ -187,7 +191,7 @@ void Buffer::readContents(uint64 regionOffset, uint64 regionSize, void* buffer) 
     getAlloc()->readContents(regionOffset, regionSize, buffer);
 }
 
-void Buffer::rotateBuffer(uint64 size, bool preserveContents, uint32 fillValue) {
+void Buffer::rotateBuffer(uint64 size, bool preserveContents) {
     assert(dynamic);
     if (buffers.size() > 0) {
         size = std::max(getSize(), size);
@@ -198,41 +202,23 @@ void Buffer::rotateBuffer(uint64 size, bool preserveContents, uint32 fillValue) 
         }
         if (buffers[i]->size < size) {
             graphics->getDestructionManager()->queueResourceForDestruction(std::move(buffers[i]));
-            uint32 family = graphics->getFamilyMapping().getQueueTypeFamilyIndex(initialOwner);
-            VkBufferCreateInfo info = {
-                .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-                .pNext = nullptr,
-                .flags = 0,
-                .size = size,
-                .usage = usage,
-                .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-                .queueFamilyIndexCount = 1,
-                .pQueueFamilyIndices = &family,
-            };
-            VmaAllocationCreateInfo allocInfo = {
-                .usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
-            };
-            buffers[i] = new BufferAllocation(graphics, name, info, allocInfo, initialOwner);
+            createBuffer(size, i);
         }
         if (preserveContents) {
             copyBuffer(currentBuffer, i);
-            if (buffers[i]->size > buffers[currentBuffer]->size) {
-                PCommand command = graphics->getQueueCommands(getAlloc()->owner)->getCommands();
-                vkCmdFillBuffer(command->getHandle(), buffers[i]->buffer, buffers[currentBuffer]->size,
-                                buffers[i]->size - buffers[currentBuffer]->size, fillValue);
-            }
         }
         currentBuffer = i;
         return;
     }
-    createBuffer(size);
+    buffers.add(nullptr);
+    createBuffer(size, buffers.size() - 1);
     if (preserveContents) {
         copyBuffer(currentBuffer, buffers.size() - 1);
     }
     currentBuffer = buffers.size() - 1;
 }
 
-void Buffer::createBuffer(uint64 size) {
+void Buffer::createBuffer(uint64 size, uint32 destIndex) {
     if (size > 0) {
         uint32 family = graphics->getFamilyMapping().getQueueTypeFamilyIndex(initialOwner);
         VkBufferCreateInfo info = {
@@ -246,9 +232,13 @@ void Buffer::createBuffer(uint64 size) {
             .pQueueFamilyIndices = &family,
         };
         VmaAllocationCreateInfo allocInfo = {
-            .usage = VMA_MEMORY_USAGE_AUTO,
+            .usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
         };
-        buffers.add(new BufferAllocation(graphics, name, info, allocInfo, initialOwner));
+        buffers[destIndex] = new BufferAllocation(graphics, name, info, allocInfo, initialOwner);
+        PCommand command = graphics->getQueueCommands(initialOwner)->getCommands();
+        vkCmdFillBuffer(command->getHandle(), buffers[destIndex]->buffer, 0, VK_WHOLE_SIZE, clearValue);
+        pipelineBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                        VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
     }
 }
 
@@ -349,9 +339,9 @@ void ShaderBuffer::updateContents(const ShaderBufferCreateInfo& createInfo) {
     }
 }
 
-void ShaderBuffer::rotateBuffer(uint64 size, bool preserveContents, uint32 fillValue) {
+void ShaderBuffer::rotateBuffer(uint64 size, bool preserveContents) {
     assert(dynamic);
-    Vulkan::Buffer::rotateBuffer(size, preserveContents, fillValue);
+    Vulkan::Buffer::rotateBuffer(size, preserveContents);
 }
 
 void ShaderBuffer::clear() {

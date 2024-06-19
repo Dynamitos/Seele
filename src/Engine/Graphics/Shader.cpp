@@ -1,10 +1,9 @@
 #include "Shader.h"
+#include "Graphics/Graphics.h"
 #include "Graphics/Initializer.h"
 #include "Material/Material.h"
 #include "ThreadPool.h"
-#include "Graphics/Graphics.h"
 #include <fmt/core.h>
-
 
 using namespace Seele;
 using namespace Seele::Gfx;
@@ -55,20 +54,18 @@ void ShaderCompiler::compile() {
         for (const auto& [vdName, vd] : vertexData) {
             if (pass.useMaterial) {
                 for (const auto& [matName, mat] : materials) {
-                    for (int x = 0; x < 2; x++) {
-                        for (int y = 0; y < 2; y++) {
-                            work.add([=]() {
-                                ShaderPermutation permutation = getTemplate(name);
-                                permutation.setPositionOnly(x);
-                                permutation.setDepthCulling(y);
-                                permutation.setVertexData(vd->getTypeName());
-                                OPipelineLayout layout = graphics->createPipelineLayout(pass.baseLayout->getName(), pass.baseLayout);
-                                layout->addDescriptorLayout(vd->getVertexDataLayout());
-                                layout->addDescriptorLayout(vd->getInstanceDataLayout());
-                                permutation.setMaterial(mat->getName());
-                                createShaders(permutation, std::move(layout));
-                            });
-                        }
+                    for (int y = 0; y < 2; y++) {
+                        work.add([=]() {
+                            ShaderPermutation permutation = getTemplate(name);
+                            permutation.setPositionOnly(false);
+                            permutation.setDepthCulling(y);
+                            permutation.setVertexData(vd->getTypeName());
+                            OPipelineLayout layout = graphics->createPipelineLayout(pass.baseLayout->getName(), pass.baseLayout);
+                            layout->addDescriptorLayout(vd->getVertexDataLayout());
+                            layout->addDescriptorLayout(vd->getInstanceDataLayout());
+                            permutation.setMaterial(mat->getName());
+                            createShaders(permutation, std::move(layout));
+                        });
                     }
                 }
             } else {

@@ -10,10 +10,10 @@ DECLARE_REF(Command)
 DECLARE_REF(Fence)
 class BufferAllocation : public CommandBoundResource {
   public:
-    BufferAllocation(PGraphics graphics, const std::string& name, VkBufferCreateInfo bufferInfo, VmaAllocationCreateInfo allocInfo, Gfx::QueueType owner, uint64 alignment = 0);
+    BufferAllocation(PGraphics graphics, const std::string& name, VkBufferCreateInfo bufferInfo, VmaAllocationCreateInfo allocInfo,
+                     Gfx::QueueType owner, uint64 alignment = 0);
     virtual ~BufferAllocation();
-    void pipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, VkAccessFlags dstAccess,
-                                VkPipelineStageFlags dstStage);
+    void pipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, VkAccessFlags dstAccess, VkPipelineStageFlags dstStage);
     void transferOwnership(Gfx::QueueType newOwner);
     void updateContents(uint64 regionOffset, uint64 regionSize, void* ptr);
     void readContents(uint64 regionOffset, uint64 regionSize, void* ptr);
@@ -28,7 +28,7 @@ class BufferAllocation : public CommandBoundResource {
 DEFINE_REF(BufferAllocation);
 class Buffer {
   public:
-    Buffer(PGraphics graphics, uint64 size, VkBufferUsageFlags usage, Gfx::QueueType initialOwner, bool dynamic, std::string name);
+    Buffer(PGraphics graphics, uint64 size, VkBufferUsageFlags usage, Gfx::QueueType initialOwner, bool dynamic, std::string name, uint32 clearValue = 0);
     virtual ~Buffer();
     VkBuffer getHandle() const { return buffers[currentBuffer]->buffer; }
     VkDeviceAddress getDeviceAddress() const { return buffers[currentBuffer]->deviceAddress; }
@@ -45,13 +45,13 @@ class Buffer {
     VkBufferUsageFlags usage;
     bool dynamic;
     std::string name;
-    void rotateBuffer(uint64 size, bool preserveContents = false, uint32 fillValue = 0);
-    void createBuffer(uint64 size);
+    uint32 clearValue;
+    void rotateBuffer(uint64 size, bool preserveContents = false);
+    void createBuffer(uint64 size, uint32 destIndex);
     void copyBuffer(uint64 src, uint64 dest);
 
     void transferOwnership(Gfx::QueueType newOwner);
-    void pipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, VkAccessFlags dstAccess,
-                                VkPipelineStageFlags dstStage);
+    void pipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, VkAccessFlags dstAccess, VkPipelineStageFlags dstStage);
 };
 DEFINE_REF(Buffer)
 
@@ -107,7 +107,7 @@ class ShaderBuffer : public Gfx::ShaderBuffer, public Buffer {
     ShaderBuffer(PGraphics graphics, const ShaderBufferCreateInfo& sourceData);
     virtual ~ShaderBuffer();
     virtual void updateContents(const ShaderBufferCreateInfo& createInfo) override;
-    virtual void rotateBuffer(uint64 size, bool preserveContents = false, uint32 fillValue = 0) override;
+    virtual void rotateBuffer(uint64 size, bool preserveContents = false) override;
 
     virtual void clear() override;
 

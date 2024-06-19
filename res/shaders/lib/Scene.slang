@@ -34,26 +34,10 @@ struct InstanceData
 
 struct MeshletCullingInfo
 {
-    uint32_t visible[MAX_PRIMITIVES / 32];
-    // lookup if a specific triangle is visible
-    bool triangleVisible(uint32_t primIndex)
+    uint32_t visible;
+    bool wasVisible()
     {
-        uint32_t arrIdx = primIndex / 32;
-        uint32_t cullIdx = primIndex % 32;
-        return (visible[arrIdx] & (1 << cullIdx)) != 0;
-    }
-    bool triangleCulled(uint32_t primIndex)
-    {
-        return !triangleVisible(primIndex);
-    }
-    bool anyVisible()
-    {
-        uint result = 0;
-        for(uint i = 0; i < MAX_PRIMITIVES / 32; ++i)
-        {
-            result |= visible[i];
-        }
-        return result != 0;
+        return bool(visible);
     }
 };
 
@@ -80,17 +64,14 @@ struct Scene
 layout(set=2)
 ParameterBlock<Scene> pScene;
 
-uint32_t encodePrimitive(uint32_t primitiveId, uint32_t meshletId)
+uint32_t encodePrimitive(uint32_t meshletId)
 {
-    return primitiveId + (meshletId * uint(MAX_PRIMITIVES));
+    return meshletId;
 }
 
-uint2 decodePrimitive(uint32_t encoded)
+uint decodePrimitive(uint32_t encoded)
 {
-    uint prim = uint(encoded % MAX_PRIMITIVES);
-    encoded = encoded / MAX_PRIMITIVES;
-    uint meshletId = uint(encoded);
-    return uint2(prim, meshletId);
+    return encoded;
 }
 
 struct MeshPayload

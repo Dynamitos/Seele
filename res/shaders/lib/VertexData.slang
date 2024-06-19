@@ -9,7 +9,6 @@ struct VertexInput
 interface IVertexData
 {
     VertexAttributes getAttributes(uint index);
-    VertexAttributes getPosition(uint index);
 };
 
 layout(set=1)
