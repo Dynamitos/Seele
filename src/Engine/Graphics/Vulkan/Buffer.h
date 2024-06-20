@@ -22,13 +22,15 @@ class BufferAllocation : public CommandBoundResource {
     VmaAllocationInfo info = VmaAllocationInfo();
     VkMemoryPropertyFlags properties = 0;
     uint64 size = 0;
+    std::string name;
     VkDeviceAddress deviceAddress;
     Gfx::QueueType owner;
 };
 DEFINE_REF(BufferAllocation);
 class Buffer {
   public:
-    Buffer(PGraphics graphics, uint64 size, VkBufferUsageFlags usage, Gfx::QueueType initialOwner, bool dynamic, std::string name, uint32 clearValue = 0);
+    Buffer(PGraphics graphics, uint64 size, VkBufferUsageFlags usage, Gfx::QueueType initialOwner, bool dynamic, std::string name,
+           bool createCleared = false, uint32 clearValue = 0);
     virtual ~Buffer();
     VkBuffer getHandle() const { return buffers[currentBuffer]->buffer; }
     VkDeviceAddress getDeviceAddress() const { return buffers[currentBuffer]->deviceAddress; }
@@ -44,6 +46,7 @@ class Buffer {
     Array<OBufferAllocation> buffers;
     VkBufferUsageFlags usage;
     bool dynamic;
+    bool createCleared;
     std::string name;
     uint32 clearValue;
     void rotateBuffer(uint64 size, bool preserveContents = false);

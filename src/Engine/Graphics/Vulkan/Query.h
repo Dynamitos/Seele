@@ -24,6 +24,8 @@ class QueryPool {
     uint32 currentQuery = 0;
     uint32 numQueries;
     uint32 resultsStride;
+    std::mutex queryMutex;
+    std::condition_variable queryCV;
 };
 class OcclusionQuery : public Gfx::OcclusionQuery, public QueryPool {
   public:

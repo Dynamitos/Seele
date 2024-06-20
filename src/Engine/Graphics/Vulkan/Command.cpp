@@ -7,7 +7,6 @@
 #include "RenderPass.h"
 #include "Window.h"
 
-
 using namespace Seele;
 using namespace Seele::Vulkan;
 
@@ -151,8 +150,7 @@ void Command::waitForCommand(uint32 timeout) {
     checkFence();
 }
 
-void Command::setPipelineStatisticsFlags(VkQueryPipelineStatisticFlags flags)
-{ statisticsFlags = flags; }
+void Command::setPipelineStatisticsFlags(VkQueryPipelineStatisticFlags flags) { statisticsFlags = flags; }
 
 void Command::bindResource(PCommandBoundResource resource) {
     resource->bind();
@@ -239,8 +237,10 @@ void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet, Array<uint
     descriptor->bind();
     boundResources.add(descriptor.getHandle());
     for (auto binding : descriptor->boundResources) {
-        binding->bind();
-        boundResources.add(binding);
+        for (auto res : binding) {
+            res->bind();
+            boundResources.add(res);
+        }
     }
 
     VkDescriptorSet setHandle = descriptor->getHandle();
@@ -260,8 +260,13 @@ void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorS
         boundResources.add(descriptorSet.getHandle());
 
         for (auto binding : descriptorSet->boundResources) {
-            binding->bind();
-            boundResources.add(binding);
+            for (auto res : binding) {
+                // partially bound descriptors can include nulls
+                if (res != nullptr) {
+                    res->bind();
+                    boundResources.add(res);
+                }
+            }
         }
         sets[pipeline->getPipelineLayout()->findParameter(descriptorSet->getName())] = descriptorSet->getHandle();
     }
@@ -316,7 +321,7 @@ void RenderCommand::drawMeshIndirect(Gfx::PShaderBuffer buffer, uint64 offset, u
     vkCmdDrawMeshTasksIndirectEXT(handle, buffer.cast<ShaderBuffer>()->getHandle(), offset, drawCount, stride);
 }
 
-void RenderCommand::traceRays() { }
+void RenderCommand::traceRays() {}
 
 ComputeCommand::ComputeCommand(PGraphics graphics, VkCommandPool cmdPool) : graphics(graphics), owner(cmdPool) {
     VkCommandBufferAllocateInfo allocInfo = {
@@ -378,8 +383,10 @@ void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet, Array<uin
     boundResources.add(descriptor.getHandle());
 
     for (auto binding : descriptor->boundResources) {
-        binding->bind();
-        boundResources.add(binding);
+        for (auto res : binding) {
+            res->bind();
+            boundResources.add(res);
+        }
     }
 
     VkDescriptorSet setHandle = descriptor->getHandle();
@@ -398,9 +405,12 @@ void ComputeCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptor
         boundResources.add(descriptorSet.getHandle());
 
         // std::cout << "Binding descriptor " << descriptorSet->getHandle() << " to cmd " << handle << std::endl;
+
         for (auto binding : descriptorSet->boundResources) {
-            binding->bind();
-            boundResources.add(binding);
+            for (auto res : binding) {
+                res->bind();
+                boundResources.add(res);
+            }
         }
         sets[pipeline->getPipelineLayout()->findParameter(descriptorSet->getName())] = descriptorSet->getHandle();
     }

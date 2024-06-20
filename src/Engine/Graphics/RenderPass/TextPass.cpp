@@ -186,7 +186,7 @@ TextPass::FontData& TextPass::getFontData(PFontAsset font) {
     const auto& fontGlyphs = font->getGlyphData();
     FontData& fd = fontData[font];
     Array<GlyphData> glyphData;
-    Array<Gfx::PTexture> textures;
+    Array<Gfx::PTexture2D> textures;
     glyphData.reserve(fontGlyphs.size());
     for (const auto& [key, value] : fontGlyphs) {
         fd.characterToGlyphIndex[key] = static_cast<uint32>(glyphData.size());

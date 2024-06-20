@@ -55,7 +55,8 @@ class DescriptorSet : public Gfx::DescriptorSet, public CommandBoundResource {
     virtual void updateSampler(uint32_t binding, uint32 dstArrayIndex, Gfx::PSampler samplerState) override;
     virtual void updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::PSampler sampler = nullptr) override;
     virtual void updateTexture(uint32 binding, uint32 dstArrayIndex, Gfx::PTexture texture) override;
-    virtual void updateTextureArray(uint32_t binding, Array<Gfx::PTexture> texture) override;
+    virtual void updateTextureArray(uint32_t binding, Array<Gfx::PTexture2D> texture) override;
+    virtual void updateSamplerArray(uint32_t binding, Array<Gfx::PSampler> samplers) override;
 
     constexpr bool isCurrentlyInUse() const { return currentlyInUse; }
     constexpr void allocate() { currentlyInUse = true; }
@@ -70,7 +71,7 @@ class DescriptorSet : public Gfx::DescriptorSet, public CommandBoundResource {
     // since the layout is fixed, trying to bind a texture to a buffer
     // would not work anyways, so casts should be safe
     // Array<void*> cachedData;
-    Array<PCommandBoundResource> boundResources;
+    Array<Array<PCommandBoundResource>> boundResources;
     VkDescriptorSet setHandle;
     PGraphics graphics;
     PDescriptorPool owner;

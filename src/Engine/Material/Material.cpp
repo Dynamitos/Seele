@@ -20,11 +20,11 @@ Array<PMaterial> Material::materials;
 
 Material::Material() {}
 
-Material::Material(Gfx::PGraphics graphics, uint32 numTextures, uint32 numSamplers, uint32 numFloats, std::string materialName,
-                   Array<OShaderExpression> expressions, Array<std::string> parameter, MaterialNode brdf)
-    : graphics(graphics), numTextures(numTextures), numSamplers(numSamplers), numFloats(numFloats), instanceId(0),
-      materialName(materialName), codeExpressions(std::move(expressions)), parameters(std::move(parameter)), brdf(std::move(brdf)),
-      materialId(materialIdCounter++) {
+Material::Material(Gfx::PGraphics graphics, uint32 numTextures, uint32 numSamplers, uint32 numFloats, bool twoSided, float opacity,
+                   std::string materialName, Array<OShaderExpression> expressions, Array<std::string> parameter, MaterialNode brdf)
+    : graphics(graphics), numTextures(numTextures), numSamplers(numSamplers), numFloats(numFloats), twoSided(twoSided), opacity(opacity),
+      instanceId(0), materialName(materialName), codeExpressions(std::move(expressions)), parameters(std::move(parameter)),
+      brdf(std::move(brdf)), materialId(materialIdCounter++) {
     if (layout == nullptr) {
         init(graphics);
     }
@@ -75,13 +75,15 @@ void Material::updateDescriptor() {
                                  Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
     layout->reset();
     set = layout->allocateDescriptorSet();
-    for (uint32 i = 0; i < textures.size(); ++i)
-    {
-        set->updateTexture(0, i, textures[i]);
+    for (uint32 i = 0; i < textures.size(); ++i) {
+        if (textures[i] != nullptr) {
+            set->updateTexture(0, i, textures[i]);
+        }
     }
-    for (uint32 i = 0; i < samplers.size(); ++i)
-    {
-        set->updateSampler(1, i, samplers[i]);
+    for (uint32 i = 0; i < samplers.size(); ++i) {
+        if (samplers[i] != nullptr) {
+            set->updateSampler(1, i, samplers[i]);
+        }
     }
     set->updateBuffer(2, floatBuffer);
     set->writeChanges();
@@ -116,11 +118,16 @@ uint32 Material::addFloats(uint32 numFloats) {
 OMaterialInstance Material::instantiate() {
     return new MaterialInstance(instanceId++, graphics, codeExpressions, parameters, numTextures, numSamplers, numFloats);
 }
+bool Material::isTwoSided() const { return twoSided; }
+bool Material::hasTransparency() const { return opacity != 1.0f; }
+float Material::getOpacity() const { return opacity; }
 
 void Material::save(ArchiveBuffer& buffer) const {
     Serialization::save(buffer, numTextures);
     Serialization::save(buffer, numSamplers);
     Serialization::save(buffer, numFloats);
+    Serialization::save(buffer, twoSided);
+    Serialization::save(buffer, opacity);
     Serialization::save(buffer, instanceId);
     Serialization::save(buffer, materialName);
     Serialization::save(buffer, codeExpressions);
@@ -130,13 +137,14 @@ void Material::save(ArchiveBuffer& buffer) const {
 
 void Material::load(ArchiveBuffer& buffer) {
     graphics = buffer.getGraphics();
-    if (layout == nullptr)
-    {
+    if (layout == nullptr) {
         init(graphics);
     }
     Serialization::load(buffer, numTextures);
     Serialization::load(buffer, numSamplers);
     Serialization::load(buffer, numFloats);
+    Serialization::load(buffer, twoSided);
+    Serialization::load(buffer, opacity);
     Serialization::load(buffer, instanceId);
     Serialization::load(buffer, materialName);
     Serialization::load(buffer, codeExpressions);
@@ -167,4 +175,3 @@ void Material::compile() {
     codeStream << "};\n";
     graphics->getShaderCompiler()->registerMaterial(this);
 }
-

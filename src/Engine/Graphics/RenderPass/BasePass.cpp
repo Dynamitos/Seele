@@ -75,6 +75,9 @@ BasePass::~BasePass() {}
 void BasePass::beginFrame(const Component::Camera& cam) {
     RenderPass::beginFrame(cam);
 
+    cameraPos = cam.getCameraPosition();
+    cameraForward = cam.getCameraForward();
+
     lightCullingLayout->reset();
     opaqueCulling = lightCullingLayout->allocateDescriptorSet();
     transparentCulling = lightCullingLayout->allocateDescriptorSet();
@@ -95,7 +98,9 @@ void BasePass::render() {
     Gfx::ShaderPermutation permutation = graphics->getShaderCompiler()->getTemplate("BasePass");
     permutation.setDepthCulling(true); // always use the culling info
     permutation.setPositionOnly(false);
+    Array<VertexData::TransparentDraw> transparentData;
     for (VertexData* vertexData : VertexData::getList()) {
+        transparentData.addAll(vertexData->getTransparentData());
         vertexData->getInstanceDataSet()->updateBuffer(6, cullingBuffer);
         vertexData->getInstanceDataSet()->writeChanges();
         permutation.setVertexData(vertexData->getTypeName());
@@ -120,6 +125,9 @@ void BasePass::render() {
 
             const Gfx::ShaderCollection* collection = graphics->getShaderCompiler()->findShaders(id);
             assert(collection != nullptr);
+
+            bool twoSided = materialData.material->isTwoSided();
+
             if (graphics->supportMeshShading()) {
                 Gfx::MeshPipelineCreateInfo pipelineInfo = {
                     .taskShader = collection->taskShader,
@@ -130,6 +138,10 @@ void BasePass::render() {
                     .multisampleState =
                         {
                             .samples = viewport->getSamples(),
+                        },
+                    .rasterizationState =
+                        {
+                            .cullMode = Gfx::SeCullModeFlags(twoSided ? Gfx::SE_CULL_MODE_NONE : Gfx::SE_CULL_MODE_BACK_BIT),
                         },
                     .depthStencilState =
                         {
@@ -151,6 +163,10 @@ void BasePass::render() {
                     .multisampleState =
                         {
                             .samples = viewport->getSamples(),
+                        },
+                    .rasterizationState =
+                        {
+                            .cullMode = Gfx::SeCullModeFlags(twoSided ? Gfx::SE_CULL_MODE_NONE : Gfx::SE_CULL_MODE_BACK_BIT),
                         },
                     .depthStencilState =
                         {
@@ -184,8 +200,106 @@ void BasePass::render() {
             commands.add(std::move(command));
         }
     }
-
     graphics->executeCommands(std::move(commands));
+
+    Map<float, VertexData::TransparentDraw> sortedDraws;
+    for (const auto& t : transparentData) {
+        Vector toCenter = Vector(t.worldPosition) - cameraPos;
+        float dist = glm::length(toCenter) * glm::dot(glm::normalize(toCenter), cameraForward);
+        sortedDraws[dist] = t;
+    }
+    Gfx::ORenderCommand command = graphics->createRenderCommand("TransparentDraw");
+    command->setViewport(viewport);
+    for (const auto& [_, t] : sortedDraws) {
+        permutation.setVertexData(t.vertexData->getTypeName());
+        permutation.setMaterial(t.matInst->getBaseMaterial()->getName());
+        Gfx::PermutationId id(permutation);
+
+        const Gfx::ShaderCollection* collection = graphics->getShaderCompiler()->findShaders(id);
+        assert(collection != nullptr);
+
+        bool twoSided = t.matInst->getBaseMaterial()->isTwoSided();
+
+        if (graphics->supportMeshShading()) {
+            Gfx::MeshPipelineCreateInfo pipelineInfo = {
+                .taskShader = collection->taskShader,
+                .meshShader = collection->meshShader,
+                .fragmentShader = collection->fragmentShader,
+                .renderPass = renderPass,
+                .pipelineLayout = collection->pipelineLayout,
+                .multisampleState =
+                    {
+                        .samples = viewport->getSamples(),
+                    },
+                .rasterizationState =
+                    {
+                        .cullMode = Gfx::SeCullModeFlags(twoSided ? Gfx::SE_CULL_MODE_NONE : Gfx::SE_CULL_MODE_BACK_BIT),
+                    },
+                .depthStencilState =
+                    {
+                        .depthCompareOp = Gfx::SE_COMPARE_OP_GREATER_OR_EQUAL,
+                    },
+                .colorBlend =
+                    {
+                        .attachmentCount = 1,
+                        .blendAttachments =
+                            {
+                                Gfx::ColorBlendState::BlendAttachment{
+                                    .blendEnable = true,
+                                },
+                            },
+                    },
+            };
+            Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
+            command->bindPipeline(pipeline);
+        } else {
+            Gfx::LegacyPipelineCreateInfo pipelineInfo = {
+                .vertexShader = collection->vertexShader,
+                .fragmentShader = collection->fragmentShader,
+                .renderPass = renderPass,
+                .pipelineLayout = collection->pipelineLayout,
+                .multisampleState =
+                    {
+                        .samples = viewport->getSamples(),
+                    },
+                .rasterizationState =
+                    {
+                        .cullMode = Gfx::SeCullModeFlags(twoSided ? Gfx::SE_CULL_MODE_NONE : Gfx::SE_CULL_MODE_BACK_BIT),
+                    },
+                .depthStencilState =
+                    {
+                        .depthCompareOp = Gfx::SE_COMPARE_OP_GREATER_OR_EQUAL,
+                    },
+                .colorBlend =
+                    {
+                        .attachmentCount = 1,
+                        .blendAttachments =
+                            {
+                                Gfx::ColorBlendState::BlendAttachment{
+                                    .blendEnable = true,
+                                },
+                            },
+                    },
+            };
+            Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
+            command->bindPipeline(pipeline);
+        }
+        command->bindDescriptor({viewParamsSet, t.vertexData->getVertexDataSet(), t.vertexData->getInstanceDataSet(),
+                                 scene->getLightEnvironment()->getDescriptorSet(), Material::getDescriptorSet(), transparentCulling});
+        command->pushConstants(Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_VERTEX_BIT | Gfx::SE_SHADER_STAGE_FRAGMENT_BIT, 0,
+                               sizeof(VertexData::DrawCallOffsets), &t.offsets);
+        if (graphics->supportMeshShading()) {
+            command->drawMesh(1, 1, 1);
+        } else {
+            // command->bindIndexBuffer(t.vertexData->getIndexBuffer());
+            // for (const auto& meshData : drawCall.instanceMeshData) {
+            //     // all meshlets of a mesh share the same indices offset
+            //     command->drawIndexed(meshData.numIndices, 1, meshData.firstIndex, vertexData->getIndicesOffset(meshData.meshletOffset),
+            //     0);
+            // }
+        }
+    }
+
     graphics->endRenderPass();
     query->endQuery();
 }

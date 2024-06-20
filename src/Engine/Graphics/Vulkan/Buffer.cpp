@@ -10,8 +10,8 @@ using namespace Seele::Vulkan;
 
 BufferAllocation::BufferAllocation(PGraphics graphics, const std::string& name, VkBufferCreateInfo bufferInfo,
                                    VmaAllocationCreateInfo allocInfo, Gfx::QueueType owner, uint64 alignment)
-    : CommandBoundResource(graphics), size(bufferInfo.size), owner(owner) {
-    VK_CHECK(vmaCreateBufferWithAlignment(graphics->getAllocator(), &bufferInfo, &allocInfo, alignment, &buffer, &allocation, nullptr));
+    : CommandBoundResource(graphics), size(bufferInfo.size), name(name), owner(owner) {
+    VK_CHECK(vmaCreateBufferWithAlignment(graphics->getAllocator(), &bufferInfo, &allocInfo, alignment, &buffer, &allocation, &info));
     vmaGetAllocationMemoryProperties(graphics->getAllocator(), allocation, &properties);
     VkDebugUtilsObjectNameInfoEXT nameInfo = {
         .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
@@ -167,10 +167,10 @@ void BufferAllocation::readContents(uint64 regionOffset, uint64 regionSize, void
 }
 
 Buffer::Buffer(PGraphics graphics, uint64 size, VkBufferUsageFlags usage, Gfx::QueueType queueType, bool dynamic, std::string name,
-               uint32 clearValue)
+               bool createCleared, uint32 clearValue)
     : graphics(graphics), currentBuffer(0), initialOwner(queueType),
       usage(usage | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT),
-      dynamic(dynamic), name(name), clearValue(clearValue) {
+      dynamic(dynamic), createCleared(createCleared), name(name), clearValue(clearValue) {
     if (size > 0) {
         buffers.add(nullptr);
         createBuffer(size, 0);
@@ -235,10 +235,13 @@ void Buffer::createBuffer(uint64 size, uint32 destIndex) {
             .usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
         };
         buffers[destIndex] = new BufferAllocation(graphics, name, info, allocInfo, initialOwner);
-        PCommand command = graphics->getQueueCommands(initialOwner)->getCommands();
-        vkCmdFillBuffer(command->getHandle(), buffers[destIndex]->buffer, 0, VK_WHOLE_SIZE, clearValue);
-        pipelineBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-                        VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
+        if (createCleared)
+        {
+            PCommand command = graphics->getQueueCommands(initialOwner)->getCommands();
+            vkCmdFillBuffer(command->getHandle(), buffers[destIndex]->buffer, 0, VK_WHOLE_SIZE, clearValue);
+            pipelineBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                            VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
+        }
     }
 }
 
@@ -321,7 +324,7 @@ ShaderBuffer::ShaderBuffer(PGraphics graphics, const ShaderBufferCreateInfo& cre
                          (createInfo.vertexBuffer ? VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR |
                                                         VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
                                                   : 0),
-                     createInfo.sourceData.owner, createInfo.dynamic, createInfo.name) {
+                     createInfo.sourceData.owner, createInfo.dynamic, createInfo.name, createInfo.createCleared, createInfo.clearValue) {
     if (createInfo.sourceData.size > 0 && createInfo.sourceData.data != nullptr) {
         getAlloc()->updateContents(createInfo.sourceData.offset, createInfo.sourceData.size, createInfo.sourceData.data);
     }

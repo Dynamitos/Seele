@@ -63,16 +63,13 @@ int main() {
         .filePath = sourcePath / "import/textures/skyboxsun5deg_tn.jpg",
         .type = TextureImportType::TEXTURE_CUBEMAP,
     });
-    // AssetImporter::importMesh(MeshImportArgs{
-    //     .filePath = sourcePath / "import/models/greek-temple/source/greek-temple.fbx",
-    //     .importPath = "temple"
-    //     });
     AssetImporter::importMesh(MeshImportArgs{.filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.fbx",
                                              .importPath = "Whitechapel"});
-    // AssetImporter::importMesh(MeshImportArgs{
-    //     .filePath = sourcePath / "import/models/nitra-castle-rawscan/source/Nitriansky.obj",
-    //     .importPath = "Nitriansky"
-    //     });
+    //AssetImporter::importMesh(MeshImportArgs{
+    //    .filePath = sourcePath / "import/models/city-suburbs/city-suburbs.gltf",
+    //    .importPath = "suburbs",
+    //});
+    vd->commitMeshes();
     WindowCreateInfo mainWindowInfo;
     mainWindowInfo.title = "SeeleEngine";
     mainWindowInfo.width = 1920;

@@ -105,7 +105,9 @@ void DepthCullingPass::render() {
         UVector2 threadGroups = (((mipDims[i] + UVector2(1, 1)) / 2u) + UVector2(BLOCK_SIZE - 1, BLOCK_SIZE - 1)) / uint32(BLOCK_SIZE);
         computeCommand->dispatch(threadGroups.x, threadGroups.y, 1);
     }
-
+    Array<Gfx::OComputeCommand> computeCommands;
+    computeCommands.add(std::move(computeCommand));
+    graphics->executeCommands(std::move(computeCommands));
     depthMipBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                                     Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_TASK_SHADER_BIT_EXT);
 

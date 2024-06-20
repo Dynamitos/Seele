@@ -4,7 +4,6 @@
 #include "Graphics.h"
 #include "Window.h"
 
-
 using namespace Seele;
 using namespace Seele::Vulkan;
 
@@ -76,7 +75,11 @@ DestructionManager::DestructionManager(PGraphics graphics) : graphics(graphics) 
 
 DestructionManager::~DestructionManager() {}
 
-void DestructionManager::queueResourceForDestruction(OCommandBoundResource resource) { resources.add(std::move(resource)); }
+void DestructionManager::queueResourceForDestruction(OCommandBoundResource resource) {
+    if (resource->isCurrentlyBound()) {
+        resources.add(std::move(resource));
+    }
+}
 
 void DestructionManager::notifyCommandComplete() {
     for (size_t i = 0; i < resources.size(); ++i) {

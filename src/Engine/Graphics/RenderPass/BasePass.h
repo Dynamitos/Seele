@@ -31,6 +31,10 @@ class BasePass : public RenderPass {
     // use a different texture here so we can do multisampling
     Gfx::OTexture2D basePassDepth;
 
+    // used for transparency sorting
+    Vector cameraPos;
+    Vector cameraForward;
+
     PCameraActor source;
     Gfx::OPipelineLayout basePassLayout;
     Gfx::ODescriptorLayout lightCullingLayout;

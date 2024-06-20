@@ -37,7 +37,7 @@ class UIPass : public RenderPass {
     Gfx::OPipelineLayout pipelineLayout;
 
     Array<UI::RenderElementStyle> renderElements;
-    Array<Gfx::PTexture> usedTextures;
+    Array<Gfx::PTexture2D> usedTextures;
 };
 DEFINE_REF(UIPass);
 } // namespace Seele

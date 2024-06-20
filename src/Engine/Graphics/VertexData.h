@@ -41,10 +41,17 @@ class VertexData {
         PMaterial material;
         Array<BatchedDrawCall> instances;
     };
+    struct TransparentDraw {
+        PMaterialInstance matInst;
+        VertexData* vertexData;
+        DrawCallOffsets offsets;
+        Vector worldPosition;
+    };
     void resetMeshData();
     void updateMesh(entt::entity id, uint32 meshIndex, PMesh mesh, Component::Transform& transform);
     void createDescriptors();
     void loadMesh(MeshId id, Array<uint32> indices, Array<Meshlet> meshlets);
+    void commitMeshes();
     MeshId allocateVertexData(uint64 numVertices);
     uint64 getMeshOffset(MeshId id);
     uint64 getMeshVertexCount(MeshId id);
@@ -60,6 +67,7 @@ class VertexData {
     Gfx::PDescriptorLayout getInstanceDataLayout() { return instanceDataLayout; }
     Gfx::PDescriptorSet getInstanceDataSet() { return descriptorSet; }
     const Array<MaterialData>& getMaterialData() const { return materialData; }
+    const Array<TransparentDraw>& getTransparentData() const { return transparentData; }
     const MeshData& getMeshData(MeshId id) { return meshData[id]; }
     uint64 getIndicesOffset(uint32 meshletIndex) { return meshlets[meshletIndex].indicesOffset; }
     uint64 getNumInstances() const { return instanceData.size(); }
@@ -91,10 +99,13 @@ class VertexData {
     };
     std::mutex materialDataLock;
     Array<MaterialData> materialData;
+    Array<TransparentDraw> transparentData;
+
     std::mutex vertexDataLock;
     Map<MeshId, MeshData> meshData;
     Map<MeshId, uint64> meshOffsets;
     Map<MeshId, uint64> meshVertexCounts;
+
     Array<MeshletDescription> meshlets;
     Array<uint8> primitiveIndices;
     Array<uint32> vertexIndices;
@@ -121,8 +132,15 @@ class VertexData {
     // Material data
     Array<InstanceData> instanceData;
     Gfx::OShaderBuffer instanceBuffer;
+
     Array<MeshData> instanceMeshData;
     Gfx::OShaderBuffer instanceMeshDataBuffer;
+    
+    Array<InstanceData> transparentInstanceData;
+    Gfx::OShaderBuffer transparentInstanceDataBuffer;
+    Array<MeshData> transparentMeshData;
+    Gfx::OShaderBuffer transparentMeshDataBuffer;
+
     Gfx::PDescriptorSet descriptorSet;
     uint64 idCounter;
     uint64 head;

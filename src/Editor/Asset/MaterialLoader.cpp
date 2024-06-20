@@ -202,7 +202,7 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset) {
             }
         }
     }
-    asset->material = new Material(graphics, numTextures, numSamplers, numFloats, materialName, std::move(expressions),
+    asset->material = new Material(graphics, numTextures, numSamplers, numFloats, false, 1, materialName, std::move(expressions),
                                    std::move(parameters), std::move(mat));
 
     asset->material->compile();

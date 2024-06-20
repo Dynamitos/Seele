@@ -54,6 +54,7 @@ DEFINE_REF(DescriptorPool)
 DECLARE_REF(UniformBuffer)
 DECLARE_REF(ShaderBuffer)
 DECLARE_REF(Texture)
+DECLARE_REF(Texture2D)
 DECLARE_REF(Sampler)
 class DescriptorSet {
   public:
@@ -67,7 +68,8 @@ class DescriptorSet {
     virtual void updateSampler(uint32_t binding, uint32 dstArrayIndex, Gfx::PSampler samplerState) = 0;
     virtual void updateTexture(uint32 binding, PTexture texture, PSampler samplerState = nullptr) = 0;
     virtual void updateTexture(uint32 binding, uint32 dstArrayIndex, PTexture texture) = 0;
-    virtual void updateTextureArray(uint32_t binding, Array<PTexture> texture) = 0;
+    virtual void updateTextureArray(uint32_t binding, Array<PTexture2D> texture) = 0;
+    virtual void updateSamplerArray(uint32_t binding, Array<PSampler> samplers) = 0;
     bool operator<(PDescriptorSet other);
 
     constexpr PDescriptorLayout getLayout() const { return layout; }

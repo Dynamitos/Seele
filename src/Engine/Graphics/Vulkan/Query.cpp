@@ -51,13 +51,18 @@ void QueryPool::end() {
     //                          sizeof(uint64) * currentQuery, resultsStride + sizeof(uint64),
     //                          VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_WITH_AVAILABILITY_BIT);
     graphics->getGraphicsCommands()->submitCommands();
+    std::unique_lock l(queryMutex);
     currentQuery = (currentQuery + 1) % numQueries;
+    queryCV.notify_all();
 }
 
 void QueryPool::getQueryResults(Array<uint64>& results) {
     //uint64 numInts = resultsStride / sizeof(uint64);
     while (currentQuery == pendingQuery)
-        ;
+    {
+        std::unique_lock l(queryMutex);
+        queryCV.wait(l);
+    }
     results.resize(resultsStride/ sizeof(uint64));
     vkGetQueryPoolResults(graphics->getDevice(), handle, pendingQuery, 1, resultsStride, results.data(), resultsStride,
                           VK_QUERY_RESULT_WAIT_BIT | VK_QUERY_RESULT_64_BIT);

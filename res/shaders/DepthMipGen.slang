@@ -14,7 +14,7 @@ struct MipParam
     uint2 srcMipDim;
     uint2 dstMipDim;
 }
-layout(push_constants)
+layout(push_constant)
 ConstantBuffer<MipParam> pMipParam;
 
 float getSrcDepth(uint2 pos)

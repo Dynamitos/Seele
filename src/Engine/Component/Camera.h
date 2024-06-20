@@ -16,6 +16,7 @@ struct Camera {
         return viewMatrix;
     }
     Vector getCameraPosition() const { return cameraPos; }
+    Vector getCameraForward() const { return cameraForward; }
     void mouseMove(float deltaX, float deltaY);
     void mouseScroll(float x);
     void moveX(float amount);
@@ -29,6 +30,7 @@ struct Camera {
     float pitch;
     Matrix4 viewMatrix;
     Vector cameraPos;
+    Vector cameraForward;
     bool bNeedsViewBuild;
 };
 } // namespace Component

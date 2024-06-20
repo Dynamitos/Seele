@@ -19,7 +19,6 @@
 #include <set>
 #include <stb_image_write.h>
 
-
 using namespace Seele;
 
 MeshLoader::MeshLoader(Gfx::PGraphics graphics) : graphics(graphics) {}
@@ -372,10 +371,13 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Array<PTextureAsset>&
             }
             break;
         };
-
+        bool twoSided = true;
+        material->Get(AI_MATKEY_TWOSIDED, twoSided);
+        float opacity = 1.0f;
+        material->Get(AI_MATKEY_OPACITY, opacity);
         OMaterialAsset baseMat = new MaterialAsset(importPath, materialName);
-        baseMat->material = new Material(graphics, numTextures, numSamplers, numFloats, materialName, std::move(expressions),
-                                         std::move(parameters), std::move(brdf));
+        baseMat->material = new Material(graphics, numTextures, numSamplers, numFloats, twoSided, opacity, materialName,
+                                         std::move(expressions), std::move(parameters), std::move(brdf));
         baseMat->material->compile();
         graphics->getShaderCompiler()->registerMaterial(baseMat->material);
         globalMaterials[m] = baseMat->instantiate(InstantiationParameter{
@@ -473,8 +475,6 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
         globalMeshes[meshIndex]->meshlets = std::move(meshlets);
         globalMeshes[meshIndex]->indices = std::move(indices);
         globalMeshes[meshIndex]->vertexCount = mesh->mNumVertices;
-        globalMeshes[meshIndex]->blas =
-            graphics->createBottomLevelAccelerationStructure(Gfx::BottomLevelASCreateInfo(globalMeshes[meshIndex]));
     }
 }
 

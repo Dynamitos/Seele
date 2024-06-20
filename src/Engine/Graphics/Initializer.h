@@ -98,6 +98,7 @@ struct ShaderBufferCreateInfo {
     DataSource sourceData = DataSource();
     uint64 numElements = 1;
     uint32 clearValue = 0;
+    uint8 createCleared = 0;
     uint8 dynamic = 0;
     uint8 vertexBuffer = 0;
     std::string name = "Unnamed";
@@ -169,10 +170,10 @@ struct ColorBlendState {
     struct BlendAttachment {
         uint32 blendEnable = 0;
         SeBlendFactor srcColorBlendFactor = Gfx::SE_BLEND_FACTOR_SRC_ALPHA;
-        SeBlendFactor dstColorBlendFactor = Gfx::SE_BLEND_FACTOR_SRC_ALPHA;
+        SeBlendFactor dstColorBlendFactor = Gfx::SE_BLEND_FACTOR_DST_ALPHA;
         SeBlendOp colorBlendOp = Gfx::SE_BLEND_OP_ADD;
-        SeBlendFactor srcAlphaBlendFactor = Gfx::SE_BLEND_FACTOR_SRC_ALPHA;
-        SeBlendFactor dstAlphaBlendFactor = Gfx::SE_BLEND_FACTOR_SRC_ALPHA;
+        SeBlendFactor srcAlphaBlendFactor = Gfx::SE_BLEND_FACTOR_ONE;
+        SeBlendFactor dstAlphaBlendFactor = Gfx::SE_BLEND_FACTOR_ONE;
         SeBlendOp alphaBlendOp = Gfx::SE_BLEND_OP_ADD;
         SeColorComponentFlags colorWriteMask =
             Gfx::SE_COLOR_COMPONENT_R_BIT | Gfx::SE_COLOR_COMPONENT_G_BIT | Gfx::SE_COLOR_COMPONENT_B_BIT | Gfx::SE_COLOR_COMPONENT_A_BIT;
