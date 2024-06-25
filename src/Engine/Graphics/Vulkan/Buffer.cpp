@@ -184,10 +184,14 @@ Buffer::~Buffer() {
 }
 
 void Buffer::updateContents(uint64 regionOffset, uint64 regionSize, void* buffer) {
+    if (buffers.size() == 0)
+        return;
     getAlloc()->updateContents(regionOffset, regionSize, buffer);
 }
 
 void Buffer::readContents(uint64 regionOffset, uint64 regionSize, void* buffer) {
+    if (buffers.size() == 0)
+        return;
     getAlloc()->readContents(regionOffset, regionSize, buffer);
 }
 
@@ -218,29 +222,27 @@ void Buffer::rotateBuffer(uint64 size, bool preserveContents) {
 }
 
 void Buffer::createBuffer(uint64 size, uint32 destIndex) {
-    if (size > 0) {
-        uint32 family = graphics->getFamilyMapping().getQueueTypeFamilyIndex(initialOwner);
-        VkBufferCreateInfo info = {
-            .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-            .pNext = nullptr,
-            .flags = 0,
-            .size = size,
-            .usage = usage,
-            .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-            .queueFamilyIndexCount = 1,
-            .pQueueFamilyIndices = &family,
-        };
-        VmaAllocationCreateInfo allocInfo = {
-            .usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
-        };
-        buffers[destIndex] = new BufferAllocation(graphics, name, info, allocInfo, initialOwner);
-        if (createCleared)
-        {
-            PCommand command = graphics->getQueueCommands(initialOwner)->getCommands();
-            vkCmdFillBuffer(command->getHandle(), buffers[destIndex]->buffer, 0, VK_WHOLE_SIZE, clearValue);
-            pipelineBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-                            VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
-        }
+    uint32 family = graphics->getFamilyMapping().getQueueTypeFamilyIndex(initialOwner);
+    VkBufferCreateInfo info = {
+        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .size = size,
+        .usage = usage,
+        .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        .queueFamilyIndexCount = 1,
+        .pQueueFamilyIndices = &family,
+    };
+    VmaAllocationCreateInfo allocInfo = {
+        .usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
+    };
+    buffers[destIndex] = new BufferAllocation(graphics, name, info, allocInfo, initialOwner);
+    if (createCleared)
+    {
+        PCommand command = graphics->getQueueCommands(initialOwner)->getCommands();
+        vkCmdFillBuffer(command->getHandle(), buffers[destIndex]->buffer, 0, VK_WHOLE_SIZE, clearValue);
+        pipelineBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                        VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
     }
 }
 
@@ -283,10 +285,16 @@ void Buffer::copyBuffer(uint64 src, uint64 dst) {
                          &dstBarrier, 0, nullptr);
 }
 
-void Buffer::transferOwnership(Gfx::QueueType newOwner) { getAlloc()->transferOwnership(newOwner); }
+void Buffer::transferOwnership(Gfx::QueueType newOwner) {
+    if (buffers.size() == 0)
+        return;
+    getAlloc()->transferOwnership(newOwner);
+}
 
 void Buffer::pipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, VkAccessFlags dstAccess,
                              VkPipelineStageFlags dstStage) {
+    if (buffers.size() == 0)
+        return;
     getAlloc()->pipelineBarrier(srcAccess, srcStage, dstAccess, dstStage);
 }
 

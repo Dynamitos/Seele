@@ -62,5 +62,4 @@ void initialReduce(
     int2 texCoord = groupOffset + threadID.xy;
     float fDepth = pDepthAttachment.texture.Load(int3(texCoord, 0)).r;
     pDepthAttachment.buffer[texCoord.x + (texCoord.y * width)] = fDepth;
-    
 }

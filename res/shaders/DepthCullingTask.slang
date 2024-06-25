@@ -24,27 +24,8 @@ bool isBoxVisible(AABB bounding)
     // now we calculate what mip level we need to only sample up to 4 texels covering the entire meshlet
     uint2 screenCornerMin = mipDimensions;
     uint2 screenCornerMax = uint2(0, 0);
-    // we use reverse depth, so higher values are closer
-    float maxDepth = 0;
-    {
-        float4 corners[8];
-        corners[0] = float4(bounding.min.x, bounding.min.y, bounding.min.z, 1.0f);
-        corners[1] = float4(bounding.min.x, bounding.min.y, bounding.max.z, 1.0f);
-        corners[2] = float4(bounding.min.x, bounding.max.y, bounding.min.z, 1.0f);
-        corners[3] = float4(bounding.min.x, bounding.max.y, bounding.max.z, 1.0f);
-        corners[4] = float4(bounding.max.x, bounding.min.y, bounding.min.z, 1.0f);
-        corners[5] = float4(bounding.max.x, bounding.min.y, bounding.max.z, 1.0f);
-        corners[6] = float4(bounding.max.x, bounding.max.y, bounding.min.z, 1.0f);
-        corners[7] = float4(bounding.max.x, bounding.max.y, bounding.max.z, 1.0f);
-        for(uint i = 0; i < 8; ++i)
-        {
-            float4 clipCorner = mul(modelViewProjection, corners[i]);
-            float4 screenCorner = clipToScreen(clipCorner);
-            screenCornerMin = uint2(min(screenCornerMin.x, uint(screenCorner.x)), min(screenCornerMin.y, uint(screenCorner.y)));
-            screenCornerMax = uint2(max(screenCornerMax.x, uint(screenCorner.x)), max(screenCornerMax.y, uint(screenCorner.y)));
-            maxDepth = max(maxDepth, screenCorner.z);
-        }
-    }
+    // lower values are closer
+    float maxDepth = bounding.projectScreenDepth(modelViewProjection, screenCornerMin, screenCornerMax);
     uint mipOffset = 0;
     // in theory this wouldnt work if no corner was in screen, as min would be greater that max, however we verified that with view culling
     while(screenCornerMax.x - screenCornerMin.x > 1 || screenCornerMax.y - screenCornerMin.y > 1)
@@ -118,8 +99,10 @@ void taskMain(
             // if the meshlet is outside of the frustum, we skip it since we cant do depth culling anyways
 		    if(meshlet.bounding.insideFrustum(viewFrustum))
             {
+#ifdef DEPTH_CULLING
                 // if the meshlet bounding box is behind the cached depth buffer, we skip
                 if(isBoxVisible(meshlet.bounding))
+#endif
                 {
                     uint index;
                     InterlockedAdd(head, 1, index);

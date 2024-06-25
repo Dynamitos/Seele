@@ -143,10 +143,6 @@ void BasePass::render() {
                         {
                             .cullMode = Gfx::SeCullModeFlags(twoSided ? Gfx::SE_CULL_MODE_NONE : Gfx::SE_CULL_MODE_BACK_BIT),
                         },
-                    .depthStencilState =
-                        {
-                            .depthCompareOp = Gfx::SE_COMPARE_OP_GREATER_OR_EQUAL,
-                        },
                     .colorBlend =
                         {
                             .attachmentCount = 1,
@@ -167,10 +163,6 @@ void BasePass::render() {
                     .rasterizationState =
                         {
                             .cullMode = Gfx::SeCullModeFlags(twoSided ? Gfx::SE_CULL_MODE_NONE : Gfx::SE_CULL_MODE_BACK_BIT),
-                        },
-                    .depthStencilState =
-                        {
-                            .depthCompareOp = Gfx::SE_COMPARE_OP_GREATER_OR_EQUAL,
                         },
                     .colorBlend =
                         {

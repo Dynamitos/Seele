@@ -118,101 +118,90 @@ void DepthCullingPass::render() {
 
     query->beginQuery();
     graphics->beginRenderPass(renderPass);
-    if (useDepthCulling) {
+    Array<Gfx::ORenderCommand> commands;
 
-        Array<Gfx::ORenderCommand> commands;
+    Gfx::ShaderPermutation permutation = graphics->getShaderCompiler()->getTemplate("DepthPass");
+    permutation.setPositionOnly(usePositionOnly);
+    permutation.setDepthCulling(useDepthCulling);
+    for (VertexData* vertexData : VertexData::getList()) {
+        permutation.setVertexData(vertexData->getTypeName());
+        vertexData->getInstanceDataSet()->updateBuffer(6, cullingBuffer);
+        vertexData->getInstanceDataSet()->writeChanges();
+        // Create Pipeline(VertexData)
+        // Descriptors:
+        // ViewData => global, static
+        // VertexData => per meshtype
+        // SceneData => per meshtype
+        Gfx::PermutationId id(permutation);
 
-        Gfx::ShaderPermutation permutation = graphics->getShaderCompiler()->getTemplate("DepthPass");
-        permutation.setPositionOnly(usePositionOnly);
-        permutation.setDepthCulling(useDepthCulling);
-        for (VertexData* vertexData : VertexData::getList()) {
-            permutation.setVertexData(vertexData->getTypeName());
-            vertexData->getInstanceDataSet()->updateBuffer(6, cullingBuffer);
-            vertexData->getInstanceDataSet()->writeChanges();
-            // Create Pipeline(VertexData)
-            // Descriptors:
-            // ViewData => global, static
-            // VertexData => per meshtype
-            // SceneData => per meshtype
-            Gfx::PermutationId id(permutation);
+        Gfx::ORenderCommand command = graphics->createRenderCommand("DepthRender");
+        command->setViewport(viewport);
 
-            Gfx::ORenderCommand command = graphics->createRenderCommand("DepthRender");
-            command->setViewport(viewport);
-
-            const Gfx::ShaderCollection* collection = graphics->getShaderCompiler()->findShaders(id);
-            assert(collection != nullptr);
-            if (graphics->supportMeshShading()) {
-                Gfx::MeshPipelineCreateInfo pipelineInfo = {
-                    .taskShader = collection->taskShader,
-                    .meshShader = collection->meshShader,
-                    .fragmentShader = collection->fragmentShader,
-                    .renderPass = renderPass,
-                    .pipelineLayout = collection->pipelineLayout,
-                    .multisampleState =
-                        {
-                            .samples = viewport->getSamples(),
-                        },
-                    .depthStencilState =
-                        {
-                            .depthCompareOp = Gfx::SE_COMPARE_OP_GREATER,
-                        },
-                    .colorBlend =
-                        {
-                            .attachmentCount = 1,
-                        },
-                };
-                Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
-                command->bindPipeline(pipeline);
-            } else {
-                Gfx::LegacyPipelineCreateInfo pipelineInfo = {
-                    .vertexShader = collection->vertexShader,
-                    .fragmentShader = collection->fragmentShader,
-                    .renderPass = renderPass,
-                    .pipelineLayout = collection->pipelineLayout,
-                    .multisampleState =
-                        {
-                            .samples = viewport->getSamples(),
-                        },
-                    .depthStencilState =
-                        {
-                            .depthCompareOp = Gfx::SE_COMPARE_OP_GREATER,
-                        },
-                    .colorBlend =
-                        {
-                            .attachmentCount = 1,
-                        },
-                };
-                Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
-                command->bindPipeline(pipeline);
-            }
-            command->bindDescriptor({viewParamsSet, vertexData->getVertexDataSet(), vertexData->getInstanceDataSet(), set});
-            uint32 offset = 0;
-            command->pushConstants(Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_VERTEX_BIT, 0,
-                                   sizeof(VertexData::DrawCallOffsets), &offset);
-            if (graphics->supportMeshShading()) {
-                command->drawMesh(vertexData->getNumInstances(), 1, 1);
-            } else {
-                const auto& materials = vertexData->getMaterialData();
-                for (const auto& materialData : materials) {
-                    for (const auto& drawCall : materialData.instances) {
-                        // material not used for any active meshes, skip
-                        if (materialData.instances.size() == 0)
-                            continue;
-                        command->bindIndexBuffer(vertexData->getIndexBuffer());
-                        uint32 inst = drawCall.offsets.instanceOffset;
-                        for (const auto& meshData : drawCall.instanceMeshData) {
-                            // all meshlets of a mesh share the same indices offset
-                            command->drawIndexed(meshData.numIndices, 1, meshData.firstIndex,
-                                                 vertexData->getIndicesOffset(meshData.meshletOffset), inst++);
-                        }
+        const Gfx::ShaderCollection* collection = graphics->getShaderCompiler()->findShaders(id);
+        assert(collection != nullptr);
+        if (graphics->supportMeshShading()) {
+            Gfx::MeshPipelineCreateInfo pipelineInfo = {
+                .taskShader = collection->taskShader,
+                .meshShader = collection->meshShader,
+                .fragmentShader = collection->fragmentShader,
+                .renderPass = renderPass,
+                .pipelineLayout = collection->pipelineLayout,
+                .multisampleState =
+                    {
+                        .samples = viewport->getSamples(),
+                    },
+                .colorBlend =
+                    {
+                        .attachmentCount = 1,
+                    },
+            };
+            Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
+            command->bindPipeline(pipeline);
+        } else {
+            Gfx::LegacyPipelineCreateInfo pipelineInfo = {
+                .vertexShader = collection->vertexShader,
+                .fragmentShader = collection->fragmentShader,
+                .renderPass = renderPass,
+                .pipelineLayout = collection->pipelineLayout,
+                .multisampleState =
+                    {
+                        .samples = viewport->getSamples(),
+                    },
+                .colorBlend =
+                    {
+                        .attachmentCount = 1,
+                    },
+            };
+            Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
+            command->bindPipeline(pipeline);
+        }
+        command->bindDescriptor({viewParamsSet, vertexData->getVertexDataSet(), vertexData->getInstanceDataSet(), set});
+        uint32 offset = 0;
+        command->pushConstants(Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_VERTEX_BIT, 0, sizeof(VertexData::DrawCallOffsets),
+                               &offset);
+        if (graphics->supportMeshShading()) {
+            command->drawMesh(vertexData->getNumInstances(), 1, 1);
+        } else {
+            const auto& materials = vertexData->getMaterialData();
+            for (const auto& materialData : materials) {
+                for (const auto& drawCall : materialData.instances) {
+                    // material not used for any active meshes, skip
+                    if (materialData.instances.size() == 0)
+                        continue;
+                    command->bindIndexBuffer(vertexData->getIndexBuffer());
+                    uint32 inst = drawCall.offsets.instanceOffset;
+                    for (const auto& meshData : drawCall.instanceMeshData) {
+                        // all meshlets of a mesh share the same indices offset
+                        command->drawIndexed(meshData.numIndices, 1, meshData.firstIndex,
+                                             vertexData->getIndicesOffset(meshData.meshletOffset), inst++);
                     }
                 }
             }
-            commands.add(std::move(command));
         }
-
-        graphics->executeCommands(std::move(commands));
+        commands.add(std::move(command));
     }
+
+    graphics->executeCommands(std::move(commands));
     graphics->endRenderPass();
     query->endQuery();
     // Sync depth read/write with compute read

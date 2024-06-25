@@ -26,10 +26,7 @@ void taskMain(
         uint cull = p.cullingOffset + i;
         MeshletDescription meshlet = pScene.meshletInfos[m];
         MeshletCullingInfo culling = pScene.cullingInfos[cull];
-#ifdef DEPTH_CULLING
-        // if depth culling is disabled, we draw the whole scene as if cached
         if(culling.wasVisible())
-#endif
         {
             uint index;
             InterlockedAdd(head, 1, index);

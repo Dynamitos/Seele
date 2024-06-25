@@ -404,19 +404,19 @@ void findMeshRoots(aiNode* node, List<aiNode*>& meshNodes) {
 
 void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialInstanceAsset>& materials, Array<OMesh>& globalMeshes,
                                   Component::Collider& collider) {
-    //List<std::function<void()>> work;
+    List<std::function<void()>> work;
     for (int32 meshIndex = 0; meshIndex < scene->mNumMeshes; ++meshIndex) {
         aiMesh* mesh = scene->mMeshes[meshIndex];
         if (!(mesh->mPrimitiveTypes & aiPrimitiveType_TRIANGLE))
             continue;
-        globalMeshes.add(nullptr);
+        globalMeshes[meshIndex] = new Mesh();
 
         StaticMeshVertexData* vertexData = StaticMeshVertexData::getInstance();
         MeshId id = vertexData->allocateVertexData(mesh->mNumVertices);
         uint64 offset = vertexData->getMeshOffset(id);
         collider.boundingbox.adjust(Vector(mesh->mAABB.mMin.x, mesh->mAABB.mMin.y, mesh->mAABB.mMin.z));
         collider.boundingbox.adjust(Vector(mesh->mAABB.mMax.x, mesh->mAABB.mMax.y, mesh->mAABB.mMax.z));
-        //work.add([&]() {
+        work.add([=, &globalMeshes]() {
             // assume static mesh for now
             Array<Vector4> positions(mesh->mNumVertices);
             StaticArray<Array<Vector2>, MAX_TEXCOORDS> texCoords;
@@ -475,16 +475,15 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
 
             // collider.physicsMesh.addCollider(positions, indices, Matrix4(1.0f));
 
-            globalMeshes[meshIndex] = new Mesh();
             globalMeshes[meshIndex]->vertexData = vertexData;
             globalMeshes[meshIndex]->id = id;
             globalMeshes[meshIndex]->referencedMaterial = materials[mesh->mMaterialIndex];
             globalMeshes[meshIndex]->meshlets = std::move(meshlets);
             globalMeshes[meshIndex]->indices = std::move(indices);
             globalMeshes[meshIndex]->vertexCount = mesh->mNumVertices;
-            //});
+            });
     }
-    //getThreadPool().runAndWait(std::move(work));
+    getThreadPool().runAndWait(std::move(work));
 }
 
 Matrix4 convertMatrix(aiMatrix4x4 matrix) {

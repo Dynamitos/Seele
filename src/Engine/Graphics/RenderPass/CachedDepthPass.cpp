@@ -81,10 +81,6 @@ void CachedDepthPass::render() {
                     {
                         .samples = viewport->getSamples(),
                     },
-                .depthStencilState =
-                    {
-                        .depthCompareOp = Gfx::SE_COMPARE_OP_GREATER,
-                    },
                 .colorBlend =
                     {
                         .attachmentCount = 1,
@@ -101,10 +97,6 @@ void CachedDepthPass::render() {
                 .multisampleState =
                     {
                         .samples = viewport->getSamples(),
-                    },
-                .depthStencilState =
-                    {
-                        .depthCompareOp = Gfx::SE_COMPARE_OP_GREATER,
                     },
                 .colorBlend =
                     {
