@@ -15,6 +15,7 @@ DECLARE_REF(MaterialInstance)
 DECLARE_REF(Mesh)
 struct MeshId {
     uint64 id;
+    operator uint64() const { return id; }
     std::strong_ordering operator<=>(const MeshId& other) const { return id <=> other.id; }
     bool operator==(const MeshId& other) const { return id == other.id; }
 };
@@ -102,9 +103,9 @@ class VertexData {
     Array<TransparentDraw> transparentData;
 
     std::mutex vertexDataLock;
-    Map<MeshId, MeshData> meshData;
-    Map<MeshId, uint64> meshOffsets;
-    Map<MeshId, uint64> meshVertexCounts;
+    Array<MeshData> meshData;
+    Array<uint64> meshOffsets;
+    Array<uint64> meshVertexCounts;
 
     Array<MeshletDescription> meshlets;
     Array<uint8> primitiveIndices;

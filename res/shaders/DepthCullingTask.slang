@@ -20,7 +20,7 @@ ParameterBlock<DepthData> pDepthAttachment;
 
 bool isBoxVisible(AABB bounding)
 {
-    uint2 mipDimensions = uint2((uint(pViewParams.screenDimensions.x) + BLOCK_SIZE - 1) / BLOCK_SIZE, (uint(pViewParams.screenDimensions.y) + BLOCK_SIZE - 1) / BLOCK_SIZE);
+    uint2 mipDimensions = uint2(uint(pViewParams.screenDimensions.x), uint(pViewParams.screenDimensions.y));
     // now we calculate what mip level we need to only sample up to 4 texels covering the entire meshlet
     uint2 screenCornerMin = mipDimensions;
     uint2 screenCornerMax = uint2(0, 0);
@@ -39,7 +39,7 @@ bool isBoxVisible(AABB bounding)
         for(uint i = 0; i < 8; ++i)
         {
             float4 clipCorner = mul(modelViewProjection, corners[i]);
-            float4 screenCorner = clipToScreen(clipCorner) / BLOCK_SIZE;
+            float4 screenCorner = clipToScreen(clipCorner);
             screenCornerMin = uint2(min(screenCornerMin.x, uint(screenCorner.x)), min(screenCornerMin.y, uint(screenCorner.y)));
             screenCornerMax = uint2(max(screenCornerMax.x, uint(screenCorner.x)), max(screenCornerMax.y, uint(screenCorner.y)));
             maxDepth = max(maxDepth, screenCorner.z);

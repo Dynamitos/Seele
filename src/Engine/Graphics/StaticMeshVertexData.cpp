@@ -16,67 +16,37 @@ StaticMeshVertexData* StaticMeshVertexData::getInstance() {
     return &instance;
 }
 
-void StaticMeshVertexData::loadPositions(MeshId id, const Array<Vector4>& data) {
-    uint64 offset;
-    {
-        std::unique_lock l(mutex);
-        offset = meshOffsets[id];
-    }
+void StaticMeshVertexData::loadPositions(uint64 offset, const Array<Vector4>& data) {
     assert(offset + data.size() <= head);
     std::memcpy(positionData.data() + offset, data.data(), data.size() * sizeof(Vector4));
     dirty = true;
 }
 
-void StaticMeshVertexData::loadTexCoords(MeshId id, uint64 index, const Array<Vector2>& data) {
-    uint64 offset;
-    {
-        std::unique_lock l(mutex);
-        offset = meshOffsets[id];
-    }
+void StaticMeshVertexData::loadTexCoords(uint64 offset, uint64 index, const Array<Vector2>& data) {
     assert(offset + data.size() <= head);
     std::memcpy(texCoordsData[index].data() + offset, data.data(), data.size() * sizeof(Vector2));
     dirty = true;
 }
 
-void StaticMeshVertexData::loadNormals(MeshId id, const Array<Vector4>& data) {
-    uint64 offset;
-    {
-        std::unique_lock l(mutex);
-        offset = meshOffsets[id];
-    }
+void StaticMeshVertexData::loadNormals(uint64 offset, const Array<Vector4>& data) {
     assert(offset + data.size() <= head);
     std::memcpy(normalData.data() + offset, data.data(), data.size() * sizeof(Vector4));
     dirty = true;
 }
 
-void StaticMeshVertexData::loadTangents(MeshId id, const Array<Vector4>& data) {
-    uint64 offset;
-    {
-        std::unique_lock l(mutex);
-        offset = meshOffsets[id];
-    }
+void StaticMeshVertexData::loadTangents(uint64 offset, const Array<Vector4>& data) {
     assert(offset + data.size() <= head);
     std::memcpy(tangentData.data() + offset, data.data(), data.size() * sizeof(Vector4));
     dirty = true;
 }
 
-void StaticMeshVertexData::loadBiTangents(MeshId id, const Array<Vector4>& data) {
-    uint64 offset;
-    {
-        std::unique_lock l(mutex);
-        offset = meshOffsets[id];
-    }
+void StaticMeshVertexData::loadBiTangents(uint64 offset, const Array<Vector4>& data) {
     assert(offset + data.size() <= head);
     std::memcpy(biTangentData.data() + offset, data.data(), data.size() * sizeof(Vector4));
     dirty = true;
 }
 
-void Seele::StaticMeshVertexData::loadColors(MeshId id, const Array<Vector4>& data) {
-    uint64 offset;
-    {
-        std::unique_lock l(mutex);
-        offset = meshOffsets[id];
-    }
+void Seele::StaticMeshVertexData::loadColors(uint64 offset, const Array<Vector4>& data) {
     assert(offset + data.size() <= head);
     std::memcpy(colorData.data() + offset, data.data(), data.size() * sizeof(Vector4));
     dirty = true;
@@ -85,7 +55,7 @@ void Seele::StaticMeshVertexData::loadColors(MeshId id, const Array<Vector4>& da
 void StaticMeshVertexData::serializeMesh(MeshId id, uint64 numVertices, ArchiveBuffer& buffer) {
     uint64 offset;
     {
-        std::unique_lock l(mutex);
+        std::unique_lock l(vertexDataLock);
         offset = meshOffsets[id];
     }
     Array<Vector4> pos(numVertices);
@@ -112,11 +82,16 @@ void StaticMeshVertexData::serializeMesh(MeshId id, uint64 numVertices, ArchiveB
 }
 
 void StaticMeshVertexData::deserializeMesh(MeshId id, ArchiveBuffer& buffer) {
+    uint64 offset;
+    {
+        std::unique_lock l(vertexDataLock);
+        offset = meshOffsets[id];
+    }
     Array<Vector4> pos;
     Array<Vector2> tex[MAX_TEXCOORDS];
     for (size_t i = 0; i < MAX_TEXCOORDS; ++i) {
         Serialization::load(buffer, tex[i]);
-        loadTexCoords(id, i, tex[i]);
+        loadTexCoords(offset, i, tex[i]);
     }
     Array<Vector4> nor;
     Array<Vector4> tan;
@@ -127,11 +102,11 @@ void StaticMeshVertexData::deserializeMesh(MeshId id, ArchiveBuffer& buffer) {
     Serialization::load(buffer, tan);
     Serialization::load(buffer, bit);
     Serialization::load(buffer, col);
-    loadPositions(id, pos);
-    loadNormals(id, nor);
-    loadTangents(id, tan);
-    loadBiTangents(id, bit);
-    loadColors(id, col);
+    loadPositions(offset, pos);
+    loadNormals(offset, nor);
+    loadTangents(offset, tan);
+    loadBiTangents(offset, bit);
+    loadColors(offset, col);
 }
 
 void StaticMeshVertexData::init(Gfx::PGraphics _graphics) {

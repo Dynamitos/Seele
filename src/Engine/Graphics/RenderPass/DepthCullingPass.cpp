@@ -228,8 +228,8 @@ void DepthCullingPass::render() {
 void DepthCullingPass::endFrame() {}
 
 void DepthCullingPass::publishOutputs() {
-    uint32 width = (viewport->getOwner()->getFramebufferWidth() + BLOCK_SIZE - 1) / BLOCK_SIZE;
-    uint32 height = (viewport->getOwner()->getFramebufferHeight() + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    uint32 width = viewport->getOwner()->getFramebufferWidth();
+    uint32 height = viewport->getOwner()->getFramebufferHeight();
     uint32 bufferSize = 0;
     while (width > 1 && height > 1) {
         mipOffsets.add(bufferSize);

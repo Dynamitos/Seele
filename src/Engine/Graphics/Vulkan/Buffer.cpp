@@ -192,10 +192,9 @@ void Buffer::readContents(uint64 regionOffset, uint64 regionSize, void* buffer) 
 }
 
 void Buffer::rotateBuffer(uint64 size, bool preserveContents) {
+    if (size == 0)
+        return;
     assert(dynamic);
-    if (buffers.size() > 0) {
-        size = std::max(getSize(), size);
-    }
     for (uint32 i = 0; i < buffers.size(); ++i) {
         if (buffers[i]->isCurrentlyBound()) {
             continue;

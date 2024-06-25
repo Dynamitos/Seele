@@ -22,12 +22,12 @@ class StaticMeshVertexData : public VertexData {
     StaticMeshVertexData();
     virtual ~StaticMeshVertexData();
     static StaticMeshVertexData* getInstance();
-    void loadPositions(MeshId id, const Array<Vector4>& data);
-    void loadTexCoords(MeshId id, uint64 index, const Array<Vector2>& data);
-    void loadNormals(MeshId id, const Array<Vector4>& data);
-    void loadTangents(MeshId id, const Array<Vector4>& data);
-    void loadBiTangents(MeshId id, const Array<Vector4>& data);
-    void loadColors(MeshId id, const Array<Vector4>& data);
+    void loadPositions(uint64 offset, const Array<Vector4>& data);
+    void loadTexCoords(uint64 offset, uint64 index, const Array<Vector2>& data);
+    void loadNormals(uint64 offset, const Array<Vector4>& data);
+    void loadTangents(uint64 offset, const Array<Vector4>& data);
+    void loadBiTangents(uint64 offset, const Array<Vector4>& data);
+    void loadColors(uint64 offset, const Array<Vector4>& data);
     virtual void serializeMesh(MeshId id, uint64 numVertices, ArchiveBuffer& buffer) override;
     virtual void deserializeMesh(MeshId id, ArchiveBuffer& buffer) override;
     virtual void init(Gfx::PGraphics graphics) override;
@@ -44,7 +44,6 @@ class StaticMeshVertexData : public VertexData {
     virtual void updateBuffers() override;
     Array<StaticMatData> staticData;
 
-    std::mutex mutex;
     Gfx::OShaderBuffer positions;
     Array<Vector4> positionData;
     Gfx::OShaderBuffer texCoords[MAX_TEXCOORDS];

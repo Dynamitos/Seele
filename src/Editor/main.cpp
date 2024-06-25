@@ -63,25 +63,30 @@ int main() {
         .filePath = sourcePath / "import/textures/skyboxsun5deg_tn.jpg",
         .type = TextureImportType::TEXTURE_CUBEMAP,
     });
-    AssetImporter::importMesh(MeshImportArgs{.filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.fbx",
-                                             .importPath = "Whitechapel"});
-    //AssetImporter::importMesh(MeshImportArgs{
-    //    .filePath = sourcePath / "import/models/city-suburbs/city-suburbs.gltf",
-    //    .importPath = "suburbs",
-    //});
+    AssetImporter::importMesh(MeshImportArgs{
+        .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.fbx",
+        .importPath = "Whitechapel",
+    });
+    AssetImporter::importMesh(MeshImportArgs{
+        .filePath = sourcePath / "import/models/city-suburbs/source/city-suburbs.obj",
+        .importPath = "suburbs",
+    });
     vd->commitMeshes();
-    WindowCreateInfo mainWindowInfo;
-    mainWindowInfo.title = "SeeleEngine";
-    mainWindowInfo.width = 1920;
-    mainWindowInfo.height = 1080;
-    mainWindowInfo.preferredFormat = Gfx::SE_FORMAT_B8G8R8A8_SRGB;
+    WindowCreateInfo mainWindowInfo = {
+        .width = 1920,
+        .height = 1080,
+        .title = "SeeleEngine",
+        .preferredFormat = Gfx::SE_FORMAT_B8G8R8A8_SRGB,
+    };
     auto window = windowManager->addWindow(graphics, mainWindowInfo);
-    ViewportCreateInfo sceneViewInfo;
-    sceneViewInfo.dimensions.size.x = 1920;
-    sceneViewInfo.dimensions.size.y = 1080;
-    sceneViewInfo.dimensions.offset.x = 0;
-    sceneViewInfo.dimensions.offset.y = 0;
-    sceneViewInfo.numSamples = Gfx::SE_SAMPLE_COUNT_1_BIT;
+    ViewportCreateInfo sceneViewInfo = {
+        .dimensions =
+            {
+                .size = {1920, 1080},
+                .offset = {0, 0},
+            },
+        .numSamples = Gfx::SE_SAMPLE_COUNT_1_BIT,
+    };
     OGameView sceneView = new Editor::PlayView(graphics, window, sceneViewInfo, binaryPath.generic_string());
     sceneView->setFocused();
 

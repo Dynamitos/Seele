@@ -22,7 +22,7 @@ struct MeshData
 
 static const uint32_t MAX_VERTICES = 256;
 static const uint32_t MAX_PRIMITIVES = 256;
-static const uint32_t TASK_GROUP_SIZE = 128;
+static const uint32_t TASK_GROUP_SIZE = 32;
 static const uint32_t MESH_GROUP_SIZE = 32;
 static const uint32_t MAX_MESHLETS_PER_INSTANCE = 2048;
 

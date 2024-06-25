@@ -51,32 +51,16 @@ void reduceLevel(
     setDstDepth(minCoords / 2, minDepth);
 }
 
-groupshared uint uMinDepth;
-
 [numthreads(BLOCK_SIZE, BLOCK_SIZE, 1)]
 [shader("compute")]
 void initialReduce(
     uint3 threadID: SV_GroupThreadID,
     uint3 groupID: SV_GroupID,
 ) {
-    uint reducedWidth = uint(pViewParams.screenDimensions.x) / BLOCK_SIZE;
+    uint width = uint(pViewParams.screenDimensions.x);
     int2 groupOffset = groupID.xy * BLOCK_SIZE;
     int2 texCoord = groupOffset + threadID.xy;
     float fDepth = pDepthAttachment.texture.Load(int3(texCoord, 0)).r;
-    uint uDepth = asuint(fDepth);
-    if(groupID.x == 0 && groupID.y == 0)
-    {
-        uMinDepth = 0xffffffff;
-    }
-    GroupMemoryBarrierWithGroupSync();
-
-    InterlockedMin(uMinDepth, uDepth);
+    pDepthAttachment.buffer[texCoord.x + (texCoord.y * width)] = fDepth;
     
-    GroupMemoryBarrierWithGroupSync();
-
-    float fMinDepth = asfloat(uMinDepth);
-    if(threadID.x == 0 && threadID.y == 0)
-    {
-        pDepthAttachment.buffer[groupID.x + (groupID.y * reducedWidth)] = fMinDepth;
-    }
 }

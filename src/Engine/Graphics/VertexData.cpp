@@ -294,8 +294,9 @@ void VertexData::commitMeshes() {
 MeshId VertexData::allocateVertexData(uint64 numVertices) {
         std::unique_lock l(vertexDataLock);
         MeshId res{idCounter++};
-        meshOffsets[res] = head;
-        meshVertexCounts[res] = numVertices;
+        meshOffsets.add(head);
+        meshVertexCounts.add(numVertices);
+        meshData.add({});
         head += numVertices;
         if (head > verticesAllocated) {
             verticesAllocated = std::max(head, verticesAllocated + NUM_DEFAULT_ELEMENTS);
