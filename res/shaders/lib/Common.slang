@@ -81,9 +81,9 @@ float4 screenToModel(float4x4 inverseTransform, float4 screen)
 
 float4 clipToScreen(float4 clip)
 {
-    float2 texCoord = float2(clip.x, 1.0f-clip.y) / 2.0f + 0.5f;
-
-    return float4(texCoord * pViewParams.screenDimensions, clip.z, clip.w);
+    float4 ndc = clip / clip.w;
+    float2 texCoords = (float2(ndc.xy) + 1.0f) / 2.0f;
+    return float4(float2(texCoords.x, 1 - texCoords.y) * pViewParams.screenDimensions, 1 - ndc.z, 1.0f);
 }
 
 struct Plane
