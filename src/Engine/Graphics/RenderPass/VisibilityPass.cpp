@@ -28,6 +28,7 @@ void VisibilityPass::render() {
     visibilitySet->writeChanges();
 
     query->beginQuery();
+    timestamps->write(Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT, "VISIBILITY");
     Gfx::OComputeCommand command = graphics->createComputeCommand("VisibilityCommand");
     command->bindPipeline(visibilityPipeline);
     command->bindDescriptor({viewParamsSet, visibilitySet});
@@ -85,7 +86,8 @@ void VisibilityPass::publishOutputs() {
     });
     resources->registerBufferOutput("CULLINGBUFFER", cullingBuffer);
 
-    query = graphics->createPipelineStatisticsQuery();
+    query = graphics->createPipelineStatisticsQuery("VisibilityPipelineStatistics");
+    timestamps = resources->requestTimestampQuery("TIMESTAMP");
     resources->registerQueryOutput("VISIBILITY_QUERY", query);
 }
 

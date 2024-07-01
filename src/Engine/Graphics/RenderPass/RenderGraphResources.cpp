@@ -21,6 +21,8 @@ Gfx::PUniformBuffer RenderGraphResources::requestUniform(const std::string& outp
 
 Gfx::PPipelineStatisticsQuery RenderGraphResources::requestQuery(const std::string& outputName) { return registeredQueries.at(outputName); }
 
+Gfx::PTimestampQuery Seele::RenderGraphResources::requestTimestampQuery(const std::string& outputName) { return registeredTimestamps.at(outputName); }
+
 void RenderGraphResources::registerRenderPassOutput(const std::string& outputName, Gfx::RenderTargetAttachment attachment) {
     registeredAttachments[outputName] = attachment;
 }
@@ -38,4 +40,8 @@ void RenderGraphResources::registerUniformOutput(const std::string& outputName, 
 
 void RenderGraphResources::registerQueryOutput(const std::string& outputName, Gfx::PPipelineStatisticsQuery query) {
     registeredQueries[outputName] = query;
+}
+
+void Seele::RenderGraphResources::registerTimestampQueryOutput(const std::string& outputName, Gfx::PTimestampQuery query) {
+    registeredTimestamps[outputName] = query;
 }

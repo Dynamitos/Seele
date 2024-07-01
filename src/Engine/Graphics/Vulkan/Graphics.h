@@ -18,6 +18,8 @@ class Graphics : public Gfx::Graphics {
     constexpr VkPhysicalDevice getPhysicalDevice() const { return physicalDevice; }
     constexpr VkPhysicalDeviceAccelerationStructurePropertiesKHR getAccelerationProperties() const { return accelerationProperties; }
     constexpr VkPhysicalDeviceRayTracingPipelinePropertiesKHR getRayTracingProperties() const { return rayTracingProperties; }
+    constexpr float getTimestampPeriod() const { return props.properties.limits.timestampPeriod; }
+    constexpr uint64 getTimestampValidBits() const { return graphicsProps.timestampValidBits; }
 
     PCommandPool getQueueCommands(Gfx::QueueType queueType);
     PCommandPool getGraphicsCommands();
@@ -67,8 +69,9 @@ class Graphics : public Gfx::Graphics {
 
     virtual Gfx::OVertexInput createVertexInput(VertexInputStateCreateInfo createInfo) override;
 
-    virtual Gfx::OOcclusionQuery createOcclusionQuery() override;
-    virtual Gfx::OPipelineStatisticsQuery createPipelineStatisticsQuery() override;
+    virtual Gfx::OOcclusionQuery createOcclusionQuery(const std::string& name = "") override;
+    virtual Gfx::OPipelineStatisticsQuery createPipelineStatisticsQuery(const std::string& name = "") override;
+    virtual Gfx::OTimestampQuery createTimestampQuery(uint64 numTimestamps, const std::string& name = "") override;
 
     virtual void resolveTexture(Gfx::PTexture source, Gfx::PTexture destination) override;
     virtual void copyTexture(Gfx::PTexture src, Gfx::PTexture dst) override;
@@ -104,6 +107,7 @@ class Graphics : public Gfx::Graphics {
     thread_local static PCommandPool transferCommands;
     std::mutex poolLock;
     Array<OCommandPool> pools;
+    VkQueueFamilyProperties graphicsProps;
     VkPhysicalDeviceProperties2 props;
     VkPhysicalDeviceFeatures2 features;
     VkPhysicalDeviceVulkan12Features features12;

@@ -14,3 +14,9 @@ PipelineStatisticsQuery::PipelineStatisticsQuery()
 
 PipelineStatisticsQuery::~PipelineStatisticsQuery()
 {}
+
+TimestampQuery::TimestampQuery()
+{}
+
+TimestampQuery::~TimestampQuery()
+{}

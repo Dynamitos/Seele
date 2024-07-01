@@ -22,6 +22,7 @@ class CachedDepthPass : public RenderPass {
     Gfx::OTexture2D visibilityBuffer;
     Gfx::OPipelineLayout depthPrepassLayout;
     Gfx::OPipelineStatisticsQuery query;
+    Gfx::OTimestampQuery timestamps;
 
     Gfx::PShaderBuffer cullingBuffer;
 };

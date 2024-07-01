@@ -258,7 +258,6 @@ void TextureHandle::changeLayout(Gfx::SeImageLayout newLayout, VkAccessFlags src
     PCommandPool commandPool = graphics->getQueueCommands(owner);
     vkCmdPipelineBarrier(commandPool->getCommands()->getHandle(), srcStage, dstStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
     commandPool->getCommands()->bindResource(PTextureHandle(this));
-    commandPool->submitCommands();
     layout = newLayout;
 }
 

@@ -92,6 +92,7 @@ void BasePass::render() {
     transparentCulling->writeChanges();
 
     query->beginQuery();
+    timestamps->write(Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT, "BASEPASS");
     graphics->beginRenderPass(renderPass);
     Array<Gfx::ORenderCommand> commands;
 
@@ -294,6 +295,8 @@ void BasePass::render() {
 
     graphics->endRenderPass();
     query->endQuery();
+    timestamps->write(Gfx::SE_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, "END");
+    timestamps->end();
 }
 
 void BasePass::endFrame() {}
@@ -316,11 +319,12 @@ void BasePass::publishOutputs() {
                                     Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
     resources->registerRenderPassOutput("BASEPASS_DEPTH", depthAttachment);
 
-    query = graphics->createPipelineStatisticsQuery();
+    query = graphics->createPipelineStatisticsQuery("BasePassPipelineStatistics");
     resources->registerQueryOutput("BASEPASS_QUERY", query);
 }
 
 void BasePass::createRenderPass() {
+    timestamps = resources->requestTimestampQuery("TIMESTAMP");
     cullingBuffer = resources->requestBuffer("CULLINGBUFFER");
 
     Gfx::RenderTargetLayout layout = Gfx::RenderTargetLayout{

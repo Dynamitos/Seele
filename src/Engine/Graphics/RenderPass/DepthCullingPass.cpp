@@ -71,6 +71,7 @@ DepthCullingPass::~DepthCullingPass() {}
 void DepthCullingPass::beginFrame(const Component::Camera& cam) { RenderPass::beginFrame(cam); }
 
 void DepthCullingPass::render() {
+    query->beginQuery();
     depthAttachment.getTexture()->changeLayout(Gfx::SE_IMAGE_LAYOUT_GENERAL, Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
                                                Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, Gfx::SE_ACCESS_TRANSFER_READ_BIT,
                                                Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT);
@@ -80,6 +81,7 @@ void DepthCullingPass::render() {
     set->updateBuffer(1, depthMipBuffer);
     set->writeChanges();
 
+    timestamps->write(Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT, "DEPTHMIP");
     Gfx::OComputeCommand computeCommand = graphics->createComputeCommand("DepthMipGenCommand");
     computeCommand->bindPipeline(depthInitialReduce);
     computeCommand->bindDescriptor({viewParamsSet, set});
@@ -116,7 +118,7 @@ void DepthCullingPass::render() {
         Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
         Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT);
 
-    query->beginQuery();
+    timestamps->write(Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT, "DEPTHCULL");
     graphics->beginRenderPass(renderPass);
     Array<Gfx::ORenderCommand> commands;
 
@@ -262,11 +264,12 @@ void DepthCullingPass::publishOutputs() {
 
     depthMipGen = graphics->createComputePipeline(pipelineCreateInfo);
 
-    query = graphics->createPipelineStatisticsQuery();
+    query = graphics->createPipelineStatisticsQuery("DepthPipelineStatistics");
     resources->registerQueryOutput("DEPTH_QUERY", query);
 }
 
 void DepthCullingPass::createRenderPass() {
+    timestamps = resources->requestTimestampQuery("TIMESTAMP");
     cullingBuffer = resources->requestBuffer("CULLINGBUFFER");
 
     depthAttachment = resources->requestRenderTarget("DEPTHPREPASS_DEPTH");

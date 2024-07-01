@@ -18,11 +18,13 @@ class RenderGraphResources {
     Gfx::PShaderBuffer requestBuffer(const std::string& outputName);
     Gfx::PUniformBuffer requestUniform(const std::string& outputName);
     Gfx::PPipelineStatisticsQuery requestQuery(const std::string& outputName);
+    Gfx::PTimestampQuery requestTimestampQuery(const std::string& outputName);
     void registerRenderPassOutput(const std::string& outputName, Gfx::RenderTargetAttachment attachment);
     void registerTextureOutput(const std::string& outputName, Gfx::PTexture buffer);
     void registerBufferOutput(const std::string& outputName, Gfx::PShaderBuffer buffer);
     void registerUniformOutput(const std::string& outputName, Gfx::PUniformBuffer buffer);
     void registerQueryOutput(const std::string& outputName, Gfx::PPipelineStatisticsQuery query);
+    void registerTimestampQueryOutput(const std::string& outputName, Gfx::PTimestampQuery query);
 
   protected:
     Map<std::string, Gfx::RenderTargetAttachment> registeredAttachments;
@@ -30,6 +32,7 @@ class RenderGraphResources {
     Map<std::string, Gfx::PShaderBuffer> registeredBuffers;
     Map<std::string, Gfx::PUniformBuffer> registeredUniforms;
     Map<std::string, Gfx::PPipelineStatisticsQuery> registeredQueries;
+    Map<std::string, Gfx::PTimestampQuery> registeredTimestamps;
 };
 DEFINE_REF(RenderGraphResources)
 } // namespace Seele

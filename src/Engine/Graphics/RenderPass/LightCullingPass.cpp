@@ -41,6 +41,7 @@ void LightCullingPass::beginFrame(const Component::Camera& cam) {
 
 void LightCullingPass::render() {
     query->beginQuery();
+    timestamps->write(Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT, "LIGHTCULL");
     depthAttachment->transferOwnership(Gfx::QueueType::COMPUTE);
     cullingDescriptorSet->updateTexture(0, depthAttachment);
     cullingDescriptorSet->updateBuffer(1, oLightIndexCounter);
@@ -211,12 +212,14 @@ void LightCullingPass::publishOutputs() {
 
     resources->registerTextureOutput("LIGHTCULLING_OLIGHTGRID", Gfx::PTexture2D(oLightGrid));
     resources->registerTextureOutput("LIGHTCULLING_TLIGHTGRID", Gfx::PTexture2D(tLightGrid));
+
+    query = graphics->createPipelineStatisticsQuery("LightCullPipelineStatistics");
+    resources->registerQueryOutput("LIGHTCULL_QUERY", query);
 }
 
 void LightCullingPass::createRenderPass() {
     depthAttachment = resources->requestRenderTarget("DEPTHPREPASS_DEPTH").getTexture();
-    query = graphics->createPipelineStatisticsQuery();
-    resources->registerQueryOutput("LIGHTCULL_QUERY", query);
+    timestamps = resources->requestTimestampQuery("TIMESTAMP");
 }
 
 void LightCullingPass::setupFrustums() {

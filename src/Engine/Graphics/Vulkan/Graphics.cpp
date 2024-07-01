@@ -239,9 +239,15 @@ Gfx::OPipelineLayout Graphics::createPipelineLayout(const std::string& name, Gfx
 
 Gfx::OVertexInput Graphics::createVertexInput(VertexInputStateCreateInfo createInfo) { return new VertexInput(createInfo); }
 
-Gfx::OOcclusionQuery Graphics::createOcclusionQuery() { return new OcclusionQuery(this); }
+Gfx::OOcclusionQuery Graphics::createOcclusionQuery(const std::string& name) { return new OcclusionQuery(this, name); }
 
-Gfx::OPipelineStatisticsQuery Graphics::createPipelineStatisticsQuery() { return new PipelineStatisticsQuery(this); }
+Gfx::OPipelineStatisticsQuery Graphics::createPipelineStatisticsQuery(const std::string& name) {
+    return new PipelineStatisticsQuery(this, name);
+}
+
+Gfx::OTimestampQuery Graphics::createTimestampQuery(uint64 numTimestamps, const std::string& name) {
+    return new TimestampQuery(this, name, numTimestamps);
+}
 
 void Graphics::resolveTexture(Gfx::PTexture source, Gfx::PTexture destination) {
     PTextureBase sourceTex = source.cast<TextureBase>();
@@ -642,7 +648,6 @@ void Graphics::createDevice(GraphicsInitializer initializer) {
             *currentPriority++ = 1.0f;
         }
     }
-
     if (supportMeshShading()) {
         initializer.deviceExtensions.add(VK_EXT_MESH_SHADER_EXTENSION_NAME);
     }
@@ -682,6 +687,8 @@ void Graphics::createDevice(GraphicsInitializer initializer) {
     queueMapping.graphicsFamily = queues[graphicsQueue]->getFamilyIndex();
     queueMapping.computeFamily = queues[computeQueue]->getFamilyIndex();
     queueMapping.transferFamily = queues[transferQueue]->getFamilyIndex();
+
+    graphicsProps = queueProperties[queueMapping.graphicsFamily];
 
     cmdDrawMeshTasks = (PFN_vkCmdDrawMeshTasksEXT)vkGetDeviceProcAddr(handle, "vkCmdDrawMeshTasksEXT");
     cmdDrawMeshTasksIndirect = (PFN_vkCmdDrawMeshTasksIndirectEXT)vkGetDeviceProcAddr(handle, "vkCmdDrawMeshTasksIndirectEXT");

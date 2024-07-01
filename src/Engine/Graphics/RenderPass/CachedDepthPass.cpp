@@ -47,6 +47,8 @@ void CachedDepthPass::beginFrame(const Component::Camera& cam) { RenderPass::beg
 
 void CachedDepthPass::render() {
     query->beginQuery();
+    timestamps->begin();
+    timestamps->write(Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT, "CACHED");
     graphics->beginRenderPass(renderPass);
     Array<Gfx::ORenderCommand> commands;
 
@@ -165,8 +167,11 @@ void CachedDepthPass::publishOutputs() {
         Gfx::RenderTargetAttachment(visibilityBuffer, Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
                                     Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
     resources->registerRenderPassOutput("VISIBILITY", visibilityAttachment);
-    query = graphics->createPipelineStatisticsQuery();
+    query = graphics->createPipelineStatisticsQuery("CachedPipelineStatistics");
     resources->registerQueryOutput("CACHED_QUERY", query);
+
+    timestamps = graphics->createTimestampQuery(7, "Timestamps");
+    resources->registerTimestampQueryOutput("TIMESTAMP", timestamps);
 }
 
 void CachedDepthPass::createRenderPass() {

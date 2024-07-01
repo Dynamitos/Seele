@@ -32,6 +32,7 @@ DECLARE_REF(RenderCommand)
 DECLARE_REF(ComputeCommand)
 DECLARE_REF(OcclusionQuery)
 DECLARE_REF(PipelineStatisticsQuery)
+DECLARE_REF(TimestampQuery)
 DECLARE_REF(BottomLevelAS)
 DECLARE_REF(TopLevelAS)
 DECLARE_REF(RayGenShader)
@@ -87,8 +88,9 @@ class Graphics {
 
     virtual OVertexInput createVertexInput(VertexInputStateCreateInfo createInfo) = 0;
 
-    virtual Gfx::OOcclusionQuery createOcclusionQuery() = 0;
-    virtual Gfx::OPipelineStatisticsQuery createPipelineStatisticsQuery() = 0;
+    virtual Gfx::OOcclusionQuery createOcclusionQuery(const std::string& name = "") = 0;
+    virtual Gfx::OPipelineStatisticsQuery createPipelineStatisticsQuery(const std::string& name = "") = 0;
+    virtual Gfx::OTimestampQuery createTimestampQuery(uint64 numTimestamps, const std::string& name = "") = 0;
 
     virtual void resolveTexture(PTexture source, PTexture destination) = 0;
     virtual void copyTexture(PTexture src, PTexture dst) = 0;

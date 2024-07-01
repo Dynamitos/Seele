@@ -40,6 +40,7 @@ class BasePass : public RenderPass {
     Gfx::ODescriptorLayout lightCullingLayout;
 
     Gfx::OPipelineStatisticsQuery query;
+    Gfx::PTimestampQuery timestamps;
 
     Gfx::PShaderBuffer cullingBuffer;
 };

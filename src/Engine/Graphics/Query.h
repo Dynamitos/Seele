@@ -1,5 +1,11 @@
 #pragma once
+#include "Containers/Array.h"
+#include "Enums.h"
 #include "MinimalEngine.h"
+#include <ostream>
+#include <chrono>
+#include <fmt/format.h>
+#include <string>
 
 namespace Seele {
 namespace Gfx {
@@ -25,7 +31,15 @@ struct PipelineStatisticsResult {
     uint64 computeShaderInvocations;
     uint64 taskShaderInvocations;
     uint64 meshShaderInvocations;
+    friend std::ostream& operator<<(std::ostream& buf, const PipelineStatisticsResult& res);
 };
+
+static std::ostream& operator<<(std::ostream & buf, const PipelineStatisticsResult& res) {
+    buf << fmt::format("{},{},{},{},{},{},{},{},{},", res.inputAssemblyVertices, res.inputAssemblyPrimitives, res.vertexShaderInvocations,
+                       res.clippingInvocations, res.clippingPrimitives, res.fragmentShaderInvocations, res.computeShaderInvocations, res.taskShaderInvocations,
+                       res.meshShaderInvocations);
+    return buf;
+}
 class PipelineStatisticsQuery {
   public:
     PipelineStatisticsQuery();
@@ -35,5 +49,19 @@ class PipelineStatisticsQuery {
     virtual PipelineStatisticsResult getResults() = 0;
 };
 DEFINE_REF(PipelineStatisticsQuery)
+struct Timestamp {
+    std::string name;
+    std::chrono::nanoseconds time;
+};
+class TimestampQuery {
+  public:
+    TimestampQuery();
+    virtual ~TimestampQuery();
+    virtual void begin() = 0;
+    virtual void write(SePipelineStageFlagBits stage, const std::string& name = "") = 0;
+    virtual void end() = 0;
+    virtual Array<Timestamp> getResults() = 0;
+};
+DEFINE_REF(TimestampQuery)
 } // namespace Gfx
 } // namespace Seele

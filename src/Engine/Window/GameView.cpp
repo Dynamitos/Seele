@@ -16,6 +16,7 @@
 #include "System/LightGather.h"
 #include "System/MeshUpdater.h"
 #include "Window/Window.h"
+#include <fstream>
 
 using namespace Seele;
 
@@ -42,16 +43,35 @@ GameView::GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreate
         Gfx::PPipelineStatisticsQuery baseQuery = res->requestQuery("BASEPASS_QUERY");
         Gfx::PPipelineStatisticsQuery lightCullQuery = res->requestQuery("LIGHTCULL_QUERY");
         Gfx::PPipelineStatisticsQuery visibilityQuery = res->requestQuery("VISIBILITY_QUERY");
+        Gfx::PTimestampQuery timeQuery = res->requestTimestampQuery("TIMESTAMP");
+        std::ofstream stats("stats.csv");
+        stats << "RelTime,"
+              << "CachedIAV,CachedIAP,CachedVS,CachedClipInv,CachedClipPrim,CachedFS,CachedCS,CachedTS,CachedMS,"
+              << "DepthIAV,DepthIAP,DepthVS,DepthClipInv,DepthClipPrim,DepthFS,DepthCS,DepthTS,DepthMS,"
+              << "BaseIAV,BaseIAP,BaseVS,BaseClipInv,BaseClipPrim,BaseFS,BaseCS,BaseTS,BaseMS,"
+              << "LightCullIAV,LightCullIAP,LightCullVS,LightCullClipInv,LightCullClipPrim,LightCullFS,LightCullCS,LightCullTS,LightCullMS,"
+              << "VisibilityIAV,VisibilityIAP,VisibilityVS,VisibilityClipInv,VisibilityClipPrim,VisibilityFS,VisibilityCS,VisibilityTS,"
+                 "VisibilityMS,"
+              << "CACHED,MIPGEN,DEPTHCULL,VISIBILITY,LIGHTCULL,BASE" << std::endl;
+        std::chrono::nanoseconds start = std::chrono::nanoseconds(0);
         while (true) {
+            auto timestamps = timeQuery->getResults();
             auto cachedResults = cachedQuery->getResults();
             auto depthResults = depthQuery->getResults();
             auto baseResults = baseQuery->getResults();
             auto lightCullResults = lightCullQuery->getResults();
             auto visiblityResults = visibilityQuery->getResults();
-            std::cout << "Pipeline Stats: "
-                      << cachedResults.meshShaderInvocations + depthResults.meshShaderInvocations + baseResults.meshShaderInvocations +
-                             lightCullResults.meshShaderInvocations + visiblityResults.meshShaderInvocations
-                      << std::endl;
+            if (start.count() == 0) {
+                start = timestamps[0].time;
+            }
+            stats << (timestamps[0].time - start).count() << "," << cachedResults << depthResults << baseResults << lightCullResults
+                  << visiblityResults;
+            stats << fmt::format("{},{},{},{},{},{}", (timestamps[1].time - timestamps[0].time).count(),
+                                 (timestamps[2].time - timestamps[1].time).count(), (timestamps[3].time - timestamps[2].time).count(),
+                                 (timestamps[4].time - timestamps[3].time).count(), (timestamps[5].time - timestamps[4].time).count(),
+                                 (timestamps[6].time - timestamps[5].time).count())
+                  << std::endl;
+            stats.flush();
         }
     });
 }
