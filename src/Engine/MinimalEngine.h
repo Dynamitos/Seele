@@ -142,4 +142,13 @@ template <typename T> class UniquePtr {
   private:
     T* handle;
 };
+
+// idk if it should be here?
+struct Globals {
+    bool usePositionOnly = true;
+    bool useDepthCulling = true;
+    bool useLightCulling = true;
+    bool running = true;
+};
+Globals& getGlobals();
 } // namespace Seele

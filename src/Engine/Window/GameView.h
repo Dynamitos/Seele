@@ -28,7 +28,6 @@ class GameView : public View {
     OScene scene;
     GameInterface gameInterface;
     RenderGraph renderGraph;
-    std::thread queryThread;
 
     PSystemGraph systemGraph;
     System::PKeyboardInput keyboardSystem;

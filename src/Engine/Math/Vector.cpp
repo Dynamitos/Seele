@@ -26,15 +26,20 @@ void from_json(const nlohmann::json& j, Vector& vec) {
 }
 
 std::ostream& operator<<(std::ostream& stream, const Vector2& vector) {
-    stream << "(" << vector.x << ", " << vector.y << ")";
+    stream << "Vec2(" << vector.x << ", " << vector.y << ")";
     return stream;
 }
 std::ostream& operator<<(std::ostream& stream, const Vector& vector) {
-    stream << "(" << vector.x << ", " << vector.y << ", " << vector.z << ")";
+    stream << "Vec3(" << vector.x << ", " << vector.y << ", " << vector.z << ")";
     return stream;
 }
 std::ostream& operator<<(std::ostream& stream, const Vector4& vector) {
-    stream << "(" << vector.x << ", " << vector.y << ", " << vector.z << ", " << vector.w << ")";
+    stream << "Vec4(" << vector.x << ", " << vector.y << ", " << vector.z << ", " << vector.w << ")";
+    return stream;
+}
+
+std::ostream& operator<<(std::ostream& stream, const Quaternion& vector) {
+    stream << "Quat(" << vector.w << ", " << vector.x << ", " << vector.y << ", " << vector.z << ")";
     return stream;
 }
 

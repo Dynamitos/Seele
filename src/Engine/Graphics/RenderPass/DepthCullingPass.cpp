@@ -4,9 +4,6 @@
 
 using namespace Seele;
 
-extern bool usePositionOnly;
-extern bool useDepthCulling;
-
 DepthCullingPass::DepthCullingPass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics, scene) {
     depthAttachmentLayout = graphics->createDescriptorLayout("pDepthAttachment");
     depthAttachmentLayout->addDescriptorBinding(Gfx::DescriptorBinding{
@@ -68,13 +65,15 @@ DepthCullingPass::DepthCullingPass(Gfx::PGraphics graphics, PScene scene) : Rend
 
 DepthCullingPass::~DepthCullingPass() {}
 
-void DepthCullingPass::beginFrame(const Component::Camera& cam) { RenderPass::beginFrame(cam); }
+void DepthCullingPass::beginFrame(const Component::Camera& cam) {
+    RenderPass::beginFrame(cam);
+}
 
 void DepthCullingPass::render() {
     query->beginQuery();
     depthAttachment.getTexture()->changeLayout(Gfx::SE_IMAGE_LAYOUT_GENERAL, Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-                                               Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, Gfx::SE_ACCESS_TRANSFER_READ_BIT,
-                                               Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT);
+                                               Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, Gfx::SE_ACCESS_SHADER_READ_BIT,
+                                               Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 
     Gfx::PDescriptorSet set = depthAttachmentLayout->allocateDescriptorSet();
     set->updateTexture(0, Gfx::PTexture2D(depthAttachment.getTexture()));
@@ -123,8 +122,8 @@ void DepthCullingPass::render() {
     Array<Gfx::ORenderCommand> commands;
 
     Gfx::ShaderPermutation permutation = graphics->getShaderCompiler()->getTemplate("DepthPass");
-    permutation.setPositionOnly(usePositionOnly);
-    permutation.setDepthCulling(useDepthCulling);
+    permutation.setPositionOnly(getGlobals().usePositionOnly);
+    permutation.setDepthCulling(getGlobals().useDepthCulling);
     for (VertexData* vertexData : VertexData::getList()) {
         permutation.setVertexData(vertexData->getTypeName());
         vertexData->getInstanceDataSet()->updateBuffer(6, cullingBuffer);
@@ -148,10 +147,6 @@ void DepthCullingPass::render() {
                 .fragmentShader = collection->fragmentShader,
                 .renderPass = renderPass,
                 .pipelineLayout = collection->pipelineLayout,
-                .multisampleState =
-                    {
-                        .samples = viewport->getSamples(),
-                    },
                 .colorBlend =
                     {
                         .attachmentCount = 1,
@@ -165,10 +160,6 @@ void DepthCullingPass::render() {
                 .fragmentShader = collection->fragmentShader,
                 .renderPass = renderPass,
                 .pipelineLayout = collection->pipelineLayout,
-                .multisampleState =
-                    {
-                        .samples = viewport->getSamples(),
-                    },
                 .colorBlend =
                     {
                         .attachmentCount = 1,

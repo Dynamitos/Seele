@@ -6,23 +6,18 @@
 #include "Graphics/Query.h"
 #include "Graphics/RenderPass/BasePass.h"
 #include "Graphics/RenderPass/CachedDepthPass.h"
-#include "Graphics/RenderPass/DebugPass.h"
 #include "Graphics/RenderPass/DepthCullingPass.h"
 #include "Graphics/RenderPass/LightCullingPass.h"
 #include "Graphics/RenderPass/RenderGraphResources.h"
-#include "Graphics/RenderPass/SkyboxRenderPass.h"
 #include "Graphics/RenderPass/VisibilityPass.h"
 #include "System/CameraUpdater.h"
 #include "System/LightGather.h"
 #include "System/MeshUpdater.h"
 #include "Window/Window.h"
 #include <fstream>
+#include <thread>
 
 using namespace Seele;
-
-bool usePositionOnly = false;
-bool useDepthCulling = false;
-bool useLightCulling = false;
 
 GameView::GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo& createInfo, std::string dllPath)
     : View(graphics, window, createInfo, "Game"), scene(new Scene(graphics)), gameInterface(dllPath) {
@@ -32,48 +27,8 @@ GameView::GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreate
     renderGraph.addPass(new VisibilityPass(graphics, scene));
     renderGraph.addPass(new LightCullingPass(graphics, scene));
     renderGraph.addPass(new BasePass(graphics, scene));
-    renderGraph.addPass(new DebugPass(graphics, scene));
-    //    renderGraph.addPass(new SkyboxRenderPass(graphics, scene));
     renderGraph.setViewport(viewport);
     renderGraph.createRenderPass();
-    queryThread = std::thread([&]() {
-        PRenderGraphResources res = renderGraph.getResources();
-        Gfx::PPipelineStatisticsQuery cachedQuery = res->requestQuery("CACHED_QUERY");
-        Gfx::PPipelineStatisticsQuery depthQuery = res->requestQuery("DEPTH_QUERY");
-        Gfx::PPipelineStatisticsQuery baseQuery = res->requestQuery("BASEPASS_QUERY");
-        Gfx::PPipelineStatisticsQuery lightCullQuery = res->requestQuery("LIGHTCULL_QUERY");
-        Gfx::PPipelineStatisticsQuery visibilityQuery = res->requestQuery("VISIBILITY_QUERY");
-        Gfx::PTimestampQuery timeQuery = res->requestTimestampQuery("TIMESTAMP");
-        std::ofstream stats("stats.csv");
-        stats << "RelTime,"
-              << "CachedIAV,CachedIAP,CachedVS,CachedClipInv,CachedClipPrim,CachedFS,CachedCS,CachedTS,CachedMS,"
-              << "DepthIAV,DepthIAP,DepthVS,DepthClipInv,DepthClipPrim,DepthFS,DepthCS,DepthTS,DepthMS,"
-              << "BaseIAV,BaseIAP,BaseVS,BaseClipInv,BaseClipPrim,BaseFS,BaseCS,BaseTS,BaseMS,"
-              << "LightCullIAV,LightCullIAP,LightCullVS,LightCullClipInv,LightCullClipPrim,LightCullFS,LightCullCS,LightCullTS,LightCullMS,"
-              << "VisibilityIAV,VisibilityIAP,VisibilityVS,VisibilityClipInv,VisibilityClipPrim,VisibilityFS,VisibilityCS,VisibilityTS,"
-                 "VisibilityMS,"
-              << "CACHED,MIPGEN,DEPTHCULL,VISIBILITY,LIGHTCULL,BASE" << std::endl;
-        std::chrono::nanoseconds start = std::chrono::nanoseconds(0);
-        while (true) {
-            auto timestamps = timeQuery->getResults();
-            auto cachedResults = cachedQuery->getResults();
-            auto depthResults = depthQuery->getResults();
-            auto baseResults = baseQuery->getResults();
-            auto lightCullResults = lightCullQuery->getResults();
-            auto visiblityResults = visibilityQuery->getResults();
-            if (start.count() == 0) {
-                start = timestamps[0].time;
-            }
-            stats << (timestamps[0].time - start).count() << "," << cachedResults << depthResults << baseResults << lightCullResults
-                  << visiblityResults;
-            stats << fmt::format("{},{},{},{},{},{}", (timestamps[1].time - timestamps[0].time).count(),
-                                 (timestamps[2].time - timestamps[1].time).count(), (timestamps[3].time - timestamps[2].time).count(),
-                                 (timestamps[4].time - timestamps[3].time).count(), (timestamps[5].time - timestamps[4].time).count(),
-                                 (timestamps[6].time - timestamps[5].time).count())
-                  << std::endl;
-            stats.flush();
-        }
-    });
 }
 
 GameView::~GameView() {}
@@ -127,18 +82,6 @@ void GameView::reloadGame() {
 
 void GameView::keyCallback(KeyCode code, InputAction action, KeyModifier modifier) {
     keyboardSystem->keyCallback(code, action, modifier);
-    if (code == KeyCode::KEY_P && action == InputAction::RELEASE) {
-        usePositionOnly = !usePositionOnly;
-        std::cout << "Use Pos only " << usePositionOnly << std::endl;
-    }
-    if (code == KeyCode::KEY_O && action == InputAction::RELEASE) {
-        useDepthCulling = !useDepthCulling;
-        std::cout << "Use Depth Culling " << useDepthCulling << std::endl;
-    }
-    if (code == KeyCode::KEY_L && action == InputAction::RELEASE) {
-        useLightCulling = !useLightCulling;
-        std::cout << "Use Light Culling " << useLightCulling << std::endl;
-    }
 }
 
 void GameView::mouseMoveCallback(double xPos, double yPos) { keyboardSystem->mouseCallback(xPos, yPos); }

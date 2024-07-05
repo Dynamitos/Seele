@@ -150,14 +150,9 @@ Array<Gfx::Timestamp> TimestampQuery::getResults() {
     tail = (tail + 1) % 512;
     Array<Gfx::Timestamp> res;
     for (uint64 i = 0; i < numTimestamps; ++i) {
-        if (results[i] < lastMeasure)
-        {
-            wrapping += 1ull << graphics->getTimestampValidBits();
-        }
-        lastMeasure = results[i];
         res.add(Gfx::Timestamp{
             .name = pendingTimestamps[firstQuery + i],
-            .time = std::chrono::nanoseconds(uint64((results[i] + wrapping) * graphics->getTimestampPeriod())),
+            .time = uint64((results[i] + wrapping) * graphics->getTimestampPeriod()),
         });
     }
     return res;

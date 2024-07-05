@@ -17,7 +17,9 @@ class BasePass : public RenderPass {
     virtual void createRenderPass() override;
 
   private:
+    Gfx::RenderTargetAttachment msColorAttachment;
     Gfx::RenderTargetAttachment colorAttachment;
+    Gfx::RenderTargetAttachment msDepthAttachment;
     Gfx::RenderTargetAttachment depthAttachment;
     Gfx::RenderTargetAttachment visibilityAttachment;
     Gfx::PShaderBuffer oLightIndexList;
@@ -29,7 +31,9 @@ class BasePass : public RenderPass {
     Gfx::PDescriptorSet transparentCulling;
 
     // use a different texture here so we can do multisampling
+    Gfx::OTexture2D msBasePassDepth;
     Gfx::OTexture2D basePassDepth;
+    Gfx::OTexture2D msBasePassColor;
 
     // used for transparency sorting
     Vector cameraPos;
@@ -43,6 +47,32 @@ class BasePass : public RenderPass {
     Gfx::PTimestampQuery timestamps;
 
     Gfx::PShaderBuffer cullingBuffer;
+
+    // Debug rendering
+    Gfx::OVertexInput debugVertexInput;
+    Gfx::OVertexBuffer debugVertices;
+    Gfx::OVertexShader debugVertexShader;
+    Gfx::OFragmentShader debugFragmentShader;
+    Gfx::PGraphicsPipeline debugPipeline;
+    Gfx::OPipelineLayout debugPipelineLayout;
+
+    // Skybox
+    Gfx::ODescriptorLayout skyboxDataLayout;
+    Gfx::PDescriptorSet skyboxDataSet;
+    Gfx::ODescriptorLayout textureLayout;
+    Gfx::PDescriptorSet textureSet;
+    Gfx::OVertexShader vertexShader;
+    Gfx::OFragmentShader fragmentShader;
+    Gfx::OPipelineLayout pipelineLayout;
+    Gfx::PGraphicsPipeline pipeline;
+    Gfx::OSampler skyboxSampler;
+    struct SkyboxData {
+        Matrix4 transformMatrix;
+        Vector fogColor;
+        float blendFactor;
+    } skyboxData;
+    Gfx::OUniformBuffer skyboxBuffer;
+    Component::Skybox skybox;
 };
 DEFINE_REF(BasePass)
 } // namespace Seele

@@ -51,7 +51,7 @@ class PipelineStatisticsQuery {
 DEFINE_REF(PipelineStatisticsQuery)
 struct Timestamp {
     std::string name;
-    std::chrono::nanoseconds time;
+    uint64 time;
 };
 class TimestampQuery {
   public:

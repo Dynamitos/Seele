@@ -1,6 +1,11 @@
 #include "ThreadPool.h"
+#include "MinimalEngine.h"
 
 using namespace Seele;
+
+Globals globals;
+
+Globals& Seele::getGlobals() { return globals; }
 
 ThreadPool::ThreadPool(uint32 numWorkers) {
     for (uint32 i = 0; i < numWorkers; ++i) {

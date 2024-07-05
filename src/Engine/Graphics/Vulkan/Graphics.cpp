@@ -46,7 +46,10 @@ void vkCmdDrawMeshTasksIndirectEXT(VkCommandBuffer commandBuffer, VkBuffer buffe
 }
 
 VkResult vkSetDebugUtilsObjectNameEXT(VkDevice device, const VkDebugUtilsObjectNameInfoEXT* pNameInfo) {
-    return setDebugUtilsObjectName(device, pNameInfo);
+    if (setDebugUtilsObjectName != nullptr) {
+        return setDebugUtilsObjectName(device, pNameInfo);
+    }
+    return VK_SUCCESS;
 }
 
 VkResult vkCreateAccelerationStructureKHR(VkDevice device, const VkAccelerationStructureCreateInfoKHR* pCreateInfo,
@@ -139,7 +142,9 @@ void Graphics::beginRenderPass(Gfx::PRenderPass renderPass) {
     getGraphicsCommands()->getCommands()->beginRenderPass(rp, framebuffer);
 }
 
-void Graphics::endRenderPass() { getGraphicsCommands()->getCommands()->endRenderPass(); }
+void Graphics::endRenderPass() {
+    getGraphicsCommands()->getCommands()->endRenderPass();
+}
 
 void Graphics::waitDeviceIdle() { vkDeviceWaitIdle(handle); }
 

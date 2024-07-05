@@ -79,7 +79,7 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Arra
             .pNext = nullptr,
             .flags = 0,
             .format = cast(resolveAttachment.getFormat()),
-            .samples = (VkSampleCountFlagBits)resolveAttachment.getNumSamples(),
+            .samples = (VkSampleCountFlagBits)resolveAttachment.getTexture()->getNumSamples(),
             .loadOp = cast(resolveAttachment.getLoadOp()),
             .storeOp = cast(resolveAttachment.getStoreOp()),
             .stencilLoadOp = cast(resolveAttachment.getStencilLoadOp()),
@@ -143,6 +143,10 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Arra
             .initialLayout = cast(layout.depthResolveAttachment.getInitialLayout()),
             .finalLayout = cast(layout.depthResolveAttachment.getFinalLayout()),
         };
+        VkClearValue& clearValue = clearValues.add();
+        if (attachments.back().loadOp == VK_ATTACHMENT_LOAD_OP_CLEAR) {
+            clearValue = cast(layout.depthResolveAttachment.clear);
+        }
         depthResolveRef = {
             .sType = VK_STRUCTURE_TYPE_ATTACHMENT_REFERENCE_2,
             .pNext = nullptr,
@@ -214,14 +218,22 @@ uint32 RenderPass::getFramebufferHash() {
         PTexture2D tex = colorAttachment.getTexture().cast<Texture2D>();
         description.colorAttachments[description.numColorAttachments++] = tex->getView();
     }
+    for (auto& resolveAttachment : layout.resolveAttachments) {
+        PTexture2D tex = resolveAttachment.getTexture().cast<Texture2D>();
+        description.resolveAttachments[description.numResolveAttachments++] = tex->getView(); 
+    }
     if (layout.depthAttachment.getTexture() != nullptr) {
         PTexture2D tex = layout.depthAttachment.getTexture().cast<Texture2D>();
         description.depthAttachment = tex->getView();
     }
+    if (layout.depthResolveAttachment.getTexture() != nullptr) {
+        PTexture2D tex = layout.depthResolveAttachment.getTexture().cast<Texture2D>();
+        description.depthResolveAttachment = tex->getView();
+    }
     return CRC::Calculate(&description, sizeof(FramebufferDescription), CRC::CRC_32());
 }
 
-void Vulkan::RenderPass::endRenderPass() {
+void RenderPass::endRenderPass() {
     for (auto& inputAttachment : layout.inputAttachments) {
         PTexture2D tex = inputAttachment.getTexture().cast<Texture2D>();
         tex->setLayout(inputAttachment.getFinalLayout());
@@ -230,8 +242,16 @@ void Vulkan::RenderPass::endRenderPass() {
         PTexture2D tex = colorAttachment.getTexture().cast<Texture2D>();
         tex->setLayout(colorAttachment.getFinalLayout());
     }
+    for (auto& resolveAttachment : layout.resolveAttachments) {
+        PTexture2D tex = resolveAttachment.getTexture().cast<Texture2D>();
+        tex->setLayout(resolveAttachment.getFinalLayout());
+    }
     if (layout.depthAttachment.getTexture() != nullptr) {
         PTexture2D tex = layout.depthAttachment.getTexture().cast<Texture2D>();
         tex->setLayout(layout.depthAttachment.getFinalLayout());
+    }
+    if (layout.depthResolveAttachment.getTexture() != nullptr) {
+        PTexture2D tex = layout.depthResolveAttachment.getTexture().cast<Texture2D>();
+        tex->setLayout(layout.depthResolveAttachment.getFinalLayout());
     }
 }

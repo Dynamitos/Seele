@@ -41,7 +41,6 @@ class LightCullingPass : public RenderPass {
 
     Gfx::OShaderBuffer frustumBuffer;
     Gfx::OUniformBuffer dispatchParamsBuffer;
-    Gfx::OUniformBuffer viewParamsBuffer;
     Gfx::ODescriptorLayout dispatchParamsLayout;
     Gfx::PDescriptorSet dispatchParamsSet;
     Gfx::OComputeShader frustumShader;

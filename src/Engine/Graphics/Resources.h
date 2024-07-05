@@ -3,11 +3,6 @@
 #include "Enums.h"
 #include "Math/Math.h"
 
-
-#ifndef ENABLE_VALIDATION
-#define ENABLE_VALIDATION 1
-#endif
-
 namespace Seele {
 DECLARE_REF(Material)
 namespace Gfx {

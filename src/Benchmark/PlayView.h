@@ -2,10 +2,9 @@
 #include "Window/GameView.h"
 
 namespace Seele {
-namespace Editor {
 class PlayView : public GameView {
   public:
-    PlayView(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo& createInfo, std::string dllPath);
+    PlayView(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo& createInfo, std::string dllPath, bool useMeshCulling);
     virtual ~PlayView();
     virtual void beginUpdate() override;
     virtual void update() override;
@@ -17,7 +16,7 @@ class PlayView : public GameView {
     virtual void keyCallback(Seele::KeyCode code, Seele::InputAction action, Seele::KeyModifier modifier) override;
 
   private:
+    std::thread queryThread;
 };
 DECLARE_REF(PlayView)
-} // namespace Editor
 } // namespace Seele

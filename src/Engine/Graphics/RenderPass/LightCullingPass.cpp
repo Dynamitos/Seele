@@ -8,8 +8,6 @@
 
 using namespace Seele;
 
-extern bool useLightCulling;
-
 LightCullingPass::LightCullingPass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics, scene) {}
 
 LightCullingPass::~LightCullingPass() {}
@@ -25,7 +23,13 @@ void LightCullingPass::beginFrame(const Component::Camera& cam) {
                                         Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT);
     uint32 reset = 0;
     ShaderBufferCreateInfo counterReset = {
-        .sourceData = {.size = sizeof(uint32), .data = (uint8*)&reset, .owner = Gfx::QueueType::COMPUTE}};
+        .sourceData =
+            {
+                .size = sizeof(uint32),
+                .data = (uint8*)&reset,
+                .owner = Gfx::QueueType::COMPUTE,
+            },
+    };
     oLightIndexCounter->rotateBuffer(sizeof(uint32));
     oLightIndexCounter->updateContents(counterReset);
     tLightIndexCounter->rotateBuffer(sizeof(uint32));
@@ -42,7 +46,10 @@ void LightCullingPass::beginFrame(const Component::Camera& cam) {
 void LightCullingPass::render() {
     query->beginQuery();
     timestamps->write(Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT, "LIGHTCULL");
-    depthAttachment->transferOwnership(Gfx::QueueType::COMPUTE);
+    oLightGrid->pipelineBarrier(Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, Gfx::SE_ACCESS_SHADER_WRITE_BIT,
+                                Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
+    tLightGrid->pipelineBarrier(Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, Gfx::SE_ACCESS_SHADER_WRITE_BIT,
+                                Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
     cullingDescriptorSet->updateTexture(0, depthAttachment);
     cullingDescriptorSet->updateBuffer(1, oLightIndexCounter);
     cullingDescriptorSet->updateBuffer(2, tLightIndexCounter);
@@ -52,7 +59,7 @@ void LightCullingPass::render() {
     cullingDescriptorSet->updateTexture(6, Gfx::PTexture2D(tLightGrid));
     cullingDescriptorSet->writeChanges();
     Gfx::OComputeCommand computeCommand = graphics->createComputeCommand("CullingCommand");
-    if (useLightCulling) {
+    if (getGlobals().useLightCulling) {
         computeCommand->bindPipeline(cullingEnabledPipeline);
     } else {
         computeCommand->bindPipeline(cullingPipeline);
@@ -84,11 +91,17 @@ void LightCullingPass::publishOutputs() {
     dispatchParams.numThreadGroups = numThreadGroups;
     dispatchParams.numThreads = numThreadGroups * glm::uvec3(BLOCK_SIZE, BLOCK_SIZE, 1);
     dispatchParamsBuffer = graphics->createUniformBuffer(UniformBufferCreateInfo{
-        .sourceData = {.size = sizeof(DispatchParams), .data = (uint8*)&dispatchParams, .owner = Gfx::QueueType::COMPUTE},
+        .sourceData =
+            {
+                .size = sizeof(DispatchParams),
+                .data = (uint8*)&dispatchParams,
+                .owner = Gfx::QueueType::COMPUTE,
+            },
         .dynamic = false,
         .name = "DispatchParams",
     });
-
+    dispatchParamsBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
+                                          Gfx::SE_ACCESS_UNIFORM_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
     dispatchParamsSet = dispatchParamsLayout->allocateDescriptorSet();
     dispatchParamsSet->updateBuffer(0, dispatchParamsBuffer);
     dispatchParamsSet->updateBuffer(1, frustumBuffer);
@@ -209,6 +222,10 @@ void LightCullingPass::publishOutputs() {
     };
     oLightGrid = graphics->createTexture2D(textureInfo);
     tLightGrid = graphics->createTexture2D(textureInfo);
+    oLightGrid->changeLayout(Gfx::SE_IMAGE_LAYOUT_GENERAL, Gfx::SE_ACCESS_NONE, Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                             Gfx::SE_ACCESS_SHADER_READ_BIT | Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
+    tLightGrid->changeLayout(Gfx::SE_IMAGE_LAYOUT_GENERAL, Gfx::SE_ACCESS_NONE, Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                             Gfx::SE_ACCESS_SHADER_READ_BIT | Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 
     resources->registerTextureOutput("LIGHTCULLING_OLIGHTGRID", Gfx::PTexture2D(oLightGrid));
     resources->registerTextureOutput("LIGHTCULLING_TLIGHTGRID", Gfx::PTexture2D(tLightGrid));
@@ -230,6 +247,8 @@ void LightCullingPass::setupFrustums() {
     glm::uvec3 numThreadGroups = glm::ceil(glm::vec3(numThreads.x / (float)BLOCK_SIZE, numThreads.y / (float)BLOCK_SIZE, 1));
 
     RenderPass::beginFrame(Component::Camera());
+    viewParamsBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
+                                      Gfx::SE_ACCESS_UNIFORM_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
     dispatchParams.numThreads = numThreads;
     dispatchParams.numThreadGroups = numThreadGroups;
 

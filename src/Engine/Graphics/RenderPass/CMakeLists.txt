@@ -4,8 +4,6 @@ target_sources(Engine
         BasePass.cpp
         CachedDepthPass.h
         CachedDepthPass.cpp
-        DebugPass.h
-        DebugPass.cpp
         DepthCullingPass.h
         DepthCullingPass.cpp
         LightCullingPass.h
@@ -17,8 +15,6 @@ target_sources(Engine
         RenderGraphResources.cpp
         RenderPass.h
         RenderPass.cpp
-        SkyboxRenderPass.h
-        SkyboxRenderPass.cpp
         TextPass.h
         TextPass.cpp
         UIPass.h
@@ -31,14 +27,12 @@ target_sources(Engine
         FILES
             BasePass.h
             CachedDepthPass.h
-            DebugPass.h
             DepthCullingPass.h
             LightCullingPass.h
             RayTracingPass.h
             RenderGraph.h
             RenderGraphResources.h
             RenderPass.h
-            SkyboxRenderPass.h
             TextPass.h
             UIPass.h
             VisibilityPass.h)

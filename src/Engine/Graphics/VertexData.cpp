@@ -211,198 +211,195 @@ void VertexData::createDescriptors() {
 }
 
 void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet> loadedMeshlets) {
-        std::unique_lock l(vertexDataLock);
-        meshlets.reserve(meshlets.size() + loadedMeshlets.size());
-        vertexIndices.reserve(vertexIndices.size() + loadedMeshlets.size() * Gfx::numVerticesPerMeshlet);
-        primitiveIndices.reserve(primitiveIndices.size() + loadedMeshlets.size() * Gfx::numPrimitivesPerMeshlet * 3);
-        uint32 meshletOffset = meshlets.size();
-        AABB meshAABB;
-        for (uint32 i = 0; i < loadedMeshlets.size(); ++i) {
-            Meshlet& m = loadedMeshlets[i];
-            meshAABB = meshAABB.combine(m.boundingBox);
-            uint32 vertexOffset = vertexIndices.size();
-            vertexIndices.resize(vertexOffset + m.numVertices);
-            std::memcpy(vertexIndices.data() + vertexOffset, m.uniqueVertices, m.numVertices * sizeof(uint32));
-            uint32 primitiveOffset = primitiveIndices.size();
-            primitiveIndices.resize(primitiveOffset + (m.numPrimitives * 3));
-            std::memcpy(primitiveIndices.data() + primitiveOffset, m.primitiveLayout, m.numPrimitives * 3 * sizeof(uint8));
-            meshlets.add(MeshletDescription{
-                .bounding = m.boundingBox, //.toSphere(),
-                .vertexCount = m.numVertices,
-                .primitiveCount = m.numPrimitives,
-                .vertexOffset = vertexOffset,
-                .primitiveOffset = primitiveOffset,
-                .color = Vector((float)rand() / RAND_MAX, (float)rand() / RAND_MAX, (float)rand() / RAND_MAX),
-                .indicesOffset = (uint32)meshOffsets[id],
-            });
-        }
-        meshData[id] = MeshData{
-            .bounding = meshAABB, //.toSphere(),
-            .numMeshlets = (uint32)loadedMeshlets.size(),
-            .meshletOffset = meshletOffset,
-            .firstIndex = (uint32)indices.size(),
-            .numIndices = (uint32)loadedIndices.size(),
-        };
+    std::unique_lock l(vertexDataLock);
+    meshlets.reserve(meshlets.size() + loadedMeshlets.size());
+    vertexIndices.reserve(vertexIndices.size() + loadedMeshlets.size() * Gfx::numVerticesPerMeshlet);
+    primitiveIndices.reserve(primitiveIndices.size() + loadedMeshlets.size() * Gfx::numPrimitivesPerMeshlet * 3);
+    uint32 meshletOffset = meshlets.size();
+    AABB meshAABB;
+    for (uint32 i = 0; i < loadedMeshlets.size(); ++i) {
+        Meshlet& m = loadedMeshlets[i];
+        meshAABB = meshAABB.combine(m.boundingBox);
+        uint32 vertexOffset = vertexIndices.size();
+        vertexIndices.resize(vertexOffset + m.numVertices);
+        std::memcpy(vertexIndices.data() + vertexOffset, m.uniqueVertices, m.numVertices * sizeof(uint32));
+        uint32 primitiveOffset = primitiveIndices.size();
+        primitiveIndices.resize(primitiveOffset + (m.numPrimitives * 3));
+        std::memcpy(primitiveIndices.data() + primitiveOffset, m.primitiveLayout, m.numPrimitives * 3 * sizeof(uint8));
+        meshlets.add(MeshletDescription{
+            .bounding = m.boundingBox, //.toSphere(),
+            .vertexCount = m.numVertices,
+            .primitiveCount = m.numPrimitives,
+            .vertexOffset = vertexOffset,
+            .primitiveOffset = primitiveOffset,
+            .color = Vector((float)rand() / RAND_MAX, (float)rand() / RAND_MAX, (float)rand() / RAND_MAX),
+            .indicesOffset = (uint32)meshOffsets[id],
+        });
+    }
+    meshData[id] = MeshData{
+        .bounding = meshAABB, //.toSphere(),
+        .numMeshlets = (uint32)loadedMeshlets.size(),
+        .meshletOffset = meshletOffset,
+        .firstIndex = (uint32)indices.size(),
+        .numIndices = (uint32)loadedIndices.size(),
+    };
 
-        indices.resize(indices.size() + loadedIndices.size());
-        std::memcpy(indices.data() + meshData[id].firstIndex, loadedIndices.data(), loadedIndices.size() * sizeof(uint32));
+    indices.resize(indices.size() + loadedIndices.size());
+    std::memcpy(indices.data() + meshData[id].firstIndex, loadedIndices.data(), loadedIndices.size() * sizeof(uint32));
 }
 
 void VertexData::commitMeshes() {
-        indexBuffer = graphics->createIndexBuffer(IndexBufferCreateInfo{
-            .sourceData =
-                {
-                    .size = sizeof(uint32) * indices.size(),
-                    .data = (uint8*)indices.data(),
-                },
-            .indexType = Gfx::SE_INDEX_TYPE_UINT32,
-            .name = "IndexBuffer",
-        });
-        meshletBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
-            .sourceData =
-                {
-                    .size = sizeof(MeshletDescription) * meshlets.size(),
-                    .data = (uint8*)meshlets.data(),
-                },
-            .numElements = meshlets.size(),
-            .dynamic = false,
-            .name = "MeshletBuffer",
-        });
-        vertexIndicesBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
-            .sourceData =
-                {
-                    .size = sizeof(uint32) * vertexIndices.size(),
-                    .data = (uint8*)vertexIndices.data(),
-                },
-            .numElements = vertexIndices.size(),
-            .dynamic = false,
-            .name = "VertexIndicesBuffer",
-        });
+    indexBuffer = graphics->createIndexBuffer(IndexBufferCreateInfo{
+        .sourceData =
+            {
+                .size = sizeof(uint32) * indices.size(),
+                .data = (uint8*)indices.data(),
+            },
+        .indexType = Gfx::SE_INDEX_TYPE_UINT32,
+        .name = "IndexBuffer",
+    });
+    meshletBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
+        .sourceData =
+            {
+                .size = sizeof(MeshletDescription) * meshlets.size(),
+                .data = (uint8*)meshlets.data(),
+            },
+        .numElements = meshlets.size(),
+        .dynamic = false,
+        .name = "MeshletBuffer",
+    });
+    vertexIndicesBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
+        .sourceData =
+            {
+                .size = sizeof(uint32) * vertexIndices.size(),
+                .data = (uint8*)vertexIndices.data(),
+            },
+        .numElements = vertexIndices.size(),
+        .dynamic = false,
+        .name = "VertexIndicesBuffer",
+    });
 
-        primitiveIndicesBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
-            .sourceData =
-                {
-                    .size = sizeof(uint8) * primitiveIndices.size(),
-                    .data = (uint8*)primitiveIndices.data(),
-                },
-            .numElements = primitiveIndices.size(),
-            .dynamic = false,
-            .name = "PrimitiveIndicesBuffer",
-        });
+    primitiveIndicesBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
+        .sourceData =
+            {
+                .size = sizeof(uint8) * primitiveIndices.size(),
+                .data = (uint8*)primitiveIndices.data(),
+            },
+        .numElements = primitiveIndices.size(),
+        .dynamic = false,
+        .name = "PrimitiveIndicesBuffer",
+    });
 }
 
 MeshId VertexData::allocateVertexData(uint64 numVertices) {
-        std::unique_lock l(vertexDataLock);
-        MeshId res{idCounter++};
-        meshOffsets.add(head);
-        meshVertexCounts.add(numVertices);
-        meshData.add({});
-        head += numVertices;
-        if (head > verticesAllocated) {
-            verticesAllocated = std::max(head, verticesAllocated + NUM_DEFAULT_ELEMENTS);
-            resizeBuffers();
-        }
-        return res;
+    std::unique_lock l(vertexDataLock);
+    MeshId res{idCounter++};
+    meshOffsets.add(head);
+    meshVertexCounts.add(numVertices);
+    meshData.add({});
+    head += numVertices;
+    if (head > verticesAllocated) {
+        verticesAllocated = std::max(head, verticesAllocated + NUM_DEFAULT_ELEMENTS);
+        resizeBuffers();
+    }
+    return res;
 }
 
-uint64 VertexData::getMeshOffset(MeshId id) {
-        return meshOffsets[id]; }
+uint64 VertexData::getMeshOffset(MeshId id) { return meshOffsets[id]; }
 
-uint64 VertexData::getMeshVertexCount(MeshId id) {
-        return meshVertexCounts[id]; }
+uint64 VertexData::getMeshVertexCount(MeshId id) { return meshVertexCounts[id]; }
 
 List<VertexData*> vertexDataList;
 
-List<VertexData*> VertexData::getList() {
-        return vertexDataList; }
+List<VertexData*> VertexData::getList() { return vertexDataList; }
 
 VertexData* VertexData::findByTypeName(std::string name) {
-        for (auto vd : vertexDataList) {
-            if (vd->getTypeName() == name) {
-                return vd;
-            }
+    for (auto vd : vertexDataList) {
+        if (vd->getTypeName() == name) {
+            return vd;
         }
-        return nullptr;
+    }
+    return nullptr;
 }
 
 void VertexData::init(Gfx::PGraphics _graphics) {
-        graphics = _graphics;
-        verticesAllocated = NUM_DEFAULT_ELEMENTS;
-        instanceDataLayout = graphics->createDescriptorLayout("pScene");
+    graphics = _graphics;
+    verticesAllocated = NUM_DEFAULT_ELEMENTS;
+    instanceDataLayout = graphics->createDescriptorLayout("pScene");
 
-        // instanceData
-        instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-            .binding = 0,
-            .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-        });
-        // meshData
-        instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-            .binding = 1,
-            .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-        });
-        // meshletData
-        instanceDataLayout->addDescriptorBinding(
-            Gfx::DescriptorBinding{.binding = 2, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
-        // primitiveIndices
-        instanceDataLayout->addDescriptorBinding(
-            Gfx::DescriptorBinding{.binding = 3, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
-        // vertexIndices
-        instanceDataLayout->addDescriptorBinding(
-            Gfx::DescriptorBinding{.binding = 4, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
-        // cullingOffset
-        instanceDataLayout->addDescriptorBinding(
-            Gfx::DescriptorBinding{.binding = 5, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
-        // cullingInfos
-        instanceDataLayout->addDescriptorBinding(
-            Gfx::DescriptorBinding{.binding = 6, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
+    // instanceData
+    instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .binding = 0,
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+    });
+    // meshData
+    instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .binding = 1,
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+    });
+    // meshletData
+    instanceDataLayout->addDescriptorBinding(
+        Gfx::DescriptorBinding{.binding = 2, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
+    // primitiveIndices
+    instanceDataLayout->addDescriptorBinding(
+        Gfx::DescriptorBinding{.binding = 3, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
+    // vertexIndices
+    instanceDataLayout->addDescriptorBinding(
+        Gfx::DescriptorBinding{.binding = 4, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
+    // cullingOffset
+    instanceDataLayout->addDescriptorBinding(
+        Gfx::DescriptorBinding{.binding = 5, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
+    // cullingInfos
+    instanceDataLayout->addDescriptorBinding(
+        Gfx::DescriptorBinding{.binding = 6, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
 
-        instanceDataLayout->create();
+    instanceDataLayout->create();
 
-        cullingOffsetBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
-            .dynamic = true,
-            .name = "MeshletOffset",
-        });
-        instanceBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
-            .dynamic = true,
-            .name = "InstanceBuffer",
-        });
-        instanceMeshDataBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
-            .dynamic = true,
-            .name = "MeshDataBuffer",
-        });
+    cullingOffsetBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
+        .dynamic = true,
+        .name = "MeshletOffset",
+    });
+    instanceBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
+        .dynamic = true,
+        .name = "InstanceBuffer",
+    });
+    instanceMeshDataBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
+        .dynamic = true,
+        .name = "MeshDataBuffer",
+    });
 
-        transparentInstanceDataBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
-            .dynamic = true,
-            .name = "TransparentInstanceBuffer",
-        });
-        transparentMeshDataBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
-            .dynamic = true,
-            .name = "TransparentMeshBuffer",
-        });
+    transparentInstanceDataBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
+        .dynamic = true,
+        .name = "TransparentInstanceBuffer",
+    });
+    transparentMeshDataBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
+        .dynamic = true,
+        .name = "TransparentMeshBuffer",
+    });
 
-        resizeBuffers();
-        graphics->getShaderCompiler()->registerVertexData(this);
+    resizeBuffers();
+    graphics->getShaderCompiler()->registerVertexData(this);
 }
 
 void VertexData::destroy() {
-        instanceBuffer = nullptr;
-        instanceMeshDataBuffer = nullptr;
-        instanceDataLayout = nullptr;
-        meshletBuffer = nullptr;
-        vertexIndicesBuffer = nullptr;
-        primitiveIndicesBuffer = nullptr;
-        indexBuffer = nullptr;
-        meshData.clear();
-        materialData.clear();
+    instanceBuffer = nullptr;
+    instanceMeshDataBuffer = nullptr;
+    instanceDataLayout = nullptr;
+    meshletBuffer = nullptr;
+    vertexIndicesBuffer = nullptr;
+    primitiveIndicesBuffer = nullptr;
+    indexBuffer = nullptr;
+    meshData.clear();
+    materialData.clear();
 }
 
 VertexData::CullingMapping VertexData::getCullingMapping(entt::entity id, uint32 meshIndex, uint32 numMeshlets) {
-        MeshMapping key = MeshMapping{.id = id, .meshId = meshIndex};
-        if (!instanceIdMap.contains(key)) {
-            instanceIdMap[key] = CullingMapping{.instanceId = instanceCount++, .cullingOffset = uint32(meshletCount)};
-            meshletCount += numMeshlets;
-        }
-        return instanceIdMap[key];
+    MeshMapping key = MeshMapping{.id = id, .meshId = meshIndex};
+    if (!instanceIdMap.contains(key)) {
+        instanceIdMap[key] = CullingMapping{.instanceId = instanceCount++, .cullingOffset = uint32(meshletCount)};
+        meshletCount += numMeshlets;
+    }
+    return instanceIdMap[key];
 }
 
 VertexData::VertexData() : idCounter(0), head(0), verticesAllocated(0), dirty(false) {}

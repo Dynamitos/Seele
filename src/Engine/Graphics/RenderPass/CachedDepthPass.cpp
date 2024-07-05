@@ -3,9 +3,6 @@
 
 using namespace Seele;
 
-extern bool usePositionOnly;
-extern bool useDepthCulling;
-
 CachedDepthPass::CachedDepthPass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics, scene) {
     depthPrepassLayout = graphics->createPipelineLayout("CachedDepthLayout");
     depthPrepassLayout->addDescriptorLayout(viewParamsLayout);
@@ -43,7 +40,9 @@ CachedDepthPass::CachedDepthPass(Gfx::PGraphics graphics, PScene scene) : Render
 
 CachedDepthPass::~CachedDepthPass() {}
 
-void CachedDepthPass::beginFrame(const Component::Camera& cam) { RenderPass::beginFrame(cam); }
+void CachedDepthPass::beginFrame(const Component::Camera& cam) {
+    RenderPass::beginFrame(cam);
+}
 
 void CachedDepthPass::render() {
     query->beginQuery();
@@ -53,8 +52,8 @@ void CachedDepthPass::render() {
     Array<Gfx::ORenderCommand> commands;
 
     Gfx::ShaderPermutation permutation = graphics->getShaderCompiler()->getTemplate("CachedDepthPass");
-    permutation.setPositionOnly(usePositionOnly);
-    permutation.setDepthCulling(useDepthCulling);
+    permutation.setPositionOnly(getGlobals().usePositionOnly);
+    permutation.setDepthCulling(getGlobals().useDepthCulling);
     for (VertexData* vertexData : VertexData::getList()) {
         permutation.setVertexData(vertexData->getTypeName());
         vertexData->getInstanceDataSet()->updateBuffer(6, cullingBuffer);
@@ -79,10 +78,6 @@ void CachedDepthPass::render() {
                 .fragmentShader = collection->fragmentShader,
                 .renderPass = renderPass,
                 .pipelineLayout = collection->pipelineLayout,
-                .multisampleState =
-                    {
-                        .samples = viewport->getSamples(),
-                    },
                 .colorBlend =
                     {
                         .attachmentCount = 1,
@@ -96,10 +91,6 @@ void CachedDepthPass::render() {
                 .fragmentShader = collection->fragmentShader,
                 .renderPass = renderPass,
                 .pipelineLayout = collection->pipelineLayout,
-                .multisampleState =
-                    {
-                        .samples = viewport->getSamples(),
-                    },
                 .colorBlend =
                     {
                         .attachmentCount = 1,

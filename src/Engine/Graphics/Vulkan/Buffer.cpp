@@ -262,8 +262,20 @@ void Buffer::copyBuffer(uint64 src, uint64 dst) {
         .offset = 0,
         .size = buffers[src]->size,
     };
-    vkCmdPipelineBarrier(command->getHandle(), VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 1,
-                         &srcBarrier, 0, nullptr);
+    VkBufferMemoryBarrier clearBarrier = {
+        .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
+        .pNext = nullptr,
+        .srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
+        .dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
+        .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+        .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+        .buffer = buffers[dst]->buffer,
+        .offset = 0,
+        .size = buffers[dst]->size,
+    };
+    VkBufferMemoryBarrier srcBarriers[] = {srcBarrier, clearBarrier};
+    vkCmdPipelineBarrier(command->getHandle(), VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 2,
+                         srcBarriers, 0, nullptr);
     VkBufferCopy region = {
         .srcOffset = 0,
         .dstOffset = 0,

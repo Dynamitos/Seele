@@ -12,14 +12,14 @@ class TextureAsset : public Asset {
     virtual ~TextureAsset();
     virtual void save(ArchiveBuffer& buffer) const override;
     virtual void load(ArchiveBuffer& buffer) override;
-    void setTexture(Gfx::OTexture _texture);
     Gfx::PTexture getTexture() { return texture; }
+    void setTexture(Array<uint8> data) { ktxData = std::move(data); }
     uint32 getWidth();
     uint32 getHeight();
 
   private:
     Gfx::OTexture texture;
-    bool normalMap;
+    Array<uint8> ktxData;
     friend class TextureLoader;
 };
 DEFINE_REF(TextureAsset)

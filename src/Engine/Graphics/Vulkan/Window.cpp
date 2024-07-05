@@ -5,7 +5,6 @@
 #include "Resources.h"
 #include <GLFW/glfw3.h>
 
-
 using namespace Seele;
 using namespace Seele::Vulkan;
 
@@ -93,9 +92,9 @@ void Window::pollInput() { glfwPollEvents(); }
 
 void Window::beginFrame() {
     imageAvailableFences[currentSemaphoreIndex]->reset();
-    vkAcquireNextImageKHR(graphics->getDevice(), swapchain, std::numeric_limits<uint64>::max(),
-                          imageAvailableSemaphores[currentSemaphoreIndex]->getHandle(),
-                          imageAvailableFences[currentSemaphoreIndex]->getHandle(), &currentImageIndex);
+    VK_CHECK(vkAcquireNextImageKHR(graphics->getDevice(), swapchain, std::numeric_limits<uint64>::max(),
+                                   imageAvailableSemaphores[currentSemaphoreIndex]->getHandle(),
+                                   imageAvailableFences[currentSemaphoreIndex]->getHandle(), &currentImageIndex));
     imageAvailableFences[currentSemaphoreIndex]->submit();
     graphics->getGraphicsCommands()->getCommands()->waitForSemaphore(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
                                                                      imageAvailableSemaphores[currentSemaphoreIndex]);

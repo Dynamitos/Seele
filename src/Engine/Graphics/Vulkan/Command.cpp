@@ -141,7 +141,6 @@ void Command::checkFence() {
 }
 
 void Command::waitForCommand(uint32 timeout) {
-    pool->submitCommands();
     if (state == State::Begin) {
         // is already done
         return;

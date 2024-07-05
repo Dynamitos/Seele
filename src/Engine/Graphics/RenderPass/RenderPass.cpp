@@ -40,7 +40,9 @@ void RenderPass::beginFrame(const Component::Camera& cam) {
     viewParamsBuffer->rotateBuffer(sizeof(ViewParameter));
     viewParamsBuffer->updateContents(uniformUpdate);
     viewParamsBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
-                                      Gfx::SE_ACCESS_MEMORY_READ_BIT, Gfx::SE_PIPELINE_STAGE_ALL_COMMANDS_BIT);
+                                      Gfx::SE_ACCESS_UNIFORM_READ_BIT,
+                                      Gfx::SE_PIPELINE_STAGE_TASK_SHADER_BIT_EXT | Gfx::SE_PIPELINE_STAGE_MESH_SHADER_BIT_EXT |
+                                          Gfx::SE_PIPELINE_STAGE_VERTEX_SHADER_BIT | Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
     viewParamsLayout->reset();
     viewParamsSet = viewParamsLayout->allocateDescriptorSet();
     viewParamsSet->updateBuffer(0, viewParamsBuffer);

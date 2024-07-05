@@ -3,8 +3,6 @@
 
 using namespace Seele;
 
-extern bool resetVisibility;
-
 VisibilityPass::VisibilityPass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics, scene) {}
 
 VisibilityPass::~VisibilityPass() {}
