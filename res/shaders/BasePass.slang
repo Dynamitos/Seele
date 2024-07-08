@@ -1,7 +1,6 @@
 import Common;
 import LightEnv;
 import MaterialParameter;
-import MATERIAL_FILE_NAME;
 
 struct LightCullingData
 {
@@ -26,7 +25,7 @@ float4 fragmentMain(in FragmentParameter params) : SV_Target
     {
         result += pLightEnv.directionalLights[i].illuminate(lightingParams, brdf);
     }
-    for(uint i = 0; i < pLightEnv.numPointLights; ++i)
+    for(uint i = 0; i < lightCount; ++i)
     {
         uint lightIndex = pLightCullingData.lightIndexList[startOffset + i];
         result += pLightEnv.pointLights[lightIndex].illuminate(lightingParams, brdf);

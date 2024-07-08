@@ -1,6 +1,12 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
+#areas = pd.read_csv('build/s.csv')
+#
+#plot = areas.hist(column='area', bins=100)
+#plt.yscale('log')
+#plt.show()
+
 df = pd.read_csv('build/stats.csv')
 noculldf = pd.read_csv('build/statsNOCULL.csv')
 
@@ -59,4 +65,17 @@ nocullax.set_ylabel('Render Times (ms)')
 nocullax.legend()
 
 nocullfig.savefig('allnocull.png')
+
+combfig, combax = plt.subplots()
+
+combax.plot(scaled_reltime, scaled_FrameTime, label='Culling Frametime')
+combax.plot(nocullscaled_reltime, nocullscaled_FrameTime, label='No Culling Frametime')
+
+combax.set_xlabel('Application Time (ms)')
+combax.set_ylabel('Render Times (ms)')
+
+combax.legend()
+
+combfig.savefig('combined.png')
+
 

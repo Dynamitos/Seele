@@ -49,6 +49,23 @@ struct FragmentParameter
 		return result;
 	}
 #endif
+    static FragmentParameter interpolate(FragmentParameter f0, FragmentParameter f1, FragmentParameter f2, float3 barycentricCoords)
+    {
+        FragmentParameter result;
+        result.position_CS = f0.position_CS * barycentricCoords.x + f1.position_CS * barycentricCoords.y + f2.position_CS * barycentricCoords.z;
+#ifndef POS_ONLY
+	    result.normal_WS = f0.normal_WS * barycentricCoords.x + f1.normal_WS * barycentricCoords.y + f2.normal_WS * barycentricCoords.z;
+	    result.tangent_WS = f0.tangent_WS * barycentricCoords.x + f1.tangent_WS * barycentricCoords.y + f2.tangent_WS * barycentricCoords.z;
+	    result.biTangent_WS = f0.biTangent_WS * barycentricCoords.x + f1.biTangent_WS * barycentricCoords.y + f2.biTangent_WS * barycentricCoords.z;
+	    result.position_WS = f0.position_WS * barycentricCoords.x + f1.position_WS * barycentricCoords.y + f2.position_WS * barycentricCoords.z;
+	    result.vertexColor = f0.vertexColor * barycentricCoords.x + f1.vertexColor * barycentricCoords.y + f2.vertexColor * barycentricCoords.z;
+		for(uint i = 0; i < MAX_TEXCOORDS; ++i)
+        {
+            result.texCoords[i] = f0.texCoords[i] * barycentricCoords.x + f1.texCoords[i] * barycentricCoords.y + f2.texCoords[i] * barycentricCoords.z;
+        }
+#endif
+        return result;
+    }
 };
 
 // data passed to visibility render

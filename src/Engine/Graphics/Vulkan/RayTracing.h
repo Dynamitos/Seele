@@ -16,7 +16,7 @@ class BottomLevelAS : public Gfx::BottomLevelAS {
     PGraphics graphics;
     VkAccelerationStructureKHR handle;
     OBufferAllocation buffer;
-
+    PMaterialInstance material;
 };
 DEFINE_REF(BottomLevelAS)
 class TopLevelAS : public Gfx::TopLevelAS {

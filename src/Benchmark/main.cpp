@@ -23,7 +23,7 @@ int main(int argc, char** argv) {
         useDepthCulling = false;
     }
 
-    std::filesystem::path binaryPath = "MeshShadingDemo.dll";
+    std::filesystem::path binaryPath = "C:/Users/Dynamitos/MeshShadingDemo/bin/MeshShadingDemo.dll";
     graphics = new Vulkan::Graphics();
     GraphicsInitializer initializer;
     graphics->init(initializer);
@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
     vd->init(graphics);
 
     OWindowManager windowManager = new WindowManager();
-    AssetRegistry::init("Assets", graphics);
+    AssetRegistry::init("C:/Users/Dynamitos/MeshShadingDemo/Assets", graphics);
     vd->commitMeshes();
     WindowCreateInfo mainWindowInfo = {
         .width = 1920,

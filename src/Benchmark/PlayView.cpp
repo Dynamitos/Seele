@@ -1,7 +1,7 @@
 #include "PlayView.h"
 #include "Window/Window.h"
-#include <fstream>
 #include <fmt/format.h>
+#include <fstream>
 
 using namespace Seele;
 
@@ -38,11 +38,17 @@ PlayView::PlayView(Gfx::PGraphics graphics, PWindow window, const ViewportCreate
             if (start == 0) {
                 start = timestamps[0].time;
             }
-            stats << timestamps[0].time - start << "," << cachedResults << depthResults << baseResults << lightCullResults
-                  << visiblityResults << timestamps[1].time - timestamps[0].time << "," << timestamps[2].time - timestamps[1].time << ","
-                  << timestamps[3].time - timestamps[2].time << "," << timestamps[4].time - timestamps[3].time << ","
-                  << timestamps[5].time - timestamps[4].time << "," << timestamps[6].time - timestamps[5].time << ","
-                  << timestamps[6].time - timestamps[0].time << std::endl;
+            uint64 t0 = timestamps[0].time;
+            uint64 t1 = timestamps[1].time;
+            uint64 t2 = timestamps[2].time;
+            uint64 t3 = timestamps[3].time;
+            uint64 t4 = timestamps[4].time;
+            uint64 t5 = timestamps[5].time;
+            uint64 t6 = timestamps[6].time;
+            if (t1 < t0 || t2 < t1 || t3 < t2 || t4 < t3 || t5 < t4 || t6 < t5)
+                continue;
+            stats << t0 - start << "," << cachedResults << depthResults << baseResults << lightCullResults << visiblityResults << t1 - t0
+                  << "," << t2 - t1 << "," << t3 - t2 << "," << t4 - t3 << "," << t5 - t4 << "," << t6 - t5 << "," << t6 - t0 << std::endl;
             stats.flush();
         }
     });

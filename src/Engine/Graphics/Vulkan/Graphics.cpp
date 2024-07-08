@@ -675,7 +675,6 @@ void Graphics::createDevice(GraphicsInitializer initializer) {
 
     VK_CHECK(vkCreateDevice(physicalDevice, &deviceInfo, nullptr, &handle));
     // std::cout << "Vulkan handle: " << handle << std::endl;
-
     graphicsQueue = 0;
     computeQueue = 0;
     transferQueue = 0;

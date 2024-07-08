@@ -22,6 +22,7 @@ struct MeshId {
 class VertexData {
   public:
     struct DrawCallOffsets {
+        // offset into the instanceData and meshData arrays
         uint32 instanceOffset = 0;
         uint32 textureOffset = 0;
         uint32 samplerOffset = 0;
@@ -91,11 +92,16 @@ class VertexData {
     VertexData();
     struct MeshletDescription {
         AABB bounding;
+        // number of relevant entries in the vertexIndices array
         uint32 vertexCount;
+        // number of relevant entries in the primitiveIndices array
         uint32 primitiveCount;
+        // starting offset into the vertexIndices array
         uint32 vertexOffset;
+        // starting offset into the primitiveIndices array
         uint32 primitiveOffset;
         Vector color;
+        // gets added to vertex indices so that they reference the global mesh bool
         uint32 indicesOffset = 0;
     };
     std::mutex materialDataLock;

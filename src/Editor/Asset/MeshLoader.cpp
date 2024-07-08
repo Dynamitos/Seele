@@ -416,7 +416,7 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
         uint64 offset = vertexData->getMeshOffset(id);
         collider.boundingbox.adjust(Vector(mesh->mAABB.mMin.x, mesh->mAABB.mMin.y, mesh->mAABB.mMin.z));
         collider.boundingbox.adjust(Vector(mesh->mAABB.mMax.x, mesh->mAABB.mMax.y, mesh->mAABB.mMax.z));
-        work.add([=, &globalMeshes]() {
+        work.add([=, this, &globalMeshes]() {
             // assume static mesh for now
             Array<Vector4> positions(mesh->mNumVertices);
             StaticArray<Array<Vector2>, MAX_TEXCOORDS> texCoords;
@@ -462,7 +462,7 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
             vertexData->loadColors(offset, colors);
 
             Array<uint32> indices(mesh->mNumFaces * 3);
-            for (int32 faceIndex = 0; faceIndex < mesh->mNumFaces; ++faceIndex) {
+            for (uint32 faceIndex = 0; faceIndex < mesh->mNumFaces; ++faceIndex) {
                 indices[faceIndex * 3 + 0] = mesh->mFaces[faceIndex].mIndices[0];
                 indices[faceIndex * 3 + 1] = mesh->mFaces[faceIndex].mIndices[1];
                 indices[faceIndex * 3 + 2] = mesh->mFaces[faceIndex].mIndices[2];
@@ -481,7 +481,10 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
             globalMeshes[meshIndex]->meshlets = std::move(meshlets);
             globalMeshes[meshIndex]->indices = std::move(indices);
             globalMeshes[meshIndex]->vertexCount = mesh->mNumVertices;
+            globalMeshes[meshIndex]->blas = graphics->createBottomLevelAccelerationStructure(Gfx::BottomLevelASCreateInfo{
+                .mesh = globalMeshes[meshIndex],
             });
+        });
     }
     getThreadPool().runAndWait(std::move(work));
 }

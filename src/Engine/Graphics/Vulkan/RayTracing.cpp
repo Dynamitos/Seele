@@ -12,7 +12,8 @@
 
 using namespace Seele::Vulkan;
 
-BottomLevelAS::BottomLevelAS(PGraphics graphics, const Gfx::BottomLevelASCreateInfo& createInfo) : graphics(graphics) {
+BottomLevelAS::BottomLevelAS(PGraphics graphics, const Gfx::BottomLevelASCreateInfo& createInfo)
+    : graphics(graphics), material(createInfo.mesh->referencedMaterial->getHandle()) {
     VertexData* vertexData = createInfo.mesh->vertexData;
     MeshData meshData = vertexData->getMeshData(createInfo.mesh->id);
     Gfx::PShaderBuffer positionBuffer = vertexData->getPositionBuffer();
@@ -37,6 +38,8 @@ BottomLevelAS::BottomLevelAS(PGraphics graphics, const Gfx::BottomLevelASCreateI
     };
     OBufferAllocation transformBuffer =
         new BufferAllocation(graphics, "TransformBuffer", transformBufferInfo, transformAllocInfo, Gfx::QueueType::GRAPHICS);
+    transformBuffer->updateContents(0, sizeof(VkTransformMatrixKHR), &matrix);
+
     VkDeviceOrHostAddressConstKHR vertexDataAddress = {
         .deviceAddress =
             positionBuffer.cast<ShaderBuffer>()->getDeviceAddress() + vertexData->getMeshOffset(createInfo.mesh->id) * sizeof(Vector4),
@@ -51,18 +54,21 @@ BottomLevelAS::BottomLevelAS(PGraphics graphics, const Gfx::BottomLevelASCreateI
         .sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR,
         .pNext = nullptr,
         .geometryType = VK_GEOMETRY_TYPE_TRIANGLES_KHR,
-        .geometry = {.triangles =
-                         {
-                             .sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR,
-                             .pNext = nullptr,
-                             .vertexFormat = VK_FORMAT_R32G32B32_SFLOAT,
-                             .vertexData = vertexDataAddress,
-                             .vertexStride = sizeof(Vector),
-                             .maxVertex = static_cast<uint32_t>(createInfo.mesh->vertexCount),
-                             .indexType = VK_INDEX_TYPE_UINT32,
-                             .indexData = indexDataAddress,
-                             .transformData = transformDataAddress,
-                         }},
+        .geometry =
+            {
+                .triangles =
+                    {
+                        .sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR,
+                        .pNext = nullptr,
+                        .vertexFormat = VK_FORMAT_R32G32B32_SFLOAT,
+                        .vertexData = vertexDataAddress,
+                        .vertexStride = sizeof(Vector),
+                        .maxVertex = static_cast<uint32_t>(createInfo.mesh->vertexCount),
+                        .indexType = VK_INDEX_TYPE_UINT32,
+                        .indexData = indexDataAddress,
+                        .transformData = transformDataAddress,
+                    },
+            },
         .flags = VK_GEOMETRY_OPAQUE_BIT_KHR,
     };
     VkAccelerationStructureBuildGeometryInfoKHR structureBuildGeometry = {
