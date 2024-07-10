@@ -48,15 +48,17 @@ class DescriptorSet : public Gfx::DescriptorSet, public CommandBoundResource {
     DescriptorSet(PGraphics graphics, PDescriptorPool owner);
     virtual ~DescriptorSet();
     virtual void writeChanges() override;
-    virtual void updateBuffer(uint32_t binding, Gfx::PUniformBuffer uniformBuffer) override;
-    virtual void updateBuffer(uint32_t binding, Gfx::PShaderBuffer uniformBuffer) override;
-    virtual void updateBuffer(uint32_t binding, uint32 index, Gfx::PShaderBuffer uniformBuffer) override;
-    virtual void updateSampler(uint32_t binding, Gfx::PSampler samplerState) override;
-    virtual void updateSampler(uint32_t binding, uint32 dstArrayIndex, Gfx::PSampler samplerState) override;
-    virtual void updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::PSampler sampler = nullptr) override;
+    virtual void updateBuffer(uint32 binding, Gfx::PUniformBuffer uniformBuffer) override;
+    virtual void updateBuffer(uint32 binding, Gfx::PShaderBuffer uniformBuffer) override;
+    virtual void updateBuffer(uint32 binding, Gfx::PIndexBuffer uniformBuffer) override;
+    virtual void updateBuffer(uint32 binding, uint32 index, Gfx::PShaderBuffer uniformBuffer) override;
+    virtual void updateSampler(uint32 binding, Gfx::PSampler samplerState) override;
+    virtual void updateSampler(uint32 binding, uint32 dstArrayIndex, Gfx::PSampler samplerState) override;
+    virtual void updateTexture(uint32 binding, Gfx::PTexture texture, Gfx::PSampler sampler = nullptr) override;
     virtual void updateTexture(uint32 binding, uint32 dstArrayIndex, Gfx::PTexture texture) override;
-    virtual void updateTextureArray(uint32_t binding, Array<Gfx::PTexture2D> texture) override;
-    virtual void updateSamplerArray(uint32_t binding, Array<Gfx::PSampler> samplers) override;
+    virtual void updateTextureArray(uint32 binding, Array<Gfx::PTexture2D> texture) override;
+    virtual void updateSamplerArray(uint32 binding, Array<Gfx::PSampler> samplers) override;
+    virtual void updateAccelerationStructure(uint32 binding, Gfx::PTopLevelAS as) override;
 
     constexpr bool isCurrentlyInUse() const { return currentlyInUse; }
     constexpr void allocate() { currentlyInUse = true; }
@@ -66,6 +68,7 @@ class DescriptorSet : public Gfx::DescriptorSet, public CommandBoundResource {
   private:
     List<VkDescriptorImageInfo> imageInfos;
     List<VkDescriptorBufferInfo> bufferInfos;
+    List<VkWriteDescriptorSetAccelerationStructureKHR> accelerationInfos;
     Array<VkWriteDescriptorSet> writeDescriptors;
     // contains the previously bound resources at every binding
     // since the layout is fixed, trying to bind a texture to a buffer

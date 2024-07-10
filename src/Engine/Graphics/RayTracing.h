@@ -4,8 +4,7 @@
 namespace Seele {
 namespace Gfx {
 DECLARE_REF(PipelineLayout)
-class RayTracingPipeline
-{
+class RayTracingPipeline {
   public:
     RayTracingPipeline(PPipelineLayout layout);
     virtual ~RayTracingPipeline();
@@ -18,7 +17,7 @@ DEFINE_REF(RayTracingPipeline)
 class BottomLevelAS {
   public:
     BottomLevelAS();
-    ~BottomLevelAS();
+    virtual ~BottomLevelAS();
 
   private:
 };
@@ -26,7 +25,7 @@ DEFINE_REF(BottomLevelAS)
 class TopLevelAS {
   public:
     TopLevelAS();
-    ~TopLevelAS();
+    virtual ~TopLevelAS();
 
   private:
 };

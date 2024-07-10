@@ -3,7 +3,6 @@
 #include "Matrix.h"
 #include "Vector.h"
 
-
 namespace Seele {
 struct Rect {
     bool isEmpty() const { return size.x == 0 || size.y == 0; }
@@ -19,4 +18,5 @@ struct Rect3D {
     Vector size = Vector(0);
     Vector offset = Vector(0);
 };
+template <typename T> constexpr T align(T size, T alignment) { return (size + alignment - 1) & ~(alignment - 1); }
 } // namespace Seele

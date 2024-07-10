@@ -4,7 +4,6 @@
 #include "Resources.h"
 #include "VertexData.h"
 
-
 namespace Seele {
 namespace Gfx {
 
@@ -100,6 +99,7 @@ struct ShaderPermutation {
     uint8 positionOnly;
     uint8 depthCulling;
     uint8 visibilityPass;
+    uint8 rayTracing;
     // TODO: lightmapping etc
     ShaderPermutation() { std::memset(this, 0, sizeof(ShaderPermutation)); }
     void setTaskFile(std::string_view name) {
@@ -115,6 +115,11 @@ struct ShaderPermutation {
     void setMeshFile(std::string_view name) {
         std::memset(vertexMeshFile, 0, sizeof(vertexMeshFile));
         useMeshShading = 1;
+        strncpy(vertexMeshFile, name.data(), sizeof(vertexMeshFile));
+    }
+    void setRayTracingFile(std::string_view name) {
+        std::memset(vertexMeshFile, 0, sizeof(vertexMeshFile));
+        rayTracing = true;
         strncpy(vertexMeshFile, name.data(), sizeof(vertexMeshFile));
     }
     void setFragmentFile(std::string_view name) {
@@ -149,6 +154,7 @@ struct ShaderCollection {
     OTaskShader taskShader;
     OMeshShader meshShader;
     OFragmentShader fragmentShader;
+    OClosestHitShader closestHitShader;
 };
 
 struct PassConfig {
@@ -161,6 +167,7 @@ struct PassConfig {
     bool hasTaskShader = false;
     bool useMaterial = false;
     bool useVisibility = false;
+    bool rayTracing = false;
 };
 class ShaderCompiler {
   public:

@@ -4,6 +4,7 @@
 #include "Framebuffer.h"
 #include "Graphics.h"
 #include "Pipeline.h"
+#include "RayTracing.h"
 #include "RenderPass.h"
 #include "Window.h"
 
@@ -178,9 +179,7 @@ void RenderCommand::begin(PRenderPass renderPass, PFramebuffer framebuffer, VkQu
     ready = false;
     VkCommandBufferInheritanceInfo inheritanceInfo = {
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO,
-        .renderPass = renderPass->getHandle(),
         .subpass = 0,
-        .framebuffer = framebuffer->getHandle(),
         .occlusionQueryEnable = 0,
         .queryFlags = 0,
         .pipelineStatistics = pipelineFlags,
@@ -188,9 +187,13 @@ void RenderCommand::begin(PRenderPass renderPass, PFramebuffer framebuffer, VkQu
     VkCommandBufferBeginInfo beginInfo = {
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
         .pNext = nullptr,
-        .flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT,
         .pInheritanceInfo = &inheritanceInfo,
     };
+    if (renderPass != nullptr || framebuffer != nullptr) {
+        inheritanceInfo.renderPass = renderPass->getHandle();
+        inheritanceInfo.framebuffer = framebuffer->getHandle();
+        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
+    }
     VK_CHECK(vkBeginCommandBuffer(handle, &beginInfo));
 }
 
@@ -229,6 +232,12 @@ void RenderCommand::bindPipeline(Gfx::PGraphicsPipeline gfxPipeline) {
     pipeline->bind(handle);
 }
 
+void RenderCommand::bindPipeline(Gfx::PRayTracingPipeline gfxPipeline) {
+    assert(threadId == std::this_thread::get_id());
+    rtPipeline = gfxPipeline.cast<RayTracingPipeline>();
+    rtPipeline->bind(handle);
+}
+
 void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet, Array<uint32> dynamicOffsets) {
     assert(threadId == std::this_thread::get_id());
     auto descriptor = descriptorSet.cast<DescriptorSet>();
@@ -243,15 +252,16 @@ void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet, Array<uint
     }
 
     VkDescriptorSet setHandle = descriptor->getHandle();
-    vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getLayout(),
-                            pipeline->getPipelineLayout()->findParameter(descriptorSet->getName()), 1, &setHandle, dynamicOffsets.size(),
-                            dynamicOffsets.data());
+    Gfx::PPipelineLayout layout = pipeline != nullptr ? pipeline->getPipelineLayout() : rtPipeline->getPipelineLayout();
+    vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getLayout(), layout->findParameter(descriptorSet->getName()),
+                            1, &setHandle, dynamicOffsets.size(), dynamicOffsets.data());
 }
 
 void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorSets, Array<uint32> dynamicOffsets) {
     assert(threadId == std::this_thread::get_id());
     VkDescriptorSet* sets = new VkDescriptorSet[descriptorSets.size()];
     std::memset(sets, 0, sizeof(VkDescriptorSet) * descriptorSets.size());
+    Gfx::PPipelineLayout layout = pipeline != nullptr ? pipeline->getPipelineLayout() : rtPipeline->getPipelineLayout();
     for (uint32 i = 0; i < descriptorSets.size(); ++i) {
         auto descriptorSet = descriptorSets[i].cast<DescriptorSet>();
         assert(descriptorSet->writeDescriptors.size() == 0);
@@ -267,7 +277,7 @@ void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorS
                 }
             }
         }
-        sets[pipeline->getPipelineLayout()->findParameter(descriptorSet->getName())] = descriptorSet->getHandle();
+        sets[layout->findParameter(descriptorSet->getName())] = descriptorSet->getHandle();
     }
     vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getLayout(), 0, (uint32)descriptorSets.size(), sets,
                             dynamicOffsets.size(), dynamicOffsets.data());
@@ -320,7 +330,12 @@ void RenderCommand::drawMeshIndirect(Gfx::PShaderBuffer buffer, uint64 offset, u
     vkCmdDrawMeshTasksIndirectEXT(handle, buffer.cast<ShaderBuffer>()->getHandle(), offset, drawCount, stride);
 }
 
-void RenderCommand::traceRays() {}
+void RenderCommand::traceRays(uint32 width, uint32 height, uint32 depth) {
+    VkStridedDeviceAddressRegionKHR rayGenRef = rtPipeline->getRayGenRegion();
+    VkStridedDeviceAddressRegionKHR hitRef = rtPipeline->getHitRegion();
+    VkStridedDeviceAddressRegionKHR missRef = rtPipeline->getMissRegion();
+    vkCmdTraceRaysKHR(handle, &rayGenRef, &missRef, &hitRef, nullptr, width, height, depth);
+}
 
 ComputeCommand::ComputeCommand(PGraphics graphics, VkCommandPool cmdPool) : graphics(graphics), owner(cmdPool) {
     VkCommandBufferAllocateInfo allocInfo = {

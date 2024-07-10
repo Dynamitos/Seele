@@ -37,6 +37,7 @@ class VertexData {
         DrawCallOffsets offsets;
         Array<InstanceData> instanceData;
         Array<MeshData> instanceMeshData;
+        Array<Gfx::PBottomLevelAS> rayTracingData;
         Array<uint32> cullingOffsets;
     };
     struct MaterialData {
@@ -70,6 +71,7 @@ class VertexData {
     Gfx::PDescriptorSet getInstanceDataSet() { return descriptorSet; }
     const Array<MaterialData>& getMaterialData() const { return materialData; }
     const Array<TransparentDraw>& getTransparentData() const { return transparentData; }
+    const Array<Gfx::PBottomLevelAS>& getRayTracingData() const { return rayTracingScene; }
     const MeshData& getMeshData(MeshId id) { return meshData[id]; }
     uint64 getIndicesOffset(uint32 meshletIndex) { return meshlets[meshletIndex].indicesOffset; }
     uint64 getNumInstances() const { return instanceData.size(); }
@@ -142,6 +144,8 @@ class VertexData {
 
     Array<MeshData> instanceMeshData;
     Gfx::OShaderBuffer instanceMeshDataBuffer;
+
+    Array<Gfx::PBottomLevelAS> rayTracingScene;
     
     Array<InstanceData> transparentInstanceData;
     Gfx::OShaderBuffer transparentInstanceDataBuffer;

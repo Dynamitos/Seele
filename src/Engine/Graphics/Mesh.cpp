@@ -2,7 +2,6 @@
 #include "Asset/AssetRegistry.h"
 #include "Graphics/Graphics.h"
 
-
 using namespace Seele;
 
 Mesh::Mesh() {}
@@ -36,4 +35,7 @@ void Mesh::load(ArchiveBuffer& buffer) {
     id = vertexData->allocateVertexData(vertexCount);
     vertexData->loadMesh(id, indices, meshlets);
     vertexData->deserializeMesh(id, buffer);
+    blas = buffer.getGraphics()->createBottomLevelAccelerationStructure(Gfx::BottomLevelASCreateInfo{
+        .mesh = this,
+    });
 }

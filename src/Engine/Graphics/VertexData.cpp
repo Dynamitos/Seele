@@ -19,6 +19,7 @@ void VertexData::resetMeshData() {
     std::unique_lock l(materialDataLock);
     transparentInstanceData.clear();
     transparentMeshData.clear();
+    rayTracingScene.clear();
     for (auto& mat : materialData) {
         for (auto& inst : mat.instances) {
             inst.instanceData.clear();
@@ -74,9 +75,11 @@ void VertexData::updateMesh(entt::entity id, uint32 meshIndex, PMesh mesh, Compo
     }
     BatchedDrawCall& matInstanceData = matData.instances[referencedInstance->getId()];
     matInstanceData.materialInstance = referencedInstance;
-
-    matInstanceData.instanceData.add(inst);
+    
     auto [instanceId, meshletOffset] = getCullingMapping(id, meshIndex, data.numMeshlets);
+
+    matInstanceData.rayTracingData.add(mesh->blas);
+    matInstanceData.instanceData.add(inst);
     matInstanceData.instanceMeshData.add(data);
     matInstanceData.cullingOffsets.add(meshletOffset);
     referencedInstance->updateDescriptor();
@@ -140,6 +143,7 @@ void VertexData::createDescriptors() {
                 cullingOffsets.add(instance.cullingOffsets[i]);
                 instanceData.add(instance.instanceData[i]);
                 instanceMeshData.add(instance.instanceMeshData[i]);
+                rayTracingScene.add(instance.rayTracingData[i]);
                 // instance.numMeshlets += instance.instanceMeshData[i].numMeshlets;
                 // cullingOffsets.add(numMeshlets);
             }

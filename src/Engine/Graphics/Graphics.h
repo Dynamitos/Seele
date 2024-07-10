@@ -27,6 +27,7 @@ DECLARE_REF(IndexBuffer)
 DECLARE_REF(UniformBuffer)
 DECLARE_REF(PipelineLayout)
 DECLARE_REF(GraphicsPipeline)
+DECLARE_REF(RayTracingPipeline)
 DECLARE_REF(ComputePipeline)
 DECLARE_REF(RenderCommand)
 DECLARE_REF(ComputeCommand)
@@ -73,6 +74,7 @@ class Graphics {
     virtual ORenderCommand createRenderCommand(const std::string& name = "") = 0;
     virtual OComputeCommand createComputeCommand(const std::string& name = "") = 0;
 
+    virtual void beginShaderCompilation(const ShaderCompilationInfo& compileInfo) = 0;
     virtual OVertexShader createVertexShader(const ShaderCreateInfo& createInfo) = 0;
     virtual OFragmentShader createFragmentShader(const ShaderCreateInfo& createInfo) = 0;
     virtual OComputeShader createComputeShader(const ShaderCreateInfo& createInfo) = 0;
@@ -80,6 +82,7 @@ class Graphics {
     virtual OTaskShader createTaskShader(const ShaderCreateInfo& createInfo) = 0;
     virtual PGraphicsPipeline createGraphicsPipeline(LegacyPipelineCreateInfo createInfo) = 0;
     virtual PGraphicsPipeline createGraphicsPipeline(MeshPipelineCreateInfo createInfo) = 0;
+    virtual PRayTracingPipeline createRayTracingPipeline(RayTracingPipelineCreateInfo createInfo) = 0;
     virtual PComputePipeline createComputePipeline(ComputePipelineCreateInfo createInfo) = 0;
     virtual OSampler createSampler(const SamplerCreateInfo& createInfo) = 0;
 

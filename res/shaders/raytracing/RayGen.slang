@@ -17,11 +17,9 @@ void main()
 
 	uint max_rays = 24;
 
-    uint object_type = 100;
     float4 color = float4(0, 0, 0, 0);
-    uint current_mode = 0;
     float expectedDistance = -1;
-    Payload payload;
+    float3 payload;
 
     RayDesc desc = {
         origin.xyz,
@@ -32,5 +30,5 @@ void main()
 
     TraceRay(pRayTracingParams.scene, RAY_FLAG_FORCE_OPAQUE, 0xff, 0, 0, 0, desc, payload);
 
-    pRayTracingParams.image[DispatchRaysIndex().xy] = payload.color;
+    pRayTracingParams.image[DispatchRaysIndex().xy] = float4(payload, 1.0f);
 }

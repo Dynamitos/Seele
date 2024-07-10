@@ -54,6 +54,7 @@ class Graphics : public Gfx::Graphics {
     virtual Gfx::ORenderCommand createRenderCommand(const std::string& name) override;
     virtual Gfx::OComputeCommand createComputeCommand(const std::string& name) override;
 
+    virtual void beginShaderCompilation(const ShaderCompilationInfo& compileInfo) override;
     virtual Gfx::OVertexShader createVertexShader(const ShaderCreateInfo& createInfo) override;
     virtual Gfx::OFragmentShader createFragmentShader(const ShaderCreateInfo& createInfo) override;
     virtual Gfx::OComputeShader createComputeShader(const ShaderCreateInfo& createInfo) override;
@@ -61,6 +62,7 @@ class Graphics : public Gfx::Graphics {
     virtual Gfx::OMeshShader createMeshShader(const ShaderCreateInfo& createInfo) override;
     virtual Gfx::PGraphicsPipeline createGraphicsPipeline(Gfx::LegacyPipelineCreateInfo createInfo) override;
     virtual Gfx::PGraphicsPipeline createGraphicsPipeline(Gfx::MeshPipelineCreateInfo createInfo) override;
+    virtual Gfx::PRayTracingPipeline createRayTracingPipeline(Gfx::RayTracingPipelineCreateInfo createInfo) override;
     virtual Gfx::PComputePipeline createComputePipeline(Gfx::ComputePipelineCreateInfo createInfo) override;
     virtual Gfx::OSampler createSampler(const SamplerCreateInfo& createInfo) override;
 

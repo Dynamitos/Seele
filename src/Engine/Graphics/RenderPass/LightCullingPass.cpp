@@ -144,13 +144,14 @@ void LightCullingPass::publishOutputs() {
         cullingLayout->addDescriptorLayout(cullingDescriptorLayout);
         cullingLayout->addDescriptorLayout(lightEnv->getDescriptorLayout());
 
-        ShaderCreateInfo createInfo = {
+        ShaderCompilationInfo createInfo = {
             .name = "Culling",
-            .mainModule = "LightCulling",
-            .entryPoint = "cullLights",
+            .modules = {"LightCulling"},
+            .entryPoints = {{"cullLights", "LightCulling"}},
             .rootSignature = cullingLayout,
         };
-        cullingShader = graphics->createComputeShader(createInfo);
+        graphics->beginShaderCompilation(createInfo);
+        cullingShader = graphics->createComputeShader({0});
         cullingLayout->create();
 
         Gfx::ComputePipelineCreateInfo pipelineInfo;
@@ -166,14 +167,15 @@ void LightCullingPass::publishOutputs() {
         cullingEnableLayout->addDescriptorLayout(cullingDescriptorLayout);
         cullingEnableLayout->addDescriptorLayout(lightEnv->getDescriptorLayout());
 
-        ShaderCreateInfo createInfo = {
+        ShaderCompilationInfo createInfo = {
             .name = "Culling",
-            .mainModule = "LightCulling",
-            .entryPoint = "cullLights",
+            .modules = {"LightCulling"},
+            .entryPoints = {{"cullLights", "LightCulling"}},
             .rootSignature = cullingEnableLayout,
         };
         createInfo.defines["LIGHT_CULLING"] = "1";
-        cullingEnabledShader = graphics->createComputeShader(createInfo);
+        graphics->beginShaderCompilation(createInfo);
+        cullingEnabledShader = graphics->createComputeShader({0});
         cullingEnableLayout->create();
 
         Gfx::ComputePipelineCreateInfo pipelineInfo;
@@ -265,14 +267,14 @@ void LightCullingPass::setupFrustums() {
     frustumLayout = graphics->createPipelineLayout("FrustumLayout");
     frustumLayout->addDescriptorLayout(viewParamsLayout);
     frustumLayout->addDescriptorLayout(dispatchParamsLayout);
-    ShaderCreateInfo createInfo = {
+    ShaderCompilationInfo createInfo = {
         .name = "Frustum",
-        .mainModule = "ComputeFrustums",
-        .entryPoint = "computeFrustums",
+        .modules = {"ComputeFrustums"},
+        .entryPoints = {{"computeFrustums", "ComputeFrustums"}},
         .rootSignature = frustumLayout,
     };
-    std::cout << "Compiling frustumShader" << std::endl;
-    frustumShader = graphics->createComputeShader(createInfo);
+    graphics->beginShaderCompilation(createInfo);
+    frustumShader = graphics->createComputeShader({0});
     // Have to compile shader before finalizing layout as parameters get mapped later
     frustumLayout->create();
     dispatchParamsLayout->create();

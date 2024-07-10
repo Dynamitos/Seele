@@ -4,7 +4,7 @@
 #include "Command.h"
 #include "Graphics.h"
 #include "Texture.h"
-
+#include "RayTracing.h"
 
 using namespace Seele;
 using namespace Seele::Vulkan;
@@ -62,21 +62,17 @@ DescriptorPool::DescriptorPool(PGraphics graphics, PDescriptorLayout layout)
         cachedHandles[i] = nullptr;
     }
 
-    uint32 perTypeSizes[VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT]; // TODO: FIX ENUM
-    std::memset(perTypeSizes, 0, sizeof(perTypeSizes));
+    Map<Gfx::SeDescriptorType, uint32> perTypeSizes;
     for (uint32 i = 0; i < layout->getBindings().size(); ++i) {
         auto& binding = layout->getBindings()[i];
-        int typeIndex = binding.descriptorType;
-        perTypeSizes[typeIndex] += 512;
+        perTypeSizes[binding.descriptorType] += 512;
     }
     Array<VkDescriptorPoolSize> poolSizes;
-    for (uint32 i = 0; i < VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT; ++i) {
-        if (perTypeSizes[i] > 0) {
-            VkDescriptorPoolSize size;
-            size.descriptorCount = perTypeSizes[i];
-            size.type = (VkDescriptorType)i;
-            poolSizes.add(size);
-        }
+    for (const auto [type, num] : perTypeSizes) {
+        VkDescriptorPoolSize size;
+        size.descriptorCount = num;
+        size.type = cast(type);
+        poolSizes.add(size);
     }
     VkDescriptorPoolCreateInfo createInfo = {
         .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
@@ -226,6 +222,32 @@ void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PShaderBuffer shaderBuff
 
     boundResources[binding][0] = vulkanBuffer->getAlloc();
 }
+
+void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PIndexBuffer indexBuffer) {
+    PIndexBuffer vulkanBuffer = indexBuffer.cast<IndexBuffer>();
+    if (boundResources[binding][0] == vulkanBuffer->getAlloc()) {
+        return;
+    }
+
+    bufferInfos.add(VkDescriptorBufferInfo{
+        .buffer = vulkanBuffer->getHandle(),
+        .offset = 0,
+        .range = vulkanBuffer->getSize(),
+    });
+    writeDescriptors.add(VkWriteDescriptorSet{
+        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .pNext = nullptr,
+        .dstSet = setHandle,
+        .dstBinding = binding,
+        .dstArrayElement = 0,
+        .descriptorCount = 1,
+        .descriptorType = cast(layout->getBindings()[binding].descriptorType),
+        .pBufferInfo = &bufferInfos.back(),
+    });
+
+    boundResources[binding][0] = vulkanBuffer->getAlloc();
+}
+
 
 void DescriptorSet::updateBuffer(uint32_t binding, uint32 index, Gfx::PShaderBuffer shaderBuffer) {
     PShaderBuffer vulkanBuffer = shaderBuffer.cast<ShaderBuffer>();
@@ -429,6 +451,25 @@ void DescriptorSet::updateSamplerArray(uint32_t binding, Array<Gfx::PSampler> sa
     }
 }
 
+void DescriptorSet::updateAccelerationStructure(uint32 binding, Gfx::PTopLevelAS as) {
+    auto tlas = as.cast<TopLevelAS>();
+    auto handle = tlas->getHandle();
+    accelerationInfos.add(VkWriteDescriptorSetAccelerationStructureKHR{
+        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR,
+        .pNext = nullptr,
+        .accelerationStructureCount = 1,
+        .pAccelerationStructures = &handle,
+    });
+    writeDescriptors.add(VkWriteDescriptorSet{
+        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .pNext = &accelerationInfos.back(),
+        .dstSet = setHandle,
+        .dstBinding = binding,
+        .dstArrayElement = 0,
+        .descriptorCount = 1,
+        .descriptorType = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR,
+    });
+}
 
 void DescriptorSet::writeChanges() {
     if (writeDescriptors.size() > 0) {

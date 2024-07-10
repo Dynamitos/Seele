@@ -1,4 +1,5 @@
 #pragma once
+#include "Graphics/Graphics.h"
 #include "RenderPass.h"
 
 namespace Seele {
@@ -14,5 +15,11 @@ class RayTracingPass : public RenderPass {
     virtual void createRenderPass() override;
 
   private:
+    Gfx::PRayGenShader raygen;
+    Gfx::PMissShader miss;
+    Gfx::ODescriptorLayout paramsLayout;
+    Gfx::OPipelineLayout pipelineLayout;
+    Gfx::OTexture2D texture;
+    
 };
 } // namespace Seele

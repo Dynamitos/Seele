@@ -10,7 +10,6 @@ struct SkyboxData
     float4x4 transformMatrix;
     float4 fogBlend;
 };
-layout(set=1)
 ParameterBlock<SkyboxData> pSkyboxData;
 
 [shader("vertex")]
@@ -88,7 +87,6 @@ struct TextureData
     TextureCube cubeMap2;
     SamplerState sampler;
 };
-layout(set=2)
 ParameterBlock<TextureData> pSkyboxTextures;
 static const float lowerLimit = 0.0;
 static const float upperLimit = 0.1;

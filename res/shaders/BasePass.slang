@@ -1,6 +1,7 @@
 import Common;
 import LightEnv;
 import MaterialParameter;
+import MATERIAL_FILE_NAME;
 
 struct LightCullingData
 {
@@ -8,7 +9,6 @@ struct LightCullingData
 
     RWTexture2D<uint2> lightGrid;
 };
-layout(set=5)
 ParameterBlock<LightCullingData> pLightCullingData;
 
 [shader("pixel")]

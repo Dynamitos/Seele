@@ -1,14 +1,15 @@
 import Common;
-import RayTracingData;
 import VertexData;
 import MaterialParameter;
-import Scene;
 import LightEnv;
+import Scene;
+import RayTracingData;
+import MATERIAL_FILE_NAME;
 
 // simplification: all BLAS only have 1 geometry
 
 [shader("closesthit")]
-void main(inout payload Payload hitValue, in BuiltInTriangleIntersectionAttributes attr)
+void closesthit(inout float3 hitValue, in BuiltInTriangleIntersectionAttributes attr)
 {
     const float3 barycentricCoords = float3(1.0f - attr.barycentrics.x - attr.barycentrics.y, attr.barycentrics.x, attr.barycentrics.y);
 
@@ -52,5 +53,5 @@ void main(inout payload Payload hitValue, in BuiltInTriangleIntersectionAttribut
     result = result / (result + float3(1.0));
     result = pow(result, float3(1.0/2.2));
 
-    hitValue.color = result;
+    hitValue = result;
 }

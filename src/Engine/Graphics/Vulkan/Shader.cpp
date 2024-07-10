@@ -20,10 +20,8 @@ Shader::~Shader() {
 
 uint32 Seele::Vulkan::Shader::getShaderHash() const { return hash; }
 
-void Shader::create(ShaderCreateInfo createInfo) {
-    Map<std::string, uint32> paramMapping;
-    Slang::ComPtr<slang::IBlob> kernelBlob = generateShader(createInfo, SLANG_SPIRV, paramMapping);
-    createInfo.rootSignature->addMapping(paramMapping);
+void Shader::create(const ShaderCreateInfo& createInfo) {
+    Slang::ComPtr<slang::IBlob> kernelBlob = generateShader(createInfo);
     VkShaderModuleCreateInfo moduleInfo = {
         .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
         .pNext = nullptr,

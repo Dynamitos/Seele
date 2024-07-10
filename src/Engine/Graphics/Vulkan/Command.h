@@ -65,6 +65,7 @@ DEFINE_REF(Command)
 
 DECLARE_REF(GraphicsPipeline)
 DECLARE_REF(ComputePipeline)
+DECLARE_REF(RayTracingPipeline)
 class RenderCommand : public Gfx::RenderCommand {
   public:
     RenderCommand(PGraphics graphics, VkCommandPool cmdPool);
@@ -76,6 +77,7 @@ class RenderCommand : public Gfx::RenderCommand {
     bool isReady();
     virtual void setViewport(Gfx::PViewport viewport) override;
     virtual void bindPipeline(Gfx::PGraphicsPipeline pipeline) override;
+    virtual void bindPipeline(Gfx::PRayTracingPipeline pipeline) override;
     virtual void bindDescriptor(Gfx::PDescriptorSet descriptorSet, Array<uint32> dynamicOffsets) override;
     virtual void bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorSets, Array<uint32> dynamicOffsets) override;
     virtual void bindVertexBuffer(const Array<Gfx::PVertexBuffer>& buffers) override;
@@ -85,11 +87,11 @@ class RenderCommand : public Gfx::RenderCommand {
     virtual void drawIndexed(uint32 indexCount, uint32 instanceCount, int32 firstIndex, uint32 vertexOffset, uint32 firstInstance) override;
     virtual void drawMesh(uint32 groupX, uint32 groupY, uint32 groupZ) override;
     virtual void drawMeshIndirect(Gfx::PShaderBuffer buffer, uint64 offset, uint32 drawCount, uint32 stride) override;
-
-    virtual void traceRays();
+    virtual void traceRays(uint32 width, uint32 height, uint32 depth) override;
 
   private:
     PGraphicsPipeline pipeline;
+    PRayTracingPipeline rtPipeline;
     bool ready;
     Array<PCommandBoundResource> boundResources;
     VkViewport currentViewport;

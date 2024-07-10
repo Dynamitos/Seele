@@ -15,6 +15,7 @@
 #include "Shader.h"
 #include "Window.h"
 #include <GLFW/glfw3.h>
+#include "Graphics/slang-compile.h"
 #include <cstring>
 #include <vulkan/vulkan_core.h>
 
@@ -35,6 +36,8 @@ PFN_vkCreateAccelerationStructureKHR createAccelerationStructure;
 PFN_vkCmdBuildAccelerationStructuresKHR cmdBuildAccelerationStructures;
 PFN_vkGetAccelerationStructureBuildSizesKHR getAccelerationStructureBuildSize;
 PFN_vkCreateRayTracingPipelinesKHR createRayTracingPipelines;
+PFN_vkGetRayTracingShaderGroupHandlesKHR getRayTracingShaderGroupHandles;
+PFN_vkCmdTraceRaysKHR cmdTraceRays;
 
 void vkCmdDrawMeshTasksEXT(VkCommandBuffer command, uint32 groupX, uint32 groupY, uint32 groupZ) {
     cmdDrawMeshTasks(command, groupX, groupY, groupZ);
@@ -69,11 +72,25 @@ void vkGetAccelerationStructureBuildSizesKHR(VkDevice device, VkAccelerationStru
 }
 
 VkResult vkCreateRayTracingPipelinesKHR(VkDevice device, VkDeferredOperationKHR deferredOperation, VkPipelineCache pipelineCache,
-                                    uint32_t createInfoCount, const VkRayTracingPipelineCreateInfoKHR* pCreateInfos,
-                                    const VkAllocationCallbacks* pAllocator, VkPipeline* pPipelines) 
-{
+                                        uint32_t createInfoCount, const VkRayTracingPipelineCreateInfoKHR* pCreateInfos,
+                                        const VkAllocationCallbacks* pAllocator, VkPipeline* pPipelines) {
     return createRayTracingPipelines(device, deferredOperation, pipelineCache, createInfoCount, pCreateInfos, pAllocator, pPipelines);
 }
+
+VkResult vkGetRayTracingShaderGroupHandlesKHR(VkDevice device, VkPipeline pipeline, uint32_t firstGroup, uint32_t groupCount,
+                                              size_t dataSize, void* pData) {
+    return getRayTracingShaderGroupHandles(device, pipeline, firstGroup, groupCount, dataSize, pData);
+}
+
+void vkCmdTraceRaysKHR(VkCommandBuffer commandBuffer, const VkStridedDeviceAddressRegionKHR* pRaygenShaderBindingTable,
+                       const VkStridedDeviceAddressRegionKHR* pMissShaderBindingTable,
+                       const VkStridedDeviceAddressRegionKHR* pHitShaderBindingTable,
+                       const VkStridedDeviceAddressRegionKHR* pCallableShaderBindingTable, uint32_t width, uint32_t height,
+                       uint32_t depth) {
+    cmdTraceRays(commandBuffer, pRaygenShaderBindingTable, pMissShaderBindingTable, pHitShaderBindingTable, pCallableShaderBindingTable,
+                 width, height, depth);
+}
+
 
 Graphics::Graphics() : instance(VK_NULL_HANDLE), handle(VK_NULL_HANDLE), physicalDevice(VK_NULL_HANDLE), callback(VK_NULL_HANDLE) {}
 
@@ -142,9 +159,7 @@ void Graphics::beginRenderPass(Gfx::PRenderPass renderPass) {
     getGraphicsCommands()->getCommands()->beginRenderPass(rp, framebuffer);
 }
 
-void Graphics::endRenderPass() {
-    getGraphicsCommands()->getCommands()->endRenderPass();
-}
+void Graphics::endRenderPass() { getGraphicsCommands()->getCommands()->endRenderPass(); }
 
 void Graphics::waitDeviceIdle() { vkDeviceWaitIdle(handle); }
 
@@ -173,6 +188,8 @@ Gfx::OIndexBuffer Graphics::createIndexBuffer(const IndexBufferCreateInfo& bulkD
 Gfx::ORenderCommand Graphics::createRenderCommand(const std::string& name) { return getGraphicsCommands()->createRenderCommand(name); }
 
 Gfx::OComputeCommand Graphics::createComputeCommand(const std::string& name) { return getComputeCommands()->createComputeCommand(name); }
+
+void Graphics::beginShaderCompilation(const ShaderCompilationInfo& createInfo) { beginCompilation(createInfo, SLANG_SPIRV, createInfo.rootSignature); }
 
 Gfx::OVertexShader Graphics::createVertexShader(const ShaderCreateInfo& createInfo) {
     OVertexShader shader = new VertexShader(this);
@@ -205,6 +222,10 @@ Gfx::PGraphicsPipeline Graphics::createGraphicsPipeline(Gfx::LegacyPipelineCreat
 }
 
 Gfx::PGraphicsPipeline Graphics::createGraphicsPipeline(Gfx::MeshPipelineCreateInfo createInfo) {
+    return pipelineCache->createPipeline(std::move(createInfo));
+}
+
+Gfx::PRayTracingPipeline Graphics::createRayTracingPipeline(Gfx::RayTracingPipelineCreateInfo createInfo) {
     return pipelineCache->createPipeline(std::move(createInfo));
 }
 
@@ -704,4 +725,6 @@ void Graphics::createDevice(GraphicsInitializer initializer) {
     getAccelerationStructureBuildSize =
         (PFN_vkGetAccelerationStructureBuildSizesKHR)vkGetDeviceProcAddr(handle, "vkGetAccelerationStructureBuildSizesKHR");
     createRayTracingPipelines = (PFN_vkCreateRayTracingPipelinesKHR)vkGetDeviceProcAddr(handle, "vkCreateRayTracingPipelinesKHR");
+    getRayTracingShaderGroupHandles =
+        (PFN_vkGetRayTracingShaderGroupHandlesKHR)vkGetDeviceProcAddr(handle, "vkGetRayTracingShaderGroupHandlesKHR");
 }

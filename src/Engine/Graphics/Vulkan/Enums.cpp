@@ -29,12 +29,14 @@ VkDescriptorType Seele::Vulkan::cast(const Seele::Gfx::SeDescriptorType& descrip
         return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC;
     case SE_DESCRIPTOR_TYPE_INPUT_ATTACHMENT:
         return VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
-#ifdef USE_EXTENSIONS
-    case SE_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK_EXT:
-        return VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK_EXT;
+    case SE_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK:
+        return VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK;
+    case SE_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR:
+        return VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
     case SE_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_NV:
         return VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_NV;
-#endif
+    case SE_DESCRIPTOR_TYPE_BLOCK_MATCH_IMAGE_QCOM:
+        return VK_DESCRIPTOR_TYPE_BLOCK_MATCH_IMAGE_QCOM;
     default:
         break;
     }
@@ -43,7 +45,6 @@ VkDescriptorType Seele::Vulkan::cast(const Seele::Gfx::SeDescriptorType& descrip
 
 Seele::Gfx::SeDescriptorType Seele::Vulkan::cast(const VkDescriptorType& descriptorType) {
     switch (descriptorType) {
-
     case VK_DESCRIPTOR_TYPE_SAMPLER:
         return SE_DESCRIPTOR_TYPE_SAMPLER;
     case VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
@@ -66,12 +67,14 @@ Seele::Gfx::SeDescriptorType Seele::Vulkan::cast(const VkDescriptorType& descrip
         return SE_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC;
     case VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT:
         return SE_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
-#ifdef USE_EXTENSIONS
-    case VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK_EXT:
-        return SE_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK_EXT;
+    case VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK:
+        return SE_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK;
+    case VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR:
+        return SE_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
     case VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_NV:
         return SE_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_NV;
-#endif
+    case VK_DESCRIPTOR_TYPE_BLOCK_MATCH_IMAGE_QCOM:
+        return SE_DESCRIPTOR_TYPE_BLOCK_MATCH_IMAGE_QCOM;
     default:
         throw std::logic_error("Not implemented");
     }
@@ -79,7 +82,6 @@ Seele::Gfx::SeDescriptorType Seele::Vulkan::cast(const VkDescriptorType& descrip
 
 VkShaderStageFlagBits Seele::Vulkan::cast(const Seele::Gfx::SeShaderStageFlagBits& stage) {
     switch (stage) {
-
     case SE_SHADER_STAGE_VERTEX_BIT:
         return VK_SHADER_STAGE_VERTEX_BIT;
     case SE_SHADER_STAGE_TESSELLATION_CONTROL_BIT:

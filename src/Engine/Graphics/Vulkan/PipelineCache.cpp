@@ -5,6 +5,7 @@
 #include "RenderPass.h"
 #include "Shader.h"
 #include <fstream>
+#include <vulkan/vulkan_core.h>
 
 using namespace Seele;
 using namespace Seele::Vulkan;
@@ -489,8 +490,8 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
         });
     }
     {
-        for (auto gfxHit : createInfo.closestHitShaders) {
-            auto hit = gfxHit.cast<ClosestHitShader>();
+        for (auto hitgroup : createInfo.hitgroups) {
+            auto hit = hitgroup.closestHitShader.cast<ClosestHitShader>();
             shaderStages.add(VkPipelineShaderStageCreateInfo{
                 .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
                 .pNext = nullptr,
@@ -499,59 +500,38 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
                 .module = hit->getModuleHandle(),
                 .pName = hit->getEntryPointName(),
             });
+            uint32 anyHitIndex = VK_SHADER_UNUSED_KHR;
+            uint32 intersectionIndex = VK_SHADER_UNUSED_KHR;
+            if (hitgroup.anyHitShader != nullptr) {
+                auto anyHit = hitgroup.anyHitShader.cast<AnyHitShader>();
+                shaderStages.add(VkPipelineShaderStageCreateInfo{
+                    .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+                    .pNext = nullptr,
+                    .flags = 0,
+                    .stage = VK_SHADER_STAGE_ANY_HIT_BIT_KHR,
+                    .module = hit->getModuleHandle(),
+                    .pName = hit->getEntryPointName(),
+                });
+            }
+            if (hitgroup.intersectionShader != nullptr) {
+                auto intersect = hitgroup.intersectionShader.cast<IntersectionShader>();
+                shaderStages.add(VkPipelineShaderStageCreateInfo{
+                    .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+                    .pNext = nullptr,
+                    .flags = 0,
+                    .stage = VK_SHADER_STAGE_INTERSECTION_BIT_KHR,
+                    .module = intersect->getModuleHandle(),
+                    .pName = intersect->getEntryPointName(),
+                });
+            }
             shaderGroups.add(VkRayTracingShaderGroupCreateInfoKHR{
                 .sType = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR,
                 .pNext = nullptr,
                 .type = VK_RAY_TRACING_SHADER_GROUP_TYPE_TRIANGLES_HIT_GROUP_KHR,
                 .generalShader = VK_SHADER_UNUSED_KHR,
                 .closestHitShader = static_cast<uint32>(shaderStages.size() - 1),
-                .anyHitShader = VK_SHADER_UNUSED_KHR,
-                .intersectionShader = VK_SHADER_UNUSED_KHR,
-            });
-        }
-    }
-    {
-        for (auto gfxHit : createInfo.anyHitShaders) {
-            auto hit = gfxHit.cast<AnyHitShader>();
-            shaderStages.add(VkPipelineShaderStageCreateInfo{
-                .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-                .pNext = nullptr,
-                .flags = 0,
-                .stage = VK_SHADER_STAGE_ANY_HIT_BIT_KHR,
-                .module = hit->getModuleHandle(),
-                .pName = hit->getEntryPointName(),
-            });
-            shaderGroups.add(VkRayTracingShaderGroupCreateInfoKHR{
-                .sType = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR,
-                .pNext = nullptr,
-                .type = VK_RAY_TRACING_SHADER_GROUP_TYPE_TRIANGLES_HIT_GROUP_KHR,
-                .generalShader = VK_SHADER_UNUSED_KHR,
-                .closestHitShader = VK_SHADER_UNUSED_KHR,
-                .anyHitShader = static_cast<uint32>(shaderStages.size() - 1),
-                .intersectionShader = VK_SHADER_UNUSED_KHR,
-            });
-        }
-    }
-    {
-        for (auto gfxIntersect : createInfo.intersectionShaders) {
-            auto intersect = gfxIntersect.cast<IntersectionShader>();
-            shaderStages.add(VkPipelineShaderStageCreateInfo{
-                .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-                .pNext = nullptr,
-                .flags = 0,
-                .stage = VK_SHADER_STAGE_INTERSECTION_BIT_KHR,
-                .module = intersect->getModuleHandle(),
-                .pName = intersect->getEntryPointName(),
-            });
-
-            shaderGroups.add(VkRayTracingShaderGroupCreateInfoKHR{
-                .sType = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR,
-                .pNext = nullptr,
-                .type = VK_RAY_TRACING_SHADER_GROUP_TYPE_TRIANGLES_HIT_GROUP_KHR,
-                .generalShader = VK_SHADER_UNUSED_KHR,
-                .closestHitShader = VK_SHADER_UNUSED_KHR,
-                .anyHitShader = VK_SHADER_UNUSED_KHR,
-                .intersectionShader = static_cast<uint32>(shaderStages.size() - 1),
+                .anyHitShader = anyHitIndex,
+                .intersectionShader = intersectionIndex,
             });
         }
     }
@@ -613,7 +593,89 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
     };
     VkPipeline pipelineHandle;
     VK_CHECK(vkCreateRayTracingPipelinesKHR(graphics->getDevice(), VK_NULL_HANDLE, cache, 1, &pipelineInfo, nullptr, &pipelineHandle));
-    ORayTracingPipeline pipeline = new RayTracingPipeline(graphics, pipelineHandle, createInfo.pipelineLayout);
+
+    const uint32_t handleSize = graphics->getRayTracingProperties().shaderGroupHandleSize;
+    const uint32_t handleAlignment = graphics->getRayTracingProperties().shaderGroupHandleAlignment;
+    const uint32_t handleSizeAligned = align(handleSize, handleAlignment);
+    const uint32_t groupCount = static_cast<uint32_t>(shaderGroups.size());
+    const uint32_t sbtSize = handleSizeAligned * groupCount;
+
+    Array<uint8> sbt(sbtSize);
+
+    vkGetRayTracingShaderGroupHandlesKHR(graphics->getDevice(), pipelineHandle, 0, shaderGroups.size(), sbtSize, sbt.data());
+
+    Array<uint8> rayGenSbt(handleSizeAligned);
+    std::memcpy(rayGenSbt.data(), sbt.data(), handleSize);
+
+    uint64 sbtOffset = handleSizeAligned;
+    uint32 maxParamSize = 0;
+    for (auto& hitgroup : createInfo.hitgroups) {
+        maxParamSize = std::max<uint32>(maxParamSize, hitgroup.parameters.size());
+    }
+
+    uint64 hitStride = align(handleSize + maxParamSize, handleAlignment);
+    Array<uint8> hitSbt(hitStride * createInfo.hitgroups.size());
+    for (uint64 i = 0; i < createInfo.hitgroups.size(); ++i) {
+        std::memcpy(hitSbt.data() + i * hitStride, sbt.data() + sbtOffset, handleSize);
+        std::memcpy(hitSbt.data() + i * hitStride + handleSize, createInfo.hitgroups[i].parameters.data(),
+                    createInfo.hitgroups[i].parameters.size());
+        sbtOffset += handleSizeAligned;
+    }
+
+    Array<uint8> missSbt(handleSizeAligned);
+    std::memcpy(missSbt.data(), sbt.data() + sbtOffset, handleSize);
+
+    OBufferAllocation rayGenBuffer =
+        new BufferAllocation(graphics, "RayGenSBT",
+                             VkBufferCreateInfo{
+                                 .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+                                 .pNext = nullptr,
+                                 .flags = 0,
+                                 .size = rayGenSbt.size(),
+                                 .usage = VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR | VK_BUFFER_USAGE_TRANSFER_SRC_BIT |
+                                          VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+                             },
+                             VmaAllocationCreateInfo{
+                                 .usage = VMA_MEMORY_USAGE_AUTO,
+                             },
+                             Gfx::QueueType::GRAPHICS);
+    rayGenBuffer->updateContents(0, rayGenSbt.size(), rayGenSbt.data());
+
+    OBufferAllocation hitBuffer =
+        new BufferAllocation(graphics, "HitSBT",
+                             VkBufferCreateInfo{
+                                 .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+                                 .pNext = nullptr,
+                                 .flags = 0,
+                                 .size = hitSbt.size(),
+                                 .usage = VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR | VK_BUFFER_USAGE_TRANSFER_SRC_BIT |
+                                          VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+                             },
+                             VmaAllocationCreateInfo{
+                                 .usage = VMA_MEMORY_USAGE_AUTO,
+                             },
+                             Gfx::QueueType::GRAPHICS);
+    hitBuffer->updateContents(0, hitSbt.size(), hitSbt.data());
+
+    OBufferAllocation missBuffer =
+        new BufferAllocation(graphics, "MissSBT",
+                             VkBufferCreateInfo{
+                                 .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+                                 .pNext = nullptr,
+                                 .flags = 0,
+                                 .size = missSbt.size(),
+                                 .usage = VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR | VK_BUFFER_USAGE_TRANSFER_SRC_BIT |
+                                          VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+                             },
+                             VmaAllocationCreateInfo{
+                                 .usage = VMA_MEMORY_USAGE_AUTO,
+                             },
+                             Gfx::QueueType::GRAPHICS);
+    missBuffer->updateContents(0, missSbt.size(), missSbt.data());
+
+    ORayTracingPipeline pipeline =
+        new RayTracingPipeline(graphics, pipelineHandle, std::move(rayGenBuffer), handleSizeAligned, std::move(hitBuffer), hitStride,
+                               std::move(missBuffer), handleSizeAligned, createInfo.pipelineLayout);
     PRayTracingPipeline handle = pipeline;
     rayTracingPipelines[hash] = std::move(pipeline);
     return handle;

@@ -2,16 +2,17 @@
 #include "Descriptor.h"
 #include "Enums.h"
 
-
 namespace Seele {
 namespace Gfx {
 DECLARE_REF(Viewport)
+DECLARE_REF(RayTracingPipeline)
 class RenderCommand {
   public:
     RenderCommand();
     virtual ~RenderCommand();
     virtual void setViewport(Gfx::PViewport viewport) = 0;
     virtual void bindPipeline(Gfx::PGraphicsPipeline pipeline) = 0;
+    virtual void bindPipeline(Gfx::PRayTracingPipeline pipeline) = 0;
     virtual void bindDescriptor(Gfx::PDescriptorSet set, Array<uint32> dynamicOffsets = {}) = 0;
     virtual void bindDescriptor(const Array<Gfx::PDescriptorSet>& sets, Array<uint32> dynamicOffsets = {}) = 0;
     virtual void bindVertexBuffer(const Array<PVertexBuffer>& buffer) = 0;
@@ -21,6 +22,7 @@ class RenderCommand {
     virtual void drawIndexed(uint32 indexCount, uint32 instanceCount, int32 firstIndex, uint32 vertexOffset, uint32 firstInstance) = 0;
     virtual void drawMesh(uint32 groupX, uint32 groupY, uint32 groupZ) = 0;
     virtual void drawMeshIndirect(Gfx::PShaderBuffer buffer, uint64 offset, uint32 drawCount, uint32 stride) = 0;
+    virtual void traceRays(uint32 width, uint32 height, uint32 depth) = 0;
     std::string name;
 };
 DEFINE_REF(RenderCommand)

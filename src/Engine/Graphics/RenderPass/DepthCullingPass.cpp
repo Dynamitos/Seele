@@ -65,9 +65,7 @@ DepthCullingPass::DepthCullingPass(Gfx::PGraphics graphics, PScene scene) : Rend
 
 DepthCullingPass::~DepthCullingPass() {}
 
-void DepthCullingPass::beginFrame(const Component::Camera& cam) {
-    RenderPass::beginFrame(cam);
-}
+void DepthCullingPass::beginFrame(const Component::Camera& cam) { RenderPass::beginFrame(cam); }
 
 void DepthCullingPass::render() {
     query->beginQuery();
@@ -231,14 +229,15 @@ void DepthCullingPass::publishOutputs() {
     };
     depthMipBuffer = graphics->createShaderBuffer(depthMipInfo);
 
-    ShaderCreateInfo mipComputeInfo = {
+    ShaderCompilationInfo mipComputeInfo = {
         .name = "DepthMipCompute",
-        .mainModule = "DepthMipGen",
-        .entryPoint = "initialReduce",
+        .modules = {"DepthMipGen"},
+        .entryPoints = {{"initialReduce", "DepthMipGen"}, {"reduceLevel", "DepthMipGen"}},
         .rootSignature = depthComputeLayout,
     };
 
-    depthInitialReduceShader = graphics->createComputeShader(mipComputeInfo);
+    graphics->beginShaderCompilation(mipComputeInfo);
+    depthInitialReduceShader = graphics->createComputeShader({0});
     depthComputeLayout->create();
 
     Gfx::ComputePipelineCreateInfo pipelineCreateInfo = {
@@ -246,10 +245,7 @@ void DepthCullingPass::publishOutputs() {
         .pipelineLayout = depthComputeLayout,
     };
     depthInitialReduce = graphics->createComputePipeline(pipelineCreateInfo);
-
-    mipComputeInfo.entryPoint = "reduceLevel";
-
-    depthMipGenShader = graphics->createComputeShader(mipComputeInfo);
+    depthMipGenShader = graphics->createComputeShader({1});
 
     pipelineCreateInfo.computeShader = depthMipGenShader;
 

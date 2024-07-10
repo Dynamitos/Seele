@@ -35,6 +35,8 @@ ShaderPermutation ShaderCompiler::getTemplate(std::string name) {
     PassConfig& pass = passes[name];
     if (pass.useMeshShading) {
         permutation.setMeshFile(pass.mainFile);
+    } else if (pass.rayTracing) {
+        permutation.setRayTracingFile(pass.mainFile);
     } else {
         permutation.setVertexFile(pass.mainFile);
     }
@@ -49,13 +51,13 @@ ShaderPermutation ShaderCompiler::getTemplate(std::string name) {
 }
 
 void ShaderCompiler::compile() {
-    List<std::function<void()>> work;
+    //List<std::function<void()>> work;
     for (const auto& [name, pass] : passes) {
         for (const auto& [vdName, vd] : vertexData) {
             if (pass.useMaterial) {
                 for (const auto& [matName, mat] : materials) {
                     for (int y = 0; y < 2; y++) {
-                        work.add([=]() {
+                        //work.add([=]() {
                             ShaderPermutation permutation = getTemplate(name);
                             permutation.setPositionOnly(false);
                             permutation.setDepthCulling(y);
@@ -65,13 +67,13 @@ void ShaderCompiler::compile() {
                             layout->addDescriptorLayout(vd->getInstanceDataLayout());
                             permutation.setMaterial(mat->getName());
                             createShaders(permutation, std::move(layout));
-                        });
+                        //});
                     }
                 }
             } else {
                 for (int x = 0; x < 2; x++) {
                     for (int y = 0; y < 2; y++) {
-                        work.add([=]() {
+                        //work.add([=]() {
                             ShaderPermutation permutation = getTemplate(name);
                             permutation.setPositionOnly(x);
                             permutation.setDepthCulling(y);
@@ -80,13 +82,13 @@ void ShaderCompiler::compile() {
                             layout->addDescriptorLayout(vd->getVertexDataLayout());
                             layout->addDescriptorLayout(vd->getInstanceDataLayout());
                             createShaders(permutation, std::move(layout));
-                        });
+                        //});
                     }
                 }
             }
         }
     }
-    getThreadPool().runAndWait(std::move(work));
+    //getThreadPool().runAndWait(std::move(work));
 }
 
 void ShaderCompiler::createShaders(ShaderPermutation permutation, Gfx::OPipelineLayout layout) {
@@ -99,11 +101,11 @@ void ShaderCompiler::createShaders(ShaderPermutation permutation, Gfx::OPipeline
     ShaderCollection collection;
     collection.pipelineLayout = std::move(layout);
 
-    ShaderCreateInfo createInfo;
+    ShaderCompilationInfo createInfo;
     createInfo.name = fmt::format("Material {0}", permutation.materialName);
     createInfo.rootSignature = collection.pipelineLayout;
     if (std::strlen(permutation.materialName) > 0) {
-        createInfo.additionalModules.add(permutation.materialName);
+        createInfo.modules.add(permutation.materialName);
         createInfo.defines["MATERIAL_FILE_NAME"] = permutation.materialName;
     }
     if (permutation.positionOnly) {
@@ -116,27 +118,42 @@ void ShaderCompiler::createShaders(ShaderPermutation permutation, Gfx::OPipeline
         createInfo.defines["VISIBILITY"] = "1";
     }
     createInfo.typeParameter.add({Pair<const char*, const char*>("IVertexData", permutation.vertexDataName)});
-    createInfo.additionalModules.add(permutation.vertexDataName);
+    createInfo.modules.add(permutation.vertexDataName);
 
     if (permutation.useMeshShading) {
         if (permutation.hasTaskShader) {
-            createInfo.mainModule = permutation.taskFile;
-            createInfo.entryPoint = "taskMain";
-            collection.taskShader = graphics->createTaskShader(createInfo);
+            createInfo.entryPoints.add({"taskMain", permutation.taskFile});
+            createInfo.modules.add(permutation.taskFile);
         }
-        createInfo.mainModule = permutation.vertexMeshFile;
-        createInfo.entryPoint = "meshMain";
-        collection.meshShader = graphics->createMeshShader(createInfo);
+        createInfo.entryPoints.add({"meshMain", permutation.vertexMeshFile});
+        createInfo.modules.add(permutation.vertexMeshFile);
+    } else if (permutation.rayTracing) {
+        createInfo.defines["RAY_TRACING"] = "1";
+        createInfo.entryPoints.add({"closesthit", permutation.vertexMeshFile});
+        createInfo.modules.add(permutation.vertexMeshFile);
     } else {
-        createInfo.mainModule = permutation.vertexMeshFile;
-        createInfo.entryPoint = "vertexMain";
-        collection.vertexShader = graphics->createVertexShader(createInfo);
+        createInfo.entryPoints.add({"vertexMain", permutation.vertexMeshFile});
+        createInfo.modules.add(permutation.vertexMeshFile);
+    }
+    if (permutation.hasFragment) {
+        createInfo.entryPoints.add({"fragmentMain", permutation.fragmentFile});
+        createInfo.modules.add(permutation.fragmentFile);
     }
 
+    graphics->beginShaderCompilation(createInfo);
+    uint32 shaderIndex = 0;
+    if (permutation.useMeshShading) {
+        if (permutation.hasTaskShader) {
+            collection.taskShader = graphics->createTaskShader({shaderIndex++});
+        }
+        collection.meshShader = graphics->createMeshShader({shaderIndex++});
+    } else if (permutation.rayTracing) {
+        collection.closestHitShader = graphics->createClosestHitShader({shaderIndex++});
+    } else {
+        collection.vertexShader = graphics->createVertexShader({shaderIndex++});
+    }
     if (permutation.hasFragment) {
-        createInfo.mainModule = permutation.fragmentFile;
-        createInfo.entryPoint = "fragmentMain";
-        collection.fragmentShader = graphics->createFragmentShader(createInfo);
+        collection.fragmentShader = graphics->createFragmentShader({shaderIndex++});
     }
     collection.pipelineLayout->create();
     {

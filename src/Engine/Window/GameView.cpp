@@ -10,6 +10,7 @@
 #include "Graphics/RenderPass/LightCullingPass.h"
 #include "Graphics/RenderPass/RenderGraphResources.h"
 #include "Graphics/RenderPass/VisibilityPass.h"
+#include "Graphics/RenderPass/RayTracingPass.h"
 #include "System/CameraUpdater.h"
 #include "System/LightGather.h"
 #include "System/MeshUpdater.h"
@@ -22,11 +23,12 @@ using namespace Seele;
 GameView::GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo& createInfo, std::string dllPath)
     : View(graphics, window, createInfo, "Game"), scene(new Scene(graphics)), gameInterface(dllPath) {
     reloadGame();
-    renderGraph.addPass(new CachedDepthPass(graphics, scene));
-    renderGraph.addPass(new DepthCullingPass(graphics, scene));
-    renderGraph.addPass(new VisibilityPass(graphics, scene));
-    renderGraph.addPass(new LightCullingPass(graphics, scene));
-    renderGraph.addPass(new BasePass(graphics, scene));
+    //renderGraph.addPass(new CachedDepthPass(graphics, scene));
+    //renderGraph.addPass(new DepthCullingPass(graphics, scene));
+    //renderGraph.addPass(new VisibilityPass(graphics, scene));
+    //renderGraph.addPass(new LightCullingPass(graphics, scene));
+    //renderGraph.addPass(new BasePass(graphics, scene));
+    renderGraph.addPass(new RayTracingPass(graphics, scene));
     renderGraph.setViewport(viewport);
     renderGraph.createRenderPass();
 }

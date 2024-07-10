@@ -104,14 +104,16 @@ struct ShaderBufferCreateInfo {
     std::string name = "Unnamed";
 };
 DECLARE_NAME_REF(Gfx, PipelineLayout)
-struct ShaderCreateInfo {
+struct ShaderCompilationInfo {
     std::string name; // Debug info
-    std::string mainModule;
-    Array<std::string> additionalModules;
-    std::string entryPoint;
+    Array<std::string> modules;
+    Array<Pair<std::string, std::string>> entryPoints; // entry function name, module name
     Array<Pair<const char*, const char*>> typeParameter;
     Map<const char*, const char*> defines;
     Gfx::PPipelineLayout rootSignature;
+};
+struct ShaderCreateInfo {
+    uint32 entryPointIndex;
 };
 struct VertexInputBinding {
     uint32 binding;
@@ -204,6 +206,7 @@ DECLARE_REF(MissShader)
 DECLARE_REF(CallableShader)
 DECLARE_REF(RenderPass)
 DECLARE_REF(PipelineLayout)
+DECLARE_REF(BottomLevelAS)
 struct LegacyPipelineCreateInfo {
     SePrimitiveTopology topology = Gfx::SE_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     PVertexInput vertexInput = nullptr;
@@ -232,18 +235,25 @@ struct ComputePipelineCreateInfo {
     Gfx::PComputeShader computeShader = nullptr;
     Gfx::PPipelineLayout pipelineLayout = nullptr;
 };
+struct RayTracingHitGroup {
+    PClosestHitShader closestHitShader;
+    PAnyHitShader anyHitShader;
+    PIntersectionShader intersectionShader;
+    Array<uint8> parameters;
+};
 struct RayTracingPipelineCreateInfo {
     PPipelineLayout pipelineLayout = nullptr;
     PRayGenShader rayGenShader = nullptr;
-    Array<PClosestHitShader> closestHitShaders;
-    Array<PAnyHitShader> anyHitShaders;
-    Array<PIntersectionShader> intersectionShaders;
+    Array<RayTracingHitGroup> hitgroups;
     Array<PMissShader> missShaders;
     Array<PCallableShader> callableShaders;
 };
 struct BottomLevelASCreateInfo {
     PMesh mesh;
 };
-struct TopLevelASCreateInfo {};
+struct TopLevelASCreateInfo {
+    Array<InstanceData> instances;
+    Array<Gfx::PBottomLevelAS> bottomLevelStructures;
+};
 } // namespace Gfx
 } // namespace Seele

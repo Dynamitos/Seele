@@ -3,7 +3,7 @@
 
 using namespace Seele::Gfx;
 
-RayTracingPipeline::RayTracingPipeline(Gfx::PPipelineLayout layout) {}
+RayTracingPipeline::RayTracingPipeline(Gfx::PPipelineLayout layout) : layout(layout) {}
 
 RayTracingPipeline::~RayTracingPipeline() {}
 

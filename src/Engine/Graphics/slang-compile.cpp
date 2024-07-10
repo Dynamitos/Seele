@@ -1,9 +1,11 @@
 #include "slang-compile.h"
 #include "Containers/Array.h"
+#include "Graphics/Descriptor.h"
 #include <fmt/core.h>
 #include <iostream>
 #include <slang.h>
 
+using namespace Seele;
 
 #define CHECK_RESULT(x)                                                                                                                    \
     {                                                                                                                                      \
@@ -20,15 +22,17 @@
         }                                                                                                                                  \
     }
 
-Slang::ComPtr<slang::IBlob> Seele::generateShader(const ShaderCreateInfo& createInfo, SlangCompileTarget target,
-                                                  Map<std::string, uint32>& paramMapping) {
-    thread_local Slang::ComPtr<slang::IGlobalSession> globalSession;
+thread_local Slang::ComPtr<slang::IGlobalSession> globalSession;
+thread_local Slang::ComPtr<slang::IComponentType> specializedComponent;
+thread_local Slang::ComPtr<slang::ISession> session;
+
+void Seele::beginCompilation(const ShaderCompilationInfo& info, SlangCompileTarget target, Gfx::PPipelineLayout layout) {
     if (!globalSession) {
         slang::createGlobalSession(globalSession.writeRef());
     }
     slang::SessionDesc sessionDesc;
     sessionDesc.flags = 0;
-    StaticArray<slang::CompilerOptionEntry, 4> option;
+    StaticArray<slang::CompilerOptionEntry, 5> option;
     option[0].name = slang::CompilerOptionName::IgnoreCapabilities;
     option[0].value.kind = slang::CompilerOptionValueKind::Int;
     option[0].value.intValue0 = 1;
@@ -41,12 +45,15 @@ Slang::ComPtr<slang::IBlob> Seele::generateShader(const ShaderCreateInfo& create
     option[3].name = slang::CompilerOptionName::DebugInformationFormat;
     option[3].value.kind = slang::CompilerOptionValueKind::Int;
     option[3].value.intValue0 = SLANG_DEBUG_INFO_FORMAT_PDB;
+    option[4].name = slang::CompilerOptionName::DumpIntermediates;
+    option[4].value.kind = slang::CompilerOptionValueKind::Int;
+    option[4].value.intValue0 = 1;
 
     sessionDesc.compilerOptionEntries = option.data();
     sessionDesc.compilerOptionEntryCount = option.size();
     sessionDesc.defaultMatrixLayoutMode = SLANG_MATRIX_LAYOUT_COLUMN_MAJOR;
     Array<slang::PreprocessorMacroDesc> macros;
-    for (const auto& [key, val] : createInfo.defines) {
+    for (const auto& [key, val] : info.defines) {
         macros.add(slang::PreprocessorMacroDesc{
             .name = key,
             .value = val,
@@ -59,28 +66,30 @@ Slang::ComPtr<slang::IBlob> Seele::generateShader(const ShaderCreateInfo& create
     targetDesc.format = target;
     sessionDesc.targetCount = 1;
     sessionDesc.targets = &targetDesc;
-    StaticArray<const char*, 3> searchPaths = {"shaders/", "shaders/lib/", "shaders/generated/"};
+    StaticArray<const char*, 4> searchPaths = {"shaders/", "shaders/lib/", "shaders/raytracing/", "shaders/generated/"};
     sessionDesc.searchPaths = searchPaths.data();
     sessionDesc.searchPathCount = searchPaths.size();
 
-    Slang::ComPtr<slang::ISession> session;
-    CHECK_RESULT(globalSession->createSession(sessionDesc, session.writeRef()));
     Slang::ComPtr<slang::IBlob> diagnostics;
-    Array<slang::IComponentType*> modules;
-    Slang::ComPtr<slang::IEntryPoint> entrypoint;
-    for (const auto& moduleName : createInfo.additionalModules) {
-        modules.add(session->loadModule(moduleName.c_str(), diagnostics.writeRef()));
+
+    CHECK_RESULT(globalSession->createSession(sessionDesc, session.writeRef()));
+    Array<slang::IComponentType*> components;
+    Map<std::string, slang::IModule*> moduleMap;
+    for (const auto& moduleName : info.modules) {
+        slang::IModule* loaded = session->loadModule(moduleName.c_str(), diagnostics.writeRef());
+        components.add(loaded);
+        moduleMap[moduleName] = loaded;
         CHECK_DIAGNOSTICS();
     }
-    slang::IModule* mainModule = session->loadModule(createInfo.mainModule.c_str(), diagnostics.writeRef());
-    modules.add(mainModule);
-    CHECK_DIAGNOSTICS();
 
-    CHECK_RESULT(mainModule->findEntryPointByName(createInfo.entryPoint.c_str(), entrypoint.writeRef()));
-    modules.add(entrypoint);
+    for (const auto& [name, mod] : info.entryPoints) {
+        slang::IEntryPoint* entry;
+        moduleMap[mod]->findEntryPointByName(name.c_str(), &entry);
+        components.add(entry);
+    }
 
     Slang::ComPtr<slang::IComponentType> moduleComposition;
-    session->createCompositeComponentType(modules.data(), modules.size(), moduleComposition.writeRef(), diagnostics.writeRef());
+    session->createCompositeComponentType(components.data(), components.size(), moduleComposition.writeRef(), diagnostics.writeRef());
 
     CHECK_DIAGNOSTICS();
 
@@ -94,25 +103,28 @@ Slang::ComPtr<slang::IBlob> Seele::generateShader(const ShaderCreateInfo& create
     CHECK_DIAGNOSTICS();
 
     Array<slang::SpecializationArg> specialization;
-    for (const auto& [key, value] : createInfo.typeParameter) {
+    for (const auto& [key, value] : info.typeParameter) {
         specialization.add(slang::SpecializationArg::fromType(reflection->findTypeByName(value)));
     }
-    Slang::ComPtr<slang::IComponentType> specializedComponent;
     linkedProgram->specialize(specialization.data(), specialization.size(), specializedComponent.writeRef(), diagnostics.writeRef());
     CHECK_DIAGNOSTICS();
 
-    Slang::ComPtr<slang::IBlob> kernelBlob;
-    specializedComponent->getEntryPointCode(0, 0, kernelBlob.writeRef(), diagnostics.writeRef());
-    CHECK_DIAGNOSTICS();
     slang::ProgramLayout* signature = specializedComponent->getLayout(0, diagnostics.writeRef());
     CHECK_DIAGNOSTICS();
     for (size_t i = 0; i < signature->getParameterCount(); ++i) {
         auto param = signature->getParameterByIndex(i);
-        paramMapping[param->getName()] = param->getBindingIndex();
+        layout->addMapping(param->getName(), param->getBindingIndex());
     }
 
     // workaround
-    paramMapping["pVertexData"] = 1;
-    paramMapping["pMaterial"] = 4;
+    layout->addMapping("pVertexData", 1);
+    layout->addMapping("pMaterial", 4);
+}
+
+Slang::ComPtr<slang::IBlob> Seele::generateShader(const ShaderCreateInfo& createInfo) {
+    Slang::ComPtr<slang::IBlob> diagnostics;
+    Slang::ComPtr<slang::IBlob> kernelBlob;
+    specializedComponent->getEntryPointCode(createInfo.entryPointIndex, 0, kernelBlob.writeRef(), diagnostics.writeRef());
+    CHECK_DIAGNOSTICS();
     return kernelBlob;
 }

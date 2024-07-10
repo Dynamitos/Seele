@@ -472,17 +472,19 @@ void BasePass::createRenderPass() {
         debugPipelineLayout = graphics->createPipelineLayout("DebugPassLayout");
         debugPipelineLayout->addDescriptorLayout(viewParamsLayout);
 
-        ShaderCreateInfo createInfo = {
+        ShaderCompilationInfo createInfo = {
             .name = "DebugVertex",
-            .mainModule = "Debug",
-            .entryPoint = "vertexMain",
+            .modules = {"Debug"},
+            .entryPoints =
+                {
+                    {"vertexMain", "Debug"},
+                    {"fragmentMain", "Debug"},
+                },
             .rootSignature = debugPipelineLayout,
         };
-        debugVertexShader = graphics->createVertexShader(createInfo);
-
-        createInfo.name = "DebugFragment";
-        createInfo.entryPoint = "fragmentMain";
-        debugFragmentShader = graphics->createFragmentShader(createInfo);
+        graphics->beginShaderCompilation(createInfo);
+        debugVertexShader = graphics->createVertexShader({0});
+        debugFragmentShader = graphics->createFragmentShader({1});
         debugPipelineLayout->create();
 
         VertexInputStateCreateInfo inputCreate = {
@@ -578,17 +580,15 @@ void BasePass::createRenderPass() {
         pipelineLayout->addDescriptorLayout(skyboxDataLayout);
         pipelineLayout->addDescriptorLayout(textureLayout);
 
-        ShaderCreateInfo createInfo = {
+        ShaderCompilationInfo createInfo = {
             .name = "SkyboxVertex",
-            .mainModule = "Skybox",
-            .entryPoint = "vertexMain",
+            .modules = {"Skybox"},
+            .entryPoints = {{"vertexMain", "Skybox"}, {"fragmentMain", "Skybox"}},
             .rootSignature = pipelineLayout,
         };
-        vertexShader = graphics->createVertexShader(createInfo);
-
-        createInfo.name = "SkyboxFragment";
-        createInfo.entryPoint = "fragmentMain";
-        fragmentShader = graphics->createFragmentShader(createInfo);
+        graphics->beginShaderCompilation(createInfo);
+        vertexShader = graphics->createVertexShader({0});
+        fragmentShader = graphics->createFragmentShader({1});
 
         pipelineLayout->create();
 

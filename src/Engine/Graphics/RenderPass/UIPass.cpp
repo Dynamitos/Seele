@@ -5,7 +5,6 @@
 #include "Graphics/RenderTarget.h"
 #include "RenderGraph.h"
 
-
 using namespace Seele;
 
 UIPass::UIPass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics, scene) {}
@@ -80,16 +79,18 @@ void UIPass::publishOutputs() {
 }
 
 void UIPass::createRenderPass() {
-    ShaderCreateInfo createInfo = {
+    ShaderCompilationInfo createInfo = {
         .name = "UIVertex",
-        .mainModule = "UIPass",
-        .entryPoint = "vertexMain",
+        .modules = {"UIPass"},
+        .entryPoints =
+            {
+                {"vertexMain", "UIPass"},
+                {"fragmentMain", "UIFragment"},
+            },
     };
-    vertexShader = graphics->createVertexShader(createInfo);
-
-    createInfo.name = "UIFragment";
-    createInfo.entryPoint = "fragmentMain";
-    fragmentShader = graphics->createFragmentShader(createInfo);
+    graphics->beginShaderCompilation(createInfo);
+    vertexShader = graphics->createVertexShader({0});
+    fragmentShader = graphics->createFragmentShader({1});
 
     descriptorLayout = graphics->createDescriptorLayout("pParams");
     descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{

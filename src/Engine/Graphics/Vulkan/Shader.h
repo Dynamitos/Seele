@@ -13,7 +13,7 @@ class Shader {
     Shader(PGraphics graphics, VkShaderStageFlags stage);
     virtual ~Shader();
 
-    void create(ShaderCreateInfo createInfo);
+    void create(const ShaderCreateInfo& createInfo);
 
     constexpr VkShaderModule getModuleHandle() const { return module; }
     constexpr const char* getEntryPointName() const {

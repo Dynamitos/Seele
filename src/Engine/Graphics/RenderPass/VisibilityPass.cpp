@@ -59,21 +59,22 @@ void VisibilityPass::publishOutputs() {
     visibilityDescriptor->create();
 
     visibilityLayout = graphics->createPipelineLayout("VisibilityLayout");
-    visibilityLayout->addDescriptorLayout(viewParamsLayout);
     visibilityLayout->addDescriptorLayout(visibilityDescriptor);
+    visibilityLayout->addDescriptorLayout(viewParamsLayout);
 
-    ShaderCreateInfo createInfo = {
+    ShaderCompilationInfo createInfo = {
         .name = "Visibility",
-        .mainModule = "VisibilityCompute",
-        .entryPoint = "computeMain",
+        .modules = {"VisibilityCompute"},
+        .entryPoints = {{"computeMain", "VisibilityCompute"}},
         .rootSignature = visibilityLayout,
     };
-    visibilityShader = graphics->createComputeShader(createInfo);
+    graphics->beginShaderCompilation(createInfo);
+    visibilityShader = graphics->createComputeShader({0});
     visibilityLayout->create();
 
     Gfx::ComputePipelineCreateInfo pipelineInfo;
     pipelineInfo.computeShader = visibilityShader;
-    pipelineInfo.pipelineLayout = std::move(visibilityLayout);
+    pipelineInfo.pipelineLayout = visibilityLayout;
     visibilityPipeline = graphics->createComputePipeline(std::move(pipelineInfo));
 
     cullingBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{

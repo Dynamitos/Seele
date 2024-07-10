@@ -5,7 +5,6 @@
 #include "Graphics/RenderTarget.h"
 #include "RenderGraph.h"
 
-
 using namespace Seele;
 
 TextPass::TextPass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics, scene) {}
@@ -97,16 +96,15 @@ void TextPass::createRenderPass() {
     renderTarget = resources->requestRenderTarget("UIPASS_COLOR");
     depthAttachment = resources->requestRenderTarget("UIPASS_DEPTH");
 
-    ShaderCreateInfo createInfo = {
+    ShaderCompilationInfo createInfo = {
         .name = "TextVertex",
-        .mainModule = "TextPass",
-        .entryPoint = "vertexMain",
+        .modules = {"TextPass"},
+        .entryPoints = {{"vertexMain", "TextPass"}, {"fragmentMain", "TextFragment"}},
     };
-    vertexShader = graphics->createVertexShader(createInfo);
+    graphics->beginShaderCompilation(createInfo);
+    vertexShader = graphics->createVertexShader({0});
+    fragmentShader = graphics->createFragmentShader({1});
 
-    createInfo.name = "TextFragment";
-    createInfo.entryPoint = "fragmentMain";
-    fragmentShader = graphics->createFragmentShader(createInfo);
     generalLayout = graphics->createDescriptorLayout("pRender");
     generalLayout->addDescriptorBinding(Gfx::DescriptorBinding{
         .binding = 0,

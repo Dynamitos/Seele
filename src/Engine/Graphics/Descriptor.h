@@ -3,7 +3,6 @@
 #include "Initializer.h"
 #include "Resources.h"
 
-
 namespace Seele {
 namespace Gfx {
 struct DescriptorBinding {
@@ -56,13 +55,15 @@ DECLARE_REF(ShaderBuffer)
 DECLARE_REF(Texture)
 DECLARE_REF(Texture2D)
 DECLARE_REF(Sampler)
+DECLARE_REF(TopLevelAS)
 class DescriptorSet {
   public:
     DescriptorSet(PDescriptorLayout layout);
     virtual ~DescriptorSet();
     virtual void writeChanges() = 0;
     virtual void updateBuffer(uint32 binding, PUniformBuffer uniformBuffer) = 0;
-    virtual void updateBuffer(uint32 binding, PShaderBuffer ShaderBuffer) = 0;
+    virtual void updateBuffer(uint32 binding, PIndexBuffer indexBuffer) = 0;
+    virtual void updateBuffer(uint32 binding, PShaderBuffer shaderBuffer) = 0;
     virtual void updateBuffer(uint32_t binding, uint32 index, Gfx::PShaderBuffer uniformBuffer) = 0;
     virtual void updateSampler(uint32 binding, PSampler sampler) = 0;
     virtual void updateSampler(uint32_t binding, uint32 dstArrayIndex, Gfx::PSampler samplerState) = 0;
@@ -70,6 +71,7 @@ class DescriptorSet {
     virtual void updateTexture(uint32 binding, uint32 dstArrayIndex, PTexture texture) = 0;
     virtual void updateTextureArray(uint32_t binding, Array<PTexture2D> texture) = 0;
     virtual void updateSamplerArray(uint32_t binding, Array<PSampler> samplers) = 0;
+    virtual void updateAccelerationStructure(uint32 binding, PTopLevelAS as) = 0;
     bool operator<(PDescriptorSet other);
 
     constexpr PDescriptorLayout getLayout() const { return layout; }
@@ -92,7 +94,7 @@ class PipelineLayout {
     constexpr uint32 getHash() const { return layoutHash; }
     constexpr const Map<std::string, PDescriptorLayout>& getLayouts() const { return descriptorSetLayouts; }
     constexpr uint32 findParameter(const std::string& param) const { return parameterMapping[param]; }
-    void addMapping(Map<std::string, uint32> mapping);
+    void addMapping(std::string name, uint32 index);
     constexpr std::string getName() const { return name; };
 
   protected:

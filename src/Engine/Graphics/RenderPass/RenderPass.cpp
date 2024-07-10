@@ -3,7 +3,6 @@
 using namespace Seele;
 
 RenderPass::RenderPass(Gfx::PGraphics graphics, PScene scene) : graphics(graphics), scene(scene) {
-
     viewParamsLayout = graphics->createDescriptorLayout("pViewParams");
     viewParamsLayout->addDescriptorBinding(Gfx::DescriptorBinding{
         .binding = 0,

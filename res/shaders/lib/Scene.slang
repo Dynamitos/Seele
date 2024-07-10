@@ -43,12 +43,16 @@ struct MeshletCullingInfo
 
 struct DrawCallOffsets
 {
-    uint32_t instanceOffset;
+    uint instanceOffset;
 	uint textureOffset;
 	uint samplerOffset;
 	uint floatOffset;
 };
+#ifdef RAY_TRACING
+layout(shaderRecordEXT)
+#else
 layout(push_constant)
+#endif
 ConstantBuffer<DrawCallOffsets> pOffsets;
 
 struct Scene
