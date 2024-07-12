@@ -56,8 +56,8 @@ class VertexData {
     void loadMesh(MeshId id, Array<uint32> indices, Array<Meshlet> meshlets);
     void commitMeshes();
     MeshId allocateVertexData(uint64 numVertices);
-    uint64 getMeshOffset(MeshId id);
-    uint64 getMeshVertexCount(MeshId id);
+    uint64 getMeshOffset(MeshId id) const { return meshOffsets[id]; }
+    uint64 getMeshVertexCount(MeshId id) { return meshVertexCounts[id]; }
     virtual void serializeMesh(MeshId id, uint64 numVertices, ArchiveBuffer& buffer) = 0;
     virtual void deserializeMesh(MeshId id, ArchiveBuffer& buffer) = 0;
     virtual void bindBuffers(Gfx::PRenderCommand command) = 0;
@@ -72,7 +72,8 @@ class VertexData {
     const Array<MaterialData>& getMaterialData() const { return materialData; }
     const Array<TransparentDraw>& getTransparentData() const { return transparentData; }
     const Array<Gfx::PBottomLevelAS>& getRayTracingData() const { return rayTracingScene; }
-    const MeshData& getMeshData(MeshId id) { return meshData[id]; }
+    const MeshData& getMeshData(MeshId id) const { return meshData[id]; }
+    void registerBottomLevelAccelerationStructure(Gfx::PBottomLevelAS blas) { dataToBuild.add(blas); }
     uint64 getIndicesOffset(uint32 meshletIndex) { return meshlets[meshletIndex].indicesOffset; }
     uint64 getNumInstances() const { return instanceData.size(); }
     static List<VertexData*> getList();
@@ -138,6 +139,7 @@ class VertexData {
     Gfx::OShaderBuffer cullingOffsetBuffer;
     // for legacy pipeline
     Gfx::OIndexBuffer indexBuffer;
+    Array<Gfx::PBottomLevelAS> dataToBuild;
     // Material data
     Array<InstanceData> instanceData;
     Gfx::OShaderBuffer instanceBuffer;

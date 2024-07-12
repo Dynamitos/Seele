@@ -25,6 +25,7 @@ using namespace Seele;
 thread_local Slang::ComPtr<slang::IGlobalSession> globalSession;
 thread_local Slang::ComPtr<slang::IComponentType> specializedComponent;
 thread_local Slang::ComPtr<slang::ISession> session;
+thread_local Array<std::string> entryPoints;
 
 void Seele::beginCompilation(const ShaderCompilationInfo& info, SlangCompileTarget target, Gfx::PPipelineLayout layout) {
     if (!globalSession) {
@@ -81,8 +82,9 @@ void Seele::beginCompilation(const ShaderCompilationInfo& info, SlangCompileTarg
         moduleMap[moduleName] = loaded;
         CHECK_DIAGNOSTICS();
     }
-
+    entryPoints.clear();
     for (const auto& [name, mod] : info.entryPoints) {
+        entryPoints.add(name);
         slang::IEntryPoint* entry;
         moduleMap[mod]->findEntryPointByName(name.c_str(), &entry);
         components.add(entry);
@@ -119,12 +121,15 @@ void Seele::beginCompilation(const ShaderCompilationInfo& info, SlangCompileTarg
     // workaround
     layout->addMapping("pVertexData", 1);
     layout->addMapping("pMaterial", 4);
+    layout->addMapping("pLightEnv", 3);
+    layout->addMapping("pRayTracingParams", 5);
+    layout->addMapping("pScene", 2);
 }
 
-Slang::ComPtr<slang::IBlob> Seele::generateShader(const ShaderCreateInfo& createInfo) {
+Pair<Slang::ComPtr<slang::IBlob>, std::string> Seele::generateShader(const ShaderCreateInfo& createInfo) {
     Slang::ComPtr<slang::IBlob> diagnostics;
     Slang::ComPtr<slang::IBlob> kernelBlob;
     specializedComponent->getEntryPointCode(createInfo.entryPointIndex, 0, kernelBlob.writeRef(), diagnostics.writeRef());
     CHECK_DIAGNOSTICS();
-    return kernelBlob;
+    return {kernelBlob, entryPoints[createInfo.entryPointIndex]};
 }

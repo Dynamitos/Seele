@@ -293,6 +293,7 @@ void VertexData::commitMeshes() {
         .dynamic = false,
         .name = "PrimitiveIndicesBuffer",
     });
+    graphics->buildBottomLevelAccelerationStructures(std::move(dataToBuild));
 }
 
 MeshId VertexData::allocateVertexData(uint64 numVertices) {
@@ -308,10 +309,6 @@ MeshId VertexData::allocateVertexData(uint64 numVertices) {
     }
     return res;
 }
-
-uint64 VertexData::getMeshOffset(MeshId id) { return meshOffsets[id]; }
-
-uint64 VertexData::getMeshVertexCount(MeshId id) { return meshVertexCounts[id]; }
 
 List<VertexData*> vertexDataList;
 

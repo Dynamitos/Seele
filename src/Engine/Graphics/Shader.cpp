@@ -51,13 +51,13 @@ ShaderPermutation ShaderCompiler::getTemplate(std::string name) {
 }
 
 void ShaderCompiler::compile() {
-    //List<std::function<void()>> work;
+    List<std::function<void()>> work;
     for (const auto& [name, pass] : passes) {
         for (const auto& [vdName, vd] : vertexData) {
             if (pass.useMaterial) {
                 for (const auto& [matName, mat] : materials) {
                     for (int y = 0; y < 2; y++) {
-                        //work.add([=]() {
+                        work.add([=]() {
                             ShaderPermutation permutation = getTemplate(name);
                             permutation.setPositionOnly(false);
                             permutation.setDepthCulling(y);
@@ -67,13 +67,13 @@ void ShaderCompiler::compile() {
                             layout->addDescriptorLayout(vd->getInstanceDataLayout());
                             permutation.setMaterial(mat->getName());
                             createShaders(permutation, std::move(layout));
-                        //});
+                        });
                     }
                 }
             } else {
                 for (int x = 0; x < 2; x++) {
                     for (int y = 0; y < 2; y++) {
-                        //work.add([=]() {
+                        work.add([=]() {
                             ShaderPermutation permutation = getTemplate(name);
                             permutation.setPositionOnly(x);
                             permutation.setDepthCulling(y);
@@ -82,13 +82,13 @@ void ShaderCompiler::compile() {
                             layout->addDescriptorLayout(vd->getVertexDataLayout());
                             layout->addDescriptorLayout(vd->getInstanceDataLayout());
                             createShaders(permutation, std::move(layout));
-                        //});
+                        });
                     }
                 }
             }
         }
     }
-    //getThreadPool().runAndWait(std::move(work));
+    getThreadPool().runAndWait(std::move(work));
 }
 
 void ShaderCompiler::createShaders(ShaderPermutation permutation, Gfx::OPipelineLayout layout) {
@@ -129,7 +129,7 @@ void ShaderCompiler::createShaders(ShaderPermutation permutation, Gfx::OPipeline
         createInfo.modules.add(permutation.vertexMeshFile);
     } else if (permutation.rayTracing) {
         createInfo.defines["RAY_TRACING"] = "1";
-        createInfo.entryPoints.add({"closesthit", permutation.vertexMeshFile});
+        createInfo.entryPoints = {{"callable", "Callable"}};
         createInfo.modules.add(permutation.vertexMeshFile);
     } else {
         createInfo.entryPoints.add({"vertexMain", permutation.vertexMeshFile});
@@ -148,7 +148,7 @@ void ShaderCompiler::createShaders(ShaderPermutation permutation, Gfx::OPipeline
         }
         collection.meshShader = graphics->createMeshShader({shaderIndex++});
     } else if (permutation.rayTracing) {
-        collection.closestHitShader = graphics->createClosestHitShader({shaderIndex++});
+        collection.callableShader = graphics->createCallableShader({shaderIndex++});
     } else {
         collection.vertexShader = graphics->createVertexShader({shaderIndex++});
     }

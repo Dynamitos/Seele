@@ -8,6 +8,8 @@
 #include "Graphics/Enums.h"
 #include "Graphics/Graphics.h"
 #include "Graphics/Initializer.h"
+#include "Graphics/StaticMeshVertexData.h"
+#include "Graphics/slang-compile.h"
 #include "PipelineCache.h"
 #include "Query.h"
 #include "RayTracing.h"
@@ -15,7 +17,6 @@
 #include "Shader.h"
 #include "Window.h"
 #include <GLFW/glfw3.h>
-#include "Graphics/slang-compile.h"
 #include <cstring>
 #include <vulkan/vulkan_core.h>
 
@@ -90,7 +91,6 @@ void vkCmdTraceRaysKHR(VkCommandBuffer commandBuffer, const VkStridedDeviceAddre
     cmdTraceRays(commandBuffer, pRaygenShaderBindingTable, pMissShaderBindingTable, pHitShaderBindingTable, pCallableShaderBindingTable,
                  width, height, depth);
 }
-
 
 Graphics::Graphics() : instance(VK_NULL_HANDLE), handle(VK_NULL_HANDLE), physicalDevice(VK_NULL_HANDLE), callback(VK_NULL_HANDLE) {}
 
@@ -189,7 +189,9 @@ Gfx::ORenderCommand Graphics::createRenderCommand(const std::string& name) { ret
 
 Gfx::OComputeCommand Graphics::createComputeCommand(const std::string& name) { return getComputeCommands()->createComputeCommand(name); }
 
-void Graphics::beginShaderCompilation(const ShaderCompilationInfo& createInfo) { beginCompilation(createInfo, SLANG_SPIRV, createInfo.rootSignature); }
+void Graphics::beginShaderCompilation(const ShaderCompilationInfo& createInfo) {
+    beginCompilation(createInfo, SLANG_SPIRV, createInfo.rootSignature);
+}
 
 Gfx::OVertexShader Graphics::createVertexShader(const ShaderCreateInfo& createInfo) {
     OVertexShader shader = new VertexShader(this);
@@ -319,6 +321,13 @@ void Graphics::resolveTexture(Gfx::PTexture source, Gfx::PTexture destination) {
 void Graphics::copyTexture(Gfx::PTexture source, Gfx::PTexture destination) {
     PTextureBase src = source.cast<TextureBase>();
     PTextureBase dst = destination.cast<TextureBase>();
+    Gfx::SeImageLayout srcLayout = src->getLayout();
+    Gfx::SeImageLayout dstLayout = dst->getLayout();
+    src->changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, Gfx::SE_ACCESS_MEMORY_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                      Gfx::SE_ACCESS_TRANSFER_READ_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT);
+    dst->changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, Gfx::SE_ACCESS_MEMORY_WRITE_BIT | Gfx::SE_ACCESS_MEMORY_READ_BIT,
+                      Gfx::SE_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT);
+
     VkImageBlit blit = {
         .srcSubresource =
             {
@@ -349,6 +358,12 @@ void Graphics::copyTexture(Gfx::PTexture source, Gfx::PTexture destination) {
     vkCmdBlitImage(command->getHandle(), src->getImage(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, dst->getImage(),
                    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blit,
                    src->getAspect() & VK_IMAGE_ASPECT_DEPTH_BIT ? VK_FILTER_NEAREST : VK_FILTER_LINEAR);
+
+    src->changeLayout(srcLayout, Gfx::SE_ACCESS_TRANSFER_READ_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
+                      Gfx::SE_ACCESS_MEMORY_READ_BIT | Gfx::SE_ACCESS_MEMORY_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
+
+    dst->changeLayout(dstLayout, Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
+                      Gfx::SE_ACCESS_MEMORY_READ_BIT | Gfx::SE_ACCESS_MEMORY_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
 }
 
 Gfx::OBottomLevelAS Graphics::createBottomLevelAccelerationStructure(const Gfx::BottomLevelASCreateInfo& createInfo) {
@@ -357,6 +372,148 @@ Gfx::OBottomLevelAS Graphics::createBottomLevelAccelerationStructure(const Gfx::
 
 Gfx::OTopLevelAS Graphics::createTopLevelAccelerationStructure(const Gfx::TopLevelASCreateInfo& createInfo) {
     return new TopLevelAS(this, createInfo);
+}
+
+void Graphics::buildBottomLevelAccelerationStructures(Array<Gfx::PBottomLevelAS> data) {
+    Gfx::PShaderBuffer positionBuffer = StaticMeshVertexData::getInstance()->getPositionBuffer();
+    Gfx::PIndexBuffer indexBuffer = StaticMeshVertexData::getInstance()->getIndexBuffer();
+
+    VkBufferCreateInfo transformBufferInfo = {
+        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .size = sizeof(VkTransformMatrixKHR) * data.size(),
+        .usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT |
+                 VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+    };
+    VmaAllocationCreateInfo transformAllocInfo = {
+        .flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
+        .usage = VMA_MEMORY_USAGE_AUTO,
+    };
+
+    Array<VkTransformMatrixKHR> matrices;
+    for (const auto gfxBlas : data) {
+        const auto blas = gfxBlas.cast<BottomLevelAS>();
+        matrices.add(blas->getTransform());
+    }
+    OBufferAllocation transformBuffer =
+        new BufferAllocation(this, "TransformBuffer", transformBufferInfo, transformAllocInfo, Gfx::QueueType::GRAPHICS);
+    transformBuffer->updateContents(0, sizeof(VkTransformMatrixKHR) * matrices.size(), matrices.data());
+
+    Array<VkAccelerationStructureGeometryKHR> geometries(data.size());
+    Array<VkAccelerationStructureBuildGeometryInfoKHR> buildGeometries(data.size());
+    Array<VkAccelerationStructureBuildSizesInfoKHR> buildSizes(data.size());
+    Array<OBufferAllocation> scratchBuffers(data.size());
+    Array<VkAccelerationStructureBuildRangeInfoKHR> buildRanges(data.size());
+    Array<VkAccelerationStructureBuildRangeInfoKHR*> buildRangePointers(data.size());
+    for (uint32 i = 0; i < data.size(); ++i) {
+        auto blas = data[i].cast<BottomLevelAS>();
+        VkDeviceOrHostAddressConstKHR vertexDataAddress = {
+            .deviceAddress = positionBuffer.cast<ShaderBuffer>()->getDeviceAddress() + blas->getVertexOffset(),
+        };
+        VkDeviceOrHostAddressConstKHR indexDataAddress = {
+            .deviceAddress = indexBuffer.cast<IndexBuffer>()->getDeviceAddress() + blas->getIndexOffset(),
+        };
+        VkDeviceOrHostAddressConstKHR transformDataAddress = {
+            .deviceAddress = transformBuffer->deviceAddress + i * sizeof(VkTransformMatrixKHR),
+        };
+        geometries[i] = {
+            .sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR,
+            .pNext = nullptr,
+            .geometryType = VK_GEOMETRY_TYPE_TRIANGLES_KHR,
+            .geometry =
+                {
+                    .triangles =
+                        {
+                            .sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR,
+                            .pNext = nullptr,
+                            .vertexFormat = VK_FORMAT_R32G32B32_SFLOAT,
+                            .vertexData = vertexDataAddress,
+                            .vertexStride = sizeof(Vector4),
+                            .maxVertex = static_cast<uint32_t>(blas->getVertexCount()),
+                            .indexType = VK_INDEX_TYPE_UINT32,
+                            .indexData = indexDataAddress,
+                            .transformData = transformDataAddress,
+                        },
+                },
+            .flags = VK_GEOMETRY_OPAQUE_BIT_KHR,
+        };
+        buildGeometries[i] = {
+            .sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR,
+            .pNext = nullptr,
+            .type = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR,
+            .flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR,
+            .geometryCount = 1,
+            .pGeometries = &geometries[i],
+        };
+
+        buildSizes[i] = {
+            .sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR,
+            .pNext = nullptr,
+        };
+        const uint32 primitiveCount = blas->getPrimitiveCount();
+        vkGetAccelerationStructureBuildSizesKHR(handle, VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR, &buildGeometries[i],
+                                                &primitiveCount, &buildSizes[i]);
+
+        VkBufferCreateInfo bufferInfo = {
+            .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+            .pNext = nullptr,
+            .flags = 0,
+            .size = buildSizes[i].accelerationStructureSize,
+            .usage = VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+        };
+        VmaAllocationCreateInfo bufferAllocInfo = {
+            .usage = VMA_MEMORY_USAGE_AUTO,
+        };
+        blas->buffer = new BufferAllocation(this, "BLAS", bufferInfo, bufferAllocInfo, Gfx::QueueType::GRAPHICS);
+
+        VkAccelerationStructureCreateInfoKHR blasInfo = {
+            .sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR,
+            .pNext = nullptr,
+            .createFlags = 0,
+            .buffer = blas->buffer->buffer,
+            .offset = 0,
+            .size = buildSizes[i].accelerationStructureSize,
+            .type = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR,
+        };
+        VK_CHECK(vkCreateAccelerationStructureKHR(handle, &blasInfo, nullptr, &blas->handle));
+
+        VkBufferCreateInfo scratchInfo = {
+            .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+            .pNext = nullptr,
+            .flags = 0,
+            .size = buildSizes[i].buildScratchSize,
+            .usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+        };
+        VmaAllocationCreateInfo scratchAllocInfo = {
+            .usage = VMA_MEMORY_USAGE_AUTO,
+        };
+        scratchBuffers[i] = new BufferAllocation(this, "ScratchBuffer", scratchInfo, scratchAllocInfo, Gfx::QueueType::GRAPHICS,
+                                                 accelerationProperties.minAccelerationStructureScratchOffsetAlignment);
+
+        buildGeometries[i].dstAccelerationStructure = blas->handle;
+        buildGeometries[i].scratchData.deviceAddress = scratchBuffers[i]->deviceAddress;
+
+        buildRanges[i] = VkAccelerationStructureBuildRangeInfoKHR{
+            .primitiveCount = primitiveCount,
+            .primitiveOffset = 0,
+            .firstVertex = 0,
+            .transformOffset = 0,
+        };
+        buildRangePointers[i] = &buildRanges[i];
+    }
+
+    PCommand cmd = graphicsCommands->getCommands();
+    vkCmdBuildAccelerationStructuresKHR(cmd->getHandle(), buildGeometries.size(), buildGeometries.data(), buildRangePointers.data());
+    transformBuffer->bind();
+    cmd->bindResource(PBufferAllocation(transformBuffer));
+    destructionManager->queueResourceForDestruction(std::move(transformBuffer));
+
+    for (auto& scratchAlloc : scratchBuffers) {
+        scratchAlloc->bind();
+        cmd->bindResource(PBufferAllocation(scratchAlloc));
+        destructionManager->queueResourceForDestruction(std::move(scratchAlloc));
+    }
 }
 
 Gfx::ORayGenShader Graphics::createRayGenShader(const ShaderCreateInfo& createInfo) {
@@ -499,7 +656,7 @@ void Graphics::setupDebugCallback() {
         .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
         .pNext = nullptr,
         .flags = 0,
-        .messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT,
+        .messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT,
         .messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
                        VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
         .pfnUserCallback = &debugCallback,
@@ -583,10 +740,8 @@ void Graphics::pickPhysicalDevice() {
         .pNext = &features12,
         .features =
             {
-                .geometryShader = true,
                 .fillModeNonSolid = true,
                 .wideLines = true,
-                .occlusionQueryPrecise = true,
                 .pipelineStatisticsQuery = true,
                 .fragmentStoresAndAtomics = true,
                 .shaderInt64 = true,
@@ -727,4 +882,5 @@ void Graphics::createDevice(GraphicsInitializer initializer) {
     createRayTracingPipelines = (PFN_vkCreateRayTracingPipelinesKHR)vkGetDeviceProcAddr(handle, "vkCreateRayTracingPipelinesKHR");
     getRayTracingShaderGroupHandles =
         (PFN_vkGetRayTracingShaderGroupHandlesKHR)vkGetDeviceProcAddr(handle, "vkGetRayTracingShaderGroupHandlesKHR");
+    cmdTraceRays = (PFN_vkCmdTraceRaysKHR)vkGetDeviceProcAddr(handle, "vkCmdTraceRaysKHR");
 }

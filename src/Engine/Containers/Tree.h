@@ -110,6 +110,12 @@ template <typename KeyType, typename NodeData, typename KeyFun, typename Compare
         : alloc(alloc), root(nullptr), beginIt(nullptr), endIt(nullptr), iteratorsDirty(true), _size(0), comp(comp) {}
     constexpr explicit Tree(const Allocator& alloc) noexcept(noexcept(Compare()))
         : alloc(alloc), root(nullptr), beginIt(nullptr), endIt(nullptr), iteratorsDirty(true), _size(0), comp(Compare()) {}
+    constexpr Tree(std::initializer_list<NodeData> init)
+        : alloc(NodeAlloc()), root(nullptr), beginIt(nullptr), endIt(nullptr), iteratorsDirty(true), _size(0), comp(Compare()) {
+        for (const auto& it : init) {
+            insert(it);
+        }
+    }
     constexpr Tree(const Tree& other) : alloc(other.alloc), root(nullptr), iteratorsDirty(true), _size(), comp(other.comp) {
         for (const auto& elem : other) {
             insert(elem);

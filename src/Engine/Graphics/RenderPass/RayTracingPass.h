@@ -15,11 +15,13 @@ class RayTracingPass : public RenderPass {
     virtual void createRenderPass() override;
 
   private:
-    Gfx::PRayGenShader raygen;
-    Gfx::PMissShader miss;
     Gfx::ODescriptorLayout paramsLayout;
     Gfx::OPipelineLayout pipelineLayout;
     Gfx::OTexture2D texture;
-    
+    Gfx::ORayGenShader rayGen;
+    Gfx::OClosestHitShader closestHit;
+    Gfx::OMissShader miss;
+    Gfx::OShaderBuffer directionBuffer;
+    Gfx::OShaderBuffer originBuffer;
 };
 } // namespace Seele

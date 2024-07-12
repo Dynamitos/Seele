@@ -46,6 +46,7 @@ void MeshLoader::convertAssimpARGB(unsigned char* dst, aiTexel* src, uint32 numP
 }
 void MeshLoader::loadTextures(const aiScene* scene, const std::filesystem::path& meshDirectory, const std::string& importPath,
                               Array<PTextureAsset>& textures) {
+    std::cout << "Loading Textures" << std::endl;
     for (uint32 i = 0; i < scene->mNumTextures; ++i) {
         aiTexture* tex = scene->mTextures[i];
         auto texPath = std::filesystem::path(tex->mFilename.C_Str());
@@ -75,6 +76,7 @@ void MeshLoader::loadTextures(const aiScene* scene, const std::filesystem::path&
             .importPath = importPath,
         });
         textures.add(AssetRegistry::findTexture(importPath, texPath.stem().string()));
+        std::cout << "Loaded " << i << "/" << scene->mNumTextures << std::endl;
     }
 }
 

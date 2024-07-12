@@ -1,7 +1,7 @@
 import RayTracingData;
 
 [shader("miss")]
-void main(inout float3 p)
+void miss(inout RayPayload p)
 {
-    p = float3(1, 0, 1);
+    p.color = float3(0, 1, 0);
 }

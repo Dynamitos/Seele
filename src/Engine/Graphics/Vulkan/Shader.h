@@ -18,7 +18,7 @@ class Shader {
     constexpr VkShaderModule getModuleHandle() const { return module; }
     constexpr const char* getEntryPointName() const {
         // SLang renames all entry points to main, so we dont need that
-        return "main"; // entryPointName.c_str();
+        return "main";// entryPointName.c_str();
     }
     constexpr VkShaderStageFlags getStage() const { return stage; }
     uint32 getShaderHash() const;
@@ -27,6 +27,7 @@ class Shader {
     PGraphics graphics;
     VkShaderModule module;
     VkShaderStageFlags stage;
+    std::string entryPointName;
     uint32 hash;
 };
 DEFINE_REF(Shader)

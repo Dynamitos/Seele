@@ -74,7 +74,6 @@ void Command::endRenderPass() {
 }
 
 void Command::executeCommands(Array<Gfx::ORenderCommand> commands) {
-    assert(state == State::RenderPass);
     if (commands.size() == 0) {
         // std::cout << "No commands provided" << std::endl;
         return;
@@ -253,8 +252,9 @@ void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet, Array<uint
 
     VkDescriptorSet setHandle = descriptor->getHandle();
     Gfx::PPipelineLayout layout = pipeline != nullptr ? pipeline->getPipelineLayout() : rtPipeline->getPipelineLayout();
-    vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getLayout(), layout->findParameter(descriptorSet->getName()),
-                            1, &setHandle, dynamicOffsets.size(), dynamicOffsets.data());
+    vkCmdBindDescriptorSets(handle, pipeline != nullptr ? VK_PIPELINE_BIND_POINT_GRAPHICS : VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR,
+                            pipeline->getLayout(), layout->findParameter(descriptorSet->getName()), 1, &setHandle, dynamicOffsets.size(),
+                            dynamicOffsets.data());
 }
 
 void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorSets, Array<uint32> dynamicOffsets) {
@@ -279,7 +279,8 @@ void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorS
         }
         sets[layout->findParameter(descriptorSet->getName())] = descriptorSet->getHandle();
     }
-    vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getLayout(), 0, (uint32)descriptorSets.size(), sets,
+    vkCmdBindDescriptorSets(handle, pipeline != nullptr ? VK_PIPELINE_BIND_POINT_GRAPHICS : VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR,
+                            pipeline != nullptr ? pipeline->getLayout() : rtPipeline->getLayout(), 0, (uint32)descriptorSets.size(), sets,
                             dynamicOffsets.size(), dynamicOffsets.data());
     delete[] sets;
 }
@@ -334,7 +335,8 @@ void RenderCommand::traceRays(uint32 width, uint32 height, uint32 depth) {
     VkStridedDeviceAddressRegionKHR rayGenRef = rtPipeline->getRayGenRegion();
     VkStridedDeviceAddressRegionKHR hitRef = rtPipeline->getHitRegion();
     VkStridedDeviceAddressRegionKHR missRef = rtPipeline->getMissRegion();
-    vkCmdTraceRaysKHR(handle, &rayGenRef, &missRef, &hitRef, nullptr, width, height, depth);
+    VkStridedDeviceAddressRegionKHR callableRef = rtPipeline->getCallableRegion();
+    vkCmdTraceRaysKHR(handle, &rayGenRef, &missRef, &hitRef, &callableRef, width, height, depth);
 }
 
 ComputeCommand::ComputeCommand(PGraphics graphics, VkCommandPool cmdPool) : graphics(graphics), owner(cmdPool) {

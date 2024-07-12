@@ -81,6 +81,7 @@ class Graphics : public Gfx::Graphics {
     // Ray Tracing
     virtual Gfx::OBottomLevelAS createBottomLevelAccelerationStructure(const Gfx::BottomLevelASCreateInfo& createInfo) override;
     virtual Gfx::OTopLevelAS createTopLevelAccelerationStructure(const Gfx::TopLevelASCreateInfo& createInfo) override;
+    virtual void buildBottomLevelAccelerationStructures(Array<Gfx::PBottomLevelAS> data) override;
 
     virtual Gfx::ORayGenShader createRayGenShader(const ShaderCreateInfo& createInfo) override;
     virtual Gfx::OAnyHitShader createAnyHitShader(const ShaderCreateInfo& createInfo) override;

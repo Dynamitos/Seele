@@ -76,6 +76,7 @@ class ShaderBuffer : public Buffer {
   public:
     ShaderBuffer(QueueFamilyMapping mapping, const ShaderBufferCreateInfo& createInfo);
     virtual ~ShaderBuffer();
+    virtual void readContents(Array<uint8>& data) = 0;
     virtual void rotateBuffer(uint64 size, bool preserveContents = false) = 0;
     virtual void updateContents(const ShaderBufferCreateInfo& sourceData) = 0;
     constexpr uint32 getNumElements() const { return numElements; }

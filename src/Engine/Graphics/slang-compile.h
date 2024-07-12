@@ -5,5 +5,5 @@
 
 namespace Seele {
 void beginCompilation(const ShaderCompilationInfo& info, SlangCompileTarget target, Gfx::PPipelineLayout layout);
-Slang::ComPtr<slang::IBlob> generateShader(const ShaderCreateInfo& createInfo);
+Pair<Slang::ComPtr<slang::IBlob>, std::string> generateShader(const ShaderCreateInfo& createInfo);
 }

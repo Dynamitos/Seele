@@ -103,6 +103,7 @@ class Graphics {
     // Ray Tracing
     virtual OBottomLevelAS createBottomLevelAccelerationStructure(const BottomLevelASCreateInfo& createInfo) = 0;
     virtual OTopLevelAS createTopLevelAccelerationStructure(const TopLevelASCreateInfo& createInfo) = 0;
+    virtual void buildBottomLevelAccelerationStructures(Array<Gfx::PBottomLevelAS> data) = 0;
 
     virtual ORayGenShader createRayGenShader(const ShaderCreateInfo& createInfo) = 0;
     virtual OAnyHitShader createAnyHitShader(const ShaderCreateInfo& createInfo) = 0;

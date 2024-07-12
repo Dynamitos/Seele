@@ -470,14 +470,14 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
     Array<VkPipelineShaderStageCreateInfo> shaderStages;
     Array<VkRayTracingShaderGroupCreateInfoKHR> shaderGroups;
     {
-        auto rayGen = createInfo.rayGenShader.cast<RayGenShader>();
+        auto rayGen = createInfo.rayGenGroup.shader.cast<RayGenShader>();
         shaderStages.add(VkPipelineShaderStageCreateInfo{
             .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
             .pNext = nullptr,
             .flags = 0,
             .stage = VK_SHADER_STAGE_RAYGEN_BIT_KHR,
             .module = rayGen->getModuleHandle(),
-            .pName = rayGen->getEntryPointName(),
+            .pName = "main",
         });
         shaderGroups.add(VkRayTracingShaderGroupCreateInfoKHR{
             .sType = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR,
@@ -490,7 +490,7 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
         });
     }
     {
-        for (auto hitgroup : createInfo.hitgroups) {
+        for (auto hitgroup : createInfo.hitGroups) {
             auto hit = hitgroup.closestHitShader.cast<ClosestHitShader>();
             shaderStages.add(VkPipelineShaderStageCreateInfo{
                 .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
@@ -498,8 +498,9 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
                 .flags = 0,
                 .stage = VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR,
                 .module = hit->getModuleHandle(),
-                .pName = hit->getEntryPointName(),
+                .pName = "main",
             });
+            uint32 hitIndex = static_cast<uint32>(shaderStages.size() - 1);
             uint32 anyHitIndex = VK_SHADER_UNUSED_KHR;
             uint32 intersectionIndex = VK_SHADER_UNUSED_KHR;
             if (hitgroup.anyHitShader != nullptr) {
@@ -509,8 +510,8 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
                     .pNext = nullptr,
                     .flags = 0,
                     .stage = VK_SHADER_STAGE_ANY_HIT_BIT_KHR,
-                    .module = hit->getModuleHandle(),
-                    .pName = hit->getEntryPointName(),
+                    .module = anyHit->getModuleHandle(),
+                    .pName = "main",
                 });
             }
             if (hitgroup.intersectionShader != nullptr) {
@@ -529,15 +530,15 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
                 .pNext = nullptr,
                 .type = VK_RAY_TRACING_SHADER_GROUP_TYPE_TRIANGLES_HIT_GROUP_KHR,
                 .generalShader = VK_SHADER_UNUSED_KHR,
-                .closestHitShader = static_cast<uint32>(shaderStages.size() - 1),
+                .closestHitShader = hitIndex,
                 .anyHitShader = anyHitIndex,
                 .intersectionShader = intersectionIndex,
             });
         }
     }
     {
-        for (auto gfxMiss : createInfo.missShaders) {
-            auto miss = gfxMiss.cast<MissShader>();
+        for (auto gfxMiss : createInfo.missGroups) {
+            auto miss = gfxMiss.shader.cast<MissShader>();
             shaderStages.add(VkPipelineShaderStageCreateInfo{
                 .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
                 .pNext = nullptr,
@@ -558,15 +559,15 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
         }
     }
     {
-        for (auto gfxCallable : createInfo.callableShaders) {
-            auto miss = gfxCallable.cast<CallableShader>();
+        for (auto gfxCallable : createInfo.callableGroups) {
+            auto call = gfxCallable.shader.cast<CallableShader>();
             shaderStages.add(VkPipelineShaderStageCreateInfo{
                 .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
                 .pNext = nullptr,
                 .flags = 0,
                 .stage = VK_SHADER_STAGE_CALLABLE_BIT_KHR,
-                .module = miss->getModuleHandle(),
-                .pName = miss->getEntryPointName(),
+                .module = call->getModuleHandle(),
+                .pName = call->getEntryPointName(),
             });
             shaderGroups.add(VkRayTracingShaderGroupCreateInfoKHR{
                 .sType = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR,
@@ -604,26 +605,51 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
 
     vkGetRayTracingShaderGroupHandlesKHR(graphics->getDevice(), pipelineHandle, 0, shaderGroups.size(), sbtSize, sbt.data());
 
+    uint32 rayGenSize = align<uint32>(handleSize + createInfo.rayGenGroup.parameters.size(), handleAlignment);
     Array<uint8> rayGenSbt(handleSizeAligned);
     std::memcpy(rayGenSbt.data(), sbt.data(), handleSize);
+    std::memcpy(rayGenSbt.data() + handleSize, createInfo.rayGenGroup.parameters.data(), createInfo.rayGenGroup.parameters.size());
 
     uint64 sbtOffset = handleSizeAligned;
+
     uint32 maxParamSize = 0;
-    for (auto& hitgroup : createInfo.hitgroups) {
+    for (auto& hitgroup : createInfo.hitGroups) {
         maxParamSize = std::max<uint32>(maxParamSize, hitgroup.parameters.size());
     }
-
     uint64 hitStride = align(handleSize + maxParamSize, handleAlignment);
-    Array<uint8> hitSbt(hitStride * createInfo.hitgroups.size());
-    for (uint64 i = 0; i < createInfo.hitgroups.size(); ++i) {
+    Array<uint8> hitSbt(hitStride * createInfo.hitGroups.size());
+    for (uint64 i = 0; i < createInfo.hitGroups.size(); ++i) {
         std::memcpy(hitSbt.data() + i * hitStride, sbt.data() + sbtOffset, handleSize);
-        std::memcpy(hitSbt.data() + i * hitStride + handleSize, createInfo.hitgroups[i].parameters.data(),
-                    createInfo.hitgroups[i].parameters.size());
+        std::memcpy(hitSbt.data() + i * hitStride + handleSize, createInfo.hitGroups[i].parameters.data(),
+                    createInfo.hitGroups[i].parameters.size());
+        sbtOffset += handleSizeAligned;
+    }
+    
+    maxParamSize = 0;
+    for (auto& missGroup : createInfo.missGroups) {
+        maxParamSize = std::max<uint32>(maxParamSize, missGroup.parameters.size());
+    }
+    uint64 missStride = align(handleSize + maxParamSize, handleAlignment);
+    Array<uint8> missSbt(missStride * createInfo.missGroups.size());
+    for (uint64 i = 0; i < createInfo.missGroups.size(); ++i) {
+        std::memcpy(missSbt.data() + i * missStride, sbt.data() + sbtOffset, handleSize);
+        std::memcpy(missSbt.data() + i * missStride + handleSize, createInfo.missGroups[i].parameters.data(),
+                    createInfo.missGroups[i].parameters.size());
         sbtOffset += handleSizeAligned;
     }
 
-    Array<uint8> missSbt(handleSizeAligned);
-    std::memcpy(missSbt.data(), sbt.data() + sbtOffset, handleSize);
+    maxParamSize = 0;
+    for (auto& callableGroup : createInfo.callableGroups) {
+        maxParamSize = std::max<uint32>(maxParamSize, callableGroup.parameters.size());
+    }
+    uint64 callableStride = align(handleSize + maxParamSize, handleAlignment);
+    Array<uint8> callableSbt(callableStride * createInfo.callableGroups.size());
+    for (uint64 i = 0; i < createInfo.callableGroups.size(); ++i) {
+        std::memcpy(callableSbt.data() + i * callableStride, sbt.data() + sbtOffset, handleSize);
+        std::memcpy(callableSbt.data() + i * callableStride + handleSize, createInfo.callableGroups[i].parameters.data(),
+                    createInfo.callableGroups[i].parameters.size());
+        sbtOffset += handleSizeAligned;
+    }
 
     OBufferAllocation rayGenBuffer =
         new BufferAllocation(graphics, "RayGenSBT",
@@ -633,13 +659,15 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
                                  .flags = 0,
                                  .size = rayGenSbt.size(),
                                  .usage = VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR | VK_BUFFER_USAGE_TRANSFER_SRC_BIT |
-                                          VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+                                          VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
                              },
                              VmaAllocationCreateInfo{
                                  .usage = VMA_MEMORY_USAGE_AUTO,
                              },
                              Gfx::QueueType::GRAPHICS);
     rayGenBuffer->updateContents(0, rayGenSbt.size(), rayGenSbt.data());
+    rayGenBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, Gfx::SE_ACCESS_SHADER_READ_BIT,
+                                  Gfx::SE_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR);
 
     OBufferAllocation hitBuffer =
         new BufferAllocation(graphics, "HitSBT",
@@ -649,13 +677,15 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
                                  .flags = 0,
                                  .size = hitSbt.size(),
                                  .usage = VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR | VK_BUFFER_USAGE_TRANSFER_SRC_BIT |
-                                          VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+                                          VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
                              },
                              VmaAllocationCreateInfo{
                                  .usage = VMA_MEMORY_USAGE_AUTO,
                              },
                              Gfx::QueueType::GRAPHICS);
     hitBuffer->updateContents(0, hitSbt.size(), hitSbt.data());
+    hitBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, Gfx::SE_ACCESS_SHADER_READ_BIT,
+                                  Gfx::SE_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR);
 
     OBufferAllocation missBuffer =
         new BufferAllocation(graphics, "MissSBT",
@@ -665,17 +695,39 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
                                  .flags = 0,
                                  .size = missSbt.size(),
                                  .usage = VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR | VK_BUFFER_USAGE_TRANSFER_SRC_BIT |
-                                          VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+                                          VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
                              },
                              VmaAllocationCreateInfo{
                                  .usage = VMA_MEMORY_USAGE_AUTO,
                              },
                              Gfx::QueueType::GRAPHICS);
     missBuffer->updateContents(0, missSbt.size(), missSbt.data());
+    missBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, Gfx::SE_ACCESS_SHADER_READ_BIT,
+                                  Gfx::SE_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR);
+
+
+    OBufferAllocation callableBuffer =
+        new BufferAllocation(graphics, "CallableSBT",
+                             VkBufferCreateInfo{
+                                 .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+                                 .pNext = nullptr,
+                                 .flags = 0,
+                                 .size = callableSbt.size(),
+                                 .usage = VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR | VK_BUFFER_USAGE_TRANSFER_SRC_BIT |
+                                          VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+                             },
+                             VmaAllocationCreateInfo{
+                                 .usage = VMA_MEMORY_USAGE_AUTO,
+                             },
+                             Gfx::QueueType::GRAPHICS);
+    callableBuffer->updateContents(0, callableSbt.size(), callableSbt.data());
+    callableBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, Gfx::SE_ACCESS_SHADER_READ_BIT,
+                                Gfx::SE_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR);
+
 
     ORayTracingPipeline pipeline =
-        new RayTracingPipeline(graphics, pipelineHandle, std::move(rayGenBuffer), handleSizeAligned, std::move(hitBuffer), hitStride,
-                               std::move(missBuffer), handleSizeAligned, createInfo.pipelineLayout);
+        new RayTracingPipeline(graphics, pipelineHandle, std::move(rayGenBuffer), rayGenSize, std::move(hitBuffer), hitStride,
+                               std::move(missBuffer), missStride, std::move(callableBuffer), callableStride, createInfo.pipelineLayout);
     PRayTracingPipeline handle = pipeline;
     rayTracingPipelines[hash] = std::move(pipeline);
     return handle;

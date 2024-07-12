@@ -453,12 +453,11 @@ void DescriptorSet::updateSamplerArray(uint32_t binding, Array<Gfx::PSampler> sa
 
 void DescriptorSet::updateAccelerationStructure(uint32 binding, Gfx::PTopLevelAS as) {
     auto tlas = as.cast<TopLevelAS>();
-    auto handle = tlas->getHandle();
     accelerationInfos.add(VkWriteDescriptorSetAccelerationStructureKHR{
         .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR,
         .pNext = nullptr,
         .accelerationStructureCount = 1,
-        .pAccelerationStructures = &handle,
+        .pAccelerationStructures = &tlas->handle,
     });
     writeDescriptors.add(VkWriteDescriptorSet{
         .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,

@@ -235,18 +235,30 @@ struct ComputePipelineCreateInfo {
     Gfx::PComputeShader computeShader = nullptr;
     Gfx::PPipelineLayout pipelineLayout = nullptr;
 };
+struct RayTracingRayGenGroup {
+    PRayGenShader shader;
+    Array<uint8> parameters;
+};
 struct RayTracingHitGroup {
     PClosestHitShader closestHitShader;
     PAnyHitShader anyHitShader;
     PIntersectionShader intersectionShader;
     Array<uint8> parameters;
 };
+struct RayTracingMissGroup {
+    PMissShader shader;
+    Array<uint8> parameters;
+};
+struct RayTracingCallableGroup {
+    PCallableShader shader;
+    Array<uint8> parameters;
+};
 struct RayTracingPipelineCreateInfo {
     PPipelineLayout pipelineLayout = nullptr;
-    PRayGenShader rayGenShader = nullptr;
-    Array<RayTracingHitGroup> hitgroups;
-    Array<PMissShader> missShaders;
-    Array<PCallableShader> callableShaders;
+    RayTracingRayGenGroup rayGenGroup;
+    Array<RayTracingHitGroup> hitGroups;
+    Array<RayTracingMissGroup> missGroups;
+    Array<RayTracingCallableGroup> callableGroups;
 };
 struct BottomLevelASCreateInfo {
     PMesh mesh;

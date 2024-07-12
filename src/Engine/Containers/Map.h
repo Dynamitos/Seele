@@ -34,6 +34,7 @@ struct Map : public Tree<K, Pair<K, V>, _KeyFun<K, Pair<K, V>>, Compare, Allocat
     constexpr explicit Map(const Compare& comp, const Allocator& alloc = Allocator()) noexcept(noexcept(Allocator()))
         : Super(comp, alloc) {}
     constexpr explicit Map(const Allocator& alloc) noexcept(noexcept(Compare())) : Super(alloc) {}
+    constexpr Map(std::initializer_list<Pair<K, V>> init) : Super(init) {}
     constexpr mapped_type& operator[](const key_type& key) {
         auto [it, inserted] = Super::insert(Pair<K, V>(key, V()));
         return it->value;

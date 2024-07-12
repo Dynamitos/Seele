@@ -109,6 +109,7 @@ class ShaderBuffer : public Gfx::ShaderBuffer, public Buffer {
   public:
     ShaderBuffer(PGraphics graphics, const ShaderBufferCreateInfo& sourceData);
     virtual ~ShaderBuffer();
+    virtual void readContents(Array<uint8>& data) override;
     virtual void updateContents(const ShaderBufferCreateInfo& createInfo) override;
     virtual void rotateBuffer(uint64 size, bool preserveContents = false) override;
 

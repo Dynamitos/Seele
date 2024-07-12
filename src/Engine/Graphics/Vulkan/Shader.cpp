@@ -21,7 +21,8 @@ Shader::~Shader() {
 uint32 Seele::Vulkan::Shader::getShaderHash() const { return hash; }
 
 void Shader::create(const ShaderCreateInfo& createInfo) {
-    Slang::ComPtr<slang::IBlob> kernelBlob = generateShader(createInfo);
+    auto [kernelBlob, entryName] = generateShader(createInfo);
+    entryPointName = entryName;
     VkShaderModuleCreateInfo moduleInfo = {
         .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
         .pNext = nullptr,

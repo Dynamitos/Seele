@@ -237,8 +237,7 @@ void Buffer::createBuffer(uint64 size, uint32 destIndex) {
         .usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
     };
     buffers[destIndex] = new BufferAllocation(graphics, name, info, allocInfo, initialOwner);
-    if (createCleared)
-    {
+    if (createCleared) {
         PCommand command = graphics->getQueueCommands(initialOwner)->getCommands();
         vkCmdFillBuffer(command->getHandle(), buffers[destIndex]->buffer, 0, VK_WHOLE_SIZE, clearValue);
         pipelineBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
@@ -351,6 +350,11 @@ ShaderBuffer::ShaderBuffer(PGraphics graphics, const ShaderBufferCreateInfo& cre
 
 ShaderBuffer::~ShaderBuffer() {}
 
+void ShaderBuffer::readContents(Array<uint8>& data) {
+    data.resize(getSize());
+    getAlloc()->readContents(0, data.size(), data.data());
+}
+
 void ShaderBuffer::updateContents(const ShaderBufferCreateInfo& createInfo) {
     if (createInfo.sourceData.data == nullptr) {
         return;
@@ -407,7 +411,7 @@ IndexBuffer::IndexBuffer(PGraphics graphics, const IndexBufferCreateInfo& create
     : Gfx::IndexBuffer(graphics->getFamilyMapping(), createInfo),
       Vulkan::Buffer(graphics, createInfo.sourceData.size,
                      VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR |
-                         VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+                         VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
                      createInfo.sourceData.owner, false, createInfo.name) {
     getAlloc()->updateContents(createInfo.sourceData.offset, createInfo.sourceData.size, createInfo.sourceData.data);
 }

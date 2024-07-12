@@ -38,4 +38,5 @@ void Mesh::load(ArchiveBuffer& buffer) {
     blas = buffer.getGraphics()->createBottomLevelAccelerationStructure(Gfx::BottomLevelASCreateInfo{
         .mesh = this,
     });
+    vertexData->registerBottomLevelAccelerationStructure(blas);
 }
