@@ -610,47 +610,6 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
     std::memcpy(rayGenSbt.data(), sbt.data(), handleSize);
     std::memcpy(rayGenSbt.data() + handleSize, createInfo.rayGenGroup.parameters.data(), createInfo.rayGenGroup.parameters.size());
 
-    uint64 sbtOffset = handleSizeAligned;
-
-    uint32 maxParamSize = 0;
-    for (auto& hitgroup : createInfo.hitGroups) {
-        maxParamSize = std::max<uint32>(maxParamSize, hitgroup.parameters.size());
-    }
-    uint64 hitStride = align(handleSize + maxParamSize, handleAlignment);
-    Array<uint8> hitSbt(hitStride * createInfo.hitGroups.size());
-    for (uint64 i = 0; i < createInfo.hitGroups.size(); ++i) {
-        std::memcpy(hitSbt.data() + i * hitStride, sbt.data() + sbtOffset, handleSize);
-        std::memcpy(hitSbt.data() + i * hitStride + handleSize, createInfo.hitGroups[i].parameters.data(),
-                    createInfo.hitGroups[i].parameters.size());
-        sbtOffset += handleSizeAligned;
-    }
-    
-    maxParamSize = 0;
-    for (auto& missGroup : createInfo.missGroups) {
-        maxParamSize = std::max<uint32>(maxParamSize, missGroup.parameters.size());
-    }
-    uint64 missStride = align(handleSize + maxParamSize, handleAlignment);
-    Array<uint8> missSbt(missStride * createInfo.missGroups.size());
-    for (uint64 i = 0; i < createInfo.missGroups.size(); ++i) {
-        std::memcpy(missSbt.data() + i * missStride, sbt.data() + sbtOffset, handleSize);
-        std::memcpy(missSbt.data() + i * missStride + handleSize, createInfo.missGroups[i].parameters.data(),
-                    createInfo.missGroups[i].parameters.size());
-        sbtOffset += handleSizeAligned;
-    }
-
-    maxParamSize = 0;
-    for (auto& callableGroup : createInfo.callableGroups) {
-        maxParamSize = std::max<uint32>(maxParamSize, callableGroup.parameters.size());
-    }
-    uint64 callableStride = align(handleSize + maxParamSize, handleAlignment);
-    Array<uint8> callableSbt(callableStride * createInfo.callableGroups.size());
-    for (uint64 i = 0; i < createInfo.callableGroups.size(); ++i) {
-        std::memcpy(callableSbt.data() + i * callableStride, sbt.data() + sbtOffset, handleSize);
-        std::memcpy(callableSbt.data() + i * callableStride + handleSize, createInfo.callableGroups[i].parameters.data(),
-                    createInfo.callableGroups[i].parameters.size());
-        sbtOffset += handleSizeAligned;
-    }
-
     OBufferAllocation rayGenBuffer =
         new BufferAllocation(graphics, "RayGenSBT",
                              VkBufferCreateInfo{
@@ -669,6 +628,21 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
     rayGenBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, Gfx::SE_ACCESS_SHADER_READ_BIT,
                                   Gfx::SE_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR);
 
+    uint64 sbtOffset = handleSizeAligned;
+
+    uint32 maxParamSize = 0;
+    for (auto& hitgroup : createInfo.hitGroups) {
+        maxParamSize = std::max<uint32>(maxParamSize, hitgroup.parameters.size());
+    }
+    uint64 hitStride = align(handleSize + maxParamSize, handleAlignment);
+    Array<uint8> hitSbt(hitStride * createInfo.hitGroups.size());
+    for (uint64 i = 0; i < createInfo.hitGroups.size(); ++i) {
+        std::memcpy(hitSbt.data() + i * hitStride, sbt.data() + sbtOffset, handleSize);
+        std::memcpy(hitSbt.data() + i * hitStride + handleSize, createInfo.hitGroups[i].parameters.data(),
+                    createInfo.hitGroups[i].parameters.size());
+        sbtOffset += handleSizeAligned;
+    }
+
     OBufferAllocation hitBuffer =
         new BufferAllocation(graphics, "HitSBT",
                              VkBufferCreateInfo{
@@ -685,7 +659,20 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
                              Gfx::QueueType::GRAPHICS);
     hitBuffer->updateContents(0, hitSbt.size(), hitSbt.data());
     hitBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, Gfx::SE_ACCESS_SHADER_READ_BIT,
-                                  Gfx::SE_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR);
+                               Gfx::SE_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR);
+
+    maxParamSize = 0;
+    for (auto& missGroup : createInfo.missGroups) {
+        maxParamSize = std::max<uint32>(maxParamSize, missGroup.parameters.size());
+    }
+    uint64 missStride = align(handleSize + maxParamSize, handleAlignment);
+    Array<uint8> missSbt(missStride * createInfo.missGroups.size());
+    for (uint64 i = 0; i < createInfo.missGroups.size(); ++i) {
+        std::memcpy(missSbt.data() + i * missStride, sbt.data() + sbtOffset, handleSize);
+        std::memcpy(missSbt.data() + i * missStride + handleSize, createInfo.missGroups[i].parameters.data(),
+                    createInfo.missGroups[i].parameters.size());
+        sbtOffset += handleSizeAligned;
+    }
 
     OBufferAllocation missBuffer =
         new BufferAllocation(graphics, "MissSBT",
@@ -703,8 +690,20 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
                              Gfx::QueueType::GRAPHICS);
     missBuffer->updateContents(0, missSbt.size(), missSbt.data());
     missBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, Gfx::SE_ACCESS_SHADER_READ_BIT,
-                                  Gfx::SE_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR);
+                                Gfx::SE_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR);
 
+    maxParamSize = 0;
+    for (auto& callableGroup : createInfo.callableGroups) {
+        maxParamSize = std::max<uint32>(maxParamSize, callableGroup.parameters.size());
+    }
+    uint64 callableStride = align(handleSize + maxParamSize, handleAlignment);
+    Array<uint8> callableSbt(callableStride * createInfo.callableGroups.size());
+    for (uint64 i = 0; i < createInfo.callableGroups.size(); ++i) {
+        std::memcpy(callableSbt.data() + i * callableStride, sbt.data() + sbtOffset, handleSize);
+        std::memcpy(callableSbt.data() + i * callableStride + handleSize, createInfo.callableGroups[i].parameters.data(),
+                    createInfo.callableGroups[i].parameters.size());
+        sbtOffset += handleSizeAligned;
+    }
 
     OBufferAllocation callableBuffer =
         new BufferAllocation(graphics, "CallableSBT",

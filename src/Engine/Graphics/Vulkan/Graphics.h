@@ -113,6 +113,7 @@ class Graphics : public Gfx::Graphics {
     VkQueueFamilyProperties graphicsProps;
     VkPhysicalDeviceProperties2 props;
     VkPhysicalDeviceFeatures2 features;
+    VkPhysicalDeviceVulkan11Features features11;
     VkPhysicalDeviceVulkan12Features features12;
     VkPhysicalDeviceMeshShaderFeaturesEXT meshShaderFeatures;
     VkPhysicalDeviceAccelerationStructureFeaturesKHR accelerationFeatures;

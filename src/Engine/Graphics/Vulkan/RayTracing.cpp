@@ -83,13 +83,16 @@ TopLevelAS::TopLevelAS(PGraphics graphics, const Gfx::TopLevelASCreateInfo& crea
         .sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR,
         .pNext = nullptr,
         .geometryType = VK_GEOMETRY_TYPE_INSTANCES_KHR,
-        .geometry = {.instances =
-                         {
-                             .sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_INSTANCES_DATA_KHR,
-                             .pNext = nullptr,
-                             .arrayOfPointers = VK_FALSE,
-                             .data = instanceDeviceAddress,
-                         }},
+        .geometry =
+            {
+                .instances =
+                    {
+                        .sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_INSTANCES_DATA_KHR,
+                        .pNext = nullptr,
+                        .arrayOfPointers = VK_FALSE,
+                        .data = instanceDeviceAddress,
+                    },
+            },
         .flags = VK_GEOMETRY_OPAQUE_BIT_KHR,
     };
     VkAccelerationStructureBuildGeometryInfoKHR structureBuildGeometry = {
@@ -171,7 +174,21 @@ TopLevelAS::TopLevelAS(PGraphics graphics, const Gfx::TopLevelASCreateInfo& crea
     VkAccelerationStructureBuildRangeInfoKHR* buildRangeInfos[] = {&buildRange};
 
     auto cmd = graphics->getGraphicsCommands()->getCommands();
+
     vkCmdBuildAccelerationStructuresKHR(cmd->getHandle(), 1, &buildGeometry, buildRangeInfos);
+    VkBufferMemoryBarrier barrier = {
+        .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
+        .pNext = nullptr,
+        .srcAccessMask = VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_KHR,
+        .dstAccessMask = VK_ACCESS_ACCELERATION_STRUCTURE_READ_BIT_KHR,
+        .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+        .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+        .buffer = buffer->buffer,
+        .offset = 0,
+        .size = buffer->size,
+    };
+    vkCmdPipelineBarrier(cmd->getHandle(), VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR, VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR, 0, 0,
+                         nullptr, 1, &barrier, 0, nullptr);
     scratchBuffer->bind();
     cmd->bindResource(PBufferAllocation(scratchBuffer));
     graphics->getDestructionManager()->queueResourceForDestruction(std::move(scratchBuffer));

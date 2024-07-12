@@ -12,7 +12,14 @@ class BottomLevelAS : public Gfx::BottomLevelAS {
   public:
     BottomLevelAS(PGraphics graphics, const Gfx::BottomLevelASCreateInfo& createInfo);
     ~BottomLevelAS();
-    uint64 getDeviceAddress() const { return buffer->deviceAddress; }
+    uint64 getDeviceAddress() const {
+        VkAccelerationStructureDeviceAddressInfoKHR accelerationStructureDeviceInfo{
+            .sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR,
+            .pNext = nullptr,
+            .accelerationStructure = handle,
+        };
+        return vkGetAccelerationStructureDeviceAddressKHR(graphics->getDevice(), &accelerationStructureDeviceInfo);
+    }
     constexpr VkTransformMatrixKHR getTransform() const { return matrix; }
     constexpr uint64 getIndexOffset() const { return indexOffset; }
     constexpr uint64 getVertexOffset() const { return vertexOffset; }

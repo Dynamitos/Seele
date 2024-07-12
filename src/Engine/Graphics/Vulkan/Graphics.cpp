@@ -39,6 +39,7 @@ PFN_vkGetAccelerationStructureBuildSizesKHR getAccelerationStructureBuildSize;
 PFN_vkCreateRayTracingPipelinesKHR createRayTracingPipelines;
 PFN_vkGetRayTracingShaderGroupHandlesKHR getRayTracingShaderGroupHandles;
 PFN_vkCmdTraceRaysKHR cmdTraceRays;
+PFN_vkGetAccelerationStructureDeviceAddressKHR getAccelerationStructureDeviceAddress;
 
 void vkCmdDrawMeshTasksEXT(VkCommandBuffer command, uint32 groupX, uint32 groupY, uint32 groupZ) {
     cmdDrawMeshTasks(command, groupX, groupY, groupZ);
@@ -90,6 +91,10 @@ void vkCmdTraceRaysKHR(VkCommandBuffer commandBuffer, const VkStridedDeviceAddre
                        uint32_t depth) {
     cmdTraceRays(commandBuffer, pRaygenShaderBindingTable, pMissShaderBindingTable, pHitShaderBindingTable, pCallableShaderBindingTable,
                  width, height, depth);
+}
+
+VkDeviceAddress vkGetAccelerationStructureDeviceAddressKHR(VkDevice device, const VkAccelerationStructureDeviceAddressInfoKHR* pInfo) {
+    return getAccelerationStructureDeviceAddress(device, pInfo);
 }
 
 Graphics::Graphics() : instance(VK_NULL_HANDLE), handle(VK_NULL_HANDLE), physicalDevice(VK_NULL_HANDLE), callback(VK_NULL_HANDLE) {}
@@ -399,6 +404,13 @@ void Graphics::buildBottomLevelAccelerationStructures(Array<Gfx::PBottomLevelAS>
     OBufferAllocation transformBuffer =
         new BufferAllocation(this, "TransformBuffer", transformBufferInfo, transformAllocInfo, Gfx::QueueType::GRAPHICS);
     transformBuffer->updateContents(0, sizeof(VkTransformMatrixKHR) * matrices.size(), matrices.data());
+    transformBuffer->pipelineBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                                     VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_TRANSFER_READ_BIT,
+                                     VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR | VK_PIPELINE_STAGE_TRANSFER_BIT);
+    positionBuffer->pipelineBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_SHADER_READ_BIT,
+                                    VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR);
+    indexBuffer->pipelineBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_SHADER_READ_BIT,
+                                 VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR);
 
     Array<VkAccelerationStructureGeometryKHR> geometries(data.size());
     Array<VkAccelerationStructureBuildGeometryInfoKHR> buildGeometries(data.size());
@@ -656,7 +668,7 @@ void Graphics::setupDebugCallback() {
         .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
         .pNext = nullptr,
         .flags = 0,
-        .messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT,
+        .messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT,
         .messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
                        VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
         .pfnUserCallback = &debugCallback,
@@ -725,6 +737,7 @@ void Graphics::pickPhysicalDevice() {
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES,
         .pNext = &meshShaderFeatures,
         .storageBuffer8BitAccess = true,
+        .uniformAndStorageBuffer8BitAccess = true,
         .shaderUniformBufferArrayNonUniformIndexing = true,
         .shaderSampledImageArrayNonUniformIndexing = true,
         .shaderStorageBufferArrayNonUniformIndexing = true,
@@ -735,9 +748,14 @@ void Graphics::pickPhysicalDevice() {
         .runtimeDescriptorArray = true,
         .bufferDeviceAddress = true,
     };
+    features11 = {
+        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES,
+        .pNext = &features12,
+        .uniformAndStorageBuffer16BitAccess = true,
+    };
     features = {
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
-        .pNext = &features12,
+        .pNext = &features11,
         .features =
             {
                 .fillModeNonSolid = true,
@@ -883,4 +901,6 @@ void Graphics::createDevice(GraphicsInitializer initializer) {
     getRayTracingShaderGroupHandles =
         (PFN_vkGetRayTracingShaderGroupHandlesKHR)vkGetDeviceProcAddr(handle, "vkGetRayTracingShaderGroupHandlesKHR");
     cmdTraceRays = (PFN_vkCmdTraceRaysKHR)vkGetDeviceProcAddr(handle, "vkCmdTraceRaysKHR");
+    getAccelerationStructureDeviceAddress =
+        (PFN_vkGetAccelerationStructureDeviceAddressKHR)vkGetDeviceProcAddr(handle, "vkGetAccelerationStructureDeviceAddressKHR");
 }
