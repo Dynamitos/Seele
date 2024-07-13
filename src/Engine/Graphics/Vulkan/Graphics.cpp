@@ -645,9 +645,6 @@ void Graphics::initInstance(GraphicsInitializer initInfo) {
 #ifdef __APPLE__
     extensions.add("VK_KHR_portability_enumeration");
 #endif
-#if ENABLE_VALIDATION
-    initInfo.layers.add("VK_LAYER_KHRONOS_validation");
-#endif
     VkInstanceCreateInfo info = {
         .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
         .pNext = nullptr,
@@ -853,10 +850,9 @@ void Graphics::createDevice(GraphicsInitializer initializer) {
 #ifdef __APPLE__
     initializer.deviceExtensions.add("VK_KHR_portability_subset");
 #endif
-    initializer.deviceExtensions.add(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
     initializer.deviceExtensions.add(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
     initializer.deviceExtensions.add(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME);
-    initializer.deviceExtensions.add(VK_KHR_DEDICATED_ALLOCATION_EXTENSION_NAME);
+    initializer.deviceExtensions.add(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
     VkDeviceCreateInfo deviceInfo = {
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
         .pNext = &features,

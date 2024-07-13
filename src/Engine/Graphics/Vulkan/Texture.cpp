@@ -88,7 +88,7 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType, const
     const DataSource& sourceData = createInfo.sourceData;
     if (sourceData.size > 0) {
         changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_ACCESS_NONE, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-                     VK_ACCESS_MEMORY_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
+                     VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
         void* data;
         VkBufferCreateInfo stagingInfo = {
             .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
@@ -134,7 +134,7 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType, const
         commandPool->getCommands()->bindResource(PBufferAllocation(stagingAlloc));
         generateMipmaps();
         // When loading a texture from a file, we will almost always use it as a texture map for fragment shaders
-        changeLayout(Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+        changeLayout(Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_ACCESS_TRANSFER_READ_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
                      VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
         graphics->getDestructionManager()->queueResourceForDestruction(std::move(stagingAlloc));
     }

@@ -21,7 +21,5 @@ class RayTracingPass : public RenderPass {
     Gfx::ORayGenShader rayGen;
     Gfx::OClosestHitShader closestHit;
     Gfx::OMissShader miss;
-    Gfx::OShaderBuffer directionBuffer;
-    Gfx::OShaderBuffer originBuffer;
 };
 } // namespace Seele

@@ -20,16 +20,6 @@ RayTracingPass::RayTracingPass(Gfx::PGraphics graphics, PScene scene) : RenderPa
         .binding = 2,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
     });
-    paramsLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 3,
-        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-        .access = Gfx::SE_DESCRIPTOR_ACCESS_READ_WRITE_BIT,
-    });
-    paramsLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 4,
-        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-        .access = Gfx::SE_DESCRIPTOR_ACCESS_READ_WRITE_BIT,
-    });
     paramsLayout->create();
     pipelineLayout = graphics->createPipelineLayout("RayTracing");
     pipelineLayout->addDescriptorLayout(viewParamsLayout);
@@ -92,8 +82,6 @@ void RayTracingPass::render() {
     desc->updateAccelerationStructure(0, tlas);
     desc->updateTexture(1, Gfx::PTexture2D(texture));
     desc->updateBuffer(2, StaticMeshVertexData::getInstance()->getIndexBuffer());
-    desc->updateBuffer(3, directionBuffer);
-    desc->updateBuffer(4, originBuffer);
     desc->writeChanges();
 
     Gfx::PRayTracingPipeline pipeline = graphics->createRayTracingPipeline(Gfx::RayTracingPipelineCreateInfo{
@@ -146,22 +134,6 @@ void RayTracingPass::publishOutputs() {
     closestHit = graphics->createClosestHitShader({1});
     miss = graphics->createMissShader({2});
     pipelineLayout->create();
-    directionBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
-        .sourceData =
-            {
-                .size = sizeof(Vector) * texture->getWidth() * texture->getHeight(),
-            },
-        .dynamic = true,
-        .name = "DirectionBuffer",
-    });
-    originBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
-        .sourceData =
-            {
-                .size = sizeof(Vector) * texture->getWidth() * texture->getHeight(),
-            },
-        .dynamic = true,
-        .name = "OriginBuffer",
-    });
 }
 
 void RayTracingPass::createRenderPass() {}

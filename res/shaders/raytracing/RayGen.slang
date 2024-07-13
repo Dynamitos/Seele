@@ -25,10 +25,7 @@ void raygen()
     desc.TMin = tmin;
     desc.TMax = tmax;
 
-    pRayTracingParams.origins[DispatchRaysIndex().x + DispatchRaysDimensions().x * DispatchRaysIndex().y] = origin.xyz;
-    pRayTracingParams.rayDirections[DispatchRaysIndex().x + DispatchRaysDimensions().x * DispatchRaysIndex().y] = direction.xyz;
-
-    TraceRay(pRayTracingParams.scene, 0, 0xff, 0, 1, 0, desc, payload);
+    TraceRay(pRayTracingParams.scene, 0, 0xff, 0, 0, 0, desc, payload);
 
     pRayTracingParams.image[DispatchRaysIndex().xy] = float4(payload.color, 1.0f);
 }
