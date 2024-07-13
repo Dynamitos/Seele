@@ -48,7 +48,7 @@ void Seele::beginCompilation(const ShaderCompilationInfo& info, SlangCompileTarg
     option[3].value.intValue0 = SLANG_DEBUG_INFO_FORMAT_PDB;
     option[4].name = slang::CompilerOptionName::DumpIntermediates;
     option[4].value.kind = slang::CompilerOptionValueKind::Int;
-    option[4].value.intValue0 = 1;
+    option[4].value.intValue0 = 0;
 
     sessionDesc.compilerOptionEntries = option.data();
     sessionDesc.compilerOptionEntryCount = option.size();

@@ -111,6 +111,8 @@ void RayTracingPass::render() {
                              StaticMeshVertexData::getInstance()->getVertexDataSet(), Material::getDescriptorSet(),
                              scene->getLightEnvironment()->getDescriptorSet(), desc});
     command->traceRays(texture->getWidth(), texture->getHeight(), 1);
+    texture->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR,
+                             Gfx::SE_ACCESS_TRANSFER_READ_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT);
     Array<Gfx::ORenderCommand> commands;
     commands.add(std::move(command));
     graphics->executeCommands(std::move(commands));

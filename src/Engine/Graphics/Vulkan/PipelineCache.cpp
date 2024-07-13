@@ -596,7 +596,7 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
     VK_CHECK(vkCreateRayTracingPipelinesKHR(graphics->getDevice(), VK_NULL_HANDLE, cache, 1, &pipelineInfo, nullptr, &pipelineHandle));
 
     const uint32_t handleSize = graphics->getRayTracingProperties().shaderGroupHandleSize;
-    const uint32_t handleAlignment = graphics->getRayTracingProperties().shaderGroupHandleAlignment;
+    const uint32_t handleAlignment = graphics->getRayTracingProperties().shaderGroupBaseAlignment;
     const uint32_t handleSizeAligned = align(handleSize, handleAlignment);
     const uint32_t groupCount = static_cast<uint32_t>(shaderGroups.size());
     const uint32_t sbtSize = handleSizeAligned * groupCount;

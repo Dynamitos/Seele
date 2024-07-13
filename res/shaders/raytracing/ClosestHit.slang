@@ -37,7 +37,7 @@ void closestHit(inout RayPayload hitValue, in BuiltInTriangleIntersectionAttribu
     CallablePayload callable;
     callable.params = params;
 
-    CallShader(0, callable);
+    CallShader(InstanceID(), callable);
 
-    hitValue.color = float3(0, 1, 1) + callable.color;
+    hitValue.color = float3(1, 0, 0);
 }
