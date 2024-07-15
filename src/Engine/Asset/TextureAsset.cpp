@@ -22,9 +22,7 @@ TextureAsset::TextureAsset(std::string_view folderPath, std::string_view name) :
 
 TextureAsset::~TextureAsset() {}
 
-void TextureAsset::save(ArchiveBuffer& buffer) const {
-    Serialization::save(buffer, ktxData);
-}
+void TextureAsset::save(ArchiveBuffer& buffer) const { Serialization::save(buffer, ktxData); }
 
 void TextureAsset::load(ArchiveBuffer& buffer) {
     ktxTexture2* ktxHandle;
@@ -33,7 +31,7 @@ void TextureAsset::load(ArchiveBuffer& buffer) {
         ktxTexture_CreateFromMemory(ktxData.data(), ktxData.size(), KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, (ktxTexture**)&ktxHandle));
 
     ktxTexture2_TranscodeBasis(ktxHandle, KTX_TTF_RGBA32, 0);
-    //ktxTexture2_DeflateZstd(ktxHandle, 0);
+    // ktxTexture2_DeflateZstd(ktxHandle, 0);
 
     Gfx::PGraphics graphics = buffer.getGraphics();
     TextureCreateInfo createInfo = {
@@ -51,6 +49,7 @@ void TextureAsset::load(ArchiveBuffer& buffer) {
         .layers = ktxHandle->numFaces,
         .elements = ktxHandle->numLayers,
         .usage = Gfx::SE_IMAGE_USAGE_SAMPLED_BIT,
+        .name = name,
     };
     if (ktxHandle->isCubemap) {
         texture = graphics->createTextureCube(createInfo);

@@ -154,7 +154,7 @@ struct ShaderCollection {
     OTaskShader taskShader;
     OMeshShader meshShader;
     OFragmentShader fragmentShader;
-    OCallableShader callableShader;
+    OClosestHitShader callableShader;
 };
 
 struct PassConfig {

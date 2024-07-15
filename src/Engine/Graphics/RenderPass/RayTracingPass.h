@@ -19,7 +19,6 @@ class RayTracingPass : public RenderPass {
     Gfx::OPipelineLayout pipelineLayout;
     Gfx::OTexture2D texture;
     Gfx::ORayGenShader rayGen;
-    Gfx::OClosestHitShader closestHit;
     Gfx::OMissShader miss;
     Gfx::PRayTracingPipeline pipeline;
     Gfx::OTopLevelAS tlas;

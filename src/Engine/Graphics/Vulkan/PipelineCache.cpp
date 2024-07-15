@@ -490,7 +490,7 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
         });
     }
     {
-        for (auto hitgroup : createInfo.hitGroups) {
+        for (const auto& hitgroup : createInfo.hitGroups) {
             auto hit = hitgroup.closestHitShader.cast<ClosestHitShader>();
             shaderStages.add(VkPipelineShaderStageCreateInfo{
                 .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
@@ -594,174 +594,105 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
     };
     VkPipeline pipelineHandle;
     VK_CHECK(vkCreateRayTracingPipelinesKHR(graphics->getDevice(), VK_NULL_HANDLE, cache, 1, &pipelineInfo, nullptr, &pipelineHandle));
-    /*
-    const uint32_t handle_size = graphics->getRayTracingProperties().shaderGroupHandleSize;
-    const uint32_t handle_size_aligned =
-        align(graphics->getRayTracingProperties().shaderGroupHandleSize, graphics->getRayTracingProperties().shaderGroupHandleAlignment);
-    const uint32_t handle_alignment = graphics->getRayTracingProperties().shaderGroupHandleAlignment;
-    const uint32_t group_count = static_cast<uint32_t>(shaderGroups.size());
-    const uint32_t sbt_size = group_count * handle_size_aligned;
-    const VkBufferUsageFlags sbt_buffer_usage_flags =
-        VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
-    const VmaMemoryUsage sbt_memory_usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
-
-    // Raygen
-    // Create binding table buffers for each shader type
-    OBufferAllocation raygen_shader_binding_table = new BufferAllocation(graphics, "RayGen",
-                                                                         VkBufferCreateInfo{
-                                                                             .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-                                                                             .pNext = nullptr,
-                                                                             .size = handle_size,
-                                                                             .usage = sbt_buffer_usage_flags,
-                                                                         },
-                                                                         VmaAllocationCreateInfo{
-                                                                             .usage = sbt_memory_usage,
-                                                                         },
-                                                                         Gfx::QueueType::GRAPHICS, 0);
-    OBufferAllocation miss_shader_binding_table = new BufferAllocation(graphics, "Miss",
-                                                                       VkBufferCreateInfo{
-                                                                           .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-                                                                           .pNext = nullptr,
-                                                                           .size = handle_size,
-                                                                           .usage = sbt_buffer_usage_flags,
-                                                                       },
-                                                                       VmaAllocationCreateInfo{
-                                                                           .usage = sbt_memory_usage,
-                                                                       },
-                                                                       Gfx::QueueType::GRAPHICS, 0);
-    OBufferAllocation hit_shader_binding_table = new BufferAllocation(graphics, "Hit",
-                                                                      VkBufferCreateInfo{
-                                                                          .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-                                                                          .pNext = nullptr,
-                                                                          .size = handle_size,
-                                                                          .usage = sbt_buffer_usage_flags,
-                                                                      },
-                                                                      VmaAllocationCreateInfo{
-                                                                          .usage = sbt_memory_usage,
-                                                                      },
-                                                                      Gfx::QueueType::GRAPHICS, 0);
-
-    // Copy the pipeline's shader handles into a host buffer
-    std::vector<uint8_t> shader_handle_storage(sbt_size);
-    VK_CHECK(vkGetRayTracingShaderGroupHandlesKHR(graphics->getDevice(), pipelineHandle, 0, group_count, sbt_size,
-                                                  shader_handle_storage.data()));
-
-    // Copy the shader handles from the host buffer to the binding tables
-    uint8_t* data = static_cast<uint8_t*>(raygen_shader_binding_table->map());
-    memcpy(data, shader_handle_storage.data(), handle_size);
-    data = static_cast<uint8_t*>(miss_shader_binding_table->map());
-    memcpy(data, shader_handle_storage.data() + handle_size_aligned, handle_size);
-    data = static_cast<uint8_t*>(hit_shader_binding_table->map());
-    memcpy(data, shader_handle_storage.data() + handle_size_aligned * 2, handle_size);
-    raygen_shader_binding_table->unmap();
-    miss_shader_binding_table->unmap();
-    hit_shader_binding_table->unmap();*/
 
     const uint32_t handleSize = graphics->getRayTracingProperties().shaderGroupHandleSize;
     const uint32_t handleSizeAligned =
         align(graphics->getRayTracingProperties().shaderGroupHandleSize, graphics->getRayTracingProperties().shaderGroupHandleAlignment);
     const uint32_t handleAlignment = graphics->getRayTracingProperties().shaderGroupHandleAlignment;
+    const uint32_t sbtAlignment = graphics->getRayTracingProperties().shaderGroupBaseAlignment;
     const uint32_t groupCount = static_cast<uint32_t>(shaderGroups.size());
     const uint32_t sbtSize = groupCount * handleSizeAligned;
     const VkBufferUsageFlags sbtBufferUsage =
-        VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
-    const VmaMemoryUsage sbtMemoryUsage = VMA_MEMORY_USAGE_CPU_TO_GPU;
-
+        VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
+    const VmaMemoryUsage sbtMemoryUsage = VMA_MEMORY_USAGE_AUTO;
+    
+    uint64 rayGenStride = align<uint64>(handleSize + createInfo.rayGenGroup.parameters.size(), handleAlignment);
+    uint64 hitStride = handleSize;
+    for (const auto& h : createInfo.hitGroups) {
+        hitStride = std::max(hitStride, align<uint64>(handleSize + h.parameters.size(), handleAlignment));
+    }
+    uint64 missStride = handleSize;
+    for (const auto& m : createInfo.missGroups) {
+        missStride = std::max(missStride, align<uint64>(handleSize + m.parameters.size(), handleAlignment));
+    }
     OBufferAllocation rayGenBuffer = new BufferAllocation(graphics, "RayGenSBT",
                                                           VkBufferCreateInfo{
                                                               .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
                                                               .pNext = nullptr,
                                                               .flags = 0,
-                                                              .size = handleSize,
+                                                              .size = rayGenStride,
                                                               .usage = sbtBufferUsage,
                                                           },
                                                           VmaAllocationCreateInfo{
                                                               .usage = sbtMemoryUsage,
                                                           },
-                                                          Gfx::QueueType::GRAPHICS);
+                                                          Gfx::QueueType::GRAPHICS, sbtAlignment);
 
     OBufferAllocation hitBuffer = new BufferAllocation(graphics, "HitSBT",
                                                        VkBufferCreateInfo{
                                                            .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
                                                            .pNext = nullptr,
                                                            .flags = 0,
-                                                           .size = handleSize * createInfo.hitGroups.size(),
+                                                           .size = hitStride * createInfo.hitGroups.size(),
                                                            .usage = sbtBufferUsage,
                                                        },
                                                        VmaAllocationCreateInfo{
                                                            .usage = sbtMemoryUsage,
                                                        },
-                                                       Gfx::QueueType::GRAPHICS);
+                                                       Gfx::QueueType::GRAPHICS, sbtAlignment);
 
     OBufferAllocation missBuffer = new BufferAllocation(graphics, "MissSBT",
                                                         VkBufferCreateInfo{
                                                             .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
                                                             .pNext = nullptr,
                                                             .flags = 0,
-                                                            .size = handleSize * createInfo.missGroups.size(),
+                                                            .size = missStride * createInfo.missGroups.size(),
                                                             .usage = sbtBufferUsage,
                                                         },
                                                         VmaAllocationCreateInfo{
                                                             .usage = sbtMemoryUsage,
                                                         },
-                                                        Gfx::QueueType::GRAPHICS);
+                                                        Gfx::QueueType::GRAPHICS, sbtAlignment);
 
     Array<uint8> sbt(sbtSize);
     vkGetRayTracingShaderGroupHandlesKHR(graphics->getDevice(), pipelineHandle, 0, shaderGroups.size(), sbtSize, sbt.data());
 
-    /* maxParamSize = 0;
-    for (auto& callableGroup : createInfo.callableGroups) {
-        maxParamSize = std::max<uint32>(maxParamSize, callableGroup.parameters.size());
-    }
-    uint64 callableStride = align(handleSize + maxParamSize, handleAlignment);
-
-    OBufferAllocation callableBuffer = new BufferAllocation(graphics, "CallableSBT",
-                                                            VkBufferCreateInfo{
-                                                                .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-                                                                .pNext = nullptr,
-                                                                .flags = 0,
-                                                                .size = callableStride * createInfo.callableGroups.size(),
-                                                                .usage = sbtBufferUsage,
-                                                            },
-                                                            VmaAllocationCreateInfo{
-                                                                .usage = sbtMemoryUsage,
-                                                            },
-                                                            Gfx::QueueType::GRAPHICS);
-    uint8* callableData = static_cast<uint8*>(callableBuffer->map());
-    for (uint64 i = 0; i < createInfo.callableGroups.size(); ++i) {
-        std::memcpy(callableData, sbt.data() + sbtOffset, handleSize);
-        std::memcpy(callableData + handleSize, createInfo.callableGroups[i].parameters.data(),
-                    createInfo.callableGroups[i].parameters.size());
-        sbtOffset += handleSizeAligned;
-        callableData += callableStride;
-    }
-    callableBuffer->unmap();
-    */
     uint64 sbtOffset = 0;
-    uint8* rayGenData = static_cast<uint8*>(rayGenBuffer->map());
-    std::memcpy(rayGenData, sbt.data() + sbtOffset, handleSize);
-    rayGenBuffer->unmap();
+    Array<uint8> rayGenSbt(rayGenStride);
+    std::memcpy(rayGenSbt.data(), sbt.data() + sbtOffset, handleSize);
+    std::memcpy(rayGenSbt.data() + handleSize, createInfo.rayGenGroup.parameters.data(), createInfo.rayGenGroup.parameters.size());
     sbtOffset += handleSizeAligned;
+    rayGenBuffer->updateContents(0, rayGenSbt.size(), rayGenSbt.data());
+    rayGenBuffer->pipelineBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_SHADER_READ_BIT,
+                                  VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR);
 
-    uint8* hitData = static_cast<uint8*>(hitBuffer->map());
+    
+    Array<uint8> hitSbt(hitStride * createInfo.hitGroups.size());
     for (uint64 i = 0; i < createInfo.hitGroups.size(); ++i) {
-        std::memcpy(hitData, sbt.data() + sbtOffset, handleSize);
+        std::memcpy(hitSbt.data() + i * hitStride, sbt.data() + sbtOffset, handleSize);
+        std::memcpy(hitSbt.data() + i * hitStride + handleSize, createInfo.hitGroups[i].parameters.data(),
+                    createInfo.hitGroups[i].parameters.size());
         sbtOffset += handleSizeAligned;
-        hitData += handleSizeAligned;
     }
-    hitBuffer->unmap();
+    hitBuffer->updateContents(0, hitSbt.size(), hitSbt.data());
+    hitBuffer->pipelineBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_SHADER_READ_BIT,
+                                  VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR);
 
-    uint8* missData = static_cast<uint8*>(missBuffer->map());
+    
+    Array<uint8> missSbt(missStride * createInfo.missGroups.size());
     for (uint64 i = 0; i < createInfo.missGroups.size(); ++i) {
-        std::memcpy(missData, sbt.data() + sbtOffset, handleSize);
+        std::memcpy(missSbt.data() + i * missStride, sbt.data() + sbtOffset, handleSize);
+        std::memcpy(missSbt.data() + i * missStride + handleSize, createInfo.missGroups[i].parameters.data(),
+                    createInfo.missGroups[i].parameters.size());
         sbtOffset += handleSizeAligned;
-        missData += handleSizeAligned;
     }
-    missBuffer->unmap();
+    missBuffer->updateContents(0, missSbt.size(), missSbt.data());
+    missBuffer->pipelineBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_SHADER_READ_BIT,
+                                  VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR);
 
     ORayTracingPipeline pipeline =
-        new RayTracingPipeline(graphics, pipelineHandle, std::move(rayGenBuffer), handleSizeAligned, std::move(hitBuffer),
-                               handleSizeAligned, std::move(missBuffer), handleSizeAligned, nullptr, 0, createInfo.pipelineLayout);
+        new RayTracingPipeline(graphics, pipelineHandle, std::move(rayGenBuffer), rayGenStride, std::move(hitBuffer),
+                               hitStride, std::move(missBuffer), missStride, nullptr, 0, createInfo.pipelineLayout);
     PRayTracingPipeline handle = pipeline;
     rayTracingPipelines[hash] = std::move(pipeline);
     return handle;

@@ -78,9 +78,9 @@ void Seele::beginCompilation(const ShaderCompilationInfo& info, SlangCompileTarg
     Map<std::string, slang::IModule*> moduleMap;
     for (const auto& moduleName : info.modules) {
         slang::IModule* loaded = session->loadModule(moduleName.c_str(), diagnostics.writeRef());
+        CHECK_DIAGNOSTICS();
         components.add(loaded);
         moduleMap[moduleName] = loaded;
-        CHECK_DIAGNOSTICS();
     }
     entryPoints.clear();
     for (const auto& [name, mod] : info.entryPoints) {

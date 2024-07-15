@@ -20,6 +20,7 @@ BufferAllocation::BufferAllocation(PGraphics graphics, const std::string& name, 
         .objectHandle = (uint64)buffer,
         .pObjectName = name.c_str(),
     };
+    assert(!name.empty());
     vkSetDebugUtilsObjectNameEXT(graphics->getDevice(), &nameInfo);
     if (bufferInfo.usage & VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT) {
         VkBufferDeviceAddressInfo addrInfo = {

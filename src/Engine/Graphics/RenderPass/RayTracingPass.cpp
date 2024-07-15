@@ -33,7 +33,7 @@ RayTracingPass::RayTracingPass(Gfx::PGraphics graphics, PScene scene) : RenderPa
     pipelineLayout->addDescriptorLayout(StaticMeshVertexData::getInstance()->getInstanceDataLayout());
     graphics->getShaderCompiler()->registerRenderPass("RayTracing", Gfx::PassConfig{
                                                                         .baseLayout = pipelineLayout,
-                                                                        .mainFile = "Callable",
+                                                                        .mainFile = "ClosestHit",
                                                                         .useMaterial = true,
                                                                         .rayTracing = true,
                                                                     });
@@ -42,8 +42,7 @@ RayTracingPass::RayTracingPass(Gfx::PGraphics graphics, PScene scene) : RenderPa
 void RayTracingPass::beginFrame(const Component::Camera& cam) { RenderPass::beginFrame(cam); }
 
 void RayTracingPass::render() {
-    Gfx::ORenderCommand command = graphics->createRenderCommand("RayTracing");
-    Array<Gfx::RayTracingCallableGroup> callableGroups;
+    Array<Gfx::RayTracingHitGroup> callableGroups;
     Array<Gfx::PBottomLevelAS> accelerationStructures;
     Array<InstanceData> instanceData;
 
@@ -64,8 +63,8 @@ void RayTracingPass::render() {
 
             for (auto& inst : matData.instances) {
                 for (uint32 i = 0; i < inst.instanceData.size(); ++i) {
-                    Gfx::RayTracingCallableGroup callableGroup = {
-                        .shader = collection->callableShader,
+                    Gfx::RayTracingHitGroup callableGroup = {
+                        .closestHitShader = collection->callableShader,
                     };
                     callableGroup.parameters.resize(sizeof(VertexData::DrawCallOffsets));
                     std::memcpy(callableGroup.parameters.data(), &inst.offsets, sizeof(VertexData::DrawCallOffsets));
@@ -77,6 +76,13 @@ void RayTracingPass::render() {
             }
         }
     }
+    pipeline = graphics->createRayTracingPipeline(Gfx::RayTracingPipelineCreateInfo{
+        .pipelineLayout = pipelineLayout,
+        .rayGenGroup = {.shader = rayGen},
+        .hitGroups = callableGroups,
+        .missGroups = {{.shader = miss}},
+        //.callableGroups = callableGroups,
+    });
     tlas = graphics->createTopLevelAccelerationStructure(Gfx::TopLevelASCreateInfo{
         .instances = instanceData,
         .bottomLevelStructures = accelerationStructures,
@@ -87,6 +93,7 @@ void RayTracingPass::render() {
     desc->updateBuffer(2, StaticMeshVertexData::getInstance()->getIndexBuffer());
     desc->writeChanges();
 
+    Gfx::ORenderCommand command = graphics->createRenderCommand("RayTracing");
     command->bindPipeline(pipeline);
     StaticMeshVertexData::getInstance()->getInstanceDataSet()->writeChanges();
     StaticMeshVertexData::getInstance()->getVertexDataSet()->writeChanges();
@@ -118,26 +125,15 @@ void RayTracingPass::publishOutputs() {
                           Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
     ShaderCompilationInfo compileInfo = {
         .name = "RT",
-        .modules = {"RayGen", "ClosestHit", "Miss"},
-        .entryPoints = {{"raygen", "RayGen"}, {"closestHit", "ClosestHit"}, {"miss", "Miss"}},
+        .modules = {"RayGen", "Miss"},
+        .entryPoints = {{"raygen", "RayGen"}, {"miss", "Miss"}},
         .defines = {{"RAY_TRACING", "1"}},
         .rootSignature = pipelineLayout,
     };
     graphics->beginShaderCompilation(compileInfo);
     rayGen = graphics->createRayGenShader({0});
-    closestHit = graphics->createClosestHitShader({1});
-    miss = graphics->createMissShader({2});
+    miss = graphics->createMissShader({1});
     pipelineLayout->create();
-    pipeline = graphics->createRayTracingPipeline(Gfx::RayTracingPipelineCreateInfo{
-        .pipelineLayout = pipelineLayout,
-        .rayGenGroup = {.shader = rayGen},
-        .hitGroups = {{.closestHitShader = closestHit}},
-        .missGroups = {{.shader = miss}},
-        //.callableGroups = callableGroups,
-    });
-    Component::Transform transform;
-    transform.setScale(Vector(1, 1, 1));
-    transform.setPosition(Vector(0, 0, 1));
 }
 
 void RayTracingPass::createRenderPass() {}

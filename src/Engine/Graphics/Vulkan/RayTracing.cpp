@@ -56,7 +56,7 @@ TopLevelAS::TopLevelAS(PGraphics graphics, const Gfx::TopLevelASCreateInfo& crea
                 },
             .instanceCustomIndex = i,
             .mask = 0xff,
-            .instanceShaderBindingTableRecordOffset = 0,
+            .instanceShaderBindingTableRecordOffset = i,
             .flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR,
             .accelerationStructureReference = blas->getDeviceAddress(),
         };

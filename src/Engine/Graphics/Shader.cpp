@@ -129,7 +129,7 @@ void ShaderCompiler::createShaders(ShaderPermutation permutation, Gfx::OPipeline
         createInfo.modules.add(permutation.vertexMeshFile);
     } else if (permutation.rayTracing) {
         createInfo.defines["RAY_TRACING"] = "1";
-        createInfo.entryPoints = {{"callable", "Callable"}};
+        createInfo.entryPoints = {{"closestHit", "ClosestHit"}};
         createInfo.modules.add(permutation.vertexMeshFile);
     } else {
         createInfo.entryPoints.add({"vertexMain", permutation.vertexMeshFile});
@@ -148,7 +148,7 @@ void ShaderCompiler::createShaders(ShaderPermutation permutation, Gfx::OPipeline
         }
         collection.meshShader = graphics->createMeshShader({shaderIndex++});
     } else if (permutation.rayTracing) {
-        collection.callableShader = graphics->createCallableShader({shaderIndex++});
+        collection.callableShader = graphics->createClosestHitShader({shaderIndex++});
     } else {
         collection.vertexShader = graphics->createVertexShader({shaderIndex++});
     }

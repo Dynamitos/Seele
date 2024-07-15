@@ -11,9 +11,9 @@ struct MaterialParameter
 struct LightingParameter
 {
     float3x3 tbn;
-    float3 normal_WS;
-	float3 position_WS;
-	float3 viewDir_WS;
+    float3 normal_TS;
+	float3 position_TS;
+	float3 viewDir_TS;
 };
 
 // data passed to fragment shader
@@ -42,10 +42,11 @@ struct FragmentParameter
 	LightingParameter getLightingParameter()
 	{
 		LightingParameter result;
-		result.tbn = float3x3(normalize(tangent_WS), normalize(biTangent_WS), normalize(normal_WS));
-		result.position_WS = position_WS;
-        result.viewDir_WS = normalize(cameraPos_WS - position_WS);
-        result.normal_WS = normal_WS;
+		float3x3 tbn = float3x3(normalize(tangent_WS), normalize(biTangent_WS), normalize(normal_WS));
+		result.tbn = tbn;
+        result.position_TS = mul(tbn, position_WS);
+        result.viewDir_TS = mul(tbn, normalize(cameraPos_WS - position_WS));
+        result.normal_TS = mul(tbn, normal_WS);
 		return result;
 	}
 #endif
