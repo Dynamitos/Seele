@@ -486,6 +486,7 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
             globalMeshes[meshIndex]->blas = graphics->createBottomLevelAccelerationStructure(Gfx::BottomLevelASCreateInfo{
                 .mesh = globalMeshes[meshIndex],
             });
+            vertexData->registerBottomLevelAccelerationStructure(globalMeshes[meshIndex]->blas);
         });
     }
     getThreadPool().runAndWait(std::move(work));

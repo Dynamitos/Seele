@@ -10,7 +10,7 @@ class ThreadPool {
     ThreadPool(uint32 numWorkers = std::thread::hardware_concurrency() - 2);
     ~ThreadPool();
     void runAndWait(List<std::function<void()>> functions);
-
+    void runAsync(std::function<void()> func);
   private:
     struct Task {
         uint64 numRemaining = 0;

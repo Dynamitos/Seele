@@ -1,5 +1,4 @@
 import Common;
-import VertexData;
 import MaterialParameter;
 import LightEnv;
 import Scene;

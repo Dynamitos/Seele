@@ -5,18 +5,18 @@ include (ExternalProject)
 add_library(slang SHARED IMPORTED)
 if(WIN32)
     add_library(slang-glslang SHARED IMPORTED)
-    set(SLANG_ROOT ${EXTERNAL_ROOT}/slang/bin/windows-x64/release/)
-    set_target_properties(slang-glslang PROPERTIES IMPORTED_LOCATION ${SLANG_ROOT}slang-glslang.dll)
-    set_target_properties(slang-glslang PROPERTIES IMPORTED_IMPLIB ${SLANG_ROOT}slang.lib)
-    set_target_properties(slang PROPERTIES IMPORTED_LOCATION ${SLANG_ROOT}slang.dll)
-    set_target_properties(slang PROPERTIES IMPORTED_IMPLIB ${SLANG_ROOT}slang.lib)
+    set(SLANG_ROOT ${EXTERNAL_ROOT}/slang/build/Release/)
+    set_target_properties(slang-glslang PROPERTIES IMPORTED_LOCATION ${SLANG_ROOT}bin/slang-glslang.dll)
+    set_target_properties(slang-glslang PROPERTIES IMPORTED_IMPLIB ${SLANG_ROOT}lib/slang.lib)
+    set_target_properties(slang PROPERTIES IMPORTED_LOCATION ${SLANG_ROOT}bin/slang.dll)
+    set_target_properties(slang PROPERTIES IMPORTED_IMPLIB ${SLANG_ROOT}lib/slang.lib)
     target_link_libraries(slang INTERFACE slang-glslang)
     install(FILES 
-        ${SLANG_ROOT}slang-glslang.dll
-        ${SLANG_ROOT}slang.dll
+        ${SLANG_ROOT}bin/slang-glslang.dll
+        ${SLANG_ROOT}bin/slang.dll
     DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
     install(FILES 
-        ${SLANG_ROOT}slang.lib
+        ${SLANG_ROOT}lib/slang.lib
     DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 elseif(APPLE)
     set(BINARY_ROOT ${SLANG_ROOT}/build/Debug/)

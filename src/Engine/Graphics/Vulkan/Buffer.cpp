@@ -98,7 +98,7 @@ void BufferAllocation::updateContents(uint64 regionOffset, uint64 regionSize, vo
         .flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT,
         .usage = VMA_MEMORY_USAGE_AUTO,
     };
-    OBufferAllocation staging = new BufferAllocation(graphics, "UpdateStaging", stagingInfo, stagingAlloc, Gfx::QueueType::TRANSFER);
+    OBufferAllocation staging = new BufferAllocation(graphics, "UpdateStaging", stagingInfo, stagingAlloc, Gfx::QueueType::GRAPHICS);
 
     uint8* data;
     VK_CHECK(vmaMapMemory(graphics->getAllocator(), staging->allocation, (void**)&data));
@@ -107,7 +107,7 @@ void BufferAllocation::updateContents(uint64 regionOffset, uint64 regionSize, vo
     vmaUnmapMemory(graphics->getAllocator(), staging->allocation);
 
     Gfx::QueueType prevOwner = owner;
-    transferOwnership(Gfx::QueueType::TRANSFER);
+    // transferOwnership(Gfx::QueueType::TRANSFER);
 
     PCommand cmd = graphics->getQueueCommands(Gfx::QueueType::TRANSFER)->getCommands();
     VkBufferCopy copy = {
@@ -119,7 +119,7 @@ void BufferAllocation::updateContents(uint64 regionOffset, uint64 regionSize, vo
     cmd->bindResource(PBufferAllocation(this));
     cmd->bindResource(PBufferAllocation(staging));
 
-    transferOwnership(prevOwner);
+    // transferOwnership(prevOwner);
     graphics->getDestructionManager()->queueResourceForDestruction(std::move(staging));
 }
 
@@ -138,10 +138,10 @@ void BufferAllocation::readContents(uint64 regionOffset, uint64 regionSize, void
         .flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT,
         .usage = VMA_MEMORY_USAGE_AUTO,
     };
-    OBufferAllocation staging = new BufferAllocation(graphics, "ReadStaging", stagingInfo, stagingAlloc, Gfx::QueueType::TRANSFER);
+    OBufferAllocation staging = new BufferAllocation(graphics, "ReadStaging", stagingInfo, stagingAlloc, Gfx::QueueType::GRAPHICS);
 
     Gfx::QueueType prevOwner = owner;
-    transferOwnership(Gfx::QueueType::TRANSFER);
+    // transferOwnership(Gfx::QueueType::TRANSFER);
 
     PCommandPool pool = graphics->getQueueCommands(Gfx::QueueType::TRANSFER);
     PCommand cmd = pool->getCommands();
@@ -156,7 +156,7 @@ void BufferAllocation::readContents(uint64 regionOffset, uint64 regionSize, void
     pool->submitCommands();
     cmd->getFence()->wait(1000000);
 
-    transferOwnership(prevOwner);
+    // transferOwnership(prevOwner);
 
     uint8* data;
     VK_CHECK(vmaMapMemory(graphics->getAllocator(), staging->allocation, (void**)&data));
@@ -165,6 +165,14 @@ void BufferAllocation::readContents(uint64 regionOffset, uint64 regionSize, void
     vmaUnmapMemory(graphics->getAllocator(), staging->allocation);
     graphics->getDestructionManager()->queueResourceForDestruction(std::move(staging));
 }
+
+void* BufferAllocation::map() {
+    void* data;
+    vmaMapMemory(graphics->getAllocator(), allocation, &data);
+    return data;
+}
+
+void BufferAllocation::unmap() { vmaUnmapMemory(graphics->getAllocator(), allocation); }
 
 Buffer::Buffer(PGraphics graphics, uint64 size, VkBufferUsageFlags usage, Gfx::QueueType queueType, bool dynamic, std::string name,
                bool createCleared, uint32 clearValue)
@@ -285,15 +293,15 @@ void Buffer::copyBuffer(uint64 src, uint64 dst) {
         .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
         .pNext = nullptr,
         .srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
-        .dstAccessMask = VK_ACCESS_MEMORY_READ_BIT,
+        .dstAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_TRANSFER_WRITE_BIT,
         .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
         .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
         .buffer = buffers[dst]->buffer,
         .offset = 0,
         .size = buffers[dst]->size,
     };
-    vkCmdPipelineBarrier(command->getHandle(), VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, 0, 0, nullptr, 1,
-                         &dstBarrier, 0, nullptr);
+    vkCmdPipelineBarrier(command->getHandle(), VK_PIPELINE_STAGE_TRANSFER_BIT,
+                         VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT | VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 1, &dstBarrier, 0, nullptr);
 }
 
 void Buffer::transferOwnership(Gfx::QueueType newOwner) {
@@ -322,6 +330,7 @@ UniformBuffer::~UniformBuffer() {}
 
 void UniformBuffer::updateContents(const DataSource& sourceData) {
     if (sourceData.size > 0 && sourceData.data != nullptr) {
+        rotateBuffer(sourceData.size);
         getAlloc()->updateContents(sourceData.offset, sourceData.size, sourceData.data);
     }
 }
@@ -414,6 +423,8 @@ IndexBuffer::IndexBuffer(PGraphics graphics, const IndexBufferCreateInfo& create
                          VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
                      createInfo.sourceData.owner, false, createInfo.name) {
     getAlloc()->updateContents(createInfo.sourceData.offset, createInfo.sourceData.size, createInfo.sourceData.data);
+    getAlloc()->pipelineBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, Gfx::SE_ACCESS_INDEX_READ_BIT,
+                                Gfx::SE_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR | Gfx::SE_PIPELINE_STAGE_VERTEX_INPUT_BIT);
 }
 
 IndexBuffer::~IndexBuffer() {}

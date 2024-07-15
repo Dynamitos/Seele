@@ -17,6 +17,8 @@ class BufferAllocation : public CommandBoundResource {
     void transferOwnership(Gfx::QueueType newOwner);
     void updateContents(uint64 regionOffset, uint64 regionSize, void* ptr);
     void readContents(uint64 regionOffset, uint64 regionSize, void* ptr);
+    void* map();
+    void unmap();
     VkBuffer buffer = VK_NULL_HANDLE;
     VmaAllocation allocation = VmaAllocation();
     VmaAllocationInfo info = VmaAllocationInfo();

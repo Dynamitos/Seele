@@ -120,11 +120,11 @@ void BasePass::beginFrame(const Component::Camera& cam) {
         .size = sizeof(SkyboxData),
         .data = (uint8*)&skyboxData,
     });
+    skyboxBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, Gfx::SE_ACCESS_UNIFORM_READ_BIT,
+                                  Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
     skyboxDataSet = skyboxDataLayout->allocateDescriptorSet();
     skyboxDataSet->updateBuffer(0, skyboxBuffer);
     skyboxDataSet->writeChanges();
-    skyboxBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, Gfx::SE_ACCESS_UNIFORM_READ_BIT,
-                                  Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
     textureSet = textureLayout->allocateDescriptorSet();
     textureSet->updateTexture(0, skybox.day);
     textureSet->updateTexture(1, skybox.night);

@@ -83,9 +83,9 @@ class RayTracingPipeline : public Gfx::RayTracingPipeline {
     }
     VkStridedDeviceAddressRegionKHR getCallableRegion() {
         return VkStridedDeviceAddressRegionKHR{
-            .deviceAddress = callable->deviceAddress,
-            .stride = callableStride,
-            .size = callable->size,
+            .deviceAddress = 0,//callable->deviceAddress,
+            .stride = 0,//callableStride,
+            .size = 0,//callable->size,
         };
     }
     VkPipelineLayout getLayout() const { return layout.cast<PipelineLayout>()->getHandle(); }

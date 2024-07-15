@@ -380,9 +380,19 @@ Gfx::OTopLevelAS Graphics::createTopLevelAccelerationStructure(const Gfx::TopLev
 }
 
 void Graphics::buildBottomLevelAccelerationStructures(Array<Gfx::PBottomLevelAS> data) {
-    Gfx::PShaderBuffer positionBuffer = StaticMeshVertexData::getInstance()->getPositionBuffer();
+    Gfx::PShaderBuffer verticesBuffer = StaticMeshVertexData::getInstance()->getPositionBuffer();
     Gfx::PIndexBuffer indexBuffer = StaticMeshVertexData::getInstance()->getIndexBuffer();
+    
+    // Setup vertices and indices for a single triangle
+    
+    // Create buffers for the bottom level geometry
+    // For the sake of simplicity we won't stage the vertex data to the GPU memory
 
+    // Note that the buffer usage flags for buffers consumed by the bottom level acceleration structure require special flags
+    const VkBufferUsageFlags buffer_usage_flags = VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR |
+                                                  VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+
+    
     VkBufferCreateInfo transformBufferInfo = {
         .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
         .pNext = nullptr,
@@ -407,10 +417,10 @@ void Graphics::buildBottomLevelAccelerationStructures(Array<Gfx::PBottomLevelAS>
     transformBuffer->pipelineBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
                                      VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_TRANSFER_READ_BIT,
                                      VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR | VK_PIPELINE_STAGE_TRANSFER_BIT);
-    positionBuffer->pipelineBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_SHADER_READ_BIT,
-                                    VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR);
+    verticesBuffer->pipelineBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_SHADER_READ_BIT,
+                                   VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR);
     indexBuffer->pipelineBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_SHADER_READ_BIT,
-                                 VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR);
+                                  VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR);
 
     Array<VkAccelerationStructureGeometryKHR> geometries(data.size());
     Array<VkAccelerationStructureBuildGeometryInfoKHR> buildGeometries(data.size());
@@ -421,7 +431,7 @@ void Graphics::buildBottomLevelAccelerationStructures(Array<Gfx::PBottomLevelAS>
     for (uint32 i = 0; i < data.size(); ++i) {
         auto blas = data[i].cast<BottomLevelAS>();
         VkDeviceOrHostAddressConstKHR vertexDataAddress = {
-            .deviceAddress = positionBuffer.cast<ShaderBuffer>()->getDeviceAddress() + blas->getVertexOffset(),
+            .deviceAddress = verticesBuffer.cast<ShaderBuffer>()->getDeviceAddress() + blas->getVertexOffset(),
         };
         VkDeviceOrHostAddressConstKHR indexDataAddress = {
             .deviceAddress = indexBuffer.cast<IndexBuffer>()->getDeviceAddress() + blas->getIndexOffset(),
@@ -520,7 +530,6 @@ void Graphics::buildBottomLevelAccelerationStructures(Array<Gfx::PBottomLevelAS>
     transformBuffer->bind();
     cmd->bindResource(PBufferAllocation(transformBuffer));
     destructionManager->queueResourceForDestruction(std::move(transformBuffer));
-
     for (auto& scratchAlloc : scratchBuffers) {
         scratchAlloc->bind();
         cmd->bindResource(PBufferAllocation(scratchAlloc));
@@ -755,6 +764,7 @@ void Graphics::pickPhysicalDevice() {
         .pNext = &features11,
         .features =
             {
+                .geometryShader = true,
                 .fillModeNonSolid = true,
                 .wideLines = true,
                 .pipelineStatisticsQuery = true,

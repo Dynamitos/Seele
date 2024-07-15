@@ -152,7 +152,7 @@ void StaticMeshVertexData::resizeBuffers() {
             },
         .numElements = verticesAllocated,
         .dynamic = false,
-        .vertexBuffer = 1,
+        .vertexBuffer = true,
         .name = "Positions",
     };
     positions = graphics->createShaderBuffer(createInfo);

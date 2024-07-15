@@ -293,6 +293,8 @@ void VertexData::commitMeshes() {
         .dynamic = false,
         .name = "PrimitiveIndicesBuffer",
     });
+    updateBuffers();
+    dirty = false;
     graphics->buildBottomLevelAccelerationStructures(std::move(dataToBuild));
 }
 

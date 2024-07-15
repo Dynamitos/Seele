@@ -76,6 +76,8 @@ DestructionManager::DestructionManager(PGraphics graphics) : graphics(graphics) 
 DestructionManager::~DestructionManager() {}
 
 void DestructionManager::queueResourceForDestruction(OCommandBoundResource resource) {
+    if (resource == nullptr)
+        return;
     if (resource->isCurrentlyBound()) {
         resources.add(std::move(resource));
     }

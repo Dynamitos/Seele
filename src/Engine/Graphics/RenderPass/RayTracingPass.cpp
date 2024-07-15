@@ -1,4 +1,7 @@
 #include "RayTracingPass.h"
+#include "Asset/AssetRegistry.h"
+#include "Asset/MeshAsset.h"
+#include "Graphics/Mesh.h"
 #include "Graphics/RayTracing.h"
 #include "Graphics/Shader.h"
 #include "Graphics/StaticMeshVertexData.h"
@@ -74,7 +77,7 @@ void RayTracingPass::render() {
             }
         }
     }
-    Gfx::OTopLevelAS tlas = graphics->createTopLevelAccelerationStructure(Gfx::TopLevelASCreateInfo{
+    tlas = graphics->createTopLevelAccelerationStructure(Gfx::TopLevelASCreateInfo{
         .instances = instanceData,
         .bottomLevelStructures = accelerationStructures,
     });
@@ -83,14 +86,6 @@ void RayTracingPass::render() {
     desc->updateTexture(1, Gfx::PTexture2D(texture));
     desc->updateBuffer(2, StaticMeshVertexData::getInstance()->getIndexBuffer());
     desc->writeChanges();
-
-    Gfx::PRayTracingPipeline pipeline = graphics->createRayTracingPipeline(Gfx::RayTracingPipelineCreateInfo{
-        .pipelineLayout = pipelineLayout,
-        .rayGenGroup = {.shader = rayGen},
-        .hitGroups = {{.closestHitShader = closestHit}},
-        .missGroups = {{.shader = miss}},
-        .callableGroups = callableGroups,
-    });
 
     command->bindPipeline(pipeline);
     StaticMeshVertexData::getInstance()->getInstanceDataSet()->writeChanges();
@@ -123,9 +118,8 @@ void RayTracingPass::publishOutputs() {
                           Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
     ShaderCompilationInfo compileInfo = {
         .name = "RT",
-        .modules = {"RayGen", "ClosestHit", "Miss", "StaticMeshVertexData"},
+        .modules = {"RayGen", "ClosestHit", "Miss"},
         .entryPoints = {{"raygen", "RayGen"}, {"closestHit", "ClosestHit"}, {"miss", "Miss"}},
-        .typeParameter = {{"IVertexData", "StaticMeshVertexData"}},
         .defines = {{"RAY_TRACING", "1"}},
         .rootSignature = pipelineLayout,
     };
@@ -134,6 +128,16 @@ void RayTracingPass::publishOutputs() {
     closestHit = graphics->createClosestHitShader({1});
     miss = graphics->createMissShader({2});
     pipelineLayout->create();
+    pipeline = graphics->createRayTracingPipeline(Gfx::RayTracingPipelineCreateInfo{
+        .pipelineLayout = pipelineLayout,
+        .rayGenGroup = {.shader = rayGen},
+        .hitGroups = {{.closestHitShader = closestHit}},
+        .missGroups = {{.shader = miss}},
+        //.callableGroups = callableGroups,
+    });
+    Component::Transform transform;
+    transform.setScale(Vector(1, 1, 1));
+    transform.setPosition(Vector(0, 0, 1));
 }
 
 void RayTracingPass::createRenderPass() {}
