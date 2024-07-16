@@ -602,7 +602,7 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
         .pStages = shaderStages.data(),
         .groupCount = static_cast<uint32>(shaderGroups.size()),
         .pGroups = shaderGroups.data(),
-        .maxPipelineRayRecursionDepth = 1,
+        .maxPipelineRayRecursionDepth = 12,
         .layout = createInfo.pipelineLayout.cast<PipelineLayout>()->getHandle(),
     };
     VkPipeline pipelineHandle;

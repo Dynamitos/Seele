@@ -17,5 +17,6 @@ struct CallablePayload
 
 struct RayPayload
 {
+    float3 rayDirection;
     float3 color;
 };

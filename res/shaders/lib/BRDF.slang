@@ -4,11 +4,13 @@ interface IBRDF
 {
     float3 evaluate(float3 viewDir_TS, float3 lightDir_TS, float3 lightColor);
     float3 evaluateAmbient();
+    float getAlpha();
 };
 
 struct Phong : IBRDF
 {
     float3 baseColor;
+    float alpha;
     float3 specular;
     float3 normal;
     float3 ambient;
@@ -16,6 +18,7 @@ struct Phong : IBRDF
 
     __init()
     {
+        alpha = 1;
         normal = float3(0, 0, 1);
     }
 
@@ -33,11 +36,16 @@ struct Phong : IBRDF
     {
         return ambient;
     }
+    float getAlpha()
+    {
+        return alpha;
+    }
 };
 
 struct BlinnPhong : IBRDF
 {
     float3 baseColor;
+    float alpha;
     float3 specularColor;
     float3 normal;
     float shininess;
@@ -45,6 +53,7 @@ struct BlinnPhong : IBRDF
 
     __init()
     {
+        alpha = 1;
         normal = float3(0, 0, 1);
     }
 
@@ -62,15 +71,21 @@ struct BlinnPhong : IBRDF
     {
         return ambient;
     }
+    float getAlpha()
+    {
+        return alpha;
+    }
 };
 
 struct CelShading : IBRDF
 {
     float3 baseColor;
+    float alpha;
     float3 normal;
 
     __init()
     {
+        alpha = 1;
         normal = float3(0, 0, 1);
     }
 
@@ -94,12 +109,17 @@ struct CelShading : IBRDF
     {
         return float3(0, 0, 0);
     }
+    float getAlpha()
+    {
+        return alpha;
+    }
 };
 
 // https://learnopengl.com/PBR/Theory
 struct CookTorrance : IBRDF
 {
     float3 baseColor;
+    float alpha;
     float3 normal;
     float roughness;
     float metallic;
@@ -107,6 +127,7 @@ struct CookTorrance : IBRDF
 
     __init()
     {
+        alpha = 1;
         normal = float3(0, 0, 1);
         roughness = 0;
         metallic = 0;
@@ -175,5 +196,9 @@ struct CookTorrance : IBRDF
     float3 evaluateAmbient()
     {
         return float3(0.03) * baseColor * ambientOcclusion;
+    }
+    float getAlpha()
+    {
+        return alpha;
     }
 };

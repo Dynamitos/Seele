@@ -39,7 +39,7 @@ void closestHit(inout RayPayload hitValue, in BuiltInTriangleIntersectionAttribu
     LightingParameter lightingParams = params.getLightingParameter();
     MaterialParameter materialParams = params.getMaterialParameter();
 	let brdf = Material.prepare(materialParams);
-    
+
     float3 result = float3(0, 0, 0);
     for(int i = 0; i < pLightEnv.numDirectionalLights; ++i)
     {
@@ -53,5 +53,7 @@ void closestHit(inout RayPayload hitValue, in BuiltInTriangleIntersectionAttribu
     // gamma correction
     result = result / (result + float3(1.0));
     result = pow(result, float3(1.0/2.2));
+
+    
     hitValue.color = result;
 }
