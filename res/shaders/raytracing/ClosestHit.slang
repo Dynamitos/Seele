@@ -53,5 +53,5 @@ void closestHit(inout RayPayload hitValue, in BuiltInTriangleIntersectionAttribu
     // gamma correction
     result = result / (result + float3(1.0));
     result = pow(result, float3(1.0/2.2));
-    hitValue.color = getMaterialTextureParameter(0).Sample(getMaterialSamplerParameter(0), params.texCoords[0]).xyz;
+    hitValue.color = result;
 }

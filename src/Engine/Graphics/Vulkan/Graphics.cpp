@@ -654,6 +654,8 @@ void Graphics::initInstance(GraphicsInitializer initInfo) {
 #ifdef __APPLE__
     extensions.add("VK_KHR_portability_enumeration");
 #endif
+    Array<const char*> layers = initInfo.layers;
+    layers.add("VK_LAYER_KHRONOS_validation");
     VkInstanceCreateInfo info = {
         .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
         .pNext = nullptr,
@@ -661,8 +663,8 @@ void Graphics::initInstance(GraphicsInitializer initInfo) {
         .flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR,
 #endif
         .pApplicationInfo = &appInfo,
-        .enabledLayerCount = (uint32)initInfo.layers.size(),
-        .ppEnabledLayerNames = initInfo.layers.data(),
+        .enabledLayerCount = (uint32)layers.size(),
+        .ppEnabledLayerNames = layers.data(),
         .enabledExtensionCount = (uint32)extensions.size(),
         .ppEnabledExtensionNames = extensions.data(),
     };

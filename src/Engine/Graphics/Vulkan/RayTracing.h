@@ -101,6 +101,7 @@ class RayTracingPipeline : public Gfx::RayTracingPipeline {
     uint64 missStride;
     OBufferAllocation callable;
     uint64 callableStride;
+    friend class RenderCommand;
 };
 DEFINE_REF(RayTracingPipeline)
 } // namespace Vulkan

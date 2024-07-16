@@ -235,6 +235,9 @@ void RenderCommand::bindPipeline(Gfx::PRayTracingPipeline gfxPipeline) {
     assert(threadId == std::this_thread::get_id());
     rtPipeline = gfxPipeline.cast<RayTracingPipeline>();
     rtPipeline->bind(handle);
+    boundResources.add(PBufferAllocation(rtPipeline->rayGen));
+    boundResources.add(PBufferAllocation(rtPipeline->hit));
+    boundResources.add(PBufferAllocation(rtPipeline->miss));
 }
 
 void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet, Array<uint32> dynamicOffsets) {

@@ -21,5 +21,5 @@ void raygen()
     RayPayload payload;
     TraceRay(pRayTracingParams.scene, RAY_FLAG_FORCE_OPAQUE, 0xff, 0, 0, 0, rayDesc, payload);
 
-    pRayTracingParams.image[int2(LaunchID.xy)] = float4(payload.color, 0.0);
+    pRayTracingParams.image[int2(LaunchID.xy)] = float4(payload.color, 1.0);
 }

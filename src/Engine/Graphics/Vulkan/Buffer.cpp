@@ -117,6 +117,8 @@ void BufferAllocation::updateContents(uint64 regionOffset, uint64 regionSize, vo
         .size = regionSize,
     };
     vkCmdCopyBuffer(cmd->getHandle(), staging->buffer, buffer, 1, &copy);
+    pipelineBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_WRITE_BIT,
+                    VK_PIPELINE_STAGE_TRANSFER_BIT);
     cmd->bindResource(PBufferAllocation(this));
     cmd->bindResource(PBufferAllocation(staging));
 

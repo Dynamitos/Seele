@@ -18,8 +18,6 @@ class LightEnvironment {
     Gfx::PDescriptorSet getDescriptorSet();
 
   private:
-#define INIT_DIRECTIONAL_LIGHTS 4
-#define INIT_POINT_LIGHTS 256
     struct LightEnv {
         uint32 numDirectionalLights;
         uint32 numPointLights;

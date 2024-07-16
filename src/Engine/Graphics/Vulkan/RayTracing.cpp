@@ -220,4 +220,9 @@ RayTracingPipeline::~RayTracingPipeline() {
     graphics->getDestructionManager()->queueResourceForDestruction(std::move(callable));
 }
 
-void RayTracingPipeline::bind(VkCommandBuffer handle) { vkCmdBindPipeline(handle, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, pipeline); }
+void RayTracingPipeline::bind(VkCommandBuffer handle) {
+    vkCmdBindPipeline(handle, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, pipeline);
+    rayGen->bind();
+    hit->bind();
+    miss->bind();
+}

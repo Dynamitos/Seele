@@ -478,6 +478,7 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
             .stage = VK_SHADER_STAGE_RAYGEN_BIT_KHR,
             .module = rayGen->getModuleHandle(),
             .pName = rayGen->getEntryPointName(),
+            .pSpecializationInfo = nullptr,
         });
         shaderGroups.add(VkRayTracingShaderGroupCreateInfoKHR{
             .sType = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR,
@@ -487,6 +488,7 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
             .closestHitShader = VK_SHADER_UNUSED_KHR,
             .anyHitShader = VK_SHADER_UNUSED_KHR,
             .intersectionShader = VK_SHADER_UNUSED_KHR,
+            .pShaderGroupCaptureReplayHandle = nullptr,
         });
     }
     {
@@ -499,6 +501,7 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
                 .stage = VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR,
                 .module = hit->getModuleHandle(),
                 .pName = hit->getEntryPointName(),
+                .pSpecializationInfo = nullptr,
             });
             uint32 hitIndex = static_cast<uint32>(shaderStages.size() - 1);
             uint32 anyHitIndex = VK_SHADER_UNUSED_KHR;
@@ -512,6 +515,7 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
                     .stage = VK_SHADER_STAGE_ANY_HIT_BIT_KHR,
                     .module = anyHit->getModuleHandle(),
                     .pName = anyHit->getEntryPointName(),
+                    .pSpecializationInfo = nullptr,
                 });
             }
             if (hitgroup.intersectionShader != nullptr) {
@@ -523,6 +527,7 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
                     .stage = VK_SHADER_STAGE_INTERSECTION_BIT_KHR,
                     .module = intersect->getModuleHandle(),
                     .pName = intersect->getEntryPointName(),
+                    .pSpecializationInfo = nullptr,
                 });
             }
             shaderGroups.add(VkRayTracingShaderGroupCreateInfoKHR{
@@ -533,6 +538,7 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
                 .closestHitShader = hitIndex,
                 .anyHitShader = anyHitIndex,
                 .intersectionShader = intersectionIndex,
+                .pShaderGroupCaptureReplayHandle = nullptr,
             });
         }
     }
@@ -546,6 +552,7 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
                 .stage = VK_SHADER_STAGE_MISS_BIT_KHR,
                 .module = miss->getModuleHandle(),
                 .pName = miss->getEntryPointName(),
+                .pSpecializationInfo = nullptr,
             });
             shaderGroups.add(VkRayTracingShaderGroupCreateInfoKHR{
                 .sType = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR,
@@ -555,6 +562,7 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
                 .closestHitShader = VK_SHADER_UNUSED_KHR,
                 .anyHitShader = VK_SHADER_UNUSED_KHR,
                 .intersectionShader = VK_SHADER_UNUSED_KHR,
+                .pShaderGroupCaptureReplayHandle = nullptr,
             });
         }
     }
@@ -568,6 +576,7 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
                 .stage = VK_SHADER_STAGE_CALLABLE_BIT_KHR,
                 .module = call->getModuleHandle(),
                 .pName = call->getEntryPointName(),
+                .pSpecializationInfo = nullptr,
             });
             shaderGroups.add(VkRayTracingShaderGroupCreateInfoKHR{
                 .sType = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR,
@@ -577,11 +586,15 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
                 .closestHitShader = VK_SHADER_UNUSED_KHR,
                 .anyHitShader = VK_SHADER_UNUSED_KHR,
                 .intersectionShader = VK_SHADER_UNUSED_KHR,
+                .pShaderGroupCaptureReplayHandle = nullptr,
             });
         }
     }
     uint32 hash = CRC::Calculate(shaderStages.data(), sizeof(VkPipelineShaderStageCreateInfo) * shaderStages.size(), CRC::CRC_32());
     hash = CRC::Calculate(shaderGroups.data(), sizeof(VkRayTracingShaderGroupCreateInfoKHR) * shaderGroups.size(), CRC::CRC_32(), hash);
+    if (rayTracingPipelines.contains(hash)) {
+        return rayTracingPipelines[hash];
+    }
     VkRayTracingPipelineCreateInfoKHR pipelineInfo = {
         .sType = VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR,
         .pNext = nullptr,
@@ -593,7 +606,11 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
         .layout = createInfo.pipelineLayout.cast<PipelineLayout>()->getHandle(),
     };
     VkPipeline pipelineHandle;
+    auto beginTime = std::chrono::high_resolution_clock::now();
     VK_CHECK(vkCreateRayTracingPipelinesKHR(graphics->getDevice(), VK_NULL_HANDLE, cache, 1, &pipelineInfo, nullptr, &pipelineHandle));
+    auto endTime = std::chrono::high_resolution_clock::now();
+    int64 delta = std::chrono::duration_cast<std::chrono::microseconds>(endTime - beginTime).count();
+    std::cout << "RT creation time: " << delta << std::endl;
 
     const uint32_t handleSize = graphics->getRayTracingProperties().shaderGroupHandleSize;
     const uint32_t handleSizeAligned =

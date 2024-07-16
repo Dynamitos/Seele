@@ -77,10 +77,7 @@ void RayTracingPass::render() {
         }
     }
     pipeline = graphics->createRayTracingPipeline(Gfx::RayTracingPipelineCreateInfo{
-        .pipelineLayout = pipelineLayout,
-        .rayGenGroup = {.shader = rayGen},
-        .hitGroups = callableGroups,
-        .missGroups = {{.shader = miss}},
+        .pipelineLayout = pipelineLayout, .rayGenGroup = {.shader = rayGen}, .hitGroups = callableGroups, .missGroups = {{.shader = miss}},
         //.callableGroups = callableGroups,
     });
     tlas = graphics->createTopLevelAccelerationStructure(Gfx::TopLevelASCreateInfo{
@@ -122,7 +119,8 @@ void RayTracingPass::publishOutputs() {
         .usage = Gfx::SE_IMAGE_USAGE_STORAGE_BIT,
     });
     texture->changeLayout(Gfx::SE_IMAGE_LAYOUT_GENERAL, Gfx::SE_ACCESS_NONE, Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-                          Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
+                          Gfx::SE_ACCESS_SHADER_WRITE_BIT,
+                          Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT | Gfx::SE_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR);
     ShaderCompilationInfo compileInfo = {
         .name = "RT",
         .modules = {"RayGen", "Miss"},
