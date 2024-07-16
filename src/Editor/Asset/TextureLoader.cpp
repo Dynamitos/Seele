@@ -57,23 +57,9 @@ PTextureAsset TextureLoader::getPlaceholderTexture() { return placeholderAsset; 
 
 void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset) {
     int totalWidth = 0, totalHeight = 0, n = 0;
-    unsigned char* data = stbi_load(args.filePath.string().c_str(), &totalWidth, &totalHeight, &n, 0);
+    unsigned char* data = stbi_load(args.filePath.string().c_str(), &totalWidth, &totalHeight, &n, 4);
     ktxTexture2* kTexture = nullptr;
-    VkFormat format;
-    switch (n) {
-    case 1:
-        format = VK_FORMAT_R8_UNORM;
-        break;
-    case 2:
-        format = VK_FORMAT_R8G8_UNORM;
-        break;
-    case 3:
-        format = VK_FORMAT_R8G8B8_UNORM;
-        break;
-    case 4:
-        format = VK_FORMAT_R8G8B8A8_UNORM;
-        break;
-    }
+    VkFormat format = VK_FORMAT_R8G8B8A8_UNORM;
     ktxTextureCreateInfo createInfo = {
         .vkFormat = (uint32)format,
         .baseDepth = 1,
@@ -94,13 +80,13 @@ void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset) {
 
         KTX_ASSERT(ktxTexture2_Create(&createInfo, KTX_TEXTURE_CREATE_ALLOC_STORAGE, &kTexture));
 
-        auto loadCubeFace = [n, &kTexture, faceWidth, totalWidth, &data](int xPos, int yPos, int faceName) {
-            std::vector<unsigned char> vec(faceWidth * faceWidth * n);
+        auto loadCubeFace = [&kTexture, faceWidth, totalWidth, &data](int xPos, int yPos, int faceName) {
+            std::vector<unsigned char> vec(faceWidth * faceWidth * 4);
             for (uint32 y = 0; y < faceWidth; ++y) {
                 for (uint32 x = 0; x < faceWidth; ++x) {
                     int imgX = x + (xPos * faceWidth);
                     int imgY = y + (yPos * faceWidth);
-                    std::memcpy(&vec[(x + (faceWidth * y)) * n], &data[(imgX + (totalWidth * imgY)) * n], n);
+                    std::memcpy(&vec[(x + (faceWidth * y)) * 4], &data[(imgX + (totalWidth * imgY)) * 4], 4);
                 }
             }
             ktxTexture_SetImageFromMemory(ktxTexture(kTexture), 0, 0, faceName, vec.data(), vec.size());
@@ -119,7 +105,7 @@ void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset) {
 
         ktxTexture2_Create(&createInfo, KTX_TEXTURE_CREATE_ALLOC_STORAGE, &kTexture);
 
-        ktxTexture_SetImageFromMemory(ktxTexture(kTexture), 0, 0, 0, data, totalWidth * totalHeight * n * sizeof(unsigned char));
+        ktxTexture_SetImageFromMemory(ktxTexture(kTexture), 0, 0, 0, data, totalWidth * totalHeight * 4 * sizeof(unsigned char));
     }
     ktxBasisParams basisParams = {
         .structSize = sizeof(ktxBasisParams),
@@ -128,9 +114,9 @@ void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset) {
         .uastcFlags = KTX_PACK_UASTC_LEVEL_DEFAULT,
         .uastcRDO = true,
     };
-    KTX_ASSERT(ktxTexture2_CompressBasisEx(kTexture, &basisParams));
-    
-    KTX_ASSERT(ktxTexture2_DeflateZstd(kTexture, 15));
+    //KTX_ASSERT(ktxTexture2_CompressBasisEx(kTexture, &basisParams));
+    //
+    //KTX_ASSERT(ktxTexture2_DeflateZstd(kTexture, 15));
 
     char writer[100];
     snprintf(writer, sizeof(writer), "%s version %s", "SeeleEngine", "0.0.1");

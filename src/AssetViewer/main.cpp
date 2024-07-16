@@ -19,7 +19,7 @@ AssetRegistry* _instance = new AssetRegistry();
 int main(int, char**) {
     Assimp::Importer importer;
     const aiScene* scene =
-        importer.ReadFile("C:\\Users\\Dynamitos\\MeshShadingDemo\\import\\models\\after-the-rain-vr-sound\\source\\WhitechapelSrc.fbx",
+        importer.ReadFile("C:\\Users\\Dynamitos\\MeshShadingDemo\\import\\models\\after-the-rain-vr-sound\\source\\WhitechapelSrc.glb",
                           (uint32)(aiProcess_FlipUVs | aiProcess_Triangulate | aiProcess_ImproveCacheLocality));
 
     auto interpolate = [](Vector p0, Vector p1, Vector p2) { return (p0 + p1 + p2) / 3.0f; };
@@ -103,15 +103,15 @@ int main(int, char**) {
         //    stats << calcArea(tris[i]) << std::endl;
         //}
         bool tess = false;
-        while (!tess) {
-            tess = true;
-            for (uint32 i = 0; i < tris.size(); ++i) {
-                if (calcArea(tris[i]) > 100.f) {
-                    tesselate(i);
-                    tess = false;
-                }
-            }
-        }
+        //while (!tess) {
+        //    tess = true;
+        //    for (uint32 i = 0; i < tris.size(); ++i) {
+        //        if (calcArea(tris[i]) > 100.f) {
+        //            tesselate(i);
+        //            tess = false;
+        //        }
+        //    }
+        //}
 
         aiVector3D* newPos = new aiVector3D[positions.size()];
         std::memcpy(newPos, positions.data(), positions.size() * sizeof(Vector));
@@ -160,8 +160,8 @@ int main(int, char**) {
     }
 
     Assimp::Exporter exporter;
-    exporter.Export(scene, "fbx",
-                    "C:\\Users\\Dynamitos\\MeshShadingDemo\\import\\models\\after-the-rain-vr-sound\\source\\Whitechapel.fbx");
+    exporter.Export(scene, "glb2",
+                    "C:\\Users\\Dynamitos\\MeshShadingDemo\\import\\models\\after-the-rain-vr-sound\\source\\Whitechapel.glb");
     for (uint32 i = 0; i < exporter.GetExportFormatCount(); ++i) {
         auto desc = exporter.GetExportFormatDescription(i);
         std::cout << desc->description << " " << desc->fileExtension << " " << desc->id << " " << std::endl;

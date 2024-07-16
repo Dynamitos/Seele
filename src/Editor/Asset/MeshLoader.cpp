@@ -379,7 +379,10 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Array<PTextureAsset>&
         bool twoSided = true;
         material->Get(AI_MATKEY_TWOSIDED, twoSided);
         float opacity = 1.0f;
-        material->Get(AI_MATKEY_OPACITY, opacity);
+        if (std::strcmp(material->GetName().C_Str(), "3td_Africa_Grass01") == 0)
+        {
+            opacity = 0.5f;
+        }
         OMaterialAsset baseMat = new MaterialAsset(importPath, materialName);
         baseMat->material = new Material(graphics, numTextures, numSamplers, numFloats, twoSided, opacity, materialName,
                                          std::move(expressions), std::move(parameters), std::move(brdf));
