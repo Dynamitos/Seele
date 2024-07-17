@@ -49,6 +49,9 @@ class VertexData {
         VertexData* vertexData;
         DrawCallOffsets offsets;
         Vector worldPosition;
+        InstanceData instanceData;
+        MeshData meshData;
+        Gfx::PBottomLevelAS rayTracingScene;
     };
     void resetMeshData();
     void updateMesh(entt::entity id, uint32 meshIndex, PMesh mesh, Component::Transform& transform);

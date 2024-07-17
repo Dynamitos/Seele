@@ -75,6 +75,24 @@ void RayTracingPass::render() {
                 }
             }
         }
+        for (const auto& transparentData : vertexData->getTransparentData()) {
+            PMaterial mat = transparentData.matInst->getBaseMaterial();
+
+            Gfx::ShaderPermutation permutation = graphics->getShaderCompiler()->getTemplate("RayTracing");
+            permutation.setMaterial(mat->getName());
+            permutation.setVertexData(vertexData->getTypeName());
+            const Gfx::ShaderCollection* collection = graphics->getShaderCompiler()->findShaders(Gfx::PermutationId(permutation));
+            assert(collection != nullptr);
+            Gfx::RayTracingHitGroup callableGroup = {
+                .closestHitShader = collection->callableShader,
+            };
+            callableGroup.parameters.resize(sizeof(VertexData::DrawCallOffsets));
+            std::memcpy(callableGroup.parameters.data(), &transparentData.offsets, sizeof(VertexData::DrawCallOffsets));
+            callableGroups.add(callableGroup);
+
+            instanceData.add(transparentData.instanceData);
+            accelerationStructures.add(transparentData.rayTracingScene);
+        }
     }
     pipeline = graphics->createRayTracingPipeline(Gfx::RayTracingPipelineCreateInfo{
         .pipelineLayout = pipelineLayout, .rayGenGroup = {.shader = rayGen}, .hitGroups = callableGroups, .missGroups = {{.shader = miss}},

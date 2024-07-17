@@ -20,6 +20,7 @@ void VertexData::resetMeshData() {
     instanceData.clear();
     instanceMeshData.clear();
     rayTracingScene.clear();
+    transparentData.clear();
     for (auto& mat : materialData) {
         for (auto& inst : mat.instances) {
             inst.instanceData.clear();
@@ -47,6 +48,8 @@ void VertexData::updateMesh(entt::entity id, uint32 meshIndex, PMesh mesh, Compo
         .inverseTransformMatrix = glm::inverse(transformMatrix),
     };
 
+    auto [instanceId, meshletOffset] = getCullingMapping(id, meshIndex, data.numMeshlets);
+
     referencedInstance->updateDescriptor();
     if (mat->hasTransparency()) {
         auto params = referencedInstance->getMaterialOffsets();
@@ -55,15 +58,16 @@ void VertexData::updateMesh(entt::entity id, uint32 meshIndex, PMesh mesh, Compo
             .vertexData = this,
             .offsets =
                 {
-                    .instanceOffset = static_cast<uint32>(instanceData.size()),
+                    .instanceOffset = 0,
                     .textureOffset = params.textureOffset,
                     .samplerOffset = params.samplerOffset,
                     .floatOffset = params.floatOffset,
                 },
             .worldPosition = Vector(inst.transformMatrix[3]),
+            .instanceData = inst,
+            .meshData = data,
+            .rayTracingScene = mesh->blas,
         });
-        instanceData.add(inst);
-        instanceMeshData.add(data);
         return;
     }
     if (materialData.size() <= mat->getId()) {
@@ -76,9 +80,6 @@ void VertexData::updateMesh(entt::entity id, uint32 meshIndex, PMesh mesh, Compo
     }
     BatchedDrawCall& matInstanceData = matData.instances[referencedInstance->getId()];
     matInstanceData.materialInstance = referencedInstance;
-    
-    auto [instanceId, meshletOffset] = getCullingMapping(id, meshIndex, data.numMeshlets);
-
     matInstanceData.rayTracingData.add(mesh->blas);
     matInstanceData.instanceData.add(inst);
     matInstanceData.instanceMeshData.add(data);
@@ -145,6 +146,13 @@ void VertexData::createDescriptors() {
                 // cullingOffsets.add(numMeshlets);
             }
         }
+    }
+    for (uint32 i = 0; i < transparentData.size(); ++i)
+    {
+        transparentData[i].offsets.instanceOffset = instanceData.size();
+        instanceData.add(transparentData[i].instanceData);
+        instanceMeshData.add(transparentData[i].meshData);
+        rayTracingScene.add(transparentData[i].rayTracingScene);
     }
     cullingOffsetBuffer->rotateBuffer(cullingOffsets.size() * sizeof(uint32));
     cullingOffsetBuffer->updateContents(ShaderBufferCreateInfo{

@@ -151,7 +151,7 @@ TopLevelAS::TopLevelAS(PGraphics graphics, const Gfx::TopLevelASCreateInfo& crea
                              VmaAllocationCreateInfo{
                                  .usage = VMA_MEMORY_USAGE_AUTO,
                              },
-                             Gfx::QueueType::GRAPHICS);
+                             Gfx::QueueType::GRAPHICS, graphics->getAccelerationProperties().minAccelerationStructureScratchOffsetAlignment);
 
     VkAccelerationStructureBuildGeometryInfoKHR buildGeometry = {
         .sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR,
