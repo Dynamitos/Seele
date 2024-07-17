@@ -1,5 +1,6 @@
 #pragma once
 #include "Asset.h"
+#include "TextureAsset.h"
 
 namespace Seele {
 class LevelAsset : public Asset {
@@ -12,5 +13,6 @@ class LevelAsset : public Asset {
     virtual void load(ArchiveBuffer& buffer) override;
 
   private:
+    Array<OTextureAsset> lightMaps;
 };
 } // namespace Seele

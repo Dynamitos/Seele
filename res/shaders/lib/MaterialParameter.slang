@@ -49,6 +49,11 @@ struct FragmentParameter
         result.normal_TS = mul(tbn, normal_WS);
 		return result;
 	}
+    float3x3 getTangentToWorld()
+    {
+        float3x3 tbn = float3x3(normalize(tangent_WS), normalize(biTangent_WS), normalize(normal_WS));
+		return transpose(tbn);
+    }
 #endif
     static FragmentParameter interpolate(FragmentParameter f0, FragmentParameter f1, FragmentParameter f2, float3 barycentricCoords)
     {

@@ -53,6 +53,9 @@ void closestHit(inout RayPayload hitValue, in BuiltInTriangleIntersectionAttribu
     // gamma correction
     result = result / (result + float3(1.0));
     result = pow(result, float3(1.0/2.2));
-    
+
     hitValue.color = result;
+    hitValue.alpha = brdf.getAlpha();
+    hitValue.intersection_WS = WorldRayOrigin() + RayTCurrent() * WorldRayDirection();
+    hitValue.normal_WS = mul(params.getTangentToWorld(), brdf.getTangentNormal());
 }

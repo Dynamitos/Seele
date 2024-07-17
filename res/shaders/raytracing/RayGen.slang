@@ -17,10 +17,20 @@ void raygen()
     rayDesc.Direction = mul(pViewParams.inverseViewMatrix, float4(normalize(target.xyz), 0)).xyz;
     rayDesc.TMin = 0.001;
     rayDesc.TMax = 10000.0;
+	
+    const uint maxRays = 12;
+    float3 color = float3(0, 0, 0);
+    float alpha;
+    for(uint i = 0; i < maxRays; ++i) {
+        RayPayload payload;
+        TraceRay(pRayTracingParams.scene, RAY_FLAG_FORCE_OPAQUE, 0xff, 0, 0, 0, rayDesc, payload);
+        color = color.rgb * alpha + payload.color * payload.alpha;
+        alpha = alpha + payload.alpha;
+        rayDesc.Origin = payload.intersection_WS;
+        if(alpha > 0.9){
+            break;
+        }
+    }
 
-    RayPayload payload;
-    payload.rayDirection = rayDesc.Direction;
-    TraceRay(pRayTracingParams.scene, RAY_FLAG_FORCE_OPAQUE, 0xff, 0, 0, 0, rayDesc, payload);
-
-    pRayTracingParams.image[int2(LaunchID.xy)] = float4(payload.color, 1.0);
+    pRayTracingParams.image[int2(LaunchID.xy)] = float4(color, alpha);
 }

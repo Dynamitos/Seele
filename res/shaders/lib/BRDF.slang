@@ -5,6 +5,7 @@ interface IBRDF
     float3 evaluate(float3 viewDir_TS, float3 lightDir_TS, float3 lightColor);
     float3 evaluateAmbient();
     float getAlpha();
+    float3 getTangentNormal();
 };
 
 struct Phong : IBRDF
@@ -40,6 +41,10 @@ struct Phong : IBRDF
     {
         return alpha;
     }
+    float3 getTangentNormal()
+    {
+        return normal;
+    }
 };
 
 struct BlinnPhong : IBRDF
@@ -74,6 +79,10 @@ struct BlinnPhong : IBRDF
     float getAlpha()
     {
         return alpha;
+    }
+    float3 getTangentNormal()
+    {
+        return normal;
     }
 };
 
@@ -112,6 +121,10 @@ struct CelShading : IBRDF
     float getAlpha()
     {
         return alpha;
+    }
+    float3 getTangentNormal()
+    {
+        return normal;
     }
 };
 
@@ -200,5 +213,9 @@ struct CookTorrance : IBRDF
     float getAlpha()
     {
         return alpha;
+    }
+    float3 getTangentNormal()
+    {
+        return normal;
     }
 };
