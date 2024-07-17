@@ -148,11 +148,6 @@ class VertexData {
     Gfx::OShaderBuffer instanceMeshDataBuffer;
 
     Array<Gfx::PBottomLevelAS> rayTracingScene;
-    
-    Array<InstanceData> transparentInstanceData;
-    Gfx::OShaderBuffer transparentInstanceDataBuffer;
-    Array<MeshData> transparentMeshData;
-    Gfx::OShaderBuffer transparentMeshDataBuffer;
 
     Gfx::PDescriptorSet descriptorSet;
     uint64 idCounter;

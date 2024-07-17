@@ -11,7 +11,7 @@ using namespace Seele;
 using namespace Seele::Vulkan;
 
 RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Array<Gfx::SubPassDependency> _dependencies,
-                       Gfx::PViewport viewport)
+                       Gfx::PViewport viewport, std::string name)
     : Gfx::RenderPass(std::move(_layout), std::move(_dependencies)), graphics(graphics) {
     renderArea.extent.width = viewport->getWidth();
     renderArea.extent.height = viewport->getHeight();
@@ -200,6 +200,15 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Arra
     };
 
     VK_CHECK(vkCreateRenderPass2(graphics->getDevice(), &info, nullptr, &renderPass));
+    VkDebugUtilsObjectNameInfoEXT nameInfo = {
+        .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
+        .pNext = nullptr,
+        .objectType = VK_OBJECT_TYPE_RENDER_PASS,
+        .objectHandle = (uint64)renderPass,
+        .pObjectName = name.c_str(),
+    };
+    assert(!name.empty());
+    vkSetDebugUtilsObjectNameEXT(graphics->getDevice(), &nameInfo);
 }
 
 RenderPass::~RenderPass() {

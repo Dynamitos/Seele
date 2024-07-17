@@ -145,8 +145,8 @@ Gfx::OViewport Graphics::createViewport(Gfx::PWindow owner, const ViewportCreate
 }
 
 Gfx::ORenderPass Graphics::createRenderPass(Gfx::RenderTargetLayout layout, Array<Gfx::SubPassDependency> dependencies,
-                                            Gfx::PViewport renderArea) {
-    return new RenderPass(this, std::move(layout), std::move(dependencies), renderArea);
+                                            Gfx::PViewport renderArea, std::string name) {
+    return new RenderPass(this, std::move(layout), std::move(dependencies), renderArea, name);
 }
 void Graphics::beginRenderPass(Gfx::PRenderPass renderPass) {
     PRenderPass rp = renderPass.cast<RenderPass>();

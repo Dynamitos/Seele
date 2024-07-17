@@ -2,12 +2,11 @@
 #include "Graphics.h"
 #include "Graphics/RenderTarget.h"
 
-
 namespace Seele {
 namespace Vulkan {
 class RenderPass : public Gfx::RenderPass {
   public:
-    RenderPass(PGraphics graphics, Gfx::RenderTargetLayout layout, Array<Gfx::SubPassDependency> dependencies, Gfx::PViewport viewport);
+    RenderPass(PGraphics graphics, Gfx::RenderTargetLayout layout, Array<Gfx::SubPassDependency> dependencies, Gfx::PViewport viewport, std::string name);
     virtual ~RenderPass();
     uint32 getFramebufferHash();
     void endRenderPass();

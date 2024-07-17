@@ -80,7 +80,7 @@ void MeshLoader::loadTextures(const aiScene* scene, const std::filesystem::path&
     }
 }
 
-constexpr const char* KEY_BASE_COLOR = "k_b";
+constexpr const char* KEY_ALPHA = "k_alpha";
 constexpr const char* KEY_DIFFUSE_COLOR = "k_d";
 constexpr const char* KEY_SPECULAR_COLOR = "k_s";
 constexpr const char* KEY_AMBIENT_COLOR = "k_a";
@@ -137,7 +137,7 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Array<PTextureAsset>&
         };
 
         auto addTextureParameter = [&](std::string paramKey, aiTextureType type, int index, std::string& result,
-                                       StaticArray<int32, 4> extractMask = {0, 1, 2, -1}) {
+                                       StaticArray<int32, 4> extractMask = {0, 1, 2, -1}, std::string* alpha = nullptr) {
             aiString texPath;
             aiTextureMapping mapping;
             uint32 uvIndex = 0;
@@ -218,7 +218,21 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Array<PTextureAsset>&
             expressions.add(new SwizzleExpression(extractMask));
             expressions.back()->key = colorExtract;
             expressions.back()->inputs["target"].source = sampleKey;
-            // TODO: extract alpha, set opacity
+
+            if (alpha != nullptr)
+            {
+                std::string alphaExtract = fmt::format("{0}Alpha{1}", paramKey, index);
+                expressions.add(new SwizzleExpression({3, -1, -1, -1}));
+                expressions.back()->key = alphaExtract;
+                expressions.back()->inputs["target"].source = sampleKey;
+
+                //std::string alphaMul = fmt::format("{0}AlphaMul{1}", paramKey, index);
+                //expressions.add(new MulExpression());
+                //expressions.back()->key = alphaMul;
+                //expressions.back()->inputs["lhs"].source = *alpha;
+                //expressions.back()->inputs["rhs"].source = alphaExtract;
+                *alpha = alphaExtract;
+            }
 
             if (blend == std::numeric_limits<float>::max()) {
                 result = colorExtract;
@@ -273,21 +287,13 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Array<PTextureAsset>&
         };
         // Diffuse
         addVectorParameter(KEY_DIFFUSE_COLOR, AI_MATKEY_COLOR_DIFFUSE);
-        std::string outputBase = KEY_BASE_COLOR;
+        std::string outputDiffuse = KEY_DIFFUSE_COLOR;
+        addScalarParameter(KEY_ALPHA, AI_MATKEY_OPACITY);
+        std::string outputAlpha = KEY_ALPHA;
         uint32 numDiffuseTextures = material->GetTextureCount(aiTextureType_DIFFUSE);
         for (uint32 i = 0; i < numDiffuseTextures; ++i) {
-            addTextureParameter(KEY_DIFFUSE_TEXTURE, aiTextureType_DIFFUSE, i, outputBase, {0, 1, 2, 3});
+            addTextureParameter(KEY_DIFFUSE_TEXTURE, aiTextureType_DIFFUSE, i, outputDiffuse, {0, 1, 2, -1}, &outputAlpha);
         }
-
-        std::string outputDiffuse = KEY_DIFFUSE_COLOR;
-        expressions.add(new SwizzleExpression({0, 1, 2, -1}));
-        expressions.back()->key = outputDiffuse;
-        expressions.back()->inputs["target"].source = outputBase;
-
-        std::string outputAlpha = "alpha";
-        expressions.add(new SwizzleExpression({-1, -1, -1, 0}));
-        expressions.back()->key = outputDiffuse;
-        expressions.back()->inputs["target"].source = outputBase;
 
         // Specular
         addVectorParameter(KEY_SPECULAR_COLOR, AI_MATKEY_COLOR_SPECULAR);
@@ -387,8 +393,48 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Array<PTextureAsset>&
             }
             break;
         };
+        uint32 twoSided = false;
+        float opacity = 1.0f;
+        const char* mat = material->GetName().C_Str();
+
+        if (strcmp(mat, "Leaves0119_14_S") == 0) {
+            opacity = 0.5f;
+            twoSided = true;
+        }
+        if (strcmp(mat, "TexturesCom_Leaves0119_1_alphamasked_S") == 0) {
+            opacity = 0.5f;
+            twoSided = true;
+        }
+        if (strcmp(mat, "TexturesCom_Leaves0119_2_alphamasked_S") == 0) {
+            opacity = 0.5f;
+            twoSided = true;
+        }
+        if (strcmp(mat, "3td_Africa_Grass01") == 0) {
+            opacity = 0.5f;
+            twoSided = true;
+        }
+        if (strcmp(mat, "DryWeeds-CC0") == 0) {
+            opacity = 0.5f;
+            twoSided = true;
+        }
+        if (strcmp(mat, "fgrass1_v2_256") == 0) {
+            opacity = 0.5f;
+            twoSided = true;
+        }
+        if (strcmp(mat, "arbre-feuille") == 0) {
+            opacity = 0.5f;
+            twoSided = true;
+        }
+        if (strcmp(mat, "arbre-feuille-variante") == 0) {
+            opacity = 0.5f;
+            twoSided = true;
+        }
+        if (strcmp(mat, "arbre-feuille-variante2") == 0) {
+            opacity = 0.5f;
+            twoSided = true;
+        }
         OMaterialAsset baseMat = new MaterialAsset(importPath, materialName);
-        baseMat->material = new Material(graphics, numTextures, numSamplers, numFloats, 1, 1, materialName,
+        baseMat->material = new Material(graphics, numTextures, numSamplers, numFloats, twoSided, opacity, materialName,
                                          std::move(expressions), std::move(parameters), std::move(brdf));
         baseMat->material->compile();
         graphics->getShaderCompiler()->registerMaterial(baseMat->material);

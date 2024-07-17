@@ -245,8 +245,16 @@ void BasePass::render() {
     graphics->executeCommands(std::move(commands));
 
     commands.clear();
+    Gfx::ORenderCommand skyboxCommand = graphics->createRenderCommand("SkyboxRender");
+    skyboxCommand->setViewport(viewport);
+    skyboxCommand->bindPipeline(pipeline);
+    skyboxCommand->bindDescriptor({viewParamsSet, skyboxDataSet, textureSet});
+    skyboxCommand->draw(36, 1, 0, 0);
+    commands.add(std::move(skyboxCommand));
+
     // Transparent rendering
     {
+        permutation.setDepthCulling(false); // ignore visibility infos for transparency
         Map<float, VertexData::TransparentDraw> sortedDraws;
         for (const auto& t : transparentData) {
             Vector toCenter = Vector(t.worldPosition) - cameraPos;
@@ -279,10 +287,6 @@ void BasePass::render() {
                     .rasterizationState =
                         {
                             .cullMode = Gfx::SeCullModeFlags(twoSided ? Gfx::SE_CULL_MODE_NONE : Gfx::SE_CULL_MODE_BACK_BIT),
-                        },
-                    .depthStencilState =
-                        {
-                            .depthCompareOp = Gfx::SE_COMPARE_OP_GREATER_OR_EQUAL,
                         },
                     .colorBlend =
                         {
@@ -359,13 +363,6 @@ void BasePass::render() {
         commands.add(std::move(debugCommand));
     }
 
-    Gfx::ORenderCommand skyboxCommand = graphics->createRenderCommand("SkyboxRender");
-    skyboxCommand->setViewport(viewport);
-    skyboxCommand->bindPipeline(pipeline);
-    skyboxCommand->bindDescriptor({viewParamsSet, skyboxDataSet, textureSet});
-    skyboxCommand->draw(36, 1, 0, 0);
-
-    commands.add(std::move(skyboxCommand));
     graphics->executeCommands(std::move(commands));
     graphics->endRenderPass();
     query->endQuery();
@@ -461,7 +458,7 @@ void BasePass::createRenderPass() {
                          Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
         },
     };
-    renderPass = graphics->createRenderPass(std::move(layout), std::move(dependency), viewport);
+    renderPass = graphics->createRenderPass(std::move(layout), std::move(dependency), viewport, "BasePass");
     oLightIndexList = resources->requestBuffer("LIGHTCULLING_OLIGHTLIST");
     tLightIndexList = resources->requestBuffer("LIGHTCULLING_TLIGHTLIST");
     oLightGrid = resources->requestTexture("LIGHTCULLING_OLIGHTGRID");

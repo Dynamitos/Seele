@@ -17,8 +17,8 @@ uint64 VertexData::meshletCount = 0;
 
 void VertexData::resetMeshData() {
     std::unique_lock l(materialDataLock);
-    transparentInstanceData.clear();
-    transparentMeshData.clear();
+    instanceData.clear();
+    instanceMeshData.clear();
     rayTracingScene.clear();
     for (auto& mat : materialData) {
         for (auto& inst : mat.instances) {
@@ -47,6 +47,7 @@ void VertexData::updateMesh(entt::entity id, uint32 meshIndex, PMesh mesh, Compo
         .inverseTransformMatrix = glm::inverse(transformMatrix),
     };
 
+    referencedInstance->updateDescriptor();
     if (mat->hasTransparency()) {
         auto params = referencedInstance->getMaterialOffsets();
         transparentData.add(TransparentDraw{
@@ -54,15 +55,15 @@ void VertexData::updateMesh(entt::entity id, uint32 meshIndex, PMesh mesh, Compo
             .vertexData = this,
             .offsets =
                 {
-                    .instanceOffset = static_cast<uint32>(transparentInstanceData.size()),
+                    .instanceOffset = static_cast<uint32>(instanceData.size()),
                     .textureOffset = params.textureOffset,
                     .samplerOffset = params.samplerOffset,
                     .floatOffset = params.floatOffset,
                 },
             .worldPosition = Vector(inst.transformMatrix[3]),
         });
-        transparentInstanceData.add(inst);
-        transparentMeshData.add(data);
+        instanceData.add(inst);
+        instanceMeshData.add(data);
         return;
     }
     if (materialData.size() <= mat->getId()) {
@@ -82,7 +83,6 @@ void VertexData::updateMesh(entt::entity id, uint32 meshIndex, PMesh mesh, Compo
     matInstanceData.instanceData.add(inst);
     matInstanceData.instanceMeshData.add(data);
     matInstanceData.cullingOffsets.add(meshletOffset);
-    referencedInstance->updateDescriptor();
     for (size_t i = 0; i < 0; ++i) {
         auto bounding = meshlets[data.meshletOffset + i].bounding;
         StaticArray<Vector, 8> corners;
@@ -125,9 +125,6 @@ void VertexData::updateMesh(entt::entity id, uint32 meshIndex, PMesh mesh, Compo
 
 void VertexData::createDescriptors() {
     std::unique_lock l(materialDataLock);
-
-    instanceData.clear();
-    instanceMeshData.clear();
 
     Array<uint32> cullingOffsets;
     for (auto& mat : materialData) {
@@ -184,24 +181,6 @@ void VertexData::createDescriptors() {
     });
     instanceMeshDataBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
                                             Gfx::SE_ACCESS_MEMORY_READ_BIT, Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
-
-    transparentInstanceDataBuffer->rotateBuffer(sizeof(InstanceData) * transparentInstanceData.size());
-    transparentInstanceDataBuffer->updateContents(ShaderBufferCreateInfo{
-        .sourceData =
-            {
-                .size = sizeof(InstanceData) * transparentInstanceData.size(),
-                .data = (uint8*)transparentInstanceData.data(),
-            },
-    });
-
-    transparentMeshDataBuffer->rotateBuffer(sizeof(MeshData) * transparentMeshData.size());
-    transparentMeshDataBuffer->updateContents(ShaderBufferCreateInfo{
-        .sourceData =
-            {
-                .size = sizeof(MeshData) * transparentMeshData.size(),
-                .data = (uint8*)transparentMeshData.data(),
-            },
-    });
 
     instanceDataLayout->reset();
     descriptorSet = instanceDataLayout->allocateDescriptorSet();
@@ -370,16 +349,6 @@ void VertexData::init(Gfx::PGraphics _graphics) {
         .dynamic = true,
         .name = "MeshDataBuffer",
     });
-
-    transparentInstanceDataBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
-        .dynamic = true,
-        .name = "TransparentInstanceBuffer",
-    });
-    transparentMeshDataBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
-        .dynamic = true,
-        .name = "TransparentMeshBuffer",
-    });
-
     resizeBuffers();
     graphics->getShaderCompiler()->registerVertexData(this);
 }

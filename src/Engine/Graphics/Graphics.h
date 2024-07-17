@@ -55,7 +55,8 @@ class Graphics {
     virtual OWindow createWindow(const WindowCreateInfo& createInfo) = 0;
     virtual OViewport createViewport(PWindow owner, const ViewportCreateInfo& createInfo) = 0;
 
-    virtual ORenderPass createRenderPass(RenderTargetLayout layout, Array<SubPassDependency> dependencies, PViewport renderArea) = 0;
+    virtual ORenderPass createRenderPass(RenderTargetLayout layout, Array<SubPassDependency> dependencies, PViewport renderArea,
+                                         std::string name = "") = 0;
     virtual void beginRenderPass(PRenderPass renderPass) = 0;
     virtual void endRenderPass() = 0;
     virtual void waitDeviceIdle() = 0;
