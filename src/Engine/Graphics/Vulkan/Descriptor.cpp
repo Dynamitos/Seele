@@ -125,7 +125,7 @@ Gfx::PDescriptorSet DescriptorPool::allocateDescriptorSet() {
         if (cachedHandles[setIndex] == nullptr) {
             cachedHandles[setIndex] = new DescriptorSet(graphics, this);
         }
-        if (cachedHandles[setIndex]->isCurrentlyBound() || cachedHandles[setIndex]->isCurrentlyInUse()) {
+        if (cachedHandles[setIndex]->isCurrentlyBound()) {
             // Currently in use, skip
             continue;
         }
@@ -133,7 +133,6 @@ Gfx::PDescriptorSet DescriptorPool::allocateDescriptorSet() {
             // If it hasnt been initialized, allocate it
             VK_CHECK(vkAllocateDescriptorSets(graphics->getDevice(), &allocInfo, &cachedHandles[setIndex]->setHandle));
         }
-        cachedHandles[setIndex]->allocate();
 
         PDescriptorSet vulkanSet = cachedHandles[setIndex];
 
@@ -153,7 +152,6 @@ void DescriptorPool::reset() {
         if (cachedHandles[i] == nullptr) {
             return;
         }
-        cachedHandles[i]->free();
     }
     if (nextAlloc != nullptr) {
         nextAlloc->reset();
@@ -161,8 +159,7 @@ void DescriptorPool::reset() {
 }
 
 DescriptorSet::DescriptorSet(PGraphics graphics, PDescriptorPool owner)
-    : Gfx::DescriptorSet(owner->getLayout()), CommandBoundResource(graphics), setHandle(VK_NULL_HANDLE), graphics(graphics), owner(owner),
-      bindCount(0), currentlyInUse(false) {
+    : Gfx::DescriptorSet(owner->getLayout()), CommandBoundResource(graphics), setHandle(VK_NULL_HANDLE), graphics(graphics), owner(owner){
     boundResources.resize(owner->getLayout()->getBindings().size());
     for (uint32 i = 0; i < boundResources.size(); ++i)
     {

@@ -60,9 +60,6 @@ class DescriptorSet : public Gfx::DescriptorSet, public CommandBoundResource {
     virtual void updateSamplerArray(uint32 binding, Array<Gfx::PSampler> samplers) override;
     virtual void updateAccelerationStructure(uint32 binding, Gfx::PTopLevelAS as) override;
 
-    constexpr bool isCurrentlyInUse() const { return currentlyInUse; }
-    constexpr void allocate() { currentlyInUse = true; }
-    constexpr void free() { currentlyInUse = false; }
     constexpr VkDescriptorSet getHandle() const { return setHandle; }
 
   private:
@@ -78,8 +75,6 @@ class DescriptorSet : public Gfx::DescriptorSet, public CommandBoundResource {
     VkDescriptorSet setHandle;
     PGraphics graphics;
     PDescriptorPool owner;
-    uint32 bindCount;
-    bool currentlyInUse;
     friend class DescriptorPool;
     friend class Command;
     friend class RenderCommand;

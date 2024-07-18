@@ -12,16 +12,24 @@ class ThreadPool {
     void runAndWait(List<std::function<void()>> functions);
     void runAsync(std::function<void()> func);
   private:
-    struct Task {
+    struct TaskGroup {
         uint64 numRemaining = 0;
-        List<std::function<void()>> functions;
     };
+    struct QueueEntry {
+        std::function<void()> func;
+        TaskGroup* task = nullptr;
+    };
+    
+    std::mutex queueLock;
+    std::condition_variable queueCV;
+    List<QueueEntry> queue;
+    
     void work();
     Array<std::thread> workers;
+
     std::mutex taskLock;
-    std::condition_variable taskCV;
     std::condition_variable completedCV;
-    Task currentTask;
+    List<TaskGroup> runningTasks;
     bool running = true;
 };
 ThreadPool& getThreadPool();

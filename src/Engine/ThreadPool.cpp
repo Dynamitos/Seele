@@ -15,9 +15,9 @@ ThreadPool::ThreadPool(uint32 numWorkers) {
 
 ThreadPool::~ThreadPool() {
     {
-        std::unique_lock l(taskLock);
+        std::unique_lock l(queueLock);
         running = false;
-        taskCV.notify_all();
+        queueCV.notify_all();
     }
     for (auto& worker : workers) {
         worker.join();
@@ -26,33 +26,54 @@ ThreadPool::~ThreadPool() {
 
 void ThreadPool::runAndWait(List<std::function<void()>> functions) {
     std::unique_lock l(taskLock);
-    currentTask.numRemaining = functions.size();
-    currentTask.functions = std::move(functions);
-    taskCV.notify_all();
-
-    while (currentTask.numRemaining > 0) {
+    auto newTask = runningTasks.add();
+    newTask->numRemaining = functions.size();
+    {
+        std::unique_lock q(queueLock);
+        while (!functions.empty()) {
+            queue.add(QueueEntry{
+                .func = std::move(functions.back()),
+                .task = &*newTask,
+            });
+            functions.popBack();
+        }
+        queueCV.notify_all();
+    }
+    while (newTask->numRemaining > 0) {
         completedCV.wait(l);
     }
+    runningTasks.remove(newTask);
+}
+
+void ThreadPool::runAsync(std::function<void()> func) {
+    std::unique_lock l(queueLock);
+    queue.add(QueueEntry{
+        .func = std::move(func),
+        .task = nullptr,
+    });
+    queueCV.notify_one();
 }
 
 void ThreadPool::work() {
     while (running) {
-        std::unique_lock l(taskLock);
-        while (currentTask.functions.empty()) {
-            taskCV.wait(l);
+        std::unique_lock l(queueLock);
+        while (queue.empty()) {
+            queueCV.wait(l);
             if (!running) {
                 return;
             }
         }
-        auto func = std::move(currentTask.functions.front());
-        currentTask.functions.popFront();
+        auto entry = std::move(queue.front());
+        queue.popFront();
         l.unlock();
-        func();
+        entry.func();
         l.lock();
-        currentTask.numRemaining--;
-        if (currentTask.numRemaining == 0) {
-            currentTask.functions.clear();
-            completedCV.notify_one();
+        if (entry.task != nullptr) {
+            std::unique_lock t(taskLock);
+            entry.task->numRemaining--;
+            if (entry.task->numRemaining == 0) {
+                completedCV.notify_one();
+            }
         }
     }
 }

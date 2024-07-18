@@ -245,7 +245,7 @@ void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet, Array<uint
     auto descriptor = descriptorSet.cast<DescriptorSet>();
     assert(descriptor->writeDescriptors.size() == 0);
     descriptor->bind();
-    boundResources.add(descriptor.getHandle());
+    boundResources.add(descriptor);
     for (auto binding : descriptor->boundResources) {
         for (auto res : binding) {
             res->bind();
@@ -269,7 +269,7 @@ void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorS
         auto descriptorSet = descriptorSets[i].cast<DescriptorSet>();
         assert(descriptorSet->writeDescriptors.size() == 0);
         descriptorSet->bind();
-        boundResources.add(descriptorSet.getHandle());
+        boundResources.add(descriptorSet);
 
         for (auto binding : descriptorSet->boundResources) {
             for (auto res : binding) {
@@ -549,4 +549,11 @@ void CommandPool::submitCommands(PSemaphore signalSemaphore) {
     command = allocatedBuffers.back();
     command->begin();
     command->waitForSemaphore(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, waitSemaphore);
+}
+
+void CommandPool::refreshCommands() {
+    for (uint32 i = 0; i < allocatedBuffers.size(); ++i)
+    {
+        allocatedBuffers[i]->checkFence();
+    }
 }

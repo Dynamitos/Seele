@@ -14,6 +14,7 @@ class Material {
              std::string materialName, Array<OShaderExpression> expressions, Array<std::string> parameter, MaterialNode brdf);
     ~Material();
     static void init(Gfx::PGraphics graphics);
+    static void destroy();
     static Gfx::PDescriptorLayout getDescriptorLayout() { return layout; }
     static Gfx::PDescriptorSet getDescriptorSet() { return set; }
     static void updateDescriptor();

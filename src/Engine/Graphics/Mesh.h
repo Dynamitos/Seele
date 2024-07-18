@@ -16,8 +16,6 @@ class Mesh {
     MeshId id;
     uint64 vertexCount;
     PMaterialInstanceAsset referencedMaterial;
-    Array<uint32> indices;
-    Array<Meshlet> meshlets;
     Gfx::OBottomLevelAS blas;
     void save(ArchiveBuffer& buffer) const;
     void load(ArchiveBuffer& buffer);

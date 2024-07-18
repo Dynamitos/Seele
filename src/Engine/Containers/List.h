@@ -182,7 +182,7 @@ template <typename T, typename Allocator = std::pmr::polymorphic_allocator<T>> c
         _size = 0;
     }
     // Insert at the end
-    constexpr iterator add(const T& value) { return addInternal(value); }
+    constexpr iterator add(const T& value = T()) { return addInternal(value); }
     constexpr iterator add(T&& value) { return addInternal(std::move(value)); }
     template <typename... args> constexpr reference emplace(args... arguments) {
         std::allocator_traits<NodeAllocator>::construct(allocator, tail, tail->prev, tail->next, arguments...);

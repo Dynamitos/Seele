@@ -147,8 +147,7 @@ void VertexData::createDescriptors() {
             }
         }
     }
-    for (uint32 i = 0; i < transparentData.size(); ++i)
-    {
+    for (uint32 i = 0; i < transparentData.size(); ++i) {
         transparentData[i].offsets.instanceOffset = instanceData.size();
         instanceData.add(transparentData[i].instanceData);
         instanceMeshData.add(transparentData[i].meshData);
@@ -299,6 +298,35 @@ MeshId VertexData::allocateVertexData(uint64 numVertices) {
     return res;
 }
 
+void VertexData::serializeMesh(MeshId id, uint64 numVertices, ArchiveBuffer& buffer) {
+    std::unique_lock l(vertexDataLock);
+    Array<Meshlet> out;
+    MeshData data = meshData[id];
+    for (size_t i = 0; i < data.numMeshlets; ++i)
+    {
+        MeshletDescription& desc = meshlets[i + data.meshletOffset];
+        Meshlet m;
+        std::memcpy(m.uniqueVertices, &vertexIndices[desc.vertexOffset], desc.vertexCount * sizeof(uint32));
+        std::memcpy(m.primitiveLayout, &primitiveIndices[desc.primitiveOffset], desc.primitiveCount * 3 * sizeof(uint8));
+        m.numPrimitives = desc.primitiveCount;
+        m.numVertices = desc.vertexCount;
+        m.boundingBox = desc.bounding;
+        out.add(std::move(m));
+    }
+    Array<uint32> ind(data.numIndices);
+    std::memcpy(ind.data(), &indices[data.firstIndex], data.numIndices * sizeof(uint32));
+    Serialization::save(buffer, out);
+    Serialization::save(buffer, ind);
+}
+
+void VertexData::deserializeMesh(MeshId id, ArchiveBuffer& buffer) { 
+    Array<Meshlet> in;
+    Array<uint32> ind;
+    Serialization::load(buffer, in);
+    Serialization::load(buffer, ind);
+    loadMesh(id, ind, in);
+}
+
 List<VertexData*> vertexDataList;
 
 List<VertexData*> VertexData::getList() { return vertexDataList; }
@@ -362,6 +390,7 @@ void VertexData::init(Gfx::PGraphics _graphics) {
 }
 
 void VertexData::destroy() {
+    cullingOffsetBuffer = nullptr;
     instanceBuffer = nullptr;
     instanceMeshDataBuffer = nullptr;
     instanceDataLayout = nullptr;

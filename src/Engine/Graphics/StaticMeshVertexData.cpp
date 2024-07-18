@@ -53,6 +53,7 @@ void Seele::StaticMeshVertexData::loadColors(uint64 offset, const Array<Vector4>
 }
 
 void StaticMeshVertexData::serializeMesh(MeshId id, uint64 numVertices, ArchiveBuffer& buffer) {
+    VertexData::serializeMesh(id, numVertices, buffer);
     uint64 offset;
     {
         std::unique_lock l(vertexDataLock);
@@ -82,6 +83,7 @@ void StaticMeshVertexData::serializeMesh(MeshId id, uint64 numVertices, ArchiveB
 }
 
 void StaticMeshVertexData::deserializeMesh(MeshId id, ArchiveBuffer& buffer) {
+    VertexData::deserializeMesh(id, buffer);
     uint64 offset;
     {
         std::unique_lock l(vertexDataLock);

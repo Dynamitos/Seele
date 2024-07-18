@@ -100,6 +100,7 @@ AssetRegistry::AssetFolder* AssetRegistry::getOrCreateFolder(std::string_view fu
 }
 
 void AssetRegistry::initialize(const std::filesystem::path& _rootFolder, Gfx::PGraphics _graphics) {
+    std::unique_lock l(get().assetLock);
     this->graphics = _graphics;
     this->rootFolder = _rootFolder;
     this->assetRoot = new AssetFolder("");
@@ -279,26 +280,31 @@ void AssetRegistry::saveAsset(PAsset asset, uint64 identifier, const std::filesy
 std::filesystem::path AssetRegistry::getRootFolder() { return get().rootFolder; }
 
 void AssetRegistry::registerMesh(OMeshAsset mesh) {
+    std::unique_lock l(assetLock);
     AssetFolder* folder = getOrCreateFolder(mesh->getFolderPath());
     folder->meshes[mesh->getName()] = std::move(mesh);
 }
 
 void AssetRegistry::registerTexture(OTextureAsset texture) {
+    std::unique_lock l(assetLock);
     AssetFolder* folder = getOrCreateFolder(texture->getFolderPath());
     folder->textures[texture->getName()] = std::move(texture);
 }
 
 void AssetRegistry::registerFont(OFontAsset font) {
+    std::unique_lock l(assetLock);
     AssetFolder* folder = getOrCreateFolder(font->getFolderPath());
     folder->fonts[font->getName()] = std::move(font);
 }
 
 void AssetRegistry::registerMaterial(OMaterialAsset material) {
+    std::unique_lock l(assetLock);
     AssetFolder* folder = getOrCreateFolder(material->getFolderPath());
     folder->materials[material->getName()] = std::move(material);
 }
 
 void AssetRegistry::registerMaterialInstance(OMaterialInstanceAsset material) {
+    std::unique_lock l(assetLock);
     AssetFolder* folder = getOrCreateFolder(material->getFolderPath());
     folder->instances[material->getName()] = std::move(material);
 }

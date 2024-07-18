@@ -14,6 +14,7 @@
 #include <stb_image_write.h>
 #pragma GCC diagnostic pop
 #include "ktx.h"
+#include <ThreadPool.h>
 #include <fstream>
 
 using namespace Seele;
@@ -110,13 +111,12 @@ void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset) {
     ktxBasisParams basisParams = {
         .structSize = sizeof(ktxBasisParams),
         .uastc = true,
-        .threadCount = std::thread::hardware_concurrency() - 2,
+        .threadCount = std::thread::hardware_concurrency(),
         .uastcFlags = KTX_PACK_UASTC_LEVEL_DEFAULT,
         .uastcRDO = true,
     };
     //KTX_ASSERT(ktxTexture2_CompressBasisEx(kTexture, &basisParams));
-    //
-    //KTX_ASSERT(ktxTexture2_DeflateZstd(kTexture, 15));
+    //KTX_ASSERT(ktxTexture2_DeflateZstd(kTexture, 20));
 
     char writer[100];
     snprintf(writer, sizeof(writer), "%s version %s", "SeeleEngine", "0.0.1");
@@ -126,7 +126,7 @@ void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset) {
     size_t texSize;
     KTX_ASSERT(ktxTexture_WriteToMemory(ktxTexture(kTexture), &texData, &texSize));
 
-    //ktxTexture_WriteToNamedFile(ktxTexture(kTexture), args.filePath.filename().replace_extension(".ktx").generic_string().c_str());
+    // ktxTexture_WriteToNamedFile(ktxTexture(kTexture), args.filePath.filename().replace_extension(".ktx").generic_string().c_str());
 
     Array<uint8> serialized(texSize);
     std::memcpy(serialized.data(), texData, texSize);
@@ -138,7 +138,7 @@ void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset) {
         return;
     }
 
-    textureAsset->setTexture(std::move(serialized));
+    //textureAsset->setTexture(std::move(serialized));
 
     std::string path = (std::filesystem::path(args.importPath) / textureAsset->getName()).string().append(".asset");
     auto assetStream = AssetRegistry::createWriteStream(std::move(path), std::ios::binary);
@@ -150,11 +150,13 @@ void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset) {
     // write folder
     Serialization::save(buffer, textureAsset->getFolderPath());
     // write asset data
-    textureAsset->save(buffer);
+    //textureAsset->save(buffer);
+    Serialization::save(buffer, serialized);
 
     buffer.writeToStream(assetStream);
 
     buffer.rewind();
 
+    std::unique_lock l(AssetRegistry::get().assetLock);
     AssetRegistry::get().loadAsset(buffer);
 }

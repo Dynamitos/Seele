@@ -71,6 +71,7 @@ class AssetRegistry {
     std::ifstream internalCreateReadStream(const std::filesystem::path& relaitvePath, std::ios_base::openmode openmode = std::ios::in);
 
     std::filesystem::path rootFolder;
+    std::mutex assetLock;
     AssetFolder* assetRoot;
     Gfx::PGraphics graphics;
     bool release = false;

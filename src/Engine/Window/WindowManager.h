@@ -11,7 +11,7 @@ class WindowManager {
     OWindow addWindow(Gfx::PGraphics graphics, const WindowCreateInfo& createInfo);
     void render();
     void notifyWindowClosed(PWindow window);
-    bool isActive() const { return windows.size(); }
+    bool isActive() const { return getGlobals().running && windows.size(); }
 
   private:
     Array<PWindow> windows;

@@ -54,6 +54,7 @@ int main(int argc, char** argv) {
     while (windowManager->isActive()) {
         windowManager->render();
     }
+    graphics->waitDeviceIdle();
     vd->destroy();
 
     return 0;

@@ -15,6 +15,7 @@ class Scene {
   public:
     Scene(Gfx::PGraphics graphics);
     ~Scene();
+    void bakeLighting();
     void update(float deltaTime);
     entt::entity createEntity() { return registry.create(); }
     void destroyEntity(entt::entity identifier) { registry.destroy(identifier); }
@@ -39,6 +40,7 @@ class Scene {
     Gfx::PGraphics graphics;
     OLightEnvironment lightEnv;
     PhysicsSystem physics;
+    Array<Gfx::OTexture2D> lightMaps;
 };
 DEFINE_REF(Scene)
 } // namespace Seele

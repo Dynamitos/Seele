@@ -93,6 +93,8 @@ int main() {
         while (windowManager->isActive() && getGlobals().running) {
             windowManager->render();
         }
+        graphics->waitDeviceIdle();
+        Material::destroy();
         vd->destroy();
         // export game
 

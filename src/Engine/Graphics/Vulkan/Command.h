@@ -144,6 +144,7 @@ class CommandPool {
     OComputeCommand createComputeCommand(const std::string& name);
     constexpr VkCommandPool getHandle() const { return commandPool; }
     void submitCommands(PSemaphore signalSemaphore = nullptr);
+    void refreshCommands();
 
   private:
     PGraphics graphics;

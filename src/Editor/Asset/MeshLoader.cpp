@@ -533,8 +533,6 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
             globalMeshes[meshIndex]->vertexData = vertexData;
             globalMeshes[meshIndex]->id = id;
             globalMeshes[meshIndex]->referencedMaterial = materials[mesh->mMaterialIndex];
-            globalMeshes[meshIndex]->meshlets = std::move(meshlets);
-            globalMeshes[meshIndex]->indices = std::move(indices);
             globalMeshes[meshIndex]->vertexCount = mesh->mNumVertices;
             globalMeshes[meshIndex]->blas = graphics->createBottomLevelAccelerationStructure(Gfx::BottomLevelASCreateInfo{
                 .mesh = globalMeshes[meshIndex],
@@ -563,8 +561,8 @@ void MeshLoader::import(MeshImportArgs args, PMeshAsset meshAsset) {
     meshAsset->setStatus(Asset::Status::Loading);
     Assimp::Importer importer;
     importer.ReadFile(args.filePath.string().c_str(),
-                      (uint32)(aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs | aiProcess_Triangulate | aiProcess_SortByPType |
-                               aiProcess_GenBoundingBoxes | aiProcess_GenSmoothNormals | aiProcess_ImproveCacheLocality |
+                      (uint32)(aiProcess_FlipUVs | aiProcess_Triangulate | aiProcess_SortByPType |
+                               aiProcess_GenBoundingBoxes | aiProcess_GenSmoothNormals |
                                aiProcess_GenUVCoords | aiProcess_FindDegenerates));
     const aiScene* scene = importer.ApplyPostProcessing(aiProcess_CalcTangentSpace);
     std::cout << importer.GetErrorString() << std::endl;

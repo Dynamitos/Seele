@@ -63,6 +63,12 @@ void Material::init(Gfx::PGraphics graphics) {
     });
 }
 
+void Material::destroy() {
+    floatBuffer = nullptr;
+    set = nullptr;
+    layout = nullptr;
+}
+
 void Material::updateDescriptor() {
     floatBuffer->rotateBuffer(floatData.size() * sizeof(float));
     floatBuffer->updateContents(ShaderBufferCreateInfo{

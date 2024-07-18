@@ -100,7 +100,6 @@ VkDeviceAddress vkGetAccelerationStructureDeviceAddressKHR(VkDevice device, cons
 Graphics::Graphics() : instance(VK_NULL_HANDLE), handle(VK_NULL_HANDLE), physicalDevice(VK_NULL_HANDLE), callback(VK_NULL_HANDLE) {}
 
 Graphics::~Graphics() {
-    vkDeviceWaitIdle(handle);
     pipelineCache = nullptr;
     allocatedFramebuffers.clear();
     shaderCompiler = nullptr;
@@ -166,7 +165,10 @@ void Graphics::beginRenderPass(Gfx::PRenderPass renderPass) {
 
 void Graphics::endRenderPass() { getGraphicsCommands()->getCommands()->endRenderPass(); }
 
-void Graphics::waitDeviceIdle() { vkDeviceWaitIdle(handle); }
+void Graphics::waitDeviceIdle() { 
+    vkDeviceWaitIdle(handle); 
+    getGraphicsCommands()->refreshCommands();
+}
 
 void Graphics::executeCommands(Array<Gfx::ORenderCommand> commands) {
     getGraphicsCommands()->getCommands()->executeCommands(std::move(commands));
@@ -527,11 +529,9 @@ void Graphics::buildBottomLevelAccelerationStructures(Array<Gfx::PBottomLevelAS>
 
     PCommand cmd = graphicsCommands->getCommands();
     vkCmdBuildAccelerationStructuresKHR(cmd->getHandle(), buildGeometries.size(), buildGeometries.data(), buildRangePointers.data());
-    transformBuffer->bind();
     cmd->bindResource(PBufferAllocation(transformBuffer));
     destructionManager->queueResourceForDestruction(std::move(transformBuffer));
     for (auto& scratchAlloc : scratchBuffers) {
-        scratchAlloc->bind();
         cmd->bindResource(PBufferAllocation(scratchAlloc));
         destructionManager->queueResourceForDestruction(std::move(scratchAlloc));
     }
@@ -655,7 +655,7 @@ void Graphics::initInstance(GraphicsInitializer initInfo) {
     extensions.add("VK_KHR_portability_enumeration");
 #endif
     Array<const char*> layers = initInfo.layers;
-    layers.add("VK_LAYER_KHRONOS_validation");
+    //layers.add("VK_LAYER_KHRONOS_validation");
     VkInstanceCreateInfo info = {
         .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
         .pNext = nullptr,

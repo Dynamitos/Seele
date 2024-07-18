@@ -190,14 +190,12 @@ TopLevelAS::TopLevelAS(PGraphics graphics, const Gfx::TopLevelASCreateInfo& crea
     };
     vkCmdPipelineBarrier(cmd->getHandle(), VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR, VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR, 0, 0,
                          nullptr, 1, &barrier, 0, nullptr);
-    scratchBuffer->bind();
+
     cmd->bindResource(PBufferAllocation(scratchBuffer));
     graphics->getDestructionManager()->queueResourceForDestruction(std::move(scratchBuffer));
 
-    buffer->bind();
     cmd->bindResource(PBufferAllocation(buffer));
 
-    instanceAllocation->bind();
     cmd->bindResource(PBufferAllocation(instanceAllocation));
 }
 

@@ -54,6 +54,7 @@ void BufferAllocation::pipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageF
         .offset = 0,
         .size = size,
     };
+    commandBuffer->bindResource(this);
     vkCmdPipelineBarrier(commandBuffer->getHandle(), srcStage, dstStage, 0, 0, nullptr, 1, &barrier, 0, nullptr);
 }
 
@@ -77,6 +78,8 @@ void BufferAllocation::transferOwnership(Gfx::QueueType newOwner) {
     PCommandPool sourcePool = graphics->getQueueCommands(owner);
     PCommandPool dstPool = graphics->getQueueCommands(newOwner);
     assert(barrier.srcQueueFamilyIndex != barrier.dstQueueFamilyIndex);
+    sourcePool->getCommands()->bindResource(this);
+    dstPool->getCommands()->bindResource(this);
     vkCmdPipelineBarrier(sourcePool->getCommands()->getHandle(), VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, 0,
                          0, nullptr, 1, &barrier, 0, nullptr);
     vkCmdPipelineBarrier(dstPool->getCommands()->getHandle(), VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, 0, 0,
@@ -110,17 +113,15 @@ void BufferAllocation::updateContents(uint64 regionOffset, uint64 regionSize, vo
     Gfx::QueueType prevOwner = owner;
     // transferOwnership(Gfx::QueueType::TRANSFER);
 
-    PCommand cmd = graphics->getQueueCommands(Gfx::QueueType::TRANSFER)->getCommands();
+    PCommand cmd = graphics->getQueueCommands(Gfx::QueueType::GRAPHICS)->getCommands();
     VkBufferCopy copy = {
         .srcOffset = 0,
         .dstOffset = regionOffset,
         .size = regionSize,
     };
-    vkCmdCopyBuffer(cmd->getHandle(), staging->buffer, buffer, 1, &copy);
-    pipelineBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_WRITE_BIT,
-                    VK_PIPELINE_STAGE_TRANSFER_BIT);
     cmd->bindResource(PBufferAllocation(this));
     cmd->bindResource(PBufferAllocation(staging));
+    vkCmdCopyBuffer(cmd->getHandle(), staging->buffer, buffer, 1, &copy);
 
     // transferOwnership(prevOwner);
     graphics->getDestructionManager()->queueResourceForDestruction(std::move(staging));
@@ -153,9 +154,9 @@ void BufferAllocation::readContents(uint64 regionOffset, uint64 regionSize, void
         .dstOffset = 0,
         .size = regionSize,
     };
-    vkCmdCopyBuffer(cmd->getHandle(), buffer, staging->buffer, 1, &copy);
     cmd->bindResource(PBufferAllocation(this));
     cmd->bindResource(PBufferAllocation(staging));
+    vkCmdCopyBuffer(cmd->getHandle(), buffer, staging->buffer, 1, &copy);
     pool->submitCommands();
     cmd->getFence()->wait(1000000);
 
@@ -250,6 +251,7 @@ void Buffer::createBuffer(uint64 size, uint32 destIndex) {
     buffers[destIndex] = new BufferAllocation(graphics, name, info, allocInfo, initialOwner);
     if (createCleared) {
         PCommand command = graphics->getQueueCommands(initialOwner)->getCommands();
+        command->bindResource(PBufferAllocation(buffers[destIndex]));
         vkCmdFillBuffer(command->getHandle(), buffers[destIndex]->buffer, 0, VK_WHOLE_SIZE, clearValue);
         pipelineBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
                         VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
@@ -284,6 +286,8 @@ void Buffer::copyBuffer(uint64 src, uint64 dst) {
         .size = buffers[dst]->size,
     };
     VkBufferMemoryBarrier srcBarriers[] = {srcBarrier, clearBarrier};
+    command->bindResource(PBufferAllocation(buffers[src]));
+    command->bindResource(PBufferAllocation(buffers[dst]));
     vkCmdPipelineBarrier(command->getHandle(), VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 2,
                          srcBarriers, 0, nullptr);
     VkBufferCopy region = {
@@ -291,6 +295,8 @@ void Buffer::copyBuffer(uint64 src, uint64 dst) {
         .dstOffset = 0,
         .size = buffers[src]->size,
     };
+    command->bindResource(PBufferAllocation(buffers[src]));
+    command->bindResource(PBufferAllocation(buffers[dst]));
     vkCmdCopyBuffer(command->getHandle(), buffers[src]->buffer, buffers[dst]->buffer, 1, &region);
     VkBufferMemoryBarrier dstBarrier = {
         .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
@@ -303,6 +309,7 @@ void Buffer::copyBuffer(uint64 src, uint64 dst) {
         .offset = 0,
         .size = buffers[dst]->size,
     };
+    command->bindResource(PBufferAllocation(buffers[dst]));
     vkCmdPipelineBarrier(command->getHandle(), VK_PIPELINE_STAGE_TRANSFER_BIT,
                          VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT | VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 1, &dstBarrier, 0, nullptr);
 }
@@ -383,7 +390,9 @@ void ShaderBuffer::rotateBuffer(uint64 size, bool preserveContents) {
 }
 
 void ShaderBuffer::clear() {
-    vkCmdFillBuffer(graphics->getQueueCommands(getAlloc()->owner)->getCommands()->getHandle(), Vulkan::Buffer::getHandle(), 0,
+    PCommand command = graphics->getQueueCommands(getAlloc()->owner)->getCommands();
+    command->bindResource(PBufferAllocation(getAlloc()));
+    vkCmdFillBuffer(command->getHandle(), Vulkan::Buffer::getHandle(), 0,
                     VK_WHOLE_SIZE, 0);
 }
 
