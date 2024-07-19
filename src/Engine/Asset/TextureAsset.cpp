@@ -22,13 +22,12 @@ TextureAsset::TextureAsset(std::string_view folderPath, std::string_view name) :
 
 TextureAsset::~TextureAsset() {}
 
-void TextureAsset::save(ArchiveBuffer& buffer) const { /*
-    Serialization::save(buffer, ktxData);*/
+void TextureAsset::save(ArchiveBuffer& buffer) const { 
+    Serialization::save(buffer, ktxData);
 }
 
 void TextureAsset::load(ArchiveBuffer& buffer) {
     ktxTexture2* ktxHandle;
-    Array<uint8> ktxData;
     Serialization::load(buffer, ktxData);
     KTX_ASSERT(
         ktxTexture_CreateFromMemory(ktxData.data(), ktxData.size(), KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, (ktxTexture**)&ktxHandle));

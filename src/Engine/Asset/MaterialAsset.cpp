@@ -3,7 +3,7 @@
 #include "Graphics/Graphics.h"
 #include "Material/Material.h"
 #include "MaterialInstanceAsset.h"
-
+#include <fstream>
 
 using namespace Seele;
 
@@ -28,7 +28,7 @@ PMaterialInstanceAsset MaterialAsset::instantiate(const InstantiationParameter& 
     asset->setHandle(std::move(instance));
     asset->setBase(this);
     PMaterialInstanceAsset ref = asset;
-    AssetRegistry::get().saveAsset(ref, MaterialInstanceAsset::IDENTIFIER, ref->getFolderPath(), ref->getName());
-    AssetRegistry::get().registerMaterialInstance(std::move(asset));
+    AssetRegistry::registerMaterialInstance(std::move(asset));
+    AssetRegistry::saveAsset(ref, MaterialInstanceAsset::IDENTIFIER, ref->getFolderPath(), ref->getName());
     return ref;
 }

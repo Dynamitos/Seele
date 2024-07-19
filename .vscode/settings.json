@@ -1,6 +1,5 @@
 {
     "cmake.cmakePath": "cmake",
-    "cmake.skipConfigureIfCachePresent": false,
     "cmake.configureArgs": [
         "-Wno-dev"
     ],
@@ -10,7 +9,6 @@
         "external/**": true
     },
     "git.ignoreSubmodules": true,
-    "cmake.configureOnOpen": true,
     "cmake.parallelJobs": 0,
     "cmake.buildDirectory": "${workspaceFolder}/build",
     "C_Cpp.files.exclude": {

@@ -72,15 +72,7 @@ void FontLoader::import(FontImportArgs args, PFontAsset asset) {
     FT_Done_FreeType(ft);
     asset->setUsedTextures(std::move(usedTextures));
 
-    auto stream = AssetRegistry::createWriteStream(
-        (std::filesystem::path(asset->getFolderPath()) / asset->getName()).replace_extension("asset").string(), std::ios::binary);
-
-    ArchiveBuffer archive;
-    Serialization::save(archive, FontAsset::IDENTIFIER);
-    Serialization::save(archive, asset->getName());
-    Serialization::save(archive, asset->getFolderPath());
-    asset->save(archive);
-    archive.writeToStream(stream);
+    AssetRegistry::saveAsset(asset, FontAsset::IDENTIFIER, asset->getFolderPath(), asset->getName());
 
     asset->setStatus(Asset::Status::Ready);
 }

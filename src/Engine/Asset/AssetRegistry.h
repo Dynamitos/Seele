@@ -1,10 +1,11 @@
 #pragma once
 #include "Asset.h"
 #include "Containers/Map.h"
+#include "Containers/Pair.h"
+#include "Containers/List.h"
 #include "MinimalEngine.h"
 #include <filesystem>
 #include <string>
-
 
 namespace Seele {
 DECLARE_REF(TextureAsset)
@@ -26,9 +27,18 @@ class AssetRegistry {
     static PMaterialAsset findMaterial(std::string_view folderPath, std::string_view filePath);
     static PMaterialInstanceAsset findMaterialInstance(std::string_view folderPath, std::string_view filePath);
 
+    static void registerMesh(OMeshAsset mesh);
+    static void registerTexture(OTextureAsset texture);
+    static void registerFont(OFontAsset font);
+    static void registerMaterial(OMaterialAsset material);
+    static void registerMaterialInstance(OMaterialInstanceAsset instance);
+
     static std::ofstream createWriteStream(const std::filesystem::path& relativePath, std::ios_base::openmode openmode = std::ios::out);
     static std::ifstream createReadStream(const std::filesystem::path& relativePath, std::ios_base::openmode openmode = std::ios::in);
 
+    static void loadAsset(ArchiveBuffer& buffer);
+    static void saveAsset(PAsset asset, uint64 identifier, const std::filesystem::path& folderPath, std::string name);
+    
     static void set(AssetRegistry registry);
 
     static void loadRegistry();
@@ -47,25 +57,21 @@ class AssetRegistry {
     AssetFolder* getOrCreateFolder(std::string_view foldername);
     AssetRegistry();
     static AssetRegistry* getInstance();
-
-  private:
     static AssetRegistry& get();
 
+  private:
     void initialize(const std::filesystem::path& rootFolder, Gfx::PGraphics graphics);
     void loadRegistryInternal();
-    void peekFolder(AssetFolder* folder);
-    void loadFolder(AssetFolder* folder);
-    void peekAsset(ArchiveBuffer& buffer);
-    void loadAsset(ArchiveBuffer& buffer);
+    List<Pair<PAsset, ArchiveBuffer>> peekFolder(AssetFolder* folder);
+    Pair<PAsset, ArchiveBuffer> peekAsset(ArchiveBuffer& buffer);
     void saveRegistryInternal();
     void saveFolder(const std::filesystem::path& folderPath, AssetFolder* folder);
-    void saveAsset(PAsset asset, uint64 identifier, const std::filesystem::path& folderPath, std::string name);
 
-    void registerMesh(OMeshAsset mesh);
-    void registerTexture(OTextureAsset texture);
-    void registerFont(OFontAsset font);
-    void registerMaterial(OMaterialAsset material);
-    void registerMaterialInstance(OMaterialInstanceAsset instance);
+    void registerMeshInternal(OMeshAsset mesh);
+    void registerTextureInternal(OTextureAsset texture);
+    void registerFontInternal(OFontAsset font);
+    void registerMaterialInternal(OMaterialAsset material);
+    void registerMaterialInstanceInternal(OMaterialInstanceAsset instance);
 
     std::ofstream internalCreateWriteStream(const std::filesystem::path& relativePath, std::ios_base::openmode openmode = std::ios::out);
     std::ifstream internalCreateReadStream(const std::filesystem::path& relaitvePath, std::ios_base::openmode openmode = std::ios::in);
@@ -75,10 +81,5 @@ class AssetRegistry {
     AssetFolder* assetRoot;
     Gfx::PGraphics graphics;
     bool release = false;
-    friend class MaterialAsset;
-    friend class TextureLoader;
-    friend class FontLoader;
-    friend class MaterialLoader;
-    friend class MeshLoader;
 };
 } // namespace Seele

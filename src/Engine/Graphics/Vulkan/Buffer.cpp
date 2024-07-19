@@ -122,6 +122,8 @@ void BufferAllocation::updateContents(uint64 regionOffset, uint64 regionSize, vo
     cmd->bindResource(PBufferAllocation(this));
     cmd->bindResource(PBufferAllocation(staging));
     vkCmdCopyBuffer(cmd->getHandle(), staging->buffer, buffer, 1, &copy);
+    pipelineBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_WRITE_BIT,
+                    VK_PIPELINE_STAGE_TRANSFER_BIT);
 
     // transferOwnership(prevOwner);
     graphics->getDestructionManager()->queueResourceForDestruction(std::move(staging));
@@ -157,6 +159,8 @@ void BufferAllocation::readContents(uint64 regionOffset, uint64 regionSize, void
     cmd->bindResource(PBufferAllocation(this));
     cmd->bindResource(PBufferAllocation(staging));
     vkCmdCopyBuffer(cmd->getHandle(), buffer, staging->buffer, 1, &copy);
+    pipelineBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_WRITE_BIT,
+                    VK_PIPELINE_STAGE_TRANSFER_BIT);
     pool->submitCommands();
     cmd->getFence()->wait(1000000);
 

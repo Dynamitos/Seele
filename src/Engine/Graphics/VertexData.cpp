@@ -66,6 +66,7 @@ void VertexData::updateMesh(entt::entity id, uint32 meshIndex, PMesh mesh, Compo
             .worldPosition = Vector(inst.transformMatrix[3]),
             .instanceData = inst,
             .meshData = data,
+            .cullingOffset = meshletOffset,
             .rayTracingScene = mesh->blas,
         });
         return;
@@ -149,6 +150,7 @@ void VertexData::createDescriptors() {
     }
     for (uint32 i = 0; i < transparentData.size(); ++i) {
         transparentData[i].offsets.instanceOffset = instanceData.size();
+        cullingOffsets.add(transparentData[i].cullingOffset);
         instanceData.add(transparentData[i].instanceData);
         instanceMeshData.add(transparentData[i].meshData);
         rayTracingScene.add(transparentData[i].rayTracingScene);

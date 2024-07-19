@@ -51,6 +51,7 @@ class VertexData {
         Vector worldPosition;
         InstanceData instanceData;
         MeshData meshData;
+        uint32 cullingOffset;
         Gfx::PBottomLevelAS rayTracingScene;
     };
     void resetMeshData();

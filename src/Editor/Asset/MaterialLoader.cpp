@@ -24,7 +24,7 @@ MaterialLoader::MaterialLoader(Gfx::PGraphics graphics) : graphics(graphics) {
             .importPath = "",
         },
         placeholderAsset);
-    AssetRegistry::get().assetRoot->materials[""] = std::move(placeholderAsset);
+    AssetRegistry::get().registerMaterial(std::move(placeholderAsset));
 }
 
 MaterialLoader::~MaterialLoader() {}
@@ -213,16 +213,9 @@ void MaterialLoader::import(MaterialImportArgs args, PMaterialAsset asset) {
         return;
     }
 
-    auto stream = AssetRegistry::createWriteStream((std::filesystem::path(asset->folderPath) / asset->getName()).string().append(".asset"),
-                                                   std::ios::binary);
+    AssetRegistry::saveAsset(asset, MaterialAsset::IDENTIFIER, asset->getFolderPath(), asset->getName());
 
-    ArchiveBuffer archive;
-    Serialization::save(archive, MaterialAsset::IDENTIFIER);
-    Serialization::save(archive, asset->getName());
-    Serialization::save(archive, asset->getFolderPath());
-    asset->save(archive);
-    archive.writeToStream(stream);
-    ////co_return;
+    asset->setStatus(Asset::Status::Ready);
 }
 
 PMaterialAsset MaterialLoader::getPlaceHolderMaterial() { return placeholderMaterial; }

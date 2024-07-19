@@ -28,7 +28,7 @@ TextureLoader::TextureLoader(Gfx::PGraphics graphics) : graphics(graphics) {
             .importPath = "",
         },
         placeholderAsset);
-    AssetRegistry::get().assetRoot->textures[""] = std::move(placeholder);
+    AssetRegistry::get().registerTexture(std::move(placeholder));
 }
 
 TextureLoader::~TextureLoader() {}
@@ -138,25 +138,14 @@ void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset) {
         return;
     }
 
-    //textureAsset->setTexture(std::move(serialized));
-
-    std::string path = (std::filesystem::path(args.importPath) / textureAsset->getName()).string().append(".asset");
-    auto assetStream = AssetRegistry::createWriteStream(std::move(path), std::ios::binary);
     ArchiveBuffer buffer(graphics);
-    // write identifier
-    Serialization::save(buffer, TextureAsset::IDENTIFIER);
-    // write name
-    Serialization::save(buffer, textureAsset->getName());
-    // write folder
-    Serialization::save(buffer, textureAsset->getFolderPath());
-    // write asset data
-    //textureAsset->save(buffer);
     Serialization::save(buffer, serialized);
-
-    buffer.writeToStream(assetStream);
-
     buffer.rewind();
+    textureAsset->load(buffer);
 
-    std::unique_lock l(AssetRegistry::get().assetLock);
-    AssetRegistry::get().loadAsset(buffer);
+    textureAsset->setTexture(std::move(serialized));
+
+    AssetRegistry::saveAsset(textureAsset, TextureAsset::IDENTIFIER, textureAsset->getFolderPath(), textureAsset->getName());
+    
+    textureAsset->setStatus(Asset::Status::Ready);
 }
