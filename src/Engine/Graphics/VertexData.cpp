@@ -51,7 +51,7 @@ void VertexData::updateMesh(entt::entity id, uint32 meshIndex, PMesh mesh, Compo
     auto [instanceId, meshletOffset] = getCullingMapping(id, meshIndex, data.numMeshlets);
 
     referencedInstance->updateDescriptor();
-    if (false && mat->hasTransparency()) {
+    if (mat->hasTransparency()) {
         auto params = referencedInstance->getMaterialOffsets();
         transparentData.add(TransparentDraw{
             .matInst = referencedInstance,
@@ -136,15 +136,11 @@ void VertexData::createDescriptors() {
             instance.offsets.textureOffset = offsets.textureOffset;
             instance.offsets.samplerOffset = offsets.samplerOffset;
             instance.offsets.floatOffset = offsets.floatOffset;
-            // instance.offsets.cullingCounterOffset = cullingOffsets.size();
-            // instance.numMeshlets = 0;
             for (size_t i = 0; i < instance.instanceData.size(); ++i) {
                 cullingOffsets.add(instance.cullingOffsets[i]);
                 instanceData.add(instance.instanceData[i]);
                 instanceMeshData.add(instance.instanceMeshData[i]);
                 rayTracingScene.add(instance.rayTracingData[i]);
-                // instance.numMeshlets += instance.instanceMeshData[i].numMeshlets;
-                // cullingOffsets.add(numMeshlets);
             }
         }
     }
