@@ -57,7 +57,7 @@ void DescriptorLayout::create() {
 }
 
 DescriptorPool::DescriptorPool(PGraphics graphics, PDescriptorLayout layout)
-    : CommandBoundResource(graphics), graphics(graphics), layout(layout) {
+    : CommandBoundResource(graphics, layout->getName()), graphics(graphics), layout(layout) {
     for (uint32 i = 0; i < cachedHandles.size(); ++i) {
         cachedHandles[i] = nullptr;
     }
@@ -159,7 +159,7 @@ void DescriptorPool::reset() {
 }
 
 DescriptorSet::DescriptorSet(PGraphics graphics, PDescriptorPool owner)
-    : Gfx::DescriptorSet(owner->getLayout()), CommandBoundResource(graphics), setHandle(VK_NULL_HANDLE), graphics(graphics), owner(owner){
+    : Gfx::DescriptorSet(owner->getLayout()), CommandBoundResource(graphics, owner->getLayout()->getName()), setHandle(VK_NULL_HANDLE), graphics(graphics), owner(owner){
     boundResources.resize(owner->getLayout()->getBindings().size());
     for (uint32 i = 0; i < boundResources.size(); ++i)
     {

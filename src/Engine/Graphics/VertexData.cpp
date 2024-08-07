@@ -51,7 +51,7 @@ void VertexData::updateMesh(entt::entity id, uint32 meshIndex, PMesh mesh, Compo
     auto [instanceId, meshletOffset] = getCullingMapping(id, meshIndex, data.numMeshlets);
 
     referencedInstance->updateDescriptor();
-    if (mat->hasTransparency()) {
+    if (false && mat->hasTransparency()) {
         auto params = referencedInstance->getMaterialOffsets();
         transparentData.add(TransparentDraw{
             .matInst = referencedInstance,
@@ -204,9 +204,6 @@ void VertexData::createDescriptors() {
 
 void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet> loadedMeshlets) {
     std::unique_lock l(vertexDataLock);
-    meshlets.reserve(meshlets.size() + loadedMeshlets.size());
-    vertexIndices.reserve(vertexIndices.size() + loadedMeshlets.size() * Gfx::numVerticesPerMeshlet);
-    primitiveIndices.reserve(primitiveIndices.size() + loadedMeshlets.size() * Gfx::numPrimitivesPerMeshlet * 3);
     uint32 meshletOffset = meshlets.size();
     AABB meshAABB;
     for (uint32 i = 0; i < loadedMeshlets.size(); ++i) {
@@ -321,12 +318,15 @@ void VertexData::serializeMesh(MeshId id, uint64 numVertices, ArchiveBuffer& buf
     Serialization::save(buffer, ind);
 }
 
-void VertexData::deserializeMesh(MeshId id, ArchiveBuffer& buffer) { 
+uint64 VertexData::deserializeMesh(MeshId id, ArchiveBuffer& buffer) { 
     Array<Meshlet> in;
     Array<uint32> ind;
     Serialization::load(buffer, in);
     Serialization::load(buffer, ind);
     loadMesh(id, ind, in);
+    uint64 result = in.size() * sizeof(MeshletDescription);
+    result += ind.size() * sizeof(uint32);
+    return result;
 }
 
 List<VertexData*> vertexDataList;

@@ -63,7 +63,7 @@ class VertexData {
     uint64 getMeshOffset(MeshId id) const { return meshOffsets[id]; }
     uint64 getMeshVertexCount(MeshId id) { return meshVertexCounts[id]; }
     virtual void serializeMesh(MeshId id, uint64 numVertices, ArchiveBuffer& buffer);
-    virtual void deserializeMesh(MeshId id, ArchiveBuffer& buffer);
+    virtual uint64 deserializeMesh(MeshId id, ArchiveBuffer& buffer);
     virtual void bindBuffers(Gfx::PRenderCommand command) = 0;
     virtual Gfx::PDescriptorLayout getVertexDataLayout() = 0;
     virtual Gfx::PDescriptorSet getVertexDataSet() = 0;

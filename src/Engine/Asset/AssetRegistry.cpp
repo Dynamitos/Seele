@@ -195,18 +195,21 @@ void AssetRegistry::initialize(const std::filesystem::path& _rootFolder, Gfx::PG
 }
 
 void AssetRegistry::loadRegistryInternal() {
-    List<Pair<PAsset, ArchiveBuffer>> peeked; 
+    Array<Pair<PAsset, ArchiveBuffer>> peeked; 
     {
         std::unique_lock l(get().assetLock);
         peeked = peekFolder(assetRoot);
     }
+    uint64 assetSize = 0;
     for (auto& [asset, buffer] : peeked) {
         asset->load(buffer);
+        assetSize += asset->getSize();
     }
+    std::cout << "Done loading " << assetSize << std::endl;
 }
 
-List<Pair<PAsset, ArchiveBuffer>> AssetRegistry::peekFolder(AssetFolder* folder) {
-    List<Pair<PAsset, ArchiveBuffer>> peeked;
+Array<Pair<PAsset, ArchiveBuffer>> AssetRegistry::peekFolder(AssetFolder* folder) {
+    Array<Pair<PAsset, ArchiveBuffer>> peeked;
     for (const auto& entry : std::filesystem::directory_iterator(rootFolder / folder->folderPath)) {
         const auto& stem = entry.path().stem().string();
         if (entry.is_directory()) {
@@ -216,8 +219,8 @@ List<Pair<PAsset, ArchiveBuffer>> AssetRegistry::peekFolder(AssetFolder* folder)
                 folder->children[stem] = new AssetFolder(folder->folderPath + "/" + stem);
             }
             auto temp = peekFolder(folder->children[stem]);
-            for (auto t : temp) {
-                peeked.add(t);
+            for (auto& t : temp) {
+                peeked.add(std::move(t));
             }
             continue;
         }
@@ -273,7 +276,7 @@ Pair<PAsset, ArchiveBuffer> AssetRegistry::peekAsset(ArchiveBuffer& buffer) {
     default:
         throw new std::logic_error("Unknown Identifier");
     }
-    return {asset, buffer};
+    return {asset, std::move(buffer)};
 }
 
 

@@ -31,6 +31,9 @@ class MaterialInstance {
     void save(ArchiveBuffer& buffer) const;
     void load(ArchiveBuffer& buffer);
 
+    uint64 getCPUSize() const;
+    uint64 getGPUSize() const;
+
   private:
     Gfx::PGraphics graphics;
     Array<OShaderParameter> parameters;

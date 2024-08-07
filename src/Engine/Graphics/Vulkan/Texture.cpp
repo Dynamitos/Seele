@@ -5,6 +5,7 @@
 #include "Graphics/Initializer.h"
 #include <math.h>
 #include <vulkan/vulkan_core.h>
+#include <fmt/format.h>
 
 using namespace Seele;
 using namespace Seele::Vulkan;
@@ -28,7 +29,7 @@ VkImageAspectFlags getAspectFromFormat(Gfx::SeFormat format) {
 }
 
 TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType, const TextureCreateInfo& createInfo, VkImage existingImage)
-    : CommandBoundResource(graphics), image(existingImage), width(createInfo.width), height(createInfo.height), depth(createInfo.depth),
+    : CommandBoundResource(graphics, createInfo.name), image(existingImage), width(createInfo.width), height(createInfo.height), depth(createInfo.depth),
       arrayCount(createInfo.elements), layerCount(createInfo.layers), mipLevels(createInfo.mipLevels), samples(createInfo.samples),
       format(createInfo.format), usage(createInfo.usage), layout(Gfx::SE_IMAGE_LAYOUT_UNDEFINED),
       aspect(getAspectFromFormat(createInfo.format)), ownsImage(false), owner(createInfo.sourceData.owner) {
@@ -102,7 +103,7 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType, const
             .flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT,
             .usage = VMA_MEMORY_USAGE_AUTO,
         };
-        OBufferAllocation stagingAlloc = new BufferAllocation(graphics, createInfo.name, stagingInfo, alloc, Gfx::QueueType::TRANSFER);
+        OBufferAllocation stagingAlloc = new BufferAllocation(graphics, fmt::format("{}Staging", createInfo.name), stagingInfo, alloc, Gfx::QueueType::TRANSFER);
         vmaMapMemory(graphics->getAllocator(), stagingAlloc->allocation, &data);
         std::memcpy(data, sourceData.data, sourceData.size);
         vmaUnmapMemory(graphics->getAllocator(), stagingAlloc->allocation);

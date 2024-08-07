@@ -181,3 +181,24 @@ void Material::compile() {
     codeStream << "};\n";
     graphics->getShaderCompiler()->registerMaterial(this);
 }
+
+uint64 Material::getCPUSize() const { 
+    uint64 result = sizeof(Material);
+    for (size_t i = 0; i < parameters.size(); ++i) {
+        result += parameters[i].size();
+    }
+    for (const auto& expr : codeExpressions)
+    {
+        result += expr->getCPUSize();
+    }
+    return result;
+}
+
+uint64 Material::getGPUSize() const
+{
+    uint64 result = 0;
+    for (const auto& expr : codeExpressions) {
+        result += expr->getGPUSize();
+    }
+    return result;
+}

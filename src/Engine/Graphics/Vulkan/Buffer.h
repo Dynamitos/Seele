@@ -4,10 +4,13 @@
 #include "Graphics/Enums.h"
 #include "Resources.h"
 
+uint64 getBufferSize();
+
 namespace Seele {
 namespace Vulkan {
 DECLARE_REF(Command)
 DECLARE_REF(Fence)
+
 class BufferAllocation : public CommandBoundResource {
   public:
     BufferAllocation(PGraphics graphics, const std::string& name, VkBufferCreateInfo bufferInfo, VmaAllocationCreateInfo allocInfo,
@@ -24,7 +27,6 @@ class BufferAllocation : public CommandBoundResource {
     VmaAllocationInfo info = VmaAllocationInfo();
     VkMemoryPropertyFlags properties = 0;
     uint64 size = 0;
-    std::string name;
     VkDeviceAddress deviceAddress;
     Gfx::QueueType owner;
 };

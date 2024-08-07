@@ -11,6 +11,11 @@ class ArchiveBuffer {
   public:
     ArchiveBuffer();
     ArchiveBuffer(Gfx::PGraphics graphics);
+    ArchiveBuffer(const ArchiveBuffer& other) = delete;
+    ArchiveBuffer(ArchiveBuffer&& other) = default;
+    ArchiveBuffer& operator=(const ArchiveBuffer& other) = delete;
+    ArchiveBuffer& operator=(ArchiveBuffer&& other) = default;
+    ~ArchiveBuffer() {}
     void writeBytes(const void* data, uint64 size);
     void readBytes(void* dest, uint64 size);
     void writeToStream(std::ostream& stream);

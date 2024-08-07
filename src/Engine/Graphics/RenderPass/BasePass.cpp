@@ -242,9 +242,6 @@ void BasePass::render() {
         }
     }
 
-    graphics->executeCommands(std::move(commands));
-
-    commands.clear();
     Gfx::ORenderCommand skyboxCommand = graphics->createRenderCommand("SkyboxRender");
     skyboxCommand->setViewport(viewport);
     skyboxCommand->bindPipeline(pipeline);

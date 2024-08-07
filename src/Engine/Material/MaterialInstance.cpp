@@ -2,7 +2,6 @@
 #include "Graphics/Graphics.h"
 #include "Material.h"
 
-
 using namespace Seele;
 
 MaterialInstance::MaterialInstance() {}
@@ -34,9 +33,7 @@ void MaterialInstance::updateDescriptor() {
     }
 }
 
-void MaterialInstance::setBaseMaterial(PMaterialAsset asset) {
-    baseMaterial = asset;
-}
+void MaterialInstance::setBaseMaterial(PMaterialAsset asset) { baseMaterial = asset; }
 
 void MaterialInstance::save(ArchiveBuffer& buffer) const {
     Serialization::save(buffer, numTextures);
@@ -55,4 +52,20 @@ void MaterialInstance::load(ArchiveBuffer& buffer) {
     texturesOffset = Material::addTextures(numTextures);
     samplersOffset = Material::addSamplers(numSamplers);
     floatBufferOffset = Material::addFloats(numFloats);
+}
+
+uint64 MaterialInstance::getCPUSize() const {
+    uint64 result = sizeof(MaterialInstance);
+    for (size_t i = 0; i < parameters.size(); ++i) {
+        result += parameters[i]->getCPUSize();
+    }
+    return result;
+}
+
+uint64 MaterialInstance::getGPUSize() const {
+    uint64 result = 0;
+    for (size_t i = 0; i < parameters.size(); ++i) {
+        result += parameters[i]->getGPUSize();
+    }
+    return result;
 }

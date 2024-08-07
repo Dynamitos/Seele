@@ -28,4 +28,6 @@ void MaterialInstanceAsset::load(ArchiveBuffer& buffer) {
     material->load(buffer);
     baseMaterial = AssetRegistry::findMaterial(folder, id);
     material->setBaseMaterial(baseMaterial);
+
+    byteSize = material->getCPUSize();
 }

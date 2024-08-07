@@ -19,7 +19,7 @@ class StaticMeshVertexData : public VertexData {
     void loadBiTangents(uint64 offset, const Array<Vector4>& data);
     void loadColors(uint64 offset, const Array<Vector4>& data);
     virtual void serializeMesh(MeshId id, uint64 numVertices, ArchiveBuffer& buffer) override;
-    virtual void deserializeMesh(MeshId id, ArchiveBuffer& buffer) override;
+    virtual uint64 deserializeMesh(MeshId id, ArchiveBuffer& buffer) override;
     virtual void init(Gfx::PGraphics graphics) override;
     virtual void destroy() override;
     virtual void bindBuffers(Gfx::PRenderCommand command) override;
@@ -31,6 +31,9 @@ class StaticMeshVertexData : public VertexData {
   private:
     virtual void resizeBuffers() override;
     virtual void updateBuffers() override;
+
+    void swapOut();
+    void swapIn();
 
     Gfx::OShaderBuffer positions;
     Array<Vector4> positionData;
@@ -44,6 +47,7 @@ class StaticMeshVertexData : public VertexData {
     Array<Vector4> biTangentData;
     Gfx::OShaderBuffer colors;
     Array<Vector4> colorData;
+    bool swappedOut = false;
     Gfx::ODescriptorLayout descriptorLayout;
     Gfx::PDescriptorSet descriptorSet;
 };

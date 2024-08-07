@@ -62,6 +62,8 @@ void TextureAsset::load(ArchiveBuffer& buffer) {
     }
 
     ktxTexture_Destroy(ktxTexture(ktxHandle));
+
+    byteSize = sizeof(TextureAsset) + ktxData.size();
 }
 
 uint32 TextureAsset::getWidth() { return texture->getWidth(); }

@@ -464,6 +464,7 @@ CommandPool::CommandPool(PGraphics graphics, PQueue queue) : graphics(graphics),
 }
 
 CommandPool::~CommandPool() {
+    submitCommands();
     vkDeviceWaitIdle(graphics->getDevice());
     for (auto& cmd : allocatedBuffers) {
         cmd->checkFence();

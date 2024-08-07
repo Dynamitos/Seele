@@ -62,7 +62,7 @@ class AssetRegistry {
   private:
     void initialize(const std::filesystem::path& rootFolder, Gfx::PGraphics graphics);
     void loadRegistryInternal();
-    List<Pair<PAsset, ArchiveBuffer>> peekFolder(AssetFolder* folder);
+    Array<Pair<PAsset, ArchiveBuffer>> peekFolder(AssetFolder* folder);
     Pair<PAsset, ArchiveBuffer> peekAsset(ArchiveBuffer& buffer);
     void saveRegistryInternal();
     void saveFolder(const std::filesystem::path& folderPath, AssetFolder* folder);

@@ -6,7 +6,6 @@
 #include "stdlib.h"
 #include <fmt/core.h>
 
-
 using namespace Seele;
 using namespace Seele::Vulkan;
 

@@ -13,6 +13,7 @@
 #include "Graphics/StaticMeshVertexData.h"
 #include "Graphics/Vulkan/Graphics.h"
 #include "Window/PlayView.h"
+#include "Graphics/Vulkan/Buffer.h"
 #include "Window/WindowManager.h"
 #include <fmt/core.h>
 #include <random>

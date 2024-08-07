@@ -5,12 +5,17 @@
 #include <vma/vk_mem_alloc.h>
 #include <vulkan/vulkan_core.h>
 
+uint64 bufferSize = 0;
+
+uint64 getBufferSize()
+{ return bufferSize; }
+
 using namespace Seele;
 using namespace Seele::Vulkan;
 
 BufferAllocation::BufferAllocation(PGraphics graphics, const std::string& name, VkBufferCreateInfo bufferInfo,
                                    VmaAllocationCreateInfo allocInfo, Gfx::QueueType owner, uint64 alignment)
-    : CommandBoundResource(graphics), size(bufferInfo.size), name(name), owner(owner) {
+    : CommandBoundResource(graphics, name), size(bufferInfo.size), owner(owner) {
     VK_CHECK(vmaCreateBufferWithAlignment(graphics->getAllocator(), &bufferInfo, &allocInfo, alignment, &buffer, &allocation, &info));
     vmaGetAllocationMemoryProperties(graphics->getAllocator(), allocation, &properties);
     VkDebugUtilsObjectNameInfoEXT nameInfo = {
@@ -20,6 +25,9 @@ BufferAllocation::BufferAllocation(PGraphics graphics, const std::string& name, 
         .objectHandle = (uint64)buffer,
         .pObjectName = name.c_str(),
     };
+    if (!(properties & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)) {
+        bufferSize += size;
+    }
     assert(!name.empty());
     vkSetDebugUtilsObjectNameEXT(graphics->getDevice(), &nameInfo);
     if (bufferInfo.usage & VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT) {
@@ -34,6 +42,9 @@ BufferAllocation::BufferAllocation(PGraphics graphics, const std::string& name, 
 
 BufferAllocation::~BufferAllocation() {
     if (buffer != VK_NULL_HANDLE) {
+        if (!(properties & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)) {
+            bufferSize -= size;
+        }
         vmaDestroyBuffer(graphics->getAllocator(), buffer, allocation);
     }
 }

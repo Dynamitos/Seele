@@ -40,6 +40,9 @@ class Material {
 
     void compile();
 
+    uint64 getCPUSize() const;
+    uint64 getGPUSize() const;
+
   private:
     Gfx::PGraphics graphics;
     uint32 numTextures;

@@ -2,6 +2,7 @@
 #include "Graphics.h"
 #include "Graphics/Enums.h"
 #include "Mesh.h"
+#include <fstream>
 
 using namespace Seele;
 
@@ -17,36 +18,54 @@ StaticMeshVertexData* StaticMeshVertexData::getInstance() {
 }
 
 void StaticMeshVertexData::loadPositions(uint64 offset, const Array<Vector4>& data) {
+    if (swappedOut) {
+        swapIn();
+    }
     assert(offset + data.size() <= head);
     std::memcpy(positionData.data() + offset, data.data(), data.size() * sizeof(Vector4));
     dirty = true;
 }
 
 void StaticMeshVertexData::loadTexCoords(uint64 offset, uint64 index, const Array<Vector2>& data) {
+    if (swappedOut) {
+        swapIn();
+    }
     assert(offset + data.size() <= head);
     std::memcpy(texCoordsData[index].data() + offset, data.data(), data.size() * sizeof(Vector2));
     dirty = true;
 }
 
 void StaticMeshVertexData::loadNormals(uint64 offset, const Array<Vector4>& data) {
+    if (swappedOut) {
+        swapIn();
+    }
     assert(offset + data.size() <= head);
     std::memcpy(normalData.data() + offset, data.data(), data.size() * sizeof(Vector4));
     dirty = true;
 }
 
 void StaticMeshVertexData::loadTangents(uint64 offset, const Array<Vector4>& data) {
+    if (swappedOut) {
+        swapIn();
+    }
     assert(offset + data.size() <= head);
     std::memcpy(tangentData.data() + offset, data.data(), data.size() * sizeof(Vector4));
     dirty = true;
 }
 
 void StaticMeshVertexData::loadBiTangents(uint64 offset, const Array<Vector4>& data) {
+    if (swappedOut) {
+        swapIn();
+    }
     assert(offset + data.size() <= head);
     std::memcpy(biTangentData.data() + offset, data.data(), data.size() * sizeof(Vector4));
     dirty = true;
 }
 
 void Seele::StaticMeshVertexData::loadColors(uint64 offset, const Array<Vector4>& data) {
+    if (swappedOut) {
+        swapIn();
+    }
     assert(offset + data.size() <= head);
     std::memcpy(colorData.data() + offset, data.data(), data.size() * sizeof(Vector4));
     dirty = true;
@@ -82,8 +101,8 @@ void StaticMeshVertexData::serializeMesh(MeshId id, uint64 numVertices, ArchiveB
     Serialization::save(buffer, col);
 }
 
-void StaticMeshVertexData::deserializeMesh(MeshId id, ArchiveBuffer& buffer) {
-    VertexData::deserializeMesh(id, buffer);
+uint64 StaticMeshVertexData::deserializeMesh(MeshId id, ArchiveBuffer& buffer) {
+    uint64 result = VertexData::deserializeMesh(id, buffer);
     uint64 offset;
     {
         std::unique_lock l(vertexDataLock);
@@ -94,6 +113,7 @@ void StaticMeshVertexData::deserializeMesh(MeshId id, ArchiveBuffer& buffer) {
     for (size_t i = 0; i < MAX_TEXCOORDS; ++i) {
         Serialization::load(buffer, tex[i]);
         loadTexCoords(offset, i, tex[i]);
+        result += tex[i].size() * sizeof(Vector2);
     }
     Array<Vector4> nor;
     Array<Vector4> tan;
@@ -109,6 +129,12 @@ void StaticMeshVertexData::deserializeMesh(MeshId id, ArchiveBuffer& buffer) {
     loadTangents(offset, tan);
     loadBiTangents(offset, bit);
     loadColors(offset, col);
+    result += pos.size() * sizeof(Vector4);
+    result += nor.size() * sizeof(Vector4);
+    result += tan.size() * sizeof(Vector4);
+    result += bit.size() * sizeof(Vector4);
+    result += col.size() * sizeof(Vector4);
+    return result;
 }
 
 void StaticMeshVertexData::init(Gfx::PGraphics _graphics) {
@@ -119,8 +145,11 @@ void StaticMeshVertexData::init(Gfx::PGraphics _graphics) {
     descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 2, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
     descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 3, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
     descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 4, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
-    descriptorLayout->addDescriptorBinding(
-        Gfx::DescriptorBinding{.binding = 5, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER, .descriptorCount = MAX_TEXCOORDS,});
+    descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .binding = 5,
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+        .descriptorCount = MAX_TEXCOORDS,
+    });
     descriptorLayout->create();
     descriptorSet = descriptorLayout->allocateDescriptorSet();
 }
@@ -135,6 +164,7 @@ void StaticMeshVertexData::destroy() {
     tangents = nullptr;
     biTangents = nullptr;
     colors = nullptr;
+    descriptorSet = nullptr;
     descriptorLayout = nullptr;
 }
 
@@ -231,6 +261,8 @@ void StaticMeshVertexData::updateBuffers() {
             },
         .numElements = colorData.size(),
     });
+    // we just updated the GPU buffers, might not change that for a while
+    swapOut();
     descriptorLayout->reset();
     descriptorSet = descriptorLayout->allocateDescriptorSet();
     descriptorSet->updateBuffer(0, positions);
@@ -242,4 +274,40 @@ void StaticMeshVertexData::updateBuffers() {
         descriptorSet->updateBuffer(5, i, texCoords[i]);
     }
     descriptorSet->writeChanges();
+}
+
+void StaticMeshVertexData::swapOut() {
+    ArchiveBuffer buf;
+    Serialization::save(buf, positionData);
+    positionData.clear();
+    Serialization::save(buf, normalData);
+    normalData.clear();
+    Serialization::save(buf, tangentData);
+    tangentData.clear();
+    Serialization::save(buf, biTangentData);
+    biTangentData.clear();
+    Serialization::save(buf, colorData);
+    colorData.clear();
+    for (size_t i = 0; i < MAX_TEXCOORDS; ++i) {
+        Serialization::save(buf, texCoordsData[i]);
+        texCoordsData[i].clear();
+    }
+    std::ofstream str("vertex", std::ios::binary);
+    buf.writeToStream(str);
+    swappedOut = true;
+}
+
+void StaticMeshVertexData::swapIn() {
+    ArchiveBuffer buf;
+    std::ifstream str("vertex", std::ios::binary);
+    buf.readFromStream(str);
+    Serialization::load(buf, positionData);
+    Serialization::load(buf, normalData);
+    Serialization::load(buf, tangentData);
+    Serialization::load(buf, biTangentData);
+    Serialization::load(buf, colorData);
+    for (size_t i = 0; i < MAX_TEXCOORDS; ++i) {
+        Serialization::load(buf, texCoordsData[i]);
+    }
+    swappedOut = false;
 }

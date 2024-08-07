@@ -23,17 +23,17 @@ float4 fragmentMain(in FragmentParameter params) : SV_Target
     float3 result = float3(0, 0, 0);
     for(int i = 0; i < pLightEnv.numDirectionalLights; ++i)
     {
-        result += pLightEnv.directionalLights[i].illuminate(lightingParams, brdf);
+        //result += pLightEnv.directionalLights[i].illuminate(lightingParams, brdf);
     }
     for(uint i = 0; i < pLightEnv.numPointLights; ++i)
     {
         //uint lightIndex = pLightCullingData.lightIndexList[startOffset + i];
-        result += pLightEnv.pointLights[i].illuminate(lightingParams, brdf);
+        //result += pLightEnv.pointLights[i].illuminate(lightingParams, brdf);
     }
     result += brdf.evaluateAmbient();
     // gamma correction
     //result = result / (result + float3(1.0));
     //result = pow(result, float3(1.0/2.2));
-    return float4(result, brdf.getAlpha());
+    return float4(result, 1.0f);
 }
             

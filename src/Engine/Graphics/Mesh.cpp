@@ -29,9 +29,17 @@ void Mesh::load(ArchiveBuffer& buffer) {
     Serialization::load(buffer, refId);
     referencedMaterial = AssetRegistry::findMaterialInstance(refFolder, refId);
     id = vertexData->allocateVertexData(vertexCount);
-    vertexData->deserializeMesh(id, buffer);
+    byteSize = vertexData->deserializeMesh(id, buffer);
     blas = buffer.getGraphics()->createBottomLevelAccelerationStructure(Gfx::BottomLevelASCreateInfo{
         .mesh = this,
     });
     vertexData->registerBottomLevelAccelerationStructure(blas);
 }
+
+uint64 Mesh::getCPUSize() const {
+    uint64 result = sizeof(Mesh);
+    result += byteSize;
+    return result;
+}
+
+uint64 Mesh::getGPUSize() const { return byteSize; }

@@ -15,10 +15,14 @@ class Mesh {
     VertexData* vertexData;
     MeshId id;
     uint64 vertexCount;
+    uint64 byteSize;
     PMaterialInstanceAsset referencedMaterial;
     Gfx::OBottomLevelAS blas;
     void save(ArchiveBuffer& buffer) const;
     void load(ArchiveBuffer& buffer);
+
+    uint64 getCPUSize() const;
+    uint64 getGPUSize() const;
 
   private:
 };

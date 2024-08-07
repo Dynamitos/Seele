@@ -16,6 +16,8 @@ class Asset {
     virtual void save(ArchiveBuffer& buffer) const = 0;
     virtual void load(ArchiveBuffer& buffer) = 0;
 
+    constexpr uint64 getSize() const { return byteSize; }
+
     bool isModified() const;
     // returns the assets name
     std::string getName() const;

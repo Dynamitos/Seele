@@ -19,6 +19,7 @@ void MaterialAsset::load(ArchiveBuffer& buffer) {
     material = new Material();
     material->load(buffer);
     material->compile();
+    byteSize = material->getCPUSize();
 }
 
 PMaterialInstanceAsset MaterialAsset::instantiate(const InstantiationParameter& params) {

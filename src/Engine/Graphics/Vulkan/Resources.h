@@ -61,7 +61,7 @@ DEFINE_REF(DestructionManager)
 
 class CommandBoundResource {
   public:
-    CommandBoundResource(PGraphics graphics) : graphics(graphics) {}
+    CommandBoundResource(PGraphics graphics, const std::string& name) : graphics(graphics), name(name) {}
     virtual ~CommandBoundResource() {
         if (isCurrentlyBound())
             abort();
@@ -72,6 +72,7 @@ class CommandBoundResource {
 
   protected:
     PGraphics graphics;
+    std::string name;
     uint64 bindCount = 0;
 };
 DEFINE_REF(CommandBoundResource)

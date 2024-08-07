@@ -165,7 +165,8 @@ void Graphics::beginRenderPass(Gfx::PRenderPass renderPass) {
 
 void Graphics::endRenderPass() { getGraphicsCommands()->getCommands()->endRenderPass(); }
 
-void Graphics::waitDeviceIdle() { 
+void Graphics::waitDeviceIdle() {
+    getGraphicsCommands()->submitCommands();
     vkDeviceWaitIdle(handle); 
     getGraphicsCommands()->refreshCommands();
 }

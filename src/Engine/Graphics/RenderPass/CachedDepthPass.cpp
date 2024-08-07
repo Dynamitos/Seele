@@ -194,5 +194,5 @@ void CachedDepthPass::createRenderPass() {
                          Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
         },
     };
-    renderPass = graphics->createRenderPass(std::move(layout), std::move(dependency), viewport);
+    renderPass = graphics->createRenderPass(std::move(layout), std::move(dependency), viewport, "CachedDepthPass");
 }

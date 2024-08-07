@@ -92,7 +92,7 @@ void DestructionManager::notifyCommandComplete() {
     }
 }
 
-SamplerHandle::SamplerHandle(PGraphics graphics, VkSamplerCreateInfo createInfo) : CommandBoundResource(graphics) {
+SamplerHandle::SamplerHandle(PGraphics graphics, VkSamplerCreateInfo createInfo) : CommandBoundResource(graphics, "Sampler") {
     vkCreateSampler(graphics->getDevice(), &createInfo, nullptr, &sampler);
 }
 
