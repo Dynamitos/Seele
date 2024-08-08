@@ -7,10 +7,11 @@
 #include "Graphics/Shader.h"
 #include "Material/Material.h"
 #include "Material/MaterialInstance.h"
+#include <iostream>
 
 using namespace Seele;
 
-constexpr static uint64 NUM_DEFAULT_ELEMENTS = 1024 * 1024;
+constexpr static uint64 NUM_DEFAULT_ELEMENTS = 1024 * 1024;// 17962284
 Map<VertexData::MeshMapping, VertexData::CullingMapping> VertexData::instanceIdMap;
 uint64 VertexData::instanceCount = 0;
 uint64 VertexData::meshletCount = 0;
@@ -152,38 +153,17 @@ void VertexData::createDescriptors() {
         rayTracingScene.add(transparentData[i].rayTracingScene);
     }
     cullingOffsetBuffer->rotateBuffer(cullingOffsets.size() * sizeof(uint32));
-    cullingOffsetBuffer->updateContents(ShaderBufferCreateInfo{
-        .sourceData =
-            {
-                .size = cullingOffsets.size() * sizeof(uint32),
-                .data = (uint8*)cullingOffsets.data(),
-            },
-        .numElements = cullingOffsets.size(),
-    });
+    cullingOffsetBuffer->updateContents(0, cullingOffsets.size() * sizeof(uint32), cullingOffsets.data());
     cullingOffsetBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
                                          Gfx::SE_ACCESS_MEMORY_READ_BIT, Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
 
     instanceBuffer->rotateBuffer(instanceData.size() * sizeof(InstanceData));
-    instanceBuffer->updateContents(ShaderBufferCreateInfo{
-        .sourceData =
-            {
-                .size = instanceData.size() * sizeof(InstanceData),
-                .data = (uint8*)instanceData.data(),
-            },
-        .numElements = instanceData.size(),
-    });
+    instanceBuffer->updateContents(0, instanceData.size() * sizeof(InstanceData), instanceData.data());
     instanceBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, Gfx::SE_ACCESS_MEMORY_READ_BIT,
                                     Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
 
     instanceMeshDataBuffer->rotateBuffer(sizeof(MeshData) * instanceMeshData.size());
-    instanceMeshDataBuffer->updateContents(ShaderBufferCreateInfo{
-        .sourceData =
-            {
-                .size = sizeof(MeshData) * instanceMeshData.size(),
-                .data = (uint8*)instanceMeshData.data(),
-            },
-        .numElements = instanceMeshData.size(),
-    });
+    instanceMeshDataBuffer->updateContents(0, sizeof(MeshData) * instanceMeshData.size(), instanceMeshData.data());
     instanceMeshDataBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
                                             Gfx::SE_ACCESS_MEMORY_READ_BIT, Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
 
@@ -287,7 +267,8 @@ MeshId VertexData::allocateVertexData(uint64 numVertices) {
     meshData.add({});
     head += numVertices;
     if (head > verticesAllocated) {
-        verticesAllocated = std::max(head, verticesAllocated + NUM_DEFAULT_ELEMENTS);
+        verticesAllocated = 2 * head; // double capacity
+        std::cout << "Resizing buffers to " << verticesAllocated << std::endl;
         resizeBuffers();
     }
     return res;
@@ -383,7 +364,6 @@ void VertexData::init(Gfx::PGraphics _graphics) {
         .dynamic = true,
         .name = "MeshDataBuffer",
     });
-    resizeBuffers();
     graphics->getShaderCompiler()->registerVertexData(this);
 }
 

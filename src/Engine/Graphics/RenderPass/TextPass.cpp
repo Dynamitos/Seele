@@ -53,11 +53,7 @@ void TextPass::beginFrame(const Component::Camera& cam) {
         };
     }
     auto proj = viewport->getProjectionMatrix();
-    DataSource projectionUpdate = {
-        .size = sizeof(Matrix4),
-        .data = (uint8*)&proj,
-    };
-    projectionBuffer->updateContents(projectionUpdate);
+    projectionBuffer->updateContents(0, sizeof(Matrix4), &proj);
     generalSet->updateBuffer(1, projectionBuffer);
     generalSet->writeChanges();
     // co_return;

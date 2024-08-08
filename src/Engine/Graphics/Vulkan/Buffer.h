@@ -26,6 +26,7 @@ class BufferAllocation : public CommandBoundResource {
     VmaAllocation allocation = VmaAllocation();
     VmaAllocationInfo info = VmaAllocationInfo();
     VkMemoryPropertyFlags properties = 0;
+    void* mappedPointer = nullptr;
     uint64 size = 0;
     VkDeviceAddress deviceAddress;
     Gfx::QueueType owner;
@@ -42,12 +43,15 @@ class Buffer {
     uint64 getSize() const { return buffers[currentBuffer]->size; }
     void updateContents(uint64 regionOffset, uint64 regionSize, void* ptr);
     void readContents(uint64 regionOffset, uint64 regionSize, void* ptr);
+    void* map();
+    void unmap();
 
   protected:
     PGraphics graphics;
     uint32 currentBuffer;
     Gfx::QueueType initialOwner;
     Array<OBufferAllocation> buffers;
+    OBufferAllocation stagingBuffer = nullptr;
     VkBufferUsageFlags usage;
     bool dynamic;
     bool createCleared;
@@ -67,7 +71,7 @@ class VertexBuffer : public Gfx::VertexBuffer, public Buffer {
     VertexBuffer(PGraphics graphics, const VertexBufferCreateInfo& sourceData);
     virtual ~VertexBuffer();
 
-    virtual void updateRegion(DataSource update) override;
+    virtual void updateRegion(uint64 offset, uint64 size, void* data) override;
     virtual void download(Array<uint8>& buffer) override;
 
   protected:
@@ -96,7 +100,7 @@ class UniformBuffer : public Gfx::UniformBuffer, public Buffer {
   public:
     UniformBuffer(PGraphics graphics, const UniformBufferCreateInfo& sourceData);
     virtual ~UniformBuffer();
-    virtual void updateContents(const DataSource& sourceData) override;
+    virtual void updateContents(uint64 offset, uint64 size, void* data) override;
     virtual void rotateBuffer(uint64 size) override;
 
   protected:
@@ -113,9 +117,11 @@ class ShaderBuffer : public Gfx::ShaderBuffer, public Buffer {
   public:
     ShaderBuffer(PGraphics graphics, const ShaderBufferCreateInfo& sourceData);
     virtual ~ShaderBuffer();
-    virtual void readContents(Array<uint8>& data) override;
-    virtual void updateContents(const ShaderBufferCreateInfo& createInfo) override;
+    virtual void readContents(uint64 offset, uint64 size, void* data) override;
+    virtual void updateContents(uint64 offset, uint64 size, void* data) override;
     virtual void rotateBuffer(uint64 size, bool preserveContents = false) override;
+    virtual void* map() override;
+    virtual void unmap() override;
 
     virtual void clear() override;
 

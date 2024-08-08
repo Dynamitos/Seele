@@ -24,7 +24,7 @@ class VertexBuffer : public Buffer {
     // Size of one vertex in bytes
     constexpr uint32 getVertexSize() const { return vertexSize; }
 
-    virtual void updateRegion(DataSource update) = 0;
+    virtual void updateRegion(uint64 offset, uint64 size, void* data) = 0;
     virtual void download(Array<uint8>& buffer) = 0;
 
   protected:
@@ -63,7 +63,7 @@ class UniformBuffer : public Buffer {
     virtual ~UniformBuffer();
 
     virtual void rotateBuffer(uint64 size) = 0;
-    virtual void updateContents(const DataSource& sourceData) = 0;
+    virtual void updateContents(uint64 offset, uint64 size, void* data) = 0;
 
   protected:
     // Inherited via QueueOwnedResource
@@ -76,9 +76,11 @@ class ShaderBuffer : public Buffer {
   public:
     ShaderBuffer(QueueFamilyMapping mapping, const ShaderBufferCreateInfo& createInfo);
     virtual ~ShaderBuffer();
-    virtual void readContents(Array<uint8>& data) = 0;
+    virtual void readContents(uint64 offset, uint64 size, void* data) = 0;
     virtual void rotateBuffer(uint64 size, bool preserveContents = false) = 0;
-    virtual void updateContents(const ShaderBufferCreateInfo& sourceData) = 0;
+    virtual void updateContents(uint64 offset, uint64 size, void* data) = 0;
+    virtual void* map() = 0;
+    virtual void unmap() = 0;
     constexpr uint32 getNumElements() const { return numElements; }
 
     virtual void clear() = 0;

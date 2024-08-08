@@ -32,22 +32,12 @@ class StaticMeshVertexData : public VertexData {
     virtual void resizeBuffers() override;
     virtual void updateBuffers() override;
 
-    void swapOut();
-    void swapIn();
-
     Gfx::OShaderBuffer positions;
-    Array<Vector4> positionData;
     Gfx::OShaderBuffer texCoords[MAX_TEXCOORDS];
-    Array<Vector2> texCoordsData[MAX_TEXCOORDS];
     Gfx::OShaderBuffer normals;
-    Array<Vector4> normalData;
     Gfx::OShaderBuffer tangents;
-    Array<Vector4> tangentData;
     Gfx::OShaderBuffer biTangents;
-    Array<Vector4> biTangentData;
     Gfx::OShaderBuffer colors;
-    Array<Vector4> colorData;
-    bool swappedOut = false;
     Gfx::ODescriptorLayout descriptorLayout;
     Gfx::PDescriptorSet descriptorSet;
 };

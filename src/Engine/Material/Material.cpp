@@ -71,13 +71,7 @@ void Material::destroy() {
 
 void Material::updateDescriptor() {
     floatBuffer->rotateBuffer(floatData.size() * sizeof(float));
-    floatBuffer->updateContents(ShaderBufferCreateInfo{
-        .sourceData =
-            {
-                .size = floatData.size() * sizeof(float),
-                .data = (uint8*)floatData.data(),
-            },
-    });
+    floatBuffer->updateContents(0, floatData.size() * sizeof(float), floatData.data());
     floatBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, Gfx::SE_ACCESS_SHADER_READ_BIT,
                                  Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
     layout->reset();

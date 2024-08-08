@@ -20,10 +20,7 @@ void UIPass::beginFrame(const Component::Camera& cam) {
     };
     elementBuffer = graphics->createVertexBuffer(info);
     uint32 numTextures = static_cast<uint32>(usedTextures.size());
-    numTexturesBuffer->updateContents({
-        .size = sizeof(uint32),
-        .data = (uint8*)&numTextures,
-    });
+    numTexturesBuffer->updateContents(0, sizeof(uint32), &numTextures);
     descriptorSet->updateBuffer(2, numTexturesBuffer);
     descriptorSet->updateTextureArray(3, usedTextures);
     descriptorSet->writeChanges();

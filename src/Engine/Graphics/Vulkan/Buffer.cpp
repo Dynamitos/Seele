@@ -2,13 +2,12 @@
 #include "Command.h"
 #include "Enums.h"
 #include "Graphics/Enums.h"
+#include <fmt/format.h>
 #include <vma/vk_mem_alloc.h>
-#include <vulkan/vulkan_core.h>
 
 uint64 bufferSize = 0;
 
-uint64 getBufferSize()
-{ return bufferSize; }
+uint64 getBufferSize() { return bufferSize; }
 
 using namespace Seele;
 using namespace Seele::Vulkan;
@@ -186,12 +185,16 @@ void BufferAllocation::readContents(uint64 regionOffset, uint64 regionSize, void
 }
 
 void* BufferAllocation::map() {
-    void* data;
-    vmaMapMemory(graphics->getAllocator(), allocation, &data);
-    return data;
+    if (mappedPointer == nullptr) {
+        vmaMapMemory(graphics->getAllocator(), allocation, &mappedPointer);
+    }
+    return mappedPointer;
 }
 
-void BufferAllocation::unmap() { vmaUnmapMemory(graphics->getAllocator(), allocation); }
+void BufferAllocation::unmap() {
+    vmaUnmapMemory(graphics->getAllocator(), allocation);
+    mappedPointer = nullptr;
+}
 
 Buffer::Buffer(PGraphics graphics, uint64 size, VkBufferUsageFlags usage, Gfx::QueueType queueType, bool dynamic, std::string name,
                bool createCleared, uint32 clearValue)
@@ -222,10 +225,52 @@ void Buffer::readContents(uint64 regionOffset, uint64 regionSize, void* buffer) 
     getAlloc()->readContents(regionOffset, regionSize, buffer);
 }
 
+void* Buffer::map() {
+    if (stagingBuffer == nullptr) {
+        stagingBuffer = new BufferAllocation(graphics, fmt::format("{}Staging", name),
+                                             VkBufferCreateInfo{
+                                                 .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+                                                 .pNext = nullptr,
+                                                 .flags = 0,
+                                                 .size = getSize(),
+                                                 .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                                             },
+                                             VmaAllocationCreateInfo{
+                                                 .flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
+                                                 .usage = VMA_MEMORY_USAGE_AUTO,
+                                             },
+                                             Gfx::QueueType::GRAPHICS);
+    }
+    return stagingBuffer->map();
+}
+
+void Buffer::unmap() {
+    if (stagingBuffer == nullptr)
+        return;
+    stagingBuffer->unmap();
+
+    PCommand cmd = graphics->getQueueCommands(Gfx::QueueType::GRAPHICS)->getCommands();
+    VkBufferCopy copy = {
+        .srcOffset = 0,
+        .dstOffset = 0,
+        .size = getSize(),
+    };
+    cmd->bindResource(getAlloc());
+    cmd->bindResource(PBufferAllocation(stagingBuffer));
+    vkCmdCopyBuffer(cmd->getHandle(), stagingBuffer->buffer, getAlloc()->buffer, 1, &copy);
+    pipelineBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_WRITE_BIT,
+                    VK_PIPELINE_STAGE_TRANSFER_BIT);
+
+    // transferOwnership(prevOwner);
+    graphics->getDestructionManager()->queueResourceForDestruction(std::move(stagingBuffer));
+    stagingBuffer = nullptr;
+}
+
 void Buffer::rotateBuffer(uint64 size, bool preserveContents) {
     if (size == 0)
         return;
     assert(dynamic);
+    unmap();
     for (uint32 i = 0; i < buffers.size(); ++i) {
         if (buffers[i]->isCurrentlyBound()) {
             continue;
@@ -353,10 +398,10 @@ UniformBuffer::UniformBuffer(PGraphics graphics, const UniformBufferCreateInfo& 
 
 UniformBuffer::~UniformBuffer() {}
 
-void UniformBuffer::updateContents(const DataSource& sourceData) {
-    if (sourceData.size > 0 && sourceData.data != nullptr) {
-        rotateBuffer(sourceData.size);
-        getAlloc()->updateContents(sourceData.offset, sourceData.size, sourceData.data);
+void UniformBuffer::updateContents(uint64 offset, uint64 size, void* data) {
+    if (size > 0 && data != nullptr) {
+        rotateBuffer(size);
+        getAlloc()->updateContents(offset, size, data);
     }
 }
 
@@ -384,18 +429,15 @@ ShaderBuffer::ShaderBuffer(PGraphics graphics, const ShaderBufferCreateInfo& cre
 
 ShaderBuffer::~ShaderBuffer() {}
 
-void ShaderBuffer::readContents(Array<uint8>& data) {
-    data.resize(getSize());
-    getAlloc()->readContents(0, data.size(), data.data());
-}
+void ShaderBuffer::readContents(uint64 offset, uint64 size, void* data) { getAlloc()->readContents(offset, size, data); }
 
-void ShaderBuffer::updateContents(const ShaderBufferCreateInfo& createInfo) {
-    if (createInfo.sourceData.data == nullptr) {
+void ShaderBuffer::updateContents(uint64 offset, uint64 size, void* data) {
+    if (data == nullptr) {
         return;
     }
     // We always want to update, as the contents could be different on the GPU
-    if (createInfo.sourceData.size > 0 && createInfo.sourceData.data != nullptr) {
-        getAlloc()->updateContents(createInfo.sourceData.offset, createInfo.sourceData.size, createInfo.sourceData.data);
+    if (size > 0 && data != nullptr) {
+        getAlloc()->updateContents(offset, size, data);
     }
 }
 
@@ -404,11 +446,14 @@ void ShaderBuffer::rotateBuffer(uint64 size, bool preserveContents) {
     Vulkan::Buffer::rotateBuffer(size, preserveContents);
 }
 
+void* ShaderBuffer::map() { return Vulkan::Buffer::map(); }
+
+void ShaderBuffer::unmap() { Vulkan::Buffer::unmap(); }
+
 void ShaderBuffer::clear() {
     PCommand command = graphics->getQueueCommands(getAlloc()->owner)->getCommands();
     command->bindResource(PBufferAllocation(getAlloc()));
-    vkCmdFillBuffer(command->getHandle(), Vulkan::Buffer::getHandle(), 0,
-                    VK_WHOLE_SIZE, 0);
+    vkCmdFillBuffer(command->getHandle(), Vulkan::Buffer::getHandle(), 0, VK_WHOLE_SIZE, 0);
 }
 
 void ShaderBuffer::executeOwnershipBarrier(Gfx::QueueType newOwner) { Vulkan::Buffer::transferOwnership(newOwner); }
@@ -429,7 +474,7 @@ VertexBuffer::VertexBuffer(PGraphics graphics, const VertexBufferCreateInfo& cre
 
 VertexBuffer::~VertexBuffer() {}
 
-void VertexBuffer::updateRegion(DataSource sourceData) { getAlloc()->updateContents(sourceData.offset, sourceData.size, sourceData.data); }
+void VertexBuffer::updateRegion(uint64 offset, uint64 size, void* data) { getAlloc()->updateContents(offset, size, data); }
 
 void VertexBuffer::download(Array<uint8>& buffer) {
     buffer.resize(getSize());

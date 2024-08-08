@@ -116,10 +116,7 @@ void BasePass::beginFrame(const Component::Camera& cam) {
     textureLayout->reset();
     skyboxData.transformMatrix = glm::rotate(skyboxData.transformMatrix, (float)(Gfx::getCurrentFrameDelta()), Vector(0, 1, 0));
     skyboxBuffer->rotateBuffer(sizeof(SkyboxData));
-    skyboxBuffer->updateContents(DataSource{
-        .size = sizeof(SkyboxData),
-        .data = (uint8*)&skyboxData,
-    });
+    skyboxBuffer->updateContents(0, sizeof(SkyboxData), &skyboxData);
     skyboxBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, Gfx::SE_ACCESS_UNIFORM_READ_BIT,
                                   Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
     skyboxDataSet = skyboxDataLayout->allocateDescriptorSet();

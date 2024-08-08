@@ -22,18 +22,10 @@ void LightCullingPass::beginFrame(const Component::Camera& cam) {
                                         Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT, Gfx::SE_ACCESS_MEMORY_WRITE_BIT,
                                         Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT);
     uint32 reset = 0;
-    ShaderBufferCreateInfo counterReset = {
-        .sourceData =
-            {
-                .size = sizeof(uint32),
-                .data = (uint8*)&reset,
-                .owner = Gfx::QueueType::COMPUTE,
-            },
-    };
     oLightIndexCounter->rotateBuffer(sizeof(uint32));
-    oLightIndexCounter->updateContents(counterReset);
+    oLightIndexCounter->updateContents(0, sizeof(uint32), &reset);
     tLightIndexCounter->rotateBuffer(sizeof(uint32));
-    tLightIndexCounter->updateContents(counterReset);
+    tLightIndexCounter->updateContents(0, sizeof(uint32), &reset);
     oLightIndexCounter->pipelineBarrier(Gfx::SE_ACCESS_MEMORY_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
                                         Gfx::SE_ACCESS_MEMORY_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
     tLightIndexCounter->pipelineBarrier(Gfx::SE_ACCESS_MEMORY_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
