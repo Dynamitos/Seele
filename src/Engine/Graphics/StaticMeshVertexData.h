@@ -38,6 +38,12 @@ class StaticMeshVertexData : public VertexData {
     Gfx::OShaderBuffer tangents;
     Gfx::OShaderBuffer biTangents;
     Gfx::OShaderBuffer colors;
+    Array<Vector4> posData;
+    Array<Vector2> texData[MAX_TEXCOORDS];
+    Array<Vector4> norData;
+    Array<Vector4> tanData;
+    Array<Vector4> bitData;
+    Array<Vector4> colData;
     Gfx::ODescriptorLayout descriptorLayout;
     Gfx::PDescriptorSet descriptorSet;
 };

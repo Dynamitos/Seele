@@ -255,8 +255,12 @@ void VertexData::commitMeshes() {
         .name = "PrimitiveIndicesBuffer",
     });
     updateBuffers();
+    vertexIndices.clear();
+    primitiveIndices.clear();
+    indices.clear();
+    meshlets.clear();
     dirty = false;
-    graphics->buildBottomLevelAccelerationStructures(std::move(dataToBuild));
+    //graphics->buildBottomLevelAccelerationStructures(std::move(dataToBuild));
 }
 
 MeshId VertexData::allocateVertexData(uint64 numVertices) {
@@ -364,6 +368,7 @@ void VertexData::init(Gfx::PGraphics _graphics) {
         .dynamic = true,
         .name = "MeshDataBuffer",
     });
+    resizeBuffers();
     graphics->getShaderCompiler()->registerVertexData(this);
 }
 
