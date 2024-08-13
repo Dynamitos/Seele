@@ -50,10 +50,10 @@ struct TextureCreateInfo {
     uint32 width = 1;
     uint32 height = 1;
     uint32 depth = 1;
-    uint32 mipLevels = 1;
     uint32 layers = 1;
     uint32 elements = 1;
     uint32 samples = 1;
+    bool useMip = false;
     Gfx::SeImageUsageFlags usage = Gfx::SE_IMAGE_USAGE_SAMPLED_BIT;
     Gfx::SeMemoryPropertyFlags memoryProps = Gfx::SE_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
     std::string name;
@@ -111,6 +111,7 @@ struct ShaderCompilationInfo {
     Array<Pair<const char*, const char*>> typeParameter;
     Map<const char*, const char*> defines;
     Gfx::PPipelineLayout rootSignature;
+    bool dumpIntermediate = false;
 };
 struct ShaderCreateInfo {
     uint32 entryPointIndex;

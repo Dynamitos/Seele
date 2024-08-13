@@ -46,7 +46,6 @@ void QueryPool::begin() {
 void QueryPool::end() {
     PCommand cmd = graphics->getGraphicsCommands()->getCommands();
     vkCmdEndQuery(cmd->getHandle(), handle, head);
-    graphics->getGraphicsCommands()->submitCommands();
     std::unique_lock l(queryMutex);
     head = (head + 1) % numQueries;
     queryCV.notify_all();

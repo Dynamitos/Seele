@@ -17,7 +17,8 @@ target_sources(Engine
         Skybox.h
         SphereCollider.h
 		Transform.h
-		Transform.cpp)
+		Transform.cpp
+        WaterTile.h)
 
 
 target_sources(Engine
@@ -36,4 +37,5 @@ target_sources(Engine
             ShapeBase.h
             Skybox.h
             SphereCollider.h
-            Transform.h)
+            Transform.h
+            WaterTile.h)

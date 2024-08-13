@@ -24,7 +24,7 @@ class VisibilityPass : public RenderPass {
     Gfx::OComputeShader visibilityShader;
     Gfx::PComputePipeline visibilityPipeline;
     Gfx::OPipelineStatisticsQuery query;
-    Gfx::PTimestampQuery timestamps;
+    Gfx::OTimestampQuery timestamps;
 
     // Holds culling information for every meshlet for each instance
     Gfx::OShaderBuffer cullingBuffer;

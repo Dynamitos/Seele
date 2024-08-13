@@ -20,7 +20,9 @@ target_sources(Engine
         UIPass.h
         UIPass.cpp
         VisibilityPass.h
-        VisibilityPass.cpp)
+        VisibilityPass.cpp
+        WaterRenderer.h
+        WaterRenderer.cpp)
 
 target_sources(Engine
     PUBLIC FILE_SET HEADERS

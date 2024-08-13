@@ -33,7 +33,7 @@ class DepthCullingPass : public RenderPass {
     Gfx::ODescriptorLayout depthAttachmentLayout;
     Gfx::OPipelineLayout depthCullingLayout;
     Gfx::OPipelineStatisticsQuery query;
-    Gfx::PTimestampQuery timestamps;
+    Gfx::OTimestampQuery timestamps;
 
     Gfx::OPipelineLayout depthComputeLayout;
     Gfx::OComputeShader depthInitialReduceShader;

@@ -175,6 +175,12 @@ void Graphics::executeCommands(Array<Gfx::ORenderCommand> commands) {
     getGraphicsCommands()->getCommands()->executeCommands(std::move(commands));
 }
 
+void Graphics::executeCommands(Gfx::OComputeCommand commands) {
+    Array<Gfx::OComputeCommand> commandArray;
+    commandArray.add(std::move(commands));
+    getComputeCommands()->getCommands()->executeCommands(std::move(commandArray));
+}
+
 void Graphics::executeCommands(Array<Gfx::OComputeCommand> commands) {
     getComputeCommands()->getCommands()->executeCommands(std::move(commands));
 }
@@ -747,6 +753,7 @@ void Graphics::pickPhysicalDevice() {
         .pNext = &meshShaderFeatures,
         .storageBuffer8BitAccess = true,
         .uniformAndStorageBuffer8BitAccess = true,
+        .shaderFloat16 = true,
         .shaderUniformBufferArrayNonUniformIndexing = true,
         .shaderSampledImageArrayNonUniformIndexing = true,
         .shaderStorageBufferArrayNonUniformIndexing = true,
@@ -770,6 +777,7 @@ void Graphics::pickPhysicalDevice() {
                 .geometryShader = true,
                 .fillModeNonSolid = true,
                 .wideLines = true,
+                .samplerAnisotropy = true,
                 .pipelineStatisticsQuery = true,
                 .fragmentStoresAndAtomics = true,
                 .shaderInt64 = true,

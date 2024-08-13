@@ -1,6 +1,7 @@
 #pragma once
 #include "MinimalEngine.h"
 #include "RenderPass.h"
+#include "WaterRenderer.h"
 
 namespace Seele {
 DECLARE_REF(CameraActor)
@@ -44,9 +45,11 @@ class BasePass : public RenderPass {
     Gfx::ODescriptorLayout lightCullingLayout;
 
     Gfx::OPipelineStatisticsQuery query;
-    Gfx::PTimestampQuery timestamps;
+    Gfx::OTimestampQuery timestamps;
 
     Gfx::PShaderBuffer cullingBuffer;
+
+    OWaterRenderer waterRenderer;
 
     // Debug rendering
     Gfx::OVertexInput debugVertexInput;

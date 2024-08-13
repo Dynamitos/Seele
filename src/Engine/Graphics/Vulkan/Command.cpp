@@ -401,7 +401,7 @@ void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet, Array<uin
     assert(descriptor->writeDescriptors.size() == 0);
     boundResources.add(descriptor.getHandle());
 
-    for (auto binding : descriptor->boundResources) {
+    for (const auto& binding : descriptor->boundResources) {
         for (auto res : binding) {
             res->bind();
             boundResources.add(res);

@@ -11,6 +11,9 @@ using namespace Seele::Vulkan;
 double currentFrameDelta = 0;
 double Gfx::getCurrentFrameDelta() { return currentFrameDelta; }
 
+double currentFrameTime = 0;
+double Gfx::getCurrentFrameTime() { return currentFrameTime; }
+
 uint32 currentFrameIndex = 0;
 uint32 Gfx::getCurrentFrameIndex() { return currentFrameIndex; }
 
@@ -98,6 +101,11 @@ void Window::beginFrame() {
     imageAvailableFences[currentSemaphoreIndex]->submit();
     graphics->getGraphicsCommands()->getCommands()->waitForSemaphore(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
                                                                      imageAvailableSemaphores[currentSemaphoreIndex]);
+    static double start = glfwGetTime();
+    double end = glfwGetTime();
+    currentFrameDelta = end - start;
+    currentFrameTime += currentFrameDelta;
+    start = end;
 }
 
 void Window::endFrame() {
@@ -261,7 +269,6 @@ void Window::createSwapChain() {
                                                  .width = extent.width,
                                                  .height = extent.height,
                                                  .depth = 1,
-                                                 .mipLevels = 1,
                                                  .layers = 1,
                                                  .elements = 1,
                                                  .samples = 1,

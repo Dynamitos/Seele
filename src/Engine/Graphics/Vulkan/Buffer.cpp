@@ -17,6 +17,7 @@ BufferAllocation::BufferAllocation(PGraphics graphics, const std::string& name, 
     : CommandBoundResource(graphics, name), size(bufferInfo.size), owner(owner) {
     VK_CHECK(vmaCreateBufferWithAlignment(graphics->getAllocator(), &bufferInfo, &allocInfo, alignment, &buffer, &allocation, &info));
     vmaGetAllocationMemoryProperties(graphics->getAllocator(), allocation, &properties);
+    assert(!name.empty());
     VkDebugUtilsObjectNameInfoEXT nameInfo = {
         .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
         .pNext = nullptr,
@@ -24,11 +25,10 @@ BufferAllocation::BufferAllocation(PGraphics graphics, const std::string& name, 
         .objectHandle = (uint64)buffer,
         .pObjectName = name.c_str(),
     };
+    vkSetDebugUtilsObjectNameEXT(graphics->getDevice(), &nameInfo);
     if (!(properties & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)) {
         bufferSize += size;
     }
-    assert(!name.empty());
-    vkSetDebugUtilsObjectNameEXT(graphics->getDevice(), &nameInfo);
     if (bufferInfo.usage & VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT) {
         VkBufferDeviceAddressInfo addrInfo = {
             .sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO_KHR,

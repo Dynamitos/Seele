@@ -66,22 +66,22 @@ void StaticMeshVertexData::serializeMesh(MeshId id, uint64 numVertices, ArchiveB
         std::unique_lock l(vertexDataLock);
         offset = meshOffsets[id];
     }
-    Array<Vector4> pos(numVertices);
     Array<Vector2> tex[MAX_TEXCOORDS];
     for (size_t i = 0; i < MAX_TEXCOORDS; ++i) {
         tex[i].resize(numVertices);
-        texCoords[i]->readContents(offset * sizeof(Vector2), numVertices * sizeof(Vector2), tex[i].data());
+        std::memcpy(tex[i].data(), texData[i].data() + offset, numVertices * sizeof(Vector2));
         Serialization::save(buffer, tex[i]);
     }
     Array<Vector4> nor(numVertices);
     Array<Vector4> tan(numVertices);
     Array<Vector4> bit(numVertices);
     Array<Vector4> col(numVertices);
-    positions->readContents(offset * sizeof(Vector4), numVertices * sizeof(Vector4), pos.data());
-    normals->readContents(offset * sizeof(Vector4), numVertices * sizeof(Vector4), nor.data());
-    tangents->readContents(offset * sizeof(Vector4), numVertices * sizeof(Vector4), tan.data());
-    biTangents->readContents(offset * sizeof(Vector4), numVertices * sizeof(Vector4), bit.data());
-    colors->readContents(offset * sizeof(Vector4), numVertices * sizeof(Vector4), col.data());
+    Array<Vector4> pos(numVertices);
+    std::memcpy(pos.data(), posData.data() + offset, numVertices * sizeof(Vector4));
+    std::memcpy(nor.data(), norData.data() + offset, numVertices * sizeof(Vector4));
+    std::memcpy(tan.data(), tanData.data() + offset, numVertices * sizeof(Vector4));
+    std::memcpy(bit.data(), bitData.data() + offset, numVertices * sizeof(Vector4));
+    std::memcpy(col.data(), colData.data() + offset, numVertices * sizeof(Vector4));
     Serialization::save(buffer, pos);
     Serialization::save(buffer, nor);
     Serialization::save(buffer, tan);

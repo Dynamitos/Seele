@@ -86,9 +86,9 @@ void FontAsset::load(ArchiveBuffer& buffer) {
             .width = kTexture->baseWidth,
             .height = kTexture->baseHeight,
             .depth = kTexture->baseDepth,
-            .mipLevels = kTexture->numLevels,
             .layers = kTexture->numFaces,
             .elements = kTexture->numLayers,
+            .useMip = true,
             .usage = Gfx::SE_IMAGE_USAGE_SAMPLED_BIT,
         };
 

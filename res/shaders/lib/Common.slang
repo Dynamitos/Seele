@@ -1,6 +1,8 @@
 const static float PI = 3.1415926535897932f;
 const static uint BLOCK_SIZE = 32;
 static const uint64_t MAX_TEXCOORDS = 8;
+static const uint32_t TASK_GROUP_SIZE = 32;
+static const uint32_t MESH_GROUP_SIZE = 32;
 
 struct ViewParameter
 {

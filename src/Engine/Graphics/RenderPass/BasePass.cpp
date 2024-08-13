@@ -3,6 +3,7 @@
 #include "Asset/AssetRegistry.h"
 #include "Component/Camera.h"
 #include "Component/Mesh.h"
+#include "Component/WaterTile.h"
 #include "Graphics/Command.h"
 #include "Graphics/Descriptor.h"
 #include "Graphics/Enums.h"
@@ -25,6 +26,7 @@ void Seele::addDebugVertex(DebugVertex vert) { gDebugVertices.add(vert); }
 void Seele::addDebugVertices(Array<DebugVertex> verts) { gDebugVertices.addAll(verts); }
 
 BasePass::BasePass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics, scene) {
+    waterRenderer = new WaterRenderer(graphics, scene, viewParamsLayout);
     basePassLayout = graphics->createPipelineLayout("BasePassLayout");
 
     basePassLayout->addDescriptorLayout(viewParamsLayout);
@@ -96,37 +98,42 @@ void BasePass::beginFrame(const Component::Camera& cam) {
     opaqueCulling = lightCullingLayout->allocateDescriptorSet();
     transparentCulling = lightCullingLayout->allocateDescriptorSet();
 
-    // Debug vertices
-    VertexBufferCreateInfo vertexBufferInfo = {
-        .sourceData =
-            {
-                .size = sizeof(DebugVertex) * gDebugVertices.size(),
-                .data = (uint8*)gDebugVertices.data(),
-            },
-        .vertexSize = sizeof(DebugVertex),
-        .numVertices = (uint32)gDebugVertices.size(),
-        .name = "DebugVertices",
-    };
-    debugVertices = graphics->createVertexBuffer(vertexBufferInfo);
-    debugVertices->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
-                                   Gfx::SE_ACCESS_VERTEX_ATTRIBUTE_READ_BIT, Gfx::SE_PIPELINE_STAGE_VERTEX_INPUT_BIT);
+    waterRenderer->beginFrame();
 
+    // Debug vertices
+    {
+        VertexBufferCreateInfo vertexBufferInfo = {
+            .sourceData =
+                {
+                    .size = sizeof(DebugVertex) * gDebugVertices.size(),
+                    .data = (uint8*)gDebugVertices.data(),
+                },
+            .vertexSize = sizeof(DebugVertex),
+            .numVertices = (uint32)gDebugVertices.size(),
+            .name = "DebugVertices",
+        };
+        debugVertices = graphics->createVertexBuffer(vertexBufferInfo);
+        debugVertices->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
+                                       Gfx::SE_ACCESS_VERTEX_ATTRIBUTE_READ_BIT, Gfx::SE_PIPELINE_STAGE_VERTEX_INPUT_BIT);
+    }
     // Skybox
-    skyboxDataLayout->reset();
-    textureLayout->reset();
-    skyboxData.transformMatrix = glm::rotate(skyboxData.transformMatrix, (float)(Gfx::getCurrentFrameDelta()), Vector(0, 1, 0));
-    skyboxBuffer->rotateBuffer(sizeof(SkyboxData));
-    skyboxBuffer->updateContents(0, sizeof(SkyboxData), &skyboxData);
-    skyboxBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, Gfx::SE_ACCESS_UNIFORM_READ_BIT,
-                                  Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
-    skyboxDataSet = skyboxDataLayout->allocateDescriptorSet();
-    skyboxDataSet->updateBuffer(0, skyboxBuffer);
-    skyboxDataSet->writeChanges();
-    textureSet = textureLayout->allocateDescriptorSet();
-    textureSet->updateTexture(0, skybox.day);
-    textureSet->updateTexture(1, skybox.night);
-    textureSet->updateSampler(2, skyboxSampler);
-    textureSet->writeChanges();
+    {
+        skyboxDataLayout->reset();
+        textureLayout->reset();
+        skyboxData.transformMatrix = glm::rotate(skyboxData.transformMatrix, (float)(Gfx::getCurrentFrameDelta()), Vector(0, 1, 0));
+        skyboxBuffer->rotateBuffer(sizeof(SkyboxData));
+        skyboxBuffer->updateContents(0, sizeof(SkyboxData), &skyboxData);
+        skyboxBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
+                                      Gfx::SE_ACCESS_UNIFORM_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+        skyboxDataSet = skyboxDataLayout->allocateDescriptorSet();
+        skyboxDataSet->updateBuffer(0, skyboxBuffer);
+        skyboxDataSet->writeChanges();
+        textureSet = textureLayout->allocateDescriptorSet();
+        textureSet->updateTexture(0, skybox.day);
+        textureSet->updateTexture(1, skybox.night);
+        textureSet->updateSampler(2, skyboxSampler);
+        textureSet->writeChanges();
+    }
 }
 
 void BasePass::render() {
@@ -138,13 +145,15 @@ void BasePass::render() {
     transparentCulling->writeChanges();
 
     query->beginQuery();
-    timestamps->write(Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT, "BASEPASS");
+    timestamps->begin();
+    timestamps->write(Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT, "BaseBegin");
     graphics->beginRenderPass(renderPass);
     Array<Gfx::ORenderCommand> commands;
     Gfx::ShaderPermutation permutation = graphics->getShaderCompiler()->getTemplate("BasePass");
     permutation.setDepthCulling(true); // always use the culling info
     permutation.setPositionOnly(false);
     Array<VertexData::TransparentDraw> transparentData;
+    // Base Rendering
     for (VertexData* vertexData : VertexData::getList()) {
         transparentData.addAll(vertexData->getTransparentData());
         vertexData->getInstanceDataSet()->updateBuffer(6, cullingBuffer);
@@ -238,14 +247,18 @@ void BasePass::render() {
             commands.add(std::move(command));
         }
     }
-
-    Gfx::ORenderCommand skyboxCommand = graphics->createRenderCommand("SkyboxRender");
-    skyboxCommand->setViewport(viewport);
-    skyboxCommand->bindPipeline(pipeline);
-    skyboxCommand->bindDescriptor({viewParamsSet, skyboxDataSet, textureSet});
-    skyboxCommand->draw(36, 1, 0, 0);
-    commands.add(std::move(skyboxCommand));
-
+    
+    commands.add(waterRenderer->render(viewParamsSet));
+    
+    // Skybox
+    {
+        Gfx::ORenderCommand skyboxCommand = graphics->createRenderCommand("SkyboxRender");
+        skyboxCommand->setViewport(viewport);
+        skyboxCommand->bindPipeline(pipeline);
+        skyboxCommand->bindDescriptor({viewParamsSet, skyboxDataSet, textureSet});
+        skyboxCommand->draw(36, 1, 0, 0);
+        commands.add(std::move(skyboxCommand));
+    }
     // Transparent rendering
     {
         permutation.setDepthCulling(false); // ignore visibility infos for transparency
@@ -360,7 +373,7 @@ void BasePass::render() {
     graphics->executeCommands(std::move(commands));
     graphics->endRenderPass();
     query->endQuery();
-    timestamps->write(Gfx::SE_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, "END");
+    timestamps->write(Gfx::SE_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, "BaseEnd");
     timestamps->end();
     gDebugVertices.clear();
 }
@@ -412,12 +425,13 @@ void BasePass::publishOutputs() {
     resources->registerRenderPassOutput("BASEPASS_COLOR", colorAttachment);
     resources->registerRenderPassOutput("BASEPASS_DEPTH", depthAttachment);
 
+    timestamps = graphics->createTimestampQuery(2, "BaseTS");
+    resources->registerTimestampQueryOutput("BASE_TS", timestamps);
     query = graphics->createPipelineStatisticsQuery("BasePassPipelineStatistics");
     resources->registerQueryOutput("BASEPASS_QUERY", query);
 }
 
 void BasePass::createRenderPass() {
-    timestamps = resources->requestTimestampQuery("TIMESTAMP");
     cullingBuffer = resources->requestBuffer("CULLINGBUFFER");
 
     Gfx::RenderTargetLayout layout = Gfx::RenderTargetLayout{
@@ -457,6 +471,8 @@ void BasePass::createRenderPass() {
     tLightIndexList = resources->requestBuffer("LIGHTCULLING_TLIGHTLIST");
     oLightGrid = resources->requestTexture("LIGHTCULLING_OLIGHTGRID");
     tLightGrid = resources->requestTexture("LIGHTCULLING_TLIGHTGRID");
+
+    waterRenderer->setViewport(viewport, renderPass);
 
     // Debug rendering
     {
@@ -527,7 +543,6 @@ void BasePass::createRenderPass() {
         };
         debugPipeline = graphics->createGraphicsPipeline(std::move(gfxInfo));
     }
-
     // Skybox
     {
         skyboxDataLayout = graphics->createDescriptorLayout("pSkyboxData");

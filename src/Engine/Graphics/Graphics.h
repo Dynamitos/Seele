@@ -62,6 +62,7 @@ class Graphics {
     virtual void waitDeviceIdle() = 0;
 
     virtual void executeCommands(Array<ORenderCommand> commands) = 0;
+    virtual void executeCommands(OComputeCommand commands) = 0;
     virtual void executeCommands(Array<OComputeCommand> commands) = 0;
 
     virtual OTexture2D createTexture2D(const TextureCreateInfo& createInfo) = 0;

@@ -48,7 +48,7 @@ void Seele::beginCompilation(const ShaderCompilationInfo& info, SlangCompileTarg
     option[3].value.intValue0 = SLANG_DEBUG_INFO_FORMAT_PDB;
     option[4].name = slang::CompilerOptionName::DumpIntermediates;
     option[4].value.kind = slang::CompilerOptionValueKind::Int;
-    option[4].value.intValue0 = 0;
+    option[4].value.intValue0 = info.dumpIntermediate;
 
     sessionDesc.compilerOptionEntries = option.data();
     sessionDesc.compilerOptionEntryCount = option.size();
@@ -124,6 +124,7 @@ void Seele::beginCompilation(const ShaderCompilationInfo& info, SlangCompileTarg
     layout->addMapping("pLightEnv", 3);
     layout->addMapping("pRayTracingParams", 5);
     layout->addMapping("pScene", 2);
+    layout->addMapping("pWaterMaterial", 1);
 }
 
 Pair<Slang::ComPtr<slang::IBlob>, std::string> Seele::generateShader(const ShaderCreateInfo& createInfo) {

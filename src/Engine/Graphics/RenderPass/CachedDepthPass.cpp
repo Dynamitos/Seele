@@ -47,13 +47,13 @@ void CachedDepthPass::beginFrame(const Component::Camera& cam) {
 void CachedDepthPass::render() {
     query->beginQuery();
     timestamps->begin();
-    timestamps->write(Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT, "CACHED");
+    timestamps->write(Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT, "CachedBegin");
     graphics->beginRenderPass(renderPass);
     Array<Gfx::ORenderCommand> commands;
 
     Gfx::ShaderPermutation permutation = graphics->getShaderCompiler()->getTemplate("CachedDepthPass");
     permutation.setPositionOnly(getGlobals().usePositionOnly);
-    permutation.setDepthCulling(getGlobals().useDepthCulling);
+    permutation.setDepthCulling(true);
     for (VertexData* vertexData : VertexData::getList()) {
         permutation.setVertexData(vertexData->getTypeName());
         vertexData->getInstanceDataSet()->updateBuffer(6, cullingBuffer);
@@ -127,6 +127,8 @@ void CachedDepthPass::render() {
 
     graphics->executeCommands(std::move(commands));
     graphics->endRenderPass();
+    timestamps->write(Gfx::SE_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, "CachedEnd");
+    timestamps->end();
     query->endQuery();
 }
 
@@ -161,8 +163,8 @@ void CachedDepthPass::publishOutputs() {
     query = graphics->createPipelineStatisticsQuery("CachedPipelineStatistics");
     resources->registerQueryOutput("CACHED_QUERY", query);
 
-    timestamps = graphics->createTimestampQuery(7, "Timestamps");
-    resources->registerTimestampQueryOutput("TIMESTAMP", timestamps);
+    timestamps = graphics->createTimestampQuery(2, "CachedTS");
+    resources->registerTimestampQueryOutput("CACHED_TS", timestamps);
 }
 
 void CachedDepthPass::createRenderPass() {
