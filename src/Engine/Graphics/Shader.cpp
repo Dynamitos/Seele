@@ -47,6 +47,7 @@ ShaderPermutation ShaderCompiler::getTemplate(std::string name) {
         permutation.setTaskFile(pass.taskFile);
     }
     permutation.setVisibilityPass(pass.useVisibility);
+    permutation.setDumpIntermediates(pass.dumpIntermediates);
     return permutation;
 }
 
@@ -116,6 +117,10 @@ void ShaderCompiler::createShaders(ShaderPermutation permutation, Gfx::OPipeline
     }
     if (permutation.visibilityPass) {
         createInfo.defines["VISIBILITY"] = "1";
+    }
+    if (permutation.dumpIntermediates)
+    {
+        createInfo.dumpIntermediate = true;
     }
     createInfo.typeParameter.add({Pair<const char*, const char*>("IVertexData", permutation.vertexDataName)});
     createInfo.modules.add(permutation.vertexDataName);

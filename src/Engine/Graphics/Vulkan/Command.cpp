@@ -194,6 +194,14 @@ void RenderCommand::begin(PRenderPass renderPass, PFramebuffer framebuffer, VkQu
         beginInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
     }
     VK_CHECK(vkBeginCommandBuffer(handle, &beginInfo));
+    VkDebugUtilsObjectNameInfoEXT nameInfo = {
+        .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
+        .pNext = nullptr,
+        .objectType = VK_OBJECT_TYPE_COMMAND_BUFFER,
+        .objectHandle = (uint64)handle,
+        .pObjectName = name.c_str(),
+    };
+    vkSetDebugUtilsObjectNameEXT(graphics->getDevice(), &nameInfo);
 }
 
 void RenderCommand::end() { VK_CHECK(vkEndCommandBuffer(handle)); }
@@ -374,6 +382,14 @@ void ComputeCommand::begin(VkQueryPipelineStatisticFlags pipelineFlags) {
         .pInheritanceInfo = &inheritanceInfo,
     };
     VK_CHECK(vkBeginCommandBuffer(handle, &beginInfo));
+    VkDebugUtilsObjectNameInfoEXT nameInfo = {
+        .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
+        .pNext = nullptr,
+        .objectType = VK_OBJECT_TYPE_COMMAND_BUFFER,
+        .objectHandle = (uint64)handle,
+        .pObjectName = name.c_str(),
+    };
+    vkSetDebugUtilsObjectNameEXT(graphics->getDevice(), &nameInfo);
 }
 
 void ComputeCommand::end() {
@@ -399,6 +415,7 @@ void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet, Array<uin
     assert(threadId == std::this_thread::get_id());
     auto descriptor = descriptorSet.cast<DescriptorSet>();
     assert(descriptor->writeDescriptors.size() == 0);
+    descriptor->bind();
     boundResources.add(descriptor.getHandle());
 
     for (const auto& binding : descriptor->boundResources) {

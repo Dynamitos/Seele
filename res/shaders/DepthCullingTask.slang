@@ -32,8 +32,8 @@ bool isBoxVisible(AABB bounding)
     {
         mipOffset += mipDimensions.x * mipDimensions.y;
         mipDimensions = uint2(mipDimensions.x + 1, mipDimensions.y + 1) / 2;
-        screenCornerMin /= 2;
-        screenCornerMax /= 2;
+        screenCornerMin = uint2(screenCornerMin.x + 1, screenCornerMin.y + 1) / 2;
+        screenCornerMax = uint2(screenCornerMax.x, screenCornerMax.y) / 2;
     }
 
     // now we sample 4 texels from the depth at the calculated mip level, this should give us the screen extent of the meshlet
@@ -80,7 +80,8 @@ void taskMain(
 		viewFrustum.sides[1] = computePlane(origin, corners[1], corners[3]);
 		viewFrustum.sides[2] = computePlane(origin, corners[0], corners[1]);
 		viewFrustum.sides[3] = computePlane(origin, corners[3], corners[2]);
-        meshVisible = isBoxVisible(mesh.bounding);
+        //meshVisible = isBoxVisible(mesh.bounding);
+        meshVisible = true;
     }
     GroupMemoryBarrierWithGroupSync();
     if(!meshVisible)

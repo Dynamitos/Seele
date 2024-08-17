@@ -258,13 +258,92 @@ WaterRenderer::WaterRenderer(Gfx::PGraphics graphics, PScene scene, Gfx::PDescri
     waterFragment = graphics->createFragmentShader({2});
 
     waterLayout->create();
+
+    displaySpectrums[0] = {
+        .scale = 0.01f,
+        .windSpeed = 2,
+        .windDirection = 22,
+        .fetch = 100000,
+        .spreadBlend = 0.642,
+        .swell = 1,
+        .peakEnhancement = 1,
+        .shortWavesFade = 0.25f,
+    };
+    displaySpectrums[1] = {
+        .scale = 0.07f,
+        .windSpeed = 2,
+        .windDirection = 59,
+        .fetch = 1000,
+        .spreadBlend = 0,
+        .swell = 1,
+        .peakEnhancement = 1,
+        .shortWavesFade = 0.01f,
+    };
+    displaySpectrums[2] = {
+        .scale = 0.25f,
+        .windSpeed = 20,
+        .windDirection = 97,
+        .fetch = 100000000,
+        .spreadBlend = 0.14f,
+        .swell = 1,
+        .peakEnhancement = 1,
+        .shortWavesFade = 0.5f,
+    };
+    displaySpectrums[3] = {
+        .scale = 0.25f,
+        .windSpeed = 20,
+        .windDirection = 67,
+        .fetch = 1000000,
+        .spreadBlend = 0.47f,
+        .swell = 1,
+        .peakEnhancement = 1,
+        .shortWavesFade = 0.5f,
+    };
+    displaySpectrums[4] = {
+        .scale = 0.15f,
+        .windSpeed = 5,
+        .windDirection = 105,
+        .fetch = 1000000,
+        .spreadBlend = 0.2f,
+        .swell = 1,
+        .peakEnhancement = 1,
+        .shortWavesFade = 0.5f,
+    };
+    displaySpectrums[5] = {
+        .scale = 0.1f,
+        .windSpeed = 1,
+        .windDirection = 19,
+        .fetch = 10000,
+        .spreadBlend = 0.298f,
+        .swell = 0.695f,
+        .peakEnhancement = 1,
+        .shortWavesFade = 0.5f,
+    };
+    displaySpectrums[6] = {
+        .scale = 1.0f,
+        .windSpeed = 1,
+        .windDirection = 209,
+        .fetch = 200000,
+        .spreadBlend = 0.56f,
+        .swell = 1,
+        .peakEnhancement = 1,
+        .shortWavesFade = 0.0001f,
+    };
+    displaySpectrums[7] = {
+        .scale = 0.25f,
+        .windSpeed = 1,
+        .windDirection = 0,
+        .fetch = 1000,
+        .spreadBlend = 0,
+        .swell = 0,
+        .peakEnhancement = 1,
+        .shortWavesFade = 0.0001f,
+    };
 }
 
 WaterRenderer::~WaterRenderer() {}
 
 void WaterRenderer::beginFrame() {
-    std::cout << "Test" << std::endl;
-    updateFFTDescriptor();
     struct WaterPayload {
         Vector2 offset;
         float extent;
@@ -273,8 +352,8 @@ void WaterRenderer::beginFrame() {
     Array<WaterPayload> payloads;
     scene->view<Component::WaterTile>([&](Component::WaterTile& tile) {
         payloads.add(WaterPayload{
-            .offset = Vector2(tile.location) * Component::WaterTile::DIMENSIONS,
-            .extent = Component::WaterTile::DIMENSIONS,
+            .offset = Vector2(tile.location),
+            .extent = 1,
             .height = tile.height,
         });
     });
@@ -298,7 +377,7 @@ void WaterRenderer::beginFrame() {
 
     boyancyData->changeLayout(Gfx::SE_IMAGE_LAYOUT_GENERAL, Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_SHADER_STAGE_MESH_BIT_EXT,
                               Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
-
+    updateFFTDescriptor();
     Gfx::OComputeCommand updateCommand = graphics->createComputeCommand("WaterUpdate");
     updateCommand->bindPipeline(updateSpectrumForFFT);
     updateCommand->bindDescriptor(computeSet);
@@ -334,6 +413,8 @@ void WaterRenderer::beginFrame() {
     assembleCommand->dispatch(threadGroupsX, threadGroupsY, 1);
     graphics->executeCommands(std::move(assembleCommand));
 
+    graphics->waitDeviceIdle();
+
     // transition for mipmap gen
     displacementTextures->changeLayout(
         Gfx::SE_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
@@ -357,7 +438,6 @@ void WaterRenderer::beginFrame() {
                               Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT, Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_SHADER_STAGE_MESH_BIT_EXT);
 
     updateMaterialDescriptor();
-    graphics->waitDeviceIdle();
 }
 
 Gfx::ORenderCommand WaterRenderer::render(Gfx::PDescriptorSet viewParamsSet) {
@@ -443,12 +523,13 @@ void WaterRenderer::updateFFTDescriptor() {
     spectrumBuffer->updateContents(0, sizeof(SpectrumParameters) * spectrums.size(), spectrums.data());
     spectrumBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, Gfx::SE_ACCESS_SHADER_READ_BIT,
                                     Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
+
     params.deltaTime = Gfx::getCurrentFrameDelta();
     params.frameTime = Gfx::getCurrentFrameTime();
     paramsBuffer->updateContents(0, sizeof(ComputeParams), &params);
     paramsBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, Gfx::SE_ACCESS_UNIFORM_READ_BIT,
                                   Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
-    computeLayout->reset();
+
     computeSet = computeLayout->allocateDescriptorSet();
     computeSet->updateBuffer(0, paramsBuffer);
     computeSet->updateTexture(1, 0, Gfx::PTexture2D(spectrumTextures));
@@ -462,7 +543,10 @@ void WaterRenderer::updateFFTDescriptor() {
 }
 
 void WaterRenderer::updateMaterialDescriptor() {
-    materialLayout->reset();
+    materialUniforms->updateContents(0, sizeof(MaterialParams), &materialParams);
+    materialUniforms->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
+                                      Gfx::SE_ACCESS_UNIFORM_READ_BIT,
+                                      Gfx::SE_PIPELINE_STAGE_MESH_SHADER_BIT_EXT | Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
     materialSet = materialLayout->allocateDescriptorSet();
     materialSet->updateBuffer(0, materialUniforms);
     materialSet->updateTexture(1, Gfx::PTexture2D(displacementTextures));

@@ -23,6 +23,11 @@ struct MaterialParams
     float foamSubtract2;
     float foamSubtract3;
     
+    float tile1;
+    float tile2;
+    float tile3;
+    float tile4;
+
     float normalStrength;
     float foamDepthAttenuation;
     float normalDepthAttenuation;
@@ -42,7 +47,13 @@ struct MaterialParams
     float scatterStrength;
     float scatterShadowStrength;
 
+    uint contributeDisplacement1;
+    uint contributeDisplacement2;
+    uint contributeDisplacement3;
+    uint contributeDisplacement4;
+    
     float3 foamColor;
+
     Texture2DArray displacementTextures;
     Texture2DArray<float2> slopeTextures;
     TextureCube environmentMap;

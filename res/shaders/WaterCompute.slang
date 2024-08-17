@@ -141,8 +141,8 @@ void CS_InitializeSpectrum(uint3 id : SV_DISPATCHTHREADID) {
 
         seed += i + uint(hash(seed) * 10);
         float4 uniformRandSamples = float4(hash(seed), hash(seed * 2), hash(seed * 3), hash(seed * 4));
-        float2 gauss1 = float2(1, 1);UniformToGaussian(uniformRandSamples.x, uniformRandSamples.y);
-        float2 gauss2 = float2(1, 1);UniformToGaussian(uniformRandSamples.z, uniformRandSamples.w);
+        float2 gauss1 = UniformToGaussian(uniformRandSamples.x, uniformRandSamples.y);
+        float2 gauss2 = UniformToGaussian(uniformRandSamples.z, uniformRandSamples.w);
 
         if (pParams.lowCutoff <= kLength && kLength <= pParams.highCutoff) {
             float kAngle = atan2(K.y, K.x);

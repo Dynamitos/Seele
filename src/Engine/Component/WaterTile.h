@@ -9,7 +9,7 @@ struct WaterTile
 {
     IVector2 location;
     float height;
-    constexpr static float DIMENSIONS = 100;
+    constexpr static float DIMENSIONS = 10;
 };
 }
 }
