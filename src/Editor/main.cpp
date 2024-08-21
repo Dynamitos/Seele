@@ -11,9 +11,9 @@
 #include "Graphics/Vulkan/Graphics.h"
 #endif
 #include "Graphics/StaticMeshVertexData.h"
+#include "Graphics/Vulkan/Buffer.h"
 #include "Graphics/Vulkan/Graphics.h"
 #include "Window/PlayView.h"
-#include "Graphics/Vulkan/Buffer.h"
 #include "Window/WindowManager.h"
 #include <fmt/core.h>
 #include <random>
@@ -64,14 +64,17 @@ int main() {
             .filePath = sourcePath / "import/textures/skyboxsun5deg_tn.jpg",
             .type = TextureImportType::TEXTURE_CUBEMAP,
         });
-        //ssetImporter::importMesh(MeshImportArgs{
-        //   .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.glb",
-        //   .importPath = "Whitechapel",
-        //);
+        AssetImporter::importMesh(MeshImportArgs{
+            .filePath = sourcePath / "import/models/sheepsbody.fbx",
+        });
         // AssetImporter::importMesh(MeshImportArgs{
-        //     .filePath = sourcePath / "import/models/city-suburbs/source/city-suburbs.obj",
-        //     .importPath = "suburbs",
-        // });
+        //    .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.glb",
+        //    .importPath = "Whitechapel",
+        //);
+        //  AssetImporter::importMesh(MeshImportArgs{
+        //      .filePath = sourcePath / "import/models/city-suburbs/source/city-suburbs.obj",
+        //      .importPath = "suburbs",
+        //  });
         vd->commitMeshes();
         WindowCreateInfo mainWindowInfo = {
             .width = 1920,

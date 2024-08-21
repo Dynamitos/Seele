@@ -30,20 +30,20 @@ float4 main(WaterVertex vert) : SV_TARGET {
     float VdotH = clamp(dot(viewDir, halfwayDir), 0, 1);
     
     
-    float4 displacementFoam1 = pWaterMaterial.displacementTextures.Sample(pWaterMaterial.sampler, float3(vert.texCoord * pWaterMaterial.tile1, 0));
+    float4 displacementFoam1 = pWaterMaterial.displacementTextures.Sample(pWaterMaterial.sampler, float3(vert.position_WS.xz * pWaterMaterial.tile1, 0));
     displacementFoam1.a += pWaterMaterial.foamSubtract0;
-    float4 displacementFoam2 = pWaterMaterial.displacementTextures.Sample(pWaterMaterial.sampler, float3(vert.texCoord * pWaterMaterial.tile2, 0));
+    float4 displacementFoam2 = pWaterMaterial.displacementTextures.Sample(pWaterMaterial.sampler, float3(vert.position_WS.xz * pWaterMaterial.tile2, 0));
     displacementFoam2.a += pWaterMaterial.foamSubtract1;
-    float4 displacementFoam3 = pWaterMaterial.displacementTextures.Sample(pWaterMaterial.sampler, float3(vert.texCoord * pWaterMaterial.tile3, 0));
+    float4 displacementFoam3 = pWaterMaterial.displacementTextures.Sample(pWaterMaterial.sampler, float3(vert.position_WS.xz * pWaterMaterial.tile3, 0));
     displacementFoam3.a += pWaterMaterial.foamSubtract2;
-    float4 displacementFoam4 = pWaterMaterial.displacementTextures.Sample(pWaterMaterial.sampler, float3(vert.texCoord * pWaterMaterial.tile4, 0));
+    float4 displacementFoam4 = pWaterMaterial.displacementTextures.Sample(pWaterMaterial.sampler, float3(vert.position_WS.xz * pWaterMaterial.tile4, 0));
     displacementFoam4.a += pWaterMaterial.foamSubtract3;
     float4 displacementFoam = displacementFoam1 + displacementFoam2 + displacementFoam3 + displacementFoam4;
 
-    float2 slopes1 = pWaterMaterial.slopeTextures.Sample(pWaterMaterial.sampler, float3(vert.texCoord * pWaterMaterial.tile1, 0));
-    float2 slopes2 = pWaterMaterial.slopeTextures.Sample(pWaterMaterial.sampler, float3(vert.texCoord * pWaterMaterial.tile2, 1));
-    float2 slopes3 = pWaterMaterial.slopeTextures.Sample(pWaterMaterial.sampler, float3(vert.texCoord * pWaterMaterial.tile3, 2));
-    float2 slopes4 = pWaterMaterial.slopeTextures.Sample(pWaterMaterial.sampler, float3(vert.texCoord * pWaterMaterial.tile4, 3));
+    float2 slopes1 = pWaterMaterial.slopeTextures.Sample(pWaterMaterial.sampler, float3(vert.position_WS.xz * pWaterMaterial.tile1, 0));
+    float2 slopes2 = pWaterMaterial.slopeTextures.Sample(pWaterMaterial.sampler, float3(vert.position_WS.xz * pWaterMaterial.tile2, 1));
+    float2 slopes3 = pWaterMaterial.slopeTextures.Sample(pWaterMaterial.sampler, float3(vert.position_WS.xz * pWaterMaterial.tile3, 2));
+    float2 slopes4 = pWaterMaterial.slopeTextures.Sample(pWaterMaterial.sampler, float3(vert.position_WS.xz * pWaterMaterial.tile4, 3));
     float2 slopes = slopes1 + slopes2 + slopes3 + slopes4;
     
     slopes *= pWaterMaterial.normalStrength;
@@ -51,7 +51,7 @@ float4 main(WaterVertex vert) : SV_TARGET {
 
     float3 macroNormal = float3(0, 1, 0);
     float3 mesoNormal = normalize(float3(-slopes.x, 1.0f, -slopes.y));
-    mesoNormal = normalize(lerp(float3(0, 1, 0), mesoNormal, pow(saturate(depth), pWaterMaterial.normalDepthAttenuation)));
+    mesoNormal = normalize(lerp(macroNormal, mesoNormal, pow(saturate(depth), pWaterMaterial.normalDepthAttenuation)));
     mesoNormal = normalize(mesoNormal);
 
     float NdotL = clamp(dot(mesoNormal, lightDir), 0, 1);

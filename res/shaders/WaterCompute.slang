@@ -157,7 +157,7 @@ void CS_InitializeSpectrum(uint3 id : SV_DISPATCHTHREADID) {
             
             pParams.initialSpectrumTextures[uint3(id.xy, i)] = float4(float2(gauss2.x, gauss1.y) * sqrt(2 * spectrum * abs(dOmegadk) / kLength * deltaK * deltaK), 0.0f, 0.0f);
         } else {
-            pParams.initialSpectrumTextures[uint3(id.xy, i)] = 0.0f;
+            pParams.initialSpectrumTextures[uint3(id.xy, i)] = 1.0f;
         }
     }
 }
@@ -221,20 +221,6 @@ void CS_UpdateSpectrumForFFT(uint3 id : SV_DISPATCHTHREADID) {
     }
 }
 
-float2 ComplexExp(float2 a) {
-    return float2(cos(a.y), sin(a.y) * exp(a.x));
-}
-
-
-float4 ComputeTwiddleFactorAndInputIndices(uint2 id) {
-    uint b = pParams.N >> (id.x + 1);
-    float2 mult = 2 * PI * float2(0.0f, 1.0f) / pParams.N;
-    uint i = (2 * b * (id.y / b) + id.y % b) % pParams.N;
-    float2 twiddle = ComplexExp(-mult * ((id.y / b) * b));
-
-    return float4(twiddle, i, i + b);
-}
-
 #define SIZE 1024
 #define LOG_SIZE 10
 
@@ -264,7 +250,7 @@ float4 FFT(uint threadIndex, float4 input) {
         ButterflyValues(step, threadIndex, inputsIndices, twiddle);
 
         float4 v = fftGroupBuffer[uint(flag)][inputsIndices.y];
-        fftGroupBuffer[uint(flag)][threadIndex] = fftGroupBuffer[uint(flag)][inputsIndices.x] + float4(ComplexMult(twiddle, v.xy), ComplexMult(twiddle, v.zw));
+        fftGroupBuffer[uint(!flag)][threadIndex] = fftGroupBuffer[uint(flag)][inputsIndices.x] + float4(ComplexMult(twiddle, v.xy), ComplexMult(twiddle, v.zw));
 
         flag = !flag;
         GroupMemoryBarrierWithGroupSync();

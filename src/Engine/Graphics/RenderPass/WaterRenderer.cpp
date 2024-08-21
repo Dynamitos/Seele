@@ -344,23 +344,23 @@ WaterRenderer::WaterRenderer(Gfx::PGraphics graphics, PScene scene, Gfx::PDescri
 WaterRenderer::~WaterRenderer() {}
 
 void WaterRenderer::beginFrame() {
-    struct WaterPayload {
-        Vector2 offset;
+    struct WaterTile {
+        IVector2 offset;
         float extent;
         float height;
     };
-    Array<WaterPayload> payloads;
+    Array<WaterTile> payloads;
     scene->view<Component::WaterTile>([&](Component::WaterTile& tile) {
-        payloads.add(WaterPayload{
+        payloads.add(WaterTile{
             .offset = Vector2(tile.location),
-            .extent = 1,
+            .extent = Component::WaterTile::DIMENSIONS,
             .height = tile.height,
         });
     });
     waterTiles = graphics->createShaderBuffer(ShaderBufferCreateInfo{
         .sourceData =
             {
-                .size = payloads.size() * sizeof(WaterPayload),
+                .size = payloads.size() * sizeof(WaterTile),
                 .data = (uint8*)payloads.data(),
             },
         .numElements = payloads.size(),
@@ -413,8 +413,6 @@ void WaterRenderer::beginFrame() {
     assembleCommand->dispatch(threadGroupsX, threadGroupsY, 1);
     graphics->executeCommands(std::move(assembleCommand));
 
-    graphics->waitDeviceIdle();
-
     // transition for mipmap gen
     displacementTextures->changeLayout(
         Gfx::SE_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
@@ -464,6 +462,7 @@ void WaterRenderer::setViewport(Gfx::PViewport _viewport, Gfx::PRenderPass rende
             },
         .rasterizationState =
             {
+                .polygonMode = Gfx::SE_POLYGON_MODE_LINE,
                 .cullMode = Gfx::SE_CULL_MODE_BACK_BIT,
             },
         .colorBlend =

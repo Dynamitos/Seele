@@ -29,7 +29,7 @@ uint3(53, 42, 54), uint3(42, 43, 54), uint3(54, 43, 55), uint3(43, 44, 55), uint
 [shader("mesh")]
 void meshMain(
     in uint threadID: SV_GroupThreadID,
-    in uint groupID: SV_GroupID,
+    in uint3 groupID: SV_GroupID,
     in payload WaterPayload params,
     out vertices WaterVertex vertices[TILE_VERTS],
     out indices uint3 indices[TILE_PRIMS],
@@ -44,8 +44,8 @@ void meshMain(
 	for(uint i = threadID; i < TILE_VERTS; i += MESH_GROUP_SIZE)
 	{
         float2 base = VERT[i];
-        float2 worldTransformed = params.offset + (params.extent * base);
-        float3 worldPos = float3(worldTransformed.x, params.height, worldTransformed.y);
+        float3 objectPos = float3(base.x, 0, base.y);
+        float3 worldPos = params.offset + objectPos * params.extent + float3(groupID.x * params.extent, 0, groupID.y * params.extent);
         float3 displacement1 = pWaterMaterial.displacementTextures.Sample(pWaterMaterial.sampler, float3(worldPos.xz * pWaterMaterial.tile1, 0)).xyz * pWaterMaterial.contributeDisplacement1;
         float3 displacement2 = pWaterMaterial.displacementTextures.Sample(pWaterMaterial.sampler, float3(worldPos.xz * pWaterMaterial.tile2, 1)).xyz * pWaterMaterial.contributeDisplacement2;
         float3 displacement3 = pWaterMaterial.displacementTextures.Sample(pWaterMaterial.sampler, float3(worldPos.xz * pWaterMaterial.tile3, 2)).xyz * pWaterMaterial.contributeDisplacement3;
@@ -53,7 +53,11 @@ void meshMain(
         float3 displacement = displacement1 + displacement2 + displacement3 + displacement4;
 
         float4 clipPos = mul(vp, float4(worldPos, 1)); 
-        float depth = 1 - clamp(1 / (clipPos.z / clipPos.w), 0, 1);
+        float ndcDepth = clipPos.z / clipPos.w;
+
+        float depth = 1 - (-ndcDepth + 1.0f) / 2.0f;
+
+        displacement = lerp(0.0f, displacement, pow(saturate(depth), pWaterMaterial.displacementDepthAttenuation));
 
         worldPos += displacement;
 
@@ -61,7 +65,7 @@ void meshMain(
         v.position_WS = worldPos;
         v.position_CS = mul(vp, float4(worldPos, 1));
         v.texCoord = worldPos.xz;
-        v.depth = clipPos.z / clipPos.w;
+        v.depth = depth;
         vertices[i] = v;
 	}
 }

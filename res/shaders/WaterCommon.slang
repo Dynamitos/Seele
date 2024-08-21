@@ -1,9 +1,15 @@
 struct WaterPayload
 {
-    float2 offset;
+    float3 offset;
+    float extent;
+};
+
+struct WaterTile
+{
+    int2 location;
     float extent;
     float height;
-};
+}
 
 struct WaterVertex
 {
@@ -58,7 +64,7 @@ struct MaterialParams
     Texture2DArray<float2> slopeTextures;
     TextureCube environmentMap;
     SamplerState sampler;
-    StructuredBuffer<WaterPayload> tiles;
+    StructuredBuffer<WaterTile> tiles;
 };
 layout(set = 1)
 ParameterBlock<MaterialParams> pWaterMaterial;
