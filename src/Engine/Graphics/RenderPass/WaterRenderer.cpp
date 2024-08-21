@@ -251,6 +251,7 @@ WaterRenderer::WaterRenderer(Gfx::PGraphics graphics, PScene scene, Gfx::PDescri
                 {"main", "WaterPass"},
             },
         .rootSignature = waterLayout,
+        .dumpIntermediate = true,
     };
     graphics->beginShaderCompilation(createInfo);
     waterTask = graphics->createTaskShader({0});
@@ -462,7 +463,6 @@ void WaterRenderer::setViewport(Gfx::PViewport _viewport, Gfx::PRenderPass rende
             },
         .rasterizationState =
             {
-                .polygonMode = Gfx::SE_POLYGON_MODE_LINE,
                 .cullMode = Gfx::SE_CULL_MODE_BACK_BIT,
             },
         .colorBlend =

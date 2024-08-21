@@ -98,7 +98,7 @@ void BasePass::beginFrame(const Component::Camera& cam) {
     opaqueCulling = lightCullingLayout->allocateDescriptorSet();
     transparentCulling = lightCullingLayout->allocateDescriptorSet();
 
-    //waterRenderer->beginFrame();
+    waterRenderer->beginFrame();
 
     // Debug vertices
     {
@@ -248,7 +248,7 @@ void BasePass::render() {
         }
     }
     
-    //commands.add(waterRenderer->render(viewParamsSet));
+    commands.add(waterRenderer->render(viewParamsSet));
     
     // Skybox
     {

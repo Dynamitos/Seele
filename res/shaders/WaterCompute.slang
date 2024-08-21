@@ -157,7 +157,7 @@ void CS_InitializeSpectrum(uint3 id : SV_DISPATCHTHREADID) {
             
             pParams.initialSpectrumTextures[uint3(id.xy, i)] = float4(float2(gauss2.x, gauss1.y) * sqrt(2 * spectrum * abs(dOmegadk) / kLength * deltaK * deltaK), 0.0f, 0.0f);
         } else {
-            pParams.initialSpectrumTextures[uint3(id.xy, i)] = 1.0f;
+            pParams.initialSpectrumTextures[uint3(id.xy, i)] = 0.0f;
         }
     }
 }

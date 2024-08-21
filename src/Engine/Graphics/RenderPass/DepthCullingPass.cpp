@@ -47,7 +47,6 @@ DepthCullingPass::DepthCullingPass(Gfx::PGraphics graphics, PScene scene) : Rend
                                                                            .hasTaskShader = true,
                                                                            .useMaterial = false,
                                                                            .useVisibility = true,
-                                                                           .dumpIntermediates = true,
                                                                        });
     } else {
         graphics->getShaderCompiler()->registerRenderPass("DepthPass", Gfx::PassConfig{

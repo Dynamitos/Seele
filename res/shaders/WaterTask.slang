@@ -17,7 +17,7 @@ void taskMain(
     bounding.maxCorner = float3(tile.location.x + 1, tile.height, tile.location.y + 1) * tile.extent;
     float3 median = (bounding.minCorner + bounding.maxCorner) / 2;
     float distance = distance(median, pViewParams.cameraPos_WS.xyz);
-    uint numMeshes = max(10 - uint(distance / tile.extent), 1);
+    uint numMeshes = max(4 - uint(distance / tile.extent), 1);
     WaterPayload payload;
     payload.offset = bounding.minCorner;
     payload.extent = tile.extent / numMeshes;

@@ -11,7 +11,7 @@
 
 using namespace Seele;
 
-constexpr static uint64 NUM_DEFAULT_ELEMENTS = 17962284;
+constexpr static uint64 NUM_DEFAULT_ELEMENTS = 24;//17962284;
 Map<VertexData::MeshMapping, VertexData::CullingMapping> VertexData::instanceIdMap;
 uint64 VertexData::instanceCount = 0;
 uint64 VertexData::meshletCount = 0;

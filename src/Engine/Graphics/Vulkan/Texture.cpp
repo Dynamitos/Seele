@@ -162,7 +162,7 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType, const
             {
                 .aspectMask = aspect,
                 .levelCount = mipLevels,
-                .layerCount = layerCount,
+                .layerCount = layerCount * arrayCount,
             },
     };
 
@@ -194,7 +194,7 @@ void TextureHandle::pipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlag
                 .baseMipLevel = 0,
                 .levelCount = mipLevels,
                 .baseArrayLayer = 0,
-                .layerCount = 1,
+                .layerCount = layerCount * arrayCount,
             },
     };
     PCommand command = graphics->getQueueCommands(owner)->getCommands();
