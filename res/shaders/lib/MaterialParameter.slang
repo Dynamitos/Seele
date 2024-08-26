@@ -27,16 +27,23 @@ struct FragmentParameter
 	float3 biTangent_WS : TANGENT1;
 	float3 position_WS : POSITION2;
 	float3 vertexColor : COLOR0;
-	float2 texCoords[MAX_TEXCOORDS] : TEXCOORD0;
+	float4 texCoords0 : TEXCOORD0;
+	float4 texCoords1 : TEXCOORD1;
+	float4 texCoords2 : TEXCOORD2;
+	float4 texCoords3 : TEXCOORD3;
 	MaterialParameter getMaterialParameter()
 	{
 		MaterialParameter result;
 		result.position_WS = position_WS;
 		result.vertexColor = vertexColor;
-		for(uint i = 0; i < MAX_TEXCOORDS; ++i)
-		{
-			result.texCoords[i] = texCoords[i];
-		}
+        result.texCoords[0] = texCoords0.xy;
+        result.texCoords[1] = texCoords0.zw;
+        result.texCoords[2] = texCoords1.xy;
+        result.texCoords[3] = texCoords1.zw;
+        result.texCoords[4] = texCoords2.xy;
+        result.texCoords[5] = texCoords2.zw;
+        result.texCoords[6] = texCoords3.xy;
+        result.texCoords[7] = texCoords3.zw;
 		return result;
 	}
 	LightingParameter getLightingParameter()
@@ -66,10 +73,10 @@ struct FragmentParameter
 	    result.biTangent_WS = f0.biTangent_WS * barycentricCoords.x + f1.biTangent_WS * barycentricCoords.y + f2.biTangent_WS * barycentricCoords.z;
 	    result.position_WS = f0.position_WS * barycentricCoords.x + f1.position_WS * barycentricCoords.y + f2.position_WS * barycentricCoords.z;
 	    result.vertexColor = f0.vertexColor * barycentricCoords.x + f1.vertexColor * barycentricCoords.y + f2.vertexColor * barycentricCoords.z;
-		for(uint i = 0; i < MAX_TEXCOORDS; ++i)
-        {
-            result.texCoords[i] = f0.texCoords[i] * barycentricCoords.x + f1.texCoords[i] * barycentricCoords.y + f2.texCoords[i] * barycentricCoords.z;
-        }
+	    //for(uint i = 0; i < MAX_TEXCOORDS; ++i)
+        //{
+        //    result.texCoords[i] = f0.texCoords[i] * barycentricCoords.x + f1.texCoords[i] * barycentricCoords.y + f2.texCoords[i] * barycentricCoords.z;
+        //}
 #endif
         return result;
     }
@@ -112,10 +119,10 @@ struct VertexAttributes
 		result.biTangent_WS = B;
 		result.position_WS = worldPos.xyz;
 		result.vertexColor = vertexColor;
-		for(uint i = 0; i < MAX_TEXCOORDS; ++i)
-		{
-			result.texCoords[i] = texCoords[i];
-		}
+        result.texCoords0 = float4(texCoords[0], texCoords[1]);
+        result.texCoords1 = float4(texCoords[2], texCoords[3]);
+        result.texCoords2 = float4(texCoords[4], texCoords[5]);
+        result.texCoords3 = float4(texCoords[6], texCoords[7]);
 #endif
 		return result;
 	}

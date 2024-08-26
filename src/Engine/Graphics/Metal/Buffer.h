@@ -2,6 +2,7 @@
 #include "Graphics/Buffer.h"
 #include "Graphics/Enums.h"
 #include "Graphics/Initializer.h"
+#include "Metal/MTLResource.hpp"
 #include "Metal/MTLTypes.hpp"
 #include "MinimalEngine.h"
 #include "Resources.h"
@@ -11,31 +12,47 @@ namespace Metal {
 DECLARE_REF(Graphics)
 class BufferAllocation : public CommandBoundResource {
   public:
-    BufferAllocation(PGraphics graphics);
+    BufferAllocation(PGraphics graphics, const std::string& name, uint64 size, MTL::ResourceOptions options = MTL::ResourceOptionCPUCacheModeDefault);
     virtual ~BufferAllocation();
+    void pipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage, Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage);
+    void transferOwnership(Gfx::QueueType newOwner);
+    void updateContents(uint64 regionOffset, uint64 regionSize, void* ptr);
+    void readContents(uint64 regionOffset, uint64 regionSize, void* ptr);
+    void* map();
+    void unmap();
     MTL::Buffer* buffer = nullptr;
     uint64 size = 0;
 };
 DECLARE_REF(BufferAllocation)
 class Buffer {
   public:
-    Buffer(PGraphics graphics, uint64 size, void* data, bool dynamic, const std::string& name);
+    Buffer(PGraphics graphics, uint64 size, Gfx::SeBufferUsageFlags usage, Gfx::QueueType queueType, bool dynamic, std::string name,
+               bool createCleared = false, uint32 clearValue = 0);
     virtual ~Buffer();
     MTL::Buffer* getHandle() const { return buffers[currentBuffer]->buffer; }
     PBufferAllocation getAlloc() const { return buffers[currentBuffer]; }
     uint64 getSize() const { return buffers[currentBuffer]->size; }
-    void* map(bool writeOnly = true);
-    void* mapRegion(uint64 regionOffset, uint64 regionSize, bool writeOnly);
-    void unmap();
+    void updateContents(uint64 regionOffset, uint64 regionSize, void* ptr);
+    void readContents(uint64 regionOffset, uint64 regionSize, void* ptr);
+
 
   protected:
     PGraphics graphics;
-    uint32 currentBuffer = 0;
+    uint32 currentBuffer;
+    Gfx::QueueType initialOwner;
     Array<OBufferAllocation> buffers;
+    Gfx::SeBufferUsageFlags usage;
     bool dynamic;
+    bool createCleared;
     std::string name;
-    void rotateBuffer(uint64 size);
-    void createBuffer(uint64 size, void* data);
+    uint32 clearValue;
+    void rotateBuffer(uint64 size, bool preserveContents = false);
+    void createBuffer(uint64 size, uint32 destIndex);
+    void copyBuffer(uint64 src, uint64 dest);
+
+    void transferOwnership(Gfx::QueueType newOwner);
+    void pipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage, Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage);
+
 };
 DEFINE_REF(Buffer)
 
@@ -73,7 +90,8 @@ class UniformBuffer : public Gfx::UniformBuffer, public Buffer {
     UniformBuffer(PGraphics graphics, const UniformBufferCreateInfo& createInfo);
     virtual ~UniformBuffer();
 
-    virtual bool updateContents(const DataSource& sourceData) override;
+    virtual void rotateBuffer(uint64 size) override;
+    virtual void updateContents(const DataSource& sourceData) override;
 
   protected:
     // Inherited via QueueOwnedResource
@@ -86,10 +104,10 @@ class ShaderBuffer : public Gfx::ShaderBuffer, public Buffer {
   public:
     ShaderBuffer(PGraphics graphics, const ShaderBufferCreateInfo& createInfo);
     virtual ~ShaderBuffer();
-    virtual void rotateBuffer(uint64 size) override;
+    virtual void readContents(Array<uint8>& data) override;
+    virtual void rotateBuffer(uint64 size, bool preserveContents = false) override;
     virtual void updateContents(const ShaderBufferCreateInfo& sourceData) override;
-    virtual void* mapRegion(uint64 offset, uint64 size, bool writeOnly) override;
-    virtual void unmap() override;
+    virtual void clear() override;
 
   protected:
     // Inherited via QueueOwnedResource

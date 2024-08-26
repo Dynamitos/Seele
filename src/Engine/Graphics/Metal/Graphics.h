@@ -18,7 +18,7 @@ class Graphics : public Gfx::Graphics {
     virtual Gfx::OViewport createViewport(Gfx::PWindow owner, const ViewportCreateInfo& createInfo) override;
 
     virtual Gfx::ORenderPass createRenderPass(Gfx::RenderTargetLayout layout, Array<Gfx::SubPassDependency> dependencies,
-                                              Gfx::PViewport renderArea) override;
+                                              Gfx::PViewport renderArea, std::string name = "") override;
     virtual void beginRenderPass(Gfx::PRenderPass renderPass) override;
     virtual void endRenderPass() override;
     virtual void waitDeviceIdle() override;
@@ -37,6 +37,7 @@ class Graphics : public Gfx::Graphics {
     virtual Gfx::ORenderCommand createRenderCommand(const std::string& name = "") override;
     virtual Gfx::OComputeCommand createComputeCommand(const std::string& name = "") override;
 
+    virtual void beginShaderCompilation(const ShaderCompilationInfo& compileInfo) override;
     virtual Gfx::OVertexShader createVertexShader(const ShaderCreateInfo& createInfo) override;
     virtual Gfx::OFragmentShader createFragmentShader(const ShaderCreateInfo& createInfo) override;
     virtual Gfx::OComputeShader createComputeShader(const ShaderCreateInfo& createInfo) override;
@@ -45,6 +46,7 @@ class Graphics : public Gfx::Graphics {
     virtual Gfx::PGraphicsPipeline createGraphicsPipeline(Gfx::LegacyPipelineCreateInfo createInfo) override;
     virtual Gfx::PGraphicsPipeline createGraphicsPipeline(Gfx::MeshPipelineCreateInfo createInfo) override;
     virtual Gfx::PComputePipeline createComputePipeline(Gfx::ComputePipelineCreateInfo createInfo) override;
+    virtual Gfx::PRayTracingPipeline createRayTracingPipeline(Gfx::RayTracingPipelineCreateInfo createInfo) override;
     virtual Gfx::OSampler createSampler(const SamplerCreateInfo& createInfo) override;
 
     virtual Gfx::ODescriptorLayout createDescriptorLayout(const std::string& name = "") override;
@@ -52,7 +54,24 @@ class Graphics : public Gfx::Graphics {
 
     virtual Gfx::OVertexInput createVertexInput(VertexInputStateCreateInfo createInfo) override;
 
+    virtual Gfx::OOcclusionQuery createOcclusionQuery(const std::string& name = "") override;
+    virtual Gfx::OPipelineStatisticsQuery createPipelineStatisticsQuery(const std::string& name = "") override;
+    virtual Gfx::OTimestampQuery createTimestampQuery(uint64 numTimestamps, const std::string& name = "") override;
+
     virtual void resolveTexture(Gfx::PTexture source, Gfx::PTexture destination) override;
+    virtual void copyTexture(Gfx::PTexture src, Gfx::PTexture dst) override;
+
+    // Ray Tracing
+    virtual Gfx::OBottomLevelAS createBottomLevelAccelerationStructure(const Gfx::BottomLevelASCreateInfo& createInfo) override;
+    virtual Gfx::OTopLevelAS createTopLevelAccelerationStructure(const Gfx::TopLevelASCreateInfo& createInfo) override;
+    virtual void buildBottomLevelAccelerationStructures(Array<Gfx::PBottomLevelAS> data) override;
+
+    virtual Gfx::ORayGenShader createRayGenShader(const ShaderCreateInfo& createInfo) override;
+    virtual Gfx::OAnyHitShader createAnyHitShader(const ShaderCreateInfo& createInfo) override;
+    virtual Gfx::OClosestHitShader createClosestHitShader(const ShaderCreateInfo& createInfo) override;
+    virtual Gfx::OMissShader createMissShader(const ShaderCreateInfo& createInfo) override;
+    virtual Gfx::OIntersectionShader createIntersectionShader(const ShaderCreateInfo& createInfo) override;
+    virtual Gfx::OCallableShader createCallableShader(const ShaderCreateInfo& createInfo) override;
 
     MTL::Device* getDevice() const { return device; }
     PCommandQueue getQueue() const { return queue; }

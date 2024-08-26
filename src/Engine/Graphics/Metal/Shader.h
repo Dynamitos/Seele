@@ -40,10 +40,24 @@ using ComputeShader = ShaderBase<Gfx::ComputeShader, Gfx::SE_SHADER_STAGE_COMPUT
 using TaskShader = ShaderBase<Gfx::TaskShader, Gfx::SE_SHADER_STAGE_TASK_BIT_EXT>;
 using MeshShader = ShaderBase<Gfx::MeshShader, Gfx::SE_SHADER_STAGE_MESH_BIT_EXT>;
 
+using RayGenShader = ShaderBase<Gfx::RayGenShader, Gfx::SE_SHADER_STAGE_RAYGEN_BIT_KHR>;
+using ClosestHitShader = ShaderBase<Gfx::ClosestHitShader, Gfx::SE_SHADER_STAGE_CLOSEST_HIT_BIT_KHR>;
+using IntersectionShader = ShaderBase<Gfx::IntersectionShader, Gfx::SE_SHADER_STAGE_INTERSECTION_BIT_KHR>;
+using AnyHitShader = ShaderBase<Gfx::AnyHitShader, Gfx::SE_SHADER_STAGE_ANY_HIT_BIT_KHR>;
+using MissShader = ShaderBase<Gfx::MissShader, Gfx::SE_SHADER_STAGE_MISS_BIT_KHR>;
+using CallableShader = ShaderBase<Gfx::CallableShader, Gfx::SE_SHADER_STAGE_CALLABLE_BIT_KHR>;
+
 DEFINE_REF(VertexShader)
 DEFINE_REF(FragmentShader)
 DEFINE_REF(ComputeShader)
 DEFINE_REF(TaskShader)
 DEFINE_REF(MeshShader)
+
+DEFINE_REF(RayGenShader)
+DEFINE_REF(ClosestHitShader)
+DEFINE_REF(IntersectionShader)
+DEFINE_REF(AnyHitShader)
+DEFINE_REF(MissShader)
+DEFINE_REF(CallableShader)
 } // namespace Metal
 } // namespace Seele

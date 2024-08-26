@@ -1,4 +1,5 @@
 #include "Buffer.h"
+#include "Foundation/NSString.hpp"
 #include "Graphics.h"
 #include "Graphics/Buffer.h"
 #include "Graphics/Enums.h"
@@ -10,8 +11,11 @@
 using namespace Seele;
 using namespace Seele::Metal;
 
-BufferAllocation::BufferAllocation(PGraphics graphics)
-    : CommandBoundResource(graphics) {}
+BufferAllocation::BufferAllocation(PGraphics graphics, const std::string& name, uint64 size, MTL::ResourceOptions options)
+    : CommandBoundResource(graphics) {
+    buffer = graphics->getDevice()->newBuffer(size, options);
+    buffer->setLabel(NS::String::string(name.c_str(), NS::ASCIIStringEncoding));
+}
 
 BufferAllocation::~BufferAllocation() {
   if (buffer != nullptr) {
@@ -19,10 +23,42 @@ BufferAllocation::~BufferAllocation() {
   }
 }
 
-Buffer::Buffer(PGraphics graphics, uint64 size, void *data, bool dynamic,
-               const std::string &name)
-    : graphics(graphics), dynamic(dynamic), name(name) {
-  createBuffer(size, data);
+void BufferAllocation::pipelineBarrier(Gfx::SeAccessFlags, Gfx::SePipelineStageFlags , Gfx::SeAccessFlags, Gfx::SePipelineStageFlags)
+{
+
+}
+
+void BufferAllocation::transferOwnership(Gfx::QueueType)
+{
+
+}
+
+void BufferAllocation::updateContents(uint64 regionOffset, uint64 regionSize, void* ptr)
+{
+    std::memcpy((uint8*)buffer->contents() + regionOffset, ptr, regionSize);
+}
+
+void BufferAllocation::readContents(uint64 regionOffset, uint64 regionSize, void* ptr)
+{
+    std::memcpy(ptr, (uint8*)buffer->contents() + regionOffset, regionSize);
+}
+
+void* BufferAllocation::map()
+{
+    return buffer->contents();
+}
+
+void BufferAllocation::unmap()
+{
+
+}
+   
+
+Buffer::Buffer(PGraphics graphics, uint64 size, Gfx::SeBufferUsageFlags usage, Gfx::QueueType queueType, bool dynamic, std::string name,
+               bool createCleared, uint32 clearValue)
+    : graphics(graphics), currentBuffer(0), dynamic(dynamic), createCleared(createCleared), name(name), clearValue(clearValue) {
+    buffers.add(nullptr);
+    createBuffer(size, 0);
 }
 
 Buffer::~Buffer() {
@@ -31,52 +67,76 @@ Buffer::~Buffer() {
   }
 }
 
-void *Buffer::map(bool) { return getHandle()->contents(); }
-
-void *Buffer::mapRegion(uint64 regionOffset, uint64, bool) {
-  return (char *)getHandle()->contents() + regionOffset;
+void Buffer::updateContents(uint64 regionOffset, uint64 regionSize, void* ptr)
+{
+    getAlloc()->updateContents(regionOffset, regionSize, ptr);
 }
 
-void Buffer::unmap() {}
-
-void Buffer::rotateBuffer(uint64 size) {
-  size = std::max(getSize(), size);
-  for (size_t i = 0; i < buffers.size(); ++i) {
-    if (buffers[i]->isCurrentlyBound()) {
-      continue;
-    }
-    if (buffers[i]->size < size) {
-      buffers[i]->buffer->release();
-      buffers[i]->buffer =
-          graphics->getDevice()->newBuffer(size, MTL::StorageModeShared);
-      buffers[i]->size = size;
-    }
-    currentBuffer = i;
-    return;
-  }
-  createBuffer(size, nullptr);
-  currentBuffer = buffers.size() - 1;
+void Buffer::readContents(uint64 regionOffset, uint64 regionSize, void* ptr)
+{
+    getAlloc()->readContents(regionOffset, regionSize, ptr);
 }
 
-void Buffer::createBuffer(uint64 size, void *data) {
-  buffers.add(new BufferAllocation(graphics));
-  if (data != nullptr) {
-    buffers.back()->buffer =
-        graphics->getDevice()->newBuffer(data, size, MTL::StorageModeShared);
-  } else {
-    buffers.back()->buffer =
-        graphics->getDevice()->newBuffer(size, MTL::StorageModeShared);
-  }
-  buffers.back()->buffer->setLabel(
-      NS::String::string(name.c_str(), NS::ASCIIStringEncoding));
+void Buffer::rotateBuffer(uint64 size, bool preserveContents)
+{
+    if(size == 0)
+        return;
+    assert(dynamic);
+    for(uint32 i = 0; i < buffers.size(); ++i) {
+        if(buffers[i]->isCurrentlyBound()) {
+            continue;
+        }
+        if(buffers[i]->size < size) {
+            createBuffer(size, i);
+        }
+        if(preserveContents) {
+            copyBuffer(currentBuffer, i);
+        }
+        currentBuffer = i;
+        return;
+    }
+    buffers.add(nullptr);
+    createBuffer(size, buffers.size() - 1);
+    if(preserveContents) {
+        copyBuffer(currentBuffer, buffers.size() - 1);
+    }
+    currentBuffer = buffers.size() - 1;
+}
+
+void Buffer::createBuffer(uint64 size, uint32 destIndex)
+{
+    buffers[destIndex] = new BufferAllocation(graphics, name, size);
+    if(createCleared) {
+        std::memset(buffers[destIndex]->map(), clearValue, buffers[destIndex]->size);
+    }
+}
+
+void Buffer::copyBuffer(uint64 src, uint64 dest)
+{
+    if(src == dest) {
+        return;
+    }
+    std::memcpy(buffers[dest]->map(), buffers[src]->map(), buffers[src]->size);
+}
+
+void Buffer::transferOwnership(Gfx::QueueType newOwner)
+{
+    getAlloc()->transferOwnership(newOwner);
+}
+
+void Buffer::pipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage, Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage)
+{
+    getAlloc()->pipelineBarrier(srcAccess, srcStage, dstAccess, dstStage);
 }
 
 VertexBuffer::VertexBuffer(PGraphics graphics,
                            const VertexBufferCreateInfo &createInfo)
-    : Gfx::VertexBuffer(graphics->getFamilyMapping(), createInfo.numVertices,
-                        createInfo.vertexSize, createInfo.sourceData.owner),
-      Seele::Metal::Buffer(graphics, createInfo.sourceData.size,
-                           createInfo.sourceData.data, false, createInfo.name) {
+    : Gfx::VertexBuffer(graphics->getFamilyMapping(), createInfo),
+      Metal::Buffer(graphics, createInfo.sourceData.size, Gfx::SE_BUFFER_USAGE_VERTEX_BUFFER_BIT, createInfo.sourceData.owner, false,
+                     createInfo.name) {
+    if(createInfo.sourceData.size > 0 && createInfo.sourceData.data != nullptr) {
+        getAlloc()->updateContents(createInfo.sourceData.offset, createInfo.sourceData.size, createInfo.sourceData.data);
+    }
 }
 
 VertexBuffer::~VertexBuffer() {}
@@ -93,20 +153,22 @@ void VertexBuffer::download(Array<uint8> &buffer) {
 }
 
 void VertexBuffer::executeOwnershipBarrier(Gfx::QueueType newOwner) {
-  currentOwner = newOwner;
+    Metal::Buffer::transferOwnership(newOwner);
 }
 
 void VertexBuffer::executePipelineBarrier(Gfx::SeAccessFlags srcAccess,
                                           Gfx::SePipelineStageFlags srcStage,
                                           Gfx::SeAccessFlags dstAccess,
-                                          Gfx::SePipelineStageFlags dstStage) {}
+                                          Gfx::SePipelineStageFlags dstStage) {
+    Metal::Buffer::pipelineBarrier(srcAccess, srcStage, dstAccess, dstStage);
+}
 
 IndexBuffer::IndexBuffer(PGraphics graphics,
                          const IndexBufferCreateInfo &createInfo)
-    : Gfx::IndexBuffer(graphics->getFamilyMapping(), createInfo.sourceData.size,
-                       createInfo.indexType, createInfo.sourceData.owner),
-      Seele::Metal::Buffer(graphics, createInfo.sourceData.size,
-                           createInfo.sourceData.data, false, createInfo.name) {
+    : Gfx::IndexBuffer(graphics->getFamilyMapping(), createInfo),
+      Metal::Buffer(graphics, createInfo.sourceData.size,
+                     Gfx::SE_BUFFER_USAGE_INDEX_BUFFER_BIT | Gfx::SE_BUFFER_USAGE_TRANSFER_DST_BIT | Gfx::SE_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                     createInfo.sourceData.owner, false, createInfo.name) {
 }
 
 IndexBuffer::~IndexBuffer() {}
@@ -117,76 +179,90 @@ void IndexBuffer::download(Array<uint8> &buffer) {
   std::memcpy(buffer.data(), data, getSize());
 }
 void IndexBuffer::executeOwnershipBarrier(Gfx::QueueType newOwner) {
-  currentOwner = newOwner;
+    Metal::Buffer::transferOwnership(newOwner);
 }
 
 void IndexBuffer::executePipelineBarrier(Gfx::SeAccessFlags srcAccess,
                                          Gfx::SePipelineStageFlags srcStage,
                                          Gfx::SeAccessFlags dstAccess,
-                                         Gfx::SePipelineStageFlags dstStage) {}
+                                         Gfx::SePipelineStageFlags dstStage) {
+    Metal::Buffer::pipelineBarrier(srcAccess, srcStage, dstAccess, dstStage);
+}
 
 UniformBuffer::UniformBuffer(PGraphics graphics,
                              const UniformBufferCreateInfo &createInfo)
-    : Gfx::UniformBuffer(graphics->getFamilyMapping(), createInfo.sourceData),
-      Seele::Metal::Buffer(graphics, createInfo.sourceData.size,
-                           createInfo.sourceData.data, createInfo.dynamic,
-                           createInfo.name) {}
+    : Gfx::UniformBuffer(graphics->getFamilyMapping(), createInfo),
+      Metal::Buffer(graphics, createInfo.sourceData.size, Gfx::SE_BUFFER_USAGE_UNIFORM_BUFFER_BIT, createInfo.sourceData.owner,
+                     createInfo.dynamic, createInfo.name) {
+    getAlloc()->updateContents(createInfo.sourceData.offset, createInfo.sourceData.size, createInfo.sourceData.data);
+}
 
 UniformBuffer::~UniformBuffer() {}
 
-bool UniformBuffer::updateContents(const DataSource &sourceData) {
-  void *data = getHandle()->contents();
-  std::memcpy((char *)data + sourceData.offset, sourceData.data,
-              sourceData.size);
-  return true;
+void UniformBuffer::rotateBuffer(uint64 size) {
+    Metal::Buffer::rotateBuffer(size);
+}
+
+void UniformBuffer::updateContents(const DataSource &sourceData) {
+    if (sourceData.size > 0 && sourceData.data != nullptr) {
+        Metal::Buffer::rotateBuffer(sourceData.size);
+        getAlloc()->updateContents(sourceData.offset, sourceData.size, sourceData.data);
+    }
 }
 
 void UniformBuffer::executeOwnershipBarrier(Gfx::QueueType newOwner) {
-  currentOwner = newOwner;
+    Metal::Buffer::transferOwnership(newOwner);
 }
 
 void UniformBuffer::executePipelineBarrier(Gfx::SeAccessFlags srcAccess,
                                            Gfx::SePipelineStageFlags srcStage,
                                            Gfx::SeAccessFlags dstAccess,
                                            Gfx::SePipelineStageFlags dstStage) {
+    Metal::Buffer::pipelineBarrier(srcAccess, srcStage, dstAccess, dstStage);
 }
 
 ShaderBuffer::ShaderBuffer(PGraphics graphics,
                            const ShaderBufferCreateInfo &createInfo)
-    : Gfx::ShaderBuffer(graphics->getFamilyMapping(), createInfo.numElements,
-                        createInfo.sourceData),
+    : Gfx::ShaderBuffer(graphics->getFamilyMapping(), createInfo),
       Seele::Metal::Buffer(graphics, createInfo.sourceData.size,
-                           createInfo.sourceData.data, createInfo.dynamic,
-                           createInfo.name) {}
+                     Gfx::SE_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                     createInfo.sourceData.owner, createInfo.dynamic, createInfo.name, createInfo.createCleared, createInfo.clearValue) {}
 
 ShaderBuffer::~ShaderBuffer() {}
 
-void ShaderBuffer::rotateBuffer(uint64 size) {
-  Metal::Buffer::rotateBuffer(size);
+void ShaderBuffer::readContents(Array<uint8>& data) {
+    data.resize(getSize());
+    getAlloc()->readContents(0, data.size(), data.data());
 }
 
-void ShaderBuffer::updateContents(const ShaderBufferCreateInfo &createInfo) {
-  Gfx::ShaderBuffer::updateContents(createInfo);
-  if (createInfo.sourceData.data == nullptr) {
-    return;
-  }
-  void *data = map();
-  std::memcpy((char *)data + createInfo.sourceData.offset,
-              createInfo.sourceData.data, createInfo.sourceData.size);
-  unmap();
+void ShaderBuffer::updateContents(const ShaderBufferCreateInfo& createInfo) {
+    if (createInfo.sourceData.data == nullptr) {
+        return;
+    }
+    // We always want to update, as the contents could be different on the GPU
+    if (createInfo.sourceData.size > 0 && createInfo.sourceData.data != nullptr) {
+        getAlloc()->updateContents(createInfo.sourceData.offset, createInfo.sourceData.size, createInfo.sourceData.data);
+    }
+
 }
 
-void *ShaderBuffer::mapRegion(uint64 offset, uint64 size, bool writeOnly) {
-  return Metal::Buffer::mapRegion(offset, size, writeOnly);
+void ShaderBuffer::rotateBuffer(uint64 size, bool preserveContents) {
+    assert(dynamic);
+    Metal::Buffer::rotateBuffer(size, preserveContents);
 }
 
-void ShaderBuffer::unmap() { Metal::Buffer::unmap(); }
+
+void ShaderBuffer::clear() {
+    std::memset(getAlloc()->map(), 0, getSize());
+}
 
 void ShaderBuffer::executeOwnershipBarrier(Gfx::QueueType newOwner) {
-  currentOwner = newOwner;
+    Metal::Buffer::transferOwnership(newOwner);
 }
 
 void ShaderBuffer::executePipelineBarrier(Gfx::SeAccessFlags srcAccess,
                                           Gfx::SePipelineStageFlags srcStage,
                                           Gfx::SeAccessFlags dstAccess,
-                                          Gfx::SePipelineStageFlags dstStage) {}
+                                          Gfx::SePipelineStageFlags dstStage) {
+    Metal::Buffer::pipelineBarrier(srcAccess, srcStage, dstAccess, dstStage);
+}

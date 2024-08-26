@@ -84,15 +84,10 @@ void RenderCommand::setViewport(Gfx::PViewport viewport) {
 void RenderCommand::bindPipeline(Gfx::PGraphicsPipeline pipeline) {
   boundPipeline = pipeline.cast<GraphicsPipeline>();
   encoder->setRenderPipelineState(boundPipeline->getHandle());
-  uint64 argBufferSize = 0;
-  for (auto [_, layout] : boundPipeline->getPipelineLayout()->getLayouts()) {
-    argBufferSize += 3 * sizeof(uint64) * layout->getBindings().size();
-  }
-  argumentBuffer = boundPipeline->graphics->getDevice()->newBuffer(
-      argBufferSize, MTL::ResourceStorageModeShared);
-  argumentBuffer->setLabel(
-      NS::String::string(boundPipeline->getPipelineLayout()->getName().c_str(),
-                         NS::ASCIIStringEncoding));
+}
+
+void RenderCommand::bindPipeline(Gfx::PRayTracingPipeline pipeline) {
+    
 }
 
 void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet,
@@ -126,7 +121,10 @@ void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet,
       usage = MTL::ResourceUsageWrite;
       break;
     }
-    encoder->useResource(metalSet->getBoundResources()[i], usage);
+    for(size_t x = 0; x < metalSet->getBoundResources()[i].size(); ++x)
+    {
+        encoder->useResource(metalSet->getBoundResources()[i][x], usage);
+    }
   }
 }
 
@@ -188,6 +186,10 @@ void RenderCommand::drawMeshIndirect(Gfx::PShaderBuffer buffer, uint64 offset,
   // encoder->drawMeshThreadgroups()
 }
 
+void RenderCommand::traceRays(uint32 width, uint32 height, uint32 depth){
+
+}
+
 ComputeCommand::ComputeCommand(MTL::CommandBuffer *cmdBuffer,
                                const std::string &name)
     : commandBuffer(cmdBuffer), encoder(cmdBuffer->computeCommandEncoder()),
@@ -244,7 +246,10 @@ void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet set,
       usage = MTL::ResourceUsageWrite;
       break;
     }
-    encoder->useResource(metalSet->getBoundResources()[i], usage);
+    for(size_t x = 0; x < metalSet->getBoundResources()[i].size(); ++x)
+    {
+        encoder->useResource(metalSet->getBoundResources()[i][x], usage);
+    }
   }
 }
 

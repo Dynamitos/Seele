@@ -1,6 +1,7 @@
 #pragma once
 #include "Buffer.h"
 #include "Graphics/Command.h"
+#include "Metal/MTLArgumentEncoder.hpp"
 #include "Metal/MTLBlitCommandEncoder.hpp"
 #include "Metal/MTLCaptureManager.hpp"
 #include "Metal/MTLCommandBuffer.hpp"
@@ -55,6 +56,7 @@ class RenderCommand : public Gfx::RenderCommand {
     void end();
     virtual void setViewport(Gfx::PViewport viewport) override;
     virtual void bindPipeline(Gfx::PGraphicsPipeline pipeline) override;
+    virtual void bindPipeline(Gfx::PRayTracingPipeline pipeline) override;
     virtual void bindDescriptor(Gfx::PDescriptorSet descriptorSet, Array<uint32> dynamicOffsets) override;
     virtual void bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorSets, Array<uint32> dynamicOffsets) override;
     virtual void bindVertexBuffer(const Array<Gfx::PVertexBuffer>& buffers) override;
@@ -64,10 +66,12 @@ class RenderCommand : public Gfx::RenderCommand {
     virtual void drawIndexed(uint32 indexCount, uint32 instanceCount, int32 firstIndex, uint32 vertexOffset, uint32 firstInstance) override;
     virtual void drawMesh(uint32 groupX, uint32 groupY, uint32 groupZ) override;
     virtual void drawMeshIndirect(Gfx::PShaderBuffer buffer, uint64 offset, uint32 drawCount, uint32 stride) override;
+    virtual void traceRays(uint32 width, uint32 height, uint32 depth) override;
 
   private:
     PGraphicsPipeline boundPipeline;
     PIndexBuffer boundIndexBuffer;
+    MTL::ArgumentEncoder* argumentEncoder;
     MTL::Buffer* argumentBuffer;
     MTL::RenderCommandEncoder* encoder;
     std::string name;

@@ -9,7 +9,7 @@ using namespace Seele::Metal;
 
 RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout layout,
                        Array<Gfx::SubPassDependency> dependencies,
-                       Gfx::PViewport viewport)
+                       Gfx::PViewport viewport, const std::string& name)
     : Gfx::RenderPass(layout, dependencies), graphics(graphics),
       viewport(viewport) {
   renderPass = MTL::RenderPassDescriptor::renderPassDescriptor();
@@ -33,7 +33,7 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout layout,
       desc->setResolveLevel(0);
       desc->setStoreAction(MTL::StoreActionStoreAndMultisampleResolve);
       desc->setResolveTexture(
-          resolve.getTexture().cast<TextureBase>()->getTexture());
+          resolve.getTexture().cast<TextureBase>()->getImage());
     }
   }
   if (layout.depthAttachment.getTexture() != nullptr) {
@@ -45,7 +45,7 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout layout,
     if (layout.depthResolveAttachment.getTexture() != nullptr) {
       depth->setResolveTexture(layout.depthResolveAttachment.getTexture()
                                    .cast<TextureBase>()
-                                   ->getTexture());
+                                   ->getImage());
       depth->setStoreAction(MTL::StoreActionStoreAndMultisampleResolve);
     }
   }
@@ -57,11 +57,11 @@ void RenderPass::updateRenderPass() {
   for (size_t i = 0; i < layout.colorAttachments.size(); ++i) {
     const auto &color = layout.colorAttachments[i];
     auto desc = renderPass->colorAttachments()->object(i);
-    desc->setTexture(color.getTexture().cast<TextureBase>()->getTexture());
+    desc->setTexture(color.getTexture().cast<TextureBase>()->getImage());
   }
   if (layout.depthAttachment.getTexture() != nullptr) {
     auto depth = renderPass->depthAttachment();
     depth->setTexture(
-        layout.depthAttachment.getTexture().cast<TextureBase>()->getTexture());
+        layout.depthAttachment.getTexture().cast<TextureBase>()->getImage());
   }
 }

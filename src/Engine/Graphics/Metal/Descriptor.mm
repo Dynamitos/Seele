@@ -1,6 +1,7 @@
 #include "Descriptor.h"
 #include "Buffer.h"
 #include "Enums.h"
+#include "Foundation/NSObject.hpp"
 #include "Graphics/Descriptor.h"
 #include "Graphics/Initializer.h"
 #include "Graphics/Metal/Resources.h"
@@ -10,6 +11,7 @@
 #include "Metal/MTLTexture.hpp"
 #include "Texture.h"
 #include <Foundation/Foundation.h>
+#include <CRC.h>
 #include <iostream>
 
 using namespace Seele;
@@ -21,11 +23,11 @@ DescriptorLayout::DescriptorLayout(PGraphics graphics, const std::string &name)
 DescriptorLayout::~DescriptorLayout() {}
 
 void DescriptorLayout::create() {
-  pool = new DescriptorPool(graphics, this);
-  hash =
-      CRC::Calculate(descriptorBindings.data(),
-                     sizeof(Gfx::DescriptorBinding) * descriptorBindings.size(),
-                     CRC::CRC_32());
+    pool = new DescriptorPool(graphics, this);
+    hash =
+        CRC::Calculate(descriptorBindings.data(),
+                        sizeof(Gfx::DescriptorBinding) * descriptorBindings.size(),
+                        CRC::CRC_32());
 }
 
 DescriptorPool::DescriptorPool(PGraphics graphics, PDescriptorLayout layout)
@@ -35,36 +37,30 @@ DescriptorPool::~DescriptorPool() {}
 
 Gfx::PDescriptorSet DescriptorPool::allocateDescriptorSet() {
   for (uint32 setIndex = 0; setIndex < allocatedSets.size(); ++setIndex) {
-    if (allocatedSets[setIndex]->isCurrentlyBound() ||
-        allocatedSets[setIndex]->isCurrentlyInUse()) {
+    if (allocatedSets[setIndex]->isCurrentlyBound()) {
       // Currently in use, skip
       continue;
     }
-    allocatedSets[setIndex]->allocate();
 
     // Found set, stop searching
     return PDescriptorSet(allocatedSets[setIndex]);
   }
   allocatedSets.add(new DescriptorSet(graphics, this));
-  allocatedSets.back()->allocate();
   return PDescriptorSet(allocatedSets.back());
 }
 
 void DescriptorPool::reset() {
-  for (auto &set : allocatedSets) {
-    set->free();
-  }
 }
 
 DescriptorSet::DescriptorSet(PGraphics graphics, PDescriptorPool owner)
     : Gfx::DescriptorSet(owner->getLayout()), CommandBoundResource(graphics),
-      graphics(graphics), owner(owner), currentlyInUse(false) {
+      graphics(graphics), owner(owner) {
   boundResources.resize(owner->getLayout()->getBindings().size());
-  buffer = graphics->getDevice()->newBuffer(
-      std::max<size_t>(8, sizeof(uint64_t) * 3 *
-                              owner->getLayout()->getBindings().size()),
-      MTL::ResourceStorageModeShared);
-  argumentBuffer = (uint64 *)buffer->contents();
+  for(uint32 i = 0; i < boundResources.size(); ++i) {
+    boundResources[i].resize(owner->getLayout()->getBindings()[i].descriptorCount);
+  }
+  encoder = owner->getLayout()->createEncoder();
+  buffer = graphics->getDevice()->newBuffer(encoder->encodedLength(), MTL::ResourceOptionCPUCacheModeDefault);
   buffer->setLabel(NS::String::string(owner->getLayout()->getName().c_str(),
                                       NS::ASCIIStringEncoding));
 }
@@ -73,67 +69,40 @@ DescriptorSet::~DescriptorSet() { buffer->release(); }
 
 void DescriptorSet::writeChanges() {}
 
-void DescriptorSet::updateBuffer(uint32_t binding,
-                                 Gfx::PUniformBuffer uniformBuffer) {
-  PUniformBuffer metalBuffer = uniformBuffer.cast<UniformBuffer>();
-  uint64 offset = binding * 3;
-  argumentBuffer[offset + 0] = metalBuffer->getHandle()->gpuAddress();
-  argumentBuffer[offset + 1] = 0;
-  argumentBuffer[offset + 2] =
-      (uint32)metalBuffer->getSize(); // TODO: buffer texture view, typed??
-  boundResources[binding] = metalBuffer->getHandle();
-}
-void DescriptorSet::updateBuffer(uint32_t binding,
-                                 Gfx::PShaderBuffer uniformBuffer) {
-  PShaderBuffer metalBuffer = uniformBuffer.cast<ShaderBuffer>();
-  uint64 offset = binding * 3;
-  argumentBuffer[offset + 0] = metalBuffer->getHandle()->gpuAddress();
-  argumentBuffer[offset + 1] = 0;
-  argumentBuffer[offset + 2] =
-      (uint32)metalBuffer->getSize(); // TODO: buffer texture view, typed??
-  boundResources[binding] = metalBuffer->getHandle();
+void DescriptorSet::updateBuffer(uint32 binding, Gfx::PUniformBuffer uniformBuffer)
+{
+    encoder->setBuffer(uniformBuffer.cast<UniformBuffer>()->getHandle(), 0, binding);
 }
 
-void DescriptorSet::updateBuffer(uint32_t binding, uint32 index,
-                                 Gfx::PShaderBuffer uniformBuffer) {}
-
-void DescriptorSet::updateSampler(uint32_t binding,
-                                  Gfx::PSampler samplerState) {
-  PSampler sampler = samplerState.cast<Sampler>();
-  MTL::ResourceID resourceId = sampler->getHandle()->gpuResourceID();
-  uint64 offset = binding * 3;
-  argumentBuffer[offset + 0] = 0;
-  argumentBuffer[offset + 1] = *(uint64 *)&resourceId;
-  argumentBuffer[offset + 2] = 0; // LOD bias
-}
-void DescriptorSet::updateTexture(uint32_t binding, Gfx::PTexture texture,
-                                  Gfx::PSampler samplerState) {
-  PTextureBase base = texture.cast<TextureBase>();
-  if (layout->getBindings()[binding].access ==
-      Gfx::SE_DESCRIPTOR_ACCESS_READ_ONLY_BIT) {
-    MTL::ResourceID resourceId = base->getTexture()->gpuResourceID();
-    uint64 offset = binding * 3;
-    argumentBuffer[offset + 0] = 0;
-    argumentBuffer[offset + 1] = *(uint64 *)&resourceId;
-    argumentBuffer[offset + 2] = 0; // min LOD clamp
-  } else {
-    uint64 offset = binding * 3;
-    argumentBuffer[offset + 0] = base->getTexture()->buffer()->gpuAddress();
-    argumentBuffer[offset + 1] = 0;
-    argumentBuffer[offset + 2] =
-        (uint32)base->getTexture()
-            ->buffer()
-            ->length(); // TODO: buffer texture view, typed??
-  }
-  boundResources[binding] = base->getTexture();
+void DescriptorSet::updateBuffer(uint32 binding, Gfx::PShaderBuffer uniformBuffer)
+{
+    encoder->setBuffer(uniformBuffer.cast<ShaderBuffer>()->getHandle(), 0, binding);
 }
 
-void DescriptorSet::updateTextureArray(uint32_t binding,
-                                       Array<Gfx::PTexture> array) {
-  for (auto &t : array) {
-    updateTexture(binding++, t);
-  }
+void DescriptorSet::updateBuffer(uint32 binding, Gfx::PIndexBuffer uniformBuffer)
+{
+    encoder->setBuffer(uniformBuffer.cast<IndexBuffer>()->getHandle(), 0, binding);
 }
+
+void DescriptorSet::updateBuffer(uint32 binding, uint32 index, Gfx::PShaderBuffer uniformBuffer)
+{
+    encoder->setBuffer(uniformBuffer.cast<ShaderBuffer>()->getHandle(), 0, binding);
+}
+
+void DescriptorSet::updateSampler(uint32 binding, Gfx::PSampler samplerState)
+{}
+void DescriptorSet::updateSampler(uint32 binding, uint32 dstArrayIndex, Gfx::PSampler samplerState)
+{}
+void DescriptorSet::updateTexture(uint32 binding, Gfx::PTexture texture, Gfx::PSampler sampler)
+{}
+void DescriptorSet::updateTexture(uint32 binding, uint32 dstArrayIndex, Gfx::PTexture texture)
+{}
+void DescriptorSet::updateTextureArray(uint32 binding, Array<Gfx::PTexture2D> texture)
+{}
+void DescriptorSet::updateSamplerArray(uint32 binding, Array<Gfx::PSampler> samplers)
+{}
+void DescriptorSet::updateAccelerationStructure(uint32 binding, Gfx::PTopLevelAS as)
+{}
 
 PipelineLayout::PipelineLayout(PGraphics graphics, const std::string &name,
                                Gfx::PPipelineLayout baseLayout)

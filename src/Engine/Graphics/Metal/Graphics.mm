@@ -10,7 +10,8 @@
 #include "Resources.h"
 #include "Shader.h"
 #include "Window.h"
-
+#include <slang.h>
+#include "Graphics/slang-compile.h"
 
 using namespace Seele;
 using namespace Seele::Metal;
@@ -40,8 +41,8 @@ Gfx::OViewport Graphics::createViewport(Gfx::PWindow owner,
 Gfx::ORenderPass
 Graphics::createRenderPass(Gfx::RenderTargetLayout layout,
                            Array<Gfx::SubPassDependency> dependencies,
-                           Gfx::PViewport renderArea) {
-  return new RenderPass(this, layout, dependencies, renderArea);
+                           Gfx::PViewport renderArea, std::string name) {
+  return new RenderPass(this, layout, dependencies, renderArea, name);
 }
 
 void Graphics::beginRenderPass(Gfx::PRenderPass renderPass) {
@@ -102,6 +103,10 @@ Gfx::OComputeCommand Graphics::createComputeCommand(const std::string &name) {
   return queue->getComputeCommand(name);
 }
 
+void Graphics::beginShaderCompilation(const ShaderCompilationInfo &compileInfo) {
+    beginCompilation(compileInfo, SLANG_METAL, compileInfo.rootSignature);
+}
+
 Gfx::OVertexShader
 Graphics::createVertexShader(const ShaderCreateInfo &createInfo) {
   OVertexShader result = new VertexShader(this);
@@ -151,6 +156,9 @@ Gfx::PComputePipeline
 Graphics::createComputePipeline(Gfx::ComputePipelineCreateInfo createInfo) {
   return cache->createPipeline(std::move(createInfo));
 }
+Gfx::PRayTracingPipeline Graphics::createRayTracingPipeline(Gfx::RayTracingPipelineCreateInfo createInfo) {
+    return nullptr;
+}
 
 Gfx::OSampler Graphics::createSampler(const SamplerCreateInfo &createInfo) {
   return new Sampler(this, createInfo);
@@ -172,5 +180,68 @@ Graphics::createVertexInput(VertexInputStateCreateInfo createInfo) {
   return new VertexInput(createInfo);
 }
 
+
+Gfx::OOcclusionQuery Graphics::createOcclusionQuery(const std::string& name) {
+
+}
+
+Gfx::OPipelineStatisticsQuery Graphics::createPipelineStatisticsQuery(const std::string& name) {
+
+}
+
+Gfx::OTimestampQuery Graphics::createTimestampQuery(uint64 numTimestamps, const std::string& name) {
+
+}
+
 void Graphics::resolveTexture(Gfx::PTexture source, Gfx::PTexture destination) {
 }
+
+void Graphics::copyTexture(Gfx::PTexture src, Gfx::PTexture dst) {
+
+}
+
+
+// Ray Tracing
+Gfx::OBottomLevelAS Graphics::createBottomLevelAccelerationStructure(const Gfx::BottomLevelASCreateInfo& createInfo) {
+    return nullptr;
+}
+
+Gfx::OTopLevelAS Graphics::createTopLevelAccelerationStructure(const Gfx::TopLevelASCreateInfo& createInfo) {
+    return nullptr;
+}
+
+void Graphics::buildBottomLevelAccelerationStructures(Array<Gfx::PBottomLevelAS> data) {
+
+}
+
+Gfx::ORayGenShader Graphics::createRayGenShader(const ShaderCreateInfo& createInfo) {
+    ORayGenShader shader = new RayGenShader(this);
+    shader->create(createInfo);
+    return shader;
+}
+Gfx::OAnyHitShader Graphics::createAnyHitShader(const ShaderCreateInfo& createInfo) {
+    OAnyHitShader shader = new AnyHitShader(this);
+    shader->create(createInfo);
+    return shader;
+}
+Gfx::OClosestHitShader Graphics::createClosestHitShader(const ShaderCreateInfo& createInfo) {
+    OClosestHitShader shader = new ClosestHitShader(this);
+    shader->create(createInfo);
+    return shader;
+}
+Gfx::OMissShader Graphics::createMissShader(const ShaderCreateInfo& createInfo) {
+    OMissShader shader = new MissShader(this);
+    shader->create(createInfo);
+    return shader;
+}
+Gfx::OIntersectionShader Graphics::createIntersectionShader(const ShaderCreateInfo& createInfo) {
+    OIntersectionShader shader = new IntersectionShader(this);
+    shader->create(createInfo);
+    return shader;
+}
+Gfx::OCallableShader Graphics::createCallableShader(const ShaderCreateInfo& createInfo) {
+    OCallableShader shader = new CallableShader(this);
+    shader->create(createInfo);
+    return shader;
+}
+

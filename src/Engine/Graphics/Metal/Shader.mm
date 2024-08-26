@@ -25,10 +25,9 @@ Shader::~Shader() {
 }
 
 void Shader::create(const ShaderCreateInfo &createInfo) {
-  std::cout << "Compiling " << createInfo.name << std::endl;
   Map<std::string, uint32> paramMapping;
-  Slang::ComPtr<slang::IBlob> kernelBlob =
-      generateShader(createInfo, SLANG_METAL, paramMapping);
+  auto [kernelBlob, entryPoint] =
+      generateShader(createInfo);
   std::cout << (char *)kernelBlob->getBufferPointer() << std::endl;
   hash = CRC::Calculate(kernelBlob->getBufferPointer(),
                         kernelBlob->getBufferSize(), CRC::CRC_32());
@@ -44,10 +43,11 @@ void Shader::create(const ShaderCreateInfo &createInfo) {
               << std::endl;
   }
   function = library->newFunction(NS::String::string(
-      createInfo.entryPoint.c_str(), NS::ASCIIStringEncoding));
+      entryPoint.c_str(), NS::ASCIIStringEncoding));
   if (!function) {
     assert(false);
   }
+  
 }
 
 uint32 Shader::getShaderHash() const { return hash; }

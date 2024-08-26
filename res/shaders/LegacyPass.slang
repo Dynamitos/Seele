@@ -1,5 +1,6 @@
 import Common;
 import VertexData;
+import StaticMeshVertexData;
 import MaterialParameter;
 import Scene;
 
