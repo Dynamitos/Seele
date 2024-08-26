@@ -98,6 +98,23 @@ float4 main(WaterVertex vert) : SV_TARGET {
     float3 output = (1 - F) * scatter + specular + F * envReflection;
     output = max(0.0f, output);
     output = lerp(output, pWaterMaterial.foamColor, saturate(foam));
+    return float4(output, 1);
 
-    return float4(output, 1.0f);
+    //if(vert.lod == 1)
+    //{
+    //    return float4(1, 0, 0, 1.0f);
+    //}
+    //if(vert.lod == 2)
+    //{
+    //    return float4(0, 1, 0, 1.0f);
+    //}
+    //if(vert.lod == 3)
+    //{
+    //    return float4(0, 0, 1, 1.0f);
+    //}
+    //if(vert.lod == 4)
+    //{
+    //    return float4(1, 1, 1, 1.0f);
+    //}
+    //return float4(0, 0, 0, 1);
 }

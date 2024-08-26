@@ -2,6 +2,7 @@ struct WaterPayload
 {
     float3 offset;
     float extent;
+    uint numMeshes;
 };
 
 struct WaterTile
@@ -17,6 +18,7 @@ struct WaterVertex
     float3 position_WS : POSITION0;
     float2 texCoord : TEXCOORD0;
     float depth : DEPTH;
+    uint lod : BONEINDEX;
 };
 
 struct MaterialParams

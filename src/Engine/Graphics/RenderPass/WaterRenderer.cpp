@@ -444,7 +444,7 @@ Gfx::ORenderCommand WaterRenderer::render(Gfx::PDescriptorSet viewParamsSet) {
     waterCommand->setViewport(viewport);
     waterCommand->bindPipeline(waterPipeline);
     waterCommand->bindDescriptor({viewParamsSet, materialSet});
-    waterCommand->drawMesh(waterTiles->getNumElements(), 1, 1);
+    waterCommand->drawMesh(waterTiles->getNumElements(), 4, 1);
     return waterCommand;
 }
 
@@ -471,7 +471,7 @@ void WaterRenderer::setViewport(Gfx::PViewport _viewport, Gfx::PRenderPass rende
                 .blendAttachments =
                     {
                         Gfx::ColorBlendState::BlendAttachment{
-                            .blendEnable = true,
+                            .blendEnable = false,
                         },
                     },
             },

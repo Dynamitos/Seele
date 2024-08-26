@@ -46,13 +46,22 @@ void meshMain(
         float2 base = VERT[i];
         float3 objectPos = float3(base.x, 0, base.y);
         float3 worldPos = params.offset + objectPos * params.extent + float3(groupID.x * params.extent, 0, groupID.y * params.extent);
+
+        float lodDisplacement = 0;
+        float3 camPos = pViewParams.cameraPos_WS.xyz;
+        float cameraDistance = distance(worldPos, float3(camPos.x, 0, camPos.z)) / params.extent;
+        if(params.numMeshes < 4)
+        {
+            lodDisplacement = exp(-(1 / (cameraDistance + 4)));
+        }
+
         float3 displacement1 = pWaterMaterial.displacementTextures.Sample(pWaterMaterial.sampler, float3(worldPos.xz * pWaterMaterial.tile1, 0)).xyz * pWaterMaterial.contributeDisplacement1;
         float3 displacement2 = pWaterMaterial.displacementTextures.Sample(pWaterMaterial.sampler, float3(worldPos.xz * pWaterMaterial.tile2, 1)).xyz * pWaterMaterial.contributeDisplacement2;
         float3 displacement3 = pWaterMaterial.displacementTextures.Sample(pWaterMaterial.sampler, float3(worldPos.xz * pWaterMaterial.tile3, 2)).xyz * pWaterMaterial.contributeDisplacement3;
         float3 displacement4 = pWaterMaterial.displacementTextures.Sample(pWaterMaterial.sampler, float3(worldPos.xz * pWaterMaterial.tile4, 3)).xyz * pWaterMaterial.contributeDisplacement4;
         float3 displacement = displacement1 + displacement2 + displacement3 + displacement4;
 
-        float4 clipPos = mul(vp, float4(worldPos, 1)); 
+        float4 clipPos = mul(vp, float4(worldPos, 1));
         float ndcDepth = clipPos.z / clipPos.w;
 
         float depth = 1 - (-ndcDepth + 1.0f) / 2.0f;
@@ -60,12 +69,14 @@ void meshMain(
         displacement = lerp(0.0f, displacement, pow(saturate(depth), pWaterMaterial.displacementDepthAttenuation));
 
         worldPos += displacement;
+        worldPos.y = lodDisplacement;
 
         WaterVertex v;
         v.position_WS = worldPos;
         v.position_CS = mul(vp, float4(worldPos, 1));
         v.texCoord = worldPos.xz;
         v.depth = depth;
+        v.lod = params.numMeshes;
         vertices[i] = v;
 	}
 }

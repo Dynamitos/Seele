@@ -42,7 +42,7 @@ void TextureLoader::importAsset(TextureImportArgs args) {
     PTextureAsset ref = asset;
     asset->setStatus(Asset::Status::Loading);
     AssetRegistry::get().registerTexture(std::move(asset));
-    import(args, ref);
+    getThreadPool().runAsync([=](){import(args, ref);});
 }
 
 PTextureAsset TextureLoader::getPlaceholderTexture() { return placeholderAsset; }
@@ -111,7 +111,7 @@ void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset) {
     ktxBasisParams basisParams = {
         .structSize = sizeof(ktxBasisParams),
         .uastc = true,
-        .threadCount = std::thread::hardware_concurrency(),
+        .threadCount = 1,
         .uastcFlags = KTX_PACK_UASTC_LEVEL_DEFAULT,
         .uastcRDO = true,
     };
@@ -146,6 +146,6 @@ void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset) {
     textureAsset->setTexture(std::move(serialized));
 
     AssetRegistry::saveAsset(textureAsset, TextureAsset::IDENTIFIER, textureAsset->getFolderPath(), textureAsset->getName());
-    
+
     textureAsset->setStatus(Asset::Status::Ready);
 }

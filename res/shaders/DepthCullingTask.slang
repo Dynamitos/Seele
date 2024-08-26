@@ -102,7 +102,7 @@ void taskMain(
             {
 #ifdef DEPTH_CULLING
                 // if the meshlet bounding box is behind the cached depth buffer, we skip
-                if(isBoxVisible(meshlet.bounding))
+                //if(isBoxVisible(meshlet.bounding))
 #endif
                 {
                     uint index;

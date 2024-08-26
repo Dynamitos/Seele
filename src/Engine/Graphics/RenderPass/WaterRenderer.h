@@ -98,7 +98,7 @@ class WaterRenderer {
     Gfx::OSampler linearRepeatSampler;
 
     struct MaterialParams {
-        Vector sunDirection = Vector(-1.29f, -1.0f, 4.86f);
+        Vector sunDirection = Vector(-5, 0.6186, 5);
         float displacementDepthAttenuation = 1;
 
         float foamSubtract0 = 0.04f;
@@ -116,7 +116,7 @@ class WaterRenderer {
         float normalDepthAttenuation = 1;
         float roughness = 0.075f;
 
-        Vector sunIrradiance = Vector(1.0f, 0.694f, 0.32f);
+        Vector sunIrradiance = Vector(0.9921, 0.9058, 0.5450);
         float foamRoughnessModifier = 0;
 
         Vector scatterColor = Vector(0.016f, 0.0735f, 0.16f);
