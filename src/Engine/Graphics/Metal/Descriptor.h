@@ -1,11 +1,13 @@
 #pragma once
 #include "Buffer.h"
 #include "Foundation/NSArray.hpp"
+#include "Foundation/NSObject.hpp"
 #include "Graphics/Descriptor.h"
 #include "Graphics/Initializer.h"
 #include "Graphics/Metal/Resources.h"
 #include "Metal/MTLArgumentEncoder.hpp"
 #include "Metal/MTLLibrary.hpp"
+#include "Metal/MTLResource.hpp"
 #include "MinimalEngine.h"
 
 namespace Seele {
@@ -16,13 +18,11 @@ class DescriptorLayout : public Gfx::DescriptorLayout {
     DescriptorLayout(PGraphics graphics, const std::string& name);
     virtual ~DescriptorLayout();
     virtual void create() override;
-    void setFunction(MTL::Function* func, uint64 ind) { function = func; index = ind; }
-    MTL::ArgumentEncoder* createEncoder() { return function->newArgumentEncoder(index); }
+    MTL::ArgumentEncoder* createEncoder();
 
   private:
     PGraphics graphics;
-    MTL::Function* function;
-    uint64 index;
+    NS::Array* arguments;
 };
 DEFINE_REF(DescriptorLayout)
 
@@ -59,15 +59,14 @@ class DescriptorSet : public Gfx::DescriptorSet, public CommandBoundResource {
     virtual void updateSamplerArray(uint32 binding, Array<Gfx::PSampler> samplers) override;
     virtual void updateAccelerationStructure(uint32 binding, Gfx::PTopLevelAS as) override;
 
-    constexpr MTL::Buffer* getBuffer() const { return buffer; }
     constexpr const Array<Array<MTL::Resource*>>& getBoundResources() const { return boundResources; }
 
   private:
     PGraphics graphics;
     PDescriptorPool owner;
-    MTL::ArgumentEncoder* encoder;
-    MTL::Buffer* buffer = nullptr;
     Array<Array<MTL::Resource*>> boundResources;
+    MTL::ArgumentEncoder* encoder;
+    MTL::Buffer* argumentBuffer = nullptr;
 };
 DEFINE_REF(DescriptorSet)
 

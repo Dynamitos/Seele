@@ -1,7 +1,11 @@
 #include "Asset/AssetRegistry.h"
 #include "Graphics/Initializer.h"
 #include "Graphics/StaticMeshVertexData.h"
+#ifdef __APPLE__
+#include "Graphics/Metal/Graphics.h"
+#else
 #include "Graphics/Vulkan/Graphics.h"
+#endif
 #include "PlayView.h"
 #include "Window/WindowManager.h"
 #include <fmt/core.h>
@@ -24,7 +28,12 @@ int main(int argc, char** argv) {
     }
 
     std::filesystem::path binaryPath = "C:/Users/Dynamitos/MeshShadingDemo/bin/MeshShadingDemo.dll";
-    graphics = new Vulkan::Graphics();
+
+#ifdef __APPLE__
+        graphics = new Metal::Graphics();
+#else
+        graphics = new Vulkan::Graphics();
+#endif
     GraphicsInitializer initializer;
     graphics->init(initializer);
     StaticMeshVertexData* vd = StaticMeshVertexData::getInstance();

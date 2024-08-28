@@ -34,7 +34,7 @@ struct PipelineStatisticsResult {
     friend std::ostream& operator<<(std::ostream& buf, const PipelineStatisticsResult& res);
 };
 
-static std::ostream& operator<<(std::ostream & buf, const PipelineStatisticsResult& res) {
+inline std::ostream& operator<<(std::ostream & buf, const PipelineStatisticsResult& res) {
     buf << fmt::format("{},{},{},{},{},{},{},{},{},", res.inputAssemblyVertices, res.inputAssemblyPrimitives, res.vertexShaderInvocations,
                        res.clippingInvocations, res.clippingPrimitives, res.fragmentShaderInvocations, res.computeShaderInvocations, res.taskShaderInvocations,
                        res.meshShaderInvocations);

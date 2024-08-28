@@ -22,9 +22,9 @@ Material::Material() {}
 
 Material::Material(Gfx::PGraphics graphics, uint32 numTextures, uint32 numSamplers, uint32 numFloats, bool twoSided, float opacity,
                    std::string materialName, Array<OShaderExpression> expressions, Array<std::string> parameter, MaterialNode brdf)
-    : graphics(graphics), numTextures(numTextures), numSamplers(numSamplers), numFloats(numFloats), twoSided(twoSided), opacity(opacity),
-      instanceId(0), materialName(materialName), codeExpressions(std::move(expressions)), parameters(std::move(parameter)),
-      brdf(std::move(brdf)), materialId(materialIdCounter++) {
+    : graphics(graphics), numTextures(numTextures), numSamplers(numSamplers), numFloats(numFloats), instanceId(0), materialId(materialIdCounter++),
+      materialName(materialName), twoSided(twoSided), opacity(opacity), codeExpressions(std::move(expressions)),
+      parameters(std::move(parameter)), brdf(std::move(brdf)) {
     if (layout == nullptr) {
         init(graphics);
     }
@@ -38,14 +38,14 @@ void Material::init(Gfx::PGraphics graphics) {
     layout->addDescriptorBinding(Gfx::DescriptorBinding{
         .binding = 0,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
-        .descriptorCount = 2000,
+        .descriptorCount = 512,
         .bindingFlags = Gfx::SE_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT,
         .shaderStages = Gfx::SE_SHADER_STAGE_FRAGMENT_BIT | Gfx::SE_SHADER_STAGE_CLOSEST_HIT_BIT_KHR,
     });
     layout->addDescriptorBinding(Gfx::DescriptorBinding{
         .binding = 1,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLER,
-        .descriptorCount = 2000,
+        .descriptorCount = 512,
         .bindingFlags = Gfx::SE_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT,
         .shaderStages = Gfx::SE_SHADER_STAGE_FRAGMENT_BIT | Gfx::SE_SHADER_STAGE_CLOSEST_HIT_BIT_KHR,
     });
@@ -101,12 +101,14 @@ void Material::updateFloatData(uint32 offset, uint32 numFloats, float* data) {
 uint32 Material::addTextures(uint32 numTextures) {
     uint32 textureOffset = textures.size();
     textures.resize(textures.size() + numTextures);
+    assert(textures.size() < 512);
     return textureOffset;
 }
 
 uint32 Material::addSamplers(uint32 numSamplers) {
     uint32 samplerOffset = samplers.size();
     samplers.resize(samplers.size() + numSamplers);
+    assert(textures.size() < 512);
     return samplerOffset;
 }
 

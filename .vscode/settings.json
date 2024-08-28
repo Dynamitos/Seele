@@ -18,11 +18,11 @@
         "**/external": true,
         "**/res": true,
     },
-    "editor.tabSize": 4,
     "editor.detectIndentation": false,
     "lldb.displayFormat": "auto",
     "lldb.showDisassembly": "auto",
     "lldb.dereferencePointers": true,
     "lldb.consoleMode": "commands",
-    "cmake.generator": "Ninja"
+    "cmake.generator": "Ninja",
+    "editor.tabSize": 4
 }

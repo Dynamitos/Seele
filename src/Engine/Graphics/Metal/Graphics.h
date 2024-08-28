@@ -2,7 +2,6 @@
 #include "Graphics/Graphics.h"
 #include "Metal/Metal.hpp"
 
-
 namespace Seele {
 namespace Metal {
 DECLARE_REF(CommandQueue)
@@ -24,6 +23,7 @@ class Graphics : public Gfx::Graphics {
     virtual void waitDeviceIdle() override;
 
     virtual void executeCommands(Array<Gfx::ORenderCommand> commands) override;
+    virtual void executeCommands(Gfx::OComputeCommand commands) override;
     virtual void executeCommands(Array<Gfx::OComputeCommand> commands) override;
 
     virtual Gfx::OTexture2D createTexture2D(const TextureCreateInfo& createInfo) override;

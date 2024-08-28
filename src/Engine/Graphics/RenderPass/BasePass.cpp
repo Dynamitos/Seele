@@ -26,7 +26,7 @@ void Seele::addDebugVertex(DebugVertex vert) { gDebugVertices.add(vert); }
 void Seele::addDebugVertices(Array<DebugVertex> verts) { gDebugVertices.addAll(verts); }
 
 BasePass::BasePass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics, scene) {
-    waterRenderer = new WaterRenderer(graphics, scene, viewParamsLayout);
+    //waterRenderer = new WaterRenderer(graphics, scene, viewParamsLayout);
     basePassLayout = graphics->createPipelineLayout("BasePassLayout");
 
     basePassLayout->addDescriptorLayout(viewParamsLayout);
@@ -98,7 +98,7 @@ void BasePass::beginFrame(const Component::Camera& cam) {
     opaqueCulling = lightCullingLayout->allocateDescriptorSet();
     transparentCulling = lightCullingLayout->allocateDescriptorSet();
 
-    waterRenderer->beginFrame();
+    //waterRenderer->beginFrame();
 
     // Debug vertices
     {
@@ -248,7 +248,7 @@ void BasePass::render() {
         }
     }
     
-    commands.add(waterRenderer->render(viewParamsSet));
+    //commands.add(waterRenderer->render(viewParamsSet));
     
     // Skybox
     {

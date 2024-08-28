@@ -29,10 +29,10 @@ VkImageAspectFlags getAspectFromFormat(Gfx::SeFormat format) {
 }
 
 TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType, const TextureCreateInfo& createInfo, VkImage existingImage)
-    : CommandBoundResource(graphics, createInfo.name), image(existingImage), width(createInfo.width), height(createInfo.height),
-      depth(createInfo.depth), arrayCount(createInfo.elements), mipLevels(1), layerCount(createInfo.layers), samples(createInfo.samples),
-      format(createInfo.format), usage(createInfo.usage), layout(Gfx::SE_IMAGE_LAYOUT_UNDEFINED),
-      aspect(getAspectFromFormat(createInfo.format)), ownsImage(false), owner(createInfo.sourceData.owner) {
+    : CommandBoundResource(graphics, createInfo.name), image(existingImage), owner(createInfo.sourceData.owner), width(createInfo.width),
+      height(createInfo.height), depth(createInfo.depth), arrayCount(createInfo.elements), layerCount(createInfo.layers), mipLevels(1),
+      samples(createInfo.samples), format(createInfo.format), usage(createInfo.usage),
+      layout(Gfx::SE_IMAGE_LAYOUT_UNDEFINED), aspect(getAspectFromFormat(createInfo.format)), ownsImage(false) {
     if (createInfo.useMip) {
         mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(width, height)))) + 1;
     }

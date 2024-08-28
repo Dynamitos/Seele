@@ -248,7 +248,7 @@ WaterRenderer::WaterRenderer(Gfx::PGraphics graphics, PScene scene, Gfx::PDescri
             {
                 {"taskMain", "WaterTask"},
                 {"meshMain", "WaterMesh"},
-                {"main", "WaterPass"},
+                {"fragmentMain", "WaterPass"},
             },
         .rootSignature = waterLayout,
         .dumpIntermediate = true,

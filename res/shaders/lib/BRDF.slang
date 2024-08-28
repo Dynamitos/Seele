@@ -19,8 +19,12 @@ struct Phong : IBRDF
 
     __init()
     {
+        baseColor = float3(0, 0, 0);
         alpha = 1;
+        specular = float3(0, 0, 0);
         normal = float3(0, 0, 1);
+        ambient = float3(0, 0, 0);
+        shininess = 0;
     }
 
     float3 evaluate(float3 viewDir_TS, float3 lightDir_TS, float3 lightColor)
@@ -58,8 +62,12 @@ struct BlinnPhong : IBRDF
 
     __init()
     {
+        baseColor = float3(0, 0, 0);
         alpha = 1;
+        specularColor = float3(0, 0, 0);
         normal = float3(0, 0, 1);
+        shininess = 0;
+        ambient = float3(0, 0, 0);
     }
 
     float3 evaluate(float3 viewDir_TS, float3 lightDir_TS, float3 lightColor)
@@ -94,6 +102,7 @@ struct CelShading : IBRDF
 
     __init()
     {
+        baseColor = float3(0, 0, 0);
         alpha = 1;
         normal = float3(0, 0, 1);
     }
@@ -140,6 +149,7 @@ struct CookTorrance : IBRDF
 
     __init()
     {
+        baseColor = float3(0, 0, 0);
         alpha = 1;
         normal = float3(0, 0, 1);
         roughness = 0;

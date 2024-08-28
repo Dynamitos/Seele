@@ -1,6 +1,7 @@
 import Common;
 import Scene;
 import VertexData;
+import StaticMeshVertexData;
 import MaterialParameter;
 
 struct PrimitiveAttributes
@@ -37,11 +38,13 @@ void meshMain(
 			uint local_idx0 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 0];
 			uint local_idx1 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 1];
 			uint local_idx2 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 2];
-            indices[p] = uint3(local_idx0, local_idx1, local_idx2);
-            prim[p].cull = false;//cull.triangleCulled(p);
+      indices[p] = uint3(local_idx0, local_idx1, local_idx2);
+      PrimitiveAttributes primAttr;
+      primAttr.cull = false;//cull.triangleCulled(p);
 #ifdef VISIBILITY
-            prim[p].prim = encodePrimitive(meshletId);
+      primAttr.prim = encodePrimitive(meshletId);
 #endif
+      prim[p] = primAttr;
 		}
 	}
 	for(uint i = threadID; i < MAX_VERTICES; i += MESH_GROUP_SIZE)

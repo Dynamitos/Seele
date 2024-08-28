@@ -7,23 +7,17 @@
 using namespace Seele;
 using namespace Seele::Metal;
 
-VertexInput::VertexInput(VertexInputStateCreateInfo createInfo)
-    : Gfx::VertexInput(createInfo) {}
+VertexInput::VertexInput(VertexInputStateCreateInfo createInfo) : Gfx::VertexInput(createInfo) {}
 
 VertexInput::~VertexInput() {}
 
-GraphicsPipeline::GraphicsPipeline(PGraphics graphics,
-                                   MTL::PrimitiveType primitive,
-                                   MTL::RenderPipelineState *pipeline,
+GraphicsPipeline::GraphicsPipeline(PGraphics graphics, MTL::PrimitiveType primitive, MTL::RenderPipelineState* pipeline,
                                    Gfx::PPipelineLayout layout)
-    : Gfx::GraphicsPipeline(layout), graphics(graphics), state(pipeline),
-      primitiveType(primitive) {}
+    : Gfx::GraphicsPipeline(layout), graphics(graphics), state(pipeline), primitiveType(primitive) {}
 
 GraphicsPipeline::~GraphicsPipeline() {}
 
-ComputePipeline::ComputePipeline(PGraphics graphics,
-                                 MTL::ComputePipelineState *pipeline,
-                                 Gfx::PPipelineLayout layout)
+ComputePipeline::ComputePipeline(PGraphics graphics, MTL::ComputePipelineState* pipeline, Gfx::PPipelineLayout layout)
     : Gfx::ComputePipeline(layout), graphics(graphics), state(pipeline) {}
 
 ComputePipeline::~ComputePipeline() {}

@@ -1,6 +1,6 @@
 #pragma once
-#include "Graphics/Resources.h"
 #include "Graphics/Initializer.h"
+#include "Graphics/Resources.h"
 #include "Metal/MTLSampler.hpp"
 #include <Foundation/Foundation.hpp>
 #include <Metal/Metal.hpp>

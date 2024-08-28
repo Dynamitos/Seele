@@ -65,7 +65,7 @@ int main() {
             .type = TextureImportType::TEXTURE_CUBEMAP,
         });
         AssetImporter::importMesh(MeshImportArgs{
-            .filePath = sourcePath / "import/models/ship.glb",
+            .filePath = sourcePath / "import/models/ship.fbx",
             .importPath = "ship",
         });
         // AssetImporter::importMesh(MeshImportArgs{

@@ -19,7 +19,7 @@ struct ComputeParams
     uint N, lengthScale0, lengthScale1, lengthScale2, lengthScale3;
     float foamBias, foamDecayRate, foamAdd, foamThreshold;
     RWTexture2DArray<float4> spectrumTextures, initialSpectrumTextures, displacementTextures;
-    RWTexture2DArray<float2> slopeTexture;
+    RWTexture2DArray<float4> slopeTexture;
     RWTexture2D<half> boyancyData;
     StructuredBuffer<SpectrumParameters> spectrums;
     SamplerState linear_repeat_sampler;
@@ -306,7 +306,7 @@ void CS_AssembleMaps(uint3 id : SV_DISPATCHTHREADID) {
 
 
         pParams.displacementTextures[uint3(id.xy, i)] = float4(displacement, foam);
-        pParams.slopeTexture[uint3(id.xy, i)] = float2(slopes);
+        pParams.slopeTexture[uint3(id.xy, i)] = float4(slopes, 0, 0);
 
         if (i == 0) {
             pParams.boyancyData[id.xy] = half(displacement.y);

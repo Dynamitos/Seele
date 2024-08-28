@@ -1,27 +1,29 @@
-target_sources(Engine
-    PRIVATE
-        Buffer.h
-        Buffer.mm
-        Command.h
-        Command.mm
-        Descriptor.h
-        Descriptor.mm
-        Enums.h
-        Enums.mm
+target_sources(Engine 
+    PRIVATE 
+        Buffer.h 
+        Buffer.mm 
+        Command.h 
+        Command.mm 
+        Descriptor.h 
+        Descriptor.mm 
+        Enums.h 
+        Enums.mm 
         Graphics.h
-        Graphics.mm
-        Pipeline.h
-        Pipeline.mm
-        PipelineCache.h
-        PipelineCache.mm
+        Graphics.mm 
+        Pipeline.h 
+        Pipeline.mm 
+        PipelineCache.h 
+        PipelineCache.mm 
         PrivateImpl.mm
-        RenderPass.h
-        RenderPass.mm
-        Resources.h
-        Resources.mm
-        Shader.h
-        Shader.mm
-        Texture.h
-        Texture.mm
-        Window.h
+        Query.h
+        Query.mm 
+        RenderPass.h 
+        RenderPass.mm 
+        Resources.h 
+        Resources.mm 
+        Shader.h 
+        Shader.mm 
+        Texture.h 
+        Texture.mm 
+        Window.h 
         Window.mm)

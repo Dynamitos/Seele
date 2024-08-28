@@ -260,6 +260,7 @@ void LightCullingPass::setupFrustums() {
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
         .access = Gfx::SE_DESCRIPTOR_ACCESS_WRITE_ONLY_BIT,
     });
+    dispatchParamsLayout->create();
     frustumLayout = graphics->createPipelineLayout("FrustumLayout");
     frustumLayout->addDescriptorLayout(viewParamsLayout);
     frustumLayout->addDescriptorLayout(dispatchParamsLayout);

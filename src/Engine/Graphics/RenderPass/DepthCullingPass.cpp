@@ -1,6 +1,6 @@
 #include "DepthCullingPass.h"
 #include "Graphics/Shader.h"
-#include <minmax.h>
+#include <algorithm>
 
 using namespace Seele;
 
@@ -218,8 +218,8 @@ void DepthCullingPass::publishOutputs() {
         mipOffsets.add(bufferSize);
         mipDims.add(UVector2(width, height));
         bufferSize += width * height;
-        width = max((width + 1) / 2, 1);
-        height = max((height + 1) / 2, 1);
+        width = std::max((width + 1) / 2, 1u);
+        height = std::max((height + 1) / 2, 1u);
     }
     ShaderBufferCreateInfo depthMipInfo = {
         .sourceData =

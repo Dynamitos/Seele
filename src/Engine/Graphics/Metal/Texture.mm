@@ -9,83 +9,68 @@
 using namespace Seele;
 using namespace Seele::Metal;
 
-TextureHandle::TextureHandle(PGraphics graphics, MTL::TextureType type,
-                         const TextureCreateInfo &createInfo,
-                         MTL::Texture *existingImage)
-    : texture(existingImage),
-      type(type), width(createInfo.width),
-      height(createInfo.height), depth(createInfo.depth),
-      arrayCount(createInfo.elements), layerCount(createInfo.layers),
-      mipLevels(createInfo.mipLevels), samples(createInfo.samples),
-      format(createInfo.format), usage(createInfo.usage),
-      layout(Gfx::SE_IMAGE_LAYOUT_UNDEFINED),
-      ownsImage(existingImage == nullptr) {
-  if (existingImage == nullptr) {
-    MTL::TextureUsage mtlUsage = 0;
-    if (usage & Gfx::SE_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT ||
-        usage & Gfx::SE_IMAGE_USAGE_COLOR_ATTACHMENT_BIT) {
-      mtlUsage |= MTL::TextureUsageRenderTarget;
+TextureHandle::TextureHandle(PGraphics graphics, MTL::TextureType type, const TextureCreateInfo& createInfo, MTL::Texture* existingImage)
+    : texture(existingImage), type(type), width(createInfo.width), height(createInfo.height), depth(createInfo.depth),
+      arrayCount(createInfo.elements), layerCount(createInfo.layers), mipLevels(1), samples(createInfo.samples), format(createInfo.format),
+      usage(createInfo.usage), layout(Gfx::SE_IMAGE_LAYOUT_UNDEFINED), ownsImage(existingImage == nullptr) {
+    if (createInfo.useMip) {
+        mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(width, height)))) + 1;
     }
-    if (usage & Gfx::SE_IMAGE_USAGE_SAMPLED_BIT) {
-      mtlUsage |= MTL::TextureUsageShaderRead;
-    }
-    if (usage & Gfx::SE_IMAGE_USAGE_STORAGE_BIT) {
-      mtlUsage |= MTL::TextureUsageShaderWrite;
-    }
-    MTL::TextureDescriptor *descriptor =
-        MTL::TextureDescriptor::alloc()->init();
-    descriptor->setPixelFormat(cast(format));
-    descriptor->setWidth(width);
-    descriptor->setHeight(height);
-    descriptor->setDepth(depth);
-    descriptor->setArrayLength(arrayCount);
-    descriptor->setMipmapLevelCount(mipLevels);
-    descriptor->setTextureType(type);
-    descriptor->setSampleCount(samples);
-    descriptor->setUsage(mtlUsage);
+    if (existingImage == nullptr) {
+        MTL::TextureUsage mtlUsage = 0;
+        if (usage & Gfx::SE_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT || usage & Gfx::SE_IMAGE_USAGE_COLOR_ATTACHMENT_BIT) {
+            mtlUsage |= MTL::TextureUsageRenderTarget;
+        }
+        if (usage & Gfx::SE_IMAGE_USAGE_SAMPLED_BIT) {
+            mtlUsage |= MTL::TextureUsageShaderRead;
+        }
+        if (usage & Gfx::SE_IMAGE_USAGE_STORAGE_BIT) {
+            mtlUsage |= MTL::TextureUsageShaderWrite;
+        }
+        MTL::TextureDescriptor* descriptor = MTL::TextureDescriptor::alloc()->init();
+        descriptor->setPixelFormat(cast(format));
+        descriptor->setWidth(width);
+        descriptor->setHeight(height);
+        descriptor->setDepth(depth);
+        descriptor->setArrayLength(arrayCount);
+        descriptor->setMipmapLevelCount(mipLevels);
+        descriptor->setTextureType(type);
+        descriptor->setSampleCount(samples);
+        descriptor->setUsage(mtlUsage);
 
-    texture = graphics->getDevice()->newTexture(descriptor);
+        texture = graphics->getDevice()->newTexture(descriptor);
 
-    descriptor->release();
-  }
-  //  if(createInfo.sourceData.data != nullptr)
-  //  {
-  //    MTL::Region region(0, 0, 0, width, height, depth);
-  //    texture->replaceRegion(region, 0, createInfo.sourceData.data,
-  //    createInfo.sourceData.size / (depth * height));
-  //  }
+        descriptor->release();
+    }
+    //  if(createInfo.sourceData.data != nullptr)
+    //  {
+    //    MTL::Region region(0, 0, 0, width, height, depth);
+    //    texture->replaceRegion(region, 0, createInfo.sourceData.data,
+    //    createInfo.sourceData.size / (depth * height));
+    //  }
 }
 
 TextureHandle::~TextureHandle() {
-  if (ownsImage) {
-    texture->release();
-  }
+    if (ownsImage) {
+        texture->release();
+    }
 }
 
-void TextureHandle::pipelineBarrier(Gfx::SeAccessFlags,
-                                         Gfx::SePipelineStageFlags,
-                                         Gfx::SeAccessFlags,
-                                         Gfx::SePipelineStageFlags) {}
+void TextureHandle::pipelineBarrier(Gfx::SeAccessFlags, Gfx::SePipelineStageFlags, Gfx::SeAccessFlags, Gfx::SePipelineStageFlags) {}
 
-void TextureHandle::changeLayout(Gfx::SeImageLayout, Gfx::SeAccessFlags,
-                               Gfx::SePipelineStageFlags, Gfx::SeAccessFlags,
-                               Gfx::SePipelineStageFlags) {}
+void TextureHandle::changeLayout(Gfx::SeImageLayout, Gfx::SeAccessFlags, Gfx::SePipelineStageFlags, Gfx::SeAccessFlags,
+                                 Gfx::SePipelineStageFlags) {}
 
-void TextureHandle::transferOwnership(Gfx::QueueType newOwner) {
-    
-}
+void TextureHandle::transferOwnership(Gfx::QueueType newOwner) {}
 
-void TextureHandle::download(uint32, uint32, uint32, Array<uint8> &) {}
+void TextureHandle::download(uint32, uint32, uint32, Array<uint8>&) {}
 
-void TextureHandle::generateMipmaps()
-{
-}
+void TextureHandle::generateMipmaps() {}
 
 TextureBase::TextureBase(PGraphics graphics, MTL::TextureType viewType, const TextureCreateInfo& createInfo, MTL::Texture* existingImage)
-    : handle(new TextureHandle(graphics, viewType, createInfo, existingImage)), graphics(graphics)
-      {}
+    : handle(new TextureHandle(graphics, viewType, createInfo, existingImage)), graphics(graphics) {}
 
-TextureBase::~TextureBase() { }
+TextureBase::~TextureBase() {}
 
 void TextureBase::pipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage, Gfx::SeAccessFlags dstAccess,
                                   Gfx::SePipelineStageFlags dstStage) {

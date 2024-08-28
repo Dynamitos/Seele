@@ -8,34 +8,35 @@ import Scene;
 //	associatedtype BRDF : IBRDF;
 //	BRDF prepare(MaterialParameter input);
 //};
-
-layout(set=4, binding=0)
-Texture2D textureArray[];
-layout(set=4, binding=1)
-SamplerState samplerArray[];
-layout(set=4, binding=2)
-StructuredBuffer<float> floatArray;
+struct MaterialResources
+{
+    StructuredBuffer<float> floatArray;
+    Texture2D textureArray[512];
+    SamplerState samplerArray[512];
+};
+layout(set=4)
+ParameterBlock<MaterialResources> pResources;
 
 Texture2D getMaterialTextureParameter(uint index)
 {
-	return textureArray[pOffsets.textureOffset + index];
+	return pResources.textureArray[pOffsets.textureOffset + index];
 }
 
 SamplerState getMaterialSamplerParameter(uint index)
 {
-	return samplerArray[pOffsets.samplerOffset + index];
+	return pResources.samplerArray[pOffsets.samplerOffset + index];
 }
 
 float getMaterialFloatParameter(uint index)
 {
-	return floatArray[pOffsets.floatOffset + index];
+	return pResources.floatArray[pOffsets.floatOffset + index];
 }
 
 float3 getMaterialVectorParameter(uint index)
 {
 	return float3(
-		floatArray[pOffsets.floatOffset + index],
-		floatArray[pOffsets.floatOffset + index + 1],
-		floatArray[pOffsets.floatOffset + index + 2]
+		pResources.floatArray[pOffsets.floatOffset + index],
+		pResources.floatArray[pOffsets.floatOffset + index + 1],
+		pResources.floatArray[pOffsets.floatOffset + index + 2]
 	);
 }

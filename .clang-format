@@ -1,6 +1,5 @@
 BasedOnStyle: LLVM
 IndentWidth: 4
-Language: Cpp
 ColumnLimit: 140
 DerivePointerAlignment: false
 PointerAlignment: Left

@@ -54,7 +54,7 @@ struct ShaderParameter : public ShaderExpression {
     virtual uint64 getIdentifier() const override = 0;
     virtual uint64 getCPUSize() const override = 0;
     virtual uint64 getGPUSize() const override = 0;
-    virtual std::string evaluate(Map<std::string, std::string>& varState) const = 0;
+    virtual std::string evaluate(Map<std::string, std::string>& varState) const override = 0;
     virtual void save(ArchiveBuffer& buffer) const override;
     virtual void load(ArchiveBuffer& buffer) override;
 };
@@ -68,8 +68,8 @@ struct FloatParameter : public ShaderParameter {
     virtual void updateDescriptorSet(uint32 textureOffset, uint32 samplerOffset, uint32 floatOffset) override;
     virtual std::string evaluate(Map<std::string, std::string>& varState) const override;
     virtual uint64 getIdentifier() const override { return IDENTIFIER; }
-    virtual uint64 getCPUSize() const { return sizeof(FloatParameter); }
-    virtual uint64 getGPUSize() const { return sizeof(float); }
+    virtual uint64 getCPUSize() const override { return sizeof(FloatParameter); }
+    virtual uint64 getGPUSize() const override { return sizeof(float); }
     virtual void save(ArchiveBuffer& buffer) const override;
     virtual void load(ArchiveBuffer& buffer) override;
 };
@@ -83,8 +83,8 @@ struct VectorParameter : public ShaderParameter {
     virtual void updateDescriptorSet(uint32 textureOffset, uint32 samplerOffset, uint32 floatOffset) override;
     virtual std::string evaluate(Map<std::string, std::string>& varState) const override;
     virtual uint64 getIdentifier() const override { return IDENTIFIER; }
-    virtual uint64 getCPUSize() const { return sizeof(VectorParameter); }
-    virtual uint64 getGPUSize() const { return sizeof(Vector); }
+    virtual uint64 getCPUSize() const override { return sizeof(VectorParameter); }
+    virtual uint64 getGPUSize() const override { return sizeof(Vector); }
     virtual void save(ArchiveBuffer& buffer) const override;
     virtual void load(ArchiveBuffer& buffer) override;
 };
@@ -98,8 +98,8 @@ struct TextureParameter : public ShaderParameter {
     virtual void updateDescriptorSet(uint32 textureOffset, uint32 samplerOffset, uint32 floatOffset) override;
     virtual std::string evaluate(Map<std::string, std::string>& varState) const override;
     virtual uint64 getIdentifier() const override { return IDENTIFIER; }
-    virtual uint64 getCPUSize() const { return sizeof(TextureParameter); }
-    virtual uint64 getGPUSize() const { return sizeof(void*); } // TODO: technically this is just a ref, but idk
+    virtual uint64 getCPUSize() const override { return sizeof(TextureParameter); }
+    virtual uint64 getGPUSize() const override { return sizeof(void*); } // TODO: technically this is just a ref, but idk
     virtual void save(ArchiveBuffer& buffer) const override;
     virtual void load(ArchiveBuffer& buffer) override;
 };
@@ -114,8 +114,8 @@ struct SamplerParameter : public ShaderParameter {
     virtual void updateDescriptorSet(uint32 textureOffset, uint32 samplerOffset, uint32 floatOffset) override;
     virtual std::string evaluate(Map<std::string, std::string>& varState) const override;
     virtual uint64 getIdentifier() const override { return IDENTIFIER; }
-    virtual uint64 getCPUSize() const { return sizeof(SamplerParameter); }
-    virtual uint64 getGPUSize() const { return sizeof(void*); }
+    virtual uint64 getCPUSize() const override { return sizeof(SamplerParameter); }
+    virtual uint64 getGPUSize() const override { return sizeof(void*); }
     virtual void save(ArchiveBuffer& buffer) const override;
     virtual void load(ArchiveBuffer& buffer) override;
 };
@@ -130,8 +130,8 @@ struct CombinedTextureParameter : public ShaderParameter {
     virtual void updateDescriptorSet(uint32 textureOffset, uint32 samplerOffset, uint32 floatOffset) override;
     virtual std::string evaluate(Map<std::string, std::string>& varState) const override;
     virtual uint64 getIdentifier() const override { return IDENTIFIER; }
-    virtual uint64 getCPUSize() const { return sizeof(CombinedTextureParameter); }
-    virtual uint64 getGPUSize() const { return sizeof(void*); }
+    virtual uint64 getCPUSize() const override { return sizeof(CombinedTextureParameter); }
+    virtual uint64 getGPUSize() const override { return sizeof(void*); }
     virtual void save(ArchiveBuffer& buffer) const override;
     virtual void load(ArchiveBuffer& buffer) override;
 };

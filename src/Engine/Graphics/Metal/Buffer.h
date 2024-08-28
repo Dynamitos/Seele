@@ -12,9 +12,11 @@ namespace Metal {
 DECLARE_REF(Graphics)
 class BufferAllocation : public CommandBoundResource {
   public:
-    BufferAllocation(PGraphics graphics, const std::string& name, uint64 size, MTL::ResourceOptions options = MTL::ResourceOptionCPUCacheModeDefault);
+    BufferAllocation(PGraphics graphics, const std::string& name, uint64 size,
+                     MTL::ResourceOptions options = MTL::ResourceOptionCPUCacheModeDefault);
     virtual ~BufferAllocation();
-    void pipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage, Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage);
+    void pipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage, Gfx::SeAccessFlags dstAccess,
+                         Gfx::SePipelineStageFlags dstStage);
     void transferOwnership(Gfx::QueueType newOwner);
     void updateContents(uint64 regionOffset, uint64 regionSize, void* ptr);
     void readContents(uint64 regionOffset, uint64 regionSize, void* ptr);
@@ -27,14 +29,15 @@ DECLARE_REF(BufferAllocation)
 class Buffer {
   public:
     Buffer(PGraphics graphics, uint64 size, Gfx::SeBufferUsageFlags usage, Gfx::QueueType queueType, bool dynamic, std::string name,
-               bool createCleared = false, uint32 clearValue = 0);
+           bool createCleared = false, uint32 clearValue = 0);
     virtual ~Buffer();
     MTL::Buffer* getHandle() const { return buffers[currentBuffer]->buffer; }
     PBufferAllocation getAlloc() const { return buffers[currentBuffer]; }
     uint64 getSize() const { return buffers[currentBuffer]->size; }
     void updateContents(uint64 regionOffset, uint64 regionSize, void* ptr);
     void readContents(uint64 regionOffset, uint64 regionSize, void* ptr);
-
+    void* map();
+    void unmap();
 
   protected:
     PGraphics graphics;
@@ -51,8 +54,8 @@ class Buffer {
     void copyBuffer(uint64 src, uint64 dest);
 
     void transferOwnership(Gfx::QueueType newOwner);
-    void pipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage, Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage);
-
+    void pipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage, Gfx::SeAccessFlags dstAccess,
+                         Gfx::SePipelineStageFlags dstStage);
 };
 DEFINE_REF(Buffer)
 
@@ -60,7 +63,8 @@ class VertexBuffer : public Gfx::VertexBuffer, public Buffer {
   public:
     VertexBuffer(PGraphics graphics, const VertexBufferCreateInfo& createInfo);
     virtual ~VertexBuffer();
-    virtual void updateRegion(DataSource update) override;
+
+    virtual void updateRegion(uint64 offset, uint64 size, void* data) override;
     virtual void download(Array<uint8>& buffer) override;
 
   protected:
@@ -89,9 +93,8 @@ class UniformBuffer : public Gfx::UniformBuffer, public Buffer {
   public:
     UniformBuffer(PGraphics graphics, const UniformBufferCreateInfo& createInfo);
     virtual ~UniformBuffer();
-
+    virtual void updateContents(uint64 offset, uint64 size, void* data) override;
     virtual void rotateBuffer(uint64 size) override;
-    virtual void updateContents(const DataSource& sourceData) override;
 
   protected:
     // Inherited via QueueOwnedResource
@@ -104,9 +107,12 @@ class ShaderBuffer : public Gfx::ShaderBuffer, public Buffer {
   public:
     ShaderBuffer(PGraphics graphics, const ShaderBufferCreateInfo& createInfo);
     virtual ~ShaderBuffer();
-    virtual void readContents(Array<uint8>& data) override;
+    virtual void readContents(uint64 offset, uint64 size, void* data) override;
+    virtual void updateContents(uint64 offset, uint64 size, void* data) override;
     virtual void rotateBuffer(uint64 size, bool preserveContents = false) override;
-    virtual void updateContents(const ShaderBufferCreateInfo& sourceData) override;
+    virtual void* map() override;
+    virtual void unmap() override;
+
     virtual void clear() override;
 
   protected:

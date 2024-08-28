@@ -11,13 +11,13 @@ class TextureHandle {
     TextureHandle(PGraphics graphics, MTL::TextureType type, const TextureCreateInfo& createInfo, MTL::Texture* existingImage);
     virtual ~TextureHandle();
     void pipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage, Gfx::SeAccessFlags dstAccess,
-                                Gfx::SePipelineStageFlags dstStage);
+                         Gfx::SePipelineStageFlags dstStage);
     void transferOwnership(Gfx::QueueType newOwner);
-    void changeLayout(Gfx::SeImageLayout newLayout, Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage, Gfx::SeAccessFlags dstAccess,
-                    Gfx::SePipelineStageFlags dstStage);
+    void changeLayout(Gfx::SeImageLayout newLayout, Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage,
+                      Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage);
     void download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<uint8>& buffer);
     void generateMipmaps();
-   
+
     MTL::Texture* texture;
     MTL::TextureType type;
     uint32 width;
@@ -34,7 +34,6 @@ class TextureHandle {
     uint8 ownsImage;
 };
 DEFINE_REF(TextureHandle)
-
 
 class TextureBase {
   public:
@@ -56,12 +55,13 @@ class TextureBase {
     constexpr bool isDepthStencil() const { return handle->aspect & (Gfx::SE_IMAGE_ASPECT_DEPTH_BIT | Gfx::SE_IMAGE_ASPECT_STENCIL_BIT); }
 
     void pipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage, Gfx::SeAccessFlags dstAccess,
-                                Gfx::SePipelineStageFlags dstStage);
+                         Gfx::SePipelineStageFlags dstStage);
     void transferOwnership(Gfx::QueueType newOwner);
-    void changeLayout(Gfx::SeImageLayout newLayout, Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage, Gfx::SeAccessFlags dstAccess,
-                      Gfx::SePipelineStageFlags dstStage);
+    void changeLayout(Gfx::SeImageLayout newLayout, Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage,
+                      Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage);
     void download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<uint8>& buffer);
     void generateMipmaps();
+
   protected:
     OTextureHandle handle;
     // Updates via reference
