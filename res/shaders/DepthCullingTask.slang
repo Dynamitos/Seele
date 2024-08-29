@@ -1,6 +1,7 @@
 import Common;
 import Scene;
 import Bounding;
+import DepthCommon;
 
 groupshared MeshPayload p;
 groupshared uint head;
@@ -10,37 +11,55 @@ groupshared Frustum viewFrustum;
 groupshared float4x4 modelViewProjection;
 groupshared bool meshVisible;
 
-struct DepthData
-{
-    Texture2D<float> texture;
-    RWStructuredBuffer<float> buffer;
-}
+//void writeDebug(uint mipLevel, uint mipOffset, int2 mipDimensions, int2 screenMin, int2 screenMax, int2 origScreenMin, int2 origScreenMax)
+//{
+//    uint index = 0;
+//    InterlockedAdd(pDepthAttachment.debugHead[0], 1, index);
+//    index = min(index, 10000);
+//    {
+//        pDepthAttachment.debugData[index].mipLevel = mipLevel;
+//        pDepthAttachment.debugData[index].mipOffset = mipOffset;
+//        pDepthAttachment.debugData[index].mipDimensions = mipDimensions;
+//        pDepthAttachment.debugData[index].screenCornerMax = screenMax;
+//        pDepthAttachment.debugData[index].screenCornerMin = screenMin;
+//        pDepthAttachment.debugData[index].origScreenMax = origScreenMax;
+//        pDepthAttachment.debugData[index].origScreenMin = origScreenMin;
+//    }
+//}
 
 ParameterBlock<DepthData> pDepthAttachment;
-
 bool isBoxVisible(AABB bounding)
 {
-    uint2 mipDimensions = uint2(uint(pViewParams.screenDimensions.x), uint(pViewParams.screenDimensions.y));
+    int2 mipDimensions = uint2(uint(pViewParams.screenDimensions.x), uint(pViewParams.screenDimensions.y));
     // now we calculate what mip level we need to only sample up to 4 texels covering the entire meshlet
-    uint2 screenCornerMin = mipDimensions;
-    uint2 screenCornerMax = uint2(0, 0);
+    int2 screenCornerMin = mipDimensions;
+    int2 screenCornerMax = uint2(0, 0);
     // lower values are closer
     float maxDepth = bounding.projectScreenDepth(modelViewProjection, screenCornerMin, screenCornerMax);
     uint mipOffset = 0;
+//    uint mipLevel = 0;
+//    int2 origScreenMin = screenCornerMin;
+//    int2 origScreenMax = screenCornerMax;
     // in theory this wouldnt work if no corner was in screen, as min would be greater that max, however we verified that with view culling
     while(screenCornerMax.x - screenCornerMin.x > 1 || screenCornerMax.y - screenCornerMin.y > 1)
     {
+//        mipLevel++;
         mipOffset += mipDimensions.x * mipDimensions.y;
-        mipDimensions = uint2(mipDimensions.x + 1, mipDimensions.y + 1) / 2;
-        screenCornerMin = uint2(screenCornerMin.x + 1, screenCornerMin.y + 1) / 2;
-        screenCornerMax = uint2(screenCornerMax.x, screenCornerMax.y) / 2;
+        mipDimensions = int2(mipDimensions.x + 1, mipDimensions.y + 1) / 2;
+        screenCornerMin = int2(screenCornerMin.x + 1, screenCornerMin.y + 1) / 2;
+        screenCornerMax = int2(screenCornerMax.x, screenCornerMax.y) / 2;
     }
 
+    uint i0 = mipOffset + (screenCornerMin.y * mipDimensions.x) + screenCornerMin.x;
+    uint i1 = mipOffset + (screenCornerMin.y * mipDimensions.x) + screenCornerMax.x;
+    uint i2 = mipOffset + (screenCornerMax.y * mipDimensions.x) + screenCornerMin.x;
+    uint i3 = mipOffset + (screenCornerMax.y * mipDimensions.x) + screenCornerMax.x;
+
     // now we sample 4 texels from the depth at the calculated mip level, this should give us the screen extent of the meshlet
-    float d1 = pDepthAttachment.buffer[mipOffset + (screenCornerMin.y * mipDimensions.x) + screenCornerMin.x];
-    float d2 = pDepthAttachment.buffer[mipOffset + (screenCornerMin.y * mipDimensions.x) + screenCornerMax.x];
-    float d3 = pDepthAttachment.buffer[mipOffset + (screenCornerMax.y * mipDimensions.x) + screenCornerMin.x];
-    float d4 = pDepthAttachment.buffer[mipOffset + (screenCornerMax.y * mipDimensions.x) + screenCornerMax.x];
+    float d1 = pDepthAttachment.buffer[i0];
+    float d2 = pDepthAttachment.buffer[i1];
+    float d3 = pDepthAttachment.buffer[i2];
+    float d4 = pDepthAttachment.buffer[i3];
 
     // we want to check if the minimum depth (the value farthest away) is smaller than the maximum bounding box depth
     // otherwise, there is no way for the meshlet to be visible
@@ -102,7 +121,7 @@ void taskMain(
             {
 #ifdef DEPTH_CULLING
                 // if the meshlet bounding box is behind the cached depth buffer, we skip
-                //if(isBoxVisible(meshlet.bounding))
+                if(isBoxVisible(meshlet.bounding))
 #endif
                 {
                     uint index;

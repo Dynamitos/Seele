@@ -1,10 +1,6 @@
 import Common;
+import DepthCommon;
 
-struct DepthData
-{
-    Texture2D<float> texture;
-    RWStructuredBuffer<float> buffer;
-}
 ParameterBlock<DepthData> pDepthAttachment;
 
 struct MipParam

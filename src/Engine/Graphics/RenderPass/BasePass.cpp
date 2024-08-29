@@ -472,7 +472,7 @@ void BasePass::createRenderPass() {
     oLightGrid = resources->requestTexture("LIGHTCULLING_OLIGHTGRID");
     tLightGrid = resources->requestTexture("LIGHTCULLING_TLIGHTGRID");
 
-    waterRenderer->setViewport(viewport, renderPass);
+    //waterRenderer->setViewport(viewport, renderPass);
 
     // Debug rendering
     {

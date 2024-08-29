@@ -774,6 +774,7 @@ void Graphics::pickPhysicalDevice() {
         .pNext = &features11,
         .features =
             {
+                //.robustBufferAccess = true,
                 .geometryShader = true,
                 .fillModeNonSolid = true,
                 .wideLines = true,

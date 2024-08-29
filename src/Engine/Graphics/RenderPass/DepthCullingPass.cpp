@@ -6,6 +6,10 @@ using namespace Seele;
 
 DepthCullingPass::DepthCullingPass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics, scene) {
     depthAttachmentLayout = graphics->createDescriptorLayout("pDepthAttachment");
+    //depthAttachmentLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+    //    .binding = 0,
+    //    .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+    //});
     depthAttachmentLayout->addDescriptorBinding(Gfx::DescriptorBinding{
         .binding = 0,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
@@ -16,6 +20,16 @@ DepthCullingPass::DepthCullingPass(Gfx::PGraphics graphics, PScene scene) : Rend
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
         .shaderStages = Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_COMPUTE_BIT,
     });
+    //depthAttachmentLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+    //    .binding = 3,
+    //    .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+    //    .shaderStages = Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_COMPUTE_BIT,
+    //});
+    //depthAttachmentLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+    //    .binding = 4,
+    //    .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+    //    .shaderStages = Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_COMPUTE_BIT,
+    //});
     depthAttachmentLayout->create();
 
     depthCullingLayout = graphics->createPipelineLayout("DepthPrepassLayout");
@@ -73,9 +87,15 @@ void DepthCullingPass::render() {
                                                Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, Gfx::SE_ACCESS_SHADER_READ_BIT,
                                                Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 
+    //uint32 reset = 0;
+    //debugHead->updateContents(0, sizeof(uint32), &reset);
+
     Gfx::PDescriptorSet set = depthAttachmentLayout->allocateDescriptorSet();
+    //set->updateBuffer(0, debugUniform);
     set->updateTexture(0, Gfx::PTexture2D(depthAttachment.getTexture()));
     set->updateBuffer(1, depthMipBuffer);
+    //set->updateBuffer(3, debugHead);
+    //set->updateBuffer(4, debugData);
     set->writeChanges();
 
     timestamps->begin();
@@ -221,7 +241,33 @@ void DepthCullingPass::publishOutputs() {
         width = std::max((width + 1) / 2, 1u);
         height = std::max((height + 1) / 2, 1u);
     }
-    ShaderBufferCreateInfo depthMipInfo = {
+
+    //debugUniform = graphics->createUniformBuffer(UniformBufferCreateInfo{
+    //    .sourceData =
+    //        {
+    //            .size = sizeof(uint32),
+    //            .data = (uint8*)&bufferSize,
+    //        },
+    //});
+    //uint32 reset = 0;
+    //debugHead = graphics->createShaderBuffer(ShaderBufferCreateInfo{
+    //    .sourceData =
+    //        {
+    //            .size = sizeof(uint32),
+    //            .data = (uint8*)&reset,
+    //        },
+    //
+    //});
+    //debugData = graphics->createShaderBuffer(ShaderBufferCreateInfo{
+    //    .sourceData =
+    //        {
+    //            .size = sizeof(DepthDebugData) * 10000,
+    //            .data = nullptr,
+    //        },
+    //});
+    //graphics->waitDeviceIdle();
+    
+    depthMipBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
         .sourceData =
             {
                 .size = bufferSize * sizeof(uint32),
@@ -229,17 +275,14 @@ void DepthCullingPass::publishOutputs() {
             },
         .numElements = bufferSize,
         .name = "DepthMipBuffer",
-    };
-    depthMipBuffer = graphics->createShaderBuffer(depthMipInfo);
+    });
 
-    ShaderCompilationInfo mipComputeInfo = {
+    graphics->beginShaderCompilation(ShaderCompilationInfo{
         .name = "DepthMipCompute",
         .modules = {"DepthMipGen"},
         .entryPoints = {{"initialReduce", "DepthMipGen"}, {"reduceLevel", "DepthMipGen"}},
         .rootSignature = depthComputeLayout,
-    };
-
-    graphics->beginShaderCompilation(mipComputeInfo);
+    });
     depthInitialReduceShader = graphics->createComputeShader({0});
     depthComputeLayout->create();
 

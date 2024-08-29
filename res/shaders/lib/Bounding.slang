@@ -51,7 +51,7 @@ struct AABB
         }
         return result;
 	}
-    float projectScreenDepth(float4x4 mvp, inout uint2 screenCornerMin, inout uint2 screenCornerMax)
+    float projectScreenDepth(float4x4 mvp, inout int2 screenCornerMin, inout int2 screenCornerMax)
     {
         float maxDepth = 0;
         float4 corners[8];
@@ -67,8 +67,9 @@ struct AABB
         {
             float4 clipCorner = mul(mvp, corners[i]);
             float4 screenCorner = clipToScreen(clipCorner);
-            screenCornerMin = uint2(min(screenCornerMin.x, uint(screenCorner.x)), min(screenCornerMin.y, uint(screenCorner.y)));
-            screenCornerMax = uint2(max(screenCornerMax.x, uint(screenCorner.x)), max(screenCornerMax.y, uint(screenCorner.y)));
+            int2 screenCoords = int2(clamp(int(screenCorner.x), 0, int(pViewParams.screenDimensions.x)), clamp(int(screenCorner.y), 0, int(pViewParams.screenDimensions.y)));
+            screenCornerMin = int2(min(screenCornerMin.x, screenCoords.x), min(screenCornerMin.y, screenCoords.y));
+            screenCornerMax = int2(max(screenCornerMax.x, screenCoords.x), max(screenCornerMax.y, screenCoords.y));
             maxDepth = max(maxDepth, screenCorner.z);
         }
         return maxDepth;
