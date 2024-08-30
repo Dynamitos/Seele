@@ -19,26 +19,25 @@ void taskMain(
     float tileDistance = distance / tile.extent;
     uint numMeshes = groupID.y + 1;
     
-    if(numMeshes == 4 && (tileDistance > 8))
+    if(numMeshes == 4 && tileDistance > 2)
     {
         return;
     }
-    if(numMeshes == 3)
+    if(numMeshes == 3 && (tileDistance > 4 || tileDistance < 1))
     {
         return;
     }
-    if(numMeshes == 2)
+    if(numMeshes == 2 && (tileDistance > 8 || tileDistance < 3))
     {
         return;
     }
-    if(numMeshes == 1)
+    if(numMeshes == 1 && tileDistance < 7)
     {
         return;
     }
     WaterPayload payload;
     payload.offset = bounding.minCorner;
     payload.extent = tile.extent / numMeshes;
-    // todo: hardcoded max lod
     payload.numMeshes = numMeshes;
     DispatchMesh(numMeshes, numMeshes, 1, payload);
 }

@@ -49,11 +49,33 @@ void meshMain(
 
         float lodDisplacement = 0;
         float3 camPos = pViewParams.cameraPos_WS.xyz;
-        float cameraDistance = distance(worldPos, float3(camPos.x, 0, camPos.z)) / params.extent;
+        float cameraDistance = distance(worldPos, camPos);
+        float threshold = 0;
+        if(params.numMeshes == 3)
+        {
+            threshold = 10;
+        }
+        if(params.numMeshes == 2)
+        {
+            threshold = 30;
+        }
+        if(params.numMeshes == 1)
+        {
+            threshold = 70;
+        }
+
         if(params.numMeshes < 4)
         {
-            lodDisplacement = exp(-(1 / (cameraDistance + 4)));
+            if(cameraDistance > threshold)
+            {
+                lodDisplacement = clamp(exp(-(1 / (cameraDistance + threshold))), 0, 1) - 1;
+            }
+            else
+            {
+                lodDisplacement = -1;
+            }
         }
+    
 
         float3 displacement1 = pWaterMaterial.displacementTextures.Sample(pWaterMaterial.sampler, float3(worldPos.xz * pWaterMaterial.tile1, 0)).xyz * pWaterMaterial.contributeDisplacement1;
         float3 displacement2 = pWaterMaterial.displacementTextures.Sample(pWaterMaterial.sampler, float3(worldPos.xz * pWaterMaterial.tile2, 1)).xyz * pWaterMaterial.contributeDisplacement2;
@@ -69,7 +91,7 @@ void meshMain(
         displacement = lerp(0.0f, displacement, pow(saturate(depth), pWaterMaterial.displacementDepthAttenuation));
 
         worldPos += displacement;
-        worldPos.y = lodDisplacement;
+        worldPos.y += lodDisplacement;
 
         WaterVertex v;
         v.position_WS = worldPos;

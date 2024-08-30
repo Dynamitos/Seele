@@ -358,6 +358,8 @@ void WaterRenderer::beginFrame() {
             .height = tile.height,
         });
     });
+    if (payloads.size() == 0)
+        return;
     waterTiles = graphics->createShaderBuffer(ShaderBufferCreateInfo{
         .sourceData =
             {
@@ -435,7 +437,6 @@ void WaterRenderer::beginFrame() {
 
     boyancyData->changeLayout(Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, Gfx::SE_ACCESS_SHADER_WRITE_BIT,
                               Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT, Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_SHADER_STAGE_MESH_BIT_EXT);
-
     updateMaterialDescriptor();
 }
 
@@ -463,6 +464,7 @@ void WaterRenderer::setViewport(Gfx::PViewport _viewport, Gfx::PRenderPass rende
             },
         .rasterizationState =
             {
+                //.polygonMode = Gfx::SE_POLYGON_MODE_LINE,
                 .cullMode = Gfx::SE_CULL_MODE_BACK_BIT,
             },
         .colorBlend =

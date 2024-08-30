@@ -64,19 +64,19 @@ int main() {
             .filePath = sourcePath / "import/textures/skyboxsun5deg_tn.jpg",
             .type = TextureImportType::TEXTURE_CUBEMAP,
         });
+        //AssetImporter::importMesh(MeshImportArgs{
+        //    .filePath = sourcePath / "import/models/ship.fbx",
+        //    .importPath = "ship",
+        //});
         AssetImporter::importMesh(MeshImportArgs{
-            .filePath = sourcePath / "import/models/ship.fbx",
-            .importPath = "ship",
+           .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.glb",
+           .importPath = "Whitechapel",
         });
-        // AssetImporter::importMesh(MeshImportArgs{
-        //    .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.glb",
-        //    .importPath = "Whitechapel",
-        //);
         //  AssetImporter::importMesh(MeshImportArgs{
         //      .filePath = sourcePath / "import/models/city-suburbs/source/city-suburbs.obj",
         //      .importPath = "suburbs",
         //  });
-
+        getThreadPool().waitIdle();
         vd->commitMeshes();
         WindowCreateInfo mainWindowInfo = {
             .width = 1920,

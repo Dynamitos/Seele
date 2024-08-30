@@ -11,6 +11,7 @@ class ThreadPool {
     ~ThreadPool();
     void runAndWait(List<std::function<void()>> functions);
     void runAsync(std::function<void()> func);
+    void waitIdle();
   private:
     struct TaskGroup {
         uint64 numRemaining = 0;
@@ -22,6 +23,8 @@ class ThreadPool {
     
     std::mutex queueLock;
     std::condition_variable queueCV;
+    std::atomic_uint32_t numWaiting = 0;
+    std::condition_variable idleCV;
     List<QueueEntry> queue;
     
     void work();

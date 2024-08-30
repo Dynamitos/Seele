@@ -26,7 +26,7 @@ void Seele::addDebugVertex(DebugVertex vert) { gDebugVertices.add(vert); }
 void Seele::addDebugVertices(Array<DebugVertex> verts) { gDebugVertices.addAll(verts); }
 
 BasePass::BasePass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics, scene) {
-    //waterRenderer = new WaterRenderer(graphics, scene, viewParamsLayout);
+    waterRenderer = new WaterRenderer(graphics, scene, viewParamsLayout);
     basePassLayout = graphics->createPipelineLayout("BasePassLayout");
 
     basePassLayout->addDescriptorLayout(viewParamsLayout);
@@ -472,7 +472,7 @@ void BasePass::createRenderPass() {
     oLightGrid = resources->requestTexture("LIGHTCULLING_OLIGHTGRID");
     tLightGrid = resources->requestTexture("LIGHTCULLING_TLIGHTGRID");
 
-    //waterRenderer->setViewport(viewport, renderPass);
+    waterRenderer->setViewport(viewport, renderPass);
 
     // Debug rendering
     {

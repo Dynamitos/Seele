@@ -54,11 +54,25 @@ void ThreadPool::runAsync(std::function<void()> func) {
     queueCV.notify_one();
 }
 
+void ThreadPool::waitIdle() {
+    std::unique_lock l(queueLock);
+    while (numWaiting < workers.size())
+    {
+        idleCV.wait(l);
+    }
+}
+
 void ThreadPool::work() {
     while (running) {
         std::unique_lock l(queueLock);
         while (queue.empty()) {
+            numWaiting++;
+            if (numWaiting == workers.size())
+            {
+                idleCV.notify_all();
+            }
             queueCV.wait(l);
+            numWaiting--;
             if (!running) {
                 return;
             }
@@ -72,7 +86,7 @@ void ThreadPool::work() {
             std::unique_lock t(taskLock);
             entry.task->numRemaining--;
             if (entry.task->numRemaining == 0) {
-                completedCV.notify_one();
+                completedCV.notify_all();
             }
         }
     }
