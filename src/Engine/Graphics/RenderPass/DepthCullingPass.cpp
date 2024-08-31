@@ -87,47 +87,41 @@ void DepthCullingPass::render() {
                                                Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, Gfx::SE_ACCESS_SHADER_READ_BIT,
                                                Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 
-    //uint32 reset = 0;
-    //debugHead->updateContents(0, sizeof(uint32), &reset);
-
+    depthMipBuffer->rotateBuffer(depthMipBuffer->getNumElements() * sizeof(uint32));
     Gfx::PDescriptorSet set = depthAttachmentLayout->allocateDescriptorSet();
-    //set->updateBuffer(0, debugUniform);
     set->updateTexture(0, Gfx::PTexture2D(depthAttachment.getTexture()));
     set->updateBuffer(1, depthMipBuffer);
-    //set->updateBuffer(3, debugHead);
-    //set->updateBuffer(4, debugData);
     set->writeChanges();
 
     timestamps->begin();
     timestamps->write(Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT, "MipBegin");
-    Gfx::OComputeCommand computeCommand = graphics->createComputeCommand("DepthMipGenCommand");
+    Gfx::OComputeCommand computeCommand = graphics->createComputeCommand("InitialReduce");
     computeCommand->bindPipeline(depthInitialReduce);
     computeCommand->bindDescriptor({viewParamsSet, set});
     UVector2 reduceDimensions = UVector2(viewport->getOwner()->getFramebufferWidth() + BLOCK_SIZE - 1,
                                          viewport->getOwner()->getFramebufferHeight() + BLOCK_SIZE - 1) /
                                 uint32(BLOCK_SIZE);
     computeCommand->dispatch(reduceDimensions.x, reduceDimensions.y, 1);
-
-    computeCommand->bindPipeline(depthMipGen);
-    computeCommand->bindDescriptor({viewParamsSet, set});
+    graphics->executeCommands(std::move(computeCommand));
 
     for (uint32 i = 0; i < mipOffsets.size() - 1; ++i) {
         depthMipBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                                         Gfx::SE_ACCESS_SHADER_READ_BIT | Gfx::SE_ACCESS_SHADER_WRITE_BIT,
                                         Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
+        Gfx::OComputeCommand mipCommand = graphics->createComputeCommand(fmt::format("MipGenLevel{0}", i));
+        mipCommand->bindPipeline(depthMipGen);
+        mipCommand->bindDescriptor({viewParamsSet, set});
         MipParam params = {
             .srcMipOffset = mipOffsets[i],
             .dstMipOffset = mipOffsets[i + 1],
             .srcMipDim = mipDims[i],
             .dstMipDim = mipDims[i + 1],
         };
-        computeCommand->pushConstants(Gfx::SE_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(MipParam), &params);
-        UVector2 threadGroups = (((mipDims[i] + UVector2(1, 1)) / 2u) + UVector2(BLOCK_SIZE - 1, BLOCK_SIZE - 1)) / uint32(BLOCK_SIZE);
-        computeCommand->dispatch(threadGroups.x, threadGroups.y, 1);
+        mipCommand->pushConstants(Gfx::SE_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(MipParam), &params);
+        UVector2 threadGroups = (reduceDimensions + 1u) / 2u;
+        mipCommand->dispatch(threadGroups.x, threadGroups.y, 1);
+        graphics->executeCommands(std::move(mipCommand));
     }
-    Array<Gfx::OComputeCommand> computeCommands;
-    computeCommands.add(std::move(computeCommand));
-    graphics->executeCommands(std::move(computeCommands));
     depthMipBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                                     Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_TASK_SHADER_BIT_EXT);
 
@@ -141,7 +135,7 @@ void DepthCullingPass::render() {
     Array<Gfx::ORenderCommand> commands;
 
     Gfx::ShaderPermutation permutation = graphics->getShaderCompiler()->getTemplate("DepthPass");
-    permutation.setPositionOnly(getGlobals().usePositionOnly);
+    permutation.setPositionOnly(true);
     permutation.setDepthCulling(getGlobals().useDepthCulling);
     for (VertexData* vertexData : VertexData::getList()) {
         permutation.setVertexData(vertexData->getTypeName());
@@ -238,35 +232,10 @@ void DepthCullingPass::publishOutputs() {
         mipOffsets.add(bufferSize);
         mipDims.add(UVector2(width, height));
         bufferSize += width * height;
-        width = std::max((width + 1) / 2, 1u);
-        height = std::max((height + 1) / 2, 1u);
+        width = (width + 1) / 2;
+        height = (height + 1) / 2;
     }
 
-    //debugUniform = graphics->createUniformBuffer(UniformBufferCreateInfo{
-    //    .sourceData =
-    //        {
-    //            .size = sizeof(uint32),
-    //            .data = (uint8*)&bufferSize,
-    //        },
-    //});
-    //uint32 reset = 0;
-    //debugHead = graphics->createShaderBuffer(ShaderBufferCreateInfo{
-    //    .sourceData =
-    //        {
-    //            .size = sizeof(uint32),
-    //            .data = (uint8*)&reset,
-    //        },
-    //
-    //});
-    //debugData = graphics->createShaderBuffer(ShaderBufferCreateInfo{
-    //    .sourceData =
-    //        {
-    //            .size = sizeof(DepthDebugData) * 10000,
-    //            .data = nullptr,
-    //        },
-    //});
-    //graphics->waitDeviceIdle();
-    
     depthMipBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
         .sourceData =
             {
@@ -274,6 +243,9 @@ void DepthCullingPass::publishOutputs() {
                 .data = nullptr,
             },
         .numElements = bufferSize,
+        .clearValue = 0,
+        .createCleared = true,
+        .dynamic = true,
         .name = "DepthMipBuffer",
     });
 

@@ -70,7 +70,7 @@ struct AABB
             int2 screenCoords = int2(clamp(int(screenCorner.x), 0, int(pViewParams.screenDimensions.x)), clamp(int(screenCorner.y), 0, int(pViewParams.screenDimensions.y)));
             screenCornerMin = int2(min(screenCornerMin.x, screenCoords.x), min(screenCornerMin.y, screenCoords.y));
             screenCornerMax = int2(max(screenCornerMax.x, screenCoords.x), max(screenCornerMax.y, screenCoords.y));
-            maxDepth = max(maxDepth, screenCorner.z);
+            maxDepth = max(maxDepth, 1/screenCorner.z);
         }
         return maxDepth;
     }

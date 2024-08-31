@@ -26,16 +26,9 @@ class DepthCullingPass : public RenderPass {
         UVector2 dstMipDim;
     };
 
-    struct DepthDebugData {
-        uint32 mipLevel;
-        uint32 mipOffset;
-        UVector2 mipDimensions;
-        UVector2 screenCornerMin;
-        UVector2 screenCornerMax;
-    };
-
     Array<uint32> mipOffsets;
     Array<UVector2> mipDims;
+
     Gfx::OShaderBuffer depthMipBuffer;
     Gfx::RenderTargetAttachment depthAttachment;
     Gfx::RenderTargetAttachment visibilityAttachment;
@@ -49,11 +42,7 @@ class DepthCullingPass : public RenderPass {
     Gfx::PComputePipeline depthInitialReduce;
     Gfx::OComputeShader depthMipGenShader;
     Gfx::PComputePipeline depthMipGen;
-
-    //Gfx::OUniformBuffer debugUniform;
-    //Gfx::OShaderBuffer debugHead;
-    //Gfx::OShaderBuffer debugData;
-
+    
     Gfx::PShaderBuffer cullingBuffer;
 };
 DEFINE_REF(DepthCullingPass)

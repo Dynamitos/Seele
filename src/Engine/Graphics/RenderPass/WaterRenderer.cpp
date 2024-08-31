@@ -174,7 +174,7 @@ WaterRenderer::WaterRenderer(Gfx::PGraphics graphics, PScene scene, Gfx::PDescri
                 {"CS_AssembleMaps", "WaterCompute"},
             },
         .rootSignature = pipelineLayout,
-        .dumpIntermediate = true,
+        .dumpIntermediate = false,
     };
     graphics->beginShaderCompilation(info);
     initSpectrumCS = graphics->createComputeShader({0});
