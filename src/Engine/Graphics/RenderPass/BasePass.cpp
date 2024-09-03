@@ -26,7 +26,7 @@ void Seele::addDebugVertex(DebugVertex vert) { gDebugVertices.add(vert); }
 void Seele::addDebugVertices(Array<DebugVertex> verts) { gDebugVertices.addAll(verts); }
 
 BasePass::BasePass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics, scene) {
-    waterRenderer = new WaterRenderer(graphics, scene, viewParamsLayout);
+    //waterRenderer = new WaterRenderer(graphics, scene, viewParamsLayout);
     basePassLayout = graphics->createPipelineLayout("BasePassLayout");
 
     basePassLayout->addDescriptorLayout(viewParamsLayout);
@@ -145,7 +145,6 @@ void BasePass::render() {
     transparentCulling->writeChanges();
 
     query->beginQuery();
-    timestamps->begin();
     timestamps->write(Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT, "BaseBegin");
     graphics->beginRenderPass(renderPass);
     Array<Gfx::ORenderCommand> commands;
@@ -196,7 +195,7 @@ void BasePass::render() {
                         },
                     .rasterizationState =
                         {
-                            .cullMode = Gfx::SeCullModeFlags(twoSided ? Gfx::SE_CULL_MODE_NONE : Gfx::SE_CULL_MODE_BACK_BIT),
+                            .cullMode = Gfx::SE_CULL_MODE_NONE,
                         },
                     .colorBlend =
                         {
@@ -374,7 +373,6 @@ void BasePass::render() {
     graphics->endRenderPass();
     query->endQuery();
     timestamps->write(Gfx::SE_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, "BaseEnd");
-    timestamps->end();
     gDebugVertices.clear();
 }
 
@@ -426,13 +424,13 @@ void BasePass::publishOutputs() {
     resources->registerRenderPassOutput("BASEPASS_DEPTH", depthAttachment);
 
     timestamps = graphics->createTimestampQuery(2, "BaseTS");
-    resources->registerTimestampQueryOutput("BASE_TS", timestamps);
     query = graphics->createPipelineStatisticsQuery("BasePassPipelineStatistics");
     resources->registerQueryOutput("BASEPASS_QUERY", query);
 }
 
 void BasePass::createRenderPass() {
     cullingBuffer = resources->requestBuffer("CULLINGBUFFER");
+    timestamps = resources->requestTimestampQuery("TIMESTAMPS");
 
     Gfx::RenderTargetLayout layout = Gfx::RenderTargetLayout{
         .colorAttachments = {msColorAttachment},
@@ -472,7 +470,7 @@ void BasePass::createRenderPass() {
     oLightGrid = resources->requestTexture("LIGHTCULLING_OLIGHTGRID");
     tLightGrid = resources->requestTexture("LIGHTCULLING_TLIGHTGRID");
 
-    waterRenderer->setViewport(viewport, renderPass);
+    //waterRenderer->setViewport(viewport, renderPass);
 
     // Debug rendering
     {

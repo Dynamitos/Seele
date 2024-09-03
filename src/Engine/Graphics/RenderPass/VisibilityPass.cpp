@@ -26,7 +26,6 @@ void VisibilityPass::render() {
     visibilitySet->writeChanges();
 
     query->beginQuery();
-    timestamps->begin();
     timestamps->write(Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT, "VisibilityBegin");
     Gfx::OComputeCommand command = graphics->createComputeCommand("VisibilityCommand");
     command->bindPipeline(visibilityPipeline);
@@ -36,7 +35,6 @@ void VisibilityPass::render() {
     commands.add(std::move(command));
     graphics->executeCommands(std::move(commands));
     timestamps->write(Gfx::SE_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, "VisibilityEnd");
-    timestamps->end();
     query->endQuery();
     cullingBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                                    Gfx::SE_ACCESS_SHADER_READ_BIT,
@@ -88,11 +86,11 @@ void VisibilityPass::publishOutputs() {
     });
     resources->registerBufferOutput("CULLINGBUFFER", cullingBuffer);
 
-    timestamps = graphics->createTimestampQuery(2, "VisibilityTS");
-    resources->registerTimestampQueryOutput("VISIBILITY_TS", timestamps);
-
     query = graphics->createPipelineStatisticsQuery("VisibilityPipelineStatistics");
     resources->registerQueryOutput("VISIBILITY_QUERY", query);
 }
 
-void VisibilityPass::createRenderPass() { visibilityAttachment = resources->requestRenderTarget("VISIBILITY"); }
+void VisibilityPass::createRenderPass() {
+    visibilityAttachment = resources->requestRenderTarget("VISIBILITY");
+    timestamps = resources->requestTimestampQuery("TIMESTAMPS");
+}

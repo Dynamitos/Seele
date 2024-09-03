@@ -93,7 +93,6 @@ void DepthCullingPass::render() {
     set->updateBuffer(1, depthMipBuffer);
     set->writeChanges();
 
-    timestamps->begin();
     timestamps->write(Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT, "MipBegin");
     Gfx::OComputeCommand computeCommand = graphics->createComputeCommand("InitialReduce");
     computeCommand->bindPipeline(depthInitialReduce);
@@ -160,6 +159,10 @@ void DepthCullingPass::render() {
                 .fragmentShader = collection->fragmentShader,
                 .renderPass = renderPass,
                 .pipelineLayout = collection->pipelineLayout,
+                .rasterizationState =
+                    {
+                        .cullMode = Gfx::SE_CULL_MODE_NONE,
+                    },
                 .colorBlend =
                     {
                         .attachmentCount = 1,
@@ -173,6 +176,10 @@ void DepthCullingPass::render() {
                 .fragmentShader = collection->fragmentShader,
                 .renderPass = renderPass,
                 .pipelineLayout = collection->pipelineLayout,
+                .rasterizationState =
+                    {
+                        .cullMode = Gfx::SE_CULL_MODE_NONE,
+                    },
                 .colorBlend =
                     {
                         .attachmentCount = 1,
@@ -210,7 +217,6 @@ void DepthCullingPass::render() {
     graphics->executeCommands(std::move(commands));
     graphics->endRenderPass();
     timestamps->write(Gfx::SE_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, "CullingEnd");
-    timestamps->end();
     query->endQuery();
     // Sync depth read/write with compute read
     depthAttachment.getTexture()->pipelineBarrier(
@@ -243,8 +249,6 @@ void DepthCullingPass::publishOutputs() {
                 .data = nullptr,
             },
         .numElements = bufferSize,
-        .clearValue = 0,
-        .createCleared = true,
         .dynamic = true,
         .name = "DepthMipBuffer",
     });
@@ -269,14 +273,13 @@ void DepthCullingPass::publishOutputs() {
 
     depthMipGen = graphics->createComputePipeline(pipelineCreateInfo);
 
-    timestamps = graphics->createTimestampQuery(3, "CullingTS");
-    resources->registerTimestampQueryOutput("DEPTH_TS", timestamps);
     query = graphics->createPipelineStatisticsQuery("DepthPipelineStatistics");
     resources->registerQueryOutput("DEPTH_QUERY", query);
 }
 
 void DepthCullingPass::createRenderPass() {
     cullingBuffer = resources->requestBuffer("CULLINGBUFFER");
+    timestamps = resources->requestTimestampQuery("TIMESTAMPS");
 
     depthAttachment = resources->requestRenderTarget("DEPTHPREPASS_DEPTH");
     depthAttachment.setInitialLayout(Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);

@@ -288,7 +288,7 @@ Gfx::OPipelineStatisticsQuery Graphics::createPipelineStatisticsQuery(const std:
 }
 
 Gfx::OTimestampQuery Graphics::createTimestampQuery(uint64 numTimestamps, const std::string& name) {
-    return new TimestampQuery(this, name, numTimestamps);
+    return new TimestampQuery(this, name);
 }
 
 void Graphics::resolveTexture(Gfx::PTexture source, Gfx::PTexture destination) {
@@ -635,9 +635,9 @@ Array<const char*> Graphics::getRequiredExtensions() {
     for (unsigned int i = 0; i < glfwExtensionCount; i++) {
         extensions.add(glfwExtensions[i]);
     }
-#if ENABLE_VALIDATION
+#ifdef ENABLE_VALIDATION
     extensions.add(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-#endif // ENABLE_VALIDATION
+#endif
     return extensions;
 }
 

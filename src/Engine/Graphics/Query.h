@@ -57,10 +57,8 @@ class TimestampQuery {
   public:
     TimestampQuery();
     virtual ~TimestampQuery();
-    virtual void begin() = 0;
     virtual void write(SePipelineStageFlagBits stage, const std::string& name = "") = 0;
-    virtual void end() = 0;
-    virtual Array<Timestamp> getResults() = 0;
+    virtual Timestamp getResult() = 0;
 };
 DEFINE_REF(TimestampQuery)
 } // namespace Gfx

@@ -72,10 +72,10 @@ int main() {
            .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.glb",
            .importPath = "Whitechapel",
         });
-        //AssetImporter::importMesh(MeshImportArgs{
-        //    .filePath = sourcePath / "import/models/city-suburbs/source/city-suburbs.obj",
-        //    .importPath = "suburbs",
-        //});
+        AssetImporter::importMesh(MeshImportArgs{
+            .filePath = sourcePath / "import/models/city-suburbs/source/city-suburbs.obj",
+            .importPath = "suburbs",
+        });
         getThreadPool().waitIdle();
         vd->commitMeshes();
         WindowCreateInfo mainWindowInfo = {

@@ -40,13 +40,10 @@ CachedDepthPass::CachedDepthPass(Gfx::PGraphics graphics, PScene scene) : Render
 
 CachedDepthPass::~CachedDepthPass() {}
 
-void CachedDepthPass::beginFrame(const Component::Camera& cam) {
-    RenderPass::beginFrame(cam);
-}
+void CachedDepthPass::beginFrame(const Component::Camera& cam) { RenderPass::beginFrame(cam); }
 
 void CachedDepthPass::render() {
     query->beginQuery();
-    timestamps->begin();
     timestamps->write(Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT, "CachedBegin");
     graphics->beginRenderPass(renderPass);
     Array<Gfx::ORenderCommand> commands;
@@ -78,6 +75,10 @@ void CachedDepthPass::render() {
                 .fragmentShader = collection->fragmentShader,
                 .renderPass = renderPass,
                 .pipelineLayout = collection->pipelineLayout,
+                .rasterizationState =
+                    {
+                        .cullMode = Gfx::SE_CULL_MODE_NONE,
+                    },
                 .colorBlend =
                     {
                         .attachmentCount = 1,
@@ -91,6 +92,10 @@ void CachedDepthPass::render() {
                 .fragmentShader = collection->fragmentShader,
                 .renderPass = renderPass,
                 .pipelineLayout = collection->pipelineLayout,
+                .rasterizationState =
+                    {
+                        .cullMode = Gfx::SE_CULL_MODE_NONE,
+                    },
                 .colorBlend =
                     {
                         .attachmentCount = 1,
@@ -128,7 +133,6 @@ void CachedDepthPass::render() {
     graphics->executeCommands(std::move(commands));
     graphics->endRenderPass();
     timestamps->write(Gfx::SE_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, "CachedEnd");
-    timestamps->end();
     query->endQuery();
 }
 
@@ -163,8 +167,8 @@ void CachedDepthPass::publishOutputs() {
     query = graphics->createPipelineStatisticsQuery("CachedPipelineStatistics");
     resources->registerQueryOutput("CACHED_QUERY", query);
 
-    timestamps = graphics->createTimestampQuery(2, "CachedTS");
-    resources->registerTimestampQueryOutput("CACHED_TS", timestamps);
+    timestamps = graphics->createTimestampQuery(7, "CachedTS");
+    resources->registerTimestampQueryOutput("TIMESTAMPS", timestamps);
 }
 
 void CachedDepthPass::createRenderPass() {

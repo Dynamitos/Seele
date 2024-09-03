@@ -12,13 +12,65 @@ using namespace Seele::Vulkan;
 
 QueryPool::QueryPool(PGraphics graphics, VkQueryType type, VkQueryPipelineStatisticFlags flags, uint32 resultsStride, uint32 numBuffered,
                      const std::string& name)
-    : graphics(graphics), flags(flags), numQueries(numBuffered), resultsStride(resultsStride) {
+    : graphics(graphics), type(type), name(name), flags(flags), numQueries(numBuffered), resultsStride(resultsStride) {
+    createPool();
+}
+
+QueryPool::~QueryPool() {
+    for (auto handle : pools) {
+        vkDestroyQueryPool(graphics->getDevice(), handle, nullptr);
+    }
+}
+
+void QueryPool::begin() {
+    PCommand cmd = graphics->getGraphicsCommands()->getCommands();
+    vkCmdResetQueryPool(cmd->getHandle(), pools.back(), head, 1);
+    vkCmdBeginQuery(cmd->getHandle(), pools.back(), head, 0);
+    cmd->setPipelineStatisticsFlags(flags);
+}
+
+void QueryPool::end() {
+    PCommand cmd = graphics->getGraphicsCommands()->getCommands();
+    vkCmdEndQuery(cmd->getHandle(), pools.back(), head);
+    std::unique_lock l(queryMutex);
+    head++;
+    if (head == numQueries) {
+        createPool();
+        head = 0;
+    }
+    numAvailable++;
+    queryCV.notify_all();
+}
+
+void QueryPool::getQueryResults(Array<uint64>& results) {
+    {
+        std::unique_lock l(queryMutex);
+        while (numAvailable == 0) {
+            queryCV.wait(l);
+        } 
+    }
+    results.resize(resultsStride / sizeof(uint64));
+    vkGetQueryPoolResults(graphics->getDevice(), pools.front(), tail, 1, resultsStride, results.data(), resultsStride,
+                          VK_QUERY_RESULT_WAIT_BIT | VK_QUERY_RESULT_64_BIT);
+    std::unique_lock l(queryMutex);
+    tail++;
+    if (tail == numQueries)
+    {
+        vkDestroyQueryPool(graphics->getDevice(), pools.front(), nullptr);
+        pools.popFront();
+        tail = 0;
+    }
+    numAvailable--;
+}
+
+void QueryPool::createPool() {
+    VkQueryPool handle;
     VkQueryPoolCreateInfo info = {
         .sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO,
         .pNext = nullptr,
         .flags = 0,
         .queryType = type,
-        .queryCount = numBuffered,
+        .queryCount = numQueries,
         .pipelineStatistics = flags,
     };
     VK_CHECK(vkCreateQueryPool(graphics->getDevice(), &info, nullptr, &handle));
@@ -30,36 +82,12 @@ QueryPool::QueryPool(PGraphics graphics, VkQueryType type, VkQueryPipelineStatis
         .pObjectName = name.c_str(),
     };
     vkSetDebugUtilsObjectNameEXT(graphics->getDevice(), &nameInfo);
-    PCommand cmd = graphics->getGraphicsCommands()->getCommands();
-    vkCmdResetQueryPool(cmd->getHandle(), handle, head, numQueries);
-}
-
-QueryPool::~QueryPool() { vkDestroyQueryPool(graphics->getDevice(), handle, nullptr); }
-
-void QueryPool::begin() {
-    PCommand cmd = graphics->getGraphicsCommands()->getCommands();
-    vkCmdResetQueryPool(cmd->getHandle(), handle, head, 1);
-    vkCmdBeginQuery(cmd->getHandle(), handle, head, 0);
-    cmd->setPipelineStatisticsFlags(flags);
-}
-
-void QueryPool::end() {
-    PCommand cmd = graphics->getGraphicsCommands()->getCommands();
-    vkCmdEndQuery(cmd->getHandle(), handle, head);
-    std::unique_lock l(queryMutex);
-    head = (head + 1) % numQueries;
-    queryCV.notify_all();
-}
-
-void QueryPool::getQueryResults(Array<uint64>& results) {
-    while (tail == head) {
-        std::unique_lock l(queryMutex);
-        queryCV.wait(l);
+    pools.add(handle);
+    if (pools.size() > 5)
+    {
+        vkDestroyQueryPool(graphics->getDevice(), pools.front(), nullptr);
+        pools.popFront();
     }
-    results.resize(resultsStride / sizeof(uint64));
-    vkGetQueryPoolResults(graphics->getDevice(), handle, tail, 1, resultsStride, results.data(), resultsStride,
-                          VK_QUERY_RESULT_WAIT_BIT | VK_QUERY_RESULT_64_BIT);
-    tail = (tail + 1) % numQueries;
 }
 
 OcclusionQuery::OcclusionQuery(PGraphics graphics, const std::string& name)
@@ -111,48 +139,52 @@ Gfx::PipelineStatisticsResult PipelineStatisticsQuery::getResults() {
     };
 }
 
-TimestampQuery::TimestampQuery(PGraphics graphics, const std::string& name, uint32 numTimestamps)
-    : QueryPool(graphics, VK_QUERY_TYPE_TIMESTAMP, 0, sizeof(uint64), 512 * numTimestamps, name), numTimestamps(numTimestamps) {
-    pendingTimestamps.resize(numQueries);
+TimestampQuery::TimestampQuery(PGraphics graphics, const std::string& name)
+    : QueryPool(graphics, VK_QUERY_TYPE_TIMESTAMP, 0, sizeof(uint64), 512, name) {
 }
 
 TimestampQuery::~TimestampQuery() {}
 
-void TimestampQuery::begin() {
-    currentTimestamp = 0;
-}
-
 void TimestampQuery::write(Gfx::SePipelineStageFlagBits stage, const std::string& name) {
     PCommand cmd = graphics->getGraphicsCommands()->getCommands();
-    uint32 queryIndex = (head * numTimestamps) + currentTimestamp;
-    vkCmdResetQueryPool(cmd->getHandle(), handle, queryIndex, 1);
-    vkCmdWriteTimestamp(cmd->getHandle(), cast(stage), handle, queryIndex);
-    pendingTimestamps[queryIndex] = name;
-    currentTimestamp++;
-}
-
-void TimestampQuery::end() {
-    std::unique_lock l(queryMutex);
-    head = (head + 1) % 512;
-    queryCV.notify_all();
-}
-
-Array<Gfx::Timestamp> TimestampQuery::getResults() {
-    while (head == tail) {
+    vkCmdResetQueryPool(cmd->getHandle(), pools.back(), head, 1);
+    vkCmdWriteTimestamp(cmd->getHandle(), cast(stage), pools.back(), head);
+    pendingTimestamps.add(name);
+    {
         std::unique_lock l(queryMutex);
-        queryCV.wait(l);
+        head++;
+        if (head == numQueries) {
+            createPool();
+            head = 0;
+        }
+        numAvailable++;
     }
-    Array<uint64> results(numTimestamps);
-    uint32 firstQuery = (tail * numTimestamps);
-    vkGetQueryPoolResults(graphics->getDevice(), handle, firstQuery, numTimestamps, numTimestamps * sizeof(uint64), results.data(),
-                          resultsStride, VK_QUERY_RESULT_WAIT_BIT | VK_QUERY_RESULT_64_BIT);
-    tail = (tail + 1) % 512;
-    Array<Gfx::Timestamp> res;
-    for (uint64 i = 0; i < numTimestamps; ++i) {
-        res.add(Gfx::Timestamp{
-            .name = pendingTimestamps[firstQuery + i],
-            .time = uint64((results[i] + wrapping) * graphics->getTimestampPeriod()),
-        });
+}
+
+Gfx::Timestamp TimestampQuery::getResult() {
+    {
+        std::unique_lock l(queryMutex);
+        while (numAvailable == 0) {
+            queryCV.wait(l);
+        } 
     }
-    return res;
+    uint64 result;
+    vkGetQueryPoolResults(graphics->getDevice(), pools.front(), tail, 1, sizeof(uint64), &result, resultsStride,
+                          VK_QUERY_RESULT_WAIT_BIT | VK_QUERY_RESULT_64_BIT);
+    {
+        std::unique_lock l(queryMutex);
+        tail++;
+        if (tail == numQueries) {
+            vkDestroyQueryPool(graphics->getDevice(), pools.front(), nullptr);
+            pools.popFront();
+            tail = 0;
+        }
+        numAvailable--;
+        Gfx::Timestamp res = Gfx::Timestamp{
+            .name = pendingTimestamps.front(),
+            .time = result,
+        };
+        pendingTimestamps.popFront();
+        return res;
+    }
 }

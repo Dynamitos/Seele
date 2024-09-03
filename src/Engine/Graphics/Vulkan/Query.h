@@ -14,14 +14,18 @@ class QueryPool {
     void end();
     // stalls for the currently first pending query, dont call in render thread
     void getQueryResults(Array<uint64>& results);
+    void createPool();
 
   protected:
     PGraphics graphics;
-    VkQueryPool handle;
+    List<VkQueryPool> pools;
+    VkQueryType type;
+    std::string name;
     VkQueryPipelineStatisticFlags flags;
     // ring buffer
     uint64 head = 0;
     uint64 tail = 0;
+    uint64 numAvailable;
     uint32 numQueries;
     uint32 resultsStride;
     std::mutex queryMutex;
@@ -48,19 +52,15 @@ DEFINE_REF(PipelineStatisticsQuery)
 
 class TimestampQuery : public Gfx::TimestampQuery, public QueryPool {
   public:
-    TimestampQuery(PGraphics graphics, const std::string& name, uint32 numTimestamps);
+    TimestampQuery(PGraphics graphics, const std::string& name);
     virtual ~TimestampQuery();
-    virtual void begin() override;
     virtual void write(Gfx::SePipelineStageFlagBits stage, const std::string& name = "") override;
-    virtual void end() override;
-    virtual Array<Gfx::Timestamp> getResults() override;
+    virtual Gfx::Timestamp getResult() override;
 
   private:
     uint64 wrapping = 0;
     uint64 lastMeasure = 0;
-    uint32 numTimestamps = 0;
-    uint32 currentTimestamp = 0;
-    Array<std::string> pendingTimestamps;
+    List<std::string> pendingTimestamps;
 };
 DEFINE_REF(TimestampQuery)
 } // namespace Vulkan

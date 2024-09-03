@@ -78,30 +78,28 @@ void taskMain(
     uint threadID: SV_GroupThreadID,
     uint groupID: SV_GroupID, )
 {
-    if (threadID == 0)
-    {
-        head = 0;
-	    instance = pScene.instances[pOffsets.instanceOffset + groupID];
-        mesh = pScene.meshData[pOffsets.instanceOffset + groupID];
-        p.instanceId = pOffsets.instanceOffset + groupID;
-        p.meshletOffset = mesh.meshletOffset;
-        p.cullingOffset = pScene.cullingOffsets[p.instanceId];
-        modelViewProjection = mul(mul(pViewParams.projectionMatrix, pViewParams.viewMatrix), instance.transformMatrix);
-		float3 origin = viewToModel(instance.inverseTransformMatrix, float4(0, 0, 0, 1)).xyz;
-		const float offset = 0.0f;
-		float3 corners[4] = {
-			screenToModel(instance.inverseTransformMatrix, float4(offset, offset, -1.0f, 1.0f)).xyz,
-			screenToModel(instance.inverseTransformMatrix, float4(pViewParams.screenDimensions.x - offset, offset, -1.0f, 1.0f)).xyz,
-			screenToModel(instance.inverseTransformMatrix, float4(offset, pViewParams.screenDimensions.y - offset, -1.0f, 1.0f)).xyz,
-			screenToModel(instance.inverseTransformMatrix, float4(pViewParams.screenDimensions - float2(offset, offset), -1.0f, 1.0f)).xyz
-		};
-		viewFrustum.sides[0] = computePlane(origin, corners[2], corners[0]);
-		viewFrustum.sides[1] = computePlane(origin, corners[1], corners[3]);
-		viewFrustum.sides[2] = computePlane(origin, corners[0], corners[1]);
-		viewFrustum.sides[3] = computePlane(origin, corners[3], corners[2]);
-        //meshVisible = isBoxVisible(mesh.bounding);
-        meshVisible = true;
-    }
+    head = 0;
+    instance = pScene.instances[pOffsets.instanceOffset + groupID];
+    mesh = pScene.meshData[pOffsets.instanceOffset + groupID];
+    p.instanceId = pOffsets.instanceOffset + groupID;
+    p.meshletOffset = mesh.meshletOffset;
+    p.cullingOffset = pScene.cullingOffsets[p.instanceId];
+    modelViewProjection = mul(mul(pViewParams.projectionMatrix, pViewParams.viewMatrix), instance.transformMatrix);
+    float3 origin = viewToModel(instance.inverseTransformMatrix, float4(0, 0, 0, 1)).xyz;
+    const float offset = 0.0f;
+    float3 corners[4] = {
+        screenToModel(instance.inverseTransformMatrix, float4(offset, offset, -1.0f, 1.0f)).xyz,
+        screenToModel(instance.inverseTransformMatrix, float4(pViewParams.screenDimensions.x - offset, offset, -1.0f, 1.0f)).xyz,
+        screenToModel(instance.inverseTransformMatrix, float4(offset, pViewParams.screenDimensions.y - offset, -1.0f, 1.0f)).xyz,
+        screenToModel(instance.inverseTransformMatrix, float4(pViewParams.screenDimensions - float2(offset, offset), -1.0f, 1.0f)).xyz
+    };
+    viewFrustum.sides[0] = computePlane(origin, corners[2], corners[0]);
+    viewFrustum.sides[1] = computePlane(origin, corners[1], corners[3]);
+    viewFrustum.sides[2] = computePlane(origin, corners[0], corners[1]);
+    viewFrustum.sides[3] = computePlane(origin, corners[3], corners[2]);
+    meshVisible = mesh.bounding.insideFrustum(viewFrustum) && isBoxVisible(mesh.bounding);
+    //meshVisible = true;
+
     GroupMemoryBarrierWithGroupSync();
     if(!meshVisible)
     {

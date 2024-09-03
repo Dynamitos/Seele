@@ -37,7 +37,6 @@ void LightCullingPass::beginFrame(const Component::Camera& cam) {
 
 void LightCullingPass::render() {
     query->beginQuery();
-    timestamps->begin();
     timestamps->write(Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT, "LightCullBegin");
     oLightGrid->pipelineBarrier(Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, Gfx::SE_ACCESS_SHADER_WRITE_BIT,
                                 Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
@@ -64,7 +63,6 @@ void LightCullingPass::render() {
     // std::cout << "Execute" << std::endl;
     graphics->executeCommands(std::move(commands));
     timestamps->write(Gfx::SE_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, "LightCullEnd");
-    timestamps->end();
     query->endQuery();
     oLightIndexList->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                                      Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
@@ -227,13 +225,12 @@ void LightCullingPass::publishOutputs() {
     resources->registerTextureOutput("LIGHTCULLING_OLIGHTGRID", Gfx::PTexture2D(oLightGrid));
     resources->registerTextureOutput("LIGHTCULLING_TLIGHTGRID", Gfx::PTexture2D(tLightGrid));
 
-    timestamps = graphics->createTimestampQuery(2, "LightCullTS");
-    resources->registerTimestampQueryOutput("LIGHTCULL_TS", timestamps);
     query = graphics->createPipelineStatisticsQuery("LightCullPipelineStatistics");
     resources->registerQueryOutput("LIGHTCULL_QUERY", query);
 }
 
 void LightCullingPass::createRenderPass() {
+    timestamps = resources->requestTimestampQuery("TIMESTAMPS");
     depthAttachment = resources->requestRenderTarget("DEPTHPREPASS_DEPTH").getTexture();
 }
 
