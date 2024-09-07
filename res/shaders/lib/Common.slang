@@ -88,7 +88,7 @@ float4 clipToScreen(float4 clip)
     float oz = 1;
     float pz = 0 - 1;
     float zf = pz * ndc.z + oz;
-    return float4(float2(texCoords.x, 1 - texCoords.y) * pViewParams.screenDimensions, 1 / zf, 1.0f);
+    return float4(float2(texCoords.x, 1 - texCoords.y) * pViewParams.screenDimensions, zf, 1.0f);
 }
 
 struct Plane

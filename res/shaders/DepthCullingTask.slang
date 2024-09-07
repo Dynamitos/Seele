@@ -30,25 +30,30 @@ groupshared bool meshVisible;
 ParameterBlock<DepthData> pDepthAttachment;
 bool isBoxVisible(AABB bounding)
 {
-    int2 mipDimensions = uint2(uint(pViewParams.screenDimensions.x), uint(pViewParams.screenDimensions.y));
+    int2 mipDimensions = int2(int(pViewParams.screenDimensions.x), int(pViewParams.screenDimensions.y));
     // now we calculate what mip level we need to only sample up to 4 texels covering the entire meshlet
     int2 screenCornerMin = mipDimensions;
-    int2 screenCornerMax = uint2(0, 0);
+    int2 screenCornerMax = int2(0, 0);
     // lower values are closer
     float maxDepth = bounding.projectScreenDepth(modelViewProjection, screenCornerMin, screenCornerMax);
     uint mipOffset = 0;
-//    uint mipLevel = 0;
-//    int2 origScreenMin = screenCornerMin;
-//    int2 origScreenMax = screenCornerMax;
+    
     // in theory this wouldnt work if no corner was in screen, as min would be greater that max, however we verified that with view culling
     while(screenCornerMax.x - screenCornerMin.x > 1 || screenCornerMax.y - screenCornerMin.y > 1)
     {
-//        mipLevel++;
         mipOffset += mipDimensions.x * mipDimensions.y;
         mipDimensions = int2(mipDimensions.x + 1, mipDimensions.y + 1) / 2;
-        screenCornerMin = int2(screenCornerMin.x + 1, screenCornerMin.y + 1) / 2;
+        screenCornerMin = int2(screenCornerMin.x, screenCornerMin.y) / 2;
         screenCornerMax = int2(screenCornerMax.x, screenCornerMax.y) / 2;
     }
+    //float d = 1;
+    //for(uint y = screenCornerMin.y; y <= screenCornerMax.y; y++)
+    //{
+    //    for(uint x = screenCornerMin.x; x <= screenCornerMax.x; x++)
+    //    {
+    //        d = min(pDepthAttachment.buffer[mipOffset + (y * mipDimensions.x) + x], d);
+    //    }
+    //}
 
     uint i0 = mipOffset + (screenCornerMin.y * mipDimensions.x) + screenCornerMin.x;
     uint i1 = mipOffset + (screenCornerMin.y * mipDimensions.x) + screenCornerMax.x;
@@ -64,7 +69,7 @@ bool isBoxVisible(AABB bounding)
     // we want to check if the minimum depth (the value farthest away) is smaller than the maximum bounding box depth
     // otherwise, there is no way for the meshlet to be visible
     float d = min(min(d1, d2), min(d3, d4));
-                
+              
     if(d < maxDepth)
     {
         return true;
@@ -78,28 +83,30 @@ void taskMain(
     uint threadID: SV_GroupThreadID,
     uint groupID: SV_GroupID, )
 {
-    head = 0;
-    instance = pScene.instances[pOffsets.instanceOffset + groupID];
-    mesh = pScene.meshData[pOffsets.instanceOffset + groupID];
-    p.instanceId = pOffsets.instanceOffset + groupID;
-    p.meshletOffset = mesh.meshletOffset;
-    p.cullingOffset = pScene.cullingOffsets[p.instanceId];
-    modelViewProjection = mul(mul(pViewParams.projectionMatrix, pViewParams.viewMatrix), instance.transformMatrix);
-    float3 origin = viewToModel(instance.inverseTransformMatrix, float4(0, 0, 0, 1)).xyz;
-    const float offset = 0.0f;
-    float3 corners[4] = {
-        screenToModel(instance.inverseTransformMatrix, float4(offset, offset, -1.0f, 1.0f)).xyz,
-        screenToModel(instance.inverseTransformMatrix, float4(pViewParams.screenDimensions.x - offset, offset, -1.0f, 1.0f)).xyz,
-        screenToModel(instance.inverseTransformMatrix, float4(offset, pViewParams.screenDimensions.y - offset, -1.0f, 1.0f)).xyz,
-        screenToModel(instance.inverseTransformMatrix, float4(pViewParams.screenDimensions - float2(offset, offset), -1.0f, 1.0f)).xyz
-    };
-    viewFrustum.sides[0] = computePlane(origin, corners[2], corners[0]);
-    viewFrustum.sides[1] = computePlane(origin, corners[1], corners[3]);
-    viewFrustum.sides[2] = computePlane(origin, corners[0], corners[1]);
-    viewFrustum.sides[3] = computePlane(origin, corners[3], corners[2]);
-    meshVisible = mesh.bounding.insideFrustum(viewFrustum) && isBoxVisible(mesh.bounding);
-    //meshVisible = true;
-
+    if(threadID == 0)
+    {
+        head = 0;
+        instance = pScene.instances[pOffsets.instanceOffset + groupID];
+        mesh = pScene.meshData[pOffsets.instanceOffset + groupID];
+        p.instanceId = pOffsets.instanceOffset + groupID;
+        p.meshletOffset = mesh.meshletOffset;
+        p.cullingOffset = pScene.cullingOffsets[p.instanceId];
+        modelViewProjection = mul(mul(pViewParams.projectionMatrix, pViewParams.viewMatrix), instance.transformMatrix);
+        float3 origin = viewToModel(instance.inverseTransformMatrix, float4(0, 0, 0, 1)).xyz;
+        const float offset = 0.0f;
+        float3 corners[4] = {
+            screenToModel(instance.inverseTransformMatrix, float4(offset, offset, -1.0f, 1.0f)).xyz,
+            screenToModel(instance.inverseTransformMatrix, float4(pViewParams.screenDimensions.x - offset, offset, -1.0f, 1.0f)).xyz,
+            screenToModel(instance.inverseTransformMatrix, float4(offset, pViewParams.screenDimensions.y - offset, -1.0f, 1.0f)).xyz,
+            screenToModel(instance.inverseTransformMatrix, float4(pViewParams.screenDimensions - float2(offset, offset), -1.0f, 1.0f)).xyz
+        };
+        viewFrustum.sides[0] = computePlane(origin, corners[2], corners[0]);
+        viewFrustum.sides[1] = computePlane(origin, corners[1], corners[3]);
+        viewFrustum.sides[2] = computePlane(origin, corners[0], corners[1]);
+        viewFrustum.sides[3] = computePlane(origin, corners[3], corners[2]);
+        //meshVisible = mesh.bounding.insideFrustum(viewFrustum) && isBoxVisible(mesh.bounding);
+        meshVisible = true;
+    }
     GroupMemoryBarrierWithGroupSync();
     if(!meshVisible)
     {

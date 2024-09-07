@@ -5,57 +5,51 @@ ParameterBlock<DepthData> pDepthAttachment;
 
 struct MipParam
 {
-    uint srcMipOffset;
-    uint dstMipOffset;
-    uint2 srcMipDim;
-    uint2 dstMipDim;
+    uint sourceOffset;
+    uint destOffset;
+    uint2 sourceDim;
+    uint2 destDim;
 }
 layout(push_constant)
 ConstantBuffer<MipParam> pMipParam;
 
-float getSrcDepth(uint2 pos)
+float readBuffer(uint2 pos)
 {
-    return pDepthAttachment.buffer[pMipParam.srcMipOffset + pos.x + (pos.y * pMipParam.srcMipDim.x)];
+    if(pos.x >= pMipParam.sourceDim.x || pos.y >= pMipParam.sourceDim.y)
+    {
+        return 1.0f;
+    }
+    return pDepthAttachment.buffer[pMipParam.sourceOffset + pos.x + (pos.y * pMipParam.sourceDim.x)];
 }
 
-void setDstDepth(uint2 pos, float depth)
-{
-    pDepthAttachment.buffer[pMipParam.dstMipOffset + pos.x + (pos.y * pMipParam.dstMipDim.x)] = depth;
-}
-
-[numthreads(BLOCK_SIZE, BLOCK_SIZE, 1)]
 [shader("compute")]
+[numthreads(BLOCK_SIZE, BLOCK_SIZE, 1)]
 void reduceLevel(
-    uint3 threadID: SV_GroupThreadID,
-    uint3 groupID: SV_GroupID,
-){
-    uint2 minCoords = (groupID.xy * BLOCK_SIZE + threadID.xy) * 2;
-    
-    if(minCoords.x >= pMipParam.srcMipDim.x || minCoords.y >= pMipParam.srcMipDim.y)
+    uint2 dispatchID: SV_DispatchThreadID,
+) {
+    if(dispatchID.x >= pMipParam.destDim.x || dispatchID.y >= pMipParam.destDim.y)
     {
         return;
     }
-    
-    uint2 maxCoords = uint2(min(minCoords.x + 1, pMipParam.srcMipDim.x - 1), min(minCoords.y + 1, pMipParam.srcMipDim.y - 1));
-
-    float d0 = getSrcDepth(uint2(minCoords.x, minCoords.y));
-    float d1 = getSrcDepth(uint2(maxCoords.x, minCoords.y));
-    float d2 = getSrcDepth(uint2(minCoords.x, maxCoords.y));
-    float d3 = getSrcDepth(uint2(maxCoords.x, maxCoords.y));
-
-    float minDepth = min(min(d0, d1), min(d2, d3));
-    setDstDepth(minCoords / 2, minDepth);
+    uint2 readOffset = dispatchID * 2;
+    float d0 = readBuffer(readOffset + uint2(0, 0));
+    float d1 = readBuffer(readOffset + uint2(0, 1));
+    float d2 = readBuffer(readOffset + uint2(1, 0));
+    float d3 = readBuffer(readOffset + uint2(1, 1));
+    pDepthAttachment.buffer[pMipParam.destOffset + dispatchID.x + (dispatchID.y * pMipParam.destDim.x)] = min(min(d0, d1), min(d2, d3));
 }
 
-[numthreads(BLOCK_SIZE, BLOCK_SIZE, 1)]
+// each thread reduces the a pixel indivdually
+// used for mip levels where the read size is smaller than
+// the group dimensions
 [shader("compute")]
-void initialReduce(
-    uint3 threadID: SV_GroupThreadID,
-    uint3 groupID: SV_GroupID,
+[numthreads(BLOCK_SIZE, BLOCK_SIZE, 1)]
+void sourceCopy(
+    uint2 dispatchID: SV_DispatchThreadID
 ) {
-    uint width = uint(pViewParams.screenDimensions.x);
-    int2 groupOffset = groupID.xy * BLOCK_SIZE;
-    int2 texCoord = groupOffset + threadID.xy;
-    float fDepth = pDepthAttachment.texture.Load(int3(texCoord, 0)).r;
-    pDepthAttachment.buffer[texCoord.x + (texCoord.y * width)] = fDepth;
+    if(dispatchID.x >= pViewParams.screenDimensions.x || dispatchID.y >= pViewParams.screenDimensions.y)
+    {
+        return;
+    }
+    pDepthAttachment.buffer[dispatchID.x + (dispatchID.y * uint(pViewParams.screenDimensions.x))] = pDepthAttachment.texture[uint2(dispatchID)];
 }

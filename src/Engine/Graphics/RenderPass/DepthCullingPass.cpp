@@ -6,10 +6,6 @@ using namespace Seele;
 
 DepthCullingPass::DepthCullingPass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics, scene) {
     depthAttachmentLayout = graphics->createDescriptorLayout("pDepthAttachment");
-    //depthAttachmentLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-    //    .binding = 0,
-    //    .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-    //});
     depthAttachmentLayout->addDescriptorBinding(Gfx::DescriptorBinding{
         .binding = 0,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
@@ -20,16 +16,6 @@ DepthCullingPass::DepthCullingPass(Gfx::PGraphics graphics, PScene scene) : Rend
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
         .shaderStages = Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_COMPUTE_BIT,
     });
-    //depthAttachmentLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-    //    .binding = 3,
-    //    .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-    //    .shaderStages = Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_COMPUTE_BIT,
-    //});
-    //depthAttachmentLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-    //    .binding = 4,
-    //    .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-    //    .shaderStages = Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_COMPUTE_BIT,
-    //});
     depthAttachmentLayout->create();
 
     depthCullingLayout = graphics->createPipelineLayout("DepthPrepassLayout");
@@ -94,33 +80,34 @@ void DepthCullingPass::render() {
     set->writeChanges();
 
     timestamps->write(Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT, "MipBegin");
-    Gfx::OComputeCommand computeCommand = graphics->createComputeCommand("InitialReduce");
-    computeCommand->bindPipeline(depthInitialReduce);
+    // First we generate a pixel value per thread, while using a whole threadgroup
+    // for a single one would be a waste
+    Gfx::OComputeCommand computeCommand = graphics->createComputeCommand("MipGen");
+    computeCommand->bindPipeline(depthSourceCopy);
     computeCommand->bindDescriptor({viewParamsSet, set});
-    UVector2 reduceDimensions = UVector2(viewport->getOwner()->getFramebufferWidth() + BLOCK_SIZE - 1,
-                                         viewport->getOwner()->getFramebufferHeight() + BLOCK_SIZE - 1) /
-                                uint32(BLOCK_SIZE);
-    computeCommand->dispatch(reduceDimensions.x, reduceDimensions.y, 1);
+    computeCommand->dispatch((viewport->getWidth() + BLOCK_SIZE - 1) / BLOCK_SIZE, (viewport->getHeight() + BLOCK_SIZE - 1) / BLOCK_SIZE,
+                             1);
     graphics->executeCommands(std::move(computeCommand));
-
-    for (uint32 i = 0; i < mipOffsets.size() - 1; ++i) {
+    for (uint32 i = 0; i < mipOffsets.size() - 1; ++i)
+    {
         depthMipBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                                         Gfx::SE_ACCESS_SHADER_READ_BIT | Gfx::SE_ACCESS_SHADER_WRITE_BIT,
                                         Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
-        Gfx::OComputeCommand mipCommand = graphics->createComputeCommand(fmt::format("MipGenLevel{0}", i));
-        mipCommand->bindPipeline(depthMipGen);
-        mipCommand->bindDescriptor({viewParamsSet, set});
-        MipParam params = {
-            .srcMipOffset = mipOffsets[i],
-            .dstMipOffset = mipOffsets[i + 1],
-            .srcMipDim = mipDims[i],
-            .dstMipDim = mipDims[i + 1],
+        MipParam param = {
+            .sourceOffset = mipOffsets[i],
+            .destOffset = mipOffsets[i + 1],
+            .sourceDim = mipDims[i],
+            .destDim = mipDims[i + 1],
         };
-        mipCommand->pushConstants(Gfx::SE_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(MipParam), &params);
-        UVector2 threadGroups = (reduceDimensions + 1u) / 2u;
-        mipCommand->dispatch(threadGroups.x, threadGroups.y, 1);
-        graphics->executeCommands(std::move(mipCommand));
+        Gfx::OComputeCommand reduceCommand = graphics->createComputeCommand("ReduceCommand");
+        reduceCommand->bindPipeline(depthReduceLevel);
+        reduceCommand->bindDescriptor({viewParamsSet, set});
+        reduceCommand->pushConstants(Gfx::SE_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(MipParam), &param);
+        auto dispatchDim = (mipDims[i + 1] + uint32(BLOCK_SIZE) - 1u) / uint32(BLOCK_SIZE);
+        reduceCommand->dispatch(dispatchDim.x, dispatchDim.y, 1);
+        graphics->executeCommands(std::move(reduceCommand));
     }
+
     depthMipBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                                     Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_TASK_SHADER_BIT_EXT);
 
@@ -256,22 +243,21 @@ void DepthCullingPass::publishOutputs() {
     graphics->beginShaderCompilation(ShaderCompilationInfo{
         .name = "DepthMipCompute",
         .modules = {"DepthMipGen"},
-        .entryPoints = {{"initialReduce", "DepthMipGen"}, {"reduceLevel", "DepthMipGen"}},
+        .entryPoints = {{"sourceCopy", "DepthMipGen"}, {"reduceLevel", "DepthMipGen"}},
         .rootSignature = depthComputeLayout,
     });
-    depthInitialReduceShader = graphics->createComputeShader({0});
+    depthSourceCopyShader = graphics->createComputeShader({0});
     depthComputeLayout->create();
 
     Gfx::ComputePipelineCreateInfo pipelineCreateInfo = {
-        .computeShader = depthInitialReduceShader,
+        .computeShader = depthSourceCopyShader,
         .pipelineLayout = depthComputeLayout,
     };
-    depthInitialReduce = graphics->createComputePipeline(pipelineCreateInfo);
-    depthMipGenShader = graphics->createComputeShader({1});
+    depthSourceCopy = graphics->createComputePipeline(pipelineCreateInfo);
 
-    pipelineCreateInfo.computeShader = depthMipGenShader;
-
-    depthMipGen = graphics->createComputePipeline(pipelineCreateInfo);
+    depthReduceLevelShader = graphics->createComputeShader({1});
+    pipelineCreateInfo.computeShader = depthReduceLevelShader;
+    depthReduceLevel = graphics->createComputePipeline(pipelineCreateInfo);
 
     query = graphics->createPipelineStatisticsQuery("DepthPipelineStatistics");
     resources->registerQueryOutput("DEPTH_QUERY", query);

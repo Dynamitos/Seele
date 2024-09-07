@@ -17,6 +17,7 @@ class PlayView : public GameView {
 
   private:
     std::thread queryThread;
+    Gfx::OTimestampQuery renderTimestamp;
 };
 DECLARE_REF(PlayView)
 } // namespace Seele

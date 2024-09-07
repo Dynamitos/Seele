@@ -57,8 +57,11 @@ int main() {
         // AssetImporter::importFont(FontImportArgs{
         //     .filePath = "./fonts/Calibri.ttf",
         // });
+        //AssetImporter::importMesh(MeshImportArgs{
+        //    .filePath = sourcePath / "import/models/cube.fbx",
+        //});
         AssetImporter::importMesh(MeshImportArgs{
-            .filePath = sourcePath / "import/models/cube.fbx",
+            .filePath = sourcePath / "import/models/culling.fbx",
         });
         AssetImporter::importTexture(TextureImportArgs{
             .filePath = sourcePath / "import/textures/skyboxsun5deg_tn.jpg",
@@ -72,10 +75,10 @@ int main() {
            .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.glb",
            .importPath = "Whitechapel",
         });
-        AssetImporter::importMesh(MeshImportArgs{
-            .filePath = sourcePath / "import/models/city-suburbs/source/city-suburbs.obj",
-            .importPath = "suburbs",
-        });
+        //AssetImporter::importMesh(MeshImportArgs{
+        //    .filePath = sourcePath / "import/models/city-suburbs/source/city-suburbs.obj",
+        //    .importPath = "suburbs",
+        //});
         getThreadPool().waitIdle();
         vd->commitMeshes();
         WindowCreateInfo mainWindowInfo = {

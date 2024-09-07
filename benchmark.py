@@ -1,4 +1,4 @@
 import subprocess
 
-subprocess.run(['build/Benchmark.exe'])
-subprocess.run(['build/Benchmark.exe', 'NOCULL'])
+subprocess.run(['Benchmark.exe'])
+subprocess.run(['Benchmark.exe', 'NOCULL'])

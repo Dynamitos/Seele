@@ -1,8 +1,8 @@
 #pragma once
-#include "MinimalEngine.h"
-#include "RenderPass.h"
 #include "Graphics/Pipeline.h"
 #include "Graphics/Query.h"
+#include "MinimalEngine.h"
+#include "RenderPass.h"
 
 namespace Seele {
 class DepthCullingPass : public RenderPass {
@@ -20,10 +20,10 @@ class DepthCullingPass : public RenderPass {
   private:
     constexpr static uint64 BLOCK_SIZE = 32;
     struct MipParam {
-        uint32 srcMipOffset;
-        uint32 dstMipOffset;
-        UVector2 srcMipDim;
-        UVector2 dstMipDim;
+        uint32 sourceOffset;
+        uint32 destOffset;
+        UVector2 sourceDim;
+        UVector2 destDim;
     };
 
     Array<uint32> mipOffsets;
@@ -38,11 +38,11 @@ class DepthCullingPass : public RenderPass {
     Gfx::PTimestampQuery timestamps;
 
     Gfx::OPipelineLayout depthComputeLayout;
-    Gfx::OComputeShader depthInitialReduceShader;
-    Gfx::PComputePipeline depthInitialReduce;
-    Gfx::OComputeShader depthMipGenShader;
-    Gfx::PComputePipeline depthMipGen;
-    
+    Gfx::OComputeShader depthSourceCopyShader;
+    Gfx::PComputePipeline depthSourceCopy;
+    Gfx::OComputeShader depthReduceLevelShader;
+    Gfx::PComputePipeline depthReduceLevel;
+
     Gfx::PShaderBuffer cullingBuffer;
 };
 DEFINE_REF(DepthCullingPass)

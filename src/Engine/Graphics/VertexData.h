@@ -55,7 +55,7 @@ class VertexData {
         Gfx::PBottomLevelAS rayTracingScene;
     };
     void resetMeshData();
-    void updateMesh(entt::entity id, uint32 meshIndex, PMesh mesh, Component::Transform& transform);
+    void updateMesh(uint32 meshletOffset, PMesh mesh, Component::Transform& transform);
     void createDescriptors();
     void loadMesh(MeshId id, Array<uint32> indices, Array<Meshlet> meshlets);
     void commitMeshes();
@@ -85,12 +85,7 @@ class VertexData {
     virtual void init(Gfx::PGraphics graphics);
     virtual void destroy();
 
-    struct CullingMapping {
-        uint64 instanceId;
-        uint32 cullingOffset;
-    };
-    static CullingMapping getCullingMapping(entt::entity id, uint32 meshIndex, uint32 numMeshlets);
-    static uint64 getInstanceCount() { return instanceCount; }
+    uint32 addCullingMapping(MeshId id);
     static uint64 getMeshletCount() { return meshletCount; }
 
   protected:
@@ -125,13 +120,6 @@ class VertexData {
     Array<uint32> vertexIndices;
     Array<uint32> indices;
 
-    struct MeshMapping {
-        entt::entity id;
-        uint32 meshId;
-        auto operator<=>(const MeshMapping& other) const = default;
-    };
-    static Map<MeshMapping, CullingMapping> instanceIdMap;
-    static uint64 instanceCount;
     static uint64 meshletCount;
 
     Gfx::PGraphics graphics;

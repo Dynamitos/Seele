@@ -12,8 +12,6 @@
 using namespace Seele;
 
 constexpr static uint64 NUM_DEFAULT_ELEMENTS = 17962284;
-Map<VertexData::MeshMapping, VertexData::CullingMapping> VertexData::instanceIdMap;
-uint64 VertexData::instanceCount = 0;
 uint64 VertexData::meshletCount = 0;
 
 void VertexData::resetMeshData() {
@@ -37,7 +35,7 @@ void VertexData::resetMeshData() {
     }
 }
 
-void VertexData::updateMesh(entt::entity id, uint32 meshIndex, PMesh mesh, Component::Transform& transform) {
+void VertexData::updateMesh(uint32 meshletOffset, PMesh mesh, Component::Transform& transform) {
     std::unique_lock l(materialDataLock);
     PMaterialInstance referencedInstance = mesh->referencedMaterial->getHandle();
     PMaterial mat = referencedInstance->getBaseMaterial();
@@ -48,8 +46,6 @@ void VertexData::updateMesh(entt::entity id, uint32 meshIndex, PMesh mesh, Compo
         .transformMatrix = transformMatrix,
         .inverseTransformMatrix = glm::inverse(transformMatrix),
     };
-
-    auto [instanceId, meshletOffset] = getCullingMapping(id, meshIndex, data.numMeshlets);
 
     referencedInstance->updateDescriptor();
     if (mat->hasTransparency()) {
@@ -260,7 +256,7 @@ void VertexData::commitMeshes() {
     indices.clear();
     meshlets.clear();
     dirty = false;
-    //graphics->buildBottomLevelAccelerationStructures(std::move(dataToBuild));
+    // graphics->buildBottomLevelAccelerationStructures(std::move(dataToBuild));
 }
 
 MeshId VertexData::allocateVertexData(uint64 numVertices) {
@@ -282,8 +278,7 @@ void VertexData::serializeMesh(MeshId id, uint64 numVertices, ArchiveBuffer& buf
     std::unique_lock l(vertexDataLock);
     Array<Meshlet> out;
     MeshData data = meshData[id];
-    for (size_t i = 0; i < data.numMeshlets; ++i)
-    {
+    for (size_t i = 0; i < data.numMeshlets; ++i) {
         MeshletDescription& desc = meshlets[i + data.meshletOffset];
         Meshlet m;
         std::memcpy(m.uniqueVertices, &vertexIndices[desc.vertexOffset], desc.vertexCount * sizeof(uint32));
@@ -299,7 +294,7 @@ void VertexData::serializeMesh(MeshId id, uint64 numVertices, ArchiveBuffer& buf
     Serialization::save(buffer, ind);
 }
 
-uint64 VertexData::deserializeMesh(MeshId id, ArchiveBuffer& buffer) { 
+uint64 VertexData::deserializeMesh(MeshId id, ArchiveBuffer& buffer) {
     Array<Meshlet> in;
     Array<uint32> ind;
     Serialization::load(buffer, in);
@@ -385,13 +380,10 @@ void VertexData::destroy() {
     materialData.clear();
 }
 
-VertexData::CullingMapping VertexData::getCullingMapping(entt::entity id, uint32 meshIndex, uint32 numMeshlets) {
-    MeshMapping key = MeshMapping{.id = id, .meshId = meshIndex};
-    if (!instanceIdMap.contains(key)) {
-        instanceIdMap[key] = CullingMapping{.instanceId = instanceCount++, .cullingOffset = uint32(meshletCount)};
-        meshletCount += numMeshlets;
-    }
-    return instanceIdMap[key];
+uint32 VertexData::addCullingMapping(MeshId id) {
+    uint32 result = meshletCount;
+    meshletCount += getMeshData(id).numMeshlets;
+    return result;
 }
 
 VertexData::VertexData() : idCounter(0), head(0), verticesAllocated(0), dirty(false) {}
