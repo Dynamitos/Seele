@@ -115,7 +115,7 @@ PipelineStatisticsQuery::PipelineStatisticsQuery(PGraphics graphics, const std::
                     VK_QUERY_PIPELINE_STATISTIC_COMPUTE_SHADER_INVOCATIONS_BIT |
                     VK_QUERY_PIPELINE_STATISTIC_TASK_SHADER_INVOCATIONS_BIT_EXT |
                     VK_QUERY_PIPELINE_STATISTIC_MESH_SHADER_INVOCATIONS_BIT_EXT,
-                sizeof(PipelineStatisticsQuery), 128, name) {}
+                sizeof(Gfx::PipelineStatisticsResult), 128, name) {}
 
 PipelineStatisticsQuery::~PipelineStatisticsQuery() {}
 
