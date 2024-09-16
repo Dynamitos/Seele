@@ -121,7 +121,7 @@ Gfx::PGraphicsPipeline Graphics::createGraphicsPipeline(Gfx::MeshPipelineCreateI
 Gfx::PComputePipeline Graphics::createComputePipeline(Gfx::ComputePipelineCreateInfo createInfo) {
     return cache->createPipeline(std::move(createInfo));
 }
-Gfx::PRayTracingPipeline Graphics::createRayTracingPipeline(Gfx::RayTracingPipelineCreateInfo createInfo) { return nullptr; }
+Gfx::PRayTracingPipeline Graphics::createRayTracingPipeline(Gfx::RayTracingPipelineCreateInfo) { return nullptr; }
 
 Gfx::OSampler Graphics::createSampler(const SamplerCreateInfo& createInfo) { return new Sampler(this, createInfo); }
 
@@ -143,16 +143,16 @@ Gfx::OTimestampQuery Graphics::createTimestampQuery(uint64 numTimestamps, const 
     return new TimestampQuery(this, name, numTimestamps);
 }
 
-void Graphics::resolveTexture(Gfx::PTexture source, Gfx::PTexture destination) {}
+void Graphics::resolveTexture(Gfx::PTexture, Gfx::PTexture) {}
 
-void Graphics::copyTexture(Gfx::PTexture src, Gfx::PTexture dst) {}
+void Graphics::copyTexture(Gfx::PTexture, Gfx::PTexture) {}
 
 // Ray Tracing
 Gfx::OBottomLevelAS Graphics::createBottomLevelAccelerationStructure(const Gfx::BottomLevelASCreateInfo& createInfo) { return nullptr; }
 
 Gfx::OTopLevelAS Graphics::createTopLevelAccelerationStructure(const Gfx::TopLevelASCreateInfo& createInfo) { return nullptr; }
 
-void Graphics::buildBottomLevelAccelerationStructures(Array<Gfx::PBottomLevelAS> data) {}
+void Graphics::buildBottomLevelAccelerationStructures(Array<Gfx::PBottomLevelAS>) {}
 
 Gfx::ORayGenShader Graphics::createRayGenShader(const ShaderCreateInfo& createInfo) {
     ORayGenShader shader = new RayGenShader(this);

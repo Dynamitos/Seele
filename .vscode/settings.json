@@ -23,6 +23,6 @@
     "lldb.showDisassembly": "auto",
     "lldb.dereferencePointers": true,
     "lldb.consoleMode": "commands",
-    "cmake.generator": "Ninja",
+    "cmake.generator": "Xcode",
     "editor.tabSize": 4
 }

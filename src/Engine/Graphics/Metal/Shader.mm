@@ -25,10 +25,10 @@ Shader::~Shader() {
 
 void Shader::create(const ShaderCreateInfo& createInfo) {
     auto [kernelBlob, entryPoint] = generateShader(createInfo);
-    std::ofstream test("test.metal");
-    test.write((char*)kernelBlob->getBufferPointer(), kernelBlob->getBufferSize());
-    test.close();
     hash = CRC::Calculate(kernelBlob->getBufferPointer(), kernelBlob->getBufferSize(), CRC::CRC_32());
+    std::ofstream test("test.metal");
+    test.write((const char*)kernelBlob->getBufferPointer(), kernelBlob->getBufferSize());
+    test.close();
     NS::Error* error;
     MTL::CompileOptions* options = MTL::CompileOptions::alloc()->init();
     library = graphics->getDevice()->newLibrary(NS::String::string((char*)kernelBlob->getBufferPointer(), NS::ASCIIStringEncoding), options,

@@ -11,8 +11,6 @@
 #include "Graphics/Vulkan/Graphics.h"
 #endif
 #include "Graphics/StaticMeshVertexData.h"
-#include "Graphics/Vulkan/Buffer.h"
-#include "Graphics/Vulkan/Graphics.h"
 #include "Window/PlayView.h"
 #include "Window/WindowManager.h"
 #include <fmt/core.h>
@@ -60,21 +58,21 @@ int main() {
         //AssetImporter::importMesh(MeshImportArgs{
         //    .filePath = sourcePath / "import/models/cube.fbx",
         //});
-        AssetImporter::importMesh(MeshImportArgs{
-            .filePath = sourcePath / "import/models/culling.fbx",
-        });
+        //AssetImporter::importMesh(MeshImportArgs{
+        //    .filePath = sourcePath / "import/models/culling.fbx",
+        //});
         AssetImporter::importTexture(TextureImportArgs{
             .filePath = sourcePath / "import/textures/skyboxsun5deg_tn.jpg",
             .type = TextureImportType::TEXTURE_CUBEMAP,
         });
-        //AssetImporter::importMesh(MeshImportArgs{
-        //    .filePath = sourcePath / "import/models/ship.fbx",
-        //    .importPath = "ship",
-        //});
         AssetImporter::importMesh(MeshImportArgs{
-           .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.glb",
-           .importPath = "Whitechapel",
+            .filePath = sourcePath / "import/models/ship.fbx",
+            .importPath = "ship",
         });
+        //AssetImporter::importMesh(MeshImportArgs{
+        //   .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.glb",
+        //   .importPath = "Whitechapel",
+        //});
         //AssetImporter::importMesh(MeshImportArgs{
         //    .filePath = sourcePath / "import/models/city-suburbs/source/city-suburbs.obj",
         //    .importPath = "suburbs",

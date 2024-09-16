@@ -57,8 +57,8 @@ class RenderCommand : public Gfx::RenderCommand {
     virtual void setViewport(Gfx::PViewport viewport) override;
     virtual void bindPipeline(Gfx::PGraphicsPipeline pipeline) override;
     virtual void bindPipeline(Gfx::PRayTracingPipeline pipeline) override;
-    virtual void bindDescriptor(Gfx::PDescriptorSet descriptorSet, Array<uint32> dynamicOffsets) override;
-    virtual void bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorSets, Array<uint32> dynamicOffsets) override;
+    virtual void bindDescriptor(Gfx::PDescriptorSet descriptorSet) override;
+    virtual void bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorSets) override;
     virtual void bindVertexBuffer(const Array<Gfx::PVertexBuffer>& buffers) override;
     virtual void bindIndexBuffer(Gfx::PIndexBuffer indexBuffer) override;
     virtual void pushConstants(Gfx::SeShaderStageFlags stage, uint32 offset, uint32 size, const void* data) override;
@@ -71,9 +71,8 @@ class RenderCommand : public Gfx::RenderCommand {
   private:
     PGraphicsPipeline boundPipeline;
     PIndexBuffer boundIndexBuffer;
-    MTL::ArgumentEncoder* argumentEncoder;
-    MTL::Buffer* argumentBuffer;
     MTL::RenderCommandEncoder* encoder;
+    MTL::Buffer* constantsBuffer;
     std::string name;
 };
 DEFINE_REF(RenderCommand)
@@ -83,8 +82,8 @@ class ComputeCommand : public Gfx::ComputeCommand {
     virtual ~ComputeCommand();
     void end();
     virtual void bindPipeline(Gfx::PComputePipeline pipeline) override;
-    virtual void bindDescriptor(Gfx::PDescriptorSet set, Array<uint32> dynamicOffsets) override;
-    virtual void bindDescriptor(const Array<Gfx::PDescriptorSet>& sets, Array<uint32> dynamicOffsets) override;
+    virtual void bindDescriptor(Gfx::PDescriptorSet set) override;
+    virtual void bindDescriptor(const Array<Gfx::PDescriptorSet>& sets) override;
     virtual void pushConstants(Gfx::SeShaderStageFlags stage, uint32 offset, uint32 size, const void* data) override;
     virtual void dispatch(uint32 threadX, uint32 threadY, uint32 threadZ) override;
 
@@ -92,7 +91,7 @@ class ComputeCommand : public Gfx::ComputeCommand {
     PComputePipeline boundPipeline;
     MTL::CommandBuffer* commandBuffer;
     MTL::ComputeCommandEncoder* encoder;
-    MTL::Buffer* argumentBuffer;
+    MTL::Buffer* constantsBuffer;
     std::string name;
 };
 DEFINE_REF(ComputeCommand)

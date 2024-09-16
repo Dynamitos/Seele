@@ -34,7 +34,7 @@ void meshMain(
     out vertices WaterVertex vertices[TILE_VERTS],
     out indices uint3 indices[TILE_PRIMS],
 ) {
-    float4x4 vp = mul(pViewParams.projectionMatrix, pViewParams.viewMatrix);
+    float4x4 vp = mul(pViewParams.c.projectionMatrix, pViewParams.c.viewMatrix);
 	SetMeshOutputCounts(TILE_VERTS, TILE_PRIMS);
 	
 	for(uint i = threadID; i < TILE_PRIMS; i += MESH_GROUP_SIZE)
@@ -48,7 +48,7 @@ void meshMain(
         float3 worldPos = params.offset + objectPos * params.extent + float3(groupID.x * params.extent, 0, groupID.y * params.extent);
 
         float lodDisplacement = 0;
-        float3 camPos = pViewParams.cameraPos_WS.xyz;
+        float3 camPos = pViewParams.c.cameraPos_WS.xyz;
         float cameraDistance = distance(worldPos, camPos);
         float threshold = 0;
         if(params.numMeshes == 3)

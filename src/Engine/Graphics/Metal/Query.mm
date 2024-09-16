@@ -4,28 +4,23 @@
 #include "Containers/Array.h"
 #include "Enums.h"
 #include "Graphics.h"
+#include "Graphics/Query.h"
 #include <vulkan/vulkan_core.h>
 
 using namespace Seele;
 using namespace Seele::Metal;
 
-QueryPool::QueryPool(PGraphics graphics, const std::string& name)
-    : graphics(graphics) {
-}
+QueryPool::QueryPool(PGraphics graphics, const std::string&) : graphics(graphics) {}
 
-QueryPool::~QueryPool() { }
+QueryPool::~QueryPool() {}
 
-void QueryPool::begin() {
-}
+void QueryPool::begin() {}
 
-void QueryPool::end() {
-}
+void QueryPool::end() {}
 
-void QueryPool::getQueryResults(Array<uint64>& results) {
-}
+void QueryPool::getQueryResults(Array<uint64>&) {}
 
-OcclusionQuery::OcclusionQuery(PGraphics graphics, const std::string& name)
-    : QueryPool(graphics, name) {}
+OcclusionQuery::OcclusionQuery(PGraphics graphics, const std::string& name) : QueryPool(graphics, name) {}
 
 OcclusionQuery::~OcclusionQuery() {}
 
@@ -41,8 +36,7 @@ Gfx::OcclusionResult OcclusionQuery::getResults() {
     };
 }
 
-PipelineStatisticsQuery::PipelineStatisticsQuery(PGraphics graphics, const std::string& name)
-    : QueryPool(graphics, name) {}
+PipelineStatisticsQuery::PipelineStatisticsQuery(PGraphics graphics, const std::string& name) : QueryPool(graphics, name) {}
 
 PipelineStatisticsQuery::~PipelineStatisticsQuery() {}
 
@@ -66,21 +60,15 @@ Gfx::PipelineStatisticsResult PipelineStatisticsQuery::getResults() {
     };
 }
 
-TimestampQuery::TimestampQuery(PGraphics graphics, const std::string& name, uint32 numTimestamps)
-    : QueryPool(graphics, name), numTimestamps(numTimestamps) {
-}
+TimestampQuery::TimestampQuery(PGraphics graphics, const std::string& name, uint32) : QueryPool(graphics, name) {}
 
 TimestampQuery::~TimestampQuery() {}
 
-void TimestampQuery::begin() {
-    currentTimestamp = 0;
-}
+void TimestampQuery::write(Gfx::SePipelineStageFlagBits, const std::string&) {}
 
-void TimestampQuery::write(Gfx::SePipelineStageFlagBits stage, const std::string& name) {
-}
-
-void TimestampQuery::end() {
-}
-
-Array<Gfx::Timestamp> TimestampQuery::getResults() {
+Gfx::Timestamp TimestampQuery::getResult() {
+    return Gfx::Timestamp{
+        .name = "Test",
+        .time = 0,
+    };
 }

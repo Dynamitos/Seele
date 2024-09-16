@@ -66,7 +66,7 @@ VertexOutput vertexMain(VertexInput input)
     float4 vertex = coordinates[input.vertexId];
     VertexOutput output;
     output.texCoords = vertex.zw;
-    output.position = mul(pViewParams.projectionMatrix, float4(vertex.xy, 0, 1));
+    output.position = mul(pViewParams.c.projectionMatrix, float4(vertex.xy, 0, 1));
     output.glyphIndex = pRender.instances[input.instanceId].glyphIndex;
     return output;
 }

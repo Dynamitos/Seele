@@ -6,6 +6,11 @@ struct DispatchParams
 	uint pad0;
 	uint3 numThreads;
 	uint pad1;
-	RWStructuredBuffer<Frustum> frustums;
+};
+
+struct DispatchParamWrapper
+{
+    ParameterBlock<DispatchParams> p;
+    RWStructuredBuffer<Frustum> frustums;
 }
-ParameterBlock<DispatchParams> pDispatchParams;
+ParameterBlock<DispatchParamWrapper> pDispatchParams;

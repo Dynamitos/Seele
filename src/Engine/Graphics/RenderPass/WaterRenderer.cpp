@@ -533,13 +533,13 @@ void WaterRenderer::updateFFTDescriptor() {
 
     computeSet = computeLayout->allocateDescriptorSet();
     computeSet->updateBuffer(0, paramsBuffer);
-    computeSet->updateTexture(1, 0, Gfx::PTexture2D(spectrumTextures));
-    computeSet->updateTexture(2, 0, Gfx::PTexture2D(initialSpectrumTextures));
-    computeSet->updateTexture(3, 0, Gfx::PTexture2D(displacementTextures));
-    computeSet->updateTexture(4, 0, Gfx::PTexture2D(slopeTextures));
-    computeSet->updateTexture(5, 0, Gfx::PTexture2D(boyancyData));
-    computeSet->updateBuffer(6, 0, spectrumBuffer);
-    computeSet->updateSampler(7, 0, linearRepeatSampler);
+    computeSet->updateTexture(1, Gfx::PTexture2D(spectrumTextures));
+    computeSet->updateTexture(2, Gfx::PTexture2D(initialSpectrumTextures));
+    computeSet->updateTexture(3, Gfx::PTexture2D(displacementTextures));
+    computeSet->updateTexture(4, Gfx::PTexture2D(slopeTextures));
+    computeSet->updateTexture(5, Gfx::PTexture2D(boyancyData));
+    computeSet->updateBuffer(6, spectrumBuffer);
+    computeSet->updateSampler(7, linearRepeatSampler);
     computeSet->writeChanges();
 }
 

@@ -23,7 +23,7 @@ float Beckmann(float ndoth, float roughness) {
 [shader("pixel")]
 float4 fragmentMain(WaterVertex vert) : SV_TARGET {
     float3 lightDir = -normalize(pWaterMaterial.sunDirection);
-    float3 viewDir = normalize(pViewParams.cameraPos_WS.xyz - vert.position_WS);
+    float3 viewDir = normalize(pViewParams.c.cameraPos_WS.xyz - vert.position_WS);
     float3 halfwayDir = normalize(lightDir + viewDir);
     float depth = vert.depth;
     float LdotH = clamp(dot(lightDir, halfwayDir), 0, 1);

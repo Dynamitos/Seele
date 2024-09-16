@@ -1,6 +1,7 @@
 #include "StaticMeshVertexData.h"
 #include "Graphics.h"
 #include "Graphics/Enums.h"
+#include "Graphics/VertexData.h"
 #include "Mesh.h"
 #include <fstream>
 
@@ -133,11 +134,13 @@ void StaticMeshVertexData::init(Gfx::PGraphics _graphics) {
     descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 2, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
     descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 3, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
     descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 4, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
-    descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 5,
-        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-        .descriptorCount = MAX_TEXCOORDS,
-    });
+    for(uint i = 0; i < MAX_TEXCOORDS; ++i)
+    {
+        descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+            .binding = 5 + i,
+            .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+        });
+    }
     descriptorLayout->create();
     descriptorSet = descriptorLayout->allocateDescriptorSet();
 }
@@ -223,7 +226,7 @@ void StaticMeshVertexData::updateBuffers() {
     descriptorSet->updateBuffer(3, biTangents);
     descriptorSet->updateBuffer(4, colors);
     for (size_t i = 0; i < MAX_TEXCOORDS; ++i) {
-        descriptorSet->updateBuffer(5, i, texCoords[i]);
+        descriptorSet->updateBuffer(5 + i, texCoords[i]);
     }
     descriptorSet->writeChanges();
 }

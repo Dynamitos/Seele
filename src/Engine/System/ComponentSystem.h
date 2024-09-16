@@ -27,8 +27,8 @@ template <typename... Components> class ComponentSystem : public SystemBase {
         setupView((getDependencies<Components>() | ...));
     }
     virtual void update() override {}
-    virtual void update(Components&... components) {}
-    virtual void update(entt::entity id, Components&... components) {}
+    virtual void update(Components&...) {}
+    virtual void update(entt::entity, Components&...) {}
 };
 } // namespace System
 } // namespace Seele

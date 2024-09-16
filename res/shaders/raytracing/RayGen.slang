@@ -10,11 +10,11 @@ void raygen()
     const float2 pixelCenter = float2(LaunchID.xy) + float2(0.5, 0.5);
     const float2 inUV = pixelCenter / float2(LaunchSize.xy);
     float2 d = float2(inUV.x, 1 - inUV.y) * 2.0 - 1.0;
-    float4 target = mul(pViewParams.inverseProjection, float4(d.x, d.y, 1, 1));
+    float4 target = mul(pViewParams.c.inverseProjection, float4(d.x, d.y, 1, 1));
 
     RayDesc rayDesc;
-    rayDesc.Origin = mul(pViewParams.inverseViewMatrix, float4(0, 0, 0, 1)).xyz;
-    rayDesc.Direction = mul(pViewParams.inverseViewMatrix, float4(normalize(target.xyz), 0)).xyz;
+    rayDesc.Origin = mul(pViewParams.c.inverseViewMatrix, float4(0, 0, 0, 1)).xyz;
+    rayDesc.Direction = mul(pViewParams.c.inverseViewMatrix, float4(normalize(target.xyz), 0)).xyz;
     rayDesc.TMin = 0.001;
     rayDesc.TMax = 10000.0;
 	

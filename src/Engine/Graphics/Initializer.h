@@ -68,7 +68,7 @@ struct SamplerCreateInfo {
     Gfx::SeSamplerAddressMode addressModeW = Gfx::SE_SAMPLER_ADDRESS_MODE_REPEAT;
     float mipLodBias = 0.0f;
     uint32 anisotropyEnable = 0;
-    float maxAnisotropy = 0.0f;
+    float maxAnisotropy = 1.0f;
     uint32 compareEnable = 0;
     Gfx::SeCompareOp compareOp = Gfx::SE_COMPARE_OP_NEVER;
     float minLod = 0.0f;
@@ -138,6 +138,7 @@ struct SePushConstantRange {
     SeShaderStageFlags stageFlags;
     uint32 offset;
     uint32 size;
+    std::string name;
 };
 struct RasterizationState {
     uint32 depthClampEnable = 0;

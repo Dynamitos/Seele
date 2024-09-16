@@ -88,7 +88,10 @@ void TextureBase::generateMipmaps() { handle->generateMipmaps(); }
 
 Texture2D::Texture2D(PGraphics graphics, const TextureCreateInfo& createInfo, MTL::Texture* existingImage)
     : Gfx::Texture2D(graphics->getFamilyMapping()),
-      TextureBase(graphics, createInfo.elements > 1 ? MTL::TextureType2DArray : MTL::TextureType2D, createInfo, existingImage) {}
+      TextureBase(graphics,
+                  createInfo.elements > 1 ? (createInfo.samples > 1 ? MTL::TextureType2DMultisampleArray : MTL::TextureType2DArray)
+                                          : (createInfo.samples > 1 ? MTL::TextureType2DMultisample : MTL::TextureType2D),
+                  createInfo, existingImage) {}
 
 Texture2D::~Texture2D() {}
 

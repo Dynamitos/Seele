@@ -50,21 +50,20 @@ class DescriptorSet : public Gfx::DescriptorSet, public CommandBoundResource {
     virtual void updateBuffer(uint32 binding, Gfx::PUniformBuffer uniformBuffer) override;
     virtual void updateBuffer(uint32 binding, Gfx::PShaderBuffer uniformBuffer) override;
     virtual void updateBuffer(uint32 binding, Gfx::PIndexBuffer uniformBuffer) override;
-    virtual void updateBuffer(uint32 binding, uint32 index, Gfx::PShaderBuffer uniformBuffer) override;
     virtual void updateSampler(uint32 binding, Gfx::PSampler samplerState) override;
-    virtual void updateSampler(uint32 binding, uint32 dstArrayIndex, Gfx::PSampler samplerState) override;
     virtual void updateTexture(uint32 binding, Gfx::PTexture texture, Gfx::PSampler sampler = nullptr) override;
-    virtual void updateTexture(uint32 binding, uint32 dstArrayIndex, Gfx::PTexture texture) override;
     virtual void updateTextureArray(uint32 binding, Array<Gfx::PTexture2D> texture) override;
     virtual void updateSamplerArray(uint32 binding, Array<Gfx::PSampler> samplers) override;
     virtual void updateAccelerationStructure(uint32 binding, Gfx::PTopLevelAS as) override;
 
-    constexpr const Array<Array<MTL::Resource*>>& getBoundResources() const { return boundResources; }
+    constexpr const Array<MTL::Resource*>& getBoundResources() const { return boundResources; }
+
+    MTL::Buffer* getArgumentBuffer() const { return argumentBuffer; }
 
   private:
     PGraphics graphics;
     PDescriptorPool owner;
-    Array<Array<MTL::Resource*>> boundResources;
+    Array<MTL::Resource*> boundResources;
     MTL::ArgumentEncoder* encoder;
     MTL::Buffer* argumentBuffer = nullptr;
 };

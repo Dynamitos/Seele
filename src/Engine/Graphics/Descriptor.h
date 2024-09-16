@@ -64,11 +64,8 @@ class DescriptorSet {
     virtual void updateBuffer(uint32 binding, PUniformBuffer uniformBuffer) = 0;
     virtual void updateBuffer(uint32 binding, PIndexBuffer indexBuffer) = 0;
     virtual void updateBuffer(uint32 binding, PShaderBuffer shaderBuffer) = 0;
-    virtual void updateBuffer(uint32_t binding, uint32 index, Gfx::PShaderBuffer uniformBuffer) = 0;
     virtual void updateSampler(uint32 binding, PSampler sampler) = 0;
-    virtual void updateSampler(uint32_t binding, uint32 dstArrayIndex, Gfx::PSampler samplerState) = 0;
     virtual void updateTexture(uint32 binding, PTexture texture, PSampler samplerState = nullptr) = 0;
-    virtual void updateTexture(uint32 binding, uint32 dstArrayIndex, PTexture texture) = 0;
     virtual void updateTextureArray(uint32_t binding, Array<PTexture2D> texture) = 0;
     virtual void updateSamplerArray(uint32_t binding, Array<PSampler> samplers) = 0;
     virtual void updateAccelerationStructure(uint32 binding, PTopLevelAS as) = 0;
@@ -96,6 +93,8 @@ class PipelineLayout {
     constexpr uint32 findParameter(const std::string& param) const { return parameterMapping[param]; }
     void addMapping(std::string name, uint32 index);
     constexpr std::string getName() const { return name; };
+    constexpr bool hasPushConstants() const { return !pushConstants.empty(); }
+    constexpr uint64 getPushConstantsSize() const { return pushConstants[0].size; }
 
   protected:
     uint32 layoutHash = 0;

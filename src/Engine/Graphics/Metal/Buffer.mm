@@ -42,8 +42,11 @@ void BufferAllocation::unmap() {}
 Buffer::Buffer(PGraphics graphics, uint64 size, Gfx::SeBufferUsageFlags usage, Gfx::QueueType queueType, bool dynamic, std::string name,
                bool createCleared, uint32 clearValue)
     : graphics(graphics), currentBuffer(0), dynamic(dynamic), createCleared(createCleared), name(name), clearValue(clearValue) {
-    buffers.add(nullptr);
-    createBuffer(size, 0);
+    if(size > 0)
+    {
+        buffers.add(nullptr);
+        createBuffer(size, 0);
+    }
 }
 
 Buffer::~Buffer() {
@@ -101,10 +104,16 @@ void Buffer::copyBuffer(uint64 src, uint64 dest) {
     std::memcpy(buffers[dest]->map(), buffers[src]->map(), buffers[src]->size);
 }
 
-void Buffer::transferOwnership(Gfx::QueueType newOwner) { getAlloc()->transferOwnership(newOwner); }
+void Buffer::transferOwnership(Gfx::QueueType newOwner) {
+    if(buffers.size() == 0)
+        return;
+    getAlloc()->transferOwnership(newOwner);
+}
 
 void Buffer::pipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage, Gfx::SeAccessFlags dstAccess,
                              Gfx::SePipelineStageFlags dstStage) {
+    if(buffers.size() == 0)
+        return;
     getAlloc()->pipelineBarrier(srcAccess, srcStage, dstAccess, dstStage);
 }
 

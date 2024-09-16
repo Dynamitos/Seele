@@ -51,11 +51,8 @@ class DescriptorSet : public Gfx::DescriptorSet, public CommandBoundResource {
     virtual void updateBuffer(uint32 binding, Gfx::PUniformBuffer uniformBuffer) override;
     virtual void updateBuffer(uint32 binding, Gfx::PShaderBuffer uniformBuffer) override;
     virtual void updateBuffer(uint32 binding, Gfx::PIndexBuffer uniformBuffer) override;
-    virtual void updateBuffer(uint32 binding, uint32 index, Gfx::PShaderBuffer uniformBuffer) override;
     virtual void updateSampler(uint32 binding, Gfx::PSampler samplerState) override;
-    virtual void updateSampler(uint32 binding, uint32 dstArrayIndex, Gfx::PSampler samplerState) override;
     virtual void updateTexture(uint32 binding, Gfx::PTexture texture, Gfx::PSampler sampler = nullptr) override;
-    virtual void updateTexture(uint32 binding, uint32 dstArrayIndex, Gfx::PTexture texture) override;
     virtual void updateTextureArray(uint32 binding, Array<Gfx::PTexture2D> texture) override;
     virtual void updateSamplerArray(uint32 binding, Array<Gfx::PSampler> samplers) override;
     virtual void updateAccelerationStructure(uint32 binding, Gfx::PTopLevelAS as) override;
@@ -71,7 +68,7 @@ class DescriptorSet : public Gfx::DescriptorSet, public CommandBoundResource {
     // since the layout is fixed, trying to bind a texture to a buffer
     // would not work anyways, so casts should be safe
     // Array<void*> cachedData;
-    Array<Array<PCommandBoundResource>> boundResources;
+    Array<PCommandBoundResource> boundResources;
     VkDescriptorSet setHandle;
     PGraphics graphics;
     PDescriptorPool owner;

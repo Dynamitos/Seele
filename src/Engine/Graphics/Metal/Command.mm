@@ -3,6 +3,7 @@
 #include "Containers/Array.h"
 #include "Descriptor.h"
 #include "Enums.h"
+#include "Graphics/Graphics.h"
 #include "Graphics/Command.h"
 #include "Graphics/Enums.h"
 #include "Graphics/Graphics.h"
@@ -74,35 +75,51 @@ void RenderCommand::setViewport(Gfx::PViewport viewport) {
 void RenderCommand::bindPipeline(Gfx::PGraphicsPipeline pipeline) {
     boundPipeline = pipeline.cast<GraphicsPipeline>();
     encoder->setRenderPipelineState(boundPipeline->getHandle());
+    if(boundPipeline->getPipelineLayout()->hasPushConstants()) {
+        constantsBuffer = boundPipeline->graphics->getDevice()->newBuffer(boundPipeline->getPipelineLayout()->getPushConstantsSize(), 0);
+    }
 }
 
 void RenderCommand::bindPipeline(Gfx::PRayTracingPipeline pipeline) {}
 
-void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet, Array<uint32> offsets) {
+void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet) {
     auto metalSet = descriptorSet.cast<DescriptorSet>();
     metalSet->bind();
+    uint32 descriptorIndex = boundPipeline->getPipelineLayout()->findParameter(metalSet->getLayout()->getName());
+    encoder->setVertexBuffer(metalSet->getArgumentBuffer(), 0, descriptorIndex);
+    encoder->setFragmentBuffer(metalSet->getArgumentBuffer(), 0, descriptorIndex);
+    encoder->setObjectBuffer(metalSet->getArgumentBuffer(), 0, descriptorIndex);
+    encoder->setMeshBuffer(metalSet->getArgumentBuffer(), 0, descriptorIndex);
 }
 
-void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorSets, Array<uint32> offsets) {
+void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorSets) {
     for (auto set : descriptorSets) {
-        bindDescriptor(set, offsets);
+        bindDescriptor(set);
     }
 }
 void RenderCommand::bindVertexBuffer(const Array<Gfx::PVertexBuffer>& buffers) {
     uint32 i = 0;
     for (auto buffer : buffers) {
-        encoder->setVertexBuffer(buffer.cast<VertexBuffer>()->getHandle(), 0, METAL_VERTEXBUFFER_OFFSET + i++);
+        encoder->setVertexBuffer(buffer.cast<VertexBuffer>()->getHandle(), 0, buffer.cast<VertexBuffer>()->getVertexSize(), i++);
     }
 }
 
 void RenderCommand::bindIndexBuffer(Gfx::PIndexBuffer gfxIndexBuffer) { boundIndexBuffer = gfxIndexBuffer.cast<IndexBuffer>(); }
 
 void RenderCommand::pushConstants(Gfx::SeShaderStageFlags stage, uint32 offset, uint32 size, const void* data) {
+    std::memcpy(constantsBuffer->contents(), data, size);
+    uint pushIndex = boundPipeline->getPipelineLayout()->findParameter("pOffsets");
     if (stage & Gfx::SE_SHADER_STAGE_VERTEX_BIT) {
-        encoder->setVertexBytes((char*)data + offset, size, 0);
+        encoder->setVertexBuffer(constantsBuffer, 0, pushIndex); // TODO: hardcoded
     }
     if (stage & Gfx::SE_SHADER_STAGE_FRAGMENT_BIT) {
-        encoder->setFragmentBytes((char*)data + offset, size, 0);
+        encoder->setFragmentBuffer(constantsBuffer, 0, pushIndex); // TODO: hardcoded
+    }
+    if (stage & Gfx::SE_SHADER_STAGE_TASK_BIT_EXT) {
+        encoder->setObjectBuffer(constantsBuffer, 0, pushIndex); // TODO: hardcoded
+    }
+    if (stage & Gfx::SE_SHADER_STAGE_MESH_BIT_EXT) {
+        encoder->setMeshBuffer(constantsBuffer, 0, pushIndex); // TODO: hardcoded
     }
 }
 
@@ -116,11 +133,6 @@ void RenderCommand::drawIndexed(uint32 indexCount, uint32 instanceCount, int32 f
 }
 
 void RenderCommand::drawMesh(uint32 groupX, uint32 groupY, uint32 groupZ) {
-    // TODO:
-    std::cout << "Draw" << std::endl;
-    encoder->setFragmentBuffer(argumentBuffer, 0, 2);
-    encoder->setMeshBuffer(argumentBuffer, 0, 2);
-    encoder->setObjectBuffer(argumentBuffer, 0, 2);
     encoder->drawMeshThreadgroups(MTL::Size(groupX, groupY, groupZ), MTL::Size(128, 1, 1), MTL::Size(32, 1, 1));
 }
 
@@ -143,29 +155,32 @@ void ComputeCommand::end() {
 void ComputeCommand::bindPipeline(Gfx::PComputePipeline pipeline) {
     boundPipeline = pipeline.cast<ComputePipeline>();
     encoder->setComputePipelineState(boundPipeline->getHandle());
-    argumentBuffer = boundPipeline->graphics->getDevice()->newBuffer(
-        sizeof(uint64) * (boundPipeline->getPipelineLayout()->getLayouts().size() + 1), MTL::ResourceStorageModeShared);
-    argumentBuffer->setLabel(NS::String::string(pipeline->getPipelineLayout()->getName().c_str(), NS::ASCIIStringEncoding));
+    if(boundPipeline->getPipelineLayout()->hasPushConstants()) {
+        constantsBuffer = boundPipeline->graphics->getDevice()->newBuffer(boundPipeline->getPipelineLayout()->getPushConstantsSize(), 0);
+    }
 }
 
-void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet set, Array<uint32> offsets) {
+void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet set) {
     auto metalSet = set.cast<DescriptorSet>();
     metalSet->bind();
+    uint32 descriptorIndex = boundPipeline->getPipelineLayout()->findParameter(metalSet->getLayout()->getName());
+    encoder->setBuffer(metalSet->getArgumentBuffer(), 0, descriptorIndex);
 }
 
-void ComputeCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& sets, Array<uint32> offsets) {
+void ComputeCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& sets) {
     for (auto& set : sets) {
-        bindDescriptor(set, offsets);
+        bindDescriptor(set);
     }
 }
 
 void ComputeCommand::pushConstants(Gfx::SeShaderStageFlags, uint32 offset, uint32 size, const void* data) {
-    encoder->setBytes((char*)data + offset, size, 0);
+    std::memcpy(constantsBuffer->contents(), data, size);
+    uint pushIndex = boundPipeline->getPipelineLayout()->findParameter("pMipParam");
+    encoder->setBuffer(constantsBuffer, 0, pushIndex); // TODO: hardcoded
 }
 
 void ComputeCommand::dispatch(uint32 threadX, uint32 threadY, uint32 threadZ) {
     // TODO
-    encoder->setBuffer(argumentBuffer, 0, 2);
     encoder->dispatchThreadgroups(MTL::Size(threadX, threadY, threadZ), MTL::Size(32, 32, 1));
 }
 

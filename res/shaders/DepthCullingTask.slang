@@ -30,7 +30,7 @@ groupshared bool meshVisible;
 ParameterBlock<DepthData> pDepthAttachment;
 bool isBoxVisible(AABB bounding)
 {
-    int2 mipDimensions = int2(int(pViewParams.screenDimensions.x), int(pViewParams.screenDimensions.y));
+    int2 mipDimensions = int2(int(pViewParams.c.screenDimensions.x), int(pViewParams.c.screenDimensions.y));
     // now we calculate what mip level we need to only sample up to 4 texels covering the entire meshlet
     int2 screenCornerMin = mipDimensions;
     int2 screenCornerMax = int2(0, 0);
@@ -91,14 +91,14 @@ void taskMain(
         p.instanceId = pOffsets.instanceOffset + groupID;
         p.meshletOffset = mesh.meshletOffset;
         p.cullingOffset = pScene.cullingOffsets[p.instanceId];
-        modelViewProjection = mul(mul(pViewParams.projectionMatrix, pViewParams.viewMatrix), instance.transformMatrix);
+        modelViewProjection = mul(mul(pViewParams.c.projectionMatrix, pViewParams.c.viewMatrix), instance.transformMatrix);
         float3 origin = viewToModel(instance.inverseTransformMatrix, float4(0, 0, 0, 1)).xyz;
         const float offset = 0.0f;
         float3 corners[4] = {
             screenToModel(instance.inverseTransformMatrix, float4(offset, offset, -1.0f, 1.0f)).xyz,
-            screenToModel(instance.inverseTransformMatrix, float4(pViewParams.screenDimensions.x - offset, offset, -1.0f, 1.0f)).xyz,
-            screenToModel(instance.inverseTransformMatrix, float4(offset, pViewParams.screenDimensions.y - offset, -1.0f, 1.0f)).xyz,
-            screenToModel(instance.inverseTransformMatrix, float4(pViewParams.screenDimensions - float2(offset, offset), -1.0f, 1.0f)).xyz
+            screenToModel(instance.inverseTransformMatrix, float4(pViewParams.c.screenDimensions.x - offset, offset, -1.0f, 1.0f)).xyz,
+            screenToModel(instance.inverseTransformMatrix, float4(offset, pViewParams.c.screenDimensions.y - offset, -1.0f, 1.0f)).xyz,
+            screenToModel(instance.inverseTransformMatrix, float4(pViewParams.c.screenDimensions - float2(offset, offset), -1.0f, 1.0f)).xyz
         };
         viewFrustum.sides[0] = computePlane(origin, corners[2], corners[0]);
         viewFrustum.sides[1] = computePlane(origin, corners[1], corners[3]);

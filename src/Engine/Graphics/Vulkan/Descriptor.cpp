@@ -163,7 +163,7 @@ DescriptorSet::DescriptorSet(PGraphics graphics, PDescriptorPool owner)
       graphics(graphics), owner(owner) {
     boundResources.resize(owner->getLayout()->getBindings().size());
     for (uint32 i = 0; i < boundResources.size(); ++i) {
-        boundResources[i].resize(owner->getLayout()->getBindings()[i].descriptorCount);
+        if(owner->getLayout()->getBindings()[i].descriptorCount > 1) std::abort();
     }
 }
 
@@ -171,7 +171,7 @@ DescriptorSet::~DescriptorSet() {}
 
 void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PUniformBuffer uniformBuffer) {
     PUniformBuffer vulkanBuffer = uniformBuffer.cast<UniformBuffer>();
-    if (boundResources[binding][0] == vulkanBuffer->getAlloc()) {
+    if (boundResources[binding] == vulkanBuffer->getAlloc()) {
         return;
     }
 
@@ -192,12 +192,12 @@ void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PUniformBuffer uniformBu
         .pBufferInfo = &bufferInfos.back(),
     });
 
-    boundResources[binding][0] = vulkanBuffer->getAlloc();
+    boundResources[binding] = vulkanBuffer->getAlloc();
 }
 
 void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PShaderBuffer shaderBuffer) {
     PShaderBuffer vulkanBuffer = shaderBuffer.cast<ShaderBuffer>();
-    if (boundResources[binding][0] == vulkanBuffer->getAlloc()) {
+    if (boundResources[binding] == vulkanBuffer->getAlloc()) {
         return;
     }
 
@@ -217,12 +217,12 @@ void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PShaderBuffer shaderBuff
         .pBufferInfo = &bufferInfos.back(),
     });
 
-    boundResources[binding][0] = vulkanBuffer->getAlloc();
+    boundResources[binding] = vulkanBuffer->getAlloc();
 }
 
 void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PIndexBuffer indexBuffer) {
     PIndexBuffer vulkanBuffer = indexBuffer.cast<IndexBuffer>();
-    if (boundResources[binding][0] == vulkanBuffer->getAlloc()) {
+    if (boundResources[binding] == vulkanBuffer->getAlloc()) {
         return;
     }
 
@@ -242,38 +242,12 @@ void DescriptorSet::updateBuffer(uint32_t binding, Gfx::PIndexBuffer indexBuffer
         .pBufferInfo = &bufferInfos.back(),
     });
 
-    boundResources[binding][0] = vulkanBuffer->getAlloc();
-}
-
-void DescriptorSet::updateBuffer(uint32_t binding, uint32 index, Gfx::PShaderBuffer shaderBuffer) {
-    PShaderBuffer vulkanBuffer = shaderBuffer.cast<ShaderBuffer>();
-    if (boundResources[binding][index] == vulkanBuffer->getAlloc()) {
-        return;
-    }
-
-    bufferInfos.add(VkDescriptorBufferInfo{
-        .buffer = vulkanBuffer->getHandle(),
-        .offset = 0,
-        .range = vulkanBuffer->getSize(),
-    });
-
-    writeDescriptors.add(VkWriteDescriptorSet{
-        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-        .pNext = nullptr,
-        .dstSet = setHandle,
-        .dstBinding = binding,
-        .dstArrayElement = index,
-        .descriptorCount = 1,
-        .descriptorType = cast(layout->getBindings()[binding].descriptorType),
-        .pBufferInfo = &bufferInfos.back(),
-    });
-
-    boundResources[binding][index] = vulkanBuffer->getAlloc();
+    boundResources[binding] = vulkanBuffer->getAlloc();
 }
 
 void DescriptorSet::updateSampler(uint32_t binding, Gfx::PSampler samplerState) {
     PSampler vulkanSampler = samplerState.cast<Sampler>();
-    if (boundResources[binding][0] == vulkanSampler->getHandle()) {
+    if (boundResources[binding] == vulkanSampler->getHandle()) {
         return;
     }
 
@@ -294,38 +268,12 @@ void DescriptorSet::updateSampler(uint32_t binding, Gfx::PSampler samplerState) 
         .pImageInfo = &imageInfos.back(),
     });
 
-    boundResources[binding][0] = vulkanSampler->getHandle();
-}
-
-void DescriptorSet::updateSampler(uint32_t binding, uint32 dstArrayIndex, Gfx::PSampler samplerState) {
-    PSampler vulkanSampler = samplerState.cast<Sampler>();
-    if (boundResources[binding][dstArrayIndex] == vulkanSampler->getHandle()) {
-        return;
-    }
-
-    imageInfos.add(VkDescriptorImageInfo{
-        .sampler = vulkanSampler->getSampler(),
-        .imageView = VK_NULL_HANDLE,
-        .imageLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-    });
-
-    writeDescriptors.add(VkWriteDescriptorSet{
-        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-        .pNext = nullptr,
-        .dstSet = setHandle,
-        .dstBinding = binding,
-        .dstArrayElement = dstArrayIndex,
-        .descriptorCount = 1,
-        .descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER,
-        .pImageInfo = &imageInfos.back(),
-    });
-
-    boundResources[binding][dstArrayIndex] = vulkanSampler->getHandle();
+    boundResources[binding] = vulkanSampler->getHandle();
 }
 
 void DescriptorSet::updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::PSampler samplerState) {
     TextureBase* vulkanTexture = texture.cast<TextureBase>().getHandle();
-    if (boundResources[binding][0] == vulkanTexture->getHandle()) {
+    if (boundResources[binding] == vulkanTexture->getHandle()) {
         return;
     }
 
@@ -346,33 +294,7 @@ void DescriptorSet::updateTexture(uint32_t binding, Gfx::PTexture texture, Gfx::
         .pImageInfo = &imageInfos.back(),
     });
 
-    boundResources[binding][0] = vulkanTexture->getHandle();
-}
-
-void DescriptorSet::updateTexture(uint32 binding, uint32 dstArrayIndex, Gfx::PTexture texture) {
-    TextureBase* vulkanTexture = texture.cast<TextureBase>().getHandle();
-    if (boundResources[binding][dstArrayIndex] == vulkanTexture->getHandle()) {
-        return;
-    }
-
-    // It is assumed that the image is in the correct layout
-    imageInfos.add(VkDescriptorImageInfo{
-        .sampler = VK_NULL_HANDLE,
-        .imageView = vulkanTexture->getView(),
-        .imageLayout = cast(vulkanTexture->getLayout()),
-    });
-    writeDescriptors.add(VkWriteDescriptorSet{
-        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-        .pNext = nullptr,
-        .dstSet = setHandle,
-        .dstBinding = binding,
-        .dstArrayElement = dstArrayIndex,
-        .descriptorCount = 1,
-        .descriptorType = cast(layout->getBindings()[binding].descriptorType),
-        .pImageInfo = &imageInfos.back(),
-    });
-
-    boundResources[binding][dstArrayIndex] = vulkanTexture->getHandle();
+    boundResources[binding] = vulkanTexture->getHandle();
 }
 
 void DescriptorSet::updateTextureArray(uint32_t binding, Array<Gfx::PTexture2D> textures) {
@@ -380,7 +302,7 @@ void DescriptorSet::updateTextureArray(uint32_t binding, Array<Gfx::PTexture2D> 
     uint32 arrayElement = 0;
     for (auto& gfxTexture : textures) {
         TextureBase* vulkanTexture = gfxTexture.cast<TextureBase>().getHandle();
-        if (boundResources[binding][arrayElement] == vulkanTexture->getHandle()) {
+        if (boundResources[binding+arrayElement] == vulkanTexture->getHandle()) {
             continue;
         }
         imageInfos.add(VkDescriptorImageInfo{
@@ -389,7 +311,7 @@ void DescriptorSet::updateTextureArray(uint32_t binding, Array<Gfx::PTexture2D> 
             .imageLayout = cast(vulkanTexture->getLayout()),
         });
 
-        boundResources[binding][arrayElement] = vulkanTexture->getHandle();
+        boundResources[binding+arrayElement] = vulkanTexture->getHandle();
         writeDescriptors.add(VkWriteDescriptorSet{
             .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
             .pNext = nullptr,
@@ -408,7 +330,7 @@ void DescriptorSet::updateSamplerArray(uint32_t binding, Array<Gfx::PSampler> sa
     uint32 arrayElement = 0;
     for (auto& gfxSampler : samplers) {
         PSampler vulkanSampler = gfxSampler.cast<Sampler>();
-        if (boundResources[binding][arrayElement] == vulkanSampler->getHandle()) {
+        if (boundResources[binding+arrayElement] == vulkanSampler->getHandle()) {
             continue;
         }
         imageInfos.add(VkDescriptorImageInfo{

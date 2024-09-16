@@ -274,7 +274,7 @@ MeshId VertexData::allocateVertexData(uint64 numVertices) {
     return res;
 }
 
-void VertexData::serializeMesh(MeshId id, uint64 numVertices, ArchiveBuffer& buffer) {
+void VertexData::serializeMesh(MeshId id, uint64, ArchiveBuffer& buffer) {
     std::unique_lock l(vertexDataLock);
     Array<Meshlet> out;
     MeshData data = meshData[id];

@@ -76,15 +76,16 @@ void Material::updateDescriptor() {
                                  Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
     layout->reset();
     set = layout->allocateDescriptorSet();
-    set->updateBuffer(0, floatBuffer);
+    uint32 binding = 0;
+    set->updateBuffer(binding++, floatBuffer);
     for (uint32 i = 0; i < textures.size(); ++i) {
         if (textures[i] != nullptr) {
-            set->updateTexture(1, i, textures[i]);
+            set->updateTexture(binding++, textures[i]);
         }
     }
     for (uint32 i = 0; i < samplers.size(); ++i) {
         if (samplers[i] != nullptr) {
-            set->updateSampler(2, i, samplers[i]);
+            set->updateSampler(binding++, samplers[i]);
         }
     }
     set->writeChanges();

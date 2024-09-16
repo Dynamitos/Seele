@@ -40,16 +40,10 @@ class TimestampQuery : public Gfx::TimestampQuery, public QueryPool {
   public:
     TimestampQuery(PGraphics graphics, const std::string& name, uint32 numTimestamps);
     virtual ~TimestampQuery();
-    virtual void begin() override;
     virtual void write(Gfx::SePipelineStageFlagBits stage, const std::string& name = "") override;
-    virtual void end() override;
-    virtual Array<Gfx::Timestamp> getResults() override;
+    virtual Gfx::Timestamp getResult() override;
 
   private:
-    uint64 wrapping = 0;
-    uint64 lastMeasure = 0;
-    uint32 numTimestamps = 0;
-    uint32 currentTimestamp = 0;
     Array<std::string> pendingTimestamps;
 };
 DEFINE_REF(TimestampQuery)

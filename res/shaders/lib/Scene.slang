@@ -20,8 +20,8 @@ struct MeshData
     uint32_t numIndices;
 };
 
-static const uint32_t MAX_VERTICES = 256;
-static const uint32_t MAX_PRIMITIVES = 256;
+static const uint32_t MAX_VERTICES = 64;
+static const uint32_t MAX_PRIMITIVES = 126;
 static const uint32_t MAX_MESHLETS_PER_INSTANCE = 2048;
 
 struct InstanceData
@@ -39,19 +39,19 @@ struct MeshletCullingInfo
     }
 };
 
-struct DrawCallOffsets
+cbuffer DrawCallOffsets
 {
     uint instanceOffset;
 	uint textureOffset;
 	uint samplerOffset;
 	uint floatOffset;
-};
-#ifdef RAY_TRACING
-layout(shaderRecordEXT)
-#else
-layout(push_constant)
-#endif
-ConstantBuffer<DrawCallOffsets> pOffsets;
+} pOffsets;
+//#ifdef RAY_TRACING
+//layout(shaderRecordEXT)
+//#else
+//layout(push_constant)
+//#endif
+//ConstantBuffer<DrawCallOffsets> pOffsets;
 
 struct Scene
 {

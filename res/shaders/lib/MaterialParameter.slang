@@ -21,7 +21,6 @@ struct FragmentParameter
 {
     float4 position_CS : SV_Position;
 #ifndef POS_ONLY
-    float3 cameraPos_WS: POSITION0;
 	float3 normal_WS : NORMAL0;
 	float3 tangent_WS : TANGENT0;
 	float3 biTangent_WS : TANGENT1;
@@ -52,7 +51,7 @@ struct FragmentParameter
 		float3x3 tbn = float3x3(normalize(tangent_WS), normalize(biTangent_WS), normalize(normal_WS));
 		result.tbn = tbn;
         result.position_TS = mul(tbn, position_WS);
-        result.viewDir_TS = mul(tbn, normalize(cameraPos_WS - position_WS));
+        result.viewDir_TS = mul(tbn, normalize(pViewParams.c.cameraPos_WS.xyz - position_WS));
         result.normal_TS = mul(tbn, normal_WS);
 		return result;
 	}
@@ -67,7 +66,6 @@ struct FragmentParameter
         FragmentParameter result;
         result.position_CS = f0.position_CS * barycentricCoords.x + f1.position_CS * barycentricCoords.y + f2.position_CS * barycentricCoords.z;
 #ifndef POS_ONLY
-	    result.cameraPos_WS = f0.cameraPos_WS * barycentricCoords.x + f1.cameraPos_WS * barycentricCoords.y + f2.cameraPos_WS * barycentricCoords.z;
         result.normal_WS = f0.normal_WS * barycentricCoords.x + f1.normal_WS * barycentricCoords.y + f2.normal_WS * barycentricCoords.z;
 	    result.tangent_WS = f0.tangent_WS * barycentricCoords.x + f1.tangent_WS * barycentricCoords.y + f2.tangent_WS * barycentricCoords.z;
 	    result.biTangent_WS = f0.biTangent_WS * barycentricCoords.x + f1.biTangent_WS * barycentricCoords.y + f2.biTangent_WS * barycentricCoords.z;
@@ -104,8 +102,8 @@ struct VertexAttributes
 	{
 		float4 modelPos = float4(position_MS, 1);
 		float4 worldPos = mul(transformMatrix, modelPos);
-		float4 viewPos = mul(pViewParams.viewMatrix, worldPos);
-		float4 clipPos = mul(pViewParams.projectionMatrix, viewPos);
+		float4 viewPos = mul(pViewParams.c.viewMatrix, worldPos);
+		float4 clipPos = mul(pViewParams.c.projectionMatrix, viewPos);
 		FragmentParameter result;
 		result.position_CS = clipPos;
 #ifndef POS_ONLY
@@ -113,7 +111,6 @@ struct VertexAttributes
 		float3 T = mul(normalMatrix, tangent_MS);
 		float3 N = mul(normalMatrix, normal_MS);
 		float3 B = mul(normalMatrix, biTangent_MS);
-		result.cameraPos_WS = pViewParams.cameraPos_WS.xyz;
 		result.normal_WS = N;
 		result.tangent_WS = T;
 		result.biTangent_WS = B;

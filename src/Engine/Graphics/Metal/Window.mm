@@ -90,6 +90,10 @@ Window::Window(PGraphics graphics, const WindowCreateInfo& createInfo) : graphic
     metalLayer.drawableSize = CGSizeMake(createInfo.width, createInfo.height);
     metalWindow.contentView.layer = metalLayer;
     metalWindow.contentView.wantsLayer = YES;
+    framebufferFormat = Gfx::SE_FORMAT_R8G8B8A8_UNORM;
+    
+    drawable = (__bridge CA::MetalDrawable*)[metalLayer nextDrawable];
+    createBackBuffer();
 }
 
 Window::~Window() { glfwDestroyWindow(static_cast<GLFWwindow*>(windowHandle)); }
