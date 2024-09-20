@@ -12,6 +12,7 @@
 #include "Metal/MTLRenderCommandEncoder.hpp"
 #include "Metal/MTLRenderPipeline.hpp"
 #include "Metal/MTLVertexDescriptor.hpp"
+#include "RenderPass.h"
 #include "Shader.h"
 #include "Texture.h"
 #include <Foundation/Foundation.h>
@@ -25,8 +26,7 @@ PipelineCache::PipelineCache(PGraphics graphics, const std::string& name) : grap
 PipelineCache::~PipelineCache() {}
 
 PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo createInfo) {
-    PPipelineLayout layout = Gfx::PPipelineLayout(createInfo.pipelineLayout).cast<PipelineLayout>();
-
+    PRenderPass renderPass = createInfo.renderPass.cast<RenderPass>();
     MTL::RenderPipelineDescriptor* pipelineDescriptor = MTL::RenderPipelineDescriptor::alloc()->init();
 
     MTL::VertexDescriptor* vertexDescriptor = pipelineDescriptor->vertexDescriptor()->init();
@@ -68,6 +68,16 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo cr
         pipelineDescriptor->setFragmentFunction(createInfo.fragmentShader.cast<FragmentShader>()->getFunction());
     }
     pipelineDescriptor->setInputPrimitiveTopology(cast(createInfo.topology));
+    for(uint c = 0; c < renderPass->getLayout().colorAttachments.size(); ++c) {
+        const auto& color = renderPass->getLayout().colorAttachments[c];
+        MTL::RenderPipelineColorAttachmentDescriptor* desc = MTL::RenderPipelineColorAttachmentDescriptor::alloc()->init();
+        desc->setWriteMask(MTL::ColorWriteMaskAll);
+        desc->setPixelFormat(cast(color.getFormat()));
+        desc->setAlphaBlendOperation(MTL::BlendOperationAdd);
+        desc->setDestinationAlphaBlendFactor(MTL::BlendFactorDestinationAlpha);
+        desc->setBlendingEnabled(false);
+        pipelineDescriptor->colorAttachments()->setObject(desc, c);
+    }
     if (createInfo.renderPass->getLayout().depthAttachment.getTexture() != nullptr) {
         pipelineDescriptor->setDepthAttachmentPixelFormat(
             cast(createInfo.renderPass->getLayout().depthAttachment.getTexture().cast<Texture2D>()->getFormat()));
@@ -118,6 +128,7 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo cr
         type = MTL::PrimitiveTypeTriangle;
         break;
     }
+    pipelineDescriptor->setLabel(NS::String::string("Pipeline", NS::ASCIIStringEncoding));
     NS::Error* error;
     graphicsPipelines[hash] = new GraphicsPipeline(
         graphics, type, graphics->getDevice()->newRenderPipelineState(pipelineDescriptor, &error), std::move(createInfo.pipelineLayout));
@@ -131,6 +142,7 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo cr
 }
 
 PGraphicsPipeline PipelineCache::createPipeline(Gfx::MeshPipelineCreateInfo createInfo) {
+    PRenderPass renderPass = createInfo.renderPass.cast<RenderPass>();
     MTL::MeshRenderPipelineDescriptor* pipelineDescriptor = MTL::MeshRenderPipelineDescriptor::alloc()->init();
 
     pipelineDescriptor->setMeshFunction(createInfo.meshShader.cast<MeshShader>()->getFunction());
@@ -140,9 +152,19 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::MeshPipelineCreateInfo crea
     if (createInfo.fragmentShader != nullptr) {
         pipelineDescriptor->setFragmentFunction(createInfo.fragmentShader.cast<FragmentShader>()->getFunction());
     }
+    for(uint c = 0; c < renderPass->getLayout().colorAttachments.size(); ++c) {
+        const auto& color = renderPass->getLayout().colorAttachments[c];
+        MTL::RenderPipelineColorAttachmentDescriptor* desc = MTL::RenderPipelineColorAttachmentDescriptor::alloc()->init();
+        desc->setWriteMask(MTL::ColorWriteMaskAll);
+        desc->setPixelFormat(cast(color.getFormat()));
+        desc->setAlphaBlendOperation(MTL::BlendOperationAdd);
+        desc->setDestinationAlphaBlendFactor(MTL::BlendFactorDestinationAlpha);
+        desc->setBlendingEnabled(false);
+        pipelineDescriptor->colorAttachments()->setObject(desc, c);
+    }
     if (createInfo.renderPass->getLayout().depthAttachment.getTexture() != nullptr) {
         pipelineDescriptor->setDepthAttachmentPixelFormat(
-            cast(createInfo.renderPass->getLayout().depthAttachment.getTexture().cast<Texture2D>()->getFormat()));
+            cast(renderPass->getLayout().depthAttachment.getTexture().cast<Texture2D>()->getFormat()));
     }
     pipelineDescriptor->setAlphaToCoverageEnabled(createInfo.multisampleState.alphaCoverageEnable);
     pipelineDescriptor->setAlphaToOneEnabled(createInfo.multisampleState.alphaToOneEnable);
@@ -154,6 +176,7 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::MeshPipelineCreateInfo crea
     if (graphicsPipelines.contains(hash)) {
         return graphicsPipelines[hash];
     }
+    pipelineDescriptor->setLabel(NS::String::string("Pipeline", NS::ASCIIStringEncoding));
     NS::Error* error = nullptr;
     MTL::AutoreleasedRenderPipelineReflection reflection;
     graphicsPipelines[hash] = new GraphicsPipeline(
@@ -163,6 +186,7 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::MeshPipelineCreateInfo crea
 
     if (error) {
         std::cout << error->debugDescription()->utf8String() << std::endl;
+        assert(false);
     }
 
     pipelineDescriptor->release();

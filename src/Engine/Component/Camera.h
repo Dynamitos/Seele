@@ -24,11 +24,11 @@ struct Camera {
     void buildViewMatrix();
 
     bool mainCamera = false;
-
+    
+    Matrix4 viewMatrix;
   private:
     float yaw;
     float pitch;
-    Matrix4 viewMatrix;
     Vector cameraPos;
     Vector cameraForward;
     bool bNeedsViewBuild;

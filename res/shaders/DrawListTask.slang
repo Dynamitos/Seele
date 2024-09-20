@@ -14,10 +14,10 @@ void taskMain(
     if (threadID == 0)
     {
         head = 0;
-        mesh = pScene.meshData[pOffsets.instanceOffset + groupID];
-        p.instanceId = pOffsets.instanceOffset + groupID;
+        mesh = pScene.meshData[0]; // pOffsets.instanceOffset + groupID];
+        p.instanceId = 0;//pOffsets.instanceOffset + groupID;
         p.meshletOffset = mesh.meshletOffset;
-        p.cullingOffset = pScene.cullingOffsets[p.instanceId];
+        p.cullingOffset = 0;//pScene.cullingOffsets[p.instanceId];
     }
     GroupMemoryBarrierWithGroupSync();
     for (uint i = threadID; i < mesh.numMeshlets; i += TASK_GROUP_SIZE)
@@ -26,7 +26,7 @@ void taskMain(
         uint cull = p.cullingOffset + i;
         MeshletDescription meshlet = pScene.meshletInfos[m];
         MeshletCullingInfo culling = pScene.cullingInfos[cull];
-        if(culling.wasVisible())
+        //if(culling.wasVisible())
         {
             uint index;
             InterlockedAdd(head, 1, index);

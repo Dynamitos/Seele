@@ -91,7 +91,7 @@ void cullLights(ComputeShaderInput in)
 
     Plane maxPlane = {float3(0, 0, -1), -maxDepthWS};
 
-    for ( uint i = in.groupIndex; i < pLightEnv.numPointLights; i += BLOCK_SIZE * BLOCK_SIZE )
+    for ( uint i = in.groupIndex; i < pLightEnv.counts.numPointLights; i += BLOCK_SIZE * BLOCK_SIZE )
     {
         PointLight light = pLightEnv.pointLights[i];
 #ifdef LIGHT_CULLING

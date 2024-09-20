@@ -1,4 +1,8 @@
 #pragma once
+#include "Graphics/Graphics.h"
+#include "Graphics/Initializer.h"
+#include "Graphics/RenderPass/BasePass.h"
+#include "Graphics/Resources.h"
 #include "Scene/Scene.h"
 #include "System/KeyboardInput.h"
 #include "Window/View.h"
@@ -31,6 +35,27 @@ class GameView : public View {
 
     PSystemGraph systemGraph;
     System::PKeyboardInput keyboardSystem;
+    struct ViewParameter {
+        Matrix4 viewMatrix;
+        Matrix4 inverseViewMatrix;
+        Matrix4 projectionMatrix;
+        Matrix4 inverseProjection;
+        Vector4 cameraPosition;
+        Vector2 screenDimensions;
+    } viewParams;
+    Gfx::ODescriptorLayout viewParamsLayout;
+    Gfx::OUniformBuffer viewParamsBuffer;
+    Gfx::PDescriptorSet viewParamsSet;
+    Gfx::OPipelineLayout layout;
+    Gfx::OTaskShader task;
+    Gfx::OMeshShader mesh;
+    Gfx::OVertexInput input;
+    Gfx::OVertexShader vert;
+    Gfx::OFragmentShader frag;
+    Gfx::ORenderPass renderPass;
+    Gfx::PGraphicsPipeline pipeline;
+
+    OBasePass basePass;
     float updateTime = 0;
 
     virtual void keyCallback(Seele::KeyCode code, Seele::InputAction action, Seele::KeyModifier modifier) override;

@@ -21,15 +21,15 @@ float4 fragmentMain(in FragmentParameter params) : SV_Target
     uint startOffset = pLightCullingData.lightGrid[tileIndex].x;
     uint lightCount = pLightCullingData.lightGrid[tileIndex].y;
     float3 result = float3(0, 0, 0);
-    for(int i = 0; i < pLightEnv.numDirectionalLights; ++i)
+    for(int i = 0; i < pLightEnv.counts.numDirectionalLights; ++i)
     {
         result += pLightEnv.directionalLights[i].illuminate(lightingParams, brdf);
     }
-    for(uint i = 0; i < lightCount; ++i)
-    {
-        uint lightIndex = pLightCullingData.lightIndexList[startOffset + i];
-        result += pLightEnv.pointLights[lightIndex].illuminate(lightingParams, brdf);
-    }
+    //for(uint i = 0; i < lightCount; ++i)
+    //{
+    //    uint lightIndex = pLightCullingData.lightIndexList[startOffset + i];
+    //    result += pLightEnv.pointLights[lightIndex].illuminate(lightingParams, brdf);
+    //}
     result += brdf.evaluateAmbient();
     // gamma correction
     //result = result / (result + float3(1.0));

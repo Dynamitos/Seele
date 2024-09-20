@@ -90,7 +90,7 @@ Window::Window(PGraphics graphics, const WindowCreateInfo& createInfo) : graphic
     metalLayer.drawableSize = CGSizeMake(createInfo.width, createInfo.height);
     metalWindow.contentView.layer = metalLayer;
     metalWindow.contentView.wantsLayer = YES;
-    framebufferFormat = Gfx::SE_FORMAT_R8G8B8A8_UNORM;
+    framebufferFormat = Gfx::SE_FORMAT_B8G8R8A8_UNORM;
     
     drawable = (__bridge CA::MetalDrawable*)[metalLayer nextDrawable];
     createBackBuffer();
@@ -172,7 +172,7 @@ void Window::createBackBuffer() {
                                    .elements = static_cast<uint32>(buf->arrayLength()),
                                    .useMip = false,
                                    .format = cast(buf->pixelFormat()),
-                                   .usage = MTL::TextureUsageRenderTarget,
+                                   .usage = Gfx::SE_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
                                    .samples = static_cast<uint32>(buf->sampleCount()),
                                },
                                buf);
@@ -183,8 +183,8 @@ Viewport::Viewport(PWindow owner, const ViewportCreateInfo& createInfo) : Gfx::V
     viewport.height = sizeY;
     viewport.originX = offsetX;
     viewport.originY = offsetY;
-    viewport.znear = 0.0f;
-    viewport.zfar = 1.0f;
+    viewport.znear = 1.0f;
+    viewport.zfar = 0.0f;
 }
 
 Viewport::~Viewport() {}

@@ -34,7 +34,7 @@ Material::Material(Gfx::PGraphics graphics, uint32 numTextures, uint32 numSample
 Material::~Material() {}
 
 void Material::init(Gfx::PGraphics graphics) {
-    layout = graphics->createDescriptorLayout("pMaterial");
+    layout = graphics->createDescriptorLayout("pResources");
     layout->addDescriptorBinding(Gfx::DescriptorBinding{
         .binding = 0,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,

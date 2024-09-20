@@ -12,7 +12,7 @@ class RenderPass : public Gfx::RenderPass {
     virtual ~RenderPass();
     void updateRenderPass();
     MTL::RenderPassDescriptor* getDescriptor() const { return renderPass; }
-
+    
   private:
     PGraphics graphics;
     Gfx::PViewport viewport;

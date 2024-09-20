@@ -55,7 +55,7 @@ class VertexData {
         Gfx::PBottomLevelAS rayTracingScene;
     };
     void resetMeshData();
-    void updateMesh(uint32 meshletOffset, PMesh mesh, Component::Transform& transform);
+    void updateMesh(uint32 meshletOffset, PMesh mesh, const Component::Transform& transform);
     void createDescriptors();
     void loadMesh(MeshId id, Array<uint32> indices, Array<Meshlet> meshlets);
     void commitMeshes();

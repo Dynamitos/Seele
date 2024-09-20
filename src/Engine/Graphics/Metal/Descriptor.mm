@@ -3,6 +3,7 @@
 #include "Enums.h"
 #include "Foundation/NSArray.hpp"
 #include "Foundation/NSObject.hpp"
+#include "Foundation/NSString.hpp"
 #include "Graphics/Descriptor.h"
 #include "Graphics/Enums.h"
 #include "Graphics/Initializer.h"
@@ -20,6 +21,7 @@
 #include <Foundation/Foundation.h>
 #include <iostream>
 #include <stdexcept>
+#include <fmt/format.h>
 
 using namespace Seele;
 using namespace Seele::Metal;
@@ -91,6 +93,8 @@ void DescriptorLayout::create() {
         objects[i]->setTextureType(textureType);
     }
     arguments = NS::Array::array((NS::Object**)objects, descriptorBindings.size());
+    std::cout << "Layout " << name << std::endl;
+    std::cout << arguments->debugDescription()->cString(NS::ASCIIStringEncoding) << std::endl;
 }
 
 MTL::ArgumentEncoder* DescriptorLayout::createEncoder() { return graphics->getDevice()->newArgumentEncoder(arguments); }
@@ -119,6 +123,7 @@ DescriptorSet::DescriptorSet(PGraphics graphics, PDescriptorPool owner)
     : Gfx::DescriptorSet(owner->getLayout()), CommandBoundResource(graphics), graphics(graphics), owner(owner) {
     encoder = owner->getLayout()->createEncoder();
     argumentBuffer = graphics->getDevice()->newBuffer(encoder->encodedLength(), 0);
+    argumentBuffer->setLabel(NS::String::string(fmt::format("{0}ArgumentBuffer", owner->getLayout()->getName()).c_str(), NS::ASCIIStringEncoding));
     encoder->setArgumentBuffer(argumentBuffer, 0);
     boundResources.resize(owner->getLayout()->getBindings().size());
 }

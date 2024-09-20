@@ -40,7 +40,9 @@ void Command::present(MTL::Drawable* drawable) { cmdBuffer->presentDrawable(draw
 
 void Command::end(PEvent signal) {
     assert(!parallelEncoder);
-    blitEncoder->endEncoding();
+    if(blitEncoder) {
+        blitEncoder->endEncoding();
+    }
     if (signal != nullptr) {
         cmdBuffer->encodeSignalEvent(signal->getHandle(), 1);
     }
@@ -75,6 +77,10 @@ void RenderCommand::setViewport(Gfx::PViewport viewport) {
 void RenderCommand::bindPipeline(Gfx::PGraphicsPipeline pipeline) {
     boundPipeline = pipeline.cast<GraphicsPipeline>();
     encoder->setRenderPipelineState(boundPipeline->getHandle());
+    encoder->setCullMode(MTL::CullModeNone);
+    encoder->setDepthClipMode(MTL::DepthClipModeClip);
+    encoder->setFrontFacingWinding(MTL::WindingCounterClockwise);
+    encoder->setTriangleFillMode(MTL::TriangleFillModeFill);
     if(boundPipeline->getPipelineLayout()->hasPushConstants()) {
         constantsBuffer = boundPipeline->graphics->getDevice()->newBuffer(boundPipeline->getPipelineLayout()->getPushConstantsSize(), 0);
     }
@@ -86,6 +92,11 @@ void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet) {
     auto metalSet = descriptorSet.cast<DescriptorSet>();
     metalSet->bind();
     uint32 descriptorIndex = boundPipeline->getPipelineLayout()->findParameter(metalSet->getLayout()->getName());
+    for(auto res : metalSet->getBoundResources())
+    {
+        if(res == nullptr) continue;
+        encoder->useResource(res, MTL::ResourceUsageRead);
+    }
     encoder->setVertexBuffer(metalSet->getArgumentBuffer(), 0, descriptorIndex);
     encoder->setFragmentBuffer(metalSet->getArgumentBuffer(), 0, descriptorIndex);
     encoder->setObjectBuffer(metalSet->getArgumentBuffer(), 0, descriptorIndex);
@@ -110,16 +121,16 @@ void RenderCommand::pushConstants(Gfx::SeShaderStageFlags stage, uint32 offset, 
     std::memcpy(constantsBuffer->contents(), data, size);
     uint pushIndex = boundPipeline->getPipelineLayout()->findParameter("pOffsets");
     if (stage & Gfx::SE_SHADER_STAGE_VERTEX_BIT) {
-        encoder->setVertexBuffer(constantsBuffer, 0, pushIndex); // TODO: hardcoded
+        encoder->setVertexBuffer(constantsBuffer, 0, pushIndex);
     }
     if (stage & Gfx::SE_SHADER_STAGE_FRAGMENT_BIT) {
-        encoder->setFragmentBuffer(constantsBuffer, 0, pushIndex); // TODO: hardcoded
+        encoder->setFragmentBuffer(constantsBuffer, 0, pushIndex);
     }
     if (stage & Gfx::SE_SHADER_STAGE_TASK_BIT_EXT) {
-        encoder->setObjectBuffer(constantsBuffer, 0, pushIndex); // TODO: hardcoded
+        encoder->setObjectBuffer(constantsBuffer, 0, pushIndex);
     }
     if (stage & Gfx::SE_SHADER_STAGE_MESH_BIT_EXT) {
-        encoder->setMeshBuffer(constantsBuffer, 0, pushIndex); // TODO: hardcoded
+        encoder->setMeshBuffer(constantsBuffer, 0, pushIndex);
     }
 }
 

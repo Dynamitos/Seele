@@ -35,7 +35,7 @@ void VertexData::resetMeshData() {
     }
 }
 
-void VertexData::updateMesh(uint32 meshletOffset, PMesh mesh, Component::Transform& transform) {
+void VertexData::updateMesh(uint32 meshletOffset, PMesh mesh, const Component::Transform& transform) {
     std::unique_lock l(materialDataLock);
     PMaterialInstance referencedInstance = mesh->referencedMaterial->getHandle();
     PMaterial mat = referencedInstance->getBaseMaterial();

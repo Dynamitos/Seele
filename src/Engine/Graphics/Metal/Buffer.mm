@@ -12,7 +12,7 @@ using namespace Seele;
 using namespace Seele::Metal;
 
 BufferAllocation::BufferAllocation(PGraphics graphics, const std::string& name, uint64 size, MTL::ResourceOptions options)
-    : CommandBoundResource(graphics) {
+    : CommandBoundResource(graphics), size(size) {
     buffer = graphics->getDevice()->newBuffer(size, options);
     buffer->setLabel(NS::String::string(name.c_str(), NS::ASCIIStringEncoding));
 }
@@ -193,7 +193,11 @@ void UniformBuffer::executePipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::Se
 ShaderBuffer::ShaderBuffer(PGraphics graphics, const ShaderBufferCreateInfo& createInfo)
     : Gfx::ShaderBuffer(graphics->getFamilyMapping(), createInfo),
       Seele::Metal::Buffer(graphics, createInfo.sourceData.size, Gfx::SE_BUFFER_USAGE_STORAGE_BUFFER_BIT, createInfo.sourceData.owner,
-                           createInfo.dynamic, createInfo.name, createInfo.createCleared, createInfo.clearValue) {}
+                           createInfo.dynamic, createInfo.name, createInfo.createCleared, createInfo.clearValue) {
+    if(createInfo.sourceData.size > 0 && createInfo.sourceData.data != nullptr) {
+        getAlloc()->updateContents(0, createInfo.sourceData.size, createInfo.sourceData.data);
+    }
+}
 
 ShaderBuffer::~ShaderBuffer() {}
 

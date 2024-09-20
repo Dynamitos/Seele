@@ -21,15 +21,15 @@ struct FragmentParameter
 {
     float4 position_CS : SV_Position;
 #ifndef POS_ONLY
-	float3 normal_WS : NORMAL0;
-	float3 tangent_WS : TANGENT0;
-	float3 biTangent_WS : TANGENT1;
-	float3 position_WS : POSITION2;
-	float3 vertexColor : COLOR0;
-	float4 texCoords0 : TEXCOORD0;
-	float4 texCoords1 : TEXCOORD1;
-	float4 texCoords2 : TEXCOORD2;
-	float4 texCoords3 : TEXCOORD3;
+	float3 normal_WS : NORMALWS;
+	float3 tangent_WS : TANGENTWS;
+	float3 biTangent_WS : BITANGENTWS;
+	float3 position_WS : POSITIONWS;
+	float3 vertexColor : VERTEXCOLOR;
+	float4 texCoords0 : TEXCOORDS0;
+	float4 texCoords1 : TEXCOORDS1;
+	float4 texCoords2 : TEXCOORDS2;
+	float4 texCoords3 : TEXCOORDS3;
 	MaterialParameter getMaterialParameter()
 	{
 		MaterialParameter result;

@@ -42,7 +42,7 @@ void TextureLoader::importAsset(TextureImportArgs args) {
     PTextureAsset ref = asset;
     asset->setStatus(Asset::Status::Loading);
     AssetRegistry::get().registerTexture(std::move(asset));
-    getThreadPool().runAsync([=](){import(args, ref);});
+    import(args, ref);
 }
 
 PTextureAsset TextureLoader::getPlaceholderTexture() { return placeholderAsset; }

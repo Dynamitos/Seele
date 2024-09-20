@@ -60,12 +60,17 @@ struct PointLight : ILightEnv
     }
 };
 
+struct LightCounts
+{
+    uint numDirectionalLights;
+    uint numPointLights;
+};
+
 struct LightEnv
 {
+    ParameterBlock<LightCounts> counts;
     StructuredBuffer<DirectionalLight> directionalLights;
-    uint numDirectionalLights;
     StructuredBuffer<PointLight> pointLights;
-    uint numPointLights;
 };
 layout(set=3)
 ParameterBlock<LightEnv> pLightEnv;

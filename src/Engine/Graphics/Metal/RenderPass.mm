@@ -18,7 +18,7 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout layout, Array
 
     for (size_t i = 0; i < layout.colorAttachments.size(); ++i) {
         const auto& color = layout.colorAttachments[i];
-        MTL::RenderPassColorAttachmentDescriptor* desc = renderPass->colorAttachments()->object(i);
+        MTL::RenderPassColorAttachmentDescriptor* desc = MTL::RenderPassColorAttachmentDescriptor::alloc()->init();
         desc->setClearColor(MTL::ClearColor(color.clear.color.float32[0], color.clear.color.float32[1], color.clear.color.float32[2],
                                             color.clear.color.float32[3]));
         desc->setLoadAction(cast(color.getLoadOp()));
@@ -30,9 +30,10 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout layout, Array
             desc->setStoreAction(MTL::StoreActionStoreAndMultisampleResolve);
             desc->setResolveTexture(resolve.getTexture().cast<TextureBase>()->getImage());
         }
+        renderPass->colorAttachments()->setObject(desc, i);
     }
     if (layout.depthAttachment.getTexture() != nullptr) {
-        auto depth = renderPass->depthAttachment();
+        MTL::RenderPassDepthAttachmentDescriptor* depth = MTL::RenderPassDepthAttachmentDescriptor::alloc()->init();
         depth->setClearDepth(layout.depthAttachment.clear.depthStencil.depth);
         depth->setLoadAction(cast(layout.depthAttachment.getLoadOp()));
         depth->setStoreAction(cast(layout.depthAttachment.getStoreOp()));
@@ -41,6 +42,7 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout layout, Array
             depth->setResolveTexture(layout.depthResolveAttachment.getTexture().cast<TextureBase>()->getImage());
             depth->setStoreAction(MTL::StoreActionStoreAndMultisampleResolve);
         }
+        renderPass->setDepthAttachment(depth);
     }
     // TODO: stencil
 }

@@ -55,20 +55,20 @@ int main() {
         // AssetImporter::importFont(FontImportArgs{
         //     .filePath = "./fonts/Calibri.ttf",
         // });
-        //AssetImporter::importMesh(MeshImportArgs{
-        //    .filePath = sourcePath / "import/models/cube.fbx",
-        //});
+        AssetImporter::importMesh(MeshImportArgs{
+            .filePath = sourcePath / "import/models/cube.fbx",
+        });
         //AssetImporter::importMesh(MeshImportArgs{
         //    .filePath = sourcePath / "import/models/culling.fbx",
         //});
-        AssetImporter::importTexture(TextureImportArgs{
-            .filePath = sourcePath / "import/textures/skyboxsun5deg_tn.jpg",
-            .type = TextureImportType::TEXTURE_CUBEMAP,
-        });
-        AssetImporter::importMesh(MeshImportArgs{
-            .filePath = sourcePath / "import/models/ship.fbx",
-            .importPath = "ship",
-        });
+        //AssetImporter::importTexture(TextureImportArgs{
+        //    .filePath = sourcePath / "import/textures/skyboxsun5deg_tn.jpg",
+        //    .type = TextureImportType::TEXTURE_CUBEMAP,
+        //});
+        //AssetImporter::importMesh(MeshImportArgs{
+        //    .filePath = sourcePath / "import/models/ship.fbx",
+        //    .importPath = "ship",
+        //});
         //AssetImporter::importMesh(MeshImportArgs{
         //   .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.glb",
         //   .importPath = "Whitechapel",
@@ -92,7 +92,7 @@ int main() {
                     .size = {1920, 1080},
                     .offset = {0, 0},
                 },
-            .numSamples = Gfx::SE_SAMPLE_COUNT_4_BIT,
+            .numSamples = Gfx::SE_SAMPLE_COUNT_1_BIT,
         };
         OGameView sceneView = new Editor::PlayView(graphics, window, sceneViewInfo, binaryPath.generic_string());
         sceneView->setFocused();
