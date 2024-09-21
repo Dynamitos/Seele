@@ -142,7 +142,6 @@ void StaticMeshVertexData::init(Gfx::PGraphics _graphics) {
         });
     }
     descriptorLayout->create();
-    descriptorSet = descriptorLayout->allocateDescriptorSet();
 }
 
 void StaticMeshVertexData::destroy() {
@@ -225,7 +224,7 @@ void StaticMeshVertexData::updateBuffers() {
     descriptorSet->updateBuffer(2, tangents);
     descriptorSet->updateBuffer(3, biTangents);
     descriptorSet->updateBuffer(4, colors);
-    for (size_t i = 0; i < MAX_TEXCOORDS; ++i) {
+    for (size_t i = 0; i < 2; ++i) {
         descriptorSet->updateBuffer(5 + i, texCoords[i]);
     }
     descriptorSet->writeChanges();

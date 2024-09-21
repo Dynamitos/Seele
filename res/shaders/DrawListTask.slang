@@ -14,7 +14,8 @@ void taskMain(
     if (threadID == 0)
     {
         head = 0;
-        mesh = pScene.meshData[0]; // pOffsets.instanceOffset + groupID];
+        mesh.numMeshlets = 1; //= pScene.meshData[0]; // pOffsets.instanceOffset + groupID];
+        mesh.meshletOffset = 0;
         p.instanceId = 0;//pOffsets.instanceOffset + groupID;
         p.meshletOffset = mesh.meshletOffset;
         p.cullingOffset = 0;//pScene.cullingOffsets[p.instanceId];
@@ -24,13 +25,13 @@ void taskMain(
     {
         uint m = p.meshletOffset + i;
         uint cull = p.cullingOffset + i;
-        MeshletDescription meshlet = pScene.meshletInfos[m];
-        MeshletCullingInfo culling = pScene.cullingInfos[cull];
+        //MeshletDescription meshlet = pScene.meshletInfos[m];
+        //MeshletCullingInfo culling = pScene.cullingInfos[cull];
         //if(culling.wasVisible())
         {
-            uint index;
-            InterlockedAdd(head, 1, index);
-            p.culledMeshlets[index] = i;
+            //uint index;
+            //InterlockedAdd(head, 1, index);
+            p.culledMeshlets[0] = 0;
         }
     }
     GroupMemoryBarrierWithGroupSync();

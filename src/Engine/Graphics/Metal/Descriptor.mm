@@ -97,7 +97,12 @@ void DescriptorLayout::create() {
     std::cout << arguments->debugDescription()->cString(NS::ASCIIStringEncoding) << std::endl;
 }
 
-MTL::ArgumentEncoder* DescriptorLayout::createEncoder() { return graphics->getDevice()->newArgumentEncoder(arguments); }
+MTL::ArgumentEncoder* DescriptorLayout::createEncoder() {
+    MTL::AutoreleasedArgument arg;
+    auto enc =  function->newArgumentEncoder(index, &arg);
+    std::cout << arg->debugDescription()->cString(NS::ASCIIStringEncoding) << std::endl;
+    return enc;
+}
 
 DescriptorPool::DescriptorPool(PGraphics graphics, PDescriptorLayout layout) : graphics(graphics), layout(layout) {}
 

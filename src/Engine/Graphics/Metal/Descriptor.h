@@ -18,11 +18,14 @@ class DescriptorLayout : public Gfx::DescriptorLayout {
     DescriptorLayout(PGraphics graphics, const std::string& name);
     virtual ~DescriptorLayout();
     virtual void create() override;
+    void setFunction(MTL::Function* func, uint32 ind){function = func; index = ind;}
     MTL::ArgumentEncoder* createEncoder();
 
   private:
     PGraphics graphics;
     NS::Array* arguments;
+    MTL::Function* function;
+    uint32 index = 0;
 };
 DEFINE_REF(DescriptorLayout)
 

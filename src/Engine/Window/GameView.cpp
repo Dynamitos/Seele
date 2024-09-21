@@ -24,6 +24,8 @@
 #include "System/MeshUpdater.h"
 #include "Window/Window.h"
 #include "Graphics/Mesh.h"
+#include "Graphics/Metal/Descriptor.h"
+#include "Graphics/Metal/Shader.h"
 #include <fstream>
 #include <thread>
 
@@ -45,7 +47,7 @@ GameView::GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreate
             .colorAttachments = {Gfx::RenderTargetAttachment(viewport, Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_PRESENT_SRC_KHR,
                                                              Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE)}},
         {}, viewport);
-
+    
     viewParamsLayout = graphics->createDescriptorLayout("pViewParams");
     viewParamsLayout->addDescriptorBinding(Gfx::DescriptorBinding{
         .binding = 0,
@@ -94,31 +96,37 @@ GameView::GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreate
         .pipelineLayout = layout,
         .renderPass = renderPass,
     });
+        ((Metal::DescriptorLayout*)Material::getDescriptorLayout().getHandle())->setFunction(((Metal::FragmentShader*)*frag)->getFunction(), 6);
+        ((Metal::DescriptorLayout*)scene->getLightEnvironment()->getDescriptorLayout().getHandle())->setFunction(((Metal::FragmentShader*)*frag)->getFunction(), 5);
+        ((Metal::DescriptorLayout*)StaticMeshVertexData::getInstance()->getInstanceDataLayout().getHandle())->setFunction(((Metal::MeshShader*)*mesh)->getFunction(), 4);
+        ((Metal::DescriptorLayout*)*viewParamsLayout)->setFunction(((Metal::MeshShader*)*mesh)->getFunction(), 2);
+        ((Metal::DescriptorLayout*)StaticMeshVertexData::getInstance()->getVertexDataLayout().getHandle())->setFunction(((Metal::MeshShader*)*mesh)->getFunction(), 1);
+        StaticMeshVertexData::getInstance()->commitMeshes();
     StaticMeshVertexData::getInstance()->addCullingMapping(AssetRegistry::getInstance()->findMesh("", "cube")->meshes[0]->id);
-        scene->getLightEnvironment()->reset();
-        scene->getLightEnvironment()->addPointLight({Vector4(0, 1, 0, 1), Vector4(0, 1, 0, 1)});
-        scene->getLightEnvironment()->addDirectionalLight({Vector4(0, 1, 0, 1), Vector4(0, 1, 0, 1)});
-        Component::Camera cam;
-        cam.viewMatrix = glm::lookAt(Vector(0, 0, -10), Vector(0, 0, 0), Vector(0, 1, 0));
-        viewParams = {
-            .viewMatrix = cam.getViewMatrix(),
-            .inverseViewMatrix = glm::inverse(cam.getViewMatrix()),
-            .projectionMatrix = viewport->getProjectionMatrix(),
-            .inverseProjection = glm::inverse(viewport->getProjectionMatrix()),
-            .cameraPosition = Vector4(cam.getCameraPosition(), 1),
-            .screenDimensions = Vector2(static_cast<float>(viewport->getWidth()), static_cast<float>(viewport->getHeight())),
-        };
-        viewParamsBuffer->rotateBuffer(sizeof(ViewParameter));
-        viewParamsBuffer->updateContents(0, sizeof(ViewParameter), &viewParams);
-        viewParamsBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
-                                          Gfx::SE_ACCESS_UNIFORM_READ_BIT | Gfx::SE_ACCESS_TRANSFER_WRITE_BIT,
-                                          Gfx::SE_PIPELINE_STAGE_TASK_SHADER_BIT_EXT | Gfx::SE_PIPELINE_STAGE_MESH_SHADER_BIT_EXT |
-                                              Gfx::SE_PIPELINE_STAGE_VERTEX_SHADER_BIT | Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT |
-                                              Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT);
-        viewParamsLayout->reset();
-        viewParamsSet = viewParamsLayout->allocateDescriptorSet();
-        viewParamsSet->updateBuffer(0, viewParamsBuffer);
-        viewParamsSet->writeChanges();
+    scene->getLightEnvironment()->reset();
+    scene->getLightEnvironment()->addPointLight({Vector4(0, 1, 0, 1), Vector4(0, 1, 0, 1)});
+    scene->getLightEnvironment()->addDirectionalLight({Vector4(0, 1, 0, 1), Vector4(0, 1, 0, 1)});
+    Component::Camera cam;
+    cam.viewMatrix = glm::lookAt(Vector(0, 0, -10), Vector(0, 0, 0), Vector(0, 1, 0));
+    viewParams = {
+        .viewMatrix = cam.getViewMatrix(),
+        .inverseViewMatrix = glm::inverse(cam.getViewMatrix()),
+        .projectionMatrix = viewport->getProjectionMatrix(),
+        .inverseProjection = glm::inverse(viewport->getProjectionMatrix()),
+        .cameraPosition = Vector4(cam.getCameraPosition(), 1),
+        .screenDimensions = Vector2(static_cast<float>(viewport->getWidth()), static_cast<float>(viewport->getHeight())),
+    };
+    viewParamsBuffer->rotateBuffer(sizeof(ViewParameter));
+    viewParamsBuffer->updateContents(0, sizeof(ViewParameter), &viewParams);
+    viewParamsBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
+                                      Gfx::SE_ACCESS_UNIFORM_READ_BIT | Gfx::SE_ACCESS_TRANSFER_WRITE_BIT,
+                                      Gfx::SE_PIPELINE_STAGE_TASK_SHADER_BIT_EXT | Gfx::SE_PIPELINE_STAGE_MESH_SHADER_BIT_EXT |
+                                          Gfx::SE_PIPELINE_STAGE_VERTEX_SHADER_BIT | Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT |
+                                          Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT);
+    viewParamsLayout->reset();
+    viewParamsSet = viewParamsLayout->allocateDescriptorSet();
+    viewParamsSet->updateBuffer(0, viewParamsBuffer);
+    viewParamsSet->writeChanges();
     // input = graphics->createVertexInput(VertexInputStateCreateInfo{
     //     .attributes = {},
     //     .bindings = {},
@@ -158,8 +166,7 @@ void GameView::update() {
     Gfx::ORenderCommand cmd = graphics->createRenderCommand("TestCommand");
     cmd->bindPipeline(pipeline);
     cmd->bindDescriptor({viewParamsSet, StaticMeshVertexData::getInstance()->getVertexDataSet(),
-                         StaticMeshVertexData::getInstance()->getInstanceDataSet(), scene->getLightEnvironment()->getDescriptorSet(),
-                         Material::getDescriptorSet()});
+                         StaticMeshVertexData::getInstance()->getInstanceDataSet(), scene->getLightEnvironment()->getDescriptorSet()});
     cmd->setViewport(viewport);
     VertexData::DrawCallOffsets offsets = {
         .floatOffset = 0,

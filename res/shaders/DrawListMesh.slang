@@ -26,8 +26,12 @@ void meshMain(
     // meshlet number relative to start for this instance
     uint meshletNumber = meshPayload.culledMeshlets[groupID];
     uint meshletId = meshPayload.cullingOffset + meshletNumber;
-    InstanceData inst = pScene.instances[meshPayload.instanceId];
-    MeshletDescription m = pScene.meshletInfos[meshPayload.meshletOffset + meshletNumber];
+    // InstanceData inst = pScene.instances[meshPayload.instanceId];
+    MeshletDescription m;// = pScene.meshletInfos[meshPayload.meshletOffset + meshletNumber];
+    m.vertexCount = 12;
+    m.vertexOffset = 0;
+    m.primitiveCount = 36;
+    m.primitiveOffset = 0;
     MeshletCullingInfo cull = pScene.cullingInfos[meshletId];
 	SetMeshOutputCounts(m.vertexCount, m.primitiveCount);
 	
@@ -38,13 +42,13 @@ void meshMain(
 			uint local_idx0 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 0];
 			uint local_idx1 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 1];
 			uint local_idx2 = pScene.primitiveIndices[m.primitiveOffset + (p * 3) + 2];
-      indices[p] = uint3(local_idx0, local_idx1, local_idx2);
-      PrimitiveAttributes primAttr;
-      primAttr.cull = false;//cull.triangleCulled(p);
+            indices[p] = uint3(local_idx0, local_idx1, local_idx2);
+            PrimitiveAttributes primAttr;
+            primAttr.cull = false;//cull.triangleCulled(p);
 #ifdef VISIBILITY
-      primAttr.prim = encodePrimitive(meshletId);
+            primAttr.prim = encodePrimitive(meshletId);
 #endif
-      prim[p] = primAttr;
+            prim[p] = primAttr;
 		}
 	}
 	for(uint i = threadID; i < MAX_VERTICES; i += MESH_GROUP_SIZE)
@@ -53,7 +57,7 @@ void meshMain(
 		{
 			uint vertexIndex = pScene.vertexIndices[m.vertexOffset + v];
 			VertexAttributes attr = pVertexData.getAttributes(m.indicesOffset + vertexIndex);
-			vertices[v] = attr.getParameter(inst.transformMatrix);
+			vertices[v] = attr.getParameter(float4x4(1));
 		}
 	}
 }

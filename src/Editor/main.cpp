@@ -78,7 +78,6 @@ int main() {
         //    .importPath = "suburbs",
         //});
         getThreadPool().waitIdle();
-        vd->commitMeshes();
         WindowCreateInfo mainWindowInfo = {
             .width = 1920,
             .height = 1080,

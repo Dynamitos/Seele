@@ -171,7 +171,7 @@ void VertexData::createDescriptors() {
     descriptorSet->updateBuffer(3, primitiveIndicesBuffer);
     descriptorSet->updateBuffer(4, vertexIndicesBuffer);
     descriptorSet->updateBuffer(5, cullingOffsetBuffer);
-    Material::updateDescriptor();
+    //Material::updateDescriptor();
 }
 
 void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet> loadedMeshlets) {
