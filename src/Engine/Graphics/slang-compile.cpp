@@ -42,7 +42,7 @@ void Seele::beginCompilation(const ShaderCompilationInfo& info, SlangCompileTarg
     option[1].value.intValue0 = 1;
     option[2].name = slang::CompilerOptionName::DebugInformation;
     option[2].value.kind = slang::CompilerOptionValueKind::Int;
-    option[2].value.intValue0 = SLANG_DEBUG_INFO_LEVEL_STANDARD;
+    option[2].value.intValue0 = SLANG_DEBUG_INFO_LEVEL_NONE;
     option[3].name = slang::CompilerOptionName::DebugInformationFormat;
     option[3].value.kind = slang::CompilerOptionValueKind::Int;
     option[3].value.intValue0 = SLANG_DEBUG_INFO_FORMAT_PDB;

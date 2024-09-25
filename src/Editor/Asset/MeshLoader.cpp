@@ -54,7 +54,12 @@ void MeshLoader::loadTextures(const aiScene* scene, const std::filesystem::path&
         } else if (std::filesystem::exists(meshDirectory / texPath)) {
             texPath = meshDirectory / texPath;
         } else {
-            texPath = (meshDirectory / texPath).replace_extension("png");
+            if (tex->mFilename.length == 0) {
+                texPath = (meshDirectory / fmt::format("Texture{0}", i));
+            } else {
+                texPath = (meshDirectory / texPath);
+            }
+            texPath = texPath.replace_extension(tex->achFormatHint);
             if (tex->mHeight == 0) {
                 std::cout << "Dumping texture " << texPath << std::endl;
                 // already compressed, just dump it to the disk
@@ -219,18 +224,17 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Array<PTextureAsset>&
             expressions.back()->key = colorExtract;
             expressions.back()->inputs["target"].source = sampleKey;
 
-            if (alpha != nullptr)
-            {
+            if (alpha != nullptr) {
                 std::string alphaExtract = fmt::format("{0}Alpha{1}", paramKey, index);
                 expressions.add(new SwizzleExpression({3, -1, -1, -1}));
                 expressions.back()->key = alphaExtract;
                 expressions.back()->inputs["target"].source = sampleKey;
 
-                //std::string alphaMul = fmt::format("{0}AlphaMul{1}", paramKey, index);
-                //expressions.add(new MulExpression());
-                //expressions.back()->key = alphaMul;
-                //expressions.back()->inputs["lhs"].source = *alpha;
-                //expressions.back()->inputs["rhs"].source = alphaExtract;
+                // std::string alphaMul = fmt::format("{0}AlphaMul{1}", paramKey, index);
+                // expressions.add(new MulExpression());
+                // expressions.back()->key = alphaMul;
+                // expressions.back()->inputs["lhs"].source = *alpha;
+                // expressions.back()->inputs["rhs"].source = alphaExtract;
                 *alpha = alphaExtract;
             }
 
@@ -561,9 +565,8 @@ void MeshLoader::import(MeshImportArgs args, PMeshAsset meshAsset) {
     meshAsset->setStatus(Asset::Status::Loading);
     Assimp::Importer importer;
     importer.ReadFile(args.filePath.string().c_str(),
-                      (uint32)(aiProcess_FlipUVs | aiProcess_Triangulate | aiProcess_SortByPType |
-                               aiProcess_GenBoundingBoxes | aiProcess_GenSmoothNormals |
-                               aiProcess_GenUVCoords | aiProcess_FindDegenerates));
+                      (uint32)(aiProcess_FlipUVs | aiProcess_Triangulate | aiProcess_SortByPType | aiProcess_GenBoundingBoxes |
+                               aiProcess_GenSmoothNormals | aiProcess_GenUVCoords | aiProcess_FindDegenerates));
     const aiScene* scene = importer.ApplyPostProcessing(aiProcess_CalcTangentSpace);
     std::cout << importer.GetErrorString() << std::endl;
 
@@ -593,6 +596,6 @@ void MeshLoader::import(MeshImportArgs args, PMeshAsset meshAsset) {
     meshAsset->physicsMesh = std::move(collider);
 
     AssetRegistry::saveAsset(meshAsset, MeshAsset::IDENTIFIER, meshAsset->getFolderPath(), meshAsset->getName());
-    
+
     meshAsset->setStatus(Asset::Status::Ready);
 }

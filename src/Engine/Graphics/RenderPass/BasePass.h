@@ -2,6 +2,7 @@
 #include "MinimalEngine.h"
 #include "RenderPass.h"
 #include "WaterRenderer.h"
+#include "TerrainRenderer.h"
 
 namespace Seele {
 DECLARE_REF(CameraActor)
@@ -50,6 +51,7 @@ class BasePass : public RenderPass {
     Gfx::PShaderBuffer cullingBuffer;
 
     OWaterRenderer waterRenderer;
+    OTerrainRenderer terrainRenderer;
 
     // Debug rendering
     Gfx::OVertexInput debugVertexInput;

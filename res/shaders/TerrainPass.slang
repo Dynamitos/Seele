@@ -1,7 +1,77 @@
 import Common;
+import Bounding;
 import Scene;
-import WaterCommon;
 import MaterialParameter;
+
+struct TerrainPayload
+{
+    float3 offset;
+    float extent;
+    uint numMeshes;
+};
+
+struct TerrainTile
+{
+    int2 location;
+    float extent;
+    float height;
+};
+
+struct TerrainVertex
+{
+    float4 position_CS : SV_Position;
+    float3 position_WS : POSITION0;
+    float2 texCoord : TEXCOORD0;
+    float depth : DEPTH;
+    uint lod : BONEINDEX;
+};
+
+struct TerrainData
+{
+    StructuredBuffer<TerrainTile> tiles;
+    Texture2D<float> displacement;
+    SamplerState sampler;
+};
+ParameterBlock<TerrainData> pTerrainData;
+
+[numthreads(1, 1, 1)]
+[shader("amplification")]
+void taskMain(
+    uint threadID: SV_GroupThreadID,
+    uint3 groupID: SV_GroupID
+    ) {
+    TerrainTile tile = pTerrainData.tiles[groupID.x];
+    GroupMemoryBarrierWithGroupSync();
+    AABB bounding;
+    bounding.minCorner = float3(tile.location.x, tile.height, tile.location.y) * tile.extent;
+    bounding.maxCorner = float3(tile.location.x + 1, tile.height, tile.location.y + 1) * tile.extent;
+    float3 median = (bounding.minCorner + bounding.maxCorner) / 2;
+    float distance = distance(median, pViewParams.cameraPos_WS.xyz);
+    float tileDistance = distance / tile.extent;
+    uint numMeshes = groupID.y + 1;
+    
+    if(numMeshes == 4 && tileDistance > 2)
+    {
+        return;
+    }
+    if(numMeshes == 3 && (tileDistance > 4 || tileDistance < 1))
+    {
+        return;
+    }
+    if(numMeshes == 2 && (tileDistance > 8 || tileDistance < 3))
+    {
+        return;
+    }
+    if(numMeshes == 1 && tileDistance < 7)
+    {
+        return;
+    }
+    TerrainPayload payload;
+    payload.offset = bounding.minCorner;
+    payload.extent = tile.extent / numMeshes;
+    payload.numMeshes = numMeshes;
+    DispatchMesh(numMeshes, numMeshes, 1, payload);
+}
 
 const static uint64_t TILE_VERTS = 144;
 const static uint64_t TILE_PRIMS = 242;
@@ -30,8 +100,8 @@ uint3(53, 42, 54), uint3(42, 43, 54), uint3(54, 43, 55), uint3(43, 44, 55), uint
 void meshMain(
     in uint threadID: SV_GroupThreadID,
     in uint3 groupID: SV_GroupID,
-    in payload WaterPayload params,
-    out vertices WaterVertex vertices[TILE_VERTS],
+    in payload TerrainPayload params,
+    out vertices TerrainVertex vertices[TILE_VERTS],
     out indices uint3 indices[TILE_PRIMS],
 ) {
     float4x4 vp = mul(pViewParams.c.projectionMatrix, pViewParams.c.viewMatrix);
@@ -77,23 +147,23 @@ void meshMain(
         }
     
 
-        float3 displacement1 = pWaterMaterial.displacementTextures.Sample(pWaterMaterial.sampler, float3(worldPos.xz * pWaterMaterial.tile1, 0)).xyz * pWaterMaterial.contributeDisplacement1;
-        float3 displacement2 = pWaterMaterial.displacementTextures.Sample(pWaterMaterial.sampler, float3(worldPos.xz * pWaterMaterial.tile2, 1)).xyz * pWaterMaterial.contributeDisplacement2;
-        float3 displacement3 = pWaterMaterial.displacementTextures.Sample(pWaterMaterial.sampler, float3(worldPos.xz * pWaterMaterial.tile3, 2)).xyz * pWaterMaterial.contributeDisplacement3;
-        float3 displacement4 = pWaterMaterial.displacementTextures.Sample(pWaterMaterial.sampler, float3(worldPos.xz * pWaterMaterial.tile4, 3)).xyz * pWaterMaterial.contributeDisplacement4;
-        float3 displacement = displacement1 + displacement2 + displacement3 + displacement4;
+//        float3 displacement1 = pWaterMaterial.displacementTextures.Sample(pWaterMaterial.sampler, float3(worldPos.xz * pWaterMaterial.tile1, 0)).xyz * pWaterMaterial.contributeDisplacement1;
+//        float3 displacement2 = pWaterMaterial.displacementTextures.Sample(pWaterMaterial.sampler, float3(worldPos.xz * pWaterMaterial.tile2, 1)).xyz * pWaterMaterial.contributeDisplacement2;
+//        float3 displacement3 = pWaterMaterial.displacementTextures.Sample(pWaterMaterial.sampler, float3(worldPos.xz * pWaterMaterial.tile3, 2)).xyz * pWaterMaterial.contributeDisplacement3;
+//        float3 displacement4 = pWaterMaterial.displacementTextures.Sample(pWaterMaterial.sampler, float3(worldPos.xz * pWaterMaterial.tile4, 3)).xyz * pWaterMaterial.contributeDisplacement4;
+        float displacement = pTerrainData.displacement.Sample(pTerrainData.sampler, worldPos.xz);
 
         float4 clipPos = mul(vp, float4(worldPos, 1));
         float ndcDepth = clipPos.z / clipPos.w;
 
         float depth = 1 - (-ndcDepth + 1.0f) / 2.0f;
 
-        displacement = lerp(0.0f, displacement, pow(saturate(depth), pWaterMaterial.displacementDepthAttenuation));
+//        displacement = lerp(0.0f, displacement, pow(saturate(depth), pTerrainData.displacementDepthAttenuation));
 
         worldPos += displacement;
         worldPos.y += lodDisplacement;
 
-        WaterVertex v;
+        TerrainVertex v;
         v.position_WS = worldPos;
         v.position_CS = mul(vp, float4(worldPos, 1));
         v.texCoord = worldPos.xz;
@@ -101,4 +171,10 @@ void meshMain(
         v.lod = params.numMeshes;
         vertices[i] = v;
 	}
+}
+
+[shader("pixel")]
+float4 fragmentMain(TerrainVertex vertex)
+{
+    return float4(0, 1, 0, 1);
 }

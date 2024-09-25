@@ -77,6 +77,14 @@ int main() {
         //    .filePath = sourcePath / "import/models/city-suburbs/source/city-suburbs.obj",
         //    .importPath = "suburbs",
         //});
+        //AssetImporter::importMesh(MeshImportArgs{
+        //    .filePath = sourcePath / "import/models/minecraft-medieval-city.fbx",
+        //    .importPath = "minecraft",
+        //});
+        //AssetImporter::importMesh(MeshImportArgs{
+        //    .filePath = sourcePath / "import/models/Volvo/Volvo.fbx",
+        //    .importPath = "Volvo",
+        //});
         getThreadPool().waitIdle();
         vd->commitMeshes();
         WindowCreateInfo mainWindowInfo = {

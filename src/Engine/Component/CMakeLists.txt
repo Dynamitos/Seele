@@ -16,6 +16,7 @@ target_sources(Engine
         ShapeBase.cpp
         Skybox.h
         SphereCollider.h
+        TerrainTile.h
 		Transform.h
 		Transform.cpp
         WaterTile.h)
@@ -37,5 +38,6 @@ target_sources(Engine
             ShapeBase.h
             Skybox.h
             SphereCollider.h
+            TerrainTile.h
             Transform.h
             WaterTile.h)

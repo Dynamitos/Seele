@@ -243,15 +243,15 @@ WaterRenderer::WaterRenderer(Gfx::PGraphics graphics, PScene scene, Gfx::PDescri
 
     ShaderCompilationInfo createInfo = {
         .name = "WaterTiles",
-        .modules = {"WaterTask", "WaterMesh", "WaterPass"},
+        .modules = {"WaterPass"},
         .entryPoints =
             {
-                {"taskMain", "WaterTask"},
-                {"meshMain", "WaterMesh"},
+                {"taskMain", "WaterPass"},
+                {"meshMain", "WaterPass"},
                 {"fragmentMain", "WaterPass"},
             },
         .rootSignature = waterLayout,
-        .dumpIntermediate = true,
+        .dumpIntermediate = false,
     };
     graphics->beginShaderCompilation(createInfo);
     waterTask = graphics->createTaskShader({0});
@@ -353,7 +353,7 @@ void WaterRenderer::beginFrame() {
     Array<WaterTile> payloads;
     scene->view<Component::WaterTile>([&](Component::WaterTile& tile) {
         payloads.add(WaterTile{
-            .offset = Vector2(tile.location),
+            .offset = IVector2(tile.location),
             .extent = Component::WaterTile::DIMENSIONS,
             .height = tile.height,
         });
