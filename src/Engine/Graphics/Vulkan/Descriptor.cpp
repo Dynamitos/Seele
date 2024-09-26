@@ -340,7 +340,7 @@ void DescriptorSet::updateSamplerArray(uint32_t binding, Array<Gfx::PSampler> sa
         });
 
         VkDescriptorType descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-        boundResources[binding][arrayElement] = vulkanSampler->getHandle();
+        boundResources[binding] = vulkanSampler->getHandle();
         writeDescriptors.add(VkWriteDescriptorSet{
             .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
             .pNext = nullptr,

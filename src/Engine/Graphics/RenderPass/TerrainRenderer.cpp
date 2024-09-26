@@ -87,7 +87,7 @@ void TerrainRenderer::beginFrame() {
 
     set = layout->allocateDescriptorSet();
     set->updateBuffer(0, tilesBuffer);
-    set->updateTexture(1, 0, Gfx::PTexture2D(displacementMap));
+    set->updateTexture(1, Gfx::PTexture2D(displacementMap));
     set->updateSampler(2, sampler);
     set->writeChanges();
 }

@@ -111,12 +111,12 @@ void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset) {
     ktxBasisParams basisParams = {
         .structSize = sizeof(ktxBasisParams),
         .uastc = true,
-        .threadCount = 1,
-        .uastcFlags = KTX_PACK_UASTC_LEVEL_FASTER,
+        .threadCount = 14,
+        .uastcFlags = KTX_PACK_UASTC_LEVEL_SLOWER,
         .uastcRDO = true,
     };
     KTX_ASSERT(ktxTexture2_CompressBasisEx(kTexture, &basisParams));
-    KTX_ASSERT(ktxTexture2_DeflateZstd(kTexture, 2));
+    KTX_ASSERT(ktxTexture2_DeflateZstd(kTexture, 20));
 
     char writer[100];
     snprintf(writer, sizeof(writer), "%s version %s", "SeeleEngine", "0.0.1");

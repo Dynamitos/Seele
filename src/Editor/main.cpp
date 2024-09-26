@@ -55,10 +55,10 @@ int main() {
         // AssetImporter::importFont(FontImportArgs{
         //     .filePath = "./fonts/Calibri.ttf",
         // });
-        //AssetImporter::importMesh(MeshImportArgs{
-        //    .filePath = sourcePath / "import/models/cube.fbx",
-        //});
-        //AssetImporter::importMesh(MeshImportArgs{
+        AssetImporter::importMesh(MeshImportArgs{
+            .filePath = sourcePath / "import/models/cube.fbx",
+        });
+        // AssetImporter::importMesh(MeshImportArgs{
         //    .filePath = sourcePath / "import/models/culling.fbx",
         //});
         AssetImporter::importTexture(TextureImportArgs{
@@ -69,22 +69,25 @@ int main() {
             .filePath = sourcePath / "import/models/ship.fbx",
             .importPath = "ship",
         });
-        //AssetImporter::importMesh(MeshImportArgs{
-        //   .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.glb",
-        //   .importPath = "Whitechapel",
-        //});
-        //AssetImporter::importMesh(MeshImportArgs{
-        //    .filePath = sourcePath / "import/models/city-suburbs/source/city-suburbs.obj",
-        //    .importPath = "suburbs",
-        //});
-        //AssetImporter::importMesh(MeshImportArgs{
-        //    .filePath = sourcePath / "import/models/minecraft-medieval-city.fbx",
-        //    .importPath = "minecraft",
-        //});
-        //AssetImporter::importMesh(MeshImportArgs{
-        //    .filePath = sourcePath / "import/models/Volvo/Volvo.fbx",
-        //    .importPath = "Volvo",
-        //});
+        AssetImporter::importTexture(TextureImportArgs{
+            .filePath = sourcePath / "import/textures/azeroth.png",
+        });
+        // AssetImporter::importMesh(MeshImportArgs{
+        //    .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.glb",
+        //    .importPath = "Whitechapel",
+        // });
+        // AssetImporter::importMesh(MeshImportArgs{
+        //     .filePath = sourcePath / "import/models/city-suburbs/source/city-suburbs.obj",
+        //     .importPath = "suburbs",
+        // });
+        // AssetImporter::importMesh(MeshImportArgs{
+        //     .filePath = sourcePath / "import/models/minecraft-medieval-city.fbx",
+        //     .importPath = "minecraft",
+        // });
+        // AssetImporter::importMesh(MeshImportArgs{
+        //     .filePath = sourcePath / "import/models/Volvo/Volvo.fbx",
+        //     .importPath = "Volvo",
+        // });
         getThreadPool().waitIdle();
         vd->commitMeshes();
         WindowCreateInfo mainWindowInfo = {

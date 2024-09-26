@@ -134,7 +134,7 @@ void StaticMeshVertexData::init(Gfx::PGraphics _graphics) {
     descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 2, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
     descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 3, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
     descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 4, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
-    for(uint i = 0; i < MAX_TEXCOORDS; ++i)
+    for(uint32 i = 0; i < MAX_TEXCOORDS; ++i)
     {
         descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{
             .binding = 5 + i,

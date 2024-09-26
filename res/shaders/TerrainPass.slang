@@ -46,7 +46,7 @@ void taskMain(
     bounding.minCorner = float3(tile.location.x, tile.height, tile.location.y) * tile.extent;
     bounding.maxCorner = float3(tile.location.x + 1, tile.height, tile.location.y + 1) * tile.extent;
     float3 median = (bounding.minCorner + bounding.maxCorner) / 2;
-    float distance = distance(median, pViewParams.cameraPos_WS.xyz);
+    float distance = distance(median, pViewParams.c.cameraPos_WS.xyz);
     float tileDistance = distance / tile.extent;
     uint numMeshes = groupID.y + 1;
     
