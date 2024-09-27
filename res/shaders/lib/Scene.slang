@@ -39,19 +39,19 @@ struct MeshletCullingInfo
     }
 };
 
-cbuffer DrawCallOffsets
+struct DrawCallOffsets
 {
     uint instanceOffset;
 	uint textureOffset;
 	uint samplerOffset;
 	uint floatOffset;
-} pOffsets;
-//#ifdef RAY_TRACING
-//layout(shaderRecordEXT)
-//#else
-//layout(push_constant)
-//#endif
-//ConstantBuffer<DrawCallOffsets> pOffsets;
+};
+#ifdef RAY_TRACING
+layout(shaderRecordEXT)
+#else
+layout(push_constant)
+#endif
+ConstantBuffer<DrawCallOffsets> pOffsets;
 
 struct Scene
 {
@@ -63,7 +63,6 @@ struct Scene
     StructuredBuffer<uint32_t> cullingOffsets;
     StructuredBuffer<MeshletCullingInfo> cullingInfos;
 };
-layout(set=2)
 ParameterBlock<Scene> pScene;
 
 uint32_t encodePrimitive(uint32_t meshletId)
