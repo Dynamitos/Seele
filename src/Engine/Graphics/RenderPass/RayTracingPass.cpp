@@ -103,9 +103,9 @@ void RayTracingPass::render() {
         .bottomLevelStructures = accelerationStructures,
     });
     Gfx::PDescriptorSet desc = paramsLayout->allocateDescriptorSet();
-    desc->updateAccelerationStructure(0, tlas);
-    desc->updateTexture(1, Gfx::PTexture2D(texture));
-    desc->updateBuffer(2, StaticMeshVertexData::getInstance()->getIndexBuffer());
+    desc->updateAccelerationStructure(0, 0, tlas);
+    desc->updateTexture(1, 0, texture);
+    desc->updateBuffer(2, 0, StaticMeshVertexData::getInstance()->getIndexBuffer());
     desc->writeChanges();
 
     Gfx::ORenderCommand command = graphics->createRenderCommand("RayTracing");

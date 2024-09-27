@@ -26,7 +26,7 @@ elseif(APPLE)
     DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 endif()
 target_include_directories(slang INTERFACE 
-    $<BUILD_INTERFACE:${EXTERNAL_ROOT}/slang>
+    $<BUILD_INTERFACE:${EXTERNAL_ROOT}/slang/include>
     $<INSTALL_INTERFACE:include>
 )
 

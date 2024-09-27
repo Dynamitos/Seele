@@ -34,25 +34,25 @@ Material::Material(Gfx::PGraphics graphics, uint32 numTextures, uint32 numSample
 Material::~Material() {}
 
 void Material::init(Gfx::PGraphics graphics) {
-    layout = graphics->createDescriptorLayout("pMaterial");
+    layout = graphics->createDescriptorLayout("pResources");
     layout->addDescriptorBinding(Gfx::DescriptorBinding{
         .binding = 0,
-        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-        .descriptorCount = 1,
-        .bindingFlags = Gfx::SE_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT,
-        .shaderStages = Gfx::SE_SHADER_STAGE_FRAGMENT_BIT | Gfx::SE_SHADER_STAGE_CLOSEST_HIT_BIT_KHR,
-    });
-    layout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 1,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
         .descriptorCount = 512,
         .bindingFlags = Gfx::SE_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT,
         .shaderStages = Gfx::SE_SHADER_STAGE_FRAGMENT_BIT | Gfx::SE_SHADER_STAGE_CLOSEST_HIT_BIT_KHR,
     });
     layout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 2,
+        .binding = 1,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLER,
         .descriptorCount = 512,
+        .bindingFlags = Gfx::SE_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT,
+        .shaderStages = Gfx::SE_SHADER_STAGE_FRAGMENT_BIT | Gfx::SE_SHADER_STAGE_CLOSEST_HIT_BIT_KHR,
+    });
+    layout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .binding = 2,
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+        .descriptorCount = 1,
         .bindingFlags = Gfx::SE_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT,
         .shaderStages = Gfx::SE_SHADER_STAGE_FRAGMENT_BIT | Gfx::SE_SHADER_STAGE_CLOSEST_HIT_BIT_KHR,
     });
@@ -76,18 +76,17 @@ void Material::updateDescriptor() {
                                  Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
     layout->reset();
     set = layout->allocateDescriptorSet();
-    uint32 binding = 0;
-    set->updateBuffer(binding++, floatBuffer);
     for (uint32 i = 0; i < textures.size(); ++i) {
         if (textures[i] != nullptr) {
-            set->updateTexture(binding++, textures[i]);
+            set->updateTexture(0, i, textures[i]);
         }
     }
     for (uint32 i = 0; i < samplers.size(); ++i) {
         if (samplers[i] != nullptr) {
-            set->updateSampler(binding++, samplers[i]);
+            set->updateSampler(1, i, samplers[i]);
         }
     }
+    set->updateBuffer(2, 0, floatBuffer);
     set->writeChanges();
 }
 

@@ -165,12 +165,12 @@ void VertexData::createDescriptors() {
 
     instanceDataLayout->reset();
     descriptorSet = instanceDataLayout->allocateDescriptorSet();
-    descriptorSet->updateBuffer(0, instanceBuffer);
-    descriptorSet->updateBuffer(1, instanceMeshDataBuffer);
-    descriptorSet->updateBuffer(2, meshletBuffer);
-    descriptorSet->updateBuffer(3, primitiveIndicesBuffer);
-    descriptorSet->updateBuffer(4, vertexIndicesBuffer);
-    descriptorSet->updateBuffer(5, cullingOffsetBuffer);
+    descriptorSet->updateBuffer(0, 0, instanceBuffer);
+    descriptorSet->updateBuffer(1, 0, instanceMeshDataBuffer);
+    descriptorSet->updateBuffer(2, 0, meshletBuffer);
+    descriptorSet->updateBuffer(3, 0, primitiveIndicesBuffer);
+    descriptorSet->updateBuffer(4, 0, vertexIndicesBuffer);
+    descriptorSet->updateBuffer(5, 0, cullingOffsetBuffer);
     Material::updateDescriptor();
 }
 

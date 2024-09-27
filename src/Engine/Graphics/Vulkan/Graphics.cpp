@@ -114,9 +114,6 @@ Graphics::~Graphics() {
 
 void Graphics::init(GraphicsInitializer initInfo) {
     initInstance(initInfo);
-#if ENABLE_VALIDATION
-    setupDebugCallback();
-#endif
     pickPhysicalDevice();
     createDevice(initInfo);
     VmaAllocatorCreateInfo createInfo = {
@@ -754,6 +751,7 @@ void Graphics::pickPhysicalDevice() {
         .storageBuffer8BitAccess = true,
         .uniformAndStorageBuffer8BitAccess = true,
         .shaderFloat16 = true,
+        .shaderInt8 = true,
         .shaderUniformBufferArrayNonUniformIndexing = true,
         .shaderSampledImageArrayNonUniformIndexing = true,
         .shaderStorageBufferArrayNonUniformIndexing = true,

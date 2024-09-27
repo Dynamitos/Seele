@@ -53,7 +53,7 @@ void CachedDepthPass::render() {
     permutation.setDepthCulling(true);
     for (VertexData* vertexData : VertexData::getList()) {
         permutation.setVertexData(vertexData->getTypeName());
-        vertexData->getInstanceDataSet()->updateBuffer(6, cullingBuffer);
+        vertexData->getInstanceDataSet()->updateBuffer(6, 0, cullingBuffer);
         vertexData->getInstanceDataSet()->writeChanges();
 
         // Create Pipeline(VertexData)
@@ -63,7 +63,7 @@ void CachedDepthPass::render() {
         // SceneData => per meshtype
         Gfx::PermutationId id(permutation);
 
-        Gfx::ORenderCommand command = graphics->createRenderCommand("DepthRender");
+        Gfx::ORenderCommand command = graphics->createRenderCommand("CullingRender");
         command->setViewport(viewport);
 
         const Gfx::ShaderCollection* collection = graphics->getShaderCompiler()->findShaders(id);

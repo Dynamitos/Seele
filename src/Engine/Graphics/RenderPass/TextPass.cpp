@@ -54,7 +54,7 @@ void TextPass::beginFrame(const Component::Camera& cam) {
     }
     auto proj = viewport->getProjectionMatrix();
     projectionBuffer->updateContents(0, sizeof(Matrix4), &proj);
-    generalSet->updateBuffer(1, projectionBuffer);
+    generalSet->updateBuffer(1, 0, projectionBuffer);
     generalSet->writeChanges();
     // co_return;
 }
@@ -139,8 +139,8 @@ void TextPass::createRenderPass() {
     });
 
     generalSet = generalLayout->allocateDescriptorSet();
-    generalSet->updateBuffer(0, projectionBuffer);
-    generalSet->updateSampler(1, glyphSampler);
+    generalSet->updateBuffer(0, 0, projectionBuffer);
+    generalSet->updateSampler(1, 0, glyphSampler);
     generalSet->writeChanges();
 
     pipelineLayout = graphics->createPipelineLayout();
@@ -194,7 +194,9 @@ TextPass::FontData& TextPass::getFontData(PFontAsset font) {
 
     textureArrayLayout->reset();
     fd.textureArraySet = textureArrayLayout->allocateDescriptorSet();
-    fd.textureArraySet->updateTextureArray(0, textures);
+    for (uint32 i = 0; i < textures.size(); ++i) {
+        fd.textureArraySet->updateTexture(0, i, textures[i]);
+    }
     fd.textureArraySet->writeChanges();
     return fontData[font];
 }

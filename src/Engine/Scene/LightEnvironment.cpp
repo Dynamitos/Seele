@@ -62,9 +62,9 @@ void LightEnvironment::commit() {
                                  Gfx::SE_ACCESS_SHADER_READ_BIT | Gfx::SE_ACCESS_TRANSFER_WRITE_BIT,
                                  Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT |
                                      Gfx::SE_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR | Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT);
-    set->updateBuffer(0, lightEnvBuffer);
-    set->updateBuffer(1, directionalLights);
-    set->updateBuffer(2, pointLights);
+    set->updateBuffer(0, 0, lightEnvBuffer);
+    set->updateBuffer(1, 0, directionalLights);
+    set->updateBuffer(2, 0, pointLights);
     set->writeChanges();
 }
 

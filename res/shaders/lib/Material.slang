@@ -10,9 +10,9 @@ import Scene;
 //};
 struct MaterialResources
 {
-    StructuredBuffer<float> floatArray;
     Texture2D textureArray[512];
     SamplerState samplerArray[512];
+    StructuredBuffer<float> floatArray;
 };
 layout(set=4)
 ParameterBlock<MaterialResources> pResources;

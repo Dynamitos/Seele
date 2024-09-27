@@ -21,8 +21,8 @@ void VisibilityPass::render() {
                                    Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
     visibilityDescriptor->reset();
     visibilitySet = visibilityDescriptor->allocateDescriptorSet();
-    visibilitySet->updateTexture(0, visibilityAttachment.getTexture());
-    visibilitySet->updateBuffer(1, cullingBuffer);
+    visibilitySet->updateTexture(0, 0, visibilityAttachment.getTexture());
+    visibilitySet->updateBuffer(1, 0, cullingBuffer);
     visibilitySet->writeChanges();
 
     query->beginQuery();

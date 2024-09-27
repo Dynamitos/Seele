@@ -10,7 +10,7 @@ struct DispatchParams
 
 struct DispatchParamWrapper
 {
-    ParameterBlock<DispatchParams> p;
+    DispatchParams p;
     RWStructuredBuffer<Frustum> frustums;
 }
 ParameterBlock<DispatchParamWrapper> pDispatchParams;

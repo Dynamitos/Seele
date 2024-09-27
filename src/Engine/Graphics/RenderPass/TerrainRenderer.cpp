@@ -86,9 +86,9 @@ void TerrainRenderer::beginFrame() {
                                  Gfx::SE_PIPELINE_STAGE_TASK_SHADER_BIT_EXT);
 
     set = layout->allocateDescriptorSet();
-    set->updateBuffer(0, tilesBuffer);
-    set->updateTexture(1, Gfx::PTexture2D(displacementMap));
-    set->updateSampler(2, sampler);
+    set->updateBuffer(0, 0, tilesBuffer);
+    set->updateTexture(1, 0, Gfx::PTexture2D(displacementMap));
+    set->updateSampler(2, 0, sampler);
     set->writeChanges();
 }
 

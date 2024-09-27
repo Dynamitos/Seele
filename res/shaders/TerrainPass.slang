@@ -151,7 +151,7 @@ void meshMain(
 //        float3 displacement2 = pWaterMaterial.displacementTextures.Sample(pWaterMaterial.sampler, float3(worldPos.xz * pWaterMaterial.tile2, 1)).xyz * pWaterMaterial.contributeDisplacement2;
 //        float3 displacement3 = pWaterMaterial.displacementTextures.Sample(pWaterMaterial.sampler, float3(worldPos.xz * pWaterMaterial.tile3, 2)).xyz * pWaterMaterial.contributeDisplacement3;
 //        float3 displacement4 = pWaterMaterial.displacementTextures.Sample(pWaterMaterial.sampler, float3(worldPos.xz * pWaterMaterial.tile4, 3)).xyz * pWaterMaterial.contributeDisplacement4;
-        float displacement = pTerrainData.displacement.Sample(pTerrainData.sampler, worldPos.xz);
+        float displacement = pTerrainData.displacement.SampleLevel(pTerrainData.sampler, worldPos.xz, 0);
 
         float4 clipPos = mul(vp, float4(worldPos, 1));
         float ndcDepth = clipPos.z / clipPos.w;

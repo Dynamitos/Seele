@@ -42,13 +42,13 @@ void LightCullingPass::render() {
                                 Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
     tLightGrid->pipelineBarrier(Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, Gfx::SE_ACCESS_SHADER_WRITE_BIT,
                                 Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
-    cullingDescriptorSet->updateTexture(0, depthAttachment);
-    cullingDescriptorSet->updateBuffer(1, oLightIndexCounter);
-    cullingDescriptorSet->updateBuffer(2, tLightIndexCounter);
-    cullingDescriptorSet->updateBuffer(3, oLightIndexList);
-    cullingDescriptorSet->updateBuffer(4, tLightIndexList);
-    cullingDescriptorSet->updateTexture(5, Gfx::PTexture2D(oLightGrid));
-    cullingDescriptorSet->updateTexture(6, Gfx::PTexture2D(tLightGrid));
+    cullingDescriptorSet->updateTexture(0, 0, depthAttachment);
+    cullingDescriptorSet->updateBuffer(1, 0, oLightIndexCounter);
+    cullingDescriptorSet->updateBuffer(2, 0, tLightIndexCounter);
+    cullingDescriptorSet->updateBuffer(3, 0, oLightIndexList);
+    cullingDescriptorSet->updateBuffer(4, 0, tLightIndexList);
+    cullingDescriptorSet->updateTexture(5, 0, oLightGrid);
+    cullingDescriptorSet->updateTexture(6, 0, tLightGrid);
     cullingDescriptorSet->writeChanges();
     Gfx::OComputeCommand computeCommand = graphics->createComputeCommand("CullingCommand");
     if (getGlobals().useLightCulling) {
@@ -96,8 +96,8 @@ void LightCullingPass::publishOutputs() {
     dispatchParamsBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
                                           Gfx::SE_ACCESS_UNIFORM_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
     dispatchParamsSet = dispatchParamsLayout->allocateDescriptorSet();
-    dispatchParamsSet->updateBuffer(0, dispatchParamsBuffer);
-    dispatchParamsSet->updateBuffer(1, frustumBuffer);
+    dispatchParamsSet->updateBuffer(0, 0, dispatchParamsBuffer);
+    dispatchParamsSet->updateBuffer(1, 0, frustumBuffer);
     dispatchParamsSet->writeChanges();
 
     cullingDescriptorLayout = graphics->createDescriptorLayout("pCullingParams");
@@ -305,8 +305,8 @@ void LightCullingPass::setupFrustums() {
                                    Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 
     Gfx::PDescriptorSet dispatchParamsSet = dispatchParamsLayout->allocateDescriptorSet();
-    dispatchParamsSet->updateBuffer(0, frustumDispatchParamsBuffer);
-    dispatchParamsSet->updateBuffer(1, frustumBuffer);
+    dispatchParamsSet->updateBuffer(0, 0, frustumDispatchParamsBuffer);
+    dispatchParamsSet->updateBuffer(1, 0, frustumBuffer);
     dispatchParamsSet->writeChanges();
 
     Gfx::OComputeCommand command = graphics->createComputeCommand("FrustumCommand");

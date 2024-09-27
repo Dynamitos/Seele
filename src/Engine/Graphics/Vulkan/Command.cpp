@@ -248,18 +248,23 @@ void RenderCommand::bindPipeline(Gfx::PRayTracingPipeline gfxPipeline) {
     boundResources.add(PBufferAllocation(rtPipeline->miss));
 }
 
-void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet) {
+void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptor) {
     assert(threadId == std::this_thread::get_id());
-    auto descriptor = descriptorSet.cast<DescriptorSet>();
-    assert(descriptor->writeDescriptors.size() == 0);
-    descriptor->bind();
-    boundResources.add(descriptor);
-    for (auto binding : descriptor->boundResources) {
-        binding->bind();
-        boundResources.add(binding);
+    auto descriptorSet = descriptor.cast<DescriptorSet>();
+    assert(descriptorSet->writeDescriptors.size() == 0);
+    descriptorSet->bind();
+    boundResources.add(descriptorSet);
+    for (auto& binding : descriptorSet->boundResources) {
+        for (auto& res : binding) {
+            // partially bound descriptors can include nulls
+            if (res != nullptr) {
+                res->bind();
+                boundResources.add(res);
+            }
+        }
     }
 
-    VkDescriptorSet setHandle = descriptor->getHandle();
+    VkDescriptorSet setHandle = descriptorSet->getHandle();
     Gfx::PPipelineLayout layout = pipeline != nullptr ? pipeline->getPipelineLayout() : rtPipeline->getPipelineLayout();
     vkCmdBindDescriptorSets(handle, pipeline != nullptr ? VK_PIPELINE_BIND_POINT_GRAPHICS : VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR,
                             pipeline->getLayout(), layout->findParameter(descriptorSet->getName()), 1, &setHandle, 0,
@@ -277,11 +282,13 @@ void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorS
         descriptorSet->bind();
         boundResources.add(descriptorSet);
 
-        for (auto binding : descriptorSet->boundResources) {
+        for (auto& binding : descriptorSet->boundResources) {
+            for (auto& res : binding) {
             // partially bound descriptors can include nulls
-            if (binding != nullptr) {
-                binding->bind();
-                boundResources.add(binding);
+                if (res != nullptr) {
+                res->bind();
+                    boundResources.add(res);
+                }
             }
         }
         sets[layout->findParameter(descriptorSet->getName())] = descriptorSet->getHandle();
@@ -407,20 +414,24 @@ void ComputeCommand::bindPipeline(Gfx::PComputePipeline computePipeline) {
     pipeline->bind(handle);
 }
 
-void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet) {
+void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet descriptor) {
     assert(threadId == std::this_thread::get_id());
-    auto descriptor = descriptorSet.cast<DescriptorSet>();
-    assert(descriptor->writeDescriptors.size() == 0);
-    descriptor->bind();
-    boundResources.add(descriptor.getHandle());
+    auto descriptorSet = descriptor.cast<DescriptorSet>();
+    assert(descriptorSet->writeDescriptors.size() == 0);
+    descriptorSet->bind();
+    boundResources.add(descriptorSet.getHandle());
 
-    for (auto& binding : descriptor->boundResources) {
-            binding->bind();
-        boundResources.add(binding);
-        
+    for (auto& binding : descriptorSet->boundResources) {
+        for (auto& res : binding) {
+            // partially bound descriptors can include nulls
+            if (res != nullptr) {
+                res->bind();
+                boundResources.add(res);
+            }
+        }
     }
 
-    VkDescriptorSet setHandle = descriptor->getHandle();
+    VkDescriptorSet setHandle = descriptorSet->getHandle();
     vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->getLayout(),
                             pipeline->getPipelineLayout()->findParameter(descriptorSet->getName()), 1, &setHandle,0,
                             nullptr);
@@ -434,12 +445,14 @@ void ComputeCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptor
         assert(descriptorSet->writeDescriptors.size() == 0);
         descriptorSet->bind();
         boundResources.add(descriptorSet.getHandle());
-
-        // std::cout << "Binding descriptor " << descriptorSet->getHandle() << " to cmd " << handle << std::endl;
-
-        for (auto binding : descriptorSet->boundResources) {
-            binding->bind();
-            boundResources.add(binding);
+        for (auto& binding : descriptorSet->boundResources) {
+            for (auto& res : binding) {
+                // partially bound descriptors can include nulls
+                if (res != nullptr) {
+                    res->bind();
+                    boundResources.add(res);
+                }
+            }
         }
         sets[pipeline->getPipelineLayout()->findParameter(descriptorSet->getName())] = descriptorSet->getHandle();
     }

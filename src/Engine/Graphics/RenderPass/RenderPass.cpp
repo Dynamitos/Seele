@@ -41,7 +41,7 @@ void RenderPass::beginFrame(const Component::Camera& cam) {
                                           Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT);
     viewParamsLayout->reset();
     viewParamsSet = viewParamsLayout->allocateDescriptorSet();
-    viewParamsSet->updateBuffer(0, viewParamsBuffer);
+    viewParamsSet->updateBuffer(0, 0, viewParamsBuffer);
     viewParamsSet->writeChanges();
 }
 

@@ -54,6 +54,8 @@ DECLARE_REF(UniformBuffer)
 DECLARE_REF(ShaderBuffer)
 DECLARE_REF(Texture)
 DECLARE_REF(Texture2D)
+DECLARE_REF(Texture3D)
+DECLARE_REF(TextureCube)
 DECLARE_REF(Sampler)
 DECLARE_REF(TopLevelAS)
 class DescriptorSet {
@@ -61,14 +63,14 @@ class DescriptorSet {
     DescriptorSet(PDescriptorLayout layout);
     virtual ~DescriptorSet();
     virtual void writeChanges() = 0;
-    virtual void updateBuffer(uint32 binding, PUniformBuffer uniformBuffer) = 0;
-    virtual void updateBuffer(uint32 binding, PIndexBuffer indexBuffer) = 0;
-    virtual void updateBuffer(uint32 binding, PShaderBuffer shaderBuffer) = 0;
-    virtual void updateSampler(uint32 binding, PSampler sampler) = 0;
-    virtual void updateTexture(uint32 binding, PTexture texture, PSampler samplerState = nullptr) = 0;
-    virtual void updateTextureArray(uint32_t binding, Array<PTexture2D> texture) = 0;
-    virtual void updateSamplerArray(uint32_t binding, Array<PSampler> samplers) = 0;
-    virtual void updateAccelerationStructure(uint32 binding, PTopLevelAS as) = 0;
+    virtual void updateBuffer(uint32 binding, uint32 index, Gfx::PUniformBuffer uniformBuffer) = 0;
+    virtual void updateBuffer(uint32 binding, uint32 index, Gfx::PShaderBuffer shaderBuffer) = 0;
+    virtual void updateBuffer(uint32 binding, uint32 index, Gfx::PIndexBuffer indexBuffer) = 0;
+    virtual void updateSampler(uint32 binding, uint32 index, Gfx::PSampler samplerState) = 0;
+    virtual void updateTexture(uint32 binding, uint32 index, Gfx::PTexture2D texture) = 0;
+    virtual void updateTexture(uint32 binding, uint32 index, Gfx::PTexture3D texture) = 0;
+    virtual void updateTexture(uint32 binding, uint32 index, Gfx::PTextureCube texture) = 0;
+    virtual void updateAccelerationStructure(uint32 binding, uint32 index, Gfx::PTopLevelAS as) = 0;
     bool operator<(PDescriptorSet other);
 
     constexpr PDescriptorLayout getLayout() const { return layout; }

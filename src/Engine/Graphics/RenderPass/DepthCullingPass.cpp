@@ -75,8 +75,8 @@ void DepthCullingPass::render() {
 
     depthMipBuffer->rotateBuffer(depthMipBuffer->getNumElements() * sizeof(uint32));
     Gfx::PDescriptorSet set = depthAttachmentLayout->allocateDescriptorSet();
-    set->updateTexture(0, Gfx::PTexture2D(depthAttachment.getTexture()));
-    set->updateBuffer(1, depthMipBuffer);
+    set->updateTexture(0, 0, depthAttachment.getTexture());
+    set->updateBuffer(1, 0, depthMipBuffer);
     set->writeChanges();
 
     timestamps->write(Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT, "MipBegin");
@@ -125,7 +125,7 @@ void DepthCullingPass::render() {
     permutation.setDepthCulling(getGlobals().useDepthCulling);
     for (VertexData* vertexData : VertexData::getList()) {
         permutation.setVertexData(vertexData->getTypeName());
-        vertexData->getInstanceDataSet()->updateBuffer(6, cullingBuffer);
+        vertexData->getInstanceDataSet()->updateBuffer(6, 0, cullingBuffer);
         vertexData->getInstanceDataSet()->writeChanges();
         // Create Pipeline(VertexData)
         // Descriptors:

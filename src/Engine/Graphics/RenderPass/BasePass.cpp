@@ -128,21 +128,21 @@ void BasePass::beginFrame(const Component::Camera& cam) {
         skyboxBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
                                       Gfx::SE_ACCESS_UNIFORM_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
         skyboxDataSet = skyboxDataLayout->allocateDescriptorSet();
-        skyboxDataSet->updateBuffer(0, skyboxBuffer);
+        skyboxDataSet->updateBuffer(0, 0, skyboxBuffer);
         skyboxDataSet->writeChanges();
         textureSet = textureLayout->allocateDescriptorSet();
-        textureSet->updateTexture(0, skybox.day);
-        textureSet->updateTexture(1, skybox.night);
-        textureSet->updateSampler(2, skyboxSampler);
+        textureSet->updateTexture(0, 0, skybox.day);
+        textureSet->updateTexture(1, 0, skybox.night);
+        textureSet->updateSampler(2, 0, skyboxSampler);
         textureSet->writeChanges();
     }
 }
 
 void BasePass::render() {
-    opaqueCulling->updateBuffer(0, oLightIndexList);
-    opaqueCulling->updateTexture(1, oLightGrid);
-    transparentCulling->updateBuffer(0, tLightIndexList);
-    transparentCulling->updateTexture(1, tLightGrid);
+    opaqueCulling->updateBuffer(0, 0, oLightIndexList);
+    opaqueCulling->updateTexture(1, 0, oLightGrid);
+    transparentCulling->updateBuffer(0, 0, tLightIndexList);
+    transparentCulling->updateTexture(1, 0, tLightGrid);
     opaqueCulling->writeChanges();
     transparentCulling->writeChanges();
 
@@ -157,7 +157,7 @@ void BasePass::render() {
     // Base Rendering
     for (VertexData* vertexData : VertexData::getList()) {
         transparentData.addAll(vertexData->getTransparentData());
-        vertexData->getInstanceDataSet()->updateBuffer(6, cullingBuffer);
+        vertexData->getInstanceDataSet()->updateBuffer(6, 0, cullingBuffer);
         vertexData->getInstanceDataSet()->writeChanges();
         permutation.setVertexData(vertexData->getTypeName());
         const auto& materials = vertexData->getMaterialData();

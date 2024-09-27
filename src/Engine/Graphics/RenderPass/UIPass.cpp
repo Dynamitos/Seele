@@ -14,15 +14,21 @@ UIPass::~UIPass() {}
 void UIPass::beginFrame(const Component::Camera& cam) {
     RenderPass::beginFrame(cam);
     VertexBufferCreateInfo info = {
-        .sourceData = {.size = (uint32)(sizeof(UI::RenderElementStyle) * renderElements.size()), .data = (uint8*)renderElements.data()},
+        .sourceData =
+            {
+                .size = (uint32)(sizeof(UI::RenderElementStyle) * renderElements.size()),
+                .data = (uint8*)renderElements.data(),
+            },
         .vertexSize = sizeof(UI::RenderElementStyle),
         .numVertices = (uint32)renderElements.size(),
     };
     elementBuffer = graphics->createVertexBuffer(info);
     uint32 numTextures = static_cast<uint32>(usedTextures.size());
     numTexturesBuffer->updateContents(0, sizeof(uint32), &numTextures);
-    descriptorSet->updateBuffer(2, numTexturesBuffer);
-    descriptorSet->updateTextureArray(3, usedTextures);
+    descriptorSet->updateBuffer(2, 0, numTexturesBuffer);
+    for (uint32 i = 0; i < usedTextures.size(); ++i) {
+        descriptorSet->updateTexture(3, i, usedTextures[i]);
+    }
     descriptorSet->writeChanges();
     // co_return;
 }
@@ -131,8 +137,8 @@ void UIPass::createRenderPass() {
     numTexturesBuffer = graphics->createUniformBuffer(info);
 
     descriptorSet = descriptorLayout->allocateDescriptorSet();
-    descriptorSet->updateBuffer(0, uniformBuffer);
-    descriptorSet->updateSampler(1, backgroundSampler);
+    descriptorSet->updateBuffer(0, 0, uniformBuffer);
+    descriptorSet->updateSampler(1, 0, backgroundSampler);
     descriptorSet->writeChanges();
 
     pipelineLayout = graphics->createPipelineLayout();

@@ -134,13 +134,11 @@ void StaticMeshVertexData::init(Gfx::PGraphics _graphics) {
     descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 2, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
     descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 3, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
     descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{.binding = 4, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
-    for(uint32 i = 0; i < MAX_TEXCOORDS; ++i)
-    {
-        descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-            .binding = 5 + i,
-            .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-        });
-    }
+    descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .binding = 5,
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+        .descriptorCount = MAX_TEXCOORDS,
+    });
     descriptorLayout->create();
     descriptorSet = descriptorLayout->allocateDescriptorSet();
 }
@@ -220,13 +218,13 @@ void StaticMeshVertexData::updateBuffers() {
     colData.clear();
     descriptorLayout->reset();
     descriptorSet = descriptorLayout->allocateDescriptorSet();
-    descriptorSet->updateBuffer(0, positions);
-    descriptorSet->updateBuffer(1, normals);
-    descriptorSet->updateBuffer(2, tangents);
-    descriptorSet->updateBuffer(3, biTangents);
-    descriptorSet->updateBuffer(4, colors);
+    descriptorSet->updateBuffer(0, 0, positions);
+    descriptorSet->updateBuffer(1, 0, normals);
+    descriptorSet->updateBuffer(2, 0, tangents);
+    descriptorSet->updateBuffer(3, 0, biTangents);
+    descriptorSet->updateBuffer(4, 0, colors);
     for (size_t i = 0; i < MAX_TEXCOORDS; ++i) {
-        descriptorSet->updateBuffer(5 + i, texCoords[i]);
+        descriptorSet->updateBuffer(5, i, texCoords[i]);
     }
     descriptorSet->writeChanges();
 }
