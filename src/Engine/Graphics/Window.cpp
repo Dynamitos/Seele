@@ -28,7 +28,7 @@ Matrix4 Viewport::getProjectionMatrix() const {
         //	0, 0, a, b,
         //	0, 0, 1, 0
         //);
-        return glm::perspective(fieldOfView, sizeX / static_cast<float>(sizeY), 0.1f, 10000.0f);
+        return glm::perspective(fieldOfView, sizeX / static_cast<float>(sizeY), 0.1f, 1000.0f);
     } else {
         return glm::ortho(0.0f, (float)sizeX, (float)sizeY, 0.0f);
     }

@@ -8,23 +8,36 @@ using namespace Seele;
 
 TerrainRenderer::TerrainRenderer(Gfx::PGraphics graphics, PScene scene, Gfx::PDescriptorLayout viewParamsLayout)
     : graphics(graphics), scene(scene) {
+    struct TerrainTile {
+        IVector2 offset;
+        float extent;
+        float height;
+    };
+    Array<TerrainTile> payloads;
+    for (int32 y = -100; y < 100; ++y) {
+        for (int32 x = -100; x < 100; ++x) {
+            payloads.add(TerrainTile{
+                .offset = IVector2(x, y),
+                .extent = Component::TerrainTile::DIMENSIONS,
+                .height = 0,
+            });
+        }
+    }
     tilesBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
+        .sourceData =
+            {
+                .size = sizeof(TerrainTile) * payloads.size(),
+                .data = (uint8*)payloads.data(),
+            },
+        .numElements = payloads.size(),
         .dynamic = true,
         .name = "TilesBuffer",
     });
-    float displacementData = 0;
-    displacementMap = graphics->createTexture2D(TextureCreateInfo{
-        .sourceData =
-            {
-                .size = sizeof(float),
-                .data = (uint8*)&displacementData,
-            },
-        .format = Gfx::SE_FORMAT_R32_SFLOAT,
-        .width = 1,
-        .height = 1,
-        .depth = 1,
-        .name = "TerrainDisplacement",
-    });
+    tilesBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, Gfx::SE_ACCESS_SHADER_READ_BIT,
+                                 Gfx::SE_PIPELINE_STAGE_TASK_SHADER_BIT_EXT);
+    colorMap = AssetRegistry::findTexture("", "azeroth")->getTexture();
+    displacementMap = AssetRegistry::findTexture("", "azeroth_height")->getTexture();
+
     sampler = graphics->createSampler(SamplerCreateInfo{});
     layout = graphics->createDescriptorLayout("pTerrainData");
     layout->addDescriptorBinding(Gfx::DescriptorBinding{
@@ -37,6 +50,10 @@ TerrainRenderer::TerrainRenderer(Gfx::PGraphics graphics, PScene scene, Gfx::PDe
     });
     layout->addDescriptorBinding(Gfx::DescriptorBinding{
         .binding = 2,
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+    });
+    layout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .binding = 3,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLER,
     });
     layout->create();
@@ -65,30 +82,11 @@ TerrainRenderer::TerrainRenderer(Gfx::PGraphics graphics, PScene scene, Gfx::PDe
 TerrainRenderer::~TerrainRenderer() {}
 
 void TerrainRenderer::beginFrame() {
-    struct TerrainTile {
-        IVector2 offset;
-        float extent;
-        float height;
-    };
-    Array<TerrainTile> payloads;
-    scene->view<Component::TerrainTile>([&](Component::TerrainTile& tile) {
-        payloads.add(TerrainTile{
-            .offset = IVector2(tile.location),
-            .extent = Component::TerrainTile::DIMENSIONS,
-            .height = tile.height,
-        });
-    });
-    if (payloads.size() == 0)
-        return;
-    tilesBuffer->rotateBuffer(sizeof(TerrainTile) * payloads.size());
-    tilesBuffer->updateContents(0, sizeof(TerrainTile) * payloads.size(), payloads.data());
-    tilesBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, Gfx::SE_ACCESS_SHADER_READ_BIT,
-                                 Gfx::SE_PIPELINE_STAGE_TASK_SHADER_BIT_EXT);
-
     set = layout->allocateDescriptorSet();
     set->updateBuffer(0, 0, tilesBuffer);
-    set->updateTexture(1, 0, Gfx::PTexture2D(displacementMap));
-    set->updateSampler(2, 0, sampler);
+    set->updateTexture(1, 0, displacementMap);
+    set->updateTexture(2, 0, colorMap);
+    set->updateSampler(3, 0, sampler);
     set->writeChanges();
 }
 
@@ -97,7 +95,7 @@ Gfx::ORenderCommand TerrainRenderer::render(Gfx::PDescriptorSet viewParamsSet) {
     command->setViewport(viewport);
     command->bindPipeline(pipeline);
     command->bindDescriptor({viewParamsSet, set});
-    command->drawMesh(400, 4, 1);
+    command->drawMesh(tilesBuffer->getNumElements(), 4, 1);
     return command;
 }
 

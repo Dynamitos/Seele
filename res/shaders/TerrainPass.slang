@@ -30,6 +30,7 @@ struct TerrainData
 {
     StructuredBuffer<TerrainTile> tiles;
     Texture2D<float> displacement;
+    Texture2D<float3> colorMap;
     SamplerState sampler;
 };
 ParameterBlock<TerrainData> pTerrainData;
@@ -44,7 +45,24 @@ void taskMain(
     GroupMemoryBarrierWithGroupSync();
     AABB bounding;
     bounding.minCorner = float3(tile.location.x, tile.height, tile.location.y) * tile.extent;
-    bounding.maxCorner = float3(tile.location.x + 1, tile.height, tile.location.y + 1) * tile.extent;
+    bounding.maxCorner = float3(tile.location.x + tile.extent, tile.height, tile.location.y + tile.extent) * tile.extent;
+    float3 origin = viewToWorld(float4(0, 0, 0, 1)).xyz;
+    const float offset = 0.0f;
+    float3 corners[4] = {
+        screenToWorld(float4(offset, offset, -1.0f, 1.0f)).xyz,
+        screenToWorld(float4(pViewParams.c.screenDimensions.x - offset, offset, -1.0f, 1.0f)).xyz,
+        screenToWorld(float4(offset, pViewParams.c.screenDimensions.y - offset, -1.0f, 1.0f)).xyz,
+        screenToWorld(float4(pViewParams.c.screenDimensions - float2(offset, offset), -1.0f, 1.0f)).xyz
+    };
+    Frustum viewFrustum;
+    viewFrustum.sides[0] = computePlane(origin, corners[2], corners[0]);
+    viewFrustum.sides[1] = computePlane(origin, corners[1], corners[3]);
+    viewFrustum.sides[2] = computePlane(origin, corners[0], corners[1]);
+    viewFrustum.sides[3] = computePlane(origin, corners[3], corners[2]);
+    if(!bounding.insideFrustum(viewFrustum))
+    {
+        return;
+    }
     float3 median = (bounding.minCorner + bounding.maxCorner) / 2;
     float distance = distance(median, pViewParams.c.cameraPos_WS.xyz);
     float tileDistance = distance / tile.extent;
@@ -151,7 +169,7 @@ void meshMain(
 //        float3 displacement2 = pWaterMaterial.displacementTextures.Sample(pWaterMaterial.sampler, float3(worldPos.xz * pWaterMaterial.tile2, 1)).xyz * pWaterMaterial.contributeDisplacement2;
 //        float3 displacement3 = pWaterMaterial.displacementTextures.Sample(pWaterMaterial.sampler, float3(worldPos.xz * pWaterMaterial.tile3, 2)).xyz * pWaterMaterial.contributeDisplacement3;
 //        float3 displacement4 = pWaterMaterial.displacementTextures.Sample(pWaterMaterial.sampler, float3(worldPos.xz * pWaterMaterial.tile4, 3)).xyz * pWaterMaterial.contributeDisplacement4;
-        float displacement = pTerrainData.displacement.SampleLevel(pTerrainData.sampler, worldPos.xz, 0);
+        float displacement = pTerrainData.displacement.SampleLevel(pTerrainData.sampler, worldPos.xz / 1000, 0) * 10;
 
         float4 clipPos = mul(vp, float4(worldPos, 1));
         float ndcDepth = clipPos.z / clipPos.w;
@@ -160,7 +178,7 @@ void meshMain(
 
 //        displacement = lerp(0.0f, displacement, pow(saturate(depth), pTerrainData.displacementDepthAttenuation));
 
-        worldPos += displacement;
+        worldPos.y += displacement;
         worldPos.y += lodDisplacement;
 
         TerrainVertex v;
@@ -176,5 +194,5 @@ void meshMain(
 [shader("pixel")]
 float4 fragmentMain(TerrainVertex vertex)
 {
-    return float4(0, 1, 0, 1);
+    return float4(pTerrainData.colorMap.Sample(pTerrainData.sampler, vertex.position_WS.xz / 1000), 1);
 }

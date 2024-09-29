@@ -72,6 +72,9 @@ int main() {
         AssetImporter::importTexture(TextureImportArgs{
             .filePath = sourcePath / "import/textures/azeroth.png",
         });
+        AssetImporter::importTexture(TextureImportArgs{
+            .filePath = sourcePath / "import/textures/azeroth_height.png",
+        });
         // AssetImporter::importMesh(MeshImportArgs{
         //    .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.glb",
         //    .importPath = "Whitechapel",

@@ -22,7 +22,8 @@ class TerrainRenderer {
     Gfx::PGraphicsPipeline pipeline;
     Gfx::PViewport viewport;
     Gfx::OShaderBuffer tilesBuffer;
-    Gfx::OTexture2D displacementMap;
+    Gfx::PTexture2D displacementMap;
+    Gfx::PTexture2D colorMap;
     Gfx::OSampler sampler;
 };
 DEFINE_REF(TerrainRenderer);
