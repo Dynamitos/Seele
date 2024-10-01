@@ -17,3 +17,4 @@ struct DepthData
     //globallycoherent RWStructuredBuffer<uint> debugHead;
     //globallycoherent RWStructuredBuffer<DepthDebugData> debugData;
 };
+ParameterBlock<DepthData> pDepthAttachment;

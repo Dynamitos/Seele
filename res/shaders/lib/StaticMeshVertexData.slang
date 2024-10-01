@@ -51,7 +51,7 @@ struct StaticMeshVertexData
 		{
 			attributes.texCoords[i] = float2(uint16ToFloat(texCoords[i][index * 2 + 0]), uint16ToFloat(texCoords[i][index * 2 + 1]));
 		}
-		attributes.vertexColor = float3(color[index * 3 + 0], color[index * 3 + 1] , color[index * 3 + 2]);
+		attributes.vertexColor = float3(uint16ToFloat(color[index * 3 + 0]), uint16ToFloat(color[index * 3 + 1]) , uint16ToFloat(color[index * 3 + 2]));
 #endif
 		return attributes;
 	}

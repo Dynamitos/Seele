@@ -765,6 +765,7 @@ void Graphics::pickPhysicalDevice() {
     features11 = {
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES,
         .pNext = &features12,
+        .storageBuffer16BitAccess = true,
         .uniformAndStorageBuffer16BitAccess = true,
     };
     features = {
@@ -780,6 +781,7 @@ void Graphics::pickPhysicalDevice() {
                 .pipelineStatisticsQuery = true,
                 .fragmentStoresAndAtomics = true,
                 .shaderInt64 = true,
+                .shaderInt16 = true,
                 .inheritedQueries = true,
             },
     };

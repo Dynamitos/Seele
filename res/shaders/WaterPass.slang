@@ -179,7 +179,7 @@ void meshMain(
         float3 worldPos = params.offset + objectPos * params.extent + float3(groupID.x * params.extent, 0, groupID.y * params.extent);
 
         float lodDisplacement = 0;
-        float3 camPos = pViewParams.cameraPos_WS.xyz;
+        float3 camPos = pViewParams.ameraPos_WS.xyz;
         float cameraDistance = distance(worldPos, camPos);
         float threshold = 0;
         if(params.numMeshes == 3)
@@ -237,7 +237,7 @@ void meshMain(
 [shader("pixel")]
 float4 fragmentMain(WaterVertex vert) : SV_TARGET {
     float3 lightDir = -normalize(pWaterMaterial.sunDirection);
-    float3 viewDir = normalize(pViewParams.c.cameraPos_WS.xyz - vert.position_WS);
+    float3 viewDir = normalize(pViewParams.cameraPos_WS.xyz - vert.position_WS);
     float3 halfwayDir = normalize(lightDir + viewDir);
     float depth = vert.depth;
     float LdotH = clamp(dot(lightDir, halfwayDir), 0, 1);

@@ -17,7 +17,7 @@ Params vertexMain(
 	DebugVertex vert
 ){
 	Params result;
-	result.pos = mul(pViewParams.c.projectionMatrix, mul(pViewParams.c.viewMatrix, float4(vert.position, 1)));
+	result.pos = mul(pViewParams.projectionMatrix, mul(pViewParams.viewMatrix, float4(vert.position, 1)));
 	result.color = vert.color;
 	return result;
 }

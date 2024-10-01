@@ -51,7 +51,7 @@ struct FragmentParameter
 		float3x3 tbn = float3x3(normalize(tangent_WS), normalize(biTangent_WS), normalize(normal_WS));
 		result.tbn = tbn;
         result.position_TS = mul(tbn, position_WS);
-        result.viewDir_TS = mul(tbn, normalize(pViewParams.c.cameraPos_WS.xyz - position_WS));
+        result.viewDir_TS = mul(tbn, normalize(pViewParams.cameraPos_WS.xyz - position_WS));
         result.normal_TS = mul(tbn, normal_WS);
 		return result;
 	}
@@ -102,8 +102,8 @@ struct VertexAttributes
 	{
 		float4 modelPos = float4(position_MS, 1);
 		float4 worldPos = mul(transformMatrix, modelPos);
-		float4 viewPos = mul(pViewParams.c.viewMatrix, worldPos);
-		float4 clipPos = mul(pViewParams.c.projectionMatrix, viewPos);
+		float4 viewPos = mul(pViewParams.viewMatrix, worldPos);
+		float4 clipPos = mul(pViewParams.projectionMatrix, viewPos);
 		FragmentParameter result;
 		result.position_CS = clipPos;
 #ifndef POS_ONLY

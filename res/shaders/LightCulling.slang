@@ -72,7 +72,7 @@ void cullLights(ComputeShaderInput in)
         uMaxDepth = 0x0;
         oLightCount = 0;
         tLightCount = 0;
-        groupFrustum = pDispatchParams.frustums[in.groupID.x + (in.groupID.y * pDispatchParams.p.numThreadGroups.x)];
+        groupFrustum = pDispatchParams.frustums[in.groupID.x + (in.groupID.y * pDispatchParams.numThreadGroups.x)];
     }
 
     GroupMemoryBarrierWithGroupSync();

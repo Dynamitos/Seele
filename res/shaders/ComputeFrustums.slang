@@ -25,9 +25,9 @@ void computeFrustums(ComputeShaderInput in)
 	frustum.sides[1] = computePlane(origin, corners[1], corners[3]);
 	frustum.sides[2] = computePlane(origin, corners[0], corners[1]);
 	frustum.sides[3] = computePlane(origin, corners[3], corners[2]);
-	if(in.dispatchThreadID.x < pDispatchParams.p.numThreads.x && in.dispatchThreadID.y < pDispatchParams.p.numThreads.y)
+	if(in.dispatchThreadID.x < pDispatchParams.numThreads.x && in.dispatchThreadID.y < pDispatchParams.numThreads.y)
 	{
-		uint index = in.dispatchThreadID.x + (in.dispatchThreadID.y * pDispatchParams.p.numThreads.x);
+		uint index = in.dispatchThreadID.x + (in.dispatchThreadID.y * pDispatchParams.numThreads.x);
 		pDispatchParams.frustums[index] = frustum;
 	}
 }

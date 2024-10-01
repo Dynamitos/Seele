@@ -73,10 +73,10 @@ VertexShaderOutput vertexMain(
     };
 
     VertexShaderOutput output;
-    float3x3 cameraRotation = float3x3(pViewParams.c.viewMatrix);
+    float3x3 cameraRotation = float3x3(pViewParams.viewMatrix);
     float4 worldPos = float4(mul(cameraRotation, vertices[vertexIndex]), 1.0f);
     //clip(dot(worldPos, clipPlane));
-    output.clipPos = mul(pViewParams.c.projectionMatrix, worldPos);
+    output.clipPos = mul(pViewParams.projectionMatrix, worldPos);
     output.texCoords = normalize(vertices[vertexIndex]);
     return output;
 }

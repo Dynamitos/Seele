@@ -13,12 +13,8 @@ struct ViewParameter
     float4 cameraPos_WS;
     float2 screenDimensions;
 };
-struct ViewParamWrapper
-{
-    ParameterBlock<ViewParameter> c;
-};
 layout(set = 0)
-ParameterBlock<ViewParamWrapper> pViewParams;
+ParameterBlock<ViewParameter> pViewParams;
 
 float4 worldToModel(float4x4 inverseTransform, float4 world)
 {
@@ -31,7 +27,7 @@ float4 worldToModel(float4x4 inverseTransform, float4 world)
 
 float4 viewToWorld(float4 view)
 {
-    float4 world = mul(pViewParams.c.inverseViewMatrix, view);
+    float4 world = mul(pViewParams.inverseViewMatrix, view);
 
     world = world / world.w;
 
@@ -47,7 +43,7 @@ float4 viewToModel(float4x4 inverseTransform, float4 view)
 
 float4 clipToView(float4 clip)
 {
-    float4 view = mul(pViewParams.c.inverseProjection, clip);
+    float4 view = mul(pViewParams.inverseProjection, clip);
 
     view = view / view.w;
 
@@ -63,7 +59,7 @@ float4 clipToWorld(float4 clip)
 
 float4 screenToView(float4 screen)
 {
-    float2 texCoord = screen.xy / pViewParams.c.screenDimensions;
+    float2 texCoord = screen.xy / pViewParams.screenDimensions;
  
     // Convert to clip space 
     float4 clip = float4( float2( texCoord.x, 1.0f-texCoord.y ) * 2.0f - 1.0f, screen.z, screen.w);
@@ -92,7 +88,7 @@ float4 clipToScreen(float4 clip)
     float oz = 1;
     float pz = 0 - 1;
     float zf = pz * ndc.z + oz;
-    return float4(float2(texCoords.x, 1 - texCoords.y) * pViewParams.c.screenDimensions, zf, 1.0f);
+    return float4(float2(texCoords.x, 1 - texCoords.y) * pViewParams.screenDimensions, zf, 1.0f);
 }
 
 struct Plane

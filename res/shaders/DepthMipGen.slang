@@ -1,7 +1,6 @@
 import Common;
 import DepthCommon;
 
-ParameterBlock<DepthData> pDepthAttachment;
 
 struct MipParam
 {
@@ -47,9 +46,9 @@ void reduceLevel(
 void sourceCopy(
     uint2 dispatchID: SV_DispatchThreadID
 ) {
-    if(dispatchID.x >= pViewParams.c.screenDimensions.x || dispatchID.y >= pViewParams.c.screenDimensions.y)
+    if(dispatchID.x >= pViewParams.screenDimensions.x || dispatchID.y >= pViewParams.screenDimensions.y)
     {
         return;
     }
-    pDepthAttachment.buffer[dispatchID.x + (dispatchID.y * uint(pViewParams.c.screenDimensions.x))] = pDepthAttachment.texture[uint2(dispatchID)];
+    pDepthAttachment.buffer[dispatchID.x + (dispatchID.y * uint(pViewParams.screenDimensions.x))] = pDepthAttachment.texture[uint2(dispatchID)];
 }

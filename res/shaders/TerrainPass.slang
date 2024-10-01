@@ -50,9 +50,9 @@ void taskMain(
     const float offset = 0.0f;
     float3 corners[4] = {
         screenToWorld(float4(offset, offset, -1.0f, 1.0f)).xyz,
-        screenToWorld(float4(pViewParams.c.screenDimensions.x - offset, offset, -1.0f, 1.0f)).xyz,
-        screenToWorld(float4(offset, pViewParams.c.screenDimensions.y - offset, -1.0f, 1.0f)).xyz,
-        screenToWorld(float4(pViewParams.c.screenDimensions - float2(offset, offset), -1.0f, 1.0f)).xyz
+        screenToWorld(float4(pViewParams.screenDimensions.x - offset, offset, -1.0f, 1.0f)).xyz,
+        screenToWorld(float4(offset, pViewParams.screenDimensions.y - offset, -1.0f, 1.0f)).xyz,
+        screenToWorld(float4(pViewParams.screenDimensions - float2(offset, offset), -1.0f, 1.0f)).xyz
     };
     Frustum viewFrustum;
     viewFrustum.sides[0] = computePlane(origin, corners[2], corners[0]);
@@ -64,7 +64,7 @@ void taskMain(
         return;
     }
     float3 median = (bounding.minCorner + bounding.maxCorner) / 2;
-    float distance = distance(median, pViewParams.c.cameraPos_WS.xyz);
+    float distance = distance(median, pViewParams.cameraPos_WS.xyz);
     float tileDistance = distance / tile.extent;
     uint numMeshes = groupID.y + 1;
     
@@ -122,7 +122,7 @@ void meshMain(
     out vertices TerrainVertex vertices[TILE_VERTS],
     out indices uint3 indices[TILE_PRIMS],
 ) {
-    float4x4 vp = mul(pViewParams.c.projectionMatrix, pViewParams.c.viewMatrix);
+    float4x4 vp = mul(pViewParams.projectionMatrix, pViewParams.viewMatrix);
 	SetMeshOutputCounts(TILE_VERTS, TILE_PRIMS);
 	
 	for(uint i = threadID; i < TILE_PRIMS; i += MESH_GROUP_SIZE)
@@ -136,7 +136,7 @@ void meshMain(
         float3 worldPos = params.offset + objectPos * params.extent + float3(groupID.x * params.extent, 0, groupID.y * params.extent);
 
         float lodDisplacement = 0;
-        float3 camPos = pViewParams.c.cameraPos_WS.xyz;
+        float3 camPos = pViewParams.cameraPos_WS.xyz;
         float cameraDistance = distance(worldPos, camPos);
         float threshold = 0;
         if(params.numMeshes == 3)

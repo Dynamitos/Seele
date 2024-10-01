@@ -7,7 +7,7 @@
 namespace Seele {
 class ThreadPool {
   public:
-    ThreadPool(uint32 numWorkers = std::thread::hardware_concurrency() - 2);
+    ThreadPool(uint32 numWorkers = 1);
     ~ThreadPool();
     void runAndWait(List<std::function<void()>> functions);
     void runAsync(std::function<void()> func);
