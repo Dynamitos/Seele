@@ -27,7 +27,7 @@ void Seele::addDebugVertices(Array<DebugVertex> verts) { gDebugVertices.addAll(v
 
 BasePass::BasePass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics, scene) {
     //waterRenderer = new WaterRenderer(graphics, scene, viewParamsLayout);
-    terrainRenderer = new TerrainRenderer(graphics, scene, viewParamsLayout);
+    //terrainRenderer = new TerrainRenderer(graphics, scene, viewParamsLayout);
     basePassLayout = graphics->createPipelineLayout("BasePassLayout");
 
     basePassLayout->addDescriptorLayout(viewParamsLayout);
@@ -100,7 +100,7 @@ void BasePass::beginFrame(const Component::Camera& cam) {
     transparentCulling = lightCullingLayout->allocateDescriptorSet();
 
     //waterRenderer->beginFrame();
-    terrainRenderer->beginFrame();
+    //terrainRenderer->beginFrame();
 
     // Debug vertices
     {
@@ -474,7 +474,7 @@ void BasePass::createRenderPass() {
     tLightGrid = resources->requestTexture("LIGHTCULLING_TLIGHTGRID");
 
     //waterRenderer->setViewport(viewport, renderPass);
-    terrainRenderer->setViewport(viewport, renderPass);
+    //terrainRenderer->setViewport(viewport, renderPass);
 
     // Debug rendering
     {
