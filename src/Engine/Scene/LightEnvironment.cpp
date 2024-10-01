@@ -19,13 +19,13 @@ LightEnvironment::LightEnvironment(Gfx::PGraphics graphics) : graphics(graphics)
     });
     layout->create();
     lightEnvBuffer = graphics->createUniformBuffer(UniformBufferCreateInfo{
-        .dynamic = true,
+        .name = "LightEnv",
     });
     directionalLights = graphics->createShaderBuffer(ShaderBufferCreateInfo{
-        .dynamic = true,
+        .name = "DirectionalLights",
     });
     pointLights = graphics->createShaderBuffer(ShaderBufferCreateInfo{
-        .dynamic = true,
+        .name = "PointLights",
     });
 }
 

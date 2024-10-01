@@ -65,21 +65,21 @@ int main() {
             .filePath = sourcePath / "import/textures/skyboxsun5deg_tn.jpg",
             .type = TextureImportType::TEXTURE_CUBEMAP,
         });
-        AssetImporter::importMesh(MeshImportArgs{
-            .filePath = sourcePath / "import/models/ship.fbx",
-            .importPath = "ship",
-        });
+        //AssetImporter::importMesh(MeshImportArgs{
+        //    .filePath = sourcePath / "import/models/ship.fbx",
+        //    .importPath = "ship",
+        //});
         AssetImporter::importTexture(TextureImportArgs{
             .filePath = sourcePath / "import/textures/azeroth.png",
         });
         AssetImporter::importTexture(TextureImportArgs{
             .filePath = sourcePath / "import/textures/azeroth_height.png",
         });
-        // AssetImporter::importMesh(MeshImportArgs{
-        //    .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.glb",
-        //    .importPath = "Whitechapel",
-        // });
-        // AssetImporter::importMesh(MeshImportArgs{
+        //AssetImporter::importMesh(MeshImportArgs{
+        //   .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.glb",
+        //   .importPath = "Whitechapel",
+        //});
+        // AssetImporter::importMesh(MeshImportArgs{521
         //     .filePath = sourcePath / "import/models/city-suburbs/source/city-suburbs.obj",
         //     .importPath = "suburbs",
         // });
@@ -87,10 +87,10 @@ int main() {
         //     .filePath = sourcePath / "import/models/minecraft-medieval-city.fbx",
         //     .importPath = "minecraft",
         // });
-        // AssetImporter::importMesh(MeshImportArgs{
-        //     .filePath = sourcePath / "import/models/Volvo/Volvo.fbx",
-        //     .importPath = "Volvo",
-        // });
+        AssetImporter::importMesh(MeshImportArgs{
+            .filePath = sourcePath / "import/models/Volvo/Volvo.fbx",
+            .importPath = "Volvo",
+        });
         getThreadPool().waitIdle();
         vd->commitMeshes();
         WindowCreateInfo mainWindowInfo = {

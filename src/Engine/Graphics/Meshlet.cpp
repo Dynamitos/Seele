@@ -166,7 +166,7 @@ void completeMeshlet(Array<Meshlet>& meshlets, Meshlet& current) {
     };
 }
 
-bool addTriangle(const Array<Vector4>& positions, Meshlet& current, Triangle& tri) {
+bool addTriangle(const Array<Vector>& positions, Meshlet& current, Triangle& tri) {
     int f1 = findIndex(current, tri.indices[0]);
     int f2 = findIndex(current, tri.indices[1]);
     int f3 = findIndex(current, tri.indices[2]);
@@ -184,11 +184,12 @@ bool addTriangle(const Array<Vector4>& positions, Meshlet& current, Triangle& tr
     return true;
 }
 
-void Meshlet::build(const Array<Vector4>& positions, const Array<uint32>& indices, Array<Meshlet>& meshlets) {
+void Meshlet::build(const Array<Vector>& positions, const Array<uint32>& indices, Array<Meshlet>& meshlets) {
     Meshlet current = {
         .numVertices = 0,
         .numPrimitives = 0,
     };
+    // TODO:
     // Array<uint32> optimizedIndices = indices;
     // tipsifyIndexBuffer(indices, positions.size(), 25, optimizedIndices);
     Array<Triangle> triangles(indices.size() / 3);

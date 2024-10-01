@@ -11,7 +11,7 @@
 
 using namespace Seele;
 
-constexpr static uint64 NUM_DEFAULT_ELEMENTS = 17962284;
+constexpr static uint64 NUM_DEFAULT_ELEMENTS = 36;
 uint64 VertexData::meshletCount = 0;
 
 void VertexData::resetMeshData() {
@@ -82,7 +82,8 @@ void VertexData::updateMesh(uint32 meshletOffset, PMesh mesh, Component::Transfo
     matInstanceData.instanceData.add(inst);
     matInstanceData.instanceMeshData.add(data);
     matInstanceData.cullingOffsets.add(meshletOffset);
-    for (size_t i = 0; i < 0; ++i) {
+
+    /* for (size_t i = 0; i < 0; ++i) {
         auto bounding = meshlets[data.meshletOffset + i].bounding;
         StaticArray<Vector, 8> corners;
         Vector min = bounding.min; // bounding.center - bounding.radius * Vector(1, 1, 1);
@@ -119,7 +120,7 @@ void VertexData::updateMesh(uint32 meshletOffset, PMesh mesh, Component::Transfo
         addDebugVertex(DebugVertex{.position = corners[7], .color = meshlets[data.meshletOffset + i].color});
         addDebugVertex(DebugVertex{.position = corners[5], .color = meshlets[data.meshletOffset + i].color});
         addDebugVertex(DebugVertex{.position = corners[7], .color = meshlets[data.meshletOffset + i].color});
-    }
+    }*/
 }
 
 void VertexData::createDescriptors() {
@@ -226,7 +227,6 @@ void VertexData::commitMeshes() {
                 .data = (uint8*)meshlets.data(),
             },
         .numElements = meshlets.size(),
-        .dynamic = false,
         .name = "MeshletBuffer",
     });
     vertexIndicesBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
@@ -236,7 +236,6 @@ void VertexData::commitMeshes() {
                 .data = (uint8*)vertexIndices.data(),
             },
         .numElements = vertexIndices.size(),
-        .dynamic = false,
         .name = "VertexIndicesBuffer",
     });
 
@@ -247,7 +246,6 @@ void VertexData::commitMeshes() {
                 .data = (uint8*)primitiveIndices.data(),
             },
         .numElements = primitiveIndices.size(),
-        .dynamic = false,
         .name = "PrimitiveIndicesBuffer",
     });
     updateBuffers();
@@ -352,15 +350,12 @@ void VertexData::init(Gfx::PGraphics _graphics) {
     instanceDataLayout->create();
 
     cullingOffsetBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
-        .dynamic = true,
         .name = "MeshletOffset",
     });
     instanceBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
-        .dynamic = true,
         .name = "InstanceBuffer",
     });
     instanceMeshDataBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
-        .dynamic = true,
         .name = "MeshDataBuffer",
     });
     resizeBuffers();

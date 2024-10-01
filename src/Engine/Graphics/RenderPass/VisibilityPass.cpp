@@ -81,7 +81,6 @@ void VisibilityPass::publishOutputs() {
     cullingBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
         .clearValue = 0xffffffff,
         .createCleared = true,
-        .dynamic = true,
         .name = "CullingBuffer",
     });
     resources->registerBufferOutput("CULLINGBUFFER", cullingBuffer);

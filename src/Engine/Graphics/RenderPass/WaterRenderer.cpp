@@ -19,7 +19,6 @@ WaterRenderer::WaterRenderer(Gfx::PGraphics graphics, PScene scene, Gfx::PDescri
                 .size = sizeof(MaterialParams),
                 .data = (uint8*)&materialParams,
             },
-        .dynamic = true,
         .name = "WaterMaterialParams",
     });
     materialUniforms->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
@@ -31,7 +30,6 @@ WaterRenderer::WaterRenderer(Gfx::PGraphics graphics, PScene scene, Gfx::PDescri
             {
                 .size = sizeof(ComputeParams),
             },
-        .dynamic = true,
         .name = "WaterComputeParams",
     });
     paramsBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, Gfx::SE_ACCESS_UNIFORM_READ_BIT,
@@ -107,7 +105,6 @@ WaterRenderer::WaterRenderer(Gfx::PGraphics graphics, PScene scene, Gfx::PDescri
                 .data = (uint8*)spectrums.data(),
             },
         .numElements = 8,
-        .dynamic = true,
         .name = "Spectrums",
     });
     spectrumBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, Gfx::SE_ACCESS_SHADER_READ_BIT,

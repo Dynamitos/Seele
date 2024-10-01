@@ -236,7 +236,6 @@ void DepthCullingPass::publishOutputs() {
                 .data = nullptr,
             },
         .numElements = bufferSize,
-        .dynamic = true,
         .name = "DepthMipBuffer",
     });
 

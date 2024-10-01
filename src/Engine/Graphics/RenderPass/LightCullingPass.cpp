@@ -90,7 +90,6 @@ void LightCullingPass::publishOutputs() {
                 .data = (uint8*)&dispatchParams,
                 .owner = Gfx::QueueType::COMPUTE,
             },
-        .dynamic = false,
         .name = "DispatchParams",
     });
     dispatchParamsBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
@@ -186,7 +185,6 @@ void LightCullingPass::publishOutputs() {
                 .owner = Gfx::QueueType::COMPUTE,
             },
         .numElements = 1,
-        .dynamic = true,
         .name = "oLightIndexCounter",
     };
     oLightIndexCounter = graphics->createShaderBuffer(structInfo);
@@ -200,7 +198,6 @@ void LightCullingPass::publishOutputs() {
                 .data = nullptr,
                 .owner = Gfx::QueueType::COMPUTE,
             },
-        .dynamic = false,
         .name = "oLightIndexList",
     };
     oLightIndexList = graphics->createShaderBuffer(structInfo);
@@ -285,7 +282,6 @@ void LightCullingPass::setupFrustums() {
                 .data = (uint8*)&dispatchParams,
                 .owner = Gfx::QueueType::COMPUTE,
             },
-        .dynamic = false,
         .name = "FrustumDispatch",
     });
     frustumDispatchParamsBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
@@ -298,7 +294,6 @@ void LightCullingPass::setupFrustums() {
                 .owner = Gfx::QueueType::COMPUTE,
             },
         .numElements = numThreads.x * numThreads.y * numThreads.z,
-        .dynamic = false,
         .name = "FrustumBuffer",
     });
     frustumBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, Gfx::SE_ACCESS_SHADER_WRITE_BIT,

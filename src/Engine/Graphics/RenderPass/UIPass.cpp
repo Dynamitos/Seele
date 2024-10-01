@@ -118,23 +118,23 @@ void UIPass::createRenderPass() {
     descriptorLayout->create();
 
     Matrix4 projectionMatrix = glm::ortho(0, 1, 1, 0);
-    UniformBufferCreateInfo info = {
+
+    Gfx::OUniformBuffer uniformBuffer = graphics->createUniformBuffer(UniformBufferCreateInfo{
         .sourceData =
             {
                 .size = sizeof(Matrix4),
                 .data = (uint8*)&projectionMatrix,
             },
-        .dynamic = false,
-    };
-    Gfx::OUniformBuffer uniformBuffer = graphics->createUniformBuffer(info);
+    });
     Gfx::OSampler backgroundSampler = graphics->createSampler({});
 
-    info = {
-        .sourceData = {.size = sizeof(uint32), .data = nullptr},
-        .dynamic = true,
-    };
-
-    numTexturesBuffer = graphics->createUniformBuffer(info);
+    numTexturesBuffer = graphics->createUniformBuffer(UniformBufferCreateInfo{
+        .sourceData =
+            {
+                .size = sizeof(uint32),
+                .data = nullptr,
+            },
+    });
 
     descriptorSet = descriptorLayout->allocateDescriptorSet();
     descriptorSet->updateBuffer(0, 0, uniformBuffer);

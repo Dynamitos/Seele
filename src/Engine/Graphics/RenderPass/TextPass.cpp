@@ -128,7 +128,6 @@ void TextPass::createRenderPass() {
                 .size = sizeof(Matrix4),
                 .data = nullptr,
             },
-        .dynamic = true,
     });
 
     glyphSampler = graphics->createSampler({

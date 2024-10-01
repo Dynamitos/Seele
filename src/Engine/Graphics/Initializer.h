@@ -91,7 +91,6 @@ struct IndexBufferCreateInfo {
 };
 struct UniformBufferCreateInfo {
     DataSource sourceData = DataSource();
-    uint8 dynamic = 0;
     std::string name = "Unnamed";
 };
 struct ShaderBufferCreateInfo {
@@ -99,7 +98,6 @@ struct ShaderBufferCreateInfo {
     uint64 numElements = 1;
     uint32 clearValue = 0;
     uint8 createCleared = 0;
-    uint8 dynamic = 0;
     uint8 vertexBuffer = 0;
     std::string name = "Unnamed";
 };

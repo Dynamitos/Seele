@@ -26,6 +26,14 @@ typedef glm::ivec2 IVector2;
 typedef glm::ivec3 IVector;
 typedef glm::ivec4 IVector4;
 
+typedef glm::u16vec2 U16Vector2;
+typedef glm::u16vec3 U16Vector;
+typedef glm::u16vec4 U16Vector4;
+
+typedef glm::i16vec2 I16Vector2;
+typedef glm::i16vec3 I16Vector;
+typedef glm::i16vec4 I16Vector4;
+
 typedef glm::quat Quaternion;
 
 Vector parseVector(const char*);

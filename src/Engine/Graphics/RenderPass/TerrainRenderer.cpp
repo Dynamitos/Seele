@@ -30,7 +30,6 @@ TerrainRenderer::TerrainRenderer(Gfx::PGraphics graphics, PScene scene, Gfx::PDe
                 .data = (uint8*)payloads.data(),
             },
         .numElements = payloads.size(),
-        .dynamic = true,
         .name = "TilesBuffer",
     });
     tilesBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, Gfx::SE_ACCESS_SHADER_READ_BIT,

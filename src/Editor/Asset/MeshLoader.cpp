@@ -477,37 +477,56 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
         collider.boundingbox.adjust(Vector(mesh->mAABB.mMax.x, mesh->mAABB.mMax.y, mesh->mAABB.mMax.z));
         work.add([=, this, &globalMeshes]() {
             // assume static mesh for now
-            Array<Vector4> positions(mesh->mNumVertices);
-            StaticArray<Array<Vector2>, MAX_TEXCOORDS> texCoords;
+            Array<Vector> positions(mesh->mNumVertices);
+            StaticArray<Array<U16Vector2>, MAX_TEXCOORDS> texCoords;
             for (size_t i = 0; i < MAX_TEXCOORDS; ++i) {
                 texCoords[i].resize(mesh->mNumVertices);
             }
-            Array<Vector4> normals(mesh->mNumVertices);
-            Array<Vector4> tangents(mesh->mNumVertices);
-            Array<Vector4> biTangents(mesh->mNumVertices);
-            Array<Vector4> colors(mesh->mNumVertices);
+            Array<Quaternion> normals(mesh->mNumVertices);
+            Array<U16Vector> colors(mesh->mNumVertices);
 
             for (int32 i = 0; i < mesh->mNumVertices; ++i) {
-                positions[i] = Vector4(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z, 1.0f);
+                positions[i] = Vector(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
                 for (size_t j = 0; j < MAX_TEXCOORDS; ++j) {
                     if (mesh->HasTextureCoords(j)) {
-                        texCoords[j][i] = Vector2(mesh->mTextureCoords[j][i].x, mesh->mTextureCoords[j][i].y);
+                        texCoords[j][i] = U16Vector2(mesh->mTextureCoords[j][i].x * 65535, mesh->mTextureCoords[j][i].y * 65535);
                     } else {
-                        texCoords[j][i] = Vector2(0, 0);
+                        texCoords[j][i] = U16Vector2(0, 0);
                     }
                 }
-                normals[i] = Vector4(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z, 1.0f);
+                Vector normal = Vector(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z);
+                Vector tangent = Vector(1, 0, 0);
+                Vector biTangent = Vector(0, 0, 1);
                 if (mesh->HasTangentsAndBitangents()) {
-                    tangents[i] = Vector4(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z, 1.0f);
-                    biTangents[i] = Vector4(mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z, 1.0f);
-                } else {
-                    tangents[i] = Vector4(0, 0, 1, 1);
-                    biTangents[i] = Vector4(1, 0, 0, 1);
+                    tangent = Vector(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z);
+                    biTangent = Vector(mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z);
                 }
+                Matrix3 tbn = {normal, biTangent, tangent};
+
+                Quaternion qTangent(tbn);
+                qTangent = glm::normalize(qTangent);
+
+                if (qTangent.w < 0)
+                    qTangent = -qTangent;
+
+                const float bias = 1.0f / 32767.0f;
+
+                if (qTangent.w < bias) {
+                    double normFactor = sqrt(1 - bias * bias);
+                    qTangent.w = bias;
+                    qTangent.x *= normFactor;
+                    qTangent.y *= normFactor;
+                    qTangent.z *= normFactor;
+                }
+                Vector naturalBinormal = glm::cross(tangent, normal);
+                if (glm::dot(naturalBinormal, biTangent) <= 0)
+                    qTangent = -qTangent;
+                normals[i] = qTangent;
+
                 if (mesh->HasVertexColors(0)) {
-                    colors[i] = Vector4(mesh->mColors[0][i].r, mesh->mColors[0][i].g, mesh->mColors[0][i].b, 1.0f);
+                    colors[i] = U16Vector(mesh->mColors[0][i].r * 65535, mesh->mColors[0][i].g * 65535, mesh->mColors[0][i].b * 65535);
                 } else {
-                    colors[i] = Vector4(1, 1, 1, 1);
+                    colors[i] = U16Vector(1, 1, 1);
                 }
             }
             vertexData->loadPositions(offset, positions);
@@ -516,8 +535,6 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
                 vertexData->loadTexCoords(offset, i, texCoords[i]);
             }
             vertexData->loadNormals(offset, normals);
-            vertexData->loadTangents(offset, tangents);
-            vertexData->loadBiTangents(offset, biTangents);
             vertexData->loadColors(offset, colors);
 
             Array<uint32> indices(mesh->mNumFaces * 3);
@@ -566,7 +583,7 @@ void MeshLoader::import(MeshImportArgs args, PMeshAsset meshAsset) {
     Assimp::Importer importer;
     importer.ReadFile(args.filePath.string().c_str(),
                       (uint32)(aiProcess_FlipUVs | aiProcess_Triangulate | aiProcess_SortByPType | aiProcess_GenBoundingBoxes |
-                               aiProcess_GenSmoothNormals | aiProcess_GenUVCoords | aiProcess_FindDegenerates));
+                               aiProcess_GenUVCoords | aiProcess_FindDegenerates));
     const aiScene* scene = importer.ApplyPostProcessing(aiProcess_CalcTangentSpace);
     std::cout << importer.GetErrorString() << std::endl;
 

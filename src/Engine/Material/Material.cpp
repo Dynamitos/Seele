@@ -58,7 +58,6 @@ void Material::init(Gfx::PGraphics graphics) {
     });
     layout->create();
     floatBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
-        .dynamic = true,
         .name = "MaterialFloatBuffer",
     });
 }

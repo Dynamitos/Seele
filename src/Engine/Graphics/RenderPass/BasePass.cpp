@@ -250,7 +250,7 @@ void BasePass::render() {
     }
     
     // commands.add(waterRenderer->render(viewParamsSet));
-    commands.add(terrainRenderer->render(viewParamsSet));
+    // commands.add(terrainRenderer->render(viewParamsSet));
     
     // Skybox
     {
@@ -580,7 +580,6 @@ void BasePass::createRenderPass() {
                     .size = sizeof(SkyboxData),
                     .data = (uint8*)&skyboxData,
                 },
-            .dynamic = true,
         });
 
         pipelineLayout = graphics->createPipelineLayout("SkyboxLayout");
