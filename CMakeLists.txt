@@ -22,7 +22,6 @@ set(CMAKE_TOOLCHAIN_FILE ${EXTERNAL_ROOT}/vcpkg/scripts/buildsystems/vcpkg.cmake
 
 set(CRCPP_ROOT ${EXTERNAL_ROOT}/CRCpp)
 set(METAL_ROOT ${EXTERNAL_ROOT}/metal-cpp)
-set(SLANG_ROOT ${EXTERNAL_ROOT}/slang)
 
 set(Boost_NO_WARN_NEW_VERSIONS 1)
 

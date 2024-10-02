@@ -5,7 +5,7 @@ include (ExternalProject)
 add_library(slang SHARED IMPORTED)
 if(WIN32)
     add_library(slang-glslang SHARED IMPORTED)
-    set(SLANG_ROOT ${EXTERNAL_ROOT}/slang/build/Release/)
+    set(SLANG_ROOT ${PROJECT_SOURCE_DIR}/../slang/build/Debug/)
     set_target_properties(slang-glslang PROPERTIES IMPORTED_LOCATION ${SLANG_ROOT}bin/slang-glslang.dll)
     set_target_properties(slang-glslang PROPERTIES IMPORTED_IMPLIB ${SLANG_ROOT}lib/slang.lib)
     set_target_properties(slang PROPERTIES IMPORTED_LOCATION ${SLANG_ROOT}bin/slang.dll)
@@ -26,7 +26,7 @@ elseif(APPLE)
     DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 endif()
 target_include_directories(slang INTERFACE 
-    $<BUILD_INTERFACE:${EXTERNAL_ROOT}/slang/include>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/../slang/include>
     $<INSTALL_INTERFACE:include>
 )
 

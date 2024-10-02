@@ -86,7 +86,7 @@ void Seele::beginCompilation(const ShaderCompilationInfo& info, SlangCompileTarg
     for (const auto& [name, mod] : info.entryPoints) {
         entryPoints.add(name);
         slang::IEntryPoint* entry;
-        moduleMap[mod]->findEntryPointByName(name.c_str(), &entry);
+        CHECK_RESULT(moduleMap[mod]->findEntryPointByName(name.c_str(), &entry));
         components.add(entry);
     }
 
