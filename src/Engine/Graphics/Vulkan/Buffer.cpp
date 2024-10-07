@@ -389,8 +389,8 @@ void Buffer::pipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcSt
 
 UniformBuffer::UniformBuffer(PGraphics graphics, const UniformBufferCreateInfo& createInfo)
     : Gfx::UniformBuffer(graphics->getFamilyMapping(), createInfo),
-      Vulkan::Buffer(graphics, createInfo.sourceData.size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, createInfo.sourceData.owner,
-                     true, createInfo.name) {
+      Vulkan::Buffer(graphics, createInfo.sourceData.size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, createInfo.sourceData.owner, true,
+                     createInfo.name) {
     if (createInfo.sourceData.size > 0 && createInfo.sourceData.data != nullptr) {
         getAlloc()->updateContents(createInfo.sourceData.offset, createInfo.sourceData.size, createInfo.sourceData.data);
     }
@@ -416,11 +416,7 @@ void UniformBuffer::executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineSt
 
 ShaderBuffer::ShaderBuffer(PGraphics graphics, const ShaderBufferCreateInfo& createInfo)
     : Gfx::ShaderBuffer(graphics->getFamilyMapping(), createInfo),
-      Vulkan::Buffer(graphics, createInfo.sourceData.size,
-                     VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
-                         (createInfo.vertexBuffer ? VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR |
-                                                        VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
-                                                  : 0),
+      Vulkan::Buffer(graphics, createInfo.sourceData.size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | createInfo.usage,
                      createInfo.sourceData.owner, true, createInfo.name, createInfo.createCleared, createInfo.clearValue) {
     if (createInfo.sourceData.size > 0 && createInfo.sourceData.data != nullptr) {
         getAlloc()->updateContents(createInfo.sourceData.offset, createInfo.sourceData.size, createInfo.sourceData.data);
@@ -491,12 +487,12 @@ void VertexBuffer::executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineSta
 IndexBuffer::IndexBuffer(PGraphics graphics, const IndexBufferCreateInfo& createInfo)
     : Gfx::IndexBuffer(graphics->getFamilyMapping(), createInfo),
       Vulkan::Buffer(graphics, createInfo.sourceData.size,
-                     VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR |
-                         VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                     VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT |
+                         VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
                      createInfo.sourceData.owner, false, createInfo.name) {
     getAlloc()->updateContents(createInfo.sourceData.offset, createInfo.sourceData.size, createInfo.sourceData.data);
-    getAlloc()->pipelineBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, Gfx::SE_ACCESS_INDEX_READ_BIT,
-                                Gfx::SE_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR | Gfx::SE_PIPELINE_STAGE_VERTEX_INPUT_BIT);
+    //getAlloc()->pipelineBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, Gfx::SE_ACCESS_INDEX_READ_BIT,
+    //                            Gfx::SE_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR | Gfx::SE_PIPELINE_STAGE_VERTEX_INPUT_BIT);
 }
 
 IndexBuffer::~IndexBuffer() {}

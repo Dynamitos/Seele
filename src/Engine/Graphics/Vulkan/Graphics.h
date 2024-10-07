@@ -78,6 +78,8 @@ class Graphics : public Gfx::Graphics {
 
     virtual void resolveTexture(Gfx::PTexture source, Gfx::PTexture destination) override;
     virtual void copyTexture(Gfx::PTexture src, Gfx::PTexture dst) override;
+    
+    virtual void copyBuffer(Gfx::PShaderBuffer src, Gfx::PShaderBuffer dst) override;
 
     // Ray Tracing
     virtual Gfx::OBottomLevelAS createBottomLevelAccelerationStructure(const Gfx::BottomLevelASCreateInfo& createInfo) override;

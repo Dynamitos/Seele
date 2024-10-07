@@ -6,12 +6,17 @@ static const uint32_t MESH_GROUP_SIZE = 32;
 
 struct ViewParameter
 {
+    Frustum viewFrustum;
     float4x4 viewMatrix;
     float4x4 inverseViewMatrix;
     float4x4 projectionMatrix;
     float4x4 inverseProjection;
-    float4 cameraPos_WS;
+    float4 cameraPosition_WS;
+    float4 cameraForward_WS;
     float2 screenDimensions;
+    float2 invScreenDimensions;
+    uint frameIndex;
+    float time;
 };
 layout(set = 0)
 ParameterBlock<ViewParameter> pViewParams;

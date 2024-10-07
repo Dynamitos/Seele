@@ -220,6 +220,31 @@ void DescriptorSet::updateBuffer(uint32_t binding, uint32 index, Gfx::PShaderBuf
     boundResources[binding][index] = vulkanBuffer->getAlloc();
 }
 
+void DescriptorSet::updateBuffer(uint32_t binding, uint32 index, Gfx::PVertexBuffer indexBuffer) {
+    PVertexBuffer vulkanBuffer = indexBuffer.cast<VertexBuffer>();
+    if (boundResources[binding][index] == vulkanBuffer->getAlloc()) {
+        return;
+    }
+
+    bufferInfos.add(VkDescriptorBufferInfo{
+        .buffer = vulkanBuffer->getHandle(),
+        .offset = 0,
+        .range = vulkanBuffer->getSize(),
+    });
+    writeDescriptors.add(VkWriteDescriptorSet{
+        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .pNext = nullptr,
+        .dstSet = setHandle,
+        .dstBinding = binding,
+        .dstArrayElement = index,
+        .descriptorCount = 1,
+        .descriptorType = cast(layout->getBindings()[binding].descriptorType),
+        .pBufferInfo = &bufferInfos.back(),
+    });
+
+    boundResources[binding][index] = vulkanBuffer->getAlloc();
+}
+
 void DescriptorSet::updateBuffer(uint32_t binding, uint32 index, Gfx::PIndexBuffer indexBuffer) {
     PIndexBuffer vulkanBuffer = indexBuffer.cast<IndexBuffer>();
     if (boundResources[binding][index] == vulkanBuffer->getAlloc()) {

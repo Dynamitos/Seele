@@ -23,13 +23,18 @@ RenderPass::RenderPass(Gfx::PGraphics graphics, PScene scene) : graphics(graphic
 RenderPass::~RenderPass() {}
 
 void RenderPass::beginFrame(const Component::Camera& cam) {
+    auto screenDim = Vector2(static_cast<float>(viewport->getWidth()), static_cast<float>(viewport->getHeight()));
     viewParams = {
         .viewMatrix = cam.getViewMatrix(),
         .inverseViewMatrix = glm::inverse(cam.getViewMatrix()),
         .projectionMatrix = viewport->getProjectionMatrix(),
         .inverseProjection = glm::inverse(viewport->getProjectionMatrix()),
-        .cameraPosition = Vector4(cam.getCameraPosition(), 1),
-        .screenDimensions = Vector2(static_cast<float>(viewport->getWidth()), static_cast<float>(viewport->getHeight())),
+        .cameraPosition_WS = Vector4(cam.getCameraPosition(), 1),
+        .cameraForward_WS = Vector4(cam.getCameraForward(), 1),
+        .screenDimensions = screenDim,
+        .invScreenDimensions = 1.0f / screenDim,
+        .frameIndex = Gfx::getCurrentFrameIndex(),
+        .time = static_cast<float>(Gfx::getCurrentFrameTime()),
     };
     viewParamsBuffer->rotateBuffer(sizeof(ViewParameter));
     viewParamsBuffer->updateContents(0, sizeof(ViewParameter), &viewParams);

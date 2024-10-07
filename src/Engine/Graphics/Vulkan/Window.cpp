@@ -14,7 +14,7 @@ double Gfx::getCurrentFrameDelta() { return currentFrameDelta; }
 double currentFrameTime = 0;
 double Gfx::getCurrentFrameTime() { return currentFrameTime; }
 
-uint32 currentFrameIndex = 0;
+uint32 currentFrameIndex = std::numeric_limits<uint32>::max();
 uint32 Gfx::getCurrentFrameIndex() { return currentFrameIndex; }
 
 void glfwKeyCallback(GLFWwindow* handle, int key, int, int action, int modifier) {

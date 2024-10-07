@@ -51,7 +51,7 @@ class BasePass : public RenderPass {
     Gfx::PShaderBuffer cullingBuffer;
 
     //OWaterRenderer waterRenderer;
-    //OTerrainRenderer terrainRenderer;
+    OTerrainRenderer terrainRenderer;
 
     // Debug rendering
     Gfx::OVertexInput debugVertexInput;

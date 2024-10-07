@@ -84,6 +84,7 @@ class RenderCommand : public Gfx::RenderCommand {
     virtual void bindIndexBuffer(Gfx::PIndexBuffer indexBuffer) override;
     virtual void pushConstants(Gfx::SeShaderStageFlags stage, uint32 offset, uint32 size, const void* data) override;
     virtual void draw(uint32 vertexCount, uint32 instanceCount, int32 firstVertex, uint32 firstInstance) override;
+    virtual void drawIndirect(Gfx::PShaderBuffer buffer, uint64 offset, uint32 drawCount, uint32 stride) override;
     virtual void drawIndexed(uint32 indexCount, uint32 instanceCount, int32 firstIndex, uint32 vertexOffset, uint32 firstInstance) override;
     virtual void drawMesh(uint32 groupX, uint32 groupY, uint32 groupZ) override;
     virtual void drawMeshIndirect(Gfx::PShaderBuffer buffer, uint64 offset, uint32 drawCount, uint32 stride) override;
@@ -118,6 +119,7 @@ class ComputeCommand : public Gfx::ComputeCommand {
     virtual void bindDescriptor(const Array<Gfx::PDescriptorSet>& sets) override;
     virtual void pushConstants(Gfx::SeShaderStageFlags stage, uint32 offset, uint32 size, const void* data) override;
     virtual void dispatch(uint32 threadX, uint32 threadY, uint32 threadZ) override;
+    virtual void dispatchIndirect(Gfx::PShaderBuffer buffer, uint32 offset) override;
 
   private:
     PComputePipeline pipeline;

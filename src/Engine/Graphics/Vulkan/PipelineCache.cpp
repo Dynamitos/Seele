@@ -49,7 +49,7 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo gf
     if (graphicsPipelines.contains(hash)) {
         return graphicsPipelines[hash];
     }
-    PPipelineLayout layout = Gfx::PPipelineLayout(gfxInfo.pipelineLayout).cast<PipelineLayout>();
+    PPipelineLayout layout = gfxInfo.pipelineLayout.cast<PipelineLayout>();
     Array<VkVertexInputBindingDescription> bindings;
     Array<VkVertexInputAttributeDescription> attributes;
     if (gfxInfo.vertexInput != nullptr) {
@@ -429,7 +429,7 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::MeshPipelineCreateInfo gfxI
 }
 
 PComputePipeline PipelineCache::createPipeline(Gfx::ComputePipelineCreateInfo computeInfo) {
-    PPipelineLayout layout = Gfx::PPipelineLayout(computeInfo.pipelineLayout).cast<PipelineLayout>();
+    PPipelineLayout layout = computeInfo.pipelineLayout.cast<PipelineLayout>();
     auto computeStage = computeInfo.computeShader.cast<ComputeShader>();
 
     uint32 hash = layout->getHash();

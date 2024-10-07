@@ -51,7 +51,7 @@ struct FragmentParameter
 		float3x3 tbn = float3x3(normalize(tangent_WS), normalize(biTangent_WS), normalize(normal_WS));
 		result.tbn = tbn;
         result.position_TS = mul(tbn, position_WS);
-        result.viewDir_TS = mul(tbn, normalize(pViewParams.cameraPos_WS.xyz - position_WS));
+        result.viewDir_TS = mul(tbn, normalize(pViewParams.cameraPosition_WS.xyz - position_WS));
         result.normal_TS = mul(tbn, normal_WS);
 		return result;
 	}

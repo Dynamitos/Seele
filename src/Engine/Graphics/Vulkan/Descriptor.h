@@ -50,6 +50,7 @@ class DescriptorSet : public Gfx::DescriptorSet, public CommandBoundResource {
     virtual void writeChanges() override;
     virtual void updateBuffer(uint32 binding, uint32 index, Gfx::PUniformBuffer uniformBuffer) override;
     virtual void updateBuffer(uint32 binding, uint32 index, Gfx::PShaderBuffer shaderBuffer) override;
+    virtual void updateBuffer(uint32 binding, uint32 index, Gfx::PVertexBuffer indexBuffer) override;
     virtual void updateBuffer(uint32 binding, uint32 index, Gfx::PIndexBuffer indexBuffer) override;
     virtual void updateSampler(uint32 binding, uint32 index, Gfx::PSampler samplerState) override;
     virtual void updateTexture(uint32 binding, uint32 index, Gfx::PTexture2D texture) override;

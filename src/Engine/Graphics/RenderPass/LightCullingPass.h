@@ -31,13 +31,6 @@ class LightCullingPass : public RenderPass {
         glm::uvec3 numThreads;
         uint32_t pad1;
     } dispatchParams;
-    struct Plane {
-        Vector n;
-        float d;
-    };
-    struct Frustum {
-        Plane planes[4];
-    };
 
     Gfx::OShaderBuffer frustumBuffer;
     Gfx::OUniformBuffer dispatchParamsBuffer;

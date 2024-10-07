@@ -65,6 +65,7 @@ class DescriptorSet {
     virtual void writeChanges() = 0;
     virtual void updateBuffer(uint32 binding, uint32 index, Gfx::PUniformBuffer uniformBuffer) = 0;
     virtual void updateBuffer(uint32 binding, uint32 index, Gfx::PShaderBuffer shaderBuffer) = 0;
+    virtual void updateBuffer(uint32 binding, uint32 index, Gfx::PVertexBuffer indexBuffer) = 0;
     virtual void updateBuffer(uint32 binding, uint32 index, Gfx::PIndexBuffer indexBuffer) = 0;
     virtual void updateSampler(uint32 binding, uint32 index, Gfx::PSampler samplerState) = 0;
     virtual void updateTexture(uint32 binding, uint32 index, Gfx::PTexture2D texture) = 0;

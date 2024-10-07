@@ -33,22 +33,48 @@ void Seele::beginCompilation(const ShaderCompilationInfo& info, SlangCompileTarg
     }
     slang::SessionDesc sessionDesc;
     sessionDesc.flags = 0;
-    StaticArray<slang::CompilerOptionEntry, 5> option;
-    option[0].name = slang::CompilerOptionName::IgnoreCapabilities;
-    option[0].value.kind = slang::CompilerOptionValueKind::Int;
-    option[0].value.intValue0 = 1;
-    option[1].name = slang::CompilerOptionName::EmitSpirvViaGLSL;
-    option[1].value.kind = slang::CompilerOptionValueKind::Int;
-    option[1].value.intValue0 = 1;
-    option[2].name = slang::CompilerOptionName::DebugInformation;
-    option[2].value.kind = slang::CompilerOptionValueKind::Int;
-    option[2].value.intValue0 = SLANG_DEBUG_INFO_LEVEL_STANDARD;
-    option[3].name = slang::CompilerOptionName::DebugInformationFormat;
-    option[3].value.kind = slang::CompilerOptionValueKind::Int;
-    option[3].value.intValue0 = SLANG_DEBUG_INFO_FORMAT_PDB;
-    option[4].name = slang::CompilerOptionName::DumpIntermediates;
-    option[4].value.kind = slang::CompilerOptionValueKind::Int;
-    option[4].value.intValue0 = info.dumpIntermediate;
+    Array<slang::CompilerOptionEntry> option = {
+        {
+            .name = slang::CompilerOptionName::IgnoreCapabilities,
+            .value =
+                {
+                    .kind = slang::CompilerOptionValueKind::Int,
+                    .intValue0 = 1,
+                },
+        },
+        {
+            .name = slang::CompilerOptionName::EmitSpirvViaGLSL,
+            .value =
+                {
+                    .kind = slang::CompilerOptionValueKind::Int,
+                    .intValue0 = 1,
+                },
+        },
+        {
+            .name = slang::CompilerOptionName::DebugInformation,
+            .value =
+                {
+                    .kind = slang::CompilerOptionValueKind::Int,
+                    .intValue0 = SLANG_DEBUG_INFO_LEVEL_STANDARD,
+                },
+        },
+        {
+            .name = slang::CompilerOptionName::DebugInformationFormat,
+            .value =
+                {
+                    .kind = slang::CompilerOptionValueKind::Int,
+                    .intValue0 = SLANG_DEBUG_INFO_FORMAT_PDB,
+                },
+        },
+        {
+            .name = slang::CompilerOptionName::DumpIntermediates,
+            .value =
+                {
+                    .kind = slang::CompilerOptionValueKind::Int,
+                    .intValue0 = info.dumpIntermediate,
+                },
+        },
+    };
 
     sessionDesc.compilerOptionEntries = option.data();
     sessionDesc.compilerOptionEntryCount = option.size();
@@ -63,11 +89,11 @@ void Seele::beginCompilation(const ShaderCompilationInfo& info, SlangCompileTarg
     sessionDesc.preprocessorMacroCount = macros.size();
     sessionDesc.preprocessorMacros = macros.data();
     slang::TargetDesc targetDesc;
-    targetDesc.profile = globalSession->findProfile("spirv_1_5");
+    targetDesc.profile = globalSession->findProfile("GLSL_450");
     targetDesc.format = target;
     sessionDesc.targetCount = 1;
     sessionDesc.targets = &targetDesc;
-    StaticArray<const char*, 4> searchPaths = {"shaders/", "shaders/lib/", "shaders/raytracing/", "shaders/generated/"};
+    StaticArray<const char*, 5> searchPaths = {"shaders/", "shaders/lib/", "shaders/raytracing/", "shaders/terrain", "shaders/generated/"};
     sessionDesc.searchPaths = searchPaths.data();
     sessionDesc.searchPathCount = searchPaths.size();
 
@@ -113,20 +139,20 @@ void Seele::beginCompilation(const ShaderCompilationInfo& info, SlangCompileTarg
 
     slang::ProgramLayout* signature = specializedComponent->getLayout(0, diagnostics.writeRef());
     CHECK_DIAGNOSTICS();
-    //std::cout << info.name << std::endl;
+    // std::cout << info.name << std::endl;
     for (size_t i = 0; i < signature->getParameterCount(); ++i) {
         auto param = signature->getParameterByIndex(i);
         layout->addMapping(param->getName(), param->getBindingIndex());
-        //std::cout << param->getName() << ": " << param->getBindingIndex() << std::endl;
+        // std::cout << param->getName() << ": " << param->getBindingIndex() << std::endl;
     }
 
     // workaround
-    //layout->addMapping("pVertexData", 1);
-    //layout->addMapping("pMaterial", 4);
-    //layout->addMapping("pLightEnv", 3);
-    //layout->addMapping("pRayTracingParams", 5);
-    //layout->addMapping("pScene", 2);
-    //layout->addMapping("pWaterMaterial", 1);
+    // layout->addMapping("pVertexData", 1);
+    // layout->addMapping("pMaterial", 4);
+    // layout->addMapping("pLightEnv", 3);
+    // layout->addMapping("pRayTracingParams", 5);
+    // layout->addMapping("pScene", 2);
+    // layout->addMapping("pWaterMaterial", 1);
 }
 
 Pair<Slang::ComPtr<slang::IBlob>, std::string> Seele::generateShader(const ShaderCreateInfo& createInfo) {

@@ -11,7 +11,7 @@
 
 using namespace Seele;
 
-constexpr static uint64 NUM_DEFAULT_ELEMENTS = 100000;
+constexpr static uint64 NUM_DEFAULT_ELEMENTS = 36;
 uint64 VertexData::meshletCount = 0;
 
 void VertexData::resetMeshData() {

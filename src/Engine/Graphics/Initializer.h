@@ -98,7 +98,7 @@ struct ShaderBufferCreateInfo {
     uint64 numElements = 1;
     uint32 clearValue = 0;
     uint8 createCleared = 0;
-    uint8 vertexBuffer = 0;
+    Gfx::SeBufferUsageFlags usage = 0;
     std::string name = "Unnamed";
 };
 DECLARE_NAME_REF(Gfx, PipelineLayout)

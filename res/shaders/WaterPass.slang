@@ -87,7 +87,7 @@ void taskMain(
     bounding.minCorner = float3(tile.location.x, tile.height, tile.location.y) * tile.extent;
     bounding.maxCorner = float3(tile.location.x + 1, tile.height, tile.location.y + 1) * tile.extent;
     float3 median = (bounding.minCorner + bounding.maxCorner) / 2;
-    float distance = distance(median, pViewParams.cameraPos_WS.xyz);
+    float distance = distance(median, pViewParams.cameraPosition_WS.xyz);
     float tileDistance = distance / tile.extent;
     uint numMeshes = groupID.y + 1;
     
@@ -179,7 +179,7 @@ void meshMain(
         float3 worldPos = params.offset + objectPos * params.extent + float3(groupID.x * params.extent, 0, groupID.y * params.extent);
 
         float lodDisplacement = 0;
-        float3 camPos = pViewParams.ameraPos_WS.xyz;
+        float3 camPos = pViewParams.cameraPosition_WS.xyz;
         float cameraDistance = distance(worldPos, camPos);
         float threshold = 0;
         if(params.numMeshes == 3)
@@ -207,7 +207,7 @@ void meshMain(
             }
         }
     
-
+        // TODO: LOD load
         float3 displacement1 = pWaterMaterial.displacementTextures.Sample(pWaterMaterial.sampler, float3(worldPos.xz * pWaterMaterial.tile1, 0)).xyz * pWaterMaterial.contributeDisplacement1;
         float3 displacement2 = pWaterMaterial.displacementTextures.Sample(pWaterMaterial.sampler, float3(worldPos.xz * pWaterMaterial.tile2, 1)).xyz * pWaterMaterial.contributeDisplacement2;
         float3 displacement3 = pWaterMaterial.displacementTextures.Sample(pWaterMaterial.sampler, float3(worldPos.xz * pWaterMaterial.tile3, 2)).xyz * pWaterMaterial.contributeDisplacement3;
@@ -237,7 +237,7 @@ void meshMain(
 [shader("pixel")]
 float4 fragmentMain(WaterVertex vert) : SV_TARGET {
     float3 lightDir = -normalize(pWaterMaterial.sunDirection);
-    float3 viewDir = normalize(pViewParams.cameraPos_WS.xyz - vert.position_WS);
+    float3 viewDir = normalize(pViewParams.cameraPosition_WS.xyz - vert.position_WS);
     float3 halfwayDir = normalize(lightDir + viewDir);
     float depth = vert.depth;
     float LdotH = clamp(dot(lightDir, halfwayDir), 0, 1);

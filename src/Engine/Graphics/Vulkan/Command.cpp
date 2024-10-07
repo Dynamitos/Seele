@@ -331,6 +331,11 @@ void RenderCommand::draw(uint32 vertexCount, uint32 instanceCount, int32 firstVe
     vkCmdDraw(handle, vertexCount, instanceCount, firstVertex, firstInstance);
 }
 
+void RenderCommand::drawIndirect(Gfx::PShaderBuffer buffer, uint64 offset, uint32 drawCount, uint32 stride) {
+    assert(threadId == std::this_thread::get_id());
+    vkCmdDrawIndirect(handle, buffer.cast<ShaderBuffer>()->getHandle(), offset, drawCount, stride);
+}
+
 void RenderCommand::drawIndexed(uint32 indexCount, uint32 instanceCount, int32 firstIndex, uint32 vertexOffset, uint32 firstInstance) {
     assert(threadId == std::this_thread::get_id());
     vkCmdDrawIndexed(handle, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
@@ -469,6 +474,10 @@ void ComputeCommand::pushConstants(Gfx::SeShaderStageFlags stage, uint32 offset,
 void ComputeCommand::dispatch(uint32 threadX, uint32 threadY, uint32 threadZ) {
     assert(threadId == std::this_thread::get_id());
     vkCmdDispatch(handle, threadX, threadY, threadZ);
+}
+void ComputeCommand::dispatchIndirect(Gfx::PShaderBuffer buffer, uint32 offset) {
+    assert(threadId == std::this_thread::get_id());
+    vkCmdDispatchIndirect(handle, buffer.cast<ShaderBuffer>()->getHandle(), offset);
 }
 
 CommandPool::CommandPool(PGraphics graphics, PQueue queue) : graphics(graphics), queue(queue), queueFamilyIndex(queue->getFamilyIndex()) {

@@ -149,7 +149,6 @@ void StaticMeshVertexData::updateBuffers() {
                 .size = verticesAllocated * sizeof(Vector),
                 .data = (uint8*)posData.data(),
             },
-        .vertexBuffer = true,
         .name = "Positions",
     });
     normals = graphics->createShaderBuffer(ShaderBufferCreateInfo{
@@ -158,7 +157,6 @@ void StaticMeshVertexData::updateBuffers() {
                 .size = verticesAllocated * sizeof(Quaternion),
                 .data = (uint8*)norData.data(),
             },
-        .vertexBuffer = false,
         .name = "Normals",
     });
     colors = graphics->createShaderBuffer(ShaderBufferCreateInfo{
@@ -167,7 +165,6 @@ void StaticMeshVertexData::updateBuffers() {
                 .size = verticesAllocated * sizeof(U16Vector),
                 .data = (uint8*)colData.data(),
             },
-        .vertexBuffer = false,
         .name = "Colors",
     });
     for (size_t i = 0; i < MAX_TEXCOORDS; ++i) {
@@ -177,7 +174,6 @@ void StaticMeshVertexData::updateBuffers() {
                     .size = verticesAllocated * sizeof(U16Vector2),
                     .data = (uint8*)texData[i].data(),
                 },
-            .vertexBuffer = false,
             .name = "TexCoords",
         });
     }

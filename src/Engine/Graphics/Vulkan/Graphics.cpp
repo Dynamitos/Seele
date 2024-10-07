@@ -377,6 +377,19 @@ void Graphics::copyTexture(Gfx::PTexture source, Gfx::PTexture destination) {
                       Gfx::SE_ACCESS_MEMORY_READ_BIT | Gfx::SE_ACCESS_MEMORY_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
 }
 
+void Graphics::copyBuffer(Gfx::PShaderBuffer srcBuffer, Gfx::PShaderBuffer dstBuffer) {
+    PShaderBuffer src = srcBuffer.cast<ShaderBuffer>();
+    PShaderBuffer dst = dstBuffer.cast<ShaderBuffer>();
+
+    VkBufferCopy region = {
+        .srcOffset = 0,
+        .dstOffset = 0,
+        .size = src->getSize(),
+    };
+    vkCmdCopyBuffer(getGraphicsCommands()->getCommands()->getHandle(), src->getHandle(), dst->getHandle(), 1, &region);
+}
+
+
 Gfx::OBottomLevelAS Graphics::createBottomLevelAccelerationStructure(const Gfx::BottomLevelASCreateInfo& createInfo) {
     return new BottomLevelAS(this, createInfo);
 }
@@ -740,7 +753,7 @@ void Graphics::pickPhysicalDevice() {
     };
     meshShaderFeatures = {
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT,
-        .pNext = &accelerationFeatures,
+        .pNext = nullptr,
         .taskShader = true,
         .meshShader = true,
         .meshShaderQueries = true,
@@ -872,9 +885,9 @@ void Graphics::createDevice(GraphicsInitializer initializer) {
 #ifdef __APPLE__
     initializer.deviceExtensions.add("VK_KHR_portability_subset");
 #endif
-    initializer.deviceExtensions.add(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
-    initializer.deviceExtensions.add(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME);
-    initializer.deviceExtensions.add(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
+    //initializer.deviceExtensions.add(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
+    //initializer.deviceExtensions.add(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME);
+    //initializer.deviceExtensions.add(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
     VkDeviceCreateInfo deviceInfo = {
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
         .pNext = &features,

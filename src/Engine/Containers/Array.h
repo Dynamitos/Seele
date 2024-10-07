@@ -466,25 +466,25 @@ template <typename T, size_t N> struct StaticArray {
         using reference = X&;
         using pointer = X*;
 
-        IteratorBase(X* x = nullptr) : p(x) {}
-        reference operator*() const { return *p; }
-        pointer operator->() const { return p; }
-        inline bool operator!=(const IteratorBase& other) { return p != other.p; }
-        inline bool operator==(const IteratorBase& other) { return p == other.p; }
-        IteratorBase& operator++() {
+        constexpr IteratorBase(X* x = nullptr) : p(x) {}
+        constexpr reference operator*() const { return *p; }
+        constexpr pointer operator->() const { return p; }
+        constexpr bool operator!=(const IteratorBase& other) { return p != other.p; }
+        constexpr bool operator==(const IteratorBase& other) { return p == other.p; }
+        constexpr IteratorBase& operator++() {
             p++;
             return *this;
         }
-        IteratorBase operator++(int) {
+        constexpr IteratorBase operator++(int) {
             IteratorBase tmp(*this);
             ++*this;
             return tmp;
         }
-        IteratorBase& operator--() {
+        constexpr IteratorBase& operator--() {
             p--;
             return *this;
         }
-        IteratorBase operator--(int) {
+        constexpr IteratorBase operator--(int) {
             IteratorBase tmp(*this);
             --*this;
             return tmp;
@@ -507,18 +507,18 @@ template <typename T, size_t N> struct StaticArray {
     using reverse_iterator = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
-    StaticArray() {
+    constexpr StaticArray() {
         beginIt = iterator(_data);
         endIt = iterator(_data + N);
     }
-    StaticArray(T value) {
+    constexpr StaticArray(T value) {
         for (size_t i = 0; i < N; ++i) {
             _data[i] = value;
         }
         beginIt = iterator(_data);
         endIt = iterator(_data + N);
     }
-    StaticArray(std::initializer_list<T> init) {
+    constexpr StaticArray(std::initializer_list<T> init) {
         auto beg = init.begin();
         for (size_t i = 0; i < N; ++i) {
             _data[i] = *beg;
@@ -527,11 +527,11 @@ template <typename T, size_t N> struct StaticArray {
             }
         }
     }
-    ~StaticArray() {}
+    constexpr ~StaticArray() {}
 
-    inline size_type size() const { return N; }
-    inline pointer data() { return _data; }
-    inline const_pointer data() const { return _data; }
+    constexpr size_type size() const { return N; }
+    constexpr pointer data() { return _data; }
+    constexpr const_pointer data() const { return _data; }
     template <typename I> constexpr reference operator[](I index) noexcept { return operator[](static_cast<size_t>(index)); }
     template <typename I> constexpr const_reference operator[](I index) const noexcept { return operator[](static_cast<size_t>(index)); }
     constexpr reference operator[](size_type index) noexcept {
@@ -542,13 +542,13 @@ template <typename T, size_t N> struct StaticArray {
         assert(index < N);
         return _data[index];
     }
-    iterator begin() { return beginIt; }
-    iterator end() { return endIt; }
-    const_iterator begin() const { return beginIt; }
-    const_iterator end() const { return beginIt; }
+    constexpr iterator begin() { return beginIt; }
+    constexpr iterator end() { return endIt; }
+    constexpr const_iterator begin() const { return beginIt; }
+    constexpr const_iterator end() const { return beginIt; }
 
   private:
-    T _data[N];
+    T _data[N] = {T()};
     iterator beginIt;
     iterator endIt;
 };

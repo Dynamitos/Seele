@@ -100,6 +100,8 @@ class Graphics {
     virtual void resolveTexture(PTexture source, PTexture destination) = 0;
     virtual void copyTexture(PTexture src, PTexture dst) = 0;
 
+    virtual void copyBuffer(Gfx::PShaderBuffer src, Gfx::PShaderBuffer dst) = 0;
+
     bool supportMeshShading() const { return meshShadingEnabled; }
 
     // Ray Tracing

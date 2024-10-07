@@ -27,13 +27,25 @@ class RenderPass {
     void setViewport(Gfx::PViewport _viewport);
 
   protected:
+    struct Plane {
+        Vector n;
+        float d;
+    };
+    struct Frustum {
+        Plane planes[4];
+    };
     struct ViewParameter {
+        Frustum viewFrustum;
         Matrix4 viewMatrix;
         Matrix4 inverseViewMatrix;
         Matrix4 projectionMatrix;
         Matrix4 inverseProjection;
-        Vector4 cameraPosition;
+        Vector4 cameraPosition_WS;
+        Vector4 cameraForward_WS;
         Vector2 screenDimensions;
+        Vector2 invScreenDimensions;
+        uint32 frameIndex;
+        float time;
     } viewParams;
     PRenderGraphResources resources;
     Gfx::ODescriptorLayout viewParamsLayout;

@@ -22,6 +22,37 @@ using namespace Seele::Editor;
 // make it global so it gets deleted last and automatically
 static Gfx::OGraphics graphics;
 
+struct Halfedge {
+    uint32 vertexID;
+    uint32 nextID;
+    uint32 prevID;
+    uint32 twinID;
+};
+Array<Halfedge> generateEdges() {
+    Array<UVector> indices = {UVector(0, 1, 4),    UVector(4, 1, 5),    UVector(1, 2, 5),   UVector(5, 2, 6),   UVector(2, 3, 6),
+                              UVector(6, 3, 7),    UVector(4, 5, 8),    UVector(8, 5, 9),   UVector(5, 6, 9),   UVector(9, 6, 10),
+                              UVector(6, 7, 10),   UVector(10, 7, 11),  UVector(8, 9, 12),  UVector(12, 9, 13), UVector(9, 10, 13),
+                              UVector(13, 10, 14), UVector(10, 11, 14), UVector(14, 11, 15)};
+    Array<Halfedge> edges;
+    for (auto ind : indices) {
+        uint32 baseIndex = edges.size();
+        edges.add(Halfedge{ind.x, baseIndex+1, baseIndex+2, UINT32_MAX});
+        edges.add(Halfedge{ind.y, baseIndex+2, baseIndex, UINT32_MAX});
+        edges.add(Halfedge{ind.z, baseIndex, baseIndex+1, UINT32_MAX});
+    }
+    for (uint32 i = 0; i < edges.size(); ++i) {
+        if (edges[i].twinID == UINT32_MAX) {
+            for (uint32 j = 0; j < edges.size(); ++j) {
+                if (edges[i].vertexID == edges[edges[j].nextID].vertexID && edges[edges[i].nextID].vertexID == edges[j].vertexID) {
+                    edges[i].twinID = j;
+                    edges[j].twinID = i;
+                }
+            }
+        }
+    }
+    return edges;
+}
+
 int main() {
     std::string gameName = "MeshShadingDemo";
 #ifdef WIN32
@@ -65,32 +96,35 @@ int main() {
             .filePath = sourcePath / "import/textures/skyboxsun5deg_tn.jpg",
             .type = TextureImportType::TEXTURE_CUBEMAP,
         });
-        //AssetImporter::importMesh(MeshImportArgs{
-        //    .filePath = sourcePath / "import/models/ship.fbx",
-        //    .importPath = "ship",
-        //});
-        AssetImporter::importTexture(TextureImportArgs{
-            .filePath = sourcePath / "import/textures/azeroth.png",
-        });
-        AssetImporter::importTexture(TextureImportArgs{
-            .filePath = sourcePath / "import/textures/azeroth_height.png",
-        });
-        //AssetImporter::importMesh(MeshImportArgs{
-        //   .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.glb",
-        //   .importPath = "Whitechapel",
-        //});
-        // AssetImporter::importMesh(MeshImportArgs{521
-        //     .filePath = sourcePath / "import/models/city-suburbs/source/city-suburbs.obj",
-        //     .importPath = "suburbs",
-        // });
         // AssetImporter::importMesh(MeshImportArgs{
-        //     .filePath = sourcePath / "import/models/minecraft-medieval-city.fbx",
-        //     .importPath = "minecraft",
+        //     .filePath = sourcePath / "import/models/ship.fbx",
+        //     .importPath = "ship",
         // });
-        AssetImporter::importMesh(MeshImportArgs{
-            .filePath = sourcePath / "import/models/Volvo/Volvo.fbx",
-            .importPath = "Volvo",
-        });
+        //AssetImporter::importTexture(TextureImportArgs{
+        //    .filePath = sourcePath / "import/textures/azeroth.png",
+        //});
+        //AssetImporter::importTexture(TextureImportArgs{
+        //    .filePath = sourcePath / "import/textures/azeroth_height.png",
+        //});
+        //AssetImporter::importTexture(TextureImportArgs{
+        //    .filePath = sourcePath / "import/textures/wgen.png",
+        //});
+        // AssetImporter::importMesh(MeshImportArgs{
+        //    .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.glb",
+        //    .importPath = "Whitechapel",
+        // });
+        //  AssetImporter::importMesh(MeshImportArgs{521
+        //      .filePath = sourcePath / "import/models/city-suburbs/source/city-suburbs.obj",
+        //      .importPath = "suburbs",
+        //  });
+        //  AssetImporter::importMesh(MeshImportArgs{
+        //      .filePath = sourcePath / "import/models/minecraft-medieval-city.fbx",
+        //      .importPath = "minecraft",
+        //  });
+        // AssetImporter::importMesh(MeshImportArgs{
+        //     .filePath = sourcePath / "import/models/Volvo/Volvo.fbx",
+        //     .importPath = "Volvo",
+        // });
         getThreadPool().waitIdle();
         vd->commitMeshes();
         WindowCreateInfo mainWindowInfo = {
