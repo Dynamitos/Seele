@@ -55,7 +55,7 @@ void Seele::beginCompilation(const ShaderCompilationInfo& info, SlangCompileTarg
             .value =
                 {
                     .kind = slang::CompilerOptionValueKind::Int,
-                    .intValue0 = SLANG_DEBUG_INFO_LEVEL_STANDARD,
+                    .intValue0 = SLANG_DEBUG_INFO_LEVEL_NONE,
                 },
         },
         {

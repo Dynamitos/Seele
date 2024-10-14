@@ -12,7 +12,7 @@ TerrainRenderer::TerrainRenderer(Gfx::PGraphics graphics, PScene scene, Gfx::PDe
     : graphics(graphics), scene(scene) {
     meshUpdater.init(graphics, viewParamsLayout);
     lebCache.init(graphics, 5);
-    CBT<21> cbt;
+    CBT<18> cbt;
     CPUMesh cpuMesh = generateCPUMesh(cbt.numElements());
     plainMesh.gpuCBT.lastLevelSize = cbt.lastLevelSize();
     for (uint32 i = 0; i < 2; ++i) {
@@ -228,10 +228,6 @@ TerrainRenderer::TerrainRenderer(Gfx::PGraphics graphics, PScene scene, Gfx::PDe
     });
     updateBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, Gfx::SE_ACCESS_UNIFORM_READ_BIT,
                                   Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
-    meshUpdater.resetBuffers(plainMesh);
-    meshUpdater.prepareIndirection(plainMesh, geometryBuffer);
-    meshUpdater.evaluateLeb(baseMesh, plainMesh, viewParamsSet, geometryBuffer, updateBuffer, lebCache.getLebMatrixBuffer(), true, true);
-
     graphics->beginShaderCompilation(ShaderCompilationInfo{
         .modules = {"TerrainPass"},
         .entryPoints =
@@ -249,27 +245,20 @@ TerrainRenderer::TerrainRenderer(Gfx::PGraphics graphics, PScene scene, Gfx::PDe
         .computeShader = deformCS,
         .pipelineLayout = meshUpdater.pipelineLayout,
     });
+    meshUpdater.resetBuffers(plainMesh);
+    meshUpdater.prepareIndirection(plainMesh, geometryBuffer);
+    meshUpdater.evaluateLeb(baseMesh, plainMesh, viewParamsSet, geometryBuffer, updateBuffer, lebCache.getLebMatrixBuffer(), true, true);
+    applyDeformation(viewParamsSet);
 }
 
 TerrainRenderer::~TerrainRenderer() {}
 
+static bool first = true;
+
 void TerrainRenderer::beginFrame(Gfx::PDescriptorSet viewParamsSet) {
     meshUpdater.update(plainMesh, viewParamsSet, geometryBuffer, updateBuffer);
     meshUpdater.evaluateLeb(baseMesh, plainMesh, viewParamsSet, geometryBuffer, updateBuffer, lebCache.getLebMatrixBuffer(), false, false);
-    Gfx::PDescriptorSet set = meshUpdater.layout->allocateDescriptorSet();
-    set->updateBuffer(GEOMETRY_CB, 0, geometryBuffer);
-    set->updateBuffer(INDIRECT_DRAW_BUFFER, 0, plainMesh.indirectDrawBuffer);
-    set->updateBuffer(INDEXED_BISECTOR_BUFFER, 0, plainMesh.indexedBisectorBuffer);
-    set->updateBuffer(LEB_POSITION_BUFFER, 0, plainMesh.lebVertexBuffer);
-    set->updateBuffer(CURRENT_VERTEX_BUFFER, 0, plainMesh.currentVertexBuffer);
-    set->writeChanges();
-    Gfx::OComputeCommand command = graphics->createComputeCommand("Deform");
-    command->bindPipeline(deform);
-    command->bindDescriptor({viewParamsSet, set});
-    command->dispatchIndirect(plainMesh.indirectDispatchBuffer, 3 * sizeof(uint32));
-    graphics->executeCommands(std::move(command));
-    plainMesh.currentVertexBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-                                                   Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_VERTEX_SHADER_BIT);
+    applyDeformation(viewParamsSet);
 }
 
 Gfx::ORenderCommand TerrainRenderer::render(Gfx::PDescriptorSet viewParamsSet) {
@@ -300,8 +289,8 @@ void TerrainRenderer::setViewport(Gfx::PViewport _viewport, Gfx::PRenderPass ren
             },
         .rasterizationState =
             {
-                //.polygonMode = Gfx::SE_POLYGON_MODE_LINE,
-                .cullMode = Gfx::SE_CULL_MODE_BACK_BIT,
+                .polygonMode = Gfx::SE_POLYGON_MODE_LINE,
+                .cullMode = Gfx::SE_CULL_MODE_NONE,
             },
         .colorBlend =
             {
@@ -315,4 +304,21 @@ void TerrainRenderer::setViewport(Gfx::PViewport _viewport, Gfx::PRenderPass ren
             },
     };
     pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
+}
+
+void TerrainRenderer::applyDeformation(Gfx::PDescriptorSet viewParamsSet) {
+    Gfx::PDescriptorSet set = meshUpdater.layout->allocateDescriptorSet();
+    set->updateBuffer(GEOMETRY_CB, 0, geometryBuffer);
+    set->updateBuffer(INDIRECT_DRAW_BUFFER, 0, plainMesh.indirectDrawBuffer);
+    set->updateBuffer(INDEXED_BISECTOR_BUFFER, 0, plainMesh.indexedBisectorBuffer);
+    set->updateBuffer(LEB_POSITION_BUFFER, 0, plainMesh.lebVertexBuffer);
+    set->updateBuffer(CURRENT_VERTEX_BUFFER, 0, plainMesh.currentVertexBuffer);
+    set->writeChanges();
+    Gfx::OComputeCommand command = graphics->createComputeCommand("Deform");
+    command->bindPipeline(deform);
+    command->bindDescriptor({viewParamsSet, set});
+    command->dispatchIndirect(plainMesh.indirectDispatchBuffer, 3 * sizeof(uint32));
+    graphics->executeCommands(std::move(command));
+    plainMesh.currentVertexBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                                                   Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_VERTEX_SHADER_BIT);
 }

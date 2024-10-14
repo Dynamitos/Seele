@@ -55,7 +55,7 @@ float4 frag(PixelInput input) : SV_Target
 [numthreads(64, 1, 1)]
 void deform(uint currentID: SV_DispatchThreadID)
 {
-    if(currentID > pParams.indirectDrawBuffer[9] * 4)
+    if(currentID >= pParams.indirectDrawBuffer[9] * 4)
         return;
 
     uint bisectorID = currentID / 4;
@@ -66,6 +66,7 @@ void deform(uint currentID: SV_DispatchThreadID)
     currentID = localVertexID < 3 ? bisectorID * 3 + localVertexID : 3 * pParams.geometry.totalNumElements + bisectorID;
 
     float3 positionWS = pParams.lebPositionBuffer[currentID];
+    float3 positionRWS = positionWS - pViewParams.cameraPosition_WS.xyz;
 
     float3 positionPS = positionWS;
 
@@ -73,5 +74,5 @@ void deform(uint currentID: SV_DispatchThreadID)
 
     float2 sampleUV = float2(0, 0);
 
-    pParams.currentVertexBuffer[currentID] = positionWS;
+    pParams.currentVertexBuffer[currentID] = positionRWS;
 }

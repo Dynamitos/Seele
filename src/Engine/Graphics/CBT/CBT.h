@@ -7,6 +7,7 @@
 namespace Seele {
 constexpr auto GEOMETRY_CB = 0;
 constexpr auto UPDATE_CB = 1;
+
 constexpr auto CURRENT_VERTEX_BUFFER = 2;
 constexpr auto INDEXED_BISECTOR_BUFFER = 3;
 constexpr auto INDIRECT_DRAW_BUFFER = 4;
@@ -28,6 +29,7 @@ constexpr auto VISIBLE_BISECTOR_INDICES = 19;
 constexpr auto MODIFIED_BISECTOR_INDICES = 20;
 constexpr auto LEB_POSITION_BUFFER = 21;
 constexpr auto LEB_MATRIX_CACHE = 22;
+constexpr auto DEBUG_BUFFER = 23;
 
 constexpr uint64 WORKGROUP_SIZE = 64;
 template <size_t Power> class CBT {
@@ -495,6 +497,7 @@ struct MeshUpdater {
     // Debug
     Gfx::OComputeShader validateCS;
     Gfx::PComputePipeline validate;
+    Gfx::OShaderBuffer debugBuffer;
 
     // LEB
     Gfx::OComputeShader lebClearCS;

@@ -26,6 +26,16 @@ struct UpdateCB
     float farPlaneDistance;
 }
 
+struct DebugStruct
+{
+    float4 sourceP[3];
+    float2 areaP[3];
+    float area;
+    int validity;
+    float fDotV;
+    float vDotN;
+}
+
 struct ComputeParams
 {
     ConstantBuffer<GeometryCB> geometry;
@@ -52,5 +62,6 @@ struct ComputeParams
     RWStructuredBuffer<uint> modifiedBisectorIndices;
     RWStructuredBuffer<float3> lebPositionBuffer;
     StructuredBuffer<float3x3> lebMatrixCache;
+    RWStructuredBuffer<DebugStruct> debugBuffer;
 };
 ParameterBlock<ComputeParams> pParams;

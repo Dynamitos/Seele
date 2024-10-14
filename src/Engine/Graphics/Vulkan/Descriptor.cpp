@@ -88,7 +88,7 @@ DescriptorPool::DescriptorPool(PGraphics graphics, PDescriptorLayout layout)
 DescriptorPool::~DescriptorPool() {
     for (size_t i = 0; i < maxSets; ++i) {
         if (cachedHandles[i] != nullptr) {
-            cachedHandles[i] = nullptr;
+            graphics->getDestructionManager()->queueResourceForDestruction(std::move(cachedHandles[i]));
         }
     }
     vkDestroyDescriptorPool(graphics->getDevice(), poolHandle, nullptr);

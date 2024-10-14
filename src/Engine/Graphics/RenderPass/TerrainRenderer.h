@@ -13,11 +13,11 @@ class TerrainRenderer {
     void setViewport(Gfx::PViewport viewport, Gfx::PRenderPass renderPass);
 
   private:
+    void applyDeformation(Gfx::PDescriptorSet viewParamsSet);
     Gfx::PGraphics graphics;
     PScene scene;
-    Gfx::ODescriptorLayout layout;
-    Gfx::PDescriptorSet set;
-    Gfx::OPipelineLayout pipelineLayout;
+    Gfx::PDescriptorLayout viewParamsLayout;
+    Gfx::PRenderPass renderPass;
     Gfx::OTaskShader task;
     Gfx::OMeshShader mesh;
     Gfx::OVertexInput inp;

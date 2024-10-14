@@ -2,13 +2,13 @@
 const static int INVALID_POINTER = 4294967295;
 
 // Possible culling state
-const static int BACK_FACE_CULLED =-3;
-const static int FRUSTUM_CULLED =-2;
-const static int TOO_SMALL =-1;
-const static int UNCHANGED_ELEMENT= 0;
-const static int BISECT_ELEMENT= 1;
-const static int SIMPLIFY_ELEMENT= 2;
-const static int MERGED_ELEMENT= 3;
+const static int BACK_FACE_CULLED = -3;
+const static int FRUSTUM_CULLED = -2;
+const static int TOO_SMALL = -1;
+const static int UNCHANGED_ELEMENT = 0;
+const static int BISECT_ELEMENT = 1;
+const static int SIMPLIFY_ELEMENT = 2;
+const static int MERGED_ELEMENT = 3;
 
 // Bisector flags
 const static int VISIBLE_BISECTOR = 0x1;

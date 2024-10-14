@@ -16,7 +16,7 @@ struct BisectorGeometry
 
 // global
 // update
-int classifyBisector(in BisectorGeometry tri, uint depth)
+int classifyBisector(in BisectorGeometry tri, uint depth, inout DebugStruct debug)
 {
 	float3 triNormal = normalize(cross(tri.p[2] - tri.p[1], tri.p[0] - tri.p[1]));
 	float3 triCenter = (tri.p[0] + tri.p[1] + tri.p[2]) / 3.0;
@@ -24,36 +24,39 @@ int classifyBisector(in BisectorGeometry tri, uint depth)
 	float fDotV = dot(viewDir, pViewParams.cameraForward_WS.xyz);
 	float vDotN = dot(viewDir, triNormal);
 
+    debug.fDotV = fDotV;
+    debug.vDotN = vDotN;
 	if(fDotV < 0.0 && vDotN < -1e-3)
+    {
+        debug.area = 420;
 		return BACK_FACE_CULLED;
+    }
 
 
     AABB aabb;
 	aabb.minCorner = float3(min(min(tri.p[0].x, tri.p[1].x), tri.p[2].x), min(min(tri.p[0].y, tri.p[1].y), tri.p[2].y), min(min(tri.p[0].z, tri.p[1].z), tri.p[2].z));
     aabb.maxCorner = float3(max(max(tri.p[0].x, tri.p[1].x), tri.p[2].x), max(max(tri.p[0].y, tri.p[1].y), tri.p[2].y), max(max(tri.p[0].z, tri.p[1].z), tri.p[2].z));
 	
-	if(aabb.insideFrustum(pViewParams.viewFrustum))
-        return FRUSTUM_CULLED;
+	//if(aabb.insideFrustum(pViewParams.viewFrustum))
+    //    return FRUSTUM_CULLED;
 
     float4x4 viewProjectionMatrix = mul(pViewParams.projectionMatrix, pViewParams.viewMatrix);
 
-    float4 p0P = mul(pViewParams.viewMatrix, float4(tri.p[0], 1.0));
-    p0P.xy = p0P.xy / p0P.w;
-    p0P.xy = (p0P.xy * 0.5 + 0.5);
+    float4 p0P = clipToScreen(mul(viewProjectionMatrix, float4(tri.p[0], 1.0)));
 
-    float4 p1P = mul(viewProjectionMatrix, float4(tri.p[1], 1.0));
-    p1P.xy = p1P.xy / p1P.w;
-    p1P.xy = (p1P.xy * 0.5 + 0.5);
+    float4 p1P = clipToScreen(mul(viewProjectionMatrix, float4(tri.p[1], 1.0)));
     
-    float4 p2P = mul(viewProjectionMatrix, float4(tri.p[2], 1.0));
-    p2P.xy = p2P.xy / p2P.w;
-    p2P.xy = (p2P.xy * 0.5 + 0.5);
+    float4 p2P = clipToScreen(mul(viewProjectionMatrix, float4(tri.p[2], 1.0)));
     
-    float area = 0.5 * abs(p0P.x * (p2P.y - p1P.y) + p1P.x * (p0P.y - p2P.y) + p2P.x * (p1P.y - p0P.y));
-    area *= pViewParams.screenDimensions.x * pViewParams.screenDimensions.y;
+    float area = 0.5 * abs(p0P.x * (p1P.y - p2P.y) + p1P.x * (p2P.y - p0P.y) + p2P.x * (p0P.y - p1P.y));
 
     float areaOverestimation = lerp(2.0, 1.0, pow(vDotN, 0.2));
     area *= areaOverestimation;
+
+    debug.areaP[0] = p0P.xy;
+    debug.areaP[1] = p1P.xy;
+    debug.areaP[2] = p2P.xy;
+    debug.area = area;
 
     if(pParams.update.triangleSize < area && depth < pParams.update.maxSubdivisionDepth)
     {
@@ -61,12 +64,9 @@ int classifyBisector(in BisectorGeometry tri, uint depth)
     }
     else if((pParams.update.triangleSize * 0.5 > area) || (depth > pParams.update.maxSubdivisionDepth))
     {
-        float4 p3P = mul(viewProjectionMatrix, float4(tri.p[3], 1.0));
-        p3P.xy = p3P.xy / p3P.w;
-        p3P.xy = (p3P.xy * 0.5 + 0.5);
+        float4 p3P = clipToScreen(mul(viewProjectionMatrix, float4(tri.p[3], 1.0)));
 
-        float areaParent = 0.5 * abs(p0P.x * (p2P.y - p3P.y) + p3P.x * (p0P.y - p2P.y) + p2P.x * (p3P.y - p0P.y));
-        areaParent *= pViewParams.screenDimensions.x * pViewParams.screenDimensions.y;
+        float areaParent = 0.5 * abs(p0P.x * (p3P.y - p2P.y) + p3P.x * (p2P.y - p0P.y) + p2P.x * (p0P.y - p3P.y));
         areaParent *= areaOverestimation;
         return ((pParams.update.triangleSize >= areaParent ) || (depth > pParams.update.maxSubdivisionDepth)) ? TOO_SMALL : UNCHANGED_ELEMENT;
     }
@@ -136,7 +136,7 @@ void reset()
 [numthreads(WORKGROUP_SIZE, 1, 1)]
 void classify(uint dispatchID : SV_DispatchThreadID)
 {
-    if(dispatchID > pParams.indirectDrawBuffer[9])
+    if(dispatchID >= pParams.indirectDrawBuffer[9])
         return;
 
     uint currentID = pParams.indexedBisectorBuffer[dispatchID];
@@ -155,7 +155,13 @@ void classify(uint dispatchID : SV_DispatchThreadID)
     cBisectorData.problematicNeighbor = INVALID_POINTER;
     cBisectorData.flags = VISIBLE_BISECTOR;
 
-    int currentValidity = classifyBisector(bis, depth);
+    DebugStruct debug;
+    debug.sourceP[0] = float4(bis.p[0], 1);
+    debug.sourceP[1] = float4(bis.p[1], 1);
+    debug.sourceP[2] = float4(bis.p[2], 1);
+    int currentValidity = classifyBisector(bis, depth, debug);
+    debug.validity = currentValidity;
+    pParams.debugBuffer[dispatchID] = debug;
     if(currentValidity > UNCHANGED_ELEMENT)
     {
         uint targetSlot;
@@ -1085,7 +1091,7 @@ void leb_DecodeNodeAttributeArray_parent_child(uint64_t heapID, inout float3 chi
     }
 }
 
-void evaluateElementPosition(uint64_t heapID, uint32_t vertexDataOffset, uint minDepth, out Triangle parentTri, out Triangle childTri)
+void evaluateElementPosition(uint64_t heapID, uint32_t vertexDataOffset, uint minDepth, RWStructuredBuffer<float3> vertexBuffer, out Triangle parentTri, out Triangle childTri)
 {
     // Get the depth of the element
     uint depth = heapIDDepth(heapID);
@@ -1098,9 +1104,9 @@ void evaluateElementPosition(uint64_t heapID, uint32_t vertexDataOffset, uint mi
     uint primitiveID = uint((heapID >> subTreeDepth) - baseHeapID);
 
     // Grab the base positions of the element
-    float3 p0 = float3(pParams.currentVertexBuffer[3 * primitiveID + vertexDataOffset]);
-    float3 p1 = float3(pParams.currentVertexBuffer[3 * primitiveID + 1 + vertexDataOffset]);
-    float3 p2 = float3(pParams.currentVertexBuffer[3 * primitiveID + 2 + vertexDataOffset]);
+    float3 p0 = float3(vertexBuffer[3 * primitiveID + vertexDataOffset]);
+    float3 p1 = float3(vertexBuffer[3 * primitiveID + 1 + vertexDataOffset]);
+    float3 p2 = float3(vertexBuffer[3 * primitiveID + 2 + vertexDataOffset]);
 
     // Heap ID in the sub triangle
     uint64_t mask = subTreeDepth != 0uL ? 0xFFFFFFFFFFFFFFFFull >> (64ull - subTreeDepth) : 0ull;
@@ -1127,6 +1133,9 @@ void evaluateElementPosition(uint64_t heapID, uint32_t vertexDataOffset, uint mi
     childTri.p[2] = float3(childArray[0][2], childArray[1][2], childArray[2][2]);
 }
 
+layout(push_constant)
+ConstantBuffer<uint> preRender;
+
 [numthreads(WORKGROUP_SIZE, 1, 1)]
 void evaluateLeb(uint currentID : SV_DispatchThreadID, uint groupIndex: SV_GroupIndex)
 {
@@ -1136,7 +1145,7 @@ void evaluateLeb(uint currentID : SV_DispatchThreadID, uint groupIndex: SV_Group
     GroupMemoryBarrierWithGroupSync();
 
     uint numBisectors;
-    if(pViewParams.frameIndex == -1)
+    if(preRender == 1)
     {
         numBisectors = pParams.indirectDrawBuffer[9];
     }
@@ -1153,7 +1162,7 @@ void evaluateLeb(uint currentID : SV_DispatchThreadID, uint groupIndex: SV_Group
     uint depth = heapIDDepth(cHeapID);
 
     Triangle parentTri, childTri;
-    evaluateElementPosition(cHeapID, 0, pParams.geometry.baseDepth, parentTri, childTri);
+    evaluateElementPosition(cHeapID, 0, pParams.geometry.baseDepth, pParams.currentVertexBuffer, parentTri, childTri);
 
     pParams.lebPositionBuffer[3 * currentID + 0] = childTri.p[0];
     pParams.lebPositionBuffer[3 * currentID + 1] = childTri.p[1];

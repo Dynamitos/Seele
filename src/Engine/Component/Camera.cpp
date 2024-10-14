@@ -10,6 +10,11 @@ using namespace Seele::Math;
 Camera::Camera() : viewMatrix(Matrix4()), cameraPos(Vector()), bNeedsViewBuild(false) {
     yaw = -3.1415f / 2;
     pitch = 0;
+    Vector eyePos = Vector(0, 0, -5);
+    Vector lookAt = Vector(0, 0, 0);
+    viewMatrix = glm::lookAt(eyePos, lookAt, Vector(0, 1, 0));
+    cameraPos = eyePos;
+    cameraForward = Vector(0, 0, 1);
 }
 
 Camera::~Camera() {}
@@ -39,7 +44,7 @@ void Camera::moveY(float amount) {
 }
 
 void Camera::buildViewMatrix() {
-    Vector eyePos = getTransform().getPosition();
+    Vector eyePos = getTransform().getPosition() + Vector(0, 0, -5);
     Vector lookAt = eyePos + getTransform().getForward();
     viewMatrix = glm::lookAt(eyePos, lookAt, Vector(0, 1, 0));
     cameraPos = eyePos;
