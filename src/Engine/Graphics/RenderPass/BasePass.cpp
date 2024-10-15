@@ -99,7 +99,7 @@ void BasePass::beginFrame(const Component::Camera& cam) {
     transparentCulling = lightCullingLayout->allocateDescriptorSet();
 
     //waterRenderer->beginFrame();
-    terrainRenderer->beginFrame(viewParamsSet);
+    terrainRenderer->beginFrame(viewParamsSet, cam);
 
     // Debug vertices
     {

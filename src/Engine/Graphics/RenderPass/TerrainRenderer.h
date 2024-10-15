@@ -8,7 +8,7 @@ class TerrainRenderer {
   public:
     TerrainRenderer(Gfx::PGraphics graphics, PScene scene, Gfx::PDescriptorLayout viewParamsLayout, Gfx::PDescriptorSet viewParamsSet);
     ~TerrainRenderer();
-    void beginFrame(Gfx::PDescriptorSet viewParamsSet);
+    void beginFrame(Gfx::PDescriptorSet viewParamsSet, const Component::Camera& cam);
     Gfx::ORenderCommand render(Gfx::PDescriptorSet viewParamsSet);
     void setViewport(Gfx::PViewport viewport, Gfx::PRenderPass renderPass);
 

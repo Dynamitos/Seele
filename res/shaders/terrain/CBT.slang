@@ -563,11 +563,7 @@ void load_buffer_to_shared_memory(uint groupIndex)
     // Load the bitfield to the LDS
     for (uint e = 0; e < BUFFER_ELEMENT_PER_LANE; ++e)
     {
-#ifdef AMD
         uint target_element = BUFFER_ELEMENT_PER_LANE * groupIndex + e;
-#else
-        uint target_element = groupIndex + WORKGROUP_SIZE * e;
-#endif
         if (target_element < OCBT_TREE_NUM_SLOTS)
             gs_cbtTree[target_element] = pParams.cbtBuffer[target_element];
     }

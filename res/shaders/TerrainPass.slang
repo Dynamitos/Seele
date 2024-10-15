@@ -31,7 +31,7 @@ VertexOutput vert(VertexInput input)
 
     // Which vertex should be read?
     local_vert_id = local_vert_id == 0 ? 2 : (local_vert_id == 2 ? 0 : 1);
-    float3 positionRWS = pParams.currentVertexBuffer[output.triangleID * 3 + local_vert_id];
+    float3 positionRWS = pParams.currentVertexBuffer[output.triangleID * 3 + local_vert_id].xyz;
 
     // Apply the view projection
     output.positionCS = mul(pViewParams.projectionMatrix, mul(pViewParams.viewMatrix, float4(positionRWS, 1.0)));
@@ -53,26 +53,25 @@ float4 frag(PixelInput input) : SV_Target
 
 [shader("compute")]
 [numthreads(64, 1, 1)]
-void deform(uint currentID: SV_DispatchThreadID)
+void EvaluateDeformation(uint currentID : SV_DispatchThreadID)
 {
-    if(currentID >= pParams.indirectDrawBuffer[9] * 4)
+    // This thread doesn't have any work to do, we're done
+    if (currentID >= pParams.indirectDrawBuffer[9] * 4)
         return;
 
+    // Extract the bisector ID and the vertexID
     uint bisectorID = currentID / 4;
     uint localVertexID = currentID % 4;
 
+    // Operate the indirection
     bisectorID = pParams.indexedBisectorBuffer[bisectorID];
 
+    // Evaluate the source vertex
     currentID = localVertexID < 3 ? bisectorID * 3 + localVertexID : 3 * pParams.geometry.totalNumElements + bisectorID;
 
-    float3 positionWS = pParams.lebPositionBuffer[currentID];
-    float3 positionRWS = positionWS - pViewParams.cameraPosition_WS.xyz;
+    // Grab the position that we will be displacing
+    float3 positionWS = pParams.lebPositionBuffer[currentID].xyz;
+    float3 positionRWS = float3(positionWS - pViewParams.cameraPosition_WS.xyz);
 
-    float3 positionPS = positionWS;
-
-    float3 normalPS = float3(0, 1, 0);
-
-    float2 sampleUV = float2(0, 0);
-
-    pParams.currentVertexBuffer[currentID] = positionRWS;
+    pParams.currentVertexBuffer[currentID] = float4(positionRWS, 1);
 }

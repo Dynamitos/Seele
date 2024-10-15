@@ -16,11 +16,11 @@ const static int MODIFIED_BISECTOR = 0x2;
 
 struct BisectorData
 {
-    // Subvision that should be applied to this bisector
-    uint32_t subdivisionPattern;
-
     // Allocated indices for this bisector
     uint32_t indices[3];
+
+    // Subvision that should be applied to this bisector
+    uint32_t subdivisionPattern;
 
     // Neighbor that should be processed
     uint32_t problematicNeighbor;
@@ -35,7 +35,7 @@ struct BisectorData
     uint32_t propagationID;
 };
 
-uint heapIDDepth(uint64_t x)
+uint HeapIDDepth(uint64_t x)
 {
     uint depth = 0;
     while (x > 0u) {

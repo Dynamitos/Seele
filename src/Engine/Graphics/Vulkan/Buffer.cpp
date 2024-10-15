@@ -314,7 +314,7 @@ void Buffer::createBuffer(uint64 size, uint32 destIndex) {
         command->bindResource(PBufferAllocation(buffers[destIndex]));
         vkCmdFillBuffer(command->getHandle(), buffers[destIndex]->buffer, 0, VK_WHOLE_SIZE, clearValue);
         pipelineBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-                        VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
+                        VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT);
     }
 }
 
@@ -417,7 +417,7 @@ void UniformBuffer::executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineSt
 ShaderBuffer::ShaderBuffer(PGraphics graphics, const ShaderBufferCreateInfo& createInfo)
     : Gfx::ShaderBuffer(graphics->getFamilyMapping(), createInfo),
       Vulkan::Buffer(graphics, createInfo.sourceData.size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | createInfo.usage,
-                     createInfo.sourceData.owner, true, createInfo.name, createInfo.createCleared, createInfo.clearValue) {
+                     createInfo.sourceData.owner, true, createInfo.name, createInfo.sourceData.data == nullptr, createInfo.clearValue) {
     if (createInfo.sourceData.size > 0 && createInfo.sourceData.data != nullptr) {
         getAlloc()->updateContents(createInfo.sourceData.offset, createInfo.sourceData.size, createInfo.sourceData.data);
     }

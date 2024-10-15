@@ -281,27 +281,27 @@ void MeshUpdater::init(Gfx::PGraphics gfx, Gfx::PDescriptorLayout viewParamsLayo
 
     graphics->beginShaderCompilation(ShaderCompilationInfo{
         .name = "CBTCompute",
-        .modules = {"CBTCompute"},
+        .modules = {"CBTCompute", "LEB"},
         .entryPoints =
             {
-                {"reset", "CBTCompute"},
-                {"classify", "CBTCompute"},
-                {"split", "CBTCompute"},
-                {"prepareIndirect", "CBTCompute"},
-                {"allocate", "CBTCompute"},
-                {"bisect", "CBTCompute"},
-                {"propagateBisect", "CBTCompute"},
-                {"prepareSimplify", "CBTCompute"},
-                {"simplify", "CBTCompute"},
-                {"propagateSimplify", "CBTCompute"},
-                {"reducePrePass", "CBTCompute"},
-                {"reduceFirstPass", "CBTCompute"},
-                {"reduceSecondPass", "CBTCompute"},
-                {"bisectorIndexation", "CBTCompute"},
-                {"prepareBisectorIndirect", "CBTCompute"},
-                {"validate", "CBTCompute"},
-                {"clearLeb", "CBTCompute"},
-                {"evaluateLeb", "CBTCompute"},
+                {"Reset", "CBTCompute"},
+                {"Classify", "CBTCompute"},
+                {"Split", "CBTCompute"},
+                {"PrepareIndirect", "CBTCompute"},
+                {"Allocate", "CBTCompute"},
+                {"Bisect", "CBTCompute"},
+                {"PropagateBisect", "CBTCompute"},
+                {"PrepareSimplify", "CBTCompute"},
+                {"Simplify", "CBTCompute"},
+                {"PropagateSimplify", "CBTCompute"},
+                {"ReducePrePass", "CBTCompute"},
+                {"ReduceFirstPass", "CBTCompute"},
+                {"ReduceSecondPass", "CBTCompute"},
+                {"BisectorIndexation", "CBTCompute"},
+                {"PrepareBisectorIndirect", "CBTCompute"},
+                {"Validate", "CBTCompute"},
+                {"ClearBuffer", "LEB"},
+                {"EvaluateLEB", "LEB"},
             },
         .rootSignature = pipelineLayout,
     });
@@ -412,9 +412,11 @@ void MeshUpdater::evaluateLeb(const BaseMesh& baseMesh, CBTMesh& mesh, Gfx::PDes
         clearCmd->bindPipeline(lebClear);
         clearCmd->bindDescriptor(set);
         clearCmd->dispatch((mesh.totalNumElements * 3 + WORKGROUP_SIZE - 1) / WORKGROUP_SIZE, 1, 1);
+        graphics->executeCommands(std::move(clearCmd));
         mesh.currentVertexBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                                                   Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
     }
+    graphics->waitDeviceIdle();
     Gfx::PDescriptorSet set = layout->allocateDescriptorSet();
     set->updateBuffer(GEOMETRY_CB, 0, geometryBuffer);
     set->updateBuffer(UPDATE_CB, 0, updateBuffer);
@@ -432,7 +434,7 @@ void MeshUpdater::evaluateLeb(const BaseMesh& baseMesh, CBTMesh& mesh, Gfx::PDes
     evalCmd->pushConstants(Gfx::SE_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(uint32), &val);
     evalCmd->dispatchIndirect(mesh.indirectDispatchBuffer, complete ? 0 : sizeof(uint32) * 6);
     graphics->executeCommands(std::move(evalCmd));
-    mesh.currentVertexBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+    mesh.lebVertexBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                                               Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 }
 
@@ -456,7 +458,6 @@ void MeshUpdater::update(CBTMesh& mesh, Gfx::PDescriptorSet viewParamsSet, Gfx::
         set->updateBuffer(HEAP_ID_BUFFER, 0, mesh.heapIDBuffer);
         set->updateBuffer(BISECTOR_DATA_BUFFER, 0, mesh.updateBuffer);
         set->updateBuffer(CLASSIFICATION_BUFFER, 0, mesh.classificationBuffer);
-        set->updateBuffer(DEBUG_BUFFER, 0, debugBuffer);
         set->writeChanges();
         Gfx::OComputeCommand classifyCmd = graphics->createComputeCommand("Classify");
         classifyCmd->bindPipeline(classify);
@@ -482,6 +483,7 @@ void MeshUpdater::update(CBTMesh& mesh, Gfx::PDescriptorSet viewParamsSet, Gfx::
                                         Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
     }
 
+    graphics->waitDeviceIdle();
     // split pass
     {
         Gfx::PDescriptorSet set = layout->allocateDescriptorSet();
@@ -494,6 +496,7 @@ void MeshUpdater::update(CBTMesh& mesh, Gfx::PDescriptorSet viewParamsSet, Gfx::
         set->updateBuffer(NEIGHBOURS_BUFFER, 0, currentNeighborsBuffer);
         set->updateBuffer(MEMORY_BUFFER, 0, memoryBuffer);
         set->updateBuffer(ALLOCATE_BUFFER, 0, mesh.allocateBuffer);
+        set->updateBuffer(DEBUG_BUFFER, 0, debugBuffer);
         set->writeChanges();
         Gfx::OComputeCommand splitCmd = graphics->createComputeCommand("Split");
         splitCmd->bindPipeline(split);
@@ -502,7 +505,10 @@ void MeshUpdater::update(CBTMesh& mesh, Gfx::PDescriptorSet viewParamsSet, Gfx::
         graphics->executeCommands(std::move(splitCmd));
         mesh.updateBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                                            Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
+        mesh.allocateBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                                             Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
     }
+    graphics->waitDeviceIdle();
 
     // prepare indirect pass
     {
@@ -518,6 +524,7 @@ void MeshUpdater::update(CBTMesh& mesh, Gfx::PDescriptorSet viewParamsSet, Gfx::
         indirectBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                                         Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
     }
+    graphics->waitDeviceIdle();
 
     // Allocate Pass
     {
@@ -539,6 +546,7 @@ void MeshUpdater::update(CBTMesh& mesh, Gfx::PDescriptorSet viewParamsSet, Gfx::
         mesh.updateBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                                            Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
     }
+    graphics->waitDeviceIdle();
 
     // copy
     currentNeighborsBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
@@ -546,6 +554,7 @@ void MeshUpdater::update(CBTMesh& mesh, Gfx::PDescriptorSet viewParamsSet, Gfx::
     graphics->copyBuffer(currentNeighborsBuffer, nextNeighborsBuffer);
     nextNeighborsBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
                                          Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
+    graphics->waitDeviceIdle();
 
     // bisect
     {
@@ -570,6 +579,7 @@ void MeshUpdater::update(CBTMesh& mesh, Gfx::PDescriptorSet viewParamsSet, Gfx::
         nextNeighborsBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                                              Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
     }
+    graphics->waitDeviceIdle();
 
     // Prepare indirect pass
     {
@@ -585,6 +595,7 @@ void MeshUpdater::update(CBTMesh& mesh, Gfx::PDescriptorSet viewParamsSet, Gfx::
         indirectBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                                         Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
     }
+    graphics->waitDeviceIdle();
 
     // propagate split pass
     {
@@ -604,6 +615,7 @@ void MeshUpdater::update(CBTMesh& mesh, Gfx::PDescriptorSet viewParamsSet, Gfx::
         mesh.updateBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                                            Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
     }
+    graphics->waitDeviceIdle();
 
     // prepare simplify
     {
@@ -625,6 +637,7 @@ void MeshUpdater::update(CBTMesh& mesh, Gfx::PDescriptorSet viewParamsSet, Gfx::
         mesh.simplificationBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                                                    Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
     }
+    graphics->waitDeviceIdle();
 
     // Prepare Indirect Simplify
     {
@@ -640,6 +653,7 @@ void MeshUpdater::update(CBTMesh& mesh, Gfx::PDescriptorSet viewParamsSet, Gfx::
         indirectBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                                         Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
     }
+    graphics->waitDeviceIdle();
 
     // Simplify Pass
     {
@@ -663,6 +677,7 @@ void MeshUpdater::update(CBTMesh& mesh, Gfx::PDescriptorSet viewParamsSet, Gfx::
         nextNeighborsBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                                              Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
     }
+    graphics->waitDeviceIdle();
 
     // Prepare Indirect Propagate Simplify
     {
@@ -678,6 +693,7 @@ void MeshUpdater::update(CBTMesh& mesh, Gfx::PDescriptorSet viewParamsSet, Gfx::
         indirectBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                                         Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
     }
+    graphics->waitDeviceIdle();
 
     // Propagate Simplify Pass
     {
@@ -698,6 +714,7 @@ void MeshUpdater::update(CBTMesh& mesh, Gfx::PDescriptorSet viewParamsSet, Gfx::
         nextNeighborsBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                                              Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
     }
+    graphics->waitDeviceIdle();
 
     // Update Tree
     {
@@ -730,10 +747,12 @@ void MeshUpdater::update(CBTMesh& mesh, Gfx::PDescriptorSet viewParamsSet, Gfx::
         mesh.gpuCBT.bufferArray[0]->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                                                     Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
     }
+    graphics->waitDeviceIdle();
 
     mesh.currentNeighborsBufferIdx = nextNeighborsBufferIdx;
 
     prepareIndirection(mesh, geometryCB);
+    graphics->waitDeviceIdle();
 }
 
 void MeshUpdater::validation(const CBTMesh& mesh, Gfx::PUniformBuffer geometryCB) {

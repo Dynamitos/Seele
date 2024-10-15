@@ -20,6 +20,7 @@ struct DeformationCB
 
 struct UpdateCB
 {
+    float4x4 viewProjectionMatrix;
     float triangleSize;
     uint32_t maxSubdivisionDepth;
     float fov;
@@ -28,12 +29,8 @@ struct UpdateCB
 
 struct DebugStruct
 {
-    float4 sourceP[3];
-    float2 areaP[3];
-    float area;
-    int validity;
-    float fDotV;
-    float vDotN;
+    uint3 neighbours;
+    int status;
 }
 
 struct ComputeParams
@@ -41,7 +38,7 @@ struct ComputeParams
     ConstantBuffer<GeometryCB> geometry;
     ConstantBuffer<UpdateCB> update;
 
-	RWStructuredBuffer<float3> currentVertexBuffer;
+	RWStructuredBuffer<float4> currentVertexBuffer;
 	StructuredBuffer<uint> indexedBisectorBuffer;
     RWStructuredBuffer<uint> indirectDrawBuffer;
     RWStructuredBuffer<uint64_t> heapIDBuffer;
@@ -49,8 +46,8 @@ struct ComputeParams
     RWStructuredBuffer<uint> classificationBuffer;
     RWStructuredBuffer<int> allocateBuffer;
     RWStructuredBuffer<uint> indirectDispatchBuffer;
-    RWStructuredBuffer<uint3> neighboursBuffer;
-    RWStructuredBuffer<uint3> neighboursOutputBuffer;
+    RWStructuredBuffer<uint4> neighboursBuffer;
+    RWStructuredBuffer<uint4> neighboursOutputBuffer;
     RWStructuredBuffer<int> memoryBuffer;
     RWStructuredBuffer<uint> cbtBuffer;
     RWStructuredBuffer<uint64_t> bitFieldBuffer;
@@ -60,7 +57,7 @@ struct ComputeParams
     RWStructuredBuffer<uint> bisectorIndicesBuffer;
     RWStructuredBuffer<uint> visibleBisectorIndices;
     RWStructuredBuffer<uint> modifiedBisectorIndices;
-    RWStructuredBuffer<float3> lebPositionBuffer;
+    RWStructuredBuffer<float4> lebPositionBuffer;
     StructuredBuffer<float3x3> lebMatrixCache;
     RWStructuredBuffer<DebugStruct> debugBuffer;
 };

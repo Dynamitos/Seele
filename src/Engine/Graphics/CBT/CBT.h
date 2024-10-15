@@ -327,6 +327,7 @@ struct GeometryCB {
     uint32 totalNumVertices;
 };
 struct UpdateCB {
+    Matrix4 viewProjectionMatrix;
     float triangleSize;
     uint32_t maxSubdivisionDepth;
     float fov;
@@ -355,10 +356,10 @@ constexpr int64 BISECT_ELEMENT = 1;
 constexpr int64 SIMPLIFY_ELEMENT = 2;
 constexpr int64 MERGED_ELEMENT = 3;
 struct BisectorData {
-    uint32 subdivisionPattern;
-
     UVector indices;
 
+    uint32 subdivisionPattern;
+    
     uint32 problematicNeighbor;
 
     uint32 bisectorState;

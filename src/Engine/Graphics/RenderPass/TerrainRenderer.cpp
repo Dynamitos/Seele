@@ -10,11 +10,19 @@ using namespace Seele;
 TerrainRenderer::TerrainRenderer(Gfx::PGraphics graphics, PScene scene, Gfx::PDescriptorLayout viewParamsLayout,
                                  Gfx::PDescriptorSet viewParamsSet)
     : graphics(graphics), scene(scene) {
+    //Gfx::OPipelineLayout test = graphics->createPipelineLayout();
+    //graphics->beginShaderCompilation(ShaderCompilationInfo{
+    //    .modules = {"CompileTest"},
+    //    .entryPoints = {{"Reset", "CompileTest"}},
+    //    .rootSignature = test,
+    //});
+    //graphics->createComputeShader({0});
     meshUpdater.init(graphics, viewParamsLayout);
     lebCache.init(graphics, 5);
     CBT<18> cbt;
     CPUMesh cpuMesh = generateCPUMesh(cbt.numElements());
     plainMesh.gpuCBT.lastLevelSize = cbt.lastLevelSize();
+    plainMesh.gpuCBT.bufferCount = 2;
     for (uint32 i = 0; i < 2; ++i) {
         uint32 bufferSize = cbt.bufferSize(i);
         uint32 elementSize = cbt.elementSize(i);
@@ -74,7 +82,6 @@ TerrainRenderer::TerrainRenderer(Gfx::PGraphics graphics, PScene scene, Gfx::PDe
             {
                 .size = sizeof(BisectorData) * cpuMesh.totalNumElements,
             },
-        .usage = Gfx::SE_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
         .name = "UpdateBuffer",
     });
     plainMesh.classificationBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
@@ -151,6 +158,8 @@ TerrainRenderer::TerrainRenderer(Gfx::PGraphics graphics, PScene scene, Gfx::PDe
             },
         .name = "LebVertexBuffer",
     });
+    plainMesh.lebVertexBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
+                                               Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
     plainMesh.currentVertexBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
         .sourceData =
             {
@@ -213,6 +222,7 @@ TerrainRenderer::TerrainRenderer(Gfx::PGraphics graphics, PScene scene, Gfx::PDe
     geometryBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, Gfx::SE_ACCESS_UNIFORM_READ_BIT,
                                     Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
     UpdateCB updateCB = {
+        .viewProjectionMatrix = Matrix4(0),
         .triangleSize = 10.0f,
         .maxSubdivisionDepth = 63,
         .fov = 70.0f,
@@ -234,7 +244,7 @@ TerrainRenderer::TerrainRenderer(Gfx::PGraphics graphics, PScene scene, Gfx::PDe
             {
                 {"vert", "TerrainPass"},
                 {"frag", "TerrainPass"},
-                {"deform", "TerrainPass"},
+                {"EvaluateDeformation", "TerrainPass"},
             },
         .rootSignature = meshUpdater.pipelineLayout,
     });
@@ -245,20 +255,47 @@ TerrainRenderer::TerrainRenderer(Gfx::PGraphics graphics, PScene scene, Gfx::PDe
         .computeShader = deformCS,
         .pipelineLayout = meshUpdater.pipelineLayout,
     });
+    graphics->waitDeviceIdle();
+
     meshUpdater.resetBuffers(plainMesh);
+    graphics->waitDeviceIdle();
     meshUpdater.prepareIndirection(plainMesh, geometryBuffer);
+    graphics->waitDeviceIdle();
     meshUpdater.evaluateLeb(baseMesh, plainMesh, viewParamsSet, geometryBuffer, updateBuffer, lebCache.getLebMatrixBuffer(), true, true);
+    graphics->waitDeviceIdle();
     applyDeformation(viewParamsSet);
+    graphics->waitDeviceIdle();
 }
 
 TerrainRenderer::~TerrainRenderer() {}
 
 static bool first = true;
 
-void TerrainRenderer::beginFrame(Gfx::PDescriptorSet viewParamsSet) {
+void TerrainRenderer::beginFrame(Gfx::PDescriptorSet viewParamsSet, const Component::Camera& cam) {
+    UpdateCB updateCB = {
+        .viewProjectionMatrix = viewport->getProjectionMatrix() * cam.getViewMatrix(),
+        .triangleSize = 10.0f,
+        .maxSubdivisionDepth = 63,
+        .fov = 70.0f,
+        .farPlaneDistance = 1000.0f,
+    };
+    updateBuffer = graphics->createUniformBuffer(UniformBufferCreateInfo{
+        .sourceData =
+            {
+                .size = sizeof(UpdateCB),
+                .data = (uint8*)&updateCB,
+            },
+        .name = "UpdateCB",
+    });
+    updateBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, Gfx::SE_ACCESS_UNIFORM_READ_BIT,
+                                  Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
+    graphics->waitDeviceIdle();
     meshUpdater.update(plainMesh, viewParamsSet, geometryBuffer, updateBuffer);
+    graphics->waitDeviceIdle();
     meshUpdater.evaluateLeb(baseMesh, plainMesh, viewParamsSet, geometryBuffer, updateBuffer, lebCache.getLebMatrixBuffer(), false, false);
+    graphics->waitDeviceIdle();
     applyDeformation(viewParamsSet);
+    graphics->waitDeviceIdle();
 }
 
 Gfx::ORenderCommand TerrainRenderer::render(Gfx::PDescriptorSet viewParamsSet) {

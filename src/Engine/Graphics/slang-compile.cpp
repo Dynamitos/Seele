@@ -18,7 +18,6 @@ using namespace Seele;
     {                                                                                                                                      \
         if (diagnostics) {                                                                                                                 \
             std::cout << (const char*)diagnostics->getBufferPointer() << std::endl;                                                        \
-            assert(false);                                                                                                                 \
         }                                                                                                                                  \
     }
 
@@ -35,15 +34,15 @@ void Seele::beginCompilation(const ShaderCompilationInfo& info, SlangCompileTarg
     sessionDesc.flags = 0;
     Array<slang::CompilerOptionEntry> option = {
         {
-            .name = slang::CompilerOptionName::IgnoreCapabilities,
+            .name = slang::CompilerOptionName::Capability,
             .value =
                 {
                     .kind = slang::CompilerOptionValueKind::Int,
-                    .intValue0 = 1,
+                    .intValue0 = globalSession->findCapability("GLSL_450"),
                 },
         },
         {
-            .name = slang::CompilerOptionName::EmitSpirvViaGLSL,
+            .name = slang::CompilerOptionName::EmitSpirvDirectly,
             .value =
                 {
                     .kind = slang::CompilerOptionValueKind::Int,
@@ -89,7 +88,7 @@ void Seele::beginCompilation(const ShaderCompilationInfo& info, SlangCompileTarg
     sessionDesc.preprocessorMacroCount = macros.size();
     sessionDesc.preprocessorMacros = macros.data();
     slang::TargetDesc targetDesc;
-    targetDesc.profile = globalSession->findProfile("GLSL_450");
+    targetDesc.profile = globalSession->findProfile("glsl_450");
     targetDesc.format = target;
     sessionDesc.targetCount = 1;
     sessionDesc.targets = &targetDesc;
