@@ -10,13 +10,13 @@ using namespace Seele;
 TerrainRenderer::TerrainRenderer(Gfx::PGraphics graphics, PScene scene, Gfx::PDescriptorLayout viewParamsLayout,
                                  Gfx::PDescriptorSet viewParamsSet)
     : graphics(graphics), scene(scene) {
-    //Gfx::OPipelineLayout test = graphics->createPipelineLayout();
-    //graphics->beginShaderCompilation(ShaderCompilationInfo{
-    //    .modules = {"CompileTest"},
-    //    .entryPoints = {{"Reset", "CompileTest"}},
-    //    .rootSignature = test,
-    //});
-    //graphics->createComputeShader({0});
+    Gfx::OPipelineLayout test = graphics->createPipelineLayout();
+    graphics->beginShaderCompilation(ShaderCompilationInfo{
+        .modules = {"CompileTest"},
+        .entryPoints = {{"Split", "CompileTest"}},
+        .rootSignature = test,
+    });
+    graphics->createComputeShader({0});
     meshUpdater.init(graphics, viewParamsLayout);
     lebCache.init(graphics, 5);
     CBT<18> cbt;
@@ -223,9 +223,9 @@ TerrainRenderer::TerrainRenderer(Gfx::PGraphics graphics, PScene scene, Gfx::PDe
                                     Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
     UpdateCB updateCB = {
         .viewProjectionMatrix = Matrix4(0),
-        .triangleSize = 10.0f,
+        .triangleSize = 60.0f,
         .maxSubdivisionDepth = 63,
-        .fov = 70.0f,
+        .fov = 1.22173f,
         .farPlaneDistance = 1000.0f,
     };
     updateBuffer = graphics->createUniformBuffer(UniformBufferCreateInfo{
@@ -265,6 +265,8 @@ TerrainRenderer::TerrainRenderer(Gfx::PGraphics graphics, PScene scene, Gfx::PDe
     graphics->waitDeviceIdle();
     applyDeformation(viewParamsSet);
     graphics->waitDeviceIdle();
+    meshUpdater.validation(plainMesh, geometryBuffer);
+    graphics->waitDeviceIdle();
 }
 
 TerrainRenderer::~TerrainRenderer() {}
@@ -274,9 +276,9 @@ static bool first = true;
 void TerrainRenderer::beginFrame(Gfx::PDescriptorSet viewParamsSet, const Component::Camera& cam) {
     UpdateCB updateCB = {
         .viewProjectionMatrix = viewport->getProjectionMatrix() * cam.getViewMatrix(),
-        .triangleSize = 10.0f,
+        .triangleSize = 60.0f,
         .maxSubdivisionDepth = 63,
-        .fov = 70.0f,
+        .fov = 1.22173f,
         .farPlaneDistance = 1000.0f,
     };
     updateBuffer = graphics->createUniformBuffer(UniformBufferCreateInfo{
@@ -295,6 +297,8 @@ void TerrainRenderer::beginFrame(Gfx::PDescriptorSet viewParamsSet, const Compon
     meshUpdater.evaluateLeb(baseMesh, plainMesh, viewParamsSet, geometryBuffer, updateBuffer, lebCache.getLebMatrixBuffer(), false, false);
     graphics->waitDeviceIdle();
     applyDeformation(viewParamsSet);
+    graphics->waitDeviceIdle();
+    meshUpdater.validation(plainMesh, geometryBuffer);
     graphics->waitDeviceIdle();
 }
 
@@ -344,6 +348,7 @@ void TerrainRenderer::setViewport(Gfx::PViewport _viewport, Gfx::PRenderPass ren
 }
 
 void TerrainRenderer::applyDeformation(Gfx::PDescriptorSet viewParamsSet) {
+    graphics->beginDebugRegion("ApplyDeformation");
     Gfx::PDescriptorSet set = meshUpdater.layout->allocateDescriptorSet();
     set->updateBuffer(GEOMETRY_CB, 0, geometryBuffer);
     set->updateBuffer(INDIRECT_DRAW_BUFFER, 0, plainMesh.indirectDrawBuffer);
@@ -358,4 +363,5 @@ void TerrainRenderer::applyDeformation(Gfx::PDescriptorSet viewParamsSet) {
     graphics->executeCommands(std::move(command));
     plainMesh.currentVertexBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                                                    Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_VERTEX_SHADER_BIT);
+    graphics->endDebugRegion();
 }

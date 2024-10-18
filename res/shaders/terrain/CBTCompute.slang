@@ -41,7 +41,7 @@ void Split(uint dispatchID : SV_DispatchThreadID)
     uint currentID = pParams.classificationBuffer[CLASSIFY_COUNTER_OFFSET + dispatchID];
 
     // Split the element
-    SplitElement(currentID, pParams.geometry.baseDepth);
+    SplitElement(currentID, pParams.geometry.baseDepth, dispatchID);
 }
 
 [numthreads(1, 1, 1)]

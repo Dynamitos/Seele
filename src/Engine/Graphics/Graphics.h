@@ -97,6 +97,9 @@ class Graphics {
     virtual Gfx::OPipelineStatisticsQuery createPipelineStatisticsQuery(const std::string& name = "") = 0;
     virtual Gfx::OTimestampQuery createTimestampQuery(uint64 numTimestamps, const std::string& name = "") = 0;
 
+    virtual void beginDebugRegion(const std::string& name) = 0;
+    virtual void endDebugRegion() = 0;
+
     virtual void resolveTexture(PTexture source, PTexture destination) = 0;
     virtual void copyTexture(PTexture src, PTexture dst) = 0;
 

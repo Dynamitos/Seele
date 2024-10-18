@@ -24,5 +24,11 @@
     "lldb.dereferencePointers": true,
     "lldb.consoleMode": "commands",
     "cmake.generator": "Xcode",
-    "editor.tabSize": 4
+    "editor.tabSize": 4,
+    "slang.additionalSearchPaths": [
+        "res/shaders/",
+        "res/shaders/lib"
+    ],
+    "slang.slangdLocation": "C:\\Users\\Dynamitos\\slang\\build\\Release\\bin\\slangd.exe",
+    "slang.searchInAllWorkspaceDirectories": false
 }

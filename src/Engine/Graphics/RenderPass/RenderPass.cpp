@@ -25,6 +25,28 @@ RenderPass::~RenderPass() {}
 void RenderPass::beginFrame(const Component::Camera& cam) {
     auto screenDim = Vector2(static_cast<float>(viewport->getWidth()), static_cast<float>(viewport->getHeight()));
     viewParams = {
+        .viewFrustum =
+            {
+                .planes =
+                    {
+                        Plane{
+                            .n = Vector(-0.62628, 0, 0.7796),
+                            .d = 3.898,
+                        },
+                        Plane{
+                            .n = Vector(0.62628, 0, 0.7796),
+                            .d = 3.898,
+                        },
+                        Plane{
+                            .n = Vector(0, 0.81915, 0.57358),
+                            .d = 2.86788,
+                        },
+                        Plane{
+                            .n = Vector(0, -0.81915, 0.57358),
+                            .d = 2.86788,
+                        },
+                    },
+            },
         .viewMatrix = cam.getViewMatrix(),
         .inverseViewMatrix = glm::inverse(cam.getViewMatrix()),
         .projectionMatrix = viewport->getProjectionMatrix(),

@@ -33,14 +33,14 @@ void Seele::beginCompilation(const ShaderCompilationInfo& info, SlangCompileTarg
     slang::SessionDesc sessionDesc;
     sessionDesc.flags = 0;
     Array<slang::CompilerOptionEntry> option = {
-        {
-            .name = slang::CompilerOptionName::Capability,
-            .value =
-                {
-                    .kind = slang::CompilerOptionValueKind::Int,
-                    .intValue0 = globalSession->findCapability("GLSL_450"),
-                },
-        },
+        //{
+        //    .name = slang::CompilerOptionName::Capability,
+        //    .value =
+        //        {
+        //            .kind = slang::CompilerOptionValueKind::Int,
+        //            .intValue0 = globalSession->findCapability("GLSL_450"),
+        //        },
+        //},
         {
             .name = slang::CompilerOptionName::EmitSpirvDirectly,
             .value =
@@ -88,7 +88,7 @@ void Seele::beginCompilation(const ShaderCompilationInfo& info, SlangCompileTarg
     sessionDesc.preprocessorMacroCount = macros.size();
     sessionDesc.preprocessorMacros = macros.data();
     slang::TargetDesc targetDesc;
-    targetDesc.profile = globalSession->findProfile("glsl_450");
+    targetDesc.profile = globalSession->findProfile("spirv_1_6");
     targetDesc.format = target;
     sessionDesc.targetCount = 1;
     sessionDesc.targets = &targetDesc;

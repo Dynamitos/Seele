@@ -29,9 +29,12 @@ struct UpdateCB
 
 struct DebugStruct
 {
-    uint3 neighbours;
-    int status;
-}
+    int maxRequiredMemory;
+    int usedMemory;
+    uint memoryChange;
+    uint twinID;
+};
+
 
 struct ComputeParams
 {
@@ -59,6 +62,6 @@ struct ComputeParams
     RWStructuredBuffer<uint> modifiedBisectorIndices;
     RWStructuredBuffer<float4> lebPositionBuffer;
     StructuredBuffer<float3x3> lebMatrixCache;
-    RWStructuredBuffer<DebugStruct> debugBuffer;
+    globallycoherent RWStructuredBuffer<DebugStruct> debugBuffer;
 };
 ParameterBlock<ComputeParams> pParams;

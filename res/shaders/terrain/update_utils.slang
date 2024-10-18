@@ -23,13 +23,30 @@ static const uint64_t SPLIT_COUNTER = 0;
 static const uint64_t SIMPLIFY_COUNTER = 1;
 static const uint64_t CLASSIFY_COUNTER_OFFSET = 2;
 
+bool FrustumAABBIntersect(in Frustum frustum, float3 aabbMin, float3 aabbMax)
+{
+    float3 center = (aabbMax + aabbMin) * 0.5;
+    float3 extents = (aabbMax - aabbMin) * 0.5;
+    for (int i = 0; i < 4; i++)
+    {
+        Plane plane = frustum.sides[i];
+        float3 normal_sign = sign(plane.n);
+        float3 test_point = center + extents * normal_sign;
+ 
+        float dotProd = dot(test_point, plane.n);
+        if (dotProd + plane.d < 0)
+            return false;
+    }
+    return true;
+}
+
 int ClassifyBisector(in BisectorGeometry tri, uint depth)
 {
     // Check the triangle's visibility
     float3 triNormal = normalize(cross(tri.p[2] - tri.p[1], tri.p[0] - tri.p[1]));
     float3 triCenter = (tri.p[0] + tri.p[1] + tri.p[2]) / 3.0;
     float3 viewDir = normalize(-triCenter);
-    float FdotV = dot(viewDir, pViewParams.cameraForward_WS.xyz);
+    float FdotV = dot(viewDir, -pViewParams.cameraForward_WS.xyz);
     float VdotN = dot(viewDir, triNormal);
 
     // Here we don't use 0 as it introduces stability issues at grazing angles
@@ -41,11 +58,11 @@ int ClassifyBisector(in BisectorGeometry tri, uint depth)
     float3 aabbMax = float3(max(max(tri.p[0].x, tri.p[1].x), tri.p[2].x), max(max(tri.p[0].y, tri.p[1].y), tri.p[2].y), max(max(tri.p[0].z, tri.p[1].z), tri.p[2].z));
 
     // First we do a frustum culling pass
-    //if (!FrustumAABBIntersect(_FrustumPlanes, aabbMin, aabbMax))
-    //    return FRUSTUM_CULLED;
+    if (!FrustumAABBIntersect(pViewParams.viewFrustum, aabbMin, aabbMax))
+        return FRUSTUM_CULLED;
 
     // Project the points on screen
-    float4x4 viewProjectionMatrix = mul(pViewParams.projectionMatrix, pViewParams.viewMatrix);
+    float4x4 viewProjectionMatrix = pParams.update.viewProjectionMatrix;//mul(pViewParams.projectionMatrix, pViewParams.viewMatrix);
     float4 p0P = mul(viewProjectionMatrix, float4(tri.p[0], 1.0));
     p0P.xy = p0P.xy / p0P.w;
     p0P.xy = (p0P.xy * 0.5 + 0.5);
@@ -166,16 +183,20 @@ void ClassifyElement(uint currentID, BisectorGeometry bis, uint totalNumElements
     pParams.bisectorDataBuffer[currentID] = cbisectorData;
 }
 
-void SplitElement(uint currentID, uint baseDepth)
+void SplitElement(uint currentID, uint baseDepth, uint dispatchID)
 {
+    DebugStruct debug;
+    debug.maxRequiredMemory = 0;
+    debug.usedMemory = 0;
+    debug.memoryChange = 0;
     // Get the neighbors information
-    uint3 cNeighbors = pParams.neighboursBuffer[currentID].xyz;
+    uint4 cNeighbors = pParams.neighboursBuffer[currentID];
 
     // If there is a neighbor X
     if (cNeighbors.x != INVALID_POINTER)
     {
         // This is on the path of it's neighbor X
-        uint3 xNeighbors = pParams.neighboursBuffer[cNeighbors.x].xyz;
+        uint4 xNeighbors = pParams.neighboursBuffer[cNeighbors.x];
         if (xNeighbors.z == currentID && pParams.bisectorDataBuffer[cNeighbors.x].bisectorState != UNCHANGED_ELEMENT)
             return;
     }
@@ -184,7 +205,7 @@ void SplitElement(uint currentID, uint baseDepth)
     if (cNeighbors.y != INVALID_POINTER)
     {
         // This is on the path of it's neighbor Y
-        uint3 yNeighbors = pParams.neighboursBuffer[cNeighbors.y].xyz;
+        uint4 yNeighbors = pParams.neighboursBuffer[cNeighbors.y];
         if (yNeighbors.z == currentID && pParams.bisectorDataBuffer[cNeighbors.y].bisectorState != UNCHANGED_ELEMENT)
             return;
     }
@@ -205,10 +226,13 @@ void SplitElement(uint currentID, uint baseDepth)
     else if (pParams.neighboursBuffer[twinID].z == currentID)
         maxRequiredMemory = 2;
 
+    debug.maxRequiredMemory = maxRequiredMemory;
+    debug.twinID = twinID;
+
     // Try to reserve
     int remainingMemory;
     InterlockedAdd(pParams.memoryBuffer[1], -maxRequiredMemory, remainingMemory);
-
+    debug.memoryChange = -maxRequiredMemory;
     // Did someone manage to sneak-in while we were trying to pick the memory, add it back and try again
     if (remainingMemory < maxRequiredMemory)
     {
@@ -218,7 +242,7 @@ void SplitElement(uint currentID, uint baseDepth)
     }
 
     // Let's actually count the memory that we will be using
-    uint usedMemory = 1;
+    int usedMemory = 1;
     uint prevPattern;
     InterlockedOr(pParams.bisectorDataBuffer[currentID].subdivisionPattern, CENTER_SPLIT, prevPattern);
 
@@ -246,7 +270,7 @@ void SplitElement(uint currentID, uint baseDepth)
         uint64_t nHeapID = pParams.heapIDBuffer[twinID];
         BisectorData nBisectorData = pParams.bisectorDataBuffer[twinID];
         uint nDepth = HeapIDDepth(nHeapID);
-        uint3 nNeighbors = pParams.neighboursBuffer[twinID].xyz;
+        uint4 nNeighbors = pParams.neighboursBuffer[twinID];
 
         // If both triangles have the same depth
         if (nDepth == currentDepth)
@@ -297,9 +321,13 @@ void SplitElement(uint currentID, uint baseDepth)
             }
         }
     }
+    int change = maxRequiredMemory - usedMemory;
 
     // Add back the unused memory (in case)
-    InterlockedAdd(pParams.memoryBuffer[1], max(maxRequiredMemory - usedMemory, 0), remainingMemory);
+    InterlockedAdd(pParams.memoryBuffer[1], change, remainingMemory);
+    debug.memoryChange += change;
+    debug.usedMemory = usedMemory;
+    pParams.debugBuffer[dispatchID] = debug;
 }
 
 void AllocateElement(uint currentID)
@@ -335,7 +363,7 @@ void AllocateElement(uint currentID)
 void evaluate_neighbors(uint currentID, uint bisectorID, out uint resX, out uint resY)
 {
     BisectorData nBisectorData = pParams.bisectorDataBuffer[bisectorID];
-    uint3 nNeighbors = pParams.neighboursBuffer[bisectorID].xyz;
+    uint4 nNeighbors = pParams.neighboursBuffer[bisectorID];
     if (nBisectorData.subdivisionPattern == 0x01)
     {
         resX = nBisectorData.indices[SUBLING0_ID];
@@ -399,7 +427,7 @@ void BisectElement(uint currentID)
     uint currentSubdiv = cBisectorData.subdivisionPattern;
 
     // neighbors of the parent
-    uint3 cNeighbors = pParams.neighboursBuffer[currentID].xyz;
+    uint4 cNeighbors = pParams.neighboursBuffer[currentID];
     uint p_n0 = cNeighbors[0];
     uint p_n1 = cNeighbors[1];
     uint p_n2 = cNeighbors[2];
@@ -421,15 +449,15 @@ void BisectElement(uint currentID)
         pParams.heapIDBuffer[siblingID0] = 2 * baseHeapID + 1;
 
         // Update the neighbors
-        uint3 modifiedNeighbors;
+        uint4 modifiedNeighbors;
         modifiedNeighbors[0] = siblingID0;
         modifiedNeighbors[1] = resX;
         modifiedNeighbors[2] = p_n0;
-        pParams.neighboursOutputBuffer[currentID] = uint4(modifiedNeighbors, 0);
+        pParams.neighboursOutputBuffer[currentID] = modifiedNeighbors;
         modifiedNeighbors[0] = resY;
         modifiedNeighbors[1] = currentID;
         modifiedNeighbors[2] = p_n1;
-        pParams.neighboursOutputBuffer[siblingID0] = uint4(modifiedNeighbors, 0);
+        pParams.neighboursOutputBuffer[siblingID0] = modifiedNeighbors;
 
         // Keep track of the parent
         BisectorData modifiedBisector = cBisectorData;
@@ -444,7 +472,7 @@ void BisectElement(uint currentID)
         pParams.bisectorDataBuffer[siblingID0] = modifiedBisector;
 
         // Mark this for propagation
-        uint targetLocation = 0;
+        uint targetLocation;
         InterlockedAdd(pParams.propagateBuffer[0], 1, targetLocation);
         pParams.propagateBuffer[2 + targetLocation] = siblingID0;
     }
@@ -463,19 +491,19 @@ void BisectElement(uint currentID)
         pParams.heapIDBuffer[siblingID0] = 2 * baseHeapID + 1;
         pParams.heapIDBuffer[siblingID1] = 4 * baseHeapID + 1;
 
-        uint3 modifiedNeighbors;
+        uint4 modifiedNeighbors;
         modifiedNeighbors[0] = siblingID1;
         modifiedNeighbors[1] = res0X;
         modifiedNeighbors[2] = siblingID0;
-        pParams.neighboursOutputBuffer[currentID] = uint4(modifiedNeighbors, 0);
+        pParams.neighboursOutputBuffer[currentID] = modifiedNeighbors;
         modifiedNeighbors[0] = res1Y;
         modifiedNeighbors[1] = currentID;
         modifiedNeighbors[2] = p_n1;
-        pParams.neighboursOutputBuffer[siblingID0] = uint4(modifiedNeighbors, 0);
+        pParams.neighboursOutputBuffer[siblingID0] = modifiedNeighbors;
         modifiedNeighbors[0] = res0Y;
         modifiedNeighbors[1] = currentID;
         modifiedNeighbors[2] = res1X;
-        pParams.neighboursOutputBuffer[siblingID1] = uint4(modifiedNeighbors, 0);
+        pParams.neighboursOutputBuffer[siblingID1] = modifiedNeighbors;
 
         // Keep track of the parent
         BisectorData modifiedBisector = cBisectorData;
@@ -497,7 +525,7 @@ void BisectElement(uint currentID)
         pParams.bisectorDataBuffer[siblingID1] = modifiedBisector;
 
         // Mark this for propagation
-        uint targetLocation = 0;
+        uint targetLocation;
         InterlockedAdd(pParams.propagateBuffer[0], 1, targetLocation);
         pParams.propagateBuffer[2 + targetLocation] = siblingID0;
     }
@@ -516,19 +544,19 @@ void BisectElement(uint currentID)
         pParams.heapIDBuffer[siblingID0] = 4 * baseHeapID + 2;
         pParams.heapIDBuffer[siblingID1] = 4 * baseHeapID + 3;
 
-        uint3 modifiedNeighbors;
+        uint4 modifiedNeighbors;
         modifiedNeighbors[0] = siblingID1;
         modifiedNeighbors[1] = res1X;
         modifiedNeighbors[2] = p_n0;
-        pParams.neighboursOutputBuffer[currentID] = uint4(modifiedNeighbors, 0);
+        pParams.neighboursOutputBuffer[currentID] = modifiedNeighbors;
         modifiedNeighbors[0] = siblingID1;
         modifiedNeighbors[1] = res0X;
         modifiedNeighbors[2] = res1Y;
-        pParams.neighboursOutputBuffer[siblingID0] = uint4(modifiedNeighbors, 0);
+        pParams.neighboursOutputBuffer[siblingID0] = modifiedNeighbors;
         modifiedNeighbors[0] = res0Y;
         modifiedNeighbors[1] = siblingID0;
         modifiedNeighbors[2] = currentID;
-        pParams.neighboursOutputBuffer[siblingID1] = uint4(modifiedNeighbors, 0);
+        pParams.neighboursOutputBuffer[siblingID1] = modifiedNeighbors;
 
         // Keep track of the parent
         BisectorData modifiedBisector = cBisectorData;
@@ -568,23 +596,23 @@ void BisectElement(uint currentID)
         pParams.heapIDBuffer[siblingID1] = 4 * baseHeapID + 1;
         pParams.heapIDBuffer[siblingID2] = 4 * baseHeapID + 3;
 
-        uint3 modifiedNeighbors;
+        uint4 modifiedNeighbors;
         modifiedNeighbors[0] = siblingID1;
         modifiedNeighbors[1] = res0X;
         modifiedNeighbors[2] = siblingID2;
-        pParams.neighboursOutputBuffer[currentID] = uint4(modifiedNeighbors, 0);
+        pParams.neighboursOutputBuffer[currentID] = modifiedNeighbors;
         modifiedNeighbors[0] = siblingID2;
         modifiedNeighbors[1] = res1X;
         modifiedNeighbors[2] = res2Y;
-        pParams.neighboursOutputBuffer[siblingID0] = uint4(modifiedNeighbors, 0);
+        pParams.neighboursOutputBuffer[siblingID0] = modifiedNeighbors;
         modifiedNeighbors[0] = res0Y;
         modifiedNeighbors[1] = currentID;
         modifiedNeighbors[2] = res2X;
-        pParams.neighboursOutputBuffer[siblingID1] = uint4(modifiedNeighbors, 0);
+        pParams.neighboursOutputBuffer[siblingID1] = modifiedNeighbors;
         modifiedNeighbors[0] = res1Y;
         modifiedNeighbors[1] = siblingID0;
         modifiedNeighbors[2] = currentID;
-        pParams.neighboursOutputBuffer[siblingID2] = uint4(modifiedNeighbors, 0);
+        pParams.neighboursOutputBuffer[siblingID2] = modifiedNeighbors;
 
         // Keep track of the parent
         BisectorData modifiedBisector = cBisectorData;
@@ -930,7 +958,8 @@ void ValidateBisector(uint currentID)
         return;
 
     // Load the bisector data of the target element
-    uint3 cNeighbors = pParams.neighboursBuffer[currentID].xyz;
+    uint4 cNeighbors = pParams.neighboursBuffer[currentID];
+    uint4 tempnNeighbours[3];
 
     bool failed = false;
     uint targetNeighbor = INVALID_POINTER;
@@ -941,7 +970,8 @@ void ValidateBisector(uint currentID)
         if (neighborID != INVALID_POINTER)
         {
             bool found = false;
-            uint3 nNeighbors = pParams.neighboursBuffer[neighborID].xyz;
+            uint4 nNeighbors = pParams.neighboursBuffer[neighborID];
+            tempnNeighbours[i] = nNeighbors;
             for (uint j = 0; j < 3; ++j)
             {
                 if (nNeighbors[j] == currentID)

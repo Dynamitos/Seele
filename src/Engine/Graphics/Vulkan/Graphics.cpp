@@ -33,6 +33,8 @@ thread_local PCommandPool Seele::Vulkan::Graphics::transferCommands = nullptr;
 PFN_vkCmdDrawMeshTasksEXT cmdDrawMeshTasks;
 PFN_vkCmdDrawMeshTasksIndirectEXT cmdDrawMeshTasksIndirect;
 PFN_vkSetDebugUtilsObjectNameEXT setDebugUtilsObjectName;
+PFN_vkQueueBeginDebugUtilsLabelEXT queueBeginDebugUtilsLabelEXT;
+PFN_vkQueueEndDebugUtilsLabelEXT queueEndDebugUtilsLabelEXT;
 PFN_vkCreateAccelerationStructureKHR createAccelerationStructure;
 PFN_vkCmdBuildAccelerationStructuresKHR cmdBuildAccelerationStructures;
 PFN_vkGetAccelerationStructureBuildSizesKHR getAccelerationStructureBuildSize;
@@ -55,6 +57,18 @@ VkResult vkSetDebugUtilsObjectNameEXT(VkDevice device, const VkDebugUtilsObjectN
         return setDebugUtilsObjectName(device, pNameInfo);
     }
     return VK_SUCCESS;
+}
+
+void vkQueueBeginDebugUtilsLabelEXT(VkQueue queue, const VkDebugUtilsLabelEXT* pLabelInfo) {
+    if (queueBeginDebugUtilsLabelEXT != nullptr) {
+        queueBeginDebugUtilsLabelEXT(queue, pLabelInfo);
+    }
+}
+
+void vkQueueEndDebugUtilsLabelEXT(VkQueue queue) {
+    if (queueEndDebugUtilsLabelEXT != nullptr) {
+        queueEndDebugUtilsLabelEXT(queue);
+    }
 }
 
 VkResult vkCreateAccelerationStructureKHR(VkDevice device, const VkAccelerationStructureCreateInfoKHR* pCreateInfo,
@@ -164,7 +178,7 @@ void Graphics::endRenderPass() { getGraphicsCommands()->getCommands()->endRender
 
 void Graphics::waitDeviceIdle() {
     getGraphicsCommands()->submitCommands();
-    vkDeviceWaitIdle(handle); 
+    vkDeviceWaitIdle(handle);
     getGraphicsCommands()->refreshCommands();
 }
 
@@ -288,6 +302,17 @@ Gfx::OTimestampQuery Graphics::createTimestampQuery(uint64 numTimestamps, const 
     return new TimestampQuery(this, name);
 }
 
+void Graphics::beginDebugRegion(const std::string& name) {
+    VkDebugUtilsLabelEXT label = {
+        .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT,
+        .pNext = nullptr,
+        .pLabelName = name.c_str(),
+    };
+    vkQueueBeginDebugUtilsLabelEXT(queues[graphicsQueue]->getHandle(), &label);
+}
+
+void Graphics::endDebugRegion() { vkQueueEndDebugUtilsLabelEXT(queues[graphicsQueue]->getHandle()); }
+
 void Graphics::resolveTexture(Gfx::PTexture source, Gfx::PTexture destination) {
     PTextureBase sourceTex = source.cast<TextureBase>();
     PTextureBase destinationTex = destination.cast<TextureBase>();
@@ -389,7 +414,6 @@ void Graphics::copyBuffer(Gfx::PShaderBuffer srcBuffer, Gfx::PShaderBuffer dstBu
     vkCmdCopyBuffer(getGraphicsCommands()->getCommands()->getHandle(), src->getHandle(), dst->getHandle(), 1, &region);
 }
 
-
 Gfx::OBottomLevelAS Graphics::createBottomLevelAccelerationStructure(const Gfx::BottomLevelASCreateInfo& createInfo) {
     return new BottomLevelAS(this, createInfo);
 }
@@ -401,9 +425,9 @@ Gfx::OTopLevelAS Graphics::createTopLevelAccelerationStructure(const Gfx::TopLev
 void Graphics::buildBottomLevelAccelerationStructures(Array<Gfx::PBottomLevelAS> data) {
     Gfx::PShaderBuffer verticesBuffer = StaticMeshVertexData::getInstance()->getPositionBuffer();
     Gfx::PIndexBuffer indexBuffer = StaticMeshVertexData::getInstance()->getIndexBuffer();
-    
+
     // Setup vertices and indices for a single triangle
-    
+
     // Create buffers for the bottom level geometry
     // For the sake of simplicity we won't stage the vertex data to the GPU memory
 
@@ -411,7 +435,6 @@ void Graphics::buildBottomLevelAccelerationStructures(Array<Gfx::PBottomLevelAS>
     const VkBufferUsageFlags buffer_usage_flags = VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR |
                                                   VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
 
-    
     VkBufferCreateInfo transformBufferInfo = {
         .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
         .pNext = nullptr,
@@ -437,9 +460,9 @@ void Graphics::buildBottomLevelAccelerationStructures(Array<Gfx::PBottomLevelAS>
                                      VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_TRANSFER_READ_BIT,
                                      VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR | VK_PIPELINE_STAGE_TRANSFER_BIT);
     verticesBuffer->pipelineBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_SHADER_READ_BIT,
-                                   VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR);
+                                    VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR);
     indexBuffer->pipelineBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_SHADER_READ_BIT,
-                                  VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR);
+                                 VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR);
 
     Array<VkAccelerationStructureGeometryKHR> geometries(data.size());
     Array<VkAccelerationStructureBuildGeometryInfoKHR> buildGeometries(data.size());
@@ -672,7 +695,7 @@ void Graphics::initInstance(GraphicsInitializer initInfo) {
     extensions.add("VK_KHR_portability_enumeration");
 #endif
     Array<const char*> layers = initInfo.layers;
-    //layers.add("VK_LAYER_KHRONOS_validation");
+    // layers.add("VK_LAYER_KHRONOS_validation");
     VkInstanceCreateInfo info = {
         .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
         .pNext = nullptr,
@@ -885,9 +908,9 @@ void Graphics::createDevice(GraphicsInitializer initializer) {
 #ifdef __APPLE__
     initializer.deviceExtensions.add("VK_KHR_portability_subset");
 #endif
-    //initializer.deviceExtensions.add(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
-    //initializer.deviceExtensions.add(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME);
-    //initializer.deviceExtensions.add(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
+    // initializer.deviceExtensions.add(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
+    // initializer.deviceExtensions.add(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME);
+    // initializer.deviceExtensions.add(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
     VkDeviceCreateInfo deviceInfo = {
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
         .pNext = &features,
@@ -920,6 +943,8 @@ void Graphics::createDevice(GraphicsInitializer initializer) {
     cmdDrawMeshTasks = (PFN_vkCmdDrawMeshTasksEXT)vkGetDeviceProcAddr(handle, "vkCmdDrawMeshTasksEXT");
     cmdDrawMeshTasksIndirect = (PFN_vkCmdDrawMeshTasksIndirectEXT)vkGetDeviceProcAddr(handle, "vkCmdDrawMeshTasksIndirectEXT");
     setDebugUtilsObjectName = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(instance, "vkSetDebugUtilsObjectNameEXT");
+    queueBeginDebugUtilsLabelEXT = (PFN_vkQueueBeginDebugUtilsLabelEXT)vkGetInstanceProcAddr(instance, "vkQueueBeginDebugUtilsLabelEXT");
+    queueEndDebugUtilsLabelEXT = (PFN_vkQueueEndDebugUtilsLabelEXT)vkGetInstanceProcAddr(instance, "vkQueueEndDebugUtilsLabelEXT");
 
     createAccelerationStructure = (PFN_vkCreateAccelerationStructureKHR)vkGetDeviceProcAddr(handle, "vkCreateAccelerationStructureKHR");
     cmdBuildAccelerationStructures =
