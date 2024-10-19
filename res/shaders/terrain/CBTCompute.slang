@@ -41,7 +41,7 @@ void Split(uint dispatchID : SV_DispatchThreadID)
     uint currentID = pParams.classificationBuffer[CLASSIFY_COUNTER_OFFSET + dispatchID];
 
     // Split the element
-    SplitElement(currentID, pParams.geometry.baseDepth, dispatchID);
+    SplitElement(currentID, pParams.geometry.baseDepth);
 }
 
 [numthreads(1, 1, 1)]
@@ -74,7 +74,7 @@ void Bisect(uint groupIndex : SV_GroupIndex, uint dispatchID : SV_DispatchThread
         return;
 
     // Operation the bisection of this element
-    BisectElement(pParams.allocateBuffer[1 + dispatchID]);
+    BisectElement(pParams.allocateBuffer[1 + dispatchID], dispatchID);
 }
 
 [numthreads(WORKGROUP_SIZE, 1, 1)]

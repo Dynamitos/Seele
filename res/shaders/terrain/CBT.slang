@@ -230,7 +230,6 @@ uint bit_count(uint depth, uint element)
 // decodes the position of the i-th one in the bitfield
 uint decode_bit(uint handle)
 {
-#if defined(NAIVE_DECODE)
     uint bitID = 1;
     for (uint currentDepth = 0; currentDepth < WAVE_TREE_DEPTH; ++currentDepth)
     {
@@ -242,65 +241,11 @@ uint decode_bit(uint handle)
     }
 
     return (bitID ^ OCBT_NUM_ELEMENTS);
-#else
-    uint currentDepth = 0;
-    uint heapElementID = 1u;
-    for (currentDepth = 0; currentDepth < FIRST_VIRTUAL_LEVEL; ++currentDepth)
-    {
-        // Read the left element
-        uint heapValue = get_heap_element(2u * heapElementID);
-
-        // Does it fall in the right or left subtree?
-        uint b = handle < heapValue ? 0u : 1u;
-
-        // Pick a subtree
-        heapElementID = 2u * heapElementID + b;
-
-        // Move the iterator to exclude the right subtree if required
-        handle -= heapValue * b;
-    }
-
-    // Align with the internal depth
-    currentDepth++;
-
-    // Ok we have our subtree, now we need to pick the right bit
-    uint64_t heapValue = pParams.bitFieldBuffer[heapElementID - OCBT_LAST_LEVEL_SIZE * 2];
-    uint64_t mask = 0xffffffff;
-    uint32_t bitCount = 32;
-    for (; currentDepth < (WAVE_TREE_DEPTH + 1); ++currentDepth)
-    {
-        // Figure out the location of the first bit of this element
-        uint real_heap_id =  2 * heapElementID - 1;
-        uint level_first_element = (1u << currentDepth) - 1;
-        uint id_in_level = real_heap_id - level_first_element;
-        uint first_bit = bitCount * id_in_level;
-        uint local_id = first_bit % 64;
-        uint64_t target_bits = (heapValue >> local_id) & mask;
-        uint32_t high = uint(target_bits >> 32);
-        uint32_t low = uint(target_bits);
-        uint heapValue = countbits(high) + countbits(low);
-
-        // Does it fall in the right or left subtree?
-        uint b = handle < heapValue ? 0u : 1u;
-
-        // Pick a subtree
-        heapElementID = 2u * heapElementID + b;
-
-        // Move the iterator to exclude the right subtree if required
-        handle -= heapValue * b;
-
-        // Adjust the mask and bitcount
-        bitCount /= 2;
-        mask = mask >> bitCount;
-    }
-    return (heapElementID ^ OCBT_NUM_ELEMENTS);
-#endif
 }
 
 // decodes the position of the i-th zero in the bitfield
 uint decode_bit_complement(uint handle)
 {
-#if defined(NAIVE_DECODE)
     uint bitID = 1u;
     uint c = OCBT_NUM_ELEMENTS / 2u;
 
@@ -314,54 +259,6 @@ uint decode_bit_complement(uint handle)
     }
 
     return (bitID ^ OCBT_NUM_ELEMENTS);
-#else
-    uint heapElementID = 1u;
-    uint c = OCBT_NUM_ELEMENTS / 2u;
-    uint currentDepth = 0;
-
-    for (currentDepth = 0; currentDepth < FIRST_VIRTUAL_LEVEL; ++currentDepth)
-    {
-        uint heapValue = c - get_heap_element(2u * heapElementID);
-        uint b = handle < heapValue ? 0u : 1u;
-
-        heapElementID = 2u * heapElementID + b;
-        handle -= heapValue * b;
-        c /= 2u;
-    }
-
-    // Align with the internal depth
-    currentDepth++;
-
-    // Ok we have our subtree, now we need to pick the right bit
-    uint64_t heapValue = pParams.bitFieldBuffer[heapElementID - OCBT_LAST_LEVEL_SIZE * 2];
-    uint64_t mask = 0xffffffff;
-    uint32_t bitCount = 32;
-    for (; currentDepth < (WAVE_TREE_DEPTH + 1); ++currentDepth)
-    {
-        // Figure out the location of the first bit of this element
-        uint real_heap_id = 2 * heapElementID - 1;
-        uint level_first_element = (1u << currentDepth) - 1;
-        uint id_in_level = real_heap_id - level_first_element;
-        uint first_bit = bitCount * id_in_level;
-        uint local_id = first_bit % 64;
-        uint64_t target_bits = (heapValue >> local_id) & mask;
-        uint32_t high = uint(target_bits >> 32);
-        uint32_t low = uint(target_bits);
-        uint heapValue = c - (countbits(high) + countbits(low));
-
-        uint b = handle < heapValue ? 0u : 1u;
-
-        heapElementID = 2u * heapElementID + b;
-        handle -= heapValue * b;
-        c /= 2u;
-
-        // Adjust the mask and bitcount
-        bitCount /= 2;
-        mask = mask >> bitCount;
-    }
-
-    return (heapElementID ^ OCBT_NUM_ELEMENTS);
-#endif
 }
 
 void reduce(uint groupIndex)
@@ -578,11 +475,7 @@ void load_shared_memory_to_buffer(uint groupIndex)
     // Load the bitfield to the LDS
     for (uint e = 0; e < BUFFER_ELEMENT_PER_LANE; ++e)
     {
-#ifdef AMD
         uint target_element = BUFFER_ELEMENT_PER_LANE * groupIndex + e;
-#else
-        uint target_element = groupIndex + WORKGROUP_SIZE * e;
-#endif
         if (target_element < OCBT_TREE_NUM_SLOTS)
             pParams.cbtBuffer[target_element] = gs_cbtTree[target_element];
     }

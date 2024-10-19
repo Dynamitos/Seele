@@ -88,6 +88,8 @@ class Graphics {
     virtual PComputePipeline createComputePipeline(ComputePipelineCreateInfo createInfo) = 0;
     virtual OSampler createSampler(const SamplerCreateInfo& createInfo) = 0;
 
+    virtual OComputeShader createComputeShaderFromBinary(std::string_view binaryName) = 0;
+
     virtual ODescriptorLayout createDescriptorLayout(const std::string& name = "") = 0;
     virtual OPipelineLayout createPipelineLayout(const std::string& name = "", PPipelineLayout baseLayout = nullptr) = 0;
 

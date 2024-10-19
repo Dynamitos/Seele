@@ -4,6 +4,7 @@
 #include "slang-com-ptr.h"
 #include "slang.h"
 #include "stdlib.h"
+#include <fstream>
 #include <fmt/core.h>
 
 using namespace Seele;
@@ -32,4 +33,20 @@ void Shader::create(const ShaderCreateInfo& createInfo) {
     VK_CHECK(vkCreateShaderModule(graphics->getDevice(), &moduleInfo, nullptr, &module));
 
     hash = CRC::Calculate(kernelBlob->getBufferPointer(), kernelBlob->getBufferSize(), CRC::CRC_32(), hash);
+}
+
+void Shader::create(std::string_view binary) { 
+    std::ifstream stream(binary.data(), std::ios::binary | std::ios::ate);
+    uint64 fullSize = stream.tellg();
+    stream.seekg(0, std::ios::beg);
+    Array<uint32> buffer(fullSize);
+    stream.read((char*)buffer.data(), fullSize);
+    VkShaderModuleCreateInfo moduleInfo = {
+        .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .codeSize = buffer.size() / sizeof(uint32),
+        .pCode = (uint32*)buffer.data(),
+    };
+    VK_CHECK(vkCreateShaderModule(graphics->getDevice(), &moduleInfo, nullptr, &module));
 }

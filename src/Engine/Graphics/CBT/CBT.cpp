@@ -503,7 +503,6 @@ void MeshUpdater::update(CBTMesh& mesh, Gfx::PDescriptorSet viewParamsSet, Gfx::
         set->updateBuffer(NEIGHBOURS_BUFFER, 0, currentNeighborsBuffer);
         set->updateBuffer(MEMORY_BUFFER, 0, memoryBuffer);
         set->updateBuffer(ALLOCATE_BUFFER, 0, mesh.allocateBuffer);
-        set->updateBuffer(DEBUG_BUFFER, 0, debugBuffer);
         set->writeChanges();
         Gfx::OComputeCommand splitCmd = graphics->createComputeCommand("Split");
         splitCmd->bindPipeline(split);
@@ -581,6 +580,7 @@ void MeshUpdater::update(CBTMesh& mesh, Gfx::PDescriptorSet viewParamsSet, Gfx::
         set->updateBuffer(NEIGHBOURS_BUFFER, 0, currentNeighborsBuffer);
         set->updateBuffer(NEIGHBOURS_OUTPUT_BUFFER, 0, nextNeighborsBuffer);
         set->updateBuffer(PROPAGATE_BUFFER, 0, mesh.propagateBuffer);
+        set->updateBuffer(DEBUG_BUFFER, 0, debugBuffer);
         set->writeChanges();
         Gfx::OComputeCommand bisectCmd = graphics->createComputeCommand("Bisect");
         bisectCmd->bindPipeline(bisect);

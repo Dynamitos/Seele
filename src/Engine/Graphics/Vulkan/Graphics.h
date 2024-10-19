@@ -66,6 +66,8 @@ class Graphics : public Gfx::Graphics {
     virtual Gfx::PRayTracingPipeline createRayTracingPipeline(Gfx::RayTracingPipelineCreateInfo createInfo) override;
     virtual Gfx::PComputePipeline createComputePipeline(Gfx::ComputePipelineCreateInfo createInfo) override;
     virtual Gfx::OSampler createSampler(const SamplerCreateInfo& createInfo) override;
+    
+    virtual Gfx::OComputeShader createComputeShaderFromBinary(std::string_view binaryName) override;
 
     virtual Gfx::ODescriptorLayout createDescriptorLayout(const std::string& name = "") override;
     virtual Gfx::OPipelineLayout createPipelineLayout(const std::string& name = "", Gfx::PPipelineLayout baseLayout = nullptr) override;

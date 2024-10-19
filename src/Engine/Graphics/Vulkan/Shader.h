@@ -14,6 +14,7 @@ class Shader {
     virtual ~Shader();
 
     void create(const ShaderCreateInfo& createInfo);
+    void create(std::string_view binary);
 
     constexpr VkShaderModule getModuleHandle() const { return module; }
     constexpr const char* getEntryPointName() const {

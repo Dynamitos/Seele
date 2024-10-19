@@ -46,7 +46,7 @@ int ClassifyBisector(in BisectorGeometry tri, uint depth)
     float3 triNormal = normalize(cross(tri.p[2] - tri.p[1], tri.p[0] - tri.p[1]));
     float3 triCenter = (tri.p[0] + tri.p[1] + tri.p[2]) / 3.0;
     float3 viewDir = normalize(-triCenter);
-    float FdotV = dot(viewDir, -pViewParams.cameraForward_WS.xyz);
+    float FdotV = dot(viewDir, pViewParams.cameraForward_WS.xyz);
     float VdotN = dot(viewDir, triNormal);
 
     // Here we don't use 0 as it introduces stability issues at grazing angles
@@ -183,12 +183,8 @@ void ClassifyElement(uint currentID, BisectorGeometry bis, uint totalNumElements
     pParams.bisectorDataBuffer[currentID] = cbisectorData;
 }
 
-void SplitElement(uint currentID, uint baseDepth, uint dispatchID)
+void SplitElement(uint currentID, uint baseDepth)
 {
-    DebugStruct debug;
-    debug.maxRequiredMemory = 0;
-    debug.usedMemory = 0;
-    debug.memoryChange = 0;
     // Get the neighbors information
     uint4 cNeighbors = pParams.neighboursBuffer[currentID];
 
@@ -226,13 +222,10 @@ void SplitElement(uint currentID, uint baseDepth, uint dispatchID)
     else if (pParams.neighboursBuffer[twinID].z == currentID)
         maxRequiredMemory = 2;
 
-    debug.maxRequiredMemory = maxRequiredMemory;
-    debug.twinID = twinID;
 
     // Try to reserve
     int remainingMemory;
     InterlockedAdd(pParams.memoryBuffer[1], -maxRequiredMemory, remainingMemory);
-    debug.memoryChange = -maxRequiredMemory;
     // Did someone manage to sneak-in while we were trying to pick the memory, add it back and try again
     if (remainingMemory < maxRequiredMemory)
     {
@@ -321,13 +314,8 @@ void SplitElement(uint currentID, uint baseDepth, uint dispatchID)
             }
         }
     }
-    int change = maxRequiredMemory - usedMemory;
-
     // Add back the unused memory (in case)
-    InterlockedAdd(pParams.memoryBuffer[1], change, remainingMemory);
-    debug.memoryChange += change;
-    debug.usedMemory = usedMemory;
-    pParams.debugBuffer[dispatchID] = debug;
+    InterlockedAdd(pParams.memoryBuffer[1], maxRequiredMemory - usedMemory, remainingMemory);
 }
 
 void AllocateElement(uint currentID)
@@ -415,11 +403,15 @@ void evaluate_neighbors(uint currentID, uint bisectorID, out uint resX, out uint
     }
 }
 
-void BisectElement(uint currentID)
+void BisectElement(uint currentID, uint dispatchID)
 {
+    DebugStruct debug;
     // If this bisector is not allocated or not subdivided, stop right away
     uint64_t baseHeapID = pParams.heapIDBuffer[currentID];
     BisectorData cBisectorData = pParams.bisectorDataBuffer[currentID];
+    debug.baseHeapID = baseHeapID;
+    debug.subdivision = cBisectorData.subdivisionPattern;
+    debug.propagateLocation = 0;
     if (baseHeapID == 0 || cBisectorData.subdivisionPattern == NO_SPLIT)
         return;
 
@@ -436,6 +428,11 @@ void BisectElement(uint currentID)
     uint siblingID0 = cBisectorData.indices[0];
     uint siblingID1 = cBisectorData.indices[1];
     uint siblingID2 = cBisectorData.indices[2];
+
+    debug.indices[0] = cBisectorData.indices[0];
+    debug.indices[1] = cBisectorData.indices[1];
+    debug.indices[2] = cBisectorData.indices[2];
+    debug.indices[3] = 0;
 
     // Simple subdivision (along the main axis)
     if (currentSubdiv == CENTER_SPLIT)
@@ -461,6 +458,11 @@ void BisectElement(uint currentID)
 
         // Keep track of the parent
         BisectorData modifiedBisector = cBisectorData;
+        modifiedBisector.indices[0] = cBisectorData.indices[0];
+        modifiedBisector.indices[1] = cBisectorData.indices[1];
+        modifiedBisector.indices[2] = cBisectorData.indices[2];
+        modifiedBisector.subdivisionPattern = cBisectorData.subdivisionPattern;
+        modifiedBisector.bisectorState = cBisectorData.bisectorState;
         modifiedBisector.propagationID = currentID;
 
         modifiedBisector.problematicNeighbor = INVALID_POINTER;
@@ -472,9 +474,10 @@ void BisectElement(uint currentID)
         pParams.bisectorDataBuffer[siblingID0] = modifiedBisector;
 
         // Mark this for propagation
-        uint targetLocation;
+        uint targetLocation = 0;
         InterlockedAdd(pParams.propagateBuffer[0], 1, targetLocation);
         pParams.propagateBuffer[2 + targetLocation] = siblingID0;
+        debug.propagateLocation = targetLocation;
     }
     else if (currentSubdiv == RIGHT_DOUBLE_SPLIT)
     {
@@ -507,6 +510,11 @@ void BisectElement(uint currentID)
 
         // Keep track of the parent
         BisectorData modifiedBisector = cBisectorData;
+        modifiedBisector.indices[0] = cBisectorData.indices[0];
+        modifiedBisector.indices[1] = cBisectorData.indices[1];
+        modifiedBisector.indices[2] = cBisectorData.indices[2];
+        modifiedBisector.subdivisionPattern = cBisectorData.subdivisionPattern;
+        modifiedBisector.bisectorState = cBisectorData.bisectorState;
         modifiedBisector.propagationID = currentID;
 
         // Lower the element down the tree and update it's sibling
@@ -525,9 +533,10 @@ void BisectElement(uint currentID)
         pParams.bisectorDataBuffer[siblingID1] = modifiedBisector;
 
         // Mark this for propagation
-        uint targetLocation;
+        uint targetLocation = 0;
         InterlockedAdd(pParams.propagateBuffer[0], 1, targetLocation);
         pParams.propagateBuffer[2 + targetLocation] = siblingID0;
+        debug.propagateLocation = targetLocation;
     }
     else if (currentSubdiv == LEFT_DOUBLE_SPLIT)
     {
@@ -560,6 +569,11 @@ void BisectElement(uint currentID)
 
         // Keep track of the parent
         BisectorData modifiedBisector = cBisectorData;
+        modifiedBisector.indices[0] = cBisectorData.indices[0];
+        modifiedBisector.indices[1] = cBisectorData.indices[1];
+        modifiedBisector.indices[2] = cBisectorData.indices[2];
+        modifiedBisector.subdivisionPattern = cBisectorData.subdivisionPattern;
+        modifiedBisector.bisectorState = cBisectorData.bisectorState;
         modifiedBisector.propagationID = currentID;
 
         // Lower the element down the tree and update it's sibling
@@ -616,6 +630,11 @@ void BisectElement(uint currentID)
 
         // Keep track of the parent
         BisectorData modifiedBisector = cBisectorData;
+        modifiedBisector.indices[0] = cBisectorData.indices[0];
+        modifiedBisector.indices[1] = cBisectorData.indices[1];
+        modifiedBisector.indices[2] = cBisectorData.indices[2];
+        modifiedBisector.subdivisionPattern = cBisectorData.subdivisionPattern;
+        modifiedBisector.bisectorState = cBisectorData.bisectorState;
         modifiedBisector.propagationID = currentID;
 
         // Lower the element down the tree and update it's sibling
@@ -641,6 +660,8 @@ void BisectElement(uint currentID)
 
     // How many bits do we need to raise
     uint numSiblings = countbits(currentSubdiv);
+    debug.numSiblings = numSiblings;
+    pParams.debugBuffer[dispatchID] = debug;
     for (uint siblingIdx = 0; siblingIdx < numSiblings; ++siblingIdx)
     {
         set_bit_atomic_buffer(cBisectorData.indices[siblingIdx], true);

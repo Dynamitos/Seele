@@ -29,39 +29,64 @@ struct UpdateCB
 
 struct DebugStruct
 {
-    int maxRequiredMemory;
-    int usedMemory;
-    uint memoryChange;
-    uint twinID;
+    uint4 indices;
+    uint baseHeapID;
+    uint subdivision;
+    uint propagateLocation;
+    uint numSiblings;
 };
 
 
 struct ComputeParams
 {
+    // 0
     ConstantBuffer<GeometryCB> geometry;
+    // 1
     ConstantBuffer<UpdateCB> update;
 
+    // 2
 	RWStructuredBuffer<float4> currentVertexBuffer;
+    // 3
 	StructuredBuffer<uint> indexedBisectorBuffer;
+    // 4
     RWStructuredBuffer<uint> indirectDrawBuffer;
+    // 5
     RWStructuredBuffer<uint64_t> heapIDBuffer;
+    // 6
     RWStructuredBuffer<BisectorData> bisectorDataBuffer;
+    // 7
     RWStructuredBuffer<uint> classificationBuffer;
+    // 8
     RWStructuredBuffer<int> allocateBuffer;
+    // 9
     RWStructuredBuffer<uint> indirectDispatchBuffer;
+    // 10
     RWStructuredBuffer<uint4> neighboursBuffer;
+    // 11
     RWStructuredBuffer<uint4> neighboursOutputBuffer;
+    // 12
     RWStructuredBuffer<int> memoryBuffer;
+    // 13
     RWStructuredBuffer<uint> cbtBuffer;
+    // 14
     RWStructuredBuffer<uint64_t> bitFieldBuffer;
+    // 15
     RWStructuredBuffer<int> propagateBuffer;
+    // 16
     RWStructuredBuffer<uint> simplifyBuffer;
+    // 17
     RWStructuredBuffer<uint> validationBuffer;
+    // 18
     RWStructuredBuffer<uint> bisectorIndicesBuffer;
+    // 19
     RWStructuredBuffer<uint> visibleBisectorIndices;
+    // 20
     RWStructuredBuffer<uint> modifiedBisectorIndices;
+    // 21
     RWStructuredBuffer<float4> lebPositionBuffer;
+    // 22
     StructuredBuffer<float3x3> lebMatrixCache;
+    // 23
     globallycoherent RWStructuredBuffer<DebugStruct> debugBuffer;
 };
 ParameterBlock<ComputeParams> pParams;
