@@ -228,35 +228,58 @@ uint bit_count(uint depth, uint element)
 // decodes the position of the i-th one in the bitfield
 uint decode_bit(uint handle)
 {
-    uint bitID = 1;
-    for (uint currentDepth = 0; currentDepth < WAVE_TREE_DEPTH; ++currentDepth)
+    //uint bitID = 1;
+    //for (uint currentDepth = 0; currentDepth < WAVE_TREE_DEPTH; ++currentDepth)
+    //{
+    //    uint heapValue = get_heap_element(2 * bitID);
+    //    uint b = handle < heapValue ? 0 : 1;
+//
+    //    bitID = 2 * bitID + b;
+    //    handle -= heapValue * b;
+    //}
+//
+    //return (bitID ^ OCBT_NUM_ELEMENTS);
+    
+    for(uint i = 0; i < OCBT_NUM_ELEMENTS; ++i)
     {
-        uint heapValue = get_heap_element(2 * bitID);
-        uint b = handle < heapValue ? 0 : 1;
-
-        bitID = 2 * bitID + b;
-        handle -= heapValue * b;
+        if(get_bit(i) == 1)
+        {
+            if(handle == 0)
+            {
+                return i;
+            }
+            handle--;
+        }
     }
-
-    return (bitID ^ OCBT_NUM_ELEMENTS);
 }
 
 // decodes the position of the i-th zero in the bitfield
 uint decode_bit_complement(uint handle)
 {
-    uint bitID = 1u;
-    uint c = OCBT_NUM_ELEMENTS / 2u;
-
-    while (bitID < OCBT_NUM_ELEMENTS) {
-        uint heapValue = c - get_heap_element(2u * bitID);
-        uint b = handle < heapValue ? 0u : 1u;
-
-        bitID = 2u * bitID + b;
-        handle -= heapValue * b;
-        c /= 2u;
+    //uint bitID = 1u;
+    //uint c = OCBT_NUM_ELEMENTS / 2u;
+//
+    //while (bitID < OCBT_NUM_ELEMENTS) {
+    //    uint heapValue = c - get_heap_element(2u * bitID);
+    //    uint b = handle < heapValue ? 0u : 1u;
+//
+    //    bitID = 2u * bitID + b;
+    //    handle -= heapValue * b;
+    //    c /= 2u;
+    //}
+//
+    //return (bitID ^ OCBT_NUM_ELEMENTS);
+    for(uint i = 0; i < OCBT_NUM_ELEMENTS; ++i)
+    {
+        if(get_bit(i) == 0)
+        {
+            if(handle == 0)
+            {
+                return i;
+            }
+            handle--;
+        }
     }
-
-    return (bitID ^ OCBT_NUM_ELEMENTS);
 }
 
 void reduce(uint groupIndex)

@@ -327,7 +327,6 @@ struct GeometryCB {
     uint32 totalNumVertices;
 };
 struct UpdateCB {
-    Matrix4 viewProjectionMatrix;
     float triangleSize;
     uint32_t maxSubdivisionDepth;
     float fov;
@@ -436,9 +435,9 @@ struct MeshUpdater {
 
     void update(CBTMesh& mesh, Gfx::PDescriptorSet viewParamsSet, Gfx::PUniformBuffer geometryCB, Gfx::PUniformBuffer updateCB);
 
-    void validation(const CBTMesh& mesh, Gfx::PUniformBuffer geometryCB);
+    void validation(CBTMesh& mesh, Gfx::PUniformBuffer geometryCB);
 
-    void resetBuffers(const CBTMesh& mesh);
+    void resetBuffers(CBTMesh& mesh);
 
     void prepareIndirection(CBTMesh& mesh, Gfx::PUniformBuffer geometryCB);
 

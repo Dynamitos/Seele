@@ -20,7 +20,6 @@ struct DeformationCB
 
 struct UpdateCB
 {
-    float4x4 viewProjectionMatrix;
     float triangleSize;
     uint32_t maxSubdivisionDepth;
     float fov;

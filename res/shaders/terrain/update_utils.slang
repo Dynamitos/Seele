@@ -62,7 +62,7 @@ int ClassifyBisector(in BisectorGeometry tri, uint depth)
         return FRUSTUM_CULLED;
 
     // Project the points on screen
-    float4x4 viewProjectionMatrix = pParams.update.viewProjectionMatrix;//mul(pViewParams.projectionMatrix, pViewParams.viewMatrix);
+    float4x4 viewProjectionMatrix = mul(pViewParams.projectionMatrix, pViewParams.viewMatrix);
     float4 p0P = mul(viewProjectionMatrix, float4(tri.p[0], 1.0));
     p0P.xy = p0P.xy / p0P.w;
     p0P.xy = (p0P.xy * 0.5 + 0.5);
@@ -402,15 +402,11 @@ void evaluate_neighbors(uint currentID, uint bisectorID, out uint resX, out uint
     }
 }
 
-void BisectElement(uint currentID, uint dispatchID)
+void BisectElement(uint currentID)
 {
-    DebugStruct debug;
     // If this bisector is not allocated or not subdivided, stop right away
     uint64_t baseHeapID = pParams.heapIDBuffer[currentID];
     BisectorData cBisectorData = pParams.bisectorDataBuffer[currentID];
-    debug.baseHeapID = baseHeapID;
-    debug.subdivision = cBisectorData.subdivisionPattern;
-    debug.propagateLocation = 0;
     if (baseHeapID == 0 || cBisectorData.subdivisionPattern == NO_SPLIT)
         return;
 
@@ -427,11 +423,6 @@ void BisectElement(uint currentID, uint dispatchID)
     uint siblingID0 = cBisectorData.indices[0];
     uint siblingID1 = cBisectorData.indices[1];
     uint siblingID2 = cBisectorData.indices[2];
-
-    debug.indices[0] = cBisectorData.indices[0];
-    debug.indices[1] = cBisectorData.indices[1];
-    debug.indices[2] = cBisectorData.indices[2];
-    debug.indices[3] = 0;
 
     // Simple subdivision (along the main axis)
     if (currentSubdiv == CENTER_SPLIT)
@@ -476,7 +467,6 @@ void BisectElement(uint currentID, uint dispatchID)
         uint targetLocation = 0;
         InterlockedAdd(pParams.propagateBuffer[0], 1, targetLocation);
         pParams.propagateBuffer[2 + targetLocation] = siblingID0;
-        debug.propagateLocation = targetLocation;
     }
     else if (currentSubdiv == RIGHT_DOUBLE_SPLIT)
     {
@@ -535,7 +525,6 @@ void BisectElement(uint currentID, uint dispatchID)
         uint targetLocation = 0;
         InterlockedAdd(pParams.propagateBuffer[0], 1, targetLocation);
         pParams.propagateBuffer[2 + targetLocation] = siblingID0;
-        debug.propagateLocation = targetLocation;
     }
     else if (currentSubdiv == LEFT_DOUBLE_SPLIT)
     {
@@ -659,8 +648,6 @@ void BisectElement(uint currentID, uint dispatchID)
 
     // How many bits do we need to raise
     uint numSiblings = countbits(currentSubdiv);
-    debug.numSiblings = numSiblings;
-    pParams.debugBuffer[dispatchID] = debug;
     for (uint siblingIdx = 0; siblingIdx < numSiblings; ++siblingIdx)
     {
         set_bit_atomic(cBisectorData.indices[siblingIdx], true);
