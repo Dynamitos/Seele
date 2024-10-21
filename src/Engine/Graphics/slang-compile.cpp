@@ -42,7 +42,7 @@ void Seele::beginCompilation(const ShaderCompilationInfo& info, SlangCompileTarg
         //        },
         //},
         {
-            .name = slang::CompilerOptionName::EmitSpirvDirectly,
+            .name = slang::CompilerOptionName::EmitSpirvViaGLSL,
             .value =
                 {
                     .kind = slang::CompilerOptionValueKind::Int,
@@ -88,7 +88,7 @@ void Seele::beginCompilation(const ShaderCompilationInfo& info, SlangCompileTarg
     sessionDesc.preprocessorMacroCount = macros.size();
     sessionDesc.preprocessorMacros = macros.data();
     slang::TargetDesc targetDesc;
-    targetDesc.profile = globalSession->findProfile("spirv_1_6");
+    targetDesc.profile = globalSession->findProfile("glsl_450");
     targetDesc.format = target;
     sessionDesc.targetCount = 1;
     sessionDesc.targets = &targetDesc;

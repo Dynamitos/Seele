@@ -313,7 +313,7 @@ void Buffer::createBuffer(uint64 size, uint32 destIndex) {
         PCommand command = graphics->getQueueCommands(initialOwner)->getCommands();
         command->bindResource(PBufferAllocation(buffers[destIndex]));
         vkCmdFillBuffer(command->getHandle(), buffers[destIndex]->buffer, 0, VK_WHOLE_SIZE, clearValue);
-        pipelineBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+        buffers[destIndex]->pipelineBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
                         VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT);
     }
 }

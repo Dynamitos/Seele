@@ -19,9 +19,9 @@ static const uint64_t LEFT_DOUBLE_SPLIT = (CENTER_SPLIT | LEFT_SPLIT);
 static const uint64_t TRIPLE_SPLIT = (CENTER_SPLIT | RIGHT_SPLIT | LEFT_SPLIT);
 
 // Split buffer slots
-static const uint64_t SPLIT_COUNTER = 0;
-static const uint64_t SIMPLIFY_COUNTER = 1;
-static const uint64_t CLASSIFY_COUNTER_OFFSET = 2;
+static const uint32_t SPLIT_COUNTER = 0;
+static const uint32_t SIMPLIFY_COUNTER = 1;
+static const uint32_t CLASSIFY_COUNTER_OFFSET = 2;
 
 bool FrustumAABBIntersect(in Frustum frustum, float3 aabbMin, float3 aabbMax)
 {
@@ -330,14 +330,13 @@ void AllocateElement(uint currentID)
         int numSlots = countbits(bisectorData.subdivisionPattern);
 
         // Request the number of bits we need using an interlock add
-        uint firstBitIndex = 0;
+        int firstBitIndex = 0;
         InterlockedAdd(pParams.memoryBuffer[0], numSlots, firstBitIndex);
 
         // llocate the bits we need
         for (uint bitId = 0; bitId < numSlots; ++bitId)
         {
-            uint index = decode_bit_complement(firstBitIndex + bitId);
-            bisectorData.indices[bitId] = index;
+            bisectorData.indices[bitId] = decode_bit_complement(firstBitIndex + bitId);
         }
 
         // Output 
@@ -664,7 +663,7 @@ void BisectElement(uint currentID, uint dispatchID)
     pParams.debugBuffer[dispatchID] = debug;
     for (uint siblingIdx = 0; siblingIdx < numSiblings; ++siblingIdx)
     {
-        set_bit_atomic_buffer(cBisectorData.indices[siblingIdx], true);
+        set_bit_atomic(cBisectorData.indices[siblingIdx], true);
     }
 }
 
@@ -709,8 +708,9 @@ void PropagateBisectElement(uint currentID)
     }
 
     // Reset the problematic neighbor and the bisection state
-    pParams.bisectorDataBuffer[currentID].problematicNeighbor = INVALID_POINTER;
-    pParams.bisectorDataBuffer[currentID].bisectorState = UNCHANGED_ELEMENT;
+    cBisectorData.problematicNeighbor = INVALID_POINTER;
+    cBisectorData.bisectorState = UNCHANGED_ELEMENT;
+    pParams.bisectorDataBuffer[currentID] = cBisectorData;
 }
 
 void PrepareSimplifyElement(uint currentID)

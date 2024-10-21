@@ -71,157 +71,144 @@ struct ComputeParams
     RWStructuredBuffer<BisectorData> bisectorDataBuffer;
     RWStructuredBuffer<int> propagateBuffer;
     RWStructuredBuffer<uint> simplifyBuffer;
-    RWStructuredBuffer<uint32_t> bitFieldBuffer;
+    RWStructuredBuffer<uint> cbtBuffer;
+    RWStructuredBuffer<uint64_t> bitFieldBuffer;
 };
 ParameterBlock<ComputeParams> pParams;
 
-void SplitElement(uint currentID, uint baseDepth, uint dispatchID)
+#define WORKGROUP_SIZE 64
+
+// Num elements
+#define OCBT_NUM_ELEMENTS 131072
+// Tree sizes
+#define OCBT_TREE_SIZE_BITS (32 * 1 + 32 * 2 + 32 * 4 + 32 * 8 + 32 * 16 + 32 * 32 + 32 * 64 + 16 * 128 + 16 * 256 + 16 * 512 + 8 * 1024)
+#define OCBT_TREE_NUM_SLOTS (OCBT_TREE_SIZE_BITS / 32)
+#define OCBT_BITFIELD_NUM_SLOTS (OCBT_NUM_ELEMENTS / 64)
+#define OCBT_LAST_LEVEL_SIZE 1024
+
+// Tree last level
+#define TREE_LAST_LEVEL 10
+// First virtual level
+#define FIRST_VIRTUAL_LEVEL 11
+// Leaf level
+#define LEAF_LEVEL 17
+
+// per level offset
+static const uint32_t OCBT_depth_offset[18] = { 0, // Level 0
+                                        32 * 1, // level 1
+                                        32 * 1 + 32 * 2, // level 2
+                                        32 * 1 + 32 * 2 + 32 * 4, // level 3
+                                        32 * 1 + 32 * 2 + 32 * 4 + 32 * 8, // Level 4
+                                        32 * 1 + 32 * 2 + 32 * 4 + 32 * 8 + 32 * 16, // Level 5
+                                        32 * 1 + 32 * 2 + 32 * 4 + 32 * 8 + 32 * 16 + 32 * 32, // Level 6
+                                        32 * 1 + 32 * 2 + 32 * 4 + 32 * 8 + 32 * 16 + 32 * 32 + 32 * 64, // Level 7
+
+                                        32 * 1 + 32 * 2 + 32 * 4 + 32 * 8 + 32 * 16 + 32 * 32 + 32 * 64 + 16 * 128, // Level 8
+                                        32 * 1 + 32 * 2 + 32 * 4 + 32 * 8 + 32 * 16 + 32 * 32 + 32 * 64 + 16 * 128 + 16 * 256, // Level 9
+                                        32 * 1 + 32 * 2 + 32 * 4 + 32 * 8 + 32 * 16 + 32 * 32 + 32 * 64 + 16 * 128 + 16 * 256 + 16 * 512, // Level 10
+
+                                        0, // Level 12
+                                        0, // Level 13
+                                        0, // Level 14
+                                        0, // Level 15
+                                        0, // Level 16
+                                        0, // Level 17
+                                        0, // Level 18
+};
+
+static const uint64_t OCBT_bit_mask[18] = { 0xffffffff, // Root 17
+                            0xffffffff, // Level 16
+                            0xffffffff, // level 15
+                            0xffffffff, // level 14
+                            0xffffffff, // level 13
+                            0xffffffff, // level 12
+                            0xffffffff, // level 11
+
+                            0xffff, // level 10
+                            0xffff, // level 9
+                            0xffff, // level 8
+                            0xff, // level 8
+
+                            0xffffffffffffffff, // level 7
+                            0xffffffff, // Level 6
+                            0xffff, // level 5
+                            0xff, // level 4
+                            0xf, // level 3
+                            0x3, // level 2
+                            0x1, // level 1
+};
+
+static const uint32_t OCBT_bit_count[18] = { 32, // Root 17
+                            32, // Level 16
+                            32, // level 15
+                            32, // level 14
+                            32, // level 13
+                            32, // level 12
+                            32, // level 11
+
+                            16, // level 10
+                            16, // level 9
+                            16, // level 8
+                            8, // level 8
+
+                            64, // Level 5
+                            32, // Level 5
+                            16, // Level 4
+                            8, // level 3
+                            4, // level 2
+                            2, // level 1
+                            1, // level 0
+};
+
+groupshared uint gs_cbtTree[OCBT_TREE_NUM_SLOTS];
+
+// Define the remaining values
+#define BUFFER_ELEMENT_PER_LANE ((OCBT_TREE_NUM_SLOTS + WORKGROUP_SIZE - 1) / WORKGROUP_SIZE)
+#define BUFFER_ELEMENT_PER_LANE_NO_BITFIELD ((OCBT_TREE_NUM_SLOTS + WORKGROUP_SIZE - 1) / WORKGROUP_SIZE)
+#define BITFIELD_ELEMENT_PER_LANE ((OCBT_BITFIELD_NUM_SLOTS + WORKGROUP_SIZE - 1) / WORKGROUP_SIZE)
+#define WAVE_TREE_DEPTH uint(log2(OCBT_NUM_ELEMENTS))
+
+void load_buffer_to_shared_memory(uint groupIndex)
 {
-    // Get the neighbors information
-    uint4 cNeighbors = pParams.neighboursBuffer[currentID];
-
-    // If there is a neighbor X
-    if (cNeighbors.x != INVALID_POINTER)
+    // Load the bitfield to the LDS
+    for (uint e = 0; e < BUFFER_ELEMENT_PER_LANE; ++e)
     {
-        // This is on the path of it's neighbor X
-        uint4 xNeighbors = pParams.neighboursBuffer[cNeighbors.x];
-        if (xNeighbors.z == currentID && pParams.bisectorDataBuffer[cNeighbors.x].bisectorState != UNCHANGED_ELEMENT)
-            return;
+        uint target_element = BUFFER_ELEMENT_PER_LANE * groupIndex + e;
+        if (target_element < OCBT_TREE_NUM_SLOTS)
+            gs_cbtTree[target_element] = pParams.cbtBuffer[target_element];
     }
+    GroupMemoryBarrierWithGroupSync();
+}
 
-    // If there is a neighbor Y
-    if (cNeighbors.y != INVALID_POINTER)
+uint get_heap_element(uint id)
+{
+    // Figure out the location of the first bit of this element
+    uint32_t real_heap_id = id - 1;
+    uint32_t depth = uint32_t(log2(real_heap_id + 1));
+    uint32_t level_first_element = (1u << depth) - 1;
+    uint32_t id_in_level = real_heap_id - level_first_element;
+    uint32_t first_bit = OCBT_depth_offset[depth] + OCBT_bit_count[depth] * id_in_level;
+    if (depth < FIRST_VIRTUAL_LEVEL)
     {
-        // This is on the path of it's neighbor Y
-        uint4 yNeighbors = pParams.neighboursBuffer[cNeighbors.y];
-        if (yNeighbors.z == currentID && pParams.bisectorDataBuffer[cNeighbors.y].bisectorState != UNCHANGED_ELEMENT)
-            return;
+        uint32_t slot = first_bit / 32;
+        uint32_t local_id = first_bit % 32;
+        uint32_t target_bits = (gs_cbtTree[slot] >> local_id) & uint32_t(OCBT_bit_mask[depth]);
+        return (gs_cbtTree[slot] >> local_id) & uint32_t(OCBT_bit_mask[depth]);
     }
-
-    // Depth of the current triangle
-    uint64_t heapID = pParams.heapIDBuffer[currentID];
-    uint currentDepth = HeapIDDepth(heapID);
-
-    // Compute the maximal required memory for this subdivision
-    int maxRequiredMemory = 2 * (currentDepth - baseDepth) - 1;
-
-    // Get the twin information
-    uint twinID = cNeighbors.z;
-
-    // This avoid the massive over-reservation and saves a bunch of artifacts
-    if (twinID == INVALID_POINTER)
-        maxRequiredMemory = 1;
-    else if (pParams.neighboursBuffer[twinID].z == currentID)
-        maxRequiredMemory = 2;
-
-    // Try to reserve
-    int remainingMemory;
-    InterlockedAdd(pParams.memoryBuffer[1], -maxRequiredMemory, remainingMemory);
-    // Did someone manage to sneak-in while we were trying to pick the memory, add it back and try again
-    if (remainingMemory < maxRequiredMemory)
+    else
     {
-        // Then add back the required memory and stop
-        InterlockedAdd(pParams.memoryBuffer[1], maxRequiredMemory, remainingMemory);
-        return;
-    }
-
-    // Let's actually count the memory that we will be using
-    uint usedMemory = 1;
-    uint prevPattern;
-    InterlockedOr(pParams.bisectorDataBuffer[currentID].subdivisionPattern, CENTER_SPLIT, prevPattern);
-
-    // If this is not zero, it means an other neighbor went faster than us, we restore the memory and leave.
-    if (prevPattern != 0)
-    {
-        InterlockedAdd(pParams.memoryBuffer[1], maxRequiredMemory, remainingMemory);
-        return;
-    }
-
-    // Mark this for allocation
-    uint targetLocation = 0;
-    InterlockedAdd(pParams.allocateBuffer[0], 1, targetLocation);
-    pParams.allocateBuffer[1 + targetLocation] = currentID;
-
-    // While we're not done (up the tree or everything is subdivided properly)
-    bool done = false;
-    while (!done)
-    {
-        // If this neighbor is not allocated, we're done.
-        if (twinID == INVALID_POINTER)
-            break;
-
-        // Grab the bisector of the neighbor
-        uint64_t nHeapID = pParams.heapIDBuffer[twinID];
-        BisectorData nBisectorData = pParams.bisectorDataBuffer[twinID];
-        uint nDepth = HeapIDDepth(nHeapID);
-        uint4 nNeighbors = pParams.neighboursBuffer[twinID];
-
-        // If both triangles have the same depth
-        if (nDepth == currentDepth)
-        {
-            // Raised the center split
-            InterlockedOr(pParams.bisectorDataBuffer[twinID].subdivisionPattern, CENTER_SPLIT, prevPattern);
-
-            // Only account for it if it was not raised before.
-            if (prevPattern == 0)
-            {
-                // Mark this for allocation
-                uint targetLocation = 0;
-                InterlockedAdd(pParams.allocateBuffer[0], 1, targetLocation);
-                pParams.allocateBuffer[1 + targetLocation] = twinID;
-                usedMemory++;
-            }
-
-            // And we're done
-            done = true;
-        }
-        // If this node has already been subdivided, it means that we need to add the third subdivision and we're done
-        else
-        {
-            if (nNeighbors[0] == currentID)
-                InterlockedOr(pParams.bisectorDataBuffer[twinID].subdivisionPattern, RIGHT_DOUBLE_SPLIT, prevPattern);
-            else // if (nNeighbors[1] == currentID)
-                InterlockedOr(pParams.bisectorDataBuffer[twinID].subdivisionPattern, LEFT_DOUBLE_SPLIT, prevPattern);
-
-            if (prevPattern != 0)
-            {
-                usedMemory++;
-                done = true;
-            }
-            else
-            {
-                // Mark this for allocation
-                uint targetLocation = 0;
-                InterlockedAdd(pParams.allocateBuffer[0], 1, targetLocation);
-                pParams.allocateBuffer[1 + targetLocation] = twinID;
-                
-                // Account for two splits
-                usedMemory += 2;
-
-                // the new bisector that needs to be propagated
-                currentID = twinID;
-                currentDepth = nDepth;
-                twinID = pParams.neighboursBuffer[currentID].z;
-            }
-        }
-    }
-    int change = maxRequiredMemory - usedMemory;
-    if(change > 0)
-    {
-        // Add back the unused memory (in case)
-        InterlockedAdd(pParams.memoryBuffer[1], change, remainingMemory);
+        uint32_t slot = first_bit / 64;
+        uint32_t local_id = first_bit % 64;
+        uint64_t target_bits = (pParams.bitFieldBuffer[slot] >> local_id) & OCBT_bit_mask[depth];
+        uint32_t high = uint(target_bits >> 32);
+        uint32_t low = uint(target_bits);
+        return countbits(high) + countbits(low);
     }
 }
 
 [numthreads(64, 1, 1)]
-void Split(uint dispatchID : SV_DispatchThreadID)
+void GetHeap(uint groupIndex : SV_GroupIndex, uint dispatchID : SV_DispatchThreadID)
 {
-    if (dispatchID >= pParams.classificationBuffer[SPLIT_COUNTER])
-        return;
-
-    // Grab the real elementID
-    uint currentID = pParams.classificationBuffer[CLASSIFY_COUNTER_OFFSET + dispatchID];
-
-    // Split the element
-    SplitElement(currentID, 7, dispatchID);
+    load_buffer_to_shared_memory(groupIndex);
+    pParams.classificationBuffer[dispatchID] = get_heap_element(dispatchID);
 }

@@ -792,6 +792,7 @@ void Graphics::pickPhysicalDevice() {
         .pNext = &meshShaderFeatures,
         .storageBuffer8BitAccess = true,
         .uniformAndStorageBuffer8BitAccess = true,
+        .shaderBufferInt64Atomics = true,
         .shaderFloat16 = true,
         .shaderInt8 = true,
         .shaderUniformBufferArrayNonUniformIndexing = true,

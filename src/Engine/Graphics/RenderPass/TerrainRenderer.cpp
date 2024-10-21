@@ -13,7 +13,7 @@ TerrainRenderer::TerrainRenderer(Gfx::PGraphics graphics, PScene scene, Gfx::PDe
     Gfx::OPipelineLayout test = graphics->createPipelineLayout();
     graphics->beginShaderCompilation(ShaderCompilationInfo{
         .modules = {"CompileTest"},
-        .entryPoints = {{"Split", "CompileTest"}},
+        .entryPoints = {{"GetHeap", "CompileTest"}},
         .rootSignature = test,
     });
     graphics->createComputeShader({0});
@@ -32,7 +32,7 @@ TerrainRenderer::TerrainRenderer(Gfx::PGraphics graphics, PScene scene, Gfx::PDe
                     .size = bufferSize,
                     .data = (uint8*)cbt.rawBuffer(i),
                 },
-            .name = "GPUCBT",
+            .name = fmt::format("GPUCBT{0}", i).c_str(),
         });
         plainMesh.gpuCBT.bufferArray[i]->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
                                                          Gfx::SE_ACCESS_SHADER_READ_BIT | Gfx::SE_ACCESS_SHADER_WRITE_BIT,

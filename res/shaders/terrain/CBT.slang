@@ -396,11 +396,9 @@ void reduce_second_pass(uint groupIndex)
     GroupMemoryBarrierWithGroupSync();
 
     // Load the bitfield to the LDS
-    for (uint e = 0; e < 5; ++e)
+    for (uint i = groupIndex; i < 319; i+=WORKGROUP_SIZE)
     {
-        uint target_element = 5 * groupIndex + e;
-        if (target_element < 319)
-            pParams.cbtBuffer[target_element] = gs_cbtTree[target_element];
+        pParams.cbtBuffer[i] = gs_cbtTree[i];
     }
 }
 
