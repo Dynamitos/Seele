@@ -11,6 +11,8 @@ struct ViewParameter
     float4x4 inverseViewMatrix;
     float4x4 projectionMatrix;
     float4x4 inverseProjection;
+    float4x4 viewProjectionMatrix;
+    float4x4 inverseViewProjectionMatrix;
     float4 cameraPosition_WS;
     float4 cameraForward_WS;
     float2 screenDimensions;

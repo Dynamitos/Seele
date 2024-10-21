@@ -34,12 +34,27 @@ class RenderPass {
     struct Frustum {
         Plane planes[4];
     };
+    Plane computePlane(Vector p0, Vector p1, Vector p2) {
+        Plane plane;
+
+        Vector v0 = p1 - p0;
+        Vector v2 = p2 - p0;
+
+        plane.n = normalize(cross(v0, v2));
+
+        plane.d = dot(plane.n, p0);
+
+        return plane;
+    }
+
     struct ViewParameter {
         Frustum viewFrustum;
         Matrix4 viewMatrix;
         Matrix4 inverseViewMatrix;
         Matrix4 projectionMatrix;
         Matrix4 inverseProjection;
+        Matrix4 viewProjectionMatrix;
+        Matrix4 inverseViewProjectionMatrix;
         Vector4 cameraPosition_WS;
         Vector4 cameraForward_WS;
         Vector2 screenDimensions;

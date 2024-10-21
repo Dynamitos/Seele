@@ -62,7 +62,7 @@ int ClassifyBisector(in BisectorGeometry tri, uint depth)
         return FRUSTUM_CULLED;
 
     // Project the points on screen
-    float4x4 viewProjectionMatrix = mul(pViewParams.projectionMatrix, pViewParams.viewMatrix);
+    float4x4 viewProjectionMatrix = pViewParams.viewProjectionMatrix;
     float4 p0P = mul(viewProjectionMatrix, float4(tri.p[0], 1.0));
     p0P.xy = p0P.xy / p0P.w;
     p0P.xy = (p0P.xy * 0.5 + 0.5);
