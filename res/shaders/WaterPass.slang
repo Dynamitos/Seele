@@ -9,6 +9,11 @@ struct WaterPayload
     uint numMeshes;
 };
 
+//struct WaterPayload
+//{
+//    TileDescriptor descriptors[BLOCK_SIZE];
+//}
+
 struct WaterTile
 {
     int2 location;
@@ -75,12 +80,24 @@ struct MaterialParams
 layout(set = 1)
 ParameterBlock<MaterialParams> pWaterMaterial;
 
-[numthreads(1, 1, 1)]
+//groupshared WaterPayload waterPayload;
+//groupshared uint head;
+
+[numthreads(BLOCK_SIZE, 1, 1)]
 [shader("amplification")]
 void taskMain(
     uint threadID: SV_GroupThreadID,
     uint3 groupID: SV_GroupID
+  //  uint dispatchID: SV_DispatchThreadID,
     ) {
+    //if(threadID == 0)
+    //{
+    //    head = 0;
+    //}
+    //if(dispatchID >= 1600)
+    //{
+    //    return;
+    //}
     WaterTile tile = pWaterMaterial.tiles[groupID.x];
     GroupMemoryBarrierWithGroupSync();
     AABB bounding;
@@ -111,6 +128,10 @@ void taskMain(
     payload.offset = bounding.minCorner;
     payload.extent = tile.extent / numMeshes;
     payload.numMeshes = numMeshes;
+    //uint index = 0;
+    //InterlockedAdd(head, 1, index);
+    //waterPayload.descriptors[index] = payload;
+    //GroupMemoryBarrierWithGroupSync();
     DispatchMesh(numMeshes, numMeshes, 1, payload);
 }
 

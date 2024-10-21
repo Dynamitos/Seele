@@ -108,7 +108,7 @@ static const uint32_t OCBT_bit_count[18] = { 32, // Root 17
 #define BUFFER_ELEMENT_PER_LANE ((OCBT_TREE_NUM_SLOTS + WORKGROUP_SIZE - 1) / WORKGROUP_SIZE)
 #define BUFFER_ELEMENT_PER_LANE_NO_BITFIELD ((OCBT_TREE_NUM_SLOTS + WORKGROUP_SIZE - 1) / WORKGROUP_SIZE)
 #define BITFIELD_ELEMENT_PER_LANE ((OCBT_BITFIELD_NUM_SLOTS + WORKGROUP_SIZE - 1) / WORKGROUP_SIZE)
-#define WAVE_TREE_DEPTH uint(log2(OCBT_NUM_ELEMENTS))
+#define WAVE_TREE_DEPTH uint(17)
 
 uint32_t cbt_size()
 {
@@ -174,9 +174,7 @@ uint get_heap_element(uint id)
         uint32_t slot = first_bit / 64;
         uint32_t local_id = first_bit % 64;
         uint64_t target_bits = (pParams.bitFieldBuffer[slot] >> local_id) & OCBT_bit_mask[depth];
-        uint32_t high = uint(target_bits >> 32);
-        uint32_t low = uint(target_bits);
-        return countbits(high) + countbits(low);
+        return countbits(uint(target_bits >> 32)) + countbits(uint(target_bits));
     }
 }
 
@@ -298,15 +296,11 @@ void reduce_prepass(uint dispatchThreadID)
     {
         // First element of the pair
         uint64_t target_bits = pParams.bitFieldBuffer[dispatchThreadID * 8 + 2 * pairIdx];
-        uint32_t high = uint(target_bits >> 32);
-        uint32_t low = uint(target_bits);
-        uint elementC = countbits(high) + countbits(low);
+        uint elementC = countbits(uint(target_bits >> 32)) + countbits(uint(target_bits));
 
         // Second element of the pair
         target_bits = pParams.bitFieldBuffer[dispatchThreadID * 8 + 2 * pairIdx + 1];
-        high = uint(target_bits >> 32);
-        low = uint(target_bits);
-        elementC += countbits(high) + countbits(low);
+        elementC += countbits(uint(target_bits >> 32)) + countbits(uint(target_bits));
 
         // Store in the right bits
         packedSum |= (elementC << pairIdx * 8);
@@ -396,9 +390,11 @@ void reduce_second_pass(uint groupIndex)
     GroupMemoryBarrierWithGroupSync();
 
     // Load the bitfield to the LDS
-    for (uint i = groupIndex; i < 319; i+=WORKGROUP_SIZE)
+    for (uint e = 0; e < 5; ++e)
     {
-        pParams.cbtBuffer[i] = gs_cbtTree[i];
+        uint target_element = 5 * groupIndex + e;
+        if (target_element < 319)
+            pParams.cbtBuffer[target_element] = gs_cbtTree[target_element];
     }
 }
 
