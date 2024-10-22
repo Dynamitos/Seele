@@ -86,6 +86,10 @@ struct ComputeParams
     // 22
     StructuredBuffer<float> lebMatrixCache;
     // 23
-    globallycoherent RWStructuredBuffer<DebugStruct> debugBuffer;
+    RWStructuredBuffer<DebugStruct> debugBuffer;
+    // 24
+    SamplerState displacementSampler;
+    // 25
+    Texture2D<float4> displacementMap;
 };
 ParameterBlock<ComputeParams> pParams;

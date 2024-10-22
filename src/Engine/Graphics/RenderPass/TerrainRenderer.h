@@ -31,6 +31,7 @@ class TerrainRenderer {
     Gfx::PTexture2D displacementMap;
     Gfx::PTexture2D colorMap;
     Gfx::OSampler sampler;
+    Gfx::PTexture2D displacementAsset;
 
     Gfx::OUniformBuffer geometryBuffer;
     Gfx::OUniformBuffer updateBuffer;

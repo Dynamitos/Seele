@@ -32,7 +32,11 @@ VertexOutput vert(VertexInput input)
     // Which vertex should be read?
     local_vert_id = local_vert_id == 0 ? 2 : (local_vert_id == 2 ? 0 : 1);
     float3 positionRWS = pParams.currentVertexBuffer[output.triangleID * 3 + local_vert_id].xyz;
+    //positionRWS.y = pParams.displacementMap.SampleLevel(pParams.displacementSampler, positionRWS.xz, 0).r;
 
+    float2 texCoord = positionRWS.xz / 1000;
+
+    positionRWS.y = pParams.displacementMap.SampleLevel(pParams.displacementSampler, texCoord, 0).r * 100;
     // Apply the view projection
     output.positionCS = mul(pViewParams.projectionMatrix, mul(pViewParams.viewMatrix, float4(positionRWS, 1.0)));
     return output;

@@ -253,6 +253,8 @@ TerrainRenderer::TerrainRenderer(Gfx::PGraphics graphics, PScene scene, Gfx::PDe
         .computeShader = deformCS,
         .pipelineLayout = meshUpdater.pipelineLayout,
     });
+    sampler = graphics->createSampler({});
+    displacementAsset = AssetRegistry::findTexture("", "wgen")->getTexture().cast<Gfx::Texture2D>();
     meshUpdater.resetBuffers(plainMesh);
     meshUpdater.prepareIndirection(plainMesh, geometryBuffer);
     meshUpdater.evaluateLeb(baseMesh, plainMesh, viewParamsSet, geometryBuffer, updateBuffer, lebCache.getLebMatrixBuffer(), true, true);
@@ -273,6 +275,8 @@ Gfx::ORenderCommand TerrainRenderer::render(Gfx::PDescriptorSet viewParamsSet) {
     Gfx::PDescriptorSet set = meshUpdater.layout->allocateDescriptorSet();
     set->updateBuffer(CURRENT_VERTEX_BUFFER, 0, plainMesh.currentVertexBuffer);
     set->updateBuffer(INDEXED_BISECTOR_BUFFER, 0, plainMesh.indexedBisectorBuffer);
+    set->updateSampler(SAMPLER_LOCATION, 0, sampler);
+    set->updateTexture(DISPLACEMENT_MAP, 0, displacementAsset);
     set->writeChanges();
     Gfx::ORenderCommand command = graphics->createRenderCommand("TerrainRender");
     command->setViewport(viewport);

@@ -30,6 +30,8 @@ constexpr auto MODIFIED_BISECTOR_INDICES = 20;
 constexpr auto LEB_POSITION_BUFFER = 21;
 constexpr auto LEB_MATRIX_CACHE = 22;
 constexpr auto DEBUG_BUFFER = 23;
+constexpr auto SAMPLER_LOCATION = 24;
+constexpr auto DISPLACEMENT_MAP = 25;
 
 constexpr uint64 WORKGROUP_SIZE = 64;
 template <size_t Power> class CBT {

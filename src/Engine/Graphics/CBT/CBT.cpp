@@ -1,5 +1,6 @@
 #include "CBT.h"
 #include "Graphics/Shader.h"
+#include "Asset/AssetRegistry.h"
 
 using namespace Seele;
 
@@ -240,6 +241,8 @@ void MeshUpdater::init(Gfx::PGraphics gfx, Gfx::PDescriptorLayout viewParamsLayo
     layout->addDescriptorBinding(Gfx::DescriptorBinding{21, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
     layout->addDescriptorBinding(Gfx::DescriptorBinding{22, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
     layout->addDescriptorBinding(Gfx::DescriptorBinding{23, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
+    layout->addDescriptorBinding(Gfx::DescriptorBinding{24, Gfx::SE_DESCRIPTOR_TYPE_SAMPLER});
+    layout->addDescriptorBinding(Gfx::DescriptorBinding{25, Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE});
     layout->create();
     pipelineLayout = graphics->createPipelineLayout("ComputeLayout");
     pipelineLayout->addDescriptorLayout(viewParamsLayout);
