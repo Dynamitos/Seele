@@ -46,7 +46,9 @@ class RenderPass {
 
         return plane;
     }
-
+    void normalize_plane(Plane& plane);
+    void extract_planes_from_view_projection_matrix(const Matrix4 viewProj, Frustum& frustum);
+    
     struct ViewParameter {
         Frustum viewFrustum;
         Matrix4 viewMatrix;

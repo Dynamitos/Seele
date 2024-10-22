@@ -109,10 +109,10 @@ int main() {
         //AssetImporter::importTexture(TextureImportArgs{
         //    .filePath = sourcePath / "import/textures/wgen.png",
         //});
-        // AssetImporter::importMesh(MeshImportArgs{
-        //    .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.glb",
-        //    .importPath = "Whitechapel",
-        // });
+        AssetImporter::importMesh(MeshImportArgs{
+           .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.glb",
+           .importPath = "Whitechapel",
+        });
         //  AssetImporter::importMesh(MeshImportArgs{521
         //      .filePath = sourcePath / "import/models/city-suburbs/source/city-suburbs.obj",
         //      .importPath = "suburbs",

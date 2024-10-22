@@ -48,6 +48,6 @@ void Camera::buildViewMatrix() {
     Vector lookAt = eyePos + getTransform().getForward();
     viewMatrix = glm::lookAt(eyePos, lookAt, Vector(0, 1, 0));
     cameraPos = eyePos;
-    cameraForward = -getTransform().getForward();
+    cameraForward = getTransform().getForward();
     bNeedsViewBuild = false;
 }

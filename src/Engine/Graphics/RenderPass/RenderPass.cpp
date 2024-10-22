@@ -81,15 +81,7 @@ void RenderPass::beginFrame(const Component::Camera& cam) {
         corners[i] = world / world.w;
     }
 
-    //viewParams.viewFrustum = {
-    //    .planes =
-    //        {
-    //            computePlane(cam.getCameraPosition(), Vector(corners[2]), Vector(corners[0])),
-    //            computePlane(cam.getCameraPosition(), Vector(corners[1]), Vector(corners[3])),
-    //            computePlane(cam.getCameraPosition(), Vector(corners[0]), Vector(corners[1])),
-    //            computePlane(cam.getCameraPosition(), Vector(corners[3]), Vector(corners[2])),
-    //        },
-    //};
+    extract_planes_from_view_projection_matrix(viewParams.viewProjectionMatrix, viewParams.viewFrustum);
 
     viewParamsBuffer->rotateBuffer(sizeof(ViewParameter));
     viewParamsBuffer->updateContents(0, sizeof(ViewParameter), &viewParams);
@@ -107,3 +99,34 @@ void RenderPass::beginFrame(const Component::Camera& cam) {
 void RenderPass::setResources(PRenderGraphResources _resources) { resources = _resources; }
 
 void RenderPass::setViewport(Gfx::PViewport _viewport) { viewport = _viewport; }
+
+void RenderPass::normalize_plane(Plane& plane) {
+    float l = sqrtf(plane.n.x * plane.n.x + plane.n.y * plane.n.y + plane.n.z * plane.n.z);
+    plane.n.x /= l;
+    plane.n.y /= l;
+    plane.n.z /= l;
+    plane.d /= l;
+}
+
+void RenderPass::extract_planes_from_view_projection_matrix(const Matrix4 viewProj, Frustum& frustum) {
+    // Compute all the planes
+    frustum.planes[0] = {
+        .n = Vector(viewProj[0][0] + viewProj[0][3], viewProj[1][0] + viewProj[1][3], viewProj[2][0] + viewProj[2][3]),
+        .d = viewProj[3][0] + viewProj[3][3],
+    };
+    frustum.planes[1] = {
+        .n = Vector(-viewProj[0][0] + viewProj[0][3], -viewProj[1][0] + viewProj[1][3], -viewProj[2][0] + viewProj[2][3]),
+        .d = -viewProj[3][0] + viewProj[3][3],
+    };
+    frustum.planes[2] = {
+        .n = Vector(viewProj[0][1] + viewProj[0][3], viewProj[1][1] + viewProj[1][3], viewProj[2][1] + viewProj[2][3]),
+        .d = viewProj[3][1] + viewProj[3][3],
+    };
+    frustum.planes[3] = {
+        .n = Vector(-viewProj[0][1] + viewProj[0][3], -viewProj[1][1] + viewProj[1][3], -viewProj[2][1] + viewProj[2][3]),
+        .d = -viewProj[3][1] + viewProj[3][3],
+    };
+    // Normalize all the planes
+    for (uint32_t planeIdx = 0; planeIdx < 4; ++planeIdx)
+        normalize_plane(frustum.planes[planeIdx]);
+}

@@ -2,6 +2,7 @@ import Common;
 import Bisector;
 import CBT;
 import Parameters;
+import Bounding;
 
 // Needs to be defined before including update_utilities
 struct BisectorGeometry
@@ -43,10 +44,10 @@ bool FrustumAABBIntersect(in Frustum frustum, float3 aabbMin, float3 aabbMax)
 int ClassifyBisector(in BisectorGeometry tri, uint depth)
 {
     // Check the triangle's visibility
-    float3 triNormal = normalize(cross(tri.p[2] - tri.p[1], tri.p[0] - tri.p[1]));
+    float3 triNormal = normalize(cross(tri.p[2] - tri.p[0], tri.p[1] - tri.p[0]));
     float3 triCenter = (tri.p[0] + tri.p[1] + tri.p[2]) / 3.0;
     float3 viewDir = normalize(-triCenter);
-    float FdotV = dot(viewDir, pViewParams.cameraForward_WS.xyz);
+    float FdotV = dot(viewDir, -pViewParams.cameraForward_WS.xyz);
     float VdotN = dot(viewDir, triNormal);
 
     // Here we don't use 0 as it introduces stability issues at grazing angles
@@ -54,11 +55,12 @@ int ClassifyBisector(in BisectorGeometry tri, uint depth)
         return BACK_FACE_CULLED;
 
     // Compute the triangle's AABB
-    float3 aabbMin = float3(min(min(tri.p[0].x, tri.p[1].x), tri.p[2].x), min(min(tri.p[0].y, tri.p[1].y), tri.p[2].y), min(min(tri.p[0].z, tri.p[1].z), tri.p[2].z));
-    float3 aabbMax = float3(max(max(tri.p[0].x, tri.p[1].x), tri.p[2].x), max(max(tri.p[0].y, tri.p[1].y), tri.p[2].y), max(max(tri.p[0].z, tri.p[1].z), tri.p[2].z));
+    AABB aabb;
+    aabb.minCorner = float3(min(min(tri.p[0].x, tri.p[1].x), tri.p[2].x), min(min(tri.p[0].y, tri.p[1].y), tri.p[2].y), min(min(tri.p[0].z, tri.p[1].z), tri.p[2].z));
+    aabb.maxCorner = float3(max(max(tri.p[0].x, tri.p[1].x), tri.p[2].x), max(max(tri.p[0].y, tri.p[1].y), tri.p[2].y), max(max(tri.p[0].z, tri.p[1].z), tri.p[2].z));
 
     // First we do a frustum culling pass
-    if (!FrustumAABBIntersect(pViewParams.viewFrustum, aabbMin, aabbMax))
+    if (!FrustumAABBIntersect(pViewParams.viewFrustum, aabb.minCorner, aabb.maxCorner))
         return FRUSTUM_CULLED;
 
     // Project the points on screen

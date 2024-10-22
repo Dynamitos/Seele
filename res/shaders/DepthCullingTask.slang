@@ -90,7 +90,7 @@ void taskMain(
         p.instanceId = pOffsets.instanceOffset + groupID;
         p.meshletOffset = mesh.meshletOffset;
         p.cullingOffset = pScene.cullingOffsets[p.instanceId];
-        modelViewProjection = mul(mul(pViewParams.projectionMatrix, pViewParams.viewMatrix), instance.transformMatrix);
+        modelViewProjection = mul(pViewParams.viewProjectionMatrix, instance.transformMatrix);
         float3 origin = viewToModel(instance.inverseTransformMatrix, float4(0, 0, 0, 1)).xyz;
         const float offset = 0.0f;
         float3 corners[4] = {
@@ -103,8 +103,8 @@ void taskMain(
         viewFrustum.sides[1] = computePlane(origin, corners[1], corners[3]);
         viewFrustum.sides[2] = computePlane(origin, corners[0], corners[1]);
         viewFrustum.sides[3] = computePlane(origin, corners[3], corners[2]);
-        //meshVisible = mesh.bounding.insideFrustum(viewFrustum) && isBoxVisible(mesh.bounding);
-        meshVisible = true;
+        meshVisible = mesh.bounding.insideFrustum(viewFrustum) && isBoxVisible(mesh.bounding);
+        //meshVisible = true;
     }
     GroupMemoryBarrierWithGroupSync();
     if(!meshVisible)

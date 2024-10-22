@@ -298,7 +298,7 @@ void TerrainRenderer::setViewport(Gfx::PViewport _viewport, Gfx::PRenderPass ren
         .rasterizationState =
             {
                 .polygonMode = Gfx::SE_POLYGON_MODE_LINE,
-                .cullMode = Gfx::SE_CULL_MODE_NONE,
+                .cullMode = Gfx::SE_CULL_MODE_BACK_BIT,
             },
         .colorBlend =
             {
@@ -310,6 +310,7 @@ void TerrainRenderer::setViewport(Gfx::PViewport _viewport, Gfx::PRenderPass ren
                         },
                     },
             },
+
     };
     pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
 }

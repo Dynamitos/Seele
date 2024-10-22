@@ -23,59 +23,76 @@ struct Halfedge {
 };
 Array<Halfedge> edges = {
     Halfedge{0, 1, 2, 4294967295},
-    Halfedge{1, 2, 0, 3},
-    Halfedge{4, 0, 1, 4294967295},
+    Halfedge{4, 2, 0, 3},
+    Halfedge{1, 0, 1, 4294967295},
+
     Halfedge{4, 4, 5, 1},
-    Halfedge{1, 5, 3, 8},
-    Halfedge{5, 3, 4, 18},
+    Halfedge{5, 5, 3, 8},
+    Halfedge{1, 3, 4, 18},
+
     Halfedge{1, 7, 8, 4294967295},
-    Halfedge{2, 8, 6, 9},
-    Halfedge{5, 6, 7, 4},
+    Halfedge{5, 8, 6, 9},
+    Halfedge{2, 6, 7, 4},
+
     Halfedge{5, 10, 11, 7},
-    Halfedge{2, 11, 9, 14},
-    Halfedge{6, 9, 10, 24},
+    Halfedge{6, 11, 9, 14},
+    Halfedge{2, 9, 10, 24},
+
     Halfedge{2, 13, 14, 4294967295},
-    Halfedge{3, 14, 12, 15},
-    Halfedge{6, 12, 13, 10},
+    Halfedge{6, 14, 12, 15},
+    Halfedge{3, 12, 13, 10},
+
     Halfedge{6, 16, 17, 13},
-    Halfedge{3, 17, 15, 4294967295},
-    Halfedge{7, 15, 16, 30},
+    Halfedge{7, 17, 15, 4294967295},
+    Halfedge{3, 15, 16, 30},
+
     Halfedge{4, 19, 20, 5},
-    Halfedge{5, 20, 18, 21},
-    Halfedge{8, 18, 19, 4294967295},
+    Halfedge{8, 20, 18, 21},
+    Halfedge{5, 18, 19, 4294967295},
+
     Halfedge{8, 22, 23, 19},
-    Halfedge{5, 23, 21, 26},
-    Halfedge{9, 21, 22, 36},
+    Halfedge{9, 23, 21, 26},
+    Halfedge{5, 21, 22, 36},
+
     Halfedge{5, 25, 26, 11},
-    Halfedge{6, 26, 24, 27},
-    Halfedge{9, 24, 25, 22},
+    Halfedge{9, 26, 24, 27},
+    Halfedge{6, 24, 25, 22},
+
     Halfedge{9, 28, 29, 25},
-    Halfedge{6, 29, 27, 32},
-    Halfedge{10, 27, 28, 42},
+    Halfedge{10, 29, 27, 32},
+    Halfedge{6, 27, 28, 42},
+
     Halfedge{6, 31, 32, 17},
-    Halfedge{7, 32, 30, 33},
-    Halfedge{10, 30, 31, 28},
+    Halfedge{10, 32, 30, 33},
+    Halfedge{7, 30, 31, 28},
+
     Halfedge{10, 34, 35, 31},
-    Halfedge{7, 35, 33, 4294967295},
-    Halfedge{11, 33, 34, 48},
+    Halfedge{11, 35, 33, 4294967295},
+    Halfedge{7, 33, 34, 48},
+
     Halfedge{8, 37, 38, 23},
-    Halfedge{9, 38, 36, 39},
-    Halfedge{12, 36, 37, 4294967295},
+    Halfedge{12, 38, 36, 39},
+    Halfedge{9, 36, 37, 4294967295},
+
     Halfedge{12, 40, 41, 37},
-    Halfedge{9, 41, 39, 44},
-    Halfedge{13, 39, 40, 4294967295},
+    Halfedge{13, 41, 39, 44},
+    Halfedge{9, 39, 40, 4294967295},
+
     Halfedge{9, 43, 44, 29},
-    Halfedge{10, 44, 42, 45},
-    Halfedge{13, 42, 43, 40},
+    Halfedge{13, 44, 42, 45},
+    Halfedge{10, 42, 43, 40},
+
     Halfedge{13, 46, 47, 43},
-    Halfedge{10, 47, 45, 50},
-    Halfedge{14, 45, 46, 4294967295},
+    Halfedge{14, 47, 45, 50},
+    Halfedge{10, 45, 46, 4294967295},
+
     Halfedge{10, 49, 50, 35},
-    Halfedge{11, 50, 48, 51},
-    Halfedge{14, 48, 49, 46},
+    Halfedge{14, 50, 48, 51},
+    Halfedge{11, 48, 49, 46},
+
     Halfedge{14, 52, 53, 49},
-    Halfedge{11, 53, 51, 4294967295},
-    Halfedge{15, 51, 52, 4294967295},
+    Halfedge{15, 53, 51, 4294967295},
+    Halfedge{11, 51, 52, 4294967295},
 
     // Halfedge{1, 1, 2, 5},     Halfedge{2, 2, 0, 36},    Halfedge{6, 0, 1, 39},    Halfedge{1, 4, 5, 51},    Halfedge{7, 5, 3, 48},
     // Halfedge{2, 3, 4, 0},     Halfedge{3, 7, 8, 9},     Halfedge{4, 8, 6, 45},    Halfedge{5, 6, 7, 42},    Halfedge{4, 10, 11, 6},
@@ -150,7 +167,7 @@ Matrix3 splittingMatrix(uint32 bitValue) {
     float b = float(bitValue);
     float c = 1.0f - b;
 
-    return Matrix3({
+    return glm::transpose(Matrix3({
         0.0f,
         b,
         c,
@@ -160,7 +177,7 @@ Matrix3 splittingMatrix(uint32 bitValue) {
         b,
         c,
         0.0f,
-    });
+    }));
 }
 
 Matrix3 decodeSubdivisionMatrix(uint64 heapID) {
@@ -175,19 +192,16 @@ Matrix3 decodeSubdivisionMatrix(uint64 heapID) {
 void LebMatrixCache::init(Gfx::PGraphics graphics, uint32 depth) {
     cacheDepth = depth;
     uint32 matrixCount = 2ULL << cacheDepth;
-    struct PaddedMatrix {
-        Matrix3 m;
-        uint8 pad[12];
-    };
-    std::vector<PaddedMatrix> table(matrixCount);
-    table[0].m = Matrix3({1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f});
+    Matrix3 m;
+    std::vector<Matrix3> table(matrixCount);
+    table[0] = Matrix3({1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f});
     for (uint64 heapID = 1ULL; heapID < (2ULL << cacheDepth); ++heapID) {
-        table[heapID].m = decodeSubdivisionMatrix(heapID);
+        table[heapID] = decodeSubdivisionMatrix(heapID);
     }
     lebMatrixBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
         .sourceData =
             {
-                .size = sizeof(PaddedMatrix) * matrixCount,
+                .size = sizeof(Matrix3) * matrixCount,
                 .data = (uint8*)table.data(),
             },
         .name = "LebMatrixCache",

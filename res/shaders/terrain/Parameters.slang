@@ -84,7 +84,7 @@ struct ComputeParams
     // 21
     RWStructuredBuffer<float4> lebPositionBuffer;
     // 22
-    StructuredBuffer<float3x3> lebMatrixCache;
+    StructuredBuffer<float> lebMatrixCache;
     // 23
     globallycoherent RWStructuredBuffer<DebugStruct> debugBuffer;
 };
