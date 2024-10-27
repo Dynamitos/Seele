@@ -78,7 +78,7 @@ void Allocate(uint groupIndex : SV_GroupIndex, uint dispatchID : SV_DispatchThre
     //for(uint i = 0; i < pParams.allocateBuffer[0]; ++i)
     //{
         // Allocate the required bits
-    AllocateElement(pParams.allocateBuffer[1 + dispatchID]);
+    AllocateElement(pParams.allocateBuffer[1 + dispatchID], dispatchID);
     //}
 }
 

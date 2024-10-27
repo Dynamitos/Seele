@@ -26,13 +26,19 @@ struct UpdateCB
     float farPlaneDistance;
 }
 
+struct HeapDebug
+{
+    uint id;
+    uint real_heap_id;
+    uint depth;
+    uint level_first_element;
+    uint id_in_level;
+    uint first_bit;
+};
+
 struct DebugStruct
 {
-    uint4 indices;
-    uint baseHeapID;
-    uint subdivision;
-    uint propagateLocation;
-    uint numSiblings;
+    HeapDebug heapValues[18];
 };
 
 

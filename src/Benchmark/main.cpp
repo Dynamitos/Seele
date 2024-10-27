@@ -27,7 +27,7 @@ int main(int argc, char** argv) {
         useDepthCulling = false;
     }
 
-    std::filesystem::path binaryPath = "C:/Users/Dynamitos/MeshShadingDemo/bin/MeshShadingDemo.dll";
+    std::filesystem::path binaryPath = "MeshShadingDemo.dll";
 
 #ifdef __APPLE__
         graphics = new Metal::Graphics();
@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
     vd->init(graphics);
 
     OWindowManager windowManager = new WindowManager();
-    AssetRegistry::init("C:/Users/Dynamitos/MeshShadingDemo/Assets", graphics);
+    AssetRegistry::init("Assets", graphics);
     vd->commitMeshes();
     WindowCreateInfo mainWindowInfo = {
         .width = 1920,

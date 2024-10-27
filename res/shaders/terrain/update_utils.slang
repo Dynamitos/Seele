@@ -320,7 +320,7 @@ void SplitElement(uint currentID, uint baseDepth)
     InterlockedAdd(pParams.memoryBuffer[1], maxRequiredMemory - usedMemory, remainingMemory);
 }
 
-void AllocateElement(uint currentID)
+void AllocateElement(uint currentID, uint dispatchID)
 {
     // Load the bisector for this element
     BisectorData bisectorData = pParams.bisectorDataBuffer[currentID];
@@ -338,7 +338,7 @@ void AllocateElement(uint currentID)
         // llocate the bits we need
         for (uint bitId = 0; bitId < numSlots; ++bitId)
         {
-            bisectorData.indices[bitId] = decode_bit_complement(firstBitIndex + bitId);
+            bisectorData.indices[bitId] = decode_bit_complement(firstBitIndex + bitId, dispatchID);
         }
 
         // Output 

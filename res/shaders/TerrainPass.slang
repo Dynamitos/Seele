@@ -36,7 +36,7 @@ VertexOutput vert(VertexInput input)
 
     float2 texCoord = positionRWS.xz / 1000;
 
-    positionRWS.y = pParams.displacementMap.SampleLevel(pParams.displacementSampler, texCoord, 0).r * 100;
+    //positionRWS.y = pParams.displacementMap.SampleLevel(pParams.displacementSampler, texCoord, 0).r * 100;
     // Apply the view projection
     output.positionCS = mul(pViewParams.projectionMatrix, mul(pViewParams.viewMatrix, float4(positionRWS, 1.0)));
     return output;

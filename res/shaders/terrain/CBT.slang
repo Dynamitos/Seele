@@ -108,7 +108,7 @@ static const uint32_t OCBT_bit_count[18] = { 32, // Root 17
 #define BUFFER_ELEMENT_PER_LANE ((OCBT_TREE_NUM_SLOTS + WORKGROUP_SIZE - 1) / WORKGROUP_SIZE)
 #define BUFFER_ELEMENT_PER_LANE_NO_BITFIELD ((OCBT_TREE_NUM_SLOTS + WORKGROUP_SIZE - 1) / WORKGROUP_SIZE)
 #define BITFIELD_ELEMENT_PER_LANE ((OCBT_BITFIELD_NUM_SLOTS + WORKGROUP_SIZE - 1) / WORKGROUP_SIZE)
-#define WAVE_TREE_DEPTH uint(17)
+#define WAVE_TREE_DEPTH uint(log2(OCBT_NUM_ELEMENTS))
 
 uint32_t cbt_size()
 {
@@ -154,7 +154,7 @@ uint get_bit(uint bitID)
     return uint((pParams.bitFieldBuffer[slot] & (1uLL << local_id)) >> local_id);
 }
 
-uint get_heap_element(uint id)
+uint get_heap_element(uint id, inout HeapDebug debug)
 {
     // Figure out the location of the first bit of this element
     uint32_t real_heap_id = id - 1;
@@ -162,6 +162,12 @@ uint get_heap_element(uint id)
     uint32_t level_first_element = (1u << depth) - 1;
     uint32_t id_in_level = real_heap_id - level_first_element;
     uint32_t first_bit = OCBT_depth_offset[depth] + OCBT_bit_count[depth] * id_in_level;
+    debug.id = id;
+    debug.real_heap_id = real_heap_id;
+    debug.depth = depth;
+    debug.level_first_element = level_first_element;
+    debug.id_in_level = id_in_level;
+    debug.first_bit = first_bit;
     if (depth < FIRST_VIRTUAL_LEVEL)
     {
         uint32_t slot = first_bit / 32;
@@ -222,59 +228,37 @@ uint bit_count()
 
 uint bit_count(uint depth, uint element)
 {
-    return get_heap_element((1u << depth) + element);
-}
-
-// decodes the position of the i-th one in the bitfield
-uint decode_bit(uint handle)
-{
-    //uint bitID = 1;
-    //for (uint currentDepth = 0; currentDepth < WAVE_TREE_DEPTH; ++currentDepth)
-    //{
-    //    uint heapValue = get_heap_element(2 * bitID);
-    //    uint b = handle < heapValue ? 0 : 1;
-//
-    //    bitID = 2 * bitID + b;
-    //    handle -= heapValue * b;
-    //}
-//
-    //return (bitID ^ OCBT_NUM_ELEMENTS);
-    
-    for(uint i = 0; i < OCBT_NUM_ELEMENTS; ++i)
-    {
-        if(get_bit(i) == 1)
-        {
-            if(handle == 0)
-            {
-                return i;
-            }
-            handle--;
-        }
-    }
+    HeapDebug debug;
+    return get_heap_element((1u << depth) + element, debug);
 }
 
 // decodes the position of the i-th zero in the bitfield
-uint decode_bit_complement(uint handle)
+uint decode_bit_complement(uint handle, uint dispatchID)
 {
-    //uint bitID = 1u;
-    //uint c = OCBT_NUM_ELEMENTS / 2u;
-//
-    //while (bitID < OCBT_NUM_ELEMENTS) {
-    //    uint heapValue = c - get_heap_element(2u * bitID);
-    //    uint b = handle < heapValue ? 0u : 1u;
-//
-    //    bitID = 2u * bitID + b;
-    //    handle -= heapValue * b;
-    //    c /= 2u;
-    //}
-//
-    //return (bitID ^ OCBT_NUM_ELEMENTS);
+    uint temp = handle;
+    DebugStruct debug;
+    uint x = 0;
+    uint bitID = 1u;
+    uint c = OCBT_NUM_ELEMENTS / 2u;
+
+    while (bitID < OCBT_NUM_ELEMENTS) {
+        uint heapValue = c - get_heap_element(2u * bitID, debug.heapValues[x++]);
+        uint b = handle < heapValue ? 0u : 1u;
+
+        bitID = 2u * bitID + b;
+        handle -= heapValue * b;
+        c /= 2u;
+    }
+
+    uint result = (bitID ^ OCBT_NUM_ELEMENTS);
+    handle = temp;
     for(uint i = 0; i < OCBT_NUM_ELEMENTS; ++i)
     {
         if(get_bit(i) == 0)
         {
             if(handle == 0)
             {
+                pParams.debugBuffer[dispatchID] = debug;
                 return i;
             }
             handle--;
@@ -284,6 +268,7 @@ uint decode_bit_complement(uint handle)
 
 void reduce(uint groupIndex)
 {
+    HeapDebug debug;
 	// First we do a reduction until each lane has exactly one element to process
 	uint initial_pass_size = OCBT_NUM_ELEMENTS / WORKGROUP_SIZE;
     for (uint it = initial_pass_size / 64, offset = OCBT_NUM_ELEMENTS / 64; it > 0 ; it >>=1, offset >>=1)
@@ -293,7 +278,7 @@ void reduce(uint groupIndex)
 
         for (uint heapID = minHeapID; heapID < maxHeapID; ++heapID)
         {
-            set_heap_element(heapID, get_heap_element(heapID * 2) + get_heap_element(heapID * 2 + 1));
+            set_heap_element(heapID, get_heap_element(heapID * 2, debug) + get_heap_element(heapID * 2 + 1, debug));
         }
     }
 	GroupMemoryBarrierWithGroupSync();
@@ -303,7 +288,7 @@ void reduce(uint groupIndex)
         if (groupIndex < s)
         {
             uint v = s + groupIndex;
-            set_heap_element(v, get_heap_element(v * 2) + get_heap_element(v * 2 + 1));
+            set_heap_element(v, get_heap_element(v * 2, debug) + get_heap_element(v * 2 + 1, debug));
         }
         GroupMemoryBarrierWithGroupSync();
     }
@@ -338,6 +323,7 @@ void reduce_prepass(uint dispatchThreadID)
 
 void reduce_first_pass(uint dispatchThreadID, uint groupIndex)
 {
+    HeapDebug debug;
     // Load the lowest level (and only the last level)
     const uint level0Offset = OCBT_depth_offset[TREE_LAST_LEVEL] / 32;
     if (groupIndex % 2 == 0)
@@ -355,13 +341,13 @@ void reduce_first_pass(uint dispatchThreadID, uint groupIndex)
 
         for (uint heapID = minHeapID; heapID < maxHeapID; ++heapID)
         {
-            set_heap_element(heapID, get_heap_element(heapID * 2) + get_heap_element(heapID * 2 + 1));
+            set_heap_element(heapID, get_heap_element(heapID * 2, debug) + get_heap_element(heapID * 2 + 1, debug));
         }
     }
 
     // Last pass needs to be atomic
     uint heapID = offset + (dispatchThreadID * it);
-    set_heap_element_atomic(heapID, get_heap_element(heapID * 2) + get_heap_element(heapID * 2 + 1));
+    set_heap_element_atomic(heapID, get_heap_element(heapID * 2, debug) + get_heap_element(heapID * 2 + 1, debug));
 
     GroupMemoryBarrierWithGroupSync();
 
@@ -376,6 +362,7 @@ void reduce_first_pass(uint dispatchThreadID, uint groupIndex)
 
 void reduce_second_pass(uint groupIndex)
 {
+    HeapDebug debug;
     // Load the lowest level (and only the last level)
     const uint level0Offset = OCBT_depth_offset[9] / 32;
     for (uint e = 0; e < 4; ++e)
@@ -394,7 +381,7 @@ void reduce_second_pass(uint groupIndex)
 
         for (uint heapID = minHeapID; heapID < maxHeapID; ++heapID)
         {
-            set_heap_element(heapID, get_heap_element(heapID * 2) + get_heap_element(heapID * 2 + 1));
+            set_heap_element(heapID, get_heap_element(heapID * 2, debug) + get_heap_element(heapID * 2 + 1, debug));
         }
     }
     GroupMemoryBarrierWithGroupSync();
@@ -404,7 +391,7 @@ void reduce_second_pass(uint groupIndex)
         if (groupIndex < s)
         {
             uint v = s + groupIndex;
-            set_heap_element(v, get_heap_element(v * 2) + get_heap_element(v * 2 + 1));
+            set_heap_element(v, get_heap_element(v * 2, debug) + get_heap_element(v * 2 + 1, debug));
         }
         GroupMemoryBarrierWithGroupSync();
     }
@@ -423,6 +410,7 @@ void reduce_second_pass(uint groupIndex)
 
 void reduce_no_bitfield(uint groupIndex)
 {
+    HeapDebug debug;
     // First we do a reduction until each lane has exactly one element to process
     uint initial_pass_size = OCBT_NUM_ELEMENTS / WORKGROUP_SIZE;
     for (uint it = initial_pass_size / 128, offset = OCBT_NUM_ELEMENTS / 128; it > 0 ; it >>=1, offset >>=1)
@@ -432,7 +420,7 @@ void reduce_no_bitfield(uint groupIndex)
 
         for (uint heapID = minHeapID; heapID < maxHeapID; ++heapID)
         {
-            set_heap_element(heapID, get_heap_element(heapID * 2) + get_heap_element(heapID * 2 + 1));
+            set_heap_element(heapID, get_heap_element(heapID * 2, debug) + get_heap_element(heapID * 2 + 1, debug));
         }
     }
     GroupMemoryBarrierWithGroupSync();
@@ -442,7 +430,7 @@ void reduce_no_bitfield(uint groupIndex)
         if (groupIndex < s)
         {
             uint v = s + groupIndex;
-            set_heap_element(v, get_heap_element(v * 2) + get_heap_element(v * 2 + 1));
+            set_heap_element(v, get_heap_element(v * 2, debug) + get_heap_element(v * 2 + 1, debug));
         }
         GroupMemoryBarrierWithGroupSync();
     }

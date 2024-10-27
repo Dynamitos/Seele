@@ -5,16 +5,16 @@
 using namespace Seele;
 
 Array<Vector4> basePoints = {
-    Vector4(0.0f / 3, 0, 0.0f / 3, 1), Vector4(0.0f / 3, 0, 1.0f / 3, 1), Vector4(0.0f / 3, 0, 2.0f / 3, 1),
-    Vector4(0.0f / 3, 0, 3.0f / 3, 1), Vector4(1.0f / 3, 0, 0.0f / 3, 1), Vector4(1.0f / 3, 0, 1.0f / 3, 1),
-    Vector4(1.0f / 3, 0, 2.0f / 3, 1), Vector4(1.0f / 3, 0, 3.0f / 3, 1), Vector4(2.0f / 3, 0, 0.0f / 3, 1),
-    Vector4(2.0f / 3, 0, 1.0f / 3, 1), Vector4(2.0f / 3, 0, 2.0f / 3, 1), Vector4(2.0f / 3, 0, 3.0f / 3, 1),
-    Vector4(3.0f / 3, 0, 0.0f / 3, 1), Vector4(3.0f / 3, 0, 1.0f / 3, 1), Vector4(3.0f / 3, 0, 2.0f / 3, 1),
-    Vector4(3.0f / 3, 0, 3.0f / 3, 1),
-    // Vector4(0, -0.525731, 0.850651, 1),  Vector4(0.850651, 0, 0.525731, 1),  Vector4(0.850651, 0, -0.525731, 1),
-    // Vector4(-0.850651, 0, -0.525731, 1), Vector4(-0.850651, 0, 0.525731, 1), Vector4(-0.525731, 0.850651, 0, 1),
-    // Vector4(0.525731, 0.850651, 0, 1),   Vector4(0.525731, -0.850651, 0, 1), Vector4(-0.525731, -0.850651, 0, 1),
-    // Vector4(0, -0.525731, -0.850651, 1), Vector4(0, 0.525731, -0.850651, 1), Vector4(0, 0.525731, 0.850651, 1),
+    //Vector4(0.0f / 3, 0, 0.0f / 3, 1), Vector4(0.0f / 3, 0, 1.0f / 3, 1), Vector4(0.0f / 3, 0, 2.0f / 3, 1),
+    //Vector4(0.0f / 3, 0, 3.0f / 3, 1), Vector4(1.0f / 3, 0, 0.0f / 3, 1), Vector4(1.0f / 3, 0, 1.0f / 3, 1),
+    //Vector4(1.0f / 3, 0, 2.0f / 3, 1), Vector4(1.0f / 3, 0, 3.0f / 3, 1), Vector4(2.0f / 3, 0, 0.0f / 3, 1),
+    //Vector4(2.0f / 3, 0, 1.0f / 3, 1), Vector4(2.0f / 3, 0, 2.0f / 3, 1), Vector4(2.0f / 3, 0, 3.0f / 3, 1),
+    //Vector4(3.0f / 3, 0, 0.0f / 3, 1), Vector4(3.0f / 3, 0, 1.0f / 3, 1), Vector4(3.0f / 3, 0, 2.0f / 3, 1),
+    //Vector4(3.0f / 3, 0, 3.0f / 3, 1),
+    Vector4(0, -0.525731, 0.850651, 1),  Vector4(0.850651, 0, 0.525731, 1),  Vector4(0.850651, 0, -0.525731, 1),
+    Vector4(-0.850651, 0, -0.525731, 1), Vector4(-0.850651, 0, 0.525731, 1), Vector4(-0.525731, 0.850651, 0, 1),
+    Vector4(0.525731, 0.850651, 0, 1),   Vector4(0.525731, -0.850651, 0, 1), Vector4(-0.525731, -0.850651, 0, 1),
+    Vector4(0, -0.525731, -0.850651, 1), Vector4(0, 0.525731, -0.850651, 1), Vector4(0, 0.525731, 0.850651, 1),
 };
 struct Halfedge {
     uint32 vertexID;
@@ -23,90 +23,90 @@ struct Halfedge {
     uint32 twinID;
 };
 Array<Halfedge> edges = {
-    Halfedge{0, 1, 2, 4294967295},
-    Halfedge{4, 2, 0, 3},
-    Halfedge{1, 0, 1, 4294967295},
+    //Halfedge{0, 1, 2, 4294967295},
+    //Halfedge{4, 2, 0, 3},
+    //Halfedge{1, 0, 1, 4294967295},
+    //
+    //Halfedge{4, 4, 5, 1},
+    //Halfedge{5, 5, 3, 8},
+    //Halfedge{1, 3, 4, 18},
+    //
+    //Halfedge{1, 7, 8, 4294967295},
+    //Halfedge{5, 8, 6, 9},
+    //Halfedge{2, 6, 7, 4},
+    //
+    //Halfedge{5, 10, 11, 7},
+    //Halfedge{6, 11, 9, 14},
+    //Halfedge{2, 9, 10, 24},
+    //
+    //Halfedge{2, 13, 14, 4294967295},
+    //Halfedge{6, 14, 12, 15},
+    //Halfedge{3, 12, 13, 10},
+    //
+    //Halfedge{6, 16, 17, 13},
+    //Halfedge{7, 17, 15, 4294967295},
+    //Halfedge{3, 15, 16, 30},
+    //
+    //Halfedge{4, 19, 20, 5},
+    //Halfedge{8, 20, 18, 21},
+    //Halfedge{5, 18, 19, 4294967295},
+    //
+    //Halfedge{8, 22, 23, 19},
+    //Halfedge{9, 23, 21, 26},
+    //Halfedge{5, 21, 22, 36},
+    //
+    //Halfedge{5, 25, 26, 11},
+    //Halfedge{9, 26, 24, 27},
+    //Halfedge{6, 24, 25, 22},
+    //
+    //Halfedge{9, 28, 29, 25},
+    //Halfedge{10, 29, 27, 32},
+    //Halfedge{6, 27, 28, 42},
+    //
+    //Halfedge{6, 31, 32, 17},
+    //Halfedge{10, 32, 30, 33},
+    //Halfedge{7, 30, 31, 28},
+    //
+    //Halfedge{10, 34, 35, 31},
+    //Halfedge{11, 35, 33, 4294967295},
+    //Halfedge{7, 33, 34, 48},
+    //
+    //Halfedge{8, 37, 38, 23},
+    //Halfedge{12, 38, 36, 39},
+    //Halfedge{9, 36, 37, 4294967295},
+    //
+    //Halfedge{12, 40, 41, 37},
+    //Halfedge{13, 41, 39, 44},
+    //Halfedge{9, 39, 40, 4294967295},
+    //
+    //Halfedge{9, 43, 44, 29},
+    //Halfedge{13, 44, 42, 45},
+    //Halfedge{10, 42, 43, 40},
+    //
+    //Halfedge{13, 46, 47, 43},
+    //Halfedge{14, 47, 45, 50},
+    //Halfedge{10, 45, 46, 4294967295},
+    //
+    //Halfedge{10, 49, 50, 35},
+    //Halfedge{14, 50, 48, 51},
+    //Halfedge{11, 48, 49, 46},
+    //
+    //Halfedge{14, 52, 53, 49},
+    //Halfedge{15, 53, 51, 4294967295},
+    //Halfedge{11, 51, 52, 4294967295},
 
-    Halfedge{4, 4, 5, 1},
-    Halfedge{5, 5, 3, 8},
-    Halfedge{1, 3, 4, 18},
-
-    Halfedge{1, 7, 8, 4294967295},
-    Halfedge{5, 8, 6, 9},
-    Halfedge{2, 6, 7, 4},
-
-    Halfedge{5, 10, 11, 7},
-    Halfedge{6, 11, 9, 14},
-    Halfedge{2, 9, 10, 24},
-
-    Halfedge{2, 13, 14, 4294967295},
-    Halfedge{6, 14, 12, 15},
-    Halfedge{3, 12, 13, 10},
-
-    Halfedge{6, 16, 17, 13},
-    Halfedge{7, 17, 15, 4294967295},
-    Halfedge{3, 15, 16, 30},
-
-    Halfedge{4, 19, 20, 5},
-    Halfedge{8, 20, 18, 21},
-    Halfedge{5, 18, 19, 4294967295},
-
-    Halfedge{8, 22, 23, 19},
-    Halfedge{9, 23, 21, 26},
-    Halfedge{5, 21, 22, 36},
-
-    Halfedge{5, 25, 26, 11},
-    Halfedge{9, 26, 24, 27},
-    Halfedge{6, 24, 25, 22},
-
-    Halfedge{9, 28, 29, 25},
-    Halfedge{10, 29, 27, 32},
-    Halfedge{6, 27, 28, 42},
-
-    Halfedge{6, 31, 32, 17},
-    Halfedge{10, 32, 30, 33},
-    Halfedge{7, 30, 31, 28},
-
-    Halfedge{10, 34, 35, 31},
-    Halfedge{11, 35, 33, 4294967295},
-    Halfedge{7, 33, 34, 48},
-
-    Halfedge{8, 37, 38, 23},
-    Halfedge{12, 38, 36, 39},
-    Halfedge{9, 36, 37, 4294967295},
-
-    Halfedge{12, 40, 41, 37},
-    Halfedge{13, 41, 39, 44},
-    Halfedge{9, 39, 40, 4294967295},
-
-    Halfedge{9, 43, 44, 29},
-    Halfedge{13, 44, 42, 45},
-    Halfedge{10, 42, 43, 40},
-
-    Halfedge{13, 46, 47, 43},
-    Halfedge{14, 47, 45, 50},
-    Halfedge{10, 45, 46, 4294967295},
-
-    Halfedge{10, 49, 50, 35},
-    Halfedge{14, 50, 48, 51},
-    Halfedge{11, 48, 49, 46},
-
-    Halfedge{14, 52, 53, 49},
-    Halfedge{15, 53, 51, 4294967295},
-    Halfedge{11, 51, 52, 4294967295},
-
-    // Halfedge{1, 1, 2, 5},     Halfedge{2, 2, 0, 36},    Halfedge{6, 0, 1, 39},    Halfedge{1, 4, 5, 51},    Halfedge{7, 5, 3, 48},
-    // Halfedge{2, 3, 4, 0},     Halfedge{3, 7, 8, 9},     Halfedge{4, 8, 6, 45},    Halfedge{5, 6, 7, 42},    Halfedge{4, 10, 11, 6},
-    // Halfedge{3, 11, 9, 56},   Halfedge{8, 9, 10, 57},   Halfedge{6, 13, 14, 15},  Halfedge{5, 14, 12, 47},  Halfedge{11, 12, 13, 40},
-    // Halfedge{5, 16, 17, 12},  Halfedge{6, 17, 15, 38},  Halfedge{10, 15, 16, 43}, Halfedge{9, 19, 20, 21},  Halfedge{10, 20, 18, 37},
-    // Halfedge{2, 18, 19, 50},  Halfedge{10, 22, 23, 18}, Halfedge{9, 23, 21, 54},  Halfedge{3, 21, 22, 44},  Halfedge{7, 25, 26, 27},
-    // Halfedge{8, 26, 24, 55},  Halfedge{9, 24, 25, 49},  Halfedge{8, 28, 29, 24},  Halfedge{7, 29, 27, 53},  Halfedge{0, 27, 28, 58},
-    // Halfedge{11, 31, 32, 33}, Halfedge{0, 32, 30, 52},  Halfedge{1, 30, 31, 41},  Halfedge{0, 34, 35, 30},  Halfedge{11, 35, 33, 46},
-    // Halfedge{4, 33, 34, 59},  Halfedge{6, 37, 38, 1},   Halfedge{2, 38, 36, 19},  Halfedge{10, 36, 37, 16}, Halfedge{1, 40, 41, 2},
-    // Halfedge{6, 41, 39, 14},  Halfedge{11, 39, 40, 32}, Halfedge{3, 43, 44, 8},   Halfedge{5, 44, 42, 17},  Halfedge{10, 42, 43, 23},
-    // Halfedge{5, 46, 47, 7},   Halfedge{4, 47, 45, 34},  Halfedge{11, 45, 46, 13}, Halfedge{2, 49, 50, 4},   Halfedge{7, 50, 48, 26},
-    // Halfedge{9, 48, 49, 20},  Halfedge{7, 52, 53, 3},   Halfedge{1, 53, 51, 31},  Halfedge{0, 51, 52, 28},  Halfedge{3, 55, 56, 22},
-    // Halfedge{9, 56, 54, 25},  Halfedge{8, 54, 55, 10},  Halfedge{4, 58, 59, 11},  Halfedge{8, 59, 57, 29},  Halfedge{0, 57, 58, 35},
+    Halfedge{1, 1, 2, 5},     Halfedge{2, 2, 0, 36},    Halfedge{6, 0, 1, 39},    Halfedge{1, 4, 5, 51},    Halfedge{7, 5, 3, 48},
+    Halfedge{2, 3, 4, 0},     Halfedge{3, 7, 8, 9},     Halfedge{4, 8, 6, 45},    Halfedge{5, 6, 7, 42},    Halfedge{4, 10, 11, 6},
+    Halfedge{3, 11, 9, 56},   Halfedge{8, 9, 10, 57},   Halfedge{6, 13, 14, 15},  Halfedge{5, 14, 12, 47},  Halfedge{11, 12, 13, 40},
+    Halfedge{5, 16, 17, 12},  Halfedge{6, 17, 15, 38},  Halfedge{10, 15, 16, 43}, Halfedge{9, 19, 20, 21},  Halfedge{10, 20, 18, 37},
+    Halfedge{2, 18, 19, 50},  Halfedge{10, 22, 23, 18}, Halfedge{9, 23, 21, 54},  Halfedge{3, 21, 22, 44},  Halfedge{7, 25, 26, 27},
+    Halfedge{8, 26, 24, 55},  Halfedge{9, 24, 25, 49},  Halfedge{8, 28, 29, 24},  Halfedge{7, 29, 27, 53},  Halfedge{0, 27, 28, 58},
+    Halfedge{11, 31, 32, 33}, Halfedge{0, 32, 30, 52},  Halfedge{1, 30, 31, 41},  Halfedge{0, 34, 35, 30},  Halfedge{11, 35, 33, 46},
+    Halfedge{4, 33, 34, 59},  Halfedge{6, 37, 38, 1},   Halfedge{2, 38, 36, 19},  Halfedge{10, 36, 37, 16}, Halfedge{1, 40, 41, 2},
+    Halfedge{6, 41, 39, 14},  Halfedge{11, 39, 40, 32}, Halfedge{3, 43, 44, 8},   Halfedge{5, 44, 42, 17},  Halfedge{10, 42, 43, 23},
+    Halfedge{5, 46, 47, 7},   Halfedge{4, 47, 45, 34},  Halfedge{11, 45, 46, 13}, Halfedge{2, 49, 50, 4},   Halfedge{7, 50, 48, 26},
+    Halfedge{9, 48, 49, 20},  Halfedge{7, 52, 53, 3},   Halfedge{1, 53, 51, 31},  Halfedge{0, 51, 52, 28},  Halfedge{3, 55, 56, 22},
+    Halfedge{9, 56, 54, 25},  Halfedge{8, 54, 55, 10},  Halfedge{4, 58, 59, 11},  Halfedge{8, 59, 57, 29},  Halfedge{0, 57, 58, 35},
 };
 
 uint32_t find_msb_64(uint64_t x) {
@@ -291,7 +291,7 @@ void MeshUpdater::init(Gfx::PGraphics gfx, Gfx::PDescriptorLayout viewParamsLayo
     debugBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
         .sourceData =
             {
-                .size = 100000,
+                .size = 1000000,
             },
         .name = "DebugBuffer",
     });
@@ -560,6 +560,7 @@ void MeshUpdater::update(CBTMesh& mesh, Gfx::PDescriptorSet viewParamsSet, Gfx::
         set->updateBuffer(ALLOCATE_BUFFER, 0, mesh.allocateBuffer);
         set->updateBuffer(BISECTOR_DATA_BUFFER, 0, mesh.updateBuffer);
         set->updateBuffer(MEMORY_BUFFER, 0, memoryBuffer);
+        set->updateBuffer(DEBUG_BUFFER, 0, debugBuffer);
         set->writeChanges();
         Gfx::OComputeCommand allocateCmd = graphics->createComputeCommand("Allocate");
         allocateCmd->bindPipeline(allocate);
@@ -595,7 +596,6 @@ void MeshUpdater::update(CBTMesh& mesh, Gfx::PDescriptorSet viewParamsSet, Gfx::
         set->updateBuffer(NEIGHBOURS_BUFFER, 0, currentNeighborsBuffer);
         set->updateBuffer(NEIGHBOURS_OUTPUT_BUFFER, 0, nextNeighborsBuffer);
         set->updateBuffer(PROPAGATE_BUFFER, 0, mesh.propagateBuffer);
-        set->updateBuffer(DEBUG_BUFFER, 0, debugBuffer);
         set->writeChanges();
         Gfx::OComputeCommand bisectCmd = graphics->createComputeCommand("Bisect");
         bisectCmd->bindPipeline(bisect);
