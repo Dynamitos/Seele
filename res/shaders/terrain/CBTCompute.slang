@@ -10,46 +10,48 @@ void Reset()
     ResetBuffers();
 }
 
-[numthreads(WORKGROUP_SIZE, 1, 1)]
+[numthreads(1, 1, 1)]
 void Classify(uint dispatchID : SV_DispatchThreadID)
 {
-    //if(dispatchID > 0)
+    // This thread doesn't have any work to do, we're done
+    //if (dispatchID >= pParams.indirectDrawBuffer[9])
     //    return;
-    //for(uint i = 0; i < pParams.indirectDrawBuffer[9]; ++i)
-    //{
-        // This thread doesn't have any work to do, we're done
-    if (dispatchID >= pParams.indirectDrawBuffer[9])
+    if(dispatchID > 0)
         return;
+    for(dispatchID = 0; dispatchID < pParams.indirectDrawBuffer[9]; ++dispatchID)
+    {
 
-    // Operate the indirection
-    uint currentID = pParams.indexedBisectorBuffer[dispatchID];
+        // Operate the indirection
+        uint currentID = pParams.indexedBisectorBuffer[dispatchID];
 
-    // Read the current geometry data
-    BisectorGeometry bis;
-    bis.p[0] = pParams.currentVertexBuffer[3 * currentID].xyz;
-    bis.p[1] = pParams.currentVertexBuffer[3 * currentID + 1].xyz;
-    bis.p[2] = pParams.currentVertexBuffer[3 * currentID + 2].xyz;
-    bis.p[3] = pParams.currentVertexBuffer[3 * pParams.geometry.totalNumElements + currentID].xyz;
+        // Read the current geometry data
+        BisectorGeometry bis;
+        bis.p[0] = pParams.currentVertexBuffer[3 * currentID].xyz;
+        bis.p[1] = pParams.currentVertexBuffer[3 * currentID + 1].xyz;
+        bis.p[2] = pParams.currentVertexBuffer[3 * currentID + 2].xyz;
+        bis.p[3] = pParams.currentVertexBuffer[3 * pParams.geometry.totalNumElements + currentID].xyz;
 
-    // Classify the element
-    ClassifyElement(currentID, bis, pParams.geometry.totalNumElements, pParams.geometry.baseDepth);
+        // Classify the element
+        ClassifyElement(currentID, bis, pParams.geometry.totalNumElements, pParams.geometry.baseDepth);
+    }
 }
 
-[numthreads(WORKGROUP_SIZE, 1, 1)]
+[numthreads(1, 1, 1)]
 void Split(uint dispatchID : SV_DispatchThreadID)
 {
-    //if(dispatchID > 0)
+    //if (dispatchID >= pParams.classificationBuffer[SPLIT_COUNTER])
     //    return;
-    //for(dispatchID = 0; dispatchID < pParams.classificationBuffer[SPLIT_COUNTER]; ++dispatchID)
-    //{
-    if (dispatchID >= pParams.classificationBuffer[SPLIT_COUNTER])
+    if(dispatchID > 0)
         return;
+    for(dispatchID = 0; dispatchID < pParams.classificationBuffer[SPLIT_COUNTER]; ++dispatchID)
+    {
+        // Grab the real elementID
+        uint currentID = pParams.classificationBuffer[CLASSIFY_COUNTER_OFFSET + dispatchID];
 
-    // Grab the real elementID
-    uint currentID = pParams.classificationBuffer[CLASSIFY_COUNTER_OFFSET + dispatchID];
+        // Split the element
+        SplitElement(currentID, pParams.geometry.baseDepth);
+    }
 
-    // Split the element
-    SplitElement(currentID, pParams.geometry.baseDepth);
 }
 
 [numthreads(1, 1, 1)]
@@ -60,102 +62,102 @@ void PrepareIndirect(uint currentID : SV_DispatchThreadID)
     pParams.indirectDispatchBuffer[currentID * 3 + 2] = 1;
 }
 
-[numthreads(WORKGROUP_SIZE, 1, 1)]
+[numthreads(1, 1, 1)]
 void Allocate(uint groupIndex : SV_GroupIndex, uint dispatchID : SV_DispatchThreadID)
 {
-    //if(dispatchID > 0)
-    //    return;
-//
-    //for(uint i = 0; i < 64; ++i)
-    //{
+    if(dispatchID > 0)
+        return;
+
+    for(uint i = 0; i < 64; ++i)
+    {
         // Load the CBT to the LDS
-    load_buffer_to_shared_memory(groupIndex);
-    
+        load_buffer_to_shared_memory(groupIndex);
+    }
     
     // If this element doesn't need to be processed, we're done
     if (dispatchID >= pParams.allocateBuffer[0])
         return;
-    //for(uint i = 0; i < pParams.allocateBuffer[0]; ++i)
-    //{
+    for(dispatchID = 0; dispatchID < pParams.allocateBuffer[0]; ++dispatchID)
+    {
         // Allocate the required bits
-    AllocateElement(pParams.allocateBuffer[1 + dispatchID], dispatchID);
-    //}
+        AllocateElement(pParams.allocateBuffer[1 + dispatchID], dispatchID);
+    }
 }
 
-[numthreads(WORKGROUP_SIZE, 1, 1)]
+[numthreads(1, 1, 1)]
 void Bisect(uint groupIndex : SV_GroupIndex, uint dispatchID : SV_DispatchThreadID)
 {
-    //if(dispatchID > 0)
-    //    return;
     // If this element doesn't need to be processed, we're done
-    if (dispatchID >= pParams.allocateBuffer[0])
+    //if (dispatchID >= pParams.allocateBuffer[0])
+    //    return;
+    if(dispatchID > 0)
         return;
-    //for(uint i = 0; i < pParams.allocateBuffer[0]; ++i)
-    //{
+    for(dispatchID = 0; dispatchID < pParams.allocateBuffer[0]; ++dispatchID)
+    {
         // Operation the bisection of this element
-    BisectElement(pParams.allocateBuffer[1 + dispatchID]);
-    //}
+        BisectElement(pParams.allocateBuffer[1 + dispatchID]);
+    }
 }
 
-[numthreads(WORKGROUP_SIZE, 1, 1)]
+[numthreads(1, 1, 1)]
 void PropagateBisect(uint dispatchID : SV_DispatchThreadID)
 {
-    //if(dispatchID > 0)
-    //    return;
     // If this element doesn't need to be processed, we're done
-    if (dispatchID >= pParams.propagateBuffer[0])
+    //if (dispatchID >= pParams.propagateBuffer[0])
+    //    return;
+    if(dispatchID > 0)
         return;
-    //for(uint i = 0; i < pParams.propagateBuffer[0]; ++i)
-    //{
-    PropagateBisectElement(pParams.propagateBuffer[2 + dispatchID]);
-    //}
+    for(dispatchID = 0; dispatchID < pParams.propagateBuffer[0]; ++dispatchID)
+    {
+        PropagateBisectElement(pParams.propagateBuffer[2 + dispatchID]);
+    }
 }
 
-[numthreads(WORKGROUP_SIZE, 1, 1)]
+[numthreads(1, 1, 1)]
 void PrepareSimplify(uint dispatchID : SV_DispatchThreadID)
 {
-    //if(dispatchID > 0)
-    //    return;
     // If this element doesn't need to be processed, we're done
     if (dispatchID >= pParams.classificationBuffer[SIMPLIFY_COUNTER])
         return;
-    //for(uint i = 0; i < pParams.classificationBuffer[SIMPLIFY_COUNTER]; ++i)
-    //{
-    // Grab the real elementID
-    uint currentID = pParams.classificationBuffer[CLASSIFY_COUNTER_OFFSET + pParams.geometry.totalNumElements + dispatchID];
+    if(dispatchID > 0)
+        return;
+    for(dispatchID = 0; dispatchID < pParams.classificationBuffer[SIMPLIFY_COUNTER]; ++dispatchID)
+    {
+        // Grab the real elementID
+        uint currentID = pParams.classificationBuffer[CLASSIFY_COUNTER_OFFSET + pParams.geometry.totalNumElements + dispatchID];
 
-    // Simplify an element
-    PrepareSimplifyElement(currentID);
-    //}
+        // Simplify an element
+        PrepareSimplifyElement(currentID);
+    }
 }
 
-[numthreads(WORKGROUP_SIZE, 1, 1)]
+[numthreads(1, 1, 1)]
 void Simplify(uint dispatchID : SV_DispatchThreadID)
 {
-    //if(dispatchID > 0)
-    //    return;
     // This thread doesn't have any work to do, we're done
     if (dispatchID >= pParams.simplifyBuffer[0])
         return;
-    //for(uint i = 0; i < pParams.simplifyBuffer[0]; ++i)
-    //{
-    // Simplify an element
-    SimplifyElement(pParams.simplifyBuffer[1 + dispatchID]);
-    //}
+    if(dispatchID > 0)
+        return;
+    for(dispatchID = 0; dispatchID < pParams.simplifyBuffer[0]; ++dispatchID)
+    {
+        // Simplify an element
+        SimplifyElement(pParams.simplifyBuffer[1 + dispatchID]);
+    }
 }
 
-[numthreads(WORKGROUP_SIZE, 1, 1)]
+[numthreads(1, 1, 1)]
 void PropagateSimplify(uint dispatchID : SV_DispatchThreadID)
 {
-    //if(dispatchID > 0)
-    //    return;
     // If this element doesn't need to be processed, we're done
     if (dispatchID >= pParams.propagateBuffer[1])
         return;
-    //for(uint i = 0; i < pParams.propagateBuffer[1]; ++i)
-    //{
-    PropagateElementSimplify(pParams.propagateBuffer[2 + dispatchID]);
-    //}
+    if(dispatchID > 0)
+        return;
+    for(dispatchID = 0; dispatchID < pParams.propagateBuffer[1]; ++dispatchID)
+    {
+        PropagateElementSimplify(pParams.propagateBuffer[2 + dispatchID]);
+    }
 }
 
 [numthreads(WORKGROUP_SIZE, 1, 1)]
@@ -178,20 +180,20 @@ void ReduceSecondPass(uint groupIndex : SV_GroupIndex)
     reduce_second_pass(groupIndex);
 }
 
-[numthreads(WORKGROUP_SIZE, 1, 1)]
+[numthreads(1, 1, 1)]
 void BisectorIndexation(uint currentID : SV_DispatchThreadID)
 {
-    //if(currentID > 0)
-    //    return;
     // This thread doesn't have any work to do, we're done
-    if (currentID >= pParams.geometry.totalNumElements)
+    //if (currentID >= pParams.geometry.totalNumElements)
+    //    return;
+    if(currentID > 0)
         return;
-
-    //for(uint i = 0; i < pParams.geometry.totalNumElements; ++i)
-    //{
-    // Indexate this bisector
-    BisectorElementIndexation(currentID);
-    //}
+    
+    for(currentID = 0; currentID < pParams.geometry.totalNumElements; ++currentID)
+    {
+        // Indexate this bisector
+        BisectorElementIndexation(currentID);
+    }
 }
 
 [numthreads(1, 1, 1)]

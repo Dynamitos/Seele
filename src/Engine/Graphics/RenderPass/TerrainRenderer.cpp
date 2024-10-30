@@ -13,7 +13,7 @@ TerrainRenderer::TerrainRenderer(Gfx::PGraphics graphics, PScene scene, Gfx::PDe
     Gfx::OPipelineLayout test = graphics->createPipelineLayout();
     graphics->beginShaderCompilation(ShaderCompilationInfo{
         .modules = {"CompileTest"},
-        .entryPoints = {{"GetHeap", "CompileTest"}},
+        .entryPoints = {{"TestHeap", "CompileTest"}},
         .rootSignature = test,
     });
     graphics->createComputeShader({0});
@@ -302,7 +302,7 @@ void TerrainRenderer::setViewport(Gfx::PViewport _viewport, Gfx::PRenderPass ren
         .rasterizationState =
             {
                 .polygonMode = Gfx::SE_POLYGON_MODE_LINE,
-                .cullMode = Gfx::SE_CULL_MODE_BACK_BIT,
+                .cullMode = Gfx::SE_CULL_MODE_NONE,
             },
         .colorBlend =
             {

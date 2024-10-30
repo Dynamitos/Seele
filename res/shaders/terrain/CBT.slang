@@ -60,7 +60,33 @@ static const uint32_t OCBT_depth_offset[18] = { 0, // Level 0
                                         0, // Level 18
 };
 
-static const uint64_t OCBT_bit_mask[18] = { 0xffffffff, // Root 17
+
+static const uint OCBT_bit_mask_high[18] = { 
+                            0x0, // Root 17
+                            0x0, // Level 16
+                            0x0, // level 15
+                            0x0, // level 14
+                            0x0, // level 13
+                            0x0, // level 12
+                            0x0, // level 11
+
+                            0x0, // level 10
+                            0x0, // level 9
+                            0x0, // level 8
+                            0x0, // level 8
+
+                            0xffffffff, // level 7
+                            0x0, // Level 6
+                            0x0, // level 5
+                            0x0, // level 4
+                            0x0, // level 3
+                            0x0, // level 2
+                            0x0, // level 1
+};
+
+
+static const uint OCBT_bit_mask_low[18] = { 
+                            0xffffffff, // Root 17
                             0xffffffff, // Level 16
                             0xffffffff, // level 15
                             0xffffffff, // level 14
@@ -73,7 +99,7 @@ static const uint64_t OCBT_bit_mask[18] = { 0xffffffff, // Root 17
                             0xffff, // level 8
                             0xff, // level 8
 
-                            0xffffffffffffffff, // level 7
+                            0xffffffff, // level 7
                             0xffffffff, // Level 6
                             0xffff, // level 5
                             0xff, // level 4
@@ -172,14 +198,16 @@ uint get_heap_element(uint id, inout HeapDebug debug)
     {
         uint32_t slot = first_bit / 32;
         uint32_t local_id = first_bit % 32;
-        uint32_t target_bits = (gs_cbtTree[slot] >> local_id) & uint32_t(OCBT_bit_mask[depth]);
-        return (gs_cbtTree[slot] >> local_id) & uint32_t(OCBT_bit_mask[depth]);
+        return (pParams.cbtBuffer[slot] >> local_id) & OCBT_bit_mask_low[depth];
     }
     else
     {
         uint32_t slot = first_bit / 64;
         uint32_t local_id = first_bit % 64;
-        uint64_t target_bits = (pParams.bitFieldBuffer[slot] >> local_id) & OCBT_bit_mask[depth];
+        uint64_t mask = OCBT_bit_mask_high[depth];
+        mask = (mask << 32) | OCBT_bit_mask_low[depth];
+        uint64_t target_bits = (pParams.bitFieldBuffer[slot] >> local_id) & mask;
+        debug.target_bits = target_bits;
         return countbits(uint(target_bits >> 32)) + countbits(uint(target_bits));
     }
 }
@@ -198,8 +226,8 @@ void set_heap_element(uint id, uint value)
     uint local_id = first_bit % 32;
 
     // Extract the relevant bits
-    gs_cbtTree[slot] &= ~(uint32_t(OCBT_bit_mask[depth]) << local_id);
-    gs_cbtTree[slot] |= ((uint32_t(OCBT_bit_mask[depth]) & value) << local_id);
+    gs_cbtTree[slot] &= ~(uint32_t(OCBT_bit_mask_low[depth]) << local_id);
+    gs_cbtTree[slot] |= ((uint32_t(OCBT_bit_mask_low[depth]) & value) << local_id);
 }
 
 // Should not be called if depth > TREE_LAST_LEVEL
@@ -216,8 +244,8 @@ void set_heap_element_atomic(uint id, uint value)
     uint local_id = first_bit % 32;
 
     // Extract the relevant bits
-    InterlockedAnd(gs_cbtTree[slot], ~(uint32_t(OCBT_bit_mask[depth]) << local_id));
-    InterlockedOr(gs_cbtTree[slot], ((uint32_t(OCBT_bit_mask[depth]) & value) << local_id));
+    InterlockedAnd(gs_cbtTree[slot], ~(uint32_t(OCBT_bit_mask_low[depth]) << local_id));
+    InterlockedOr(gs_cbtTree[slot], ((uint32_t(OCBT_bit_mask_low[depth]) & value) << local_id));
 }
 
 // Function that returns the number of active bits
@@ -233,37 +261,49 @@ uint bit_count(uint depth, uint element)
 }
 
 // decodes the position of the i-th zero in the bitfield
-uint decode_bit_complement(uint handle, uint dispatchID)
+uint decode_bit_complement(uint handle, inout DebugStruct debug)
 {
     uint temp = handle;
-    DebugStruct debug;
     uint x = 0;
     uint bitID = 1u;
     uint c = OCBT_NUM_ELEMENTS / 2u;
 
     while (bitID < OCBT_NUM_ELEMENTS) {
-        uint heapValue = c - get_heap_element(2u * bitID, debug.heapValues[x++]);
-        uint b = handle < heapValue ? 0u : 1u;
-
-        bitID = 2u * bitID + b;
-        handle -= heapValue * b;
+        uint b2 = 2u * bitID;
+        uint h = get_heap_element(b2, debug.heapValues[x]);
+        uint heapValue = c - h;
+        uint b;
+        if(handle < heapValue)
+        {
+            b = 0u;
+        }
+        else
+        {
+            b = 1u;
+        }
+        debug.heapValues[x].handle = handle;
+        debug.heapValues[x].heapValue = heapValue;
+        debug.heapValues[x].c = c;
+        debug.heapValues[x].h = h;
+        x++;
+        bitID = b2 + b;
+        uint t = heapValue * b;
+        handle = handle - t;
         c /= 2u;
     }
-
-    uint result = (bitID ^ OCBT_NUM_ELEMENTS);
-    handle = temp;
-    for(uint i = 0; i < OCBT_NUM_ELEMENTS; ++i)
-    {
-        if(get_bit(i) == 0)
-        {
-            if(handle == 0)
-            {
-                pParams.debugBuffer[dispatchID] = debug;
-                return i;
-            }
-            handle--;
-        }
-    }
+    return (bitID ^ OCBT_NUM_ELEMENTS);
+    //handle = temp;
+    //for(uint i = 0; i < OCBT_NUM_ELEMENTS; ++i)
+    //{
+    //    if(get_bit(i) == 0)
+    //    {
+    //        if(handle == 0)
+    //        {
+    //            return i;
+    //        }
+    //        handle--;
+    //    }
+    //}
 }
 
 void reduce(uint groupIndex)

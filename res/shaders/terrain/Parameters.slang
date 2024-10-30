@@ -34,11 +34,16 @@ struct HeapDebug
     uint level_first_element;
     uint id_in_level;
     uint first_bit;
+    uint handle;
+    uint heapValue;
+    uint h;
+    uint c;
+    uint64_t target_bits;
 };
 
 struct DebugStruct
 {
-    HeapDebug heapValues[18];
+    HeapDebug heapValues[17];
 };
 
 

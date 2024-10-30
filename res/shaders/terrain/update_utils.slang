@@ -44,7 +44,7 @@ bool FrustumAABBIntersect(in Frustum frustum, float3 aabbMin, float3 aabbMax)
 int ClassifyBisector(in BisectorGeometry tri, uint depth)
 {
     // Check the triangle's visibility
-    float3 triNormal = normalize(cross(tri.p[2] - tri.p[0], tri.p[1] - tri.p[0]));
+    float3 triNormal = normalize(cross(tri.p[2] - tri.p[1], tri.p[0] - tri.p[1]));
     float3 triCenter = (tri.p[0] + tri.p[1] + tri.p[2]) / 3.0;
     float3 viewDir = normalize(-triCenter);
     float FdotV = dot(viewDir, -pViewParams.cameraForward_WS.xyz);
@@ -147,6 +147,9 @@ void ClassifyElement(uint currentID, BisectorGeometry bis, uint totalNumElements
     BisectorData cbisectorData = pParams.bisectorDataBuffer[currentID];
 
     // Reset some values
+    cbisectorData.indices[0] = 0;
+    cbisectorData.indices[1] = 0;
+    cbisectorData.indices[2] = 0;
     cbisectorData.subdivisionPattern = 0;
     cbisectorData.bisectorState = UNCHANGED_ELEMENT;
     cbisectorData.problematicNeighbor = INVALID_POINTER;
@@ -325,6 +328,7 @@ void AllocateElement(uint currentID, uint dispatchID)
     // Load the bisector for this element
     BisectorData bisectorData = pParams.bisectorDataBuffer[currentID];
 
+    DebugStruct debug;
     // Does this guy need to be subdivided
     if (bisectorData.subdivisionPattern != 0)
     {
@@ -338,12 +342,13 @@ void AllocateElement(uint currentID, uint dispatchID)
         // llocate the bits we need
         for (uint bitId = 0; bitId < numSlots; ++bitId)
         {
-            bisectorData.indices[bitId] = decode_bit_complement(firstBitIndex + bitId, dispatchID);
+            bisectorData.indices[bitId] = decode_bit_complement(firstBitIndex + bitId, debug);
         }
 
         // Output 
         pParams.bisectorDataBuffer[currentID] = bisectorData;
     }
+    pParams.debugBuffer[dispatchID] = debug;
 }
 
 #define SUBLING0_ID 0

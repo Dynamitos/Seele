@@ -35,6 +35,8 @@ PFN_vkCmdDrawMeshTasksIndirectEXT cmdDrawMeshTasksIndirect;
 PFN_vkSetDebugUtilsObjectNameEXT setDebugUtilsObjectName;
 PFN_vkQueueBeginDebugUtilsLabelEXT queueBeginDebugUtilsLabelEXT;
 PFN_vkQueueEndDebugUtilsLabelEXT queueEndDebugUtilsLabelEXT;
+PFN_vkCmdBeginDebugUtilsLabelEXT cmdBeginDebugUtilsLabelEXT;
+PFN_vkCmdEndDebugUtilsLabelEXT cmdEndDebugUtilsLabelEXT;
 PFN_vkCreateAccelerationStructureKHR createAccelerationStructure;
 PFN_vkCmdBuildAccelerationStructuresKHR cmdBuildAccelerationStructures;
 PFN_vkGetAccelerationStructureBuildSizesKHR getAccelerationStructureBuildSize;
@@ -68,6 +70,18 @@ void vkQueueBeginDebugUtilsLabelEXT(VkQueue queue, const VkDebugUtilsLabelEXT* p
 void vkQueueEndDebugUtilsLabelEXT(VkQueue queue) {
     if (queueEndDebugUtilsLabelEXT != nullptr) {
         queueEndDebugUtilsLabelEXT(queue);
+    }
+}
+
+void vkCmdBeginDebugUtilsLabelEXT(VkCommandBuffer commandBuffer, const VkDebugUtilsLabelEXT* pLabelInfo) {
+    if (cmdBeginDebugUtilsLabelEXT != nullptr) {
+        cmdBeginDebugUtilsLabelEXT(commandBuffer, pLabelInfo);
+    }
+}
+
+void vkCmdEndDebugUtilsLabelEXT(VkCommandBuffer commandBuffer) {
+    if (cmdEndDebugUtilsLabelEXT != nullptr) {
+        cmdEndDebugUtilsLabelEXT(commandBuffer);
     }
 }
 
@@ -314,10 +328,10 @@ void Graphics::beginDebugRegion(const std::string& name) {
         .pNext = nullptr,
         .pLabelName = name.c_str(),
     };
-    vkQueueBeginDebugUtilsLabelEXT(queues[graphicsQueue]->getHandle(), &label);
+    vkCmdBeginDebugUtilsLabelEXT(getGraphicsCommands()->getCommands()->getHandle(), &label);
 }
 
-void Graphics::endDebugRegion() { vkQueueEndDebugUtilsLabelEXT(queues[graphicsQueue]->getHandle()); }
+void Graphics::endDebugRegion() { vkCmdEndDebugUtilsLabelEXT(getGraphicsCommands()->getCommands()->getHandle()); }
 
 void Graphics::resolveTexture(Gfx::PTexture source, Gfx::PTexture destination) {
     PTextureBase sourceTex = source.cast<TextureBase>();
@@ -952,6 +966,8 @@ void Graphics::createDevice(GraphicsInitializer initializer) {
     setDebugUtilsObjectName = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(instance, "vkSetDebugUtilsObjectNameEXT");
     queueBeginDebugUtilsLabelEXT = (PFN_vkQueueBeginDebugUtilsLabelEXT)vkGetInstanceProcAddr(instance, "vkQueueBeginDebugUtilsLabelEXT");
     queueEndDebugUtilsLabelEXT = (PFN_vkQueueEndDebugUtilsLabelEXT)vkGetInstanceProcAddr(instance, "vkQueueEndDebugUtilsLabelEXT");
+    cmdBeginDebugUtilsLabelEXT = (PFN_vkCmdBeginDebugUtilsLabelEXT)vkGetInstanceProcAddr(instance, "vkCmdBeginDebugUtilsLabelEXT");
+    cmdEndDebugUtilsLabelEXT = (PFN_vkCmdEndDebugUtilsLabelEXT)vkGetInstanceProcAddr(instance, "vkCmdEndDebugUtilsLabelEXT");
 
     createAccelerationStructure = (PFN_vkCreateAccelerationStructureKHR)vkGetDeviceProcAddr(handle, "vkCreateAccelerationStructureKHR");
     cmdBuildAccelerationStructures =

@@ -310,9 +310,9 @@ void EvaluateLEB(uint currentID : SV_DispatchThreadID, uint groupIndex: SV_Group
     EvaluateElementPosition(cHeapID, 0, pParams.geometry.baseDepth, pParams.currentVertexBuffer, parentTri, childTri);
 
     // Export the child
-    pParams.lebPositionBuffer[3 * currentID + 0] = float4((childTri.p[0]), 1.0f);
-    pParams.lebPositionBuffer[3 * currentID + 1] = float4((childTri.p[1]), 1.0f);
-    pParams.lebPositionBuffer[3 * currentID + 2] = float4((childTri.p[2]), 1.0f);
+    pParams.lebPositionBuffer[3 * currentID + 0] = float4(normalize(childTri.p[0]), 1.0f);
+    pParams.lebPositionBuffer[3 * currentID + 1] = float4(normalize(childTri.p[1]), 1.0f);
+    pParams.lebPositionBuffer[3 * currentID + 2] = float4(normalize(childTri.p[2]), 1.0f);
 
     // Export the fourth element
     if (pParams.geometry.baseDepth < depth)
@@ -321,6 +321,6 @@ void EvaluateLEB(uint currentID : SV_DispatchThreadID, uint groupIndex: SV_Group
         const uint parentOffset = 3 * pParams.geometry.totalNumElements;
 
         // Transform the coordinate to planet space
-        pParams.lebPositionBuffer[parentOffset + currentID] = float4((cHeapID % 2 == 0 ? parentTri.p[0] : parentTri.p[2]), 1.0f);
+        pParams.lebPositionBuffer[parentOffset + currentID] = float4(normalize(cHeapID % 2 == 0 ? parentTri.p[0] : parentTri.p[2]), 1.0f);
     }
 }
