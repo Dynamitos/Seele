@@ -67,7 +67,7 @@ void ShaderCompiler::compile() {
                             layout->addDescriptorLayout(vd->getVertexDataLayout());
                             layout->addDescriptorLayout(vd->getInstanceDataLayout());
                             permutation.setMaterial(mat->getName());
-                            createShaders(permutation, std::move(layout));
+                            createShaders(permutation, std::move(layout), name);
                         });
                     }
                 }
@@ -82,7 +82,7 @@ void ShaderCompiler::compile() {
                             OPipelineLayout layout = graphics->createPipelineLayout(pass.baseLayout->getName(), pass.baseLayout);
                             layout->addDescriptorLayout(vd->getVertexDataLayout());
                             layout->addDescriptorLayout(vd->getInstanceDataLayout());
-                            createShaders(permutation, std::move(layout));
+                            createShaders(permutation, std::move(layout), name);
                         });
                     }
                 }
@@ -92,7 +92,7 @@ void ShaderCompiler::compile() {
     getThreadPool().runAndWait(std::move(work));
 }
 
-void ShaderCompiler::createShaders(ShaderPermutation permutation, Gfx::OPipelineLayout layout) {
+void ShaderCompiler::createShaders(ShaderPermutation permutation, Gfx::OPipelineLayout layout, std::string debugName) {
     PermutationId perm = PermutationId(permutation);
     {
         std::scoped_lock lock(shadersLock);
@@ -103,7 +103,7 @@ void ShaderCompiler::createShaders(ShaderPermutation permutation, Gfx::OPipeline
     collection.pipelineLayout = std::move(layout);
 
     ShaderCompilationInfo createInfo;
-    createInfo.name = fmt::format("Material {0}", permutation.materialName);
+    createInfo.name = fmt::format("{0} Material {1}", debugName, permutation.materialName);
     createInfo.rootSignature = collection.pipelineLayout;
     if (std::strlen(permutation.materialName) > 0) {
         createInfo.modules.add(permutation.materialName);

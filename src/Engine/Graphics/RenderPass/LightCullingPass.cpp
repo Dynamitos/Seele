@@ -248,6 +248,7 @@ void LightCullingPass::setupFrustums() {
     dispatchParamsLayout->addDescriptorBinding(Gfx::DescriptorBinding{
         .binding = 0,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+        .uniformLength = sizeof(DispatchParams),
     });
     dispatchParamsLayout->addDescriptorBinding(Gfx::DescriptorBinding{
         .binding = 1,

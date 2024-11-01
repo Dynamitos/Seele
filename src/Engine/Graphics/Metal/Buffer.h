@@ -89,18 +89,23 @@ class IndexBuffer : public Gfx::IndexBuffer, public Buffer {
 };
 DEFINE_REF(IndexBuffer)
 DEFINE_REF(IndexBuffer)
-class UniformBuffer : public Gfx::UniformBuffer, public Buffer {
+// Metal Uniform Buffer is not a buffer, but just plain bytes
+class UniformBuffer : public Gfx::UniformBuffer {
   public:
     UniformBuffer(PGraphics graphics, const UniformBufferCreateInfo& createInfo);
     virtual ~UniformBuffer();
     virtual void updateContents(uint64 offset, uint64 size, void* data) override;
     virtual void rotateBuffer(uint64 size) override;
-
+    void* getContents() const { return contents.data(); }
+    size_t getSize() const { return contents.size(); }
+    
   protected:
     // Inherited via QueueOwnedResource
     virtual void executeOwnershipBarrier(Gfx::QueueType newOwner) override;
     virtual void executePipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage, Gfx::SeAccessFlags dstAccess,
                                         Gfx::SePipelineStageFlags dstStage) override;
+private:
+    Array<uint8> contents;
 };
 DEFINE_REF(UniformBuffer)
 class ShaderBuffer : public Gfx::ShaderBuffer, public Buffer {

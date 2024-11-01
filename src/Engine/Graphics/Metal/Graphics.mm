@@ -143,9 +143,22 @@ Gfx::OTimestampQuery Graphics::createTimestampQuery(uint64 numTimestamps, const 
     return new TimestampQuery(this, name, numTimestamps);
 }
 
+void Graphics::beginDebugRegion(const std::string& name) {
+    queue->getCommands()->getHandle()->pushDebugGroup(NS::String::string(name.c_str(), NS::ASCIIStringEncoding));
+}
+
+void Graphics::endDebugRegion() {
+    queue->getCommands()->getHandle()->popDebugGroup();
+}
+
 void Graphics::resolveTexture(Gfx::PTexture, Gfx::PTexture) {}
 
 void Graphics::copyTexture(Gfx::PTexture, Gfx::PTexture) {}
+
+void Graphics::copyBuffer(Gfx::PShaderBuffer src, Gfx::PShaderBuffer dst)
+{
+    // TODO blit commands
+}
 
 // Ray Tracing
 Gfx::OBottomLevelAS Graphics::createBottomLevelAccelerationStructure(const Gfx::BottomLevelASCreateInfo& createInfo) { return nullptr; }

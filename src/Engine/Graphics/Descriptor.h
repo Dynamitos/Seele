@@ -13,6 +13,8 @@ struct DescriptorBinding {
     SeDescriptorBindingFlags bindingFlags = 0;
     SeShaderStageFlags shaderStages = SE_SHADER_STAGE_ALL;
     Gfx::SeDescriptorAccessTypeFlags access = SE_DESCRIPTOR_ACCESS_READ_ONLY_BIT;
+    // In Metal uniforms are plain bytes, and for that we need to know the struct size
+    uint32 uniformLength = 0;
 };
 
 DECLARE_REF(DescriptorPool)

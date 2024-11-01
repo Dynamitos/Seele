@@ -58,8 +58,13 @@ class Graphics : public Gfx::Graphics {
     virtual Gfx::OPipelineStatisticsQuery createPipelineStatisticsQuery(const std::string& name = "") override;
     virtual Gfx::OTimestampQuery createTimestampQuery(uint64 numTimestamps, const std::string& name = "") override;
 
+    virtual void beginDebugRegion(const std::string& name) override;
+    virtual void endDebugRegion() override;
+    
     virtual void resolveTexture(Gfx::PTexture source, Gfx::PTexture destination) override;
     virtual void copyTexture(Gfx::PTexture src, Gfx::PTexture dst) override;
+    
+    virtual void copyBuffer(Gfx::PShaderBuffer src, Gfx::PShaderBuffer dst) override;
 
     // Ray Tracing
     virtual Gfx::OBottomLevelAS createBottomLevelAccelerationStructure(const Gfx::BottomLevelASCreateInfo& createInfo) override;

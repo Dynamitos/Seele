@@ -19,10 +19,15 @@ class DescriptorLayout : public Gfx::DescriptorLayout {
     virtual ~DescriptorLayout();
     virtual void create() override;
     MTL::ArgumentEncoder* createEncoder();
-
+    uint32 getFlattenedIndex(uint32 binding, uint32 arrayIndex) const { return flattenMap.at(flattenIndex(binding, arrayIndex)); }
+    constexpr uint32 getTotalBindingCount() const { return flattenedBindingCount; }
+    
   private:
+    constexpr uint64 flattenIndex(uint32 binding, uint32 arrayIndex) const { return uint64(arrayIndex) << 32 | binding; }
     PGraphics graphics;
     NS::Array* arguments;
+    Map<uint64, uint32> flattenMap;
+    uint32 flattenedBindingCount = 0;
 };
 DEFINE_REF(DescriptorLayout)
 
@@ -41,21 +46,21 @@ class DescriptorPool : public Gfx::DescriptorPool {
     Array<ODescriptorSet> allocatedSets;
 };
 DEFINE_REF(DescriptorPool)
-
 class DescriptorSet : public Gfx::DescriptorSet, public CommandBoundResource {
   public:
     DescriptorSet(PGraphics graphics, PDescriptorPool owner);
     virtual ~DescriptorSet();
     virtual void writeChanges() override;
-    virtual void updateBuffer(uint32 binding, Gfx::PUniformBuffer uniformBuffer) override;
-    virtual void updateBuffer(uint32 binding, Gfx::PShaderBuffer uniformBuffer) override;
-    virtual void updateBuffer(uint32 binding, Gfx::PIndexBuffer uniformBuffer) override;
-    virtual void updateSampler(uint32 binding, Gfx::PSampler samplerState) override;
-    virtual void updateTexture(uint32 binding, Gfx::PTexture texture, Gfx::PSampler sampler = nullptr) override;
-    virtual void updateTextureArray(uint32 binding, Array<Gfx::PTexture2D> texture) override;
-    virtual void updateSamplerArray(uint32 binding, Array<Gfx::PSampler> samplers) override;
-    virtual void updateAccelerationStructure(uint32 binding, Gfx::PTopLevelAS as) override;
-
+    virtual void updateBuffer(uint32 binding, uint32 index, Gfx::PUniformBuffer uniformBuffer) override;
+    virtual void updateBuffer(uint32 binding, uint32 index, Gfx::PShaderBuffer uniformBuffer) override;
+    virtual void updateBuffer(uint32 binding, uint32 index, Gfx::PVertexBuffer uniformBuffer) override;
+    virtual void updateBuffer(uint32 binding, uint32 index, Gfx::PIndexBuffer uniformBuffer) override;
+    virtual void updateSampler(uint32 binding, uint32 index, Gfx::PSampler samplerState) override;
+    virtual void updateTexture(uint32 binding, uint32 index, Gfx::PTexture2D texture) override;
+    virtual void updateTexture(uint32 binding, uint32 index, Gfx::PTexture3D texture) override;
+    virtual void updateTexture(uint32 binding, uint32 index, Gfx::PTextureCube texture) override;
+    virtual void updateAccelerationStructure(uint32 binding, uint32 index, Gfx::PTopLevelAS as) override;
+    
     constexpr const Array<MTL::Resource*>& getBoundResources() const { return boundResources; }
 
     MTL::Buffer* getArgumentBuffer() const { return argumentBuffer; }

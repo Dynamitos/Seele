@@ -106,9 +106,9 @@ int main() {
         //AssetImporter::importTexture(TextureImportArgs{
         //    .filePath = sourcePath / "import/textures/azeroth_height.png",
         //});
-        AssetImporter::importTexture(TextureImportArgs{
-            .filePath = sourcePath / "import/textures/wgen.png",
-        });
+        //AssetImporter::importTexture(TextureImportArgs{
+        //    .filePath = sourcePath / "import/textures/wgen.png",
+        //});
         //AssetImporter::importMesh(MeshImportArgs{
         //   .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.glb",
         //   .importPath = "Whitechapel",

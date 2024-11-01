@@ -99,7 +99,7 @@ void BasePass::beginFrame(const Component::Camera& cam) {
     transparentCulling = lightCullingLayout->allocateDescriptorSet();
 
     //waterRenderer->beginFrame();
-    terrainRenderer->beginFrame(viewParamsSet, cam);
+    //terrainRenderer->beginFrame(viewParamsSet, cam);
 
     // Debug vertices
     {
@@ -249,7 +249,7 @@ void BasePass::render() {
     }
     
     //commands.add(waterRenderer->render(viewParamsSet));
-    commands.add(terrainRenderer->render(viewParamsSet));
+    //commands.add(terrainRenderer->render(viewParamsSet));
     
     // Skybox
     {
@@ -432,7 +432,7 @@ void BasePass::publishOutputs() {
 
 void BasePass::createRenderPass() {
     RenderPass::beginFrame(Component::Camera());
-    terrainRenderer = new TerrainRenderer(graphics, scene, viewParamsLayout, viewParamsSet);
+    //terrainRenderer = new TerrainRenderer(graphics, scene, viewParamsLayout, viewParamsSet);
     cullingBuffer = resources->requestBuffer("CULLINGBUFFER");
     timestamps = resources->requestTimestampQuery("TIMESTAMPS");
 
@@ -475,7 +475,7 @@ void BasePass::createRenderPass() {
     tLightGrid = resources->requestTexture("LIGHTCULLING_TLIGHTGRID");
 
     //waterRenderer->setViewport(viewport, renderPass);
-    terrainRenderer->setViewport(viewport, renderPass);
+    //terrainRenderer->setViewport(viewport, renderPass);
 
     // Debug rendering
     {
@@ -552,6 +552,7 @@ void BasePass::createRenderPass() {
         skyboxDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{
             .binding = 0,
             .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            .uniformLength = sizeof(SkyboxData)
         });
         skyboxDataLayout->create();
         textureLayout = graphics->createDescriptorLayout("pSkyboxTextures");

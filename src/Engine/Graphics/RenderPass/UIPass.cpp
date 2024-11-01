@@ -99,6 +99,7 @@ void UIPass::createRenderPass() {
     descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{
         .binding = 0,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+        .uniformLength = sizeof(Matrix4),
     });
     descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{
         .binding = 1,
@@ -107,6 +108,7 @@ void UIPass::createRenderPass() {
     descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{
         .binding = 2,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+        .uniformLength = sizeof(uint32)
     });
     descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{
         .binding = 3,

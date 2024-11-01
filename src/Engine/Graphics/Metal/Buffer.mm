@@ -164,36 +164,38 @@ void IndexBuffer::executePipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::SePi
 }
 
 UniformBuffer::UniformBuffer(PGraphics graphics, const UniformBufferCreateInfo& createInfo)
-    : Gfx::UniformBuffer(graphics->getFamilyMapping(), createInfo),
-      Metal::Buffer(graphics, createInfo.sourceData.size, Gfx::SE_BUFFER_USAGE_UNIFORM_BUFFER_BIT, createInfo.sourceData.owner,
-                    createInfo.dynamic, createInfo.name) {
+    : Gfx::UniformBuffer(graphics->getFamilyMapping(), createInfo)
+    , contents(createInfo.sourceData.size) {
     if (createInfo.sourceData.size > 0 && createInfo.sourceData.data != nullptr) {
-        getAlloc()->updateContents(createInfo.sourceData.offset, createInfo.sourceData.size, createInfo.sourceData.data);
+        std::memcpy(contents.data(), createInfo.sourceData.data, createInfo.sourceData.size);
     }
 }
 
 UniformBuffer::~UniformBuffer() {}
 
-void UniformBuffer::rotateBuffer(uint64 size) { Metal::Buffer::rotateBuffer(size); }
+void UniformBuffer::rotateBuffer(uint64 size) {
+    contents.clear();
+    contents.resize(size);
+}
 
 void UniformBuffer::updateContents(uint64 offset, uint64 size, void* data) {
     if (size > 0 && data != nullptr) {
-        Metal::Buffer::rotateBuffer(size);
-        getAlloc()->updateContents(offset, size, data);
+        contents.resize(offset+size);
+        std::memcpy(contents.data()+offset, data, size);
     }
 }
 
-void UniformBuffer::executeOwnershipBarrier(Gfx::QueueType newOwner) { Metal::Buffer::transferOwnership(newOwner); }
+void UniformBuffer::executeOwnershipBarrier(Gfx::QueueType newOwner) { }
 
 void UniformBuffer::executePipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage, Gfx::SeAccessFlags dstAccess,
                                            Gfx::SePipelineStageFlags dstStage) {
-    Metal::Buffer::pipelineBarrier(srcAccess, srcStage, dstAccess, dstStage);
+    
 }
 
 ShaderBuffer::ShaderBuffer(PGraphics graphics, const ShaderBufferCreateInfo& createInfo)
     : Gfx::ShaderBuffer(graphics->getFamilyMapping(), createInfo),
       Seele::Metal::Buffer(graphics, createInfo.sourceData.size, Gfx::SE_BUFFER_USAGE_STORAGE_BUFFER_BIT, createInfo.sourceData.owner,
-                           createInfo.dynamic, createInfo.name, createInfo.createCleared, createInfo.clearValue) {}
+                           true, createInfo.name, createInfo.sourceData.data == nullptr, createInfo.clearValue) {}
 
 ShaderBuffer::~ShaderBuffer() {}
 

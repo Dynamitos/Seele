@@ -124,6 +124,7 @@ WaterRenderer::WaterRenderer(Gfx::PGraphics graphics, PScene scene, Gfx::PDescri
     computeLayout->addDescriptorBinding(Gfx::DescriptorBinding{
         .binding = 0,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+        .uniformLength = sizeof(MaterialParams),
     });
     computeLayout->addDescriptorBinding(Gfx::DescriptorBinding{
         .binding = 1,

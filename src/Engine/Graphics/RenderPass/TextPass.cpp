@@ -105,6 +105,7 @@ void TextPass::createRenderPass() {
     generalLayout->addDescriptorBinding(Gfx::DescriptorBinding{
         .binding = 0,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+        .uniformLength = sizeof(Matrix4),
     });
     generalLayout->addDescriptorBinding(Gfx::DescriptorBinding{
         .binding = 1,

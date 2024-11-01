@@ -184,7 +184,7 @@ class ShaderCompiler {
 
   private:
     void compile();
-    void createShaders(ShaderPermutation permutation, OPipelineLayout layout);
+    void createShaders(ShaderPermutation permutation, OPipelineLayout layout, std::string debugName);
     std::mutex shadersLock;
     Map<PermutationId, ShaderCollection> shaders;
     Map<std::string, PMaterial> materials;

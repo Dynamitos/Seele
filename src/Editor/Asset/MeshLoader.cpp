@@ -399,7 +399,8 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Array<PTextureAsset>&
         };
         uint32 twoSided = false;
         float opacity = 1.0f;
-        const char* mat = material->GetName().C_Str();
+        aiString matName = material->GetName();
+        const char* mat = matName.C_Str();
 
         if (strcmp(mat, "Leaves0119_14_S") == 0) {
             opacity = 0.5f;

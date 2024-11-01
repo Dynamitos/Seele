@@ -127,11 +127,14 @@ void RenderCommand::draw(uint32 vertexCount, uint32 instanceCount, int32 firstVe
     encoder->drawPrimitives(boundPipeline->getPrimitive(), firstVertex, vertexCount, instanceCount, firstInstance);
 }
 
+void RenderCommand::drawIndirect(Gfx::PShaderBuffer buffer, uint64 offset, uint32 drawCount, uint32 stride) {
+    encoder->drawPrimitives(MTL::PrimitiveTypeTriangle, buffer.cast<ShaderBuffer>()->getHandle(), offset);
+}
+
 void RenderCommand::drawIndexed(uint32 indexCount, uint32 instanceCount, int32 firstIndex, uint32 vertexOffset, uint32 firstInstance) {
     encoder->drawIndexedPrimitives(boundPipeline->getPrimitive(), indexCount, cast(boundIndexBuffer->getIndexType()),
                                    boundIndexBuffer->getHandle(), firstIndex, instanceCount, vertexOffset, firstInstance);
 }
-
 void RenderCommand::drawMesh(uint32 groupX, uint32 groupY, uint32 groupZ) {
     encoder->drawMeshThreadgroups(MTL::Size(groupX, groupY, groupZ), MTL::Size(128, 1, 1), MTL::Size(32, 1, 1));
 }
@@ -182,6 +185,10 @@ void ComputeCommand::pushConstants(Gfx::SeShaderStageFlags, uint32 offset, uint3
 void ComputeCommand::dispatch(uint32 threadX, uint32 threadY, uint32 threadZ) {
     // TODO
     encoder->dispatchThreadgroups(MTL::Size(threadX, threadY, threadZ), MTL::Size(32, 32, 1));
+}
+
+void ComputeCommand::dispatchIndirect(Gfx::PShaderBuffer buffer, uint32 offset){
+    encoder->dispatchThreadgroups(buffer.cast<ShaderBuffer>()->getHandle(), offset, MTL::Size(32, 32, 1));
 }
 
 CommandQueue::CommandQueue(PGraphics graphics) : graphics(graphics) {

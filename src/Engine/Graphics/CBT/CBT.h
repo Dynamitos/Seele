@@ -216,7 +216,7 @@ template <size_t Power> class CBT {
             uint32_t first_bit = tree.depthOffset[currentDepth] + tree.bitCount[currentDepth] * id_in_level;
             uint32_t local_id = first_bit % 64;
             uint64_t target_bits = (heapValue >> local_id) & tree.bitMask[currentDepth];
-            uint32_t heapValue = c - countbits(target_bits);
+            uint32_t heapValue = c - std::popcount(target_bits);
 
             uint32_t b = handle < heapValue ? 0u : 1u;
 

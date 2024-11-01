@@ -105,9 +105,11 @@ void CachedDepthPass::render() {
             command->bindPipeline(pipeline);
         }
         command->bindDescriptor({viewParamsSet, vertexData->getVertexDataSet(), vertexData->getInstanceDataSet()});
-        uint32 offset = 0;
+        VertexData::DrawCallOffsets offsets = {
+            .instanceOffset = 0,
+        };
         command->pushConstants(Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_VERTEX_BIT, 0, sizeof(VertexData::DrawCallOffsets),
-                               &offset);
+                               &offsets);
         if (graphics->supportMeshShading()) {
             command->drawMesh(vertexData->getNumInstances(), 1, 1);
         } else {
