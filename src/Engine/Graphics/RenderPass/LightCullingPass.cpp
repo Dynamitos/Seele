@@ -248,7 +248,7 @@ void LightCullingPass::setupFrustums() {
     dispatchParamsLayout->addDescriptorBinding(Gfx::DescriptorBinding{
         .binding = 0,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-        .uniformLength = sizeof(DispatchParams),
+        .uniformLength = 56,//sizeof(DispatchParams),
     });
     dispatchParamsLayout->addDescriptorBinding(Gfx::DescriptorBinding{
         .binding = 1,
@@ -264,6 +264,7 @@ void LightCullingPass::setupFrustums() {
         .modules = {"ComputeFrustums"},
         .entryPoints = {{"computeFrustums", "ComputeFrustums"}},
         .rootSignature = frustumLayout,
+        .dumpIntermediate = true,
     };
     graphics->beginShaderCompilation(createInfo);
     frustumShader = graphics->createComputeShader({0});

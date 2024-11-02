@@ -8,7 +8,7 @@ LightEnvironment::LightEnvironment(Gfx::PGraphics graphics) : graphics(graphics)
     layout->addDescriptorBinding(Gfx::DescriptorBinding{
         .binding = 0,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-        .uniformLength = sizeof(LightEnv)
+        .uniformLength = 24,//sizeof(LightEnv)
     });
     layout->addDescriptorBinding(Gfx::DescriptorBinding{
         .binding = 1,

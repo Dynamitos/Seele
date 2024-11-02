@@ -90,7 +90,7 @@ Window::Window(PGraphics graphics, const WindowCreateInfo& createInfo) : graphic
     metalLayer.drawableSize = CGSizeMake(createInfo.width, createInfo.height);
     metalWindow.contentView.layer = metalLayer;
     metalWindow.contentView.wantsLayer = YES;
-    framebufferFormat = Gfx::SE_FORMAT_R8G8B8A8_UNORM;
+    framebufferFormat = Gfx::SE_FORMAT_B8G8R8A8_UNORM;
     
     drawable = (__bridge CA::MetalDrawable*)[metalLayer nextDrawable];
     createBackBuffer();
