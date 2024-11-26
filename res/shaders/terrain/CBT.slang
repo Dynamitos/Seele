@@ -61,51 +61,28 @@ static const uint32_t OCBT_depth_offset[18] = { 0, // Level 0
 };
 
 
-static const uint OCBT_bit_mask_high[18] = { 
-                            0x0, // Root 17
-                            0x0, // Level 16
-                            0x0, // level 15
-                            0x0, // level 14
-                            0x0, // level 13
-                            0x0, // level 12
-                            0x0, // level 11
 
-                            0x0, // level 10
-                            0x0, // level 9
-                            0x0, // level 8
-                            0x0, // level 8
+static const uint64_t OCBT_bit_mask[18] = { 
+                            0xffffffffULL, // Root 17
+                            0xffffffffULL, // Level 16
+                            0xffffffffULL, // level 15
+                            0xffffffffULL, // level 14
+                            0xffffffffULL, // level 13
+                            0xffffffffULL, // level 12
+                            0xffffffffULL, // level 11
 
-                            0xffffffff, // level 7
-                            0x0, // Level 6
-                            0x0, // level 5
-                            0x0, // level 4
-                            0x0, // level 3
-                            0x0, // level 2
-                            0x0, // level 1
-};
+                            0xffffULL, // level 10
+                            0xffffULL, // level 9
+                            0xffffULL, // level 8
+                            0xffULL, // level 8
 
-
-static const uint OCBT_bit_mask_low[18] = { 
-                            0xffffffff, // Root 17
-                            0xffffffff, // Level 16
-                            0xffffffff, // level 15
-                            0xffffffff, // level 14
-                            0xffffffff, // level 13
-                            0xffffffff, // level 12
-                            0xffffffff, // level 11
-
-                            0xffff, // level 10
-                            0xffff, // level 9
-                            0xffff, // level 8
-                            0xff, // level 8
-
-                            0xffffffff, // level 7
-                            0xffffffff, // Level 6
-                            0xffff, // level 5
-                            0xff, // level 4
-                            0xf, // level 3
-                            0x3, // level 2
-                            0x1, // level 1
+                            0xffffffffffffffffULL, // level 7
+                            0xffffffffULL, // Level 6
+                            0xffffULL, // level 5
+                            0xffULL, // level 4
+                            0xfULL, // level 3
+                            0x3ULL, // level 2
+                            0x1ULL, // level 1
 };
 
 static const uint32_t OCBT_bit_count[18] = { 32, // Root 17
@@ -198,15 +175,13 @@ uint get_heap_element(uint id, inout HeapDebug debug)
     {
         uint32_t slot = first_bit / 32;
         uint32_t local_id = first_bit % 32;
-        return (pParams.cbtBuffer[slot] >> local_id) & OCBT_bit_mask_low[depth];
+        return (pParams.cbtBuffer[slot] >> local_id) & uint32_t(OCBT_bit_mask[depth]);
     }
     else
     {
         uint32_t slot = first_bit / 64;
         uint32_t local_id = first_bit % 64;
-        uint64_t mask = OCBT_bit_mask_high[depth];
-        mask = (mask << 32) | OCBT_bit_mask_low[depth];
-        uint64_t target_bits = (pParams.bitFieldBuffer[slot] >> local_id) & mask;
+        uint64_t target_bits = (pParams.bitFieldBuffer[slot] >> local_id) & OCBT_bit_mask[depth];
         debug.target_bits = target_bits;
         return countbits(uint(target_bits >> 32)) + countbits(uint(target_bits));
     }
@@ -226,8 +201,8 @@ void set_heap_element(uint id, uint value)
     uint local_id = first_bit % 32;
 
     // Extract the relevant bits
-    gs_cbtTree[slot] &= ~(uint32_t(OCBT_bit_mask_low[depth]) << local_id);
-    gs_cbtTree[slot] |= ((uint32_t(OCBT_bit_mask_low[depth]) & value) << local_id);
+    gs_cbtTree[slot] &= ~(uint32_t(OCBT_bit_mask[depth]) << local_id);
+    gs_cbtTree[slot] |= ((uint32_t(OCBT_bit_mask[depth]) & value) << local_id);
 }
 
 // Should not be called if depth > TREE_LAST_LEVEL
@@ -244,8 +219,8 @@ void set_heap_element_atomic(uint id, uint value)
     uint local_id = first_bit % 32;
 
     // Extract the relevant bits
-    InterlockedAnd(gs_cbtTree[slot], ~(uint32_t(OCBT_bit_mask_low[depth]) << local_id));
-    InterlockedOr(gs_cbtTree[slot], ((uint32_t(OCBT_bit_mask_low[depth]) & value) << local_id));
+    InterlockedAnd(gs_cbtTree[slot], ~(uint32_t(OCBT_bit_mask[depth]) << local_id));
+    InterlockedOr(gs_cbtTree[slot], ((uint32_t(OCBT_bit_mask[depth]) & value) << local_id));
 }
 
 // Function that returns the number of active bits
@@ -291,19 +266,19 @@ uint decode_bit_complement(uint handle, inout DebugStruct debug)
         handle = handle - t;
         c /= 2u;
     }
-    return (bitID ^ OCBT_NUM_ELEMENTS);
-    //handle = temp;
-    //for(uint i = 0; i < OCBT_NUM_ELEMENTS; ++i)
-    //{
-    //    if(get_bit(i) == 0)
-    //    {
-    //        if(handle == 0)
-    //        {
-    //            return i;
-    //        }
-    //        handle--;
-    //    }
-    //}
+    uint result = (bitID ^ OCBT_NUM_ELEMENTS);
+    handle = temp;
+    for(uint i = 0; i < OCBT_NUM_ELEMENTS; ++i)
+    {
+        if(get_bit(i) == 0)
+        {
+            if(handle == 0)
+            {
+                return i;
+            }
+            handle--;
+        }
+    }
 }
 
 void reduce(uint groupIndex)
