@@ -298,12 +298,6 @@ Gfx::OSampler Graphics::createSampler(const SamplerCreateInfo& createInfo) {
     return new Sampler(this, vkInfo);
 }
 
-Gfx::OComputeShader Graphics::createComputeShaderFromBinary(std::string_view binaryName) {
-    OComputeShader shader = new ComputeShader(this);
-    shader->create(binaryName);
-    return shader;
-}
-
 Gfx::ODescriptorLayout Graphics::createDescriptorLayout(const std::string& name) { return new DescriptorLayout(this, name); }
 
 Gfx::OPipelineLayout Graphics::createPipelineLayout(const std::string& name, Gfx::PPipelineLayout baseLayout) {

@@ -32,9 +32,9 @@ void StaticMeshVertexData::loadTexCoords(uint64 offset, uint64 index, const Arra
     dirty = true;
 }
 
-void StaticMeshVertexData::loadNormals(uint64 offset, const Array<Quaternion>& data) {
+void StaticMeshVertexData::loadNormals(uint64 offset, const Array<uint32>& data) {
     assert(offset + data.size() <= head);
-    std::memcpy(norData.data() + offset, data.data(), data.size() * sizeof(Quaternion));
+    std::memcpy(norData.data() + offset, data.data(), data.size() * sizeof(uint32));
     // normals->updateContents(offset * sizeof(Vector4), data.size() * sizeof(Vector4), data.data());
     dirty = true;
 }
@@ -60,10 +60,10 @@ void StaticMeshVertexData::serializeMesh(MeshId id, uint64 numVertices, ArchiveB
         Serialization::save(buffer, tex[i]);
     }
     Array<Vector> pos(numVertices);
-    Array<Quaternion> nor(numVertices);
+    Array<uint32> nor(numVertices);
     Array<U16Vector> col(numVertices);
     std::memcpy(pos.data(), posData.data() + offset, numVertices * sizeof(Vector));
-    std::memcpy(nor.data(), norData.data() + offset, numVertices * sizeof(Quaternion));
+    std::memcpy(nor.data(), norData.data() + offset, numVertices * sizeof(uint32));
     std::memcpy(col.data(), colData.data() + offset, numVertices * sizeof(U16Vector));
     Serialization::save(buffer, pos);
     Serialization::save(buffer, nor);
@@ -84,7 +84,7 @@ uint64 StaticMeshVertexData::deserializeMesh(MeshId id, ArchiveBuffer& buffer) {
         result += tex[i].size() * sizeof(U16Vector2);
     }
     Array<Vector> pos;
-    Array<Quaternion> nor;
+    Array<uint32> nor;
     Array<U16Vector> col;
     Serialization::load(buffer, pos);
     Serialization::load(buffer, nor);
@@ -93,7 +93,7 @@ uint64 StaticMeshVertexData::deserializeMesh(MeshId id, ArchiveBuffer& buffer) {
     loadNormals(offset, nor);
     loadColors(offset, col);
     result += pos.size() * sizeof(Vector);
-    result += nor.size() * sizeof(Quaternion);
+    result += nor.size() * sizeof(uint32);
     result += col.size() * sizeof(U16Vector);
     return result;
 }
@@ -154,7 +154,7 @@ void StaticMeshVertexData::updateBuffers() {
     normals = graphics->createShaderBuffer(ShaderBufferCreateInfo{
         .sourceData =
             {
-                .size = verticesAllocated * sizeof(Quaternion),
+                .size = verticesAllocated * sizeof(uint32),
                 .data = (uint8*)norData.data(),
             },
         .name = "Normals",

@@ -14,7 +14,7 @@ struct DirectionalLight : ILightEnv
 
     float3 illuminate<B:IBRDF>(LightingParameter params, B brdf)
     {
-        float3 dir_TS = mul(params.tbn, -normalize(direction.xyz));
+        float3 dir_TS = mul(params.worldToTangent, -normalize(direction.xyz));
         return brdf.evaluate(params.viewDir_TS, dir_TS, color.xyz);
     }
 };
@@ -26,7 +26,7 @@ struct PointLight : ILightEnv
     
     float3 illuminate<B:IBRDF>(LightingParameter params, B brdf)
     {
-        float3 pos_TS = mul(params.tbn, position_WS.xyz);
+        float3 pos_TS = mul(params.worldToTangent, position_WS.xyz);
         float3 lightDir_TS = pos_TS.xyz - params.position_TS;
         float d = length(lightDir_TS);
         float illuminance = max(1 - d / colorRange.w, 0);

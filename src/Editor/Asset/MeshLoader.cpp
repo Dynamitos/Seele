@@ -452,7 +452,7 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Array<PTextureAsset>&
     }
 }
 
-void findMeshRoots(aiNode* node, List<aiNode*>& meshNodes) {
+void MeshLoader::findMeshRoots(aiNode* node, List<aiNode*>& meshNodes) {
     if (node->mNumMeshes > 0) {
         meshNodes.add(node);
         return;
@@ -460,6 +460,40 @@ void findMeshRoots(aiNode* node, List<aiNode*>& meshNodes) {
     for (uint32 i = 0; i < node->mNumChildren; ++i) {
         findMeshRoots(node->mChildren[i], meshNodes);
     }
+}
+
+uint32 MeshLoader::encodeQTangent(Matrix3 m) {
+    float r = (glm::determinant(m) ? -1.0 : 1.0);
+    m[2] *= r;
+    float t = m[0][0] + (m[1][1] + m[2][2]);
+    Vector4 q;
+    if (t > 2.9999999) {
+        q = Vector4(0.0, 0.0, 0.0, 1.0);
+    } else if (t > 0.0000001) {
+        float s = sqrt(1.0 + t) * 2.0;
+        q = Vector4(Vector(m[1][2] - m[2][1], m[2][0] - m[0][2], m[0][1] - m[1][0]) / s, s * 0.25);
+    } else if ((m[0][0] > m[1][1]) && (m[0][0] > m[2][2])) {
+        float s = sqrt(1.0 + (m[0][0] - (m[1][1] + m[2][2]))) * 2.0;
+        q = Vector4(s * 0.25, Vector(m[1][0] + m[0][1], m[2][0] + m[0][2], m[1][2] - m[2][1]) / s);
+    } else if (m[1][1] > m[2][2]) {
+        float s = sqrt(1.0 + (m[1][1] - (m[0][0] + m[2][2]))) * 2.0;
+        q = Vector4(Vector(m[1][0] + m[0][1], m[2][1] + m[1][2], m[2][0] - m[0][2]) / s, s * 0.25);
+        q = Vector4(q.x, q.w, q.y, q.z);
+    } else {
+        float s = sqrt(1.0 + (m[2][2] - (m[0][0] + m[1][1]))) * 2.0;
+        q = Vector4(Vector(m[2][0] + m[0][2], m[2][1] + m[1][2], m[0][1] - m[1][0]) / s, s * 0.25);
+        q = Vector4(q.x, q.y, q.w, q.z);
+    }
+    Vector4 qAbs = abs(q = glm::normalize(q));
+    int maxComponentIndex = (qAbs.x > qAbs.y) ? ((qAbs.x > qAbs.z) ? ((qAbs.x > qAbs.w) ? 0 : 3) : ((qAbs.z > qAbs.w) ? 2 : 3))
+                                              : ((qAbs.y > qAbs.z) ? ((qAbs.y > qAbs.w) ? 1 : 3) : ((qAbs.z > qAbs.w) ? 2 : 3));
+    Vector components[4] = {Vector(q.y, q.z, q.w), Vector(q.x, q.z, q.w), Vector(q.x, q.y, q.w), Vector(q.x, q.y, q.z)};
+
+    q = Vector4(components[maxComponentIndex] * float(((q[maxComponentIndex] < 0.0) ? -1.0 : 1.0) * 1.4142135623730951), q.w);
+    return ((uint32(round(glm::clamp(q.x * 511.0, -511.0, 511.0) + 512.0)) & 0x3ffu) << 0u) |
+           ((uint32(round(glm::clamp(q.y * 511.0, -511.0, 511.0) + 512.0)) & 0x3ffu) << 10u) |
+           ((uint32(round(glm::clamp(q.z * 255.0, -255.0, 255.0) + 256.0)) & 0x1ffu) << 20u) |
+           ((uint32(((dot(cross(m[0], m[2]), m[1]) * r) < 0.0) ? 1u : 0u) & 0x1u) << 29u) | ((uint32(maxComponentIndex) & 0x3u) << 30u);
 }
 
 void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialInstanceAsset>& materials, Array<OMesh>& globalMeshes,
@@ -483,7 +517,7 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
             for (size_t i = 0; i < MAX_TEXCOORDS; ++i) {
                 texCoords[i].resize(mesh->mNumVertices);
             }
-            Array<Quaternion> normals(mesh->mNumVertices);
+            Array<uint32> normals(mesh->mNumVertices);
             Array<U16Vector> colors(mesh->mNumVertices);
 
             for (int32 i = 0; i < mesh->mNumVertices; ++i) {
@@ -504,25 +538,7 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
                 }
                 Matrix3 tbn = {normal, biTangent, tangent};
 
-                Quaternion qTangent(tbn);
-                qTangent = glm::normalize(qTangent);
-
-                if (qTangent.w < 0)
-                    qTangent = -qTangent;
-
-                const float bias = 1.0f / 32767.0f;
-
-                if (qTangent.w < bias) {
-                    double normFactor = sqrt(1 - bias * bias);
-                    qTangent.w = bias;
-                    qTangent.x *= normFactor;
-                    qTangent.y *= normFactor;
-                    qTangent.z *= normFactor;
-                }
-                Vector naturalBinormal = glm::cross(tangent, normal);
-                if (glm::dot(naturalBinormal, biTangent) <= 0)
-                    qTangent = -qTangent;
-                normals[i] = qTangent;
+                normals[i] = encodeQTangent(tbn);
 
                 if (mesh->HasVertexColors(0)) {
                     colors[i] = U16Vector(mesh->mColors[0][i].r * 65535, mesh->mColors[0][i].g * 65535, mesh->mColors[0][i].b * 65535);
@@ -559,7 +575,7 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
             globalMeshes[meshIndex]->blas = graphics->createBottomLevelAccelerationStructure(Gfx::BottomLevelASCreateInfo{
                 .mesh = globalMeshes[meshIndex],
             });
-            //vertexData->registerBottomLevelAccelerationStructure(globalMeshes[meshIndex]->blas);
+            // vertexData->registerBottomLevelAccelerationStructure(globalMeshes[meshIndex]->blas);
         });
     }
     getThreadPool().runAndWait(std::move(work));

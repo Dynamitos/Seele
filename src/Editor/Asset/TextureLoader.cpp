@@ -42,7 +42,7 @@ void TextureLoader::importAsset(TextureImportArgs args) {
     PTextureAsset ref = asset;
     asset->setStatus(Asset::Status::Loading);
     AssetRegistry::get().registerTexture(std::move(asset));
-    getThreadPool().runAsync([=](){import(args, ref);});
+    import(args, ref);
 }
 
 PTextureAsset TextureLoader::getPlaceholderTexture() { return placeholderAsset; }
@@ -112,11 +112,11 @@ void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset) {
         .structSize = sizeof(ktxBasisParams),
         .uastc = true,
         .threadCount = 14,
-        .uastcFlags = KTX_PACK_UASTC_LEVEL_FASTER,
+        .uastcFlags = KTX_PACK_UASTC_LEVEL_FASTEST,
         .uastcRDO = true,
     };
-    KTX_ASSERT(ktxTexture2_CompressBasisEx(kTexture, &basisParams));
-    KTX_ASSERT(ktxTexture2_DeflateZstd(kTexture, 20));
+    //KTX_ASSERT(ktxTexture2_CompressBasisEx(kTexture, &basisParams));
+    //KTX_ASSERT(ktxTexture2_DeflateZstd(kTexture, 20));
 
     char writer[100];
     snprintf(writer, sizeof(writer), "%s version %s", "SeeleEngine", "0.0.1");

@@ -8,33 +8,22 @@ struct StaticMeshVertexData
     {
         return value / 65535.0f;
     }
-    float3 xAxis( float4 qQuat )
-    {
-        float fTy  = 2.0 * qQuat.y;
-        float fTz  = 2.0 * qQuat.z;
-        float fTwy = fTy * qQuat.w;
-        float fTwz = fTz * qQuat.w;
-        float fTxy = fTy * qQuat.x;
-        float fTxz = fTz * qQuat.x;
-        float fTyy = fTy * qQuat.y;
-        float fTzz = fTz * qQuat.z;
-    
-        return float3( 1.0-(fTyy+fTzz), fTxy+fTwz, fTxz-fTwy );
+
+    float3x3 decodeQTangentUI32(uint v){
+        float4 q = float4(((float3(int3(uint3((uint3(v) >> uint3(0u, 10u, 20u)) & uint2(0x3ffu, 0x1ffu).xxy)) - int2(512, 256).xxy)) / float2(511.0, 255.0).xxy) * 0.7071067811865475, 0.0);
+        q.w = sqrt(1.0 - clamp(dot(q.xyz, q.xyz), 0.0, 1.0)); 
+        q = normalize(float4[4](q.wxyz, q.xwyz, q.xywz, q.xyzw)[uint((v >> 30u) & 0x3u)]);
+        float3 t2 = q.xyz * 2.0, tx = q.xxx * t2.xyz, ty = q.yyy * t2.xyz, tz = q.www * t2.xyz;
+        float3 tangent = float3(1.0 - (ty.y + (q.z * t2.z)), tx.y + tz.z, tx.z - tz.y);
+        float3 normal = float3(tx.z + tz.y, ty.z - tz.x, 1.0 - (tx.x + ty.y));
+        return float3x3(tangent, cross(tangent, normal) * (((v & (1u << 29u)) != 0u) ? -1.0 : 1.0), normal);
     }
-    
-    float3 yAxis( float4 qQuat )
-    {
-        float fTx  = 2.0 * qQuat.x;
-        float fTy  = 2.0 * qQuat.y;
-        float fTz  = 2.0 * qQuat.z;
-        float fTwx = fTx * qQuat.w;
-        float fTwz = fTz * qQuat.w;
-        float fTxx = fTx * qQuat.x;
-        float fTxy = fTy * qQuat.x;
-        float fTyz = fTz * qQuat.y;
-        float fTzz = fTz * qQuat.z;
-    
-        return float3( fTxy-fTwz, 1.0-(fTxx+fTzz), fTyz+fTwx );
+
+    // Decodes the UI32 encoded qtangent into a unpacked qtangent for further processing like vertex interpolation and so on
+    float4 decodeQTangentUI32Raw(uint v){
+        float4 q = float4(((float3(int3(uint3((uint3(v) >> uint3(0u, 10u, 20u)) & uint2(0x3ffu, 0x1ffu).xxy)) - int2(512, 256).xxy)) / float2(511.0, 255.0).xxy) * 0.7071067811865475, 0.0);
+        q.w = sqrt(1.0 - clamp(dot(q.xyz, q.xyz), 0.0, 1.0)); 
+        return normalize(float4[4](q.wxyz, q.xwyz, q.xywz, q.xyzw)[uint((v >> 30u) & 0x3u)]) * (((v & (1u << 29u)) != 0u) ? -1.0 : 1.0);
     }
 
 	VertexAttributes getAttributes(uint index)
@@ -42,11 +31,7 @@ struct StaticMeshVertexData
 		VertexAttributes attributes;
 		attributes.position_MS = float3(positions[index * 3 + 0], positions[index * 3 + 1], positions[index * 3 + 2]);
 #ifndef POS_ONLY
-        float4 qtangent = normalize(qtangents[index]);
-        attributes.normal_MS = xAxis(qtangent);
-        attributes.tangent_MS = yAxis(qtangent);
-        float biNormalReflection = sign(qtangents[index].w);
-        attributes.biTangent_MS = cross(attributes.normal_MS, attributes.tangent_MS) * biNormalReflection;
+        attributes.qTangent = decodeQTangentUI32Raw(qtangents[index]);
 		for(uint i = 0; i < MAX_TEXCOORDS; ++i)
 		{
 			attributes.texCoords[i] = float2(uint16ToFloat(texCoords[i][index * 2 + 0]), uint16ToFloat(texCoords[i][index * 2 + 1]));
@@ -56,7 +41,7 @@ struct StaticMeshVertexData
 		return attributes;
 	}
 	StructuredBuffer<float> positions;
-	StructuredBuffer<float4> qtangents;
+	StructuredBuffer<uint> qtangents;
 	StructuredBuffer<uint16_t> color;
 	StructuredBuffer<uint16_t> texCoords[MAX_TEXCOORDS];
 };

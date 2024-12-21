@@ -7,34 +7,40 @@ struct MaterialParameter
 	float3 vertexColor;
 };
 
-// data used by light environment
 struct LightingParameter
 {
-    float3x3 tbn;
-    float3 normal_TS;
-	float3 position_TS;
-	float3 viewDir_TS;
-};
+    float3x3 worldToTangent;
+    float3 viewDir_TS;
+    float3 position_TS;
+}
+
+// Constructs a TBN matrix from a unpacked qtangent for example for after vertex interpolation in the fragment shader
+float3x3 constructTBNFromQTangent(float4 q){
+    q = normalize(q); // Ensure that the quaternion is normalized in case it is not, for example after interpolation and so on 
+    float3 t2 = q.xyz * 2.0, tx = q.xxx * t2.xyz, ty = q.yyy * t2.xyz, tz = q.www * t2.xyz;
+    float3 tangent = float3(1.0 - (ty.y + (q.z * t2.z)), tx.y + tz.z, tx.z - tz.y);
+    float3 normal = float3(tx.z + tz.y, ty.z - tz.x, 1.0 - (tx.x + ty.y));
+    return float3x3(tangent, cross(tangent, normal) * ((q.w < 0.0) ? -1.0 : 1.0), normal);
+}
 
 // data passed to fragment shader
 struct FragmentParameter
 {
     float4 position_CS : SV_Position;
 #ifndef POS_ONLY
-	float3 normal_WS : NORMALWS;
-	float3 tangent_WS : TANGENTWS;
-	float3 biTangent_WS : BITANGENTWS;
+	float4 qTangent : QTANGENT;
 	float3 position_WS : POSITIONWS;
+    float3 position_TS : POSITIONTS;
+    float3 viewDir_TS : VIEWDIRTS;
 	float3 vertexColor : COLOR;
 	float4 texCoords0 : TEXCOORDS0;
 	float4 texCoords1 : TEXCOORDS1;
 	float4 texCoords2 : TEXCOORDS2;
 	float4 texCoords3 : TEXCOORDS3;
-	MaterialParameter getMaterialParameter()
-	{
-		MaterialParameter result;
-		result.position_WS = position_WS;
-		result.vertexColor = vertexColor;
+    MaterialParameter getMaterialParameter()
+    {
+        MaterialParameter result;
+        result.position_WS = position_WS;
         result.texCoords[0] = texCoords0.xy;
         result.texCoords[1] = texCoords0.zw;
         result.texCoords[2] = texCoords1.xy;
@@ -43,22 +49,18 @@ struct FragmentParameter
         result.texCoords[5] = texCoords2.zw;
         result.texCoords[6] = texCoords3.xy;
         result.texCoords[7] = texCoords3.zw;
-		return result;
-	}
-	LightingParameter getLightingParameter()
-	{
-		LightingParameter result;
-		float3x3 tbn = float3x3(normalize(tangent_WS), normalize(biTangent_WS), normalize(normal_WS));
-		result.tbn = tbn;
-        result.position_TS = mul(tbn, position_WS);
-        result.viewDir_TS = mul(tbn, normalize(pViewParams.cameraPosition_WS.xyz - position_WS));
-        result.normal_TS = mul(tbn, normal_WS);
-		return result;
-	}
-    float3x3 getTangentToWorld()
+        result.vertexColor = vertexColor;
+        return result;
+    }
+
+    LightingParameter getLightingParameter()
     {
-        float3x3 tbn = float3x3(normalize(tangent_WS), normalize(biTangent_WS), normalize(normal_WS));
-		return transpose(tbn);
+        float3x3 worldToTangent = transpose(constructTBNFromQTangent(qTangent));
+        LightingParameter result;
+        result.worldToTangent = worldToTangent;
+        result.viewDir_TS = viewDir_TS;
+        result.position_TS = position_TS;
+        return result;
     }
 #endif
     static FragmentParameter interpolate(FragmentParameter f0, FragmentParameter f1, FragmentParameter f2, float3 barycentricCoords)
@@ -66,9 +68,7 @@ struct FragmentParameter
         FragmentParameter result;
         result.position_CS = f0.position_CS * barycentricCoords.x + f1.position_CS * barycentricCoords.y + f2.position_CS * barycentricCoords.z;
 #ifndef POS_ONLY
-        result.normal_WS = f0.normal_WS * barycentricCoords.x + f1.normal_WS * barycentricCoords.y + f2.normal_WS * barycentricCoords.z;
-	    result.tangent_WS = f0.tangent_WS * barycentricCoords.x + f1.tangent_WS * barycentricCoords.y + f2.tangent_WS * barycentricCoords.z;
-	    result.biTangent_WS = f0.biTangent_WS * barycentricCoords.x + f1.biTangent_WS * barycentricCoords.y + f2.biTangent_WS * barycentricCoords.z;
+        result.qTangent = f0.qTangent * barycentricCoords.x + f1.qTangent * barycentricCoords.y + f2.qTangent * barycentricCoords.z;
 	    result.position_WS = f0.position_WS * barycentricCoords.x + f1.position_WS * barycentricCoords.y + f2.position_WS * barycentricCoords.z;
 	    result.vertexColor = f0.vertexColor * barycentricCoords.x + f1.vertexColor * barycentricCoords.y + f2.vertexColor * barycentricCoords.z;
 	    //for(uint i = 0; i < MAX_TEXCOORDS; ++i)
@@ -85,9 +85,7 @@ struct VertexAttributes
 {
 	float3 position_MS;
 #ifndef POS_ONLY
-	float3 normal_MS;
-	float3 tangent_MS;
-	float3 biTangent_MS;
+	float4 qTangent;
 	float3 vertexColor;
 	float2 texCoords[MAX_TEXCOORDS];
 #endif
@@ -100,15 +98,12 @@ struct VertexAttributes
 		FragmentParameter result;
 		result.position_CS = clipPos;
 #ifndef POS_ONLY
-		float3x3 normalMatrix = float3x3(transformMatrix);
-		float3 T = mul(normalMatrix, tangent_MS);
-		float3 N = mul(normalMatrix, normal_MS);
-		float3 B = mul(normalMatrix, biTangent_MS);
-		result.normal_WS = N;
-		result.tangent_WS = T;
-		result.biTangent_WS = B;
-		result.position_WS = worldPos.xyz;
+		result.qTangent = qTangent;
+        float3x3 tbn = transpose(constructTBNFromQTangent(qTangent));
+        result.position_TS = mul(tbn, worldPos.xyz);
 		result.vertexColor = vertexColor;
+		result.position_WS = worldPos.xyz;
+        result.viewDir_TS = mul(tbn, pViewParams.cameraPosition_WS.xyz - worldPos.xyz);
         result.texCoords0 = float4(texCoords[0], texCoords[1]);
         result.texCoords1 = float4(texCoords[2], texCoords[3]);
         result.texCoords2 = float4(texCoords[4], texCoords[5]);

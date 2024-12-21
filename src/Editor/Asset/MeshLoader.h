@@ -5,7 +5,6 @@
 #include "MinimalEngine.h"
 #include <filesystem>
 
-
 struct aiScene;
 struct aiTexel;
 struct aiNode;
@@ -26,6 +25,9 @@ class MeshLoader {
     void importAsset(MeshImportArgs args);
 
   private:
+    void findMeshRoots(aiNode* node, List<aiNode*>& meshNodes);
+    uint32 encodeQTangent(Matrix3 m);
+
     void loadTextures(const aiScene* scene, const std::filesystem::path& meshDirectory, const std::string& importPath,
                       Array<PTextureAsset>& textures);
     void loadMaterials(const aiScene* scene, const Array<PTextureAsset>& textures, const std::string& baseName,

@@ -14,7 +14,7 @@ class StaticMeshVertexData : public VertexData {
     static StaticMeshVertexData* getInstance();
     void loadPositions(uint64 offset, const Array<Vector>& data);
     void loadTexCoords(uint64 offset, uint64 index, const Array<U16Vector2>& data);
-    void loadNormals(uint64 offset, const Array<Quaternion>& data);
+    void loadNormals(uint64 offset, const Array<uint32>& data);
     void loadColors(uint64 offset, const Array<U16Vector>& data);
     virtual void serializeMesh(MeshId id, uint64 numVertices, ArchiveBuffer& buffer) override;
     virtual uint64 deserializeMesh(MeshId id, ArchiveBuffer& buffer) override;
