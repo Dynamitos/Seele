@@ -8,9 +8,9 @@
 #include "Graphics/RenderPass/CachedDepthPass.h"
 #include "Graphics/RenderPass/DepthCullingPass.h"
 #include "Graphics/RenderPass/LightCullingPass.h"
+#include "Graphics/RenderPass/RayTracingPass.h"
 #include "Graphics/RenderPass/RenderGraphResources.h"
 #include "Graphics/RenderPass/VisibilityPass.h"
-#include "Graphics/RenderPass/RayTracingPass.h"
 #include "System/CameraUpdater.h"
 #include "System/LightGather.h"
 #include "System/MeshUpdater.h"
@@ -28,11 +28,12 @@ GameView::GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreate
     renderGraph.addPass(new VisibilityPass(graphics, scene));
     renderGraph.addPass(new LightCullingPass(graphics, scene));
     renderGraph.addPass(new BasePass(graphics, scene));
-    
-    //renderGraph.addPass(new RayTracingPass(graphics, scene));
-    
     renderGraph.setViewport(viewport);
     renderGraph.createRenderPass();
+
+    rayTracingGraph.addPass(new RayTracingPass(graphics, scene));
+    rayTracingGraph.setViewport(viewport);
+    rayTracingGraph.createRenderPass();
 }
 
 GameView::~GameView() {}
@@ -66,7 +67,11 @@ void GameView::render() {
         if (c.mainCamera)
             cam = c;
     });
-    renderGraph.render(cam);
+    if (getGlobals().useRayTracing) {
+        rayTracingGraph.render(cam);
+    } else {
+        renderGraph.render(cam);
+    }
 }
 
 void GameView::applyArea(URect) { renderGraph.setViewport(viewport); }
@@ -84,9 +89,7 @@ void GameView::reloadGame() {
     systemGraph->addSystem(new System::CameraUpdater(scene));
 }
 
-void GameView::keyCallback(KeyCode code, InputAction action, KeyModifier modifier) {
-    keyboardSystem->keyCallback(code, action, modifier);
-}
+void GameView::keyCallback(KeyCode code, InputAction action, KeyModifier modifier) { keyboardSystem->keyCallback(code, action, modifier); }
 
 void GameView::mouseMoveCallback(double xPos, double yPos) { keyboardSystem->mouseCallback(xPos, yPos); }
 

@@ -1,4 +1,5 @@
 #include "LevelAsset.h"
+#include "Serialization/Serialization.h"
 
 using namespace Seele;
 
@@ -8,6 +9,6 @@ LevelAsset::LevelAsset(std::string_view folderPath, std::string_view name) : Ass
 
 LevelAsset::~LevelAsset() {}
 
-void LevelAsset::save(ArchiveBuffer&) const {}
+void LevelAsset::save(ArchiveBuffer& buffer) const { }
 
-void LevelAsset::load(ArchiveBuffer&) {}
+void LevelAsset::load(ArchiveBuffer& buffer) { }

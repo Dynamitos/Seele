@@ -17,7 +17,10 @@ class RayTracingPass : public RenderPass {
   private:
     Gfx::ODescriptorLayout paramsLayout;
     Gfx::OPipelineLayout pipelineLayout;
+    Gfx::OTexture2D radianceAccumulator;
     Gfx::OTexture2D texture;
+    Gfx::PTextureCube skyBox;
+    Gfx::OSampler skyBoxSampler;
     Gfx::ORayGenShader rayGen;
     Gfx::OMissShader miss;
     Gfx::PRayTracingPipeline pipeline;

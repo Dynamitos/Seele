@@ -31,7 +31,7 @@ struct FragmentParameter
 	float4 qTangent : QTANGENT;
 	float3 position_WS : POSITIONWS;
     float3 position_TS : POSITIONTS;
-    float3 viewDir_TS : VIEWDIRTS;
+    float3 cameraPos_TS : CAMPOSTS;
 	float3 vertexColor : COLOR;
 	float4 texCoords0 : TEXCOORDS0;
 	float4 texCoords1 : TEXCOORDS1;
@@ -58,9 +58,14 @@ struct FragmentParameter
         float3x3 worldToTangent = transpose(constructTBNFromQTangent(qTangent));
         LightingParameter result;
         result.worldToTangent = worldToTangent;
-        result.viewDir_TS = viewDir_TS;
+        result.viewDir_TS = cameraPos_TS - position_TS;
         result.position_TS = position_TS;
         return result;
+    }
+
+    float3x3 getTangentToWorld()
+    {
+        return constructTBNFromQTangent(qTangent);
     }
 #endif
     static FragmentParameter interpolate(FragmentParameter f0, FragmentParameter f1, FragmentParameter f2, float3 barycentricCoords)
@@ -71,10 +76,11 @@ struct FragmentParameter
         result.qTangent = f0.qTangent * barycentricCoords.x + f1.qTangent * barycentricCoords.y + f2.qTangent * barycentricCoords.z;
 	    result.position_WS = f0.position_WS * barycentricCoords.x + f1.position_WS * barycentricCoords.y + f2.position_WS * barycentricCoords.z;
 	    result.vertexColor = f0.vertexColor * barycentricCoords.x + f1.vertexColor * barycentricCoords.y + f2.vertexColor * barycentricCoords.z;
-	    //for(uint i = 0; i < MAX_TEXCOORDS; ++i)
-        //{
-        //    result.texCoords[i] = f0.texCoords[i] * barycentricCoords.x + f1.texCoords[i] * barycentricCoords.y + f2.texCoords[i] * barycentricCoords.z;
-        //}
+        result.texCoords0 = f0.texCoords0 * barycentricCoords.x + f1.texCoords0 * barycentricCoords.y + f2.texCoords0 * barycentricCoords.z;
+        result.texCoords1 = f0.texCoords1 * barycentricCoords.x + f1.texCoords1 * barycentricCoords.y + f2.texCoords1 * barycentricCoords.z;
+        result.texCoords2 = f0.texCoords2 * barycentricCoords.x + f1.texCoords2 * barycentricCoords.y + f2.texCoords2 * barycentricCoords.z;
+        result.texCoords3 = f0.texCoords3 * barycentricCoords.x + f1.texCoords3 * barycentricCoords.y + f2.texCoords3 * barycentricCoords.z;
+
 #endif
         return result;
     }
@@ -99,11 +105,11 @@ struct VertexAttributes
 		result.position_CS = clipPos;
 #ifndef POS_ONLY
 		result.qTangent = qTangent;
-        float3x3 tbn = transpose(constructTBNFromQTangent(qTangent));
+        float3x3 tbn = constructTBNFromQTangent(qTangent);
         result.position_TS = mul(tbn, worldPos.xyz);
 		result.vertexColor = vertexColor;
 		result.position_WS = worldPos.xyz;
-        result.viewDir_TS = mul(tbn, pViewParams.cameraPosition_WS.xyz - worldPos.xyz);
+        result.cameraPos_TS = mul(tbn, pViewParams.cameraPosition_WS.xyz);
         result.texCoords0 = float4(texCoords[0], texCoords[1]);
         result.texCoords1 = float4(texCoords[2], texCoords[3]);
         result.texCoords2 = float4(texCoords[4], texCoords[5]);

@@ -28,6 +28,7 @@ class GameView : public View {
     OScene scene;
     GameInterface gameInterface;
     RenderGraph renderGraph;
+    RenderGraph rayTracingGraph;
 
     PSystemGraph systemGraph;
     System::PKeyboardInput keyboardSystem;

@@ -9,6 +9,11 @@
 
 using namespace Seele;
 
+struct SampleParams {
+    uint32 pass;
+    uint32 samplesPerPixel;
+};
+
 RayTracingPass::RayTracingPass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics, scene) {
     paramsLayout = graphics->createDescriptorLayout("pRayTracingParams");
     paramsLayout->addDescriptorBinding(Gfx::DescriptorBinding{
@@ -21,7 +26,19 @@ RayTracingPass::RayTracingPass(Gfx::PGraphics graphics, PScene scene) : RenderPa
     });
     paramsLayout->addDescriptorBinding(Gfx::DescriptorBinding{
         .binding = 2,
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_IMAGE,
+    });
+    paramsLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .binding = 3,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+    });
+    paramsLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .binding = 4,
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+    });
+    paramsLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .binding = 5,
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLER,
     });
     paramsLayout->create();
     pipelineLayout = graphics->createPipelineLayout("RayTracing");
@@ -31,15 +48,30 @@ RayTracingPass::RayTracingPass(Gfx::PGraphics graphics, PScene scene) : RenderPa
     pipelineLayout->addDescriptorLayout(scene->getLightEnvironment()->getDescriptorLayout());
     pipelineLayout->addDescriptorLayout(StaticMeshVertexData::getInstance()->getVertexDataLayout());
     pipelineLayout->addDescriptorLayout(StaticMeshVertexData::getInstance()->getInstanceDataLayout());
+    pipelineLayout->addPushConstants(Gfx::SePushConstantRange{
+        .stageFlags = Gfx::SE_SHADER_STAGE_RAYGEN_BIT_KHR,
+        .offset = 0,
+        .size = sizeof(SampleParams),
+    });
     graphics->getShaderCompiler()->registerRenderPass("RayTracing", Gfx::PassConfig{
                                                                         .baseLayout = pipelineLayout,
                                                                         .mainFile = "ClosestHit",
                                                                         .useMaterial = true,
                                                                         .rayTracing = true,
                                                                     });
+    skyBox = AssetRegistry::findTexture("", "skybox")->getTexture().cast<Gfx::TextureCube>();
+    skyBoxSampler = graphics->createSampler({});
 }
 
-void RayTracingPass::beginFrame(const Component::Camera& cam) { RenderPass::beginFrame(cam); }
+static uint32 i = 0;
+static Component::Camera lastCam;
+void RayTracingPass::beginFrame(const Component::Camera& cam) {
+    RenderPass::beginFrame(cam);
+    if (lastCam.getCameraPosition() != cam.getCameraPosition() || lastCam.getCameraForward() != cam.getCameraForward()) {
+        lastCam = cam;
+        i = 0;
+    }
+}
 
 void RayTracingPass::render() {
     Array<Gfx::RayTracingHitGroup> callableGroups;
@@ -104,8 +136,11 @@ void RayTracingPass::render() {
     });
     Gfx::PDescriptorSet desc = paramsLayout->allocateDescriptorSet();
     desc->updateAccelerationStructure(0, 0, tlas);
-    desc->updateTexture(1, 0, texture);
-    desc->updateBuffer(2, 0, StaticMeshVertexData::getInstance()->getIndexBuffer());
+    desc->updateTexture(1, 0, radianceAccumulator);
+    desc->updateTexture(2, 0, texture);
+    desc->updateBuffer(3, 0, StaticMeshVertexData::getInstance()->getIndexBuffer());
+    desc->updateTexture(4, 0, skyBox);
+    desc->updateSampler(5, 0, skyBoxSampler);
     desc->writeChanges();
 
     Gfx::ORenderCommand command = graphics->createRenderCommand("RayTracing");
@@ -115,7 +150,22 @@ void RayTracingPass::render() {
     command->bindDescriptor({viewParamsSet, StaticMeshVertexData::getInstance()->getInstanceDataSet(),
                              StaticMeshVertexData::getInstance()->getVertexDataSet(), Material::getDescriptorSet(),
                              scene->getLightEnvironment()->getDescriptorSet(), desc});
-    command->traceRays(texture->getWidth(), texture->getHeight(), 1);
+    SampleParams sampleParams = {
+        .pass = 0,
+        .samplesPerPixel = 10000,
+    };
+    // for (uint32 i = 0; i < sampleParams.samplesPerPixel; ++i)
+    {
+        sampleParams.pass = i;
+        command->pushConstants(Gfx::SE_SHADER_STAGE_RAYGEN_BIT_KHR, 0, sizeof(SampleParams), &sampleParams);
+        command->traceRays(texture->getWidth(), texture->getHeight(), 1);
+        radianceAccumulator->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR,
+                                             Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR);
+        texture->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR,
+                                 Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR);
+    }
+    i++;
+    std::cout << i << std::endl;
     texture->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR,
                              Gfx::SE_ACCESS_TRANSFER_READ_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT);
     Array<Gfx::ORenderCommand> commands;
@@ -130,6 +180,15 @@ void RayTracingPass::render() {
 void RayTracingPass::endFrame() {}
 
 void RayTracingPass::publishOutputs() {
+    radianceAccumulator = graphics->createTexture2D(TextureCreateInfo{
+        .format = Gfx::SE_FORMAT_R32G32B32A32_SFLOAT,
+        .width = viewport->getOwner()->getFramebufferWidth(),
+        .height = viewport->getOwner()->getFramebufferHeight(),
+        .usage = Gfx::SE_IMAGE_USAGE_STORAGE_BIT,
+    });
+    radianceAccumulator->changeLayout(Gfx::SE_IMAGE_LAYOUT_GENERAL, Gfx::SE_ACCESS_NONE, Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                                      Gfx::SE_ACCESS_SHADER_WRITE_BIT,
+                                      Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT | Gfx::SE_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR);
     texture = graphics->createTexture2D(TextureCreateInfo{
         .format = Gfx::SE_FORMAT_R32G32B32A32_SFLOAT,
         .width = viewport->getOwner()->getFramebufferWidth(),
@@ -140,7 +199,7 @@ void RayTracingPass::publishOutputs() {
                           Gfx::SE_ACCESS_SHADER_WRITE_BIT,
                           Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT | Gfx::SE_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR);
     ShaderCompilationInfo compileInfo = {
-        .name = "RT",
+        .name = "RayGenMiss",
         .modules = {"RayGen", "Miss"},
         .entryPoints = {{"raygen", "RayGen"}, {"miss", "Miss"}},
         .defines = {{"RAY_TRACING", "1"}},

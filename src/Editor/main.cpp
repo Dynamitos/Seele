@@ -93,7 +93,7 @@ int main() {
         //    .filePath = sourcePath / "import/models/culling.fbx",
         //});
         AssetImporter::importTexture(TextureImportArgs{
-            .filePath = sourcePath / "import/textures/skyboxsun5deg_tn.jpg",
+            .filePath = sourcePath / "import/textures/skybox.jpg",
             .type = TextureImportType::TEXTURE_CUBEMAP,
         });
         // AssetImporter::importMesh(MeshImportArgs{

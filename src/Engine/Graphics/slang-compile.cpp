@@ -142,15 +142,18 @@ void Seele::beginCompilation(const ShaderCompilationInfo& info, SlangCompileTarg
     for (size_t i = 0; i < signature->getParameterCount(); ++i) {
         auto param = signature->getParameterByIndex(i);
         layout->addMapping(param->getName(), param->getBindingIndex());
-        //std::cout << param->getName() << ": " << param->getBindingIndex() << std::endl;
+        std::cout << param->getName() << ": " << param->getBindingIndex() << std::endl;
     }
 
     // workaround
-    // layout->addMapping("pVertexData", 1);
-    // layout->addMapping("pMaterial", 4);
-    // layout->addMapping("pLightEnv", 3);
-    // layout->addMapping("pRayTracingParams", 5);
-    // layout->addMapping("pScene", 2);
+    if (info.name == "RayGenMiss")
+    {
+        layout->addMapping("pVertexData", 1);
+        layout->addMapping("pResources", 4);
+        layout->addMapping("pLightEnv", 3);
+        layout->addMapping("pRayTracingParams", 5);
+        layout->addMapping("pScene", 2);
+    }
     // layout->addMapping("pWaterMaterial", 1);
 }
 

@@ -1,5 +1,6 @@
 #include "PlayView.h"
 #include "Window/Window.h"
+#include "Component/Mesh.h"
 
 using namespace Seele;
 using namespace Seele::Editor;
@@ -44,5 +45,8 @@ void PlayView::keyCallback(KeyCode code, InputAction action, KeyModifier modifie
         });
         std::cout << cam.getCameraPosition() << std::endl;
         std::cout << tra.getRotation() << std::endl;
+    }
+    if (code == KeyCode::KEY_R && action == InputAction::RELEASE) {
+        getGlobals().useRayTracing = !getGlobals().useRayTracing;
     }
 }

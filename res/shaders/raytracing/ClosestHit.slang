@@ -36,23 +36,13 @@ void closestHit(inout RayPayload hitValue, in BuiltInTriangleIntersectionAttribu
 
     FragmentParameter params = FragmentParameter.interpolate(f0, f1, f2, barycentricCoords);
 
-    LightingParameter lightingParams = params.getLightingParameter();
     MaterialParameter materialParams = params.getMaterialParameter();
-	let brdf = Material.prepare(materialParams);
+    let brdf = Material.prepare(materialParams);
+    
 
-    float3 result = float3(0, 0, 0);
-    for(int i = 0; i < pLightEnv.numDirectionalLights; ++i)
-    {
-        result += pLightEnv.directionalLights[i].illuminate(lightingParams, brdf);
-    }
-    for(uint i = 0; i < pLightEnv.numPointLights; ++i)
-    {
-        result += pLightEnv.pointLights[i].illuminate(lightingParams, brdf);
-    }
-    result += brdf.evaluateAmbient();
-
-    hitValue.color = result;
-    hitValue.alpha = brdf.getAlpha();
-    hitValue.intersection_WS = WorldRayOrigin() + RayTCurrent() * WorldRayDirection();
-    hitValue.normal_WS = mul(params.getTangentToWorld(), brdf.getTangentNormal());
+    hitValue.material.color = float4(brdf.baseColor, 1);
+    hitValue.material.emissive = float3(0, 0, 0);
+    hitValue.shading.position = WorldRayOrigin() + RayTCurrent() * WorldRayDirection();
+    hitValue.shading.normal = cross(f2.position_WS - f0.position_WS, f1.position_WS - f0.position_WS);
+    hitValue.shading.normalLight = dot(hitValue.shading.normal, WorldRayDirection()) < 0 ? hitValue.shading.normal : -hitValue.shading.normal;
 }

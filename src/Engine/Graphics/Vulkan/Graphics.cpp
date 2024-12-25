@@ -507,7 +507,7 @@ void Graphics::buildBottomLevelAccelerationStructures(Array<Gfx::PBottomLevelAS>
                             .pNext = nullptr,
                             .vertexFormat = VK_FORMAT_R32G32B32_SFLOAT,
                             .vertexData = vertexDataAddress,
-                            .vertexStride = sizeof(Vector4),
+                            .vertexStride = sizeof(Vector),
                             .maxVertex = static_cast<uint32_t>(blas->getVertexCount()),
                             .indexType = VK_INDEX_TYPE_UINT32,
                             .indexData = indexDataAddress,
@@ -790,7 +790,7 @@ void Graphics::pickPhysicalDevice() {
     };
     meshShaderFeatures = {
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT,
-        .pNext = nullptr,
+        .pNext = &accelerationFeatures,
         .taskShader = true,
         .meshShader = true,
         .meshShaderQueries = true,
@@ -923,9 +923,9 @@ void Graphics::createDevice(GraphicsInitializer initializer) {
 #ifdef __APPLE__
     initializer.deviceExtensions.add("VK_KHR_portability_subset");
 #endif
-    // initializer.deviceExtensions.add(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
-    // initializer.deviceExtensions.add(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME);
-    // initializer.deviceExtensions.add(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
+    initializer.deviceExtensions.add(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
+    initializer.deviceExtensions.add(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME);
+    initializer.deviceExtensions.add(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
     VkDeviceCreateInfo deviceInfo = {
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
         .pNext = &features,

@@ -148,6 +148,7 @@ struct Globals {
     bool usePositionOnly = true;
     bool useDepthCulling = true;
     bool useLightCulling = true;
+    bool useRayTracing = false;
     bool running = true;
 };
 Globals& getGlobals();

@@ -249,12 +249,8 @@ void VertexData::commitMeshes() {
         .name = "PrimitiveIndicesBuffer",
     });
     updateBuffers();
-    vertexIndices.clear();
-    primitiveIndices.clear();
-    indices.clear();
-    meshlets.clear();
     dirty = false;
-    // graphics->buildBottomLevelAccelerationStructures(std::move(dataToBuild));
+    graphics->buildBottomLevelAccelerationStructures(std::move(dataToBuild));
 }
 
 MeshId VertexData::allocateVertexData(uint64 numVertices) {

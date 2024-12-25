@@ -175,6 +175,8 @@ RenderCommand::~RenderCommand() { vkFreeCommandBuffers(graphics->getDevice(), ow
 
 void RenderCommand::begin(PRenderPass renderPass, PFramebuffer framebuffer, VkQueryPipelineStatisticFlags pipelineFlags) {
     threadId = std::this_thread::get_id();
+    pipeline = nullptr;
+    rtPipeline = nullptr;
     ready = false;
     VkCommandBufferInheritanceInfo inheritanceInfo = {
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO,
@@ -323,7 +325,7 @@ void RenderCommand::bindIndexBuffer(Gfx::PIndexBuffer indexBuffer) {
 
 void RenderCommand::pushConstants(Gfx::SeShaderStageFlags stage, uint32 offset, uint32 size, const void* data) {
     assert(threadId == std::this_thread::get_id());
-    vkCmdPushConstants(handle, pipeline->getLayout(), stage, offset, size, data);
+    vkCmdPushConstants(handle, pipeline == nullptr ? rtPipeline->getLayout() : pipeline->getLayout(), stage, offset, size, data);
 }
 
 void RenderCommand::draw(uint32 vertexCount, uint32 instanceCount, int32 firstVertex, uint32 firstInstance) {
