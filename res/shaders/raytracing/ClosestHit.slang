@@ -30,9 +30,9 @@ void closestHit(inout RayPayload hitValue, in BuiltInTriangleIntersectionAttribu
     VertexAttributes attr1 = pVertexData.getAttributes(vertexIndex1);
     VertexAttributes attr2 = pVertexData.getAttributes(vertexIndex2);
 
-    FragmentParameter f0 = attr0.getParameter(inst.transformMatrix);
-    FragmentParameter f1 = attr1.getParameter(inst.transformMatrix);
-    FragmentParameter f2 = attr2.getParameter(inst.transformMatrix);
+    FragmentParameter f0 = attr0.getParameter(inst.transformMatrix, inst.inverseTransformMatrix);
+    FragmentParameter f1 = attr1.getParameter(inst.transformMatrix, inst.inverseTransformMatrix);
+    FragmentParameter f2 = attr2.getParameter(inst.transformMatrix, inst.inverseTransformMatrix);
 
     FragmentParameter params = FragmentParameter.interpolate(f0, f1, f2, barycentricCoords);
 
@@ -43,6 +43,6 @@ void closestHit(inout RayPayload hitValue, in BuiltInTriangleIntersectionAttribu
     hitValue.material.color = float4(brdf.baseColor, 1);
     hitValue.material.emissive = float3(0, 0, 0);
     hitValue.shading.position = WorldRayOrigin() + RayTCurrent() * WorldRayDirection();
-    hitValue.shading.normal = cross(f2.position_WS - f0.position_WS, f1.position_WS - f0.position_WS);
+    hitValue.shading.normal = mul(params.getTangentToWorld(), brdf.normal);
     hitValue.shading.normalLight = dot(hitValue.shading.normal, WorldRayDirection()) < 0 ? hitValue.shading.normal : -hitValue.shading.normal;
 }

@@ -26,7 +26,7 @@ class MeshLoader {
 
   private:
     void findMeshRoots(aiNode* node, List<aiNode*>& meshNodes);
-    uint32 encodeQTangent(Matrix3 m);
+    Vector4 encodeQTangent(Matrix3 m);
 
     void loadTextures(const aiScene* scene, const std::filesystem::path& meshDirectory, const std::string& importPath,
                       Array<PTextureAsset>& textures);

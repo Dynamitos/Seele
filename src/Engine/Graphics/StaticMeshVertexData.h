@@ -9,13 +9,22 @@
 namespace Seele {
 class StaticMeshVertexData : public VertexData {
   public:
+    using PositionType = Vector;
+    using NormalType = Vector;
+    using TangentType = Vector;
+    using BiTangentType = Vector;
+    using TexCoordType = U16Vector2;
+    using ColorType = U16Vector;
+
     StaticMeshVertexData();
     virtual ~StaticMeshVertexData();
     static StaticMeshVertexData* getInstance();
-    void loadPositions(uint64 offset, const Array<Vector>& data);
-    void loadTexCoords(uint64 offset, uint64 index, const Array<U16Vector2>& data);
-    void loadNormals(uint64 offset, const Array<uint32>& data);
-    void loadColors(uint64 offset, const Array<U16Vector>& data);
+    void loadPositions(uint64 offset, const Array<PositionType>& data);
+    void loadTexCoords(uint64 offset, uint64 index, const Array<TexCoordType>& data);
+    void loadNormals(uint64 offset, const Array<NormalType>& data);
+    void loadTangents(uint64 offset, const Array<TangentType>& data);
+    void loadBitangents(uint64 offset, const Array<BiTangentType>& data);
+    void loadColors(uint64 offset, const Array<ColorType>& data);
     virtual void serializeMesh(MeshId id, uint64 numVertices, ArchiveBuffer& buffer) override;
     virtual uint64 deserializeMesh(MeshId id, ArchiveBuffer& buffer) override;
     virtual void init(Gfx::PGraphics graphics) override;
@@ -30,14 +39,19 @@ class StaticMeshVertexData : public VertexData {
     virtual void resizeBuffers() override;
     virtual void updateBuffers() override;
 
+
     Gfx::OShaderBuffer positions;
     Gfx::OShaderBuffer texCoords[MAX_TEXCOORDS];
     Gfx::OShaderBuffer normals;
+    Gfx::OShaderBuffer tangents;
+    Gfx::OShaderBuffer biTangents;
     Gfx::OShaderBuffer colors;
-    Array<Vector> posData;
-    Array<U16Vector2> texData[MAX_TEXCOORDS];
-    Array<Quaternion> norData;
-    Array<U16Vector4> colData;
+    Array<PositionType> posData;
+    Array<TexCoordType> texData[MAX_TEXCOORDS];
+    Array<NormalType> norData;
+    Array<TangentType> tanData;
+    Array<BiTangentType> bitData;
+    Array<ColorType> colData;
     Gfx::ODescriptorLayout descriptorLayout;
     Gfx::PDescriptorSet descriptorSet;
 };

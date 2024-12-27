@@ -36,4 +36,3 @@ float4 fragmentMain(in FragmentParameter params) : SV_Target
     //result = pow(result, float3(1.0/2.2));
     return float4(result, brdf.getAlpha());
 }
-            

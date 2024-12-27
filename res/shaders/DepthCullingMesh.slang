@@ -52,7 +52,7 @@ void meshMain(
 		{
 			uint vertexIndex = pScene.vertexIndices[m.vertexOffset + v];
 			VertexAttributes attr = pVertexData.getAttributes(m.indicesOffset + vertexIndex);
-			vertices[v] = attr.getParameter(inst.transformMatrix);
+			vertices[v] = attr.getParameter(inst.transformMatrix, inst.inverseTransformMatrix);
 		}
 	}
 }

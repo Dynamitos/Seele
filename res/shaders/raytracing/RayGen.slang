@@ -10,7 +10,7 @@ struct Ray
 
 const static float S_O = 6.9;
 const static float f = 0.035;
-const static float A = 0.4;
+const static float A = 0.04;
 const static float ka = 0;
 const static float ks = 0;
 const static float3 fogEmm = float3(0, 0.01, 0.01);

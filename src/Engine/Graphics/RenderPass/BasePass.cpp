@@ -79,8 +79,8 @@ BasePass::BasePass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics,
                                                                       });
     }
     skybox = Seele::Component::Skybox{
-        .day = AssetRegistry::findTexture("", "skyboxsun5deg_tn")->getTexture().cast<Gfx::TextureCube>(),
-        .night = AssetRegistry::findTexture("", "skyboxsun5deg_tn")->getTexture().cast<Gfx::TextureCube>(),
+        .day = AssetRegistry::findTexture("", "skybox")->getTexture().cast<Gfx::TextureCube>(),
+        .night = AssetRegistry::findTexture("", "skybox")->getTexture().cast<Gfx::TextureCube>(),
         .fogColor = Vector(0.1, 0.1, 0.8),
         .blendFactor = 0,
     };
