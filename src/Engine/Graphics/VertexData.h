@@ -77,7 +77,10 @@ class VertexData {
     const Array<TransparentDraw>& getTransparentData() const { return transparentData; }
     const Array<Gfx::PBottomLevelAS>& getRayTracingData() const { return rayTracingScene; }
     const MeshData& getMeshData(MeshId id) const { return meshData[id]; }
-    void registerBottomLevelAccelerationStructure(Gfx::PBottomLevelAS blas) { dataToBuild.add(blas); }
+    void registerBottomLevelAccelerationStructure(Gfx::PBottomLevelAS blas) {
+        assert(blas != nullptr);
+        dataToBuild.add(blas);
+    }
     uint64 getIndicesOffset(uint32 meshletIndex) { return meshlets[meshletIndex].indicesOffset; }
     uint64 getNumInstances() const { return instanceData.size(); }
     static List<VertexData*> getList();

@@ -34,7 +34,7 @@ struct Phong : IBRDF
         float3 r = 2 * (nDotL) * normal_WS - lightDir_WS;
         float rDotV = dot(r, viewDir_WS);
 
-        return lightColor * (baseColor * max(nDotL, 0.0));// + specular * pow(max(rDotV, 0.0), max(shininess, 1)));
+        return lightColor * (baseColor * max(nDotL, 0.0)) + specular * pow(max(rDotV, 0.0), max(shininess, 1));
     }
 
     float3 evaluateAmbient()
@@ -77,7 +77,7 @@ struct BlinnPhong : IBRDF
         float3 h = normalize(lightDir_WS + viewDir_WS);
         float specular = pow(saturate(dot(normal_WS, h)), shininess);
 		
-        return (baseColor * diffuse * lightColor) + (specularColor * specular);
+        return (baseColor * diffuse * lightColor);// + (specularColor * specular);
     }
 
     float3 evaluateAmbient()

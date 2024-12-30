@@ -372,12 +372,6 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Array<PTextureAsset>&
         aiShadingMode mode;
         material->Get(AI_MATKEY_SHADING_MODEL, mode);
         switch (mode) {
-        case aiShadingMode_Blinn:
-            brdf.profile = "BlinnPhong";
-            brdf.variables["specularColor"] = outputSpecular;
-            brdf.variables["ambient"] = outputAmbient;
-            brdf.variables["shininess"] = outputShininess;
-            break;
         case aiShadingMode_Phong:
             brdf.profile = "Phong";
             brdf.variables["specular"] = outputSpecular;
@@ -387,7 +381,6 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Array<PTextureAsset>&
         case aiShadingMode_Toon:
             brdf.profile = "CelShading";
             break;
-        default:
         case aiShadingMode_CookTorrance:
             brdf.profile = "CookTorrance";
             brdf.variables["roughness"] = outputRoughness;
@@ -395,6 +388,13 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Array<PTextureAsset>&
             if (!outputAO.empty()) {
                 brdf.variables["ambientOcclusion"] = outputAmbient;
             }
+            break;
+        default:
+        case aiShadingMode_Blinn:
+            brdf.profile = "BlinnPhong";
+            brdf.variables["specularColor"] = outputSpecular;
+            brdf.variables["ambient"] = outputAmbient;
+            brdf.variables["shininess"] = outputShininess;
             break;
         };
         uint32 twoSided = false;

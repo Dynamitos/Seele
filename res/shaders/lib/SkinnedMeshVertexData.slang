@@ -1,10 +1,11 @@
 import VertexData;
 import Common;
 import Scene;
+import MaterialParameter;
 
-struct SkinnedMeshVertexData : VertexData
+struct SkinnedMeshVertexData
 {
-	SkinnedMeshVertexAttributes getAttributes(uint index, float4x4 transform)
+	VertexInput getAttributes(uint index, float4x4 transform)
 	{
 		StaticMeshVertexAttributes attr;
 		float4x4 boneTransform = float4x4(1.0f);

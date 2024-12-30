@@ -96,13 +96,6 @@ int main() {
             .filePath = sourcePath / "import/textures/skybox.jpg",
             .type = TextureImportType::TEXTURE_CUBEMAP,
         });
-        AssetImporter::importTexture(TextureImportArgs{
-            .filePath = sourcePath / "import/textures/brickwall.jpg",
-        });
-        AssetImporter::importTexture(TextureImportArgs{
-            .filePath = sourcePath / "import/textures/brickwall_normal.jpg",
-            .type = TextureImportType::TEXTURE_NORMAL,
-        });
         // AssetImporter::importMesh(MeshImportArgs{
         //     .filePath = sourcePath / "import/models/ship.fbx",
         //     .importPath = "ship",

@@ -196,7 +196,7 @@ void BasePass::render() {
                         },
                     .rasterizationState =
                         {
-                            .cullMode = Gfx::SE_CULL_MODE_NONE,
+                            .cullMode = Gfx::SE_CULL_MODE_BACK_BIT,
                         },
                     .colorBlend =
                         {

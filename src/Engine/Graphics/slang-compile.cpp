@@ -142,7 +142,7 @@ void Seele::beginCompilation(const ShaderCompilationInfo& info, SlangCompileTarg
     for (size_t i = 0; i < signature->getParameterCount(); ++i) {
         auto param = signature->getParameterByIndex(i);
         layout->addMapping(param->getName(), param->getBindingIndex());
-        std::cout << param->getName() << ": " << param->getBindingIndex() << std::endl;
+        //std::cout << param->getName() << ": " << param->getBindingIndex() << std::endl;
     }
 
     // workaround

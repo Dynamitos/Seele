@@ -12,6 +12,7 @@ struct LightingParameter
     float3x3 tangentToWorld;
     float3 viewDir_WS;
     float3 position_WS;
+    float3 normal_WS;
 }
 
 
@@ -91,12 +92,15 @@ struct FragmentParameter
         result.tangentToWorld = getTangentToWorld();
         result.viewDir_WS = normalize(pViewParams.cameraPosition_WS.xyz - position_WS);
         result.position_WS = position_WS;
+        result.normal_WS = normalize(normal_WS);
         return result;
     }
 
     float3x3 getTangentToWorld()
     {
-        return float3x3(normalize(tangent_WS), normalize(biTangent_WS), normalize(normal_WS));
+        // in theory, transposing would make this a world-to-tangent matrix, but because we are building the matrix ourselves
+        // and something with matrix layouts is working the opposite direction, we need to transpose here
+        return transpose(float3x3(tangent_WS, biTangent_WS, normal_WS));
     }
 #endif
     static FragmentParameter interpolate(FragmentParameter f0, FragmentParameter f1, FragmentParameter f2, float3 barycentricCoords)
@@ -138,10 +142,9 @@ struct VertexAttributes
 		FragmentParameter result;
 		result.position_CS = clipPos;
 #ifndef POS_ONLY
-        float3x3 normalMatrix = transpose(float3x3(inverseTransformMatrix));
-        result.tangent_WS = mul(normalMatrix, tangent_MS);
-        result.biTangent_WS = mul(normalMatrix, biTangent_MS);
-		result.normal_WS = mul(normalMatrix, normal_MS);
+        result.tangent_WS = normalize(mul(transformMatrix, float4(tangent_MS, 0)).xyz);
+        result.biTangent_WS = normalize(mul(transformMatrix, float4(biTangent_MS, 0)).xyz);
+		result.normal_WS = normalize(mul(transformMatrix, float4(normal_MS, 0)).xyz);
 		result.vertexColor = vertexColor;
 		result.position_WS = worldPos.xyz;
         result.texCoords0 = float4(texCoords[0], texCoords[1]);

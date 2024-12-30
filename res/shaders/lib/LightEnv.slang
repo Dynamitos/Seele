@@ -14,7 +14,7 @@ struct DirectionalLight : ILightEnv
 
     float3 illuminate<B:IBRDF>(LightingParameter params, B brdf)
     {
-        float3 dir_WS = normalize(direction.xyz);
+        float3 dir_WS = -normalize(direction.xyz);
         return brdf.evaluate(params.tangentToWorld, params.viewDir_WS, dir_WS, color.xyz);
     }
 };
