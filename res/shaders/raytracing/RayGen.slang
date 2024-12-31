@@ -10,7 +10,7 @@ struct Ray
 
 const static float S_O = 6.9;
 const static float f = 0.035;
-const static float A = 0.04;
+const static float A = 0.0;
 const static float ka = 0;
 const static float ks = 0;
 const static float3 fogEmm = float3(0, 0.01, 0.01);
@@ -23,10 +23,6 @@ struct SampleParams
 layout(push_constant)
 ConstantBuffer<SampleParams> pSamps;
 
-float3 rand01(uint3 x){                   // pseudo-random number generator
-    for (int i=3; i-->0;) x = ((x>>8U)^x.yzx)*1103515245U;
-    return float3(x)*(1.0/float(0xffffffffU));
-}
 
 float3 nextEventEstimation(float3 accmat, float3 w, float3 x, float3 nl, float kt, bool useAtt, float3 rnd) {
     float3 result = float3(0);
@@ -67,6 +63,7 @@ float3 nextEventEstimation(float3 accmat, float3 w, float3 x, float3 nl, float k
 [shader("raygeneration")]
 void raygen()
 {
+    if(pSamps.pass == pSamps.samplesPerPixel) return;
     uint2 pix = DispatchRaysIndex().xy;
     uint2 imgdim = DispatchRaysDimensions().xy;
 
@@ -82,7 +79,6 @@ void raygen()
     float2 tent = float2(rnd2.x<1 ? sqrt(rnd2.x)-1 : 1-sqrt(2-rnd2.x), rnd2.y<1 ? sqrt(rnd2.y)-1 : 1-sqrt(2-rnd2.y));
     float2 s = ((pix + 0.5 * (0.5 + float2((pSamps.pass/2)%2, pSamps.pass%2) + tent)) / float2(imgdim) - 0.5) * sdim;
     float3 spos = cam.o + cx*s.x + cy*s.y, lc = cam.o + cam.d * 0.035;           // sample on 3d sensor plane
-    float3 accrad=float3(0), accmat=float3(1);        // initialize accumulated radiance and bxdf
     Ray r = Ray(lc, normalize(lc - spos));      // construct ray
 
 
@@ -107,107 +103,15 @@ void raygen()
     rayDesc.TMax = 10000.0;
 	
     const uint maxDepth = 12;
-    float emissive = 1;
     RayPayload payload;
-    for(uint depth = 0; depth < maxDepth; ++depth) {
-        TraceRay(pRayTracingParams.scene, RAY_FLAG_FORCE_OPAQUE, 0xff, 0, 0, 0, rayDesc, payload);
-        float3 rnd = rand01(uint3(pix, pSamps.pass*maxDepth + depth));
-        //float kt = ka + ks;
-        //float s = -log(rnd.z) / kt;
-        //float3 xs = r.o + s * r.d;
-        //if (s < t) {
-        //    float p = kt * rnd.z;
-        //    if (depth > 5) {
-        //        if (rnd.z >= p) break;
-        //        else accmat /= p;
-        //    }
-        //    float3 ldirect = nextEventEstimation(accmat, r.d, xs, -r.d, kt, true, rnd);
-        //    accrad += (fogEmm + ks * ldirect) / kt;
-        //    accmat *= ks / kt;
-        //    rayDesc.Origin = xs;
-        //    rayDesc.Direction = float3(
-        //        cos(2*PI*rnd.x)*sqrt(1-rnd.y*rnd.y),
-        //        sin(2*PI*rnd.x)*sqrt(1-rnd.y*rnd.y),
-        //        rnd.y
-        //    );
-        //    continue;
-        //}
-        float p = max(max(payload.material.color.x, payload.material.color.y), payload.material.color.z);
-        if(depth > 5) {
-            if (rnd.z >= p) break;
-            else accmat /= p;
-        }
-        accrad += accmat * payload.material.emissive * emissive;
-        accmat *= payload.material.color.xyz;
-        if (payload.material.color.w == 0) {
-            break;
-        }
-        //-- Ideal DIFFUSE reflection
-        else if (payload.material.color.w == 1) {
-            //if(bool(useNEE)) {
-            //    accrad += nextEventEstimation(accmat, r.d, params.x, params.nl, kt, false, rnd);
-            //}
-            for(uint i = 0; i < pLightEnv.numDirectionalLights; ++i) {
-                float3 x = payload.shading.position;
-                float3 l = -pLightEnv.directionalLights[i].direction.xyz;
-                float3 nl = l;
-                rayDesc.Origin = x;
-                rayDesc.Direction = l;
-                TraceRay(pRayTracingParams.scene, RAY_FLAG_FORCE_OPAQUE, 0xff, 0, 0, 0, rayDesc, payload);
+    // initialize accumulated radiance and bxdf
+    payload.light=float3(0);
+    payload.emissive = 1;
+    payload.depth = 1;
+    payload.anyHit = false;
+    TraceRay(pRayTracingParams.scene, RAY_FLAG_FORCE_OPAQUE, 0xff, 0, 0, 0, rayDesc, payload);
 
-                // we have missed all geometry, so directional light is affecting us
-                if(payload.material.color.w == 0) {
-                    float omega = 2 * PI;
-                    accrad += accmat / PI * max(dot(l, nl), 0) * pLightEnv.directionalLights[i].color.xyz * omega;
-                }
-            }
-            //for(uint i = 0; i < pLightEnv.numPointLights; ++i) {
-            //    float3 x = payload.shading.position;
-            //    float3 l = pLightEnv.pointLights[i].position_WS.xyz - payload.shading.position;
-            //    float3 nl = -payload.shading.normal;
-            //    rayDesc.Origin = x;
-            //    rayDesc.Direction = l;
-            //    TraceRay(pRayTracingParams.scene, RAY_FLAG_FORCE_OPAQUE, 0xff, 0, 0, 0, rayDesc, payload);
-//
-            //    // hitting only after the light
-            //    if(length(payload.shading.position - x) > length(pLightEnv.pointLights[i].position_WS.xyz - x))
-            //    {
-            //        float omega = 2 * PI;
-            //        accrad += accmat / PI * max(dot(l,nl),0) * pLightEnv.pointLights[i].colorRange.xyz * omega; 
-            //    }
-            //}
-            // Indirect Illumination: cosine-weighted importance sampling
-            float r1 = 2 * PI * rnd.x, r2 = rnd.y, r2s = sqrt(r2);
-            float3 w = payload.shading.normalLight, u = normalize((cross(abs(w.x)>0.1 ? float3(0,1,0) : float3(1,0,0), w))), v = cross(w,u);
-            rayDesc.Origin = payload.shading.position;
-            rayDesc.Direction = normalize(u*cos(r1)*r2s + v * sin(r1)*r2s + w * sqrt(1 - r2));
-            emissive = 0;   // in the next bounce, consider reflective part only!
-        } 
-        //-- Ideal SPECULAR reflection
-        else if (payload.material.color.w == 2) {   
-            rayDesc.Origin = payload.shading.position;
-            rayDesc.Direction = reflect(r.d,payload.shading.normal);
-            emissive = 1; 
-        } 
-        //-- Ideal dielectric REFRACTION
-        else if (payload.material.color.w == 3) {  
-            bool into = all(payload.shading.normal==payload.shading.normalLight);
-            float cos2t, nc=1, nt=1.5, nnt = into ? nc/nt : nt/nc, ddn = dot(r.d,payload.shading.normalLight);
-            if ((cos2t = 1 - nnt * nnt*(1 - ddn * ddn)) >= 0) {     // Fresnel reflection/refraction
-                float3 tdir = normalize(r.d*nnt - payload.shading.normal * ((into ? 1 : -1)*(ddn*nnt + sqrt(cos2t))));
-                float a = nt - nc, b = nt + nc, R0 = a*a/(b*b), c = 1 - (into ? -ddn : dot(tdir,payload.shading.normal));
-                float Re = R0 + (1 - R0)*c*c*c*c*c, Tr = 1 - Re, P = 0.25 + 0.5*Re, RP = Re/P, TP = Tr/(1-P);
-                rayDesc.Origin = payload.shading.position;
-                rayDesc.Direction = rnd.x < P ? reflect(r.d,payload.shading.normal) : tdir;      // pick reflection with probability P
-                accmat *=  rnd.x < P ? RP : TP;                     // energy compensation
-            } else {
-                rayDesc.Origin = payload.shading.position;
-                rayDesc.Direction = reflect(r.d,payload.shading.normal);                      // Total internal reflection
-            }
-            emissive = 1; 
-        }
-    }
     if(pSamps.pass == 0) pRayTracingParams.radianceAccumulator[pix] = float4(0);
-    pRayTracingParams.radianceAccumulator[pix] += float4(accrad / pSamps.samplesPerPixel, 0);
+    pRayTracingParams.radianceAccumulator[pix] += float4(payload.light / pSamps.samplesPerPixel, 0);
     pRayTracingParams.image[pix] = float4(clamp(pRayTracingParams.radianceAccumulator[pix].xyz, 0, 1), 1);
 }

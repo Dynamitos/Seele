@@ -18,21 +18,16 @@ struct CallablePayload
     float3 color;
 };
 
-struct ShadingParams
-{
-    float3 position;
-    float3 normal;
-    float3 normalLight;
-};
-
-struct MaterialParams
-{
-    float4 color;
-    float3 emissive;
-}
-
 struct RayPayload
 {
-    ShadingParams shading;
-    MaterialParams material;
+    float3 light;
+    float emissive;
+    uint depth;
+    bool hit;
+    bool anyHit;
 };
+
+float3 rand01(uint3 x){                   // pseudo-random number generator
+    for (int i=3; i-->0;) x = ((x>>8U)^x.yzx)*1103515245U;
+    return float3(x)*(1.0/float(0xffffffffU));
+}
