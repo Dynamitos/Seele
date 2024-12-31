@@ -522,8 +522,8 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
                 texCoords[i].resize(mesh->mNumVertices);
             }
             Array<StaticMeshVertexData::NormalType> normals(mesh->mNumVertices);
-            Array<StaticMeshVertexData::TangentType> tangents(mesh->mNumVertices);
-            Array<StaticMeshVertexData::BiTangentType> biTangents(mesh->mNumVertices);
+            //Array<StaticMeshVertexData::TangentType> tangents(mesh->mNumVertices);
+            //Array<StaticMeshVertexData::BiTangentType> biTangents(mesh->mNumVertices);
             Array<StaticMeshVertexData::ColorType> colors(mesh->mNumVertices);
 
             for (int32 i = 0; i < mesh->mNumVertices; ++i) {
@@ -542,9 +542,9 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
                     tangent = Vector(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z);
                     biTangent = Vector(mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z);
                 }
-                normals[i] = normal;
-                tangents[i] = tangent;
-                biTangents[i] = biTangent;
+                normals[i] = encodeQTangent(Matrix3(tangent, biTangent, normal));
+                //tangents[i] = tangent;
+                //biTangents[i] = biTangent;
 
                 if (mesh->HasVertexColors(0)) {
                     colors[i] = StaticMeshVertexData::ColorType(mesh->mColors[0][i].r * 65535, mesh->mColors[0][i].g * 65535, mesh->mColors[0][i].b * 65535);
@@ -558,8 +558,8 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
                 vertexData->loadTexCoords(offset, i, texCoords[i]);
             }
             vertexData->loadNormals(offset, normals);
-            vertexData->loadTangents(offset, tangents);
-            vertexData->loadBitangents(offset, biTangents);
+//            vertexData->loadTangents(offset, tangents);
+//            vertexData->loadBitangents(offset, biTangents);
             vertexData->loadColors(offset, colors);
 
             Array<uint32> indices(mesh->mNumFaces * 3);

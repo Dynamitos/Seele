@@ -78,7 +78,6 @@ class VertexData {
     const Array<Gfx::PBottomLevelAS>& getRayTracingData() const { return rayTracingScene; }
     const MeshData& getMeshData(MeshId id) const { return meshData[id]; }
     void registerBottomLevelAccelerationStructure(Gfx::PBottomLevelAS blas) {
-        assert(blas != nullptr);
         dataToBuild.add(blas);
     }
     uint64 getIndicesOffset(uint32 meshletIndex) { return meshlets[meshletIndex].indicesOffset; }

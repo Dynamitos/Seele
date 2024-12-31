@@ -17,7 +17,7 @@ class Mesh {
     uint64 vertexCount;
     uint64 byteSize;
     PMaterialInstanceAsset referencedMaterial;
-    Gfx::OBottomLevelAS blas;
+    Gfx::OBottomLevelAS blas = nullptr;
     void save(ArchiveBuffer& buffer) const;
     void load(ArchiveBuffer& buffer);
 
