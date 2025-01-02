@@ -109,7 +109,7 @@ void raygen()
     payload.emissive = 1;
     payload.depth = 1;
     payload.anyHit = false;
-    TraceRay(pRayTracingParams.scene, RAY_FLAG_FORCE_OPAQUE, 0xff, 0, 0, 0, rayDesc, payload);
+    TraceRay(pRayTracingParams.scene, 0, 0xff, 0, 0, 0, rayDesc, payload);
 
     if(pSamps.pass == 0) pRayTracingParams.radianceAccumulator[pix] = float4(0);
     pRayTracingParams.radianceAccumulator[pix] += float4(payload.light / pSamps.samplesPerPixel, 0);

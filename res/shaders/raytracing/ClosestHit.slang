@@ -45,8 +45,9 @@ void closestHit(inout RayPayload hitValue, in BuiltInTriangleIntersectionAttribu
     lightingParams.viewDir_WS = -WorldRayDirection();
     let brdf = Material.prepare(materialParams);
 
-    float3 normal_WS = mul(params.getTangentToWorld(), brdf.normal);
+    float3 normal_WS = normalize(mul(params.getTangentToWorld(), brdf.normal));
     float3 normalLight_WS = dot(normal_WS,WorldRayOrigin())<0 ? normal_WS : -normal_WS;
+    float3 intersection_WS = params.position_WS + normal_WS * 0.001f;
     
     hitValue.depth++;
     float3 localAccRad = float3(0);
@@ -78,59 +79,66 @@ void closestHit(inout RayPayload hitValue, in BuiltInTriangleIntersectionAttribu
     //    else hitValue.accmat /= p;
     //}
 
-    RayDesc rayDesc;
-    rayDesc.TMax = 10000.0f;
-    rayDesc.TMin = 0.001f;
 
     //-- Ideal DIFFUSE reflection
     //if(bool(useNEE)) {
     //    accrad += nextEventEstimation(accmat, r.d, params.x, params.nl, kt, false, rnd);
     //}
     for(uint i = 0; i < pLightEnv.numDirectionalLights; ++i) {
-        float3 x = params.position_WS;
+        float3 x = intersection_WS;
         float3 l = -pLightEnv.directionalLights[i].direction.xyz;
+        RayDesc rayDesc;
+        rayDesc.TMax = 10000.0f;
+        rayDesc.TMin = 0.001f;
         rayDesc.Origin = x;
         rayDesc.Direction = l;
         RayPayload payload;
         payload.depth = hitValue.depth;
         payload.emissive = 1;
         payload.anyHit = true;
-        TraceRay(pRayTracingParams.scene, RAY_FLAG_FORCE_OPAQUE, 0xff, 0, 0, 0, rayDesc, payload);
+        TraceRay(pRayTracingParams.scene, 0, 0xff, 0, 0, 0, rayDesc, payload);
 
         // we have missed all geometry, so directional light is affecting us
         if(!payload.hit) {
             localAccRad += pLightEnv.directionalLights[i].illuminate(lightingParams, brdf);
         }
     }
-    //for(uint i = 0; i < pLightEnv.numPointLights; ++i) {
-    //    float3 x = payload.shading.position;
-    //    float3 l = pLightEnv.pointLights[i].position_WS.xyz - payload.shading.position;
-    //    float3 nl = -payload.shading.normal;
-    //    rayDesc.Origin = x;
-    //    rayDesc.Direction = l;
-    //    TraceRay(pRayTracingParams.scene, RAY_FLAG_FORCE_OPAQUE, 0xff, 0, 0, 0, rayDesc, payload);
-    //
-    //    // hitting only after the light
-    //    if(length(payload.shading.position - x) > length(pLightEnv.pointLights[i].position_WS.xyz - x))
-    //    {
-    //        float omega = 2 * PI;
-    //        accrad += accmat / PI * max(dot(l,nl),0) * pLightEnv.pointLights[i].colorRange.xyz * omega; 
-    //    }
-    //}
+    for(uint i = 0; i < pLightEnv.numPointLights; ++i) {
+        RayPayload payload;
+        float3 x = intersection_WS;
+        float3 l = pLightEnv.pointLights[i].position_WS.xyz - intersection_WS;
+        if(length(l) > pLightEnv.pointLights[i].colorRange.w) {
+            continue;
+        }
+        RayDesc rayDesc;
+        rayDesc.TMax = 1.0f;
+        rayDesc.TMin = 0.001f;
+        rayDesc.Origin = x;
+        rayDesc.Direction = l;
+        TraceRay(pRayTracingParams.scene, 0, 0xff, 0, 0, 0, rayDesc, payload);
+    
+        // hitting only after the light
+        if(!payload.hit) {
+            localAccRad += pLightEnv.pointLights[i].illuminate(lightingParams, brdf);
+        }
+    }
     // Indirect Illumination: cosine-weighted importance sampling
     if(hitValue.depth < 12) {
     	float r1 = 2 * PI * rnd.x, r2 = rnd.y, r2s = sqrt(r2);
         float3 w = normalLight_WS;
         float3 u = normalize((cross(abs(w.x)>0.1 ? float3(0,1,0) : float3(1,0,0), w)));
         float3 v = cross(w,u);
-        rayDesc.Origin = params.position_WS;
+        RayDesc rayDesc;
+        rayDesc.TMax = 10000.0f;
+        rayDesc.TMin = 0.001f;
+        rayDesc.Origin = intersection_WS;
         rayDesc.Direction = normalize(u*cos(r1)*r2s + v * sin(r1)*r2s + w * sqrt(1 - r2));
         RayPayload payload;
         payload.light = float3(0);
         payload.emissive = 0;   // in the next bounce, consider reflective part only!
         payload.depth = hitValue.depth+1;
         payload.anyHit = false;
-        TraceRay(pRayTracingParams.scene, RAY_FLAG_FORCE_OPAQUE, 0xff, 0, 0, 0, rayDesc, payload);
+        TraceRay(pRayTracingParams.scene, 0, 0xff, 0, 0, 0, rayDesc, payload);
         if(payload.hit) {
             DirectionalLight dir;
             dir.color = float4(payload.light, 0);
