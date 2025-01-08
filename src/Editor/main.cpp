@@ -11,6 +11,7 @@
 #include "Graphics/Vulkan/Graphics.h"
 #endif
 #include "Graphics/StaticMeshVertexData.h"
+#include "Window/InspectorView.h"
 #include "Window/PlayView.h"
 #include "Window/WindowManager.h"
 #include <fmt/core.h>
@@ -36,9 +37,9 @@ Array<Halfedge> generateEdges() {
     Array<Halfedge> edges;
     for (auto ind : indices) {
         uint32 baseIndex = edges.size();
-        edges.add(Halfedge{ind.x, baseIndex+1, baseIndex+2, UINT32_MAX});
-        edges.add(Halfedge{ind.y, baseIndex+2, baseIndex, UINT32_MAX});
-        edges.add(Halfedge{ind.z, baseIndex, baseIndex+1, UINT32_MAX});
+        edges.add(Halfedge{ind.x, baseIndex + 1, baseIndex + 2, UINT32_MAX});
+        edges.add(Halfedge{ind.y, baseIndex + 2, baseIndex, UINT32_MAX});
+        edges.add(Halfedge{ind.z, baseIndex, baseIndex + 1, UINT32_MAX});
     }
     for (uint32 i = 0; i < edges.size(); ++i) {
         if (edges[i].twinID == UINT32_MAX) {
@@ -83,9 +84,9 @@ int main() {
         OWindowManager windowManager = new WindowManager();
         AssetRegistry::init(sourcePath / "Assets", graphics);
         AssetImporter::init(graphics);
-        // AssetImporter::importFont(FontImportArgs{
-        //     .filePath = "./fonts/Calibri.ttf",
-        // });
+        AssetImporter::importFont(FontImportArgs{
+            .filePath = "./fonts/arial.ttf",
+        });
         AssetImporter::importMesh(MeshImportArgs{
             .filePath = sourcePath / "import/models/cube.fbx",
         });
@@ -100,35 +101,35 @@ int main() {
         //     .filePath = sourcePath / "import/models/ship.fbx",
         //     .importPath = "ship",
         // });
-        //AssetImporter::importTexture(TextureImportArgs{
+        // AssetImporter::importTexture(TextureImportArgs{
         //    .filePath = sourcePath / "import/textures/azeroth.png",
         //});
-        //AssetImporter::importTexture(TextureImportArgs{
+        // AssetImporter::importTexture(TextureImportArgs{
         //    .filePath = sourcePath / "import/textures/azeroth_height.png",
         //});
-        //AssetImporter::importTexture(TextureImportArgs{
+        // AssetImporter::importTexture(TextureImportArgs{
         //    .filePath = sourcePath / "import/textures/wgen.png",
         //});
-        AssetImporter::importMesh(MeshImportArgs{
-           .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.glb",
-           .importPath = "Whitechapel",
-        });
-        //AssetImporter::importMesh(MeshImportArgs{
-        //    .filePath = sourcePath / "import/models/plane.obj",
-        //    .importPath = "",
-        //});
-        //  AssetImporter::importMesh(MeshImportArgs{
-        //      .filePath = sourcePath / "import/models/city-suburbs/source/city-suburbs.obj",
-        //      .importPath = "suburbs",
-        //  });
-        //  AssetImporter::importMesh(MeshImportArgs{
-        //      .filePath = sourcePath / "import/models/minecraft-medieval-city.fbx",
-        //      .importPath = "minecraft",
-        //  });
         // AssetImporter::importMesh(MeshImportArgs{
-        //     .filePath = sourcePath / "import/models/Volvo/Volvo.fbx",
-        //     .importPath = "Volvo",
+        //    .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.glb",
+        //    .importPath = "Whitechapel",
+        //});
+        // AssetImporter::importMesh(MeshImportArgs{
+        //     .filePath = sourcePath / "import/models/plane.obj",
+        //     .importPath = "",
         // });
+        //   AssetImporter::importMesh(MeshImportArgs{
+        //       .filePath = sourcePath / "import/models/city-suburbs/source/city-suburbs.obj",
+        //       .importPath = "suburbs",
+        //   });
+        //   AssetImporter::importMesh(MeshImportArgs{
+        //       .filePath = sourcePath / "import/models/minecraft-medieval-city.fbx",
+        //       .importPath = "minecraft",
+        //   });
+        //  AssetImporter::importMesh(MeshImportArgs{
+        //      .filePath = sourcePath / "import/models/Volvo/Volvo.fbx",
+        //      .importPath = "Volvo",
+        //  });
         getThreadPool().waitIdle();
         vd->commitMeshes();
         WindowCreateInfo mainWindowInfo = {
@@ -138,16 +139,26 @@ int main() {
             .preferredFormat = Gfx::SE_FORMAT_B8G8R8A8_SRGB,
         };
         auto window = windowManager->addWindow(graphics, mainWindowInfo);
-        ViewportCreateInfo sceneViewInfo = {
-            .dimensions =
-                {
-                    .size = {1920, 1080},
-                    .offset = {0, 0},
-                },
-            .numSamples = Gfx::SE_SAMPLE_COUNT_4_BIT,
-        };
-        OGameView sceneView = new Editor::PlayView(graphics, window, sceneViewInfo, binaryPath.generic_string());
-        sceneView->setFocused();
+        // ViewportCreateInfo sceneViewInfo = {
+        //     .dimensions =
+        //         {
+        //             .size = {1920, 1080},
+        //             .offset = {0, 0},
+        //         },
+        //     .numSamples = Gfx::SE_SAMPLE_COUNT_4_BIT,
+        // };
+        // OGameView sceneView = new Editor::PlayView(graphics, window, sceneViewInfo, binaryPath.generic_string());
+        // sceneView->setFocused();
+        OInspectorView inspectorView = new Editor::InspectorView(graphics, window,
+                                                                 ViewportCreateInfo{
+                                                                     .dimensions =
+                                                                         {
+                                                                             .size = {1920, 1080},
+                                                                             .offset = {0, 0},
+                                                                         },
+                                                                     .fieldOfView = 0,
+                                                                     .numSamples = Gfx::SE_SAMPLE_COUNT_1_BIT,
+                                                                 });
 
         while (windowManager->isActive() && getGlobals().running) {
             windowManager->render();

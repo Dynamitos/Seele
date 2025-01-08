@@ -1,25 +1,31 @@
 #pragma once
-#include "Graphics/RenderPass/TextPass.h"
-#include "Graphics/RenderPass/UIPass.h"
-#include "MinimalEngine.h"
-#include "RenderHierarchy.h"
-
+#include "Element.h"
 
 namespace Seele {
 namespace UI {
-DECLARE_REF(Panel)
+struct RenderElement {
+    // position relative to target viewport in pixels
+    UVector2 position;
+    // size relative to target viewport in pixels
+    UVector2 size;
+    // background color of area
+    Vector backgroundColor;
+    // text to render
+    std::string text;
+    // font size in pixels
+    uint32 fontSize;
+    // font family
+    PFontAsset fontFamily;
+};
 class System {
   public:
-    System();
-    virtual ~System();
-    void update();
-    void updateViewport(Gfx::PViewport viewport);
-    Component::Camera getVirtualCamera() const;
+    System(OElement rootElement) : rootElement(std::move(rootElement)) {}
+    ~System();
+    Array<RenderElement> render(UVector2 viewport) {
+    }
 
   private:
-    Component::Camera virtualCamera;
-    PPanel rootPanel;
-    RenderHierarchy hierarchy;
+    OElement rootElement;
 };
 DEFINE_REF(System)
 } // namespace UI

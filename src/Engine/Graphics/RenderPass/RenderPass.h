@@ -14,7 +14,7 @@ DECLARE_NAME_REF(Gfx, Graphics)
 DECLARE_NAME_REF(Gfx, RenderPass)
 class RenderPass {
   public:
-    RenderPass(Gfx::PGraphics graphics, PScene scene);
+    RenderPass(Gfx::PGraphics graphics);
     RenderPass(RenderPass&&) = default;
     RenderPass& operator=(RenderPass&&) = default;
     virtual ~RenderPass();
@@ -71,7 +71,6 @@ class RenderPass {
     Gfx::ORenderPass renderPass;
     Gfx::PGraphics graphics;
     Gfx::PViewport viewport;
-    PScene scene;
 };
 DEFINE_REF(RenderPass)
 template <typename RP>

@@ -3,7 +3,7 @@
 
 using namespace Seele;
 
-CachedDepthPass::CachedDepthPass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics, scene) {
+CachedDepthPass::CachedDepthPass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics), scene(scene) {
     depthPrepassLayout = graphics->createPipelineLayout("CachedDepthLayout");
     depthPrepassLayout->addDescriptorLayout(viewParamsLayout);
     depthPrepassLayout->addPushConstants(Gfx::SePushConstantRange{

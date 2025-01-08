@@ -44,6 +44,7 @@ class DepthCullingPass : public RenderPass {
     Gfx::PComputePipeline depthReduceLevel;
 
     Gfx::PShaderBuffer cullingBuffer;
+    PScene scene;
 };
 DEFINE_REF(DepthCullingPass)
 } // namespace Seele

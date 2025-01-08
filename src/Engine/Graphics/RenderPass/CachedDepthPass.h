@@ -25,6 +25,7 @@ class CachedDepthPass : public RenderPass {
     Gfx::OTimestampQuery timestamps;
 
     Gfx::PShaderBuffer cullingBuffer;
+    PScene scene;
 };
 DEFINE_REF(CachedDepthPass)
 } // namespace Seele

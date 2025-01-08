@@ -47,7 +47,7 @@ VertexOutput vertexMain(uint vertexId : SV_VertexID, RenderElementStyle style)
         float4(xMax, yMax, 1, 1)
     };
     VertexOutput output;
-    output.position = mul(pViewData.projectionMatrix, float4(coordinates[vertexId].xy, style.position.z, 1));
+    output.position = mul(pViewParams.projectionMatrix, float4(coordinates[vertexId].xy, style.position.z, 1));
     output.texCoords = coordinates[vertexId].zw;
     output.style = style;
     return output;
@@ -62,9 +62,5 @@ float4 fragmentMain(
 {
     float4 bgTextureColor = float4(1, 1, 1, 1);
     uint imageIndex = style.backgroundImageIndex;
-    if(imageIndex < numBackgroundTextures)
-    {
-        bgTextureColor = pParams.backgroundTextures[imageIndex].Sample(pParams.backgroundSampler, texCoords);
-    }
-    return float4(style.backgroundColor, style.opacity) * bgTextureColor;
+    return float4(0, 1, 0, 1);
 }

@@ -3,7 +3,7 @@
 
 using namespace Seele;
 
-VisibilityPass::VisibilityPass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics, scene) {}
+VisibilityPass::VisibilityPass(Gfx::PGraphics graphics) : RenderPass(graphics) {}
 
 VisibilityPass::~VisibilityPass() {}
 

@@ -10,6 +10,14 @@ template <std::integral T> static void save(ArchiveBuffer& buffer, const T& type
 template <std::integral T> static void load(ArchiveBuffer& buffer, T& type) { buffer.readBytes(&type, sizeof(type)); }
 template <std::floating_point T> static void save(ArchiveBuffer& buffer, const T& type) { buffer.writeBytes(&type, sizeof(type)); }
 template <std::floating_point T> static void load(ArchiveBuffer& buffer, T& type) { buffer.readBytes(&type, sizeof(type)); }
+static void save(ArchiveBuffer& buffer, const UVector2& vec) {
+    save(buffer, vec.x);
+    save(buffer, vec.y);
+}
+static void load(ArchiveBuffer& buffer, UVector2& vec) {
+    load(buffer, vec.x);
+    load(buffer, vec.y);
+}
 static void save(ArchiveBuffer& buffer, const IVector2& vec) {
     save(buffer, vec.x);
     save(buffer, vec.y);

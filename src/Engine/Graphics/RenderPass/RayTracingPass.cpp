@@ -14,7 +14,7 @@ struct SampleParams {
     uint32 samplesPerPixel;
 };
 
-RayTracingPass::RayTracingPass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics, scene) {
+RayTracingPass::RayTracingPass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics), scene(scene) {
     paramsLayout = graphics->createDescriptorLayout("pRayTracingParams");
     paramsLayout->addDescriptorBinding(Gfx::DescriptorBinding{
         .binding = 0,

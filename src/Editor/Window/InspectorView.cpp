@@ -3,40 +3,31 @@
 #include "Asset/AssetRegistry.h"
 #include "Asset/FontLoader.h"
 #include "Graphics/Graphics.h"
-#include "UI/System.h"
-#include "Window/Window.h"
-
+#include "UI/Element/Text.h"
 
 using namespace Seele;
 using namespace Seele::Editor;
 
 InspectorView::InspectorView(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo& createInfo)
-    : View(graphics, std::move(window), std::move(createInfo), "InspectorView")
-      //, renderGraph(RenderGraphBuilder::build(
-      //    UIPass(graphics),
-      //    TextPass(graphics)
-      //))
-      ,
-      uiSystem(new UI::System()) {
-    // renderGraph.updateViewport(viewport);
-    uiSystem->updateViewport(viewport);
+    : View(graphics, window, createInfo, "InspectorView"), uiSystem(new UI::System(new UI::Text("Test"))) {
+    renderGraph.addPass(new UIPass(graphics, uiSystem));
+    renderGraph.setViewport(viewport);
+    renderGraph.createRenderPass();
 }
 
 InspectorView::~InspectorView() {}
 
-void InspectorView::beginUpdate() {
-    // co_return;
-}
+void InspectorView::beginUpdate() {}
 
-void InspectorView::update() {
-    // co_return;
-}
+void InspectorView::update() {}
 
 void InspectorView::commitUpdate() {}
 
 void InspectorView::prepareRender() {}
 
-void InspectorView::render() {}
+void InspectorView::render() { renderGraph.render(Component::Camera()); }
+
+void InspectorView::applyArea(URect area) {}
 
 void InspectorView::keyCallback(KeyCode, InputAction, KeyModifier) {}
 

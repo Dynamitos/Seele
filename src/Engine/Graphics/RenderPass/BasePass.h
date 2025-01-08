@@ -78,6 +78,7 @@ class BasePass : public RenderPass {
     } skyboxData;
     Gfx::OUniformBuffer skyboxBuffer;
     Component::Skybox skybox;
+    PScene scene;
 };
 DEFINE_REF(BasePass)
 } // namespace Seele

@@ -9,4 +9,4 @@ target_sources(Editor
 		MeshLoader.h
 		MeshLoader.cpp
 		TextureLoader.h
-		TextureLoader.cpp)
+		TextureLoader.cpp "../../../tests/Engine/UI/Element.cpp")

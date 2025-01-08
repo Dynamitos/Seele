@@ -142,6 +142,7 @@ Graphics::~Graphics() {
 
 void Graphics::init(GraphicsInitializer initInfo) {
     initInstance(initInfo);
+    //setupDebugCallback();
     pickPhysicalDevice();
     createDevice(initInfo);
     VmaAllocatorCreateInfo createInfo = {
@@ -437,6 +438,8 @@ Gfx::OTopLevelAS Graphics::createTopLevelAccelerationStructure(const Gfx::TopLev
 }
 
 void Graphics::buildBottomLevelAccelerationStructures(Array<Gfx::PBottomLevelAS> data) {
+    if (!supportRayTracing())
+        return;
     Gfx::PShaderBuffer verticesBuffer = StaticMeshVertexData::getInstance()->getPositionBuffer();
     Gfx::PIndexBuffer indexBuffer = StaticMeshVertexData::getInstance()->getIndexBuffer();
 
@@ -790,14 +793,12 @@ void Graphics::pickPhysicalDevice() {
     };
     meshShaderFeatures = {
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT,
-        .pNext = &accelerationFeatures,
         .taskShader = true,
         .meshShader = true,
         .meshShaderQueries = true,
     };
     features12 = {
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES,
-        .pNext = &meshShaderFeatures,
         .storageBuffer8BitAccess = true,
         .uniformAndStorageBuffer8BitAccess = true,
         .shaderBufferInt64Atomics = true,
@@ -836,16 +837,35 @@ void Graphics::pickPhysicalDevice() {
                 .inheritedQueries = true,
             },
     };
-    if (Gfx::useMeshShading) {
-        uint32 count = 0;
-        vkEnumerateDeviceExtensionProperties(physicalDevice, NULL, &count, nullptr);
-        Array<VkExtensionProperties> extensionProps(count);
-        vkEnumerateDeviceExtensionProperties(physicalDevice, NULL, &count, extensionProps.data());
-        for (size_t i = 0; i < count; ++i) {
+    bool rayTracingPipelineSupport = false;
+    bool accelerationStructureSupport = false;
+    uint32 count = 0;
+    vkEnumerateDeviceExtensionProperties(physicalDevice, NULL, &count, nullptr);
+    Array<VkExtensionProperties> extensionProps(count);
+    vkEnumerateDeviceExtensionProperties(physicalDevice, NULL, &count, extensionProps.data());
+    for (size_t i = 0; i < count; ++i) {
+        if (Gfx::useMeshShading) {
             if (std::strcmp(VK_EXT_MESH_SHADER_EXTENSION_NAME, extensionProps[i].extensionName) == 0) {
                 meshShadingEnabled = true;
                 break;
             }
+        }
+        if (std::strcmp(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME, extensionProps[i].extensionName) == 0) {
+            rayTracingPipelineSupport = true;
+        }
+        if (std::strcmp(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME, extensionProps[i].extensionName) == 0) {
+            accelerationStructureSupport = true;
+        }
+    }
+    rayTracingEnabled = rayTracingPipelineSupport && accelerationStructureSupport;
+    if (meshShadingEnabled) {
+        features12.pNext = &meshShaderFeatures;
+    }
+    if (rayTracingEnabled) {
+        if (meshShadingEnabled) {
+            meshShaderFeatures.pNext = &accelerationFeatures;
+        } else {
+            features12.pNext = &accelerationFeatures;
         }
     }
 }
@@ -920,12 +940,14 @@ void Graphics::createDevice(GraphicsInitializer initializer) {
     if (supportMeshShading()) {
         initializer.deviceExtensions.add(VK_EXT_MESH_SHADER_EXTENSION_NAME);
     }
+    if (supportRayTracing()) {
+        initializer.deviceExtensions.add(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
+        initializer.deviceExtensions.add(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME);
+        initializer.deviceExtensions.add(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
+    }
 #ifdef __APPLE__
     initializer.deviceExtensions.add("VK_KHR_portability_subset");
 #endif
-    initializer.deviceExtensions.add(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
-    initializer.deviceExtensions.add(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME);
-    initializer.deviceExtensions.add(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
     VkDeviceCreateInfo deviceInfo = {
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
         .pNext = &features,
@@ -963,15 +985,17 @@ void Graphics::createDevice(GraphicsInitializer initializer) {
     cmdBeginDebugUtilsLabelEXT = (PFN_vkCmdBeginDebugUtilsLabelEXT)vkGetInstanceProcAddr(instance, "vkCmdBeginDebugUtilsLabelEXT");
     cmdEndDebugUtilsLabelEXT = (PFN_vkCmdEndDebugUtilsLabelEXT)vkGetInstanceProcAddr(instance, "vkCmdEndDebugUtilsLabelEXT");
 
-    createAccelerationStructure = (PFN_vkCreateAccelerationStructureKHR)vkGetDeviceProcAddr(handle, "vkCreateAccelerationStructureKHR");
-    cmdBuildAccelerationStructures =
-        (PFN_vkCmdBuildAccelerationStructuresKHR)vkGetDeviceProcAddr(handle, "vkCmdBuildAccelerationStructuresKHR");
-    getAccelerationStructureBuildSize =
-        (PFN_vkGetAccelerationStructureBuildSizesKHR)vkGetDeviceProcAddr(handle, "vkGetAccelerationStructureBuildSizesKHR");
-    createRayTracingPipelines = (PFN_vkCreateRayTracingPipelinesKHR)vkGetDeviceProcAddr(handle, "vkCreateRayTracingPipelinesKHR");
-    getRayTracingShaderGroupHandles =
-        (PFN_vkGetRayTracingShaderGroupHandlesKHR)vkGetDeviceProcAddr(handle, "vkGetRayTracingShaderGroupHandlesKHR");
-    cmdTraceRays = (PFN_vkCmdTraceRaysKHR)vkGetDeviceProcAddr(handle, "vkCmdTraceRaysKHR");
-    getAccelerationStructureDeviceAddress =
-        (PFN_vkGetAccelerationStructureDeviceAddressKHR)vkGetDeviceProcAddr(handle, "vkGetAccelerationStructureDeviceAddressKHR");
+    if (rayTracingEnabled) {
+        createAccelerationStructure = (PFN_vkCreateAccelerationStructureKHR)vkGetDeviceProcAddr(handle, "vkCreateAccelerationStructureKHR");
+        cmdBuildAccelerationStructures =
+            (PFN_vkCmdBuildAccelerationStructuresKHR)vkGetDeviceProcAddr(handle, "vkCmdBuildAccelerationStructuresKHR");
+        getAccelerationStructureBuildSize =
+            (PFN_vkGetAccelerationStructureBuildSizesKHR)vkGetDeviceProcAddr(handle, "vkGetAccelerationStructureBuildSizesKHR");
+        createRayTracingPipelines = (PFN_vkCreateRayTracingPipelinesKHR)vkGetDeviceProcAddr(handle, "vkCreateRayTracingPipelinesKHR");
+        getRayTracingShaderGroupHandles =
+            (PFN_vkGetRayTracingShaderGroupHandlesKHR)vkGetDeviceProcAddr(handle, "vkGetRayTracingShaderGroupHandlesKHR");
+        cmdTraceRays = (PFN_vkCmdTraceRaysKHR)vkGetDeviceProcAddr(handle, "vkCmdTraceRaysKHR");
+        getAccelerationStructureDeviceAddress =
+            (PFN_vkGetAccelerationStructureDeviceAddressKHR)vkGetDeviceProcAddr(handle, "vkGetAccelerationStructureDeviceAddressKHR");
+    }
 }

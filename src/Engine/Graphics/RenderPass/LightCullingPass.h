@@ -58,6 +58,8 @@ class LightCullingPass : public RenderPass {
     Gfx::PComputePipeline cullingEnabledPipeline;
     Gfx::OPipelineStatisticsQuery query;
     Gfx::PTimestampQuery timestamps;
+
+    PScene scene;
 };
 DEFINE_REF(LightCullingPass)
 } // namespace Seele

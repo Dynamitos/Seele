@@ -1,39 +1,21 @@
 import Common;
 
-struct GlyphData
-{
-    float4 bearingSize;
-};
-struct TextData
-{
-    float4 textColor;
-    float scale;
-}
-struct GlyphSampler
-{
-  SamplerState s;
-}
-ParameterBlock<GlyphSampler> glyphSampler;
-//layout(set = 1)
-//ShaderBuffer<GlyphData> glyphData;
-struct GlyphTextures
-{
-  Texture2D[256] textures;
-}
-ParameterBlock<GlyphTextures> pGlyphTextures;
-
 struct GlyphInstanceData
 {
-    float2 position;
-    float2 widthHeight;
+    float x;
+    float y;
+    float width;
+    float height;
     uint glyphIndex;
 };
-struct TextRender
+
+struct TextData
 {
-    StructuredBuffer<GlyphInstanceData> instances;
-    TextData textData;
-}
-ParameterBlock<TextRender> pRender;
+    StructuredBuffer<GlyphInstanceData> glyphs;
+    SamplerState glyphSampler;
+    Texture2D<float> glyphTextures[];
+};
+ParameterBlock<TextData> pText;
 
 struct VertexInput
 {
@@ -51,23 +33,23 @@ struct VertexOutput
 [shader("vertex")]
 VertexOutput vertexMain(VertexInput input)
 {
-    float xpos = pRender.instances[input.instanceId].position.x;
-    float ypos = pRender.instances[input.instanceId].position.y;
+    float xpos = pText.glyphs[input.instanceId].x;
+    float ypos = pText.glyphs[input.instanceId].y;
     
-    float w = pRender.instances[input.instanceId].widthHeight.x;
-    float h = pRender.instances[input.instanceId].widthHeight.y;
+    float w = pText.glyphs[input.instanceId].width;
+    float h = pText.glyphs[input.instanceId].height;
     
-    float4 coordinates[4] = {
+    const float4 coordinates[4] = {
         float4(xpos,     ypos,     0, 1),
         float4(xpos,     ypos + h, 0, 0),
         float4(xpos + w, ypos,     1, 1),
-        float4(xpos + w, ypos + h, 1, 0)
+        float4(xpos + w, ypos + h, 1, 0),
     };
     float4 vertex = coordinates[input.vertexId];
     VertexOutput output;
     output.texCoords = vertex.zw;
     output.position = mul(pViewParams.projectionMatrix, float4(vertex.xy, 0, 1));
-    output.glyphIndex = pRender.instances[input.instanceId].glyphIndex;
+    output.glyphIndex = pText.glyphs[input.instanceId].glyphIndex;
     return output;
 }
 
@@ -78,5 +60,5 @@ float4 fragmentMain(
     uint glyphIndex : GLYPHINDEX
 ) : SV_Target
 {
-    return pRender.textData.textColor * pGlyphTextures.textures[glyphIndex].Sample(glyphSampler.s, texCoords);
+    return float4(1, 0, 0, pText.glyphTextures[glyphIndex].Sample(pText.glyphSampler, texCoords));
 }

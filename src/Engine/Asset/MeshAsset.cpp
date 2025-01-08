@@ -3,7 +3,6 @@
 #include "Graphics/Graphics.h"
 #include "Graphics/Mesh.h"
 
-
 using namespace Seele;
 
 MeshAsset::MeshAsset() {}
@@ -14,7 +13,8 @@ MeshAsset::~MeshAsset() {}
 
 void MeshAsset::save(ArchiveBuffer& buffer) const { Serialization::save(buffer, meshes); }
 
-void MeshAsset::load(ArchiveBuffer& buffer) { Serialization::load(buffer, meshes);
+void MeshAsset::load(ArchiveBuffer& buffer) {
+    Serialization::load(buffer, meshes);
     byteSize = 0;
     for (const auto& mesh : meshes) {
         byteSize += mesh->getCPUSize();

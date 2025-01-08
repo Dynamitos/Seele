@@ -25,15 +25,17 @@ GameView::GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreate
     reloadGame();
     renderGraph.addPass(new CachedDepthPass(graphics, scene));
     renderGraph.addPass(new DepthCullingPass(graphics, scene));
-    renderGraph.addPass(new VisibilityPass(graphics, scene));
+    renderGraph.addPass(new VisibilityPass(graphics));
     renderGraph.addPass(new LightCullingPass(graphics, scene));
     renderGraph.addPass(new BasePass(graphics, scene));
     renderGraph.setViewport(viewport);
     renderGraph.createRenderPass();
-
-    rayTracingGraph.addPass(new RayTracingPass(graphics, scene));
-    rayTracingGraph.setViewport(viewport);
-    rayTracingGraph.createRenderPass();
+    if (graphics->supportRayTracing()) {
+        rayTracingGraph.addPass(new RayTracingPass(graphics, scene));
+        rayTracingGraph.setViewport(viewport);
+        rayTracingGraph.createRenderPass();
+    }
+    
 }
 
 GameView::~GameView() {}
@@ -67,7 +69,7 @@ void GameView::render() {
         if (c.mainCamera)
             cam = c;
     });
-    if (getGlobals().useRayTracing) {
+    if (getGlobals().useRayTracing && graphics->supportRayTracing()) {
         rayTracingGraph.render(cam);
     } else {
         renderGraph.render(cam);

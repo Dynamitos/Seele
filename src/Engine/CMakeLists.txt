@@ -5,7 +5,7 @@ target_sources(Engine
         Game.h
         MinimalEngine.h
         ThreadPool.h
-        ThreadPool.cpp)
+        ThreadPool.cpp "../../tests/Engine/UI/Element.cpp")
 
 target_sources(Engine
     PUBLIC FILE_SET HEADERS

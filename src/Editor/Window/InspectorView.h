@@ -1,10 +1,8 @@
 #pragma once
 #include "Graphics/RenderPass/RenderGraph.h"
-#include "Graphics/RenderPass/TextPass.h"
 #include "Graphics/RenderPass/UIPass.h"
-#include "UI/Elements/Panel.h"
 #include "Window/View.h"
-
+#include "UI/System.h"
 
 namespace Seele {
 DECLARE_REF(Actor)
@@ -20,11 +18,13 @@ class InspectorView : public View {
 
     virtual void prepareRender() override;
     virtual void render() override;
-    void selectActor();
+
 
   protected:
+    virtual void applyArea(URect area) override;
     UI::PSystem uiSystem;
-    PActor selectedActor;
+    RenderGraph renderGraph;
+    Component::Camera cam;
 
     virtual void keyCallback(KeyCode code, InputAction action, KeyModifier modifier) override;
     virtual void mouseMoveCallback(double xPos, double yPos) override;

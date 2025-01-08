@@ -17,8 +17,6 @@ target_sources(Engine
         RenderPass.cpp
         TerrainRenderer.h
         TerrainRenderer.cpp
-        TextPass.h
-        TextPass.cpp
         UIPass.h
         UIPass.cpp
         VisibilityPass.h
@@ -38,6 +36,5 @@ target_sources(Engine
             RenderGraphResources.h
             RenderPass.h
             TerrainRenderer.h
-            TextPass.h
             UIPass.h
             VisibilityPass.h)

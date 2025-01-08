@@ -105,7 +105,8 @@ class Graphics {
 
     virtual void copyBuffer(Gfx::PShaderBuffer src, Gfx::PShaderBuffer dst) = 0;
 
-    bool supportMeshShading() const { return meshShadingEnabled; }
+    constexpr bool supportMeshShading() const { return meshShadingEnabled; }
+    constexpr bool supportRayTracing() const { return rayTracingEnabled; }
 
     // Ray Tracing
     virtual OBottomLevelAS createBottomLevelAccelerationStructure(const BottomLevelASCreateInfo& createInfo) = 0;
@@ -122,6 +123,7 @@ class Graphics {
     QueueFamilyMapping queueMapping;
     OShaderCompiler shaderCompiler;
     bool meshShadingEnabled = false;
+    bool rayTracingEnabled = false;
     friend class Window;
 };
 DEFINE_REF(Graphics)

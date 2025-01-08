@@ -30,10 +30,12 @@ void Mesh::load(ArchiveBuffer& buffer) {
     referencedMaterial = AssetRegistry::findMaterialInstance(refFolder, refId);
     id = vertexData->allocateVertexData(vertexCount);
     byteSize = vertexData->deserializeMesh(id, buffer);
-    blas = buffer.getGraphics()->createBottomLevelAccelerationStructure(Gfx::BottomLevelASCreateInfo{
-        .mesh = this,
-    });
-    vertexData->registerBottomLevelAccelerationStructure(blas);
+    if (buffer.getGraphics()->supportRayTracing()) {
+        blas = buffer.getGraphics()->createBottomLevelAccelerationStructure(Gfx::BottomLevelASCreateInfo{
+            .mesh = this,
+        });
+        vertexData->registerBottomLevelAccelerationStructure(blas);
+    }
 }
 
 uint64 Mesh::getCPUSize() const {

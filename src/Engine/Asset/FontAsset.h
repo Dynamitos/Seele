@@ -2,6 +2,7 @@
 #include "Asset.h"
 #include "Containers/Map.h"
 #include "Math/Math.h"
+#include <freetype/freetype.h>
 
 namespace Seele {
 DECLARE_NAME_REF(Gfx, Texture2D)
@@ -15,19 +16,17 @@ class FontAsset : public Asset {
     virtual void load(ArchiveBuffer& buffer) override;
 
     struct Glyph {
-        uint32 textureIndex;
-        IVector2 size;
-        IVector2 bearing;
-        uint32 advance;
+        UVector2 size = {};
+        UVector2 bearing = {};
+        uint32 advance = 0;
+        Array<uint8> textureData;
+        Gfx::OTexture2D texture = nullptr;
         void save(ArchiveBuffer& buffer) const;
         void load(ArchiveBuffer& buffer);
     };
-    const Map<uint32, Glyph> getGlyphData() const { return glyphs; }
-    Gfx::PTexture2D getTexture(uint32 index) { return usedTextures[index]; }
-    void setUsedTextures(Array<Gfx::OTexture2D> _usedTextures);
+    const Glyph& getGlyphData(char c) const { return glyphs[c]; }
 
   private:
-    Array<Gfx::OTexture2D> usedTextures;
     Map<uint32, Glyph> glyphs;
     friend class FontLoader;
 };

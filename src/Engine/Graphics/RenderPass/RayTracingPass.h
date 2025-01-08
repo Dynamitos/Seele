@@ -25,5 +25,6 @@ class RayTracingPass : public RenderPass {
     Gfx::OMissShader miss;
     Gfx::PRayTracingPipeline pipeline;
     Gfx::OTopLevelAS tlas;
+    PScene scene;
 };
 } // namespace Seele

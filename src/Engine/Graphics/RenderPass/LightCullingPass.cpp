@@ -8,7 +8,7 @@
 
 using namespace Seele;
 
-LightCullingPass::LightCullingPass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics, scene) {}
+LightCullingPass::LightCullingPass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics), scene(scene) {}
 
 LightCullingPass::~LightCullingPass() {}
 

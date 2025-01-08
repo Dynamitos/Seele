@@ -57,10 +57,9 @@ void glfwFramebufferResizeCallback(GLFWwindow* handle, int width, int height) {
 
 Window::Window(PGraphics graphics, const WindowCreateInfo& createInfo)
     : graphics(graphics), preferences(createInfo), instance(graphics->getInstance()), swapchain(VK_NULL_HANDLE) {
-    float xscale, yscale;
-    glfwGetMonitorContentScale(glfwGetPrimaryMonitor(), &xscale, &yscale);
+    glfwGetMonitorContentScale(glfwGetPrimaryMonitor(), &contentScaleX, &contentScaleY);
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    GLFWwindow* handle = glfwCreateWindow(createInfo.width / xscale, createInfo.height / yscale, createInfo.title, nullptr, nullptr);
+    GLFWwindow* handle = glfwCreateWindow(createInfo.width / contentScaleX, createInfo.height / contentScaleY, createInfo.title, nullptr, nullptr);
     windowHandle = handle;
     glfwSetWindowUserPointer(handle, this);
 

@@ -5,7 +5,7 @@
 namespace Seele {
 class VisibilityPass : public RenderPass {
   public:
-    VisibilityPass(Gfx::PGraphics graphics, PScene scene);
+    VisibilityPass(Gfx::PGraphics graphics);
     VisibilityPass(VisibilityPass&&) = default;
     VisibilityPass& operator=(VisibilityPass&&) = default;
     virtual ~VisibilityPass();

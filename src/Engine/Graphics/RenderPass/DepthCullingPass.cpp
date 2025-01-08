@@ -4,7 +4,7 @@
 
 using namespace Seele;
 
-DepthCullingPass::DepthCullingPass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics, scene) {
+DepthCullingPass::DepthCullingPass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics), scene(scene) {
     depthAttachmentLayout = graphics->createDescriptorLayout("pDepthAttachment");
     depthAttachmentLayout->addDescriptorBinding(Gfx::DescriptorBinding{
         .binding = 0,

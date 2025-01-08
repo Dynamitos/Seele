@@ -1,3 +1,3 @@
 target_sources(AssetViewer
     PRIVATE
-        main.cpp)
+        main.cpp "../../tests/Engine/UI/Element.cpp")

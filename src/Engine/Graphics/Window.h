@@ -24,12 +24,16 @@ class Window {
     constexpr SeFormat getSwapchainFormat() const { return framebufferFormat; }
     constexpr uint32 getFramebufferWidth() const { return framebufferWidth; }
     constexpr uint32 getFramebufferHeight() const { return framebufferHeight; }
+    constexpr float getContentScaleX() const { return contentScaleX; }
+    constexpr float getContentScaleY() const { return contentScaleY; }
     constexpr bool isPaused() const { return paused; }
 
   protected:
     SeFormat framebufferFormat;
     uint32 framebufferWidth;
     uint32 framebufferHeight;
+    float contentScaleX;
+    float contentScaleY;
     bool paused = false;
 };
 DEFINE_REF(Window)
@@ -45,6 +49,8 @@ class Viewport {
     constexpr uint32 getHeight() const { return sizeY; }
     constexpr uint32 getOffsetX() const { return offsetX; }
     constexpr uint32 getOffsetY() const { return offsetY; }
+    constexpr float getContentScaleX() const { return owner->getContentScaleX(); }
+    constexpr float getContentScaleY() const { return owner->getContentScaleY(); }
     constexpr Gfx::SeSampleCountFlags getSamples() const { return samples; }
     Matrix4 getProjectionMatrix() const;
 

@@ -1,4 +1,5 @@
 #include "UIPass.h"
+#include "Asset/AssetRegistry.h"
 #include "Graphics/Command.h"
 #include "Graphics/Enums.h"
 #include "Graphics/Graphics.h"
@@ -7,53 +8,100 @@
 
 using namespace Seele;
 
-UIPass::UIPass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics, scene) {}
+UIPass::UIPass(Gfx::PGraphics graphics, UI::PSystem system) : RenderPass(graphics) {
+    glyphInstanceBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{.name = "GlyphInstanceBuffer"});
+    textDescriptorLayout = graphics->createDescriptorLayout("pText");
+    textDescriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .binding = 0,
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+    });
+    textDescriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .binding = 1,
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLER,
+    });
+    textDescriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .binding = 2,
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+        .descriptorCount = 1024,
+    });
+    textPipelineLayout = graphics->createPipelineLayout("TextPipeline");
+    textPipelineLayout->addDescriptorLayout(viewParamsLayout);
+    textPipelineLayout->addDescriptorLayout(textDescriptorLayout);
+
+    uiPipelineLayout = graphics->createPipelineLayout("UIPipeline");
+    uiPipelineLayout->addDescriptorLayout(viewParamsLayout);
+    // todo:
+    texts.add(TextRender{
+        .text = "TestText123",
+        .font = AssetRegistry::findFont("", "arial"),
+        .fontSize = 12,
+        .position = Vector2(0, 100),
+    });
+}
 
 UIPass::~UIPass() {}
 
 void UIPass::beginFrame(const Component::Camera& cam) {
     RenderPass::beginFrame(cam);
-    VertexBufferCreateInfo info = {
-        .sourceData =
-            {
-                .size = (uint32)(sizeof(UI::RenderElementStyle) * renderElements.size()),
-                .data = (uint8*)renderElements.data(),
-            },
-        .vertexSize = sizeof(UI::RenderElementStyle),
-        .numVertices = (uint32)renderElements.size(),
-    };
-    elementBuffer = graphics->createVertexBuffer(info);
-    uint32 numTextures = static_cast<uint32>(usedTextures.size());
-    numTexturesBuffer->updateContents(0, sizeof(uint32), &numTextures);
-    descriptorSet->updateBuffer(2, 0, numTexturesBuffer);
-    for (uint32 i = 0; i < usedTextures.size(); ++i) {
-        descriptorSet->updateTexture(3, i, usedTextures[i]);
+    glyphs.clear();
+    usedTextures.clear();
+    for (TextRender& render : texts) {
+        TextResources& res = textResources[render.font].add();
+        float x = render.position.x * viewport->getContentScaleX();
+        float y = (viewport->getHeight() - render.position.y) * viewport->getContentScaleY();
+        for (uint32 c : render.text) {
+            const FontAsset::Glyph& glyph = render.font->getGlyphData(c);
+            Vector2 bearing = Vector2(glyph.bearing) * viewport->getContentScaleX();
+            Vector2 size = Vector2(glyph.size) * viewport->getContentScaleY();
+            float xpos = x + glyph.bearing.x;
+            float ypos = y + (size.y - bearing.y);
+
+            float w = size.x;
+            float h = size.y;
+
+            glyphs.add(GlyphInstanceData{
+                .x = xpos,
+                .y = ypos,
+                .width = w,
+                .height = h,
+                .glyphIndex = (uint32)usedTextures.size(),
+            });
+            usedTextures.add(glyph.texture);
+            x += glyph.advance >> 6;
+        }
     }
-    descriptorSet->writeChanges();
-    // co_return;
+    glyphInstanceBuffer->rotateBuffer(sizeof(GlyphInstanceData) * glyphs.size());
+    glyphInstanceBuffer->updateContents(0, sizeof(GlyphInstanceData) * glyphs.size(), glyphs.data());
+    glyphInstanceBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
+                                         Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_VERTEX_SHADER_BIT);
+    textDescriptorLayout->reset();
+    textDescriptorSet = textDescriptorLayout->allocateDescriptorSet();
+    textDescriptorSet->updateBuffer(0, 0, glyphInstanceBuffer);
+    textDescriptorSet->updateSampler(1, 0, glyphSampler);
+    for (uint32 i = 0; i < usedTextures.size(); ++i) {
+        textDescriptorSet->updateTexture(2, i, usedTextures[i]);
+    }
+    textDescriptorSet->writeChanges();
 }
 
 void UIPass::render() {
     graphics->beginRenderPass(renderPass);
-    Gfx::ORenderCommand command = graphics->createRenderCommand("UIPassCommand");
-    command->setViewport(viewport);
-    command->bindPipeline(pipeline);
-    command->bindVertexBuffer({elementBuffer});
-    command->bindDescriptor(descriptorSet);
-    command->draw(4, static_cast<uint32>(renderElements.size()), 0, 0);
     Array<Gfx::ORenderCommand> commands;
+    Gfx::ORenderCommand command = graphics->createRenderCommand("TextPassCommand");
+    command->setViewport(viewport);
+    command->bindPipeline(textPipeline);
+    command->bindDescriptor({viewParamsSet, textDescriptorSet});
+    command->draw(4, glyphs.size(), 0, 0);
     commands.add(std::move(command));
     graphics->executeCommands(std::move(commands));
     graphics->endRenderPass();
-
-    // co_return;
 }
 
-void UIPass::endFrame() {
-    // co_return;
-}
+void UIPass::endFrame() {}
 
-void UIPass::publishOutputs() {
+void UIPass::publishOutputs() {}
+
+void UIPass::createRenderPass() {
     TextureCreateInfo depthBufferInfo = {
         .format = Gfx::SE_FORMAT_D32_SFLOAT,
         .width = viewport->getWidth(),
@@ -65,98 +113,69 @@ void UIPass::publishOutputs() {
     depthAttachment =
         Gfx::RenderTargetAttachment(depthBuffer, Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
                                     Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
-    resources->registerRenderPassOutput("UIPASS_DEPTH", depthAttachment);
+    depthAttachment.clear.depthStencil.depth = 0;
 
-    TextureCreateInfo colorBufferInfo = {
-        .format = Gfx::SE_FORMAT_R16G16B16A16_SFLOAT,
-        .width = viewport->getWidth(),
-        .height = viewport->getHeight(),
-        .usage = Gfx::SE_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+    colorAttachment = Gfx::RenderTargetAttachment(viewport, Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                                                  Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
+    colorAttachment.clear.color = {{1.0f, 1.0f, 1.0f, 1.0f}};
+
+    Gfx::RenderTargetLayout layout = Gfx::RenderTargetLayout{
+        .colorAttachments = {colorAttachment},
+        .depthAttachment = depthAttachment,
     };
-    colorBuffer = graphics->createTexture2D(colorBufferInfo);
-    renderTarget = Gfx::RenderTargetAttachment(colorBuffer, Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-                                               Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR,
-                                               Gfx::SE_ATTACHMENT_STORE_OP_STORE);
-    renderTarget.clear.color = {{0.0f, 0.0f, 0.0f, 1.0f}};
-    resources->registerRenderPassOutput("UIPASS_COLOR", renderTarget);
-}
+    renderPass = graphics->createRenderPass(std::move(layout), {}, viewport, "TextPass");
 
-void UIPass::createRenderPass() {
-    ShaderCompilationInfo createInfo = {
+    graphics->beginShaderCompilation(ShaderCompilationInfo{
+        .name = "TextVertex",
+        .modules = {"TextPass"},
+        .entryPoints = {{"vertexMain", "TextPass"}, {"fragmentMain", "TextPass"}},
+        .rootSignature = textPipelineLayout,
+    });
+    textPipelineLayout->create();
+    textVertexShader = graphics->createVertexShader({0});
+    textFragmentShader = graphics->createFragmentShader({1});
+
+    glyphSampler = graphics->createSampler({
+        .magFilter = Gfx::SE_FILTER_LINEAR,
+        .minFilter = Gfx::SE_FILTER_LINEAR,
+        .addressModeU = Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+        .addressModeV = Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+    });
+
+    Gfx::LegacyPipelineCreateInfo pipelineInfo = {
+        .topology = Gfx::SE_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP,
+        .vertexShader = textVertexShader,
+        .fragmentShader = textFragmentShader,
+        .renderPass = renderPass,
+        .pipelineLayout = textPipelineLayout,
+        .rasterizationState =
+            {
+                .cullMode = Gfx::SE_CULL_MODE_NONE,
+            },
+        .colorBlend =
+            {
+
+                .attachmentCount = 1,
+                .blendAttachments = {{
+                    .blendEnable = true,
+                    .srcColorBlendFactor = Gfx::SE_BLEND_FACTOR_SRC_ALPHA,
+                    .dstColorBlendFactor = Gfx::SE_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+                    .srcAlphaBlendFactor = Gfx::SE_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+                    .dstAlphaBlendFactor = Gfx::SE_BLEND_FACTOR_ZERO,
+                    .alphaBlendOp = Gfx::SE_BLEND_OP_ADD,
+                    .colorWriteMask = Gfx::SE_COLOR_COMPONENT_R_BIT | Gfx::SE_COLOR_COMPONENT_G_BIT | Gfx::SE_COLOR_COMPONENT_B_BIT |
+                                      Gfx::SE_COLOR_COMPONENT_A_BIT,
+                }},
+            },
+    };
+
+    textPipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
+    graphics->beginShaderCompilation(ShaderCompilationInfo{
         .name = "UIVertex",
         .modules = {"UIPass"},
-        .entryPoints =
-            {
-                {"vertexMain", "UIPass"},
-                {"fragmentMain", "UIFragment"},
-            },
-    };
-    graphics->beginShaderCompilation(createInfo);
-    vertexShader = graphics->createVertexShader({0});
-    fragmentShader = graphics->createFragmentShader({1});
-
-    descriptorLayout = graphics->createDescriptorLayout("pParams");
-    descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 0,
-        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-        .uniformLength = sizeof(Matrix4),
+        .entryPoints = {{"vertexMain", "UIPass"}, {"fragmentMain", "UIPass"}},
+        .rootSignature = uiPipelineLayout,
     });
-    descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 1,
-        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLER,
-    });
-    descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 2,
-        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-        .uniformLength = sizeof(uint32)
-    });
-    descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 3,
-        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
-        .textureType = Gfx::SE_IMAGE_VIEW_TYPE_2D_ARRAY,
-        .descriptorCount = 256,
-        .bindingFlags = Gfx::SE_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT | Gfx::SE_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT,
-    });
-    descriptorLayout->create();
-
-    Matrix4 projectionMatrix = glm::ortho(0, 1, 1, 0);
-
-    Gfx::OUniformBuffer uniformBuffer = graphics->createUniformBuffer(UniformBufferCreateInfo{
-        .sourceData =
-            {
-                .size = sizeof(Matrix4),
-                .data = (uint8*)&projectionMatrix,
-            },
-    });
-    Gfx::OSampler backgroundSampler = graphics->createSampler({});
-
-    numTexturesBuffer = graphics->createUniformBuffer(UniformBufferCreateInfo{
-        .sourceData =
-            {
-                .size = sizeof(uint32),
-                .data = nullptr,
-            },
-    });
-
-    descriptorSet = descriptorLayout->allocateDescriptorSet();
-    descriptorSet->updateBuffer(0, 0, uniformBuffer);
-    descriptorSet->updateSampler(1, 0, backgroundSampler);
-    descriptorSet->writeChanges();
-
-    pipelineLayout = graphics->createPipelineLayout();
-    pipelineLayout->addDescriptorLayout(descriptorLayout);
-    pipelineLayout->create();
-
-    Gfx::RenderTargetLayout layout = Gfx::RenderTargetLayout{.colorAttachments = {renderTarget}, .depthAttachment = depthAttachment};
-    renderPass = graphics->createRenderPass(std::move(layout), {}, viewport);
-
-    Gfx::LegacyPipelineCreateInfo pipelineInfo;
-    pipelineInfo.vertexShader = vertexShader;
-    pipelineInfo.fragmentShader = fragmentShader;
-    pipelineInfo.renderPass = renderPass;
-    pipelineInfo.pipelineLayout = pipelineLayout;
-    pipelineInfo.rasterizationState.cullMode = Gfx::SE_CULL_MODE_NONE;
-    pipelineInfo.topology = Gfx::SE_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
-
-    pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
+    uiVertexShader = graphics->createVertexShader({0});
+    uiFragmentShader = graphics->createFragmentShader({1});
 }
