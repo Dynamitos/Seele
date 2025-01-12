@@ -63,13 +63,13 @@ RayTracingPass::RayTracingPass(Gfx::PGraphics graphics, PScene scene) : RenderPa
     skyBoxSampler = graphics->createSampler({});
 }
 
-static uint32 i = 0;
+static uint32 pass = 0;
 static Component::Camera lastCam;
 void RayTracingPass::beginFrame(const Component::Camera& cam) {
     RenderPass::beginFrame(cam);
     if (lastCam.getCameraPosition() != cam.getCameraPosition() || lastCam.getCameraForward() != cam.getCameraForward()) {
         lastCam = cam;
-        i = 0;
+        pass = 0;
     }
 }
 
@@ -156,7 +156,7 @@ void RayTracingPass::render() {
     };
     // for (uint32 i = 0; i < sampleParams.samplesPerPixel; ++i)
     {
-        sampleParams.pass = i;
+        sampleParams.pass = pass;
         command->pushConstants(Gfx::SE_SHADER_STAGE_RAYGEN_BIT_KHR, 0, sizeof(SampleParams), &sampleParams);
         command->traceRays(texture->getWidth(), texture->getHeight(), 1);
         radianceAccumulator->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR,
@@ -164,8 +164,8 @@ void RayTracingPass::render() {
         texture->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR,
                                  Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR);
     }
-    i++;
-    std::cout << i << std::endl;
+    pass++;
+    std::cout << pass << std::endl;
     texture->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR,
                              Gfx::SE_ACCESS_TRANSFER_READ_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT);
     Array<Gfx::ORenderCommand> commands;

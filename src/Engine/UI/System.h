@@ -3,26 +3,13 @@
 
 namespace Seele {
 namespace UI {
-struct RenderElement {
-    // position relative to target viewport in pixels
-    UVector2 position;
-    // size relative to target viewport in pixels
-    UVector2 size;
-    // background color of area
-    Vector backgroundColor;
-    // text to render
-    std::string text;
-    // font size in pixels
-    uint32 fontSize;
-    // font family
-    PFontAsset fontFamily;
-};
 class System {
   public:
     System(OElement rootElement) : rootElement(std::move(rootElement)) {}
-    ~System();
-    Array<RenderElement> render(UVector2 viewport) {
-    }
+    ~System() {}
+    void style() { rootElement->calcStyle(UI::Style()); }
+    void layout(UVector2 viewport) { rootElement->layout(viewport); }
+    Array<UIRender> render() { return rootElement->render(Vector2(0, 0), 1); }
 
   private:
     OElement rootElement;

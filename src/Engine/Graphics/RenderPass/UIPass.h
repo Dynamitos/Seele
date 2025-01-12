@@ -7,13 +7,6 @@
 namespace Seele {
 DECLARE_NAME_REF(Gfx, Texture2D)
 DECLARE_NAME_REF(Gfx, RenderTargetAttachment)
-struct TextRender {
-    std::string text;
-    PFontAsset font;
-    uint32 fontSize;
-    Vector4 textColor;
-    Vector2 position;
-};
 class UIPass : public RenderPass {
   public:
     UIPass(Gfx::PGraphics graphics, UI::PSystem system);
@@ -35,21 +28,24 @@ class UIPass : public RenderPass {
     struct GlyphInstanceData {
         float x;
         float y;
+        float z;
         float width;
         float height;
         uint32 glyphIndex;
     };
-    struct TextData {
-        Vector4 textColor;
-        float scale;
-    };
 
-    struct TextResources {
-        Gfx::PShaderBuffer instanceBuffer;
-        Gfx::PDescriptorSet textureArraySet;
-        TextData textData;
+    struct RenderElementStyle {
+        float x;
+        float y;
+        float w;
+        float h;
+        Vector color;
+        float opacity = 1;
+        float z = 0;
+        uint32 textureIndex = -1ul;
+        uint32 pad0;
+        uint32 pad1;
     };
-    Map<PFontAsset, Array<TextResources>> textResources;
 
     Gfx::RenderTargetAttachment colorAttachment;
     Gfx::RenderTargetAttachment depthAttachment;
@@ -71,9 +67,12 @@ class UIPass : public RenderPass {
     Gfx::OPipelineLayout uiPipelineLayout;
     Gfx::PGraphicsPipeline uiPipeline;
 
-    Array<TextRender> texts;
+    UI::PSystem system;
+    Array<UI::UIRender> renderElements;
     Array<GlyphInstanceData> glyphs;
+    Array<RenderElementStyle> elements;
     Gfx::OShaderBuffer glyphInstanceBuffer;
+    Gfx::OShaderBuffer elementBuffer;
     Gfx::OSampler glyphSampler;
     Array<Gfx::PTexture2D> usedTextures;
 };

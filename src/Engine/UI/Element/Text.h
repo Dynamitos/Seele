@@ -4,10 +4,36 @@
 
 namespace Seele {
 namespace UI {
-class Text : public Element {
+template <StyleClass... classes> class Text : public Element {
   public:
     Text(std::string text) : Element({}, {}), text(text) {}
-    virtual void calcStyle(Style parentStyle) override { style = parentStyle; }
+    virtual void applyStyle(Style parentStyle) {
+        style = parentStyle;
+        style.outerDisplay = OuterDisplayType::Inline;
+        (classes::apply(style), ...);
+    }
+    virtual void layout(UVector2 parentSize) override {
+        size_t cursor = 0;
+        for (uint32 i = 0; i < text.size() - 1; ++i) {
+            dimensions.x += style.fontFamily->getGlyphData(text[i]).advance / 64.0f;
+        }
+        dimensions.x += style.fontFamily->getGlyphData(text[text.size() - 1]).size.x;
+        dimensions.y = style.fontSize;
+    }
+    virtual Array<UIRender> render(Vector2 anchor, uint32 level) override {
+        return {
+            UIRender{
+                .text = text,
+                .font = style.fontFamily,
+                .fontSize = style.fontSize,
+                .position = position + anchor,
+                .dimensions = dimensions,
+                .z = style.z,
+                .level = level,
+            },
+        };
+    }
+    // height = fontsize * 1.12
 
   private:
     std::string text;

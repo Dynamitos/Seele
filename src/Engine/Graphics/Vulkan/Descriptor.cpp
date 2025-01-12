@@ -171,7 +171,7 @@ DescriptorSet::~DescriptorSet() {}
 
 void DescriptorSet::updateBuffer(uint32_t binding, uint32 index, Gfx::PUniformBuffer uniformBuffer) {
     PUniformBuffer vulkanBuffer = uniformBuffer.cast<UniformBuffer>();
-    if (boundResources[binding][index] == vulkanBuffer->getAlloc()) {
+    if (boundResources[binding][index] == vulkanBuffer->getAlloc() || vulkanBuffer->getAlloc() == nullptr) {
         return;
     }
 
@@ -197,7 +197,7 @@ void DescriptorSet::updateBuffer(uint32_t binding, uint32 index, Gfx::PUniformBu
 
 void DescriptorSet::updateBuffer(uint32_t binding, uint32 index, Gfx::PShaderBuffer shaderBuffer) {
     PShaderBuffer vulkanBuffer = shaderBuffer.cast<ShaderBuffer>();
-    if (boundResources[binding][index] == vulkanBuffer->getAlloc()) {
+    if (boundResources[binding][index] == vulkanBuffer->getAlloc() || vulkanBuffer->getAlloc() == nullptr) {
         return;
     }
 
@@ -222,7 +222,7 @@ void DescriptorSet::updateBuffer(uint32_t binding, uint32 index, Gfx::PShaderBuf
 
 void DescriptorSet::updateBuffer(uint32_t binding, uint32 index, Gfx::PVertexBuffer indexBuffer) {
     PVertexBuffer vulkanBuffer = indexBuffer.cast<VertexBuffer>();
-    if (boundResources[binding][index] == vulkanBuffer->getAlloc()) {
+    if (boundResources[binding][index] == vulkanBuffer->getAlloc() || vulkanBuffer->getAlloc() == nullptr) {
         return;
     }
 
@@ -247,7 +247,7 @@ void DescriptorSet::updateBuffer(uint32_t binding, uint32 index, Gfx::PVertexBuf
 
 void DescriptorSet::updateBuffer(uint32_t binding, uint32 index, Gfx::PIndexBuffer indexBuffer) {
     PIndexBuffer vulkanBuffer = indexBuffer.cast<IndexBuffer>();
-    if (boundResources[binding][index] == vulkanBuffer->getAlloc()) {
+    if (boundResources[binding][index] == vulkanBuffer->getAlloc() || vulkanBuffer->getAlloc() == nullptr) {
         return;
     }
 

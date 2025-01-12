@@ -6,7 +6,6 @@
 #include <iterator>
 #include <memory_resource>
 
-
 #ifndef DEFAULT_ALLOC_SIZE
 #define DEFAULT_ALLOC_SIZE 16
 #endif
@@ -111,11 +110,12 @@ template <typename T, typename Allocator = std::pmr::polymorphic_allocator<T>> s
             }
         }
     }
+    template <typename = std::enable_if_t<std::is_copy_constructible_v<T>>>
     constexpr Array(std::initializer_list<T> init, const allocator_type& alloc = allocator_type())
         : arraySize(init.size()), allocated(init.size()), allocator(alloc) {
         _data = allocateArray(init.size());
         assert(_data != nullptr);
-        std::uninitialized_move(init.begin(), init.end(), begin());
+        std::uninitialized_copy(init.begin(), init.end(), begin());
     }
 
     constexpr Array(const Array& other)
@@ -184,8 +184,7 @@ template <typename T, typename Allocator = std::pmr::polymorphic_allocator<T>> s
     }
     constexpr ~Array() { clear(); }
 
-    [[nodiscard]]
-    constexpr iterator find(const value_type& item) noexcept {
+    [[nodiscard]] constexpr iterator find(const value_type& item) noexcept {
         for (size_type i = 0; i < arraySize; ++i) {
             if (_data[i] == item) {
                 return iterator(&_data[i]);
@@ -193,8 +192,7 @@ template <typename T, typename Allocator = std::pmr::polymorphic_allocator<T>> s
         }
         return end();
     }
-    [[nodiscard]]
-    constexpr iterator find(value_type&& item) noexcept {
+    [[nodiscard]] constexpr iterator find(value_type&& item) noexcept {
         for (size_type i = 0; i < arraySize; ++i) {
             if (_data[i] == item) {
                 return iterator(&_data[i]);
@@ -202,8 +200,7 @@ template <typename T, typename Allocator = std::pmr::polymorphic_allocator<T>> s
         }
         return end();
     }
-    [[nodiscard]]
-    constexpr const_iterator find(const value_type& item) const noexcept {
+    [[nodiscard]] constexpr const_iterator find(const value_type& item) const noexcept {
         for (size_type i = 0; i < arraySize; ++i) {
             if (_data[i] == item) {
                 return const_iterator(&_data[i]);
@@ -211,8 +208,7 @@ template <typename T, typename Allocator = std::pmr::polymorphic_allocator<T>> s
         }
         return end();
     }
-    [[nodiscard]]
-    constexpr const_iterator find(value_type&& item) const noexcept {
+    [[nodiscard]] constexpr const_iterator find(value_type&& item) const noexcept {
         for (size_type i = 0; i < arraySize; ++i) {
             if (_data[i] == item) {
                 return const_iterator(&_data[i]);
@@ -321,10 +317,7 @@ template <typename T, typename Allocator = std::pmr::polymorphic_allocator<T>> s
     constexpr size_type indexOf(T& t) { return indexOf(find(t)); }
     constexpr size_type indexOf(const T& t) const { return indexOf(find(t)); }
     constexpr size_type size() const noexcept { return arraySize; }
-    [[nodiscard]]
-    constexpr bool empty() const noexcept {
-        return arraySize == 0;
-    }
+    [[nodiscard]] constexpr bool empty() const noexcept { return arraySize == 0; }
     constexpr void reserve(size_type new_cap) {
         if (new_cap > allocated) {
             T* temp = allocateArray(new_cap);
@@ -374,8 +367,7 @@ template <typename T, typename Allocator = std::pmr::polymorphic_allocator<T>> s
 
         return geometric; // geometric growth is sufficient
     }
-    [[nodiscard]]
-    T* allocateArray(size_type size) {
+    [[nodiscard]] T* allocateArray(size_type size) {
         T* result = allocator.allocate(size);
         assert(result != nullptr);
         return result;

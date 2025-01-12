@@ -30,6 +30,6 @@ Matrix4 Viewport::getProjectionMatrix() const {
         //);
         return glm::perspective(fieldOfView, sizeX / static_cast<float>(sizeY), 0.1f, 1000.0f);
     } else {
-        return glm::ortho(0.0f, (float)sizeX, 0.0f, (float)sizeY);
+        return glm::ortho(0.0f, (float)sizeX, (float)sizeY, 0.0f);
     }
 }

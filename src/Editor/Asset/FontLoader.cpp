@@ -39,7 +39,7 @@ void FontLoader::import(FontImportArgs args, PFontAsset asset) {
     assert(!error);
     FT_Set_Pixel_Sizes(face, 0, 48);
     for (uint32 c = 0; c < 256; ++c) {
-        if (FT_Load_Char(face, c, FT_LOAD_RENDER)) {
+        if (FT_Load_Char(face, c, FT_LOAD_RENDER | FT_LOAD_COLOR)) {
             std::cout << "error loading " << (char)c << std::endl;
             continue;
         }
@@ -51,10 +51,22 @@ void FontLoader::import(FontImportArgs args, PFontAsset asset) {
         if (glyph.textureData.size() == 0) {
             glyph.size.x = 1;
             glyph.size.y = 1;
-            glyph.textureData.add(0); // load a single transparent pixel, so that we dont have to handle empty textures later
+            glyph.textureData.add(0);
+            // load a single transparent pixel, so that we dont have to handle empty textures later
         } else {
             std::memcpy(glyph.textureData.data(), face->glyph->bitmap.buffer, glyph.textureData.size());
         }
+        glyph.texture = graphics->createTexture2D(TextureCreateInfo{
+            .sourceData =
+                {
+                    .size = glyph.textureData.size(),
+                    .data = glyph.textureData.data(),
+                },
+            .format = Gfx::SE_FORMAT_R8_UNORM,
+            .width = glyph.size.x,
+            .height = glyph.size.y,
+            .name = "FontGlyph",
+        });
     }
     FT_Done_Face(face);
     FT_Done_FreeType(ft);

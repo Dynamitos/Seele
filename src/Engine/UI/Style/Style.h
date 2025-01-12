@@ -8,32 +8,41 @@ namespace UI {
 enum class DimensionType {
     Pixel,
     Percent, // EM, PEM, etc...
+    Auto,
 };
 enum class PositionType {
-    Relative,
     Static,
+    Relative,
     Absolute,
     Sticky,
 };
-enum class DisplayType {
+enum class OuterDisplayType {
     Inline,
-    Hidden,
     Block,
+    Hidden,
+};
+enum class InnerDisplayType {
+    Flow,
     Flex,
     Grid,
 };
 struct Style {
-    DimensionType widthType = DimensionType::Pixel;
-    uint32 width = 0;
-    DimensionType heightType = DimensionType::Pixel;
-    uint32 height = 0;
+    DimensionType widthType = DimensionType::Auto;
+    float width = 0;
+    DimensionType maxWidthType = DimensionType::Auto;
+    float maxWidth = 0;
+    DimensionType heightType = DimensionType::Auto;
+    float height = 0;
+    DimensionType maxHeightType = DimensionType::Auto;
+    float maxHeight = 0;
     uint32 z = 0;
     Vector backgroundColor = Vector(1, 1, 1);
-    DisplayType displayType = DisplayType::Inline;
+    OuterDisplayType outerDisplay = OuterDisplayType::Inline;
+    InnerDisplayType innerDisplay = InnerDisplayType::Flow;
     PositionType position = PositionType::Relative;
     PFontAsset fontFamily;
-    uint32 lineHeight = 12;
-    uint32 fontSize = 12;
+    uint32 lineHeight = 48;
+    uint32 fontSize = 48;
     uint32 fontWeight = 0;
     uint32 paddingTop = 0;
     uint32 paddingBottom = 0;
@@ -44,6 +53,10 @@ struct Style {
     uint32 marginLeft = 0;
     uint32 marginRight = 0;
     uint32 gap = 0;
+    uint32 top = 0;
+    uint32 bottom = 0;
+    uint32 left = 0;
+    uint32 right = 0;
 };
 } // namespace UI
 } // namespace Seele

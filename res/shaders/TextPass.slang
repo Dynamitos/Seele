@@ -4,6 +4,7 @@ struct GlyphInstanceData
 {
     float x;
     float y;
+    float z;
     float width;
     float height;
     uint glyphIndex;
@@ -40,15 +41,15 @@ VertexOutput vertexMain(VertexInput input)
     float h = pText.glyphs[input.instanceId].height;
     
     const float4 coordinates[4] = {
-        float4(xpos,     ypos,     0, 1),
-        float4(xpos,     ypos + h, 0, 0),
-        float4(xpos + w, ypos,     1, 1),
-        float4(xpos + w, ypos + h, 1, 0),
+        float4(xpos,     ypos,     0, 0),
+        float4(xpos,     ypos + h, 0, 1),
+        float4(xpos + w, ypos,     1, 0),
+        float4(xpos + w, ypos + h, 1, 1),
     };
     float4 vertex = coordinates[input.vertexId];
     VertexOutput output;
     output.texCoords = vertex.zw;
-    output.position = mul(pViewParams.projectionMatrix, float4(vertex.xy, 0, 1));
+    output.position = mul(pViewParams.projectionMatrix, float4(vertex.xy, pText.glyphs[input.instanceId].z-1, 1));
     output.glyphIndex = pText.glyphs[input.instanceId].glyphIndex;
     return output;
 }
@@ -60,5 +61,5 @@ float4 fragmentMain(
     uint glyphIndex : GLYPHINDEX
 ) : SV_Target
 {
-    return float4(1, 0, 0, pText.glyphTextures[glyphIndex].Sample(pText.glyphSampler, texCoords));
+    return float4(0,0,0,pText.glyphTextures[glyphIndex].Sample(pText.glyphSampler, texCoords));
 }

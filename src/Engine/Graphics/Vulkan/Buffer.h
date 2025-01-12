@@ -39,7 +39,11 @@ class Buffer {
     virtual ~Buffer();
     VkBuffer getHandle() const { return buffers[currentBuffer]->buffer; }
     VkDeviceAddress getDeviceAddress() const { return buffers[currentBuffer]->deviceAddress; }
-    PBufferAllocation getAlloc() const { return buffers[currentBuffer]; }
+    PBufferAllocation getAlloc() const {
+        if (buffers.empty())
+            return nullptr;
+         return buffers[currentBuffer];
+    }
     uint64 getSize() const { return buffers[currentBuffer]->size; }
     void updateContents(uint64 regionOffset, uint64 regionSize, void* ptr);
     void readContents(uint64 regionOffset, uint64 regionSize, void* ptr);

@@ -3,13 +3,16 @@
 #include "Asset/AssetRegistry.h"
 #include "Asset/FontLoader.h"
 #include "Graphics/Graphics.h"
+#include "UI/Element/Div.h"
 #include "UI/Element/Text.h"
 
 using namespace Seele;
 using namespace Seele::Editor;
 
 InspectorView::InspectorView(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo& createInfo)
-    : View(graphics, window, createInfo, "InspectorView"), uiSystem(new UI::System(new UI::Text("Test"))) {
+    : View(graphics, window, createInfo, "InspectorView"),
+      uiSystem(new UI::System(new UI::Div(
+          UI::Attributes{}, {new UI::Div<W_Full, BG_Red>({}, {new UI::Text<Font_Arial>("OtherTest")}), new UI::Text<Font_Arial>("Test")}))) {
     renderGraph.addPass(new UIPass(graphics, uiSystem));
     renderGraph.setViewport(viewport);
     renderGraph.createRenderPass();
