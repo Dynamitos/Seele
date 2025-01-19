@@ -55,7 +55,7 @@ void UIPass::beginFrame(const Component::Camera& cam) {
     RenderPass::beginFrame(cam);
     glyphs.clear();
     usedTextures.clear();
-    for (const auto& render : renderElements) {
+    for (auto& render : renderElements) {
         float x = render.position.x;
         float y = render.position.y;
         if (render.text.empty()) {
@@ -69,9 +69,9 @@ void UIPass::beginFrame(const Component::Camera& cam) {
                 .z = render.level / 100.f,
             });
         } else {
-            y = y + render.fontSize;
+            y = y + render.baseline;
             for (uint32 c : render.text) {
-                const FontAsset::Glyph& glyph = render.font->getGlyphData(c);
+                const FontAsset::Glyph& glyph = render.font->getGlyphData(c, render.fontSize);
                 Vector2 bearing = Vector2(glyph.bearing);
                 Vector2 size = Vector2(glyph.size);
                 float xpos = x + glyph.bearing.x;
@@ -160,7 +160,33 @@ void UIPass::createRenderPass() {
         .colorAttachments = {colorAttachment},
         .depthAttachment = depthAttachment,
     };
-    renderPass = graphics->createRenderPass(std::move(layout), {}, viewport, "TextPass");
+    Array<Gfx::SubPassDependency> dependency = {
+        {
+            .srcSubpass = ~0U,
+            .dstSubpass = 0,
+            .srcStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT |
+                        Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+            .dstStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT |
+                        Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+            .srcAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT |
+                         Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+            .dstAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT |
+                         Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+        },
+        {
+            .srcSubpass = 0,
+            .dstSubpass = ~0U,
+            .srcStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT |
+                        Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+            .dstStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT |
+                        Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+            .srcAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT |
+                         Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+            .dstAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT |
+                         Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+        },
+    };
+    renderPass = graphics->createRenderPass(std::move(layout), dependency, viewport, "TextPass");
 
     graphics->beginShaderCompilation(ShaderCompilationInfo{
         .name = "TextVertex",

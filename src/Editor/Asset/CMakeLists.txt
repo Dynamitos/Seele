@@ -8,5 +8,7 @@ target_sources(Editor
 		MaterialLoader.cpp
 		MeshLoader.h
 		MeshLoader.cpp
+		SVGLoader.h
+		SVGLoader.cpp
 		TextureLoader.h
-		TextureLoader.cpp "../../../tests/Engine/UI/Element.cpp")
+		TextureLoader.cpp)

@@ -12,8 +12,6 @@ class Div : public Element {
     virtual void applyStyle(Style parentStyle) override {
         style = parentStyle;
         style.outerDisplay = OuterDisplayType::Block;
-        style.widthType = DimensionType::Percent;
-        style.width = 100;
         (classes::apply(style), ...);
     }
   private:

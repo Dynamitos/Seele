@@ -14,6 +14,7 @@ struct UIRender {
     Vector backgroundColor;
     Vector2 position;
     Vector2 dimensions;
+    uint32 baseline;
     uint32 z;
     uint32 level;
 };
@@ -45,13 +46,13 @@ class Element {
             dimensions.x = parentSize.x * style.width / 100.0f;
         }
 
+        for (auto& child : children) {
+            child->layout(maxDimensions - Vector2(style.marginLeft + style.marginRight, style.marginTop + style.marginBottom));
+        }
         if (style.heightType == DimensionType::Pixel) {
             dimensions.y = style.height;
         } else if (style.heightType == DimensionType::Percent) {
             dimensions.y = parentSize.y * style.height / 100.0f;
-        }
-        for (auto& child : children) {
-            child->layout(maxDimensions);
         }
         switch (style.innerDisplay) {
         case InnerDisplayType::Flow:
@@ -71,15 +72,15 @@ class Element {
                 if (child->style.position == PositionType::Static || child->style.position == PositionType::Relative) {
                     // create a new line in case the element doesnt fit on the current one anymore,
                     // but keep in current line in case we are still at the start, as a new line wouldnt help here
-                    if (cursor.x + child->dimensions.x > dimensions.x - child->style.left && cursor.x != 0) {
+                    if (cursor.x + child->dimensions.x > maxDimensions.x - child->style.left && cursor.x != 0) {
                         cursor.x = 0;
                         cursor.y += lineHeight;
+                        lineHeight = 0;
                     }
                     // todo: border
                     child->position.x = cursor.x + child->style.marginLeft;
                     child->position.y = cursor.y + child->style.marginTop;
                     cursor.x = child->position.x + child->dimensions.x;
-                    cursor.y = child->position.y + child->dimensions.y;
                     // apply offsets after updating the cursor for relative elements
                     if (child->style.position == PositionType::Relative) {
                         child->position.x += child->style.left;
@@ -108,7 +109,7 @@ class Element {
             dimensions.x = cursor.x + style.paddingRight;
         }
         if (style.heightType == DimensionType::Auto) {
-            dimensions.y = cursor.y + style.paddingBottom;
+            dimensions.y = lineHeight + cursor.y + style.paddingBottom;
         }
     }
     virtual Array<UIRender> render(Vector2 anchor, uint32 level) {

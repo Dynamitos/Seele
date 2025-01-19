@@ -14,6 +14,8 @@ target_sources(Engine
         MaterialInstanceAsset.cpp
         MeshAsset.h
         MeshAsset.cpp
+        SVGAsset.h
+        SVGAsset.cpp
         TextureAsset.h
         TextureAsset.cpp)
 

@@ -39,10 +39,10 @@ struct Style {
     Vector backgroundColor = Vector(1, 1, 1);
     OuterDisplayType outerDisplay = OuterDisplayType::Inline;
     InnerDisplayType innerDisplay = InnerDisplayType::Flow;
-    PositionType position = PositionType::Relative;
+    PositionType position = PositionType::Static;
     PFontAsset fontFamily;
-    uint32 lineHeight = 48;
-    uint32 fontSize = 48;
+    uint32 lineHeight = 12;
+    uint32 fontSize = 12;
     uint32 fontWeight = 0;
     uint32 paddingTop = 0;
     uint32 paddingBottom = 0;

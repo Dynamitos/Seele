@@ -1,16 +1,17 @@
 {
-    "dependencies": [
-        "assimp",
-        "entt",
-        "stb",
-        "entt",
-        "freetype",
-        "glfw3",
-        "glm",
-        "ktx",
-        "nlohmann-json",
-        "fmt",
-        "gtest",
-        "vulkan-memory-allocator"
-    ]
+  "dependencies": [
+    "assimp",
+    "entt",
+    "stb",
+    "entt",
+    "freetype",
+    "glfw3",
+    "glm",
+    "ktx",
+    "nlohmann-json",
+    "fmt",
+    "gtest",
+    "vulkan-memory-allocator",
+    "lunasvg"
+  ]
 }

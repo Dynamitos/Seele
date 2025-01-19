@@ -5,6 +5,7 @@
 #include "MaterialAsset.h"
 #include "MaterialInstanceAsset.h"
 #include "MeshAsset.h"
+#include "SVGAsset.h"
 #include "TextureAsset.h"
 #include "Window/WindowManager.h"
 #include <fstream>
@@ -46,6 +47,15 @@ PFontAsset AssetRegistry::findFont(std::string_view folderPath, std::string_view
     return folder->fonts.at(std::string(filePath));
 }
 
+PSVGAsset AssetRegistry::findSVG(std::string_view folderPath, std::string_view filePath) {
+    std::unique_lock l(get().assetLock);
+    AssetFolder* folder = get().assetRoot;
+    if (!folderPath.empty()) {
+        folder = get().getOrCreateFolder(folderPath);
+    }
+    return folder->svgs.at(std::string(filePath));
+}
+
 PMaterialAsset AssetRegistry::findMaterial(std::string_view folderPath, std::string_view filePath) {
     std::unique_lock l(get().assetLock);
     AssetFolder* folder = get().assetRoot;
@@ -77,6 +87,11 @@ void AssetRegistry::registerTexture(OTextureAsset texture) {
 void AssetRegistry::registerFont(OFontAsset font) {
     std::unique_lock l(get().assetLock);
     get().registerFontInternal(std::move(font));
+}
+
+void AssetRegistry::registerSVG(OSVGAsset svg) {
+    std::unique_lock l(get().assetLock);
+    get().registerSVGInternal(std::move(svg));
 }
 
 void AssetRegistry::registerMaterial(OMaterialAsset material) {
@@ -127,6 +142,9 @@ void AssetRegistry::loadAsset(ArchiveBuffer& buffer) {
         break;
     case FontAsset::IDENTIFIER:
         asset = PFontAsset(folder->fonts.at(name));
+        break;
+    case SVGAsset::IDENTIFIER:
+        asset = PSVGAsset(folder->svgs.at(name));
         break;
     default:
         throw new std::logic_error("Unknown Identifier");
@@ -273,6 +291,10 @@ Pair<PAsset, ArchiveBuffer> AssetRegistry::peekAsset(ArchiveBuffer& buffer) {
         folder->fonts[name] = new FontAsset(folderPath, name);
         asset = PFontAsset(folder->fonts[name]);
         break;
+    case SVGAsset::IDENTIFIER:
+        folder->svgs[name] = new SVGAsset(folderPath, name);
+        asset = PSVGAsset(folder->svgs[name]);
+        break;
     default:
         throw new std::logic_error("Unknown Identifier");
     }
@@ -299,6 +321,9 @@ void AssetRegistry::saveFolder(const std::filesystem::path& folderPath, AssetFol
     for (const auto& [name, font] : folder->fonts) {
         saveAsset(PFontAsset(font), FontAsset::IDENTIFIER, folderPath, name);
     }
+    for (const auto& [name, svg] : folder->svgs) {
+        saveAsset(PSVGAsset(svg), SVGAsset::IDENTIFIER, folderPath, name);
+    }
     for (auto& [name, child] : folder->children) {
         saveFolder(folderPath / name, child);
     }
@@ -319,6 +344,11 @@ void AssetRegistry::registerTextureInternal(OTextureAsset texture) {
 void AssetRegistry::registerFontInternal(OFontAsset font) {
     AssetFolder* folder = getOrCreateFolder(font->getFolderPath());
     folder->fonts[font->getName()] = std::move(font);
+}
+
+void AssetRegistry::registerSVGInternal(OSVGAsset svg) {
+    AssetFolder* folder = getOrCreateFolder(svg->getFolderPath());
+    folder->svgs[svg->getName()] = std::move(svg);
 }
 
 void AssetRegistry::registerMaterialInternal(OMaterialAsset material) {

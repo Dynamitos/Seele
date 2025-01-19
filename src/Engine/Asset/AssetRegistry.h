@@ -10,6 +10,7 @@
 namespace Seele {
 DECLARE_REF(TextureAsset)
 DECLARE_REF(FontAsset)
+DECLARE_REF(SVGAsset)
 DECLARE_REF(MeshAsset)
 DECLARE_REF(MaterialAsset)
 DECLARE_REF(MaterialInstanceAsset)
@@ -24,12 +25,14 @@ class AssetRegistry {
     static PMeshAsset findMesh(std::string_view folderPath, std::string_view filePath);
     static PTextureAsset findTexture(std::string_view folderPath, std::string_view filePath);
     static PFontAsset findFont(std::string_view folderPath, std::string_view name);
+    static PSVGAsset findSVG(std::string_view folderPath, std::string_view name);
     static PMaterialAsset findMaterial(std::string_view folderPath, std::string_view filePath);
     static PMaterialInstanceAsset findMaterialInstance(std::string_view folderPath, std::string_view filePath);
 
     static void registerMesh(OMeshAsset mesh);
     static void registerTexture(OTextureAsset texture);
     static void registerFont(OFontAsset font);
+    static void registerSVG(OSVGAsset svg);
     static void registerMaterial(OMaterialAsset material);
     static void registerMaterialInstance(OMaterialInstanceAsset instance);
 
@@ -48,6 +51,7 @@ class AssetRegistry {
         Map<std::string, AssetFolder*> children;
         Map<std::string, OTextureAsset> textures;
         Map<std::string, OFontAsset> fonts;
+        Map<std::string, OSVGAsset> svgs;
         Map<std::string, OMeshAsset> meshes;
         Map<std::string, OMaterialAsset> materials;
         Map<std::string, OMaterialInstanceAsset> instances;
@@ -70,6 +74,7 @@ class AssetRegistry {
     void registerMeshInternal(OMeshAsset mesh);
     void registerTextureInternal(OTextureAsset texture);
     void registerFontInternal(OFontAsset font);
+    void registerSVGInternal(OSVGAsset svg);
     void registerMaterialInternal(OMaterialAsset material);
     void registerMaterialInstanceInternal(OMaterialInstanceAsset instance);
 

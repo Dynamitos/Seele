@@ -60,10 +60,10 @@
             <ExpandedItem>object</ExpandedItem>
         </Expand>
     </Type>
-    <Type Name="Seele::UniquePtr&lt;*&gt;">
-        <DisplayString>UniquePtr {*handle}</DisplayString>
+    <Type Name="Seele::OwningPtr&lt;*&gt;">
+        <DisplayString>OwningPtr {*pointer}</DisplayString>
         <Expand>
-            <ExpandedItem>handle</ExpandedItem>
+            <ExpandedItem>pointer</ExpandedItem>
         </Expand>
     </Type>
 </AutoVisualizer>

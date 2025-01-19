@@ -11,8 +11,14 @@ using namespace Seele::Editor;
 
 InspectorView::InspectorView(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo& createInfo)
     : View(graphics, window, createInfo, "InspectorView"),
-      uiSystem(new UI::System(new UI::Div(
-          UI::Attributes{}, {new UI::Div<W_Full, BG_Red>({}, {new UI::Text<Font_Arial>("OtherTest")}), new UI::Text<Font_Arial>("Test")}))) {
+      uiSystem(new UI::System(
+          new UI::Div<M_8>(UI::Attributes{}, {
+                                                 new UI::Div<BG_Red, Inline>({},
+                                                                             {
+                                                                                 new UI::Text<Font_Arial, Text_9XL>("OtherTestT"),
+                                                                             }),
+                                                 new UI::Text<Font_Arial>("Test"),
+                                             }))) {
     renderGraph.addPass(new UIPass(graphics, uiSystem));
     renderGraph.setViewport(viewport);
     renderGraph.createRenderPass();

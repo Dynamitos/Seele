@@ -87,6 +87,9 @@ int main() {
         AssetImporter::importFont(FontImportArgs{
             .filePath = "./fonts/arial.ttf",
         });
+        AssetImporter::importFont(FontImportArgs{
+            .filePath = "C:\\Windows\\Fonts\\Calibri.ttf",
+        });
         AssetImporter::importMesh(MeshImportArgs{
             .filePath = sourcePath / "import/models/cube.fbx",
         });
