@@ -12,6 +12,8 @@
     "fmt",
     "gtest",
     "vulkan-memory-allocator",
-    "lunasvg"
+    "lunasvg",
+    "harfbuzz",
+    "shader-slang"
   ]
 }

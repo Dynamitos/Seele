@@ -7,14 +7,10 @@
 namespace Seele {
 namespace UI {
 struct UIRender {
-    std::string text;
-    PFontAsset font;
-    uint32 fontSize;
-    Vector textColor;
+    Gfx::PTexture2D backgroundTexture;
     Vector backgroundColor;
     Vector2 position;
     Vector2 dimensions;
-    uint32 baseline;
     uint32 z;
     uint32 level;
 };
@@ -45,14 +41,14 @@ class Element {
         } else if (style.widthType == DimensionType::Percent) {
             dimensions.x = parentSize.x * style.width / 100.0f;
         }
-
-        for (auto& child : children) {
-            child->layout(maxDimensions - Vector2(style.marginLeft + style.marginRight, style.marginTop + style.marginBottom));
-        }
         if (style.heightType == DimensionType::Pixel) {
             dimensions.y = style.height;
         } else if (style.heightType == DimensionType::Percent) {
             dimensions.y = parentSize.y * style.height / 100.0f;
+        }
+
+        for (auto& child : children) {
+            child->layout(maxDimensions - Vector2(style.marginLeft + style.marginRight, style.marginTop + style.marginBottom));
         }
         switch (style.innerDisplay) {
         case InnerDisplayType::Flow:
@@ -73,7 +69,7 @@ class Element {
                     // create a new line in case the element doesnt fit on the current one anymore,
                     // but keep in current line in case we are still at the start, as a new line wouldnt help here
                     if (cursor.x + child->dimensions.x > maxDimensions.x - child->style.left && cursor.x != 0) {
-                        cursor.x = 0;
+                        cursor.x = style.paddingLeft;
                         cursor.y += lineHeight;
                         lineHeight = 0;
                     }
@@ -94,7 +90,7 @@ class Element {
                 if (child->style.position == PositionType::Static || child->style.position == PositionType::Relative) {
                     // create a new line in case we are not already at one
                     if (cursor.x != 0) {
-                        cursor.x = 0;
+                        cursor.x = style.paddingLeft;
                         cursor.y += lineHeight;
                     }
                     child->position.x = cursor.x + child->style.marginLeft;

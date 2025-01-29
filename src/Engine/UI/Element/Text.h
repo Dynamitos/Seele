@@ -1,6 +1,7 @@
 #pragma once
 #include "UI/Element.h"
 #include "UI/Style/Class.h"
+#include <ranges>
 
 namespace Seele {
 namespace UI {
@@ -13,31 +14,24 @@ template <StyleClass... classes> class Text : public Element {
         (classes::apply(style), ...);
     }
     virtual void layout(UVector2 parentSize) override {
-        size_t cursor = 0;
-        for (uint32 i = 0; i < text.size() - 1; ++i) {
-            dimensions.x += style.fontFamily->getGlyphData(text[i], style.fontSize).advance / 64.0f;
-        }
-        dimensions.x += style.fontFamily->getGlyphData(text[text.size() - 1], style.fontSize).size.x;
-        dimensions.y = style.fontSize;
+        UVector2 cursor = UVector2(0);
+        dimensions = style.fontFamily->shapeText(text, style.fontSize, glyphRenders);
     }
     virtual Array<UIRender> render(Vector2 anchor, uint32 level) override {
-        return {
-            UIRender{
-                .text = text,
-                .font = style.fontFamily,
-                .fontSize = style.fontSize,
-                .position = position + anchor,
-                .dimensions = dimensions,
-                .baseline = style.fontSize * 3 / 4, // TODO: improve
-                .z = style.z,
-                .level = level,
-            },
-        };
+        return Array<UIRender>(std::from_range, glyphRenders | std::views::transform([=](const FontAsset::RenderGlyph& glyph) {
+                                          return UIRender{
+                                              .backgroundTexture = glyph.texture,
+                                              .position = Vector2(glyph.position) + anchor,
+                                              .dimensions = Vector2(glyph.dimensions),
+                                              .level = level,
+                                          };
+                                      }));
     }
     // height = fontsize * 1.12
 
   private:
     std::string text;
+    Array<FontAsset::RenderGlyph> glyphRenders;
 };
 } // namespace UI
 } // namespace Seele

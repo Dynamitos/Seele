@@ -108,10 +108,13 @@ void raygen()
     payload.light=float3(0);
     payload.emissive = 1;
     payload.depth = 1;
+    payload.rndSeed = rndSeed + 1;
     payload.anyHit = false;
     TraceRay(pRayTracingParams.scene, 0, 0xff, 0, 0, 0, rayDesc, payload);
 
     if(pSamps.pass == 0) pRayTracingParams.radianceAccumulator[pix] = float4(0);
-    pRayTracingParams.radianceAccumulator[pix] += float4(payload.light / pSamps.samplesPerPixel, 0);
-    pRayTracingParams.image[pix] = float4(clamp(pRayTracingParams.radianceAccumulator[pix].xyz, 0, 1), 1);
+    float3 accumulatedRadiance = payload.light / pSamps.samplesPerPixel;
+    pRayTracingParams.radianceAccumulator[pix] += float4(accumulatedRadiance, 0);
+    float3 compensatedRadiance = pRayTracingParams.radianceAccumulator[pix].xyz * pSamps.samplesPerPixel / (pSamps.pass + 1);
+    pRayTracingParams.image[pix] = float4(clamp(compensatedRadiance, 0, 1), 1);
 }

@@ -54,6 +54,8 @@ Array<Halfedge> generateEdges() {
     return edges;
 }
 
+Array<uint32> generateArray() { return Array<uint32>(); }
+
 int main() {
     std::string gameName = "MeshShadingDemo";
 #ifdef WIN32
@@ -113,26 +115,22 @@ int main() {
         // AssetImporter::importTexture(TextureImportArgs{
         //    .filePath = sourcePath / "import/textures/wgen.png",
         //});
-        // AssetImporter::importMesh(MeshImportArgs{
+        //AssetImporter::importMesh(MeshImportArgs{
         //    .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.glb",
         //    .importPath = "Whitechapel",
         //});
-        // AssetImporter::importMesh(MeshImportArgs{
-        //     .filePath = sourcePath / "import/models/plane.obj",
-        //     .importPath = "",
-        // });
-        //   AssetImporter::importMesh(MeshImportArgs{
-        //       .filePath = sourcePath / "import/models/city-suburbs/source/city-suburbs.obj",
-        //       .importPath = "suburbs",
-        //   });
-        //   AssetImporter::importMesh(MeshImportArgs{
-        //       .filePath = sourcePath / "import/models/minecraft-medieval-city.fbx",
-        //       .importPath = "minecraft",
-        //   });
-        //  AssetImporter::importMesh(MeshImportArgs{
-        //      .filePath = sourcePath / "import/models/Volvo/Volvo.fbx",
-        //      .importPath = "Volvo",
-        //  });
+        AssetImporter::importMesh(MeshImportArgs{
+            .filePath = sourcePath / "import/models/box.glb",
+            .importPath = "",
+        });
+        AssetImporter::importMesh(MeshImportArgs{
+            .filePath = sourcePath / "import/models/rttest.glb",
+            .importPath = "",
+        });
+        AssetImporter::importMesh(MeshImportArgs{
+            .filePath = sourcePath / "import/models/town_hall.glb",
+            .importPath = "",
+        });
         getThreadPool().waitIdle();
         vd->commitMeshes();
         WindowCreateInfo mainWindowInfo = {
@@ -142,26 +140,26 @@ int main() {
             .preferredFormat = Gfx::SE_FORMAT_B8G8R8A8_SRGB,
         };
         auto window = windowManager->addWindow(graphics, mainWindowInfo);
-        // ViewportCreateInfo sceneViewInfo = {
-        //     .dimensions =
-        //         {
-        //             .size = {1920, 1080},
-        //             .offset = {0, 0},
-        //         },
-        //     .numSamples = Gfx::SE_SAMPLE_COUNT_4_BIT,
-        // };
-        // OGameView sceneView = new Editor::PlayView(graphics, window, sceneViewInfo, binaryPath.generic_string());
-        // sceneView->setFocused();
-        OInspectorView inspectorView = new Editor::InspectorView(graphics, window,
-                                                                 ViewportCreateInfo{
-                                                                     .dimensions =
-                                                                         {
-                                                                             .size = {1920, 1080},
-                                                                             .offset = {0, 0},
-                                                                         },
-                                                                     .fieldOfView = 0,
-                                                                     .numSamples = Gfx::SE_SAMPLE_COUNT_1_BIT,
-                                                                 });
+         ViewportCreateInfo sceneViewInfo = {
+             .dimensions =
+                 {
+                     .size = {1920, 1080},
+                     .offset = {0, 0},
+                 },
+             .numSamples = Gfx::SE_SAMPLE_COUNT_4_BIT,
+         };
+         OGameView sceneView = new Editor::PlayView(graphics, window, sceneViewInfo, binaryPath.generic_string());
+         sceneView->setFocused();
+        //OInspectorView inspectorView = new Editor::InspectorView(graphics, window,
+        //                                                         ViewportCreateInfo{
+        //                                                             .dimensions =
+        //                                                                 {
+        //                                                                     .size = {1920, 1080},
+        //                                                                     .offset = {0, 0},
+        //                                                                 },
+        //                                                             .fieldOfView = 0,
+        //                                                             .numSamples = Gfx::SE_SAMPLE_COUNT_1_BIT,
+        //                                                         });
 
         while (windowManager->isActive() && getGlobals().running) {
             windowManager->render();

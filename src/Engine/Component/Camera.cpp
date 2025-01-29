@@ -44,7 +44,7 @@ void Camera::moveY(float amount) {
 }
 
 void Camera::buildViewMatrix() {
-    Vector eyePos = getTransform().getPosition() + Vector(0, 0, -5);
+    Vector eyePos = getTransform().getPosition();
     Vector lookAt = eyePos + getTransform().getForward();
     viewMatrix = glm::lookAt(eyePos, lookAt, Vector(0, 1, 0));
     cameraPos = eyePos;

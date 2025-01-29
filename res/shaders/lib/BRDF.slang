@@ -16,6 +16,7 @@ struct Phong : IBRDF
     float3 normal;
     float3 ambient;
     float shininess;
+    float3 emissive;
 
     __init()
     {
@@ -25,6 +26,7 @@ struct Phong : IBRDF
         normal = float3(0, 0, 1);
         ambient = float3(0, 0, 0);
         shininess = 0;
+        emissive = float3(0, 0, 0);
     }
 
     float3 evaluate(float3x3 tangentToWorld, float3 viewDir_WS, float3 lightDir_WS, float3 lightColor)
@@ -59,6 +61,7 @@ struct BlinnPhong : IBRDF
     float3 normal;
     float shininess;
     float3 ambient;
+    float3 emissive;
 
     __init()
     {
@@ -66,8 +69,9 @@ struct BlinnPhong : IBRDF
         alpha = 1;
         specularColor = float3(0, 0, 0);
         normal = float3(0, 0, 1);
-        shininess = 0;
+        shininess = 4;
         ambient = float3(0, 0, 0);
+        emissive = float3(0, 0, 0);
     }
 
     float3 evaluate(float3x3 tangentToWorld, float3 viewDir_WS, float3 lightDir_WS, float3 lightColor)
@@ -77,7 +81,7 @@ struct BlinnPhong : IBRDF
         float3 h = normalize(lightDir_WS + viewDir_WS);
         float specular = pow(saturate(dot(normal_WS, h)), shininess);
 		
-        return (baseColor * diffuse * lightColor);// + (specularColor * specular);
+        return (baseColor * diffuse * lightColor) + (specularColor * specular);
     }
 
     float3 evaluateAmbient()
@@ -99,12 +103,14 @@ struct CelShading : IBRDF
     float3 baseColor;
     float alpha;
     float3 normal;
+    float3 emissive;
 
     __init()
     {
         baseColor = float3(0, 0, 0);
         alpha = 1;
         normal = float3(0, 0, 1);
+        emissive = float3(0, 0, 0);
     }
 
     float3 evaluate(float3x3 tangentToWorld, float3 viewDir_WS, float3 lightDir_WS, float3 lightColor)
@@ -146,6 +152,7 @@ struct CookTorrance : IBRDF
     float roughness;
     float metallic;
     float ambientOcclusion;
+    float3 emissive;
 
     __init()
     {
@@ -155,6 +162,7 @@ struct CookTorrance : IBRDF
         roughness = 0;
         metallic = 0;
         ambientOcclusion = 1;
+        emissive = float3(0, 0, 0);
     }
 
     float TrowbridgeReitzGGX(float3 normal, float3 halfway)

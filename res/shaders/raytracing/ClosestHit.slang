@@ -9,6 +9,69 @@ import MATERIAL_FILE_NAME;
 
 // simplification: all BLAS only have 1 geometry
 
+/*vec3 nextEventEstimation(vec3 accmat, vec3 w, vec3 x, vec3 nl, float kt, bool useAtt, vec3 rnd) {
+            uint triId = 0;
+            uint sphereId = 0;
+            ShadingParams paramsls;
+            Material matls;
+            vec3 result = vec3(0);
+            // Direct Illumination: Next Event Estimation over any present lights
+            for (int i = spheres.length(); i-->0;) {
+                Sphere ls = spheres[i];
+                if (all(equal(ls.e, vec3(0)))) continue; // skip non-emissive spheres 
+                vec3 xc = ls.geo.xyz - x;
+                vec3 sw = normalize(xc), su = normalize(cross((abs(sw.x)>.1 ? vec3(0,1,0) : vec3(1,0,0)), sw)), sv = cross(sw,su);
+                float cos_a_max = sqrt(float(1 - ls.geo.w*ls.geo.w / dot(xc,xc)));
+                float cos_a = 1 - rnd.x + rnd.x*cos_a_max, sin_a = sqrt(1 - cos_a*cos_a);
+                float phi = 2 * pi * rnd.y;
+                vec3 l = normalize(su*cos(phi)*sin_a + sv*sin(phi)*sin_a + sw*cos_a);   // sampled direction towards light
+                if (intersect(Ray(x,l), matls, paramsls, sphereId, triId) && sphereId == i) {      // test if shadow ray hits this light source
+                    float omega = 2 * pi * (1-cos_a_max);
+                    if(useAtt) {
+                        float tau = exp(-kt * length(x - paramsls.x));
+                        result += max(dot(l,nl),0) * ls.e * omega * tau;
+                    } else {
+                        result += accmat / pi * max(dot(l,nl),0) * ls.e * omega;   // brdf term obj.c.xyz already in accmat, 1/pi for brdf
+                    }
+                }
+            }
+            for(int i = meshLights.length(); i-->0;) {
+                MeshDescriptor mesh = meshes[meshLights[i]];
+                for(int j = 0; j < mesh.numIndices; j+=3) {
+                    vec3 A = vec3(vertices[mesh.vertexOffset + indices[mesh.indexOffset + j + 0]]);
+                    vec3 B = vec3(vertices[mesh.vertexOffset + indices[mesh.indexOffset + j + 1]]);
+                    vec3 C = vec3(vertices[mesh.vertexOffset + indices[mesh.indexOffset + j + 2]]);
+                    float b1 = 1 - sqrt(rnd.x);
+                    float b2 = (1 - rnd.y) * sqrt(rnd.x);
+                    float b3 = rnd.y * sqrt(rnd.x);
+                    vec3 P = A * b1 + B * b2 + C * b3;
+                    vec3 omega = P - x;
+                    vec3 l = normalize(omega);
+                    float v = 0.f;
+                    if(intersect(Ray(x,l), matls, paramsls, sphereId, triId) && triId == j) {
+                        v = 1.0f;
+                    }
+                    vec3 e1 = C - A;
+                    vec3 e2 = B - A;
+                    float area = length(cross(e1, e2)) / 2;
+                    float rayLen = length(omega);
+                    float cosTheta = dot(nl, l);
+                    float cosThetaDash = dot(paramsls.n, -l);
+                    float factor = area * (cosThetaDash / (rayLen * rayLen));
+                    if(useAtt) {
+                        float tau = phase(w, l) * exp(-kt * length(x - paramsls.x));
+                        result += tau * matls.e * max(cosTheta, 0) * factor;
+                    } else {
+                        result += accmat * (matls.e * max(cosTheta, 0) * factor) / pi;
+                    }
+                }
+            }
+            return result;
+        }
+
+*/
+
+const float eps = 1e-5;
 [shader("closesthit")]
 void closestHit(inout RayPayload hitValue, in BuiltInTriangleIntersectionAttributes attr)
 {
@@ -46,12 +109,11 @@ void closestHit(inout RayPayload hitValue, in BuiltInTriangleIntersectionAttribu
     let brdf = Material.prepare(materialParams);
 
     float3 normal_WS = normalize(mul(params.getTangentToWorld(), brdf.normal));
-    float3 normalLight_WS = dot(normal_WS,WorldRayOrigin())<0 ? normal_WS : -normal_WS;
-    float3 intersection_WS = params.position_WS + normal_WS * 0.001f;
+    float3 normalLight_WS = dot(normal_WS,WorldRayDirection())<0 ? normal_WS : -normal_WS;
+    float3 intersection_WS = params.position_WS;
     
     hitValue.depth++;
-    float3 localAccRad = float3(0);
-    float3 rnd = rand01(uint3(vertexIndex0, vertexIndex1, vertexIndex2));
+    float3 rnd = rand01(hitValue.rndSeed);
     //float kt = ka + ks;
     //float s = -log(rnd.z) / kt;
     //float3 xs = r.o + s * r.d;
@@ -73,13 +135,13 @@ void closestHit(inout RayPayload hitValue, in BuiltInTriangleIntersectionAttribu
     //    continue;
     //}
 
-    //float p = max(max(brdf.baseColor.x, brdf.baseColor.color.y), brdf.baseColor.color.z);
+    //float p = max(max(brdf.baseColor.x, brdf.baseColor.y), brdf.baseColor.z);
     //if(hitValue.depth > 5) {
     //    if (rnd.z >= p) return;
     //    else hitValue.accmat /= p;
     //}
 
-
+    hitValue.light += brdf.emissive * hitValue.emissive + brdf.evaluateAmbient();
     //-- Ideal DIFFUSE reflection
     //if(bool(useNEE)) {
     //    accrad += nextEventEstimation(accmat, r.d, params.x, params.nl, kt, false, rnd);
@@ -89,22 +151,25 @@ void closestHit(inout RayPayload hitValue, in BuiltInTriangleIntersectionAttribu
         float3 l = -pLightEnv.directionalLights[i].direction.xyz;
         RayDesc rayDesc;
         rayDesc.TMax = 10000.0f;
-        rayDesc.TMin = 0.001f;
+        rayDesc.TMin = eps;
         rayDesc.Origin = x;
         rayDesc.Direction = l;
         RayPayload payload;
         payload.depth = hitValue.depth;
         payload.emissive = 1;
         payload.anyHit = true;
+        payload.hit = false;
+        payload.rndSeed = hitValue.rndSeed;
         TraceRay(pRayTracingParams.scene, 0, 0xff, 0, 0, 0, rayDesc, payload);
 
         // we have missed all geometry, so directional light is affecting us
-        if(!payload.hit) {
-            localAccRad += pLightEnv.directionalLights[i].illuminate(lightingParams, brdf);
-        }
+        //if(!payload.hit) {
+            //hitValue.light += pLightEnv.directionalLights[i].illuminate(lightingParams, brdf);
+        //}
     }
     for(uint i = 0; i < pLightEnv.numPointLights; ++i) {
         RayPayload payload;
+        payload.rndSeed = hitValue.rndSeed;
         float3 x = intersection_WS;
         float3 l = pLightEnv.pointLights[i].position_WS.xyz - intersection_WS;
         if(length(l) > pLightEnv.pointLights[i].colorRange.w) {
@@ -112,40 +177,37 @@ void closestHit(inout RayPayload hitValue, in BuiltInTriangleIntersectionAttribu
         }
         RayDesc rayDesc;
         rayDesc.TMax = 1.0f;
-        rayDesc.TMin = 0.001f;
+        rayDesc.TMin = eps;
         rayDesc.Origin = x;
         rayDesc.Direction = l;
         TraceRay(pRayTracingParams.scene, 0, 0xff, 0, 0, 0, rayDesc, payload);
     
         // hitting only after the light
         if(!payload.hit) {
-            localAccRad += pLightEnv.pointLights[i].illuminate(lightingParams, brdf);
+            hitValue.light += pLightEnv.pointLights[i].illuminate(lightingParams, brdf);
         }
     }
     // Indirect Illumination: cosine-weighted importance sampling
     if(hitValue.depth < 12) {
     	float r1 = 2 * PI * rnd.x, r2 = rnd.y, r2s = sqrt(r2);
         float3 w = normalLight_WS;
-        float3 u = normalize((cross(abs(w.x)>0.1 ? float3(0,1,0) : float3(1,0,0), w)));
+        float3 u = normalize(cross(abs(w.x)>0.1 ? float3(0,1,0) : float3(1,0,0), w));
         float3 v = cross(w,u);
         RayDesc rayDesc;
         rayDesc.TMax = 10000.0f;
-        rayDesc.TMin = 0.001f;
+        rayDesc.TMin = eps;
         rayDesc.Origin = intersection_WS;
         rayDesc.Direction = normalize(u*cos(r1)*r2s + v * sin(r1)*r2s + w * sqrt(1 - r2));
         RayPayload payload;
         payload.light = float3(0);
-        payload.emissive = 0;   // in the next bounce, consider reflective part only!
-        payload.depth = hitValue.depth+1;
+        payload.emissive = 1;
+        payload.hit = false;
+        //payload.emissive = 0;   // in the next bounce, consider reflective part only!
+        payload.depth = hitValue.depth;
         payload.anyHit = false;
+        payload.rndSeed = hitValue.rndSeed + 1;
         TraceRay(pRayTracingParams.scene, 0, 0xff, 0, 0, 0, rayDesc, payload);
-        if(payload.hit) {
-            DirectionalLight dir;
-            dir.color = float4(payload.light, 0);
-            dir.direction = float4(-rayDesc.Direction, 0);
-            localAccRad += dir.illuminate(lightingParams, brdf);
-        }
+        float bias = dot(normalLight_WS, rayDesc.Direction);
+        hitValue.light += brdf.evaluate(params.getTangentToWorld(), -WorldRayDirection(), rayDesc.Direction, payload.light / bias);
     }
-
-    hitValue.light += localAccRad;
 }

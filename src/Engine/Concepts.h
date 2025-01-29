@@ -1,7 +1,12 @@
 #pragma once
 #include <concepts>
+#include <ranges>
 
 namespace Seele {
+
+template <typename Range, typename T>
+concept container_compatible_range = (std::ranges::input_range<Range>) && std::convertible_to<std::ranges::range_reference_t<Range>, T>;
+
 template <class F, class... Args>
 concept invocable = std::invocable<F, Args...>;
 

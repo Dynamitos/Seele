@@ -122,7 +122,6 @@ TopLevelAS::TopLevelAS(PGraphics graphics, const Gfx::TopLevelASCreateInfo& crea
             .flags = 0,
             .size = buildSizesInfo.accelerationStructureSize,
             .usage = VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
-
         },
         VmaAllocationCreateInfo{
             .usage = VMA_MEMORY_USAGE_AUTO,
@@ -156,7 +155,7 @@ TopLevelAS::TopLevelAS(PGraphics graphics, const Gfx::TopLevelASCreateInfo& crea
     VkAccelerationStructureBuildGeometryInfoKHR buildGeometry = {
         .sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR,
         .pNext = nullptr,
-        .flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_BUILD_BIT_KHR,
+        .flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR,
         .mode = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR,
         .dstAccelerationStructure = handle,
         .geometryCount = 1,

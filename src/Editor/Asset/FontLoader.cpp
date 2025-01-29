@@ -32,9 +32,9 @@ void FontLoader::importAsset(FontImportArgs args) {
 // so we create a single pixel empty texture
 void FontLoader::import(FontImportArgs args, PFontAsset asset) {
     std::ifstream stream(args.filePath.c_str(), std::ios::binary | std::ios::ate);
-    Array<uint8> ttfFile(stream.tellg());
+    Array<char> ttfFile(stream.tellg());
     stream.seekg(0);
-    stream.read((char*)ttfFile.data(), ttfFile.size());
+    stream.read(ttfFile.data(), ttfFile.size());
     asset->ttfFile = std::move(ttfFile);
     asset->graphics = graphics;
     asset->loadFace();

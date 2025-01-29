@@ -1,5 +1,6 @@
 #pragma once
 #include "EngineTypes.h"
+#include "Concepts.h"
 #include <algorithm>
 #include <assert.h>
 #include <initializer_list>
@@ -117,7 +118,20 @@ template <typename T, typename Allocator = std::pmr::polymorphic_allocator<T>> s
         assert(_data != nullptr);
         std::uninitialized_copy(init.begin(), init.end(), begin());
     }
-
+    template <container_compatible_range<T> Range>
+    constexpr Array(std::from_range_t, Range&& rg, const allocator_type& alloc = allocator_type())
+        : arraySize(0), allocated(0), allocator(alloc) {
+        if constexpr (std::ranges::sized_range<Range> || std::ranges::forward_range<Range>) {
+            arraySize = std::ranges::size(rg);
+            allocated = arraySize;
+            _data = allocateArray(allocated);
+            std::ranges::uninitialized_copy(rg.begin(), rg.end(), begin(), end());
+        } else {
+            for (auto it = std::ranges::begin(rg); it != std::ranges::end(rg); it++) {
+                add(*it);
+            }
+        }
+    }
     constexpr Array(const Array& other)
         : arraySize(other.arraySize), allocated(other.allocated),
           allocator(std::allocator_traits<allocator_type>::select_on_container_copy_construction(other.allocator)) {

@@ -58,40 +58,21 @@ void UIPass::beginFrame(const Component::Camera& cam) {
     for (auto& render : renderElements) {
         float x = render.position.x;
         float y = render.position.y;
-        if (render.text.empty()) {
-            //todo: convert using actual tree depth
-            elements.add(RenderElementStyle{
-                .x = x,
-                .y = y,
-                .w = render.dimensions.x,
-                .h = render.dimensions.y,
-                .color = render.backgroundColor,
-                .z = render.level / 100.f,
-            });
-        } else {
-            y = y + render.baseline;
-            for (uint32 c : render.text) {
-                const FontAsset::Glyph& glyph = render.font->getGlyphData(c, render.fontSize);
-                Vector2 bearing = Vector2(glyph.bearing);
-                Vector2 size = Vector2(glyph.size);
-                float xpos = x + glyph.bearing.x;
-                float ypos = y - bearing.y;
-
-                float w = size.x;
-                float h = size.y;
-
-                glyphs.add(GlyphInstanceData{
-                    .x = xpos,
-                    .y = ypos,
-                    .z = render.level / 100.0f,
-                    .width = w,
-                    .height = h,
-                    .glyphIndex = (uint32)usedTextures.size(),
-                });
-                usedTextures.add(glyph.texture);
-                x += glyph.advance / 64.0f;
-            }
+        //todo: convert using actual tree depth
+        uint32 textureIndex = -1ul;
+        if (render.backgroundTexture != nullptr) {
+            textureIndex = usedTextures.size();
+            usedTextures.add(render.backgroundTexture);
         }
+        elements.add(RenderElementStyle{
+            .x = x,
+            .y = y,
+            .w = render.dimensions.x,
+            .h = render.dimensions.y,
+            .color = render.backgroundColor,
+            .z = render.level / 100.f,
+            .textureIndex = textureIndex,
+        });
     }
     glyphInstanceBuffer->rotateBuffer(sizeof(GlyphInstanceData) * glyphs.size());
     glyphInstanceBuffer->updateContents(0, sizeof(GlyphInstanceData) * glyphs.size(), glyphs.data());
@@ -115,6 +96,9 @@ void UIPass::beginFrame(const Component::Camera& cam) {
     uiDescriptorSet = uiDescriptorLayout->allocateDescriptorSet();
     uiDescriptorSet->updateBuffer(0, 0, elementBuffer);
     uiDescriptorSet->updateSampler(1, 0, glyphSampler);
+    for (uint32 i = 0; i < usedTextures.size(); ++i) {
+        uiDescriptorSet->updateTexture(2, i, usedTextures[i]);
+    }
     uiDescriptorSet->writeChanges();
 }
 

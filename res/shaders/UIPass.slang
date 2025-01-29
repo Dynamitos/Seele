@@ -59,5 +59,5 @@ float4 fragmentMain(
     if(style.textureIndex == -1) {
         return float4(style.color, style.opacity);
     }
-    return float4(pParams.textures[style.textureIndex].Sample(pParams.sampler, texCoords.xy).xyz, style.opacity);
+    return pParams.textures[style.textureIndex].Sample(pParams.sampler, texCoords.xy);
 }

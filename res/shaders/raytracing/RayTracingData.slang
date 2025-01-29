@@ -25,6 +25,7 @@ struct RayPayload
     uint depth;
     bool hit;
     bool anyHit;
+    uint3 rndSeed;
 };
 
 float3 rand01(uint3 x){                   // pseudo-random number generator

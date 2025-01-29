@@ -15,9 +15,9 @@ InspectorView::InspectorView(Gfx::PGraphics graphics, PWindow window, const View
           new UI::Div<M_8>(UI::Attributes{}, {
                                                  new UI::Div<BG_Red, Inline>({},
                                                                              {
-                                                                                 new UI::Text<Font_Arial, Text_9XL>("OtherTestT"),
+                                                                                 new UI::Text<Font_Arial, Text_9XL>("Other Test T"),
                                                                              }),
-                                                 new UI::Text<Font_Arial>("Test"),
+                                                 new UI::Text<Font_Arial>("Test fasdf agll;sdfgkj ahsf"),
                                              }))) {
     renderGraph.addPass(new UIPass(graphics, uiSystem));
     renderGraph.setViewport(viewport);

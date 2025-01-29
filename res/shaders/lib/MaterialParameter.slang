@@ -106,15 +106,15 @@ struct FragmentParameter
         FragmentParameter result;
         result.position_CS = f0.position_CS * barycentricCoords.x + f1.position_CS * barycentricCoords.y + f2.position_CS * barycentricCoords.z;
 #ifndef POS_ONLY
-        result.normal_WS = f0.normal_WS * barycentricCoords.x + f1.normal_WS * barycentricCoords.y + f2.normal_WS * barycentricCoords.z;
-        result.tangent_WS = f0.tangent_WS * barycentricCoords.x + f1.tangent_WS * barycentricCoords.y + f2.tangent_WS * barycentricCoords.z;
+        result.normal_WS    = f0.normal_WS    * barycentricCoords.x + f1.normal_WS    * barycentricCoords.y + f2.normal_WS    * barycentricCoords.z;
+        result.tangent_WS   = f0.tangent_WS   * barycentricCoords.x + f1.tangent_WS   * barycentricCoords.y + f2.tangent_WS   * barycentricCoords.z;
         result.biTangent_WS = f0.biTangent_WS * barycentricCoords.x + f1.biTangent_WS * barycentricCoords.y + f2.biTangent_WS * barycentricCoords.z;
-        result.position_WS = f0.position_WS * barycentricCoords.x + f1.position_WS * barycentricCoords.y + f2.position_WS * barycentricCoords.z;
-	    result.vertexColor = f0.vertexColor * barycentricCoords.x + f1.vertexColor * barycentricCoords.y + f2.vertexColor * barycentricCoords.z;
-        result.texCoords0 = f0.texCoords0 * barycentricCoords.x + f1.texCoords0 * barycentricCoords.y + f2.texCoords0 * barycentricCoords.z;
-        result.texCoords1 = f0.texCoords1 * barycentricCoords.x + f1.texCoords1 * barycentricCoords.y + f2.texCoords1 * barycentricCoords.z;
-        result.texCoords2 = f0.texCoords2 * barycentricCoords.x + f1.texCoords2 * barycentricCoords.y + f2.texCoords2 * barycentricCoords.z;
-        result.texCoords3 = f0.texCoords3 * barycentricCoords.x + f1.texCoords3 * barycentricCoords.y + f2.texCoords3 * barycentricCoords.z;
+        result.position_WS  = f0.position_WS  * barycentricCoords.x + f1.position_WS  * barycentricCoords.y + f2.position_WS  * barycentricCoords.z;
+	    result.vertexColor  = f0.vertexColor  * barycentricCoords.x + f1.vertexColor  * barycentricCoords.y + f2.vertexColor  * barycentricCoords.z;
+        result.texCoords0   = f0.texCoords0   * barycentricCoords.x + f1.texCoords0   * barycentricCoords.y + f2.texCoords0   * barycentricCoords.z;
+        result.texCoords1   = f0.texCoords1   * barycentricCoords.x + f1.texCoords1   * barycentricCoords.y + f2.texCoords1   * barycentricCoords.z;
+        result.texCoords2   = f0.texCoords2   * barycentricCoords.x + f1.texCoords2   * barycentricCoords.y + f2.texCoords2   * barycentricCoords.z;
+        result.texCoords3   = f0.texCoords3   * barycentricCoords.x + f1.texCoords3   * barycentricCoords.y + f2.texCoords3   * barycentricCoords.z;
 #endif
         return result;
     }

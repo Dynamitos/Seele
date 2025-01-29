@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.7...3.23)
 if(${CMAKE_VERSION} VERSION_LESS 3.12)
     cmake_policy(VERSION ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION})
 endif()
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 # Handle superbuild first
 option (USE_SUPERBUILD "Whether or not a superbuild should be invoked" ON)
 
@@ -46,6 +46,7 @@ find_package(assimp CONFIG REQUIRED)
 find_package(Stb REQUIRED)
 find_package(EnTT CONFIG REQUIRED)
 find_package(FreeType CONFIG REQUIRED)
+find_package(harfbuzz CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(Ktx CONFIG REQUIRED)
@@ -66,11 +67,14 @@ add_library(Engine SHARED "")
 
 target_compile_definitions(Engine PRIVATE GLFW_WINDOWS)
 target_include_directories(Engine PRIVATE src/Engine)
+target_include_directories(Engine PRIVATE ${VCPKG_INSTALLED_DIR}/x64-windows/include/)
 target_link_libraries(Engine PUBLIC Vulkan::Vulkan)
 target_link_libraries(Engine PUBLIC EnTT::EnTT)
 target_link_libraries(Engine PUBLIC glfw)
 target_link_libraries(Engine PUBLIC glm::glm)
 target_link_libraries(Engine PUBLIC freetype)
+target_link_libraries(Engine PUBLIC harfbuzz::harfbuzz)
+target_link_libraries(Engine PUBLIC harfbuzz::harfbuzz-subset)
 target_link_libraries(Engine PUBLIC assimp::assimp)
 target_link_libraries(Engine PUBLIC KTX::ktx)
 target_link_libraries(Engine PUBLIC nlohmann_json::nlohmann_json)
@@ -78,8 +82,8 @@ target_link_libraries(Engine PUBLIC crcpp)
 target_link_libraries(Engine PUBLIC fmt::fmt)
 target_link_libraries(Engine PUBLIC unofficial::lunasvg::lunasvg)
 target_link_libraries(Engine PUBLIC GPUOpen::VulkanMemoryAllocator)
+target_link_libraries(Engine PUBLIC ${VCPKG_INSTALLED_DIR}/x64-windows/lib/slang.lib)
 
-target_link_libraries(Engine PUBLIC slang)
 if(APPLE)
     target_link_libraries(Engine PUBLIC metal)
     SET(CMAKE_OSX_DEPLOYMENT_TARGET 14.3)
@@ -105,8 +109,8 @@ target_include_directories(Benchmark PRIVATE src/Benchmark)
 
 if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-    target_compile_options(Engine PUBLIC /std:c++20 /Zi /MP14 /W4 /wd4505)
-    target_compile_options(Editor PUBLIC /std:c++20 /Zi /MP14 /W4)
+    target_compile_options(Engine PUBLIC /Zi /MP14 /W4 /wd4505)
+    target_compile_options(Editor PUBLIC /Zi /MP14 /W4)
     target_sources(Engine INTERFACE   
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Seele.natvis>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/Seele/Seele.natvis>
@@ -115,8 +119,8 @@ if(MSVC)
         Seele.natvis
         DESTINATION Seele/)
 else()
-    target_compile_options(Engine PUBLIC -g -Wall -Wextra -Wno-error -pedantic -std=c++20 -Wno-missing-field-initializers -Wno-unused-function)
-    target_compile_options(Editor PUBLIC -g -Wall -Wextra -Wno-error -pedantic -std=c++20)
+    target_compile_options(Engine PUBLIC -g -Wall -Wextra -Wno-error -pedantic -Wno-missing-field-initializers -Wno-unused-function)
+    target_compile_options(Editor PUBLIC -g -Wall -Wextra -Wno-error -pedantic)
 endif()
 if(APPLE)
   #Metal lib throws that internally for some reason
@@ -132,8 +136,8 @@ add_subdirectory(src/)
 if(WIN32)
     add_custom_target(dll_copy ALL
         COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:Engine> $<TARGET_FILE_DIR:Editor>
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SLANG_ROOT}bin/slang.dll $<TARGET_FILE_DIR:Editor>
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SLANG_ROOT}bin/slang-glslang.dll $<TARGET_FILE_DIR:Editor>
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VCPKG_INSTALLED_DIR}/x64-windows/bin/slang.dll $<TARGET_FILE_DIR:Editor>
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VCPKG_INSTALLED_DIR}/x64-windows/bin/slang-glslang.dll $<TARGET_FILE_DIR:Editor>
         COMMAND_EXPAND_LISTS
         DEPENDS Editor)
 elseif(APPLE)

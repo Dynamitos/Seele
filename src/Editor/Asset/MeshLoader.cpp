@@ -92,6 +92,8 @@ constexpr const char* KEY_AMBIENT_COLOR = "k_a";
 constexpr const char* KEY_SHININESS = "k_shiny";
 constexpr const char* KEY_ROUGHNESS = "k_r";
 constexpr const char* KEY_METALLIC = "k_m";
+constexpr const char* KEY_EMISSIVE_COLOR = "k_e";
+constexpr const char* KEY_EMISSIVE_INTENSITY = "k_ei";
 
 constexpr const char* KEY_DIFFUSE_TEXTURE = "tex_d";
 constexpr const char* KEY_SPECULAR_TEXTURE = "tex_s";
@@ -101,6 +103,7 @@ constexpr const char* KEY_SHININESS_TEXTURE = "tex_shiny";
 constexpr const char* KEY_ROUGHNESS_TEXTURE = "tex_r";
 constexpr const char* KEY_METALLIC_TEXTURE = "tex_m";
 constexpr const char* KEY_AMBIENT_OCCLUSION_TEXTURE = "tex_ao";
+constexpr const char* KEY_EMISSIVE_TEXTURE = "tex_emissive";
 
 void MeshLoader::loadMaterials(const aiScene* scene, const Array<PTextureAsset>& textures, const std::string& baseName,
                                const std::filesystem::path& meshDirectory, const std::string& importPath,
@@ -353,9 +356,19 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Array<PTextureAsset>&
             addTextureParameter(KEY_AMBIENT_OCCLUSION_TEXTURE, aiTextureType_AMBIENT_OCCLUSION, i, outputAO, {0, -1, -1, -1});
         }
 
+        // Emissive
+        //addScalarParameter(KEY_EMISSIVE_INTENSITY, AI_MATKEY_EMISSIVE_INTENSITY);
+        addVectorParameter(KEY_EMISSIVE_COLOR, AI_MATKEY_COLOR_EMISSIVE);
+        std::string outputEmissive = KEY_EMISSIVE_COLOR;
+        uint32 numEmissive = material->GetTextureCount(aiTextureType_EMISSION_COLOR);
+        for (uint32 i = 0; i < numEmissive; ++i) {
+            addTextureParameter(KEY_EMISSIVE_TEXTURE, aiTextureType_EMISSION_COLOR, i, outputEmissive);
+        }
+
         MaterialNode brdf;
         brdf.variables["baseColor"] = outputDiffuse;
         brdf.variables["alpha"] = outputAlpha;
+        brdf.variables["emissive"] = outputEmissive;
         if (!outputNormal.empty()) {
             expressions.add(new MulExpression());
             expressions.back()->key = "NormalMul";
@@ -381,6 +394,13 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Array<PTextureAsset>&
         case aiShadingMode_Toon:
             brdf.profile = "CelShading";
             break;
+        case aiShadingMode_Blinn:
+            brdf.profile = "BlinnPhong";
+            brdf.variables["specularColor"] = outputSpecular;
+            brdf.variables["ambient"] = outputAmbient;
+            brdf.variables["shininess"] = outputShininess;
+            break;
+        default:
         case aiShadingMode_CookTorrance:
             brdf.profile = "CookTorrance";
             brdf.variables["roughness"] = outputRoughness;
@@ -388,13 +408,6 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Array<PTextureAsset>&
             if (!outputAO.empty()) {
                 brdf.variables["ambientOcclusion"] = outputAmbient;
             }
-            break;
-        default:
-        case aiShadingMode_Blinn:
-            brdf.profile = "BlinnPhong";
-            brdf.variables["specularColor"] = outputSpecular;
-            brdf.variables["ambient"] = outputAmbient;
-            brdf.variables["shininess"] = outputShininess;
             break;
         };
         uint32 twoSided = false;
