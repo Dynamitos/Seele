@@ -71,7 +71,7 @@ import MATERIAL_FILE_NAME;
 
 */
 
-const float eps = 1e-5;
+static const float eps = 1e-5;
 [shader("closesthit")]
 void closestHit(inout RayPayload hitValue, in BuiltInTriangleIntersectionAttributes attr)
 {

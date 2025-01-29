@@ -10,9 +10,9 @@ namespace Seele {
 class StaticMeshVertexData : public VertexData {
   public:
     using PositionType = Vector;
-    using NormalType = Vector4;
-    //using TangentType = Vector;
-    //using BiTangentType = Vector;
+    using NormalType = Vector;
+    using TangentType = Vector;
+    using BiTangentType = Vector;
     using TexCoordType = U16Vector2;
     using ColorType = U16Vector;
 
@@ -22,8 +22,8 @@ class StaticMeshVertexData : public VertexData {
     void loadPositions(uint64 offset, const Array<PositionType>& data);
     void loadTexCoords(uint64 offset, uint64 index, const Array<TexCoordType>& data);
     void loadNormals(uint64 offset, const Array<NormalType>& data);
-    //void loadTangents(uint64 offset, const Array<TangentType>& data);
-    //void loadBitangents(uint64 offset, const Array<BiTangentType>& data);
+    void loadTangents(uint64 offset, const Array<TangentType>& data);
+    void loadBitangents(uint64 offset, const Array<BiTangentType>& data);
     void loadColors(uint64 offset, const Array<ColorType>& data);
     virtual void serializeMesh(MeshId id, uint64 numVertices, ArchiveBuffer& buffer) override;
     virtual uint64 deserializeMesh(MeshId id, ArchiveBuffer& buffer) override;
@@ -49,8 +49,8 @@ class StaticMeshVertexData : public VertexData {
     Array<PositionType> posData;
     Array<TexCoordType> texData[MAX_TEXCOORDS];
     Array<NormalType> norData;
-//    Array<TangentType> tanData;
-//    Array<BiTangentType> bitData;
+    Array<TangentType> tanData;
+    Array<BiTangentType> bitData;
     Array<ColorType> colData;
     Gfx::ODescriptorLayout descriptorLayout;
     Gfx::PDescriptorSet descriptorSet;

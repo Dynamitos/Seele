@@ -125,7 +125,10 @@ struct VertexAttributes
 {
 	float3 position_MS;
 #ifndef POS_ONLY
-	float4 qTangent;
+	//float4 qTangent;
+    float3 normal_MS;
+    float3 tangent_MS;
+    float3 biTangent_MS;
 	float3 vertexColor;
 	float2 texCoords[MAX_TEXCOORDS];
 #endif
@@ -138,10 +141,10 @@ struct VertexAttributes
 		FragmentParameter result;
 		result.position_CS = clipPos;
 #ifndef POS_ONLY
-        float3x3 tbn = qTangentToMatrix(qTangent);
-        result.tangent_WS = normalize(mul(transformMatrix, float4(tbn[0], 0)).xyz);
-        result.biTangent_WS = normalize(mul(transformMatrix, float4(tbn[1], 0)).xyz);
-		result.normal_WS = normalize(mul(transformMatrix, float4(tbn[2], 0)).xyz);
+        //float3x3 tbn = qTangentToMatrix(qTangent);
+        result.tangent_WS = normalize(mul(transformMatrix, float4(tangent_MS, 0)).xyz);
+        result.biTangent_WS = normalize(mul(transformMatrix, float4(biTangent_MS, 0)).xyz);
+		result.normal_WS = normalize(mul(transformMatrix, float4(normal_MS, 0)).xyz);
 		result.vertexColor = vertexColor;
 		result.position_WS = worldPos.xyz;
         result.texCoords0 = float4(texCoords[0], texCoords[1]);
