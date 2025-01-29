@@ -1,6 +1,6 @@
 #include "PlayView.h"
-#include "Window/Window.h"
 #include "Component/Mesh.h"
+#include "Window/Window.h"
 
 using namespace Seele;
 using namespace Seele::Editor;
@@ -49,4 +49,6 @@ void PlayView::keyCallback(KeyCode code, InputAction action, KeyModifier modifie
     if (code == KeyCode::KEY_R && action == InputAction::RELEASE) {
         getGlobals().useRayTracing = !getGlobals().useRayTracing;
     }
+    //if (code == KeyCode::KEY_B && action == InputAction::RELEASE && modifier & KeyModifier::MOD_CONTROL) {
+    //}
 }

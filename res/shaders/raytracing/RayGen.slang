@@ -11,9 +11,6 @@ struct Ray
 const static float S_O = 6.9;
 const static float f = 0.035;
 const static float A = 0.0;
-const static float ka = 0;
-const static float ks = 0;
-const static float3 fogEmm = float3(0, 0.01, 0.01);
 
 struct SampleParams
 {
@@ -110,7 +107,7 @@ void raygen()
     payload.depth = 1;
     payload.rndSeed = rndSeed + 1;
     payload.anyHit = false;
-    TraceRay(pRayTracingParams.scene, 0, 0xff, 0, 0, 0, rayDesc, payload);
+    TraceRay(pRayTracingParams.scene, RAY_FLAG_CULL_BACK_FACING_TRIANGLES, 0xff, 0, 0, 0, rayDesc, payload);
 
     if(pSamps.pass == 0) pRayTracingParams.radianceAccumulator[pix] = float4(0);
     float3 accumulatedRadiance = payload.light / pSamps.samplesPerPixel;

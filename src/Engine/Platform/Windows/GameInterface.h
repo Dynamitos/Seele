@@ -1,5 +1,6 @@
 #pragma once
 #include "Game.h"
+#define NOIME
 #include "Windows.h"
 
 namespace Seele {

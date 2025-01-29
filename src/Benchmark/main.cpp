@@ -38,6 +38,7 @@ int main(int argc, char** argv) {
     graphics->init(initializer);
     StaticMeshVertexData* vd = StaticMeshVertexData::getInstance();
     vd->init(graphics);
+    getGlobals().useRayTracing = true;
 
     OWindowManager windowManager = new WindowManager();
     AssetRegistry::init("Assets", graphics);

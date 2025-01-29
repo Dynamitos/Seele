@@ -1,4 +1,5 @@
 #include "GameInterface.h"
+#include "Windows.h"
 
 using namespace Seele;
 
