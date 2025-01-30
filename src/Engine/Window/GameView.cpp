@@ -35,7 +35,7 @@ GameView::GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreate
         rayTracingGraph.setViewport(viewport);
         rayTracingGraph.createRenderPass();
     }
-    
+
 }
 
 GameView::~GameView() {}

@@ -87,7 +87,7 @@ void RayTracingPass::render() {
             PMaterial mat = matData.material;
 
             Gfx::ShaderPermutation permutation = graphics->getShaderCompiler()->getTemplate("RayTracing");
-            permutation.setMaterial(mat->getName());
+            permutation.setMaterial(mat->getName(), mat->getProfile());
             permutation.setVertexData(vertexData->getTypeName());
 
             const Gfx::ShaderCollection* collection = graphics->getShaderCompiler()->findShaders(Gfx::PermutationId(permutation));
@@ -97,6 +97,7 @@ void RayTracingPass::render() {
                 for (uint32 i = 0; i < inst.instanceData.size(); ++i) {
                     Gfx::RayTracingHitGroup callableGroup = {
                         .closestHitShader = collection->callableShader,
+                        .anyHitShader = anyhit,
                     };
                     callableGroup.parameters.resize(sizeof(VertexData::DrawCallOffsets));
                     std::memcpy(callableGroup.parameters.data(), &inst.offsets, sizeof(VertexData::DrawCallOffsets));
@@ -111,12 +112,13 @@ void RayTracingPass::render() {
             PMaterial mat = transparentData.matInst->getBaseMaterial();
 
             Gfx::ShaderPermutation permutation = graphics->getShaderCompiler()->getTemplate("RayTracing");
-            permutation.setMaterial(mat->getName());
+            permutation.setMaterial(mat->getName(), mat->getProfile());
             permutation.setVertexData(vertexData->getTypeName());
             const Gfx::ShaderCollection* collection = graphics->getShaderCompiler()->findShaders(Gfx::PermutationId(permutation));
             assert(collection != nullptr);
             Gfx::RayTracingHitGroup callableGroup = {
                 .closestHitShader = collection->callableShader,
+                .anyHitShader = anyhit,
             };
             callableGroup.parameters.resize(sizeof(VertexData::DrawCallOffsets));
             std::memcpy(callableGroup.parameters.data(), &transparentData.offsets, sizeof(VertexData::DrawCallOffsets));
@@ -200,14 +202,15 @@ void RayTracingPass::publishOutputs() {
                           Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT | Gfx::SE_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR);
     ShaderCompilationInfo compileInfo = {
         .name = "RayGenMiss",
-        .modules = {"RayGen", "Miss"},
-        .entryPoints = {{"raygen", "RayGen"}, {"miss", "Miss"}},
+        .modules = {"RayGen", "AnyHit", "Miss"},
+        .entryPoints = {{"raygen", "RayGen"}, {"anyhit", "AnyHit"}, {"miss", "Miss"}},
         .defines = {{"RAY_TRACING", "1"}},
         .rootSignature = pipelineLayout,
     };
     graphics->beginShaderCompilation(compileInfo);
     rayGen = graphics->createRayGenShader({0});
-    miss = graphics->createMissShader({1});
+    anyhit = graphics->createAnyHitShader({1});
+    miss = graphics->createMissShader({2});
     pipelineLayout->create();
 }
 

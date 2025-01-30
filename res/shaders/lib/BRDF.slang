@@ -2,10 +2,13 @@ import Common;
 
 interface IBRDF
 {
-    float3 evaluate(float3x3 tangentToWorld, float3 viewDir_WS, float3 lightDir_WS, float3 lightColor);
+    float3 evaluate(float3 viewDir_WS, float3 lightDir_WS, float3 lightColor);
+    [mutating] void transformNormal(float3x3 tangentToWorld);
+    float3 getNormal();
+    float3 getBaseColor();
     float3 evaluateAmbient();
     float getAlpha();
-    float3 getTangentNormal();
+    float3 getEmissive();
 };
 
 struct Phong : IBRDF
@@ -29,16 +32,28 @@ struct Phong : IBRDF
         emissive = float3(0, 0, 0);
     }
 
-    float3 evaluate(float3x3 tangentToWorld, float3 viewDir_WS, float3 lightDir_WS, float3 lightColor)
+    float3 evaluate(float3 viewDir_WS, float3 lightDir_WS, float3 lightColor)
     {
-        float3 normal_WS = normalize(mul(tangentToWorld, normal));
+        float3 normal_WS = normal;
         float3 nDotL = dot(normal_WS, lightDir_WS);
         float3 r = 2 * (nDotL) * normal_WS - lightDir_WS;
         float rDotV = dot(r, viewDir_WS);
 
         return lightColor * (baseColor * max(nDotL, 0.0)) + specular * pow(max(rDotV, 0.0), max(shininess, 1));
     }
-
+    [mutating]
+    void transformNormal(float3x3 tangentToWorld)
+    {
+        normal = normalize(mul(tangentToWorld, normal));
+    }
+    float3 getNormal()
+    {
+        return normal;
+    }
+    float3 getBaseColor()
+    {
+        return baseColor;
+    }
     float3 evaluateAmbient()
     {
         return ambient;
@@ -47,9 +62,9 @@ struct Phong : IBRDF
     {
         return alpha;
     }
-    float3 getTangentNormal()
+    float3 getEmissive()
     {
-        return normal;
+        return emissive;
     }
 };
 
@@ -74,16 +89,28 @@ struct BlinnPhong : IBRDF
         emissive = float3(0, 0, 0);
     }
 
-    float3 evaluate(float3x3 tangentToWorld, float3 viewDir_WS, float3 lightDir_WS, float3 lightColor)
+    float3 evaluate(float3 viewDir_WS, float3 lightDir_WS, float3 lightColor)
     {
-        float3 normal_WS = normalize(mul(tangentToWorld, normal));
+        float3 normal_WS = normal;
         float diffuse = max(dot(normal_WS, lightDir_WS), 0);
         float3 h = normalize(lightDir_WS + viewDir_WS);
         float specular = pow(saturate(dot(normal_WS, h)), shininess);
 		
         return (baseColor * diffuse * lightColor) + (specularColor * specular);
     }
-
+    [mutating]
+    void transformNormal(float3x3 tangentToWorld)
+    {
+        normal = normalize(mul(tangentToWorld, normal));
+    }
+    float3 getNormal()
+    {
+        return normal;
+    }
+    float3 getBaseColor()
+    {
+        return baseColor;
+    }
     float3 evaluateAmbient()
     {
         return ambient;
@@ -92,9 +119,9 @@ struct BlinnPhong : IBRDF
     {
         return alpha;
     }
-    float3 getTangentNormal()
+    float3 getEmissive()
     {
-        return normal;
+        return emissive;
     }
 };
 
@@ -112,10 +139,9 @@ struct CelShading : IBRDF
         normal = float3(0, 0, 1);
         emissive = float3(0, 0, 0);
     }
-
-    float3 evaluate(float3x3 tangentToWorld, float3 viewDir_WS, float3 lightDir_WS, float3 lightColor)
+    float3 evaluate(float3 viewDir_WS, float3 lightDir_WS, float3 lightColor)
     {
-        float3 normal_WS = normalize(mul(tangentToWorld, normal));
+        float3 normal_WS = normal;
         float nDotL = dot(normal_WS, lightDir_WS);
         float diffuse = max(nDotL, 0);
 
@@ -129,6 +155,19 @@ struct CelShading : IBRDF
             return darkenedBase * lightColor;
         }
     }
+    [mutating]
+    void transformNormal(float3x3 tangentToWorld)
+    {
+        normal = normalize(mul(tangentToWorld, normal));
+    }
+    float3 getNormal()
+    {
+        return normal;
+    }
+    float3 getBaseColor()
+    {
+        return baseColor;
+    }
     float3 evaluateAmbient()
     {
         return float3(0, 0, 0);
@@ -137,9 +176,9 @@ struct CelShading : IBRDF
     {
         return alpha;
     }
-    float3 getTangentNormal()
+    float3 getEmissive()
     {
-        return normal;
+        return emissive;
     }
 };
 
@@ -197,9 +236,9 @@ struct CookTorrance : IBRDF
         return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
     }
 
-    float3 evaluate(float3x3 tangentToWorld, float3 viewDir_WS, float3 lightDir_WS, float3 lightColor)
+    float3 evaluate(float3 viewDir_WS, float3 lightDir_WS, float3 lightColor)
     {
-        float3 n = normalize(mul(tangentToWorld, normal));
+        float3 n = normal;
         float3 h = normalize(lightDir_WS + viewDir_WS);
 
         float3 F0 = float3(0.04);
@@ -224,6 +263,19 @@ struct CookTorrance : IBRDF
         float3 result = (k_d * baseColor / PI + specular) * nDotL * lightColor;
         return result * ambientOcclusion;
     }
+    [mutating]
+    void transformNormal(float3x3 tangentToWorld)
+    {
+        normal = normalize(mul(tangentToWorld, normal));
+    }
+    float3 getNormal()
+    {
+        return normal;
+    }
+    float3 getBaseColor()
+    {
+        return baseColor;
+    }
     float3 evaluateAmbient()
     {
         return float3(0.03) * baseColor * ambientOcclusion;
@@ -232,8 +284,8 @@ struct CookTorrance : IBRDF
     {
         return alpha;
     }
-    float3 getTangentNormal()
+    float3 getEmissive()
     {
-        return normal;
+        return emissive;
     }
 };

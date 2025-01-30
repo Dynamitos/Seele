@@ -22,6 +22,7 @@ class RayTracingPass : public RenderPass {
     Gfx::PTextureCube skyBox;
     Gfx::OSampler skyBoxSampler;
     Gfx::ORayGenShader rayGen;
+    Gfx::OAnyHitShader anyhit;
     Gfx::OMissShader miss;
     Gfx::PRayTracingPipeline pipeline;
     Gfx::OTopLevelAS tlas;

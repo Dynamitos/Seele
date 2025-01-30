@@ -5,8 +5,8 @@ import Scene;
 
 //interface IMaterial
 //{
-//	associatedtype BRDF : IBRDF;
-//	BRDF prepare(MaterialParameter input);
+//    associatedtype BRDF: IBRDF;
+//	static BRDF prepare(MaterialParameter input);
 //};
 struct MaterialResources
 {

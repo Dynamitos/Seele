@@ -2,6 +2,7 @@ import Common;
 
 struct MaterialParameter
 {
+    float3x3 tangentToWorld;
 	float3 position_WS;
 	float2 texCoords[MAX_TEXCOORDS];
 	float3 vertexColor;
@@ -9,7 +10,6 @@ struct MaterialParameter
 
 struct LightingParameter
 {
-    float3x3 tangentToWorld;
     float3 viewDir_WS;
     float3 position_WS;
 }
@@ -72,6 +72,7 @@ struct FragmentParameter
     MaterialParameter getMaterialParameter()
     {
         MaterialParameter result;
+        result.tangentToWorld = getTangentToWorld();
         result.position_WS = position_WS;
         result.texCoords[0] = texCoords0.xy;
         result.texCoords[1] = texCoords0.zw;
@@ -88,7 +89,6 @@ struct FragmentParameter
     LightingParameter getLightingParameter()
     {
         LightingParameter result;
-        result.tangentToWorld = getTangentToWorld();
         result.viewDir_WS = normalize(pViewParams.cameraPosition_WS.xyz - position_WS);
         result.position_WS = position_WS;
         return result;

@@ -66,7 +66,7 @@ void ShaderCompiler::compile() {
                             OPipelineLayout layout = graphics->createPipelineLayout(pass.baseLayout->getName(), pass.baseLayout);
                             layout->addDescriptorLayout(vd->getVertexDataLayout());
                             layout->addDescriptorLayout(vd->getInstanceDataLayout());
-                            permutation.setMaterial(mat->getName());
+                            permutation.setMaterial(mat->getName(), mat->getProfile());
                             createShaders(permutation, std::move(layout), name);
                         });
                     }
@@ -108,6 +108,7 @@ void ShaderCompiler::createShaders(ShaderPermutation permutation, Gfx::OPipeline
     if (std::strlen(permutation.materialName) > 0) {
         createInfo.modules.add(permutation.materialName);
         createInfo.defines["MATERIAL_FILE_NAME"] = permutation.materialName;
+        //createInfo.typeParameter.add({"IBRDF", "Phong"});
     }
     if (permutation.positionOnly) {
         createInfo.defines["POS_ONLY"] = "1";

@@ -27,6 +27,7 @@ class Material {
 
     OMaterialInstance instantiate();
     const std::string& getName() const { return materialName; }
+    const std::string& getProfile() const { return brdf.profile; }
 
     bool isTwoSided() const;
     bool hasTransparency() const;

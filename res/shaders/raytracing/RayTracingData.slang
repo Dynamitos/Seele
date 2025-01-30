@@ -1,4 +1,5 @@
 import MaterialParameter;
+import BRDF;
 
 struct RayTracingParams
 {
@@ -12,14 +13,10 @@ struct RayTracingParams
 layout(set=5)
 ParameterBlock<RayTracingParams> pRayTracingParams;
 
-struct CallablePayload
-{
-    FragmentParameter params;
-    float3 color;
-};
-
 struct RayPayload
 {
+    LightingParameter params;
+    MaterialParameter materialParams;
     float3 light;
     float emissive;
     uint depth;

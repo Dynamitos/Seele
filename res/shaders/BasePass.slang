@@ -32,7 +32,5 @@ float4 fragmentMain(in FragmentParameter params) : SV_Target
     }
     result += brdf.evaluateAmbient();
     // gamma correction
-    //result = result / (result + float3(1.0));
-    //result = pow(result, float3(1.0/2.2));
     return float4(result, brdf.getAlpha());
 }

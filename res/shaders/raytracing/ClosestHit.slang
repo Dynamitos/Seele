@@ -83,6 +83,7 @@ void closestHit(inout RayPayload hitValue, in BuiltInTriangleIntersectionAttribu
     // todo: replace with anyhit shader
     if(hitValue.anyHit)
         return;
+
     const float3 barycentricCoords = float3(1.0f - attr.barycentrics.x - attr.barycentrics.y, attr.barycentrics.x, attr.barycentrics.y);
 
     InstanceData inst = pScene.instances[InstanceID()];
@@ -107,14 +108,15 @@ void closestHit(inout RayPayload hitValue, in BuiltInTriangleIntersectionAttribu
 
     FragmentParameter params = FragmentParameter.interpolate(f0, f1, f2, barycentricCoords);
 
-    MaterialParameter materialParams = params.getMaterialParameter();
-    LightingParameter lightingParams = params.getLightingParameter();
+    hitValue.params = params.getLightingParameter();
+    hitValue.materialParams = params.getMaterialParameter();
+    LightingParameter lightingParams = hitValue.params;
     lightingParams.viewDir_WS = -WorldRayDirection();
-    let brdf = Material.prepare(materialParams);
+    let brdf = Material.prepare(hitValue.materialParams);
 
-    float3 normal_WS = normalize(mul(params.getTangentToWorld(), brdf.normal));
+    float3 normal_WS = brdf.getNormal();
     float3 normalLight_WS = dot(normal_WS,WorldRayDirection())<0 ? normal_WS : -normal_WS;
-    float3 intersection_WS = params.position_WS;
+    float3 intersection_WS = lightingParams.position_WS;
     
     hitValue.depth++;
     float3 rnd = rand01(hitValue.rndSeed);
@@ -139,12 +141,12 @@ void closestHit(inout RayPayload hitValue, in BuiltInTriangleIntersectionAttribu
     //    TraceRay(scene, 0, 0xff, 0, 0, rayDesc);
     //}
 
-    float p = max(max(brdf.baseColor.x, brdf.baseColor.y), brdf.baseColor.z);
+    float p = max(max(brdf.getBaseColor().x, brdf.getBaseColor().y), brdf.getBaseColor().z);
     if(hitValue.depth > 5) {
         if (rnd.z >= p) return;
     }
 
-    hitValue.light += brdf.emissive * hitValue.emissive + brdf.evaluateAmbient();
+    hitValue.light += brdf.getEmissive() * hitValue.emissive + brdf.evaluateAmbient();
     //-- Ideal DIFFUSE reflection
     //if(bool(useNEE)) {
     //    accrad += nextEventEstimation(accmat, r.d, params.x, params.nl, kt, false, rnd);
@@ -211,7 +213,8 @@ void closestHit(inout RayPayload hitValue, in BuiltInTriangleIntersectionAttribu
         payload.rndSeed = hitValue.rndSeed + 1;
         TraceRay(pRayTracingParams.scene, RAY_FLAG_CULL_BACK_FACING_TRIANGLES, 0xff, 0, 0, 0, rayDesc, payload);
         float bias = dot(normalLight_WS, rayDesc.Direction);
-        hitValue.light += brdf.evaluate(params.getTangentToWorld(), -WorldRayDirection(), rayDesc.Direction, payload.light / bias);
+        hitValue.light += brdf.evaluate(-WorldRayDirection(), rayDesc.Direction, payload.light / bias);
     }
-    hitValue.light /= p;
+    //hitValue.light /= p;
+
 }

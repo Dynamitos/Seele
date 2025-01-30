@@ -172,6 +172,7 @@ void Material::compile() {
     for (const auto& [name, exp] : brdf.variables) {
         codeStream << "\t\tresult." << name << " = " << varState[exp] << ";" << std::endl;
     }
+    codeStream << "\t\tresult.transformNormal(input.tangentToWorld);" << std::endl;
     codeStream << "\t\treturn result;\n";
     codeStream << "\t}\n";
     codeStream << "};\n";

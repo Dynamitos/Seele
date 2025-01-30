@@ -172,7 +172,7 @@ void BasePass::render() {
             // LightEnv => provided by scene
             // Material => per material
             // LightCulling => calculated by pass
-            permutation.setMaterial(materialData.material->getName());
+            permutation.setMaterial(materialData.material->getName(), materialData.material->getProfile());
             Gfx::PermutationId id(permutation);
 
             Gfx::ORenderCommand command = graphics->createRenderCommand("BaseRender");
@@ -273,7 +273,7 @@ void BasePass::render() {
         transparentCommand->setViewport(viewport);
         for (const auto& [_, t] : sortedDraws) {
             permutation.setVertexData(t.vertexData->getTypeName());
-            permutation.setMaterial(t.matInst->getBaseMaterial()->getName());
+            permutation.setMaterial(t.matInst->getBaseMaterial()->getName(), t.matInst->getBaseMaterial()->getProfile());
             Gfx::PermutationId id(permutation);
 
             const Gfx::ShaderCollection* collection = graphics->getShaderCompiler()->findShaders(id);

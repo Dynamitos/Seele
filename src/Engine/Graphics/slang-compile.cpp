@@ -18,6 +18,7 @@ using namespace Seele;
     {                                                                                                                                      \
         if (diagnostics) {                                                                                                                 \
             std::cout << (const char*)diagnostics->getBufferPointer() << std::endl;                                                        \
+            abort();                                                                                                                       \
         }                                                                                                                                  \
     }
 
@@ -88,7 +89,7 @@ void Seele::beginCompilation(const ShaderCompilationInfo& info, SlangCompileTarg
     sessionDesc.preprocessorMacroCount = macros.size();
     sessionDesc.preprocessorMacros = macros.data();
     slang::TargetDesc targetDesc;
-    targetDesc.profile = globalSession->findProfile("glsl_450");
+    targetDesc.profile = globalSession->findProfile("spv_1_4");
     targetDesc.format = target;
     sessionDesc.targetCount = 1;
     sessionDesc.targets = &targetDesc;
@@ -149,10 +150,10 @@ void Seele::beginCompilation(const ShaderCompilationInfo& info, SlangCompileTarg
     if (info.name == "RayGenMiss")
     {
         layout->addMapping("pVertexData", 1);
-        layout->addMapping("pResources", 4);
-        layout->addMapping("pLightEnv", 3);
-        layout->addMapping("pRayTracingParams", 5);
         layout->addMapping("pScene", 2);
+        layout->addMapping("pLightEnv", 3);
+        layout->addMapping("pResources", 4);
+        layout->addMapping("pRayTracingParams", 5);
     }
     // layout->addMapping("pWaterMaterial", 1);
 }

@@ -91,6 +91,7 @@ struct ShaderPermutation {
     char vertexMeshFile[32];
     char fragmentFile[32];
     char vertexDataName[32];
+    char brdfProfile[32];
     char materialName[64];
     uint8 hasFragment;
     uint8 useMeshShading;
@@ -106,36 +107,38 @@ struct ShaderPermutation {
     void setTaskFile(std::string_view name) {
         std::memset(taskFile, 0, sizeof(taskFile));
         hasTaskShader = 1;
-        strncpy(taskFile, name.data(), sizeof(taskFile));
+        strncpy(taskFile, name.data(), name.size());
     }
     void setVertexFile(std::string_view name) {
         std::memset(vertexMeshFile, 0, sizeof(vertexMeshFile));
         useMeshShading = 0;
-        strncpy(vertexMeshFile, name.data(), sizeof(vertexMeshFile));
+        strncpy(vertexMeshFile, name.data(), name.size());
     }
     void setMeshFile(std::string_view name) {
         std::memset(vertexMeshFile, 0, sizeof(vertexMeshFile));
         useMeshShading = 1;
-        strncpy(vertexMeshFile, name.data(), sizeof(vertexMeshFile));
+        strncpy(vertexMeshFile, name.data(), name.size());
     }
     void setRayTracingFile(std::string_view name) {
         std::memset(vertexMeshFile, 0, sizeof(vertexMeshFile));
         rayTracing = true;
-        strncpy(vertexMeshFile, name.data(), sizeof(vertexMeshFile));
+        strncpy(vertexMeshFile, name.data(), name.size());
     }
     void setFragmentFile(std::string_view name) {
         std::memset(fragmentFile, 0, sizeof(fragmentFile));
         hasFragment = 1;
-        strncpy(fragmentFile, name.data(), sizeof(fragmentFile));
+        strncpy(fragmentFile, name.data(), name.size());
     }
     void setVertexData(std::string_view name) {
         std::memset(vertexDataName, 0, sizeof(vertexDataName));
-        strncpy(vertexDataName, name.data(), sizeof(vertexDataName));
+        strncpy(vertexDataName, name.data(), name.size());
     }
-    void setMaterial(std::string_view name) {
+    void setMaterial(std::string_view name, std::string_view brdf) {
         std::memset(materialName, 0, sizeof(materialName));
+        std::memset(brdfProfile, 0, sizeof(brdfProfile));
         useMaterial = 1;
-        strncpy(materialName, name.data(), sizeof(materialName));
+        strncpy(materialName, name.data(), name.size());
+        strncpy(brdfProfile, brdf.data(), brdf.size());
     }
     void setPositionOnly(bool enable) { positionOnly = enable; }
     void setDepthCulling(bool enable) { depthCulling = enable; }

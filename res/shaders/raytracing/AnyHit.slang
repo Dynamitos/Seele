@@ -5,7 +5,7 @@ import MaterialParameter;
 import StaticMeshVertexData;
 
 [shader("anyhit")]
-void anyhit(inout RayPayload hitvalue, in BuiltInTriangleIntersectionAttributes attr)
+void anyhit(inout RayPayload hitValue, in BuiltInTriangleIntersectionAttributes attr)
 {
     const float3 barycentricCoords = float3(1.0f - attr.barycentrics.x - attr.barycentrics.y, attr.barycentrics.x, attr.barycentrics.y);
 
@@ -31,4 +31,7 @@ void anyhit(inout RayPayload hitvalue, in BuiltInTriangleIntersectionAttributes 
 
     FragmentParameter params = FragmentParameter.interpolate(f0, f1, f2, barycentricCoords);
 
+    hitValue.params = params.getLightingParameter();
+    hitValue.materialParams = params.getMaterialParameter();
+    AcceptHitAndEndSearch();
 }
