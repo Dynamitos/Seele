@@ -110,6 +110,7 @@ void closestHit(inout RayPayload hitValue, in BuiltInTriangleIntersectionAttribu
 
     hitValue.params = params.getLightingParameter();
     hitValue.materialParams = params.getMaterialParameter();
+    
     LightingParameter lightingParams = hitValue.params;
     lightingParams.viewDir_WS = -WorldRayDirection();
     let brdf = Material.prepare(hitValue.materialParams);
@@ -165,7 +166,7 @@ void closestHit(inout RayPayload hitValue, in BuiltInTriangleIntersectionAttribu
         payload.anyHit = true;
         payload.hit = false;
         payload.rndSeed = hitValue.rndSeed;
-        TraceRay(pRayTracingParams.scene, RAY_FLAG_CULL_BACK_FACING_TRIANGLES, 0xff, 0, 0, 0, rayDesc, payload);
+        TraceRay(pRayTracingParams.scene, RAY_FLAG_CULL_BACK_FACING_TRIANGLES | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH, 0xff, 0, 0, 0, rayDesc, payload);
 
         // we have missed all geometry, so directional light is affecting us
         if(!payload.hit) {
@@ -185,7 +186,7 @@ void closestHit(inout RayPayload hitValue, in BuiltInTriangleIntersectionAttribu
         rayDesc.TMin = eps;
         rayDesc.Origin = x;
         rayDesc.Direction = l;
-        TraceRay(pRayTracingParams.scene, RAY_FLAG_CULL_BACK_FACING_TRIANGLES, 0xff, 0, 0, 0, rayDesc, payload);
+        TraceRay(pRayTracingParams.scene, RAY_FLAG_CULL_BACK_FACING_TRIANGLES | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH, 0xff, 0, 0, 0, rayDesc, payload);
     
         // hitting only after the light
         if(!payload.hit) {

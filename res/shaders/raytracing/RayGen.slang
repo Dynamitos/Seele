@@ -103,6 +103,7 @@ void raygen()
     RayPayload payload;
     // initialize accumulated radiance and bxdf
     payload.light=float3(0);
+    payload.t = 10000.0f;
     payload.emissive = 1;
     payload.depth = 1;
     payload.rndSeed = rndSeed + 1;

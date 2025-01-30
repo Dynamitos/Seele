@@ -18,6 +18,7 @@ struct RayPayload
     LightingParameter params;
     MaterialParameter materialParams;
     float3 light;
+    float t;
     float emissive;
     uint depth;
     bool hit;
