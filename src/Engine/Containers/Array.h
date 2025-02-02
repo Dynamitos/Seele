@@ -111,7 +111,6 @@ template <typename T, typename Allocator = std::pmr::polymorphic_allocator<T>> s
             }
         }
     }
-    template <typename = std::enable_if_t<std::is_copy_constructible_v<T>>>
     constexpr Array(std::initializer_list<T> init, const allocator_type& alloc = allocator_type())
         : arraySize(init.size()), allocated(init.size()), allocator(alloc) {
         _data = allocateArray(init.size());
@@ -125,7 +124,7 @@ template <typename T, typename Allocator = std::pmr::polymorphic_allocator<T>> s
             arraySize = std::ranges::size(rg);
             allocated = arraySize;
             _data = allocateArray(allocated);
-            std::ranges::uninitialized_copy(rg.begin(), rg.end(), begin(), end());
+            std::uninitialized_copy(rg.begin(), rg.end(), begin());
         } else {
             for (auto it = std::ranges::begin(rg); it != std::ranges::end(rg); it++) {
                 add(*it);
@@ -296,10 +295,10 @@ template <typename T, typename Allocator = std::pmr::polymorphic_allocator<T>> s
     constexpr void remove_if(Pred pred, bool keepOrder = true) {
         remove(find(pred), keepOrder);
     }
-    constexpr void remove(const value_type& element, bool keepOrder = true) { remove(find(element), keepOrder); }
-    constexpr void remove(value_type&& element, bool keepOrder = true) { remove(find(element), keepOrder); }
-    constexpr void remove(iterator it, bool keepOrder = true) { removeAt(it - begin(), keepOrder); }
-    constexpr void remove(const_iterator it, bool keepOrder = true) { removeAt(it - cbegin(), keepOrder); }
+    constexpr void remove(const value_type& element, bool keepOrder = true) { erase(find(element), keepOrder); }
+    constexpr void remove(value_type&& element, bool keepOrder = true) { erase(find(element), keepOrder); }
+    constexpr void erase(iterator it, bool keepOrder = true) { removeAt(it - begin(), keepOrder); }
+    constexpr void erase(const_iterator it, bool keepOrder = true) { removeAt(it - cbegin(), keepOrder); }
     constexpr void removeAt(size_type index, bool keepOrder = true) {
         if (keepOrder) {
             for (size_type i = index; i < arraySize - 1; ++i) {

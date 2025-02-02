@@ -270,7 +270,6 @@ void LightCullingPass::setupFrustums() {
     frustumShader = graphics->createComputeShader({0});
     // Have to compile shader before finalizing layout as parameters get mapped later
     frustumLayout->create();
-    dispatchParamsLayout->create();
 
     Gfx::ComputePipelineCreateInfo pipelineInfo;
     pipelineInfo.computeShader = frustumShader;
@@ -301,6 +300,7 @@ void LightCullingPass::setupFrustums() {
     frustumBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, Gfx::SE_ACCESS_SHADER_WRITE_BIT,
                                    Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 
+    graphics->waitDeviceIdle();
     Gfx::PDescriptorSet dispatchParamsSet = dispatchParamsLayout->allocateDescriptorSet();
     dispatchParamsSet->updateBuffer(0, 0, frustumDispatchParamsBuffer);
     dispatchParamsSet->updateBuffer(1, 0, frustumBuffer);
@@ -315,4 +315,7 @@ void LightCullingPass::setupFrustums() {
     graphics->executeCommands(std::move(commands));
     frustumBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                                    Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
+    graphics->waitDeviceIdle();
+    Frustum* frustums = (Frustum*)frustumBuffer->map();
+    std::cout << frustums << std::endl;
 }

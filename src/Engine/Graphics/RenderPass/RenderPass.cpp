@@ -7,7 +7,7 @@ RenderPass::RenderPass(Gfx::PGraphics graphics) : graphics(graphics) {
     viewParamsLayout->addDescriptorBinding(Gfx::DescriptorBinding{
         .binding = 0,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-        .uniformLength = 576,//sizeof(ViewParameter),
+        .uniformLength = sizeof(ViewParameter),
     });
     UniformBufferCreateInfo uniformInitializer = {
         .sourceData =
@@ -28,28 +28,6 @@ void RenderPass::beginFrame(const Component::Camera& cam) {
     Matrix4 cameraMatrix = cam.getViewMatrix();
     Matrix4 projectionMatrix = viewport->getProjectionMatrix();
     viewParams = {
-        .viewFrustum =
-            {
-                .planes =
-                    {
-                        Plane{
-                            .n = Vector(-0.62628, 0, 0.7796),
-                            .d = 3.898,
-                        },
-                        Plane{
-                            .n = Vector(0.62628, 0, 0.7796),
-                            .d = 3.898,
-                        },
-                        Plane{
-                            .n = Vector(0, 0.81915, 0.57358),
-                            .d = 2.86788,
-                        },
-                        Plane{
-                            .n = Vector(0, -0.81915, 0.57358),
-                            .d = 2.86788,
-                        },
-                    },
-            },
         .viewMatrix = cameraMatrix,
         .inverseViewMatrix = glm::inverse(cameraMatrix),
         .projectionMatrix = projectionMatrix,
@@ -82,7 +60,7 @@ void RenderPass::beginFrame(const Component::Camera& cam) {
         corners[i] = world / world.w;
     }
 
-    extract_planes_from_view_projection_matrix(viewParams.viewProjectionMatrix, viewParams.viewFrustum);
+    //extract_planes_from_view_projection_matrix(viewParams.viewProjectionMatrix, viewParams.viewFrustum);
 
     viewParamsBuffer->rotateBuffer(sizeof(ViewParameter));
     viewParamsBuffer->updateContents(0, sizeof(ViewParameter), &viewParams);

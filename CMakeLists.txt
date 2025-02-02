@@ -22,6 +22,11 @@ set(CMAKE_TOOLCHAIN_FILE ${EXTERNAL_ROOT}/vcpkg/scripts/buildsystems/vcpkg.cmake
 
 set(CRCPP_ROOT ${EXTERNAL_ROOT}/CRCpp)
 set(METAL_ROOT ${EXTERNAL_ROOT}/metal-cpp)
+if(WIN32)
+    set(VCPKG_BASE_FOLDER ${VCPKG_INSTALLED_DIR}/x64-windows/)
+elseif(APPLE)
+    set(VCPKG_BASE_FOLDER ${VCPKG_INSTALLED_DIR}/arm64-osx/)
+endif()
 
 set(Boost_NO_WARN_NEW_VERSIONS 1)
 
@@ -67,7 +72,7 @@ add_library(Engine SHARED "")
 
 target_compile_definitions(Engine PRIVATE GLFW_WINDOWS)
 target_include_directories(Engine PRIVATE src/Engine)
-target_include_directories(Engine PRIVATE ${VCPKG_INSTALLED_DIR}/x64-windows/include/)
+target_include_directories(Engine PRIVATE ${VCPKG_BASE_FOLDER}/include/)
 target_link_libraries(Engine PUBLIC Vulkan::Vulkan)
 target_link_libraries(Engine PUBLIC EnTT::EnTT)
 target_link_libraries(Engine PUBLIC glfw)
@@ -82,11 +87,15 @@ target_link_libraries(Engine PUBLIC crcpp)
 target_link_libraries(Engine PUBLIC fmt::fmt)
 target_link_libraries(Engine PUBLIC unofficial::lunasvg::lunasvg)
 target_link_libraries(Engine PUBLIC GPUOpen::VulkanMemoryAllocator)
-target_link_libraries(Engine PUBLIC ${VCPKG_INSTALLED_DIR}/x64-windows/lib/slang.lib)
+if(WIN32)
+    target_link_libraries(Engine PUBLIC ${VCPKG_BASE_FOLDER}/lib/slang.lib)
+elseif(APPLE)
+    target_link_libraries(Engine PUBLIC ${VCPKG_BASE_FOLDER}/lib/libslang.dylib)
+endif()
 
 if(APPLE)
     target_link_libraries(Engine PUBLIC metal)
-    SET(CMAKE_OSX_DEPLOYMENT_TARGET 14.3)
+    SET(CMAKE_OSX_DEPLOYMENT_TARGET 15.0)
 endif()
 if(UNIX)
     target_link_libraries(Engine PUBLIC Threads::Threads)
@@ -136,8 +145,8 @@ add_subdirectory(src/)
 if(WIN32)
     add_custom_target(dll_copy ALL
         COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:Engine> $<TARGET_FILE_DIR:Editor>
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VCPKG_INSTALLED_DIR}/x64-windows/bin/slang.dll $<TARGET_FILE_DIR:Editor>
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VCPKG_INSTALLED_DIR}/x64-windows/bin/slang-glslang.dll $<TARGET_FILE_DIR:Editor>
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VCPKG_BASE_FOLDER}/bin/slang.dll $<TARGET_FILE_DIR:Editor>
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VCPKG_BASE_FOLDER}/bin/slang-glslang.dll $<TARGET_FILE_DIR:Editor>
         COMMAND_EXPAND_LISTS
         DEPENDS Editor)
 elseif(APPLE)

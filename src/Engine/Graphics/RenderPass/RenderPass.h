@@ -50,7 +50,6 @@ class RenderPass {
     void extract_planes_from_view_projection_matrix(const Matrix4 viewProj, Frustum& frustum);
     
     struct ViewParameter {
-        Frustum viewFrustum;
         Matrix4 viewMatrix;
         Matrix4 inverseViewMatrix;
         Matrix4 projectionMatrix;
@@ -63,6 +62,8 @@ class RenderPass {
         Vector2 invScreenDimensions;
         uint32 frameIndex;
         float time;
+        uint32 pad0;
+        uint32 pad1;
     } viewParams;
     PRenderGraphResources resources;
     Gfx::ODescriptorLayout viewParamsLayout;

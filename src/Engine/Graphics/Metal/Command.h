@@ -114,6 +114,7 @@ class CommandQueue {
     MTL::CommandQueue* queue;
     OCommand activeCommand;
     Array<OCommand> pendingCommands;
+    Array<OCommand> readyCommands;
 };
 class IOCommandQueue {
   public:

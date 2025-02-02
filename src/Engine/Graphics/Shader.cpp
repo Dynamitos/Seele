@@ -125,6 +125,7 @@ void ShaderCompiler::createShaders(ShaderPermutation permutation, Gfx::OPipeline
     }
     //createInfo.typeParameter.add({Pair<const char*, const char*>("IVertexData", permutation.vertexDataName)});
     createInfo.modules.add(permutation.vertexDataName);
+    //createInfo.dumpIntermediate = true;
 
     if (permutation.useMeshShading) {
         if (permutation.hasTaskShader) {

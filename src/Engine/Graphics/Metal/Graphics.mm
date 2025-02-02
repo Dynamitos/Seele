@@ -46,7 +46,9 @@ void Graphics::beginRenderPass(Gfx::PRenderPass renderPass) { queue->getCommands
 
 void Graphics::endRenderPass() { queue->getCommands()->endRenderPass(); }
 
-void Graphics::waitDeviceIdle() { queue->getCommands()->waitDeviceIdle(); }
+void Graphics::waitDeviceIdle() {
+    queue->submitCommands();
+}
 
 void Graphics::executeCommands(Array<Gfx::ORenderCommand> commands) { queue->executeCommands(std::move(commands)); }
 

@@ -1,6 +1,7 @@
 #pragma once
 #include "Graphics/Descriptor.h"
 #include "ShaderExpression.h"
+#include <atomic>
 
 
 namespace Seele {

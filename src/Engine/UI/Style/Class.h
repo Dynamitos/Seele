@@ -79,12 +79,12 @@ template <uint32 ml, uint32 mr, uint32 mt, uint32 mb> struct MarginClass {
 };
 #define DECLARE_MARGIN_CLASSES(x)                                                                                                          \
     using M_##x = MarginClass<x, x, x, x>;                                                                                                 \
-    using M_X##x = MarginClass<x, x, -1, -1>;                                                                                              \
-    using M_Y##x = MarginClass<-1, -1, x, x>;                                                                                              \
-    using M_L##x = MarginClass<x, -1, -1, -1>;                                                                                             \
-    using M_R##x = MarginClass<-1, x, -1, -1>;                                                                                             \
-    using M_T##x = MarginClass<-1, -1, x, -1>;                                                                                             \
-    using M_B##x = MarginClass<-1, -1, -1, x>;
+    using M_X##x = MarginClass<x, x, -1u, -1u>;                                                                                              \
+    using M_Y##x = MarginClass<-1u, -1u, x, x>;                                                                                              \
+    using M_L##x = MarginClass<x, -1u, -1u, -1u>;                                                                                             \
+    using M_R##x = MarginClass<-1u, x, -1u, -1u>;                                                                                             \
+    using M_T##x = MarginClass<-1u, -1u, x, -1u>;                                                                                             \
+    using M_B##x = MarginClass<-1u, -1u, -1u, x>;
 
 DECLARE_MARGIN_CLASSES(0)
 DECLARE_MARGIN_CLASSES(1)

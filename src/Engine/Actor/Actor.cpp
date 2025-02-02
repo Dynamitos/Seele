@@ -18,7 +18,7 @@ void Actor::addChild(PActor child) {
     child->setParent(this);
 }
 void Actor::removeChild(PActor child) {
-    children.remove(children.find(child), false);
+    children.remove(child, false);
     child->setParent(nullptr);
 }
 

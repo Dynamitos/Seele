@@ -134,6 +134,7 @@ void CachedDepthPass::render() {
 
     graphics->executeCommands(std::move(commands));
     graphics->endRenderPass();
+    graphics->waitDeviceIdle();
     timestamps->write(Gfx::SE_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, "CachedEnd");
     query->endQuery();
 }

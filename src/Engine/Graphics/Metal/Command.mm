@@ -40,7 +40,10 @@ void Command::present(MTL::Drawable* drawable) { cmdBuffer->presentDrawable(draw
 
 void Command::end(PEvent signal) {
     assert(!parallelEncoder);
-    blitEncoder->endEncoding();
+    if(blitEncoder)
+    {
+        blitEncoder->endEncoding();
+    }
     if (signal != nullptr) {
         cmdBuffer->encodeSignalEvent(signal->getHandle(), 1);
     }
@@ -48,7 +51,9 @@ void Command::end(PEvent signal) {
     cmdBuffer->commit();
 }
 
-void Command::waitDeviceIdle() { cmdBuffer->waitUntilCompleted(); }
+void Command::waitDeviceIdle() {
+    cmdBuffer->waitUntilCompleted();
+}
 
 void Command::signalEvent(PEvent event) { cmdBuffer->encodeSignalEvent(event->getHandle(), 1); }
 
@@ -194,6 +199,7 @@ void ComputeCommand::dispatchIndirect(Gfx::PShaderBuffer buffer, uint32 offset){
 CommandQueue::CommandQueue(PGraphics graphics) : graphics(graphics) {
     queue = graphics->getDevice()->newCommandQueue();
     MTL::CommandBufferDescriptor* descriptor = MTL::CommandBufferDescriptor::alloc()->init();
+    descriptor->setErrorOptions(MTL::CommandBufferErrorOptionEncoderExecutionStatus);
     activeCommand = new Command(graphics, queue->commandBuffer(descriptor));
     descriptor->release();
 }
@@ -214,7 +220,6 @@ void CommandQueue::executeCommands(Array<Gfx::ORenderCommand> commands) {
 }
 
 void CommandQueue::executeCommands(Array<Gfx::OComputeCommand> commands) {
-    submitCommands();
     for (auto& command : commands) {
         auto metalCmd = Gfx::PComputeCommand(command).cast<ComputeCommand>();
         metalCmd->end();
@@ -225,7 +230,8 @@ void CommandQueue::submitCommands(PEvent signalSemaphore) {
     activeCommand->getHandle()->addCompletedHandler(MTL::CommandBufferHandler([&](MTL::CommandBuffer* cmdBuffer) {
         for (auto it = pendingCommands.begin(); it != pendingCommands.end(); it++) {
             if ((*it)->getHandle() == cmdBuffer) {
-                pendingCommands.remove(it);
+                readyCommands.add(std::move(*it));
+                pendingCommands.erase(it);
                 return;
             }
         }
@@ -234,10 +240,20 @@ void CommandQueue::submitCommands(PEvent signalSemaphore) {
     activeCommand->waitDeviceIdle();
     PEvent prevCmdEvent = activeCommand->getCompletedEvent();
     pendingCommands.add(std::move(activeCommand));
-    MTL::CommandBufferDescriptor* descriptor = MTL::CommandBufferDescriptor::alloc()->init();
-    descriptor->setErrorOptions(MTL::CommandBufferErrorOptionEncoderExecutionStatus);
-    activeCommand = new Command(graphics, queue->commandBuffer(descriptor));
-    activeCommand->waitForEvent(prevCmdEvent);
+    if(!readyCommands.empty())
+    {
+        activeCommand = std::move(readyCommands.front());
+        readyCommands.removeAt(0);
+        activeCommand->waitForEvent(prevCmdEvent);
+    }
+    else
+    {
+        MTL::CommandBufferDescriptor* descriptor = MTL::CommandBufferDescriptor::alloc()->init();
+        descriptor->setErrorOptions(MTL::CommandBufferErrorOptionEncoderExecutionStatus);
+        activeCommand = new Command(graphics, queue->commandBuffer(descriptor));
+        activeCommand->waitForEvent(prevCmdEvent);
+        descriptor->release();
+    }
 }
 
 IOCommandQueue::IOCommandQueue(PGraphics graphics) : graphics(graphics) {
