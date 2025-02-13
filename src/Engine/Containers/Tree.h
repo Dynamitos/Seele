@@ -1,5 +1,6 @@
 #pragma once
 #include "Pair.h"
+#include "Array.h"
 #include <memory_resource>
 
 
@@ -226,13 +227,13 @@ template <typename KeyType, typename NodeData, typename KeyFun, typename Compare
     }
 
   private:
-    void verifyTree() {
+    /*void verifyTree() {
         size_t numElems = 0;
         for (const auto& it : *this) {
             numElems++;
         }
         assert(numElems == _size);
-    }
+    }*/
     void markIteratorsDirty() { iteratorsDirty = true; }
     void refreshIterators() {
         beginIt = calcBeginIterator();

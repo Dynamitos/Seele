@@ -50,6 +50,12 @@ void Graphics::waitDeviceIdle() {
     queue->submitCommands();
 }
 
+void Graphics::executeCommands(Gfx::ORenderCommand commands) {
+    Array<Gfx::ORenderCommand> command;
+    command.add(std::move(commands));
+    queue->executeCommands(std::move(command));
+}
+
 void Graphics::executeCommands(Array<Gfx::ORenderCommand> commands) { queue->executeCommands(std::move(commands)); }
 
 void Graphics::executeCommands(Gfx::OComputeCommand commands) {

@@ -15,13 +15,11 @@
 #include "System/LightGather.h"
 #include "System/MeshUpdater.h"
 #include "Window/Window.h"
-#include <fstream>
-#include <thread>
 
 using namespace Seele;
 
 GameView::GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo& createInfo, std::string dllPath)
-    : View(graphics, window, createInfo, "Game"), scene(new Scene(graphics)), gameInterface(dllPath) {
+    : View(graphics, window, createInfo, "Game"), graphics(graphics), scene(new Scene(graphics)), gameInterface(dllPath) {
     reloadGame();
     renderGraph.addPass(new CachedDepthPass(graphics, scene));
     renderGraph.addPass(new DepthCullingPass(graphics, scene));

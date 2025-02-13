@@ -68,7 +68,7 @@ DepthCullingPass::~DepthCullingPass() {}
 void DepthCullingPass::beginFrame(const Component::Camera& cam) { RenderPass::beginFrame(cam); }
 
 void DepthCullingPass::render() {
-    query->beginQuery();
+    /*query->beginQuery();
     depthAttachment.getTexture()->changeLayout(Gfx::SE_IMAGE_LAYOUT_GENERAL, Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
                                                Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, Gfx::SE_ACCESS_SHADER_READ_BIT,
                                                Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
@@ -217,7 +217,7 @@ void DepthCullingPass::render() {
     // Sync visibility write with compute read
     visibilityAttachment.getTexture()->pipelineBarrier(Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
                                                        Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, Gfx::SE_ACCESS_SHADER_READ_BIT,
-                                                       Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
+                                                       Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);*/
 }
 
 void DepthCullingPass::endFrame() {}

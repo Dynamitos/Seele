@@ -3,12 +3,14 @@
 #include "Containers/Array.h"
 #include "Descriptor.h"
 #include "Enums.h"
-#include "Graphics/Graphics.h"
 #include "Graphics/Command.h"
 #include "Graphics/Enums.h"
 #include "Graphics/Graphics.h"
 #include "Graphics/Resources.h"
+#include "Metal/MTLArgumentEncoder.hpp"
 #include "Metal/MTLCaptureManager.hpp"
+#include "Metal/MTLLibrary.hpp"
+#include "Metal/MTLRenderCommandEncoder.hpp"
 #include "Pipeline.h"
 #include "Resources.h"
 #include "Window.h"
@@ -40,8 +42,7 @@ void Command::present(MTL::Drawable* drawable) { cmdBuffer->presentDrawable(draw
 
 void Command::end(PEvent signal) {
     assert(!parallelEncoder);
-    if(blitEncoder)
-    {
+    if (blitEncoder) {
         blitEncoder->endEncoding();
     }
     if (signal != nullptr) {
@@ -51,9 +52,7 @@ void Command::end(PEvent signal) {
     cmdBuffer->commit();
 }
 
-void Command::waitDeviceIdle() {
-    cmdBuffer->waitUntilCompleted();
-}
+void Command::waitDeviceIdle() { cmdBuffer->waitUntilCompleted(); }
 
 void Command::signalEvent(PEvent event) { cmdBuffer->encodeSignalEvent(event->getHandle(), 1); }
 
@@ -80,7 +79,7 @@ void RenderCommand::setViewport(Gfx::PViewport viewport) {
 void RenderCommand::bindPipeline(Gfx::PGraphicsPipeline pipeline) {
     boundPipeline = pipeline.cast<GraphicsPipeline>();
     encoder->setRenderPipelineState(boundPipeline->getHandle());
-    if(boundPipeline->getPipelineLayout()->hasPushConstants()) {
+    if (boundPipeline->getPipelineLayout()->hasPushConstants()) {
         constantsBuffer = boundPipeline->graphics->getDevice()->newBuffer(boundPipeline->getPipelineLayout()->getPushConstantsSize(), 0);
     }
 }
@@ -91,10 +90,46 @@ void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet) {
     auto metalSet = descriptorSet.cast<DescriptorSet>();
     metalSet->bind();
     uint32 descriptorIndex = boundPipeline->getPipelineLayout()->findParameter(metalSet->getLayout()->getName());
-    encoder->setVertexBuffer(metalSet->getArgumentBuffer(), 0, descriptorIndex);
-    encoder->setFragmentBuffer(metalSet->getArgumentBuffer(), 0, descriptorIndex);
-    encoder->setObjectBuffer(metalSet->getArgumentBuffer(), 0, descriptorIndex);
-    encoder->setMeshBuffer(metalSet->getArgumentBuffer(), 0, descriptorIndex);
+    
+    auto createEncoder = [&metalSet, descriptorIndex](MTL::Function* function, const Array<uint32>& usedSets) {
+        if(metalSet->encoder == nullptr) {
+            if (metalSet->isPlainDescriptor()) {
+                metalSet->encoder = metalSet->createEncoder();
+            } else if (function != nullptr && usedSets.contains(descriptorIndex)) {
+                metalSet->encoder = function->newArgumentEncoder(descriptorIndex);
+            }
+        }
+    };
+    createEncoder(boundPipeline->taskFunction, boundPipeline->taskSets);
+    createEncoder(boundPipeline->meshFunction, boundPipeline->meshSets);
+    createEncoder(boundPipeline->vertexFunction, boundPipeline->vertexSets);
+    createEncoder(boundPipeline->fragmentFunction, boundPipeline->fragmentSets);
+    if(metalSet->argumentBuffer == nullptr) {
+        metalSet->argumentBuffer = metalSet->graphics->getDevice()->newBuffer(metalSet->encoder->encodedLength(), MTL::ResourceOptionCPUCacheModeDefault);
+        metalSet->encoder->setArgumentBuffer(metalSet->argumentBuffer, 0);
+    }
+    for (const auto& write : metalSet->uniformWrites) {
+        write.apply(metalSet->encoder);
+    }
+    for (const auto& write : metalSet->bufferWrites) {
+        write.apply(metalSet->encoder);
+    }
+
+    for (const auto& write : metalSet->samplerWrites) {
+        write.apply(metalSet->encoder);
+    }
+
+    for (const auto& write : metalSet->textureWrites) {
+        write.apply(metalSet->encoder);
+    }
+
+    for (const auto& write : metalSet->accelerationWrites) {
+        write.apply(metalSet->encoder);
+    }
+    encoder->setObjectBuffer(metalSet->argumentBuffer, 0, descriptorIndex);
+    encoder->setMeshBuffer(metalSet->argumentBuffer, 0, descriptorIndex);
+    encoder->setVertexBuffer(metalSet->argumentBuffer, 0, descriptorIndex);
+    encoder->setFragmentBuffer(metalSet->argumentBuffer, 0, descriptorIndex);
 }
 
 void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorSets) {
@@ -163,7 +198,7 @@ void ComputeCommand::end() {
 void ComputeCommand::bindPipeline(Gfx::PComputePipeline pipeline) {
     boundPipeline = pipeline.cast<ComputePipeline>();
     encoder->setComputePipelineState(boundPipeline->getHandle());
-    if(boundPipeline->getPipelineLayout()->hasPushConstants()) {
+    if (boundPipeline->getPipelineLayout()->hasPushConstants()) {
         constantsBuffer = boundPipeline->graphics->getDevice()->newBuffer(boundPipeline->getPipelineLayout()->getPushConstantsSize(), 0);
     }
 }
@@ -172,7 +207,34 @@ void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet set) {
     auto metalSet = set.cast<DescriptorSet>();
     metalSet->bind();
     uint32 descriptorIndex = boundPipeline->getPipelineLayout()->findParameter(metalSet->getLayout()->getName());
-    encoder->setBuffer(metalSet->getArgumentBuffer(), 0, descriptorIndex);
+    if(metalSet->encoder == nullptr) {
+        if (metalSet->isPlainDescriptor()) {
+            metalSet->encoder = metalSet->createEncoder();
+        } else {
+            metalSet->encoder = boundPipeline->computeFunction->newArgumentEncoder(descriptorIndex);
+        }
+        metalSet->argumentBuffer = metalSet->graphics->getDevice()->newBuffer(metalSet->encoder->encodedLength(), MTL::ResourceOptionCPUCacheModeDefault);
+        metalSet->encoder->setArgumentBuffer(metalSet->argumentBuffer, 0);
+    }
+    for (const auto& write : metalSet->uniformWrites) {
+        write.apply(metalSet->encoder);
+    }
+    for (const auto& write : metalSet->bufferWrites) {
+        write.apply(metalSet->encoder);
+    }
+
+    for (const auto& write : metalSet->samplerWrites) {
+        write.apply(metalSet->encoder);
+    }
+
+    for (const auto& write : metalSet->textureWrites) {
+        write.apply(metalSet->encoder);
+    }
+
+    for (const auto& write : metalSet->accelerationWrites) {
+        write.apply(metalSet->encoder);
+    }
+    encoder->setBuffer(metalSet->argumentBuffer, 0, descriptorIndex);
 }
 
 void ComputeCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& sets) {
@@ -192,7 +254,7 @@ void ComputeCommand::dispatch(uint32 threadX, uint32 threadY, uint32 threadZ) {
     encoder->dispatchThreadgroups(MTL::Size(threadX, threadY, threadZ), MTL::Size(32, 32, 1));
 }
 
-void ComputeCommand::dispatchIndirect(Gfx::PShaderBuffer buffer, uint32 offset){
+void ComputeCommand::dispatchIndirect(Gfx::PShaderBuffer buffer, uint32 offset) {
     encoder->dispatchThreadgroups(buffer.cast<ShaderBuffer>()->getHandle(), offset, MTL::Size(32, 32, 1));
 }
 
@@ -240,14 +302,11 @@ void CommandQueue::submitCommands(PEvent signalSemaphore) {
     activeCommand->waitDeviceIdle();
     PEvent prevCmdEvent = activeCommand->getCompletedEvent();
     pendingCommands.add(std::move(activeCommand));
-    if(!readyCommands.empty())
-    {
+    if (!readyCommands.empty()) {
         activeCommand = std::move(readyCommands.front());
         readyCommands.removeAt(0);
         activeCommand->waitForEvent(prevCmdEvent);
-    }
-    else
-    {
+    } else {
         MTL::CommandBufferDescriptor* descriptor = MTL::CommandBufferDescriptor::alloc()->init();
         descriptor->setErrorOptions(MTL::CommandBufferErrorOptionEncoderExecutionStatus);
         activeCommand = new Command(graphics, queue->commandBuffer(descriptor));

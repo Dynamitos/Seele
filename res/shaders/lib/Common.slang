@@ -101,11 +101,18 @@ float4 clipToScreen(float4 clip)
 
 struct Plane
 {
-    float3 n;
-    float d;
+    float4 nd;
+    float3 getNormal()
+    {
+        return nd.xyz;
+    }
+    float getDistance()
+    {
+        return nd.w;
+    }
     bool pointInside(float3 point)
     {
-        return dot(n, point) - d > 0.0f;
+        return dot(getNormal(), point) - getDistance() > 0.0f;
     }
 };
 
@@ -131,9 +138,11 @@ Plane computePlane(float3 p0, float3 p1, float3 p2)
     float3 v0 = p1 - p0;
     float3 v2 = p2 - p0;
 
-    plane.n = normalize(cross(v0, v2));
+    float3 n = normalize(cross(v0, v2));
 
-    plane.d = dot(plane.n, p0);
+    float d = dot(n, p0);
+
+    plane.nd = float4(n, d);
 
     return plane;
 }

@@ -96,8 +96,7 @@ class UniformBuffer : public Gfx::UniformBuffer {
     virtual ~UniformBuffer();
     virtual void updateContents(uint64 offset, uint64 size, void* data) override;
     virtual void rotateBuffer(uint64 size) override;
-    void* getContents() const { return contents.data(); }
-    size_t getSize() const { return contents.size(); }
+    Array<uint8> getContents() const { return contents; }
     
   protected:
     // Inherited via QueueOwnedResource

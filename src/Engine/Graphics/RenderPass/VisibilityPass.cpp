@@ -13,7 +13,7 @@ void VisibilityPass::beginFrame(const Component::Camera& cam) {
 }
 
 void VisibilityPass::render() {
-    cullingBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_MESH_SHADER_BIT_EXT,
+    /*cullingBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_MESH_SHADER_BIT_EXT,
                                    Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT);
     cullingBuffer->clear();
 
@@ -38,7 +38,7 @@ void VisibilityPass::render() {
     query->endQuery();
     cullingBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                                    Gfx::SE_ACCESS_SHADER_READ_BIT,
-                                   Gfx::SE_PIPELINE_STAGE_TASK_SHADER_BIT_EXT | Gfx::SE_PIPELINE_STAGE_MESH_SHADER_BIT_EXT);
+                                   Gfx::SE_PIPELINE_STAGE_TASK_SHADER_BIT_EXT | Gfx::SE_PIPELINE_STAGE_MESH_SHADER_BIT_EXT);*/
 }
 
 void VisibilityPass::endFrame() {}

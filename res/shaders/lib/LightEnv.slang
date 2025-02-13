@@ -34,7 +34,7 @@ struct PointLight : ILightEnv
 
     bool insidePlane(Plane plane, float3 position)
     {
-        return dot(plane.n, position) - plane.d < -colorRange.w;
+        return dot(plane.getNormal(), position) - plane.getDistance() < -colorRange.w;
     }
 
     bool insideFrustum(Frustum frustum, float3 position, float minDepth, float maxDepth)

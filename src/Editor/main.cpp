@@ -116,18 +116,18 @@ int main() {
         //    .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.glb",
         //    .importPath = "Whitechapel",
         //});
-        AssetImporter::importMesh(MeshImportArgs{
-            .filePath = sourcePath / "import/models/box.glb",
-            .importPath = "",
-        });
-        AssetImporter::importMesh(MeshImportArgs{
-            .filePath = sourcePath / "import/models/rttest.glb",
-            .importPath = "",
-        });
-        AssetImporter::importMesh(MeshImportArgs{
-            .filePath = sourcePath / "import/models/town_hall.glb",
-            .importPath = "",
-        });
+        //AssetImporter::importMesh(MeshImportArgs{
+        //    .filePath = sourcePath / "import/models/box.glb",
+        //    .importPath = "",
+        //});
+        //AssetImporter::importMesh(MeshImportArgs{
+        //    .filePath = sourcePath / "import/models/rttest.glb",
+        //    .importPath = "",
+        //});
+        //AssetImporter::importMesh(MeshImportArgs{
+        //    .filePath = sourcePath / "import/models/town_hall.glb",
+        //    .importPath = "",
+        //});
         getThreadPool().waitIdle();
         vd->commitMeshes();
         WindowCreateInfo mainWindowInfo = {

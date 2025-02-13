@@ -2,10 +2,8 @@ import Common;
 
 struct DispatchParams
 {
-	uint3 numThreadGroups;
-	uint pad0;
-    uint3 numThreads;
-    uint pad1;
+	uint4 numThreadGroups;
+    uint4 numThreads;
     RWStructuredBuffer<Frustum> frustums;
 };
 

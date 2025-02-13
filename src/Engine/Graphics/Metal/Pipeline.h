@@ -22,6 +22,14 @@ class GraphicsPipeline : public Gfx::GraphicsPipeline {
     PGraphics graphics;
     MTL::RenderPipelineState* state;
     MTL::PrimitiveType primitiveType;
+    MTL::Function* taskFunction = nullptr;
+    Array<uint32> taskSets;
+    MTL::Function* meshFunction = nullptr;
+    Array<uint32> meshSets;
+    MTL::Function* vertexFunction = nullptr;
+    Array<uint32> vertexSets;
+    MTL::Function* fragmentFunction = nullptr;
+    Array<uint32> fragmentSets;
 
   private:
 };
@@ -33,6 +41,7 @@ class ComputePipeline : public Gfx::ComputePipeline {
     constexpr MTL::ComputePipelineState* getHandle() const { return state; }
 
     PGraphics graphics;
+    MTL::Function* computeFunction;
 
   private:
     MTL::ComputePipelineState* state;

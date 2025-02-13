@@ -5,6 +5,8 @@
 #include "Graphics/Graphics.h"
 #include "RenderGraph.h"
 #include "Scene/Scene.h"
+#include "Graphics/Metal/Descriptor.h"
+#include "Graphics/Metal/Shader.h"
 
 using namespace Seele;
 
@@ -36,7 +38,7 @@ void LightCullingPass::beginFrame(const Component::Camera& cam) {
 }
 
 void LightCullingPass::render() {
-    query->beginQuery();
+    /*query->beginQuery();
     timestamps->write(Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT, "LightCullBegin");
     oLightGrid->pipelineBarrier(Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, Gfx::SE_ACCESS_SHADER_WRITE_BIT,
                                 Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
@@ -71,7 +73,7 @@ void LightCullingPass::render() {
     oLightGrid->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT, Gfx::SE_ACCESS_SHADER_READ_BIT,
                                 Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
     tLightGrid->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT, Gfx::SE_ACCESS_SHADER_READ_BIT,
-                                Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+                                Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);*/
 }
 
 void LightCullingPass::endFrame() {}
@@ -248,7 +250,7 @@ void LightCullingPass::setupFrustums() {
     dispatchParamsLayout->addDescriptorBinding(Gfx::DescriptorBinding{
         .binding = 0,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-        .uniformLength = 56,//sizeof(DispatchParams),
+        .uniformLength = sizeof(DispatchParams),
     });
     dispatchParamsLayout->addDescriptorBinding(Gfx::DescriptorBinding{
         .binding = 1,
@@ -269,6 +271,8 @@ void LightCullingPass::setupFrustums() {
     graphics->beginShaderCompilation(createInfo);
     frustumShader = graphics->createComputeShader({0});
     // Have to compile shader before finalizing layout as parameters get mapped later
+    Metal::ComputeShader* shader = (Metal::ComputeShader*)(*frustumShader);
+    std::cout << shader->getFunction()->newArgumentEncoder(1)->debugDescription()->cString(NS::ASCIIStringEncoding) << std::endl;
     frustumLayout->create();
 
     Gfx::ComputePipelineCreateInfo pipelineInfo;
@@ -315,7 +319,7 @@ void LightCullingPass::setupFrustums() {
     graphics->executeCommands(std::move(commands));
     frustumBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                                    Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
-    graphics->waitDeviceIdle();
     Frustum* frustums = (Frustum*)frustumBuffer->map();
-    std::cout << frustums << std::endl;
+    graphics->waitDeviceIdle();
+    
 }

@@ -25,6 +25,7 @@ class GameView : public View {
 
   protected:
     virtual void applyArea(URect rect) override;
+    Gfx::PGraphics graphics;
     OScene scene;
     GameInterface gameInterface;
     RenderGraph renderGraph;

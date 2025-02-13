@@ -43,7 +43,7 @@ CachedDepthPass::~CachedDepthPass() {}
 void CachedDepthPass::beginFrame(const Component::Camera& cam) { RenderPass::beginFrame(cam); }
 
 void CachedDepthPass::render() {
-    query->beginQuery();
+/*    query->beginQuery();
     timestamps->write(Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT, "CachedBegin");
     graphics->beginRenderPass(renderPass);
     Array<Gfx::ORenderCommand> commands;
@@ -136,7 +136,7 @@ void CachedDepthPass::render() {
     graphics->endRenderPass();
     graphics->waitDeviceIdle();
     timestamps->write(Gfx::SE_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, "CachedEnd");
-    query->endQuery();
+    query->endQuery();*/
 }
 
 void CachedDepthPass::endFrame() {}

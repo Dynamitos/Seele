@@ -61,6 +61,7 @@ class Graphics {
     virtual void endRenderPass() = 0;
     virtual void waitDeviceIdle() = 0;
 
+    virtual void executeCommands(ORenderCommand commands) = 0;
     virtual void executeCommands(Array<ORenderCommand> commands) = 0;
     virtual void executeCommands(OComputeCommand commands) = 0;
     virtual void executeCommands(Array<OComputeCommand> commands) = 0;

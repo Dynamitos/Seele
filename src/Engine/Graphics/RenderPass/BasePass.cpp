@@ -138,7 +138,7 @@ void BasePass::beginFrame(const Component::Camera& cam) {
 }
 
 void BasePass::render() {
-    opaqueCulling->updateBuffer(0, 0, oLightIndexList);
+    /*opaqueCulling->updateBuffer(0, 0, oLightIndexList);
     opaqueCulling->updateTexture(1, 0, oLightGrid);
     transparentCulling->updateBuffer(0, 0, tLightIndexList);
     transparentCulling->updateTexture(1, 0, tLightGrid);
@@ -250,16 +250,21 @@ void BasePass::render() {
     
     //commands.add(waterRenderer->render(viewParamsSet));
     //commands.add(terrainRenderer->render(viewParamsSet));
-    
+    */
     // Skybox
+    graphics->waitDeviceIdle();
+    graphics->beginRenderPass(renderPass);
     {
         Gfx::ORenderCommand skyboxCommand = graphics->createRenderCommand("SkyboxRender");
         skyboxCommand->setViewport(viewport);
         skyboxCommand->bindPipeline(pipeline);
         skyboxCommand->bindDescriptor({viewParamsSet, skyboxDataSet, textureSet});
         skyboxCommand->draw(36, 1, 0, 0);
-        commands.add(std::move(skyboxCommand));
+        graphics->executeCommands(std::move(skyboxCommand));
     }
+    graphics->endRenderPass();
+    graphics->waitDeviceIdle();
+    /*
     // Transparent rendering
     {
         permutation.setDepthCulling(false); // ignore visibility infos for transparency
@@ -376,6 +381,7 @@ void BasePass::render() {
     query->endQuery();
     timestamps->write(Gfx::SE_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, "BaseEnd");
     gDebugVertices.clear();
+    */
 }
 
 void BasePass::endFrame() {}

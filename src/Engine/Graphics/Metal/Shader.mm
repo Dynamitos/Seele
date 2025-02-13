@@ -10,6 +10,7 @@
 #include <fstream>
 #include <iostream>
 #include <slang.h>
+#include <regex>
 
 using namespace Seele;
 using namespace Seele::Metal;
@@ -26,9 +27,16 @@ Shader::~Shader() {
 void Shader::create(const ShaderCreateInfo& createInfo) {
     auto [kernelBlob, entryPoint] = generateShader(createInfo);
     hash = CRC::Calculate(kernelBlob->getBufferPointer(), kernelBlob->getBufferSize(), CRC::CRC_32());
-    std::ofstream test("test.metal");
-    test.write((const char*)kernelBlob->getBufferPointer(), kernelBlob->getBufferSize());
-    test.close();
+    std::regex pattern("\\[\\[buffer\\(\\d+\\)\\]\\]");
+    
+    std::string codeStr = std::string((const char*)kernelBlob->getBufferPointer());
+    auto matches_begin = std::sregex_iterator(codeStr.begin(), codeStr.end(), pattern);
+    auto matches_end = std::sregex_iterator();
+
+    for (auto it = matches_begin; it != matches_end; ++it) {
+        usedDescriptors.add(std::atoi((*it).str().c_str()+9)); // [[buffer( is 9 characters
+    }
+    
     NS::Error* error;
     MTL::CompileOptions* options = MTL::CompileOptions::alloc()->init();
     library = graphics->getDevice()->newLibrary(NS::String::string((char*)kernelBlob->getBufferPointer(), NS::ASCIIStringEncoding), options,

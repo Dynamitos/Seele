@@ -1,6 +1,7 @@
 #include "PipelineCache.h"
 #include "Descriptor.h"
 #include "Enums.h"
+#include "Metal/MTLLibrary.hpp"
 #include "RenderPass.h"
 #include "Foundation/NSError.hpp"
 #include "Foundation/NSString.hpp"
@@ -62,10 +63,17 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo cr
         }
     }
     pipelineDescriptor->setVertexDescriptor(vertexDescriptor);
-
-    pipelineDescriptor->setVertexFunction(createInfo.vertexShader.cast<VertexShader>()->getFunction());
+    auto vertShader = createInfo.vertexShader.cast<VertexShader>();
+    Array<uint32> vertexSets = vertShader->usedDescriptors;
+    MTL::Function* vertexFunction = vertShader->getFunction();
+    Array<uint32> fragmentSets;
+    MTL::Function* fragmentFunction = nullptr;
+    pipelineDescriptor->setVertexFunction(vertexFunction);
     if (createInfo.fragmentShader != nullptr) {
-        pipelineDescriptor->setFragmentFunction(createInfo.fragmentShader.cast<FragmentShader>()->getFunction());
+        auto fragShader = createInfo.fragmentShader.cast<FragmentShader>();
+        fragmentSets = fragShader->usedDescriptors;
+        fragmentFunction = fragShader->getFunction();
+        pipelineDescriptor->setFragmentFunction(fragmentFunction);
     }
     pipelineDescriptor->setInputPrimitiveTopology(cast(createInfo.topology));
     for(uint c = 0; c < renderPass->getLayout().colorAttachments.size(); ++c) {
@@ -137,6 +145,10 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo cr
     }
 
     pipelineDescriptor->release();
+    graphicsPipelines[hash]->vertexSets = vertexSets;
+    graphicsPipelines[hash]->vertexFunction = vertexFunction;
+    graphicsPipelines[hash]->fragmentSets = fragmentSets;
+    graphicsPipelines[hash]->fragmentFunction = fragmentFunction;
     return graphicsPipelines[hash];
 }
 
@@ -144,12 +156,25 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::MeshPipelineCreateInfo crea
     PRenderPass renderPass = createInfo.renderPass.cast<RenderPass>();
     MTL::MeshRenderPipelineDescriptor* pipelineDescriptor = MTL::MeshRenderPipelineDescriptor::alloc()->init();
 
-    pipelineDescriptor->setMeshFunction(createInfo.meshShader.cast<MeshShader>()->getFunction());
+    auto meshShader = createInfo.meshShader.cast<MeshShader>();
+    Array<uint32> meshSets = meshShader->usedDescriptors;
+    MTL::Function* meshFunction = meshShader->getFunction();
+    Array<uint32> taskSets;
+    MTL::Function* taskFunction = nullptr;
+    Array<uint32> fragmentSets;
+    MTL::Function* fragmentFunction = nullptr;
+    pipelineDescriptor->setMeshFunction(meshFunction);
     if (createInfo.taskShader != nullptr) {
-        pipelineDescriptor->setObjectFunction(createInfo.taskShader.cast<TaskShader>()->getFunction());
+        auto taskShader = createInfo.taskShader.cast<TaskShader>();
+        taskSets = taskShader->usedDescriptors;
+        taskFunction = taskShader->getFunction();
+        pipelineDescriptor->setObjectFunction(taskFunction);
     }
     if (createInfo.fragmentShader != nullptr) {
-        pipelineDescriptor->setFragmentFunction(createInfo.fragmentShader.cast<FragmentShader>()->getFunction());
+        auto fragShader = createInfo.fragmentShader.cast<FragmentShader>();
+        fragmentSets = fragShader->usedDescriptors;
+        fragmentFunction = fragShader->getFunction();
+        pipelineDescriptor->setFragmentFunction(fragmentFunction);
     }
     for(uint c = 0; c < renderPass->getLayout().colorAttachments.size(); ++c) {
         const auto& color = renderPass->getLayout().colorAttachments[c];
@@ -187,6 +212,13 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::MeshPipelineCreateInfo crea
     }
 
     pipelineDescriptor->release();
+    
+    graphicsPipelines[hash]->taskSets = taskSets;
+    graphicsPipelines[hash]->taskFunction = taskFunction;
+    graphicsPipelines[hash]->meshSets = meshSets;
+    graphicsPipelines[hash]->meshFunction = meshFunction;
+    graphicsPipelines[hash]->fragmentSets = fragmentSets;
+    graphicsPipelines[hash]->fragmentFunction = fragmentFunction;
     return graphicsPipelines[hash];
 }
 
@@ -201,5 +233,6 @@ PComputePipeline PipelineCache::createPipeline(Gfx::ComputePipelineCreateInfo cr
     computePipelines[hash] = new ComputePipeline(graphics, graphics->getDevice()->newComputePipelineState(shader->getFunction(), &error),
                                                  std::move(createInfo.pipelineLayout));
     assert(!error);
+    computePipelines[hash]->computeFunction = shader->getFunction();
     return computePipelines[hash];
 }

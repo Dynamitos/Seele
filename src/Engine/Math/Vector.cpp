@@ -38,6 +38,20 @@ std::ostream& operator<<(std::ostream& stream, const Vector4& vector) {
     return stream;
 }
 
+
+std::ostream& operator<<(std::ostream& stream, const UVector2& vector) {
+    stream << "UVec2(" << vector.x << ", " << vector.y << ")";
+    return stream;
+}
+std::ostream& operator<<(std::ostream& stream, const UVector& vector) {
+    stream << "UVec3(" << vector.x << ", " << vector.y << ", " << vector.z << ")";
+    return stream;
+}
+std::ostream& operator<<(std::ostream& stream, const UVector4& vector) {
+    stream << "UVec4(" << vector.x << ", " << vector.y << ", " << vector.z << ", " << vector.w << ")";
+    return stream;
+}
+
 std::ostream& operator<<(std::ostream& stream, const Quaternion& vector) {
     stream << "Quat(" << vector.w << ", " << vector.x << ", " << vector.y << ", " << vector.z << ")";
     return stream;

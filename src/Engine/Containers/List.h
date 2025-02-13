@@ -280,7 +280,7 @@ template <typename T, typename Allocator = std::pmr::polymorphic_allocator<T>> c
         std::allocator_traits<NodeAllocator>::construct(allocator, node, node->prev, node->next, std::forward<Type>(data));
     }
     constexpr void destroyNode(Node* node) { std::allocator_traits<NodeAllocator>::destroy(allocator, node); }
-    constexpr void deallocateNode(Node* node) { allocator.deallocate(node, 1); }
+    constexpr void deallocateNode(Node* node) { if(node == nullptr) return; allocator.deallocate(node, 1); }
     template <typename ValueType> constexpr iterator addInternal(ValueType&& value) {
         initializeNode(tail, std::forward<ValueType>(value));
         Node* newTail = allocateNode();

@@ -299,6 +299,7 @@ template <typename T, typename Allocator = std::pmr::polymorphic_allocator<T>> s
     constexpr void remove(value_type&& element, bool keepOrder = true) { erase(find(element), keepOrder); }
     constexpr void erase(iterator it, bool keepOrder = true) { removeAt(it - begin(), keepOrder); }
     constexpr void erase(const_iterator it, bool keepOrder = true) { removeAt(it - cbegin(), keepOrder); }
+    constexpr bool contains(const T& value) const { return find(value) != end(); }
     constexpr void removeAt(size_type index, bool keepOrder = true) {
         if (keepOrder) {
             for (size_type i = index; i < arraySize - 1; ++i) {
@@ -385,7 +386,7 @@ template <typename T, typename Allocator = std::pmr::polymorphic_allocator<T>> s
         assert(result != nullptr);
         return result;
     }
-    void deallocateArray(T* ptr, size_type size) { allocator.deallocate(ptr, size); }
+    void deallocateArray(T* ptr, size_type size) { if(ptr == nullptr) return; allocator.deallocate(ptr, size); }
     template <typename Type> T& addInternal(Type&& t) noexcept {
         if (arraySize == allocated) {
             size_type newSize = arraySize + 1;

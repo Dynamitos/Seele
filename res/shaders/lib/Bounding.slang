@@ -16,7 +16,7 @@ struct BoundingSphere
         bool result = true;
         for(int i = 0; i < 4 && result; ++i)
         {
-            if(dot(frustum.sides[i].n, getCenter()) - frustum.sides[i].d < -getRadius())
+            if(dot(frustum.sides[i].getNormal(), getCenter()) - frustum.sides[i].getDistance() < -getRadius())
             {
                 result = false;
             }
@@ -39,11 +39,11 @@ struct AABB
         bool result = true;
         for(int i = 0; i < 4 && result; ++i)
         {
-            const float r = extents.x * abs(frustum.sides[i].n.x) 
-                          + extents.y * abs(frustum.sides[i].n.y) 
-                          + extents.z * abs(frustum.sides[i].n.z);
+            const float r = extents.x * abs(frustum.sides[i].getNormal().x) 
+                          + extents.y * abs(frustum.sides[i].getNormal().y) 
+                          + extents.z * abs(frustum.sides[i].getNormal().z);
 
-            const float signedDistance = dot(frustum.sides[i].n, center) - frustum.sides[i].d;
+            const float signedDistance = dot(frustum.sides[i].getNormal(), center) - frustum.sides[i].getDistance();
             if(signedDistance < -r)
             {
                 result = false;

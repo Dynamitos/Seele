@@ -58,7 +58,7 @@ void ShaderCompiler::compile() {
             if (pass.useMaterial) {
                 for (const auto& [matName, mat] : materials) {
                     for (int y = 0; y < 2; y++) {
-                        work.add([=]() {
+                        work.add([=, this]() {
                             ShaderPermutation permutation = getTemplate(name);
                             permutation.setPositionOnly(false);
                             permutation.setDepthCulling(y);

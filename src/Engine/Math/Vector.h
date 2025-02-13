@@ -45,4 +45,9 @@ void from_json(nlohmann::json& j, Vector& vec);
 std::ostream& operator<<(std::ostream& stream, const Seele::Vector2& vector);
 std::ostream& operator<<(std::ostream& stream, const Seele::Vector& vector);
 std::ostream& operator<<(std::ostream& stream, const Seele::Vector4& vector);
+
+std::ostream& operator<<(std::ostream& stream, const Seele::UVector2& vector);
+std::ostream& operator<<(std::ostream& stream, const Seele::UVector& vector);
+std::ostream& operator<<(std::ostream& stream, const Seele::UVector4& vector);
+
 std::ostream& operator<<(std::ostream& stream, const Seele::Quaternion& vector);

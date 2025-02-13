@@ -25,7 +25,14 @@ class Shader {
     PGraphics graphics;
     MTL::Library* library;
     MTL::Function* function;
+    // since metal is stupid and doesnt let us create argument encoders for
+    // descriptors of stages that dont use them, we have to track
+    // which stage uses what descriptors, which makes sense since functions are independent
+    // but since metal ALSO doesnt provide any way to find out we have to
+    // literally manually string search the generated code to find out
+    Array<uint32> usedDescriptors;
     uint32 hash;
+    friend class PipelineCache;
 };
 DEFINE_REF(Shader)
 

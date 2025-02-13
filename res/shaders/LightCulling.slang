@@ -89,7 +89,7 @@ void cullLights(ComputeShaderInput in)
     float maxDepthWS = clipToWorld(float4(0, 0, fMaxDepth, 1)).z;
     float nearClipWS = clipToWorld(float4(0, 0, 0, 1)).z;
 
-    Plane maxPlane = {float3(0, 0, -1), -maxDepthWS};
+    Plane maxPlane = {float4(0, 0, -1, -maxDepthWS)};
 
     for ( uint i = in.groupIndex; i < pLightEnv.numPointLights; i += BLOCK_SIZE * BLOCK_SIZE )
     {

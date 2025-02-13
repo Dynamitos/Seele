@@ -25,7 +25,7 @@ set(METAL_ROOT ${EXTERNAL_ROOT}/metal-cpp)
 if(WIN32)
     set(VCPKG_BASE_FOLDER ${VCPKG_INSTALLED_DIR}/x64-windows/)
 elseif(APPLE)
-    set(VCPKG_BASE_FOLDER ${VCPKG_INSTALLED_DIR}/arm64-osx/)
+    set(VCPKG_BASE_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/build/vcpkg_installed/arm64-osx/)
 endif()
 
 set(Boost_NO_WARN_NEW_VERSIONS 1)
