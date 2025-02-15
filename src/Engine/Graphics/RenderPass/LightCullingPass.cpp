@@ -271,8 +271,6 @@ void LightCullingPass::setupFrustums() {
     graphics->beginShaderCompilation(createInfo);
     frustumShader = graphics->createComputeShader({0});
     // Have to compile shader before finalizing layout as parameters get mapped later
-    Metal::ComputeShader* shader = (Metal::ComputeShader*)(*frustumShader);
-    std::cout << shader->getFunction()->newArgumentEncoder(1)->debugDescription()->cString(NS::ASCIIStringEncoding) << std::endl;
     frustumLayout->create();
 
     Gfx::ComputePipelineCreateInfo pipelineInfo;

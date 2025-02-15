@@ -130,7 +130,6 @@ void DescriptorSet::updateSampler(uint32 binding, uint32 index, Gfx::PSampler sa
         .index = flattenedIndex,
         .sampler = sampler->getHandle(),
     });
-    boundResources[flattenedIndex] = nullptr; // Samplers are not resources??????
 }
 
 void DescriptorSet::updateTexture(uint32 binding, uint32 index, Gfx::PTexture2D texture) {

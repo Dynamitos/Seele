@@ -3,6 +3,7 @@
 #include "Containers/Array.h"
 #include "Descriptor.h"
 #include "Enums.h"
+#include "Foundation/NSString.hpp"
 #include "Graphics/Command.h"
 #include "Graphics/Enums.h"
 #include "Graphics/Graphics.h"
