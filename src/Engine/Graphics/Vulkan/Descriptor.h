@@ -2,11 +2,18 @@
 #include "Containers/List.h"
 #include "Enums.h"
 #include "Graphics/Descriptor.h"
+#include "Graphics/Vulkan/Buffer.h"
 #include "Resources.h"
 
 namespace Seele {
 namespace Vulkan {
 DECLARE_REF(Graphics)
+struct DescriptorMapping
+{
+    uint32 binding;
+    uint32 constantOffset;
+    uint32 constantSize;
+};
 class DescriptorLayout : public Gfx::DescriptorLayout {
   public:
     DescriptorLayout(PGraphics graphics, const std::string& name);
@@ -16,9 +23,13 @@ class DescriptorLayout : public Gfx::DescriptorLayout {
 
   private:
     PGraphics graphics;
+    uint32 constantsSize;
+    VkShaderStageFlags constantsStages;
     Array<VkDescriptorSetLayoutBinding> bindings;
+    Map<std::string, DescriptorMapping> mappings;
     VkDescriptorSetLayout layoutHandle;
     friend class DescriptorPool;
+    friend class DescriptorSet;
 };
 DEFINE_REF(DescriptorLayout)
 
@@ -48,19 +59,22 @@ class DescriptorSet : public Gfx::DescriptorSet, public CommandBoundResource {
     DescriptorSet(PGraphics graphics, PDescriptorPool owner);
     virtual ~DescriptorSet();
     virtual void writeChanges() override;
-    virtual void updateBuffer(uint32 binding, uint32 index, Gfx::PUniformBuffer uniformBuffer) override;
-    virtual void updateBuffer(uint32 binding, uint32 index, Gfx::PShaderBuffer shaderBuffer) override;
-    virtual void updateBuffer(uint32 binding, uint32 index, Gfx::PVertexBuffer indexBuffer) override;
-    virtual void updateBuffer(uint32 binding, uint32 index, Gfx::PIndexBuffer indexBuffer) override;
-    virtual void updateSampler(uint32 binding, uint32 index, Gfx::PSampler samplerState) override;
-    virtual void updateTexture(uint32 binding, uint32 index, Gfx::PTexture2D texture) override;
-    virtual void updateTexture(uint32 binding, uint32 index, Gfx::PTexture3D texture) override;
-    virtual void updateTexture(uint32 binding, uint32 index, Gfx::PTextureCube texture) override;
-    virtual void updateAccelerationStructure(uint32 binding, uint32 index, Gfx::PTopLevelAS as) override;
+    virtual void updateConstants(const std::string& name, uint32 offset, void* data) override;
+    virtual void updateBuffer(const std::string& name, uint32 index, Gfx::PShaderBuffer shaderBuffer) override;
+    virtual void updateBuffer(const std::string& name, uint32 index, Gfx::PVertexBuffer indexBuffer) override;
+    virtual void updateBuffer(const std::string& name, uint32 index, Gfx::PIndexBuffer indexBuffer) override;
+    virtual void updateSampler(const std::string& name, uint32 index, Gfx::PSampler samplerState) override;
+    virtual void updateTexture(const std::string& name, uint32 index, Gfx::PTexture2D texture) override;
+    virtual void updateTexture(const std::string& name, uint32 index, Gfx::PTexture3D texture) override;
+    virtual void updateTexture(const std::string& name, uint32 index, Gfx::PTextureCube texture) override;
+    virtual void updateAccelerationStructure(const std::string& name, uint32 index, Gfx::PTopLevelAS as) override;
 
     constexpr VkDescriptorSet getHandle() const { return setHandle; }
 
   private:
+    std::vector<uint8> constantData;
+    Gfx::OUniformBuffer constantsBuffer;
+    VkShaderStageFlags constantsStageFlags;
     List<VkDescriptorImageInfo> imageInfos;
     List<VkDescriptorBufferInfo> bufferInfos;
     List<VkWriteDescriptorSetAccelerationStructureKHR> accelerationInfos;

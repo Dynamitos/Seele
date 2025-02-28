@@ -34,14 +34,14 @@ void Seele::beginCompilation(const ShaderCompilationInfo& info, SlangCompileTarg
     slang::SessionDesc sessionDesc;
     sessionDesc.flags = 0;
     Array<slang::CompilerOptionEntry> option = {
-        //{
-        //    .name = slang::CompilerOptionName::Capability,
-        //    .value =
-        //        {
-        //            .kind = slang::CompilerOptionValueKind::Int,
-        //            .intValue0 = globalSession->findCapability("GLSL_450"),
-        //        },
-        //},
+        {
+            .name = slang::CompilerOptionName::LineDirectiveMode,
+            .value =
+                {
+                    .kind = slang::CompilerOptionValueKind::Int,
+                    .intValue0 = SLANG_LINE_DIRECTIVE_MODE_NONE,
+                },
+        },
         {
             .name = slang::CompilerOptionName::EmitSpirvViaGLSL,
             .value =

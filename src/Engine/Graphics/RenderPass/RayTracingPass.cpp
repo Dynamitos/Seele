@@ -16,7 +16,7 @@ struct SampleParams {
 
 RayTracingPass::RayTracingPass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics), scene(scene) {
     paramsLayout = graphics->createDescriptorLayout("pRayTracingParams");
-    paramsLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+    /*paramsLayout->addDescriptorBinding(Gfx::DescriptorBinding{
         .binding = 0,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR,
     });
@@ -39,7 +39,7 @@ RayTracingPass::RayTracingPass(Gfx::PGraphics graphics, PScene scene) : RenderPa
     paramsLayout->addDescriptorBinding(Gfx::DescriptorBinding{
         .binding = 5,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLER,
-    });
+    });*/
     paramsLayout->create();
     pipelineLayout = graphics->createPipelineLayout("RayTracing");
     pipelineLayout->addDescriptorLayout(viewParamsLayout);
@@ -137,12 +137,12 @@ void RayTracingPass::render() {
         .bottomLevelStructures = accelerationStructures,
     });
     Gfx::PDescriptorSet desc = paramsLayout->allocateDescriptorSet();
-    desc->updateAccelerationStructure(0, 0, tlas);
+    /*desc->updateAccelerationStructure(0, 0, tlas);
     desc->updateTexture(1, 0, radianceAccumulator);
     desc->updateTexture(2, 0, texture);
     desc->updateBuffer(3, 0, StaticMeshVertexData::getInstance()->getIndexBuffer());
     desc->updateTexture(4, 0, skyBox);
-    desc->updateSampler(5, 0, skyBoxSampler);
+    desc->updateSampler(5, 0, skyBoxSampler);*/
     desc->writeChanges();
 
     Gfx::ORenderCommand command = graphics->createRenderCommand("RayTracing");

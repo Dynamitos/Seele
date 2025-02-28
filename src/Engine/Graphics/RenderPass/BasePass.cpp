@@ -13,6 +13,7 @@
 #include "Graphics/Shader.h"
 #include "Graphics/StaticMeshVertexData.h"
 #include "Material/MaterialInstance.h"
+#include "Math/Matrix.h"
 #include "Math/Vector.h"
 #include "RenderGraph.h"
 #include "Window/Window.h"
@@ -34,14 +35,12 @@ BasePass::BasePass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics)
     basePassLayout->addDescriptorLayout(Material::getDescriptorLayout());
 
     lightCullingLayout = graphics->createDescriptorLayout("pLightCullingData");
-    // oLightIndexList
     lightCullingLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 0,
+        .name = LIGHTINDEX_NAME,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
     });
-    // oLightGrid
     lightCullingLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 1,
+        .name = LIGHTGRID_NAME,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_IMAGE,
     });
     lightCullingLayout->create();
@@ -122,17 +121,15 @@ void BasePass::beginFrame(const Component::Camera& cam) {
         skyboxDataLayout->reset();
         textureLayout->reset();
         skyboxData.transformMatrix = glm::rotate(skyboxData.transformMatrix, (float)(Gfx::getCurrentFrameDelta()), Vector(0, 1, 0));
-        skyboxBuffer->rotateBuffer(sizeof(SkyboxData));
-        skyboxBuffer->updateContents(0, sizeof(SkyboxData), &skyboxData);
-        skyboxBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
-                                      Gfx::SE_ACCESS_UNIFORM_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+        
         skyboxDataSet = skyboxDataLayout->allocateDescriptorSet();
-        skyboxDataSet->updateBuffer(0, 0, skyboxBuffer);
+        skyboxDataSet->updateConstants("transformMatrix", 0, &skyboxData.transformMatrix);
+        skyboxDataSet->updateConstants("fogBlend", 0, &skyboxData.fogColor);
         skyboxDataSet->writeChanges();
         textureSet = textureLayout->allocateDescriptorSet();
-        textureSet->updateTexture(0, 0, skybox.day);
-        textureSet->updateTexture(1, 0, skybox.night);
-        textureSet->updateSampler(2, 0, skyboxSampler);
+        textureSet->updateTexture(SKYBOXDAY_NAME, 0, skybox.day);
+        textureSet->updateTexture(SKYBOXNIGHT_NAME, 0, skybox.night);
+        textureSet->updateSampler(SKYBOXSAMPLER_NAME, 0, skyboxSampler);
         textureSet->writeChanges();
     }
 }
@@ -252,7 +249,6 @@ void BasePass::render() {
     //commands.add(terrainRenderer->render(viewParamsSet));
     */
     // Skybox
-    graphics->waitDeviceIdle();
     graphics->beginRenderPass(renderPass);
     {
         Gfx::ORenderCommand skyboxCommand = graphics->createRenderCommand("SkyboxRender");
@@ -556,22 +552,27 @@ void BasePass::createRenderPass() {
     {
         skyboxDataLayout = graphics->createDescriptorLayout("pSkyboxData");
         skyboxDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-            .binding = 0,
-            .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-            .uniformLength = sizeof(SkyboxData)
+            .name = "transformMatrix",
+            .uniformLength = sizeof(Matrix4)
+        });
+        skyboxDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+            .name = "fogBlend",
+            .uniformLength = sizeof(Vector4)
         });
         skyboxDataLayout->create();
         textureLayout = graphics->createDescriptorLayout("pSkyboxTextures");
         textureLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-            .binding = 0,
+            .name = SKYBOXDAY_NAME,
             .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+            .access = Gfx::SE_DESCRIPTOR_ACCESS_SAMPLE_BIT,
         });
         textureLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-            .binding = 1,
+            .name = SKYBOXNIGHT_NAME,
             .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+            .access = Gfx::SE_DESCRIPTOR_ACCESS_SAMPLE_BIT,
         });
         textureLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-            .binding = 2,
+            .name = SKYBOXSAMPLER_NAME,
             .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLER,
         });
         textureLayout->create();
@@ -581,14 +582,6 @@ void BasePass::createRenderPass() {
         skyboxData.transformMatrix = Matrix4(1);
         skyboxData.fogColor = skybox.fogColor;
         skyboxData.blendFactor = skybox.blendFactor;
-
-        skyboxBuffer = graphics->createUniformBuffer(UniformBufferCreateInfo{
-            .sourceData =
-                {
-                    .size = sizeof(SkyboxData),
-                    .data = (uint8*)&skyboxData,
-                },
-        });
 
         pipelineLayout = graphics->createPipelineLayout("SkyboxLayout");
         pipelineLayout->addDescriptorLayout(viewParamsLayout);

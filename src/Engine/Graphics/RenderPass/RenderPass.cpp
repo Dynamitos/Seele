@@ -4,20 +4,20 @@ using namespace Seele;
 
 RenderPass::RenderPass(Gfx::PGraphics graphics) : graphics(graphics) {
     viewParamsLayout = graphics->createDescriptorLayout("pViewParams");
-    viewParamsLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 0,
-        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-        .uniformLength = sizeof(ViewParameter),
-    });
-    UniformBufferCreateInfo uniformInitializer = {
-        .sourceData =
-            {
-                .size = sizeof(ViewParameter),
-                .data = (uint8*)&viewParams,
-            },
-        .name = "viewParamsBuffer",
-    };
-    viewParamsBuffer = graphics->createUniformBuffer(uniformInitializer);
+    viewParamsLayout->addDescriptorBinding(Gfx::DescriptorBinding{.name = "viewMatrix", .uniformLength = sizeof(Matrix4)});
+    viewParamsLayout->addDescriptorBinding(Gfx::DescriptorBinding{.name = "inverseViewMatrix", .uniformLength = sizeof(Matrix4)});
+    viewParamsLayout->addDescriptorBinding(Gfx::DescriptorBinding{.name = "projectionMatrix", .uniformLength = sizeof(Matrix4)});
+    viewParamsLayout->addDescriptorBinding(Gfx::DescriptorBinding{.name = "inverseProjection", .uniformLength = sizeof(Matrix4)});
+    viewParamsLayout->addDescriptorBinding(Gfx::DescriptorBinding{.name = "viewProjectionMatrix", .uniformLength = sizeof(Matrix4)});
+    viewParamsLayout->addDescriptorBinding(Gfx::DescriptorBinding{.name = "inverseViewProjectionMatrix", .uniformLength = sizeof(Matrix4)});
+    viewParamsLayout->addDescriptorBinding(Gfx::DescriptorBinding{.name = "cameraPosition_WS", .uniformLength = sizeof(Vector4)});
+    viewParamsLayout->addDescriptorBinding(Gfx::DescriptorBinding{.name = "cameraForward_WS", .uniformLength = sizeof(Vector4)});
+    viewParamsLayout->addDescriptorBinding(Gfx::DescriptorBinding{.name = "screenDimensions", .uniformLength = sizeof(Vector2)});
+    viewParamsLayout->addDescriptorBinding(Gfx::DescriptorBinding{.name = "invScreenDimensions", .uniformLength = sizeof(Vector2)});
+    viewParamsLayout->addDescriptorBinding(Gfx::DescriptorBinding{.name = "frameIndex", .uniformLength = sizeof(uint32)});
+    viewParamsLayout->addDescriptorBinding(Gfx::DescriptorBinding{.name = "time", .uniformLength = sizeof(float)});
+    viewParamsLayout->addDescriptorBinding(Gfx::DescriptorBinding{.name = "pad0", .uniformLength = sizeof(float)});
+    viewParamsLayout->addDescriptorBinding(Gfx::DescriptorBinding{.name = "pad1", .uniformLength = sizeof(float)});
     viewParamsLayout->create();
 }
 
@@ -62,16 +62,22 @@ void RenderPass::beginFrame(const Component::Camera& cam) {
 
     //extract_planes_from_view_projection_matrix(viewParams.viewProjectionMatrix, viewParams.viewFrustum);
 
-    viewParamsBuffer->rotateBuffer(sizeof(ViewParameter));
-    viewParamsBuffer->updateContents(0, sizeof(ViewParameter), &viewParams);
-    viewParamsBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
-                                      Gfx::SE_ACCESS_UNIFORM_READ_BIT | Gfx::SE_ACCESS_TRANSFER_WRITE_BIT,
-                                      Gfx::SE_PIPELINE_STAGE_TASK_SHADER_BIT_EXT | Gfx::SE_PIPELINE_STAGE_MESH_SHADER_BIT_EXT |
-                                          Gfx::SE_PIPELINE_STAGE_VERTEX_SHADER_BIT | Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT |
-                                          Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT);
     viewParamsLayout->reset();
     viewParamsSet = viewParamsLayout->allocateDescriptorSet();
-    viewParamsSet->updateBuffer(0, 0, viewParamsBuffer);
+    viewParamsSet->updateConstants("viewMatrix", 0, &viewParams.viewMatrix);
+    viewParamsSet->updateConstants("inverseViewMatrix", 0, &viewParams.inverseViewMatrix);
+    viewParamsSet->updateConstants("projectionMatrix", 0, &viewParams.projectionMatrix);
+    viewParamsSet->updateConstants("inverseProjection", 0, &viewParams.inverseProjection);
+    viewParamsSet->updateConstants("viewProjectionMatrix", 0, &viewParams.viewProjectionMatrix);
+    viewParamsSet->updateConstants("inverseViewProjectionMatrix", 0, &viewParams.inverseViewProjectionMatrix);
+    viewParamsSet->updateConstants("cameraPosition_WS", 0, &viewParams.cameraPosition_WS);
+    viewParamsSet->updateConstants("cameraForward_WS", 0, &viewParams.cameraForward_WS);
+    viewParamsSet->updateConstants("screenDimensions", 0, &viewParams.screenDimensions);
+    viewParamsSet->updateConstants("invScreenDimensions", 0, &viewParams.invScreenDimensions);
+    viewParamsSet->updateConstants("frameIndex", 0, &viewParams.frameIndex);
+    viewParamsSet->updateConstants("time", 0, &viewParams.time);
+    viewParamsSet->updateConstants("pad0", 0, &viewParams.pad0);
+    viewParamsSet->updateConstants("pad1", 0, &viewParams.pad1);
     viewParamsSet->writeChanges();
 }
 

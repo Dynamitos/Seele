@@ -6,22 +6,23 @@ using namespace Seele;
 LightEnvironment::LightEnvironment(Gfx::PGraphics graphics) : graphics(graphics) {
     layout = graphics->createDescriptorLayout("pLightEnv");
     layout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 0,
-        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-        .uniformLength = 24,//sizeof(LightEnv)
-    });
-    layout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 1,
+        .name = "directionalLights",
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
     });
     layout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 2,
+        .name = "numDirectionalLights",
+        .uniformLength = sizeof(uint)
+    });
+    layout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .name = "pointLights",
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+    });
+    layout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .name = "numPointLights",
+        .uniformLength = sizeof(uint)
     });
     layout->create();
-    lightEnvBuffer = graphics->createUniformBuffer(UniformBufferCreateInfo{
-        .name = "LightEnv",
-    });
+
     directionalLights = graphics->createShaderBuffer(ShaderBufferCreateInfo{
         .name = "DirectionalLights",
     });
@@ -44,13 +45,6 @@ void LightEnvironment::addDirectionalLight(Component::DirectionalLight dirLight)
 void LightEnvironment::addPointLight(Component::PointLight pointLight) { points.add(pointLight); }
 
 void LightEnvironment::commit() {
-    lightEnv.numDirectionalLights = dirs.size();
-    lightEnv.numPointLights = points.size();
-    lightEnvBuffer->updateContents(0, sizeof(LightEnv), &lightEnv);
-    lightEnvBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
-                                    Gfx::SE_ACCESS_UNIFORM_READ_BIT | Gfx::SE_ACCESS_TRANSFER_WRITE_BIT,
-                                    Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT |
-                                        Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT);
     directionalLights->rotateBuffer(sizeof(Component::DirectionalLight) * dirs.size());
     directionalLights->updateContents(0, sizeof(Component::DirectionalLight) * dirs.size(), dirs.data());
     directionalLights->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
@@ -63,9 +57,12 @@ void LightEnvironment::commit() {
                                  Gfx::SE_ACCESS_SHADER_READ_BIT | Gfx::SE_ACCESS_TRANSFER_WRITE_BIT,
                                  Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT |
                                      Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT);
-    set->updateBuffer(0, 0, lightEnvBuffer);
-    set->updateBuffer(1, 0, directionalLights);
-    set->updateBuffer(2, 0, pointLights);
+    uint32 numPointLights = points.size();
+    uint32 numDirectionalLights = dirs.size();
+    set->updateConstants("numPointLights", 0, &numPointLights);
+    set->updateBuffer("pointLights", 0, pointLights);
+    set->updateConstants("numDirectionalLights", 0, &numDirectionalLights);
+    set->updateBuffer("directionalLights", 0, directionalLights);
     set->writeChanges();
 }
 

@@ -1,5 +1,6 @@
 #pragma once
 #include "Graphics/Query.h"
+#include "Math/Vector.h"
 #include "RenderPass.h"
 
 namespace Seele {
@@ -26,9 +27,11 @@ class VisibilityPass : public RenderPass {
     Gfx::OPipelineStatisticsQuery query;
     Gfx::PTimestampQuery timestamps;
 
+    constexpr static std::string VISIBILITY_NAME = "visibilityTexture";
     // Holds culling information for every meshlet for each instance
     Gfx::OShaderBuffer cullingBuffer;
-    glm::uvec3 threadGroupSize;
+    constexpr static std::string CULLINGBUFFER_NAME = "cullingBuffer";
+    UVector threadGroupSize;
 };
 DEFINE_REF(VisibilityPass)
 } // namespace Seele

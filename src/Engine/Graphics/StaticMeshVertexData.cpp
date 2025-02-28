@@ -123,27 +123,27 @@ void StaticMeshVertexData::init(Gfx::PGraphics _graphics) {
     VertexData::init(_graphics);
     descriptorLayout = _graphics->createDescriptorLayout("pVertexData");
     descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 0,
+        .name = POSITIONS_NAME,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
     });
     descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 1,
+        .name = NORMALS_NAME,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
     });
     descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 2,
+        .name = TANGENTS_NAME,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
     });
     descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 3,
+        .name = BITANGENTS_NAME,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
     });
     descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 4,
+        .name = COLORS_NAME,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
     });
     descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 5,
+        .name = TEXCOORDS_NAME,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
         .descriptorCount = MAX_TEXCOORDS,
     });
@@ -238,13 +238,13 @@ void StaticMeshVertexData::updateBuffers() {
     }
     descriptorLayout->reset();
     descriptorSet = descriptorLayout->allocateDescriptorSet();
-    descriptorSet->updateBuffer(0, 0, positions);
-    descriptorSet->updateBuffer(1, 0, normals);
-    descriptorSet->updateBuffer(2, 0, tangents);
-    descriptorSet->updateBuffer(3, 0, biTangents);
-    descriptorSet->updateBuffer(4, 0, colors);
+    descriptorSet->updateBuffer(POSITIONS_NAME, 0, positions);
+    descriptorSet->updateBuffer(NORMALS_NAME, 0, normals);
+    descriptorSet->updateBuffer(TANGENTS_NAME, 0, tangents);
+    descriptorSet->updateBuffer(BITANGENTS_NAME, 0, biTangents);
+    descriptorSet->updateBuffer(COLORS_NAME, 0, colors);
     for (size_t i = 0; i < MAX_TEXCOORDS; ++i) {
-        descriptorSet->updateBuffer(5, i, texCoords[i]);
+        descriptorSet->updateBuffer(TEXCOORDS_NAME, i, texCoords[i]);
     }
     descriptorSet->writeChanges();
 }

@@ -158,6 +158,7 @@ int main() {
         //                                                             .numSamples = Gfx::SE_SAMPLE_COUNT_1_BIT,
         //                                                         });
 
+        window->show();
         while (windowManager->isActive() && getGlobals().running) {
             windowManager->render();
         }

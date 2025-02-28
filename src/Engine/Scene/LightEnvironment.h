@@ -18,12 +18,7 @@ class LightEnvironment {
     Gfx::PDescriptorSet getDescriptorSet();
 
   private:
-    struct LightEnv {
-        uint32 numDirectionalLights;
-        uint32 numPointLights;
-    } lightEnv;
     Gfx::OShaderBuffer directionalLights;
-    Gfx::OUniformBuffer lightEnvBuffer;
     Gfx::OShaderBuffer pointLights;
     Array<Component::DirectionalLight> dirs;
     Array<Component::PointLight> points;

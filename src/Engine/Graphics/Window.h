@@ -9,6 +9,7 @@ class Window {
   public:
     Window();
     virtual ~Window();
+    virtual void show() = 0;
     virtual void pollInput() = 0;
     virtual void beginFrame() = 0;
     virtual void endFrame() = 0;

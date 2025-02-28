@@ -121,7 +121,7 @@ WaterRenderer::WaterRenderer(Gfx::PGraphics graphics, PScene scene, Gfx::PDescri
     });
 
     computeLayout = graphics->createDescriptorLayout("pParams");
-    computeLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+    /*computeLayout->addDescriptorBinding(Gfx::DescriptorBinding{
         .binding = 0,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
         .uniformLength = sizeof(MaterialParams),
@@ -153,7 +153,7 @@ WaterRenderer::WaterRenderer(Gfx::PGraphics graphics, PScene scene, Gfx::PDescri
     computeLayout->addDescriptorBinding(Gfx::DescriptorBinding{
         .binding = 7,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLER,
-    });
+    });*/
     computeLayout->create();
 
     pipelineLayout = graphics->createPipelineLayout("WaterComputeLayout");
@@ -210,7 +210,7 @@ WaterRenderer::WaterRenderer(Gfx::PGraphics graphics, PScene scene, Gfx::PDescri
     });
 
     materialLayout = graphics->createDescriptorLayout("pWaterMaterial");
-    materialLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+    /*materialLayout->addDescriptorBinding(Gfx::DescriptorBinding{
         .binding = 0,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
     });
@@ -233,7 +233,7 @@ WaterRenderer::WaterRenderer(Gfx::PGraphics graphics, PScene scene, Gfx::PDescri
     materialLayout->addDescriptorBinding(Gfx::DescriptorBinding{
         .binding = 5,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-    });
+    });*/
     materialLayout->create();
     waterLayout = graphics->createPipelineLayout("WaterLayout");
     waterLayout->addDescriptorLayout(viewParamsLayout);
@@ -530,14 +530,14 @@ void WaterRenderer::updateFFTDescriptor() {
                                   Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 
     computeSet = computeLayout->allocateDescriptorSet();
-    computeSet->updateBuffer(0, 0, paramsBuffer);
+    /*computeSet->updateBuffer(0, 0, paramsBuffer);
     computeSet->updateTexture(1, 0, spectrumTextures);
     computeSet->updateTexture(2, 0, initialSpectrumTextures);
     computeSet->updateTexture(3, 0, displacementTextures);
     computeSet->updateTexture(4, 0, slopeTextures);
     computeSet->updateTexture(5, 0, boyancyData);
     computeSet->updateBuffer(6, 0, spectrumBuffer);
-    computeSet->updateSampler(7, 0, linearRepeatSampler);
+    computeSet->updateSampler(7, 0, linearRepeatSampler);*/
     computeSet->writeChanges();
 }
 
@@ -547,11 +547,11 @@ void WaterRenderer::updateMaterialDescriptor() {
                                       Gfx::SE_ACCESS_UNIFORM_READ_BIT,
                                       Gfx::SE_PIPELINE_STAGE_MESH_SHADER_BIT_EXT | Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
     materialSet = materialLayout->allocateDescriptorSet();
-    materialSet->updateBuffer(0, 0, materialUniforms);
+    /*materialSet->updateBuffer(0, 0, materialUniforms);
     materialSet->updateTexture(1, 0, displacementTextures);
     materialSet->updateTexture(2, 0, slopeTextures);
     materialSet->updateTexture(3, 0, skyBox);
     materialSet->updateSampler(4, 0, linearRepeatSampler);
-    materialSet->updateBuffer(5, 0, waterTiles);
+    materialSet->updateBuffer(5, 0, waterTiles);*/
     materialSet->writeChanges();
 }

@@ -1,18 +1,18 @@
 #include "DepthCullingPass.h"
 #include "Graphics/Shader.h"
-#include <algorithm>
 
 using namespace Seele;
 
 DepthCullingPass::DepthCullingPass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics), scene(scene) {
     depthAttachmentLayout = graphics->createDescriptorLayout("pDepthAttachment");
     depthAttachmentLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 0,
+        .name = DEPTHTEXTURE_NAME,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
         .shaderStages = Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_MESH_BIT_EXT | Gfx::SE_SHADER_STAGE_COMPUTE_BIT,
+        .access = Gfx::SE_DESCRIPTOR_ACCESS_SAMPLE_BIT,
     });
     depthAttachmentLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 1,
+        .name = DEPTHMIP_NAME,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
         .shaderStages = Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_COMPUTE_BIT,
     });
@@ -75,8 +75,8 @@ void DepthCullingPass::render() {
 
     depthMipBuffer->rotateBuffer(depthMipBuffer->getNumElements() * sizeof(uint32));
     Gfx::PDescriptorSet set = depthAttachmentLayout->allocateDescriptorSet();
-    set->updateTexture(0, 0, depthAttachment.getTexture());
-    set->updateBuffer(1, 0, depthMipBuffer);
+    set->updateTexture(DEPTHTEXTURE_NAME, 0, depthAttachment.getTexture());
+    set->updateBuffer(DEPTHMIP_NAME, 0, depthMipBuffer);
     set->writeChanges();
 
     timestamps->write(Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT, "MipBegin");

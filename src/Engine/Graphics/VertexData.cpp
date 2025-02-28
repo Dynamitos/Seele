@@ -166,12 +166,12 @@ void VertexData::createDescriptors() {
 
     instanceDataLayout->reset();
     descriptorSet = instanceDataLayout->allocateDescriptorSet();
-    descriptorSet->updateBuffer(0, 0, instanceBuffer);
-    descriptorSet->updateBuffer(1, 0, instanceMeshDataBuffer);
-    descriptorSet->updateBuffer(2, 0, meshletBuffer);
-    descriptorSet->updateBuffer(3, 0, primitiveIndicesBuffer);
-    descriptorSet->updateBuffer(4, 0, vertexIndicesBuffer);
-    descriptorSet->updateBuffer(5, 0, cullingOffsetBuffer);
+    descriptorSet->updateBuffer(INSTANCES_NAME, 0, instanceBuffer);
+    descriptorSet->updateBuffer(MESHDATA_NAME, 0, instanceMeshDataBuffer);
+    descriptorSet->updateBuffer(MESHLET_NAME, 0, meshletBuffer);
+    descriptorSet->updateBuffer(PRIMITIVEINDICES_NAME, 0, primitiveIndicesBuffer);
+    descriptorSet->updateBuffer(VERTEXINDICES_NAME, 0, vertexIndicesBuffer);
+    descriptorSet->updateBuffer(CULLINGOFFSETS_NAME, 0, cullingOffsetBuffer);
     Material::updateDescriptor();
 }
 
@@ -319,29 +319,39 @@ void VertexData::init(Gfx::PGraphics _graphics) {
 
     // instanceData
     instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 0,
+        .name = INSTANCES_NAME,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
     });
     // meshData
     instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 1,
+        .name = MESHDATA_NAME,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
     });
     // meshletData
-    instanceDataLayout->addDescriptorBinding(
-        Gfx::DescriptorBinding{.binding = 2, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
+    instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .name = MESHLET_NAME,
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+    });
     // primitiveIndices
-    instanceDataLayout->addDescriptorBinding(
-        Gfx::DescriptorBinding{.binding = 3, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
+    instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .name = PRIMITIVEINDICES_NAME,
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+    });
     // vertexIndices
-    instanceDataLayout->addDescriptorBinding(
-        Gfx::DescriptorBinding{.binding = 4, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
+    instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .name = VERTEXINDICES_NAME,
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+    });
     // cullingOffset
-    instanceDataLayout->addDescriptorBinding(
-        Gfx::DescriptorBinding{.binding = 5, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
+    instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .name = CULLINGOFFSETS_NAME,
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+    });
     // cullingInfos
-    instanceDataLayout->addDescriptorBinding(
-        Gfx::DescriptorBinding{.binding = 6, .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
+    instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .name = CULLINGDATA_NAME,
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+    });
 
     instanceDataLayout->create();
 

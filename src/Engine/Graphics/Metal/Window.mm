@@ -67,6 +67,7 @@ Window::Window(PGraphics graphics, const WindowCreateInfo& createInfo) : graphic
     float xscale = 1, yscale = 1;
     glfwGetMonitorContentScale(glfwGetPrimaryMonitor(), &xscale, &yscale);
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
     GLFWwindow* handle = glfwCreateWindow(createInfo.width / xscale, createInfo.height / yscale, createInfo.title, nullptr, nullptr);
     windowHandle = handle;
     glfwSetWindowUserPointer(handle, this);
@@ -97,6 +98,8 @@ Window::Window(PGraphics graphics, const WindowCreateInfo& createInfo) : graphic
 }
 
 Window::~Window() { glfwDestroyWindow(static_cast<GLFWwindow*>(windowHandle)); }
+
+void Window::show() { glfwShowWindow(windowHandle); }
 
 void Window::pollInput() { glfwPollEvents(); }
 

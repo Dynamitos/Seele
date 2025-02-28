@@ -28,6 +28,8 @@ class BasePass : public RenderPass {
     Gfx::PShaderBuffer tLightIndexList;
     Gfx::PTexture2D oLightGrid;
     Gfx::PTexture2D tLightGrid;
+    constexpr static std::string LIGHTINDEX_NAME = "lightIndexList";
+    constexpr static std::string LIGHTGRID_NAME = "lightGrid";
 
     Gfx::PDescriptorSet opaqueCulling;
     Gfx::PDescriptorSet transparentCulling;
@@ -76,8 +78,10 @@ class BasePass : public RenderPass {
         Vector fogColor;
         float blendFactor;
     } skyboxData;
-    Gfx::OUniformBuffer skyboxBuffer;
     Component::Skybox skybox;
+    constexpr static std::string SKYBOXDAY_NAME = "day";
+    constexpr static std::string SKYBOXNIGHT_NAME = "night";
+    constexpr static std::string SKYBOXSAMPLER_NAME = "sampler";
     PScene scene;
 };
 DEFINE_REF(BasePass)

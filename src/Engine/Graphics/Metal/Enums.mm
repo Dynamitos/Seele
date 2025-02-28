@@ -589,32 +589,6 @@ Gfx::SeAttachmentStoreOp Seele::Metal::cast(MTL::StoreAction storeOp) {
     }
 }
 
-MTL::BindingAccess Seele::Metal::cast(Gfx::SeDescriptorAccessTypeFlags access) {
-    switch (access) {
-    case Gfx::SE_DESCRIPTOR_ACCESS_READ_ONLY_BIT:
-        return MTL::ArgumentAccessReadOnly;
-    case Gfx::SE_DESCRIPTOR_ACCESS_READ_WRITE_BIT:
-        return MTL::ArgumentAccessReadWrite;
-    case Gfx::SE_DESCRIPTOR_ACCESS_WRITE_ONLY_BIT:
-        return MTL::ArgumentAccessWriteOnly;
-    default:
-        throw std::logic_error("Not implemented");
-    }
-}
-
-Gfx::SeDescriptorAccessTypeFlags Seele::Metal::cast(MTL::BindingAccess access) {
-    switch (access) {
-    case MTL::ArgumentAccessReadOnly:
-        return Gfx::SE_DESCRIPTOR_ACCESS_READ_ONLY_BIT;
-    case MTL::ArgumentAccessReadWrite:
-        return Gfx::SE_DESCRIPTOR_ACCESS_READ_WRITE_BIT;
-    case MTL::ArgumentAccessWriteOnly:
-        return Gfx::SE_DESCRIPTOR_ACCESS_WRITE_ONLY_BIT;
-    default:
-        throw std::logic_error("Not implemented");
-    }
-}
-
 MTL::SamplerBorderColor Seele::Metal::cast(Gfx::SeBorderColor color) {
     switch (color) {
     case Gfx::SE_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK:

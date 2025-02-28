@@ -18,8 +18,6 @@ struct ViewParameter
     float2 invScreenDimensions;
     uint frameIndex;
     float time;
-    uint pad0;
-    uint pad1;
 };
 layout(set = 0)
 ParameterBlock<ViewParameter> pViewParams;

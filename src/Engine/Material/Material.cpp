@@ -36,21 +36,22 @@ Material::~Material() {}
 void Material::init(Gfx::PGraphics graphics) {
     layout = graphics->createDescriptorLayout("pResources");
     layout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 0,
+        .name = "textures",
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
         .descriptorCount = 512,
         .bindingFlags = Gfx::SE_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT,
         .shaderStages = Gfx::SE_SHADER_STAGE_FRAGMENT_BIT | Gfx::SE_SHADER_STAGE_CLOSEST_HIT_BIT_KHR,
+        .access = Gfx::SE_DESCRIPTOR_ACCESS_SAMPLE_BIT,
     });
     layout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 1,
+        .name = "samplers",
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLER,
         .descriptorCount = 512,
         .bindingFlags = Gfx::SE_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT,
         .shaderStages = Gfx::SE_SHADER_STAGE_FRAGMENT_BIT | Gfx::SE_SHADER_STAGE_CLOSEST_HIT_BIT_KHR,
     });
     layout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 2,
+        .name = "floats",
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
         .descriptorCount = 1,
         .bindingFlags = Gfx::SE_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT,
@@ -77,15 +78,15 @@ void Material::updateDescriptor() {
     set = layout->allocateDescriptorSet();
     for (uint32 i = 0; i < textures.size(); ++i) {
         if (textures[i] != nullptr) {
-            set->updateTexture(0, i, textures[i]);
+            set->updateTexture("textures", i, textures[i]);
         }
     }
     for (uint32 i = 0; i < samplers.size(); ++i) {
         if (samplers[i] != nullptr) {
-            set->updateSampler(1, i, samplers[i]);
+            set->updateSampler("samplers", i, samplers[i]);
         }
     }
-    set->updateBuffer(2, 0, floatBuffer);
+    set->updateBuffer("floats", 0, floatBuffer);
     set->writeChanges();
 }
 

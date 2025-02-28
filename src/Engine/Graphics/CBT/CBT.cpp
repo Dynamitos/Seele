@@ -217,7 +217,7 @@ void LebMatrixCache::release() {}
 void MeshUpdater::init(Gfx::PGraphics gfx, Gfx::PDescriptorLayout viewParamsLayout) {
     graphics = gfx;
     layout = graphics->createDescriptorLayout("pParams");
-    layout->addDescriptorBinding(Gfx::DescriptorBinding{0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER});
+    /*layout->addDescriptorBinding(Gfx::DescriptorBinding{0, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER});
     layout->addDescriptorBinding(Gfx::DescriptorBinding{1, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER});
     layout->addDescriptorBinding(Gfx::DescriptorBinding{2, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
     layout->addDescriptorBinding(Gfx::DescriptorBinding{3, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
@@ -242,7 +242,7 @@ void MeshUpdater::init(Gfx::PGraphics gfx, Gfx::PDescriptorLayout viewParamsLayo
     layout->addDescriptorBinding(Gfx::DescriptorBinding{22, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
     layout->addDescriptorBinding(Gfx::DescriptorBinding{23, Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER});
     layout->addDescriptorBinding(Gfx::DescriptorBinding{24, Gfx::SE_DESCRIPTOR_TYPE_SAMPLER});
-    layout->addDescriptorBinding(Gfx::DescriptorBinding{25, Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE});
+    layout->addDescriptorBinding(Gfx::DescriptorBinding{25, Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE});*/
     layout->create();
     pipelineLayout = graphics->createPipelineLayout("ComputeLayout");
     pipelineLayout->addDescriptorLayout(viewParamsLayout);
@@ -420,7 +420,7 @@ void MeshUpdater::release() {}
 void MeshUpdater::evaluateLeb(const BaseMesh& baseMesh, CBTMesh& mesh, Gfx::PDescriptorSet viewParamsSet,
                               Gfx::PUniformBuffer geometryBuffer, Gfx::PUniformBuffer updateBuffer, Gfx::PShaderBuffer lebMatrixCache,
                               bool clear, bool complete) {
-    if (clear) {
+    /*if (clear) {
         graphics->beginDebugRegion("ClearLEB");
         Gfx::PDescriptorSet set = layout->allocateDescriptorSet();
         set->updateBuffer(GEOMETRY_CB, 0, geometryBuffer);
@@ -456,11 +456,11 @@ void MeshUpdater::evaluateLeb(const BaseMesh& baseMesh, CBTMesh& mesh, Gfx::PDes
     graphics->executeCommands(std::move(evalCmd));
     mesh.lebVertexBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                                           Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
-    graphics->endDebugRegion();
+    graphics->endDebugRegion();*/
 }
 
 void MeshUpdater::update(CBTMesh& mesh, Gfx::PDescriptorSet viewParamsSet, Gfx::PUniformBuffer geometryCB, Gfx::PUniformBuffer updateCB) {
-    uint32 nextNeighborsBufferIdx = (mesh.currentNeighborsBufferIdx + 1) % 2;
+    /*uint32 nextNeighborsBufferIdx = (mesh.currentNeighborsBufferIdx + 1) % 2;
     Gfx::PShaderBuffer currentNeighborsBuffer = mesh.neighborsBuffers[mesh.currentNeighborsBufferIdx];
     Gfx::PShaderBuffer nextNeighborsBuffer = mesh.neighborsBuffers[nextNeighborsBufferIdx];
 
@@ -795,13 +795,13 @@ void MeshUpdater::update(CBTMesh& mesh, Gfx::PDescriptorSet viewParamsSet, Gfx::
 
     mesh.currentNeighborsBufferIdx = nextNeighborsBufferIdx;
 
-    prepareIndirection(mesh, geometryCB);
+    prepareIndirection(mesh, geometryCB);*/
 }
 
 void MeshUpdater::validation(CBTMesh& mesh, Gfx::PUniformBuffer geometryCB) {
     uint32 numGroups = (mesh.totalNumElements + WORKGROUP_SIZE - 1) / WORKGROUP_SIZE;
 
-    Gfx::PDescriptorSet set = layout->allocateDescriptorSet();
+    /*Gfx::PDescriptorSet set = layout->allocateDescriptorSet();
     set->updateBuffer(GEOMETRY_CB, 0, geometryCB);
 
     set->updateBuffer(HEAP_ID_BUFFER, 0, mesh.heapIDBuffer);
@@ -817,11 +817,11 @@ void MeshUpdater::validation(CBTMesh& mesh, Gfx::PUniformBuffer geometryCB) {
     graphics->executeCommands(std::move(validateCmd));
     validationBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                                       Gfx::SE_ACCESS_TRANSFER_READ_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT);
-    graphics->copyBuffer(validationBuffer, validationBufferRB);
+    graphics->copyBuffer(validationBuffer, validationBufferRB);*/
 }
 
 void MeshUpdater::resetBuffers(CBTMesh& mesh) {
-    graphics->beginDebugRegion("ResetBuffers");
+    /*graphics->beginDebugRegion("ResetBuffers");
     Gfx::PDescriptorSet set = layout->allocateDescriptorSet();
     set->updateBuffer(CBT_BUFFER0, 0, mesh.gpuCBT.bufferArray[0]);
     set->updateBuffer(CBT_BUFFER1, 0, mesh.gpuCBT.bufferArray[1]);
@@ -850,11 +850,11 @@ void MeshUpdater::resetBuffers(CBTMesh& mesh) {
                                                Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
     mesh.indirectDrawBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                                              Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
-    graphics->endDebugRegion();
+    graphics->endDebugRegion();*/
 }
 
 void MeshUpdater::prepareIndirection(CBTMesh& mesh, Gfx::PUniformBuffer geometryCB) {
-    uint32 numGroups = (mesh.totalNumElements + WORKGROUP_SIZE - 1) / WORKGROUP_SIZE;
+    /*uint32 numGroups = (mesh.totalNumElements + WORKGROUP_SIZE - 1) / WORKGROUP_SIZE;
     graphics->beginDebugRegion("BisectorIndexation");
     {
         Gfx::PDescriptorSet set = layout->allocateDescriptorSet();
@@ -899,7 +899,7 @@ void MeshUpdater::prepareIndirection(CBTMesh& mesh, Gfx::PUniformBuffer geometry
         mesh.indirectDrawBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                                                  Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
     }
-    graphics->endDebugRegion();
+    graphics->endDebugRegion();*/
 }
 
 bool MeshUpdater::checkIfValid() { return true; }

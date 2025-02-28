@@ -10,6 +10,7 @@
 #include "Graphics/Resources.h"
 #include "Metal/MTLArgumentEncoder.hpp"
 #include "Metal/MTLCaptureManager.hpp"
+#include "Metal/MTLCommandEncoder.hpp"
 #include "Metal/MTLLibrary.hpp"
 #include "Metal/MTLRenderCommandEncoder.hpp"
 #include "Pipeline.h"
@@ -114,19 +115,20 @@ void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet) {
     }
     for (const auto& write : metalSet->bufferWrites) {
         write.apply(metalSet->encoder);
+        encoder->useResource(write.buffer, write.access);
     }
-
     for (const auto& write : metalSet->samplerWrites) {
         write.apply(metalSet->encoder);
     }
-
     for (const auto& write : metalSet->textureWrites) {
         write.apply(metalSet->encoder);
+        encoder->useResource(write.texture, write.access);
     }
-
     for (const auto& write : metalSet->accelerationWrites) {
         write.apply(metalSet->encoder);
+        encoder->useResource(write.accelerationStructure, write.access);
     }
+    encoder->useResource(metalSet->argumentBuffer, MTL::ResourceUsageRead);
     encoder->setObjectBuffer(metalSet->argumentBuffer, 0, descriptorIndex);
     encoder->setMeshBuffer(metalSet->argumentBuffer, 0, descriptorIndex);
     encoder->setVertexBuffer(metalSet->argumentBuffer, 0, descriptorIndex);
@@ -222,19 +224,20 @@ void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet set) {
     }
     for (const auto& write : metalSet->bufferWrites) {
         write.apply(metalSet->encoder);
+        encoder->useResource(write.buffer, write.access);
     }
-
     for (const auto& write : metalSet->samplerWrites) {
         write.apply(metalSet->encoder);
     }
-
     for (const auto& write : metalSet->textureWrites) {
         write.apply(metalSet->encoder);
+        encoder->useResource(write.texture, write.access);
     }
-
     for (const auto& write : metalSet->accelerationWrites) {
         write.apply(metalSet->encoder);
+        encoder->useResource(write.accelerationStructure, write.access);
     }
+    encoder->useResource(metalSet->argumentBuffer, MTL::ResourceUsageRead);
     encoder->setBuffer(metalSet->argumentBuffer, 0, descriptorIndex);
 }
 

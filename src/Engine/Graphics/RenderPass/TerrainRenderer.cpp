@@ -273,10 +273,10 @@ void TerrainRenderer::beginFrame(Gfx::PDescriptorSet viewParamsSet, const Compon
 
 Gfx::ORenderCommand TerrainRenderer::render(Gfx::PDescriptorSet viewParamsSet) {
     Gfx::PDescriptorSet set = meshUpdater.layout->allocateDescriptorSet();
-    set->updateBuffer(CURRENT_VERTEX_BUFFER, 0, plainMesh.currentVertexBuffer);
+    /*set->updateBuffer(CURRENT_VERTEX_BUFFER, 0, plainMesh.currentVertexBuffer);
     set->updateBuffer(INDEXED_BISECTOR_BUFFER, 0, plainMesh.indexedBisectorBuffer);
     set->updateSampler(SAMPLER_LOCATION, 0, sampler);
-    set->updateTexture(DISPLACEMENT_MAP, 0, displacementAsset);
+    set->updateTexture(DISPLACEMENT_MAP, 0, displacementAsset);*/
     set->writeChanges();
     Gfx::ORenderCommand command = graphics->createRenderCommand("TerrainRender");
     command->setViewport(viewport);
@@ -322,11 +322,11 @@ void TerrainRenderer::setViewport(Gfx::PViewport _viewport, Gfx::PRenderPass ren
 void TerrainRenderer::applyDeformation(Gfx::PDescriptorSet viewParamsSet) {
     graphics->beginDebugRegion("ApplyDeformation");
     Gfx::PDescriptorSet set = meshUpdater.layout->allocateDescriptorSet();
-    set->updateBuffer(GEOMETRY_CB, 0, geometryBuffer);
+    /*set->updateBuffer(GEOMETRY_CB, 0, geometryBuffer);
     set->updateBuffer(INDIRECT_DRAW_BUFFER, 0, plainMesh.indirectDrawBuffer);
     set->updateBuffer(INDEXED_BISECTOR_BUFFER, 0, plainMesh.indexedBisectorBuffer);
     set->updateBuffer(LEB_POSITION_BUFFER, 0, plainMesh.lebVertexBuffer);
-    set->updateBuffer(CURRENT_VERTEX_BUFFER, 0, plainMesh.currentVertexBuffer);
+    set->updateBuffer(CURRENT_VERTEX_BUFFER, 0, plainMesh.currentVertexBuffer);*/
     set->writeChanges();
     Gfx::OComputeCommand command = graphics->createComputeCommand("Deform");
     command->bindPipeline(deform);

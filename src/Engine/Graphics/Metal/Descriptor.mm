@@ -32,22 +32,26 @@ void DescriptorLayout::create() {
     pool = new DescriptorPool(graphics, this);
     hash = CRC::Calculate(descriptorBindings.data(), sizeof(Gfx::DescriptorBinding) * descriptorBindings.size(), CRC::CRC_32());
     MTL::ArgumentDescriptor** objects = new MTL::ArgumentDescriptor*[descriptorBindings.size()];
-    flattenedBindingCount = 0;
+    uint32 mappingCounter = 0;
     for (uint32 i = 0; i < descriptorBindings.size(); ++i) {
-        if(descriptorBindings[i].descriptorType != Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER) {
+        if (descriptorBindings[i].descriptorType != Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER) {
             plainDescriptor = false;
         } else {
             objects[i] = MTL::ArgumentDescriptor::alloc()->init();
-            objects[i]->setIndex(flattenedBindingCount);
-            objects[i]->setAccess(cast(descriptorBindings[i].access));
+            objects[i]->setIndex(mappingCounter);
+            objects[i]->setAccess(MTL::BindingAccessReadOnly);
             objects[i]->setArrayLength(descriptorBindings[i].descriptorCount);
             objects[i]->setDataType(MTL::DataTypeChar);
             objects[i]->setArrayLength(descriptorBindings[i].uniformLength);
         }
-        for(uint32 j = 0; j < descriptorBindings[i].descriptorCount; ++j) {
-            flattenMap[flattenIndex(i, j)] = flattenedBindingCount++;
-        }
+        variableMapping[descriptorBindings[i].name] = DescriptorMapping{
+            .index = mappingCounter,
+            .constantSize = descriptorBindings[i].uniformLength,
+            .access = descriptorBindings[i].access,
+        };
+        mappingCounter += descriptorBindings[i].descriptorCount;
     }
+    numResources = mappingCounter;
     arguments = NS::Array::array((NS::Object**)objects, descriptorBindings.size());
 }
 
@@ -63,8 +67,8 @@ Gfx::PDescriptorSet DescriptorPool::allocateDescriptorSet() {
             // Currently in use, skip
             continue;
         }
-
         // Found set, stop searching
+        allocatedSets[setIndex]->reset();
         return PDescriptorSet(allocatedSets[setIndex]);
     }
     allocatedSets.add(new DescriptorSet(graphics, this));
@@ -75,94 +79,100 @@ void DescriptorPool::reset() {}
 
 DescriptorSet::DescriptorSet(PGraphics graphics, PDescriptorPool owner)
     : Gfx::DescriptorSet(owner->getLayout()), CommandBoundResource(graphics), graphics(graphics), owner(owner) {
-    boundResources.resize(owner->getLayout()->getTotalBindingCount());
 }
 
 DescriptorSet::~DescriptorSet() {}
 
+void DescriptorSet::reset() {
+    uniformWrites.clear();
+    bufferWrites.clear();
+    textureWrites.clear();
+    samplerWrites.clear();
+    accelerationWrites.clear();
+}
+
 void DescriptorSet::writeChanges() {}
 
-void DescriptorSet::updateBuffer(uint32 binding, uint32 index, Gfx::PUniformBuffer uniformBuffer) {
-    uint32 flattenedIndex = owner->getLayout()->getFlattenedIndex(binding, index);
-    PUniformBuffer buffer = uniformBuffer.cast<UniformBuffer>();
-    boundResources[flattenedIndex] = nullptr;
+void DescriptorSet::updateConstants(const std::string& name, uint32 offset, void* data) {
+    uint32 flattenedIndex = owner->getLayout()->variableMapping[name].index;
+    Array<uint8> contents(owner->getLayout()->variableMapping[name].constantSize);
+    std::memcpy(contents.data(), (uint8*)data + offset, contents.size());
     uniformWrites.add(UniformWriteInfo{
         .index = flattenedIndex,
-        .content = buffer->getContents(),
+        .content = contents,
     });
 }
 
-void DescriptorSet::updateBuffer(uint32 binding, uint32 index, Gfx::PShaderBuffer uniformBuffer) {
-    uint32 flattenedIndex = owner->getLayout()->getFlattenedIndex(binding, index);
+void DescriptorSet::updateBuffer(const std::string& name, uint32 index, Gfx::PShaderBuffer uniformBuffer) {
+    uint32 flattenedIndex = owner->getLayout()->variableMapping[name].index + index;
     PShaderBuffer buffer = uniformBuffer.cast<ShaderBuffer>();
-    boundResources[flattenedIndex] = buffer->getHandle();
     bufferWrites.add(BufferWriteInfo{
         .index = flattenedIndex,
         .buffer = buffer->getHandle(),
+        .access = owner->getLayout()->variableMapping[name].access,
     });
 }
 
-void DescriptorSet::updateBuffer(uint32 binding, uint32 index, Gfx::PVertexBuffer uniformBuffer) {
-    uint32 flattenedIndex = owner->getLayout()->getFlattenedIndex(binding, index);
+void DescriptorSet::updateBuffer(const std::string& name, uint32 index, Gfx::PVertexBuffer uniformBuffer) {
+    uint32 flattenedIndex = owner->getLayout()->variableMapping[name].index + index;
     PVertexBuffer buffer = uniformBuffer.cast<VertexBuffer>();
-    boundResources[flattenedIndex] = buffer->getHandle();
     bufferWrites.add(BufferWriteInfo{
         .index = flattenedIndex,
         .buffer = buffer->getHandle(),
+        .access = owner->getLayout()->variableMapping[name].access,
     });
 }
 
-void DescriptorSet::updateBuffer(uint32 binding, uint32 index, Gfx::PIndexBuffer uniformBuffer) {
-    uint32 flattenedIndex = owner->getLayout()->getFlattenedIndex(binding, index);
+void DescriptorSet::updateBuffer(const std::string& name, uint32 index, Gfx::PIndexBuffer uniformBuffer) {
+    uint32 flattenedIndex = owner->getLayout()->variableMapping[name].index + index;
     PIndexBuffer buffer = uniformBuffer.cast<IndexBuffer>();
-    boundResources[flattenedIndex] = buffer->getHandle();
     bufferWrites.add(BufferWriteInfo{
         .index = flattenedIndex,
         .buffer = buffer->getHandle(),
+        .access = owner->getLayout()->variableMapping[name].access,
     });
 }
 
-void DescriptorSet::updateSampler(uint32 binding, uint32 index, Gfx::PSampler samplerState) {
-    uint32 flattenedIndex = owner->getLayout()->getFlattenedIndex(binding, index);
+void DescriptorSet::updateSampler(const std::string& name, uint32 index, Gfx::PSampler samplerState) {
+    uint32 flattenedIndex = owner->getLayout()->variableMapping[name].index + index;
     PSampler sampler = samplerState.cast<Sampler>();
-    boundResources[flattenedIndex] = nullptr;
     samplerWrites.add(SamplerWriteInfo{
         .index = flattenedIndex,
         .sampler = sampler->getHandle(),
     });
 }
 
-void DescriptorSet::updateTexture(uint32 binding, uint32 index, Gfx::PTexture2D texture) {
-    uint32 flattenedIndex = owner->getLayout()->getFlattenedIndex(binding, index);
+void DescriptorSet::updateTexture(const std::string& name, uint32 index, Gfx::PTexture2D texture) {
+    uint32 flattenedIndex = owner->getLayout()->variableMapping[name].index + index;
     PTextureBase tex = texture.cast<TextureBase>();
-    boundResources[flattenedIndex] = tex->getImage();
     textureWrites.add(TextureWriteInfo{
         .index = flattenedIndex,
         .texture = tex->getImage(),
+        .access = owner->getLayout()->variableMapping[name].access,
     });
 }
 
-void DescriptorSet::updateTexture(uint32 binding, uint32 index, Gfx::PTexture3D texture) {
-    uint32 flattenedIndex = owner->getLayout()->getFlattenedIndex(binding, index);
+void DescriptorSet::updateTexture(const std::string& name, uint32 index, Gfx::PTexture3D texture) {
+    uint32 flattenedIndex = owner->getLayout()->variableMapping[name].index + index;
     PTextureBase tex = texture.cast<TextureBase>();
-    boundResources[flattenedIndex] = tex->getImage();
     textureWrites.add(TextureWriteInfo{
         .index = flattenedIndex,
         .texture = tex->getImage(),
+        .access = owner->getLayout()->variableMapping[name].access,
     });
 }
 
-void DescriptorSet::updateTexture(uint32 binding, uint32 index, Gfx::PTextureCube texture) {
-    uint32 flattenedIndex = owner->getLayout()->getFlattenedIndex(binding, index);
+void DescriptorSet::updateTexture(const std::string& name, uint32 index, Gfx::PTextureCube texture) {
+    uint32 flattenedIndex = owner->getLayout()->variableMapping[name].index + index;
     PTextureBase tex = texture.cast<TextureBase>();
-    boundResources[flattenedIndex] = tex->getImage();
     textureWrites.add(TextureWriteInfo{
         .index = flattenedIndex,
         .texture = tex->getImage(),
+        .access = owner->getLayout()->variableMapping[name].access,
     });
 }
 
-void DescriptorSet::updateAccelerationStructure(uint32 binding, uint32 index, Gfx::PTopLevelAS as) { assert(false && "TODO"); }
+void DescriptorSet::updateAccelerationStructure(const std::string& name, uint32 index, Gfx::PTopLevelAS as) { assert(false && "TODO"); }
 
 PipelineLayout::PipelineLayout(PGraphics graphics, const std::string& name, Gfx::PPipelineLayout baseLayout)
     : Gfx::PipelineLayout(name, baseLayout), graphics(graphics) {}

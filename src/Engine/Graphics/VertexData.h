@@ -128,18 +128,27 @@ class VertexData {
     Gfx::ODescriptorLayout instanceDataLayout;
     // for mesh shading
     Gfx::OShaderBuffer meshletBuffer;
+    constexpr static std::string MESHLET_NAME = "meshlets";
     Gfx::OShaderBuffer vertexIndicesBuffer;
+    constexpr static std::string VERTEXINDICES_NAME = "vertexIndices";
     Gfx::OShaderBuffer primitiveIndicesBuffer;
+    constexpr static std::string PRIMITIVEINDICES_NAME = "primitiveIndices";
     Gfx::OShaderBuffer cullingOffsetBuffer;
+    constexpr static std::string CULLINGOFFSETS_NAME = "cullingOffsets";
+    constexpr static std::string CULLINGDATA_NAME = "cullingData";
+
     // for legacy pipeline
     Gfx::OIndexBuffer indexBuffer;
+    constexpr static std::string INDEXBUFFER_NAME = "indexBuffer";
     Array<Gfx::PBottomLevelAS> dataToBuild;
     // Material data
     Array<InstanceData> instanceData;
     Gfx::OShaderBuffer instanceBuffer;
+    constexpr static std::string INSTANCES_NAME = "instances";
 
     Array<MeshData> instanceMeshData;
     Gfx::OShaderBuffer instanceMeshDataBuffer;
+    constexpr static std::string MESHDATA_NAME = "meshData";
 
     Array<Gfx::PBottomLevelAS> rayTracingScene;
 

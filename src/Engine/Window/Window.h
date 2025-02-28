@@ -9,6 +9,7 @@ class Window {
   public:
     Window(PWindowManager owner, Gfx::OWindow handle);
     ~Window();
+    void show() { gfxHandle->show(); }
     void addView(PView view);
     void pollInputs();
     void render();

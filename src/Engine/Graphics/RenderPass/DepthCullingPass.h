@@ -29,7 +29,9 @@ class DepthCullingPass : public RenderPass {
     Array<uint32> mipOffsets;
     Array<UVector2> mipDims;
 
+    constexpr static std::string DEPTHTEXTURE_NAME = "depthTexture";
     Gfx::OShaderBuffer depthMipBuffer;
+    constexpr static std::string DEPTHMIP_NAME = "depthMip";
     Gfx::RenderTargetAttachment depthAttachment;
     Gfx::RenderTargetAttachment visibilityAttachment;
     Gfx::ODescriptorLayout depthAttachmentLayout;

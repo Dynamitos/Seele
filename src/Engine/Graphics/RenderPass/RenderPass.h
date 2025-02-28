@@ -67,7 +67,6 @@ class RenderPass {
     } viewParams;
     PRenderGraphResources resources;
     Gfx::ODescriptorLayout viewParamsLayout;
-    Gfx::OUniformBuffer viewParamsBuffer;
     Gfx::PDescriptorSet viewParamsSet;
     Gfx::ORenderPass renderPass;
     Gfx::PGraphics graphics;

@@ -41,11 +41,17 @@ class StaticMeshVertexData : public VertexData {
 
 
     Gfx::OShaderBuffer positions;
+    constexpr static std::string POSITIONS_NAME = "positions";
     Gfx::OShaderBuffer texCoords[MAX_TEXCOORDS];
+    constexpr static std::string TEXCOORDS_NAME = "texCoords";
     Gfx::OShaderBuffer normals;
+    constexpr static std::string NORMALS_NAME = "normals";
     Gfx::OShaderBuffer tangents;
+    constexpr static std::string TANGENTS_NAME = "tangents";
     Gfx::OShaderBuffer biTangents;
+    constexpr static std::string BITANGENTS_NAME = "biTangents";
     Gfx::OShaderBuffer colors;
+    constexpr static std::string COLORS_NAME = "colors";
     Array<PositionType> posData;
     Array<TexCoordType> texData[MAX_TEXCOORDS];
     Array<NormalType> norData;

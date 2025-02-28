@@ -21,8 +21,8 @@ void VisibilityPass::render() {
                                    Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
     visibilityDescriptor->reset();
     visibilitySet = visibilityDescriptor->allocateDescriptorSet();
-    visibilitySet->updateTexture(0, 0, visibilityAttachment.getTexture());
-    visibilitySet->updateBuffer(1, 0, cullingBuffer);
+    visibilitySet->updateTexture(VISIBILITY_NAME, 0, visibilityAttachment.getTexture());
+    visibilitySet->updateBuffer(CULLINGBUFFER_NAME, 0, cullingBuffer);
     visibilitySet->writeChanges();
 
     query->beginQuery();
@@ -49,13 +49,14 @@ void VisibilityPass::publishOutputs() {
     threadGroupSize = glm::ceil(glm::vec3(viewportWidth / (float)BLOCK_SIZE, viewportHeight / (float)BLOCK_SIZE, 1));
     visibilityDescriptor = graphics->createDescriptorLayout("pVisibilityParams");
     visibilityDescriptor->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 0,
+        .name = VISIBILITY_NAME,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+        .access = Gfx::SE_DESCRIPTOR_ACCESS_SAMPLE_BIT,
     });
     visibilityDescriptor->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 1,
+        .name = CULLINGBUFFER_NAME,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-        .access = Gfx::SE_DESCRIPTOR_ACCESS_READ_WRITE_BIT,
+        .access = Gfx::SE_DESCRIPTOR_ACCESS_READ_BIT | Gfx::SE_DESCRIPTOR_ACCESS_WRITE_BIT,
     });
     visibilityDescriptor->create();
 

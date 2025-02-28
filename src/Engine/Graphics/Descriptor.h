@@ -6,15 +6,15 @@
 namespace Seele {
 namespace Gfx {
 struct DescriptorBinding {
-    uint32 binding = 0;
+    std::string name;
+    // In Metal uniforms are plain bytes, and for that we need to know the struct size
+    uint32 uniformLength = 0;
     SeDescriptorType descriptorType = SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     SeImageViewType textureType = SE_IMAGE_VIEW_TYPE_2D;
     uint32 descriptorCount = 1;
     SeDescriptorBindingFlags bindingFlags = 0;
     SeShaderStageFlags shaderStages = SE_SHADER_STAGE_ALL;
-    Gfx::SeDescriptorAccessTypeFlags access = SE_DESCRIPTOR_ACCESS_READ_ONLY_BIT;
-    // In Metal uniforms are plain bytes, and for that we need to know the struct size
-    uint32 uniformLength = 0;
+    SeDescriptorAccessTypeFlags access = SE_DESCRIPTOR_ACCESS_READ_BIT;
 };
 
 DECLARE_REF(DescriptorPool)
@@ -22,8 +22,6 @@ DECLARE_REF(DescriptorSet)
 class DescriptorLayout {
   public:
     DescriptorLayout(const std::string& name);
-    DescriptorLayout(const DescriptorLayout& other);
-    DescriptorLayout& operator=(const DescriptorLayout& other);
     virtual ~DescriptorLayout();
     void addDescriptorBinding(DescriptorBinding binding);
     void reset();
@@ -65,15 +63,15 @@ class DescriptorSet {
     DescriptorSet(PDescriptorLayout layout);
     virtual ~DescriptorSet();
     virtual void writeChanges() = 0;
-    virtual void updateBuffer(uint32 binding, uint32 index, Gfx::PUniformBuffer uniformBuffer) = 0;
-    virtual void updateBuffer(uint32 binding, uint32 index, Gfx::PShaderBuffer shaderBuffer) = 0;
-    virtual void updateBuffer(uint32 binding, uint32 index, Gfx::PVertexBuffer indexBuffer) = 0;
-    virtual void updateBuffer(uint32 binding, uint32 index, Gfx::PIndexBuffer indexBuffer) = 0;
-    virtual void updateSampler(uint32 binding, uint32 index, Gfx::PSampler samplerState) = 0;
-    virtual void updateTexture(uint32 binding, uint32 index, Gfx::PTexture2D texture) = 0;
-    virtual void updateTexture(uint32 binding, uint32 index, Gfx::PTexture3D texture) = 0;
-    virtual void updateTexture(uint32 binding, uint32 index, Gfx::PTextureCube texture) = 0;
-    virtual void updateAccelerationStructure(uint32 binding, uint32 index, Gfx::PTopLevelAS as) = 0;
+    virtual void updateConstants(const std::string& name, uint32 offset, void* data) = 0;
+    virtual void updateBuffer(const std::string& name, uint32 index, Gfx::PShaderBuffer shaderBuffer) = 0;
+    virtual void updateBuffer(const std::string& name, uint32 index, Gfx::PVertexBuffer indexBuffer) = 0;
+    virtual void updateBuffer(const std::string& name, uint32 index, Gfx::PIndexBuffer indexBuffer) = 0;
+    virtual void updateSampler(const std::string& name, uint32 index, Gfx::PSampler samplerState) = 0;
+    virtual void updateTexture(const std::string& name, uint32 index, Gfx::PTexture2D texture) = 0;
+    virtual void updateTexture(const std::string& name, uint32 index, Gfx::PTexture3D texture) = 0;
+    virtual void updateTexture(const std::string& name, uint32 index, Gfx::PTextureCube texture) = 0;
+    virtual void updateAccelerationStructure(const std::string& name, uint32 index, Gfx::PTopLevelAS as) = 0;
     bool operator<(PDescriptorSet other);
 
     constexpr PDescriptorLayout getLayout() const { return layout; }

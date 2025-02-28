@@ -14,8 +14,6 @@ MTL::LoadAction cast(Gfx::SeAttachmentLoadOp loadOp);
 Gfx::SeAttachmentLoadOp cast(MTL::LoadAction loadOp);
 MTL::StoreAction cast(Gfx::SeAttachmentStoreOp storeOp);
 Gfx::SeAttachmentStoreOp cast(MTL::StoreAction storeOp);
-MTL::BindingAccess cast(Gfx::SeDescriptorAccessTypeFlags access);
-Gfx::SeDescriptorAccessTypeFlags cast(MTL::BindingAccess access);
 MTL::SamplerBorderColor cast(Gfx::SeBorderColor color);
 Gfx::SeBorderColor cast(MTL::SamplerBorderColor color);
 MTL::CompareFunction cast(Gfx::SeCompareOp compare);

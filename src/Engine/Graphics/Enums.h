@@ -1733,9 +1733,9 @@ typedef union SeClearValue {
 } SeClearValue;
 
 typedef enum SeDescriptorAccessTypeFlagBits {
-    SE_DESCRIPTOR_ACCESS_READ_ONLY_BIT = 0x00000001,
-    SE_DESCRIPTOR_ACCESS_READ_WRITE_BIT = 0x00000002,
-    SE_DESCRIPTOR_ACCESS_WRITE_ONLY_BIT = 0x00000004,
+    SE_DESCRIPTOR_ACCESS_READ_BIT = 0x00000001,
+    SE_DESCRIPTOR_ACCESS_WRITE_BIT = 0x00000002,
+    SE_DESCRIPTOR_ACCESS_SAMPLE_BIT = 0x00000004,
 } SeDescriptorAccessTypeFlagBits;
 typedef SeFlags SeDescriptorAccessTypeFlags;
 

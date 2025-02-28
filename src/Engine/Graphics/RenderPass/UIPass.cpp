@@ -13,17 +13,18 @@ UIPass::UIPass(Gfx::PGraphics graphics, UI::PSystem system) : RenderPass(graphic
     elementBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{.name = "RenderStyleElements"});
     textDescriptorLayout = graphics->createDescriptorLayout("pText");
     textDescriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 0,
+        .name = GLYPHINSTANCE_NAME,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
     });
     textDescriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 1,
+        .name = GLYPHSAMPLER_NAME,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLER,
     });
     textDescriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 2,
+        .name = TEXTURES_NAME,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
         .descriptorCount = 1024,
+        .access = Gfx::SE_DESCRIPTOR_ACCESS_SAMPLE_BIT,
     });
     textPipelineLayout = graphics->createPipelineLayout("TextPipeline");
     textPipelineLayout->addDescriptorLayout(viewParamsLayout);
@@ -31,17 +32,18 @@ UIPass::UIPass(Gfx::PGraphics graphics, UI::PSystem system) : RenderPass(graphic
 
     uiDescriptorLayout = graphics->createDescriptorLayout("pParams");
     uiDescriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 0,
+        .name = GLYPHINSTANCE_NAME,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
     });
     uiDescriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 1,
+        .name = GLYPHSAMPLER_NAME,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLER,
     });
     uiDescriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 2,
+        .name = TEXTURES_NAME,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
         .descriptorCount = 1024,
+        .access = Gfx::SE_DESCRIPTOR_ACCESS_SAMPLE_BIT,
     });
     uiPipelineLayout = graphics->createPipelineLayout("UIPipeline");
     uiPipelineLayout->addDescriptorLayout(viewParamsLayout);
@@ -81,10 +83,10 @@ void UIPass::beginFrame(const Component::Camera& cam) {
 
     textDescriptorLayout->reset();
     textDescriptorSet = textDescriptorLayout->allocateDescriptorSet();
-    textDescriptorSet->updateBuffer(0, 0, glyphInstanceBuffer);
-    textDescriptorSet->updateSampler(1, 0, glyphSampler);
+    textDescriptorSet->updateBuffer(GLYPHINSTANCE_NAME, 0, glyphInstanceBuffer);
+    textDescriptorSet->updateSampler(GLYPHSAMPLER_NAME, 0, glyphSampler);
     for (uint32 i = 0; i < usedTextures.size(); ++i) {
-        textDescriptorSet->updateTexture(2, i, usedTextures[i]);
+        textDescriptorSet->updateTexture(TEXTURES_NAME, i, usedTextures[i]);
     }
     textDescriptorSet->writeChanges();
 
@@ -94,10 +96,10 @@ void UIPass::beginFrame(const Component::Camera& cam) {
                                    Gfx::SE_PIPELINE_STAGE_VERTEX_SHADER_BIT);
     uiDescriptorLayout->reset();
     uiDescriptorSet = uiDescriptorLayout->allocateDescriptorSet();
-    uiDescriptorSet->updateBuffer(0, 0, elementBuffer);
-    uiDescriptorSet->updateSampler(1, 0, glyphSampler);
+    uiDescriptorSet->updateBuffer(ELEMENT_NAME, 0, elementBuffer);
+    uiDescriptorSet->updateSampler(GLYPHSAMPLER_NAME, 0, glyphSampler);
     for (uint32 i = 0; i < usedTextures.size(); ++i) {
-        uiDescriptorSet->updateTexture(2, i, usedTextures[i]);
+        uiDescriptorSet->updateTexture(TEXTURES_NAME, i, usedTextures[i]);
     }
     uiDescriptorSet->writeChanges();
 }
