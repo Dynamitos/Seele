@@ -26,7 +26,7 @@ using namespace Seele::Metal;
 
 DescriptorLayout::DescriptorLayout(PGraphics graphics, const std::string& name) : Gfx::DescriptorLayout(name), graphics(graphics) {}
 
-DescriptorLayout::~DescriptorLayout() {}
+DescriptorLayout::~DescriptorLayout() { arguments->release(); }
 
 void DescriptorLayout::create() {
     pool = new DescriptorPool(graphics, this);
@@ -36,14 +36,14 @@ void DescriptorLayout::create() {
     for (uint32 i = 0; i < descriptorBindings.size(); ++i) {
         if (descriptorBindings[i].descriptorType != Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER) {
             plainDescriptor = false;
-        } else {
-            objects[i] = MTL::ArgumentDescriptor::alloc()->init();
-            objects[i]->setIndex(mappingCounter);
-            objects[i]->setAccess(MTL::BindingAccessReadOnly);
-            objects[i]->setArrayLength(descriptorBindings[i].descriptorCount);
-            objects[i]->setDataType(MTL::DataTypeChar);
-            objects[i]->setArrayLength(descriptorBindings[i].uniformLength);
         }
+        objects[i] = MTL::ArgumentDescriptor::alloc()->init();
+        objects[i]->setIndex(mappingCounter);
+        objects[i]->setAccess(MTL::BindingAccessReadOnly);
+        objects[i]->setArrayLength(descriptorBindings[i].descriptorCount);
+        objects[i]->setDataType(MTL::DataTypeChar);
+        objects[i]->setArrayLength(descriptorBindings[i].uniformLength);
+    
         variableMapping[descriptorBindings[i].name] = DescriptorMapping{
             .index = mappingCounter,
             .constantSize = descriptorBindings[i].uniformLength,
@@ -53,6 +53,7 @@ void DescriptorLayout::create() {
     }
     numResources = mappingCounter;
     arguments = NS::Array::array((NS::Object**)objects, descriptorBindings.size());
+    delete[] objects;
 }
 
 MTL::ArgumentEncoder* DescriptorLayout::createEncoder() { return graphics->getDevice()->newArgumentEncoder(arguments); }
@@ -79,9 +80,18 @@ void DescriptorPool::reset() {}
 
 DescriptorSet::DescriptorSet(PGraphics graphics, PDescriptorPool owner)
     : Gfx::DescriptorSet(owner->getLayout()), CommandBoundResource(graphics), graphics(graphics), owner(owner) {
+    std::cout << "New Descriptor set" << std::endl;
 }
 
-DescriptorSet::~DescriptorSet() {}
+DescriptorSet::~DescriptorSet() {
+    if(encoder != nullptr) {
+        encoder->release();
+    }
+    if(argumentBuffer != nullptr) {
+        argumentBuffer->release();
+    }
+    std::cout << "destroying descriptor set" << std::endl;
+}
 
 void DescriptorSet::reset() {
     uniformWrites.clear();

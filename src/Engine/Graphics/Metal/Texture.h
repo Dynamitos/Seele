@@ -24,7 +24,6 @@ class TextureHandle {
     uint32 height;
     uint32 depth;
     uint32 arrayCount;
-    uint32 layerCount;
     uint32 mipLevels;
     uint32 samples;
     Gfx::SeFormat format;

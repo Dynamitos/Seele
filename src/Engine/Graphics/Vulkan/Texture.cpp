@@ -95,62 +95,62 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType, const
             .pObjectName = name.c_str(),
         };
         vkSetDebugUtilsObjectNameEXT(graphics->getDevice(), &nameInfo);
-        ownsImage = true;
+        ownsImage = true;const DataSource& sourceData = createInfo.sourceData;
+        if (sourceData.size > 0) {
+            changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_ACCESS_NONE, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                         VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
+            void* data;
+            VkBufferCreateInfo stagingInfo = {
+                .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+                .pNext = nullptr,
+                .flags = 0,
+                .size = sourceData.size,
+                .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+            };
+            VmaAllocationCreateInfo alloc = {
+                .flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT,
+                .usage = VMA_MEMORY_USAGE_AUTO,
+            };
+            OBufferAllocation stagingAlloc =
+                new BufferAllocation(graphics, fmt::format("{}Staging", createInfo.name), stagingInfo, alloc, Gfx::QueueType::TRANSFER);
+            vmaMapMemory(graphics->getAllocator(), stagingAlloc->allocation, &data);
+            std::memcpy(data, sourceData.data, sourceData.size);
+            vmaUnmapMemory(graphics->getAllocator(), stagingAlloc->allocation);
+    
+            PCommandPool commandPool = graphics->getQueueCommands(owner);
+            VkBufferImageCopy region = {
+                .bufferOffset = 0,
+                .bufferRowLength = 0,
+                .bufferImageHeight = 0,
+                .imageSubresource =
+                    {
+                        .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                        .mipLevel = 0,
+                        .baseArrayLayer = 0,
+                        .layerCount = arrayCount * layerCount,
+                    },
+                .imageOffset =
+                    {
+                        .x = 0,
+                        .y = 0,
+                        .z = 0,
+                    },
+                .imageExtent = {.width = width, .height = height, .depth = depth},
+            };
+    
+            vkCmdCopyBufferToImage(commandPool->getCommands()->getHandle(), stagingAlloc->buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                                   1, &region);
+    
+            commandPool->getCommands()->bindResource(PBufferAllocation(stagingAlloc));
+            generateMipmaps();
+            // When loading a texture from a file, we will almost always use it as a texture map for fragment shaders
+            changeLayout(Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_ACCESS_TRANSFER_READ_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                         VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+            graphics->getDestructionManager()->queueResourceForDestruction(std::move(stagingAlloc));
+        }
     }
-    const DataSource& sourceData = createInfo.sourceData;
-    if (sourceData.size > 0) {
-        changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_ACCESS_NONE, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-                     VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
-        void* data;
-        VkBufferCreateInfo stagingInfo = {
-            .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-            .pNext = nullptr,
-            .flags = 0,
-            .size = sourceData.size,
-            .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-            .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-        };
-        VmaAllocationCreateInfo alloc = {
-            .flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT,
-            .usage = VMA_MEMORY_USAGE_AUTO,
-        };
-        OBufferAllocation stagingAlloc =
-            new BufferAllocation(graphics, fmt::format("{}Staging", createInfo.name), stagingInfo, alloc, Gfx::QueueType::TRANSFER);
-        vmaMapMemory(graphics->getAllocator(), stagingAlloc->allocation, &data);
-        std::memcpy(data, sourceData.data, sourceData.size);
-        vmaUnmapMemory(graphics->getAllocator(), stagingAlloc->allocation);
-
-        PCommandPool commandPool = graphics->getQueueCommands(owner);
-        VkBufferImageCopy region = {
-            .bufferOffset = 0,
-            .bufferRowLength = 0,
-            .bufferImageHeight = 0,
-            .imageSubresource =
-                {
-                    .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-                    .mipLevel = 0,
-                    .baseArrayLayer = 0,
-                    .layerCount = arrayCount * layerCount,
-                },
-            .imageOffset =
-                {
-                    .x = 0,
-                    .y = 0,
-                    .z = 0,
-                },
-            .imageExtent = {.width = width, .height = height, .depth = depth},
-        };
-
-        vkCmdCopyBufferToImage(commandPool->getCommands()->getHandle(), stagingAlloc->buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                               1, &region);
-
-        commandPool->getCommands()->bindResource(PBufferAllocation(stagingAlloc));
-        generateMipmaps();
-        // When loading a texture from a file, we will almost always use it as a texture map for fragment shaders
-        changeLayout(Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_ACCESS_TRANSFER_READ_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-                     VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
-        graphics->getDestructionManager()->queueResourceForDestruction(std::move(stagingAlloc));
-    }
+    
     VkImageViewCreateInfo viewInfo = {
         .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
         .pNext = nullptr,

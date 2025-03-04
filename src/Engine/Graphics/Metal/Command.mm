@@ -24,19 +24,29 @@ using namespace Seele::Metal;
 Command::Command(PGraphics graphics, MTL::CommandBuffer* cmdBuffer)
     : graphics(graphics), completed(new Event(graphics)), cmdBuffer(cmdBuffer) {}
 
-Command::~Command() {}
+Command::~Command() {
+    assert(parallelEncoder == nullptr);
+    if(blitEncoder != nullptr) {
+        blitEncoder->endEncoding();
+        blitEncoder->release();
+    }
+    cmdBuffer->release();
+}
 
 void Command::beginRenderPass(PRenderPass renderPass) {
     if (blitEncoder) {
         blitEncoder->endEncoding();
+        blitEncoder->release();
         blitEncoder = nullptr;
     }
     renderPass->updateRenderPass();
     parallelEncoder = cmdBuffer->parallelRenderCommandEncoder(renderPass->getDescriptor());
+    parallelEncoder->setLabel(NS::String::string(renderPass->getName().c_str(), NS::ASCIIStringEncoding));
 }
 
 void Command::endRenderPass() {
     parallelEncoder->endEncoding();
+    parallelEncoder->release();
     parallelEncoder = nullptr;
 }
 
@@ -46,6 +56,8 @@ void Command::end(PEvent signal) {
     assert(!parallelEncoder);
     if (blitEncoder) {
         blitEncoder->endEncoding();
+        blitEncoder->release();
+        blitEncoder = nullptr;
     }
     if (signal != nullptr) {
         cmdBuffer->encodeSignalEvent(signal->getHandle(), 1);
@@ -62,7 +74,7 @@ void Command::waitForEvent(PEvent event) { cmdBuffer->encodeWait(event->getHandl
 
 RenderCommand::RenderCommand(MTL::RenderCommandEncoder* encoder, const std::string& name) : encoder(encoder), name(name) {}
 
-RenderCommand::~RenderCommand() {}
+RenderCommand::~RenderCommand() { encoder->release(); }
 
 void RenderCommand::end() { encoder->endEncoding(); }
 
@@ -81,9 +93,7 @@ void RenderCommand::setViewport(Gfx::PViewport viewport) {
 void RenderCommand::bindPipeline(Gfx::PGraphicsPipeline pipeline) {
     boundPipeline = pipeline.cast<GraphicsPipeline>();
     encoder->setRenderPipelineState(boundPipeline->getHandle());
-    if (boundPipeline->getPipelineLayout()->hasPushConstants()) {
-        constantsBuffer = boundPipeline->graphics->getDevice()->newBuffer(boundPipeline->getPipelineLayout()->getPushConstantsSize(), 0);
-    }
+    encoder->setDepthStencilState(boundPipeline->depth);
 }
 
 void RenderCommand::bindPipeline(Gfx::PRayTracingPipeline pipeline) {}
@@ -150,19 +160,18 @@ void RenderCommand::bindVertexBuffer(const Array<Gfx::PVertexBuffer>& buffers) {
 void RenderCommand::bindIndexBuffer(Gfx::PIndexBuffer gfxIndexBuffer) { boundIndexBuffer = gfxIndexBuffer.cast<IndexBuffer>(); }
 
 void RenderCommand::pushConstants(Gfx::SeShaderStageFlags stage, uint32 offset, uint32 size, const void* data) {
-    std::memcpy(constantsBuffer->contents(), data, size);
     uint pushIndex = boundPipeline->getPipelineLayout()->findParameter("pOffsets");
     if (stage & Gfx::SE_SHADER_STAGE_VERTEX_BIT) {
-        encoder->setVertexBuffer(constantsBuffer, 0, pushIndex); // TODO: hardcoded
+        encoder->setVertexBytes(data, size, pushIndex); // TODO: hardcoded
     }
     if (stage & Gfx::SE_SHADER_STAGE_FRAGMENT_BIT) {
-        encoder->setFragmentBuffer(constantsBuffer, 0, pushIndex); // TODO: hardcoded
+        encoder->setFragmentBytes(data, size, pushIndex); // TODO: hardcoded
     }
     if (stage & Gfx::SE_SHADER_STAGE_TASK_BIT_EXT) {
-        encoder->setObjectBuffer(constantsBuffer, 0, pushIndex); // TODO: hardcoded
+        encoder->setObjectBytes(data, size, pushIndex); // TODO: hardcoded
     }
     if (stage & Gfx::SE_SHADER_STAGE_MESH_BIT_EXT) {
-        encoder->setMeshBuffer(constantsBuffer, 0, pushIndex); // TODO: hardcoded
+        encoder->setMeshBytes(data, size, pushIndex); // TODO: hardcoded
     }
 }
 
@@ -191,7 +200,7 @@ void RenderCommand::traceRays(uint32 width, uint32 height, uint32 depth) {}
 ComputeCommand::ComputeCommand(MTL::CommandBuffer* cmdBuffer, const std::string& name)
     : commandBuffer(cmdBuffer), encoder(cmdBuffer->computeCommandEncoder()), name(name) {}
 
-ComputeCommand::~ComputeCommand() {}
+ComputeCommand::~ComputeCommand() { encoder->release(); commandBuffer->release(); }
 
 void ComputeCommand::end() {
     encoder->endEncoding();
@@ -201,9 +210,6 @@ void ComputeCommand::end() {
 void ComputeCommand::bindPipeline(Gfx::PComputePipeline pipeline) {
     boundPipeline = pipeline.cast<ComputePipeline>();
     encoder->setComputePipelineState(boundPipeline->getHandle());
-    if (boundPipeline->getPipelineLayout()->hasPushConstants()) {
-        constantsBuffer = boundPipeline->graphics->getDevice()->newBuffer(boundPipeline->getPipelineLayout()->getPushConstantsSize(), 0);
-    }
 }
 
 void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet set) {
@@ -248,9 +254,8 @@ void ComputeCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& sets) {
 }
 
 void ComputeCommand::pushConstants(Gfx::SeShaderStageFlags, uint32 offset, uint32 size, const void* data) {
-    std::memcpy(constantsBuffer->contents(), data, size);
     uint pushIndex = boundPipeline->getPipelineLayout()->findParameter("pMipParam");
-    encoder->setBuffer(constantsBuffer, 0, pushIndex); // TODO: hardcoded
+    encoder->setBytes(data, size, pushIndex); // TODO: hardcoded
 }
 
 void ComputeCommand::dispatch(uint32 threadX, uint32 threadY, uint32 threadZ) {

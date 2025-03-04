@@ -87,11 +87,11 @@ Window::Window(PGraphics graphics, const WindowCreateInfo& createInfo) : graphic
     metalWindow = glfwGetCocoaWindow(handle);
     metalLayer = [CAMetalLayer layer];
     metalLayer.device = (__bridge id<MTLDevice>)graphics->getDevice();
-    metalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
+    metalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm_sRGB;
     metalLayer.drawableSize = CGSizeMake(createInfo.width, createInfo.height);
     metalWindow.contentView.layer = metalLayer;
     metalWindow.contentView.wantsLayer = YES;
-    framebufferFormat = Gfx::SE_FORMAT_B8G8R8A8_UNORM;
+    framebufferFormat = Gfx::SE_FORMAT_B8G8R8A8_SRGB;
     
     drawable = (__bridge CA::MetalDrawable*)[metalLayer nextDrawable];
     createBackBuffer();
@@ -104,8 +104,6 @@ void Window::show() { glfwShowWindow(windowHandle); }
 void Window::pollInput() { glfwPollEvents(); }
 
 void Window::beginFrame() {
-    drawable = (__bridge CA::MetalDrawable*)[metalLayer nextDrawable];
-    createBackBuffer();
     static double start = glfwGetTime();
     double end = glfwGetTime();
     currentFrameDelta = end - start;
@@ -114,9 +112,12 @@ void Window::beginFrame() {
 }
 
 void Window::endFrame() {
+    graphics->waitDeviceIdle();
     graphics->getQueue()->getCommands()->present(drawable);
     graphics->getQueue()->submitCommands();
     currentFrameIndex++;
+    drawable = (__bridge CA::MetalDrawable*)[metalLayer nextDrawable];
+    createBackBuffer();
 }
 
 void Window::onWindowCloseEvent() {}
@@ -156,17 +157,17 @@ void Window::resize(int width, int height) {
     }
     paused = true;
     metalLayer.drawableSize = CGSizeMake(width, height);
-    drawable->release();
+    [drawable release];
     framebufferWidth = width;
     framebufferHeight = height;
     // Deallocate the textures if they have been created
-    drawable = (__bridge CA::MetalDrawable*)[[metalLayer nextDrawable] autorelease];
+    drawable = (__bridge CA::MetalDrawable*)[metalLayer nextDrawable];
     createBackBuffer();
     resizeCallback(width, height);
 }
 
 void Window::createBackBuffer() {
-    MTL::Texture* buf = drawable->texture();
+    MTL::Texture* buf = (__bridge MTL::Texture*)[drawable texture];
     backBuffer = new Texture2D(graphics,
                                TextureCreateInfo{
                                    .width = static_cast<uint32>(buf->width()),
@@ -186,8 +187,8 @@ Viewport::Viewport(PWindow owner, const ViewportCreateInfo& createInfo) : Gfx::V
     viewport.height = sizeY;
     viewport.originX = offsetX;
     viewport.originY = offsetY;
-    viewport.znear = 0.0f;
-    viewport.zfar = 1.0f;
+    viewport.znear = 1.0f;
+    viewport.zfar = 0.0f;
 }
 
 Viewport::~Viewport() {}

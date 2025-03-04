@@ -42,8 +42,7 @@ void BufferAllocation::unmap() {}
 Buffer::Buffer(PGraphics graphics, uint64 size, Gfx::SeBufferUsageFlags usage, Gfx::QueueType queueType, bool dynamic, std::string name,
                bool createCleared, uint32 clearValue)
     : graphics(graphics), currentBuffer(0), dynamic(dynamic), createCleared(createCleared), name(name), clearValue(clearValue) {
-    if(size > 0)
-    {
+    if(size > 0) {
         buffers.add(nullptr);
         createBuffer(size, 0);
     }
@@ -53,6 +52,7 @@ Buffer::~Buffer() {
     for (size_t i = 0; i < buffers.size(); ++i) {
         // TODO
     }
+    buffers.clear();
 }
 
 void Buffer::updateContents(uint64 regionOffset, uint64 regionSize, void* ptr) {

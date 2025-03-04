@@ -3,6 +3,7 @@
 #include "Graphics/Enums.h"
 #include "Graphics/Initializer.h"
 #include "Graphics/Metal/Graphics.h"
+#include "Command.h"
 #include "Metal/MTLTexture.hpp"
 #include "Metal/MTLTypes.hpp"
 
@@ -11,7 +12,7 @@ using namespace Seele::Metal;
 
 TextureHandle::TextureHandle(PGraphics graphics, MTL::TextureType type, const TextureCreateInfo& createInfo, MTL::Texture* existingImage)
     : texture(existingImage), type(type), width(createInfo.width), height(createInfo.height), depth(createInfo.depth),
-      arrayCount(createInfo.elements), layerCount(createInfo.layers), mipLevels(1), samples(createInfo.samples), format(createInfo.format),
+      arrayCount(createInfo.elements), mipLevels(1), samples(createInfo.samples), format(createInfo.format),
       usage(createInfo.usage), layout(Gfx::SE_IMAGE_LAYOUT_UNDEFINED), ownsImage(existingImage == nullptr) {
     if (createInfo.useMip) {
         mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(width, height)))) + 1;
@@ -37,17 +38,36 @@ TextureHandle::TextureHandle(PGraphics graphics, MTL::TextureType type, const Te
         descriptor->setTextureType(type);
         descriptor->setSampleCount(samples);
         descriptor->setUsage(mtlUsage);
+        descriptor->setStorageMode(MTL::StorageModePrivate);
+        if(usage & Gfx::SE_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT) {
+            descriptor->setStorageMode(MTL::StorageModeMemoryless);
+        }
 
         texture = graphics->getDevice()->newTexture(descriptor);
+        texture->setLabel(NS::String::string(createInfo.name.c_str(), NS::ASCIIStringEncoding));
 
         descriptor->release();
     }
-    //  if(createInfo.sourceData.data != nullptr)
-    //  {
-    //    MTL::Region region(0, 0, 0, width, height, depth);
-    //    texture->replaceRegion(region, 0, createInfo.sourceData.data,
-    //    createInfo.sourceData.size / (depth * height));
-    //  }
+    if(createInfo.sourceData.data != nullptr)
+    {
+        MTL::Buffer* stagingBuffer = graphics->getDevice()->newBuffer(createInfo.sourceData.size, MTL::ResourceStorageModeShared);
+        std::memcpy(stagingBuffer->contents(), createInfo.sourceData.data, createInfo.sourceData.size);
+        MTL::BlitCommandEncoder* blitEnc = graphics->getQueue()->getCommands()->getBlitEncoder();
+        uint32 sliceSize = createInfo.sourceData.size / arrayCount;
+        uint32 numSlices = arrayCount;
+        if(type == MTL::TextureTypeCube || type == MTL::TextureTypeCubeArray) {
+            sliceSize /= 6;
+            numSlices *= 6;
+        }
+        uint32 offset = 0;
+        for(uint32 slice = 0; slice < numSlices; ++slice){
+            blitEnc->copyFromBuffer(stagingBuffer, offset, sliceSize / createInfo.height, arrayCount == 1 ? 0 : sliceSize, MTL::Size(createInfo.width, createInfo.height, createInfo.depth), texture, slice, 0, MTL::Origin());
+            offset += sliceSize;
+        }
+        if(mipLevels > 1) {
+            blitEnc->generateMipmaps(texture);
+        }
+    }
 }
 
 TextureHandle::~TextureHandle() {

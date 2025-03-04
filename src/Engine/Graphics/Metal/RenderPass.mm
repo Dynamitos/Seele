@@ -7,9 +7,9 @@
 using namespace Seele;
 using namespace Seele::Metal;
 
-RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout layout, Array<Gfx::SubPassDependency> dependencies,
+RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Array<Gfx::SubPassDependency> dependencies,
                        Gfx::PViewport viewport, const std::string& name)
-    : Gfx::RenderPass(layout, dependencies), graphics(graphics), viewport(viewport) {
+    : Gfx::RenderPass(std::move(_layout), dependencies), graphics(graphics), viewport(viewport), name(name) {
     renderPass = MTL::RenderPassDescriptor::renderPassDescriptor();
     renderPass->setRenderTargetArrayLength(1);
     renderPass->setRenderTargetWidth(viewport->getWidth());
@@ -27,7 +27,12 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout layout, Array
         if (!layout.resolveAttachments.empty()) {
             const auto& resolve = layout.resolveAttachments[i];
             desc->setResolveLevel(0);
-            desc->setStoreAction(MTL::StoreActionStoreAndMultisampleResolve);
+            // store multisampled attachment as well
+            if(color.getStoreOp() == Gfx::SE_ATTACHMENT_STORE_OP_STORE) {
+                desc->setStoreAction(MTL::StoreActionStoreAndMultisampleResolve);
+            } else {
+                desc->setStoreAction(MTL::StoreActionMultisampleResolve);
+            }
             desc->setResolveTexture(resolve.getTexture().cast<TextureBase>()->getImage());
         }
     }
@@ -38,8 +43,13 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout layout, Array
         depth->setStoreAction(cast(layout.depthAttachment.getStoreOp()));
 
         if (layout.depthResolveAttachment.getTexture() != nullptr) {
+            // store multisampled attachment as well
+            if(layout.depthAttachment.getStoreOp() == Gfx::SE_ATTACHMENT_STORE_OP_STORE) {
+                depth->setStoreAction(MTL::StoreActionStoreAndMultisampleResolve);
+            } else {
+                depth->setStoreAction(MTL::StoreActionMultisampleResolve);
+            }
             depth->setResolveTexture(layout.depthResolveAttachment.getTexture().cast<TextureBase>()->getImage());
-            depth->setStoreAction(MTL::StoreActionStoreAndMultisampleResolve);
         }
     }
     // TODO: stencil

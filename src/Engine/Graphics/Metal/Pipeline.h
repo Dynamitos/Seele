@@ -21,6 +21,7 @@ class GraphicsPipeline : public Gfx::GraphicsPipeline {
     constexpr MTL::PrimitiveType getPrimitive() const { return primitiveType; }
     PGraphics graphics;
     MTL::RenderPipelineState* state;
+    MTL::DepthStencilState* depth;
     MTL::PrimitiveType primitiveType;
     MTL::Function* taskFunction = nullptr;
     Array<uint32> taskSets;

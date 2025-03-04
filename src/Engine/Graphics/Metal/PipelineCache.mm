@@ -86,7 +86,11 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo cr
         desc->setBlendingEnabled(false);
         pipelineDescriptor->colorAttachments()->setObject(desc, c);
     }
+
+    MTL::DepthStencilDescriptor* depthDescriptor = MTL::DepthStencilDescriptor::alloc()->init();
     if (createInfo.renderPass->getLayout().depthAttachment.getTexture() != nullptr) {
+        depthDescriptor->setDepthWriteEnabled(createInfo.depthStencilState.depthWriteEnable);
+        depthDescriptor->setDepthCompareFunction(cast(createInfo.depthStencilState.depthCompareOp));
         pipelineDescriptor->setDepthAttachmentPixelFormat(
             cast(createInfo.renderPass->getLayout().depthAttachment.getTexture().cast<Texture2D>()->getFormat()));
     }
@@ -94,7 +98,10 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo cr
     pipelineDescriptor->setAlphaToOneEnabled(createInfo.multisampleState.alphaToOneEnable);
     pipelineDescriptor->setRasterSampleCount(createInfo.multisampleState.samples);
     pipelineDescriptor->setRasterizationEnabled(!createInfo.rasterizationState.rasterizerDiscardEnable);
-
+    
+    MTL::DepthStencilState* depthState = graphics->getDevice()->newDepthStencilState(depthDescriptor);
+    depthDescriptor->release();
+    
     uint32 hash = pipelineDescriptor->hash();
 
     if (graphicsPipelines.contains(hash)) {
@@ -145,10 +152,12 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo cr
     }
 
     pipelineDescriptor->release();
+    
     graphicsPipelines[hash]->vertexSets = vertexSets;
     graphicsPipelines[hash]->vertexFunction = vertexFunction;
     graphicsPipelines[hash]->fragmentSets = fragmentSets;
     graphicsPipelines[hash]->fragmentFunction = fragmentFunction;
+    graphicsPipelines[hash]->depth = depthState;
     return graphicsPipelines[hash];
 }
 

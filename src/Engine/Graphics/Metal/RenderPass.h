@@ -12,11 +12,13 @@ class RenderPass : public Gfx::RenderPass {
     virtual ~RenderPass();
     void updateRenderPass();
     MTL::RenderPassDescriptor* getDescriptor() const { return renderPass; }
+    const std::string& getName() const { return name; }
 
   private:
     PGraphics graphics;
     Gfx::PViewport viewport;
     MTL::RenderPassDescriptor* renderPass;
+    std::string name;
 };
 DEFINE_REF(RenderPass)
 } // namespace Metal

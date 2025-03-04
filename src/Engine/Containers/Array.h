@@ -242,7 +242,7 @@ template <typename T, typename Allocator = std::pmr::polymorphic_allocator<T>> s
 
     template <class Pred>
         requires std::predicate<Pred, value_type>
-    constexpr iterator find(Pred pred) noexcept {
+    constexpr iterator find(Pred&& pred) noexcept {
         for (size_type i = 0; i < arraySize; ++i) {
             if (pred(_data[i])) {
                 return iterator(&_data[i]);
@@ -292,8 +292,11 @@ template <typename T, typename Allocator = std::pmr::polymorphic_allocator<T>> s
     }
     template <class Pred>
         requires std::predicate<Pred, value_type>
-    constexpr void remove_if(Pred pred, bool keepOrder = true) {
-        remove(find(pred), keepOrder);
+    constexpr void remove_if(Pred&& pred, bool keepOrder = true) {
+        Iterator it;
+        while((it = find(pred)) != end()) {
+            erase(it, keepOrder);
+        }
     }
     constexpr void remove(const value_type& element, bool keepOrder = true) { erase(find(element), keepOrder); }
     constexpr void remove(value_type&& element, bool keepOrder = true) { erase(find(element), keepOrder); }
@@ -326,11 +329,11 @@ template <typename T, typename Allocator = std::pmr::polymorphic_allocator<T>> s
         arraySize = 0;
         allocated = 0;
     }
-    constexpr size_type indexOf(iterator iterator) { return iterator - begin(); }
-    constexpr size_type indexOf(const_iterator iterator) const { return iterator.p - begin().p; }
-    constexpr size_type indexOf(T& t) { return indexOf(find(t)); }
-    constexpr size_type indexOf(const T& t) const { return indexOf(find(t)); }
-    constexpr size_type size() const noexcept { return arraySize; }
+    [[nodiscard]] constexpr size_type indexOf(iterator iterator) { return iterator - begin(); }
+    [[nodiscard]] constexpr size_type indexOf(const_iterator iterator) const { return iterator.p - begin().p; }
+    [[nodiscard]] constexpr size_type indexOf(T& t) { return indexOf(find(t)); }
+    [[nodiscard]] constexpr size_type indexOf(const T& t) const { return indexOf(find(t)); }
+    [[nodiscard]] constexpr size_type size() const noexcept { return arraySize; }
     [[nodiscard]] constexpr bool empty() const noexcept { return arraySize == 0; }
     constexpr void reserve(size_type new_cap) {
         if (new_cap > allocated) {

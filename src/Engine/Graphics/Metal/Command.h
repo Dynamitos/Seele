@@ -63,7 +63,7 @@ class RenderCommand : public Gfx::RenderCommand {
     virtual void bindIndexBuffer(Gfx::PIndexBuffer indexBuffer) override;
     virtual void pushConstants(Gfx::SeShaderStageFlags stage, uint32 offset, uint32 size, const void* data) override;
     virtual void draw(uint32 vertexCount, uint32 instanceCount, int32 firstVertex, uint32 firstInstance) override;
-    virtual void drawIndirect(Gfx::PShaderBuffer buffer, uint64 offset, uint32 drawCount, uint32 stride);
+    virtual void drawIndirect(Gfx::PShaderBuffer buffer, uint64 offset, uint32 drawCount, uint32 stride) override;
     virtual void drawIndexed(uint32 indexCount, uint32 instanceCount, int32 firstIndex, uint32 vertexOffset, uint32 firstInstance) override;
     virtual void drawMesh(uint32 groupX, uint32 groupY, uint32 groupZ) override;
     virtual void drawMeshIndirect(Gfx::PShaderBuffer buffer, uint64 offset, uint32 drawCount, uint32 stride) override;
@@ -73,7 +73,6 @@ class RenderCommand : public Gfx::RenderCommand {
     PGraphicsPipeline boundPipeline;
     PIndexBuffer boundIndexBuffer;
     MTL::RenderCommandEncoder* encoder;
-    MTL::Buffer* constantsBuffer;
     std::string name;
 };
 DEFINE_REF(RenderCommand)
@@ -93,7 +92,6 @@ class ComputeCommand : public Gfx::ComputeCommand {
     PComputePipeline boundPipeline;
     MTL::CommandBuffer* commandBuffer;
     MTL::ComputeCommandEncoder* encoder;
-    MTL::Buffer* constantsBuffer;
     std::string name;
 };
 DEFINE_REF(ComputeCommand)

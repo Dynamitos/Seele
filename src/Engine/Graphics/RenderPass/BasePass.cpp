@@ -259,7 +259,6 @@ void BasePass::render() {
         graphics->executeCommands(std::move(skyboxCommand));
     }
     graphics->endRenderPass();
-    graphics->waitDeviceIdle();
     /*
     // Transparent rendering
     {
@@ -416,13 +415,18 @@ void BasePass::publishOutputs() {
     msDepthAttachment =
         Gfx::RenderTargetAttachment(msBasePassDepth, Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
                                     Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_DONT_CARE);
+    msDepthAttachment.clear.depthStencil.depth = 0.0f;
 
     colorAttachment = Gfx::RenderTargetAttachment(viewport, Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-                                                  Gfx::SE_ATTACHMENT_LOAD_OP_DONT_CARE, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
+                                                  Gfx::SE_ATTACHMENT_LOAD_OP_DONT_CARE, Gfx::SE_ATTACHMENT_STORE_OP_DONT_CARE);
 
     msColorAttachment =
         Gfx::RenderTargetAttachment(msBasePassColor, Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
                                     Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_DONT_CARE);
+    msColorAttachment.clear.color.float32[0] = 0;
+    msColorAttachment.clear.color.float32[1] = 1;
+    msColorAttachment.clear.color.float32[2] = 0;
+    msColorAttachment.clear.color.float32[3] = 1;
 
     resources->registerRenderPassOutput("BASEPASS_COLOR", colorAttachment);
     resources->registerRenderPassOutput("BASEPASS_DEPTH", depthAttachment);
