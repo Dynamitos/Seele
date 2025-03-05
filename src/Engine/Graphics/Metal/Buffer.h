@@ -13,7 +13,7 @@ DECLARE_REF(Graphics)
 class BufferAllocation : public CommandBoundResource {
   public:
     BufferAllocation(PGraphics graphics, const std::string& name, uint64 size,
-                     MTL::ResourceOptions options = MTL::ResourceOptionCPUCacheModeDefault);
+                     MTL::ResourceOptions options = MTL::ResourceStorageModeShared);
     virtual ~BufferAllocation();
     void pipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage, Gfx::SeAccessFlags dstAccess,
                          Gfx::SePipelineStageFlags dstStage);

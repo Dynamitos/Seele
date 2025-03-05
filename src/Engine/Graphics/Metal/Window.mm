@@ -85,15 +85,15 @@ Window::Window(PGraphics graphics, const WindowCreateInfo& createInfo) : graphic
     framebufferHeight = height;
 
     metalWindow = glfwGetCocoaWindow(handle);
-    metalLayer = [CAMetalLayer layer];
-    metalLayer.device = (__bridge id<MTLDevice>)graphics->getDevice();
-    metalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm_sRGB;
-    metalLayer.drawableSize = CGSizeMake(createInfo.width, createInfo.height);
-    metalWindow.contentView.layer = metalLayer;
-    metalWindow.contentView.wantsLayer = YES;
+    metalLayer = CA::MetalLayer::layer();
+    metalLayer->setDevice(graphics->getDevice());
+    metalLayer->setPixelFormat(MTL::PixelFormatBGRA8Unorm_sRGB);
+    metalLayer->setDrawableSize(CGSizeMake(createInfo.width, createInfo.height));
+    [[metalWindow contentView] setLayer:(__bridge id)metalLayer];
+    [[metalWindow contentView] setWantsLayer:YES];
     framebufferFormat = Gfx::SE_FORMAT_B8G8R8A8_SRGB;
     
-    drawable = (__bridge CA::MetalDrawable*)[metalLayer nextDrawable];
+    drawable = metalLayer->nextDrawable();
     createBackBuffer();
 }
 
@@ -116,7 +116,8 @@ void Window::endFrame() {
     graphics->getQueue()->getCommands()->present(drawable);
     graphics->getQueue()->submitCommands();
     currentFrameIndex++;
-    drawable = (__bridge CA::MetalDrawable*)[metalLayer nextDrawable];
+    drawable->release();
+    drawable = metalLayer->nextDrawable();
     createBackBuffer();
 }
 
@@ -156,18 +157,18 @@ void Window::resize(int width, int height) {
         return;
     }
     paused = true;
-    metalLayer.drawableSize = CGSizeMake(width, height);
-    [drawable release];
+    metalLayer->setDrawableSize(CGSizeMake(width, height));
+    drawable->release();
     framebufferWidth = width;
     framebufferHeight = height;
     // Deallocate the textures if they have been created
-    drawable = (__bridge CA::MetalDrawable*)[metalLayer nextDrawable];
+    drawable = metalLayer->nextDrawable();
     createBackBuffer();
     resizeCallback(width, height);
 }
 
 void Window::createBackBuffer() {
-    MTL::Texture* buf = (__bridge MTL::Texture*)[drawable texture];
+    MTL::Texture* buf = drawable->texture();
     backBuffer = new Texture2D(graphics,
                                TextureCreateInfo{
                                    .width = static_cast<uint32>(buf->width()),

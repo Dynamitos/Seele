@@ -18,9 +18,7 @@ BufferAllocation::BufferAllocation(PGraphics graphics, const std::string& name, 
 }
 
 BufferAllocation::~BufferAllocation() {
-    if (buffer != nullptr) {
-        buffer->release();
-    }
+    buffer->release();
 }
 
 void BufferAllocation::pipelineBarrier(Gfx::SeAccessFlags, Gfx::SePipelineStageFlags, Gfx::SeAccessFlags, Gfx::SePipelineStageFlags) {}
@@ -50,7 +48,7 @@ Buffer::Buffer(PGraphics graphics, uint64 size, Gfx::SeBufferUsageFlags usage, G
 
 Buffer::~Buffer() {
     for (size_t i = 0; i < buffers.size(); ++i) {
-        // TODO
+        graphics->getDestructionManager()->queueResourceForDestruction(std::move(buffers[i]));
     }
     buffers.clear();
 }

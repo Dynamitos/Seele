@@ -1,5 +1,6 @@
 #pragma once
 #include "Graphics/Graphics.h"
+#include "Graphics/Metal/Resources.h"
 #include "Metal/Metal.hpp"
 
 namespace Seele {
@@ -80,12 +81,14 @@ class Graphics : public Gfx::Graphics {
     virtual Gfx::OCallableShader createCallableShader(const ShaderCreateInfo& createInfo) override;
 
     MTL::Device* getDevice() const { return device; }
+    PDestructionManager getDestructionManager() const { return destructionManager; }
     PCommandQueue getQueue() const { return queue; }
     PIOCommandQueue getIOQueue() const { return ioQueue; }
 
   protected:
     MTL::Device* device;
     OCommandQueue queue;
+    ODestructionManager destructionManager;
     OIOCommandQueue ioQueue;
     OPipelineCache cache;
 };

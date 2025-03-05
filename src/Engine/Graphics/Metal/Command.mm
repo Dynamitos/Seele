@@ -22,7 +22,9 @@ using namespace Seele;
 using namespace Seele::Metal;
 
 Command::Command(PGraphics graphics, MTL::CommandBuffer* cmdBuffer)
-    : graphics(graphics), completed(new Event(graphics)), cmdBuffer(cmdBuffer) {}
+    : graphics(graphics), completed(new Event(graphics)), cmdBuffer(cmdBuffer) {
+    state = State::Init;
+}
 
 Command::~Command() {
     assert(parallelEncoder == nullptr);
@@ -33,24 +35,10 @@ Command::~Command() {
     cmdBuffer->release();
 }
 
-void Command::beginRenderPass(PRenderPass renderPass) {
-    if (blitEncoder) {
-        blitEncoder->endEncoding();
-        blitEncoder->release();
-        blitEncoder = nullptr;
-    }
-    renderPass->updateRenderPass();
-    parallelEncoder = cmdBuffer->parallelRenderCommandEncoder(renderPass->getDescriptor());
-    parallelEncoder->setLabel(NS::String::string(renderPass->getName().c_str(), NS::ASCIIStringEncoding));
-}
 
-void Command::endRenderPass() {
-    parallelEncoder->endEncoding();
-    parallelEncoder->release();
-    parallelEncoder = nullptr;
+void Command::begin() {
+    state = State::Begin;
 }
-
-void Command::present(MTL::Drawable* drawable) { cmdBuffer->presentDrawable(drawable); }
 
 void Command::end(PEvent signal) {
     assert(!parallelEncoder);
@@ -59,18 +47,58 @@ void Command::end(PEvent signal) {
         blitEncoder->release();
         blitEncoder = nullptr;
     }
+    // todo acceleration encoder maybe?
     if (signal != nullptr) {
         cmdBuffer->encodeSignalEvent(signal->getHandle(), 1);
     }
     cmdBuffer->encodeSignalEvent(completed->getHandle(), 1);
     cmdBuffer->commit();
+    state = State::Submit;
 }
+
+void Command::beginRenderPass(PRenderPass renderPass) {
+    assert(state == Begin);
+    if (blitEncoder) {
+        blitEncoder->endEncoding();
+        blitEncoder->release();
+        blitEncoder = nullptr;
+    }
+    renderPass->updateRenderPass();
+    parallelEncoder = cmdBuffer->parallelRenderCommandEncoder(renderPass->getDescriptor());
+    parallelEncoder->setLabel(NS::String::string(renderPass->getName().c_str(), NS::ASCIIStringEncoding));
+    state = State::RenderPass;
+}
+
+void Command::endRenderPass() {
+    assert(state == RenderPass);
+    parallelEncoder->endEncoding();
+    parallelEncoder->release();
+    parallelEncoder = nullptr;
+    state = State::Begin;
+}
+
+void Command::present(MTL::Drawable* drawable) { cmdBuffer->presentDrawable(drawable); }
 
 void Command::waitDeviceIdle() { cmdBuffer->waitUntilCompleted(); }
 
+void Command::reset() {
+    for(auto& descriptor : boundResources) {
+        descriptor->unbind();
+    }
+    boundResources.clear();
+}
+
 void Command::signalEvent(PEvent event) { cmdBuffer->encodeSignalEvent(event->getHandle(), 1); }
 
-void Command::waitForEvent(PEvent event) { cmdBuffer->encodeWait(event->getHandle(), 1); }
+void Command::waitForEvent(PEvent event) {
+    assert(state == State::Begin);
+    if(blitEncoder != nullptr) {
+        blitEncoder->endEncoding();
+        blitEncoder->release();
+        blitEncoder = nullptr;
+    }
+    cmdBuffer->encodeWait(event->getHandle(), 1);
+}
 
 RenderCommand::RenderCommand(MTL::RenderCommandEncoder* encoder, const std::string& name) : encoder(encoder), name(name) {}
 
@@ -101,6 +129,7 @@ void RenderCommand::bindPipeline(Gfx::PRayTracingPipeline pipeline) {}
 void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet) {
     auto metalSet = descriptorSet.cast<DescriptorSet>();
     metalSet->bind();
+    boundResources.add(metalSet);
     uint32 descriptorIndex = boundPipeline->getPipelineLayout()->findParameter(metalSet->getLayout()->getName());
     
     auto createEncoder = [&metalSet, descriptorIndex](MTL::Function* function, const Array<uint32>& usedSets) {
@@ -117,32 +146,38 @@ void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet) {
     createEncoder(boundPipeline->vertexFunction, boundPipeline->vertexSets);
     createEncoder(boundPipeline->fragmentFunction, boundPipeline->fragmentSets);
     if(metalSet->argumentBuffer == nullptr) {
-        metalSet->argumentBuffer = metalSet->graphics->getDevice()->newBuffer(metalSet->encoder->encodedLength(), MTL::ResourceOptionCPUCacheModeDefault);
-        metalSet->encoder->setArgumentBuffer(metalSet->argumentBuffer, 0);
+        metalSet->argumentBuffer = new BufferAllocation(metalSet->graphics, "ArgumentBuffer", metalSet->encoder->encodedLength());
+        metalSet->encoder->setArgumentBuffer(metalSet->argumentBuffer->buffer, 0);
     }
+    metalSet->argumentBuffer->bind();
+    boundResources.add(PBufferAllocation(metalSet->argumentBuffer));
     for (const auto& write : metalSet->uniformWrites) {
         write.apply(metalSet->encoder);
     }
     for (const auto& write : metalSet->bufferWrites) {
         write.apply(metalSet->encoder);
-        encoder->useResource(write.buffer, write.access);
+        encoder->useResource(write.buffer->buffer, write.access);
     }
     for (const auto& write : metalSet->samplerWrites) {
         write.apply(metalSet->encoder);
     }
     for (const auto& write : metalSet->textureWrites) {
         write.apply(metalSet->encoder);
-        encoder->useResource(write.texture, write.access);
+        encoder->useResource(write.texture->texture, write.access);
     }
     for (const auto& write : metalSet->accelerationWrites) {
         write.apply(metalSet->encoder);
         encoder->useResource(write.accelerationStructure, write.access);
     }
-    encoder->useResource(metalSet->argumentBuffer, MTL::ResourceUsageRead);
-    encoder->setObjectBuffer(metalSet->argumentBuffer, 0, descriptorIndex);
-    encoder->setMeshBuffer(metalSet->argumentBuffer, 0, descriptorIndex);
-    encoder->setVertexBuffer(metalSet->argumentBuffer, 0, descriptorIndex);
-    encoder->setFragmentBuffer(metalSet->argumentBuffer, 0, descriptorIndex);
+    for(auto& res : metalSet->boundResources) {
+        res->bind();
+        boundResources.add(res);
+    }
+    encoder->useResource(metalSet->argumentBuffer->buffer, MTL::ResourceUsageRead);
+    encoder->setObjectBuffer(metalSet->argumentBuffer->buffer, 0, descriptorIndex);
+    encoder->setMeshBuffer(metalSet->argumentBuffer->buffer, 0, descriptorIndex);
+    encoder->setVertexBuffer(metalSet->argumentBuffer->buffer, 0, descriptorIndex);
+    encoder->setFragmentBuffer(metalSet->argumentBuffer->buffer, 0, descriptorIndex);
 }
 
 void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorSets) {
@@ -157,7 +192,9 @@ void RenderCommand::bindVertexBuffer(const Array<Gfx::PVertexBuffer>& buffers) {
     }
 }
 
-void RenderCommand::bindIndexBuffer(Gfx::PIndexBuffer gfxIndexBuffer) { boundIndexBuffer = gfxIndexBuffer.cast<IndexBuffer>(); }
+void RenderCommand::bindIndexBuffer(Gfx::PIndexBuffer gfxIndexBuffer) { 
+    boundIndexBuffer = gfxIndexBuffer.cast<IndexBuffer>();
+}
 
 void RenderCommand::pushConstants(Gfx::SeShaderStageFlags stage, uint32 offset, uint32 size, const void* data) {
     uint pushIndex = boundPipeline->getPipelineLayout()->findParameter("pOffsets");
@@ -200,7 +237,10 @@ void RenderCommand::traceRays(uint32 width, uint32 height, uint32 depth) {}
 ComputeCommand::ComputeCommand(MTL::CommandBuffer* cmdBuffer, const std::string& name)
     : commandBuffer(cmdBuffer), encoder(cmdBuffer->computeCommandEncoder()), name(name) {}
 
-ComputeCommand::~ComputeCommand() { encoder->release(); commandBuffer->release(); }
+ComputeCommand::~ComputeCommand() {
+    encoder->release();
+    commandBuffer->release();
+}
 
 void ComputeCommand::end() {
     encoder->endEncoding();
@@ -215,6 +255,7 @@ void ComputeCommand::bindPipeline(Gfx::PComputePipeline pipeline) {
 void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet set) {
     auto metalSet = set.cast<DescriptorSet>();
     metalSet->bind();
+    boundResources.add(metalSet);
     uint32 descriptorIndex = boundPipeline->getPipelineLayout()->findParameter(metalSet->getLayout()->getName());
     if(metalSet->encoder == nullptr) {
         if (metalSet->isPlainDescriptor()) {
@@ -222,29 +263,35 @@ void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet set) {
         } else {
             metalSet->encoder = boundPipeline->computeFunction->newArgumentEncoder(descriptorIndex);
         }
-        metalSet->argumentBuffer = metalSet->graphics->getDevice()->newBuffer(metalSet->encoder->encodedLength(), MTL::ResourceOptionCPUCacheModeDefault);
-        metalSet->encoder->setArgumentBuffer(metalSet->argumentBuffer, 0);
+        metalSet->argumentBuffer = new BufferAllocation(metalSet->graphics, "ArgumentBuffer", metalSet->encoder->encodedLength());
+        metalSet->encoder->setArgumentBuffer(metalSet->argumentBuffer->buffer, 0);
     }
+    metalSet->argumentBuffer->bind();
+    boundResources.add(PBufferAllocation(metalSet->argumentBuffer));
     for (const auto& write : metalSet->uniformWrites) {
         write.apply(metalSet->encoder);
     }
     for (const auto& write : metalSet->bufferWrites) {
         write.apply(metalSet->encoder);
-        encoder->useResource(write.buffer, write.access);
+        encoder->useResource(write.buffer->buffer, write.access);
     }
     for (const auto& write : metalSet->samplerWrites) {
         write.apply(metalSet->encoder);
     }
     for (const auto& write : metalSet->textureWrites) {
         write.apply(metalSet->encoder);
-        encoder->useResource(write.texture, write.access);
+        encoder->useResource(write.texture->texture, write.access);
     }
     for (const auto& write : metalSet->accelerationWrites) {
         write.apply(metalSet->encoder);
         encoder->useResource(write.accelerationStructure, write.access);
     }
-    encoder->useResource(metalSet->argumentBuffer, MTL::ResourceUsageRead);
-    encoder->setBuffer(metalSet->argumentBuffer, 0, descriptorIndex);
+    for(auto& res : metalSet->boundResources) {
+        res->bind();
+        boundResources.add(res);
+    }
+    encoder->useResource(metalSet->argumentBuffer->buffer, MTL::ResourceUsageRead);
+    encoder->setBuffer(metalSet->argumentBuffer->buffer, 0, descriptorIndex);
 }
 
 void ComputeCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& sets) {
@@ -286,6 +333,10 @@ OComputeCommand CommandQueue::getComputeCommand(const std::string& name) { retur
 void CommandQueue::executeCommands(Array<Gfx::ORenderCommand> commands) {
     for (auto& command : commands) {
         auto metalCmd = Gfx::PRenderCommand(command).cast<RenderCommand>();
+        for(auto& descriptor : metalCmd->boundResources) {
+            // have already bind marked as bound when added to subcommand
+            activeCommand->boundResources.add(descriptor);
+        }
         metalCmd->end();
     }
 }
@@ -293,35 +344,48 @@ void CommandQueue::executeCommands(Array<Gfx::ORenderCommand> commands) {
 void CommandQueue::executeCommands(Array<Gfx::OComputeCommand> commands) {
     for (auto& command : commands) {
         auto metalCmd = Gfx::PComputeCommand(command).cast<ComputeCommand>();
+        for(auto& descriptor : metalCmd->boundResources) {
+            // have already bind marked as bound when added to subcommand
+            activeCommand->boundResources.add(descriptor);
+        }
         metalCmd->end();
     }
 }
 
 void CommandQueue::submitCommands(PEvent signalSemaphore) {
-    activeCommand->getHandle()->addCompletedHandler(MTL::CommandBufferHandler([&](MTL::CommandBuffer* cmdBuffer) {
+    /*activeCommand->getHandle()->addCompletedHandler(MTL::CommandBufferHandler([&](MTL::CommandBuffer* cmdBuffer) {
         for (auto it = pendingCommands.begin(); it != pendingCommands.end(); it++) {
             if ((*it)->getHandle() == cmdBuffer) {
+                auto& cmd = *it;
+                cmd->reset();
                 readyCommands.add(std::move(*it));
                 pendingCommands.erase(it);
                 return;
             }
         }
     }));
+    PEvent prevCmdEvent = activeCommand->getCompletedEvent();
     activeCommand->end(signalSemaphore);
     activeCommand->waitDeviceIdle();
-    PEvent prevCmdEvent = activeCommand->getCompletedEvent();
     pendingCommands.add(std::move(activeCommand));
     if (!readyCommands.empty()) {
         activeCommand = std::move(readyCommands.front());
+        activeCommand->begin();
         readyCommands.removeAt(0);
         activeCommand->waitForEvent(prevCmdEvent);
     } else {
         MTL::CommandBufferDescriptor* descriptor = MTL::CommandBufferDescriptor::alloc()->init();
         descriptor->setErrorOptions(MTL::CommandBufferErrorOptionEncoderExecutionStatus);
         activeCommand = new Command(graphics, queue->commandBuffer(descriptor));
+        activeCommand->begin();
         activeCommand->waitForEvent(prevCmdEvent);
         descriptor->release();
-    }
+    }*/
+    activeCommand->end();
+    activeCommand->waitDeviceIdle();
+    activeCommand->reset();
+    activeCommand = new Command(graphics, queue->commandBuffer());
+    activeCommand->begin();
 }
 
 IOCommandQueue::IOCommandQueue(PGraphics graphics) : graphics(graphics) {

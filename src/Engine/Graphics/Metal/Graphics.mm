@@ -25,6 +25,7 @@ Graphics::~Graphics() {}
 void Graphics::init(GraphicsInitializer) {
     glfwInit();
     device = MTL::CreateSystemDefaultDevice();
+    destructionManager = new DestructionManager(this);
     queue = new CommandQueue(this);
     ioQueue = new IOCommandQueue(this);
     cache = new PipelineCache(this, "pipelines.metal");

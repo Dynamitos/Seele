@@ -6,6 +6,7 @@
 #include "Graphics/Initializer.h"
 #include "Graphics/Metal/Command.h"
 #include "Graphics/Metal/Resources.h"
+#include "Graphics/Metal/Texture.h"
 #include "Metal/MTLAccelerationStructure.hpp"
 #include "Metal/MTLArgumentEncoder.hpp"
 #include "Metal/MTLCommandEncoder.hpp"
@@ -80,8 +81,9 @@ class DescriptorSet : public Gfx::DescriptorSet, public CommandBoundResource {
   private:
     PGraphics graphics;
     PDescriptorPool owner;
-    MTL::Buffer* argumentBuffer = nullptr;
+    OBufferAllocation argumentBuffer = nullptr;
     MTL::ArgumentEncoder* encoder = nullptr;
+    Array<PCommandBoundResource> boundResources;
 
     struct UniformWriteInfo
     {
@@ -94,23 +96,23 @@ class DescriptorSet : public Gfx::DescriptorSet, public CommandBoundResource {
     {
         uint32 index;
         MTL::ResourceUsage access;
-        MTL::Buffer* buffer;
-        void apply(MTL::ArgumentEncoder* encoder) const { encoder->setBuffer(buffer, 0, index); }
+        PBufferAllocation buffer;
+        void apply(MTL::ArgumentEncoder* encoder) const { encoder->setBuffer(buffer->buffer, 0, index); }
     };
     Array<BufferWriteInfo> bufferWrites;
     struct TextureWriteInfo
     {
         uint32 index;
         MTL::ResourceUsage access;
-        MTL::Texture* texture;
-        void apply(MTL::ArgumentEncoder* encoder) const { encoder->setTexture(texture, index); }
+        PTextureHandle texture;
+        void apply(MTL::ArgumentEncoder* encoder) const { encoder->setTexture(texture->texture, index); }
     };
     Array<TextureWriteInfo> textureWrites;
     struct SamplerWriteInfo
     {
         uint32 index;
-        MTL::SamplerState* sampler;
-        void apply(MTL::ArgumentEncoder* encoder) const { encoder->setSamplerState(sampler, index); }
+        PSampler sampler;
+        void apply(MTL::ArgumentEncoder* encoder) const { encoder->setSamplerState(sampler->getHandle(), index); }
     };
     Array<SamplerWriteInfo> samplerWrites;
     struct AccelerationStructureWriteInfo

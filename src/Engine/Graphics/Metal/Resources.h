@@ -1,16 +1,29 @@
 #pragma once
 #include "Graphics/Initializer.h"
 #include "Graphics/Resources.h"
-#include "Metal/MTLSampler.hpp"
+#include "Containers/List.h"
 #include <Foundation/Foundation.hpp>
 #include <Metal/Metal.hpp>
-#include <QuartzCore/CAMetalLayer.h>
-#include <QuartzCore/CAMetalLayer.hpp>
 #include <QuartzCore/QuartzCore.hpp>
 
 namespace Seele {
 namespace Metal {
 DECLARE_REF(Graphics);
+
+DECLARE_REF(CommandBoundResource)
+class DestructionManager {
+  public:
+    DestructionManager(PGraphics graphics);
+    ~DestructionManager();
+    void queueResourceForDestruction(OCommandBoundResource resource);
+    void notifyCommandComplete();
+
+  private:
+    PGraphics graphics;
+    Array<OCommandBoundResource> resources; // todo: maybe list?
+};
+DEFINE_REF(DestructionManager)
+
 class CommandBoundResource {
   public:
     CommandBoundResource(PGraphics graphics) : graphics(graphics) {}

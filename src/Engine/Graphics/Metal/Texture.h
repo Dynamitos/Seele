@@ -1,12 +1,13 @@
 #pragma once
 #include "Graphics.h"
 #include "Graphics/Enums.h"
+#include "Graphics/Metal/Resources.h"
 #include "Graphics/Texture.h"
 #include "Metal/MTLTexture.hpp"
 
 namespace Seele {
 namespace Metal {
-class TextureHandle {
+class TextureHandle : public CommandBoundResource{
   public:
     TextureHandle(PGraphics graphics, MTL::TextureType type, const TextureCreateInfo& createInfo, MTL::Texture* existingImage);
     virtual ~TextureHandle();

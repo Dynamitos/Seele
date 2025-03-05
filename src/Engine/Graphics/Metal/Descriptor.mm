@@ -80,20 +80,17 @@ void DescriptorPool::reset() {}
 
 DescriptorSet::DescriptorSet(PGraphics graphics, PDescriptorPool owner)
     : Gfx::DescriptorSet(owner->getLayout()), CommandBoundResource(graphics), graphics(graphics), owner(owner) {
-    std::cout << "New Descriptor set" << std::endl;
 }
 
 DescriptorSet::~DescriptorSet() {
     if(encoder != nullptr) {
         encoder->release();
     }
-    if(argumentBuffer != nullptr) {
-        argumentBuffer->release();
-    }
     std::cout << "destroying descriptor set" << std::endl;
 }
 
 void DescriptorSet::reset() {
+    boundResources.clear();
     uniformWrites.clear();
     bufferWrites.clear();
     textureWrites.clear();
@@ -118,9 +115,10 @@ void DescriptorSet::updateBuffer(const std::string& name, uint32 index, Gfx::PSh
     PShaderBuffer buffer = uniformBuffer.cast<ShaderBuffer>();
     bufferWrites.add(BufferWriteInfo{
         .index = flattenedIndex,
-        .buffer = buffer->getHandle(),
+        .buffer = buffer->getAlloc(),
         .access = owner->getLayout()->variableMapping[name].access,
     });
+    boundResources.add(buffer->getAlloc());
 }
 
 void DescriptorSet::updateBuffer(const std::string& name, uint32 index, Gfx::PVertexBuffer uniformBuffer) {
@@ -128,9 +126,10 @@ void DescriptorSet::updateBuffer(const std::string& name, uint32 index, Gfx::PVe
     PVertexBuffer buffer = uniformBuffer.cast<VertexBuffer>();
     bufferWrites.add(BufferWriteInfo{
         .index = flattenedIndex,
-        .buffer = buffer->getHandle(),
+        .buffer = buffer->getAlloc(),
         .access = owner->getLayout()->variableMapping[name].access,
     });
+    boundResources.add(buffer->getAlloc());
 }
 
 void DescriptorSet::updateBuffer(const std::string& name, uint32 index, Gfx::PIndexBuffer uniformBuffer) {
@@ -138,9 +137,10 @@ void DescriptorSet::updateBuffer(const std::string& name, uint32 index, Gfx::PIn
     PIndexBuffer buffer = uniformBuffer.cast<IndexBuffer>();
     bufferWrites.add(BufferWriteInfo{
         .index = flattenedIndex,
-        .buffer = buffer->getHandle(),
+        .buffer = buffer->getAlloc(),
         .access = owner->getLayout()->variableMapping[name].access,
     });
+    boundResources.add(buffer->getAlloc());
 }
 
 void DescriptorSet::updateSampler(const std::string& name, uint32 index, Gfx::PSampler samplerState) {
@@ -148,7 +148,7 @@ void DescriptorSet::updateSampler(const std::string& name, uint32 index, Gfx::PS
     PSampler sampler = samplerState.cast<Sampler>();
     samplerWrites.add(SamplerWriteInfo{
         .index = flattenedIndex,
-        .sampler = sampler->getHandle(),
+        .sampler = sampler,
     });
 }
 
@@ -157,9 +157,10 @@ void DescriptorSet::updateTexture(const std::string& name, uint32 index, Gfx::PT
     PTextureBase tex = texture.cast<TextureBase>();
     textureWrites.add(TextureWriteInfo{
         .index = flattenedIndex,
-        .texture = tex->getImage(),
+        .texture = tex->getHandle(),
         .access = owner->getLayout()->variableMapping[name].access,
     });
+    boundResources.add(tex->getHandle());
 }
 
 void DescriptorSet::updateTexture(const std::string& name, uint32 index, Gfx::PTexture3D texture) {
@@ -167,9 +168,10 @@ void DescriptorSet::updateTexture(const std::string& name, uint32 index, Gfx::PT
     PTextureBase tex = texture.cast<TextureBase>();
     textureWrites.add(TextureWriteInfo{
         .index = flattenedIndex,
-        .texture = tex->getImage(),
+        .texture = tex->getHandle(),
         .access = owner->getLayout()->variableMapping[name].access,
     });
+    boundResources.add(tex->getHandle());
 }
 
 void DescriptorSet::updateTexture(const std::string& name, uint32 index, Gfx::PTextureCube texture) {
@@ -177,9 +179,10 @@ void DescriptorSet::updateTexture(const std::string& name, uint32 index, Gfx::PT
     PTextureBase tex = texture.cast<TextureBase>();
     textureWrites.add(TextureWriteInfo{
         .index = flattenedIndex,
-        .texture = tex->getImage(),
+        .texture = tex->getHandle(),
         .access = owner->getLayout()->variableMapping[name].access,
     });
+    boundResources.add(tex->getHandle());
 }
 
 void DescriptorSet::updateAccelerationStructure(const std::string& name, uint32 index, Gfx::PTopLevelAS as) { assert(false && "TODO"); }

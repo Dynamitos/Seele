@@ -7,6 +7,7 @@
 #include "Metal/MTLCommandBuffer.hpp"
 #include "Metal/MTLComputeCommandEncoder.hpp"
 #include "Metal/MTLRenderCommandEncoder.hpp"
+#include "MinimalEngine.h"
 #include "RenderPass.h"
 #include "Resources.h"
 
@@ -19,17 +20,30 @@ DECLARE_REF(Graphics)
 DECLARE_REF(IndexBuffer)
 DECLARE_REF(GraphicsPipeline)
 DECLARE_REF(ComputePipeline)
+DECLARE_REF(DescriptorSet)
 class Command {
   public:
     Command(PGraphics graphics, MTL::CommandBuffer* cmdBuffer);
     ~Command();
+    void begin();
+    void end(PEvent signal = nullptr);
     void beginRenderPass(PRenderPass renderPass);
     void endRenderPass();
     void present(MTL::Drawable* drawable);
-    void end(PEvent signal);
     void waitDeviceIdle();
+    void reset();
     void signalEvent(PEvent event);
     void waitForEvent(PEvent event);
+    void bindResource(PCommandBoundResource res) {
+        res->bind();
+        boundResources.add(res);
+    }
+    enum State {
+        Init,
+        Begin,
+        RenderPass,
+        Submit,
+    };
     MTL::RenderCommandEncoder* createRenderEncoder() { return parallelEncoder->renderCommandEncoder(); }
     MTL::BlitCommandEncoder* getBlitEncoder() {
         assert(!parallelEncoder);
@@ -44,9 +58,12 @@ class Command {
   private:
     PGraphics graphics;
     OEvent completed;
+    State state;
     MTL::CommandBuffer* cmdBuffer;
     MTL::ParallelRenderCommandEncoder* parallelEncoder = nullptr;
     MTL::BlitCommandEncoder* blitEncoder = nullptr;
+    Array<PCommandBoundResource> boundResources;
+    friend class CommandQueue;
 };
 DEFINE_REF(Command)
 class RenderCommand : public Gfx::RenderCommand {
@@ -72,8 +89,10 @@ class RenderCommand : public Gfx::RenderCommand {
   private:
     PGraphicsPipeline boundPipeline;
     PIndexBuffer boundIndexBuffer;
+    Array<PCommandBoundResource> boundResources;
     MTL::RenderCommandEncoder* encoder;
     std::string name;
+    friend class CommandQueue;
 };
 DEFINE_REF(RenderCommand)
 class ComputeCommand : public Gfx::ComputeCommand {
@@ -91,8 +110,10 @@ class ComputeCommand : public Gfx::ComputeCommand {
   private:
     PComputePipeline boundPipeline;
     MTL::CommandBuffer* commandBuffer;
+    Array<PCommandBoundResource> boundResources;
     MTL::ComputeCommandEncoder* encoder;
     std::string name;
+    friend class CommandQueue;
 };
 DEFINE_REF(ComputeCommand)
 class CommandQueue {

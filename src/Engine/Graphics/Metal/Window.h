@@ -49,7 +49,7 @@ class Window : public Gfx::Window {
     WindowCreateInfo preferences;
     GLFWwindow* windowHandle;
     NSWindow* metalWindow;
-    CAMetalLayer* metalLayer;
+    CA::MetalLayer* metalLayer;
     CA::MetalDrawable* drawable;
     OTexture2D backBuffer;
 

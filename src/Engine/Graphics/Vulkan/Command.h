@@ -55,7 +55,7 @@ class Command {
     Array<VkPipelineStageFlags> waitFlags;
     Array<ORenderCommand> executingRenders;
     Array<OComputeCommand> executingComputes;
-    Array<PDescriptorSet> boundResources;
+    Array<PCommandBoundResource> boundResources;
     VkQueryPipelineStatisticFlags statisticsFlags;
     friend class RenderCommand;
     friend class CommandPool;
