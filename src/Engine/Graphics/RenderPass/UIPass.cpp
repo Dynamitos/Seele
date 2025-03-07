@@ -32,7 +32,7 @@ UIPass::UIPass(Gfx::PGraphics graphics, UI::PSystem system) : RenderPass(graphic
 
     uiDescriptorLayout = graphics->createDescriptorLayout("pParams");
     uiDescriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .name = GLYPHINSTANCE_NAME,
+        .name = ELEMENT_NAME,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
     });
     uiDescriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{
@@ -57,6 +57,7 @@ void UIPass::beginFrame(const Component::Camera& cam) {
     RenderPass::beginFrame(cam);
     glyphs.clear();
     usedTextures.clear();
+    elements.clear();
     for (auto& render : renderElements) {
         float x = render.position.x;
         float y = render.position.y;
@@ -112,9 +113,6 @@ void UIPass::render() {
     command->bindPipeline(uiPipeline);
     command->bindDescriptor({viewParamsSet, uiDescriptorSet});
     command->draw(4, elements.size(), 0, 0);
-    command->bindPipeline(textPipeline);
-    command->bindDescriptor({viewParamsSet, textDescriptorSet});
-    command->draw(4, glyphs.size(), 0, 0);
     commands.add(std::move(command));
     graphics->executeCommands(std::move(commands));
     graphics->endRenderPass();

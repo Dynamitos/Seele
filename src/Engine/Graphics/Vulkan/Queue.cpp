@@ -25,6 +25,8 @@ void Queue::submitCommandBuffer(PCommand command, const Array<VkSemaphore>& sign
     VkCommandBuffer cmdHandle = command->handle;
 
     Array<VkSemaphore> waitSemaphores;
+    // wait semaphores get bound to the cmd when they are added
+    // and unbound when the command completes
     for (PSemaphore semaphore : command->waitSemaphores) {
         waitSemaphores.add(semaphore->getHandle());
     }
@@ -40,7 +42,6 @@ void Queue::submitCommandBuffer(PCommand command, const Array<VkSemaphore>& sign
         .signalSemaphoreCount = static_cast<uint32>(signalSemaphores.size()),
         .pSignalSemaphores = signalSemaphores.data(),
     };
-
     VK_CHECK(vkQueueSubmit(queue, 1, &submitInfo, command->fence->getHandle()));
     command->fence->submit();
     command->state = Command::State::Submit;

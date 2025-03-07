@@ -45,6 +45,7 @@ void Command::begin() {
 
 void Command::end() {
     VK_CHECK(vkEndCommandBuffer(handle));
+    signalSemaphore->rotateSemaphore();
     state = State::End;
 }
 
@@ -111,15 +112,14 @@ void Command::executeCommands(Array<Gfx::OComputeCommand> commands) {
 }
 
 void Command::waitForSemaphore(VkPipelineStageFlags flags, PSemaphore semaphore) {
+    bindResource(semaphore->getCurrentSemaphore());
     waitSemaphores.add(semaphore);
     waitFlags.add(flags);
-    // std::cout << "Cmd " << handle << " wait for " << semaphore->getHandle() << std::endl;
 }
 
 void Command::checkFence() {
     assert(state == State::Submit || !fence->isSignaled());
     if (fence->isSignaled()) {
-        // std::cout << "Cmd " << handle << " was signaled" << std::endl;
         vkResetCommandBuffer(handle, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
         fence->reset();
         for (auto& command : executingComputes) {
@@ -132,8 +132,8 @@ void Command::checkFence() {
         pool->cacheCommands(std::move(executingRenders));
         for (auto& descriptor : boundResources) {
             descriptor->unbind();
-            // std::cout << "Cmd " << handle << " unbind " << descriptor->getHandle() << std::endl;
         }
+        signalSemaphore->resolveSignal();
         boundResources.clear();
         graphics->getDestructionManager()->notifyCommandComplete();
         state = State::Init;
@@ -561,11 +561,12 @@ void CommandPool::submitCommands(PSemaphore signalSemaphore) {
     assert(command->state == Command::State::Begin); // Not in a renderpass
     command->end();
     Array<VkSemaphore> semaphores = {command->signalSemaphore->getHandle()};
+    command->signalSemaphore->encodeSignal();
     if (signalSemaphore != nullptr) {
         semaphores.add(signalSemaphore->getHandle());
+        signalSemaphore->encodeSignal();
     }
     queue->submitCommandBuffer(command, semaphores);
-    // std::cout << "Cmd " << command->getHandle() << " signalling " << command->signalSemaphore->getHandle() << std::endl;
 
     PSemaphore waitSemaphore = command->signalSemaphore;
     for (uint32 i = 0; i < allocatedBuffers.size(); ++i) {
@@ -587,8 +588,7 @@ void CommandPool::submitCommands(PSemaphore signalSemaphore) {
 }
 
 void CommandPool::refreshCommands() {
-    for (uint32 i = 0; i < allocatedBuffers.size(); ++i)
-    {
+    for (uint32 i = 0; i < allocatedBuffers.size(); ++i) {
         allocatedBuffers[i]->checkFence();
     }
 }

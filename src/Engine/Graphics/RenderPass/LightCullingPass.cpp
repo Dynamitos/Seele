@@ -6,8 +6,6 @@
 #include "Math/Vector.h"
 #include "RenderGraph.h"
 #include "Scene/Scene.h"
-#include "Graphics/Metal/Descriptor.h"
-#include "Graphics/Metal/Shader.h"
 
 using namespace Seele;
 

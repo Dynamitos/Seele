@@ -74,7 +74,7 @@ UVector2 FontAsset::shapeText(std::string_view view, uint32 fontSize, Array<Rend
 void FontAsset::loadGlyphs(uint32 fontSize) {
     FT_Set_Pixel_Sizes(ft_face, 0, fontSize);
     for (uint32 i = 0; i < ft_face->num_glyphs; ++i) {
-        assert(FT_Load_Glyph(ft_face, i, FT_LOAD_RENDER | FT_LOAD_COLOR) == 0);
+        assert(FT_Load_Glyph(ft_face, i, FT_LOAD_RENDER) == 0);
         FontAsset::Glyph& glyph = fontSizes[fontSize].glyphs[i];
         glyph.size = IVector2(ft_face->glyph->bitmap.width, ft_face->glyph->bitmap.rows);
         glyph.bearing = IVector2(ft_face->glyph->bitmap_left, ft_face->glyph->bitmap_top);

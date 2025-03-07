@@ -128,27 +128,27 @@ class VertexData {
     Gfx::ODescriptorLayout instanceDataLayout;
     // for mesh shading
     Gfx::OShaderBuffer meshletBuffer;
-    constexpr static std::string MESHLET_NAME = "meshlets";
+    constexpr static const char* MESHLET_NAME = "meshlets";
     Gfx::OShaderBuffer vertexIndicesBuffer;
-    constexpr static std::string VERTEXINDICES_NAME = "vertexIndices";
+    constexpr static const char* VERTEXINDICES_NAME = "vertexIndices";
     Gfx::OShaderBuffer primitiveIndicesBuffer;
-    constexpr static std::string PRIMITIVEINDICES_NAME = "primitiveIndices";
+    constexpr static const char* PRIMITIVEINDICES_NAME = "primitiveIndices";
     Gfx::OShaderBuffer cullingOffsetBuffer;
-    constexpr static std::string CULLINGOFFSETS_NAME = "cullingOffsets";
-    constexpr static std::string CULLINGDATA_NAME = "cullingData";
+    constexpr static const char* CULLINGOFFSETS_NAME = "cullingOffsets";
+    constexpr static const char* CULLINGDATA_NAME = "cullingData";
 
     // for legacy pipeline
     Gfx::OIndexBuffer indexBuffer;
-    constexpr static std::string INDEXBUFFER_NAME = "indexBuffer";
+    constexpr static const char* INDEXBUFFER_NAME = "indexBuffer";
     Array<Gfx::PBottomLevelAS> dataToBuild;
     // Material data
     Array<InstanceData> instanceData;
     Gfx::OShaderBuffer instanceBuffer;
-    constexpr static std::string INSTANCES_NAME = "instances";
+    constexpr static const char* INSTANCES_NAME = "instances";
 
     Array<MeshData> instanceMeshData;
     Gfx::OShaderBuffer instanceMeshDataBuffer;
-    constexpr static std::string MESHDATA_NAME = "meshData";
+    constexpr static const char* MESHDATA_NAME = "meshData";
 
     Array<Gfx::PBottomLevelAS> rayTracingScene;
 

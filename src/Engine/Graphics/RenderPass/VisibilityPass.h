@@ -27,10 +27,10 @@ class VisibilityPass : public RenderPass {
     Gfx::OPipelineStatisticsQuery query;
     Gfx::PTimestampQuery timestamps;
 
-    constexpr static std::string VISIBILITY_NAME = "visibilityTexture";
+    constexpr static const char* VISIBILITY_NAME = "visibilityTexture";
     // Holds culling information for every meshlet for each instance
     Gfx::OShaderBuffer cullingBuffer;
-    constexpr static std::string CULLINGBUFFER_NAME = "cullingBuffer";
+    constexpr static const char* CULLINGBUFFER_NAME = "cullingBuffer";
     UVector threadGroupSize;
 };
 DEFINE_REF(VisibilityPass)

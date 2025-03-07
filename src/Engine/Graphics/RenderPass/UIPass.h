@@ -72,13 +72,13 @@ class UIPass : public RenderPass {
     Array<GlyphInstanceData> glyphs;
     Array<RenderElementStyle> elements;
     Gfx::OShaderBuffer glyphInstanceBuffer;
-    constexpr static std::string GLYPHINSTANCE_NAME = "glyphData";
+    constexpr static const char* GLYPHINSTANCE_NAME = "glyphData";
     Gfx::OShaderBuffer elementBuffer;
-    constexpr static std::string ELEMENT_NAME = "elements";
+    constexpr static const char* ELEMENT_NAME = "elements";
     Gfx::OSampler glyphSampler;
-    constexpr static std::string GLYPHSAMPLER_NAME = "glyphSampler";
+    constexpr static const char* GLYPHSAMPLER_NAME = "glyphSampler";
     Array<Gfx::PTexture2D> usedTextures;
-    constexpr static std::string TEXTURES_NAME = "textures";
+    constexpr static const char* TEXTURES_NAME = "textures";
 };
 DEFINE_REF(UIPass);
 } // namespace Seele

@@ -11,7 +11,7 @@ LightEnvironment::LightEnvironment(Gfx::PGraphics graphics) : graphics(graphics)
     });
     layout->addDescriptorBinding(Gfx::DescriptorBinding{
         .name = "numDirectionalLights",
-        .uniformLength = sizeof(uint)
+        .uniformLength = sizeof(uint32),
     });
     layout->addDescriptorBinding(Gfx::DescriptorBinding{
         .name = "pointLights",
@@ -19,7 +19,7 @@ LightEnvironment::LightEnvironment(Gfx::PGraphics graphics) : graphics(graphics)
     });
     layout->addDescriptorBinding(Gfx::DescriptorBinding{
         .name = "numPointLights",
-        .uniformLength = sizeof(uint)
+        .uniformLength = sizeof(uint32),
     });
     layout->create();
 

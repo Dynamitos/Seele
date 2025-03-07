@@ -40,6 +40,7 @@ class Graphics : public Gfx::Graphics {
     virtual void endRenderPass() override;
     virtual void waitDeviceIdle() override;
 
+    virtual void executeCommands(Gfx::ORenderCommand commands) override;
     virtual void executeCommands(Array<Gfx::ORenderCommand> commands) override;
     virtual void executeCommands(Gfx::OComputeCommand commands) override;
     virtual void executeCommands(Array<Gfx::OComputeCommand> commands) override;

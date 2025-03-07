@@ -59,6 +59,7 @@ Window::Window(PGraphics graphics, const WindowCreateInfo& createInfo)
     : graphics(graphics), preferences(createInfo), instance(graphics->getInstance()), swapchain(VK_NULL_HANDLE) {
     glfwGetMonitorContentScale(glfwGetPrimaryMonitor(), &contentScaleX, &contentScaleY);
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
     GLFWwindow* handle = glfwCreateWindow(createInfo.width / contentScaleX, createInfo.height / contentScaleY, createInfo.title, nullptr, nullptr);
     windowHandle = handle;
     glfwSetWindowUserPointer(handle, this);
@@ -92,11 +93,16 @@ Window::~Window() {
 
 void Window::pollInput() { glfwPollEvents(); }
 
+void Window::show() { glfwShowWindow(static_cast<GLFWwindow*>(windowHandle)); }
+
 void Window::beginFrame() {
     imageAvailableFences[currentSemaphoreIndex]->reset();
+    imageAvailableSemaphores[currentSemaphoreIndex]->resolveSignal();
+    imageAvailableSemaphores[currentSemaphoreIndex]->rotateSemaphore();
     VK_CHECK(vkAcquireNextImageKHR(graphics->getDevice(), swapchain, std::numeric_limits<uint64>::max(),
                                    imageAvailableSemaphores[currentSemaphoreIndex]->getHandle(),
                                    imageAvailableFences[currentSemaphoreIndex]->getHandle(), &currentImageIndex));
+    imageAvailableSemaphores[currentSemaphoreIndex]->encodeSignal();
     imageAvailableFences[currentSemaphoreIndex]->submit();
     graphics->getGraphicsCommands()->getCommands()->waitForSemaphore(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
                                                                      imageAvailableSemaphores[currentSemaphoreIndex]);
@@ -111,6 +117,7 @@ void Window::endFrame() {
     swapChainTextures[currentImageIndex]->changeLayout(Gfx::SE_IMAGE_LAYOUT_PRESENT_SRC_KHR, Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
                                                        Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, Gfx::SE_ACCESS_MEMORY_READ_BIT,
                                                        Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
+    renderingDoneSemaphores[currentSemaphoreIndex]->rotateSemaphore();
     graphics->getGraphicsCommands()->submitCommands(renderingDoneSemaphores[currentSemaphoreIndex]);
     VkSemaphore renderDoneHandle = renderingDoneSemaphores[currentSemaphoreIndex]->getHandle();
     VkPresentInfoKHR presentInfo = {
@@ -130,6 +137,7 @@ void Window::endFrame() {
     } else {
         VK_CHECK(r);
     }
+    renderingDoneSemaphores[currentSemaphoreIndex]->resolveSignal();
     currentSemaphoreIndex = (currentSemaphoreIndex + 1) % Gfx::numFramesBuffered;
     currentFrameIndex = currentSemaphoreIndex;
     // graphics->waitDeviceIdle();
