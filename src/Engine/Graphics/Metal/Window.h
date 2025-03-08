@@ -52,6 +52,7 @@ class Window : public Gfx::Window {
     CA::MetalLayer* metalLayer;
     CA::MetalDrawable* drawable;
     OTexture2D backBuffer;
+    OEvent renderDoneSemaphore;
 
     std::function<void(KeyCode, InputAction, KeyModifier)> keyCallback;
     std::function<void(double, double)> mouseMoveCallback;
