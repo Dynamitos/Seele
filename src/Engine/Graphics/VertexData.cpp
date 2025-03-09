@@ -39,8 +39,6 @@ void VertexData::updateMesh(uint32 meshletOffset, PMesh mesh, Component::Transfo
     std::unique_lock l(materialDataLock);
     PMaterialInstance referencedInstance = mesh->referencedMaterial->getHandle();
     PMaterial mat = referencedInstance->getBaseMaterial();
-    const auto& data = meshData[mesh->id];
-
     Matrix4 transformMatrix = transform.toMatrix() * mesh->transform;
     InstanceData inst = InstanceData{
         .transformMatrix = transformMatrix,
@@ -48,26 +46,6 @@ void VertexData::updateMesh(uint32 meshletOffset, PMesh mesh, Component::Transfo
     };
 
     referencedInstance->updateDescriptor();
-    if (mat->hasTransparency()) {
-        auto params = referencedInstance->getMaterialOffsets();
-        transparentData.add(TransparentDraw{
-            .matInst = referencedInstance,
-            .vertexData = this,
-            .offsets =
-                {
-                    .instanceOffset = 0,
-                    .textureOffset = params.textureOffset,
-                    .samplerOffset = params.samplerOffset,
-                    .floatOffset = params.floatOffset,
-                },
-            .worldPosition = Vector(inst.transformMatrix[3]),
-            .instanceData = inst,
-            .meshData = data,
-            .cullingOffset = meshletOffset,
-            .rayTracingScene = mesh->blas,
-        });
-        return;
-    }
     if (materialData.size() <= mat->getId()) {
         materialData.resize(mat->getId() + 1);
     }
@@ -77,50 +55,33 @@ void VertexData::updateMesh(uint32 meshletOffset, PMesh mesh, Component::Transfo
         matData.instances.resize(referencedInstance->getId() + 1);
     }
     BatchedDrawCall& matInstanceData = matData.instances[referencedInstance->getId()];
-    matInstanceData.materialInstance = referencedInstance;
-    matInstanceData.rayTracingData.add(mesh->blas);
-    matInstanceData.instanceData.add(inst);
-    matInstanceData.instanceMeshData.add(data);
-    matInstanceData.cullingOffsets.add(meshletOffset);
-
-    /* for (size_t i = 0; i < 0; ++i) {
-        auto bounding = meshlets[data.meshletOffset + i].bounding;
-        StaticArray<Vector, 8> corners;
-        Vector min = bounding.min; // bounding.center - bounding.radius * Vector(1, 1, 1);
-        Vector max = bounding.max; // bounding.center + bounding.radius * Vector(1, 1, 1);
-        corners[0] = transformMatrix * Vector4(min.x, min.y, min.z, 1);
-        corners[1] = transformMatrix * Vector4(min.x, min.y, max.z, 1);
-        corners[2] = transformMatrix * Vector4(min.x, max.y, min.z, 1);
-        corners[3] = transformMatrix * Vector4(min.x, max.y, max.z, 1);
-        corners[4] = transformMatrix * Vector4(max.x, min.y, min.z, 1);
-        corners[5] = transformMatrix * Vector4(max.x, min.y, max.z, 1);
-        corners[6] = transformMatrix * Vector4(max.x, max.y, min.z, 1);
-        corners[7] = transformMatrix * Vector4(max.x, max.y, max.z, 1);
-        addDebugVertex(DebugVertex{.position = corners[0], .color = meshlets[data.meshletOffset + i].color});
-        addDebugVertex(DebugVertex{.position = corners[1], .color = meshlets[data.meshletOffset + i].color});
-        addDebugVertex(DebugVertex{.position = corners[0], .color = meshlets[data.meshletOffset + i].color});
-        addDebugVertex(DebugVertex{.position = corners[2], .color = meshlets[data.meshletOffset + i].color});
-        addDebugVertex(DebugVertex{.position = corners[1], .color = meshlets[data.meshletOffset + i].color});
-        addDebugVertex(DebugVertex{.position = corners[3], .color = meshlets[data.meshletOffset + i].color});
-        addDebugVertex(DebugVertex{.position = corners[2], .color = meshlets[data.meshletOffset + i].color});
-        addDebugVertex(DebugVertex{.position = corners[3], .color = meshlets[data.meshletOffset + i].color});
-        addDebugVertex(DebugVertex{.position = corners[0], .color = meshlets[data.meshletOffset + i].color});
-        addDebugVertex(DebugVertex{.position = corners[4], .color = meshlets[data.meshletOffset + i].color});
-        addDebugVertex(DebugVertex{.position = corners[1], .color = meshlets[data.meshletOffset + i].color});
-        addDebugVertex(DebugVertex{.position = corners[5], .color = meshlets[data.meshletOffset + i].color});
-        addDebugVertex(DebugVertex{.position = corners[2], .color = meshlets[data.meshletOffset + i].color});
-        addDebugVertex(DebugVertex{.position = corners[6], .color = meshlets[data.meshletOffset + i].color});
-        addDebugVertex(DebugVertex{.position = corners[3], .color = meshlets[data.meshletOffset + i].color});
-        addDebugVertex(DebugVertex{.position = corners[7], .color = meshlets[data.meshletOffset + i].color});
-        addDebugVertex(DebugVertex{.position = corners[4], .color = meshlets[data.meshletOffset + i].color});
-        addDebugVertex(DebugVertex{.position = corners[5], .color = meshlets[data.meshletOffset + i].color});
-        addDebugVertex(DebugVertex{.position = corners[4], .color = meshlets[data.meshletOffset + i].color});
-        addDebugVertex(DebugVertex{.position = corners[6], .color = meshlets[data.meshletOffset + i].color});
-        addDebugVertex(DebugVertex{.position = corners[6], .color = meshlets[data.meshletOffset + i].color});
-        addDebugVertex(DebugVertex{.position = corners[7], .color = meshlets[data.meshletOffset + i].color});
-        addDebugVertex(DebugVertex{.position = corners[5], .color = meshlets[data.meshletOffset + i].color});
-        addDebugVertex(DebugVertex{.position = corners[7], .color = meshlets[data.meshletOffset + i].color});
-    }*/
+    for (const auto& data : meshData[mesh->id]) {
+        if (mat->hasTransparency()) {
+            auto params = referencedInstance->getMaterialOffsets();
+            transparentData.add(TransparentDraw{
+                .matInst = referencedInstance,
+                .vertexData = this,
+                .offsets =
+                    {
+                        .instanceOffset = 0,
+                        .textureOffset = params.textureOffset,
+                        .samplerOffset = params.samplerOffset,
+                        .floatOffset = params.floatOffset,
+                    },
+                .worldPosition = Vector(inst.transformMatrix[3]),
+                .instanceData = inst,
+                .meshData = data,
+                .cullingOffset = meshletOffset,
+                .rayTracingScene = mesh->blas,
+            });
+        } else { // opaque
+            matInstanceData.materialInstance = referencedInstance;
+            matInstanceData.rayTracingData.add(mesh->blas);
+            matInstanceData.instanceData.add(inst);
+            matInstanceData.instanceMeshData.add(data);
+            matInstanceData.cullingOffsets.add(meshletOffset);
+        }
+    }
 }
 
 void VertexData::createDescriptors() {
@@ -177,37 +138,42 @@ void VertexData::createDescriptors() {
 
 void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet> loadedMeshlets) {
     std::unique_lock l(vertexDataLock);
-    uint32 meshletOffset = meshlets.size();
-    AABB meshAABB;
-    for (uint32 i = 0; i < loadedMeshlets.size(); ++i) {
-        Meshlet& m = loadedMeshlets[i];
-        meshAABB = meshAABB.combine(m.boundingBox);
-        uint32 vertexOffset = vertexIndices.size();
-        vertexIndices.resize(vertexOffset + m.numVertices);
-        std::memcpy(vertexIndices.data() + vertexOffset, m.uniqueVertices, m.numVertices * sizeof(uint32));
-        uint32 primitiveOffset = primitiveIndices.size();
-        primitiveIndices.resize(primitiveOffset + (m.numPrimitives * 3));
-        std::memcpy(primitiveIndices.data() + primitiveOffset, m.primitiveLayout, m.numPrimitives * 3 * sizeof(uint8));
-        meshlets.add(MeshletDescription{
-            .bounding = m.boundingBox, //.toSphere(),
-            .vertexCount = m.numVertices,
-            .primitiveCount = m.numPrimitives,
-            .vertexOffset = vertexOffset,
-            .primitiveOffset = primitiveOffset,
-            .color = Vector((float)rand() / RAND_MAX, (float)rand() / RAND_MAX, (float)rand() / RAND_MAX),
-            .indicesOffset = (uint32)meshOffsets[id],
+    uint32 numMeshData = (loadedMeshlets.size() + 2047) / 2048; // todo: magic number
+    for (uint32 n = 0; n < numMeshData; ++n) {
+        uint32 meshletsToProcess = std::min<uint32>(loadedMeshlets.size() - n * 2048, 2048);
+        uint32 meshletOffset = meshlets.size();
+        AABB meshAABB;
+        for (uint32 i = 0; i < meshletsToProcess; ++i) {
+            Meshlet& m = loadedMeshlets[n * 2048 + i];
+            //...
+            meshAABB = meshAABB.combine(m.boundingBox);
+            uint32 vertexOffset = vertexIndices.size();
+            vertexIndices.resize(vertexOffset + m.numVertices);
+            std::memcpy(vertexIndices.data() + vertexOffset, m.uniqueVertices, m.numVertices * sizeof(uint32));
+            uint32 primitiveOffset = primitiveIndices.size();
+            primitiveIndices.resize(primitiveOffset + (m.numPrimitives * 3));
+            std::memcpy(primitiveIndices.data() + primitiveOffset, m.primitiveLayout, m.numPrimitives * 3 * sizeof(uint8));
+            meshlets.add(MeshletDescription{
+                .bounding = m.boundingBox, //.toSphere(),
+                .vertexCount = m.numVertices,
+                .primitiveCount = m.numPrimitives,
+                .vertexOffset = vertexOffset,
+                .primitiveOffset = primitiveOffset,
+                .color = Vector((float)rand() / RAND_MAX, (float)rand() / RAND_MAX, (float)rand() / RAND_MAX),
+                .indicesOffset = (uint32)meshOffsets[id],
+            });
+        }
+        meshData[id].add(MeshData{
+            .bounding = meshAABB, //.toSphere(),
+            .numMeshlets = (uint32)meshletsToProcess,
+            .meshletOffset = meshletOffset,
         });
     }
-    meshData[id] = MeshData{
-        .bounding = meshAABB, //.toSphere(),
-        .numMeshlets = (uint32)loadedMeshlets.size(),
-        .meshletOffset = meshletOffset,
-        .firstIndex = (uint32)indices.size(),
-        .numIndices = (uint32)loadedIndices.size(),
-    };
-
+    // todo: in case of a index split for 16 bit, do something here
+    meshData[id][0].firstIndex = (uint32)indices.size();
+    meshData[id][0].numIndices = (uint32)loadedIndices.size();
     indices.resize(indices.size() + loadedIndices.size());
-    std::memcpy(indices.data() + meshData[id].firstIndex, loadedIndices.data(), loadedIndices.size() * sizeof(uint32));
+    std::memcpy(indices.data() + meshData[id][0].firstIndex, loadedIndices.data(), loadedIndices.size() * sizeof(uint32));
 }
 
 void VertexData::commitMeshes() {
@@ -268,22 +234,24 @@ MeshId VertexData::allocateVertexData(uint64 numVertices) {
     return res;
 }
 
-void VertexData::serializeMesh(MeshId id, uint64, ArchiveBuffer& buffer) {
+void VertexData::serializeMesh(MeshId id, ArchiveBuffer& buffer) {
     std::unique_lock l(vertexDataLock);
     Array<Meshlet> out;
-    MeshData data = meshData[id];
-    for (size_t i = 0; i < data.numMeshlets; ++i) {
-        MeshletDescription& desc = meshlets[i + data.meshletOffset];
-        Meshlet m;
-        std::memcpy(m.uniqueVertices, &vertexIndices[desc.vertexOffset], desc.vertexCount * sizeof(uint32));
-        std::memcpy(m.primitiveLayout, &primitiveIndices[desc.primitiveOffset], desc.primitiveCount * 3 * sizeof(uint8));
-        m.numPrimitives = desc.primitiveCount;
-        m.numVertices = desc.vertexCount;
-        m.boundingBox = desc.bounding;
-        out.add(std::move(m));
+    for (uint32 n = 0; n < meshData[id].size(); ++n) {
+        MeshData data = meshData[id][n];
+        for (size_t i = 0; i < data.numMeshlets; ++i) {
+            MeshletDescription& desc = meshlets[i + data.meshletOffset];
+            Meshlet m;
+            std::memcpy(m.uniqueVertices, &vertexIndices[desc.vertexOffset], desc.vertexCount * sizeof(uint32));
+            std::memcpy(m.primitiveLayout, &primitiveIndices[desc.primitiveOffset], desc.primitiveCount * 3 * sizeof(uint8));
+            m.numPrimitives = desc.primitiveCount;
+            m.numVertices = desc.vertexCount;
+            m.boundingBox = desc.bounding;
+            out.add(std::move(m));
+        }
     }
-    Array<uint32> ind(data.numIndices);
-    std::memcpy(ind.data(), &indices[data.firstIndex], data.numIndices * sizeof(uint32));
+    Array<uint32> ind(meshData[id][0].numIndices);
+    std::memcpy(ind.data(), &indices[meshData[id][0].firstIndex], meshData[id][0].numIndices * sizeof(uint32));
     Serialization::save(buffer, out);
     Serialization::save(buffer, ind);
 }
@@ -383,7 +351,9 @@ void VertexData::destroy() {
 
 uint32 VertexData::addCullingMapping(MeshId id) {
     uint32 result = meshletCount;
-    meshletCount += getMeshData(id).numMeshlets;
+    for (const auto& md : getMeshData(id)) {
+        meshletCount += md.numMeshlets;
+    }
     return result;
 }
 

@@ -59,7 +59,9 @@ class LightCullingPass : public RenderPass {
     Gfx::PComputePipeline cullingEnabledPipeline;
     Gfx::OPipelineStatisticsQuery query;
     Gfx::PTimestampQuery timestamps;
-
+    UVector4 numThreadGroups;
+    UVector4 numThreads;
+    
     PScene scene;
 };
 DEFINE_REF(LightCullingPass)

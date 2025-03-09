@@ -14,7 +14,7 @@ void Mesh::save(ArchiveBuffer& buffer) const {
     Serialization::save(buffer, vertexCount);
     Serialization::save(buffer, referencedMaterial->getFolderPath());
     Serialization::save(buffer, referencedMaterial->getName());
-    vertexData->serializeMesh(id, vertexCount, buffer);
+    vertexData->serializeMesh(id, buffer);
 }
 
 void Mesh::load(ArchiveBuffer& buffer) {

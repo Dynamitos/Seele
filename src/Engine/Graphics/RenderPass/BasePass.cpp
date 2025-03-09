@@ -135,10 +135,10 @@ void BasePass::beginFrame(const Component::Camera& cam) {
 }
 
 void BasePass::render() {
-    /*opaqueCulling->updateBuffer(0, 0, oLightIndexList);
-    opaqueCulling->updateTexture(1, 0, oLightGrid);
-    transparentCulling->updateBuffer(0, 0, tLightIndexList);
-    transparentCulling->updateTexture(1, 0, tLightGrid);
+    opaqueCulling->updateBuffer(LIGHTINDEX_NAME, 0, oLightIndexList);
+    opaqueCulling->updateTexture(LIGHTGRID_NAME, 0, oLightGrid);
+    transparentCulling->updateBuffer(LIGHTINDEX_NAME, 0, tLightIndexList);
+    transparentCulling->updateTexture(LIGHTGRID_NAME, 0, tLightGrid);
     opaqueCulling->writeChanges();
     transparentCulling->writeChanges();
 
@@ -153,7 +153,7 @@ void BasePass::render() {
     // Base Rendering
     for (VertexData* vertexData : VertexData::getList()) {
         transparentData.addAll(vertexData->getTransparentData());
-        vertexData->getInstanceDataSet()->updateBuffer(6, 0, cullingBuffer);
+        vertexData->getInstanceDataSet()->updateBuffer(VertexData::CULLINGDATA_NAME, 0, cullingBuffer);
         vertexData->getInstanceDataSet()->writeChanges();
         permutation.setVertexData(vertexData->getTypeName());
         const auto& materials = vertexData->getMaterialData();
@@ -231,7 +231,7 @@ void BasePass::render() {
                                            Gfx::SE_SHADER_STAGE_FRAGMENT_BIT,
                                        0, sizeof(VertexData::DrawCallOffsets), &drawCall.offsets);
                 if (graphics->supportMeshShading()) {
-                    command->drawMesh(drawCall.instanceMeshData.size(), 1, 1);
+                    //command->drawMesh(drawCall.instanceMeshData.size(), 1, 1);
                 } else {
                     command->bindIndexBuffer(vertexData->getIndexBuffer());
                     for (const auto& meshData : drawCall.instanceMeshData) {
@@ -247,9 +247,8 @@ void BasePass::render() {
     
     //commands.add(waterRenderer->render(viewParamsSet));
     //commands.add(terrainRenderer->render(viewParamsSet));
-    */
+    
     // Skybox
-    graphics->beginRenderPass(renderPass);
     {
         Gfx::ORenderCommand skyboxCommand = graphics->createRenderCommand("SkyboxRender");
         skyboxCommand->setViewport(viewport);
@@ -258,8 +257,6 @@ void BasePass::render() {
         skyboxCommand->draw(36, 1, 0, 0);
         graphics->executeCommands(std::move(skyboxCommand));
     }
-    graphics->endRenderPass();
-    /*
     // Transparent rendering
     {
         permutation.setDepthCulling(false); // ignore visibility infos for transparency
@@ -348,7 +345,7 @@ void BasePass::render() {
                                                   Gfx::SE_SHADER_STAGE_FRAGMENT_BIT,
                                               0, sizeof(VertexData::DrawCallOffsets), &t.offsets);
             if (graphics->supportMeshShading()) {
-                transparentCommand->drawMesh(1, 1, 1);
+                //transparentCommand->drawMesh(1, 1, 1);
             } else {
                 // command->bindIndexBuffer(t.vertexData->getIndexBuffer());
                 // for (const auto& meshData : drawCall.instanceMeshData) {
@@ -376,37 +373,40 @@ void BasePass::render() {
     query->endQuery();
     timestamps->write(Gfx::SE_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, "BaseEnd");
     gDebugVertices.clear();
-    */
 }
 
 void BasePass::endFrame() {}
 
 void BasePass::publishOutputs() {
-    TextureCreateInfo depthBufferInfo = {
+    basePassDepth = graphics->createTexture2D(TextureCreateInfo{
         .format = Gfx::SE_FORMAT_D32_SFLOAT,
         .width = viewport->getOwner()->getFramebufferWidth(),
         .height = viewport->getOwner()->getFramebufferHeight(),
         .usage = Gfx::SE_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-    };
-    basePassDepth = graphics->createTexture2D(depthBufferInfo);
+    });
 
-    TextureCreateInfo msDepthInfo = {
+    basePassColor = graphics->createTexture2D(TextureCreateInfo{
+        .format = Gfx::SE_FORMAT_R32G32B32A32_SFLOAT,
+        .width = viewport->getOwner()->getFramebufferWidth(),
+        .height = viewport->getOwner()->getFramebufferHeight(),
+        .usage = Gfx::SE_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+    });
+
+    msBasePassDepth = graphics->createTexture2D(TextureCreateInfo{
         .format = Gfx::SE_FORMAT_D32_SFLOAT,
         .width = viewport->getOwner()->getFramebufferWidth(),
         .height = viewport->getOwner()->getFramebufferHeight(),
         .samples = viewport->getSamples(),
         .usage = Gfx::SE_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | Gfx::SE_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT,
-    };
-    msBasePassDepth = graphics->createTexture2D(msDepthInfo);
-
-    TextureCreateInfo msBaseColorInfo = {
-        .format = viewport->getOwner()->getSwapchainFormat(),
+    });
+    
+    msBasePassColor = graphics->createTexture2D(TextureCreateInfo{
+        .format = Gfx::SE_FORMAT_R32G32B32A32_SFLOAT,
         .width = viewport->getOwner()->getFramebufferWidth(),
         .height = viewport->getOwner()->getFramebufferHeight(),
         .samples = viewport->getSamples(),
         .usage = Gfx::SE_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | Gfx::SE_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT,
-    };
-    msBasePassColor = graphics->createTexture2D(msBaseColorInfo);
+    });
 
     depthAttachment =
         Gfx::RenderTargetAttachment(basePassDepth, Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
@@ -418,7 +418,7 @@ void BasePass::publishOutputs() {
     msDepthAttachment.clear.depthStencil.depth = 0.0f;
 
     colorAttachment = Gfx::RenderTargetAttachment(viewport, Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-                                                  Gfx::SE_ATTACHMENT_LOAD_OP_DONT_CARE, Gfx::SE_ATTACHMENT_STORE_OP_DONT_CARE);
+                                                  Gfx::SE_ATTACHMENT_LOAD_OP_DONT_CARE, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
 
     msColorAttachment =
         Gfx::RenderTargetAttachment(msBasePassColor, Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,

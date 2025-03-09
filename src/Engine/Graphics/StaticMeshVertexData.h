@@ -25,7 +25,7 @@ class StaticMeshVertexData : public VertexData {
     void loadTangents(uint64 offset, const Array<TangentType>& data);
     void loadBitangents(uint64 offset, const Array<BiTangentType>& data);
     void loadColors(uint64 offset, const Array<ColorType>& data);
-    virtual void serializeMesh(MeshId id, uint64 numVertices, ArchiveBuffer& buffer) override;
+    virtual void serializeMesh(MeshId id, ArchiveBuffer& buffer) override;
     virtual uint64 deserializeMesh(MeshId id, ArchiveBuffer& buffer) override;
     virtual void init(Gfx::PGraphics graphics) override;
     virtual void destroy() override;

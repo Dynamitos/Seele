@@ -62,7 +62,7 @@ class VertexData {
     MeshId allocateVertexData(uint64 numVertices);
     uint64 getMeshOffset(MeshId id) const { return meshOffsets[id]; }
     uint64 getMeshVertexCount(MeshId id) { return meshVertexCounts[id]; }
-    virtual void serializeMesh(MeshId id, uint64 numVertices, ArchiveBuffer& buffer);
+    virtual void serializeMesh(MeshId id, ArchiveBuffer& buffer);
     virtual uint64 deserializeMesh(MeshId id, ArchiveBuffer& buffer);
     virtual void bindBuffers(Gfx::PRenderCommand command) = 0;
     virtual Gfx::PDescriptorLayout getVertexDataLayout() = 0;
@@ -76,7 +76,7 @@ class VertexData {
     const Array<MaterialData>& getMaterialData() const { return materialData; }
     const Array<TransparentDraw>& getTransparentData() const { return transparentData; }
     const Array<Gfx::PBottomLevelAS>& getRayTracingData() const { return rayTracingScene; }
-    const MeshData& getMeshData(MeshId id) const { return meshData[id]; }
+    const Array<MeshData>& getMeshData(MeshId id) const { return meshData[id]; }
     void registerBottomLevelAccelerationStructure(Gfx::PBottomLevelAS blas) {
         dataToBuild.add(blas);
     }
@@ -89,6 +89,7 @@ class VertexData {
 
     uint32 addCullingMapping(MeshId id);
     static uint64 getMeshletCount() { return meshletCount; }
+    constexpr static const char* CULLINGDATA_NAME = "cullingData";
 
   protected:
     virtual void resizeBuffers() = 0;
@@ -113,7 +114,8 @@ class VertexData {
     Array<TransparentDraw> transparentData;
 
     std::mutex vertexDataLock;
-    Array<MeshData> meshData;
+    // each mesh id can have multiple meshdata, in case it needs to be split for having too many meshlets
+    Array<Array<MeshData>> meshData;
     Array<uint64> meshOffsets;
     Array<uint64> meshVertexCounts;
 
@@ -135,7 +137,6 @@ class VertexData {
     constexpr static const char* PRIMITIVEINDICES_NAME = "primitiveIndices";
     Gfx::OShaderBuffer cullingOffsetBuffer;
     constexpr static const char* CULLINGOFFSETS_NAME = "cullingOffsets";
-    constexpr static const char* CULLINGDATA_NAME = "cullingData";
 
     // for legacy pipeline
     Gfx::OIndexBuffer indexBuffer;

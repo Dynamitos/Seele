@@ -19,6 +19,7 @@ class BasePass : public RenderPass {
     virtual void createRenderPass() override;
 
   private:
+      // hdr
     Gfx::RenderTargetAttachment msColorAttachment;
     Gfx::RenderTargetAttachment colorAttachment;
     Gfx::RenderTargetAttachment msDepthAttachment;
@@ -37,7 +38,9 @@ class BasePass : public RenderPass {
     // use a different texture here so we can do multisampling
     Gfx::OTexture2D msBasePassDepth;
     Gfx::OTexture2D basePassDepth;
+    // hdr
     Gfx::OTexture2D msBasePassColor;
+    Gfx::OTexture2D basePassColor;
 
     // used for transparency sorting
     Vector cameraPos;
