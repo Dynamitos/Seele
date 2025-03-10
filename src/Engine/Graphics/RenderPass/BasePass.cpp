@@ -189,7 +189,7 @@ void BasePass::render() {
                     .pipelineLayout = collection->pipelineLayout,
                     .multisampleState =
                         {
-                            .samples = viewport->getSamples(),
+                            .samples = msColorAttachment.getNumSamples(),
                         },
                     .rasterizationState =
                         {
@@ -210,7 +210,7 @@ void BasePass::render() {
                     .pipelineLayout = collection->pipelineLayout,
                     .multisampleState =
                         {
-                            .samples = viewport->getSamples(),
+                            .samples = msColorAttachment.getNumSamples(),
                         },
                     .rasterizationState =
                         {
@@ -231,7 +231,7 @@ void BasePass::render() {
                                            Gfx::SE_SHADER_STAGE_FRAGMENT_BIT,
                                        0, sizeof(VertexData::DrawCallOffsets), &drawCall.offsets);
                 if (graphics->supportMeshShading()) {
-                    //command->drawMesh(drawCall.instanceMeshData.size(), 1, 1);
+                    command->drawMesh(drawCall.instanceMeshData.size(), 1, 1);
                 } else {
                     command->bindIndexBuffer(vertexData->getIndexBuffer());
                     for (const auto& meshData : drawCall.instanceMeshData) {
@@ -287,7 +287,7 @@ void BasePass::render() {
                     .pipelineLayout = collection->pipelineLayout,
                     .multisampleState =
                         {
-                            .samples = viewport->getSamples(),
+                            .samples = msColorAttachment.getNumSamples(),
                         },
                     .rasterizationState =
                         {
@@ -314,7 +314,7 @@ void BasePass::render() {
                     .pipelineLayout = collection->pipelineLayout,
                     .multisampleState =
                         {
-                            .samples = viewport->getSamples(),
+                            .samples = msColorAttachment.getNumSamples(),
                         },
                     .rasterizationState =
                         {
@@ -345,7 +345,7 @@ void BasePass::render() {
                                                   Gfx::SE_SHADER_STAGE_FRAGMENT_BIT,
                                               0, sizeof(VertexData::DrawCallOffsets), &t.offsets);
             if (graphics->supportMeshShading()) {
-                //transparentCommand->drawMesh(1, 1, 1);
+                transparentCommand->drawMesh(1, 1, 1);
             } else {
                 // command->bindIndexBuffer(t.vertexData->getIndexBuffer());
                 // for (const auto& meshData : drawCall.instanceMeshData) {
@@ -396,7 +396,7 @@ void BasePass::publishOutputs() {
         .format = Gfx::SE_FORMAT_D32_SFLOAT,
         .width = viewport->getOwner()->getFramebufferWidth(),
         .height = viewport->getOwner()->getFramebufferHeight(),
-        .samples = viewport->getSamples(),
+        .samples = Gfx::SE_SAMPLE_COUNT_4_BIT,
         .usage = Gfx::SE_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | Gfx::SE_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT,
     });
     
@@ -404,7 +404,7 @@ void BasePass::publishOutputs() {
         .format = Gfx::SE_FORMAT_R32G32B32A32_SFLOAT,
         .width = viewport->getOwner()->getFramebufferWidth(),
         .height = viewport->getOwner()->getFramebufferHeight(),
-        .samples = viewport->getSamples(),
+        .samples = Gfx::SE_SAMPLE_COUNT_4_BIT, // todo: configure
         .usage = Gfx::SE_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | Gfx::SE_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT,
     });
 
@@ -417,7 +417,7 @@ void BasePass::publishOutputs() {
                                     Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_DONT_CARE);
     msDepthAttachment.clear.depthStencil.depth = 0.0f;
 
-    colorAttachment = Gfx::RenderTargetAttachment(viewport, Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+    colorAttachment = Gfx::RenderTargetAttachment(basePassColor, Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
                                                   Gfx::SE_ATTACHMENT_LOAD_OP_DONT_CARE, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
 
     msColorAttachment =
@@ -437,7 +437,7 @@ void BasePass::publishOutputs() {
 }
 
 void BasePass::createRenderPass() {
-    RenderPass::beginFrame(Component::Camera());
+    //RenderPass::beginFrame(Component::Camera());
     //terrainRenderer = new TerrainRenderer(graphics, scene, viewParamsLayout, viewParamsSet);
     cullingBuffer = resources->requestBuffer("CULLINGBUFFER");
     timestamps = resources->requestTimestampQuery("TIMESTAMPS");
@@ -538,7 +538,7 @@ void BasePass::createRenderPass() {
             .pipelineLayout = debugPipelineLayout,
             .multisampleState =
                 {
-                    .samples = viewport->getSamples(),
+                    .samples = msColorAttachment.getNumSamples(),
                 },
             .rasterizationState =
                 {
@@ -612,7 +612,7 @@ void BasePass::createRenderPass() {
             .pipelineLayout = pipelineLayout,
             .multisampleState =
                 {
-                    .samples = viewport->getSamples(),
+                    .samples = msColorAttachment.getNumSamples(),
                 },
             .rasterizationState =
                 {

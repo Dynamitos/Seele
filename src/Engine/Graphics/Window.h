@@ -52,7 +52,6 @@ class Viewport {
     constexpr uint32 getOffsetY() const { return offsetY; }
     constexpr float getContentScaleX() const { return owner->getContentScaleX(); }
     constexpr float getContentScaleY() const { return owner->getContentScaleY(); }
-    constexpr Gfx::SeSampleCountFlags getSamples() const { return samples; }
     Matrix4 getProjectionMatrix() const;
 
   protected:
@@ -61,7 +60,6 @@ class Viewport {
     uint32 offsetX;
     uint32 offsetY;
     float fieldOfView;
-    Gfx::SeSampleCountFlags samples;
     PWindow owner;
 };
 DEFINE_REF(Viewport)

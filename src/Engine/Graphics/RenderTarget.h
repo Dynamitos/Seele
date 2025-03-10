@@ -35,7 +35,8 @@ class RenderTargetAttachment {
     }
     SeSampleCountFlags getNumSamples() const {
         if (viewport != nullptr) {
-            return viewport->getSamples();
+            // viewport backbuffers are not multisampled themselves
+            return Gfx::SE_SAMPLE_COUNT_1_BIT;
         }
         return texture->getNumSamples();
     }

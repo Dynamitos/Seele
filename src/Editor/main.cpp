@@ -112,10 +112,10 @@ int main() {
         // AssetImporter::importTexture(TextureImportArgs{
         //    .filePath = sourcePath / "import/textures/wgen.png",
         //});
-        // AssetImporter::importMesh(MeshImportArgs{
-        //    .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.glb",
-        //    .importPath = "Whitechapel",
-        //});
+        AssetImporter::importMesh(MeshImportArgs{
+            .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.glb",
+            .importPath = "Whitechapel",
+        });
         //AssetImporter::importMesh(MeshImportArgs{
         //    .filePath = sourcePath / "import/models/box.glb",
         //    .importPath = "",
@@ -143,7 +143,6 @@ int main() {
                     .size = {1920, 1080},
                     .offset = {0, 0},
                 },
-            .numSamples = Gfx::SE_SAMPLE_COUNT_4_BIT,
         };
         OGameView sceneView = new Editor::PlayView(graphics, window, sceneViewInfo, binaryPath.generic_string());
         sceneView->setFocused();

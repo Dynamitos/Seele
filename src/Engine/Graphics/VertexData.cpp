@@ -55,6 +55,7 @@ void VertexData::updateMesh(uint32 meshletOffset, PMesh mesh, Component::Transfo
         matData.instances.resize(referencedInstance->getId() + 1);
     }
     BatchedDrawCall& matInstanceData = matData.instances[referencedInstance->getId()];
+    matInstanceData.materialInstance = referencedInstance;
     for (const auto& data : meshData[mesh->id]) {
         if (mat->hasTransparency()) {
             auto params = referencedInstance->getMaterialOffsets();
@@ -75,7 +76,6 @@ void VertexData::updateMesh(uint32 meshletOffset, PMesh mesh, Component::Transfo
                 .rayTracingScene = mesh->blas,
             });
         } else { // opaque
-            matInstanceData.materialInstance = referencedInstance;
             matInstanceData.rayTracingData.add(mesh->blas);
             matInstanceData.instanceData.add(inst);
             matInstanceData.instanceMeshData.add(data);
@@ -138,13 +138,12 @@ void VertexData::createDescriptors() {
 
 void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet> loadedMeshlets) {
     std::unique_lock l(vertexDataLock);
-    uint32 numMeshData = (loadedMeshlets.size() + 2047) / 2048; // todo: magic number
-    for (uint32 n = 0; n < numMeshData; ++n) {
-        uint32 meshletsToProcess = std::min<uint32>(loadedMeshlets.size() - n * 2048, 2048);
+    for (auto&& chunk : loadedMeshlets | std::views::chunk(2048)) {
         uint32 meshletOffset = meshlets.size();
         AABB meshAABB;
-        for (uint32 i = 0; i < meshletsToProcess; ++i) {
-            Meshlet& m = loadedMeshlets[n * 2048 + i];
+        uint32 numMeshlets = 0;
+        for (auto&& m : chunk) {
+            numMeshlets++;
             //...
             meshAABB = meshAABB.combine(m.boundingBox);
             uint32 vertexOffset = vertexIndices.size();
@@ -165,7 +164,7 @@ void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet>
         }
         meshData[id].add(MeshData{
             .bounding = meshAABB, //.toSphere(),
-            .numMeshlets = (uint32)meshletsToProcess,
+            .numMeshlets = numMeshlets,
             .meshletOffset = meshletOffset,
         });
     }

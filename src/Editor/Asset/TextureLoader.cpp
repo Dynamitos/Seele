@@ -60,7 +60,7 @@ void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset) {
     int totalWidth = 0, totalHeight = 0, n = 0;
     unsigned char* data = stbi_load(args.filePath.string().c_str(), &totalWidth, &totalHeight, &n, 4);
     ktxTexture2* kTexture = nullptr;
-    VkFormat format = VK_FORMAT_R8G8B8A8_UNORM;
+    VkFormat format = VK_FORMAT_R8G8B8A8_SRGB;
     ktxTextureCreateInfo createInfo = {
         .vkFormat = (uint32)format,
         .baseDepth = 1,
