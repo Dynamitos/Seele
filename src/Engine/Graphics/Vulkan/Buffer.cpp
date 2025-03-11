@@ -5,10 +5,6 @@
 #include <fmt/format.h>
 #include <vma/vk_mem_alloc.h>
 
-uint64 bufferSize = 0;
-
-uint64 getBufferSize() { return bufferSize; }
-
 using namespace Seele;
 using namespace Seele::Vulkan;
 
@@ -26,9 +22,6 @@ BufferAllocation::BufferAllocation(PGraphics graphics, const std::string& name, 
         .pObjectName = name.c_str(),
     };
     vkSetDebugUtilsObjectNameEXT(graphics->getDevice(), &nameInfo);
-    if (!(properties & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)) {
-        bufferSize += size;
-    }
     if (bufferInfo.usage & VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT) {
         VkBufferDeviceAddressInfo addrInfo = {
             .sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO_KHR,
@@ -41,9 +34,6 @@ BufferAllocation::BufferAllocation(PGraphics graphics, const std::string& name, 
 
 BufferAllocation::~BufferAllocation() {
     if (buffer != VK_NULL_HANDLE) {
-        if (!(properties & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)) {
-            bufferSize -= size;
-        }
         vmaDestroyBuffer(graphics->getAllocator(), buffer, allocation);
     }
 }

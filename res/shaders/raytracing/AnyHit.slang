@@ -7,8 +7,6 @@ import StaticMeshVertexData;
 [shader("anyhit")]
 void anyhit(inout RayPayload hitValue, in BuiltInTriangleIntersectionAttributes attr)
 {
-    if(RayTCurrent() > hitValue.t)
-        return;
     const float3 barycentricCoords = float3(1.0f - attr.barycentrics.x - attr.barycentrics.y, attr.barycentrics.x, attr.barycentrics.y);
 
     InstanceData inst = pScene.instances[InstanceID()];

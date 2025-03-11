@@ -105,7 +105,7 @@ void taskMain(
         viewFrustum.sides[3] = computePlane(origin, corners[3], corners[2]);
         meshVisible = true;
 #ifdef DEPTH_CULLING
-        meshVisible = mesh.bounding.insideFrustum(viewFrustum) && isBoxVisible(mesh.bounding);
+        //meshVisible = mesh.bounding.insideFrustum(viewFrustum) && isBoxVisible(mesh.bounding);
 #endif
     }
     GroupMemoryBarrierWithGroupSync();
