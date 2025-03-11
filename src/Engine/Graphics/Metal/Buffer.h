@@ -2,8 +2,6 @@
 #include "Graphics/Buffer.h"
 #include "Graphics/Enums.h"
 #include "Graphics/Initializer.h"
-#include "Metal/MTLResource.hpp"
-#include "Metal/MTLTypes.hpp"
 #include "MinimalEngine.h"
 #include "Resources.h"
 

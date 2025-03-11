@@ -6,8 +6,6 @@
 #include "Math/Vector.h"
 #include "RenderGraph.h"
 #include "Scene/Scene.h"
-#include "Graphics/Metal/Descriptor.h"
-#include "Graphics/Metal/Shader.h"
 
 using namespace Seele;
 
@@ -39,19 +37,19 @@ void LightCullingPass::beginFrame(const Component::Camera& cam) {
 }
 
 void LightCullingPass::render() {
-    /*query->beginQuery();
+    query->beginQuery();
     timestamps->write(Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT, "LightCullBegin");
     oLightGrid->pipelineBarrier(Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, Gfx::SE_ACCESS_SHADER_WRITE_BIT,
                                 Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
     tLightGrid->pipelineBarrier(Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, Gfx::SE_ACCESS_SHADER_WRITE_BIT,
                                 Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
-    cullingDescriptorSet->updateTexture(0, 0, depthAttachment);
-    cullingDescriptorSet->updateBuffer(1, 0, oLightIndexCounter);
-    cullingDescriptorSet->updateBuffer(2, 0, tLightIndexCounter);
-    cullingDescriptorSet->updateBuffer(3, 0, oLightIndexList);
-    cullingDescriptorSet->updateBuffer(4, 0, tLightIndexList);
-    cullingDescriptorSet->updateTexture(5, 0, oLightGrid);
-    cullingDescriptorSet->updateTexture(6, 0, tLightGrid);
+    cullingDescriptorSet->updateTexture(DEPTHATTACHMENT_NAME, 0, depthAttachment);
+    cullingDescriptorSet->updateBuffer(OLIGHTINDEXCOUNTER_NAME, 0, oLightIndexCounter);
+    cullingDescriptorSet->updateBuffer(TLIGHTINDEXCOUNTER_NAME, 0, tLightIndexCounter);
+    cullingDescriptorSet->updateBuffer(OLIGHTINDEXLIST_NAME, 0, oLightIndexList);
+    cullingDescriptorSet->updateBuffer(TLIGHTINDEXLIST_NAME, 0, tLightIndexList);
+    cullingDescriptorSet->updateTexture(OLIGHTGRID_NAME, 0, oLightGrid);
+    cullingDescriptorSet->updateTexture(TLIGHTGRID_NAME, 0, tLightGrid);
     cullingDescriptorSet->writeChanges();
     Gfx::OComputeCommand computeCommand = graphics->createComputeCommand("CullingCommand");
     if (getGlobals().useLightCulling) {
@@ -60,7 +58,7 @@ void LightCullingPass::render() {
         computeCommand->bindPipeline(cullingPipeline);
     }
     computeCommand->bindDescriptor({viewParamsSet, dispatchParamsSet, cullingDescriptorSet, lightEnv->getDescriptorSet()});
-    computeCommand->dispatch(dispatchParams.numThreadGroups.x, dispatchParams.numThreadGroups.y, dispatchParams.numThreadGroups.z);
+    computeCommand->dispatch(numThreadGroups.x, numThreadGroups.y, numThreadGroups.z);
     Array<Gfx::OComputeCommand> commands;
     commands.add(std::move(computeCommand));
     // std::cout << "Execute" << std::endl;
@@ -74,7 +72,7 @@ void LightCullingPass::render() {
     oLightGrid->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT, Gfx::SE_ACCESS_SHADER_READ_BIT,
                                 Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
     tLightGrid->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT, Gfx::SE_ACCESS_SHADER_READ_BIT,
-                                Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);*/
+                                Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
 }
 
 void LightCullingPass::endFrame() {}
@@ -83,8 +81,8 @@ void LightCullingPass::publishOutputs() {
     setupFrustums();
     uint32_t viewportWidth = viewport->getWidth();
     uint32_t viewportHeight = viewport->getHeight();
-    UVector4 numThreadGroups = glm::ceil(glm::vec4(viewportWidth / (float)BLOCK_SIZE, viewportHeight / (float)BLOCK_SIZE, 1, 0));
-    UVector4 numThreads = numThreadGroups * glm::uvec4(BLOCK_SIZE, BLOCK_SIZE, 1, 0);
+    numThreadGroups = glm::ceil(glm::vec4(viewportWidth / (float)BLOCK_SIZE, viewportHeight / (float)BLOCK_SIZE, 1, 0));
+    numThreads = numThreadGroups * glm::uvec4(BLOCK_SIZE, BLOCK_SIZE, 1, 0);
     dispatchParamsSet = dispatchParamsLayout->allocateDescriptorSet();
     dispatchParamsSet->updateConstants("numThreadGroups", 0, &numThreadGroups);
     dispatchParamsSet->updateConstants("numThreads", 0, &numThreads);
@@ -227,8 +225,8 @@ void LightCullingPass::setupFrustums() {
     uint32_t viewportWidth = viewport->getWidth();
     uint32_t viewportHeight = viewport->getHeight();
 
-    glm::uvec4 numThreads = glm::ceil(glm::vec4(viewportWidth / (float)BLOCK_SIZE, viewportHeight / (float)BLOCK_SIZE, 1, 0));
-    glm::uvec4 numThreadGroups = glm::ceil(glm::vec4(numThreads.x / (float)BLOCK_SIZE, numThreads.y / (float)BLOCK_SIZE, 1, 0));
+    numThreads = glm::ceil(glm::vec4(viewportWidth / (float)BLOCK_SIZE, viewportHeight / (float)BLOCK_SIZE, 1, 0));
+    numThreadGroups = glm::ceil(glm::vec4(numThreads.x / (float)BLOCK_SIZE, numThreads.y / (float)BLOCK_SIZE, 1, 0));
 
     RenderPass::beginFrame(Component::Camera());
 

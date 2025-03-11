@@ -25,7 +25,7 @@ class StaticMeshVertexData : public VertexData {
     void loadTangents(uint64 offset, const Array<TangentType>& data);
     void loadBitangents(uint64 offset, const Array<BiTangentType>& data);
     void loadColors(uint64 offset, const Array<ColorType>& data);
-    virtual void serializeMesh(MeshId id, uint64 numVertices, ArchiveBuffer& buffer) override;
+    virtual void serializeMesh(MeshId id, ArchiveBuffer& buffer) override;
     virtual uint64 deserializeMesh(MeshId id, ArchiveBuffer& buffer) override;
     virtual void init(Gfx::PGraphics graphics) override;
     virtual void destroy() override;
@@ -41,17 +41,17 @@ class StaticMeshVertexData : public VertexData {
 
 
     Gfx::OShaderBuffer positions;
-    constexpr static std::string POSITIONS_NAME = "positions";
+    constexpr static const char* POSITIONS_NAME = "positions";
     Gfx::OShaderBuffer texCoords[MAX_TEXCOORDS];
-    constexpr static std::string TEXCOORDS_NAME = "texCoords";
+    constexpr static const char* TEXCOORDS_NAME = "texCoords";
     Gfx::OShaderBuffer normals;
-    constexpr static std::string NORMALS_NAME = "normals";
+    constexpr static const char* NORMALS_NAME = "normals";
     Gfx::OShaderBuffer tangents;
-    constexpr static std::string TANGENTS_NAME = "tangents";
+    constexpr static const char* TANGENTS_NAME = "tangents";
     Gfx::OShaderBuffer biTangents;
-    constexpr static std::string BITANGENTS_NAME = "biTangents";
+    constexpr static const char* BITANGENTS_NAME = "biTangents";
     Gfx::OShaderBuffer colors;
-    constexpr static std::string COLORS_NAME = "colors";
+    constexpr static const char* COLORS_NAME = "colors";
     Array<PositionType> posData;
     Array<TexCoordType> texData[MAX_TEXCOORDS];
     Array<NormalType> norData;

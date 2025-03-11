@@ -11,6 +11,7 @@
 #include "Graphics/RenderPass/RayTracingPass.h"
 #include "Graphics/RenderPass/RenderGraphResources.h"
 #include "Graphics/RenderPass/VisibilityPass.h"
+#include "Graphics/RenderPass/ToneMappingPass.h"
 #include "System/CameraUpdater.h"
 #include "System/LightGather.h"
 #include "System/MeshUpdater.h"
@@ -26,6 +27,7 @@ GameView::GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreate
     renderGraph.addPass(new VisibilityPass(graphics));
     renderGraph.addPass(new LightCullingPass(graphics, scene));
     renderGraph.addPass(new BasePass(graphics, scene));
+    renderGraph.addPass(new ToneMappingPass(graphics));
     renderGraph.setViewport(viewport);
     renderGraph.createRenderPass();
     if (graphics->supportRayTracing()) {

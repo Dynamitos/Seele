@@ -8,11 +8,11 @@
 namespace Seele {
 namespace Vulkan {
 DECLARE_REF(Graphics)
-struct DescriptorMapping
-{
+struct DescriptorMapping {
     uint32 binding;
     uint32 constantOffset;
     uint32 constantSize;
+    VkDescriptorType type;
 };
 class DescriptorLayout : public Gfx::DescriptorLayout {
   public:
@@ -23,7 +23,7 @@ class DescriptorLayout : public Gfx::DescriptorLayout {
 
   private:
     PGraphics graphics;
-    uint32 constantsSize;
+    uint32 constantsSize = 0;
     VkShaderStageFlags constantsStages;
     Array<VkDescriptorSetLayoutBinding> bindings;
     Map<std::string, DescriptorMapping> mappings;
@@ -73,7 +73,7 @@ class DescriptorSet : public Gfx::DescriptorSet, public CommandBoundResource {
 
   private:
     std::vector<uint8> constantData;
-    Gfx::OUniformBuffer constantsBuffer;
+    OBufferAllocation constantsBuffer;
     VkShaderStageFlags constantsStageFlags;
     List<VkDescriptorImageInfo> imageInfos;
     List<VkDescriptorBufferInfo> bufferInfos;

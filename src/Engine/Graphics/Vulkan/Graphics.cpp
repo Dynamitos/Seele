@@ -142,7 +142,9 @@ Graphics::~Graphics() {
 
 void Graphics::init(GraphicsInitializer initInfo) {
     initInstance(initInfo);
-    //setupDebugCallback();
+#ifdef ENABLE_VALIDATION
+    setupDebugCallback();
+#endif
     pickPhysicalDevice();
     createDevice(initInfo);
     VmaAllocatorCreateInfo createInfo = {
@@ -195,6 +197,12 @@ void Graphics::waitDeviceIdle() {
     getGraphicsCommands()->submitCommands();
     vkDeviceWaitIdle(handle);
     getGraphicsCommands()->refreshCommands();
+}
+
+void Graphics::executeCommands(Gfx::ORenderCommand commands) {
+    Array<Gfx::ORenderCommand> commandArray;
+    commandArray.add(std::move(commands));
+    getGraphicsCommands()->getCommands()->executeCommands(std::move(commandArray));
 }
 
 void Graphics::executeCommands(Array<Gfx::ORenderCommand> commands) {

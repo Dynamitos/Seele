@@ -7,7 +7,7 @@
 using namespace Seele;
 using namespace Seele::Vulkan;
 
-Semaphore::Semaphore(PGraphics graphics) : graphics(graphics) {
+SemaphoreHandle::SemaphoreHandle(PGraphics graphics, const std::string& name) : CommandBoundResource(graphics, name) {
     VkSemaphoreCreateInfo info = {
         .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
         .pNext = nullptr,
@@ -16,8 +16,26 @@ Semaphore::Semaphore(PGraphics graphics) : graphics(graphics) {
     VK_CHECK(vkCreateSemaphore(graphics->getDevice(), &info, nullptr, &handle));
 }
 
+SemaphoreHandle::~SemaphoreHandle() { vkDestroySemaphore(graphics->getDevice(), handle, nullptr); }
+
+Semaphore::Semaphore(PGraphics graphics) : graphics(graphics) {}
+
 Semaphore::~Semaphore() {
-    // graphics->getDestructionManager()->queueSemaphore(graphics->getGraphicsCommands()->getCommands(), handle);
+    for (auto& h : handles) {
+        graphics->getDestructionManager()->queueResourceForDestruction(std::move(h));
+    }
+}
+
+void Semaphore::rotateSemaphore() {
+    for (uint32 i = 0; i < handles.size(); ++i) {
+        if (handles[i]->isCurrentlyBound()) {
+            continue;
+        }
+        currentHandle = i;
+        return;
+    }
+    currentHandle = handles.size();
+    handles.add(new SemaphoreHandle(graphics, "Semaphore"));
 }
 
 Fence::Fence(PGraphics graphics) : graphics(graphics), status(Status::Ready) {

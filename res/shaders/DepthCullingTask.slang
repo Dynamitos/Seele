@@ -123,11 +123,11 @@ void taskMain(
         if(!culling.wasVisible())
         {
             // if the meshlet is outside of the frustum, we skip it since we cant do depth culling anyways
-		    if(meshlet.bounding.insideFrustum(viewFrustum))
+		    //if(meshlet.bounding.insideFrustum(viewFrustum))
             {
 #ifdef DEPTH_CULLING
                 // if the meshlet bounding box is behind the cached depth buffer, we skip
-                if(isBoxVisible(meshlet.bounding))
+                //if(isBoxVisible(meshlet.bounding))
 #endif
                 {
                     uint index;

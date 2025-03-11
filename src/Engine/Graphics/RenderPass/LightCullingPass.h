@@ -27,7 +27,7 @@ class LightCullingPass : public RenderPass {
     static constexpr uint32 INDEX_LIGHT_ENV = 1;
 
     Gfx::OShaderBuffer frustumBuffer;
-    constexpr static std::string FRUSTUMBUFFER_NAME = "frustums";
+    const char* FRUSTUMBUFFER_NAME = "frustums";
     Gfx::ODescriptorLayout dispatchParamsLayout;
     Gfx::PDescriptorSet dispatchParamsSet;
     Gfx::OComputeShader frustumShader;
@@ -36,19 +36,19 @@ class LightCullingPass : public RenderPass {
 
     PLightEnvironment lightEnv;
     Gfx::PTexture2D depthAttachment;
-    constexpr static std::string DEPTHATTACHMENT_NAME = "depth";
+    constexpr static const char* DEPTHATTACHMENT_NAME = "depth";
     Gfx::OShaderBuffer oLightIndexCounter;
-    constexpr static std::string OLIGHTINDEXCOUNTER_NAME = "oLightIndexCounter";
+    constexpr static const char* OLIGHTINDEXCOUNTER_NAME = "oLightIndexCounter";
     Gfx::OShaderBuffer tLightIndexCounter;
-    constexpr static std::string TLIGHTINDEXCOUNTER_NAME = "tLightIndexCounter";
+    constexpr static const char* TLIGHTINDEXCOUNTER_NAME = "tLightIndexCounter";
     Gfx::OShaderBuffer oLightIndexList;
-    constexpr static std::string OLIGHTINDEXLIST_NAME = "oLightIndexList";
+    constexpr static const char* OLIGHTINDEXLIST_NAME = "oLightIndexList";
     Gfx::OShaderBuffer tLightIndexList;
-    constexpr static std::string TLIGHTINDEXLIST_NAME = "tLightIndexList";
+    constexpr static const char* TLIGHTINDEXLIST_NAME = "tLightIndexList";
     Gfx::OTexture2D oLightGrid;
-    constexpr static std::string OLIGHTGRID_NAME = "oLightGrid";
+    constexpr static const char* OLIGHTGRID_NAME = "oLightGrid";
     Gfx::OTexture2D tLightGrid;
-    constexpr static std::string TLIGHTGRID_NAME = "tLightGrid";
+    constexpr static const char* TLIGHTGRID_NAME = "tLightGrid";
     Gfx::PDescriptorSet cullingDescriptorSet;
     Gfx::ODescriptorLayout cullingDescriptorLayout;
     Gfx::OPipelineLayout cullingLayout;
@@ -59,7 +59,9 @@ class LightCullingPass : public RenderPass {
     Gfx::PComputePipeline cullingEnabledPipeline;
     Gfx::OPipelineStatisticsQuery query;
     Gfx::PTimestampQuery timestamps;
-
+    UVector4 numThreadGroups;
+    UVector4 numThreads;
+    
     PScene scene;
 };
 DEFINE_REF(LightCullingPass)

@@ -297,7 +297,7 @@ void TerrainRenderer::setViewport(Gfx::PViewport _viewport, Gfx::PRenderPass ren
         .pipelineLayout = meshUpdater.pipelineLayout,
         .multisampleState =
             {
-                .samples = viewport->getSamples(),
+                .samples = Gfx::SE_SAMPLE_COUNT_1_BIT,
             },
         .rasterizationState =
             {

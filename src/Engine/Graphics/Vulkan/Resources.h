@@ -4,21 +4,67 @@
 #include <vk_mem_alloc.h>
 #include <vulkan/vulkan.h>
 
-
 namespace Seele {
 namespace Vulkan {
 DECLARE_REF(DescriptorPool)
 DECLARE_REF(CommandPool)
 DECLARE_REF(Command)
 DECLARE_REF(Graphics)
-class Semaphore {
+
+class CommandBoundResource {
   public:
-    Semaphore(PGraphics graphics);
-    virtual ~Semaphore();
+    CommandBoundResource(PGraphics graphics, const std::string& name) : graphics(graphics), name(name) {}
+    virtual ~CommandBoundResource() {
+        if (isCurrentlyBound())
+            abort();
+    }
+    constexpr bool isCurrentlyBound() const { return bindCount > 0; }
+    constexpr void bind() { bindCount++; }
+    constexpr void unbind() { bindCount--; }
+
+  protected:
+    PGraphics graphics;
+    std::string name;
+    uint64 bindCount = 0;
+};
+DEFINE_REF(CommandBoundResource)
+
+class SemaphoreHandle : public CommandBoundResource {
+  public:
+    SemaphoreHandle(PGraphics graphics, const std::string& name);
+    virtual ~SemaphoreHandle();
+
     constexpr VkSemaphore getHandle() const { return handle; }
 
   private:
     VkSemaphore handle;
+};
+DEFINE_REF(SemaphoreHandle)
+
+class Semaphore {
+  public:
+    Semaphore(PGraphics graphics);
+    virtual ~Semaphore();
+    // call when you need a new semaphore
+    void rotateSemaphore();
+    // call when the semaphore is to signal something, for example after using it in vkAcquireImage
+    void encodeSignal() {
+        if (handles.size() == 0)
+            return;
+        handles[currentHandle]->bind();
+    }
+    // call when the semaphore has been signalled
+    void resolveSignal() {
+        if (handles.size() == 0)
+            return;
+        handles[currentHandle]->unbind();
+    }
+    constexpr VkSemaphore getHandle() const { return handles[currentHandle]->getHandle(); }
+    PSemaphoreHandle getCurrentSemaphore() const { return handles[currentHandle]; }
+
+  private:
+    Array<OSemaphoreHandle> handles;
+    uint32 currentHandle = 0;
     PGraphics graphics;
 };
 DEFINE_REF(Semaphore)
@@ -45,7 +91,6 @@ class Fence {
     VkFence fence;
 };
 DEFINE_REF(Fence)
-DECLARE_REF(CommandBoundResource)
 class DestructionManager {
   public:
     DestructionManager(PGraphics graphics);
@@ -58,24 +103,6 @@ class DestructionManager {
     Array<OCommandBoundResource> resources;
 };
 DEFINE_REF(DestructionManager)
-
-class CommandBoundResource {
-  public:
-    CommandBoundResource(PGraphics graphics, const std::string& name) : graphics(graphics), name(name) {}
-    virtual ~CommandBoundResource() {
-        if (isCurrentlyBound())
-            abort();
-    }
-    constexpr bool isCurrentlyBound() const { return bindCount > 0; }
-    constexpr void bind() { bindCount++; }
-    constexpr void unbind() { bindCount--; }
-
-  protected:
-    PGraphics graphics;
-    std::string name;
-    uint64 bindCount = 0;
-};
-DEFINE_REF(CommandBoundResource)
 
 class SamplerHandle : public CommandBoundResource {
   public:

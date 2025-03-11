@@ -20,9 +20,8 @@ struct MeshData
     uint32_t numIndices;
 };
 
-static const uint32_t MAX_VERTICES = 64;
-static const uint32_t MAX_PRIMITIVES = 128;
-static const uint32_t MAX_MESHLETS_PER_INSTANCE = 2048;
+static const uint32_t MAX_VERTICES = 256;
+static const uint32_t MAX_PRIMITIVES = 256;
 
 struct InstanceData
 {
@@ -77,7 +76,7 @@ uint decodePrimitive(uint32_t encoded)
 
 struct MeshPayload
 {
-    uint culledMeshlets[MAX_MESHLETS_PER_INSTANCE];
+    uint culledMeshlets[2048];
     uint instanceId;
     uint meshletOffset;
     uint cullingOffset;

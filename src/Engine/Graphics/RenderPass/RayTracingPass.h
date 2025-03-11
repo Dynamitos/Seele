@@ -17,15 +17,21 @@ class RayTracingPass : public RenderPass {
   private:
     Gfx::ODescriptorLayout paramsLayout;
     Gfx::OPipelineLayout pipelineLayout;
+    constexpr static const char* TLAS_NAME = "scene";
+    Gfx::OTopLevelAS tlas;
+    constexpr static const char* ACCUMULATOR_NAME = "accumulator";
     Gfx::OTexture2D radianceAccumulator;
+    constexpr static const char* TEXTURE_NAME = "image";
     Gfx::OTexture2D texture;
+    constexpr static const char* SKYBOX_NAME = "skybox";
     Gfx::PTextureCube skyBox;
+    constexpr static const char* SKYSAMPLER_NAME = "sampler";
     Gfx::OSampler skyBoxSampler;
+    constexpr static const char* INDEXBUFFER_NAME = "indexBuffer";
     Gfx::ORayGenShader rayGen;
     Gfx::OAnyHitShader anyhit;
     Gfx::OMissShader miss;
     Gfx::PRayTracingPipeline pipeline;
-    Gfx::OTopLevelAS tlas;
     PScene scene;
 };
 } // namespace Seele

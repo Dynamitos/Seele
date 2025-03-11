@@ -56,7 +56,6 @@ int main(int argc, char** argv) {
                 .size = {1920, 1080},
                 .offset = {0, 0},
             },
-        .numSamples = Gfx::SE_SAMPLE_COUNT_4_BIT,
     };
     OGameView sceneView = new PlayView(graphics, window, sceneViewInfo, binaryPath.generic_string(), useDepthCulling);
     sceneView->setFocused();

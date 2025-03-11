@@ -16,30 +16,30 @@ struct SampleParams {
 
 RayTracingPass::RayTracingPass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics), scene(scene) {
     paramsLayout = graphics->createDescriptorLayout("pRayTracingParams");
-    /*paramsLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 0,
+    paramsLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .name = TLAS_NAME,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR,
     });
     paramsLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 1,
+        .name = ACCUMULATOR_NAME,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_IMAGE,
     });
     paramsLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 2,
+        .name = TEXTURE_NAME,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_IMAGE,
     });
     paramsLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 3,
+        .name = INDEXBUFFER_NAME,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
     });
     paramsLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 4,
+        .name = SKYBOX_NAME,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
     });
     paramsLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .binding = 5,
+        .name = SKYSAMPLER_NAME,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLER,
-    });*/
+    });
     paramsLayout->create();
     pipelineLayout = graphics->createPipelineLayout("RayTracing");
     pipelineLayout->addDescriptorLayout(viewParamsLayout);
@@ -137,12 +137,12 @@ void RayTracingPass::render() {
         .bottomLevelStructures = accelerationStructures,
     });
     Gfx::PDescriptorSet desc = paramsLayout->allocateDescriptorSet();
-    /*desc->updateAccelerationStructure(0, 0, tlas);
-    desc->updateTexture(1, 0, radianceAccumulator);
-    desc->updateTexture(2, 0, texture);
-    desc->updateBuffer(3, 0, StaticMeshVertexData::getInstance()->getIndexBuffer());
-    desc->updateTexture(4, 0, skyBox);
-    desc->updateSampler(5, 0, skyBoxSampler);*/
+    desc->updateAccelerationStructure(TLAS_NAME, 0, tlas);
+    desc->updateTexture(ACCUMULATOR_NAME, 0, radianceAccumulator);
+    desc->updateTexture(TEXTURE_NAME, 0, texture);
+    desc->updateBuffer(INDEXBUFFER_NAME, 0, StaticMeshVertexData::getInstance()->getIndexBuffer());
+    desc->updateTexture(SKYBOX_NAME, 0, skyBox);
+    desc->updateSampler(SKYSAMPLER_NAME, 0, skyBoxSampler);
     desc->writeChanges();
 
     Gfx::ORenderCommand command = graphics->createRenderCommand("RayTracing");

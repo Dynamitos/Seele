@@ -22,7 +22,8 @@ BottomLevelAS::BottomLevelAS(PGraphics graphics, const Gfx::BottomLevelASCreateI
         1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f,
     };
     VertexData* vertexData = createInfo.mesh->vertexData;
-    MeshData meshData = vertexData->getMeshData(createInfo.mesh->id);
+    //todo: indices might be split as well
+    MeshData meshData = vertexData->getMeshData(createInfo.mesh->id)[0];
     vertexOffset = vertexData->getMeshOffset(createInfo.mesh->id) * sizeof(Vector);
     vertexCount = vertexData->getMeshVertexCount(createInfo.mesh->id);
     indexOffset = meshData.firstIndex * sizeof(uint32);

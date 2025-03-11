@@ -62,7 +62,7 @@ class VertexData {
     MeshId allocateVertexData(uint64 numVertices);
     uint64 getMeshOffset(MeshId id) const { return meshOffsets[id]; }
     uint64 getMeshVertexCount(MeshId id) { return meshVertexCounts[id]; }
-    virtual void serializeMesh(MeshId id, uint64 numVertices, ArchiveBuffer& buffer);
+    virtual void serializeMesh(MeshId id, ArchiveBuffer& buffer);
     virtual uint64 deserializeMesh(MeshId id, ArchiveBuffer& buffer);
     virtual void bindBuffers(Gfx::PRenderCommand command) = 0;
     virtual Gfx::PDescriptorLayout getVertexDataLayout() = 0;
@@ -76,7 +76,7 @@ class VertexData {
     const Array<MaterialData>& getMaterialData() const { return materialData; }
     const Array<TransparentDraw>& getTransparentData() const { return transparentData; }
     const Array<Gfx::PBottomLevelAS>& getRayTracingData() const { return rayTracingScene; }
-    const MeshData& getMeshData(MeshId id) const { return meshData[id]; }
+    const Array<MeshData>& getMeshData(MeshId id) const { return meshData[id]; }
     void registerBottomLevelAccelerationStructure(Gfx::PBottomLevelAS blas) {
         dataToBuild.add(blas);
     }
@@ -89,6 +89,7 @@ class VertexData {
 
     uint32 addCullingMapping(MeshId id);
     static uint64 getMeshletCount() { return meshletCount; }
+    constexpr static const char* CULLINGDATA_NAME = "cullingData";
 
   protected:
     virtual void resizeBuffers() = 0;
@@ -113,7 +114,8 @@ class VertexData {
     Array<TransparentDraw> transparentData;
 
     std::mutex vertexDataLock;
-    Array<MeshData> meshData;
+    // each mesh id can have multiple meshdata, in case it needs to be split for having too many meshlets
+    Array<Array<MeshData>> meshData;
     Array<uint64> meshOffsets;
     Array<uint64> meshVertexCounts;
 
@@ -128,27 +130,26 @@ class VertexData {
     Gfx::ODescriptorLayout instanceDataLayout;
     // for mesh shading
     Gfx::OShaderBuffer meshletBuffer;
-    constexpr static std::string MESHLET_NAME = "meshlets";
+    constexpr static const char* MESHLET_NAME = "meshlets";
     Gfx::OShaderBuffer vertexIndicesBuffer;
-    constexpr static std::string VERTEXINDICES_NAME = "vertexIndices";
+    constexpr static const char* VERTEXINDICES_NAME = "vertexIndices";
     Gfx::OShaderBuffer primitiveIndicesBuffer;
-    constexpr static std::string PRIMITIVEINDICES_NAME = "primitiveIndices";
+    constexpr static const char* PRIMITIVEINDICES_NAME = "primitiveIndices";
     Gfx::OShaderBuffer cullingOffsetBuffer;
-    constexpr static std::string CULLINGOFFSETS_NAME = "cullingOffsets";
-    constexpr static std::string CULLINGDATA_NAME = "cullingData";
+    constexpr static const char* CULLINGOFFSETS_NAME = "cullingOffsets";
 
     // for legacy pipeline
     Gfx::OIndexBuffer indexBuffer;
-    constexpr static std::string INDEXBUFFER_NAME = "indexBuffer";
+    constexpr static const char* INDEXBUFFER_NAME = "indexBuffer";
     Array<Gfx::PBottomLevelAS> dataToBuild;
     // Material data
     Array<InstanceData> instanceData;
     Gfx::OShaderBuffer instanceBuffer;
-    constexpr static std::string INSTANCES_NAME = "instances";
+    constexpr static const char* INSTANCES_NAME = "instances";
 
     Array<MeshData> instanceMeshData;
     Gfx::OShaderBuffer instanceMeshDataBuffer;
-    constexpr static std::string MESHDATA_NAME = "meshData";
+    constexpr static const char* MESHDATA_NAME = "meshData";
 
     Array<Gfx::PBottomLevelAS> rayTracingScene;
 

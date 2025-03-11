@@ -172,7 +172,7 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Arra
         .colorAttachmentCount = (uint32)colorRefs.size(),
         .pColorAttachments = colorRefs.data(),
         .pResolveAttachments = resolveRefs.size() > 0 ? resolveRefs.data() : nullptr,
-        .pDepthStencilAttachment = &depthRef,
+        .pDepthStencilAttachment = layout.depthAttachment.getTexture() != nullptr ? &depthRef : nullptr,
     };
     Array<VkSubpassDependency2> dep;
     for (const auto& d : dependencies) {

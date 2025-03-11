@@ -10,5 +10,5 @@ FragmentParameter vertexMain(
 ){
 	InstanceData inst = pScene.instances[input.instanceId];
 	VertexAttributes attr = pVertexData.getAttributes(input.vertexId);
-	return attr.getParameter(inst.transformMatrix);
+	return attr.getParameter(inst.transformMatrix, inst.inverseTransformMatrix);
 }

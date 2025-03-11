@@ -53,12 +53,14 @@ void StaticMeshVertexData::loadColors(uint64 offset, const Array<ColorType>& dat
     dirty = true;
 }
 
-void StaticMeshVertexData::serializeMesh(MeshId id, uint64 numVertices, ArchiveBuffer& buffer) {
-    VertexData::serializeMesh(id, numVertices, buffer);
+void StaticMeshVertexData::serializeMesh(MeshId id, ArchiveBuffer& buffer) {
+    VertexData::serializeMesh(id, buffer);
     uint64 offset;
+    uint64 numVertices;
     {
         std::unique_lock l(vertexDataLock);
         offset = meshOffsets[id];
+        numVertices = meshVertexCounts[id];
     }
     Array<TexCoordType> tex[MAX_TEXCOORDS];
     for (size_t i = 0; i < MAX_TEXCOORDS; ++i) {

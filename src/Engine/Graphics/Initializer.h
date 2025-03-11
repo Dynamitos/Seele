@@ -35,7 +35,6 @@ struct WindowCreateInfo {
 struct ViewportCreateInfo {
     URect dimensions;
     float fieldOfView = glm::radians(70.0f);
-    Gfx::SeSampleCountFlags numSamples;
 };
 // doesnt own the data, only proxy it
 struct DataSource {

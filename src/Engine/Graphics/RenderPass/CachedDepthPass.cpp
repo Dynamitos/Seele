@@ -43,7 +43,7 @@ CachedDepthPass::~CachedDepthPass() {}
 void CachedDepthPass::beginFrame(const Component::Camera& cam) { RenderPass::beginFrame(cam); }
 
 void CachedDepthPass::render() {
-/*    query->beginQuery();
+    query->beginQuery();
     timestamps->write(Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT, "CachedBegin");
     graphics->beginRenderPass(renderPass);
     Array<Gfx::ORenderCommand> commands;
@@ -53,7 +53,7 @@ void CachedDepthPass::render() {
     permutation.setDepthCulling(true);
     for (VertexData* vertexData : VertexData::getList()) {
         permutation.setVertexData(vertexData->getTypeName());
-        vertexData->getInstanceDataSet()->updateBuffer(6, 0, cullingBuffer);
+        vertexData->getInstanceDataSet()->updateBuffer(VertexData::CULLINGDATA_NAME, 0, cullingBuffer);
         vertexData->getInstanceDataSet()->writeChanges();
 
         // Create Pipeline(VertexData)
@@ -134,9 +134,8 @@ void CachedDepthPass::render() {
 
     graphics->executeCommands(std::move(commands));
     graphics->endRenderPass();
-    graphics->waitDeviceIdle();
     timestamps->write(Gfx::SE_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, "CachedEnd");
-    query->endQuery();*/
+    query->endQuery();
 }
 
 void CachedDepthPass::endFrame() {}

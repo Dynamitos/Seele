@@ -10,7 +10,7 @@ Window::~Window() {}
 Viewport::Viewport(PWindow owner, const ViewportCreateInfo& viewportInfo)
     : sizeX(std::min(owner->getFramebufferWidth(), viewportInfo.dimensions.size.x)),
       sizeY(std::min(owner->getFramebufferHeight(), viewportInfo.dimensions.size.y)), offsetX(viewportInfo.dimensions.offset.x),
-      offsetY(viewportInfo.dimensions.offset.y), fieldOfView(viewportInfo.fieldOfView), samples(viewportInfo.numSamples), owner(owner) {}
+      offsetY(viewportInfo.dimensions.offset.y), fieldOfView(viewportInfo.fieldOfView), owner(owner) {}
 
 Viewport::~Viewport() {}
 

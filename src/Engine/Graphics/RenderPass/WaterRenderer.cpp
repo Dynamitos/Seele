@@ -458,7 +458,7 @@ void WaterRenderer::setViewport(Gfx::PViewport _viewport, Gfx::PRenderPass rende
         .pipelineLayout = waterLayout,
         .multisampleState =
             {
-                .samples = viewport->getSamples(),
+                .samples = Gfx::SE_SAMPLE_COUNT_4_BIT,
             },
         .rasterizationState =
             {
