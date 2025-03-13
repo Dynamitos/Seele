@@ -84,14 +84,14 @@ float3 agxEotf(float3 val) {
   val = mul(agx_mat_inv, val);
   
   // sRGB IEC 61966-2-1 2.2 Exponent Reference EOTF Display
-  //val = pow(val, float3(2.2));
+  val = pow(val, float3(2.2));
 
   return val;
 }
 
-float3 agxLook(float3 val, float avgLum) {
+float3 agxLook(float3 val) {
   const float3 lw = float3(0.2126, 0.7152, 0.0722);
-  float luma = dot(val, lw) / (9.6 * avgLum + 0.00001);
+  float luma = dot(val, lw);
   
   // Default
   float3 offset = pToneMappingParams.offset.xyz;
@@ -108,10 +108,9 @@ float3 agxLook(float3 val, float avgLum) {
 float4 toneMapping(float2 uv : UV) : SV_Target
 {
 	float3 hdrValue = pToneMappingParams.hdrInputTexture.Sample(pToneMappingParams.hdrSampler, uv).rgb;
-    float avgLum = pToneMappingParams.averageLuminance[0];
-    
-    float3 value = agx(hdrValue);
-    value = agxLook(value, avgLum);
+
+    float3 value = agx(hdrValue / 1000);
+    value = agxLook(value);
     value = agxEotf(value);
 
     return float4(value, 1);

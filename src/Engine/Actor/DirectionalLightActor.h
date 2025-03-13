@@ -6,7 +6,7 @@ namespace Seele {
 class DirectionalLightActor : public Actor {
   public:
     DirectionalLightActor(PScene scene);
-    DirectionalLightActor(PScene scene, Vector color, Vector direction);
+    DirectionalLightActor(PScene scene, Vector color, float intensity, Vector direction);
     virtual ~DirectionalLightActor();
     Component::DirectionalLight& getDirectionalLightComponent();
     const Component::DirectionalLight& getDirectionalLightComponent() const;
