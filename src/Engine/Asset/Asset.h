@@ -34,7 +34,7 @@ class Asset {
     std::string name;
     std::string assetId;
     Status status;
-    uint64 byteSize;
+    uint64 byteSize = 0;
 };
 DEFINE_REF(Asset)
 } // namespace Seele

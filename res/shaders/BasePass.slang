@@ -31,6 +31,5 @@ float4 fragmentMain(in FragmentParameter params) : SV_Target
         result += pLightEnv.pointLights[lightIndex].illuminate(lightingParams, brdf);
     }
     result += brdf.evaluateAmbient();
-    // gamma correction
     return float4(result, brdf.getAlpha());
 }

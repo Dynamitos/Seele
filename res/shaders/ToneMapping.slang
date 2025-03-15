@@ -31,8 +31,9 @@ struct Parameters
   float sat = 1.0;
   Texture2D hdrInputTexture;
   SamplerState hdrSampler;
+  StructuredBuffer<float> averageLuminance;
 };
-ParameterBlock<Parameters> pParams;
+ParameterBlock<Parameters> pToneMappingParams;
 
 // AgX
 // ->
@@ -83,7 +84,7 @@ float3 agxEotf(float3 val) {
   val = mul(agx_mat_inv, val);
   
   // sRGB IEC 61966-2-1 2.2 Exponent Reference EOTF Display
-  //val = pow(val, float3(2.2));
+  val = pow(val, float3(2.2));
 
   return val;
 }
@@ -93,10 +94,10 @@ float3 agxLook(float3 val) {
   float luma = dot(val, lw);
   
   // Default
-  float3 offset = pParams.offset.xyz;
-  float3 slope = pParams.slope.xyz;
-  float3 power = pParams.power.xyz;
-  float sat = pParams.sat;
+  float3 offset = pToneMappingParams.offset.xyz;
+  float3 slope = pToneMappingParams.slope.xyz;
+  float3 power = pToneMappingParams.power.xyz;
+  float sat = pToneMappingParams.sat;
  
   // ASC CDL
   val = pow(val * slope + offset, power);
@@ -106,12 +107,11 @@ float3 agxLook(float3 val) {
 [shader("pixel")]
 float4 toneMapping(float2 uv : UV) : SV_Target
 {
-	float3 hdrValue = pParams.hdrInputTexture.Sample(pParams.hdrSampler, uv).rgb;
-    //float3 value = agx(hdrValue);
-    //value = agxLook(value);
-    //value = agxEotf(value);
+	float3 hdrValue = pToneMappingParams.hdrInputTexture.Sample(pToneMappingParams.hdrSampler, uv).rgb;
 
-    float3 value = hdrValue / (hdrValue + float3(10));
+    float3 value = agx(hdrValue / 1000);
+    value = agxLook(value);
+    value = agxEotf(value);
 
     return float4(value, 1);
 }

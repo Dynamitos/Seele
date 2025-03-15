@@ -4,8 +4,6 @@
 #include "Graphics/Enums.h"
 #include "Resources.h"
 
-uint64 getBufferSize();
-
 namespace Seele {
 namespace Vulkan {
 DECLARE_REF(Command)
