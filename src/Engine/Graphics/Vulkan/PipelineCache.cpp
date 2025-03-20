@@ -508,7 +508,7 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
             uint32 intersectionIndex = VK_SHADER_UNUSED_KHR;
             if (hitgroup.anyHitShader != nullptr) {
                 auto anyHit = hitgroup.anyHitShader.cast<AnyHitShader>();
-                anyHitIndex = shaderStages.size();
+                anyHitIndex = (uint32)shaderStages.size();
                 shaderStages.add(VkPipelineShaderStageCreateInfo{
                     .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
                     .pNext = nullptr,
@@ -521,7 +521,7 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
             }
             if (hitgroup.intersectionShader != nullptr) {
                 auto intersect = hitgroup.intersectionShader.cast<IntersectionShader>();
-                intersectionIndex = shaderGroups.size();
+                intersectionIndex = (uint32)shaderGroups.size();
                 shaderStages.add(VkPipelineShaderStageCreateInfo{
                     .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
                     .pNext = nullptr,
@@ -674,7 +674,7 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
                                                         Gfx::QueueType::GRAPHICS, sbtAlignment);
 
     Array<uint8> sbt(sbtSize);
-    vkGetRayTracingShaderGroupHandlesKHR(graphics->getDevice(), pipelineHandle, 0, shaderGroups.size(), sbtSize, sbt.data());
+    vkGetRayTracingShaderGroupHandlesKHR(graphics->getDevice(), pipelineHandle, 0, (uint32)shaderGroups.size(), sbtSize, sbt.data());
 
     uint64 sbtOffset = 0;
     Array<uint8> rayGenSbt(rayGenStride);

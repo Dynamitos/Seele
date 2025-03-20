@@ -321,7 +321,7 @@ Gfx::OPipelineStatisticsQuery Graphics::createPipelineStatisticsQuery(const std:
     return new PipelineStatisticsQuery(this, name);
 }
 
-Gfx::OTimestampQuery Graphics::createTimestampQuery(uint64 numTimestamps, const std::string& name) {
+Gfx::OTimestampQuery Graphics::createTimestampQuery(uint64, const std::string& name) {
     return new TimestampQuery(this, name);
 }
 
@@ -457,9 +457,6 @@ void Graphics::buildBottomLevelAccelerationStructures(Array<Gfx::PBottomLevelAS>
     // For the sake of simplicity we won't stage the vertex data to the GPU memory
 
     // Note that the buffer usage flags for buffers consumed by the bottom level acceleration structure require special flags
-    const VkBufferUsageFlags buffer_usage_flags = VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR |
-                                                  VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-
     VkBufferCreateInfo transformBufferInfo = {
         .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
         .pNext = nullptr,
@@ -593,7 +590,7 @@ void Graphics::buildBottomLevelAccelerationStructures(Array<Gfx::PBottomLevelAS>
     }
 
     PCommand cmd = graphicsCommands->getCommands();
-    vkCmdBuildAccelerationStructuresKHR(cmd->getHandle(), buildGeometries.size(), buildGeometries.data(), buildRangePointers.data());
+    vkCmdBuildAccelerationStructuresKHR(cmd->getHandle(), (uint32)buildGeometries.size(), buildGeometries.data(), buildRangePointers.data());
     cmd->bindResource(PBufferAllocation(transformBuffer));
     destructionManager->queueResourceForDestruction(std::move(transformBuffer));
     for (auto& scratchAlloc : scratchBuffers) {

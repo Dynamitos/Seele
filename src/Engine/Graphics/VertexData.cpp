@@ -90,7 +90,7 @@ void VertexData::createDescriptors() {
     Array<uint32> cullingOffsets;
     for (auto& mat : materialData) {
         for (auto& instance : mat.instances) {
-            instance.offsets.instanceOffset = instanceData.size();
+            instance.offsets.instanceOffset = (uint32)instanceData.size();
             MaterialOffsets offsets = instance.materialInstance->getMaterialOffsets();
             instance.offsets.textureOffset = offsets.textureOffset;
             instance.offsets.samplerOffset = offsets.samplerOffset;
@@ -104,7 +104,7 @@ void VertexData::createDescriptors() {
         }
     }
     for (uint32 i = 0; i < transparentData.size(); ++i) {
-        transparentData[i].offsets.instanceOffset = instanceData.size();
+        transparentData[i].offsets.instanceOffset = (uint32)instanceData.size();
         cullingOffsets.add(transparentData[i].cullingOffset);
         instanceData.add(transparentData[i].instanceData);
         instanceMeshData.add(transparentData[i].meshData);
@@ -139,17 +139,17 @@ void VertexData::createDescriptors() {
 void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet> loadedMeshlets) {
     std::unique_lock l(vertexDataLock);
     for (auto&& chunk : loadedMeshlets | std::views::chunk(2048)) {
-        uint32 meshletOffset = meshlets.size();
+        uint32 meshletOffset = (uint32)meshlets.size();
         AABB meshAABB;
         uint32 numMeshlets = 0;
         for (auto&& m : chunk) {
             numMeshlets++;
             //...
             meshAABB = meshAABB.combine(m.boundingBox);
-            uint32 vertexOffset = vertexIndices.size();
+            uint32 vertexOffset = (uint32)vertexIndices.size();
             vertexIndices.resize(vertexOffset + m.numVertices);
             std::memcpy(vertexIndices.data() + vertexOffset, m.uniqueVertices, m.numVertices * sizeof(uint32));
-            uint32 primitiveOffset = primitiveIndices.size();
+            uint32 primitiveOffset = (uint32)primitiveIndices.size();
             primitiveIndices.resize(primitiveOffset + (m.numPrimitives * 3));
             std::memcpy(primitiveIndices.data() + primitiveOffset, m.primitiveLayout, m.numPrimitives * 3 * sizeof(uint8));
             meshlets.add(MeshletDescription{
@@ -349,7 +349,7 @@ void VertexData::destroy() {
 }
 
 uint32 VertexData::addCullingMapping(MeshId id) {
-    uint32 result = meshletCount;
+    uint32 result = (uint32)meshletCount;
     for (const auto& md : getMeshData(id)) {
         meshletCount += md.numMeshlets;
     }

@@ -36,7 +36,7 @@ int main(int, char**) {
         Array<Vector> texCoords1(mesh->mNumVertices);
         if (mesh->HasTextureCoords(2))
             abort();
-        for (int32 i = 0; i < mesh->mNumVertices; ++i) {
+        for (uint32 i = 0; i < mesh->mNumVertices; ++i) {
             positions[i] = Vector(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
 
             if (mesh->mTextureCoords[0] != nullptr)
@@ -65,7 +65,7 @@ int main(int, char**) {
             return 0.5 * glm::length(glm::cross(p2 - p1, p3 - p1));
         };
         Array<Tri> tris(mesh->mNumFaces);
-        for (int32 faceIndex = 0; faceIndex < mesh->mNumFaces; ++faceIndex) {
+        for (uint32 faceIndex = 0; faceIndex < mesh->mNumFaces; ++faceIndex) {
             tris[faceIndex].p[0] = mesh->mFaces[faceIndex].mIndices[0];
             tris[faceIndex].p[1] = mesh->mFaces[faceIndex].mIndices[1];
             tris[faceIndex].p[2] = mesh->mFaces[faceIndex].mIndices[2];

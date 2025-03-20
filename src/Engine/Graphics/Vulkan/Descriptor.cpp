@@ -51,11 +51,11 @@ void DescriptorLayout::create() {
             constantsSize += gfxBinding.uniformLength;
             constantsStages |= gfxBinding.shaderStages;
         } else {
-            mappings[gfxBinding.name] = {
+            mappings[gfxBinding.name] = DescriptorMapping{
                 .binding = (uint32)bindings.size(),
                 .type = cast(gfxBinding.descriptorType),
             };
-            bindings.add({
+            bindings.add(VkDescriptorSetLayoutBinding{
                 .binding = (uint32)bindings.size(),
                 .descriptorType = cast(gfxBinding.descriptorType),
                 .descriptorCount = gfxBinding.descriptorCount,

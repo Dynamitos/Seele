@@ -36,7 +36,7 @@ void InspectorView::prepareRender() {}
 
 void InspectorView::render() { renderGraph.render(Component::Camera()); }
 
-void InspectorView::applyArea(URect area) {}
+void InspectorView::applyArea(URect ) {}
 
 void InspectorView::keyCallback(KeyCode, InputAction, KeyModifier) {}
 

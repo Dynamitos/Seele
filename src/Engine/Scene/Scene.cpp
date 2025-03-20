@@ -17,12 +17,6 @@ Scene::Scene(Gfx::PGraphics graphics) : graphics(graphics), lightEnv(new LightEn
 
 Scene::~Scene() {}
 
-void Scene::bakeLighting() { 
-	const auto& matData = StaticMeshVertexData::getInstance()->getMaterialData(); 
-	for (const auto& mat : matData)
-	{
-		
-	}
-}
+void Scene::bakeLighting() {}
 
 void Scene::update(float deltaTime) { physics.update(deltaTime); }

@@ -5,7 +5,6 @@
 #include "VertexData.h"
 #include "entt/entt.hpp"
 
-
 namespace Seele {
 class StaticMeshVertexData : public VertexData {
   public:
@@ -39,7 +38,6 @@ class StaticMeshVertexData : public VertexData {
     virtual void resizeBuffers() override;
     virtual void updateBuffers() override;
 
-
     Gfx::OShaderBuffer positions;
     constexpr static const char* POSITIONS_NAME = "positions";
     Gfx::OShaderBuffer texCoords[MAX_TEXCOORDS];
@@ -52,7 +50,7 @@ class StaticMeshVertexData : public VertexData {
     constexpr static const char* BITANGENTS_NAME = "biTangents";
     Gfx::OShaderBuffer colors;
     constexpr static const char* COLORS_NAME = "colors";
-    Array<PositionType> posData;
+    Array<PositionType> posData{debug_resource::get("VertexPositions")};
     Array<TexCoordType> texData[MAX_TEXCOORDS];
     Array<NormalType> norData;
     Array<TangentType> tanData;

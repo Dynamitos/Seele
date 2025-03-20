@@ -1,65 +1,65 @@
 ﻿{
-    "configurations": [
-        {
-            "name": "Debug",
-            "buildCommandArgs": "",
-            "ctestCommandArgs": "",
-            "configurationType": "Debug",
-            "generator": "Ninja",
-            "intelliSenseMode": "windows-msvc-x64",
-            "inheritEnvironments": [ "msvc_x64" ],
-            "cmakeCommandArgs": "-DCMAKE_DEBUG_POSTFIX=\"\" -DCMAKE_PLATFORM=x64",
-            "buildRoot": "${workspaceRoot}/build",
-            "installRoot": "C:/Program Files/Seele"
-        },
-        {
-            "name": "Release",
-            "generator": "Ninja",
-            "configurationType": "Release",
-            "buildRoot": "${workspaceRoot}/build",
-            "cmakeCommandArgs": "-DCMAKE_DEBUG_POSTFIX=\"\" -DCMAKE_PLATFORM=x64",
-            "buildCommandArgs": "",
-            "ctestCommandArgs": "",
-            "inheritEnvironments": [ "msvc_x64" ],
-            "intelliSenseMode": "windows-msvc-x64",
-            "installRoot": "C:/Program Files/Seele"
-        },
-        {
-            "name": "RelWithDebInfo",
-            "generator": "Ninja",
-            "configurationType": "RelWithDebInfo",
-            "buildRoot": "${workspaceRoot}/build",
-            "installRoot": "C:/Program Files/Seele",
-            "cmakeCommandArgs": "-DCMAKE_DEBUG_POSTFIX=\"\" -DCMAKE_PLATFORM=x64",
-            "buildCommandArgs": "",
-            "ctestCommandArgs": "",
-            "inheritEnvironments": [ "msvc_x64" ],
-            "intelliSenseMode": "windows-msvc-x64"
-        },
-        {
-            "name": "AddressSanitizer",
-            "buildCommandArgs": "",
-            "ctestCommandArgs": "",
-            "configurationType": "Debug",
-            "generator": "Ninja",
-            "intelliSenseMode": "windows-msvc-x64",
-            "inheritEnvironments": [ "msvc_x64" ],
-            "cmakeCommandArgs": "-DCMAKE_DEBUG_POSTFIX=\"\" -DCMAKE_PLATFORM=x64",
-            "buildRoot": "${workspaceRoot}/build",
-            "installRoot": "C:/Program Files/Seele",
-            "addressSanitizerEnabled": true
-        },
-        {
-            "name": "MinSizeRel",
-            "generator": "Ninja",
-            "configurationType": "MinSizeRel",
-            "buildRoot": "${workspaceRoot}/build",
-            "installRoot": "C:/Program Files/Seele",
-            "cmakeCommandArgs": "-DCMAKE_DEBUG_POSTFIX=\"\" -DCMAKE_PLATFORM=x64",
-            "buildCommandArgs": "",
-            "ctestCommandArgs": "",
-            "inheritEnvironments": [ "msvc_x64" ],
-            "intelliSenseMode": "windows-msvc-x64"
-        }
-    ]
+  "configurations": [
+    {
+      "name": "Debug",
+      "buildCommandArgs": "",
+      "ctestCommandArgs": "",
+      "configurationType": "Debug",
+      "generator": "Ninja",
+      "intelliSenseMode": "windows-msvc-x64",
+      "inheritEnvironments": [ "msvc_x64" ],
+      "cmakeCommandArgs": "-DCMAKE_DEBUG_POSTFIX=\"\" -DCMAKE_PLATFORM=x64",
+      "buildRoot": "${workspaceRoot}/build",
+      "installRoot": "C:/Program Files/Seele"
+    },
+    {
+      "name": "Release",
+      "generator": "Ninja",
+      "configurationType": "Release",
+      "buildRoot": "${workspaceRoot}/build",
+      "cmakeCommandArgs": "-DCMAKE_DEBUG_POSTFIX=\"\" -DCMAKE_PLATFORM=x64",
+      "buildCommandArgs": "",
+      "ctestCommandArgs": "",
+      "inheritEnvironments": [ "msvc_x64" ],
+      "intelliSenseMode": "windows-msvc-x64",
+      "installRoot": "C:/Program Files/Seele"
+    },
+    {
+      "name": "RelWithDebInfo",
+      "generator": "Ninja",
+      "configurationType": "RelWithDebInfo",
+      "buildRoot": "${workspaceRoot}/build",
+      "installRoot": "C:/Program Files/Seele",
+      "cmakeCommandArgs": "-DCMAKE_DEBUG_POSTFIX=\"\" -DCMAKE_PLATFORM=x64",
+      "buildCommandArgs": "",
+      "ctestCommandArgs": "",
+      "inheritEnvironments": [ "msvc_x64" ],
+      "intelliSenseMode": "windows-msvc-x64"
+    },
+    {
+      "name": "AddressSanitizer",
+      "buildCommandArgs": "",
+      "ctestCommandArgs": "",
+      "configurationType": "Debug",
+      "generator": "Visual Studio 17 2022 Win64",
+      "intelliSenseMode": "windows-msvc-x64",
+      "inheritEnvironments": [ "msvc_x64" ],
+      "cmakeCommandArgs": "-DCMAKE_DEBUG_POSTFIX=\"\" -DCMAKE_PLATFORM=x64",
+      "buildRoot": "${workspaceRoot}/build",
+      "installRoot": "C:/Program Files/Seele",
+      "addressSanitizerEnabled": true
+    },
+    {
+      "name": "MinSizeRel",
+      "generator": "Ninja",
+      "configurationType": "MinSizeRel",
+      "buildRoot": "${workspaceRoot}/build",
+      "installRoot": "C:/Program Files/Seele",
+      "cmakeCommandArgs": "-DCMAKE_DEBUG_POSTFIX=\"\" -DCMAKE_PLATFORM=x64",
+      "buildCommandArgs": "",
+      "ctestCommandArgs": "",
+      "inheritEnvironments": [ "msvc_x64" ],
+      "intelliSenseMode": "windows-msvc-x64"
+    }
+  ]
 }

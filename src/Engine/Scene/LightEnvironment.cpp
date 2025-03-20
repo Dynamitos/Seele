@@ -57,8 +57,8 @@ void LightEnvironment::commit() {
                                  Gfx::SE_ACCESS_SHADER_READ_BIT | Gfx::SE_ACCESS_TRANSFER_WRITE_BIT,
                                  Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT |
                                      Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT);
-    uint32 numPointLights = points.size();
-    uint32 numDirectionalLights = dirs.size();
+    uint32 numPointLights = (uint32)points.size();
+    uint32 numDirectionalLights = (uint32)dirs.size();
     set->updateConstants("numPointLights", 0, &numPointLights);
     set->updateBuffer("pointLights", 0, pointLights);
     set->updateConstants("numDirectionalLights", 0, &numDirectionalLights);

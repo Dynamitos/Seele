@@ -5,12 +5,11 @@
 #include "Tree.h"
 #include <utility>
 
-
 namespace Seele {
 template <typename KeyType, typename PairType> struct _KeyFun {
     const KeyType& operator()(const PairType& pair) const { return pair.key; }
 };
-template <typename K, typename V, typename Compare = std::less<K>, typename Allocator = std::pmr::polymorphic_allocator<Pair<const K, V>>>
+template <typename K, typename V, typename Compare = std::less<K>, typename Allocator = std::pmr::polymorphic_allocator<Pair<K, V>>>
 struct Map : public Tree<K, Pair<K, V>, _KeyFun<K, Pair<K, V>>, Compare, Allocator> {
     using Super = Tree<K, Pair<K, V>, _KeyFun<K, Pair<K, V>>, Compare, Allocator>;
     using key_type = Super::key_type;
@@ -35,8 +34,8 @@ struct Map : public Tree<K, Pair<K, V>, _KeyFun<K, Pair<K, V>>, Compare, Allocat
         : Super(comp, alloc) {}
     constexpr explicit Map(const Allocator& alloc) noexcept(noexcept(Compare())) : Super(alloc) {}
     constexpr Map(std::initializer_list<Pair<K, V>> init) : Super(init) {}
-    constexpr mapped_type& operator[](const key_type& key) {
-        auto [it, inserted] = Super::insert(Pair<K, V>(key, V()));
+    constexpr mapped_type& operator[](const key_type& key) { 
+        auto [it, _] = Super::insert(Pair<K, V>(key)); 
         return it->value;
     }
     constexpr const mapped_type& operator[](const key_type& key) const { return Super::find(key)->value; }

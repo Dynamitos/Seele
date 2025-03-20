@@ -245,7 +245,7 @@ void StaticMeshVertexData::updateBuffers() {
     descriptorSet->updateBuffer(TANGENTS_NAME, 0, tangents);
     descriptorSet->updateBuffer(BITANGENTS_NAME, 0, biTangents);
     descriptorSet->updateBuffer(COLORS_NAME, 0, colors);
-    for (size_t i = 0; i < MAX_TEXCOORDS; ++i) {
+    for (uint32 i = 0; i < MAX_TEXCOORDS; ++i) {
         descriptorSet->updateBuffer(TEXCOORDS_NAME, i, texCoords[i]);
     }
     descriptorSet->writeChanges();

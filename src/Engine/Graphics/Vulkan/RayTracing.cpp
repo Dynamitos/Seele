@@ -106,7 +106,7 @@ TopLevelAS::TopLevelAS(PGraphics graphics, const Gfx::TopLevelASCreateInfo& crea
         .pGeometries = &geometry,
     };
 
-    const uint32 primitiveCount = instances.size();
+    const uint32 primitiveCount = (uint32)instances.size();
 
     VkAccelerationStructureBuildSizesInfoKHR buildSizesInfo = {
         .sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR,

@@ -200,8 +200,7 @@ void BasePass::render() {
                             .attachmentCount = 1,
                         },
                 };
-                Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
-                command->bindPipeline(pipeline);
+                command->bindPipeline(graphics->createGraphicsPipeline(std::move(pipelineInfo)));
             } else {
                 Gfx::LegacyPipelineCreateInfo pipelineInfo = {
                     .vertexShader = collection->vertexShader,
@@ -221,8 +220,7 @@ void BasePass::render() {
                             .attachmentCount = 1,
                         },
                 };
-                Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
-                command->bindPipeline(pipeline);
+                command->bindPipeline(graphics->createGraphicsPipeline(std::move(pipelineInfo)));
             }
             command->bindDescriptor({viewParamsSet, vertexData->getVertexDataSet(), vertexData->getInstanceDataSet(),
                                      scene->getLightEnvironment()->getDescriptorSet(), Material::getDescriptorSet(), opaqueCulling});
@@ -231,7 +229,7 @@ void BasePass::render() {
                                            Gfx::SE_SHADER_STAGE_FRAGMENT_BIT,
                                        0, sizeof(VertexData::DrawCallOffsets), &drawCall.offsets);
                 if (graphics->supportMeshShading()) {
-                    command->drawMesh(drawCall.instanceMeshData.size(), 1, 1);
+                    command->drawMesh((uint32)drawCall.instanceMeshData.size(), 1, 1);
                 } else {
                     command->bindIndexBuffer(vertexData->getIndexBuffer());
                     for (const auto& meshData : drawCall.instanceMeshData) {
@@ -252,7 +250,7 @@ void BasePass::render() {
     {
         Gfx::ORenderCommand skyboxCommand = graphics->createRenderCommand("SkyboxRender");
         skyboxCommand->setViewport(viewport);
-        skyboxCommand->bindPipeline(pipeline);
+        skyboxCommand->bindPipeline(skyboxPipeline);
         skyboxCommand->bindDescriptor({viewParamsSet, skyboxDataSet, textureSet});
         skyboxCommand->draw(36, 1, 0, 0);
         graphics->executeCommands(std::move(skyboxCommand));
@@ -623,6 +621,6 @@ void BasePass::createRenderPass() {
                     .attachmentCount = 1,
                 },
         };
-        pipeline = graphics->createGraphicsPipeline(std::move(gfxInfo));
+        skyboxPipeline = graphics->createGraphicsPipeline(std::move(gfxInfo));
     }
 }

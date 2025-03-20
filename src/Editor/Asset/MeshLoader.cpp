@@ -516,7 +516,7 @@ Vector4 MeshLoader::encodeQTangent(Matrix3 m) {
 void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialInstanceAsset>& materials, Array<OMesh>& globalMeshes,
                                   Component::Collider& collider) {
     List<std::function<void()>> work;
-    for (int32 meshIndex = 0; meshIndex < scene->mNumMeshes; ++meshIndex) {
+    for (uint32 meshIndex = 0; meshIndex < scene->mNumMeshes; ++meshIndex) {
         aiMesh* mesh = scene->mMeshes[meshIndex];
         if (!(mesh->mPrimitiveTypes & aiPrimitiveType_TRIANGLE))
             continue;

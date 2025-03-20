@@ -85,7 +85,7 @@ void BVH::reinsertCollider(entt::entity entity, AABB aabb) {
 
 void BVH::removeCollider(entt::entity entity) {
     int32 nodeIndex = -1;
-    for (size_t i = 0; i < dynamicNodes.size(); i++) {
+    for (uint32_t i = 0; i < dynamicNodes.size(); i++) {
         if (dynamicNodes[i].isLeaf && dynamicNodes[i].owner == entity) {
             nodeIndex = i;
             break;
@@ -275,7 +275,7 @@ int32 BVH::splitNode(Array<AABBCenter> aabbs) {
     }
     struct {
         bool operator()(const AABBCenter& lhs, const AABBCenter& rhs) { return lhs.center[longestAxis] < rhs.center[longestAxis]; }
-        int32 longestAxis;
+        int32 longestAxis = 0;
     } compare = {longestAxis};
 
     std::sort(aabbs.begin(), aabbs.end(), compare);
@@ -291,7 +291,7 @@ int32 BVH::splitNode(Array<AABBCenter> aabbs) {
     return rootIndex;
 }
 int32 BVH::allocateNode() {
-    for (size_t i = 0; i < dynamicNodes.size(); i++) {
+    for (uint32 i = 0; i < dynamicNodes.size(); i++) {
         if (!dynamicNodes[i].isValid) {
             return i;
         }
@@ -309,7 +309,7 @@ void BVH::validateBVH() const {
     if (dynamicRoot != -1) {
         assert(dynamicNodes[dynamicRoot].parentIndex == -1);
     }
-    for (size_t i = 0; i < dynamicNodes.size(); ++i) {
+    for (uint32 i = 0; i < dynamicNodes.size(); ++i) {
         int32 nodeIdx = i;
         size_t counter = dynamicNodes.size();
         if (!dynamicNodes[nodeIdx].isValid)

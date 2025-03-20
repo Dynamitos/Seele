@@ -23,7 +23,7 @@ set(CMAKE_TOOLCHAIN_FILE ${EXTERNAL_ROOT}/vcpkg/scripts/buildsystems/vcpkg.cmake
 set(CRCPP_ROOT ${EXTERNAL_ROOT}/CRCpp)
 set(METAL_ROOT ${EXTERNAL_ROOT}/metal-cpp)
 if(WIN32)
-    set(VCPKG_BASE_FOLDER ${VCPKG_INSTALLED_DIR}/x64-windows/)
+    set(VCPKG_BASE_FOLDER ${CMAKE_BINARY_DIR}/vcpkg_installed/x64-windows/)
 elseif(APPLE)
     set(VCPKG_BASE_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/build/vcpkg_installed/arm64-osx/)
 endif()

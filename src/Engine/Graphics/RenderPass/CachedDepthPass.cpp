@@ -111,7 +111,7 @@ void CachedDepthPass::render() {
         command->pushConstants(Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_VERTEX_BIT, 0, sizeof(VertexData::DrawCallOffsets),
                                &offsets);
         if (graphics->supportMeshShading()) {
-            command->drawMesh(vertexData->getNumInstances(), 1, 1);
+            command->drawMesh((uint32)vertexData->getNumInstances(), 1, 1);
         } else {
             const auto& materials = vertexData->getMaterialData();
             for (const auto& materialData : materials) {

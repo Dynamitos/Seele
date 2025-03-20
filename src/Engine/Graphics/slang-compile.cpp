@@ -77,7 +77,7 @@ void Seele::beginCompilation(const ShaderCompilationInfo& info, SlangCompileTarg
     };
 
     sessionDesc.compilerOptionEntries = option.data();
-    sessionDesc.compilerOptionEntryCount = option.size();
+    sessionDesc.compilerOptionEntryCount = (uint32)option.size();
     sessionDesc.defaultMatrixLayoutMode = SLANG_MATRIX_LAYOUT_COLUMN_MAJOR;
     Array<slang::PreprocessorMacroDesc> macros;
     for (const auto& [key, val] : info.defines) {
@@ -140,7 +140,7 @@ void Seele::beginCompilation(const ShaderCompilationInfo& info, SlangCompileTarg
     slang::ProgramLayout* signature = specializedComponent->getLayout(0, diagnostics.writeRef());
     CHECK_DIAGNOSTICS();
     std::cout << info.name << std::endl;
-    for (size_t i = 0; i < signature->getParameterCount(); ++i) {
+    for (uint32 i = 0; i < signature->getParameterCount(); ++i) {
         auto param = signature->getParameterByIndex(i);
         layout->addMapping(param->getName(), param->getBindingIndex());
         //std::cout << param->getName() << ": " << param->getBindingIndex() << std::endl;

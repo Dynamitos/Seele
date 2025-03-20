@@ -278,7 +278,7 @@ void LightCullingPass::setupFrustums() {
     frustumBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, Gfx::SE_ACCESS_SHADER_WRITE_BIT,
                                    Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 
-    Gfx::PDescriptorSet dispatchParamsSet = dispatchParamsLayout->allocateDescriptorSet();
+    dispatchParamsSet = dispatchParamsLayout->allocateDescriptorSet();
     dispatchParamsSet->updateConstants("numThreadGroups", 0, &numThreadGroups);
     dispatchParamsSet->updateConstants("numThreads", 0, &numThreads);
     dispatchParamsSet->updateBuffer(FRUSTUMBUFFER_NAME, 0, frustumBuffer);
@@ -292,8 +292,5 @@ void LightCullingPass::setupFrustums() {
     commands.add(std::move(command));
     graphics->executeCommands(std::move(commands));
     frustumBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-                                   Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
-    Frustum* frustums = (Frustum*)frustumBuffer->map();
-    graphics->waitDeviceIdle();
-    
+                                   Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);    
 }

@@ -8,7 +8,7 @@
 #include "Meshlet.h"
 #include <entt/entt.hpp>
 
-constexpr uint64 MAX_TEXCOORDS = 8;
+constexpr uint32 MAX_TEXCOORDS = 8;
 
 namespace Seele {
 DECLARE_REF(MaterialInstance)
@@ -77,10 +77,8 @@ class VertexData {
     const Array<TransparentDraw>& getTransparentData() const { return transparentData; }
     const Array<Gfx::PBottomLevelAS>& getRayTracingData() const { return rayTracingScene; }
     const Array<MeshData>& getMeshData(MeshId id) const { return meshData[id]; }
-    void registerBottomLevelAccelerationStructure(Gfx::PBottomLevelAS blas) {
-        dataToBuild.add(blas);
-    }
-    uint64 getIndicesOffset(uint32 meshletIndex) { return meshlets[meshletIndex].indicesOffset; }
+    void registerBottomLevelAccelerationStructure(Gfx::PBottomLevelAS blas) { dataToBuild.add(blas); }
+    uint32 getIndicesOffset(uint32 meshletIndex) { return meshlets[meshletIndex].indicesOffset; }
     uint64 getNumInstances() const { return instanceData.size(); }
     static List<VertexData*> getList();
     static VertexData* findByTypeName(std::string name);
@@ -110,6 +108,7 @@ class VertexData {
         uint32 indicesOffset = 0;
     };
     std::mutex materialDataLock;
+    debug_resource vertexDataResource = {"VertexData"};
     Array<MaterialData> materialData;
     Array<TransparentDraw> transparentData;
 

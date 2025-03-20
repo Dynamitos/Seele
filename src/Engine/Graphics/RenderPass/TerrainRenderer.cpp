@@ -25,7 +25,7 @@ TerrainRenderer::TerrainRenderer(Gfx::PGraphics graphics, PScene scene, Gfx::PDe
     plainMesh.gpuCBT.bufferCount = 2;
     for (uint32 i = 0; i < 2; ++i) {
         uint32 bufferSize = cbt.bufferSize(i);
-        uint32 elementSize = cbt.elementSize(i);
+        //uint32 elementSize = cbt.elementSize(i);
         plainMesh.gpuCBT.bufferArray[i] = graphics->createShaderBuffer(ShaderBufferCreateInfo{
             .sourceData =
                 {
@@ -189,7 +189,7 @@ TerrainRenderer::TerrainRenderer(Gfx::PGraphics graphics, PScene scene, Gfx::PDe
     baseMesh.vertexBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
                                            Gfx::SE_ACCESS_SHADER_READ_BIT | Gfx::SE_ACCESS_SHADER_WRITE_BIT,
                                            Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
-    uint32 indexBufferSize = cpuMesh.totalNumElements * sizeof(UVector);
+    //uint32 indexBufferSize = cpuMesh.totalNumElements * sizeof(UVector);
     Array<uint32> indices;
     for (uint32 i = 0; i < cpuMesh.totalNumElements * 3; ++i)
         indices.add(i);
