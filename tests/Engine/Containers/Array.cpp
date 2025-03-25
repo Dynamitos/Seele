@@ -88,7 +88,7 @@ TEST(ArraySuite, remove_iterator)
     array.add(3);
     array.add(4);
     array.add(5);
-    array.remove(array.find(1), false);
+    array.erase(array.find(1), false);
     ASSERT_EQ(array[0], 5);
     ASSERT_EQ(array[1], 2);
     ASSERT_EQ(array[2], 3);
@@ -104,7 +104,7 @@ TEST(ArraySuite, remove_iterator_keep_order)
     array.add(3);
     array.add(4);
     array.add(5);
-    array.remove(array.find(1));
+    array.erase(array.find(1));
     ASSERT_EQ(array[0], 2);
     ASSERT_EQ(array[1], 3);
     ASSERT_EQ(array[2], 4);

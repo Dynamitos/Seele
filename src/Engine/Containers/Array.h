@@ -88,7 +88,7 @@ template <typename T> struct Array {
         _data = allocateArray(DEFAULT_ALLOC_SIZE);
         assert(_data != nullptr);
     }
-    constexpr Array(size_type size, const value_type& value, const allocator_type& alloc = allocator_type())
+    constexpr Array(size_type size, const value_type& value, const allocator_type& alloc = allocator_type(debug_resource::get("Array")))
         : arraySize(size), allocated(size), allocator(alloc) {
         _data = allocateArray(size);
         assert(_data != nullptr);
@@ -96,7 +96,7 @@ template <typename T> struct Array {
             std::allocator_traits<allocator_type>::construct(allocator, &_data[i], value);
         }
     }
-    constexpr explicit Array(size_type size, const allocator_type& alloc = allocator_type())
+    constexpr explicit Array(size_type size, const allocator_type& alloc = allocator_type(debug_resource::get("Array")))
         : arraySize(size), allocated(size), allocator(alloc) {
         _data = allocateArray(size);
         assert(_data != nullptr);
@@ -108,14 +108,14 @@ template <typename T> struct Array {
             }
         }
     }
-    constexpr Array(std::initializer_list<T> init, const allocator_type& alloc = allocator_type())
+    constexpr Array(std::initializer_list<T> init, const allocator_type& alloc = allocator_type(debug_resource::get("Array")))
         : arraySize(init.size()), allocated(init.size()), allocator(alloc) {
         _data = allocateArray(init.size());
         assert(_data != nullptr);
         std::uninitialized_copy(init.begin(), init.end(), begin());
     }
     template <container_compatible_range<T> Range>
-    constexpr Array(std::from_range_t, Range&& rg, const allocator_type& alloc = allocator_type())
+    constexpr Array(std::from_range_t, Range&& rg, const allocator_type& alloc = allocator_type(debug_resource::get("Array")))
         : arraySize(0), allocated(0), allocator(alloc) {
         if constexpr (std::ranges::sized_range<Range> || std::ranges::forward_range<Range>) {
             arraySize = std::ranges::size(rg);

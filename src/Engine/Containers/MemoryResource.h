@@ -1,5 +1,6 @@
 #pragma once
 #include <memory_resource>
+#include <map>
 
 namespace Seele {
 class MemoryManager {
@@ -8,6 +9,9 @@ class MemoryManager {
     static void printAllocations();
 
   private:
+    static MemoryManager& getInstance();
+    std::mutex allocationMutex;
+    std::map<std::string, std::atomic_uint64_t> allocationCounters;
 };
 
 class debug_resource : public std::pmr::memory_resource {
@@ -17,7 +21,9 @@ class debug_resource : public std::pmr::memory_resource {
     debug_resource(std::string name, std::pmr::memory_resource* up = std::pmr::get_default_resource())
         : name(name), upstream(up), counter(MemoryManager::getAllocationCounter(name)) {}
     debug_resource(const debug_resource& other) = delete;
+    debug_resource(debug_resource&& other) = default;
     debug_resource& operator=(const debug_resource& other) = delete;
+    debug_resource& operator=(debug_resource&& other) = default;
 
     void* do_allocate(size_t bytes, size_t alignment) override {
         counter += bytes;

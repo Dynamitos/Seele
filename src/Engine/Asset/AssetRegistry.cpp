@@ -7,6 +7,12 @@
 #include "MeshAsset.h"
 #include "SVGAsset.h"
 #include "TextureAsset.h"
+#include "Asset/TextureAsset.h"
+#include "Asset/FontAsset.h"
+#include "Asset/SVGAsset.h"
+#include "Asset/MeshAsset.h"
+#include "Asset/MaterialAsset.h"
+#include "Asset/MaterialInstanceAsset.h"
 #include "Window/WindowManager.h"
 #include <fstream>
 #include <iostream>

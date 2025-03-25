@@ -199,14 +199,14 @@ DescriptorSet::DescriptorSet(PGraphics graphics, PDescriptorPool owner)
 
 DescriptorSet::~DescriptorSet() {}
 
-void DescriptorSet::updateConstants(const std::string& name, uint32 offset, void* data) {
-    std::memcpy(constantData.data() + owner->getLayout()->mappings[name].constantOffset, (char*)data + offset,
+void DescriptorSet::updateConstants(const std::string& mappingName, uint32 offset, void* data) {
+    std::memcpy(constantData.data() + owner->getLayout()->mappings[mappingName].constantOffset, (char*)data + offset,
                 owner->getLayout()->mappings[name].constantSize);
 }
 
-void DescriptorSet::updateBuffer(const std::string& name, uint32 index, Gfx::PShaderBuffer shaderBuffer) {
+void DescriptorSet::updateBuffer(const std::string& mappingName, uint32 index, Gfx::PShaderBuffer shaderBuffer) {
     PShaderBuffer vulkanBuffer = shaderBuffer.cast<ShaderBuffer>();
-    const auto& map = owner->getLayout()->mappings[name];
+    const auto& map = owner->getLayout()->mappings[mappingName];
     uint32 binding = map.binding;
     if (boundResources[binding][index] == vulkanBuffer->getAlloc() || vulkanBuffer->getAlloc() == nullptr) {
         return;
@@ -230,9 +230,9 @@ void DescriptorSet::updateBuffer(const std::string& name, uint32 index, Gfx::PSh
     boundResources[binding][index] = vulkanBuffer->getAlloc();
 }
 
-void DescriptorSet::updateBuffer(const std::string& name, uint32 index, Gfx::PVertexBuffer indexBuffer) {
+void DescriptorSet::updateBuffer(const std::string& mappingName, uint32 index, Gfx::PVertexBuffer indexBuffer) {
     PVertexBuffer vulkanBuffer = indexBuffer.cast<VertexBuffer>();
-    const auto& map = owner->getLayout()->mappings[name];
+    const auto& map = owner->getLayout()->mappings[mappingName];
     uint32 binding = map.binding;
     if (boundResources[binding][index] == vulkanBuffer->getAlloc() || vulkanBuffer->getAlloc() == nullptr) {
         return;
@@ -257,9 +257,9 @@ void DescriptorSet::updateBuffer(const std::string& name, uint32 index, Gfx::PVe
     boundResources[binding][index] = vulkanBuffer->getAlloc();
 }
 
-void DescriptorSet::updateBuffer(const std::string& name, uint32 index, Gfx::PIndexBuffer indexBuffer) {
+void DescriptorSet::updateBuffer(const std::string& mappingName, uint32 index, Gfx::PIndexBuffer indexBuffer) {
     PIndexBuffer vulkanBuffer = indexBuffer.cast<IndexBuffer>();
-    const auto& map = owner->getLayout()->mappings[name];
+    const auto& map = owner->getLayout()->mappings[mappingName];
     uint32 binding = map.binding;
     if (boundResources[binding][index] == vulkanBuffer->getAlloc() || vulkanBuffer->getAlloc() == nullptr) {
         return;
@@ -284,9 +284,9 @@ void DescriptorSet::updateBuffer(const std::string& name, uint32 index, Gfx::PIn
     boundResources[binding][index] = vulkanBuffer->getAlloc();
 }
 
-void DescriptorSet::updateSampler(const std::string& name, uint32 index, Gfx::PSampler samplerState) {
+void DescriptorSet::updateSampler(const std::string& mappingName, uint32 index, Gfx::PSampler samplerState) {
     PSampler vulkanSampler = samplerState.cast<Sampler>();
-    const auto& map = owner->getLayout()->mappings[name];
+    const auto& map = owner->getLayout()->mappings[mappingName];
     uint32 binding = map.binding;
     if (boundResources[binding][index] == vulkanSampler->getHandle()) {
         return;
@@ -312,9 +312,9 @@ void DescriptorSet::updateSampler(const std::string& name, uint32 index, Gfx::PS
     boundResources[binding][index] = vulkanSampler->getHandle();
 }
 
-void DescriptorSet::updateTexture(const std::string& name, uint32 index, Gfx::PTexture2D texture) {
+void DescriptorSet::updateTexture(const std::string& mappingName, uint32 index, Gfx::PTexture2D texture) {
     TextureBase* vulkanTexture = texture.cast<TextureBase>().getHandle();
-    const auto& map = owner->getLayout()->mappings[name];
+    const auto& map = owner->getLayout()->mappings[mappingName];
     uint32 binding = map.binding;
     if (boundResources[binding][index] == vulkanTexture->getHandle()) {
         return;
@@ -340,9 +340,9 @@ void DescriptorSet::updateTexture(const std::string& name, uint32 index, Gfx::PT
     boundResources[binding][index] = vulkanTexture->getHandle();
 }
 
-void DescriptorSet::updateTexture(const std::string& name, uint32 index, Gfx::PTexture3D texture) {
+void DescriptorSet::updateTexture(const std::string& mappingName, uint32 index, Gfx::PTexture3D texture) {
     TextureBase* vulkanTexture = texture.cast<TextureBase>().getHandle();
-    const auto& map = owner->getLayout()->mappings[name];
+    const auto& map = owner->getLayout()->mappings[mappingName];
     uint32 binding = map.binding;
     if (boundResources[binding][index] == vulkanTexture->getHandle()) {
         return;
@@ -368,9 +368,9 @@ void DescriptorSet::updateTexture(const std::string& name, uint32 index, Gfx::PT
     boundResources[binding][index] = vulkanTexture->getHandle();
 }
 
-void DescriptorSet::updateTexture(const std::string& name, uint32 index, Gfx::PTextureCube texture) {
+void DescriptorSet::updateTexture(const std::string& mappingName, uint32 index, Gfx::PTextureCube texture) {
     TextureBase* vulkanTexture = texture.cast<TextureBase>().getHandle();
-    const auto& map = owner->getLayout()->mappings[name];
+    const auto& map = owner->getLayout()->mappings[mappingName];
     uint32 binding = map.binding;
     if (boundResources[binding][index] == vulkanTexture->getHandle()) {
         return;
@@ -396,9 +396,9 @@ void DescriptorSet::updateTexture(const std::string& name, uint32 index, Gfx::PT
     boundResources[binding][index] = vulkanTexture->getHandle();
 }
 
-void DescriptorSet::updateAccelerationStructure(const std::string& name, uint32 index, Gfx::PTopLevelAS as) {
+void DescriptorSet::updateAccelerationStructure(const std::string& mappingName, uint32 index, Gfx::PTopLevelAS as) {
     auto tlas = as.cast<TopLevelAS>();
-    uint32 binding = owner->getLayout()->mappings[name].binding;
+    uint32 binding = owner->getLayout()->mappings[mappingName].binding;
     accelerationInfos.add(VkWriteDescriptorSetAccelerationStructureKHR{
         .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR,
         .pNext = nullptr,
