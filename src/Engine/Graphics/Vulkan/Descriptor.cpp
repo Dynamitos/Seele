@@ -201,7 +201,7 @@ DescriptorSet::~DescriptorSet() {}
 
 void DescriptorSet::updateConstants(const std::string& mappingName, uint32 offset, void* data) {
     std::memcpy(constantData.data() + owner->getLayout()->mappings[mappingName].constantOffset, (char*)data + offset,
-                owner->getLayout()->mappings[name].constantSize);
+                owner->getLayout()->mappings[mappingName].constantSize);
 }
 
 void DescriptorSet::updateBuffer(const std::string& mappingName, uint32 index, Gfx::PShaderBuffer shaderBuffer) {
@@ -418,8 +418,7 @@ void DescriptorSet::updateAccelerationStructure(const std::string& mappingName, 
 
 void DescriptorSet::writeChanges() {
     if (constantData.size() > 0) {
-        if (constantsBuffer != nullptr)
-        {
+        if (constantsBuffer != nullptr) {
             graphics->getDestructionManager()->queueResourceForDestruction(std::move(constantsBuffer));
         }
         constantsBuffer = new BufferAllocation(graphics, owner->getLayout()->getName(),
@@ -452,7 +451,7 @@ void DescriptorSet::writeChanges() {
             .pBufferInfo = &bufferInfos.back(),
         });
     }
-    
+
     if (writeDescriptors.size() > 0) {
         if (isCurrentlyBound()) {
             std::cout << "Descriptor currently bound, allocate a new one instead" << std::endl;

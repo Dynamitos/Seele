@@ -7,16 +7,88 @@ namespace Seele {
 template <typename KeyType, typename NodeData, typename KeyFun, typename Compare, typename Allocator> struct Tree {
   protected:
     struct Node {
-        Node(const NodeData& data) : data(data) {}
-        Node(NodeData&& data) : data(std::move(data)) {}
-
-        Node* leftChild = nullptr;
-        Node* rightChild = nullptr;
+        Node(Node* left, Node* right, const NodeData& nodeData) : leftChild(left), rightChild(right), data(nodeData) {}
+        Node(Node* left, Node* right, NodeData&& nodeData) : leftChild(left), rightChild(right), data(std::move(nodeData)) {}
+        Node* leftChild;
+        Node* rightChild;
         NodeData data;
     };
     using NodeAlloc = std::allocator_traits<Allocator>::template rebind_alloc<Node>;
 
   public:
+    template <typename IterType> class IteratorBase {
+      public:
+        using iterator_category = std::bidirectional_iterator_tag;
+        using value_type = IterType;
+        using difference_type = std::ptrdiff_t;
+        using reference = IterType&;
+        using pointer = IterType*;
+
+        constexpr IteratorBase(Node* x = nullptr, Array<Node*>&& beginIt = Array<Node*>()) : node(x), traversal(std::move(beginIt)) {}
+        constexpr IteratorBase(const IteratorBase& i) : node(i.node), traversal(i.traversal) {}
+        constexpr IteratorBase(IteratorBase&& i) noexcept : node(std::move(i.node)), traversal(std::move(i.traversal)) {}
+        constexpr IteratorBase& operator=(const IteratorBase& other) {
+            if (this != &other) {
+                node = other.node;
+                traversal = other.traversal;
+            }
+            return *this;
+        }
+        constexpr IteratorBase& operator=(IteratorBase&& other) noexcept {
+            if (this != &other) {
+                node = std::move(other.node);
+                traversal = std::move(other.traversal);
+            }
+            return *this;
+        }
+        constexpr reference operator*() const { return node->data; }
+        constexpr pointer operator->() const { return &(node->data); }
+        constexpr bool operator!=(const IteratorBase& other) { return node != other.node; }
+        constexpr bool operator==(const IteratorBase& other) { return node == other.node; }
+        constexpr std::strong_ordering operator<=>(const IteratorBase& other) { return node <=> other.node; }
+        constexpr IteratorBase& operator++() {
+            node = node->rightChild;
+            while (node != nullptr && node->leftChild != nullptr) {
+                traversal.add(node);
+                node = node->leftChild;
+            }
+            if (node == nullptr && traversal.size() > 0) {
+                node = traversal.back();
+                traversal.pop();
+            }
+            return *this;
+        }
+        constexpr IteratorBase& operator--() {
+            node = node->leftChild;
+            while (node != nullptr && node->rightChild != nullptr) {
+                traversal.add(node);
+                node = node->rightchild;
+            }
+            if (node == nullptr && traversal.size() > 0) {
+                node = traversal.back();
+                traversal.pop();
+            }
+            return *this;
+        }
+        constexpr IteratorBase operator--(int) {
+            IteratorBase tmp(*this);
+            --*this;
+            return tmp;
+        }
+        constexpr IteratorBase operator++(int) {
+            IteratorBase tmp(*this);
+            ++*this;
+            return tmp;
+        }
+        Node* getNode() { return node; }
+
+      private:
+        Node* node;
+        Array<Node*> traversal;
+    };
+    using Iterator = IteratorBase<NodeData>;
+    using ConstIterator = IteratorBase<const NodeData>;
+
     using key_type = KeyType;
     using value_type = NodeData;
     using allocator_type = Allocator;
@@ -27,130 +99,31 @@ template <typename KeyType, typename NodeData, typename KeyFun, typename Compare
     using pointer = std::allocator_traits<Allocator>::pointer;
     using const_pointer = std::allocator_traits<Allocator>::const_pointer;
 
-    class ConstIterator {
-      public:
-        using iterator_category = std::bidirectional_iterator_tag;
-        using value_type = value_type;
-        using difference_type = difference_type;
-        using pointer = const_pointer;
-        using reference = const value_type&;
-
-        constexpr ConstIterator(Node* x, List<Node*>&& traversal) : node(x), traversal(std::move(traversal)) {}
-        constexpr ConstIterator(const ConstIterator& i) = default;
-        constexpr ConstIterator(ConstIterator&& i) noexcept = default;
-        constexpr ConstIterator& operator=(const ConstIterator& other) = default;
-        constexpr ConstIterator& operator=(ConstIterator&& other) noexcept = default;
-        constexpr reference operator*() const noexcept { return node->data; }
-        constexpr pointer operator->() const noexcept { return std::pointer_traits<pointer>::pointer_to(**this); }
-        constexpr bool operator==(const ConstIterator& other) { return node == other.node; }
-        constexpr bool operator!=(const ConstIterator& other) { return node != other.node; }
-        constexpr std::strong_ordering operator<=>(const ConstIterator& other) { return node <=> other.node; }
-        constexpr ConstIterator& operator++() noexcept {
-            // walk up tree until we can go a single step to the right
-            while (traversal.size() > 0 && node->rightChild == nullptr) {
-                node = traversal.back();
-                traversal.popBack();
-            }
-            // if there is a right subtree we havent visited yet
-            if (node->rightChild != nullptr) {
-                // go that single step
-                node = node->rightChild;
-                // then to the leftmost node of that right subtree
-                while (node->leftChild != nullptr) {
-                    node = node->leftChild;
-                }
-            }
-            return *this;
-        }
-        constexpr ConstIterator& operator--() {
-            while (node->leftChild == nullptr) {
-                node = traversal.back();
-                traversal.popBack();
-            }
-            node = node->leftChild;
-            while (node->rightChild != nullptr) {
-                node = node->rightChild;
-            }
-            return *this;
-        }
-        constexpr ConstIterator operator--(int) {
-            ConstIterator tmp(*this);
-            --*this;
-            return tmp;
-        }
-        constexpr ConstIterator operator++(int) {
-            ConstIterator tmp(*this);
-            ++*this;
-            return tmp;
-        }
-
-        Node* getNode() { return node; }
-
-      protected:
-        Node* node;
-        List<Node*> traversal;
-    };
-
-    class Iterator : public ConstIterator {
-      public:
-        using value_type = value_type;
-        using difference_type = difference_type;
-        using pointer = pointer;
-        using reference = value_type&;
-
-        constexpr Iterator(Node* x, List<Node*>&& traversal) : ConstIterator(x, std::move(traversal)) {}
-        constexpr Iterator(const Iterator& i) = default;
-        constexpr Iterator(Iterator&& i) noexcept = default;
-        constexpr Iterator& operator=(const Iterator& other) = default;
-        constexpr Iterator& operator=(Iterator&& other) noexcept = default;
-        constexpr reference operator*() const noexcept { return const_cast<reference>(ConstIterator::operator*()); }
-        constexpr pointer operator->() const noexcept { return std::pointer_traits<pointer>::pointer_to(**this); }
-        constexpr Iterator& operator++() noexcept {
-            ConstIterator::operator++();
-            return *this;
-        }
-        constexpr Iterator& operator--() noexcept {
-            ConstIterator::operator--();
-            return *this;
-        }
-        constexpr Iterator& operator++(int) noexcept {
-            Iterator tmp = *this;
-            ConstIterator::operator++();
-            return tmp;
-        }
-        constexpr Iterator& operator--(int) noexcept {
-            Iterator tmp = *this;
-            ConstIterator::operator--();
-            return tmp;
-        }
-    };
-
     using iterator = Iterator;
     using const_iterator = ConstIterator;
     using reverse_iterator = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
     constexpr Tree() noexcept
-        : alloc(NodeAlloc()), root(nullptr), beginIt(nullptr, {}), endIt(nullptr, {}), iteratorsDirty(true), _size(0), comp(Compare()) {}
+        : alloc(NodeAlloc()), root(nullptr), beginIt(nullptr), endIt(nullptr), iteratorsDirty(true), _size(0), comp(Compare()) {}
     constexpr explicit Tree(const Compare& comp, const Allocator& alloc = Allocator()) noexcept(noexcept(Allocator()))
-        : alloc(alloc), root(nullptr), beginIt(nullptr, {}), endIt(nullptr, {}), iteratorsDirty(true), _size(0), comp(comp) {}
+        : alloc(alloc), root(nullptr), beginIt(nullptr), endIt(nullptr), iteratorsDirty(true), _size(0), comp(comp) {}
     constexpr explicit Tree(const Allocator& alloc) noexcept(noexcept(Compare()))
-        : alloc(alloc), root(nullptr), beginIt(nullptr, {}), endIt(nullptr, {}), iteratorsDirty(true), _size(0), comp(Compare()) {}
+        : alloc(alloc), root(nullptr), beginIt(nullptr), endIt(nullptr), iteratorsDirty(true), _size(0), comp(Compare()) {}
     constexpr Tree(std::initializer_list<NodeData> init)
-        : alloc(NodeAlloc()), root(nullptr), beginIt(nullptr, {}), endIt(nullptr, {}), iteratorsDirty(true), _size(0), comp(Compare()) {
+        : alloc(NodeAlloc()), root(nullptr), beginIt(nullptr), endIt(nullptr), iteratorsDirty(true), _size(0), comp(Compare()) {
         for (const auto& it : init) {
             insert(it);
         }
     }
-    constexpr Tree(const Tree& other)
-        : alloc(other.alloc), root(nullptr), beginIt(nullptr, {}), endIt(nullptr, {}), iteratorsDirty(true), _size(), comp(other.comp) {
+    constexpr Tree(const Tree& other) : alloc(other.alloc), root(nullptr), iteratorsDirty(true), _size(), comp(other.comp) {
         for (const auto& elem : other) {
             insert(elem);
         }
     }
     constexpr Tree(Tree&& other) noexcept
-        : alloc(std::move(other.alloc)), root(std::move(other.root)), beginIt(nullptr, {}), endIt(nullptr, {}), iteratorsDirty(true),
-          _size(std::move(other._size)), comp(std::move(other.comp)) {
+        : alloc(std::move(other.alloc)), root(std::move(other.root)), iteratorsDirty(true), _size(std::move(other._size)),
+          comp(std::move(other.comp)) {
         other._size = 0;
     }
     constexpr ~Tree() noexcept { clear(); }
@@ -221,7 +194,7 @@ template <typename KeyType, typename NodeData, typename KeyFun, typename Compare
         if (root == nullptr || !equal(root->data, key)) {
             return end();
         }
-        return iterator(root, {});
+        return iterator(root);
     }
     constexpr iterator find(const key_type& key) const {
         Node* it = root;
@@ -235,21 +208,21 @@ template <typename KeyType, typename NodeData, typename KeyFun, typename Compare
         if (it == nullptr) {
             return end();
         }
-        return iterator(it, {});
+        return iterator(it);
     }
     constexpr Pair<iterator, bool> insert(const NodeData& data) {
-        const auto& [r, inserted] = _insert(root, data);
+        auto [r, inserted] = _insert(root, data);
         root = r;
-        return Pair<iterator, bool>(iterator(root, {}), inserted);
+        return Pair<iterator, bool>(iterator(root), inserted);
     }
     constexpr Pair<iterator, bool> insert(NodeData&& data) {
-        const auto& [r, inserted] = _insert(root, std::move(data));
+        auto [r, inserted] = _insert(root, std::move(data));
         root = r;
-        return Pair<iterator, bool>(iterator(root, {}), inserted);
+        return Pair<iterator, bool>(iterator(root), inserted);
     }
     constexpr iterator remove(const key_type& key) {
         root = _remove(root, key);
-        return iterator(root, {});
+        return iterator(root);
     }
 
   private:
@@ -267,22 +240,26 @@ template <typename KeyType, typename NodeData, typename KeyFun, typename Compare
         iteratorsDirty = false;
     }
     constexpr Iterator calcBeginIterator() const {
-        Node* beginNode = root;
-        List<Node*> traversal;
-        while (beginNode->leftChild != nullptr) {
-            traversal.add(beginNode);
-            beginNode = beginNode->leftChild;
+        Node* begin = root;
+        Array<Node*> beginTraversal;
+        while (begin != nullptr) {
+            beginTraversal.add(begin);
+            begin = begin->leftChild;
         }
-        return Iterator(beginNode, std::move(traversal));
+        if (!beginTraversal.empty()) {
+            begin = beginTraversal.back();
+            beginTraversal.pop();
+        }
+        return Iterator(begin, std::move(beginTraversal));
     }
     constexpr Iterator calcEndIterator() const {
-        Node* endNode = root;
-        List<Node*> traversal;
-        while (endNode != nullptr) {
-            traversal.add(endNode);
-            endNode = endNode->rightChild;
+        Node* endIndex = root;
+        Array<Node*> endTraversal;
+        while (endIndex != nullptr) {
+            endTraversal.add(endIndex);
+            endIndex = endIndex->rightChild;
         }
-        return Iterator(endNode, std::move(traversal));
+        return Iterator(endIndex, std::move(endTraversal));
     }
     NodeAlloc alloc;
     Node* root;
@@ -308,7 +285,7 @@ template <typename KeyType, typename NodeData, typename KeyFun, typename Compare
         markIteratorsDirty();
         if (r == nullptr) {
             root = alloc.allocate(1);
-            std::allocator_traits<NodeAlloc>::construct(alloc, root, std::forward<NodeDataType>(data));
+            std::allocator_traits<NodeAlloc>::construct(alloc, root, nullptr, nullptr, std::forward<NodeDataType>(data));
             _size++;
             return Pair<Node*, bool>(root, true);
         }
@@ -318,7 +295,7 @@ template <typename KeyType, typename NodeData, typename KeyFun, typename Compare
             return Pair<Node*, bool>(r, false);
 
         Node* newNode = alloc.allocate(1);
-        std::allocator_traits<NodeAlloc>::construct(alloc, newNode, std::forward<NodeDataType>(data));
+        std::allocator_traits<NodeAlloc>::construct(alloc, newNode, nullptr, nullptr, std::forward<NodeDataType>(data));
 
         if (comp(keyFun(newNode->data), keyFun(r->data))) {
             newNode->rightChild = r;

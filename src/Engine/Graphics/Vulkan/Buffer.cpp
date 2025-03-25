@@ -102,7 +102,7 @@ void BufferAllocation::updateContents(uint64 regionOffset, uint64 regionSize, vo
         .flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT,
         .usage = VMA_MEMORY_USAGE_AUTO,
     };
-    OBufferAllocation staging = new BufferAllocation(graphics, "UpdateStaging", stagingInfo, stagingAlloc, Gfx::QueueType::GRAPHICS);
+    OBufferAllocation staging = new BufferAllocation(graphics, fmt::format("{0}UpdateStaging", name), stagingInfo, stagingAlloc, Gfx::QueueType::GRAPHICS);
 
     uint8* data;
     VK_CHECK(vmaMapMemory(graphics->getAllocator(), staging->allocation, (void**)&data));
