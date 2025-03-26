@@ -36,7 +36,7 @@ Array<Halfedge> generateEdges() {
                               UVector(13, 10, 14), UVector(10, 11, 14), UVector(14, 11, 15)};
     Array<Halfedge> edges;
     for (auto ind : indices) {
-        uint32 baseIndex = edges.size();
+        uint32 baseIndex = (uint32)edges.size();
         edges.add(Halfedge{ind.x, baseIndex + 1, baseIndex + 2, UINT32_MAX});
         edges.add(Halfedge{ind.y, baseIndex + 2, baseIndex, UINT32_MAX});
         edges.add(Halfedge{ind.z, baseIndex, baseIndex + 1, UINT32_MAX});

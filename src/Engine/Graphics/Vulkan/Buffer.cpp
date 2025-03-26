@@ -111,7 +111,7 @@ void BufferAllocation::updateContents(uint64 regionOffset, uint64 regionSize, vo
     vmaUnmapMemory(graphics->getAllocator(), staging->allocation);
 
     Gfx::QueueType prevOwner = owner;
-    // transferOwnership(Gfx::QueueType::TRANSFER);
+    transferOwnership(Gfx::QueueType::TRANSFER);
 
     PCommand cmd = graphics->getQueueCommands(Gfx::QueueType::GRAPHICS)->getCommands();
     VkBufferCopy copy = {
@@ -125,7 +125,7 @@ void BufferAllocation::updateContents(uint64 regionOffset, uint64 regionSize, vo
     pipelineBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_WRITE_BIT,
                     VK_PIPELINE_STAGE_TRANSFER_BIT);
 
-    // transferOwnership(prevOwner);
+    transferOwnership(prevOwner);
     graphics->getDestructionManager()->queueResourceForDestruction(std::move(staging));
 }
 
@@ -147,7 +147,7 @@ void BufferAllocation::readContents(uint64 regionOffset, uint64 regionSize, void
     OBufferAllocation staging = new BufferAllocation(graphics, "ReadStaging", stagingInfo, stagingAlloc, Gfx::QueueType::GRAPHICS);
 
     Gfx::QueueType prevOwner = owner;
-    // transferOwnership(Gfx::QueueType::TRANSFER);
+    transferOwnership(Gfx::QueueType::TRANSFER);
 
     PCommandPool pool = graphics->getQueueCommands(Gfx::QueueType::TRANSFER);
     PCommand cmd = pool->getCommands();
@@ -164,7 +164,7 @@ void BufferAllocation::readContents(uint64 regionOffset, uint64 regionSize, void
     pool->submitCommands();
     cmd->getFence()->wait(1000000);
 
-    // transferOwnership(prevOwner);
+    transferOwnership(prevOwner);
 
     uint8* data;
     VK_CHECK(vmaMapMemory(graphics->getAllocator(), staging->allocation, (void**)&data));
@@ -276,11 +276,11 @@ void Buffer::rotateBuffer(uint64 size, bool preserveContents) {
         return;
     }
     buffers.add(nullptr);
-    createBuffer(size, buffers.size() - 1);
+    createBuffer(size, (uint32)buffers.size() - 1);
     if (preserveContents) {
         copyBuffer(currentBuffer, buffers.size() - 1);
     }
-    currentBuffer = buffers.size() - 1;
+    currentBuffer = (uint32)buffers.size() - 1;
 }
 
 void Buffer::createBuffer(uint64 size, uint32 destIndex) {

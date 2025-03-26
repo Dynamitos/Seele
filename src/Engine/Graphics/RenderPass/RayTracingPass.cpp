@@ -74,6 +74,8 @@ void RayTracingPass::beginFrame(const Component::Camera& cam) {
 }
 
 void RayTracingPass::render() {
+    texture->changeLayout(Gfx::SE_IMAGE_LAYOUT_GENERAL, Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                          Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR);
     Array<Gfx::RayTracingHitGroup> callableGroups;
     Array<Gfx::PBottomLevelAS> accelerationStructures;
     Array<InstanceData> instanceData;
@@ -168,15 +170,9 @@ void RayTracingPass::render() {
     }
     pass++;
     std::cout << pass << std::endl;
-    texture->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR,
-                             Gfx::SE_ACCESS_TRANSFER_READ_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT);
     Array<Gfx::ORenderCommand> commands;
     commands.add(std::move(command));
     graphics->executeCommands(std::move(commands));
-    viewport->getOwner()->getBackBuffer()->changeLayout(Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, Gfx::SE_ACCESS_NONE,
-                                                        Gfx::SE_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, Gfx::SE_ACCESS_TRANSFER_WRITE_BIT,
-                                                        Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT);
-    graphics->copyTexture(Gfx::PTexture2D(texture), viewport->getOwner()->getBackBuffer());
 }
 
 void RayTracingPass::endFrame() {}
@@ -200,6 +196,8 @@ void RayTracingPass::publishOutputs() {
     texture->changeLayout(Gfx::SE_IMAGE_LAYOUT_GENERAL, Gfx::SE_ACCESS_NONE, Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
                           Gfx::SE_ACCESS_SHADER_WRITE_BIT,
                           Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT | Gfx::SE_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR);
+    resources->registerRenderPassOutput("BASEPASS_COLOR", Gfx::RenderTargetAttachment(texture, Gfx::SE_IMAGE_LAYOUT_UNDEFINED,
+                                                                                      Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL));
     ShaderCompilationInfo compileInfo = {
         .name = "RayGenMiss",
         .modules = {"RayGen", "AnyHit", "Miss"},

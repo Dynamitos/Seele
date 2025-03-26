@@ -968,11 +968,11 @@ void Graphics::createDevice(GraphicsInitializer initializer) {
     transferQueue = 0;
     queues.add(new Queue(this, graphicsQueueInfo.familyIndex, graphicsQueueInfo.queueIndex));
     if (computeQueueInfo.familyIndex != -1) {
-        computeQueue = queues.size();
+        computeQueue = (uint32)queues.size();
         queues.add(new Queue(this, computeQueueInfo.familyIndex, computeQueueInfo.queueIndex));
     }
     if (transferQueueInfo.familyIndex != -1) {
-        transferQueue = queues.size();
+        transferQueue = (uint32)queues.size();
         queues.add(new Queue(this, transferQueueInfo.familyIndex, transferQueueInfo.queueIndex));
     }
 

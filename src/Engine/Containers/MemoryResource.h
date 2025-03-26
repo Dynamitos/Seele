@@ -1,17 +1,18 @@
 #pragma once
 #include <memory_resource>
 #include <map>
+#include "MinimalEngine.h"
 
 namespace Seele {
 class MemoryManager {
   public:
-    static std::atomic_uint64_t& getAllocationCounter(const std::string& name);
+    static RefPtr<uint64> getAllocationCounter(const std::string& name);
     static void printAllocations();
 
   private:
     static MemoryManager& getInstance();
     std::mutex allocationMutex;
-    std::map<std::string, std::atomic_uint64_t> allocationCounters;
+    std::map<std::string, OwningPtr<uint64>> allocationCounters;
 };
 
 class debug_resource : public std::pmr::memory_resource {
@@ -26,13 +27,15 @@ class debug_resource : public std::pmr::memory_resource {
     debug_resource& operator=(debug_resource&& other) = default;
 
     void* do_allocate(size_t bytes, size_t alignment) override {
-        counter += bytes;
+//        std::cout << name << " + " << bytes << std::endl;
+        *counter.getHandle() += bytes;
         return upstream->allocate(bytes, alignment);
     }
 
     void do_deallocate(void* ptr, size_t bytes, size_t alignment) override {
         upstream->deallocate(ptr, bytes, alignment);
-        counter -= bytes;
+//        std::cout << name << " - " << bytes << std::endl;
+        *counter.getHandle() -= bytes;
     }
 
     bool do_is_equal(const std::pmr::memory_resource& other) const noexcept override { return this == &other; }
@@ -40,6 +43,6 @@ class debug_resource : public std::pmr::memory_resource {
   private:
     std::string name;
     std::pmr::memory_resource* upstream;
-    std::atomic_uint64_t& counter;
+    RefPtr<uint64> counter;
 };
 } // namespace Seele

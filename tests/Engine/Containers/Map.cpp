@@ -31,7 +31,7 @@ TEST(CachedMap, for_each)
     map[6] = 4;
     map[4] = 7;
     int count = 0;
-    for(auto [key, val] : map)
+    for(const auto& [key, val] : map)
     {
         count++;
     }

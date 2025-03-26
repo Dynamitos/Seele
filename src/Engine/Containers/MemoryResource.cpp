@@ -5,8 +5,11 @@
 using namespace Seele;
 
 
-std::atomic_uint64_t& MemoryManager::getAllocationCounter(const std::string& name) {
+RefPtr<uint64> MemoryManager::getAllocationCounter(const std::string& name) {
     std::unique_lock l(getInstance().allocationMutex);
+    if (!getInstance().allocationCounters.contains(name)) {
+        getInstance().allocationCounters[name] = new uint64(0);
+    }
     return getInstance().allocationCounters[name];
 }
 
@@ -14,9 +17,9 @@ void MemoryManager::printAllocations() {
     std::unique_lock l(getInstance().allocationMutex);
     for (const auto& [name, counter] : getInstance().allocationCounters) {
         if (name.empty()) {
-            std::cout << name << ": " << counter << std::endl;
+            std::cout << name << ": " << **counter << std::endl;
         } else {
-            std::cout << name << ": " << counter << std::endl;
+            std::cout << name << ": " << **counter << std::endl;
         }
     }
 }

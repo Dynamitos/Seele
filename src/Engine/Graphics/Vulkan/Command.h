@@ -18,7 +18,6 @@ class Command {
     Command(PGraphics graphics, PCommandPool pool);
     ~Command();
     constexpr VkCommandBuffer getHandle() { return handle; }
-    void reset();
     void begin();
     void end();
     void beginRenderPass(PRenderPass renderPass, PFramebuffer framebuffer);
@@ -46,8 +45,6 @@ class Command {
     OFence fence;
     OSemaphore signalSemaphore;
     State state;
-    VkViewport currentViewport;
-    VkRect2D currentScissor;
     VkCommandBuffer handle;
     PRenderPass boundRenderPass;
     PFramebuffer boundFramebuffer;
@@ -91,12 +88,12 @@ class RenderCommand : public Gfx::RenderCommand {
     virtual void traceRays(uint32 width, uint32 height, uint32 depth) override;
 
   private:
-    PGraphicsPipeline pipeline;
-    PRayTracingPipeline rtPipeline;
-    bool ready;
+    PGraphicsPipeline pipeline = nullptr;
+    PRayTracingPipeline rtPipeline = nullptr;
+    bool ready = false;
     Array<PCommandBoundResource> boundResources;
-    VkViewport currentViewport;
-    VkRect2D currentScissor;
+    VkViewport currentViewport = VkViewport();
+    VkRect2D currentScissor = VkRect2D();
     PGraphics graphics;
     std::thread::id threadId;
     VkCommandBuffer handle;
@@ -123,10 +120,8 @@ class ComputeCommand : public Gfx::ComputeCommand {
 
   private:
     PComputePipeline pipeline;
-    bool ready;
+    bool ready = false;
     Array<PCommandBoundResource> boundResources;
-    VkViewport currentViewport;
-    VkRect2D currentScissor;
     PGraphics graphics;
     std::thread::id threadId;
     VkCommandBuffer handle;

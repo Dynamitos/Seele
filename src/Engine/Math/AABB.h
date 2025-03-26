@@ -11,9 +11,9 @@ struct BoundingSphere {
 };
 struct AABB {
     Vector min = Vector(std::numeric_limits<float>::max());
-    float pad0;                                                // So that it can be used directly in shaders
+    float pad0 = 0;                                                // So that it can be used directly in shaders
     Vector max = Vector(std::numeric_limits<float>::lowest()); // cause of reasons
-    float pad1;
+    float pad1 = 0;
     BoundingSphere toSphere() const {
         Vector center = (min + max) / 2.f;
         StaticArray<Vector, 8> corners;

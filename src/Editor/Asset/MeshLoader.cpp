@@ -151,7 +151,7 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Array<PTextureAsset>&
             uint32 uvIndex = 0;
             aiTextureMapMode mapMode = aiTextureMapMode_Clamp;
             float blend = std::numeric_limits<float>::max();
-            aiTextureOp op;
+            aiTextureOp op = aiTextureOp_Add;
             if (material->GetTexture(type, index, &texPath, &mapping, &uvIndex, nullptr, nullptr, nullptr) != AI_SUCCESS) {
                 std::cout << "fuck" << std::endl;
             }
@@ -488,23 +488,23 @@ Vector4 MeshLoader::encodeQTangent(Matrix3 m) {
     Vector4 r;
     if (t > 2.9999999) {
         r = Vector4(0.0, 0.0, 0.0, 1.0);
-    } else if (t > 0.0000001) {
-        float s = sqrt(1.0 + t) * 2.0;
-        r = Vector4(Vector(m[1][2] - m[2][1], m[2][0] - m[0][2], m[0][1] - m[1][0]) / s, s * 0.25);
+    } else if (t > 0.0000001f) {
+        float s = sqrt(1.0f + t) * 2.0f;
+        r = Vector4(Vector(m[1][2] - m[2][1], m[2][0] - m[0][2], m[0][1] - m[1][0]) / s, s * 0.25f);
     } else if ((m[0][0] > m[1][1]) && (m[0][0] > m[2][2])) {
-        float s = sqrt(1.0 + (m[0][0] - (m[1][1] + m[2][2]))) * 2.0;
+        float s = sqrt(1.0f + (m[0][0] - (m[1][1] + m[2][2]))) * 2.0;
         r = Vector4(s * 0.25, Vector(m[1][0] - m[0][1], m[2][0] - m[0][2], m[0][2] - m[2][1]) / s);
     } else if (m[1][1] > m[2][2]) {
-        float s = sqrt(1.0 + (m[1][1] - (m[0][0] + m[2][2]))) * 2.0;
-        r = Vector4(Vector(m[1][0] + m[0][1], m[2][1] + m[1][2], m[2][0] - m[0][2]) / s, s * 0.25);
+        float s = sqrt(1.0f + (m[1][1] - (m[0][0] + m[2][2]))) * 2.0f;
+        r = Vector4(Vector(m[1][0] + m[0][1], m[2][1] + m[1][2], m[2][0] - m[0][2]) / s, s * 0.25f);
         r = Vector4(r.x, r.w, r.y, r.z);
     } else {
-        float s = sqrt(1.0 + (m[2][2] - (m[0][0] + m[1][1]))) * 2.0;
-        r = Vector4(Vector(m[2][0] + m[0][2], m[2][1] + m[1][2], m[0][1] - m[1][0]) / s, s * 0.25);
+        float s = sqrt(1.0f + (m[2][2] - (m[0][0] + m[1][1]))) * 2.0f;
+        r = Vector4(Vector(m[2][0] + m[0][2], m[2][1] + m[1][2], m[0][1] - m[1][0]) / s, s * 0.25f);
         r = Vector4(r.x, r.y, r.w, r.z);
     }
     r = normalize(r);
-    const float threshold = 1.0 / 32767.0;
+    const float threshold = 1.0f / 32767.0f;
     if (r.w <= threshold) {
         r = Vector4(Vector(r) * (float)sqrt(1.0 - (threshold * threshold)), (r.w > 0.0) ? threshold : -threshold);
     }
@@ -539,9 +539,9 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
             Array<StaticMeshVertexData::BiTangentType> biTangents(mesh->mNumVertices);
             Array<StaticMeshVertexData::ColorType> colors(mesh->mNumVertices);
 
-            for (int32 i = 0; i < mesh->mNumVertices; ++i) {
+            for (uint32 i = 0; i < mesh->mNumVertices; ++i) {
                 positions[i] = Vector(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
-                for (size_t j = 0; j < MAX_TEXCOORDS; ++j) {
+                for (uint32 j = 0; j < MAX_TEXCOORDS; ++j) {
                     if (mesh->HasTextureCoords(j)) {
                         texCoords[j][i] = U16Vector2(mesh->mTextureCoords[j][i].x * 65535, mesh->mTextureCoords[j][i].y * 65535);
                     } else {

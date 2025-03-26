@@ -50,7 +50,7 @@ class StaticMeshVertexData : public VertexData {
     constexpr static const char* BITANGENTS_NAME = "biTangents";
     Gfx::OShaderBuffer colors;
     constexpr static const char* COLORS_NAME = "colors";
-    Array<PositionType> posData{debug_resource::get("VertexPositions")};
+    Array<PositionType> posData;
     Array<TexCoordType> texData[MAX_TEXCOORDS];
     Array<NormalType> norData;
     Array<TangentType> tanData;

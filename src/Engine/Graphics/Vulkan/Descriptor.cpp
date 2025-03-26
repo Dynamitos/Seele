@@ -97,11 +97,11 @@ DescriptorPool::DescriptorPool(PGraphics graphics, PDescriptorLayout layout)
         perTypeSizes[binding.descriptorType] += 512;
     }
     Array<VkDescriptorPoolSize> poolSizes;
-    for (const auto [type, num] : perTypeSizes) {
-        VkDescriptorPoolSize size;
-        size.descriptorCount = num;
-        size.type = cast(type);
-        poolSizes.add(size);
+    for (const auto& [type, num] : perTypeSizes) {
+        poolSizes.add(VkDescriptorPoolSize{
+            .type = cast(type),
+            .descriptorCount = num,
+        });
     }
     VkDescriptorPoolCreateInfo createInfo = {
         .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
@@ -473,7 +473,7 @@ std::mutex layoutLock;
 Map<uint32, VkPipelineLayout> cachedLayouts;
 
 void PipelineLayout::create() {
-    for (auto [name, desc] : descriptorSetLayouts) {
+    for (const auto& [_, desc] : descriptorSetLayouts) {
         PDescriptorLayout layout = desc.cast<DescriptorLayout>();
         layout->create();
         uint32 parameterIndex = parameterMapping[layout->getName()];

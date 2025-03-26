@@ -311,7 +311,6 @@ void BVH::validateBVH() const {
     }
     for (uint32 i = 0; i < dynamicNodes.size(); ++i) {
         int32 nodeIdx = i;
-        size_t counter = dynamicNodes.size();
         if (!dynamicNodes[nodeIdx].isValid)
             continue;
         while (dynamicNodes[nodeIdx].parentIndex != -1) {

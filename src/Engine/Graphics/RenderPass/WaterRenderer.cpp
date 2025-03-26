@@ -10,8 +10,8 @@ WaterRenderer::WaterRenderer(Gfx::PGraphics graphics, PScene scene, Gfx::PDescri
     : graphics(graphics), scene(scene) {
     skyBox = AssetRegistry::findTexture("", "skyboxsun5deg_tn")->getTexture().cast<Gfx::TextureCube>();
     logN = (int)log2(params.N);
-    threadGroupsX = ceil(params.N / 8.0f);
-    threadGroupsY = ceil(params.N / 8.0f);
+    threadGroupsX = (uint32)ceil(params.N / 8.0f);
+    threadGroupsY = (uint32)ceil(params.N / 8.0f);
 
     materialUniforms = graphics->createUniformBuffer(UniformBufferCreateInfo{
         .sourceData =
@@ -263,7 +263,7 @@ WaterRenderer::WaterRenderer(Gfx::PGraphics graphics, PScene scene, Gfx::PDescri
         .windSpeed = 2,
         .windDirection = 22,
         .fetch = 100000,
-        .spreadBlend = 0.642,
+        .spreadBlend = 0.642f,
         .swell = 1,
         .peakEnhancement = 1,
         .shortWavesFade = 0.25f,
@@ -523,8 +523,8 @@ void WaterRenderer::updateFFTDescriptor() {
     spectrumBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, Gfx::SE_ACCESS_SHADER_READ_BIT,
                                     Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 
-    params.deltaTime = Gfx::getCurrentFrameDelta();
-    params.frameTime = Gfx::getCurrentFrameTime();
+    params.deltaTime = (float)Gfx::getCurrentFrameDelta();
+    params.frameTime = (float)Gfx::getCurrentFrameTime();
     paramsBuffer->updateContents(0, sizeof(ComputeParams), &params);
     paramsBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, Gfx::SE_ACCESS_UNIFORM_READ_BIT,
                                   Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);

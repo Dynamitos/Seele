@@ -16,7 +16,7 @@ class SystemBase {
     virtual void update() {}
 
   protected:
-    double deltaTime;
+    double deltaTime = 0.0;
     entt::registry& registry;
     PScene scene;
 };

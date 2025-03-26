@@ -131,7 +131,7 @@ void ToneMappingPass::render() {
                                                Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 
     histogramLayout->reset();
-    Gfx::PDescriptorSet histogramSet = histogramLayout->allocateDescriptorSet();
+    histogramSet = histogramLayout->allocateDescriptorSet();
     histogramSet->updateConstants("minLogLum", 0, &minLogLum);
     histogramSet->updateConstants("inverseLogLumRange", 0, &inverseLogLumRange);
     histogramSet->updateConstants("timeCoeff", 0, &timeCoeff);

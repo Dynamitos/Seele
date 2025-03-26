@@ -23,8 +23,8 @@ class QueryPool {
     std::string name;
     VkQueryPipelineStatisticFlags flags;
     // ring buffer
-    uint64 head = 0;
-    uint64 tail = 0;
+    uint32 head = 0;
+    uint32 tail = 0;
     uint64 numAvailable;
     uint32 numQueries;
     uint32 resultsStride;

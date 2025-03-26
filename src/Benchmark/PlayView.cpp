@@ -28,7 +28,6 @@ PlayView::PlayView(Gfx::PGraphics graphics, PWindow window, const ViewportCreate
                  "VisibilityMS,"
               << std::endl;
         uint64 start = 0;
-        uint64 prevBegin = 0;
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
         stats << std::fixed << std::setprecision(0);
         while (getGlobals().running) {
@@ -37,8 +36,8 @@ PlayView::PlayView(Gfx::PGraphics graphics, PWindow window, const ViewportCreate
             auto baseResults = baseQuery->getResults();
             auto lightCullResults = lightCullQuery->getResults();
             auto visiblityResults = visibilityQuery->getResults();
-            int64 renderBegin = renderTimestamp->getResult().time;
-            int64 renderEnd = renderTimestamp->getResult().time;
+            //int64 renderBegin = renderTimestamp->getResult().time;
+            //int64 renderEnd = renderTimestamp->getResult().time;
             Map<std::string, uint64> results;
             for (uint32 i = 0; i < 11; ++i) {
                 auto ts = timestamps->getResult();

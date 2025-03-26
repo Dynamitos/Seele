@@ -24,7 +24,7 @@ class DescriptorLayout : public Gfx::DescriptorLayout {
   private:
     PGraphics graphics;
     uint32 constantsSize = 0;
-    VkShaderStageFlags constantsStages;
+    VkShaderStageFlags constantsStages = 0;
     Array<VkDescriptorSetLayoutBinding> bindings;
     Map<std::string, DescriptorMapping> mappings;
     VkDescriptorSetLayout layoutHandle;
@@ -74,7 +74,6 @@ class DescriptorSet : public Gfx::DescriptorSet, public CommandBoundResource {
   private:
     std::vector<uint8> constantData;
     OBufferAllocation constantsBuffer;
-    VkShaderStageFlags constantsStageFlags;
     List<VkDescriptorImageInfo> imageInfos;
     List<VkDescriptorBufferInfo> bufferInfos;
     List<VkWriteDescriptorSetAccelerationStructureKHR> accelerationInfos;

@@ -17,17 +17,17 @@ class BVH {
   private:
     struct AABBCenter {
         AABB bb;
-        Vector center;
-        entt::entity id;
+        Vector center = Vector();
+        entt::entity id = entt::entity();
     };
     struct Node {
         AABB box;
         int32 parentIndex = -1;
         int32 left = -1;
         int32 right = -1;
-        bool isLeaf;
+        bool isLeaf = false;
         bool isValid = true;
-        entt::entity owner;
+        entt::entity owner = entt::entity();
     };
     void traverseStaticTree(const AABB& aabb, entt::entity source, int32 nodeIndex, Array<Pair<entt::entity, entt::entity>>& overlaps);
     void traverseDynamicTree(const AABB& aabb, entt::entity source, int32 nodeIndex, Array<Pair<entt::entity, entt::entity>>& overlaps);

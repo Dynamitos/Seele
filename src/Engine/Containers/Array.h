@@ -83,12 +83,12 @@ template <typename T> struct Array {
     using reverse_iterator = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
-    constexpr Array(const allocator_type& alloc = allocator_type(debug_resource::get("Array"))) noexcept
+    constexpr Array(const allocator_type& alloc = allocator_type()) noexcept
         : arraySize(0), allocated(DEFAULT_ALLOC_SIZE), allocator(alloc) {
         _data = allocateArray(DEFAULT_ALLOC_SIZE);
         assert(_data != nullptr);
     }
-    constexpr Array(size_type size, const value_type& value, const allocator_type& alloc = allocator_type(debug_resource::get("Array")))
+    constexpr Array(size_type size, const value_type& value, const allocator_type& alloc = allocator_type())
         : arraySize(size), allocated(size), allocator(alloc) {
         _data = allocateArray(size);
         assert(_data != nullptr);
@@ -96,7 +96,7 @@ template <typename T> struct Array {
             std::allocator_traits<allocator_type>::construct(allocator, &_data[i], value);
         }
     }
-    constexpr explicit Array(size_type size, const allocator_type& alloc = allocator_type(debug_resource::get("Array")))
+    constexpr explicit Array(size_type size, const allocator_type& alloc = allocator_type())
         : arraySize(size), allocated(size), allocator(alloc) {
         _data = allocateArray(size);
         assert(_data != nullptr);
@@ -108,14 +108,14 @@ template <typename T> struct Array {
             }
         }
     }
-    constexpr Array(std::initializer_list<T> init, const allocator_type& alloc = allocator_type(debug_resource::get("Array")))
+    constexpr Array(std::initializer_list<T> init, const allocator_type& alloc = allocator_type())
         : arraySize(init.size()), allocated(init.size()), allocator(alloc) {
         _data = allocateArray(init.size());
         assert(_data != nullptr);
         std::uninitialized_copy(init.begin(), init.end(), begin());
     }
     template <container_compatible_range<T> Range>
-    constexpr Array(std::from_range_t, Range&& rg, const allocator_type& alloc = allocator_type(debug_resource::get("Array")))
+    constexpr Array(std::from_range_t, Range&& rg, const allocator_type& alloc = allocator_type())
         : arraySize(0), allocated(0), allocator(alloc) {
         if constexpr (std::ranges::sized_range<Range> || std::ranges::forward_range<Range>) {
             arraySize = std::ranges::size(rg);

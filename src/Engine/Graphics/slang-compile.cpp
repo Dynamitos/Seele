@@ -139,7 +139,7 @@ void Seele::beginCompilation(const ShaderCompilationInfo& info, SlangCompileTarg
 
     slang::ProgramLayout* signature = specializedComponent->getLayout(0, diagnostics.writeRef());
     CHECK_DIAGNOSTICS();
-    std::cout << info.name << std::endl;
+    //std::cout << info.name << std::endl;
     for (uint32 i = 0; i < signature->getParameterCount(); ++i) {
         auto param = signature->getParameterByIndex(i);
         layout->addMapping(param->getName(), param->getBindingIndex());
