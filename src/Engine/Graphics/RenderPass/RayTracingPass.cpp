@@ -131,7 +131,18 @@ void RayTracingPass::render() {
         }
     }
     pipeline = graphics->createRayTracingPipeline(Gfx::RayTracingPipelineCreateInfo{
-        .pipelineLayout = pipelineLayout, .rayGenGroup = {.shader = rayGen}, .hitGroups = callableGroups, .missGroups = {{.shader = miss}},
+        .pipelineLayout = pipelineLayout,
+        .rayGenGroup =
+            {
+                .shader = rayGen,
+            },
+        .hitGroups = callableGroups,
+        .missGroups =
+            {
+                {
+                    .shader = miss,
+                },
+            },
         //.callableGroups = callableGroups,
     });
     tlas = graphics->createTopLevelAccelerationStructure(Gfx::TopLevelASCreateInfo{

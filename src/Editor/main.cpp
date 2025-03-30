@@ -112,11 +112,11 @@ int main() {
         // AssetImporter::importTexture(TextureImportArgs{
         //    .filePath = sourcePath / "import/textures/wgen.png",
         //});
-        AssetImporter::importMesh(MeshImportArgs{
-            .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.glb",
-            .importPath = "Whitechapel",
-        });
-        //AssetImporter::importMesh(MeshImportArgs{
+        // AssetImporter::importMesh(MeshImportArgs{
+        //    .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.glb",
+        //    .importPath = "Whitechapel",
+        //});
+        // AssetImporter::importMesh(MeshImportArgs{
         //    .filePath = sourcePath / "import/models/box.glb",
         //    .importPath = "",
         //});
@@ -125,9 +125,13 @@ int main() {
             .importPath = "",
         });
         //AssetImporter::importMesh(MeshImportArgs{
-        //    .filePath = sourcePath / "import/models/town_hall.glb",
-        //    .importPath = "",
+        //    .filePath = sourcePath / "import/models/main1_sponza/sponza.gltf",
+        //    .importPath = "sponza",
         //});
+        // AssetImporter::importMesh(MeshImportArgs{
+        //     .filePath = sourcePath / "import/models/town_hall.glb",
+        //     .importPath = "",
+        // });
         getThreadPool().waitIdle();
         vd->commitMeshes();
         WindowCreateInfo mainWindowInfo = {
@@ -146,16 +150,16 @@ int main() {
         };
         OGameView sceneView = new Editor::PlayView(graphics, window, sceneViewInfo, binaryPath.generic_string());
         sceneView->setFocused();
-        //OInspectorView inspectorView = new Editor::InspectorView(graphics, window,
-        //                                                         ViewportCreateInfo{
-        //                                                             .dimensions =
-        //                                                                 {
-        //                                                                     .size = {1920, 1080},
-        //                                                                     .offset = {0, 0},
-        //                                                                 },
-        //                                                             .fieldOfView = 0,
-        //                                                             .numSamples = Gfx::SE_SAMPLE_COUNT_1_BIT,
-        //                                                         });
+        // OInspectorView inspectorView = new Editor::InspectorView(graphics, window,
+        //                                                          ViewportCreateInfo{
+        //                                                              .dimensions =
+        //                                                                  {
+        //                                                                      .size = {1920, 1080},
+        //                                                                      .offset = {0, 0},
+        //                                                                  },
+        //                                                              .fieldOfView = 0,
+        //                                                              .numSamples = Gfx::SE_SAMPLE_COUNT_1_BIT,
+        //                                                          });
         //
         window->show();
         while (windowManager->isActive() && getGlobals().running) {

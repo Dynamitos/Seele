@@ -32,8 +32,7 @@ void TextureAsset::load(ArchiveBuffer& buffer) {
     KTX_ASSERT(
         ktxTexture_CreateFromMemory(ktxData.data(), ktxData.size(), KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, (ktxTexture**)&ktxHandle));
 
-    ktxTexture2_TranscodeBasis(ktxHandle, KTX_TTF_RGBA32, 0);
-    // ktxTexture2_DeflateZstd(ktxHandle, 0);
+    ktxTexture2_TranscodeBasis(ktxHandle, KTX_TTF_BC7_RGBA, 0);
 
     Gfx::PGraphics graphics = buffer.getGraphics();
     TextureCreateInfo createInfo = {
