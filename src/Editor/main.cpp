@@ -124,10 +124,10 @@ int main() {
             .filePath = sourcePath / "import/models/rttest.glb",
             .importPath = "",
         });
-        //AssetImporter::importMesh(MeshImportArgs{
-        //    .filePath = sourcePath / "import/models/main1_sponza/sponza.gltf",
-        //    .importPath = "sponza",
-        //});
+        AssetImporter::importMesh(MeshImportArgs{
+            .filePath = sourcePath / "import/models/main1_sponza/sponza.gltf",
+            .importPath = "sponza",
+        });
         // AssetImporter::importMesh(MeshImportArgs{
         //     .filePath = sourcePath / "import/models/town_hall.glb",
         //     .importPath = "",

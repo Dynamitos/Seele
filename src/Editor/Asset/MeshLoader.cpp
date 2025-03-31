@@ -536,7 +536,7 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
             }
             Array<StaticMeshVertexData::NormalType> normals(mesh->mNumVertices);
             Array<StaticMeshVertexData::TangentType> tangents(mesh->mNumVertices);
-            Array<StaticMeshVertexData::BiTangentType> biTangents(mesh->mNumVertices);
+            //Array<StaticMeshVertexData::BiTangentType> biTangents(mesh->mNumVertices);
             Array<StaticMeshVertexData::ColorType> colors(mesh->mNumVertices);
 
             for (uint32 i = 0; i < mesh->mNumVertices; ++i) {
@@ -555,10 +555,15 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
                     tangent = Vector(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z);
                     biTangent = Vector(mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z);
                 }
-                normals[i] = normal; // encodeQTangent(Matrix3(tangent, biTangent, normal));
-                tangents[i] = tangent;
-                biTangents[i] = biTangent;
 
+                normals[i] = normal; // encodeQTangent(Matrix3(tangent, biTangent, normal));
+                // the fourth component encodes the sign of the bitangent.
+                // in the shader we calc n x t, and b = (n x t) * sign
+                // so we try to cross the two, and see what is the result, and if it is 
+                // the same as b, the dot product is 1, and if they are inverse, the dot product is 
+                // -1, which is the sign we need
+                tangents[i] = Vector4(tangent, dot(glm::cross(normal, tangent), biTangent));
+                
                 if (mesh->HasVertexColors(0)) {
                     colors[i] = StaticMeshVertexData::ColorType(mesh->mColors[0][i].r * 65535, mesh->mColors[0][i].g * 65535, mesh->mColors[0][i].b * 65535);
                 } else {
@@ -572,7 +577,7 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
             }
             vertexData->loadNormals(offset, normals);
             vertexData->loadTangents(offset, tangents);
-            vertexData->loadBitangents(offset, biTangents);
+            //vertexData->loadBitangents(offset, biTangents);
             vertexData->loadColors(offset, colors);
 
             Array<uint32> indices(mesh->mNumFaces * 3);

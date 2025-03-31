@@ -101,5 +101,5 @@ float4 fragmentMain(
 
     float factor = (output.texCoords.y - lowerLimit) / (upperLimit - lowerLimit);
     factor = clamp(factor, 0.0, 1.0);
-    return lerp(float4(pSkyboxData.fogBlend.xyz, 1), finalColor, factor) * 100;
+    return lerp(float4(pSkyboxData.fogBlend.xyz, 1), finalColor, factor);
 }

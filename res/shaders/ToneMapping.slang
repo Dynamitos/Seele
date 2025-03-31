@@ -109,7 +109,7 @@ float4 toneMapping(float2 uv : UV) : SV_Target
 {
 	float3 hdrValue = pToneMappingParams.hdrInputTexture.Sample(pToneMappingParams.hdrSampler, uv).rgb;
 
-    float3 value = agx(hdrValue / 1000);
+    float3 value = agx(hdrValue);
     value = agxLook(value);
     value = agxEotf(value);
 
