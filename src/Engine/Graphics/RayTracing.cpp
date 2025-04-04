@@ -1,5 +1,4 @@
 #include "RayTracing.h"
-#include "RayTracing.h"
 
 using namespace Seele::Gfx;
 

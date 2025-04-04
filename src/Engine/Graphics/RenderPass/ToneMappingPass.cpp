@@ -216,7 +216,7 @@ void ToneMappingPass::createRenderPass() {
             .dstAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
         },
     };
-    renderPass = graphics->createRenderPass(targetLayout, dependency, viewport, "ToneMappingPass");
+    renderPass = graphics->createRenderPass(targetLayout, dependency, viewport->getRenderArea(), "ToneMappingPass");
     pipeline = graphics->createGraphicsPipeline(Gfx::LegacyPipelineCreateInfo{
         .vertexShader = vert,
         .fragmentShader = frag,

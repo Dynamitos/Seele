@@ -3,6 +3,7 @@
 #include "Component/Camera.h"
 #include "Graphics/Command.h"
 #include "Graphics/Graphics.h"
+#include "Graphics/Pipeline.h"
 #include "Math/Vector.h"
 #include "RenderGraph.h"
 #include "Scene/Scene.h"
@@ -48,8 +49,8 @@ void LightCullingPass::render() {
     cullingDescriptorSet->updateBuffer(TLIGHTINDEXCOUNTER_NAME, 0, tLightIndexCounter);
     cullingDescriptorSet->updateBuffer(OLIGHTINDEXLIST_NAME, 0, oLightIndexList);
     cullingDescriptorSet->updateBuffer(TLIGHTINDEXLIST_NAME, 0, tLightIndexList);
-    cullingDescriptorSet->updateTexture(OLIGHTGRID_NAME, 0, oLightGrid);
-    cullingDescriptorSet->updateTexture(TLIGHTGRID_NAME, 0, tLightGrid);
+    cullingDescriptorSet->updateTexture(OLIGHTGRID_NAME, 0, Gfx::PTexture2D(oLightGrid));
+    cullingDescriptorSet->updateTexture(TLIGHTGRID_NAME, 0, Gfx::PTexture2D(tLightGrid));
     cullingDescriptorSet->writeChanges();
     Gfx::OComputeCommand computeCommand = graphics->createComputeCommand("CullingCommand");
     if (getGlobals().useLightCulling) {

@@ -5,7 +5,7 @@
 namespace Seele {
 class LevelAsset : public Asset {
   public:
-    static constexpr uint64 IDENTIFIER = 0x20;
+    static constexpr uint64 IDENTIFIER = 0x40;
     LevelAsset();
     LevelAsset(std::string_view folderPath, std::string_view name);
     virtual ~LevelAsset();

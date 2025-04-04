@@ -4,6 +4,8 @@ target_sources(Engine
         Asset.cpp
         AssetRegistry.h
         AssetRegistry.cpp
+        EnvironmentMapAsset.h
+        EnvironmentMapAsset.cpp
         FontAsset.h
         FontAsset.cpp
         LevelAsset.h

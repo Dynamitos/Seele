@@ -312,63 +312,7 @@ void DescriptorSet::updateSampler(const std::string& mappingName, uint32 index, 
     boundResources[binding][index] = vulkanSampler->getHandle();
 }
 
-void DescriptorSet::updateTexture(const std::string& mappingName, uint32 index, Gfx::PTexture2D texture) {
-    TextureBase* vulkanTexture = texture.cast<TextureBase>().getHandle();
-    const auto& map = owner->getLayout()->mappings[mappingName];
-    uint32 binding = map.binding;
-    if (boundResources[binding][index] == vulkanTexture->getHandle()) {
-        return;
-    }
-
-    // It is assumed that the image is in the correct layout
-    imageInfos.add(VkDescriptorImageInfo{
-        .sampler = VK_NULL_HANDLE,
-        .imageView = vulkanTexture->getView(),
-        .imageLayout = cast(vulkanTexture->getLayout()),
-    });
-    writeDescriptors.add(VkWriteDescriptorSet{
-        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-        .pNext = nullptr,
-        .dstSet = setHandle,
-        .dstBinding = binding,
-        .dstArrayElement = index,
-        .descriptorCount = 1,
-        .descriptorType = map.type,
-        .pImageInfo = &imageInfos.back(),
-    });
-
-    boundResources[binding][index] = vulkanTexture->getHandle();
-}
-
-void DescriptorSet::updateTexture(const std::string& mappingName, uint32 index, Gfx::PTexture3D texture) {
-    TextureBase* vulkanTexture = texture.cast<TextureBase>().getHandle();
-    const auto& map = owner->getLayout()->mappings[mappingName];
-    uint32 binding = map.binding;
-    if (boundResources[binding][index] == vulkanTexture->getHandle()) {
-        return;
-    }
-
-    // It is assumed that the image is in the correct layout
-    imageInfos.add(VkDescriptorImageInfo{
-        .sampler = VK_NULL_HANDLE,
-        .imageView = vulkanTexture->getView(),
-        .imageLayout = cast(vulkanTexture->getLayout()),
-    });
-    writeDescriptors.add(VkWriteDescriptorSet{
-        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-        .pNext = nullptr,
-        .dstSet = setHandle,
-        .dstBinding = binding,
-        .dstArrayElement = index,
-        .descriptorCount = 1,
-        .descriptorType = map.type,
-        .pImageInfo = &imageInfos.back(),
-    });
-
-    boundResources[binding][index] = vulkanTexture->getHandle();
-}
-
-void DescriptorSet::updateTexture(const std::string& mappingName, uint32 index, Gfx::PTextureCube texture) {
+void DescriptorSet::updateTexture(const std::string& mappingName, uint32 index, Gfx::PTexture texture) {
     TextureBase* vulkanTexture = texture.cast<TextureBase>().getHandle();
     const auto& map = owner->getLayout()->mappings[mappingName];
     uint32 binding = map.binding;

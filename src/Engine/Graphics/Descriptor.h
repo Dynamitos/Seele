@@ -68,9 +68,7 @@ class DescriptorSet {
     virtual void updateBuffer(const std::string& name, uint32 index, Gfx::PVertexBuffer indexBuffer) = 0;
     virtual void updateBuffer(const std::string& name, uint32 index, Gfx::PIndexBuffer indexBuffer) = 0;
     virtual void updateSampler(const std::string& name, uint32 index, Gfx::PSampler samplerState) = 0;
-    virtual void updateTexture(const std::string& name, uint32 index, Gfx::PTexture2D texture) = 0;
-    virtual void updateTexture(const std::string& name, uint32 index, Gfx::PTexture3D texture) = 0;
-    virtual void updateTexture(const std::string& name, uint32 index, Gfx::PTextureCube texture) = 0;
+    virtual void updateTexture(const std::string& name, uint32 index, Gfx::PTexture texture) = 0;
     virtual void updateAccelerationStructure(const std::string& name, uint32 index, Gfx::PTopLevelAS as) = 0;
     bool operator<(PDescriptorSet other);
 

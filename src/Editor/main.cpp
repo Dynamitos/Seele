@@ -4,6 +4,7 @@
 #include "Asset/MaterialLoader.h"
 #include "Asset/MeshLoader.h"
 #include "Asset/TextureLoader.h"
+#include "Asset/EnvironmentLoader.h"
 #include "Graphics/Initializer.h"
 #ifdef __APPLE__
 #include "Graphics/Metal/Graphics.h"
@@ -98,6 +99,9 @@ int main() {
         AssetImporter::importTexture(TextureImportArgs{
             .filePath = sourcePath / "import/textures/skybox.jpg",
             .type = TextureImportType::TEXTURE_CUBEMAP,
+        });
+        AssetImporter::importEnvironmentMap(EnvironmentImportArgs{
+            .filePath = sourcePath / "import/models/main1_sponza/textures/kloppenheim_05_4k.hdr",
         });
         // AssetImporter::importMesh(MeshImportArgs{
         //     .filePath = sourcePath / "import/models/ship.fbx",

@@ -151,8 +151,8 @@ void RayTracingPass::render() {
     });
     Gfx::PDescriptorSet desc = paramsLayout->allocateDescriptorSet();
     desc->updateAccelerationStructure(TLAS_NAME, 0, tlas);
-    desc->updateTexture(ACCUMULATOR_NAME, 0, radianceAccumulator);
-    desc->updateTexture(TEXTURE_NAME, 0, texture);
+    desc->updateTexture(ACCUMULATOR_NAME, 0, Gfx::PTexture2D(radianceAccumulator));
+    desc->updateTexture(TEXTURE_NAME, 0, Gfx::PTexture2D(texture));
     desc->updateBuffer(INDEXBUFFER_NAME, 0, StaticMeshVertexData::getInstance()->getIndexBuffer());
     desc->updateTexture(SKYBOX_NAME, 0, skyBox);
     desc->updateSampler(SKYSAMPLER_NAME, 0, skyBoxSampler);

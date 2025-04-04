@@ -172,8 +172,9 @@ Gfx::OViewport Graphics::createViewport(Gfx::PWindow owner, const ViewportCreate
 }
 
 Gfx::ORenderPass Graphics::createRenderPass(Gfx::RenderTargetLayout layout, Array<Gfx::SubPassDependency> dependencies,
-                                            Gfx::PViewport renderArea, std::string name) {
-    return new RenderPass(this, std::move(layout), std::move(dependencies), renderArea, name);
+                                            URect renderArea, std::string name, Array<uint32> viewMasks,
+                                            Array<uint32> correlationMasks) {
+    return new RenderPass(this, std::move(layout), std::move(dependencies), renderArea, name, std::move(viewMasks), std::move(correlationMasks));
 }
 void Graphics::beginRenderPass(Gfx::PRenderPass renderPass) {
     PRenderPass rp = renderPass.cast<RenderPass>();
@@ -824,6 +825,7 @@ void Graphics::pickPhysicalDevice() {
         .pNext = &features12,
         .storageBuffer16BitAccess = true,
         .uniformAndStorageBuffer16BitAccess = true,
+        .multiview = true,
     };
     features = {
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
@@ -950,6 +952,7 @@ void Graphics::createDevice(GraphicsInitializer initializer) {
         initializer.deviceExtensions.add(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME);
         initializer.deviceExtensions.add(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
     }
+    initializer.deviceExtensions.add(VK_KHR_MULTIVIEW_EXTENSION_NAME);
 #ifdef __APPLE__
     initializer.deviceExtensions.add("VK_KHR_portability_subset");
 #endif

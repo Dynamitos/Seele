@@ -35,7 +35,8 @@ class Graphics : public Gfx::Graphics {
     virtual Gfx::OViewport createViewport(Gfx::PWindow owner, const ViewportCreateInfo& createInfo) override;
 
     virtual Gfx::ORenderPass createRenderPass(Gfx::RenderTargetLayout layout, Array<Gfx::SubPassDependency> dependencies,
-                                              Gfx::PViewport renderArea, std::string name) override;
+                                              URect renderArea, std::string name, Array<uint32> viewMasks,
+                                              Array<uint32> correlationMasks) override;
     virtual void beginRenderPass(Gfx::PRenderPass renderPass) override;
     virtual void endRenderPass() override;
     virtual void waitDeviceIdle() override;

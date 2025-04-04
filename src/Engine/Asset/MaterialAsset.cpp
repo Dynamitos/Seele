@@ -30,6 +30,6 @@ PMaterialInstanceAsset MaterialAsset::instantiate(const InstantiationParameter& 
     asset->setBase(this);
     PMaterialInstanceAsset ref = asset;
     AssetRegistry::registerMaterialInstance(std::move(asset));
-    AssetRegistry::saveAsset(ref, MaterialInstanceAsset::IDENTIFIER, ref->getFolderPath(), ref->getName());
+    AssetRegistry::saveAsset(PAsset(ref), MaterialInstanceAsset::IDENTIFIER, ref->getFolderPath(), ref->getName());
     return ref;
 }

@@ -1,5 +1,6 @@
 #include "CachedDepthPass.h"
 #include "Graphics/Shader.h"
+#include "Graphics/Pipeline.h"
 
 using namespace Seele;
 
@@ -202,5 +203,5 @@ void CachedDepthPass::createRenderPass() {
                          Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
         },
     };
-    renderPass = graphics->createRenderPass(std::move(layout), std::move(dependency), viewport, "CachedDepthPass");
+    renderPass = graphics->createRenderPass(std::move(layout), std::move(dependency), viewport->getRenderArea(), "CachedDepthPass");
 }

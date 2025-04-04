@@ -6,15 +6,13 @@
 #include "Resources.h"
 #include <vulkan/vulkan_core.h>
 
-
 namespace Seele {
 namespace Vulkan {
 class TextureHandle : public CommandBoundResource {
   public:
     TextureHandle(PGraphics graphics, VkImageViewType viewType, const TextureCreateInfo& createInfo, VkImage existingImage);
     virtual ~TextureHandle();
-    void pipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, VkAccessFlags dstAccess,
-                                VkPipelineStageFlags dstStage);
+    void pipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, VkAccessFlags dstAccess, VkPipelineStageFlags dstStage);
     void transferOwnership(Gfx::QueueType newOwner);
     void changeLayout(Gfx::SeImageLayout newLayout, VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, VkAccessFlags dstAccess,
                       VkPipelineStageFlags dstStage);
@@ -37,11 +35,15 @@ class TextureHandle : public CommandBoundResource {
     VkImageAspectFlags aspect;
     uint8 ownsImage;
 };
-DECLARE_REF(TextureHandle)
+DEFINE_REF(TextureHandle)
+
+DECLARE_REF(TextureBase)
+DECLARE_REF(Texture2D)
+DECLARE_REF(Texture3D)
+DECLARE_REF(TextureCube)
 class TextureBase {
   public:
-    TextureBase(PGraphics graphics, VkImageViewType viewType, const TextureCreateInfo& createInfo,
-                VkImage existingImage = VK_NULL_HANDLE);
+    TextureBase(PGraphics graphics, VkImageViewType viewType, const TextureCreateInfo& createInfo, VkImage existingImage = VK_NULL_HANDLE);
     virtual ~TextureBase();
     uint32 getWidth() const { return handle->width; }
     uint32 getHeight() const { return handle->height; }
@@ -58,13 +60,13 @@ class TextureBase {
     constexpr uint32 getMipLevels() const { return handle->mipLevels; }
     constexpr bool isDepthStencil() const { return handle->aspect & (VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT); }
 
-    void pipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, VkAccessFlags dstAccess,
-                                VkPipelineStageFlags dstStage);
+    void pipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, VkAccessFlags dstAccess, VkPipelineStageFlags dstStage);
     void transferOwnership(Gfx::QueueType newOwner);
     void changeLayout(Gfx::SeImageLayout newLayout, VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, VkAccessFlags dstAccess,
                       VkPipelineStageFlags dstStage);
     void download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<uint8>& buffer);
     void generateMipmaps();
+
   protected:
     OTextureHandle handle;
     // Updates via reference
