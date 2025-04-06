@@ -25,7 +25,6 @@ class TextureHandle : public CommandBoundResource {
     uint32 width;
     uint32 height;
     uint32 depth;
-    uint32 arrayCount;
     uint32 layerCount;
     uint32 mipLevels;
     uint32 samples;
@@ -48,6 +47,7 @@ class TextureBase {
     uint32 getWidth() const { return handle->width; }
     uint32 getHeight() const { return handle->height; }
     uint32 getDepth() const { return handle->depth; }
+    uint32 getNumLayers() const { return handle->layerCount; }
     PTextureHandle getHandle() const { return handle; }
     VkImage getImage() const { return handle->image; };
     VkImageView getView() const { return handle->imageView; };

@@ -14,6 +14,20 @@ EnvironmentLoader::EnvironmentLoader(Gfx::PGraphics graphics) : graphics(graphic
                                                                        .offset = {0, 0},
                                                                    },
                                                            });
+    convolutionViewport = graphics->createViewport(nullptr, ViewportCreateInfo{
+                                                               .dimensions =
+                                                                   {
+                                                                       .size = {32, 32},
+                                                                       .offset = {0, 0},
+                                                                   },
+                                                           });
+    cubeSampler = graphics->createSampler({
+        .magFilter = Gfx::SE_FILTER_LINEAR,
+        .minFilter = Gfx::SE_FILTER_LINEAR,
+        .addressModeU = Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+        .addressModeV = Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+        .addressModeW = Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+    });
 
     cubeRenderLayout = graphics->createDescriptorLayout("pViewParams");
     cubeRenderLayout->addDescriptorBinding(Gfx::DescriptorBinding{
@@ -32,6 +46,10 @@ EnvironmentLoader::EnvironmentLoader(Gfx::PGraphics graphics) : graphics(graphic
         .name = "sampler",
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLER,
     });
+    cubeRenderLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .name = "cubeMap",
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+    });
     cubeRenderLayout->create();
 
     cubePipelineLayout = graphics->createPipelineLayout("CubeRenderLayout");
@@ -43,7 +61,8 @@ EnvironmentLoader::EnvironmentLoader(Gfx::PGraphics graphics) : graphics(graphic
         .entryPoints =
             {
                 {"vertMain", "EnvironmentMapping"},
-                {"fragMain", "EnvironmentMapping"},
+                {"computeCubemap", "EnvironmentMapping"},
+                {"convolveCubemap", "EnvironmentMapping"},
             },
         .rootSignature = cubePipelineLayout,
     });
@@ -51,14 +70,7 @@ EnvironmentLoader::EnvironmentLoader(Gfx::PGraphics graphics) : graphics(graphic
 
     cubeRenderVertex = graphics->createVertexShader({0});
     cubeRenderFrag = graphics->createFragmentShader({1});
-
-    cubeSampler = graphics->createSampler({
-        .magFilter = Gfx::SE_FILTER_LINEAR,
-        .minFilter = Gfx::SE_FILTER_LINEAR,
-        .addressModeU = Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
-        .addressModeV = Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
-        .addressModeW = Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
-    });
+    convolutionFrag = graphics->createFragmentShader({2});
 }
 
 EnvironmentLoader::~EnvironmentLoader() {}
@@ -93,12 +105,12 @@ void EnvironmentLoader::import(EnvironmentImportArgs args, PEnvironmentMapAsset 
     });
     Matrix4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
     Matrix4 captureViews[] = {
+        glm::lookAt(Vector(0.0f, 0.0f, 0.0f), Vector(1.0f, 0.0f, 0.0f), Vector(0.0f, 1.0f, 0.0f)),
+        glm::lookAt(Vector(0.0f, 0.0f, 0.0f), Vector(-1.0f, 0.0f, 0.0f), Vector(0.0f, 1.0f, 0.0f)),
+        glm::lookAt(Vector(0.0f, 0.0f, 0.0f), Vector(0.0f, 1.0f, 0.0f), Vector(0.0f, 0.0f, 1.0f)),
+        glm::lookAt(Vector(0.0f, 0.0f, 0.0f), Vector(0.0f, -1.0f, 0.0f), Vector(0.0f, 0.0f, -1.0f)),
         glm::lookAt(Vector(0.0f, 0.0f, 0.0f), Vector(0.0f, 0.0f, 1.0f), Vector(0.0f, 1.0f, 0.0f)),
         glm::lookAt(Vector(0.0f, 0.0f, 0.0f), Vector(0.0f, 0.0f, -1.0f), Vector(0.0f, 1.0f, 0.0f)),
-        glm::lookAt(Vector(0.0f, 0.0f, 0.0f), Vector(0.0f, -1.0f, 0.0f), Vector(1.0f, 0.0f, 0.0f)),
-        glm::lookAt(Vector(0.0f, 0.0f, 0.0f), Vector(0.0f, 1.0f, 0.0f), Vector(1.0f, 0.0f, 0.0f)),
-        glm::lookAt(Vector(0.0f, 0.0f, 0.0f), Vector(-1.0f, 0.0f, 0.0f), Vector(0.0f, 1.0f, 0.0f)),
-        glm::lookAt(Vector(0.0f, 0.0f, 0.0f), Vector(1.0f, 0.0f, 0.0f), Vector(0.0f, 1.0f, 0.0f)),
     };
     Gfx::PDescriptorSet set = cubeRenderLayout->allocateDescriptorSet();
     set->updateConstants("view", 0, captureViews);
@@ -110,9 +122,9 @@ void EnvironmentLoader::import(EnvironmentImportArgs args, PEnvironmentMapAsset 
         .format = Gfx::SE_FORMAT_R32G32B32A32_SFLOAT,
         .width = 1024,
         .height = 1024,
-        .usage = Gfx::SE_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+        .usage = Gfx::SE_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | Gfx::SE_IMAGE_USAGE_SAMPLED_BIT,
     });
-    cubeRenderPass = graphics->createRenderPass(
+    Gfx::ORenderPass cubeRenderPass = graphics->createRenderPass(
         Gfx::RenderTargetLayout{
             .colorAttachments = {Gfx::RenderTargetAttachment(cubeMap, Gfx::SE_IMAGE_LAYOUT_UNDEFINED,
                                                              Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
@@ -139,9 +151,57 @@ void EnvironmentLoader::import(EnvironmentImportArgs args, PEnvironmentMapAsset 
     renderCommand->bindPipeline(cubeRenderPipeline);
     renderCommand->bindDescriptor({set});
     renderCommand->setViewport(cubeRenderViewport);
-    renderCommand->draw(6, 1, 0, 0);
+    renderCommand->draw(36, 1, 0, 0);
     graphics->executeCommands(std::move(renderCommand));
     graphics->endRenderPass();
+
+    Gfx::OTextureCube convolutedMap = graphics->createTextureCube(TextureCreateInfo{
+        .format = Gfx::SE_FORMAT_R32G32B32A32_SFLOAT,
+        .width = 32,
+        .height = 32,
+        .usage = Gfx::SE_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+    });
+    Gfx::ORenderPass convolutionPass = graphics->createRenderPass(
+        Gfx::RenderTargetLayout{
+            .colorAttachments = {Gfx::RenderTargetAttachment(convolutedMap, Gfx::SE_IMAGE_LAYOUT_UNDEFINED,
+                                                             Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                                                             Gfx::SE_ATTACHMENT_LOAD_OP_DONT_CARE, Gfx::SE_ATTACHMENT_STORE_OP_STORE)},
+        },
+        {},
+        URect{
+            .size = {32, 32},
+            .offset = {0, 0},
+        },
+        "EnvironmentRenderPass", {0b111111}, {0b111111});
+    convolutionPipeline = graphics->createGraphicsPipeline(Gfx::LegacyPipelineCreateInfo{
+        .vertexShader = cubeRenderVertex,
+        .fragmentShader = convolutionFrag,
+        .renderPass = convolutionPass,
+        .pipelineLayout = cubePipelineLayout,
+        .colorBlend =
+            {
+                .attachmentCount = 1,
+            },
+    });
+
+    set = cubeRenderLayout->allocateDescriptorSet();
+    set->updateConstants("view", 0, captureViews);
+    set->updateConstants("projection", 0, &captureProjection);
+    set->updateSampler("sampler", 0, cubeSampler);
+    set->updateTexture("cubeMap", 0, Gfx::PTextureCube(cubeMap));
+    set->writeChanges();
+
+    graphics->beginRenderPass(convolutionPass);
+    Gfx::ORenderCommand cmd = graphics->createRenderCommand("ConvolutionPass");
+    cmd->bindPipeline(convolutionPipeline);
+    cmd->bindDescriptor({set});
+    cmd->setViewport(convolutionViewport);
+    cmd->draw(36, 1, 0, 0);
+    graphics->executeCommands(std::move(cmd));
+    graphics->endRenderPass();
+
+    asset->skybox = std::move(cubeMap);
+    asset->irradianceMap = std::move(convolutedMap);
+    asset->specularMap = std::move(cubeMap);
     graphics->waitDeviceIdle();
-    asset->diffuseMap = std::move(cubeMap);
 }

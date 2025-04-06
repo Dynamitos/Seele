@@ -1,5 +1,4 @@
 import Common;
-import BRDF;
 import MaterialParameter;
 import Scene;
 

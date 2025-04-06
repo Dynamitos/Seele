@@ -16,12 +16,14 @@ Framebuffer::Framebuffer(PGraphics graphics, PRenderPass renderPass, Gfx::Render
     Array<VkImageView> attachments;
     uint32 width = 0;
     uint32 height = 0;
+    uint32 layers = 0;
     for (auto inputAttachment : layout.inputAttachments) {
         PTextureBase vkInputAttachment = inputAttachment.getTexture().cast<TextureBase>();
         attachments.add(vkInputAttachment->getView());
         description.inputAttachments[description.numInputAttachments++] = vkInputAttachment->getView();
         width = std::max(width, vkInputAttachment->getWidth());
         height = std::max(height, vkInputAttachment->getHeight());
+        layers = std::max(layers, vkInputAttachment->getNumLayers());
     }
     for (auto colorAttachment : layout.colorAttachments) {
         PTextureBase vkColorAttachment = colorAttachment.getTexture().cast<TextureBase>();
@@ -29,6 +31,7 @@ Framebuffer::Framebuffer(PGraphics graphics, PRenderPass renderPass, Gfx::Render
         description.colorAttachments[description.numColorAttachments++] = vkColorAttachment->getView();
         width = std::max(width, vkColorAttachment->getWidth());
         height = std::max(height, vkColorAttachment->getHeight());
+        layers = std::max(layers, vkColorAttachment->getNumLayers());
     }
     for (auto resolveAttachment : layout.resolveAttachments) {
         PTextureBase vkResolveAttachment = resolveAttachment.getTexture().cast<TextureBase>();
@@ -36,6 +39,7 @@ Framebuffer::Framebuffer(PGraphics graphics, PRenderPass renderPass, Gfx::Render
         description.resolveAttachments[description.numResolveAttachments++] = vkResolveAttachment->getView();
         width = std::max(width, vkResolveAttachment->getWidth());
         height = std::max(height, vkResolveAttachment->getHeight());
+        layers = std::max(layers, vkResolveAttachment->getNumLayers());
     }
     if (layout.depthAttachment.getTexture() != nullptr) {
         PTextureBase vkDepthAttachment = layout.depthAttachment.getTexture().cast<TextureBase>();
@@ -43,6 +47,7 @@ Framebuffer::Framebuffer(PGraphics graphics, PRenderPass renderPass, Gfx::Render
         description.depthAttachment = vkDepthAttachment->getView();
         width = std::max(width, vkDepthAttachment->getWidth());
         height = std::max(height, vkDepthAttachment->getHeight());
+        layers = std::max(layers, vkDepthAttachment->getNumLayers());
     }
     if (layout.depthResolveAttachment.getTexture() != nullptr) {
         PTextureBase vkDepthAttachment = layout.depthResolveAttachment.getTexture().cast<TextureBase>();
@@ -50,6 +55,7 @@ Framebuffer::Framebuffer(PGraphics graphics, PRenderPass renderPass, Gfx::Render
         description.depthResolveAttachment = vkDepthAttachment->getView();
         width = std::max(width, vkDepthAttachment->getWidth());
         height = std::max(height, vkDepthAttachment->getHeight());
+        layers = std::max(layers, vkDepthAttachment->getNumLayers());
     }
     VkFramebufferCreateInfo createInfo = {
         .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,

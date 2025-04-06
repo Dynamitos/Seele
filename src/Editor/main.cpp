@@ -100,8 +100,11 @@ int main() {
             .filePath = sourcePath / "import/textures/skybox.jpg",
             .type = TextureImportType::TEXTURE_CUBEMAP,
         });
+        //AssetImporter::importEnvironmentMap(EnvironmentImportArgs{
+        //    .filePath = sourcePath / "import/models/main1_sponza/textures/kloppenheim_05_4k.hdr",
+        //});
         AssetImporter::importEnvironmentMap(EnvironmentImportArgs{
-            .filePath = sourcePath / "import/models/main1_sponza/textures/kloppenheim_05_4k.hdr",
+            .filePath = sourcePath / "import/textures/newport_loft.hdr",
         });
         // AssetImporter::importMesh(MeshImportArgs{
         //     .filePath = sourcePath / "import/models/ship.fbx",

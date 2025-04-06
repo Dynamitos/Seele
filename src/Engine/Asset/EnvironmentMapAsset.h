@@ -11,8 +11,12 @@ class EnvironmentMapAsset : public Asset {
     virtual ~EnvironmentMapAsset();
     virtual void save(ArchiveBuffer& buffer) const override;
     virtual void load(ArchiveBuffer& buffer) override;
+    Gfx::PTextureCube getSkybox() const { return skybox; }
+    Gfx::PTextureCube getIrradianceMap() const { return irradianceMap; }
+    Gfx::PTextureCube getSpecularMap() const { return specularMap; }
   private:
-    Gfx::OTextureCube diffuseMap;
+    Gfx::OTextureCube skybox;
+    Gfx::OTextureCube irradianceMap;
     Gfx::OTextureCube specularMap;
     friend class EnvironmentLoader;
 };

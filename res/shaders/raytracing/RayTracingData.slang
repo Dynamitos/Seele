@@ -1,5 +1,4 @@
 import MaterialParameter;
-import BRDF;
 
 struct RayTracingParams
 {

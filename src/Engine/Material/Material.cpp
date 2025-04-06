@@ -158,8 +158,8 @@ void Material::load(ArchiveBuffer& buffer) {
 
 void Material::compile() {
     std::ofstream codeStream("./shaders/generated/" + materialName + ".slang");
-    codeStream << "import BRDF;\n";
     codeStream << "import MaterialParameter;\n";
+    codeStream << "import LightEnv;\n";
     codeStream << "import Material;\n";
     codeStream << "struct Material{\n";
     codeStream << "\ttypedef " << brdf.profile << " BRDF;\n";

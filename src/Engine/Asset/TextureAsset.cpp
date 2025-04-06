@@ -45,7 +45,6 @@ void TextureAsset::load(ArchiveBuffer& buffer) {
         .width = ktxHandle->baseWidth,
         .height = ktxHandle->baseHeight,
         .depth = ktxHandle->baseDepth,
-        .layers = ktxHandle->numFaces,
         .elements = ktxHandle->numLayers,
         .useMip = true,
         .usage = Gfx::SE_IMAGE_USAGE_SAMPLED_BIT,

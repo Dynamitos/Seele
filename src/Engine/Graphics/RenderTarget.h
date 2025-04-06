@@ -108,7 +108,6 @@ class RenderPass {
     RenderPass(RenderPass&&) = default;
     RenderPass& operator=(RenderPass&&) = default;
     const RenderTargetLayout& getLayout() const { return layout; }
-    void updateColorAttachment(uint32 index, Gfx::PTextureCube attachment) { layout.colorAttachments[index].setTexture(attachment); }
 
   protected:
     RenderTargetLayout layout;

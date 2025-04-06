@@ -30,6 +30,6 @@ float4 fragmentMain(in FragmentParameter params) : SV_Target
         uint lightIndex = pLightCullingData.lightIndexList[startOffset + i];
         result += pLightEnv.pointLights[lightIndex].illuminate(lightingParams, brdf);
     }
-    result += brdf.evaluateAmbient();
+    result += brdf.evaluateAmbient(lightingParams.viewDir_WS);
     return float4(result, brdf.getAlpha());
 }

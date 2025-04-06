@@ -25,8 +25,10 @@ class EnvironmentLoader {
     Gfx::ODescriptorLayout cubeRenderLayout;
     Gfx::OPipelineLayout cubePipelineLayout;
     Gfx::PGraphicsPipeline cubeRenderPipeline;
-    Gfx::ORenderPass cubeRenderPass;
+    Gfx::OFragmentShader convolutionFrag;
+    Gfx::PGraphicsPipeline convolutionPipeline;
     Gfx::OViewport cubeRenderViewport;
+    Gfx::OViewport convolutionViewport;
     Gfx::OSampler cubeSampler;
 };
 }

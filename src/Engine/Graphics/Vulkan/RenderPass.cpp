@@ -9,8 +9,8 @@
 using namespace Seele;
 using namespace Seele::Vulkan;
 
-RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Array<Gfx::SubPassDependency> _dependencies,
-                       URect viewport, std::string name, Array<uint32> viewMasks, Array<uint32> correlationMasks)
+RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Array<Gfx::SubPassDependency> _dependencies, URect viewport,
+                       std::string name, Array<uint32> viewMasks, Array<uint32> correlationMasks)
     : Gfx::RenderPass(std::move(_layout), std::move(_dependencies)), graphics(graphics) {
     renderArea.extent.width = viewport.size.x;
     renderArea.extent.height = viewport.size.y;
@@ -166,6 +166,7 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Arra
         .pNext = layout.depthResolveAttachment.getTexture() != nullptr ? &depthResolve : nullptr,
         .flags = 0,
         .pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
+        .viewMask = viewMasks[0],
         .inputAttachmentCount = (uint32)inputRefs.size(),
         .pInputAttachments = inputRefs.data(),
         .colorAttachmentCount = (uint32)colorRefs.size(),
@@ -196,19 +197,9 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Arra
         .pSubpasses = &subPassDesc,
         .dependencyCount = (uint32)dep.size(),
         .pDependencies = dep.data(),
+        .correlatedViewMaskCount = (uint32)correlationMasks.size(),
+        .pCorrelatedViewMasks = correlationMasks.data(),
     };
-    VkRenderPassMultiviewCreateInfo multiViewInfo;
-    if (!viewMasks.empty()) {
-        multiViewInfo = {
-            .sType = VK_STRUCTURE_TYPE_RENDER_PASS_MULTIVIEW_CREATE_INFO,
-            .pNext = nullptr,
-            .subpassCount = 1,
-            .pViewMasks = viewMasks.data(),
-            .correlationMaskCount = (uint32)correlationMasks.size(),
-            .pCorrelationMasks = correlationMasks.data(),
-        };
-        info.pNext = &multiViewInfo;
-    }
     VK_CHECK(vkCreateRenderPass2(graphics->getDevice(), &info, nullptr, &renderPass));
     VkDebugUtilsObjectNameInfoEXT nameInfo = {
         .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,

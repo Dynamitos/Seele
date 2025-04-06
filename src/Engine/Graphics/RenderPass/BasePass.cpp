@@ -1,6 +1,7 @@
 #include "BasePass.h"
 #include "Actor/CameraActor.h"
 #include "Asset/AssetRegistry.h"
+#include "Asset/EnvironmentMapAsset.h"
 #include "Component/Camera.h"
 #include "Component/Mesh.h"
 #include "Component/WaterTile.h"
@@ -78,8 +79,8 @@ BasePass::BasePass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics)
                                                                       });
     }
     skybox = Seele::Component::Skybox{
-        .day = AssetRegistry::findTexture("", "skybox")->getTexture().cast<Gfx::TextureCube>(),
-        .night = AssetRegistry::findTexture("", "skybox")->getTexture().cast<Gfx::TextureCube>(),
+        .day = scene->getLightEnvironment()->getEnvironmentMap()->getIrradianceMap(),
+        .night = scene->getLightEnvironment()->getEnvironmentMap()->getIrradianceMap(),
         .fogColor = Vector(0.1, 0.1, 0.8),
         .blendFactor = 0,
     };
