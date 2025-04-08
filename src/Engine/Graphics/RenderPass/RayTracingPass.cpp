@@ -1,6 +1,7 @@
 #include "RayTracingPass.h"
 #include "Asset/AssetRegistry.h"
 #include "Asset/MeshAsset.h"
+#include "Asset/EnvironmentMapAsset.h"
 #include "Graphics/Mesh.h"
 #include "Graphics/RayTracing.h"
 #include "Graphics/Shader.h"
@@ -59,7 +60,7 @@ RayTracingPass::RayTracingPass(Gfx::PGraphics graphics, PScene scene) : RenderPa
                                                                         .useMaterial = true,
                                                                         .rayTracing = true,
                                                                     });
-    skyBox = AssetRegistry::findTexture("", "skybox")->getTexture().cast<Gfx::TextureCube>();
+    skyBox = AssetRegistry::findEnvironmentMap("", "newport_loft")->getIrradianceMap();
     skyBoxSampler = graphics->createSampler({});
 }
 

@@ -447,7 +447,7 @@ Gfx::OTopLevelAS Graphics::createTopLevelAccelerationStructure(const Gfx::TopLev
 }
 
 void Graphics::buildBottomLevelAccelerationStructures(Array<Gfx::PBottomLevelAS> data) {
-    if (!supportRayTracing())
+    if (!supportRayTracing() || data.empty())
         return;
     Gfx::PShaderBuffer verticesBuffer = StaticMeshVertexData::getInstance()->getPositionBuffer();
     Gfx::PIndexBuffer indexBuffer = StaticMeshVertexData::getInstance()->getIndexBuffer();

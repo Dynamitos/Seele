@@ -11,6 +11,8 @@ using namespace Seele::Vulkan;
 BufferAllocation::BufferAllocation(PGraphics graphics, const std::string& name, VkBufferCreateInfo bufferInfo,
                                    VmaAllocationCreateInfo allocInfo, Gfx::QueueType owner, uint64 alignment)
     : CommandBoundResource(graphics, name), size(bufferInfo.size), owner(owner) {
+    if (bufferInfo.size == 0)
+        return;
     VK_CHECK(vmaCreateBufferWithAlignment(graphics->getAllocator(), &bufferInfo, &allocInfo, alignment, &buffer, &allocation, &info));
     vmaGetAllocationMemoryProperties(graphics->getAllocator(), allocation, &properties);
     assert(!name.empty());
@@ -437,6 +439,8 @@ void* ShaderBuffer::map() { return Vulkan::Buffer::map(); }
 void ShaderBuffer::unmap() { Vulkan::Buffer::unmap(); }
 
 void ShaderBuffer::clear() {
+    if (getAlloc() == nullptr)
+        return;
     PCommand command = graphics->getQueueCommands(getAlloc()->owner)->getCommands();
     command->bindResource(PBufferAllocation(getAlloc()));
     vkCmdFillBuffer(command->getHandle(), Vulkan::Buffer::getHandle(), 0, VK_WHOLE_SIZE, 0);

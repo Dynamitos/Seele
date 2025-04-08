@@ -224,6 +224,14 @@ void AssetRegistry::initialize(const std::filesystem::path& _rootFolder, Gfx::PG
     this->graphics = _graphics;
     this->rootFolder = _rootFolder;
     this->assetRoot = new AssetFolder("");
+    if (!std::filesystem::exists(rootFolder))
+    {
+        std::filesystem::create_directories(rootFolder);
+    }
+    else if (!std::filesystem::is_directory(rootFolder))
+    {
+        throw std::logic_error("Asset Folder is not a directory!!");
+    }
     loadRegistryInternal();
 }
 
