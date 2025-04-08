@@ -7,9 +7,7 @@
 
 using namespace Seele;
 
-extern List<VertexData*> vertexDataList;
-
-StaticMeshVertexData::StaticMeshVertexData() { vertexDataList.add(this); }
+StaticMeshVertexData::StaticMeshVertexData() { VertexData::addVertexDataInstance(this); }
 
 StaticMeshVertexData::~StaticMeshVertexData() {}
 
@@ -167,14 +165,6 @@ void StaticMeshVertexData::destroy() {
     descriptorSet = nullptr;
     descriptorLayout = nullptr;
 }
-
-void StaticMeshVertexData::bindBuffers(Gfx::PRenderCommand) {
-    // TODO: for legacy vertex buffer binding
-}
-
-Gfx::PDescriptorLayout StaticMeshVertexData::getVertexDataLayout() { return descriptorLayout; }
-
-Gfx::PDescriptorSet StaticMeshVertexData::getVertexDataSet() { return descriptorSet; }
 
 void StaticMeshVertexData::resizeBuffers() {
     posData.resize(verticesAllocated);

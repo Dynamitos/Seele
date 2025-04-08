@@ -268,6 +268,8 @@ uint64 VertexData::deserializeMesh(MeshId id, ArchiveBuffer& buffer) {
 
 List<VertexData*> vertexDataList;
 
+void VertexData::addVertexDataInstance(VertexData* vertexData) { vertexDataList.add(vertexData); }
+
 List<VertexData*> VertexData::getList() { return vertexDataList; }
 
 VertexData* VertexData::findByTypeName(std::string name) {

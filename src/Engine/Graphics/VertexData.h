@@ -64,7 +64,6 @@ class VertexData {
     uint64 getMeshVertexCount(MeshId id) { return meshVertexCounts[id]; }
     virtual void serializeMesh(MeshId id, ArchiveBuffer& buffer);
     virtual uint64 deserializeMesh(MeshId id, ArchiveBuffer& buffer);
-    virtual void bindBuffers(Gfx::PRenderCommand command) = 0;
     virtual Gfx::PDescriptorLayout getVertexDataLayout() = 0;
     virtual Gfx::PDescriptorSet getVertexDataSet() = 0;
     virtual std::string getTypeName() const = 0;
@@ -80,6 +79,7 @@ class VertexData {
     void registerBottomLevelAccelerationStructure(Gfx::PBottomLevelAS blas) { dataToBuild.add(blas); }
     uint32 getIndicesOffset(uint32 meshletIndex) { return meshlets[meshletIndex].indicesOffset; }
     uint64 getNumInstances() const { return instanceData.size(); }
+    static void addVertexDataInstance(VertexData* vertexData);
     static List<VertexData*> getList();
     static VertexData* findByTypeName(std::string name);
     virtual void init(Gfx::PGraphics graphics);

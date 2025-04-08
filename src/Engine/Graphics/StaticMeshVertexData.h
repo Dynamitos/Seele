@@ -28,9 +28,8 @@ class StaticMeshVertexData : public VertexData {
     virtual uint64 deserializeMesh(MeshId id, ArchiveBuffer& buffer) override;
     virtual void init(Gfx::PGraphics graphics) override;
     virtual void destroy() override;
-    virtual void bindBuffers(Gfx::PRenderCommand command) override;
-    virtual Gfx::PDescriptorLayout getVertexDataLayout() override;
-    virtual Gfx::PDescriptorSet getVertexDataSet() override;
+    virtual Gfx::PDescriptorLayout getVertexDataLayout() override { return descriptorLayout; }
+    virtual Gfx::PDescriptorSet getVertexDataSet() override { return descriptorSet; }
     virtual std::string getTypeName() const override { return "StaticMeshVertexData"; }
     virtual Gfx::PShaderBuffer getPositionBuffer() const override { return positions; }
 
