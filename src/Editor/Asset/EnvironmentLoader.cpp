@@ -6,21 +6,24 @@
 
 using namespace Seele;
 
+static constexpr uint32 SOURCE_RESOLUTION = 2048;
+static constexpr uint32 CONVOLUTED_RESOLUTION = 64;
+
 EnvironmentLoader::EnvironmentLoader(Gfx::PGraphics graphics) : graphics(graphics) {
     cubeRenderViewport = graphics->createViewport(nullptr, ViewportCreateInfo{
                                                                .dimensions =
                                                                    {
-                                                                       .size = {1024, 1024},
+                                                                       .size = {SOURCE_RESOLUTION, SOURCE_RESOLUTION},
                                                                        .offset = {0, 0},
                                                                    },
                                                            });
     convolutionViewport = graphics->createViewport(nullptr, ViewportCreateInfo{
-                                                               .dimensions =
-                                                                   {
-                                                                       .size = {32, 32},
-                                                                       .offset = {0, 0},
-                                                                   },
-                                                           });
+                                                                .dimensions =
+                                                                    {
+                                                                        .size = {CONVOLUTED_RESOLUTION, CONVOLUTED_RESOLUTION},
+                                                                        .offset = {0, 0},
+                                                                    },
+                                                            });
     cubeSampler = graphics->createSampler({
         .magFilter = Gfx::SE_FILTER_LINEAR,
         .minFilter = Gfx::SE_FILTER_LINEAR,
@@ -120,8 +123,8 @@ void EnvironmentLoader::import(EnvironmentImportArgs args, PEnvironmentMapAsset 
     set->writeChanges();
     Gfx::OTextureCube cubeMap = graphics->createTextureCube(TextureCreateInfo{
         .format = Gfx::SE_FORMAT_R32G32B32A32_SFLOAT,
-        .width = 1024,
-        .height = 1024,
+        .width = SOURCE_RESOLUTION,
+        .height = SOURCE_RESOLUTION,
         .usage = Gfx::SE_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | Gfx::SE_IMAGE_USAGE_SAMPLED_BIT,
     });
     Gfx::ORenderPass cubeRenderPass = graphics->createRenderPass(
@@ -132,7 +135,7 @@ void EnvironmentLoader::import(EnvironmentImportArgs args, PEnvironmentMapAsset 
         },
         {},
         URect{
-            .size = {1024, 1024},
+            .size = {SOURCE_RESOLUTION, SOURCE_RESOLUTION},
             .offset = {0, 0},
         },
         "EnvironmentRenderPass", {0b111111}, {0b111111});
@@ -157,8 +160,8 @@ void EnvironmentLoader::import(EnvironmentImportArgs args, PEnvironmentMapAsset 
 
     Gfx::OTextureCube convolutedMap = graphics->createTextureCube(TextureCreateInfo{
         .format = Gfx::SE_FORMAT_R32G32B32A32_SFLOAT,
-        .width = 32,
-        .height = 32,
+        .width = CONVOLUTED_RESOLUTION,
+        .height = CONVOLUTED_RESOLUTION,
         .usage = Gfx::SE_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
     });
     Gfx::ORenderPass convolutionPass = graphics->createRenderPass(
@@ -169,7 +172,7 @@ void EnvironmentLoader::import(EnvironmentImportArgs args, PEnvironmentMapAsset 
         },
         {},
         URect{
-            .size = {32, 32},
+            .size = {CONVOLUTED_RESOLUTION, CONVOLUTED_RESOLUTION},
             .offset = {0, 0},
         },
         "EnvironmentRenderPass", {0b111111}, {0b111111});

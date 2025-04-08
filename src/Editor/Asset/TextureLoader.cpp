@@ -67,7 +67,7 @@ void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset) {
         .numLevels = 1,
         .numLayers = 1,
         .isArray = false,
-        .generateMipmaps = false,
+        .generateMipmaps = true,
     };
 
     if (args.type == TextureImportType::TEXTURE_CUBEMAP) {
@@ -110,14 +110,14 @@ void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset) {
     }
     ktxBasisParams basisParams = {
         .structSize = sizeof(ktxBasisParams),
-        .uastc = true,
+        .uastc = false,
         .threadCount = 1,
-        .compressionLevel = 2,
-        .uastcFlags = KTX_PACK_UASTC_LEVEL_FASTER,
+        .compressionLevel = KTX_ETC1S_DEFAULT_COMPRESSION_LEVEL,
+        .uastcFlags = KTX_PACK_UASTC_LEVEL_DEFAULT,
         .uastcRDO = true,
     };
     KTX_ASSERT(ktxTexture2_CompressBasisEx(kTexture, &basisParams));
-    KTX_ASSERT(ktxTexture2_DeflateZstd(kTexture, 10));
+    //KTX_ASSERT(ktxTexture2_DeflateZstd(kTexture, 10));
 
     char writer[100];
     snprintf(writer, sizeof(writer), "%s version %s", "SeeleEngine", "0.0.1");
@@ -149,4 +149,5 @@ void TextureLoader::import(TextureImportArgs args, PTextureAsset textureAsset) {
     AssetRegistry::saveAsset(textureAsset, TextureAsset::IDENTIFIER, textureAsset->getFolderPath(), textureAsset->getName());
 
     textureAsset->setStatus(Asset::Status::Ready);
+    std::cout << "Done importing " << textureAsset->getName() << std::endl;
 }

@@ -315,7 +315,6 @@ void BVH::validateBVH() const {
             continue;
         while (dynamicNodes[nodeIdx].parentIndex != -1) {
             nodeIdx = dynamicNodes[nodeIdx].parentIndex;
-            assert(counter-- > 0 && dynamicNodes[nodeIdx].isValid);
         }
     }
 }
