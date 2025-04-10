@@ -205,6 +205,5 @@ void EnvironmentLoader::import(EnvironmentImportArgs args, PEnvironmentMapAsset 
 
     asset->skybox = std::move(cubeMap);
     asset->irradianceMap = std::move(convolutedMap);
-    asset->specularMap = std::move(cubeMap);
     graphics->waitDeviceIdle();
 }

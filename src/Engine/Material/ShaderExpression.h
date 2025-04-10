@@ -4,7 +4,6 @@
 #include "Math/Math.h"
 #include "MinimalEngine.h"
 
-
 namespace Seele {
 enum class ExpressionType {
     UNKNOWN,
@@ -184,6 +183,9 @@ struct SwizzleExpression : public ShaderExpression {
     StaticArray<int32, 4> comp = {-1, -1, -1, -1};
     SwizzleExpression() {}
     SwizzleExpression(StaticArray<int32, 4> comp) : comp(std::move(comp)) {}
+    SwizzleExpression(std::string key, std::string target, StaticArray<int32, 4> comp) : ShaderExpression(key) {
+        inputs["target"].source = target;
+    }
     virtual ~SwizzleExpression() {}
     virtual uint64 getIdentifier() const override { return IDENTIFIER; }
     virtual std::string evaluate(Map<std::string, std::string>& varState) const override;
@@ -194,6 +196,11 @@ DEFINE_REF(SwizzleExpression)
 struct SampleExpression : public ShaderExpression {
     static constexpr uint64 IDENTIFIER = 0x16;
     SampleExpression() {}
+    SampleExpression(std::string key, std::string texture, std::string sampler, std::string texCoords) : ShaderExpression(key) {
+        inputs["texture"].source = texture;
+        inputs["sampler"].source = sampler;
+        inputs["texCoords"].source = texCoords;
+    }
     virtual ~SampleExpression() {}
     virtual uint64 getIdentifier() const override { return IDENTIFIER; }
     virtual std::string evaluate(Map<std::string, std::string>& varState) const override;
@@ -205,8 +212,6 @@ DEFINE_REF(SampleExpression)
 struct MaterialNode {
     std::string profile;
     Map<std::string, std::string> variables;
-    MaterialNode() {}
-    ~MaterialNode() {}
     void save(ArchiveBuffer& buffer) const;
     void load(ArchiveBuffer& buffer);
 };

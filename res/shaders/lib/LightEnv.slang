@@ -70,6 +70,10 @@ struct LightEnv
 layout(set=3)
 ParameterBlock<LightEnv> pLightEnv;
 
+[Differentiable]
+float polynomial(float a, float b, float c, float x) {
+    return a * x * x + b * x + c;
+}
 
 interface IBRDF
 {

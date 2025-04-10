@@ -92,9 +92,6 @@ Window::Window(PGraphics graphics, const WindowCreateInfo& createInfo) : graphic
     [[metalWindow contentView] setLayer:(__bridge id)metalLayer];
     [[metalWindow contentView] setWantsLayer:YES];
     framebufferFormat = Gfx::SE_FORMAT_B8G8R8A8_SRGB;
-    
-    drawable = metalLayer->nextDrawable();
-    createBackBuffer();
 }
 
 Window::~Window() { glfwDestroyWindow(static_cast<GLFWwindow*>(windowHandle)); }
@@ -104,6 +101,8 @@ void Window::show() { glfwShowWindow(windowHandle); }
 void Window::pollInput() { glfwPollEvents(); }
 
 void Window::beginFrame() {
+    drawable = metalLayer->nextDrawable();
+    createBackBuffer();
     static double start = glfwGetTime();
     double end = glfwGetTime();
     currentFrameDelta = end - start;
@@ -112,13 +111,10 @@ void Window::beginFrame() {
 }
 
 void Window::endFrame() {
-    graphics->waitDeviceIdle();
-    graphics->getQueue()->getCommands()->present(drawable);
     graphics->getQueue()->submitCommands();
+    graphics->getQueue()->getCommands()->present(drawable);
     currentFrameIndex++;
     drawable->release();
-    drawable = metalLayer->nextDrawable();
-    createBackBuffer();
 }
 
 void Window::onWindowCloseEvent() {}
@@ -181,6 +177,7 @@ void Window::createBackBuffer() {
                                    .samples = static_cast<uint32>(buf->sampleCount()),
                                },
                                buf);
+    renderDoneSemaphore = new Event(graphics);
 }
 
 Viewport::Viewport(PWindow owner, const ViewportCreateInfo& createInfo) : Gfx::Viewport(owner, createInfo) {

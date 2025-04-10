@@ -61,13 +61,15 @@ template <typename KeyType, typename NodeData, typename KeyFun, typename Compare
         constexpr IteratorBase& operator++() {
             // if current node has no right subtree
             if (node->rightChild == nullptr) {
-                Node* temp = node;
-                node = node->parent;
-                // walk up hierarchy until we were the left subtree of any parent
-                // this means that that parent is the correct next element
-                while (node->rightChild == temp) {
-                    temp = node;
+                if (node->parent != nullptr) {
+                    Node* temp = node;
                     node = node->parent;
+                    // walk up hierarchy until we were the left subtree of any parent
+                    // this means that that parent is the correct next element
+                    while (node->rightChild == temp) {
+                        temp = node;
+                        node = node->parent;
+                    }
                 }
             } else {
                 // if there is a right subtree, descend there
@@ -153,6 +155,7 @@ template <typename KeyType, typename NodeData, typename KeyFun, typename Compare
     constexpr Tree(Tree&& other) noexcept
         : alloc(std::move(other.alloc)), root(std::move(other.root)), pseudoRoot(std::move(other.pseudoRoot)), iteratorsDirty(true),
           _size(std::move(other._size)), comp(std::move(other.comp)) {
+        pseudoRoot.setLeftChild(root);
         other._size = 0;
     }
     constexpr ~Tree() noexcept { clear(); }
@@ -165,6 +168,7 @@ template <typename KeyType, typename NodeData, typename KeyFun, typename Compare
             for (const auto& elem : other) {
                 insert(elem);
             }
+            pseudoRoot.setLeftChild(root);
             markIteratorsDirty();
         }
         return *this;
@@ -180,6 +184,7 @@ template <typename KeyType, typename NodeData, typename KeyFun, typename Compare
             _size = std::move(other._size);
             comp = std::move(other.comp);
             other._size = 0;
+            pseudoRoot.setLeftChild(root);
             markIteratorsDirty();
         }
         return *this;

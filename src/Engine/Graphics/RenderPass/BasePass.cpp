@@ -79,8 +79,8 @@ BasePass::BasePass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics)
                                                                       });
     }
     skybox = Seele::Component::Skybox{
-        .day = scene->getLightEnvironment()->getEnvironmentMap()->getIrradianceMap(),
-        .night = scene->getLightEnvironment()->getEnvironmentMap()->getIrradianceMap(),
+        .day = scene->getLightEnvironment()->getEnvironmentMap()->getSkybox(),
+        .night = scene->getLightEnvironment()->getEnvironmentMap()->getSkybox(),
         .fogColor = Vector(0.1, 0.1, 0.8),
         .blendFactor = 0,
     };
@@ -157,8 +157,7 @@ void BasePass::render() {
         vertexData->getInstanceDataSet()->updateBuffer(VertexData::CULLINGDATA_NAME, 0, cullingBuffer);
         vertexData->getInstanceDataSet()->writeChanges();
         permutation.setVertexData(vertexData->getTypeName());
-        const auto& materials = vertexData->getMaterialData();
-        for (const auto& materialData : materials) {
+        for (const auto& materialData : vertexData->getMaterialData()) {
             // material not used for any active meshes, skip
             if (materialData.instances.size() == 0)
                 continue;

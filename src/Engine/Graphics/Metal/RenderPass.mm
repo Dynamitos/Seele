@@ -25,7 +25,6 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Arra
         desc->setStoreAction(cast(color.getStoreOp()));
         desc->setLevel(0);
         if (!layout.resolveAttachments.empty()) {
-            const auto& resolve = layout.resolveAttachments[i];
             desc->setResolveLevel(0);
             // store multisampled attachment as well
             if(color.getStoreOp() == Gfx::SE_ATTACHMENT_STORE_OP_STORE) {
@@ -33,7 +32,6 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Arra
             } else {
                 desc->setStoreAction(MTL::StoreActionMultisampleResolve);
             }
-            desc->setResolveTexture(resolve.getTexture().cast<TextureBase>()->getImage());
         }
     }
     if (layout.depthAttachment.getTexture() != nullptr) {
@@ -49,7 +47,6 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Arra
             } else {
                 depth->setStoreAction(MTL::StoreActionMultisampleResolve);
             }
-            depth->setResolveTexture(layout.depthResolveAttachment.getTexture().cast<TextureBase>()->getImage());
         }
     }
     // TODO: stencil
@@ -61,9 +58,16 @@ void RenderPass::updateRenderPass() {
         const auto& color = layout.colorAttachments[i];
         auto desc = renderPass->colorAttachments()->object(i);
         desc->setTexture(color.getTexture().cast<TextureBase>()->getImage());
+        if (!layout.resolveAttachments.empty()) {
+            const auto& resolve = layout.resolveAttachments[i];
+            desc->setResolveTexture(resolve.getTexture().cast<TextureBase>()->getImage());
+        }
     }
     if (layout.depthAttachment.getTexture() != nullptr) {
         auto depth = renderPass->depthAttachment();
         depth->setTexture(layout.depthAttachment.getTexture().cast<TextureBase>()->getImage());
+        if (layout.depthResolveAttachment.getTexture() != nullptr) {
+            depth->setResolveTexture(layout.depthResolveAttachment.getTexture().cast<TextureBase>()->getImage());
+        }
     }
 }
