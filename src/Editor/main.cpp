@@ -50,6 +50,8 @@ int main() {
         AssetImporter::importEnvironmentMap(EnvironmentImportArgs{
             .filePath = sourcePath / "import" / "textures" / "newport_loft.hdr",
         });
+        AssetImporter::importTexture(TextureImportArgs{.filePath = sourcePath / "import" / "texture" / "Dirt.png", .importPath = ""});
+        
         
         getThreadPool().waitIdle();
         vd->commitMeshes();

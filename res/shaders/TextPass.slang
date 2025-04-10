@@ -1,23 +1,5 @@
 import Common;
 
-struct GlyphInstanceData
-{
-    float x;
-    float y;
-    float z;
-    float width;
-    float height;
-    uint glyphIndex;
-};
-
-struct TextData
-{
-    StructuredBuffer<GlyphInstanceData> glyphs;
-    SamplerState glyphSampler;
-    Texture2D<float> glyphTextures[];
-};
-ParameterBlock<TextData> pText;
-
 struct VertexInput
 {
     uint vertexId : SV_VertexID;
@@ -30,6 +12,24 @@ struct VertexOutput
     float2 texCoords : TEXCOORD;
     uint glyphIndex : GLYPHINDEX;
 };
+
+struct GlyphInstanceData
+{
+    float x;
+    float y;
+    float z;
+    float width;
+    float height;
+    uint glyphIndex;
+};
+struct TextData
+{
+    StructuredBuffer<GlyphInstanceData> glyphs;
+    SamplerState glyphSampler;
+    Texture2D<float> glyphTextures[];
+};
+ParameterBlock<TextData> pText;
+
 
 [shader("vertex")]
 VertexOutput vertexMain(VertexInput input)

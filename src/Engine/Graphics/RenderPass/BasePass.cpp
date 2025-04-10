@@ -157,8 +157,7 @@ void BasePass::render() {
         vertexData->getInstanceDataSet()->updateBuffer(VertexData::CULLINGDATA_NAME, 0, cullingBuffer);
         vertexData->getInstanceDataSet()->writeChanges();
         permutation.setVertexData(vertexData->getTypeName());
-        const auto& materials = vertexData->getMaterialData();
-        for (const auto& materialData : materials) {
+        for (const auto& materialData : vertexData->getMaterialData()) {
             // material not used for any active meshes, skip
             if (materialData.instances.size() == 0)
                 continue;
