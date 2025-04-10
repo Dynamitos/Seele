@@ -23,7 +23,6 @@ struct Transform {
     void rotate(Quaternion quat);
     void scale(Vector scale);
 
-  private:
     Math::Transform transform;
 };
 DECLARE_COMPONENT(Transform)
