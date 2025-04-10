@@ -144,7 +144,7 @@ void PhysicsSystem::writeRigidBody(const Body& body) const {
     }
 }
 
-Array<PhysicsSystem::Body> PhysicsSystem::integratePhysics(const Array<Body>& bodies, const float t0, const float tdelta) const {
+Array<PhysicsSystem::Body> PhysicsSystem::integratePhysics(const Array<Body>& bodies, const float, const float) const {
     Array<Body> result;
     Array<float> buffer;
     result.resize(bodies.size());

@@ -57,8 +57,8 @@ class WaterRenderer {
     };
     StaticArray<DisplaySpectrumSettings, 8> displaySpectrums;
     struct ComputeParams {
-        float frameTime;
-        float deltaTime;
+        float frameTime = 0.0f;
+        float deltaTime = 0.0f;
         float gravity = 9.81f;
         float repeatTime = 200.0f;
         float depth = 20.0f;

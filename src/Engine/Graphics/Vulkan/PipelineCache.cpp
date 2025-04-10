@@ -11,23 +11,23 @@ using namespace Seele;
 using namespace Seele::Vulkan;
 
 PipelineCache::PipelineCache(PGraphics graphics, const std::string& cacheFilePath) : graphics(graphics), cacheFile(cacheFilePath) {
+    Array<uint8> cacheData;
     std::ifstream stream(cacheFilePath, std::ios::binary | std::ios::ate);
-    VkPipelineCacheCreateInfo cacheCreateInfo = {
-        .sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO,
-        .pNext = nullptr,
-        .flags = 0,
-        .initialDataSize = 0,
-    };
     if (stream.good()) {
-        Array<uint8> cacheData;
         uint32 fileSize = static_cast<uint32>(stream.tellg());
         cacheData.resize(fileSize);
         stream.seekg(0);
         stream.read((char*)cacheData.data(), fileSize);
-        cacheCreateInfo.initialDataSize = fileSize;
-        cacheCreateInfo.pInitialData = cacheData.data();
         std::cout << "Loaded " << fileSize << " bytes from pipeline cache" << std::endl;
     }
+    VkPipelineCacheCreateInfo cacheCreateInfo = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .initialDataSize = cacheData.size(),
+        .pInitialData = cacheData.data(),
+    };
+
     VK_CHECK(vkCreatePipelineCache(graphics->getDevice(), &cacheCreateInfo, nullptr, &cache));
 }
 
@@ -508,7 +508,7 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
             uint32 intersectionIndex = VK_SHADER_UNUSED_KHR;
             if (hitgroup.anyHitShader != nullptr) {
                 auto anyHit = hitgroup.anyHitShader.cast<AnyHitShader>();
-                anyHitIndex = shaderStages.size();
+                anyHitIndex = (uint32)shaderStages.size();
                 shaderStages.add(VkPipelineShaderStageCreateInfo{
                     .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
                     .pNext = nullptr,
@@ -521,7 +521,7 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
             }
             if (hitgroup.intersectionShader != nullptr) {
                 auto intersect = hitgroup.intersectionShader.cast<IntersectionShader>();
-                intersectionIndex = shaderGroups.size();
+                intersectionIndex = (uint32)shaderGroups.size();
                 shaderStages.add(VkPipelineShaderStageCreateInfo{
                     .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
                     .pNext = nullptr,
@@ -592,7 +592,8 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
             });
         }
     }
-    uint32 hash = CRC::Calculate(shaderStages.data(), sizeof(VkPipelineShaderStageCreateInfo) * shaderStages.size(), CRC::CRC_32());
+    uint32 hash = CRC::Calculate(shaderStages.data(), sizeof(VkPipelineShaderStageCreateInfo) * shaderStages.size(), CRC::CRC_32(),
+                                 createInfo.pipelineLayout->getHash());
     hash = CRC::Calculate(shaderGroups.data(), sizeof(VkRayTracingShaderGroupCreateInfoKHR) * shaderGroups.size(), CRC::CRC_32(), hash);
     if (rayTracingPipelines.contains(hash)) {
         return rayTracingPipelines[hash];
@@ -624,7 +625,7 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
     const VkBufferUsageFlags sbtBufferUsage =
         VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
     const VmaMemoryUsage sbtMemoryUsage = VMA_MEMORY_USAGE_AUTO;
-    
+
     uint64 rayGenStride = align<uint64>(handleSize + createInfo.rayGenGroup.parameters.size(), handleAlignment);
     uint64 hitStride = handleSize;
     for (const auto& h : createInfo.hitGroups) {
@@ -674,7 +675,7 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
                                                         Gfx::QueueType::GRAPHICS, sbtAlignment);
 
     Array<uint8> sbt(sbtSize);
-    vkGetRayTracingShaderGroupHandlesKHR(graphics->getDevice(), pipelineHandle, 0, shaderGroups.size(), sbtSize, sbt.data());
+    vkGetRayTracingShaderGroupHandlesKHR(graphics->getDevice(), pipelineHandle, 0, (uint32)shaderGroups.size(), sbtSize, sbt.data());
 
     uint64 sbtOffset = 0;
     Array<uint8> rayGenSbt(rayGenStride);
@@ -685,7 +686,6 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
     rayGenBuffer->pipelineBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_SHADER_READ_BIT,
                                   VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR);
 
-    
     Array<uint8> hitSbt(hitStride * createInfo.hitGroups.size());
     for (uint64 i = 0; i < createInfo.hitGroups.size(); ++i) {
         std::memcpy(hitSbt.data() + i * hitStride, sbt.data() + sbtOffset, handleSize);
@@ -695,9 +695,8 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
     }
     hitBuffer->updateContents(0, hitSbt.size(), hitSbt.data());
     hitBuffer->pipelineBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_SHADER_READ_BIT,
-                                  VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR);
+                               VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR);
 
-    
     Array<uint8> missSbt(missStride * createInfo.missGroups.size());
     for (uint64 i = 0; i < createInfo.missGroups.size(); ++i) {
         std::memcpy(missSbt.data() + i * missStride, sbt.data() + sbtOffset, handleSize);
@@ -707,11 +706,11 @@ PRayTracingPipeline PipelineCache::createPipeline(Gfx::RayTracingPipelineCreateI
     }
     missBuffer->updateContents(0, missSbt.size(), missSbt.data());
     missBuffer->pipelineBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_SHADER_READ_BIT,
-                                  VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR);
+                                VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR);
 
     ORayTracingPipeline pipeline =
-        new RayTracingPipeline(graphics, pipelineHandle, std::move(rayGenBuffer), rayGenStride, std::move(hitBuffer),
-                               hitStride, std::move(missBuffer), missStride, nullptr, 0, createInfo.pipelineLayout);
+        new RayTracingPipeline(graphics, pipelineHandle, std::move(rayGenBuffer), rayGenStride, std::move(hitBuffer), hitStride,
+                               std::move(missBuffer), missStride, nullptr, 0, createInfo.pipelineLayout);
     PRayTracingPipeline handle = pipeline;
     rayTracingPipelines[hash] = std::move(pipeline);
     return handle;

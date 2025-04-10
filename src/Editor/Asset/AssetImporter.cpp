@@ -4,7 +4,7 @@
 #include "MaterialLoader.h"
 #include "MeshLoader.h"
 #include "TextureLoader.h"
-
+#include "EnvironmentLoader.h"
 
 using namespace Seele;
 
@@ -40,12 +40,21 @@ void AssetImporter::importMaterial(MaterialImportArgs args) {
     get().materialLoader->importAsset(args);
 }
 
+void Seele::AssetImporter::importEnvironmentMap(EnvironmentImportArgs args) {
+    if (get().registry->getOrCreateFolder(args.importPath)->materials.contains(args.filePath.stem().string())) {
+        // skip importing duplicates
+        return;
+    }
+    get().environmentLoader->importAsset(args);
+}
+
 void AssetImporter::init(Gfx::PGraphics graphics) {
     get().registry = AssetRegistry::getInstance();
     get().meshLoader = new MeshLoader(graphics);
     get().textureLoader = new TextureLoader(graphics);
     get().materialLoader = new MaterialLoader(graphics);
     get().fontLoader = new FontLoader(graphics);
+    get().environmentLoader = new EnvironmentLoader(graphics);
 }
 
 AssetImporter& AssetImporter::get() {

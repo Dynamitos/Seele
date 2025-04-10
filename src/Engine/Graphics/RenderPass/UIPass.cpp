@@ -62,9 +62,9 @@ void UIPass::beginFrame(const Component::Camera& cam) {
         float x = render.position.x;
         float y = render.position.y;
         //todo: convert using actual tree depth
-        uint32 textureIndex = -1ul;
+        uint32 textureIndex = std::numeric_limits<uint32>::max();
         if (render.backgroundTexture != nullptr) {
-            textureIndex = usedTextures.size();
+            textureIndex = (uint32)usedTextures.size();
             usedTextures.add(render.backgroundTexture);
         }
         elements.add(RenderElementStyle{
@@ -112,7 +112,7 @@ void UIPass::render() {
     command->setViewport(viewport);
     command->bindPipeline(uiPipeline);
     command->bindDescriptor({viewParamsSet, uiDescriptorSet});
-    command->draw(4, elements.size(), 0, 0);
+    command->draw(4, (uint32)elements.size(), 0, 0);
     commands.add(std::move(command));
     graphics->executeCommands(std::move(commands));
     graphics->endRenderPass();
@@ -170,7 +170,7 @@ void UIPass::createRenderPass() {
                          Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
         },
     };
-    renderPass = graphics->createRenderPass(std::move(layout), dependency, viewport, "TextPass");
+    renderPass = graphics->createRenderPass(std::move(layout), dependency, viewport->getRenderArea(), "TextPass");
 
     graphics->beginShaderCompilation(ShaderCompilationInfo{
         .name = "TextVertex",

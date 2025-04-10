@@ -1,5 +1,6 @@
 #include "CachedDepthPass.h"
 #include "Graphics/Shader.h"
+#include "Graphics/Pipeline.h"
 
 using namespace Seele;
 
@@ -111,7 +112,7 @@ void CachedDepthPass::render() {
         command->pushConstants(Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_VERTEX_BIT, 0, sizeof(VertexData::DrawCallOffsets),
                                &offsets);
         if (graphics->supportMeshShading()) {
-            command->drawMesh(vertexData->getNumInstances(), 1, 1);
+            command->drawMesh((uint32)vertexData->getNumInstances(), 1, 1);
         } else {
             const auto& materials = vertexData->getMaterialData();
             for (const auto& materialData : materials) {
@@ -202,5 +203,5 @@ void CachedDepthPass::createRenderPass() {
                          Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
         },
     };
-    renderPass = graphics->createRenderPass(std::move(layout), std::move(dependency), viewport, "CachedDepthPass");
+    renderPass = graphics->createRenderPass(std::move(layout), std::move(dependency), viewport->getRenderArea(), "CachedDepthPass");
 }

@@ -53,6 +53,12 @@ class Viewport {
     constexpr float getContentScaleX() const { return owner->getContentScaleX(); }
     constexpr float getContentScaleY() const { return owner->getContentScaleY(); }
     Matrix4 getProjectionMatrix() const;
+    URect getRenderArea() const {
+        return URect{
+            .size = {sizeX, sizeY},
+            .offset = {offsetX, offsetY},
+        };
+    }
 
   protected:
     uint32 sizeX;

@@ -172,8 +172,9 @@ Gfx::OViewport Graphics::createViewport(Gfx::PWindow owner, const ViewportCreate
 }
 
 Gfx::ORenderPass Graphics::createRenderPass(Gfx::RenderTargetLayout layout, Array<Gfx::SubPassDependency> dependencies,
-                                            Gfx::PViewport renderArea, std::string name) {
-    return new RenderPass(this, std::move(layout), std::move(dependencies), renderArea, name);
+                                            URect renderArea, std::string name, Array<uint32> viewMasks,
+                                            Array<uint32> correlationMasks) {
+    return new RenderPass(this, std::move(layout), std::move(dependencies), renderArea, name, std::move(viewMasks), std::move(correlationMasks));
 }
 void Graphics::beginRenderPass(Gfx::PRenderPass renderPass) {
     PRenderPass rp = renderPass.cast<RenderPass>();
@@ -321,7 +322,7 @@ Gfx::OPipelineStatisticsQuery Graphics::createPipelineStatisticsQuery(const std:
     return new PipelineStatisticsQuery(this, name);
 }
 
-Gfx::OTimestampQuery Graphics::createTimestampQuery(uint64 numTimestamps, const std::string& name) {
+Gfx::OTimestampQuery Graphics::createTimestampQuery(uint64, const std::string& name) {
     return new TimestampQuery(this, name);
 }
 
@@ -446,7 +447,7 @@ Gfx::OTopLevelAS Graphics::createTopLevelAccelerationStructure(const Gfx::TopLev
 }
 
 void Graphics::buildBottomLevelAccelerationStructures(Array<Gfx::PBottomLevelAS> data) {
-    if (!supportRayTracing())
+    if (!supportRayTracing() || data.empty())
         return;
     Gfx::PShaderBuffer verticesBuffer = StaticMeshVertexData::getInstance()->getPositionBuffer();
     Gfx::PIndexBuffer indexBuffer = StaticMeshVertexData::getInstance()->getIndexBuffer();
@@ -457,9 +458,6 @@ void Graphics::buildBottomLevelAccelerationStructures(Array<Gfx::PBottomLevelAS>
     // For the sake of simplicity we won't stage the vertex data to the GPU memory
 
     // Note that the buffer usage flags for buffers consumed by the bottom level acceleration structure require special flags
-    const VkBufferUsageFlags buffer_usage_flags = VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR |
-                                                  VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-
     VkBufferCreateInfo transformBufferInfo = {
         .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
         .pNext = nullptr,
@@ -593,7 +591,7 @@ void Graphics::buildBottomLevelAccelerationStructures(Array<Gfx::PBottomLevelAS>
     }
 
     PCommand cmd = graphicsCommands->getCommands();
-    vkCmdBuildAccelerationStructuresKHR(cmd->getHandle(), buildGeometries.size(), buildGeometries.data(), buildRangePointers.data());
+    vkCmdBuildAccelerationStructuresKHR(cmd->getHandle(), (uint32)buildGeometries.size(), buildGeometries.data(), buildRangePointers.data());
     cmd->bindResource(PBufferAllocation(transformBuffer));
     destructionManager->queueResourceForDestruction(std::move(transformBuffer));
     for (auto& scratchAlloc : scratchBuffers) {
@@ -827,6 +825,7 @@ void Graphics::pickPhysicalDevice() {
         .pNext = &features12,
         .storageBuffer16BitAccess = true,
         .uniformAndStorageBuffer16BitAccess = true,
+        .multiview = true,
     };
     features = {
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
@@ -953,6 +952,7 @@ void Graphics::createDevice(GraphicsInitializer initializer) {
         initializer.deviceExtensions.add(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME);
         initializer.deviceExtensions.add(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
     }
+    initializer.deviceExtensions.add(VK_KHR_MULTIVIEW_EXTENSION_NAME);
 #ifdef __APPLE__
     initializer.deviceExtensions.add("VK_KHR_portability_subset");
 #endif
@@ -971,11 +971,11 @@ void Graphics::createDevice(GraphicsInitializer initializer) {
     transferQueue = 0;
     queues.add(new Queue(this, graphicsQueueInfo.familyIndex, graphicsQueueInfo.queueIndex));
     if (computeQueueInfo.familyIndex != -1) {
-        computeQueue = queues.size();
+        computeQueue = (uint32)queues.size();
         queues.add(new Queue(this, computeQueueInfo.familyIndex, computeQueueInfo.queueIndex));
     }
     if (transferQueueInfo.familyIndex != -1) {
-        transferQueue = queues.size();
+        transferQueue = (uint32)queues.size();
         queues.add(new Queue(this, transferQueueInfo.familyIndex, transferQueueInfo.queueIndex));
     }
 

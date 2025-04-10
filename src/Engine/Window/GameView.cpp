@@ -32,6 +32,7 @@ GameView::GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreate
     renderGraph.createRenderPass();
     if (graphics->supportRayTracing()) {
         rayTracingGraph.addPass(new RayTracingPass(graphics, scene));
+        rayTracingGraph.addPass(new ToneMappingPass(graphics));
         rayTracingGraph.setViewport(viewport);
         rayTracingGraph.createRenderPass();
     }

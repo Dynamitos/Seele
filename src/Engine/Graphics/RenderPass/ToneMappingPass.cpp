@@ -131,7 +131,7 @@ void ToneMappingPass::render() {
                                                Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 
     histogramLayout->reset();
-    Gfx::PDescriptorSet histogramSet = histogramLayout->allocateDescriptorSet();
+    histogramSet = histogramLayout->allocateDescriptorSet();
     histogramSet->updateConstants("minLogLum", 0, &minLogLum);
     histogramSet->updateConstants("inverseLogLumRange", 0, &inverseLogLumRange);
     histogramSet->updateConstants("timeCoeff", 0, &timeCoeff);
@@ -216,7 +216,7 @@ void ToneMappingPass::createRenderPass() {
             .dstAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
         },
     };
-    renderPass = graphics->createRenderPass(targetLayout, dependency, viewport, "ToneMappingPass");
+    renderPass = graphics->createRenderPass(targetLayout, dependency, viewport->getRenderArea(), "ToneMappingPass");
     pipeline = graphics->createGraphicsPipeline(Gfx::LegacyPipelineCreateInfo{
         .vertexShader = vert,
         .fragmentShader = frag,

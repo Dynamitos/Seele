@@ -13,7 +13,7 @@ ViewportControl::ViewportControl(const URect& viewportDimensions, Vector initial
 
 ViewportControl::~ViewportControl() {}
 
-void ViewportControl::update(Component::Camera& camera, float deltaTime) {
+void ViewportControl::update(Component::Camera&, float deltaTime) {
     float cameraMove = deltaTime * 20;
     if (keys[KeyCode::KEY_LEFT_SHIFT]) {
         cameraMove *= 4;

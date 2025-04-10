@@ -29,10 +29,10 @@ VkImageAspectFlags getAspectFromFormat(Gfx::SeFormat format) {
 }
 
 TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType, const TextureCreateInfo& createInfo, VkImage existingImage)
-    : CommandBoundResource(graphics, createInfo.name), image(existingImage), owner(createInfo.sourceData.owner), width(createInfo.width),
-      height(createInfo.height), depth(createInfo.depth), arrayCount(createInfo.elements), layerCount(createInfo.layers), mipLevels(1),
-      samples(createInfo.samples), format(createInfo.format), usage(createInfo.usage),
-      layout(Gfx::SE_IMAGE_LAYOUT_UNDEFINED), aspect(getAspectFromFormat(createInfo.format)), ownsImage(false) {
+    : CommandBoundResource(graphics, createInfo.name), image(existingImage), imageView(VK_NULL_HANDLE), allocation(nullptr),
+      owner(createInfo.sourceData.owner), width(createInfo.width), height(createInfo.height), depth(createInfo.depth),
+      layerCount(createInfo.elements), mipLevels(1), samples(createInfo.samples), format(createInfo.format),
+      usage(createInfo.usage), layout(Gfx::SE_IMAGE_LAYOUT_UNDEFINED), aspect(getAspectFromFormat(createInfo.format)), ownsImage(false) {
     if (createInfo.useMip) {
         mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(width, height)))) + 1;
     }
@@ -55,7 +55,7 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType, const
         case VK_IMAGE_VIEW_TYPE_CUBE_ARRAY:
             type = VK_IMAGE_TYPE_2D;
             flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
-            layerCount = 6 * arrayCount;
+            layerCount = 6 * layerCount;
             break;
         default:
             break;
@@ -76,7 +76,7 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType, const
                     .depth = depth,
                 },
             .mipLevels = mipLevels,
-            .arrayLayers = arrayCount * layerCount,
+            .arrayLayers = layerCount,
             .samples = (VkSampleCountFlagBits)samples,
             .tiling = VK_IMAGE_TILING_OPTIMAL,
             .usage = usage,
@@ -95,7 +95,8 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType, const
             .pObjectName = name.c_str(),
         };
         vkSetDebugUtilsObjectNameEXT(graphics->getDevice(), &nameInfo);
-        ownsImage = true;const DataSource& sourceData = createInfo.sourceData;
+        ownsImage = true;
+        const DataSource& sourceData = createInfo.sourceData;
         if (sourceData.size > 0) {
             changeLayout(Gfx::SE_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_ACCESS_NONE, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
                          VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
@@ -117,7 +118,7 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType, const
             vmaMapMemory(graphics->getAllocator(), stagingAlloc->allocation, &data);
             std::memcpy(data, sourceData.data, sourceData.size);
             vmaUnmapMemory(graphics->getAllocator(), stagingAlloc->allocation);
-    
+
             PCommandPool commandPool = graphics->getQueueCommands(owner);
             VkBufferImageCopy region = {
                 .bufferOffset = 0,
@@ -128,7 +129,7 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType, const
                         .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
                         .mipLevel = 0,
                         .baseArrayLayer = 0,
-                        .layerCount = arrayCount * layerCount,
+                        .layerCount = layerCount,
                     },
                 .imageOffset =
                     {
@@ -138,10 +139,10 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType, const
                     },
                 .imageExtent = {.width = width, .height = height, .depth = depth},
             };
-    
-            vkCmdCopyBufferToImage(commandPool->getCommands()->getHandle(), stagingAlloc->buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                                   1, &region);
-    
+
+            vkCmdCopyBufferToImage(commandPool->getCommands()->getHandle(), stagingAlloc->buffer, image,
+                                   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+
             commandPool->getCommands()->bindResource(PBufferAllocation(stagingAlloc));
             generateMipmaps();
             // When loading a texture from a file, we will almost always use it as a texture map for fragment shaders
@@ -150,7 +151,7 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType, const
             graphics->getDestructionManager()->queueResourceForDestruction(std::move(stagingAlloc));
         }
     }
-    
+
     VkImageViewCreateInfo viewInfo = {
         .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
         .pNext = nullptr,
@@ -162,7 +163,7 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType, const
             {
                 .aspectMask = aspect,
                 .levelCount = mipLevels,
-                .layerCount = layerCount * arrayCount,
+                .layerCount = layerCount,
             },
     };
 
@@ -194,7 +195,7 @@ void TextureHandle::pipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlag
                 .baseMipLevel = 0,
                 .levelCount = mipLevels,
                 .baseArrayLayer = 0,
-                .layerCount = layerCount * arrayCount,
+                .layerCount = layerCount,
             },
     };
     PCommand command = graphics->getQueueCommands(owner)->getCommands();
@@ -222,7 +223,7 @@ void TextureHandle::transferOwnership(Gfx::QueueType newOwner) {
                 .baseMipLevel = 0,
                 .levelCount = mipLevels,
                 .baseArrayLayer = 0,
-                .layerCount = arrayCount,
+                .layerCount = layerCount,
             },
     };
     PCommandPool sourcePool = graphics->getQueueCommands(owner);
@@ -385,7 +386,10 @@ TextureBase::TextureBase(PGraphics graphics, VkImageViewType viewType, const Tex
     : handle(new TextureHandle(graphics, viewType, createInfo, existingImage)), graphics(graphics),
       initialOwner(createInfo.sourceData.owner) {}
 
-TextureBase::~TextureBase() { graphics->getDestructionManager()->queueResourceForDestruction(std::move(handle)); }
+TextureBase::~TextureBase() {
+    graphics->getDestructionManager()->queueResourceForDestruction(std::move(handle));
+    handle = nullptr;
+}
 
 void TextureBase::pipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, VkAccessFlags dstAccess,
                                   VkPipelineStageFlags dstStage) {

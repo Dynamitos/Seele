@@ -12,6 +12,7 @@ DECLARE_REF(TextureAsset)
 DECLARE_REF(FontAsset)
 DECLARE_REF(SVGAsset)
 DECLARE_REF(MeshAsset)
+DECLARE_REF(EnvironmentMapAsset)
 DECLARE_REF(MaterialAsset)
 DECLARE_REF(MaterialInstanceAsset)
 DECLARE_NAME_REF(Gfx, Graphics)
@@ -26,6 +27,7 @@ class AssetRegistry {
     static PTextureAsset findTexture(std::string_view folderPath, std::string_view filePath);
     static PFontAsset findFont(std::string_view folderPath, std::string_view name);
     static PSVGAsset findSVG(std::string_view folderPath, std::string_view name);
+    static PEnvironmentMapAsset findEnvironmentMap(std::string_view folder, std::string_view name);
     static PMaterialAsset findMaterial(std::string_view folderPath, std::string_view filePath);
     static PMaterialInstanceAsset findMaterialInstance(std::string_view folderPath, std::string_view filePath);
 
@@ -33,6 +35,7 @@ class AssetRegistry {
     static void registerTexture(OTextureAsset texture);
     static void registerFont(OFontAsset font);
     static void registerSVG(OSVGAsset svg);
+    static void registerEnvironmentMap(OEnvironmentMapAsset env);
     static void registerMaterial(OMaterialAsset material);
     static void registerMaterialInstance(OMaterialInstanceAsset instance);
 
@@ -52,6 +55,7 @@ class AssetRegistry {
         Map<std::string, OTextureAsset> textures;
         Map<std::string, OFontAsset> fonts;
         Map<std::string, OSVGAsset> svgs;
+        Map<std::string, OEnvironmentMapAsset> envs;
         Map<std::string, OMeshAsset> meshes;
         Map<std::string, OMaterialAsset> materials;
         Map<std::string, OMaterialInstanceAsset> instances;
@@ -75,6 +79,7 @@ class AssetRegistry {
     void registerTextureInternal(OTextureAsset texture);
     void registerFontInternal(OFontAsset font);
     void registerSVGInternal(OSVGAsset svg);
+    void registerEnvironmentMapInternal(OEnvironmentMapAsset env);
     void registerMaterialInternal(OMaterialAsset material);
     void registerMaterialInstanceInternal(OMaterialInstanceAsset instance);
 

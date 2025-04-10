@@ -99,21 +99,21 @@ void Material::updateFloatData(uint32 offset, uint32 numFloats, float* data) {
 }
 
 uint32 Material::addTextures(uint32 numTextures) {
-    uint32 textureOffset = textures.size();
+    uint32 textureOffset = (uint32)textures.size();
     textures.resize(textures.size() + numTextures);
     assert(textures.size() < 512);
     return textureOffset;
 }
 
 uint32 Material::addSamplers(uint32 numSamplers) {
-    uint32 samplerOffset = samplers.size();
+    uint32 samplerOffset = (uint32)samplers.size();
     samplers.resize(samplers.size() + numSamplers);
     assert(textures.size() < 512);
     return samplerOffset;
 }
 
 uint32 Material::addFloats(uint32 numFloats) {
-    uint32 floatOffset = floatData.size();
+    uint32 floatOffset = (uint32)floatData.size();
     floatData.resize(floatData.size() + numFloats);
     return floatOffset;
 }
@@ -158,8 +158,8 @@ void Material::load(ArchiveBuffer& buffer) {
 
 void Material::compile() {
     std::ofstream codeStream("./shaders/generated/" + materialName + ".slang");
-    codeStream << "import BRDF;\n";
     codeStream << "import MaterialParameter;\n";
+    codeStream << "import LightEnv;\n";
     codeStream << "import Material;\n";
     codeStream << "struct Material{\n";
     codeStream << "\ttypedef " << brdf.profile << " BRDF;\n";

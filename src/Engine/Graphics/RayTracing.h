@@ -1,5 +1,6 @@
 #pragma once
 #include "Resources.h"
+#include "Graphics/Descriptor.h"
 
 namespace Seele {
 namespace Gfx {

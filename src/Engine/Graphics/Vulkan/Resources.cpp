@@ -34,7 +34,7 @@ void Semaphore::rotateSemaphore() {
         currentHandle = i;
         return;
     }
-    currentHandle = handles.size();
+    currentHandle = (uint32)handles.size();
     handles.add(new SemaphoreHandle(graphics, "Semaphore"));
 }
 

@@ -31,10 +31,10 @@ class Element {
     // calculates the relative positions of the child elements for the applied layout style
     virtual void layout(UVector2 parentSize) {
         if (style.maxWidthType == DimensionType::Auto) {
-            maxDimensions.x = parentSize.x;
+            maxDimensions.x = (float)parentSize.x;
         }
         if (style.maxHeightType == DimensionType::Auto) {
-            maxDimensions.y = parentSize.y;
+            maxDimensions.y = (float)parentSize.y;
         }
         if (style.widthType == DimensionType::Pixel) {
             dimensions.x = style.width;
@@ -69,7 +69,7 @@ class Element {
                     // create a new line in case the element doesnt fit on the current one anymore,
                     // but keep in current line in case we are still at the start, as a new line wouldnt help here
                     if (cursor.x + child->dimensions.x > maxDimensions.x - child->style.left && cursor.x != 0) {
-                        cursor.x = style.paddingLeft;
+                        cursor.x = (float)style.paddingLeft;
                         cursor.y += lineHeight;
                         lineHeight = 0;
                     }
@@ -90,7 +90,7 @@ class Element {
                 if (child->style.position == PositionType::Static || child->style.position == PositionType::Relative) {
                     // create a new line in case we are not already at one
                     if (cursor.x != 0) {
-                        cursor.x = style.paddingLeft;
+                        cursor.x = (float)style.paddingLeft;
                         cursor.y += lineHeight;
                     }
                     child->position.x = cursor.x + child->style.marginLeft;

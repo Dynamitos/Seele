@@ -51,11 +51,11 @@ void DescriptorLayout::create() {
             constantsSize += gfxBinding.uniformLength;
             constantsStages |= gfxBinding.shaderStages;
         } else {
-            mappings[gfxBinding.name] = {
+            mappings[gfxBinding.name] = DescriptorMapping{
                 .binding = (uint32)bindings.size(),
                 .type = cast(gfxBinding.descriptorType),
             };
-            bindings.add({
+            bindings.add(VkDescriptorSetLayoutBinding{
                 .binding = (uint32)bindings.size(),
                 .descriptorType = cast(gfxBinding.descriptorType),
                 .descriptorCount = gfxBinding.descriptorCount,
@@ -97,11 +97,11 @@ DescriptorPool::DescriptorPool(PGraphics graphics, PDescriptorLayout layout)
         perTypeSizes[binding.descriptorType] += 512;
     }
     Array<VkDescriptorPoolSize> poolSizes;
-    for (const auto [type, num] : perTypeSizes) {
-        VkDescriptorPoolSize size;
-        size.descriptorCount = num;
-        size.type = cast(type);
-        poolSizes.add(size);
+    for (const auto& [type, num] : perTypeSizes) {
+        poolSizes.add(VkDescriptorPoolSize{
+            .type = cast(type),
+            .descriptorCount = num,
+        });
     }
     VkDescriptorPoolCreateInfo createInfo = {
         .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
@@ -199,14 +199,14 @@ DescriptorSet::DescriptorSet(PGraphics graphics, PDescriptorPool owner)
 
 DescriptorSet::~DescriptorSet() {}
 
-void DescriptorSet::updateConstants(const std::string& name, uint32 offset, void* data) {
-    std::memcpy(constantData.data() + owner->getLayout()->mappings[name].constantOffset, (char*)data + offset,
-                owner->getLayout()->mappings[name].constantSize);
+void DescriptorSet::updateConstants(const std::string& mappingName, uint32 offset, void* data) {
+    std::memcpy(constantData.data() + owner->getLayout()->mappings[mappingName].constantOffset, (char*)data + offset,
+                owner->getLayout()->mappings[mappingName].constantSize);
 }
 
-void DescriptorSet::updateBuffer(const std::string& name, uint32 index, Gfx::PShaderBuffer shaderBuffer) {
+void DescriptorSet::updateBuffer(const std::string& mappingName, uint32 index, Gfx::PShaderBuffer shaderBuffer) {
     PShaderBuffer vulkanBuffer = shaderBuffer.cast<ShaderBuffer>();
-    const auto& map = owner->getLayout()->mappings[name];
+    const auto& map = owner->getLayout()->mappings[mappingName];
     uint32 binding = map.binding;
     if (boundResources[binding][index] == vulkanBuffer->getAlloc() || vulkanBuffer->getAlloc() == nullptr) {
         return;
@@ -230,9 +230,9 @@ void DescriptorSet::updateBuffer(const std::string& name, uint32 index, Gfx::PSh
     boundResources[binding][index] = vulkanBuffer->getAlloc();
 }
 
-void DescriptorSet::updateBuffer(const std::string& name, uint32 index, Gfx::PVertexBuffer indexBuffer) {
+void DescriptorSet::updateBuffer(const std::string& mappingName, uint32 index, Gfx::PVertexBuffer indexBuffer) {
     PVertexBuffer vulkanBuffer = indexBuffer.cast<VertexBuffer>();
-    const auto& map = owner->getLayout()->mappings[name];
+    const auto& map = owner->getLayout()->mappings[mappingName];
     uint32 binding = map.binding;
     if (boundResources[binding][index] == vulkanBuffer->getAlloc() || vulkanBuffer->getAlloc() == nullptr) {
         return;
@@ -257,9 +257,9 @@ void DescriptorSet::updateBuffer(const std::string& name, uint32 index, Gfx::PVe
     boundResources[binding][index] = vulkanBuffer->getAlloc();
 }
 
-void DescriptorSet::updateBuffer(const std::string& name, uint32 index, Gfx::PIndexBuffer indexBuffer) {
+void DescriptorSet::updateBuffer(const std::string& mappingName, uint32 index, Gfx::PIndexBuffer indexBuffer) {
     PIndexBuffer vulkanBuffer = indexBuffer.cast<IndexBuffer>();
-    const auto& map = owner->getLayout()->mappings[name];
+    const auto& map = owner->getLayout()->mappings[mappingName];
     uint32 binding = map.binding;
     if (boundResources[binding][index] == vulkanBuffer->getAlloc() || vulkanBuffer->getAlloc() == nullptr) {
         return;
@@ -284,9 +284,9 @@ void DescriptorSet::updateBuffer(const std::string& name, uint32 index, Gfx::PIn
     boundResources[binding][index] = vulkanBuffer->getAlloc();
 }
 
-void DescriptorSet::updateSampler(const std::string& name, uint32 index, Gfx::PSampler samplerState) {
+void DescriptorSet::updateSampler(const std::string& mappingName, uint32 index, Gfx::PSampler samplerState) {
     PSampler vulkanSampler = samplerState.cast<Sampler>();
-    const auto& map = owner->getLayout()->mappings[name];
+    const auto& map = owner->getLayout()->mappings[mappingName];
     uint32 binding = map.binding;
     if (boundResources[binding][index] == vulkanSampler->getHandle()) {
         return;
@@ -312,9 +312,9 @@ void DescriptorSet::updateSampler(const std::string& name, uint32 index, Gfx::PS
     boundResources[binding][index] = vulkanSampler->getHandle();
 }
 
-void DescriptorSet::updateTexture(const std::string& name, uint32 index, Gfx::PTexture2D texture) {
+void DescriptorSet::updateTexture(const std::string& mappingName, uint32 index, Gfx::PTexture texture) {
     TextureBase* vulkanTexture = texture.cast<TextureBase>().getHandle();
-    const auto& map = owner->getLayout()->mappings[name];
+    const auto& map = owner->getLayout()->mappings[mappingName];
     uint32 binding = map.binding;
     if (boundResources[binding][index] == vulkanTexture->getHandle()) {
         return;
@@ -340,65 +340,9 @@ void DescriptorSet::updateTexture(const std::string& name, uint32 index, Gfx::PT
     boundResources[binding][index] = vulkanTexture->getHandle();
 }
 
-void DescriptorSet::updateTexture(const std::string& name, uint32 index, Gfx::PTexture3D texture) {
-    TextureBase* vulkanTexture = texture.cast<TextureBase>().getHandle();
-    const auto& map = owner->getLayout()->mappings[name];
-    uint32 binding = map.binding;
-    if (boundResources[binding][index] == vulkanTexture->getHandle()) {
-        return;
-    }
-
-    // It is assumed that the image is in the correct layout
-    imageInfos.add(VkDescriptorImageInfo{
-        .sampler = VK_NULL_HANDLE,
-        .imageView = vulkanTexture->getView(),
-        .imageLayout = cast(vulkanTexture->getLayout()),
-    });
-    writeDescriptors.add(VkWriteDescriptorSet{
-        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-        .pNext = nullptr,
-        .dstSet = setHandle,
-        .dstBinding = binding,
-        .dstArrayElement = index,
-        .descriptorCount = 1,
-        .descriptorType = map.type,
-        .pImageInfo = &imageInfos.back(),
-    });
-
-    boundResources[binding][index] = vulkanTexture->getHandle();
-}
-
-void DescriptorSet::updateTexture(const std::string& name, uint32 index, Gfx::PTextureCube texture) {
-    TextureBase* vulkanTexture = texture.cast<TextureBase>().getHandle();
-    const auto& map = owner->getLayout()->mappings[name];
-    uint32 binding = map.binding;
-    if (boundResources[binding][index] == vulkanTexture->getHandle()) {
-        return;
-    }
-
-    // It is assumed that the image is in the correct layout
-    imageInfos.add(VkDescriptorImageInfo{
-        .sampler = VK_NULL_HANDLE,
-        .imageView = vulkanTexture->getView(),
-        .imageLayout = cast(vulkanTexture->getLayout()),
-    });
-    writeDescriptors.add(VkWriteDescriptorSet{
-        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-        .pNext = nullptr,
-        .dstSet = setHandle,
-        .dstBinding = binding,
-        .dstArrayElement = index,
-        .descriptorCount = 1,
-        .descriptorType = map.type,
-        .pImageInfo = &imageInfos.back(),
-    });
-
-    boundResources[binding][index] = vulkanTexture->getHandle();
-}
-
-void DescriptorSet::updateAccelerationStructure(const std::string& name, uint32 index, Gfx::PTopLevelAS as) {
+void DescriptorSet::updateAccelerationStructure(const std::string& mappingName, uint32 index, Gfx::PTopLevelAS as) {
     auto tlas = as.cast<TopLevelAS>();
-    uint32 binding = owner->getLayout()->mappings[name].binding;
+    uint32 binding = owner->getLayout()->mappings[mappingName].binding;
     accelerationInfos.add(VkWriteDescriptorSetAccelerationStructureKHR{
         .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR,
         .pNext = nullptr,
@@ -418,8 +362,7 @@ void DescriptorSet::updateAccelerationStructure(const std::string& name, uint32 
 
 void DescriptorSet::writeChanges() {
     if (constantData.size() > 0) {
-        if (constantsBuffer != nullptr)
-        {
+        if (constantsBuffer != nullptr) {
             graphics->getDestructionManager()->queueResourceForDestruction(std::move(constantsBuffer));
         }
         constantsBuffer = new BufferAllocation(graphics, owner->getLayout()->getName(),
@@ -452,7 +395,7 @@ void DescriptorSet::writeChanges() {
             .pBufferInfo = &bufferInfos.back(),
         });
     }
-    
+
     if (writeDescriptors.size() > 0) {
         if (isCurrentlyBound()) {
             std::cout << "Descriptor currently bound, allocate a new one instead" << std::endl;
@@ -474,7 +417,7 @@ std::mutex layoutLock;
 Map<uint32, VkPipelineLayout> cachedLayouts;
 
 void PipelineLayout::create() {
-    for (auto [name, desc] : descriptorSetLayouts) {
+    for (const auto& [_, desc] : descriptorSetLayouts) {
         PDescriptorLayout layout = desc.cast<DescriptorLayout>();
         layout->create();
         uint32 parameterIndex = parameterMapping[layout->getName()];

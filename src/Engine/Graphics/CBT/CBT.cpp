@@ -120,7 +120,7 @@ uint32_t find_msb_64(uint64_t x) {
 
 CPUMesh Seele::generateCPUMesh(uint32 cbtNumElements) {
     CPUMesh result;
-    result.totalNumElements = edges.size() + cbtNumElements;
+    result.totalNumElements = (uint32)edges.size() + cbtNumElements;
 
     result.heapIDArray.resize(result.totalNumElements);
     result.neighborsArray.resize(result.totalNumElements);
@@ -193,7 +193,6 @@ Matrix3 decodeSubdivisionMatrix(uint64 heapID) {
 void LebMatrixCache::init(Gfx::PGraphics graphics, uint32 depth) {
     cacheDepth = depth;
     uint32 matrixCount = 2ULL << cacheDepth;
-    Matrix3 m;
     std::vector<Matrix3> table(matrixCount);
     table[0] = Matrix3({1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f});
     for (uint64 heapID = 1ULL; heapID < (2ULL << cacheDepth); ++heapID) {
@@ -799,7 +798,7 @@ void MeshUpdater::update(CBTMesh& mesh, Gfx::PDescriptorSet viewParamsSet, Gfx::
 }
 
 void MeshUpdater::validation(CBTMesh& mesh, Gfx::PUniformBuffer geometryCB) {
-    uint32 numGroups = (mesh.totalNumElements + WORKGROUP_SIZE - 1) / WORKGROUP_SIZE;
+    //uint32 numGroups = (mesh.totalNumElements + WORKGROUP_SIZE - 1) / WORKGROUP_SIZE;
 
     /*Gfx::PDescriptorSet set = layout->allocateDescriptorSet();
     set->updateBuffer(GEOMETRY_CB, 0, geometryCB);

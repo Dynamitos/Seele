@@ -52,7 +52,7 @@ class IndexBuffer : public Buffer {
     virtual void executePipelineBarrier(SeAccessFlags srcAccess, SePipelineStageFlags srcStage, SeAccessFlags dstAccess,
                                         SePipelineStageFlags dstStage) = 0;
     Gfx::SeIndexType indexType;
-    uint64 numIndices;
+    uint64 numIndices = 0;
 };
 DEFINE_REF(IndexBuffer)
 
@@ -81,7 +81,7 @@ class ShaderBuffer : public Buffer {
     virtual void updateContents(uint64 offset, uint64 size, void* data) = 0;
     virtual void* map() = 0;
     virtual void unmap() = 0;
-    constexpr uint32 getNumElements() const { return numElements; }
+    constexpr uint64 getNumElements() const { return numElements; }
 
     virtual void clear() = 0;
 
@@ -91,7 +91,7 @@ class ShaderBuffer : public Buffer {
     virtual void executePipelineBarrier(SeAccessFlags srcAccess, SePipelineStageFlags srcStage, SeAccessFlags dstAccess,
                                         SePipelineStageFlags dstStage) = 0;
 
-    uint32 numElements;
+    uint64 numElements;
 };
 DEFINE_REF(ShaderBuffer)
 } // namespace Gfx

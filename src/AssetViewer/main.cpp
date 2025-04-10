@@ -36,7 +36,7 @@ int main(int, char**) {
         Array<Vector> texCoords1(mesh->mNumVertices);
         if (mesh->HasTextureCoords(2))
             abort();
-        for (int32 i = 0; i < mesh->mNumVertices; ++i) {
+        for (uint32 i = 0; i < mesh->mNumVertices; ++i) {
             positions[i] = Vector(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
 
             if (mesh->mTextureCoords[0] != nullptr)
@@ -65,7 +65,7 @@ int main(int, char**) {
             return 0.5 * glm::length(glm::cross(p2 - p1, p3 - p1));
         };
         Array<Tri> tris(mesh->mNumFaces);
-        for (int32 faceIndex = 0; faceIndex < mesh->mNumFaces; ++faceIndex) {
+        for (uint32 faceIndex = 0; faceIndex < mesh->mNumFaces; ++faceIndex) {
             tris[faceIndex].p[0] = mesh->mFaces[faceIndex].mIndices[0];
             tris[faceIndex].p[1] = mesh->mFaces[faceIndex].mIndices[1];
             tris[faceIndex].p[2] = mesh->mFaces[faceIndex].mIndices[2];
@@ -74,7 +74,7 @@ int main(int, char**) {
             uint32 p0 = tris[i].p[0];
             uint32 p1 = tris[i].p[1];
             uint32 p2 = tris[i].p[2];
-            uint32 p3 = positions.size();
+            uint32 p3 = (uint32)positions.size();
             positions.add(interpolate(positions[p0], positions[p1], positions[p2]));
 
             if (mesh->mTextureCoords[0] != nullptr)
@@ -102,7 +102,7 @@ int main(int, char**) {
         //for (uint32 i = 0; i < tris.size(); ++i) {
         //    stats << calcArea(tris[i]) << std::endl;
         //}
-        bool tess = false;
+        //bool tess = false;
         //while (!tess) {
         //    tess = true;
         //    for (uint32 i = 0; i < tris.size(); ++i) {
@@ -143,7 +143,7 @@ int main(int, char**) {
             mesh->mBitangents = newBit;
         }
 
-        uint32 numFaces = tris.size();
+        uint32 numFaces = (uint32)tris.size();
         aiFace* newFaces = new aiFace[numFaces];
         for (uint32 i = 0; i < numFaces; ++i) {
             newFaces[i].mNumIndices = 3;
@@ -153,10 +153,10 @@ int main(int, char**) {
             newFaces[i].mIndices[2] = tris[i].p[2];
         }
 
-        mesh->mNumVertices = positions.size();
+        mesh->mNumVertices = (uint32)positions.size();
         mesh->mVertices = newPos;
         mesh->mFaces = newFaces;
-        mesh->mNumFaces = tris.size();
+        mesh->mNumFaces = (uint32)tris.size();
     }
 
     Assimp::Exporter exporter;

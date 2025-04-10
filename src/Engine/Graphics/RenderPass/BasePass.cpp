@@ -1,6 +1,7 @@
 #include "BasePass.h"
 #include "Actor/CameraActor.h"
 #include "Asset/AssetRegistry.h"
+#include "Asset/EnvironmentMapAsset.h"
 #include "Component/Camera.h"
 #include "Component/Mesh.h"
 #include "Component/WaterTile.h"
@@ -78,8 +79,8 @@ BasePass::BasePass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics)
                                                                       });
     }
     skybox = Seele::Component::Skybox{
-        .day = AssetRegistry::findTexture("", "skybox")->getTexture().cast<Gfx::TextureCube>(),
-        .night = AssetRegistry::findTexture("", "skybox")->getTexture().cast<Gfx::TextureCube>(),
+        .day = scene->getLightEnvironment()->getEnvironmentMap()->getIrradianceMap(),
+        .night = scene->getLightEnvironment()->getEnvironmentMap()->getIrradianceMap(),
         .fogColor = Vector(0.1, 0.1, 0.8),
         .blendFactor = 0,
     };
@@ -156,8 +157,7 @@ void BasePass::render() {
         vertexData->getInstanceDataSet()->updateBuffer(VertexData::CULLINGDATA_NAME, 0, cullingBuffer);
         vertexData->getInstanceDataSet()->writeChanges();
         permutation.setVertexData(vertexData->getTypeName());
-        const auto& materials = vertexData->getMaterialData();
-        for (const auto& materialData : materials) {
+        for (const auto& materialData : vertexData->getMaterialData()) {
             // material not used for any active meshes, skip
             if (materialData.instances.size() == 0)
                 continue;
@@ -200,8 +200,7 @@ void BasePass::render() {
                             .attachmentCount = 1,
                         },
                 };
-                Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
-                command->bindPipeline(pipeline);
+                command->bindPipeline(graphics->createGraphicsPipeline(std::move(pipelineInfo)));
             } else {
                 Gfx::LegacyPipelineCreateInfo pipelineInfo = {
                     .vertexShader = collection->vertexShader,
@@ -221,8 +220,7 @@ void BasePass::render() {
                             .attachmentCount = 1,
                         },
                 };
-                Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
-                command->bindPipeline(pipeline);
+                command->bindPipeline(graphics->createGraphicsPipeline(std::move(pipelineInfo)));
             }
             command->bindDescriptor({viewParamsSet, vertexData->getVertexDataSet(), vertexData->getInstanceDataSet(),
                                      scene->getLightEnvironment()->getDescriptorSet(), Material::getDescriptorSet(), opaqueCulling});
@@ -231,7 +229,7 @@ void BasePass::render() {
                                            Gfx::SE_SHADER_STAGE_FRAGMENT_BIT,
                                        0, sizeof(VertexData::DrawCallOffsets), &drawCall.offsets);
                 if (graphics->supportMeshShading()) {
-                    command->drawMesh(drawCall.instanceMeshData.size(), 1, 1);
+                    command->drawMesh((uint32)drawCall.instanceMeshData.size(), 1, 1);
                 } else {
                     command->bindIndexBuffer(vertexData->getIndexBuffer());
                     for (const auto& meshData : drawCall.instanceMeshData) {
@@ -252,7 +250,7 @@ void BasePass::render() {
     {
         Gfx::ORenderCommand skyboxCommand = graphics->createRenderCommand("SkyboxRender");
         skyboxCommand->setViewport(viewport);
-        skyboxCommand->bindPipeline(pipeline);
+        skyboxCommand->bindPipeline(skyboxPipeline);
         skyboxCommand->bindDescriptor({viewParamsSet, skyboxDataSet, textureSet});
         skyboxCommand->draw(36, 1, 0, 0);
         graphics->executeCommands(std::move(skyboxCommand));
@@ -409,8 +407,8 @@ void BasePass::publishOutputs() {
     });
 
     depthAttachment =
-        Gfx::RenderTargetAttachment(basePassDepth, Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
-                                    Gfx::SE_ATTACHMENT_LOAD_OP_DONT_CARE, Gfx::SE_ATTACHMENT_STORE_OP_DONT_CARE);
+        Gfx::RenderTargetAttachment(Gfx::PTexture2D(basePassDepth), Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+                                    Gfx::SE_ATTACHMENT_LOAD_OP_DONT_CARE, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
 
     msDepthAttachment =
         Gfx::RenderTargetAttachment(msBasePassDepth, Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
@@ -474,7 +472,7 @@ void BasePass::createRenderPass() {
                          Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
         },
     };
-    renderPass = graphics->createRenderPass(std::move(layout), std::move(dependency), viewport, "BasePass");
+    renderPass = graphics->createRenderPass(std::move(layout), std::move(dependency), viewport->getRenderArea(), "BasePass");
     oLightIndexList = resources->requestBuffer("LIGHTCULLING_OLIGHTLIST");
     tLightIndexList = resources->requestBuffer("LIGHTCULLING_TLIGHTLIST");
     oLightGrid = resources->requestTexture("LIGHTCULLING_OLIGHTGRID");
@@ -623,6 +621,6 @@ void BasePass::createRenderPass() {
                     .attachmentCount = 1,
                 },
         };
-        pipeline = graphics->createGraphicsPipeline(std::move(gfxInfo));
+        skyboxPipeline = graphics->createGraphicsPipeline(std::move(gfxInfo));
     }
 }

@@ -4,6 +4,7 @@
 #include "Asset/MaterialLoader.h"
 #include "Asset/MeshLoader.h"
 #include "Asset/TextureLoader.h"
+#include "Asset/EnvironmentLoader.h"
 #include "Graphics/Initializer.h"
 #ifdef __APPLE__
 #include "Graphics/Metal/Graphics.h"
@@ -23,54 +24,11 @@ using namespace Seele::Editor;
 // make it global so it gets deleted last and automatically
 static Gfx::OGraphics graphics;
 
-struct Halfedge {
-    uint32 vertexID;
-    uint32 nextID;
-    uint32 prevID;
-    uint32 twinID;
-};
-Array<Halfedge> generateEdges() {
-    Array<UVector> indices = {UVector(0, 1, 4),    UVector(4, 1, 5),    UVector(1, 2, 5),   UVector(5, 2, 6),   UVector(2, 3, 6),
-                              UVector(6, 3, 7),    UVector(4, 5, 8),    UVector(8, 5, 9),   UVector(5, 6, 9),   UVector(9, 6, 10),
-                              UVector(6, 7, 10),   UVector(10, 7, 11),  UVector(8, 9, 12),  UVector(12, 9, 13), UVector(9, 10, 13),
-                              UVector(13, 10, 14), UVector(10, 11, 14), UVector(14, 11, 15)};
-    Array<Halfedge> edges;
-    for (auto ind : indices) {
-        uint32 baseIndex = edges.size();
-        edges.add(Halfedge{ind.x, baseIndex + 1, baseIndex + 2, UINT32_MAX});
-        edges.add(Halfedge{ind.y, baseIndex + 2, baseIndex, UINT32_MAX});
-        edges.add(Halfedge{ind.z, baseIndex, baseIndex + 1, UINT32_MAX});
-    }
-    for (uint32 i = 0; i < edges.size(); ++i) {
-        if (edges[i].twinID == UINT32_MAX) {
-            for (uint32 j = 0; j < edges.size(); ++j) {
-                if (edges[i].vertexID == edges[edges[j].nextID].vertexID && edges[edges[i].nextID].vertexID == edges[j].vertexID) {
-                    edges[i].twinID = j;
-                    edges[j].twinID = i;
-                }
-            }
-        }
-    }
-    return edges;
-}
-
-Array<uint32> generateArray() { return Array<uint32>(); }
-
 int main() {
-    std::string gameName = "MeshShadingDemo";
-#ifdef WIN32
-    std::filesystem::path outputPath = "C:/Users/Dynamitos/MeshShadingDemoGame";
-    std::filesystem::path sourcePath = "C:/Users/Dynamitos/MeshShadingDemo";
-    std::filesystem::path binaryPath = sourcePath / "bin" / "MeshShadingDemo.dll";
-#elif __APPLE__
-    std::filesystem::path outputPath = "/Users/dynamitos/MeshShadingDemoGame";
-    std::filesystem::path sourcePath = "/Users/dynamitos/MeshShadingDemo";
-    std::filesystem::path binaryPath = sourcePath / "cmake" / "libMeshShadingDemo.dylib";
-#else
-    std::filesystem::path outputPath = "/home/dynamitos/MeshShadingDemoGame";
-    std::filesystem::path sourcePath = "/home/dynamitos/MeshShadingDemo";
-    std::filesystem::path binaryPath = sourcePath / "cmake" / "libMeshShadingDemo.so";
-#endif
+    std::string gameName = "MinecraftClone";
+    std::filesystem::path outputPath = fmt::format("../../{0}Game", gameName);
+    std::filesystem::path sourcePath = fmt::format("../../{0}", gameName);
+    std::filesystem::path binaryPath = sourcePath / "bin" / fmt::format("{0}.dll", gameName);
     std::filesystem::path cmakePath = outputPath / "cmake";
     if (true) {
 #ifdef __APPLE__
@@ -89,45 +47,12 @@ int main() {
         AssetImporter::importFont(FontImportArgs{
             .filePath = "./fonts/arial.ttf",
         });
-        AssetImporter::importMesh(MeshImportArgs{
-            .filePath = sourcePath / "import/models/cube.fbx",
+        AssetImporter::importEnvironmentMap(EnvironmentImportArgs{
+            .filePath = sourcePath / "import" / "textures" / "newport_loft.hdr",
         });
-        // AssetImporter::importMesh(MeshImportArgs{
-        //    .filePath = sourcePath / "import/models/culling.fbx",
-        //});
-        AssetImporter::importTexture(TextureImportArgs{
-            .filePath = sourcePath / "import/textures/skybox.jpg",
-            .type = TextureImportType::TEXTURE_CUBEMAP,
-        });
-        // AssetImporter::importMesh(MeshImportArgs{
-        //     .filePath = sourcePath / "import/models/ship.fbx",
-        //     .importPath = "ship",
-        // });
-        // AssetImporter::importTexture(TextureImportArgs{
-        //    .filePath = sourcePath / "import/textures/azeroth.png",
-        //});
-        // AssetImporter::importTexture(TextureImportArgs{
-        //    .filePath = sourcePath / "import/textures/azeroth_height.png",
-        //});
-        // AssetImporter::importTexture(TextureImportArgs{
-        //    .filePath = sourcePath / "import/textures/wgen.png",
-        //});
-        AssetImporter::importMesh(MeshImportArgs{
-            .filePath = sourcePath / "import/models/after-the-rain-vr-sound/source/Whitechapel.glb",
-            .importPath = "Whitechapel",
-        });
-        //AssetImporter::importMesh(MeshImportArgs{
-        //    .filePath = sourcePath / "import/models/box.glb",
-        //    .importPath = "",
-        //});
-        AssetImporter::importMesh(MeshImportArgs{
-            .filePath = sourcePath / "import/models/rttest.glb",
-            .importPath = "",
-        });
-        //AssetImporter::importMesh(MeshImportArgs{
-        //    .filePath = sourcePath / "import/models/town_hall.glb",
-        //    .importPath = "",
-        //});
+        AssetImporter::importTexture(TextureImportArgs{.filePath = sourcePath / "import" / "texture" / "Dirt.png", .importPath = ""});
+        
+        
         getThreadPool().waitIdle();
         vd->commitMeshes();
         WindowCreateInfo mainWindowInfo = {
@@ -146,16 +71,16 @@ int main() {
         };
         OGameView sceneView = new Editor::PlayView(graphics, window, sceneViewInfo, binaryPath.generic_string());
         sceneView->setFocused();
-        //OInspectorView inspectorView = new Editor::InspectorView(graphics, window,
-        //                                                         ViewportCreateInfo{
-        //                                                             .dimensions =
-        //                                                                 {
-        //                                                                     .size = {1920, 1080},
-        //                                                                     .offset = {0, 0},
-        //                                                                 },
-        //                                                             .fieldOfView = 0,
-        //                                                             .numSamples = Gfx::SE_SAMPLE_COUNT_1_BIT,
-        //                                                         });
+        // OInspectorView inspectorView = new Editor::InspectorView(graphics, window,
+        //                                                          ViewportCreateInfo{
+        //                                                              .dimensions =
+        //                                                                  {
+        //                                                                      .size = {1920, 1080},
+        //                                                                      .offset = {0, 0},
+        //                                                                  },
+        //                                                              .fieldOfView = 0,
+        //                                                              .numSamples = Gfx::SE_SAMPLE_COUNT_1_BIT,
+        //                                                          });
         //
         window->show();
         while (windowManager->isActive() && getGlobals().running) {

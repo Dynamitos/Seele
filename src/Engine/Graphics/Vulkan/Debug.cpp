@@ -3,8 +3,8 @@
 
 using namespace Seele::Vulkan;
 
-VkBool32 Seele::Vulkan::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageTypes,
-                                      const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) {
+VkBool32 Seele::Vulkan::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT, VkDebugUtilsMessageTypeFlagsEXT,
+                                      const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void*) {
     std::cerr << pCallbackData->pMessage << std::endl;
     return VK_FALSE;
 }

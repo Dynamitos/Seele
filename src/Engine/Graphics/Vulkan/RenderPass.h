@@ -6,7 +6,8 @@ namespace Seele {
 namespace Vulkan {
 class RenderPass : public Gfx::RenderPass {
   public:
-    RenderPass(PGraphics graphics, Gfx::RenderTargetLayout layout, Array<Gfx::SubPassDependency> dependencies, Gfx::PViewport viewport, std::string name);
+    RenderPass(PGraphics graphics, Gfx::RenderTargetLayout layout, Array<Gfx::SubPassDependency> dependencies, URect viewport,
+               std::string name, Array<uint32> viewMasks = {}, Array<uint32> correlationMasks = {});
     virtual ~RenderPass();
     uint32 getFramebufferHash();
     void endRenderPass();

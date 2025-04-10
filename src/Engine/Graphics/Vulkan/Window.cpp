@@ -276,7 +276,6 @@ void Window::createSwapChain() {
                                                  .width = extent.width,
                                                  .height = extent.height,
                                                  .depth = 1,
-                                                 .layers = 1,
                                                  .elements = 1,
                                                  .samples = 1,
                                                  .usage = Gfx::SE_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | Gfx::SE_IMAGE_USAGE_TRANSFER_DST_BIT,

@@ -1,6 +1,7 @@
 #include "RayTracingPass.h"
 #include "Asset/AssetRegistry.h"
 #include "Asset/MeshAsset.h"
+#include "Asset/EnvironmentMapAsset.h"
 #include "Graphics/Mesh.h"
 #include "Graphics/RayTracing.h"
 #include "Graphics/Shader.h"
@@ -59,7 +60,7 @@ RayTracingPass::RayTracingPass(Gfx::PGraphics graphics, PScene scene) : RenderPa
                                                                         .useMaterial = true,
                                                                         .rayTracing = true,
                                                                     });
-    skyBox = AssetRegistry::findTexture("", "skybox")->getTexture().cast<Gfx::TextureCube>();
+    skyBox = AssetRegistry::findEnvironmentMap("", "newport_loft")->getIrradianceMap();
     skyBoxSampler = graphics->createSampler({});
 }
 
@@ -74,6 +75,8 @@ void RayTracingPass::beginFrame(const Component::Camera& cam) {
 }
 
 void RayTracingPass::render() {
+    texture->changeLayout(Gfx::SE_IMAGE_LAYOUT_GENERAL, Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                          Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR);
     Array<Gfx::RayTracingHitGroup> callableGroups;
     Array<Gfx::PBottomLevelAS> accelerationStructures;
     Array<InstanceData> instanceData;
@@ -129,7 +132,18 @@ void RayTracingPass::render() {
         }
     }
     pipeline = graphics->createRayTracingPipeline(Gfx::RayTracingPipelineCreateInfo{
-        .pipelineLayout = pipelineLayout, .rayGenGroup = {.shader = rayGen}, .hitGroups = callableGroups, .missGroups = {{.shader = miss}},
+        .pipelineLayout = pipelineLayout,
+        .rayGenGroup =
+            {
+                .shader = rayGen,
+            },
+        .hitGroups = callableGroups,
+        .missGroups =
+            {
+                {
+                    .shader = miss,
+                },
+            },
         //.callableGroups = callableGroups,
     });
     tlas = graphics->createTopLevelAccelerationStructure(Gfx::TopLevelASCreateInfo{
@@ -138,8 +152,8 @@ void RayTracingPass::render() {
     });
     Gfx::PDescriptorSet desc = paramsLayout->allocateDescriptorSet();
     desc->updateAccelerationStructure(TLAS_NAME, 0, tlas);
-    desc->updateTexture(ACCUMULATOR_NAME, 0, radianceAccumulator);
-    desc->updateTexture(TEXTURE_NAME, 0, texture);
+    desc->updateTexture(ACCUMULATOR_NAME, 0, Gfx::PTexture2D(radianceAccumulator));
+    desc->updateTexture(TEXTURE_NAME, 0, Gfx::PTexture2D(texture));
     desc->updateBuffer(INDEXBUFFER_NAME, 0, StaticMeshVertexData::getInstance()->getIndexBuffer());
     desc->updateTexture(SKYBOX_NAME, 0, skyBox);
     desc->updateSampler(SKYSAMPLER_NAME, 0, skyBoxSampler);
@@ -168,15 +182,9 @@ void RayTracingPass::render() {
     }
     pass++;
     std::cout << pass << std::endl;
-    texture->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR,
-                             Gfx::SE_ACCESS_TRANSFER_READ_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT);
     Array<Gfx::ORenderCommand> commands;
     commands.add(std::move(command));
     graphics->executeCommands(std::move(commands));
-    viewport->getOwner()->getBackBuffer()->changeLayout(Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, Gfx::SE_ACCESS_NONE,
-                                                        Gfx::SE_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, Gfx::SE_ACCESS_TRANSFER_WRITE_BIT,
-                                                        Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT);
-    graphics->copyTexture(Gfx::PTexture2D(texture), viewport->getOwner()->getBackBuffer());
 }
 
 void RayTracingPass::endFrame() {}
@@ -200,6 +208,8 @@ void RayTracingPass::publishOutputs() {
     texture->changeLayout(Gfx::SE_IMAGE_LAYOUT_GENERAL, Gfx::SE_ACCESS_NONE, Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
                           Gfx::SE_ACCESS_SHADER_WRITE_BIT,
                           Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT | Gfx::SE_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR);
+    resources->registerRenderPassOutput("BASEPASS_COLOR", Gfx::RenderTargetAttachment(texture, Gfx::SE_IMAGE_LAYOUT_UNDEFINED,
+                                                                                      Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL));
     ShaderCompilationInfo compileInfo = {
         .name = "RayGenMiss",
         .modules = {"RayGen", "AnyHit", "Miss"},

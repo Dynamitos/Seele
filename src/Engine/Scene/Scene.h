@@ -1,8 +1,8 @@
 #pragma once
+#include "MinimalEngine.h"
 #include "Component/Skybox.h"
 #include "Graphics/Graphics.h"
 #include "LightEnvironment.h"
-#include "MinimalEngine.h"
 #include "Physics/PhysicsSystem.h"
 #include <entt/entt.hpp>
 #include <iostream>

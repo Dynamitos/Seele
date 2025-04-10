@@ -2,6 +2,8 @@ target_sources(Editor
 	PRIVATE
 		AssetImporter.h
 		AssetImporter.cpp
+		EnvironmentLoader.h
+		EnvironmentLoader.cpp
 		FontLoader.h
 		FontLoader.cpp
 		MaterialLoader.h

@@ -67,24 +67,24 @@ using BG_Red = BackgroundColorClass<Vector(1, 0, 0)>;
 
 template <uint32 ml, uint32 mr, uint32 mt, uint32 mb> struct MarginClass {
     static void apply(UI::Style& s) {
-        if (ml != -1)
+        if constexpr (ml != -1)
             s.marginLeft = ml;
-        if (mr != -1)
+        if constexpr (mr != -1)
             s.marginRight = mr;
-        if (mt != -1)
+        if constexpr (mt != -1)
             s.marginTop = mt;
-        if (mb != -1)
+        if constexpr (mb != -1)
             s.marginBottom = mb;
     }
 };
 #define DECLARE_MARGIN_CLASSES(x)                                                                                                          \
     using M_##x = MarginClass<x, x, x, x>;                                                                                                 \
-    using M_X##x = MarginClass<x, x, -1u, -1u>;                                                                                              \
-    using M_Y##x = MarginClass<-1u, -1u, x, x>;                                                                                              \
-    using M_L##x = MarginClass<x, -1u, -1u, -1u>;                                                                                             \
-    using M_R##x = MarginClass<-1u, x, -1u, -1u>;                                                                                             \
-    using M_T##x = MarginClass<-1u, -1u, x, -1u>;                                                                                             \
-    using M_B##x = MarginClass<-1u, -1u, -1u, x>;
+    using M_X##x = MarginClass<x, x, std::numeric_limits<uint32>::max(), std::numeric_limits<uint32>::max()>;                                                                                              \
+    using M_Y##x = MarginClass<std::numeric_limits<uint32>::max(), std::numeric_limits<uint32>::max(), x, x>;                                                                                              \
+    using M_L##x = MarginClass<x, std::numeric_limits<uint32>::max(), std::numeric_limits<uint32>::max(), std::numeric_limits<uint32>::max()>;                                                                                             \
+    using M_R##x = MarginClass<std::numeric_limits<uint32>::max(), x, std::numeric_limits<uint32>::max(), std::numeric_limits<uint32>::max()>;                                                                                             \
+    using M_T##x = MarginClass<std::numeric_limits<uint32>::max(), std::numeric_limits<uint32>::max(), x, std::numeric_limits<uint32>::max()>;                                                                                             \
+    using M_B##x = MarginClass<std::numeric_limits<uint32>::max(), std::numeric_limits<uint32>::max(), std::numeric_limits<uint32>::max(), x>;
 
 DECLARE_MARGIN_CLASSES(0)
 DECLARE_MARGIN_CLASSES(1)

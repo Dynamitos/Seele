@@ -14,16 +14,21 @@ class RenderTargetAttachment {
                            SeAttachmentStoreOp storeOp = SE_ATTACHMENT_STORE_OP_STORE,
                            SeAttachmentLoadOp stencilLoadOp = SE_ATTACHMENT_LOAD_OP_DONT_CARE,
                            SeAttachmentStoreOp stencilStoreOp = SE_ATTACHMENT_STORE_OP_DONT_CARE);
-
+    RenderTargetAttachment(PTextureCube texture, SeImageLayout initialLayout, SeImageLayout finalLayout,
+                           SeAttachmentLoadOp loadOp = SE_ATTACHMENT_LOAD_OP_LOAD,
+                           SeAttachmentStoreOp storeOp = SE_ATTACHMENT_STORE_OP_STORE,
+                           SeAttachmentLoadOp stencilLoadOp = SE_ATTACHMENT_LOAD_OP_DONT_CARE,
+                           SeAttachmentStoreOp stencilStoreOp = SE_ATTACHMENT_STORE_OP_DONT_CARE);
     RenderTargetAttachment(PViewport viewport, SeImageLayout initialLayout, SeImageLayout finalLayout,
                            SeAttachmentLoadOp loadOp = SE_ATTACHMENT_LOAD_OP_LOAD,
                            SeAttachmentStoreOp storeOp = SE_ATTACHMENT_STORE_OP_STORE,
                            SeAttachmentLoadOp stencilLoadOp = SE_ATTACHMENT_LOAD_OP_DONT_CARE,
                            SeAttachmentStoreOp stencilStoreOp = SE_ATTACHMENT_STORE_OP_DONT_CARE);
     ~RenderTargetAttachment();
-    PTexture2D getTexture() const {
+    void setTexture(PTexture _texture) { texture = _texture; }
+    PTexture getTexture() const {
         if (viewport != nullptr) {
-            return viewport->getOwner()->getBackBuffer();
+            return PTexture(viewport->getOwner()->getBackBuffer());
         }
         return texture;
     }
@@ -68,7 +73,7 @@ class RenderTargetAttachment {
     SeColorComponentFlags componentFlags = 0;
 
   protected:
-    PTexture2D texture = nullptr;
+    PTexture texture = nullptr;
     PViewport viewport = nullptr;
     SeImageLayout initialLayout = SE_IMAGE_LAYOUT_UNDEFINED;
     SeImageLayout finalLayout = SE_IMAGE_LAYOUT_UNDEFINED;

@@ -147,7 +147,7 @@ void closestHit(inout RayPayload hitValue, in BuiltInTriangleIntersectionAttribu
         if (rnd.z >= p) return;
     }
 
-    hitValue.light += brdf.getEmissive() * hitValue.emissive + brdf.evaluateAmbient();
+    hitValue.light += brdf.getEmissive() * hitValue.emissive + brdf.evaluateAmbient(lightingParams.viewDir_WS);
     //-- Ideal DIFFUSE reflection
     //if(bool(useNEE)) {
     //    accrad += nextEventEstimation(accmat, r.d, params.x, params.nl, kt, false, rnd);

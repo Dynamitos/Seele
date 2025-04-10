@@ -7,9 +7,7 @@
 
 using namespace Seele;
 
-extern List<VertexData*> vertexDataList;
-
-StaticMeshVertexData::StaticMeshVertexData() { vertexDataList.add(this); }
+StaticMeshVertexData::StaticMeshVertexData() { VertexData::addVertexDataInstance(this); }
 
 StaticMeshVertexData::~StaticMeshVertexData() {}
 
@@ -41,11 +39,12 @@ void StaticMeshVertexData::loadTangents(uint64 offset, const Array<TangentType>&
     std::memcpy(tanData.data() + offset, data.data(), data.size() * sizeof(TangentType));
     dirty = true;
 }
-void StaticMeshVertexData::loadBitangents(uint64 offset, const Array<BiTangentType>& data) {
+
+/*void StaticMeshVertexData::loadBitangents(uint64 offset, const Array<BiTangentType>& data) {
     assert(offset + data.size() <= head);
     std::memcpy(bitData.data() + offset, data.data(), data.size() * sizeof(BiTangentType));
     dirty = true;
-}
+}*/
 
 void StaticMeshVertexData::loadColors(uint64 offset, const Array<ColorType>& data) {
     assert(offset + data.size() <= head);
@@ -71,17 +70,17 @@ void StaticMeshVertexData::serializeMesh(MeshId id, ArchiveBuffer& buffer) {
     Array<PositionType> pos(numVertices);
     Array<NormalType> nor(numVertices);
     Array<TangentType> tan(numVertices);
-    Array<BiTangentType> bit(numVertices);
+    //Array<BiTangentType> bit(numVertices);
     Array<ColorType> col(numVertices);
     std::memcpy(pos.data(), posData.data() + offset, numVertices * sizeof(PositionType));
     std::memcpy(nor.data(), norData.data() + offset, numVertices * sizeof(NormalType));
     std::memcpy(tan.data(), tanData.data() + offset, numVertices * sizeof(TangentType));
-    std::memcpy(bit.data(), bitData.data() + offset, numVertices * sizeof(BiTangentType));
+    //std::memcpy(bit.data(), bitData.data() + offset, numVertices * sizeof(BiTangentType));
     std::memcpy(col.data(), colData.data() + offset, numVertices * sizeof(ColorType));
     Serialization::save(buffer, pos);
     Serialization::save(buffer, nor);
     Serialization::save(buffer, tan);
-    Serialization::save(buffer, bit);
+    //Serialization::save(buffer, bit);
     Serialization::save(buffer, col);
 }
 
@@ -101,22 +100,22 @@ uint64 StaticMeshVertexData::deserializeMesh(MeshId id, ArchiveBuffer& buffer) {
     Array<PositionType> pos;
     Array<NormalType> nor;
     Array<TangentType> tan;
-    Array<BiTangentType> bit;
+    //Array<BiTangentType> bit;
     Array<ColorType> col;
     Serialization::load(buffer, pos);
     Serialization::load(buffer, nor);
     Serialization::load(buffer, tan);
-    Serialization::load(buffer, bit);
+    //Serialization::load(buffer, bit);
     Serialization::load(buffer, col);
     loadPositions(offset, pos);
     loadNormals(offset, nor);
     loadTangents(offset, tan);
-    loadBitangents(offset, bit);
+    //loadBitangents(offset, bit);
     loadColors(offset, col);
     result += pos.size() * sizeof(PositionType);
     result += nor.size() * sizeof(NormalType);
     result += tan.size() * sizeof(TangentType);
-    result += bit.size() * sizeof(BiTangentType);
+    //result += bit.size() * sizeof(BiTangentType);
     result += col.size() * sizeof(ColorType);
     return result;
 }
@@ -136,10 +135,10 @@ void StaticMeshVertexData::init(Gfx::PGraphics _graphics) {
         .name = TANGENTS_NAME,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
     });
-    descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+    /*descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{
         .name = BITANGENTS_NAME,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-    });
+    });*/
     descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{
         .name = COLORS_NAME,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
@@ -161,25 +160,17 @@ void StaticMeshVertexData::destroy() {
     positions = nullptr;
     normals = nullptr;
     tangents = nullptr;
-    biTangents = nullptr;
+    //biTangents = nullptr;
     colors = nullptr;
     descriptorSet = nullptr;
     descriptorLayout = nullptr;
 }
 
-void StaticMeshVertexData::bindBuffers(Gfx::PRenderCommand) {
-    // TODO: for legacy vertex buffer binding
-}
-
-Gfx::PDescriptorLayout StaticMeshVertexData::getVertexDataLayout() { return descriptorLayout; }
-
-Gfx::PDescriptorSet StaticMeshVertexData::getVertexDataSet() { return descriptorSet; }
-
 void StaticMeshVertexData::resizeBuffers() {
     posData.resize(verticesAllocated);
     norData.resize(verticesAllocated);
     tanData.resize(verticesAllocated);
-    bitData.resize(verticesAllocated);
+    //bitData.resize(verticesAllocated);
     colData.resize(verticesAllocated);
     for (size_t i = 0; i < MAX_TEXCOORDS; ++i) {
         texData[i].resize(verticesAllocated);
@@ -212,14 +203,14 @@ void StaticMeshVertexData::updateBuffers() {
             },
         .name = "Tangents",
     });
-    biTangents = graphics->createShaderBuffer(ShaderBufferCreateInfo{
+    /*biTangents = graphics->createShaderBuffer(ShaderBufferCreateInfo{
         .sourceData =
             {
                 .size = verticesAllocated * sizeof(BiTangentType),
                 .data = (uint8*)bitData.data(),
             },
         .name = "BiTangents",
-    });
+    });*/
     colors = graphics->createShaderBuffer(ShaderBufferCreateInfo{
         .sourceData =
             {
@@ -243,9 +234,9 @@ void StaticMeshVertexData::updateBuffers() {
     descriptorSet->updateBuffer(POSITIONS_NAME, 0, positions);
     descriptorSet->updateBuffer(NORMALS_NAME, 0, normals);
     descriptorSet->updateBuffer(TANGENTS_NAME, 0, tangents);
-    descriptorSet->updateBuffer(BITANGENTS_NAME, 0, biTangents);
+    //descriptorSet->updateBuffer(BITANGENTS_NAME, 0, biTangents);
     descriptorSet->updateBuffer(COLORS_NAME, 0, colors);
-    for (size_t i = 0; i < MAX_TEXCOORDS; ++i) {
+    for (uint32 i = 0; i < MAX_TEXCOORDS; ++i) {
         descriptorSet->updateBuffer(TEXCOORDS_NAME, i, texCoords[i]);
     }
     descriptorSet->writeChanges();

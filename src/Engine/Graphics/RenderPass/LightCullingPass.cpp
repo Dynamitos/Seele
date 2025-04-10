@@ -3,6 +3,7 @@
 #include "Component/Camera.h"
 #include "Graphics/Command.h"
 #include "Graphics/Graphics.h"
+#include "Graphics/Pipeline.h"
 #include "Math/Vector.h"
 #include "RenderGraph.h"
 #include "Scene/Scene.h"
@@ -48,8 +49,8 @@ void LightCullingPass::render() {
     cullingDescriptorSet->updateBuffer(TLIGHTINDEXCOUNTER_NAME, 0, tLightIndexCounter);
     cullingDescriptorSet->updateBuffer(OLIGHTINDEXLIST_NAME, 0, oLightIndexList);
     cullingDescriptorSet->updateBuffer(TLIGHTINDEXLIST_NAME, 0, tLightIndexList);
-    cullingDescriptorSet->updateTexture(OLIGHTGRID_NAME, 0, oLightGrid);
-    cullingDescriptorSet->updateTexture(TLIGHTGRID_NAME, 0, tLightGrid);
+    cullingDescriptorSet->updateTexture(OLIGHTGRID_NAME, 0, Gfx::PTexture2D(oLightGrid));
+    cullingDescriptorSet->updateTexture(TLIGHTGRID_NAME, 0, Gfx::PTexture2D(tLightGrid));
     cullingDescriptorSet->writeChanges();
     Gfx::OComputeCommand computeCommand = graphics->createComputeCommand("CullingCommand");
     if (getGlobals().useLightCulling) {
@@ -278,7 +279,7 @@ void LightCullingPass::setupFrustums() {
     frustumBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, Gfx::SE_ACCESS_SHADER_WRITE_BIT,
                                    Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 
-    Gfx::PDescriptorSet dispatchParamsSet = dispatchParamsLayout->allocateDescriptorSet();
+    dispatchParamsSet = dispatchParamsLayout->allocateDescriptorSet();
     dispatchParamsSet->updateConstants("numThreadGroups", 0, &numThreadGroups);
     dispatchParamsSet->updateConstants("numThreads", 0, &numThreads);
     dispatchParamsSet->updateBuffer(FRUSTUMBUFFER_NAME, 0, frustumBuffer);
@@ -292,8 +293,5 @@ void LightCullingPass::setupFrustums() {
     commands.add(std::move(command));
     graphics->executeCommands(std::move(commands));
     frustumBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-                                   Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
-    Frustum* frustums = (Frustum*)frustumBuffer->map();
-    graphics->waitDeviceIdle();
-    
+                                   Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);    
 }

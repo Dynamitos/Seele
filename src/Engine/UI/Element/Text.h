@@ -13,7 +13,7 @@ template <StyleClass... classes> class Text : public Element {
         style.outerDisplay = OuterDisplayType::Inline;
         (classes::apply(style), ...);
     }
-    virtual void layout(UVector2 parentSize) override {
+    virtual void layout(UVector2) override {
         UVector2 cursor = UVector2(0);
         dimensions = style.fontFamily->shapeText(text, style.fontSize, glyphRenders);
     }

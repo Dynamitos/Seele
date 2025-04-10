@@ -42,7 +42,7 @@ class UIPass : public RenderPass {
         Vector color;
         float opacity = 1;
         float z = 0;
-        uint32 textureIndex = -1ul;
+        uint32 textureIndex = std::numeric_limits<uint32>::max();
         uint32 pad0;
         uint32 pad1;
     };

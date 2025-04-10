@@ -49,7 +49,6 @@ struct TextureCreateInfo {
     uint32 width = 1;
     uint32 height = 1;
     uint32 depth = 1;
-    uint32 layers = 1;
     uint32 elements = 1;
     uint32 samples = 1;
     bool useMip = false;

@@ -10,7 +10,6 @@
     },
     "git.ignoreSubmodules": true,
     "cmake.parallelJobs": 0,
-    "cmake.buildDirectory": "${workspaceFolder}/build",
     "C_Cpp.files.exclude": {
         "**/.vs": true,
         "**/.vscode": true,
@@ -23,7 +22,7 @@
     "lldb.showDisassembly": "auto",
     "lldb.dereferencePointers": true,
     "lldb.consoleMode": "commands",
-    "cmake.generator": "Xcode",
+    "cmake.generator": "Ninja",
     "editor.tabSize": 4,
     "slang.additionalSearchPaths": [
         "res/shaders/",

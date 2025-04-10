@@ -146,7 +146,6 @@ Here is the material generated from the above JSON example:
 ```cpp
 import VERTEX_INPUT_IMPORT;
 import Material;
-import BRDF;
 import MaterialParameter;
 
 struct Placeholder: IMaterial {

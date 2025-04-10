@@ -28,16 +28,16 @@ void FontAsset::load(ArchiveBuffer& buffer) {
 }
 
 void FontAsset::loadFace() {
-    FT_Error error = FT_New_Memory_Face(ft, (unsigned char*)ttfFile.data(), ttfFile.size(), 0, &ft_face);
+    FT_Error error = FT_New_Memory_Face(ft, (unsigned char*)ttfFile.data(), (uint32)ttfFile.size(), 0, &ft_face);
     assert(!error);
-    blob = hb_blob_create(ttfFile.data(), ttfFile.size(), HB_MEMORY_MODE_DUPLICATE, nullptr, nullptr);
+    blob = hb_blob_create(ttfFile.data(), (uint32)ttfFile.size(), HB_MEMORY_MODE_DUPLICATE, nullptr, nullptr);
     hb_face = hb_face_create(blob, 0);
     hb_font = hb_font_create(hb_face);
 }
 UVector2 FontAsset::shapeText(std::string_view view, uint32 fontSize, Array<RenderGlyph>& render) {
     loadGlyphs(fontSize);
     hb_buffer_t* buf = hb_buffer_create();
-    hb_buffer_add_utf8(buf, view.data(), view.size(), 0, -1);
+    hb_buffer_add_utf8(buf, view.data(), (uint32)view.size(), 0, -1);
     hb_buffer_set_language(buf, hb_language_from_string("en", -1));
     hb_buffer_set_script(buf, HB_SCRIPT_LATIN);
     hb_buffer_set_direction(buf, HB_DIRECTION_LTR);
@@ -52,10 +52,10 @@ UVector2 FontAsset::shapeText(std::string_view view, uint32 fontSize, Array<Rend
     Vector2 cursor = Vector2(0);
     for (uint32 i = 0; i < num_glyphs; ++i) {
         hb_codepoint_t glyphid = glyphs[i].codepoint;
-        float xOffset = positions[i].x_offset * fontSize / xppem;
-        float yOffset = positions[i].y_offset * fontSize / yppem;
-        float xAdvance = positions[i].x_advance * fontSize / xppem;
-        float yAdvance = positions[i].y_advance * fontSize / yppem;
+        float xOffset = (float)positions[i].x_offset * fontSize / xppem;
+        float yOffset = (float)positions[i].y_offset * fontSize / yppem;
+        float xAdvance = (float)positions[i].x_advance * fontSize / xppem;
+        float yAdvance = (float)positions[i].y_advance * fontSize / yppem;
         Vector2 position = cursor + Vector2(xOffset, yOffset);
         Vector2 dimensions = fontSizes[fontSize].glyphs[glyphid].size;
         render.add(RenderGlyph{
@@ -73,7 +73,7 @@ UVector2 FontAsset::shapeText(std::string_view view, uint32 fontSize, Array<Rend
 
 void FontAsset::loadGlyphs(uint32 fontSize) {
     FT_Set_Pixel_Sizes(ft_face, 0, fontSize);
-    for (uint32 i = 0; i < ft_face->num_glyphs; ++i) {
+    for (int i = 0; i < ft_face->num_glyphs; ++i) {
         assert(FT_Load_Glyph(ft_face, i, FT_LOAD_RENDER) == 0);
         FontAsset::Glyph& glyph = fontSizes[fontSize].glyphs[i];
         glyph.size = IVector2(ft_face->glyph->bitmap.width, ft_face->glyph->bitmap.rows);

@@ -38,6 +38,4 @@ void PipelineLayout::addDescriptorLayout(PDescriptorLayout layout) { descriptorS
 
 void PipelineLayout::addPushConstants(const SePushConstantRange& pushConstant) { pushConstants.add(pushConstant); }
 
-void PipelineLayout::addMapping(std::string name, uint32 index) {
-    parameterMapping[name] = index;
-}
+void PipelineLayout::addMapping(std::string mappingName, uint32 index) { parameterMapping[mappingName] = index; }

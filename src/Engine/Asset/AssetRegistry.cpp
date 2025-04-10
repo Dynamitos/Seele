@@ -1,12 +1,14 @@
 #include "AssetRegistry.h"
+#include "Asset/FontAsset.h"
+#include "Asset/MaterialAsset.h"
+#include "Asset/MaterialInstanceAsset.h"
+#include "Asset/MeshAsset.h"
+#include "Asset/EnvironmentMapAsset.h"
+#include "Asset/SVGAsset.h"
+#include "Asset/TextureAsset.h"
 #include "FontAsset.h"
 #include "Graphics/Graphics.h"
 #include "Graphics/Mesh.h"
-#include "MaterialAsset.h"
-#include "MaterialInstanceAsset.h"
-#include "MeshAsset.h"
-#include "SVGAsset.h"
-#include "TextureAsset.h"
 #include "Window/WindowManager.h"
 #include <fstream>
 #include <iostream>
@@ -56,6 +58,15 @@ PSVGAsset AssetRegistry::findSVG(std::string_view folderPath, std::string_view f
     return folder->svgs.at(std::string(filePath));
 }
 
+PEnvironmentMapAsset AssetRegistry::findEnvironmentMap(std::string_view folderPath, std::string_view filePath) {
+    std::unique_lock l(get().assetLock);
+    AssetFolder* folder = get().assetRoot;
+    if (!folderPath.empty()) {
+        folder = get().getOrCreateFolder(folderPath);
+    }
+    return folder->envs.at(std::string(filePath));
+}
+
 PMaterialAsset AssetRegistry::findMaterial(std::string_view folderPath, std::string_view filePath) {
     std::unique_lock l(get().assetLock);
     AssetFolder* folder = get().assetRoot;
@@ -92,6 +103,11 @@ void AssetRegistry::registerFont(OFontAsset font) {
 void AssetRegistry::registerSVG(OSVGAsset svg) {
     std::unique_lock l(get().assetLock);
     get().registerSVGInternal(std::move(svg));
+}
+
+void AssetRegistry::registerEnvironmentMap(OEnvironmentMapAsset env) {
+    std::unique_lock l(get().assetLock);
+    get().registerEnvironmentMapInternal(std::move(env));
 }
 
 void AssetRegistry::registerMaterial(OMaterialAsset material) {
@@ -146,6 +162,9 @@ void AssetRegistry::loadAsset(ArchiveBuffer& buffer) {
     case SVGAsset::IDENTIFIER:
         asset = PSVGAsset(folder->svgs.at(name));
         break;
+    case EnvironmentMapAsset::IDENTIFIER:
+        asset = PEnvironmentMapAsset(folder->envs.at(name));
+        break;
     default:
         throw new std::logic_error("Unknown Identifier");
     }
@@ -176,13 +195,9 @@ AssetRegistry::AssetRegistry() : assetRoot(nullptr) {}
 
 AssetRegistry* AssetRegistry::getInstance() { return _instance; }
 
-void AssetRegistry::loadRegistry() {
-    get().loadRegistryInternal();
-}
+void AssetRegistry::loadRegistry() { get().loadRegistryInternal(); }
 
-void AssetRegistry::saveRegistry() {
-    get().saveRegistryInternal();
-}
+void AssetRegistry::saveRegistry() { get().saveRegistryInternal(); }
 
 AssetRegistry::AssetFolder* AssetRegistry::getOrCreateFolder(std::string_view fullPath) {
     AssetFolder* result = assetRoot;
@@ -209,11 +224,19 @@ void AssetRegistry::initialize(const std::filesystem::path& _rootFolder, Gfx::PG
     this->graphics = _graphics;
     this->rootFolder = _rootFolder;
     this->assetRoot = new AssetFolder("");
+    if (!std::filesystem::exists(rootFolder))
+    {
+        std::filesystem::create_directories(rootFolder);
+    }
+    else if (!std::filesystem::is_directory(rootFolder))
+    {
+        throw std::logic_error("Asset Folder is not a directory!!");
+    }
     loadRegistryInternal();
 }
 
 void AssetRegistry::loadRegistryInternal() {
-    Array<Pair<PAsset, ArchiveBuffer>> peeked; 
+    Array<Pair<PAsset, ArchiveBuffer>> peeked;
     {
         std::unique_lock l(get().assetLock);
         peeked = peekFolder(assetRoot);
@@ -295,12 +318,15 @@ Pair<PAsset, ArchiveBuffer> AssetRegistry::peekAsset(ArchiveBuffer& buffer) {
         folder->svgs[name] = new SVGAsset(folderPath, name);
         asset = PSVGAsset(folder->svgs[name]);
         break;
+    case EnvironmentMapAsset::IDENTIFIER:
+        folder->envs[name] = new EnvironmentMapAsset(folderPath, name);
+        asset = PEnvironmentMapAsset(folder->envs[name]);
+        break;
     default:
         throw new std::logic_error("Unknown Identifier");
     }
     return {asset, std::move(buffer)};
 }
-
 
 void AssetRegistry::saveRegistryInternal() { saveFolder("", assetRoot); }
 
@@ -323,6 +349,9 @@ void AssetRegistry::saveFolder(const std::filesystem::path& folderPath, AssetFol
     }
     for (const auto& [name, svg] : folder->svgs) {
         saveAsset(PSVGAsset(svg), SVGAsset::IDENTIFIER, folderPath, name);
+    }
+    for (const auto& [name, env] : folder->envs) {
+        saveAsset(PEnvironmentMapAsset(env), EnvironmentMapAsset::IDENTIFIER, folderPath, name);
     }
     for (auto& [name, child] : folder->children) {
         saveFolder(folderPath / name, child);
@@ -349,6 +378,11 @@ void AssetRegistry::registerFontInternal(OFontAsset font) {
 void AssetRegistry::registerSVGInternal(OSVGAsset svg) {
     AssetFolder* folder = getOrCreateFolder(svg->getFolderPath());
     folder->svgs[svg->getName()] = std::move(svg);
+}
+
+void AssetRegistry::registerEnvironmentMapInternal(OEnvironmentMapAsset env) {
+    AssetFolder* folder = getOrCreateFolder(env->getFolderPath());
+    folder->envs[env->getName()] = std::move(env);
 }
 
 void AssetRegistry::registerMaterialInternal(OMaterialAsset material) {

@@ -11,6 +11,8 @@ using namespace Seele::Vulkan;
 BufferAllocation::BufferAllocation(PGraphics graphics, const std::string& name, VkBufferCreateInfo bufferInfo,
                                    VmaAllocationCreateInfo allocInfo, Gfx::QueueType owner, uint64 alignment)
     : CommandBoundResource(graphics, name), size(bufferInfo.size), owner(owner) {
+    if (bufferInfo.size == 0)
+        return;
     VK_CHECK(vmaCreateBufferWithAlignment(graphics->getAllocator(), &bufferInfo, &allocInfo, alignment, &buffer, &allocation, &info));
     vmaGetAllocationMemoryProperties(graphics->getAllocator(), allocation, &properties);
     assert(!name.empty());
@@ -102,7 +104,7 @@ void BufferAllocation::updateContents(uint64 regionOffset, uint64 regionSize, vo
         .flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT,
         .usage = VMA_MEMORY_USAGE_AUTO,
     };
-    OBufferAllocation staging = new BufferAllocation(graphics, "UpdateStaging", stagingInfo, stagingAlloc, Gfx::QueueType::GRAPHICS);
+    OBufferAllocation staging = new BufferAllocation(graphics, fmt::format("{0}UpdateStaging", name), stagingInfo, stagingAlloc, Gfx::QueueType::GRAPHICS);
 
     uint8* data;
     VK_CHECK(vmaMapMemory(graphics->getAllocator(), staging->allocation, (void**)&data));
@@ -111,7 +113,7 @@ void BufferAllocation::updateContents(uint64 regionOffset, uint64 regionSize, vo
     vmaUnmapMemory(graphics->getAllocator(), staging->allocation);
 
     Gfx::QueueType prevOwner = owner;
-    // transferOwnership(Gfx::QueueType::TRANSFER);
+    transferOwnership(Gfx::QueueType::TRANSFER);
 
     PCommand cmd = graphics->getQueueCommands(Gfx::QueueType::GRAPHICS)->getCommands();
     VkBufferCopy copy = {
@@ -125,7 +127,7 @@ void BufferAllocation::updateContents(uint64 regionOffset, uint64 regionSize, vo
     pipelineBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_WRITE_BIT,
                     VK_PIPELINE_STAGE_TRANSFER_BIT);
 
-    // transferOwnership(prevOwner);
+    transferOwnership(prevOwner);
     graphics->getDestructionManager()->queueResourceForDestruction(std::move(staging));
 }
 
@@ -147,7 +149,7 @@ void BufferAllocation::readContents(uint64 regionOffset, uint64 regionSize, void
     OBufferAllocation staging = new BufferAllocation(graphics, "ReadStaging", stagingInfo, stagingAlloc, Gfx::QueueType::GRAPHICS);
 
     Gfx::QueueType prevOwner = owner;
-    // transferOwnership(Gfx::QueueType::TRANSFER);
+    transferOwnership(Gfx::QueueType::TRANSFER);
 
     PCommandPool pool = graphics->getQueueCommands(Gfx::QueueType::TRANSFER);
     PCommand cmd = pool->getCommands();
@@ -164,7 +166,7 @@ void BufferAllocation::readContents(uint64 regionOffset, uint64 regionSize, void
     pool->submitCommands();
     cmd->getFence()->wait(1000000);
 
-    // transferOwnership(prevOwner);
+    transferOwnership(prevOwner);
 
     uint8* data;
     VK_CHECK(vmaMapMemory(graphics->getAllocator(), staging->allocation, (void**)&data));
@@ -276,11 +278,11 @@ void Buffer::rotateBuffer(uint64 size, bool preserveContents) {
         return;
     }
     buffers.add(nullptr);
-    createBuffer(size, buffers.size() - 1);
+    createBuffer(size, (uint32)buffers.size() - 1);
     if (preserveContents) {
         copyBuffer(currentBuffer, buffers.size() - 1);
     }
-    currentBuffer = buffers.size() - 1;
+    currentBuffer = (uint32)buffers.size() - 1;
 }
 
 void Buffer::createBuffer(uint64 size, uint32 destIndex) {
@@ -437,6 +439,8 @@ void* ShaderBuffer::map() { return Vulkan::Buffer::map(); }
 void ShaderBuffer::unmap() { Vulkan::Buffer::unmap(); }
 
 void ShaderBuffer::clear() {
+    if (getAlloc() == nullptr)
+        return;
     PCommand command = graphics->getQueueCommands(getAlloc()->owner)->getCommands();
     command->bindResource(PBufferAllocation(getAlloc()));
     vkCmdFillBuffer(command->getHandle(), Vulkan::Buffer::getHandle(), 0, VK_WHOLE_SIZE, 0);

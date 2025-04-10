@@ -25,7 +25,7 @@ void buildAdjacency(const uint32 numVerts, const Array<uint32>& indices, Adjacen
         triangleOffset += info.trianglesPerVertex[j];
     }
 
-    uint32 numTriangles = indices.size() / 3;
+    uint32 numTriangles = (uint32)indices.size() / 3;
     info.triangleData.resize(triangleOffset);
     Array<uint32> offsets = info.indexBufferOffset;
     for (uint32 k = 0; k < numTriangles; ++k) {

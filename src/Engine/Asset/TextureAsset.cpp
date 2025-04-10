@@ -31,9 +31,7 @@ void TextureAsset::load(ArchiveBuffer& buffer) {
     Serialization::load(buffer, ktxData);
     KTX_ASSERT(
         ktxTexture_CreateFromMemory(ktxData.data(), ktxData.size(), KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, (ktxTexture**)&ktxHandle));
-
     ktxTexture2_TranscodeBasis(ktxHandle, KTX_TTF_RGBA32, 0);
-    // ktxTexture2_DeflateZstd(ktxHandle, 0);
 
     Gfx::PGraphics graphics = buffer.getGraphics();
     TextureCreateInfo createInfo = {
@@ -47,7 +45,6 @@ void TextureAsset::load(ArchiveBuffer& buffer) {
         .width = ktxHandle->baseWidth,
         .height = ktxHandle->baseHeight,
         .depth = ktxHandle->baseDepth,
-        .layers = ktxHandle->numFaces,
         .elements = ktxHandle->numLayers,
         .useMip = true,
         .usage = Gfx::SE_IMAGE_USAGE_SAMPLED_BIT,

@@ -1,6 +1,7 @@
 #pragma once
-#include "EngineTypes.h"
 #include "Concepts.h"
+#include "EngineTypes.h"
+#include "MemoryResource.h"
 #include <algorithm>
 #include <assert.h>
 #include <initializer_list>
@@ -12,7 +13,7 @@
 #endif
 
 namespace Seele {
-template <typename T, typename Allocator = std::pmr::polymorphic_allocator<T>> struct Array {
+template <typename T> struct Array {
   public:
     template <typename X> class IteratorBase {
       public:
@@ -67,7 +68,7 @@ template <typename T, typename Allocator = std::pmr::polymorphic_allocator<T>> s
     };
 
     using value_type = T;
-    using allocator_type = Allocator;
+    using allocator_type = std::pmr::polymorphic_allocator<T>;
     using size_type = std::size_t;
     using difference_type = std::ptrdiff_t;
     using pointer = T*;
@@ -82,12 +83,8 @@ template <typename T, typename Allocator = std::pmr::polymorphic_allocator<T>> s
     using reverse_iterator = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
-    constexpr Array() noexcept(noexcept(Allocator())) : arraySize(0), allocated(DEFAULT_ALLOC_SIZE), allocator(Allocator()) {
-        _data = allocateArray(DEFAULT_ALLOC_SIZE);
-        assert(_data != nullptr);
-    }
-
-    constexpr explicit Array(const allocator_type& alloc) noexcept : arraySize(0), allocated(DEFAULT_ALLOC_SIZE), allocator(alloc) {
+    constexpr Array(const allocator_type& alloc = allocator_type()) noexcept
+        : arraySize(0), allocated(DEFAULT_ALLOC_SIZE), allocator(alloc) {
         _data = allocateArray(DEFAULT_ALLOC_SIZE);
         assert(_data != nullptr);
     }
@@ -138,7 +135,8 @@ template <typename T, typename Allocator = std::pmr::polymorphic_allocator<T>> s
         assert(_data != nullptr);
         std::uninitialized_copy(other.begin(), other.end(), begin());
     }
-    constexpr Array(const Array& other, const Allocator& alloc) : arraySize(other.arraySize), allocated(other.allocated), allocator(alloc) {
+    constexpr Array(const Array& other, const allocator_type& alloc)
+        : arraySize(other.arraySize), allocated(other.allocated), allocator(alloc) {
         _data = allocateArray(other.allocated);
         assert(_data != nullptr);
         std::uninitialized_copy(other.begin(), other.end(), begin());
@@ -150,7 +148,7 @@ template <typename T, typename Allocator = std::pmr::polymorphic_allocator<T>> s
         other.allocated = 0;
         other.arraySize = 0;
     }
-    constexpr Array(Array&& other, const Allocator& alloc) noexcept
+    constexpr Array(Array&& other, const allocator_type& alloc) noexcept
         : arraySize(std::move(other.arraySize)), allocated(std::move(other.allocated)), allocator(alloc) {
         _data = allocateArray(other.allocated);
         std::uninitialized_move(other.begin(), other.end(), begin());
@@ -179,8 +177,8 @@ template <typename T, typename Allocator = std::pmr::polymorphic_allocator<T>> s
         }
         return *this;
     }
-    Array& operator=(Array&& other) noexcept(std::allocator_traits<Allocator>::propagate_on_container_move_assignment::value ||
-                                             std::allocator_traits<Allocator>::is_always_equal::value) {
+    Array& operator=(Array&& other) noexcept(std::allocator_traits<allocator_type>::propagate_on_container_move_assignment::value ||
+                                             std::allocator_traits<allocator_type>::is_always_equal::value) {
         if (this != &other) {
             if (_data != nullptr) {
                 clear();
@@ -294,7 +292,7 @@ template <typename T, typename Allocator = std::pmr::polymorphic_allocator<T>> s
         requires std::predicate<Pred, value_type>
     constexpr void remove_if(Pred&& pred, bool keepOrder = true) {
         Iterator it;
-        while((it = find(pred)) != end()) {
+        while ((it = find(pred)) != end()) {
             erase(it, keepOrder);
         }
     }
@@ -389,7 +387,11 @@ template <typename T, typename Allocator = std::pmr::polymorphic_allocator<T>> s
         assert(result != nullptr);
         return result;
     }
-    void deallocateArray(T* ptr, size_type size) { if(ptr == nullptr) return; allocator.deallocate(ptr, size); }
+    void deallocateArray(T* ptr, size_type size) {
+        if (ptr == nullptr)
+            return;
+        allocator.deallocate(ptr, size);
+    }
     template <typename Type> T& addInternal(Type&& t) noexcept {
         if (arraySize == allocated) {
             size_type newSize = arraySize + 1;
@@ -449,7 +451,7 @@ template <typename T, typename Allocator = std::pmr::polymorphic_allocator<T>> s
     allocator_type allocator;
 };
 
-template <class Type, class Alloc> constexpr bool operator==(const Array<Type, Alloc>& lhs, const Array<Type, Alloc>& rhs) {
+template <class Type> constexpr bool operator==(const Array<Type>& lhs, const Array<Type>& rhs) {
     if (lhs.size() != rhs.size()) {
         return false;
     }
@@ -461,7 +463,7 @@ template <class Type, class Alloc> constexpr bool operator==(const Array<Type, A
     return true;
 }
 
-template <class Type, class Alloc> constexpr auto operator<=>(const Array<Type, Alloc>& lhs, const Array<Type, Alloc>& rhs) {
+template <class Type> constexpr auto operator<=>(const Array<Type>& lhs, const Array<Type>& rhs) {
     return std::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
 }
 

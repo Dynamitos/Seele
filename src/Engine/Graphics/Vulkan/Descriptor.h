@@ -24,7 +24,7 @@ class DescriptorLayout : public Gfx::DescriptorLayout {
   private:
     PGraphics graphics;
     uint32 constantsSize = 0;
-    VkShaderStageFlags constantsStages;
+    VkShaderStageFlags constantsStages = 0;
     Array<VkDescriptorSetLayoutBinding> bindings;
     Map<std::string, DescriptorMapping> mappings;
     VkDescriptorSetLayout layoutHandle;
@@ -64,9 +64,7 @@ class DescriptorSet : public Gfx::DescriptorSet, public CommandBoundResource {
     virtual void updateBuffer(const std::string& name, uint32 index, Gfx::PVertexBuffer indexBuffer) override;
     virtual void updateBuffer(const std::string& name, uint32 index, Gfx::PIndexBuffer indexBuffer) override;
     virtual void updateSampler(const std::string& name, uint32 index, Gfx::PSampler samplerState) override;
-    virtual void updateTexture(const std::string& name, uint32 index, Gfx::PTexture2D texture) override;
-    virtual void updateTexture(const std::string& name, uint32 index, Gfx::PTexture3D texture) override;
-    virtual void updateTexture(const std::string& name, uint32 index, Gfx::PTextureCube texture) override;
+    virtual void updateTexture(const std::string& name, uint32 index, Gfx::PTexture texture) override;
     virtual void updateAccelerationStructure(const std::string& name, uint32 index, Gfx::PTopLevelAS as) override;
 
     constexpr VkDescriptorSet getHandle() const { return setHandle; }
@@ -74,7 +72,6 @@ class DescriptorSet : public Gfx::DescriptorSet, public CommandBoundResource {
   private:
     std::vector<uint8> constantData;
     OBufferAllocation constantsBuffer;
-    VkShaderStageFlags constantsStageFlags;
     List<VkDescriptorImageInfo> imageInfos;
     List<VkDescriptorBufferInfo> bufferInfos;
     List<VkWriteDescriptorSetAccelerationStructureKHR> accelerationInfos;

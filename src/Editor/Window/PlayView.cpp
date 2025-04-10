@@ -49,6 +49,7 @@ void PlayView::keyCallback(KeyCode code, InputAction action, KeyModifier modifie
     if (code == KeyCode::KEY_R && action == InputAction::RELEASE) {
         getGlobals().useRayTracing = !getGlobals().useRayTracing;
     }
-    //if (code == KeyCode::KEY_B && action == InputAction::RELEASE && modifier & KeyModifier::MOD_CONTROL) {
-    //}
+    if (code == KeyCode::KEY_H && action == InputAction::RELEASE) {
+        MemoryManager::printAllocations();
+    }
 }

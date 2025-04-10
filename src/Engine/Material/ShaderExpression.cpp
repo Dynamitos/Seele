@@ -69,7 +69,7 @@ FloatParameter::FloatParameter(std::string name, float data, uint32 index) : Sha
 
 FloatParameter::~FloatParameter() {}
 
-void FloatParameter::updateDescriptorSet(uint32 textureOffset, uint32 samplerOffset, uint32 floatOffset) {
+void FloatParameter::updateDescriptorSet(uint32, uint32, uint32 floatOffset) {
     Material::updateFloatData(floatOffset + index, 1, &data);
 }
 
@@ -98,7 +98,7 @@ VectorParameter::VectorParameter(std::string name, Vector data, uint32 index)
 
 VectorParameter::~VectorParameter() {}
 
-void VectorParameter::updateDescriptorSet(uint32 textureOffset, uint32 samplerOffset, uint32 floatOffset) {
+void VectorParameter::updateDescriptorSet(uint32, uint32, uint32 floatOffset) {
     Material::updateFloatData(floatOffset + index, 3, (float*) & data);
 }
 
@@ -125,7 +125,7 @@ TextureParameter::TextureParameter(std::string name, PTextureAsset asset, uint32
 
 TextureParameter::~TextureParameter() {}
 
-void TextureParameter::updateDescriptorSet(uint32 textureOffset, uint32 samplerOffset, uint32 floatOffset) {
+void TextureParameter::updateDescriptorSet(uint32 textureOffset, uint32, uint32) {
     Material::updateTexture(textureOffset + index, data->getTexture());
 }
 
@@ -158,7 +158,7 @@ SamplerParameter::SamplerParameter(std::string name, Gfx::OSampler sampler, uint
 
 SamplerParameter::~SamplerParameter() {}
 
-void SamplerParameter::updateDescriptorSet(uint32 textureOffset, uint32 samplerOffset, uint32 floatOffset) {
+void SamplerParameter::updateDescriptorSet(uint32, uint32 samplerOffset, uint32) {
     Material::updateSampler(samplerOffset + index, data);
 }
 
@@ -183,9 +183,9 @@ CombinedTextureParameter::CombinedTextureParameter(std::string name, PTextureAss
 
 CombinedTextureParameter::~CombinedTextureParameter() {}
 
-void CombinedTextureParameter::updateDescriptorSet(uint32 textureOffset, uint32 samplerOffset, uint32 floatOffset) { assert(false); }
+void CombinedTextureParameter::updateDescriptorSet(uint32 , uint32 , uint32 ) { assert(false); }
 
-std::string CombinedTextureParameter::evaluate(Map<std::string, std::string>& varState) const { return ""; }
+std::string CombinedTextureParameter::evaluate(Map<std::string, std::string>&) const { return ""; }
 
 void CombinedTextureParameter::save(ArchiveBuffer& buffer) const {
     ShaderParameter::save(buffer);
