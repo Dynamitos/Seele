@@ -79,8 +79,8 @@ BasePass::BasePass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics)
                                                                       });
     }
     skybox = Seele::Component::Skybox{
-        .day = scene->getLightEnvironment()->getEnvironmentMap()->getIrradianceMap(),
-        .night = scene->getLightEnvironment()->getEnvironmentMap()->getIrradianceMap(),
+        .day = scene->getLightEnvironment()->getEnvironmentMap()->getSkybox(),
+        .night = scene->getLightEnvironment()->getEnvironmentMap()->getSkybox(),
         .fogColor = Vector(0.1, 0.1, 0.8),
         .blendFactor = 0,
     };

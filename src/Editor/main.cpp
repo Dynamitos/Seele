@@ -1,10 +1,10 @@
 #include "Asset/AssetImporter.h"
 #include "Asset/AssetRegistry.h"
+#include "Asset/EnvironmentLoader.h"
 #include "Asset/FontLoader.h"
 #include "Asset/MaterialLoader.h"
 #include "Asset/MeshLoader.h"
 #include "Asset/TextureLoader.h"
-#include "Asset/EnvironmentLoader.h"
 #include "Graphics/Initializer.h"
 #ifdef __APPLE__
 #include "Graphics/Metal/Graphics.h"
@@ -50,9 +50,11 @@ int main() {
         AssetImporter::importEnvironmentMap(EnvironmentImportArgs{
             .filePath = sourcePath / "import" / "textures" / "newport_loft.hdr",
         });
-        AssetImporter::importTexture(TextureImportArgs{.filePath = sourcePath / "import" / "texture" / "Dirt.png", .importPath = ""});
-        
-        
+        AssetImporter::importTexture(TextureImportArgs{
+            .filePath = sourcePath / "import" / "textures" / "grass_block_side.png",
+            .importPath = "",
+        });
+
         getThreadPool().waitIdle();
         vd->commitMeshes();
         WindowCreateInfo mainWindowInfo = {
