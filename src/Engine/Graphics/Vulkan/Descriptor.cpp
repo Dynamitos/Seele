@@ -197,7 +197,7 @@ DescriptorSet::DescriptorSet(PGraphics graphics, PDescriptorPool owner)
     constantData.resize(owner->getLayout()->constantsSize);
 }
 
-DescriptorSet::~DescriptorSet() {}
+DescriptorSet::~DescriptorSet() { graphics->getDestructionManager()->queueResourceForDestruction(std::move(constantsBuffer)); }
 
 void DescriptorSet::updateConstants(const std::string& mappingName, uint32 offset, void* data) {
     std::memcpy(constantData.data() + owner->getLayout()->mappings[mappingName].constantOffset, (char*)data + offset,

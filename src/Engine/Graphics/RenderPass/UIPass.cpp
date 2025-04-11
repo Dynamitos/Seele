@@ -170,7 +170,7 @@ void UIPass::createRenderPass() {
                          Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
         },
     };
-    renderPass = graphics->createRenderPass(std::move(layout), dependency, viewport->getRenderArea(), "TextPass");
+    renderPass = graphics->createRenderPass(std::move(layout), dependency, "TextPass");
 
     graphics->beginShaderCompilation(ShaderCompilationInfo{
         .name = "TextVertex",

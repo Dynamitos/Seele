@@ -15,7 +15,7 @@ View::~View() {}
 
 void View::resize(URect area) {
     createInfo.dimensions = area;
-    viewport = graphics->createViewport(owner->getGfxHandle(), createInfo);
+    viewport->resize(area.size.x, area.size.y);
     applyArea(area);
 }
 

@@ -143,10 +143,6 @@ void EnvironmentLoader::import(EnvironmentImportArgs args, PEnvironmentMapAsset 
             .dstAccess = Gfx::SE_ACCESS_SHADER_READ_BIT,
         }
         },
-        URect{
-            .size = {SOURCE_RESOLUTION, SOURCE_RESOLUTION},
-            .offset = {0, 0},
-        },
         "EnvironmentRenderPass", {0b111111}, {0b111111});
     cubeRenderPipeline = graphics->createGraphicsPipeline(Gfx::LegacyPipelineCreateInfo{
         .vertexShader = cubeRenderVertex,
@@ -180,10 +176,6 @@ void EnvironmentLoader::import(EnvironmentImportArgs args, PEnvironmentMapAsset 
                                                              Gfx::SE_ATTACHMENT_LOAD_OP_DONT_CARE, Gfx::SE_ATTACHMENT_STORE_OP_STORE)},
         },
         {},
-        URect{
-            .size = {CONVOLUTED_RESOLUTION, CONVOLUTED_RESOLUTION},
-            .offset = {0, 0},
-        },
         "EnvironmentRenderPass", {0b111111}, {0b111111});
     convolutionPipeline = graphics->createGraphicsPipeline(Gfx::LegacyPipelineCreateInfo{
         .vertexShader = cubeRenderVertex,

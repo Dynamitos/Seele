@@ -9,13 +9,9 @@
 using namespace Seele;
 using namespace Seele::Vulkan;
 
-RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Array<Gfx::SubPassDependency> _dependencies, URect viewport,
+RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Array<Gfx::SubPassDependency> _dependencies,
                        std::string name, Array<uint32> viewMasks, Array<uint32> correlationMasks)
     : Gfx::RenderPass(std::move(_layout), std::move(_dependencies)), graphics(graphics) {
-    renderArea.extent.width = viewport.size.x;
-    renderArea.extent.height = viewport.size.y;
-    renderArea.offset.x = viewport.offset.x;
-    renderArea.offset.y = viewport.offset.y;
     subpassContents = VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS;
     Array<VkAttachmentDescription2> attachments;
     Array<VkAttachmentReference2> inputRefs;

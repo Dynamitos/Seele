@@ -22,9 +22,11 @@ class Framebuffer {
     virtual ~Framebuffer();
     constexpr VkFramebuffer getHandle() const { return handle; }
     constexpr uint32 getHash() const { return hash; }
+    constexpr VkRect2D getRenderArea() const { return renderArea; }
 
   private:
     uint32 hash;
+    VkRect2D renderArea;
     PGraphics graphics;
     VkFramebuffer handle;
     Gfx::RenderTargetLayout layout;

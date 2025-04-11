@@ -34,9 +34,8 @@ class Graphics : public Gfx::Graphics {
     virtual Gfx::OWindow createWindow(const WindowCreateInfo& createInfo) override;
     virtual Gfx::OViewport createViewport(Gfx::PWindow owner, const ViewportCreateInfo& createInfo) override;
 
-    virtual Gfx::ORenderPass createRenderPass(Gfx::RenderTargetLayout layout, Array<Gfx::SubPassDependency> dependencies,
-                                              URect renderArea, std::string name, Array<uint32> viewMasks,
-                                              Array<uint32> correlationMasks) override;
+    virtual Gfx::ORenderPass createRenderPass(Gfx::RenderTargetLayout layout, Array<Gfx::SubPassDependency> dependencies, std::string name,
+                                              Array<uint32> viewMasks, Array<uint32> correlationMasks) override;
     virtual void beginRenderPass(Gfx::PRenderPass renderPass) override;
     virtual void endRenderPass() override;
     virtual void waitDeviceIdle() override;
@@ -68,7 +67,7 @@ class Graphics : public Gfx::Graphics {
     virtual Gfx::PRayTracingPipeline createRayTracingPipeline(Gfx::RayTracingPipelineCreateInfo createInfo) override;
     virtual Gfx::PComputePipeline createComputePipeline(Gfx::ComputePipelineCreateInfo createInfo) override;
     virtual Gfx::OSampler createSampler(const SamplerCreateInfo& createInfo) override;
-    
+
     virtual Gfx::ODescriptorLayout createDescriptorLayout(const std::string& name = "") override;
     virtual Gfx::OPipelineLayout createPipelineLayout(const std::string& name = "", Gfx::PPipelineLayout baseLayout = nullptr) override;
 
@@ -83,7 +82,7 @@ class Graphics : public Gfx::Graphics {
 
     virtual void resolveTexture(Gfx::PTexture source, Gfx::PTexture destination) override;
     virtual void copyTexture(Gfx::PTexture src, Gfx::PTexture dst) override;
-    
+
     virtual void copyBuffer(Gfx::PShaderBuffer src, Gfx::PShaderBuffer dst) override;
 
     // Ray Tracing

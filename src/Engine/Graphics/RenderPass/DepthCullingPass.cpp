@@ -306,5 +306,5 @@ void DepthCullingPass::createRenderPass() {
                          Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
         },
     };
-    renderPass = graphics->createRenderPass(std::move(layout), std::move(dependency), viewport->getRenderArea(), "DepthCullingPass");
+    renderPass = graphics->createRenderPass(std::move(layout), std::move(dependency), "DepthCullingPass");
 }

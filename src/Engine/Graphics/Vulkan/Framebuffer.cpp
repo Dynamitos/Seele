@@ -69,7 +69,10 @@ Framebuffer::Framebuffer(PGraphics graphics, PRenderPass renderPass, Gfx::Render
         .layers = 1,
     };
     VK_CHECK(vkCreateFramebuffer(graphics->getDevice(), &createInfo, nullptr, &handle));
-
+    renderArea = VkRect2D{
+        .offset = {0, 0},
+        .extent = {width, height},
+    };
     hash = CRC::Calculate(&description, sizeof(FramebufferDescription), CRC::CRC_32());
 }
 

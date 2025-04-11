@@ -58,7 +58,7 @@ void Command::beginRenderPass(PRenderPass renderPass, PFramebuffer framebuffer) 
         .pNext = nullptr,
         .renderPass = renderPass->getHandle(),
         .framebuffer = framebuffer->getHandle(),
-        .renderArea = renderPass->getRenderArea(),
+        .renderArea = framebuffer->getRenderArea(),
         .clearValueCount = (uint32)renderPass->getClearValueCount(),
         .pClearValues = renderPass->getClearValues(),
     };

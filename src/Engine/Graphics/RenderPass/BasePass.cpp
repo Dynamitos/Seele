@@ -472,7 +472,7 @@ void BasePass::createRenderPass() {
                          Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
         },
     };
-    renderPass = graphics->createRenderPass(std::move(layout), std::move(dependency), viewport->getRenderArea(), "BasePass");
+    renderPass = graphics->createRenderPass(std::move(layout), std::move(dependency), "BasePass");
     oLightIndexList = resources->requestBuffer("LIGHTCULLING_OLIGHTLIST");
     tLightIndexList = resources->requestBuffer("LIGHTCULLING_TLIGHTLIST");
     oLightGrid = resources->requestTexture("LIGHTCULLING_OLIGHTGRID");

@@ -171,10 +171,9 @@ Gfx::OViewport Graphics::createViewport(Gfx::PWindow owner, const ViewportCreate
     return new Viewport(owner, viewportInfo);
 }
 
-Gfx::ORenderPass Graphics::createRenderPass(Gfx::RenderTargetLayout layout, Array<Gfx::SubPassDependency> dependencies,
-                                            URect renderArea, std::string name, Array<uint32> viewMasks,
-                                            Array<uint32> correlationMasks) {
-    return new RenderPass(this, std::move(layout), std::move(dependencies), renderArea, name, std::move(viewMasks), std::move(correlationMasks));
+Gfx::ORenderPass Graphics::createRenderPass(Gfx::RenderTargetLayout layout, Array<Gfx::SubPassDependency> dependencies, std::string name,
+                                            Array<uint32> viewMasks, Array<uint32> correlationMasks) {
+    return new RenderPass(this, std::move(layout), std::move(dependencies), name, std::move(viewMasks), std::move(correlationMasks));
 }
 void Graphics::beginRenderPass(Gfx::PRenderPass renderPass) {
     PRenderPass rp = renderPass.cast<RenderPass>();
@@ -322,9 +321,7 @@ Gfx::OPipelineStatisticsQuery Graphics::createPipelineStatisticsQuery(const std:
     return new PipelineStatisticsQuery(this, name);
 }
 
-Gfx::OTimestampQuery Graphics::createTimestampQuery(uint64, const std::string& name) {
-    return new TimestampQuery(this, name);
-}
+Gfx::OTimestampQuery Graphics::createTimestampQuery(uint64, const std::string& name) { return new TimestampQuery(this, name); }
 
 void Graphics::beginDebugRegion(const std::string& name) {
     VkDebugUtilsLabelEXT label = {
@@ -591,7 +588,8 @@ void Graphics::buildBottomLevelAccelerationStructures(Array<Gfx::PBottomLevelAS>
     }
 
     PCommand cmd = graphicsCommands->getCommands();
-    vkCmdBuildAccelerationStructuresKHR(cmd->getHandle(), (uint32)buildGeometries.size(), buildGeometries.data(), buildRangePointers.data());
+    vkCmdBuildAccelerationStructuresKHR(cmd->getHandle(), (uint32)buildGeometries.size(), buildGeometries.data(),
+                                        buildRangePointers.data());
     cmd->bindResource(PBufferAllocation(transformBuffer));
     destructionManager->queueResourceForDestruction(std::move(transformBuffer));
     for (auto& scratchAlloc : scratchBuffers) {

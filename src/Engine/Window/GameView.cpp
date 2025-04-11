@@ -10,8 +10,8 @@
 #include "Graphics/RenderPass/LightCullingPass.h"
 #include "Graphics/RenderPass/RayTracingPass.h"
 #include "Graphics/RenderPass/RenderGraphResources.h"
-#include "Graphics/RenderPass/VisibilityPass.h"
 #include "Graphics/RenderPass/ToneMappingPass.h"
+#include "Graphics/RenderPass/VisibilityPass.h"
 #include "System/CameraUpdater.h"
 #include "System/LightGather.h"
 #include "System/MeshUpdater.h"
@@ -36,7 +36,6 @@ GameView::GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreate
         rayTracingGraph.setViewport(viewport);
         rayTracingGraph.createRenderPass();
     }
-
 }
 
 GameView::~GameView() {}
@@ -77,7 +76,10 @@ void GameView::render() {
     }
 }
 
-void GameView::applyArea(URect) { renderGraph.setViewport(viewport); }
+void GameView::applyArea(URect) {
+    renderGraph.setViewport(viewport);
+    renderGraph.createRenderPass();
+}
 
 void GameView::reloadGame() {
     gameInterface.reload();
