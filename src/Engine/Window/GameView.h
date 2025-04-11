@@ -12,7 +12,7 @@
 namespace Seele {
 class GameView : public View {
   public:
-    GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo& createInfo, std::string dllPath);
+    GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo& createInfo, std::filesystem::path dllPath);
     virtual ~GameView();
     virtual void beginUpdate() override;
     virtual void update() override;

@@ -2,18 +2,19 @@
 #include "Game.h"
 #define NOIME
 #include "Windows.h"
+#include <filesystem>
 
 namespace Seele {
 class GameInterface {
   public:
-    GameInterface(std::string dllPath);
+    GameInterface(std::filesystem::path dllPath);
     ~GameInterface();
     Game* getGame();
     void reload();
 
   private:
     HMODULE lib = NULL;
-    std::string dllPath;
+    std::filesystem::path dllPath;
     Game* game;
     Game* (*createInstance)() = nullptr;
     void (*destroyInstance)(Game*) = nullptr;

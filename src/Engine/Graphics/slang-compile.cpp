@@ -93,7 +93,7 @@ void Seele::beginCompilation(const ShaderCompilationInfo& info, SlangCompileTarg
     targetDesc.format = target;
     sessionDesc.targetCount = 1;
     sessionDesc.targets = &targetDesc;
-    StaticArray<const char*, 5> searchPaths = {"shaders/", "shaders/lib/", "shaders/raytracing/", "shaders/terrain", "shaders/generated/"};
+    StaticArray<const char*, 6> searchPaths = {"shaders/", "shaders/lib/", "shaders/raytracing/", "shaders/terrain", "shaders/game", "shaders/generated/"};
     sessionDesc.searchPaths = searchPaths.data();
     sessionDesc.searchPathCount = searchPaths.size();
 

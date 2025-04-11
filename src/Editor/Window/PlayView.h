@@ -5,7 +5,7 @@ namespace Seele {
 namespace Editor {
 class PlayView : public GameView {
   public:
-    PlayView(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo& createInfo, std::string dllPath);
+    PlayView(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo& createInfo, std::filesystem::path dllPath);
     virtual ~PlayView();
     virtual void beginUpdate() override;
     virtual void update() override;

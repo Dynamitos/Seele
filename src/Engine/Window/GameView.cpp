@@ -19,7 +19,7 @@
 
 using namespace Seele;
 
-GameView::GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo& createInfo, std::string dllPath)
+GameView::GameView(Gfx::PGraphics graphics, PWindow window, const ViewportCreateInfo& createInfo, std::filesystem::path dllPath)
     : View(graphics, window, createInfo, "Game"), graphics(graphics), scene(new Scene(graphics)), gameInterface(dllPath) {
     reloadGame();
     renderGraph.addPass(new CachedDepthPass(graphics, scene));

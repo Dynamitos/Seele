@@ -71,7 +71,7 @@ int main() {
                     .offset = {0, 0},
                 },
         };
-        OGameView sceneView = new Editor::PlayView(graphics, window, sceneViewInfo, binaryPath.generic_string());
+        OGameView sceneView = new Editor::PlayView(graphics, window, sceneViewInfo, binaryPath);
         sceneView->setFocused();
         // OInspectorView inspectorView = new Editor::InspectorView(graphics, window,
         //                                                          ViewportCreateInfo{
