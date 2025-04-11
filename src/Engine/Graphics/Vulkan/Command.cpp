@@ -344,6 +344,8 @@ void RenderCommand::drawIndexed(uint32 indexCount, uint32 instanceCount, int32 f
 }
 void RenderCommand::drawMesh(uint32 groupX, uint32 groupY, uint32 groupZ) {
     assert(threadId == std::this_thread::get_id());
+    if (groupX * groupY * groupZ == 0) // any dimension is 0
+        return;
     vkCmdDrawMeshTasksEXT(handle, groupX, groupY, groupZ);
 }
 

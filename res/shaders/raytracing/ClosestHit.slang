@@ -3,7 +3,7 @@ import MaterialParameter;
 import LightEnv;
 import Scene;
 import RayTracingData;
-import StaticMeshVertexData;
+import VertexData;
 import Material;
 import MATERIAL_FILE_NAME;
 

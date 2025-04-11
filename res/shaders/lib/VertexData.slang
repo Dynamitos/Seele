@@ -6,7 +6,9 @@ struct VertexInput
 	uint instanceId: SV_InstanceID;
 }
 
-//interface IVertexData
-//{
-//    VertexAttributes getAttributes(uint index);
-//};
+interface IVertexData
+{
+    VertexAttributes getAttributes(uint index);
+};
+layout(set = 1)
+ParameterBlock<IVertexData> pVertexData;

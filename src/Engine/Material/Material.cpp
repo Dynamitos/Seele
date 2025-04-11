@@ -159,9 +159,9 @@ void Material::load(ArchiveBuffer& buffer) {
 void Material::compile() {
     std::ofstream codeStream("./shaders/generated/" + materialName + ".slang");
     codeStream << "import MaterialParameter;\n";
-    codeStream << "import LightEnv;\n";
     codeStream << "import Material;\n";
-    codeStream << "struct Material{\n";
+    codeStream << "import LightEnv;\n";
+    codeStream << "struct Material : IMaterial{\n";
     codeStream << "\ttypedef " << brdf.profile << " BRDF;\n";
     codeStream << "\tstatic " << brdf.profile << " prepare(MaterialParameter input) {\n";
     codeStream << "\t\t" << brdf.profile << " result;\n";

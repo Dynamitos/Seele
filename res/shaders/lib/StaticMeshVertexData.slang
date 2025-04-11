@@ -2,7 +2,7 @@ import Common;
 import VertexData;
 import MaterialParameter;
 
-struct StaticMeshVertexData
+struct StaticMeshVertexData : IVertexData
 {
     float uint16ToFloat(uint16_t value)
     {
@@ -34,5 +34,3 @@ struct StaticMeshVertexData
 	StructuredBuffer<uint16_t> color;
 	StructuredBuffer<uint16_t> texCoords[MAX_TEXCOORDS];
 };
-layout(set=1)
-ParameterBlock<StaticMeshVertexData> pVertexData;

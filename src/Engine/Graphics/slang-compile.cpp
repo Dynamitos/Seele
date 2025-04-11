@@ -147,12 +147,12 @@ void Seele::beginCompilation(const ShaderCompilationInfo& info, SlangCompileTarg
     // workaround
     if (info.name == "RayGenMiss")
     {
-        layout->addMapping("pVertexData", 1);
         layout->addMapping("pScene", 2);
         layout->addMapping("pLightEnv", 3);
         layout->addMapping("pResources", 4);
         layout->addMapping("pRayTracingParams", 5);
     }
+    layout->addMapping("pVertexData", 1);
     // layout->addMapping("pWaterMaterial", 1);
 }
 

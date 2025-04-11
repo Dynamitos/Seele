@@ -1,12 +1,13 @@
 import Common;
 import MaterialParameter;
 import Scene;
+import LightEnv;
 
-//interface IMaterial
-//{
-//    associatedtype BRDF: IBRDF;
-//	static BRDF prepare(MaterialParameter input);
-//};
+interface IMaterial
+{
+    associatedtype BRDF: IBRDF;
+	BRDF prepare(MaterialParameter input);
+};
 struct MaterialResources
 {
     Texture2D textureArray[512];
