@@ -9,7 +9,7 @@ class CachedDepthPass : public RenderPass {
     CachedDepthPass(CachedDepthPass&&) = default;
     CachedDepthPass& operator=(CachedDepthPass&&) = default;
     virtual ~CachedDepthPass();
-    virtual void beginFrame(const Component::Camera& cam) override;
+    virtual void beginFrame(const Component::Camera& cam, const Component::Transform& transform) override;
     virtual void render() override;
     virtual void endFrame() override;
     virtual void publishOutputs() override;

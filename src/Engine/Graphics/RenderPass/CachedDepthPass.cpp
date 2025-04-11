@@ -41,7 +41,7 @@ CachedDepthPass::CachedDepthPass(Gfx::PGraphics graphics, PScene scene) : Render
 
 CachedDepthPass::~CachedDepthPass() {}
 
-void CachedDepthPass::beginFrame(const Component::Camera& cam) { RenderPass::beginFrame(cam); }
+void CachedDepthPass::beginFrame(const Component::Camera& cam, const Component::Transform& transform) { RenderPass::beginFrame(cam, transform); }
 
 void CachedDepthPass::render() {
     query->beginQuery();

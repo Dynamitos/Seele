@@ -23,9 +23,9 @@ class RenderGraph {
             pass->createRenderPass();
         }
     }
-    void render(const Component::Camera& cam) {
+    void render(const Component::Camera& cam, const Component::Transform& transform) {
         for (auto& pass : passes) {
-            pass->beginFrame(cam);
+            pass->beginFrame(cam, transform);
         }
         for (auto& pass : passes) {
             pass->render();

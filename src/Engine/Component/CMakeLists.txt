@@ -2,7 +2,6 @@ target_sources(Engine
     PRIVATE
         BoxCollider.h
         Camera.h
-        Camera.cpp
         Collider.h
         Collider.cpp
         Component.h

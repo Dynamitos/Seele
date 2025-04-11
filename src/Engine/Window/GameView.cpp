@@ -65,14 +65,17 @@ void GameView::prepareRender() {}
 
 void GameView::render() {
     Component::Camera cam;
-    scene->view<Component::Camera>([&cam](Component::Camera& c) {
-        if (c.mainCamera)
+    Component::Transform transform;
+    scene->view<Component::Camera, Component::Transform>([&cam, &transform](Component::Camera& c, Component::Transform& t) {
+        if (c.mainCamera) {
             cam = c;
+            transform = t;
+        }
     });
     if (getGlobals().useRayTracing && graphics->supportRayTracing()) {
-        rayTracingGraph.render(cam);
+        rayTracingGraph.render(cam, transform);
     } else {
-        renderGraph.render(cam);
+        renderGraph.render(cam, transform);
     }
 }
 

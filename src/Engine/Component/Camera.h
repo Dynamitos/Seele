@@ -6,32 +6,8 @@
 namespace Seele {
 namespace Component {
 struct Camera {
-    REQUIRE_COMPONENT(Transform)
-
-    Camera();
-    ~Camera();
-
-    Matrix4 getViewMatrix() const {
-        assert(!bNeedsViewBuild);
-        return viewMatrix;
-    }
-    Vector getCameraPosition() const { return cameraPos; }
-    Vector getCameraForward() const { return cameraForward; }
-    void mouseMove(float deltaX, float deltaY);
-    void mouseScroll(float x);
-    void moveX(float amount);
-    void moveY(float amount);
-    void buildViewMatrix();
-
-    bool mainCamera = false;
-
-  private:
-    float yaw;
-    float pitch;
     Matrix4 viewMatrix;
-    Vector cameraPos;
-    Vector cameraForward;
-    bool bNeedsViewBuild;
+    bool mainCamera = false;
 };
 } // namespace Component
 } // namespace Seele

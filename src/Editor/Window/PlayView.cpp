@@ -43,7 +43,7 @@ void PlayView::keyCallback(KeyCode code, InputAction action, KeyModifier modifie
                 cam = c;
             }
         });
-        std::cout << cam.getCameraPosition() << std::endl;
+        std::cout << tra.getPosition() << std::endl;
         std::cout << tra.getRotation() << std::endl;
     }
     if (code == KeyCode::KEY_R && action == InputAction::RELEASE) {

@@ -88,11 +88,11 @@ BasePass::BasePass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics)
 
 BasePass::~BasePass() {}
 
-void BasePass::beginFrame(const Component::Camera& cam) {
-    RenderPass::beginFrame(cam);
+void BasePass::beginFrame(const Component::Camera& cam, const Component::Transform& transform) {
+    RenderPass::beginFrame(cam, transform);
 
-    cameraPos = cam.getCameraPosition();
-    cameraForward = cam.getCameraForward();
+    cameraPos = transform.getPosition();
+    cameraForward = transform.getForward();
 
     lightCullingLayout->reset();
     opaqueCulling = lightCullingLayout->allocateDescriptorSet();

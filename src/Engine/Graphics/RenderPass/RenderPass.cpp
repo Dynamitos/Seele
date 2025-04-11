@@ -23,9 +23,9 @@ RenderPass::RenderPass(Gfx::PGraphics graphics) : graphics(graphics) {
 
 RenderPass::~RenderPass() {}
 
-void RenderPass::beginFrame(const Component::Camera& cam) {
+void RenderPass::beginFrame(const Component::Camera& cam, const Component::Transform& transform) {
     auto screenDim = Vector2(static_cast<float>(viewport->getWidth()), static_cast<float>(viewport->getHeight()));
-    Matrix4 cameraMatrix = cam.getViewMatrix();
+    Matrix4 cameraMatrix = cam.viewMatrix;
     Matrix4 projectionMatrix = viewport->getProjectionMatrix();
     viewParams = {
         .viewMatrix = cameraMatrix,
@@ -34,8 +34,8 @@ void RenderPass::beginFrame(const Component::Camera& cam) {
         .inverseProjection = glm::inverse(projectionMatrix),
         .viewProjectionMatrix = projectionMatrix * cameraMatrix,
         .inverseViewProjectionMatrix = glm::inverse(projectionMatrix * cameraMatrix),
-        .cameraPosition_WS = Vector4(cam.getCameraPosition(), 1),
-        .cameraForward_WS = Vector4(cam.getCameraForward(), 1),
+        .cameraPosition_WS = Vector4(transform.getPosition(), 1),
+        .cameraForward_WS = Vector4(transform.getForward(), 1),
         .screenDimensions = screenDim,
         .invScreenDimensions = 1.0f / screenDim,
         .frameIndex = Gfx::getCurrentFrameIndex(),

@@ -14,8 +14,8 @@ LightCullingPass::LightCullingPass(Gfx::PGraphics graphics, PScene scene) : Rend
 
 LightCullingPass::~LightCullingPass() {}
 
-void LightCullingPass::beginFrame(const Component::Camera& cam) {
-    RenderPass::beginFrame(cam);
+void LightCullingPass::beginFrame(const Component::Camera& cam, const Component::Transform& transform) {
+    RenderPass::beginFrame(cam, transform);
 
     oLightIndexCounter->pipelineBarrier(Gfx::SE_ACCESS_MEMORY_WRITE_BIT | Gfx::SE_ACCESS_MEMORY_READ_BIT,
                                         Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT, Gfx::SE_ACCESS_MEMORY_WRITE_BIT,
@@ -229,7 +229,7 @@ void LightCullingPass::setupFrustums() {
     numThreads = glm::ceil(glm::vec4(viewportWidth / (float)BLOCK_SIZE, viewportHeight / (float)BLOCK_SIZE, 1, 0));
     numThreadGroups = glm::ceil(glm::vec4(numThreads.x / (float)BLOCK_SIZE, numThreads.y / (float)BLOCK_SIZE, 1, 0));
 
-    RenderPass::beginFrame(Component::Camera());
+    RenderPass::beginFrame(Component::Camera(), Component::Transform());
 
     dispatchParamsLayout = graphics->createDescriptorLayout("pDispatchParams");
     dispatchParamsLayout->addDescriptorBinding(Gfx::DescriptorBinding{

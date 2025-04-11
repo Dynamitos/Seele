@@ -123,7 +123,7 @@ ToneMappingPass::ToneMappingPass(Gfx::PGraphics graphics) : RenderPass(graphics)
 
 ToneMappingPass::~ToneMappingPass() {}
 
-void ToneMappingPass::beginFrame(const Component::Camera& cam) { RenderPass::beginFrame(cam); }
+void ToneMappingPass::beginFrame(const Component::Camera& cam, const Component::Transform& transform) { RenderPass::beginFrame(cam, transform); }
 
 void ToneMappingPass::render() {
     hdrInputTexture.getTexture()->changeLayout(Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,

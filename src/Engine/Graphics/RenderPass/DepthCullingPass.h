@@ -11,7 +11,7 @@ class DepthCullingPass : public RenderPass {
     DepthCullingPass(DepthCullingPass&&) = default;
     DepthCullingPass& operator=(DepthCullingPass&&) = default;
     virtual ~DepthCullingPass();
-    virtual void beginFrame(const Component::Camera& cam) override;
+    virtual void beginFrame(const Component::Camera& cam, const Component::Transform& transform) override;
     virtual void render() override;
     virtual void endFrame() override;
     virtual void publishOutputs() override;

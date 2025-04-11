@@ -11,7 +11,7 @@ class BasePass : public RenderPass {
     BasePass(BasePass&&) = default;
     BasePass& operator=(BasePass&&) = default;
     virtual ~BasePass();
-    virtual void beginFrame(const Component::Camera& cam) override;
+    virtual void beginFrame(const Component::Camera& cam, const Component::Transform& transform) override;
     virtual void render() override;
     virtual void endFrame() override;
     virtual void publishOutputs() override;

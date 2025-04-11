@@ -34,7 +34,7 @@ void InspectorView::commitUpdate() {}
 
 void InspectorView::prepareRender() {}
 
-void InspectorView::render() { renderGraph.render(Component::Camera()); }
+void InspectorView::render() { renderGraph.render(Component::Camera(), Component::Transform()); }
 
 void InspectorView::applyArea(URect ) {}
 

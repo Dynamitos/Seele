@@ -13,7 +13,7 @@ class UIPass : public RenderPass {
     UIPass(UIPass&&) = default;
     UIPass& operator=(UIPass&&) = default;
     virtual ~UIPass();
-    virtual void beginFrame(const Component::Camera& cam) override;
+    virtual void beginFrame(const Component::Camera& cam, const Component::Transform& transform) override;
     virtual void render() override;
     virtual void endFrame() override;
     virtual void publishOutputs() override;

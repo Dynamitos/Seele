@@ -4,12 +4,12 @@
 
 namespace Seele {
 namespace System {
-class CameraUpdater : public ComponentSystem<Component::Camera> {
+class CameraUpdater : public ComponentSystem<Component::Camera, Component::Transform> {
   public:
     CameraUpdater(PScene scene);
     virtual ~CameraUpdater();
 
-    virtual void update(Component::Camera& camera);
+    virtual void update(Component::Camera& camera, Component::Transform& transform);
 
   private:
 };

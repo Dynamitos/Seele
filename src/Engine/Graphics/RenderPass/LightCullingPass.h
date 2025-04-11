@@ -15,7 +15,7 @@ class LightCullingPass : public RenderPass {
     LightCullingPass(LightCullingPass&&) = default;
     LightCullingPass& operator=(LightCullingPass&&) = default;
     virtual ~LightCullingPass();
-    virtual void beginFrame(const Component::Camera& cam) override;
+    virtual void beginFrame(const Component::Camera& cam, const Component::Transform& transform) override;
     virtual void render() override;
     virtual void endFrame() override;
     virtual void publishOutputs() override;

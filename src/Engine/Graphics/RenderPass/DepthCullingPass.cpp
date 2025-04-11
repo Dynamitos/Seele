@@ -65,7 +65,7 @@ DepthCullingPass::DepthCullingPass(Gfx::PGraphics graphics, PScene scene) : Rend
 
 DepthCullingPass::~DepthCullingPass() {}
 
-void DepthCullingPass::beginFrame(const Component::Camera& cam) { RenderPass::beginFrame(cam); }
+void DepthCullingPass::beginFrame(const Component::Camera& cam, const Component::Transform& transform) { RenderPass::beginFrame(cam, transform); }
 
 void DepthCullingPass::render() {
     query->beginQuery();

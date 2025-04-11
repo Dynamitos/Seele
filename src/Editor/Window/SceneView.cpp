@@ -40,7 +40,7 @@ void SceneView::commitUpdate() {}
 
 void SceneView::prepareRender() {}
 
-void SceneView::render() { renderGraph.render(viewportCamera); }
+void SceneView::render() { renderGraph.render(viewportCamera, Component::Transform()); }
 
 void SceneView::keyCallback(KeyCode code, InputAction action, KeyModifier) { cameraSystem.keyCallback(code, action); }
 

@@ -10,7 +10,7 @@ class ToneMappingPass : public RenderPass {
     ToneMappingPass(ToneMappingPass&&) = default;
     ToneMappingPass& operator=(ToneMappingPass&&) = default;
     virtual ~ToneMappingPass();
-    virtual void beginFrame(const Component::Camera& cam) override;
+    virtual void beginFrame(const Component::Camera& cam, const Component::Transform& transform) override;
     virtual void render() override;
     virtual void endFrame() override;
     virtual void publishOutputs() override;

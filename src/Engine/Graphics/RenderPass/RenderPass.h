@@ -18,7 +18,7 @@ class RenderPass {
     RenderPass(RenderPass&&) = default;
     RenderPass& operator=(RenderPass&&) = default;
     virtual ~RenderPass();
-    virtual void beginFrame(const Component::Camera& cam);
+    virtual void beginFrame(const Component::Camera& cam, const Component::Transform& transform);
     virtual void render() = 0;
     virtual void endFrame() = 0;
     virtual void publishOutputs() = 0;
