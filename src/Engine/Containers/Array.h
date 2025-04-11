@@ -8,10 +8,6 @@
 #include <iterator>
 #include <memory_resource>
 
-#ifndef DEFAULT_ALLOC_SIZE
-#define DEFAULT_ALLOC_SIZE 16
-#endif
-
 namespace Seele {
 template <typename T> struct Array {
   public:
@@ -84,10 +80,7 @@ template <typename T> struct Array {
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
     constexpr Array(const allocator_type& alloc = allocator_type()) noexcept
-        : arraySize(0), allocated(DEFAULT_ALLOC_SIZE), allocator(alloc) {
-        _data = allocateArray(DEFAULT_ALLOC_SIZE);
-        assert(_data != nullptr);
-    }
+        : arraySize(0), allocated(0), _data(nullptr), allocator(alloc) {}
     constexpr Array(size_type size, const value_type& value, const allocator_type& alloc = allocator_type())
         : arraySize(size), allocated(size), allocator(alloc) {
         _data = allocateArray(size);
@@ -313,7 +306,7 @@ template <typename T> struct Array {
     }
     constexpr void resize(size_type newSize) { resizeInternal(newSize, T()); }
     constexpr void resize(size_type newSize, const value_type& value) { resizeInternal(newSize, value); }
-    constexpr void clear() noexcept {
+    constexpr void clear(bool preserveAllocation = false) noexcept {
         if (_data == nullptr) {
             return;
         }
@@ -322,10 +315,12 @@ template <typename T> struct Array {
                 std::allocator_traits<allocator_type>::destroy(allocator, &_data[i]);
             }
         }
-        deallocateArray(_data, allocated);
-        _data = nullptr;
+        if (!preserveAllocation) {
+            deallocateArray(_data, allocated);
+            _data = nullptr;
+            allocated = 0;
+        }
         arraySize = 0;
-        allocated = 0;
     }
     [[nodiscard]] constexpr size_type indexOf(iterator iterator) { return iterator - begin(); }
     [[nodiscard]] constexpr size_type indexOf(const_iterator iterator) const { return iterator.p - begin().p; }
@@ -400,7 +395,10 @@ template <typename T> struct Array {
             for (size_type i = 0; i < arraySize; ++i) {
                 std::allocator_traits<allocator_type>::construct(allocator, &tempArray[i], std::forward<Type>(_data[i]));
             }
-            deallocateArray(_data, arraySize);
+            if (_data != nullptr)
+            {
+                deallocateArray(_data, arraySize);
+            }
             _data = tempArray;
         }
         std::allocator_traits<allocator_type>::construct(allocator, &_data[arraySize], std::forward<Type>(t));

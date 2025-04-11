@@ -16,14 +16,16 @@ uint64 VertexData::meshletCount = 0;
 
 void VertexData::resetMeshData() {
     std::unique_lock l(materialDataLock);
-    instanceData.clear();
-    instanceMeshData.clear();
-    rayTracingScene.clear();
-    transparentData.clear();
+    instanceData.clear(true);
+    instanceMeshData.clear(true);
+    rayTracingScene.clear(true);
+    transparentData.clear(true);
     for (auto& mat : materialData) {
         for (auto& inst : mat.instances) {
-            inst.instanceData.clear();
-            inst.instanceMeshData.clear();
+            inst.instanceData.clear(true);
+            inst.instanceMeshData.clear(true);
+            inst.cullingOffsets.clear(true);
+            inst.rayTracingData.clear(true);
         }
         if (mat.material != nullptr) {
             mat.material->getDescriptorLayout()->reset();

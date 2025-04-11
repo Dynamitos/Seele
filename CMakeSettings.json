@@ -41,7 +41,7 @@
       "buildCommandArgs": "",
       "ctestCommandArgs": "",
       "configurationType": "Debug",
-      "generator": "Ninja Multi-Config",
+      "generator": "Ninja",
       "intelliSenseMode": "windows-msvc-x64",
       "inheritEnvironments": [ "msvc_x64" ],
       "cmakeCommandArgs": "-DCMAKE_DEBUG_POSTFIX=\"\" -DCMAKE_PLATFORM=x64",

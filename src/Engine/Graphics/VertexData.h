@@ -56,7 +56,7 @@ class VertexData {
     };
     void resetMeshData();
     void updateMesh(uint32 meshletOffset, PMesh mesh, Component::Transform& transform);
-    void createDescriptors();
+    virtual void createDescriptors();
     void loadMesh(MeshId id, Array<uint32> indices, Array<Meshlet> meshlets);
     void commitMeshes();
     MeshId allocateVertexData(uint64 numVertices);
