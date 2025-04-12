@@ -51,7 +51,7 @@ void Transform::setScale(Vector s) { scale = Vector4(s, 0); }
 
 Vector Transform::getForward() const { return glm::normalize(Vector(0, 0, 1) * rotation); }
 
-Vector Transform::getRight() const { return glm::normalize(Vector(1, 0, 0) * rotation); }
+Vector Transform::getRight() const { return glm::normalize(Vector(-1, 0, 0) * rotation); }
 
 Vector Transform::getUp() const { return glm::normalize(Vector(0, 1, 0) * rotation); }
 
