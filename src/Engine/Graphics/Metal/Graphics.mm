@@ -38,8 +38,7 @@ Gfx::OViewport Graphics::createViewport(Gfx::PWindow owner, const ViewportCreate
     return new Viewport(owner, createInfo);
 }
 
-Gfx::ORenderPass Graphics::createRenderPass(Gfx::RenderTargetLayout layout, Array<Gfx::SubPassDependency> dependencies,
-                                            Gfx::PViewport renderArea, std::string name) {
+Gfx::ORenderPass Graphics::createRenderPass(Gfx::RenderTargetLayout layout, Array<Gfx::SubPassDependency> dependencies, URect renderArea, std::string name, Array<uint32> viewMask, Array<uint32> correlationMask) {
     return new RenderPass(this, layout, dependencies, renderArea, name);
 }
 

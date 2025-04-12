@@ -171,8 +171,9 @@ Gfx::OViewport Graphics::createViewport(Gfx::PWindow owner, const ViewportCreate
     return new Viewport(owner, viewportInfo);
 }
 
-Gfx::ORenderPass Graphics::createRenderPass(Gfx::RenderTargetLayout layout, Array<Gfx::SubPassDependency> dependencies, std::string name,
+Gfx::ORenderPass Graphics::createRenderPass(Gfx::RenderTargetLayout layout, Array<Gfx::SubPassDependency> dependencies, URect renderArea, std::string name,
                                             Array<uint32> viewMasks, Array<uint32> correlationMasks) {
+                                                // todo: re-introduce render area to renderpass
     return new RenderPass(this, std::move(layout), std::move(dependencies), name, std::move(viewMasks), std::move(correlationMasks));
 }
 void Graphics::beginRenderPass(Gfx::PRenderPass renderPass) {

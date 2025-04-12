@@ -8,13 +8,12 @@ using namespace Seele;
 using namespace Seele::Metal;
 
 RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Array<Gfx::SubPassDependency> dependencies,
-                       Gfx::PViewport viewport, const std::string& name)
-    : Gfx::RenderPass(std::move(_layout), dependencies), graphics(graphics), viewport(viewport), name(name) {
+                       URect renderArea, const std::string& name)
+    : Gfx::RenderPass(std::move(_layout), dependencies), graphics(graphics), renderArea(renderArea), name(name) {
     renderPass = MTL::RenderPassDescriptor::renderPassDescriptor();
     renderPass->setRenderTargetArrayLength(1);
-    renderPass->setRenderTargetWidth(viewport->getWidth());
-    renderPass->setRenderTargetHeight(viewport->getHeight());
-    renderPass->setDefaultRasterSampleCount(viewport->getSamples());
+    renderPass->setRenderTargetWidth(renderArea.size.x);
+    renderPass->setRenderTargetHeight(renderArea.size.y);
 
     for (size_t i = 0; i < layout.colorAttachments.size(); ++i) {
         const auto& color = layout.colorAttachments[i];

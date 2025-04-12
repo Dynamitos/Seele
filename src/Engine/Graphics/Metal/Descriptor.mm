@@ -152,29 +152,7 @@ void DescriptorSet::updateSampler(const std::string& name, uint32 index, Gfx::PS
     });
 }
 
-void DescriptorSet::updateTexture(const std::string& name, uint32 index, Gfx::PTexture2D texture) {
-    uint32 flattenedIndex = owner->getLayout()->variableMapping[name].index + index;
-    PTextureBase tex = texture.cast<TextureBase>();
-    textureWrites.add(TextureWriteInfo{
-        .index = flattenedIndex,
-        .texture = tex->getHandle(),
-        .access = owner->getLayout()->variableMapping[name].access,
-    });
-    boundResources.add(tex->getHandle());
-}
-
-void DescriptorSet::updateTexture(const std::string& name, uint32 index, Gfx::PTexture3D texture) {
-    uint32 flattenedIndex = owner->getLayout()->variableMapping[name].index + index;
-    PTextureBase tex = texture.cast<TextureBase>();
-    textureWrites.add(TextureWriteInfo{
-        .index = flattenedIndex,
-        .texture = tex->getHandle(),
-        .access = owner->getLayout()->variableMapping[name].access,
-    });
-    boundResources.add(tex->getHandle());
-}
-
-void DescriptorSet::updateTexture(const std::string& name, uint32 index, Gfx::PTextureCube texture) {
+void DescriptorSet::updateTexture(const std::string& name, uint32 index, Gfx::PTexture texture) {
     uint32 flattenedIndex = owner->getLayout()->variableMapping[name].index + index;
     PTextureBase tex = texture.cast<TextureBase>();
     textureWrites.add(TextureWriteInfo{

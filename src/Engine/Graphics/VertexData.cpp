@@ -140,11 +140,16 @@ void VertexData::createDescriptors() {
 
 void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet> loadedMeshlets) {
     std::unique_lock l(vertexDataLock);
-    for (auto&& chunk : loadedMeshlets | std::views::chunk(2048)) {
+    uint32 numChunks = (loadedMeshlets.size() + 2047) / 2048;
+    for(uint32 chunkIdx = 0; chunkIdx < numChunks; ++chunkIdx)
+    {
         uint32 meshletOffset = (uint32)meshlets.size();
         AABB meshAABB;
         uint32 numMeshlets = 0;
-        for (auto&& m : chunk) {
+        uint32 chunkOffset = chunkIdx * 2048;
+        uint32 numRemaining = loadedMeshlets.size() - chunkOffset;
+        for (uint32 chunk = 0; chunk < std::min(numRemaining, 2048u); chunk++) {
+            Meshlet& m = loadedMeshlets[chunkOffset + chunk];
             numMeshlets++;
             //...
             meshAABB = meshAABB.combine(m.boundingBox);
@@ -169,6 +174,7 @@ void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet>
             .numMeshlets = numMeshlets,
             .meshletOffset = meshletOffset,
         });
+        
     }
     // todo: in case of a index split for 16 bit, do something here
     meshData[id][0].firstIndex = (uint32)indices.size();

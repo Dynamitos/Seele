@@ -9,8 +9,8 @@
 #ifdef __APPLE__
 #include "Graphics/Metal/Graphics.h"
 #else
-#include "Graphics/Vulkan/Graphics.h"
 #endif
+#include "Graphics/Vulkan/Graphics.h"
 #include "Graphics/StaticMeshVertexData.h"
 #include "Window/InspectorView.h"
 #include "Window/PlayView.h"
@@ -28,7 +28,14 @@ int main() {
     std::string gameName = "MinecraftClone";
     std::filesystem::path outputPath = fmt::format("../../{0}Game", gameName);
     std::filesystem::path sourcePath = fmt::format("../../{0}", gameName);
-    std::filesystem::path binaryPath = sourcePath / "bin" / fmt::format("{0}.dll", gameName);
+#ifdef WIN32
+    std::string libraryEnding = "dll";
+#elif __APPLE__
+    std::string libraryEnding = "dylib";
+#else
+    std::string libraryEnding = "so";
+#endif
+    std::filesystem::path binaryPath = sourcePath / "bin" / fmt::format("{}.{}", gameName, libraryEnding);
     std::filesystem::path cmakePath = outputPath / "cmake";
     if (true) {
 #ifdef __APPLE__

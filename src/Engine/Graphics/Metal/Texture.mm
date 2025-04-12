@@ -94,7 +94,9 @@ void TextureHandle::generateMipmaps() {}
 TextureBase::TextureBase(PGraphics graphics, MTL::TextureType viewType, const TextureCreateInfo& createInfo, MTL::Texture* existingImage)
     : handle(new TextureHandle(graphics, viewType, createInfo, existingImage)), graphics(graphics) {}
 
-TextureBase::~TextureBase() {}
+TextureBase::~TextureBase() {
+    graphics->getDestructionManager()->queueResourceForDestruction(std::move(handle));
+}
 
 void TextureBase::pipelineBarrier(Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage, Gfx::SeAccessFlags dstAccess,
                                   Gfx::SePipelineStageFlags dstStage) {

@@ -70,9 +70,7 @@ class DescriptorSet : public Gfx::DescriptorSet, public CommandBoundResource {
     virtual void updateBuffer(const std::string& name, uint32 index, Gfx::PVertexBuffer uniformBuffer) override;
     virtual void updateBuffer(const std::string& name, uint32 index, Gfx::PIndexBuffer uniformBuffer) override;
     virtual void updateSampler(const std::string& name, uint32 index, Gfx::PSampler samplerState) override;
-    virtual void updateTexture(const std::string& name, uint32 index, Gfx::PTexture2D texture) override;
-    virtual void updateTexture(const std::string& name, uint32 index, Gfx::PTexture3D texture) override;
-    virtual void updateTexture(const std::string& name, uint32 index, Gfx::PTextureCube texture) override;
+    virtual void updateTexture(const std::string& name, uint32 index, Gfx::PTexture texture) override;
     virtual void updateAccelerationStructure(const std::string& name, uint32 index, Gfx::PTopLevelAS as) override;
     
     constexpr bool isPlainDescriptor() const { return owner->getLayout()->isPlainDescriptor(); }

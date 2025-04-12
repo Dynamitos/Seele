@@ -319,6 +319,7 @@ CommandQueue::CommandQueue(PGraphics graphics) : graphics(graphics) {
     MTL::CommandBufferDescriptor* descriptor = MTL::CommandBufferDescriptor::alloc()->init();
     descriptor->setErrorOptions(MTL::CommandBufferErrorOptionEncoderExecutionStatus);
     activeCommand = new Command(graphics, queue->commandBuffer(descriptor));
+    activeCommand->begin();
     descriptor->release();
 }
 
@@ -353,7 +354,7 @@ void CommandQueue::executeCommands(Array<Gfx::OComputeCommand> commands) {
 }
 
 void CommandQueue::submitCommands(PEvent signalSemaphore) {
-    /*activeCommand->getHandle()->addCompletedHandler(MTL::CommandBufferHandler([&](MTL::CommandBuffer* cmdBuffer) {
+    activeCommand->getHandle()->addCompletedHandler(MTL::CommandBufferHandler([&](MTL::CommandBuffer* cmdBuffer) {
         for (auto it = pendingCommands.begin(); it != pendingCommands.end(); it++) {
             if ((*it)->getHandle() == cmdBuffer) {
                 auto& cmd = *it;
@@ -380,12 +381,7 @@ void CommandQueue::submitCommands(PEvent signalSemaphore) {
         activeCommand->begin();
         activeCommand->waitForEvent(prevCmdEvent);
         descriptor->release();
-    }*/
-    activeCommand->end();
-    activeCommand->waitDeviceIdle();
-    activeCommand->reset();
-    activeCommand = new Command(graphics, queue->commandBuffer());
-    activeCommand->begin();
+    }
 }
 
 IOCommandQueue::IOCommandQueue(PGraphics graphics) : graphics(graphics) {

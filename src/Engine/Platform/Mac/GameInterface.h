@@ -1,18 +1,18 @@
 #pragma once
 #include "Game.h"
-#include "dlfcn.h"
+#include <filesystem>
 
 namespace Seele {
 class GameInterface {
   public:
-    GameInterface(std::string soPath);
+    GameInterface(std::filesystem::path soPath);
     ~GameInterface();
     Game* getGame();
     void reload();
 
   private:
     void* lib;
-    std::string soPath;
+    std::filesystem::path soPath;
     Game* game;
     Game* (*createInstance)() = nullptr;
     void (*destroyInstance)(Game*) = nullptr;

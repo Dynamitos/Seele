@@ -7,7 +7,7 @@ namespace Metal {
 DECLARE_REF(Graphics)
 class RenderPass : public Gfx::RenderPass {
   public:
-    RenderPass(PGraphics graphics, Gfx::RenderTargetLayout layout, Array<Gfx::SubPassDependency> dependencies, Gfx::PViewport viewport,
+    RenderPass(PGraphics graphics, Gfx::RenderTargetLayout layout, Array<Gfx::SubPassDependency> dependencies, URect viewport,
                const std::string& name = "");
     virtual ~RenderPass();
     void updateRenderPass();
@@ -16,7 +16,7 @@ class RenderPass : public Gfx::RenderPass {
 
   private:
     PGraphics graphics;
-    Gfx::PViewport viewport;
+    URect renderArea;
     MTL::RenderPassDescriptor* renderPass;
     std::string name;
 };
