@@ -22,8 +22,8 @@ Matrix4 Viewport::getProjectionMatrix() const {
     if (fieldOfView > 0.0f) {
         Matrix4 projectionMatrix = glm::perspective(fieldOfView, sizeX / static_cast<float>(sizeY), 0.1f, 1000.0f);
         Matrix4 correctionMatrix = Matrix4(
-            1, 0, 0, 0, 
-            0, -1, 0, 0, 
+            1, 0, 0, 0,
+            0, -1, 0, 0,
             0, 0, 1 / 2.f, 0, 
             0, 0, 1 / 2.f, 1);
         return correctionMatrix * projectionMatrix;
