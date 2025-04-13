@@ -1,57 +1,57 @@
 const static float3 vertices[] = {
     // Right
+    float3( 1,  1,  1),
     float3( 1, -1,  1),
-    float3( 1,  1,  1),
-    float3( 1, -1, -1),
-
-    float3( 1, -1, -1),
-    float3( 1,  1,  1),
     float3( 1,  1, -1),
+
+    float3( 1,  1, -1),
+    float3( 1, -1,  1),
+    float3( 1, -1, -1),
 
     // Left
+    float3(-1,  1, -1),
     float3(-1, -1, -1),
-    float3(-1,  1, -1),
-    float3(-1, -1,  1),
-
-    float3(-1, -1,  1),
-    float3(-1,  1, -1),
     float3(-1,  1,  1),
+
+    float3(-1,  1,  1),
+    float3(-1, -1, -1),
+    float3(-1, -1,  1),
 
     // Bottom
-    float3(-1,  1,  1),
-    float3(-1,  1, -1),
-    float3( 1,  1,  1),
+    float3(-1, -1,  1),
+    float3(-1, -1, -1),
+    float3( 1, -1,  1),
 
-    float3( 1,  1,  1),
-    float3(-1,  1, -1),
-    float3( 1,  1, -1),
+    float3( 1, -1,  1),
+    float3(-1, -1, -1),
+    float3( 1, -1, -1),
 
     // Top
-    float3(-1, -1, -1),
-    float3(-1, -1,  1),
-    float3( 1, -1, -1),
-
-    float3( 1, -1, -1),
-    float3(-1, -1,  1),
-    float3( 1, -1,  1),
-
-    // Back
-    float3(-1, -1,  1),
+    float3(-1,  1, -1),
     float3(-1,  1,  1),
-    float3( 1, -1,  1),
+    float3( 1,  1, -1),
 
-    float3( 1, -1,  1),
+    float3( 1,  1, -1),
     float3(-1,  1,  1),
     float3( 1,  1,  1),
 
-    // Front
-    float3( 1, -1, -1),
-    float3( 1,  1, -1),
-    float3(-1, -1, -1),
+    // Back
+    float3(-1,  1,  1),
+    float3(-1, -1,  1),
+    float3( 1,  1,  1),
 
-    float3(-1, -1, -1),
+    float3( 1,  1,  1),
+    float3(-1, -1,  1),
+    float3( 1, -1,  1),
+
+    // Front
     float3( 1,  1, -1),
+    float3( 1, -1, -1),
     float3(-1,  1, -1),
+
+    float3(-1,  1, -1),
+    float3( 1, -1, -1),
+    float3(-1, -1, -1),
 };
 
 struct ViewParams

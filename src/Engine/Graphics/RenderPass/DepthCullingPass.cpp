@@ -125,8 +125,6 @@ void DepthCullingPass::render() {
     permutation.setDepthCulling(getGlobals().useDepthCulling);
     for (VertexData* vertexData : VertexData::getList()) {
         permutation.setVertexData(vertexData->getTypeName());
-        vertexData->getInstanceDataSet()->updateBuffer(VertexData::CULLINGDATA_NAME, 0, cullingBuffer);
-        vertexData->getInstanceDataSet()->writeChanges();
         // Create Pipeline(VertexData)
         // Descriptors:
         // ViewData => global, static

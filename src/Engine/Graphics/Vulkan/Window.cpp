@@ -295,8 +295,7 @@ Viewport::Viewport(PWindow owner, const ViewportCreateInfo& viewportInfo) : Gfx:
     handle.width = static_cast<float>(sizeX);
     handle.height = static_cast<float>(sizeY);
     handle.x = static_cast<float>(offsetX);
-    handle.y = static_cast<float>(offsetY) + handle.height;
-    handle.height = -handle.height;
+    handle.y = static_cast<float>(offsetY);
     handle.minDepth = 1.f;
     handle.maxDepth = 0.f;
 }
@@ -307,8 +306,7 @@ void Viewport::resize(uint32 newX, uint32 newY) {
     sizeX = newX;
     sizeY = newY;
     handle.width = static_cast<float>(sizeX);
-    handle.y = static_cast<float>(sizeY + offsetX);
-    handle.height = -static_cast<float>(sizeY);
+    handle.height = static_cast<float>(sizeY);
 }
 
 void Viewport::move(uint32 newOffsetX, uint32 newOffsetY) {

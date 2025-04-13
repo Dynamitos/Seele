@@ -337,7 +337,7 @@ struct CookTorrance : IBRDF
         float nDotL = max(dot(n, lightDir_WS), 0.0);
 
         float3 result = (k_d * baseColor / PI + specular) * nDotL * lightColor;
-        return result;
+        return baseColor;
     }
     [mutating]
     void transformNormal(float3x3 tangentToWorld)

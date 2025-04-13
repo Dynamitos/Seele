@@ -269,8 +269,7 @@ void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptor) {
     VkDescriptorSet setHandle = descriptorSet->getHandle();
     Gfx::PPipelineLayout layout = pipeline != nullptr ? pipeline->getPipelineLayout() : rtPipeline->getPipelineLayout();
     vkCmdBindDescriptorSets(handle, pipeline != nullptr ? VK_PIPELINE_BIND_POINT_GRAPHICS : VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR,
-                            pipeline->getLayout(), layout->findParameter(descriptorSet->getName()), 1, &setHandle, 0,
-                            nullptr);
+                            pipeline->getLayout(), layout->findParameter(descriptorSet->getName()), 1, &setHandle, 0, nullptr);
 }
 
 void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorSets) {
@@ -286,9 +285,9 @@ void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorS
 
         for (auto& binding : descriptorSet->boundResources) {
             for (auto& res : binding) {
-            // partially bound descriptors can include nulls
+                // partially bound descriptors can include nulls
                 if (res != nullptr) {
-                res->bind();
+                    res->bind();
                     boundResources.add(res);
                 }
             }
@@ -442,8 +441,7 @@ void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet descriptor) {
 
     VkDescriptorSet setHandle = descriptorSet->getHandle();
     vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->getLayout(),
-                            pipeline->getPipelineLayout()->findParameter(descriptorSet->getName()), 1, &setHandle,0,
-                            nullptr);
+                            pipeline->getPipelineLayout()->findParameter(descriptorSet->getName()), 1, &setHandle, 0, nullptr);
 }
 
 void ComputeCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorSets) {
@@ -465,8 +463,8 @@ void ComputeCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptor
         }
         sets[pipeline->getPipelineLayout()->findParameter(descriptorSet->getName())] = descriptorSet->getHandle();
     }
-    vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->getLayout(), 0, (uint32)descriptorSets.size(), sets,
-                            0, nullptr);
+    vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->getLayout(), 0, (uint32)descriptorSets.size(), sets, 0,
+                            nullptr);
     delete[] sets;
 }
 

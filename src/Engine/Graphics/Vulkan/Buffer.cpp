@@ -104,7 +104,8 @@ void BufferAllocation::updateContents(uint64 regionOffset, uint64 regionSize, vo
         .flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT,
         .usage = VMA_MEMORY_USAGE_AUTO,
     };
-    OBufferAllocation staging = new BufferAllocation(graphics, fmt::format("{0}UpdateStaging", name), stagingInfo, stagingAlloc, Gfx::QueueType::GRAPHICS);
+    OBufferAllocation staging =
+        new BufferAllocation(graphics, fmt::format("{0}UpdateStaging", name), stagingInfo, stagingAlloc, Gfx::QueueType::GRAPHICS);
 
     uint8* data;
     VK_CHECK(vmaMapMemory(graphics->getAllocator(), staging->allocation, (void**)&data));
@@ -306,7 +307,7 @@ void Buffer::createBuffer(uint64 size, uint32 destIndex) {
         command->bindResource(PBufferAllocation(buffers[destIndex]));
         vkCmdFillBuffer(command->getHandle(), buffers[destIndex]->buffer, 0, VK_WHOLE_SIZE, clearValue);
         buffers[destIndex]->pipelineBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-                        VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT);
+                                            VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT);
     }
 }
 
@@ -485,8 +486,8 @@ IndexBuffer::IndexBuffer(PGraphics graphics, const IndexBufferCreateInfo& create
                          VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR,
                      createInfo.sourceData.owner, false, createInfo.name) {
     getAlloc()->updateContents(createInfo.sourceData.offset, createInfo.sourceData.size, createInfo.sourceData.data);
-    //getAlloc()->pipelineBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, Gfx::SE_ACCESS_INDEX_READ_BIT,
-    //                            Gfx::SE_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR | Gfx::SE_PIPELINE_STAGE_VERTEX_INPUT_BIT);
+    // getAlloc()->pipelineBarrier(VK_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT, Gfx::SE_ACCESS_INDEX_READ_BIT,
+    //                             Gfx::SE_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR | Gfx::SE_PIPELINE_STAGE_VERTEX_INPUT_BIT);
 }
 
 IndexBuffer::~IndexBuffer() {}

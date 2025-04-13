@@ -28,6 +28,10 @@ LightEnvironment::LightEnvironment(Gfx::PGraphics graphics)
         .name = "irradianceMap",
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
     });
+    layout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .name = "irradianceSampler",
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLER,
+    });
     layout->create();
 
     directionalLights = graphics->createShaderBuffer(ShaderBufferCreateInfo{
@@ -78,6 +82,7 @@ void LightEnvironment::commit() {
     set->updateConstants("numDirectionalLights", 0, &numDirectionalLights);
     set->updateBuffer("directionalLights", 0, directionalLights);
     set->updateTexture("irradianceMap", 0, environment->getIrradianceMap());
+    set->updateSampler("irradianceSampler", 0, environmentSampler);
     set->writeChanges();
 }
 

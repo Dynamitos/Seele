@@ -154,8 +154,6 @@ void BasePass::render() {
     // Base Rendering
     for (VertexData* vertexData : VertexData::getList()) {
         transparentData.addAll(vertexData->getTransparentData());
-        vertexData->getInstanceDataSet()->updateBuffer(VertexData::CULLINGDATA_NAME, 0, cullingBuffer);
-        vertexData->getInstanceDataSet()->writeChanges();
         permutation.setVertexData(vertexData->getTypeName());
         for (const auto& materialData : vertexData->getMaterialData()) {
             // material not used for any active meshes, skip

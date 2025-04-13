@@ -161,6 +161,14 @@ Gfx::PDescriptorSet DescriptorPool::allocateDescriptorSet() {
         if (cachedHandles[setIndex]->getHandle() == VK_NULL_HANDLE) {
             // If it hasnt been initialized, allocate it
             VK_CHECK(vkAllocateDescriptorSets(graphics->getDevice(), &allocInfo, &cachedHandles[setIndex]->setHandle));
+            VkDebugUtilsObjectNameInfoEXT nameInfo = {
+                .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
+                .pNext = nullptr,
+                .objectType = VK_OBJECT_TYPE_DESCRIPTOR_SET,
+                .objectHandle = (uint64)cachedHandles[setIndex]->setHandle,
+                .pObjectName = name.c_str(),
+            };
+            vkSetDebugUtilsObjectNameEXT(graphics->getDevice(), &nameInfo);
         }
 
         PDescriptorSet vulkanSet = cachedHandles[setIndex];
@@ -193,6 +201,7 @@ DescriptorSet::DescriptorSet(PGraphics graphics, PDescriptorPool owner)
     boundResources.resize(owner->getLayout()->getBindings().size());
     for (uint32 i = 0; i < boundResources.size(); ++i) {
         boundResources[i].resize(owner->getLayout()->getBindings()[i].descriptorCount);
+        std::memset(boundResources[i].data(), 0, sizeof(PCommandBoundResource) * boundResources[i].size());
     }
     constantData.resize(owner->getLayout()->constantsSize);
 }
@@ -208,9 +217,10 @@ void DescriptorSet::updateBuffer(const std::string& mappingName, uint32 index, G
     PShaderBuffer vulkanBuffer = shaderBuffer.cast<ShaderBuffer>();
     const auto& map = owner->getLayout()->mappings[mappingName];
     uint32 binding = map.binding;
-    if (boundResources[binding][index] == vulkanBuffer->getAlloc() || vulkanBuffer->getAlloc() == nullptr) {
+    // if the buffer is empty
+    if (vulkanBuffer->getAlloc() == nullptr)
         return;
-    }
+    
     bufferInfos.add(VkDescriptorBufferInfo{
         .buffer = vulkanBuffer->getHandle(),
         .offset = 0,
@@ -234,9 +244,10 @@ void DescriptorSet::updateBuffer(const std::string& mappingName, uint32 index, G
     PVertexBuffer vulkanBuffer = indexBuffer.cast<VertexBuffer>();
     const auto& map = owner->getLayout()->mappings[mappingName];
     uint32 binding = map.binding;
-    if (boundResources[binding][index] == vulkanBuffer->getAlloc() || vulkanBuffer->getAlloc() == nullptr) {
+    // if the buffer is empty
+    if (vulkanBuffer->getAlloc() == nullptr)
         return;
-    }
+    
 
     bufferInfos.add(VkDescriptorBufferInfo{
         .buffer = vulkanBuffer->getHandle(),
@@ -261,9 +272,9 @@ void DescriptorSet::updateBuffer(const std::string& mappingName, uint32 index, G
     PIndexBuffer vulkanBuffer = indexBuffer.cast<IndexBuffer>();
     const auto& map = owner->getLayout()->mappings[mappingName];
     uint32 binding = map.binding;
-    if (boundResources[binding][index] == vulkanBuffer->getAlloc() || vulkanBuffer->getAlloc() == nullptr) {
+    // if the buffer is empty
+    if (vulkanBuffer->getAlloc() == nullptr)
         return;
-    }
 
     bufferInfos.add(VkDescriptorBufferInfo{
         .buffer = vulkanBuffer->getHandle(),
