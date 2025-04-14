@@ -141,8 +141,7 @@ void VertexData::createDescriptors() {
 void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet> loadedMeshlets) {
     std::unique_lock l(vertexDataLock);
     uint32 numChunks = (loadedMeshlets.size() + 2047) / 2048;
-    for(uint32 chunkIdx = 0; chunkIdx < numChunks; ++chunkIdx)
-    {
+    for (uint32 chunkIdx = 0; chunkIdx < numChunks; ++chunkIdx) {
         uint32 meshletOffset = (uint32)meshlets.size();
         AABB meshAABB;
         uint32 numMeshlets = 0;
@@ -174,13 +173,20 @@ void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet>
             .numMeshlets = numMeshlets,
             .meshletOffset = meshletOffset,
         });
-        
     }
     // todo: in case of a index split for 16 bit, do something here
     meshData[id][0].firstIndex = (uint32)indices.size();
     meshData[id][0].numIndices = (uint32)loadedIndices.size();
     indices.resize(indices.size() + loadedIndices.size());
     std::memcpy(indices.data() + meshData[id][0].firstIndex, loadedIndices.data(), loadedIndices.size() * sizeof(uint32));
+}
+
+void VertexData::updateMesh(MeshId id, Array<uint32> indices, Array<Meshlet> meshlets) {
+    uint32 numMeshlets = 0;
+    for (const auto& dat : meshData[id]) {
+        numMeshlets += dat.numMeshlets;
+    }
+    int32 difference = meshlets.size() - numMeshlets;
 }
 
 void VertexData::commitMeshes() {
