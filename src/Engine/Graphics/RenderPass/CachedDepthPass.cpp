@@ -124,8 +124,8 @@ void CachedDepthPass::render() {
                     uint32 inst = drawCall.offsets.instanceOffset;
                     for (const auto& meshData : drawCall.instanceMeshData) {
                         // all meshlets of a mesh share the same indices offset
-                        command->drawIndexed(meshData.numIndices, 1, meshData.firstIndex,
-                                             vertexData->getIndicesOffset(meshData.meshletOffset), inst++);
+                        command->drawIndexed(meshData.indicesRange.size, 1, meshData.indicesRange.offset,
+                            vertexData->getIndicesOffset(meshData.meshletRange.offset), inst++);
                     }
                 }
             }

@@ -58,8 +58,8 @@ void StaticMeshVertexData::serializeMesh(MeshId id, ArchiveBuffer& buffer) {
     uint64 numVertices;
     {
         std::unique_lock l(vertexDataLock);
-        offset = meshOffsets[id];
-        numVertices = meshVertexCounts[id];
+        offset = registeredMeshes[id].vertexOffset;
+        numVertices = registeredMeshes[id].vertexCount;
     }
     Array<TexCoordType> tex[MAX_TEXCOORDS];
     for (size_t i = 0; i < MAX_TEXCOORDS; ++i) {
@@ -89,7 +89,7 @@ uint64 StaticMeshVertexData::deserializeMesh(MeshId id, ArchiveBuffer& buffer) {
     uint64 offset;
     {
         std::unique_lock l(vertexDataLock);
-        offset = meshOffsets[id];
+        offset = registeredMeshes[id].vertexOffset;
     }
     Array<TexCoordType> tex[MAX_TEXCOORDS];
     for (size_t i = 0; i < MAX_TEXCOORDS; ++i) {

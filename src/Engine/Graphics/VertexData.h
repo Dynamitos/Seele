@@ -61,8 +61,8 @@ class VertexData {
     void updateMesh(MeshId id, Array<uint32> indices, Array<Meshlet> meshlets);
     void commitMeshes();
     MeshId allocateVertexData(uint64 numVertices);
-    uint64 getMeshOffset(MeshId id) const { return meshOffsets[id]; }
-    uint64 getMeshVertexCount(MeshId id) { return meshVertexCounts[id]; }
+    uint64 getMeshOffset(MeshId id) const { return registeredMeshes[id].vertexOffset; }
+    uint64 getMeshVertexCount(MeshId id) { return registeredMeshes[id].vertexCount; }
     virtual void serializeMesh(MeshId id, ArchiveBuffer& buffer);
     virtual uint64 deserializeMesh(MeshId id, ArchiveBuffer& buffer);
     virtual Gfx::PDescriptorLayout getVertexDataLayout() = 0;
@@ -76,7 +76,7 @@ class VertexData {
     const Array<MaterialData>& getMaterialData() const { return materialData; }
     const Array<TransparentDraw>& getTransparentData() const { return transparentData; }
     const Array<Gfx::PBottomLevelAS>& getRayTracingData() const { return rayTracingScene; }
-    const Array<MeshData>& getMeshData(MeshId id) const { return meshData[id]; }
+    const Array<MeshData>& getMeshData(MeshId id) const { return registeredMeshes[id].meshData; }
     void registerBottomLevelAccelerationStructure(Gfx::PBottomLevelAS blas) { dataToBuild.add(blas); }
     uint32 getIndicesOffset(uint32 meshletIndex) { return meshlets[meshletIndex].indicesOffset; }
     uint64 getNumInstances() const { return instanceData.size(); }
@@ -96,14 +96,10 @@ class VertexData {
     VertexData();
     struct MeshletDescription {
         AABB bounding;
-        // number of relevant entries in the vertexIndices array
-        uint32 vertexCount;
-        // number of relevant entries in the primitiveIndices array
-        uint32 primitiveCount;
-        // starting offset into the vertexIndices array
-        uint32 vertexOffset;
-        // starting offset into the primitiveIndices array
-        uint32 primitiveOffset;
+        // range into vertexIndices array
+        PoolRange vertexIndices;
+        // range into primitiveIndices array
+        PoolRange primitiveIndices;
         Vector color;
         // gets added to vertex indices so that they reference the global mesh bool
         uint32 indicesOffset = 0;
@@ -114,10 +110,16 @@ class VertexData {
     Array<TransparentDraw> transparentData;
 
     std::mutex vertexDataLock;
+    struct RegisteredMesh
+    {
     // each mesh id can have multiple meshdata, in case it needs to be split for having too many meshlets
-    Array<Array<MeshData>> meshData;
-    Array<uint64> meshOffsets;
-    Array<uint64> meshVertexCounts;
+        Array<MeshData> meshData;
+        uint64 vertexOffset;
+        uint64 vertexCount;
+        PoolRange meshletRange;
+        PoolRange indicesRange;
+    };
+    Array<RegisteredMesh> registeredMeshes;
 
     Array<MeshletDescription> meshlets;
     Array<uint8> primitiveIndices;

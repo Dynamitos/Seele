@@ -26,8 +26,8 @@ BottomLevelAS::BottomLevelAS(PGraphics graphics, const Gfx::BottomLevelASCreateI
     MeshData meshData = vertexData->getMeshData(createInfo.mesh->id)[0];
     vertexOffset = vertexData->getMeshOffset(createInfo.mesh->id) * sizeof(Vector);
     vertexCount = vertexData->getMeshVertexCount(createInfo.mesh->id);
-    indexOffset = meshData.firstIndex * sizeof(uint32);
-    primitiveCount = meshData.numIndices / 3;
+    indexOffset = meshData.indicesRange.offset * sizeof(uint32);
+    primitiveCount = meshData.indicesRange.size / 3;
 
     // todo: compact
 }

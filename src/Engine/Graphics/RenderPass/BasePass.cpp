@@ -232,8 +232,8 @@ void BasePass::render() {
                     command->bindIndexBuffer(vertexData->getIndexBuffer());
                     for (const auto& meshData : drawCall.instanceMeshData) {
                         // all meshlets of a mesh share the same indices offset
-                        command->drawIndexed(meshData.numIndices, 1, meshData.firstIndex,
-                                             vertexData->getIndicesOffset(meshData.meshletOffset), 0);
+                        command->drawIndexed(meshData.indicesRange.size, 1, meshData.indicesRange.offset,
+                                             vertexData->getIndicesOffset(meshData.meshletRange.offset), 0);
                     }
                 }
             }

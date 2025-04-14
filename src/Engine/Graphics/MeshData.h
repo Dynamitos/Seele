@@ -1,14 +1,16 @@
 #pragma once
 #include "Math/AABB.h"
 namespace Seele {
+
+struct PoolRange {
+    uint32 offset;
+    uint32 size;
+};
 struct MeshData {
     AABB bounding;
-    uint32 numMeshlets = 0;
-    uint32 meshletOffset = 0;
+    PoolRange meshletRange;
     // offset into the global index buffer
-    uint32 firstIndex = 0;
-    // number of indices in the global index buffer
-    uint32 numIndices = 0;
+    PoolRange indicesRange;
 };
 struct InstanceData {
     Matrix4 transformMatrix;

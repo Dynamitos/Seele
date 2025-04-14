@@ -3,7 +3,7 @@
 #include "Enums.h"
 #include "Graphics/Enums.h"
 #include <fmt/format.h>
-#include <vma/vk_mem_alloc.h>
+#include <vk_mem_alloc.h>
 
 using namespace Seele;
 using namespace Seele::Vulkan;
