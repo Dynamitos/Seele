@@ -88,7 +88,7 @@ void taskMain(
         instance = pScene.instances[pOffsets.instanceOffset + groupID];
         mesh = pScene.meshData[pOffsets.instanceOffset + groupID];
         p.instanceId = pOffsets.instanceOffset + groupID;
-        p.meshletOffset = mesh.meshletOffset;
+        p.meshletOffset = mesh.meshletRange.offset;
         p.cullingOffset = pScene.cullingOffsets[p.instanceId];
         modelViewProjection = mul(pViewParams.viewProjectionMatrix, instance.transformMatrix);
         float3 origin = viewToModel(instance.inverseTransformMatrix, float4(0, 0, 0, 1)).xyz;
@@ -113,7 +113,7 @@ void taskMain(
     {
         return;
     }
-    for (uint i = threadID; i < mesh.numMeshlets; i += TASK_GROUP_SIZE)
+    for (uint i = threadID; i < mesh.meshletRange.size; i += TASK_GROUP_SIZE)
     {
         uint m = p.meshletOffset + i;
         uint cull = p.cullingOffset + i;

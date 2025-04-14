@@ -13,9 +13,9 @@ void anyhit(inout RayPayload hitValue, in BuiltInTriangleIntersectionAttributes 
     MeshData m = pScene.meshData[InstanceID()];
 
     // offset into the index buffer
-    uint indexOffset = m.firstIndex;
+    uint indexOffset = m.indicesRange.offset;
     // added to indices to reference correct part of global mesh pool
-    uint vertexOffset = pScene.meshletInfos[m.meshletOffset].indicesOffset;
+    uint vertexOffset = pScene.meshletInfos[m.meshletRange.offset].indicesOffset;
 
     uint vertexIndex0 = vertexOffset + pRayTracingParams.indexBuffer[indexOffset + 3 * PrimitiveIndex() + 0];
     uint vertexIndex1 = vertexOffset + pRayTracingParams.indexBuffer[indexOffset + 3 * PrimitiveIndex() + 1];

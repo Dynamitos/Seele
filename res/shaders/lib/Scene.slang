@@ -1,12 +1,18 @@
 import Bounding;
 
+struct PoolRange
+{
+    uint32_t offset;
+    uint32_t size;
+};
+
 struct MeshletDescription
 {
     AABB bounding;
-    uint32_t vertexCount;
-    uint32_t primitiveCount;
-    uint32_t vertexOffset;
-    uint32_t primitiveOffset;
+    // range into vertexIndices array
+    PoolRange vertexIndices;
+    // range into primitiveIndices array
+    PoolRange primitiveIndices;
     float3 color;
     uint32_t indicesOffset;
 };
@@ -14,10 +20,9 @@ struct MeshletDescription
 struct MeshData
 {
     AABB bounding;
-    uint32_t numMeshlets;
-    uint32_t meshletOffset;
-    uint32_t firstIndex;
-    uint32_t numIndices;
+    PoolRange meshletRange;
+    // offset into the global index buffer
+    PoolRange indicesRange;
 };
 
 static const uint32_t MAX_VERTICES = 256;
