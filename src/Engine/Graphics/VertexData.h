@@ -58,7 +58,7 @@ class VertexData {
     void updateMesh(uint32 meshletOffset, PMesh mesh, Component::Transform& transform);
     virtual void createDescriptors();
     void loadMesh(MeshId id, Array<uint32> indices, Array<Meshlet> meshlets);
-    void updateMesh(MeshId id, Array<uint32> indices, Array<Meshlet> meshlets);
+    virtual void removeMesh(MeshId id);
     void commitMeshes();
     MeshId allocateVertexData(uint64 numVertices);
     uint64 getMeshOffset(MeshId id) const { return registeredMeshes[id].vertexOffset; }
@@ -101,23 +101,20 @@ class VertexData {
         // range into primitiveIndices array
         PoolRange primitiveIndices;
         Vector color;
-        // gets added to vertex indices so that they reference the global mesh bool
+        // gets added to vertex indices so that they reference the global mesh pool
         uint32 indicesOffset = 0;
     };
     std::mutex materialDataLock;
-    debug_resource vertexDataResource = {"VertexData"};
     Array<MaterialData> materialData;
     Array<TransparentDraw> transparentData;
 
     std::mutex vertexDataLock;
     struct RegisteredMesh
     {
-    // each mesh id can have multiple meshdata, in case it needs to be split for having too many meshlets
+        // each mesh id can have multiple meshdata, in case it needs to be split for having too many meshlets
         Array<MeshData> meshData;
         uint64 vertexOffset;
         uint64 vertexCount;
-        PoolRange meshletRange;
-        PoolRange indicesRange;
     };
     Array<RegisteredMesh> registeredMeshes;
 

@@ -141,24 +141,27 @@ void VertexData::createDescriptors() {
 void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet> loadedMeshlets) {
     std::unique_lock l(vertexDataLock);
     RegisteredMesh& mesh = registeredMeshes[id];
+    assert(mesh.meshData.empty()); // TODO: update if not empty
     uint32 numChunks = (loadedMeshlets.size() + 2047) / 2048;
     for (uint32 chunkIdx = 0; chunkIdx < numChunks; ++chunkIdx) {
-        uint32 meshletOffset = (uint32)meshlets.size();
-        AABB meshAABB;
-        uint32 numMeshlets = 0;
         uint32 chunkOffset = chunkIdx * 2048;
         uint32 numRemaining = loadedMeshlets.size() - chunkOffset;
+
+        AABB meshAABB;
+        uint32 meshletOffset = meshlets.size();
         for (uint32 chunk = 0; chunk < std::min(numRemaining, 2048u); chunk++) {
             Meshlet& m = loadedMeshlets[chunkOffset + chunk];
-            numMeshlets++;
             //...
             meshAABB = meshAABB.combine(m.boundingBox);
+
             uint32 vertexOffset = (uint32)vertexIndices.size();
             vertexIndices.resize(vertexOffset + m.numVertices);
             std::memcpy(vertexIndices.data() + vertexOffset, m.uniqueVertices, m.numVertices * sizeof(uint32));
+
             uint32 primitiveOffset = (uint32)primitiveIndices.size();
             primitiveIndices.resize(primitiveOffset + (m.numPrimitives * 3));
             std::memcpy(primitiveIndices.data() + primitiveOffset, m.primitiveLayout, m.numPrimitives * 3 * sizeof(uint8));
+
             meshlets.add(MeshletDescription{
                 .bounding = m.boundingBox, //.toSphere(),
                 .vertexIndices =
@@ -172,7 +175,7 @@ void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet>
                         .size = m.numPrimitives,
                     },
                 .color = Vector((float)rand() / RAND_MAX, (float)rand() / RAND_MAX, (float)rand() / RAND_MAX),
-                .indicesOffset = (uint32)registeredMeshes[id].indicesRange.offset,
+                .indicesOffset = (uint32)registeredMeshes[id].vertexOffset,
             });
         }
         registeredMeshes[id].meshData.add(MeshData{
@@ -180,7 +183,7 @@ void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet>
             .meshletRange =
                 {
                     .offset = meshletOffset,
-                    .size = numMeshlets,
+                    .size = std::min(numRemaining, 2048u),
                 },
         });
     }
@@ -190,11 +193,56 @@ void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet>
         .size = (uint32)loadedIndices.size(),
     };
     indices.resize(indices.size() + loadedIndices.size());
-    std::memcpy(indices.data() + registeredMeshes[id].meshData[0].indicesRange.offset, loadedIndices.data(), loadedIndices.size() * sizeof(uint32));
+    std::memcpy(indices.data() + registeredMeshes[id].meshData[0].indicesRange.offset, loadedIndices.data(),
+                loadedIndices.size() * sizeof(uint32));
 }
 
-void VertexData::updateMesh(MeshId id, Array<uint32> indices, Array<Meshlet> meshlets) {
+void VertexData::removeMesh(MeshId id) {
+    RegisteredMesh& removing = registeredMeshes[id];
+    uint32 meshletOffset = meshlets.size();
     uint32 numMeshlets = 0;
+    uint32 vertexIndicesOffset = vertexIndices.size();
+    uint32 numVertexIndices = 0;
+    uint32 primitiveIndicesOffset = primitiveIndices.size();
+    uint32 numPrimitiveIndices = 0;
+    for (const auto& data : removing.meshData) {
+        meshletOffset = std::min(meshletOffset, data.meshletRange.offset);
+        numMeshlets += data.meshletRange.size;
+        for (uint32 m = data.meshletRange.offset; m < data.meshletRange.size; ++m) {
+            MeshletDescription& meshlet = meshlets[m];
+            vertexIndicesOffset = std::min(vertexIndicesOffset, meshlet.vertexIndices.offset);
+            numVertexIndices += meshlet.vertexIndices.size;
+            primitiveIndicesOffset = std::min(primitiveIndicesOffset, meshlet.primitiveIndices.offset);
+            numPrimitiveIndices += meshlet.primitiveIndices.size;
+        }
+    }
+    for (auto& mesh : registeredMeshes) {
+        for (auto& data : mesh.meshData) {
+            if (data.meshletRange.offset > meshletOffset) {
+                for (uint32 i = 0; i < data.meshletRange.size; ++i) {
+                    MeshletDescription& m = meshlets[data.meshletRange.offset];
+                    if (m.primitiveIndices.offset > primitiveIndicesOffset) {
+                        m.primitiveIndices.offset -= numPrimitiveIndices;
+                    }
+                    if (m.vertexIndices.offset > vertexIndicesOffset) {
+                        m.vertexIndices.offset -= numVertexIndices;
+                    }
+                }
+                data.meshletRange.offset -= numMeshlets;
+            }
+        }
+    }
+    uint32 numMeshletsToMove = meshlets.size() - (meshletOffset + numMeshlets);
+    uint32 numVertexIndicesToMove = vertexIndices.size() - (vertexIndicesOffset + numVertexIndices);
+    uint32 numPrimitiveIndicesToMove = primitiveIndices.size() - (primitiveIndicesOffset + numPrimitiveIndices);
+    std::move(meshlets.begin() + meshletOffset + numMeshlets, meshlets.begin() + meshletOffset + numMeshlets + numMeshletsToMove,
+              meshlets.begin() + meshletOffset);
+    std::move(vertexIndices.begin() + vertexIndicesOffset + numVertexIndices,
+              vertexIndices.begin() + vertexIndicesOffset + numVertexIndices + numVertexIndicesToMove,
+              vertexIndices.begin() + vertexIndicesOffset);
+    std::move(primitiveIndices.begin() + primitiveIndicesOffset + numPrimitiveIndices,
+              primitiveIndices.begin() + primitiveIndicesOffset + numPrimitiveIndices + numPrimitiveIndices,
+              primitiveIndices.begin() + primitiveIndicesOffset);
 }
 
 void VertexData::commitMeshes() {
@@ -273,7 +321,8 @@ void VertexData::serializeMesh(MeshId id, ArchiveBuffer& buffer) {
         }
     }
     Array<uint32> ind(registeredMeshes[id].meshData[0].indicesRange.size);
-    std::memcpy(ind.data(), &indices[registeredMeshes[id].meshData[0].indicesRange.offset], registeredMeshes[id].meshData[0].indicesRange.size * sizeof(uint32));
+    std::memcpy(ind.data(), &indices[registeredMeshes[id].meshData[0].indicesRange.offset],
+                registeredMeshes[id].meshData[0].indicesRange.size * sizeof(uint32));
     Serialization::save(buffer, out);
     Serialization::save(buffer, ind);
 }
