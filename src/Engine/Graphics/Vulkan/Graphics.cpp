@@ -285,27 +285,7 @@ Gfx::PComputePipeline Graphics::createComputePipeline(Gfx::ComputePipelineCreate
 }
 
 Gfx::OSampler Graphics::createSampler(const SamplerCreateInfo& createInfo) {
-    VkSamplerCreateInfo vkInfo = {
-        .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
-        .pNext = nullptr,
-        .flags = createInfo.flags,
-        .magFilter = cast(createInfo.magFilter),
-        .minFilter = cast(createInfo.minFilter),
-        .mipmapMode = cast(createInfo.mipmapMode),
-        .addressModeU = cast(createInfo.addressModeU),
-        .addressModeV = cast(createInfo.addressModeV),
-        .addressModeW = cast(createInfo.addressModeW),
-        .mipLodBias = createInfo.mipLodBias,
-        .anisotropyEnable = createInfo.anisotropyEnable,
-        .maxAnisotropy = createInfo.maxAnisotropy,
-        .compareEnable = createInfo.compareEnable,
-        .compareOp = cast(createInfo.compareOp),
-        .minLod = createInfo.minLod,
-        .maxLod = createInfo.maxLod,
-        .borderColor = cast(createInfo.borderColor),
-        .unnormalizedCoordinates = createInfo.unnormalizedCoordinates,
-    };
-    return new Sampler(this, vkInfo);
+    return new Sampler(this, createInfo);
 }
 
 Gfx::ODescriptorLayout Graphics::createDescriptorLayout(const std::string& name) { return new DescriptorLayout(this, name); }

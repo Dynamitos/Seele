@@ -2,6 +2,7 @@
 #include "Containers/Array.h"
 #include "Enums.h"
 #include "Math/Math.h"
+#include "Initializer.h"
 
 namespace Seele {
 DECLARE_REF(Material)
@@ -14,7 +15,9 @@ DECLARE_REF(GraphicsPipeline)
 DECLARE_REF(ComputePipeline)
 class Sampler {
   public:
+    Sampler(SamplerCreateInfo createInfo): samplerInfo(createInfo) {}
     virtual ~Sampler() {}
+    SamplerCreateInfo samplerInfo;
 };
 DEFINE_REF(Sampler)
 

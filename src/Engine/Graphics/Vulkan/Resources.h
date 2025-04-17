@@ -106,7 +106,7 @@ DEFINE_REF(DestructionManager)
 
 class SamplerHandle : public CommandBoundResource {
   public:
-    SamplerHandle(PGraphics graphics, VkSamplerCreateInfo createInfo);
+    SamplerHandle(PGraphics graphics, SamplerCreateInfo createInfo);
     virtual ~SamplerHandle();
     VkSampler sampler;
 };
@@ -114,7 +114,7 @@ DEFINE_REF(SamplerHandle)
 
 class Sampler : public Gfx::Sampler {
   public:
-    Sampler(PGraphics graphics, VkSamplerCreateInfo createInfo);
+    Sampler(PGraphics graphics, SamplerCreateInfo createInfo);
     virtual ~Sampler();
     PSamplerHandle getHandle() const { return handle; }
     VkSampler getSampler() const { return handle->sampler; }

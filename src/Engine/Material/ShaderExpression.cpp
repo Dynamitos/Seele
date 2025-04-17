@@ -69,12 +69,9 @@ FloatParameter::FloatParameter(std::string name, float data, uint32 index) : Sha
 
 FloatParameter::~FloatParameter() {}
 
-void FloatParameter::updateDescriptorSet(uint32, uint32, uint32 floatOffset) {
-    Material::updateFloatData(floatOffset + index, 1, &data);
-}
+void FloatParameter::updateDescriptorSet(uint32, uint32, uint32 floatOffset) { Material::updateFloatData(floatOffset + index, 1, &data); }
 
-std::string FloatParameter::evaluate(Map<std::string, std::string>& varState) const
-{
+std::string FloatParameter::evaluate(Map<std::string, std::string>& varState) const {
     std::string varName = fmt::format("exp_{}", key);
     varState[key] = varName;
     return fmt::format("let {} = getMaterialFloatParameter({});\n", varName, index);
@@ -90,8 +87,7 @@ void FloatParameter::load(ArchiveBuffer& buffer) {
     Serialization::load(buffer, data);
 }
 
-VectorParameter::VectorParameter(std::string name, Vector data, uint32 index)
-    : ShaderParameter(name, index), data(data) {
+VectorParameter::VectorParameter(std::string name, Vector data, uint32 index) : ShaderParameter(name, index), data(data) {
     output.name = name;
     output.type = ExpressionType::FLOAT3;
 }
@@ -99,7 +95,7 @@ VectorParameter::VectorParameter(std::string name, Vector data, uint32 index)
 VectorParameter::~VectorParameter() {}
 
 void VectorParameter::updateDescriptorSet(uint32, uint32, uint32 floatOffset) {
-    Material::updateFloatData(floatOffset + index, 3, (float*) & data);
+    Material::updateFloatData(floatOffset + index, 3, (float*)&data);
 }
 
 std::string VectorParameter::evaluate(Map<std::string, std::string>& varState) const {
@@ -158,9 +154,7 @@ SamplerParameter::SamplerParameter(std::string name, Gfx::OSampler sampler, uint
 
 SamplerParameter::~SamplerParameter() {}
 
-void SamplerParameter::updateDescriptorSet(uint32, uint32 samplerOffset, uint32) {
-    Material::updateSampler(samplerOffset + index, data);
-}
+void SamplerParameter::updateDescriptorSet(uint32, uint32 samplerOffset, uint32) { Material::updateSampler(samplerOffset + index, data); }
 
 std::string SamplerParameter::evaluate(Map<std::string, std::string>& varState) const {
     std::string varName = fmt::format("exp_{}", key);
@@ -168,11 +162,48 @@ std::string SamplerParameter::evaluate(Map<std::string, std::string>& varState) 
     return fmt::format("let {} = getMaterialSamplerParameter({});\n", varName, index);
 }
 
-void SamplerParameter::save(ArchiveBuffer& buffer) const { ShaderParameter::save(buffer); }
+void SamplerParameter::save(ArchiveBuffer& buffer) const {
+    ShaderParameter::save(buffer);
+    Serialization::save(buffer, data->samplerInfo.flags);
+    Serialization::save(buffer, data->samplerInfo.magFilter);
+    Serialization::save(buffer, data->samplerInfo.minFilter);
+    Serialization::save(buffer, data->samplerInfo.mipmapMode);
+    Serialization::save(buffer, data->samplerInfo.addressModeU);
+    Serialization::save(buffer, data->samplerInfo.addressModeV);
+    Serialization::save(buffer, data->samplerInfo.addressModeW);
+    Serialization::save(buffer, data->samplerInfo.mipLodBias);
+    Serialization::save(buffer, data->samplerInfo.anisotropyEnable);
+    Serialization::save(buffer, data->samplerInfo.maxAnisotropy);
+    Serialization::save(buffer, data->samplerInfo.compareEnable);
+    Serialization::save(buffer, data->samplerInfo.compareOp);
+    Serialization::save(buffer, data->samplerInfo.minLod);
+    Serialization::save(buffer, data->samplerInfo.maxLod);
+    Serialization::save(buffer, data->samplerInfo.borderColor);
+    Serialization::save(buffer, data->samplerInfo.unnormalizedCoordinates);
+    Serialization::save(buffer, data->samplerInfo.name);
+}
 
 void SamplerParameter::load(ArchiveBuffer& buffer) {
     ShaderParameter::load(buffer);
-    data = buffer.getGraphics()->createSampler(SamplerCreateInfo{});
+    SamplerCreateInfo samplerInfo;
+    Serialization::load(buffer, samplerInfo.flags);
+    Serialization::load(buffer, samplerInfo.magFilter);
+    Serialization::load(buffer, samplerInfo.minFilter);
+    Serialization::load(buffer, samplerInfo.mipmapMode);
+    Serialization::load(buffer, samplerInfo.addressModeU);
+    Serialization::load(buffer, samplerInfo.addressModeV);
+    Serialization::load(buffer, samplerInfo.addressModeW);
+    Serialization::load(buffer, samplerInfo.mipLodBias);
+    Serialization::load(buffer, samplerInfo.anisotropyEnable);
+    Serialization::load(buffer, samplerInfo.maxAnisotropy);
+    Serialization::load(buffer, samplerInfo.compareEnable);
+    Serialization::load(buffer, samplerInfo.compareOp);
+    Serialization::load(buffer, samplerInfo.minLod);
+    Serialization::load(buffer, samplerInfo.maxLod);
+    Serialization::load(buffer, samplerInfo.borderColor);
+    Serialization::load(buffer, samplerInfo.unnormalizedCoordinates);
+    Serialization::load(buffer, samplerInfo.name);
+    data = buffer.getGraphics()->createSampler(samplerInfo);
 }
 
 CombinedTextureParameter::CombinedTextureParameter(std::string name, PTextureAsset data, Gfx::OSampler sampler, uint32 index)
@@ -183,7 +214,7 @@ CombinedTextureParameter::CombinedTextureParameter(std::string name, PTextureAss
 
 CombinedTextureParameter::~CombinedTextureParameter() {}
 
-void CombinedTextureParameter::updateDescriptorSet(uint32 , uint32 , uint32 ) { assert(false); }
+void CombinedTextureParameter::updateDescriptorSet(uint32, uint32, uint32) { assert(false); }
 
 std::string CombinedTextureParameter::evaluate(Map<std::string, std::string>&) const { return ""; }
 

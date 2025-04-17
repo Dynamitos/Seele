@@ -110,13 +110,33 @@ void DestructionManager::notifyCommandComplete() {
     }
 }
 
-SamplerHandle::SamplerHandle(PGraphics graphics, VkSamplerCreateInfo createInfo) : CommandBoundResource(graphics, "Sampler") {
-    vkCreateSampler(graphics->getDevice(), &createInfo, nullptr, &sampler);
+SamplerHandle::SamplerHandle(PGraphics graphics, SamplerCreateInfo createInfo) : CommandBoundResource(graphics, "Sampler") {
+    VkSamplerCreateInfo vkInfo = {
+        .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = createInfo.flags,
+        .magFilter = cast(createInfo.magFilter),
+        .minFilter = cast(createInfo.minFilter),
+        .mipmapMode = cast(createInfo.mipmapMode),
+        .addressModeU = cast(createInfo.addressModeU),
+        .addressModeV = cast(createInfo.addressModeV),
+        .addressModeW = cast(createInfo.addressModeW),
+        .mipLodBias = createInfo.mipLodBias,
+        .anisotropyEnable = createInfo.anisotropyEnable,
+        .maxAnisotropy = createInfo.maxAnisotropy,
+        .compareEnable = createInfo.compareEnable,
+        .compareOp = cast(createInfo.compareOp),
+        .minLod = createInfo.minLod,
+        .maxLod = createInfo.maxLod,
+        .borderColor = cast(createInfo.borderColor),
+        .unnormalizedCoordinates = createInfo.unnormalizedCoordinates,
+    };
+    vkCreateSampler(graphics->getDevice(), &vkInfo, nullptr, &sampler);
 }
 
 SamplerHandle::~SamplerHandle() { vkDestroySampler(graphics->getDevice(), sampler, nullptr); }
 
-Sampler::Sampler(PGraphics graphics, VkSamplerCreateInfo createInfo)
-    : graphics(graphics), handle(new SamplerHandle(graphics, createInfo)) {}
+Sampler::Sampler(PGraphics graphics, SamplerCreateInfo createInfo)
+    : Gfx::Sampler(createInfo), graphics(graphics), handle(new SamplerHandle(graphics, createInfo)) {}
 
 Sampler::~Sampler() { graphics->getDestructionManager()->queueResourceForDestruction(std::move(handle)); }
