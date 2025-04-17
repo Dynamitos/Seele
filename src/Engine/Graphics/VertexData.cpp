@@ -205,11 +205,13 @@ void VertexData::removeMesh(MeshId id) {
     uint32 numVertexIndices = 0;
     uint32 primitiveIndicesOffset = primitiveIndices.size();
     uint32 numPrimitiveIndices = 0;
+    uint32 indicesOffset = removing.meshData[0].indicesRange.offset;
+    uint32 numIndices = removing.meshData[0].indicesRange.size;
     for (const auto& data : removing.meshData) {
         meshletOffset = std::min(meshletOffset, data.meshletRange.offset);
         numMeshlets += data.meshletRange.size;
-        for (uint32 m = data.meshletRange.offset; m < data.meshletRange.size; ++m) {
-            MeshletDescription& meshlet = meshlets[m];
+        for (uint32 m = 0; m < data.meshletRange.size; ++m) {
+            MeshletDescription& meshlet = meshlets[data.meshletRange.offset + m];
             vertexIndicesOffset = std::min(vertexIndicesOffset, meshlet.vertexIndices.offset);
             numVertexIndices += meshlet.vertexIndices.size;
             primitiveIndicesOffset = std::min(primitiveIndicesOffset, meshlet.primitiveIndices.offset);
@@ -220,7 +222,7 @@ void VertexData::removeMesh(MeshId id) {
         for (auto& data : mesh.meshData) {
             if (data.meshletRange.offset > meshletOffset) {
                 for (uint32 i = 0; i < data.meshletRange.size; ++i) {
-                    MeshletDescription& m = meshlets[data.meshletRange.offset];
+                    MeshletDescription& m = meshlets[data.meshletRange.offset + i];
                     if (m.primitiveIndices.offset > primitiveIndicesOffset) {
                         m.primitiveIndices.offset -= numPrimitiveIndices;
                     }
@@ -229,6 +231,7 @@ void VertexData::removeMesh(MeshId id) {
                     }
                 }
                 data.meshletRange.offset -= numMeshlets;
+                data.indicesRange.offset -= numIndices;
             }
         }
     }
@@ -241,8 +244,11 @@ void VertexData::removeMesh(MeshId id) {
               vertexIndices.begin() + vertexIndicesOffset + numVertexIndices + numVertexIndicesToMove,
               vertexIndices.begin() + vertexIndicesOffset);
     std::move(primitiveIndices.begin() + primitiveIndicesOffset + numPrimitiveIndices,
-              primitiveIndices.begin() + primitiveIndicesOffset + numPrimitiveIndices + numPrimitiveIndices,
+              primitiveIndices.begin() + primitiveIndicesOffset + numPrimitiveIndices + numPrimitiveIndicesToMove,
               primitiveIndices.begin() + primitiveIndicesOffset);
+    uint32 numIndicesToMove = indices.size() - (indicesOffset + numIndices);
+    std::move(indices.begin() + indicesOffset + numIndices, indices.begin() + indicesOffset + numIndices + numIndicesToMove,
+              indices.begin() + indicesOffset);
 }
 
 void VertexData::commitMeshes() {
