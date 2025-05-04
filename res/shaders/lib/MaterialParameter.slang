@@ -98,13 +98,13 @@ struct FragmentParameter
     {
         // in theory, transposing would make this a world-to-tangent matrix, but because we are building the matrix ourselves
         // and something with matrix layouts is working the opposite direction, we need to transpose here
-        return transpose(float3x3(tangent_WS, biTangent_WS, normal_WS));
+        return transpose(float3x3(normalize(tangent_WS), normalize(biTangent_WS), normalize(normal_WS)));
     }
 #endif
     static FragmentParameter interpolate(FragmentParameter f0, FragmentParameter f1, FragmentParameter f2, float3 barycentricCoords)
     {
         FragmentParameter result;
-        result.position_CS = f0.position_CS * barycentricCoords.x + f1.position_CS * barycentricCoords.y + f2.position_CS * barycentricCoords.z;
+        result.position_CS  = f0.position_CS  * barycentricCoords.x + f1.position_CS  * barycentricCoords.y + f2.position_CS  * barycentricCoords.z;
 #ifndef POS_ONLY
         result.normal_WS    = f0.normal_WS    * barycentricCoords.x + f1.normal_WS    * barycentricCoords.y + f2.normal_WS    * barycentricCoords.z;
         result.tangent_WS   = f0.tangent_WS   * barycentricCoords.x + f1.tangent_WS   * barycentricCoords.y + f2.tangent_WS   * barycentricCoords.z;
@@ -142,9 +142,9 @@ struct VertexAttributes
 		result.position_CS = clipPos;
 #ifndef POS_ONLY
         //float3x3 tbn = qTangentToMatrix(qTangent);
-        result.tangent_WS = normalize(mul(transformMatrix, float4(tangent_MS, 0)).xyz);
-        result.biTangent_WS = normalize(mul(transformMatrix, float4(biTangent_MS, 0)).xyz);
-		result.normal_WS = normalize(mul(transformMatrix, float4(normal_MS, 0)).xyz);
+        result.tangent_WS = mul(transformMatrix, float4(tangent_MS, 0)).xyz;
+        result.biTangent_WS = mul(transformMatrix, float4(biTangent_MS, 0)).xyz;
+		result.normal_WS = mul(transformMatrix, float4(normal_MS, 0)).xyz;
 		result.vertexColor = vertexColor;
 		result.position_WS = worldPos.xyz;
         result.texCoords0 = float4(texCoords[0], texCoords[1]);

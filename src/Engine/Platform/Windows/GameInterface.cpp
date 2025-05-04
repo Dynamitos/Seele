@@ -14,7 +14,11 @@ void GameInterface::reload() {
         destroyInstance(game);
         FreeLibrary(lib);
     }
-    std::filesystem::copy(dllPath.parent_path().parent_path() / "res" / "shaders", "./shaders/game", std::filesystem::copy_options::overwrite_existing);
+    auto shaderPath = dllPath.parent_path().parent_path() / "res" / "shaders";
+    if (std::filesystem::exists(shaderPath))
+    {
+        std::filesystem::copy(shaderPath, "./shaders/game", std::filesystem::copy_options::overwrite_existing);
+    }
     lib = LoadLibraryA(dllPath.string().c_str());
     createInstance = (decltype(createInstance))GetProcAddress(lib, "createInstance");
     destroyInstance = (decltype(destroyInstance))GetProcAddress(lib, "destroyInstance");

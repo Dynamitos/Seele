@@ -25,7 +25,7 @@ using namespace Seele::Editor;
 static Gfx::OGraphics graphics;
 
 int main() {
-    std::string gameName = "MinecraftClone";
+    std::string gameName = "MeshShadingDemo";
     std::filesystem::path outputPath = fmt::format("../../{0}Game", gameName);
     std::filesystem::path sourcePath = fmt::format("../../{0}", gameName);
 #ifdef WIN32
@@ -57,9 +57,13 @@ int main() {
         AssetImporter::importEnvironmentMap(EnvironmentImportArgs{
             .filePath = sourcePath / "import" / "textures" / "newport_loft.hdr",
         });
-        AssetImporter::importTexture(TextureImportArgs{
-            .filePath = sourcePath / "import" / "textures" / "grass_block_side.png",
-            .importPath = "",
+        //AssetImporter::importTexture(TextureImportArgs{
+        //    .filePath = sourcePath / "import" / "textures" / "grass_block_side.png",
+        //    .importPath = "",
+        //});
+        AssetImporter::importMesh(MeshImportArgs{
+            .filePath = sourcePath / "import" / "models" / "main1_sponza" / "floor.glb",
+            .importPath = "sponza",
         });
 
         getThreadPool().waitIdle();

@@ -312,6 +312,10 @@ std::string MulExpression::evaluate(Map<std::string, std::string>& varState) con
     if (varState.contains(rhs)) {
         rhs = varState[rhs];
     }
+    if (inputs.at("lhs").type == ExpressionType::MATRIX2 || inputs.at("lhs").type == ExpressionType::MATRIX3 ||
+        inputs.at("lhs").type == ExpressionType::MATRIX4) { // TODO
+        return fmt::format("let {} = mul({}, {});\n", varName, lhs, rhs);
+    }
     return fmt::format("let {} = {} * {};\n", varName, lhs, rhs);
 }
 

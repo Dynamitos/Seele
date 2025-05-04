@@ -170,12 +170,10 @@ void Material::compile() {
     for (const auto& expr : codeExpressions) {
         codeStream << "\t\t" << expr->evaluate(varState);
     }
-    //for (const auto& [name, exp] : brdf.variables) {
-    for(auto it = brdf.variables.begin(); it != brdf.variables.end(); ++it){
-        auto [name, exp] = *it;
+    for (const auto& [name, exp] : brdf.variables) {
         codeStream << "\t\tresult." << name << " = " << varState[exp] << ";" << std::endl;
     }
-    codeStream << "\t\tresult.transformNormal(input.tangentToWorld);" << std::endl;
+    codeStream << "\t\tresult.normal = mul(input.tangentToWorld, result.normal);" << std::endl;
     codeStream << "\t\treturn result;\n";
     codeStream << "\t}\n";
     codeStream << "};\n";

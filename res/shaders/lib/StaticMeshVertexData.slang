@@ -16,9 +16,8 @@ struct StaticMeshVertexData : IVertexData
 #ifndef POS_ONLY
         //attributes.qTangent = qTangent[index];
         attributes.normal_MS = float3(normals[index * 3 + 0], normals[index * 3 + 1], normals[index * 3 + 2]);
-        float4 tangentSign = float4(tangents[index * 4 + 0], tangents[index * 4 + 1], tangents[index * 4 + 2], tangents[index * 4 + 3]);
-        attributes.tangent_MS = tangentSign.xyz;
-        attributes.biTangent_MS = cross(attributes.normal_MS, attributes.tangent_MS) * -tangentSign.w;
+        attributes.tangent_MS = float3(tangents[index * 3 + 0], tangents[index * 3 + 1], tangents[index * 3 + 2]);
+        attributes.biTangent_MS = float3(biTangents[index * 3 + 0], biTangents[index * 3 + 1], biTangents[index * 3 + 2]);;
 		for(uint i = 0; i < MAX_TEXCOORDS; ++i)
 		{
 			attributes.texCoords[i] = float2(uint16ToFloat(texCoords[i][index * 2 + 0]), uint16ToFloat(texCoords[i][index * 2 + 1]));
@@ -30,7 +29,8 @@ struct StaticMeshVertexData : IVertexData
 	StructuredBuffer<float> positions;
     //StructuredBuffer<float> qTangents;
 	StructuredBuffer<float> normals;
-	StructuredBuffer<float> tangents;
+    StructuredBuffer<float> tangents;
+    StructuredBuffer<float> biTangents;
 	StructuredBuffer<uint16_t> color;
 	StructuredBuffer<uint16_t> texCoords[MAX_TEXCOORDS];
 };

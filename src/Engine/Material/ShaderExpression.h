@@ -11,6 +11,9 @@ enum class ExpressionType {
     FLOAT2,
     FLOAT3,
     FLOAT4,
+    MATRIX2,
+    MATRIX3,
+    MATRIX4,
     TEXTURE,
     SAMPLER,
 };
