@@ -12,7 +12,6 @@ class Texture : public QueueOwnedResource {
     virtual uint32 getWidth() const = 0;
     virtual uint32 getHeight() const = 0;
     virtual uint32 getDepth() const = 0;
-    virtual uint32 getNumFaces() const { return 1; }
     virtual SeSampleCountFlags getNumSamples() const = 0;
     virtual uint32 getMipLevels() const = 0;
     virtual void changeLayout(SeImageLayout newLayout, SeAccessFlags srcAccess, SePipelineStageFlags srcStage, SeAccessFlags dstAccess,
@@ -36,6 +35,7 @@ class Texture2D : public Texture {
     virtual uint32 getWidth() const = 0;
     virtual uint32 getHeight() const = 0;
     virtual uint32 getDepth() const = 0;
+    virtual uint32 getNumLayers() const = 0; 
     virtual SeSampleCountFlags getNumSamples() const = 0;
     virtual uint32 getMipLevels() const = 0;
     virtual void changeLayout(SeImageLayout newLayout, SeAccessFlags srcAccess, SePipelineStageFlags srcStage, SeAccessFlags dstAccess,
@@ -59,6 +59,7 @@ class Texture3D : public Texture {
     virtual uint32 getWidth() const = 0;
     virtual uint32 getHeight() const = 0;
     virtual uint32 getDepth() const = 0;
+    virtual uint32 getNumLayers() const = 0;
     virtual SeSampleCountFlags getNumSamples() const = 0;
     virtual uint32 getMipLevels() const = 0;
     virtual void changeLayout(SeImageLayout newLayout, SeAccessFlags srcAccess, SePipelineStageFlags srcStage, SeAccessFlags dstAccess,
@@ -82,7 +83,7 @@ class TextureCube : public Texture {
     virtual uint32 getWidth() const = 0;
     virtual uint32 getHeight() const = 0;
     virtual uint32 getDepth() const = 0;
-    virtual uint32 getNumFaces() const { return 6; }
+    virtual uint32 getNumLayers() const = 0;
     virtual SeSampleCountFlags getNumSamples() const = 0;
     virtual uint32 getMipLevels() const = 0;
     virtual void changeLayout(SeImageLayout newLayout, SeAccessFlags srcAccess, SePipelineStageFlags srcStage, SeAccessFlags dstAccess,

@@ -18,7 +18,7 @@ class RenderPass {
     RenderPass(RenderPass&&) = default;
     RenderPass& operator=(RenderPass&&) = default;
     virtual ~RenderPass();
-    virtual void beginFrame(const Component::Camera& cam, const Component::Transform& transform);
+    virtual void beginFrame(const Component::Camera& cam, const Component::Transform& transform) = 0;
     virtual void render() = 0;
     virtual void endFrame() = 0;
     virtual void publishOutputs() = 0;
@@ -27,6 +27,7 @@ class RenderPass {
     void setViewport(Gfx::PViewport _viewport);
 
   protected:
+    Gfx::PDescriptorSet createViewParamsSet(const Component::Camera& cam, const Component::Transform& transform);
     struct Plane {
         Vector n;
         float d;
@@ -67,7 +68,6 @@ class RenderPass {
     } viewParams;
     PRenderGraphResources resources;
     Gfx::ODescriptorLayout viewParamsLayout;
-    Gfx::PDescriptorSet viewParamsSet;
     Gfx::ORenderPass renderPass;
     Gfx::PGraphics graphics;
     Gfx::PViewport viewport;

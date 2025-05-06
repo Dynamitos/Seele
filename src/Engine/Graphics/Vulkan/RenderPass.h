@@ -15,8 +15,10 @@ class RenderPass : public Gfx::RenderPass {
     constexpr size_t getClearValueCount() const { return clearValues.size(); }
     constexpr VkClearValue* getClearValues() const { return clearValues.data(); }
     constexpr VkSubpassContents getSubpassContents() const { return subpassContents; }
+    constexpr const std::string& getName() const { return name; }
 
   private:
+    std::string name;
     PGraphics graphics;
     VkRenderPass renderPass;
     Array<VkClearValue> clearValues;

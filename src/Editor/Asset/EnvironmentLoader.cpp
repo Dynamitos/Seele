@@ -129,18 +129,22 @@ void EnvironmentLoader::import(EnvironmentImportArgs args, PEnvironmentMapAsset 
     });
     Gfx::ORenderPass cubeRenderPass = graphics->createRenderPass(
         Gfx::RenderTargetLayout{
-            .colorAttachments = {Gfx::RenderTargetAttachment(cubeMap, Gfx::SE_IMAGE_LAYOUT_UNDEFINED,
-                                                             Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                                                             Gfx::SE_ATTACHMENT_LOAD_OP_DONT_CARE, Gfx::SE_ATTACHMENT_STORE_OP_STORE)},
+            .colorAttachments =
+                {
+                    Gfx::RenderTargetAttachment(cubeMap, Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                                                Gfx::SE_ATTACHMENT_LOAD_OP_DONT_CARE, Gfx::SE_ATTACHMENT_STORE_OP_STORE),
+                },
         },
-        {Gfx::SubPassDependency{
-            .srcSubpass = 0,
-            .dstSubpass = ~0U,
-            .srcStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-            .dstStage = Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-            .srcAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-            .dstAccess = Gfx::SE_ACCESS_SHADER_READ_BIT,
-        }},
+        {
+            Gfx::SubPassDependency{
+                .srcSubpass = 0,
+                .dstSubpass = ~0U,
+                .srcStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                .dstStage = Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                .srcAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+                .dstAccess = Gfx::SE_ACCESS_SHADER_READ_BIT,
+            },
+        },
         {
             .size = {SOURCE_RESOLUTION, SOURCE_RESOLUTION},
             .offset = {0, 0},

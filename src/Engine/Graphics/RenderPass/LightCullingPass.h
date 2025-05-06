@@ -33,6 +33,7 @@ class LightCullingPass : public RenderPass {
     Gfx::OComputeShader frustumShader;
     Gfx::PComputePipeline frustumPipeline;
     Gfx::OPipelineLayout frustumLayout;
+    Gfx::PDescriptorSet viewParamsSet;
 
     PLightEnvironment lightEnv;
     Gfx::PTexture2D depthAttachment;

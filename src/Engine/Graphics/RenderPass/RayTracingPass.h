@@ -32,6 +32,7 @@ class RayTracingPass : public RenderPass {
     Gfx::OAnyHitShader anyhit;
     Gfx::OMissShader miss;
     Gfx::PRayTracingPipeline pipeline;
+    Gfx::PDescriptorSet viewParamsSet;
     PScene scene;
 };
 } // namespace Seele

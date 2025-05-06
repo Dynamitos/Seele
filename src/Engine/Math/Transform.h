@@ -30,6 +30,10 @@ class Transform {
     Vector getRight() const;
     Vector getUp() const;
 
+    constexpr static Vector FORWARD = Vector(0, 0, 1);
+    constexpr static Vector RIGHT = Vector(-1, 0, 0);
+    constexpr static Vector UP = Vector(0, 1, 0);
+
     bool equals(const Transform& other, float tolerance = 0.000000001f);
     static void multiply(Transform* outTransform, const Transform* a, const Transform* b);
     static void add(Transform* outTransform, const Transform* a, const Transform* b);

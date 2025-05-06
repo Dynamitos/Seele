@@ -54,7 +54,7 @@ UIPass::UIPass(Gfx::PGraphics graphics, UI::PSystem system) : RenderPass(graphic
 UIPass::~UIPass() {}
 
 void UIPass::beginFrame(const Component::Camera& cam, const Component::Transform& transform) {
-    RenderPass::beginFrame(cam, transform);
+    viewParamsSet = createViewParamsSet(cam, transform);
     glyphs.clear();
     usedTextures.clear();
     elements.clear();

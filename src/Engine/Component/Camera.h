@@ -6,7 +6,8 @@
 namespace Seele {
 namespace Component {
 struct Camera {
-    Matrix4 viewMatrix;
+    float nearPlane = 0.001f;
+    float farPlane = 10000.0f;
     bool mainCamera = false;
 };
 } // namespace Component

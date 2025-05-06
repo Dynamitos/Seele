@@ -23,10 +23,17 @@ RenderPass::RenderPass(Gfx::PGraphics graphics) : graphics(graphics) {
 
 RenderPass::~RenderPass() {}
 
-void RenderPass::beginFrame(const Component::Camera& cam, const Component::Transform& transform) {
+void RenderPass::setResources(PRenderGraphResources _resources) { resources = _resources; }
+
+void RenderPass::setViewport(Gfx::PViewport _viewport) { viewport = _viewport; }
+
+Gfx::PDescriptorSet RenderPass::createViewParamsSet(const Component::Camera& cam, const Component::Transform& transform)
+{
     auto screenDim = Vector2(static_cast<float>(viewport->getWidth()), static_cast<float>(viewport->getHeight()));
-    Matrix4 cameraMatrix = cam.viewMatrix;
-    Matrix4 projectionMatrix = viewport->getProjectionMatrix();
+    Vector eyePos = transform.getPosition();
+    Vector lookAt = eyePos + transform.getForward();
+    Matrix4 cameraMatrix = glm::lookAt(eyePos, lookAt, Vector(0, 1, 0));
+    Matrix4 projectionMatrix = viewport->getProjectionMatrix(cam.nearPlane, cam.farPlane);
     viewParams = {
         .viewMatrix = cameraMatrix,
         .inverseViewMatrix = glm::inverse(cameraMatrix),
@@ -60,10 +67,10 @@ void RenderPass::beginFrame(const Component::Camera& cam, const Component::Trans
         corners[i] = world / world.w;
     }
 
-    //extract_planes_from_view_projection_matrix(viewParams.viewProjectionMatrix, viewParams.viewFrustum);
+    // extract_planes_from_view_projection_matrix(viewParams.viewProjectionMatrix, viewParams.viewFrustum);
 
     viewParamsLayout->reset();
-    viewParamsSet = viewParamsLayout->allocateDescriptorSet();
+    Gfx::PDescriptorSet viewParamsSet = viewParamsLayout->allocateDescriptorSet();
     viewParamsSet->updateConstants("viewMatrix", 0, &viewParams.viewMatrix);
     viewParamsSet->updateConstants("inverseViewMatrix", 0, &viewParams.inverseViewMatrix);
     viewParamsSet->updateConstants("projectionMatrix", 0, &viewParams.projectionMatrix);
@@ -79,11 +86,8 @@ void RenderPass::beginFrame(const Component::Camera& cam, const Component::Trans
     viewParamsSet->updateConstants("pad0", 0, &viewParams.pad0);
     viewParamsSet->updateConstants("pad1", 0, &viewParams.pad1);
     viewParamsSet->writeChanges();
+    return viewParamsSet;
 }
-
-void RenderPass::setResources(PRenderGraphResources _resources) { resources = _resources; }
-
-void RenderPass::setViewport(Gfx::PViewport _viewport) { viewport = _viewport; }
 
 void RenderPass::normalize_plane(Plane& plane) {
     float l = sqrtf(plane.n.x * plane.n.x + plane.n.y * plane.n.y + plane.n.z * plane.n.z);

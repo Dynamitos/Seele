@@ -1,7 +1,7 @@
 #include "LightEnvironment.h"
+#include "Asset/AssetRegistry.h"
 #include "Asset/EnvironmentMapAsset.h"
 #include "Graphics/Graphics.h"
-#include "Asset/AssetRegistry.h"
 
 using namespace Seele;
 
@@ -84,6 +84,17 @@ void LightEnvironment::commit() {
     set->updateTexture("irradianceMap", 0, environment->getIrradianceMap());
     set->updateSampler("irradianceSampler", 0, environmentSampler);
     set->writeChanges();
+
+    while (shadowMapArray.size() < dirs.size()) {
+        shadowMapArray.add(graphics->createTexture2D(TextureCreateInfo{
+            .format = Gfx::SE_FORMAT_D32_SFLOAT,
+            .width = 2048,
+            .height = 2048,
+            .elements = (uint32)dirs.size(),
+            .usage = Gfx::SE_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | Gfx::SE_IMAGE_USAGE_SAMPLED_BIT,
+            .name = "ShadowMap",
+        }));
+    }
 }
 
 const Gfx::PDescriptorLayout LightEnvironment::getDescriptorLayout() const { return layout; }

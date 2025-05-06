@@ -1,6 +1,6 @@
 #include "CachedDepthPass.h"
-#include "Graphics/Shader.h"
 #include "Graphics/Pipeline.h"
+#include "Graphics/Shader.h"
 
 using namespace Seele;
 
@@ -41,9 +41,12 @@ CachedDepthPass::CachedDepthPass(Gfx::PGraphics graphics, PScene scene) : Render
 
 CachedDepthPass::~CachedDepthPass() {}
 
-void CachedDepthPass::beginFrame(const Component::Camera& cam, const Component::Transform& transform) { RenderPass::beginFrame(cam, transform); }
+void CachedDepthPass::beginFrame(const Component::Camera& cam, const Component::Transform& transform) {
+    viewParamsSet = createViewParamsSet(cam, transform);
+}
 
 void CachedDepthPass::render() {
+    graphics->beginDebugRegion("CachedDepth");
     query->beginQuery();
     timestamps->write(Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT, "CachedBegin");
     graphics->beginRenderPass(renderPass);
@@ -78,7 +81,7 @@ void CachedDepthPass::render() {
                 .pipelineLayout = collection->pipelineLayout,
                 .rasterizationState =
                     {
-                        .cullMode = Gfx::SE_CULL_MODE_NONE,
+                        .cullMode = Gfx::SE_CULL_MODE_BACK_BIT,
                     },
                 .colorBlend =
                     {
@@ -95,7 +98,7 @@ void CachedDepthPass::render() {
                 .pipelineLayout = collection->pipelineLayout,
                 .rasterizationState =
                     {
-                        .cullMode = Gfx::SE_CULL_MODE_NONE,
+                        .cullMode = Gfx::SE_CULL_MODE_BACK_BIT,
                     },
                 .colorBlend =
                     {
@@ -125,7 +128,7 @@ void CachedDepthPass::render() {
                     for (const auto& meshData : drawCall.instanceMeshData) {
                         // all meshlets of a mesh share the same indices offset
                         command->drawIndexed(meshData.indicesRange.size, 1, meshData.indicesRange.offset,
-                            vertexData->getIndicesOffset(meshData.meshletRange.offset), inst++);
+                                             vertexData->getIndicesOffset(meshData.meshletRange.offset), inst++);
                     }
                 }
             }
@@ -137,6 +140,7 @@ void CachedDepthPass::render() {
     graphics->endRenderPass();
     timestamps->write(Gfx::SE_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, "CachedEnd");
     query->endQuery();
+    graphics->endDebugRegion();
 }
 
 void CachedDepthPass::endFrame() {}

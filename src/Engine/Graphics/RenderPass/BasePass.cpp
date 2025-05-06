@@ -89,7 +89,7 @@ BasePass::BasePass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics)
 BasePass::~BasePass() {}
 
 void BasePass::beginFrame(const Component::Camera& cam, const Component::Transform& transform) {
-    RenderPass::beginFrame(cam, transform);
+    viewParamsSet = createViewParamsSet(cam, transform);
 
     cameraPos = transform.getPosition();
     cameraForward = transform.getForward();
@@ -136,6 +136,7 @@ void BasePass::beginFrame(const Component::Camera& cam, const Component::Transfo
 }
 
 void BasePass::render() {
+    graphics->beginDebugRegion("BasePass");
     opaqueCulling->updateBuffer(LIGHTINDEX_NAME, 0, oLightIndexList);
     opaqueCulling->updateTexture(LIGHTGRID_NAME, 0, oLightGrid);
     transparentCulling->updateBuffer(LIGHTINDEX_NAME, 0, tLightIndexList);
@@ -151,110 +152,118 @@ void BasePass::render() {
     permutation.setDepthCulling(true); // always use the culling info
     permutation.setPositionOnly(false);
     Array<VertexData::TransparentDraw> transparentData;
-    // Base Rendering
-    for (VertexData* vertexData : VertexData::getList()) {
-        transparentData.addAll(vertexData->getTransparentData());
-        permutation.setVertexData(vertexData->getTypeName());
-        for (const auto& materialData : vertexData->getMaterialData()) {
-            // material not used for any active meshes, skip
-            if (materialData.instances.size() == 0)
-                continue;
-            // Create Pipeline(Material, VertexData)
-            // Descriptors:
-            // ViewData => global, static
-            // VertexData => per meshtype
-            // SceneData => per material instance
-            // LightEnv => provided by scene
-            // Material => per material
-            // LightCulling => calculated by pass
-            permutation.setMaterial(materialData.material->getName(), materialData.material->getProfile());
-            Gfx::PermutationId id(permutation);
+    {
+        graphics->beginDebugRegion("Opaque");
+        // Base Rendering
+        for (VertexData* vertexData : VertexData::getList()) {
+            transparentData.addAll(vertexData->getTransparentData());
+            permutation.setVertexData(vertexData->getTypeName());
+            for (const auto& materialData : vertexData->getMaterialData()) {
+                // material not used for any active meshes, skip
+                if (materialData.instances.size() == 0)
+                    continue;
+                // Create Pipeline(Material, VertexData)
+                // Descriptors:
+                // ViewData => global, static
+                // VertexData => per meshtype
+                // SceneData => per material instance
+                // LightEnv => provided by scene
+                // Material => per material
+                // LightCulling => calculated by pass
+                permutation.setMaterial(materialData.material->getName(), materialData.material->getProfile());
+                Gfx::PermutationId id(permutation);
 
-            Gfx::ORenderCommand command = graphics->createRenderCommand("BaseRender");
-            command->setViewport(viewport);
+                Gfx::ORenderCommand command = graphics->createRenderCommand("BaseRender");
+                command->setViewport(viewport);
 
-            const Gfx::ShaderCollection* collection = graphics->getShaderCompiler()->findShaders(id);
-            assert(collection != nullptr);
+                const Gfx::ShaderCollection* collection = graphics->getShaderCompiler()->findShaders(id);
+                assert(collection != nullptr);
 
-            bool twoSided = materialData.material->isTwoSided();
+                bool twoSided = materialData.material->isTwoSided();
 
-            if (graphics->supportMeshShading()) {
-                Gfx::MeshPipelineCreateInfo pipelineInfo = {
-                    .taskShader = collection->taskShader,
-                    .meshShader = collection->meshShader,
-                    .fragmentShader = collection->fragmentShader,
-                    .renderPass = renderPass,
-                    .pipelineLayout = collection->pipelineLayout,
-                    .multisampleState =
-                        {
-                            .samples = msColorAttachment.getNumSamples(),
-                        },
-                    .rasterizationState =
-                        {
-                            .cullMode = Gfx::SE_CULL_MODE_BACK_BIT,
-                        },
-                    .colorBlend =
-                        {
-                            .attachmentCount = 1,
-                        },
-                };
-                command->bindPipeline(graphics->createGraphicsPipeline(std::move(pipelineInfo)));
-            } else {
-                Gfx::LegacyPipelineCreateInfo pipelineInfo = {
-                    .vertexShader = collection->vertexShader,
-                    .fragmentShader = collection->fragmentShader,
-                    .renderPass = renderPass,
-                    .pipelineLayout = collection->pipelineLayout,
-                    .multisampleState =
-                        {
-                            .samples = msColorAttachment.getNumSamples(),
-                        },
-                    .rasterizationState =
-                        {
-                            .cullMode = Gfx::SeCullModeFlags(twoSided ? Gfx::SE_CULL_MODE_NONE : Gfx::SE_CULL_MODE_BACK_BIT),
-                        },
-                    .colorBlend =
-                        {
-                            .attachmentCount = 1,
-                        },
-                };
-                command->bindPipeline(graphics->createGraphicsPipeline(std::move(pipelineInfo)));
-            }
-            command->bindDescriptor({viewParamsSet, vertexData->getVertexDataSet(), vertexData->getInstanceDataSet(),
-                                     scene->getLightEnvironment()->getDescriptorSet(), Material::getDescriptorSet(), opaqueCulling});
-            for (const auto& drawCall : materialData.instances) {
-                command->pushConstants(Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_VERTEX_BIT |
-                                           Gfx::SE_SHADER_STAGE_FRAGMENT_BIT,
-                                       0, sizeof(VertexData::DrawCallOffsets), &drawCall.offsets);
                 if (graphics->supportMeshShading()) {
-                    command->drawMesh((uint32)drawCall.instanceMeshData.size(), 1, 1);
+                    Gfx::MeshPipelineCreateInfo pipelineInfo = {
+                        .taskShader = collection->taskShader,
+                        .meshShader = collection->meshShader,
+                        .fragmentShader = collection->fragmentShader,
+                        .renderPass = renderPass,
+                        .pipelineLayout = collection->pipelineLayout,
+                        .multisampleState =
+                            {
+                                .samples = msColorAttachment.getNumSamples(),
+                            },
+                        .rasterizationState =
+                            {
+                                .cullMode = Gfx::SE_CULL_MODE_BACK_BIT,
+                            },
+                        .colorBlend =
+                            {
+                                .attachmentCount = 1,
+                            },
+                    };
+                    command->bindPipeline(graphics->createGraphicsPipeline(std::move(pipelineInfo)));
                 } else {
-                    command->bindIndexBuffer(vertexData->getIndexBuffer());
-                    for (const auto& meshData : drawCall.instanceMeshData) {
-                        // all meshlets of a mesh share the same indices offset
-                        command->drawIndexed(meshData.indicesRange.size, 1, meshData.indicesRange.offset,
-                                             vertexData->getIndicesOffset(meshData.meshletRange.offset), 0);
+                    Gfx::LegacyPipelineCreateInfo pipelineInfo = {
+                        .vertexShader = collection->vertexShader,
+                        .fragmentShader = collection->fragmentShader,
+                        .renderPass = renderPass,
+                        .pipelineLayout = collection->pipelineLayout,
+                        .multisampleState =
+                            {
+                                .samples = msColorAttachment.getNumSamples(),
+                            },
+                        .rasterizationState =
+                            {
+                                .cullMode = Gfx::SE_CULL_MODE_BACK_BIT,
+                            },
+                        .colorBlend =
+                            {
+                                .attachmentCount = 1,
+                            },
+                    };
+                    command->bindPipeline(graphics->createGraphicsPipeline(std::move(pipelineInfo)));
+                }
+                command->bindDescriptor({viewParamsSet, vertexData->getVertexDataSet(), vertexData->getInstanceDataSet(),
+                                         scene->getLightEnvironment()->getDescriptorSet(), Material::getDescriptorSet(), opaqueCulling});
+                for (const auto& drawCall : materialData.instances) {
+                    command->pushConstants(Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_VERTEX_BIT |
+                                               Gfx::SE_SHADER_STAGE_FRAGMENT_BIT,
+                                           0, sizeof(VertexData::DrawCallOffsets), &drawCall.offsets);
+                    if (graphics->supportMeshShading()) {
+                        command->drawMesh((uint32)drawCall.instanceMeshData.size(), 1, 1);
+                    } else {
+                        command->bindIndexBuffer(vertexData->getIndexBuffer());
+                        for (const auto& meshData : drawCall.instanceMeshData) {
+                            // all meshlets of a mesh share the same indices offset
+                            command->drawIndexed(meshData.indicesRange.size, 1, meshData.indicesRange.offset,
+                                                 vertexData->getIndicesOffset(meshData.meshletRange.offset), 0);
+                        }
                     }
                 }
+                commands.add(std::move(command));
             }
-            commands.add(std::move(command));
         }
+        graphics->endDebugRegion();
     }
+    
     
     //commands.add(waterRenderer->render(viewParamsSet));
     //commands.add(terrainRenderer->render(viewParamsSet));
     
     // Skybox
     {
+        graphics->beginDebugRegion("Skybox");
         Gfx::ORenderCommand skyboxCommand = graphics->createRenderCommand("SkyboxRender");
         skyboxCommand->setViewport(viewport);
         skyboxCommand->bindPipeline(skyboxPipeline);
         skyboxCommand->bindDescriptor({viewParamsSet, skyboxDataSet, textureSet});
         skyboxCommand->draw(36, 1, 0, 0);
         graphics->executeCommands(std::move(skyboxCommand));
+        graphics->endDebugRegion();
     }
     // Transparent rendering
     {
+        graphics->beginDebugRegion("Transparent");
         permutation.setDepthCulling(false); // ignore visibility infos for transparency
         Map<float, VertexData::TransparentDraw> sortedDraws;
         for (const auto& t : transparentData) {
@@ -352,9 +361,11 @@ void BasePass::render() {
             }
         }
         commands.add(std::move(transparentCommand));
+        graphics->endDebugRegion();
     }
     // Debug vertices
     if (gDebugVertices.size() > 0) {
+        graphics->beginDebugRegion("Debug");
         Gfx::ORenderCommand debugCommand = graphics->createRenderCommand("DebugRender");
         debugCommand->setViewport(viewport);
         debugCommand->bindPipeline(debugPipeline);
@@ -362,6 +373,7 @@ void BasePass::render() {
         debugCommand->bindVertexBuffer({debugVertices});
         debugCommand->draw((uint32)gDebugVertices.size(), 1, 0, 0);
         commands.add(std::move(debugCommand));
+        graphics->endDebugRegion();
     }
 
     graphics->executeCommands(std::move(commands));
@@ -369,6 +381,7 @@ void BasePass::render() {
     query->endQuery();
     timestamps->write(Gfx::SE_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, "BaseEnd");
     gDebugVertices.clear();
+    graphics->endDebugRegion();
 }
 
 void BasePass::endFrame() {}

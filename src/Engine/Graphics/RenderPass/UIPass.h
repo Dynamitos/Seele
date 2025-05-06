@@ -62,6 +62,8 @@ class UIPass : public RenderPass {
     Gfx::ODescriptorLayout uiDescriptorLayout;
     Gfx::PDescriptorSet uiDescriptorSet;
 
+    Gfx::PDescriptorSet viewParamsSet;
+
     Gfx::OVertexShader uiVertexShader;
     Gfx::OFragmentShader uiFragmentShader;
     Gfx::OPipelineLayout uiPipelineLayout;

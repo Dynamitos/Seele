@@ -47,5 +47,7 @@ class ToneMappingPass : public RenderPass {
     Gfx::OVertexShader vert;
     Gfx::OFragmentShader frag;
     Gfx::PGraphicsPipeline pipeline;
+
+    Gfx::PDescriptorSet viewParamsSet;
 };
 }

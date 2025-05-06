@@ -67,7 +67,7 @@ RayTracingPass::RayTracingPass(Gfx::PGraphics graphics, PScene scene) : RenderPa
 static uint32 pass = 0;
 static Component::Transform lastCam;
 void RayTracingPass::beginFrame(const Component::Camera& cam, const Component::Transform& transform) {
-    RenderPass::beginFrame(cam, transform);
+    viewParamsSet = createViewParamsSet(cam, transform);
     if (lastCam.getPosition() != transform.getPosition() || lastCam.getForward() != transform.getForward()) {
         lastCam = transform;
         pass = 0;
@@ -75,6 +75,7 @@ void RayTracingPass::beginFrame(const Component::Camera& cam, const Component::T
 }
 
 void RayTracingPass::render() {
+    graphics->beginDebugRegion("RayTracingPass");
     texture->changeLayout(Gfx::SE_IMAGE_LAYOUT_GENERAL, Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
                           Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR);
     Array<Gfx::RayTracingHitGroup> callableGroups;
@@ -185,6 +186,7 @@ void RayTracingPass::render() {
     Array<Gfx::ORenderCommand> commands;
     commands.add(std::move(command));
     graphics->executeCommands(std::move(commands));
+    graphics->endDebugRegion();
 }
 
 void RayTracingPass::endFrame() {}

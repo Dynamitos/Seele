@@ -155,7 +155,6 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Array<PTextureAsset>&
             if (material->GetTexture(type, index, &texPath, &mapping, &uvIndex, &blend, &op, &mapMode) != AI_SUCCESS) {
                 std::cout << "fuck" << std::endl;
             }
-            uvIndex = 1;
             std::string textureKey = fmt::format("{0}Texture{1}", paramKey, index);
             auto texFilename = std::filesystem::path(texPath.C_Str());
             PTextureAsset texture;

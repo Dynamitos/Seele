@@ -83,6 +83,7 @@ class Texture2D : public Gfx::Texture2D, public TextureBase {
     virtual uint32 getWidth() const override { return handle->width; }
     virtual uint32 getHeight() const override { return handle->height; }
     virtual uint32 getDepth() const override { return handle->depth; }
+    virtual uint32 getNumLayers() const override { return handle->layerCount; }
     virtual Gfx::SeFormat getFormat() const override { return handle->format; }
     virtual Gfx::SeSampleCountFlags getNumSamples() const override { return handle->samples; }
     virtual uint32 getMipLevels() const override { return handle->mipLevels; }
@@ -106,6 +107,7 @@ class Texture3D : public Gfx::Texture3D, public TextureBase {
     virtual uint32 getWidth() const override { return handle->width; }
     virtual uint32 getHeight() const override { return handle->height; }
     virtual uint32 getDepth() const override { return handle->depth; }
+    virtual uint32 getNumLayers() const override { return handle->layerCount; }
     virtual Gfx::SeFormat getFormat() const override { return handle->format; }
     virtual Gfx::SeSampleCountFlags getNumSamples() const override { return handle->samples; }
     virtual uint32 getMipLevels() const override { return handle->mipLevels; }
@@ -129,6 +131,7 @@ class TextureCube : public Gfx::TextureCube, public TextureBase {
     virtual uint32 getWidth() const override { return handle->width; }
     virtual uint32 getHeight() const override { return handle->height; }
     virtual uint32 getDepth() const override { return handle->depth; }
+    virtual uint32 getNumLayers() const override { return handle->layerCount; }
     virtual Gfx::SeFormat getFormat() const override { return handle->format; }
     virtual Gfx::SeSampleCountFlags getNumSamples() const override { return handle->samples; }
     virtual uint32 getMipLevels() const override { return handle->mipLevels; }

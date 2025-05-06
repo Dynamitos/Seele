@@ -10,5 +10,4 @@ CameraUpdater::~CameraUpdater() {}
 void CameraUpdater::update(Component::Camera& camera, Component::Transform& transform) {
     Vector eyePos = transform.getPosition();
     Vector lookAt = eyePos + transform.getForward();
-    camera.viewMatrix = glm::lookAt(eyePos, lookAt, Vector(0, 1, 0));
 }

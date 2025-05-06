@@ -52,7 +52,7 @@ class Viewport {
     constexpr uint32 getOffsetY() const { return offsetY; }
     constexpr float getContentScaleX() const { return owner->getContentScaleX(); }
     constexpr float getContentScaleY() const { return owner->getContentScaleY(); }
-    Matrix4 getProjectionMatrix() const;
+    Matrix4 getProjectionMatrix(float nearPlane, float farPlane) const;
     URect getRenderArea() const {
         return URect{
             .size = {sizeX, sizeY},
@@ -66,6 +66,10 @@ class Viewport {
     uint32 offsetX;
     uint32 offsetY;
     float fieldOfView;
+    float orthoLeft;
+    float orthoRight;
+    float orthoTop;
+    float orthoBottom;
     PWindow owner;
 };
 DEFINE_REF(Viewport)

@@ -44,6 +44,7 @@ class BasePass : public RenderPass {
     // used for transparency sorting
     Vector cameraPos;
     Vector cameraForward;
+    Gfx::PDescriptorSet viewParamsSet;
 
     PCameraActor source;
     Gfx::OPipelineLayout basePassLayout;

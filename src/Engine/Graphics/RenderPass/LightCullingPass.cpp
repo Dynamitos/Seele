@@ -15,7 +15,7 @@ LightCullingPass::LightCullingPass(Gfx::PGraphics graphics, PScene scene) : Rend
 LightCullingPass::~LightCullingPass() {}
 
 void LightCullingPass::beginFrame(const Component::Camera& cam, const Component::Transform& transform) {
-    RenderPass::beginFrame(cam, transform);
+    viewParamsSet = createViewParamsSet(cam, transform);
 
     oLightIndexCounter->pipelineBarrier(Gfx::SE_ACCESS_MEMORY_WRITE_BIT | Gfx::SE_ACCESS_MEMORY_READ_BIT,
                                         Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT, Gfx::SE_ACCESS_MEMORY_WRITE_BIT,
@@ -38,6 +38,7 @@ void LightCullingPass::beginFrame(const Component::Camera& cam, const Component:
 }
 
 void LightCullingPass::render() {
+    graphics->beginDebugRegion("LightCulling");
     query->beginQuery();
     timestamps->write(Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT, "LightCullBegin");
     oLightGrid->pipelineBarrier(Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, Gfx::SE_ACCESS_SHADER_WRITE_BIT,
@@ -74,6 +75,7 @@ void LightCullingPass::render() {
                                 Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
     tLightGrid->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT, Gfx::SE_ACCESS_SHADER_READ_BIT,
                                 Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+    graphics->endDebugRegion();
 }
 
 void LightCullingPass::endFrame() {}
@@ -223,13 +225,14 @@ void LightCullingPass::createRenderPass() {
 }
 
 void LightCullingPass::setupFrustums() {
+    graphics->beginDebugRegion("SetupFrustums");
     uint32_t viewportWidth = viewport->getWidth();
     uint32_t viewportHeight = viewport->getHeight();
 
     numThreads = glm::ceil(glm::vec4(viewportWidth / (float)BLOCK_SIZE, viewportHeight / (float)BLOCK_SIZE, 1, 0));
     numThreadGroups = glm::ceil(glm::vec4(numThreads.x / (float)BLOCK_SIZE, numThreads.y / (float)BLOCK_SIZE, 1, 0));
 
-    RenderPass::beginFrame(Component::Camera(), Component::Transform());
+    viewParamsSet = createViewParamsSet(Component::Camera(), Component::Transform());
 
     dispatchParamsLayout = graphics->createDescriptorLayout("pDispatchParams");
     dispatchParamsLayout->addDescriptorBinding(Gfx::DescriptorBinding{
@@ -294,4 +297,5 @@ void LightCullingPass::setupFrustums() {
     graphics->executeCommands(std::move(commands));
     frustumBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                                    Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);    
+    graphics->endDebugRegion();
 }

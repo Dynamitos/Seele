@@ -26,6 +26,7 @@ class VisibilityPass : public RenderPass {
     Gfx::PComputePipeline visibilityPipeline;
     Gfx::OPipelineStatisticsQuery query;
     Gfx::PTimestampQuery timestamps;
+    Gfx::PDescriptorSet viewParamsSet;
 
     constexpr static const char* VISIBILITY_NAME = "visibilityTexture";
     // Holds culling information for every meshlet for each instance

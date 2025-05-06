@@ -35,6 +35,11 @@ struct WindowCreateInfo {
 struct ViewportCreateInfo {
     URect dimensions;
     float fieldOfView = glm::radians(70.0f);
+    // ortho params
+    float left = 0;
+    float right = 0;
+    float top = 0;
+    float bottom = 0;
 };
 // doesnt own the data, only proxy it
 struct DataSource {

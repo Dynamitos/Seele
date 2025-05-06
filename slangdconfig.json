@@ -1,0 +1,8 @@
+{
+  "slang.predefinedMacros": [
+  ],
+  "slang.additionalSearchPaths": [
+    "res/shaders/lib",
+    "c:\\Program Files\\Seele\\res\\shaders\\lib"
+  ]
+}

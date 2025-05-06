@@ -123,9 +123,12 @@ ToneMappingPass::ToneMappingPass(Gfx::PGraphics graphics) : RenderPass(graphics)
 
 ToneMappingPass::~ToneMappingPass() {}
 
-void ToneMappingPass::beginFrame(const Component::Camera& cam, const Component::Transform& transform) { RenderPass::beginFrame(cam, transform); }
+void ToneMappingPass::beginFrame(const Component::Camera& cam, const Component::Transform& transform) {
+    viewParamsSet = createViewParamsSet(cam, transform);
+}
 
 void ToneMappingPass::render() {
+    graphics->beginDebugRegion("ToneMapping");
     hdrInputTexture.getTexture()->changeLayout(Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
                                                Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, Gfx::SE_ACCESS_SHADER_READ_BIT,
                                                Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
@@ -181,6 +184,7 @@ void ToneMappingPass::render() {
     command->draw(3, 1, 0, 0);
     graphics->executeCommands(std::move(command));
     graphics->endRenderPass();
+    graphics->endDebugRegion();
 }
 
 void ToneMappingPass::endFrame() {}
