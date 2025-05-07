@@ -16,6 +16,7 @@ class Transform {
     Transform(Quaternion rotation, Vector scale);
     ~Transform();
     Matrix4 toMatrix() const;
+    void fromMatrix(Matrix4 mat);
     Vector transformPosition(const Vector& v) const;
 
     Vector getPosition() const;

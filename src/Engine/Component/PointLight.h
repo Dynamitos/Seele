@@ -4,9 +4,9 @@
 namespace Seele {
 namespace Component {
 struct PointLight {
-    // give the lights a radius so that they are not actual points
-    Vector4 positionWS;
-    Vector4 colorRange;
+    Vector color;
+    float intensity;
+    float attenuation;
 };
 } // namespace Component
 } // namespace Seele

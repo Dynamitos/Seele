@@ -24,6 +24,7 @@ Transform::Transform(Vector position, Quaternion rotation, Vector scale)
     : position(Vector4(position, 0)), rotation(rotation), scale(Vector4(scale, 0)) {}
 Transform::Transform(Quaternion rotation, Vector scale) : position(Vector4(0, 0, 0, 0)), rotation(rotation), scale(Vector4(scale, 0)) {}
 Transform::~Transform() {}
+
 Matrix4 Transform::toMatrix() const {
     // TODO: actual calculations, SIMD
     Matrix4 result = Matrix4(1);

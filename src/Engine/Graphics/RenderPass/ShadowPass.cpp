@@ -39,7 +39,7 @@ ShadowPass::ShadowPass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graph
 
 ShadowPass::~ShadowPass() {}
 
-void ShadowPass::beginFrame(const Component::Camera& cam, const Component::Transform& transform) {}
+void ShadowPass::beginFrame(const Component::Camera&, const Component::Transform&) {}
 
 void ShadowPass::render() {
     graphics->beginDebugRegion("ShadowPass");
@@ -81,31 +81,13 @@ void ShadowPass::render() {
             "Shadow");
         graphics->beginRenderPass(renderPass);
         auto light = scene->getLightEnvironment()->getDirectionalLight(shadowIndex);
-        Vector lightDirection = Vector(light.direction);
-        Vector lightPosition = -light.direction * 100.0f;
-        float dot = glm::dot(lightDirection, Math::Transform::FORWARD);
-        Quaternion rotation = Quaternion(1, 0, 0, 0);
-        // Handle the edge cases first
-        if (glm::epsilonEqual(dot, 1.0f, 0.00001f)) {
-            // Vectors are the same, no rotation
-        } else if (glm::epsilonEqual(dot, -1.0f, 0.00001f)) {
-            // Vectors are opposite need 180-degree rotation around any perpendicular axis
-            rotation = glm::angleAxis(glm::pi<float>(), Vector(0, 1, 0));
-        } else {
-            // Normal case
-            Vector axis = glm::normalize(glm::cross(lightDirection, Math::Transform::FORWARD));
-            float angle = std::acos(dot); // angle between vectors
-            rotation = glm::angleAxis(angle, axis);
-        }
-        Component::Transform lightTransform = Component::Transform{
-            .transform = Math::Transform(lightPosition, rotation),
-        };
+        
 
         Component::Camera lightCamera = Component::Camera{
-            .nearPlane = -1000.f,
+            .nearPlane = 0.f,
             .farPlane = 1000.0f,
         };
-        Gfx::PDescriptorSet viewParamsSet = createViewParamsSet(lightCamera, lightTransform);
+        Gfx::PDescriptorSet viewParamsSet = createViewParamsSet(lightCamera, scene->getLightEnvironment()->getDirectionalTransform(shadowIndex));
         for (VertexData* vertexData : VertexData::getList()) {
             permutation.setVertexData(vertexData->getTypeName());
             Gfx::PermutationId id(permutation);
@@ -123,7 +105,7 @@ void ShadowPass::render() {
                     .pipelineLayout = collection->pipelineLayout,
                     .rasterizationState =
                         {
-                            .cullMode = Gfx::SE_CULL_MODE_NONE,
+                            .cullMode = Gfx::SE_CULL_MODE_FRONT_BIT,
                         },
                     .colorBlend =
                         {
@@ -140,7 +122,7 @@ void ShadowPass::render() {
                     .pipelineLayout = collection->pipelineLayout,
                     .rasterizationState =
                         {
-                            .cullMode = Gfx::SE_CULL_MODE_NONE,
+                            .cullMode = Gfx::SE_CULL_MODE_FRONT_BIT,
                         },
                     .colorBlend =
                         {

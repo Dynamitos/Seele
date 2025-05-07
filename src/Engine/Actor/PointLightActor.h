@@ -10,6 +10,8 @@ class PointLightActor : public Actor {
     virtual ~PointLightActor();
     Component::PointLight& getPointLightComponent();
     const Component::PointLight& getPointLightComponent() const;
+    Component::Transform& getTransformComponent();
+    const Component::Transform& getTransformComponent() const;
 
   private:
 };

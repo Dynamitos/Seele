@@ -55,12 +55,41 @@ void LightEnvironment::reset() {
     layout->reset();
     set = layout->allocateDescriptorSet();
     dirs.clear();
+    directionalTransforms.clear();
     points.clear();
 }
 
-void LightEnvironment::addDirectionalLight(Component::DirectionalLight dirLight) { dirs.add(dirLight); }
+void LightEnvironment::addDirectionalLight(const Component::DirectionalLight& dirLight, const Component::Transform& transform) {
+    dirs.add(ShaderDirectionalLight{
+        .color = Vector4(dirLight.color, dirLight.intensity),
+        .direction = Vector4(transform.getForward(), 0),
+        .lightSpaceMatrix = transform.toMatrix(),
+    });
+    directionalTransforms.add(transform);
+    if (shadowMaps.size() < dirs.size()) {
+        shadowMaps.add(graphics->createTexture2D(TextureCreateInfo{
+            .format = Gfx::SE_FORMAT_D32_SFLOAT,
+            .width = 2048,
+            .height = 2048,
+            .elements = (uint32)dirs.size(),
+            .usage = Gfx::SE_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | Gfx::SE_IMAGE_USAGE_SAMPLED_BIT,
+            .name = "ShadowMap",
+        }));
+        shadowSamplers.add(graphics->createSampler(SamplerCreateInfo{
+            .addressModeU = Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER,
+            .addressModeV = Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER,
+            .addressModeW = Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER,
+            .name = "ShadowSampler",
+        }));
+    }
+}
 
-void LightEnvironment::addPointLight(Component::PointLight pointLight) { points.add(pointLight); }
+void LightEnvironment::addPointLight(const Component::PointLight& pointLight, const Component::Transform& transform) {
+    points.add(ShaderPointLight{
+        .position_WS = Vector4(transform.getPosition(), pointLight.intensity),
+        .colorRange = Vector4(pointLight.color, pointLight.attenuation),
+    });
+}
 
 void LightEnvironment::commit() {
     directionalLights->rotateBuffer(sizeof(Component::DirectionalLight) * dirs.size());
@@ -84,17 +113,6 @@ void LightEnvironment::commit() {
     set->updateTexture("irradianceMap", 0, environment->getIrradianceMap());
     set->updateSampler("irradianceSampler", 0, environmentSampler);
     set->writeChanges();
-
-    while (shadowMapArray.size() < dirs.size()) {
-        shadowMapArray.add(graphics->createTexture2D(TextureCreateInfo{
-            .format = Gfx::SE_FORMAT_D32_SFLOAT,
-            .width = 2048,
-            .height = 2048,
-            .elements = (uint32)dirs.size(),
-            .usage = Gfx::SE_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | Gfx::SE_IMAGE_USAGE_SAMPLED_BIT,
-            .name = "ShadowMap",
-        }));
-    }
 }
 
 const Gfx::PDescriptorLayout LightEnvironment::getDescriptorLayout() const { return layout; }

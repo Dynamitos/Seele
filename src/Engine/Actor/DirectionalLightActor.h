@@ -10,6 +10,8 @@ class DirectionalLightActor : public Actor {
     virtual ~DirectionalLightActor();
     Component::DirectionalLight& getDirectionalLightComponent();
     const Component::DirectionalLight& getDirectionalLightComponent() const;
+    Component::Transform& getTransformComponent();
+    const Component::Transform& getTransformComponent() const;
 
   private:
 };

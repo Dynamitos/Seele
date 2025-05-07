@@ -9,6 +9,10 @@ LightGather::~LightGather() {}
 
 void LightGather::update() {
     lightEnv->reset();
-    scene->view<Component::PointLight>([this](Component::PointLight& pointLight) { lightEnv->addPointLight(pointLight); });
-    scene->view<Component::DirectionalLight>([this](Component::DirectionalLight& dirLight) { lightEnv->addDirectionalLight(dirLight); });
+    scene->view<Component::PointLight, Component::Transform>(
+        [this](Component::PointLight& pointLight, Component::Transform& transform) { lightEnv->addPointLight(pointLight, transform); });
+    scene->view<Component::DirectionalLight, Component::Transform>(
+        [this](Component::DirectionalLight& dirLight, Component::Transform& transform) {
+            lightEnv->addDirectionalLight(dirLight, transform);
+        });
 }

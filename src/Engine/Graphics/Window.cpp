@@ -21,11 +21,11 @@ Viewport::Viewport(PWindow owner, const ViewportCreateInfo& viewportInfo)
 Viewport::~Viewport() {}
 
 Matrix4 Viewport::getProjectionMatrix(float nearPlane, float farPlane) const {
+    Matrix4 correctionMatrix = Matrix4(1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1 / 2.f, 0, 0, 0, 1 / 2.f, 1);
     if (fieldOfView > 0.0f) {
         Matrix4 projectionMatrix = glm::perspective(fieldOfView, sizeX / static_cast<float>(sizeY), nearPlane, farPlane);
-        Matrix4 correctionMatrix = Matrix4(1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1 / 2.f, 0, 0, 0, 1 / 2.f, 1);
         return correctionMatrix * projectionMatrix;
     } else {
-        return glm::ortho(orthoLeft, orthoRight, orthoTop, orthoBottom, nearPlane, farPlane);
+        return correctionMatrix * glm::ortho(orthoLeft, orthoRight, orthoTop, orthoBottom, farPlane, nearPlane);
     }
 }

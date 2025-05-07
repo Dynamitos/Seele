@@ -3,8 +3,8 @@
 namespace Seele {
 namespace Component {
 struct DirectionalLight {
-    Vector4 colorIntensity;
-    Vector4 direction;
+    Vector color;
+    float intensity;
 };
 } // namespace Component
 } // namespace Seele
