@@ -13,6 +13,14 @@ LightEnvironment::LightEnvironment(Gfx::PGraphics graphics)
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
     });
     layout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .name = "shadowMap",
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+    });
+    layout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .name = "shadowSampler",
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLER,
+    });
+    layout->addDescriptorBinding(Gfx::DescriptorBinding{
         .name = "numDirectionalLights",
         .uniformLength = sizeof(uint32),
     });
@@ -60,10 +68,14 @@ void LightEnvironment::reset() {
 }
 
 void LightEnvironment::addDirectionalLight(const Component::DirectionalLight& dirLight, const Component::Transform& transform) {
+    Vector eyePos = transform.getPosition();
+    Vector lookAt = eyePos + transform.getForward();
+    Matrix4 cameraMatrix = glm::lookAt(eyePos, lookAt, Vector(0, 1, 0));
+    Matrix4 correctionMatrix = Matrix4(1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1 / 2.f, 0, 0, 0, 1 / 2.f, 1);
     dirs.add(ShaderDirectionalLight{
         .color = Vector4(dirLight.color, dirLight.intensity),
         .direction = Vector4(transform.getForward(), 0),
-        .lightSpaceMatrix = transform.toMatrix(),
+        .lightSpaceMatrix = correctionMatrix * glm::ortho(-20.f, 20.f, 20.f, -20.f, 10.0f, -20.0f) * cameraMatrix,
     });
     directionalTransforms.add(transform);
     if (shadowMaps.size() < dirs.size()) {
@@ -75,6 +87,8 @@ void LightEnvironment::addDirectionalLight(const Component::DirectionalLight& di
             .usage = Gfx::SE_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | Gfx::SE_IMAGE_USAGE_SAMPLED_BIT,
             .name = "ShadowMap",
         }));
+        shadowMaps.back()->changeLayout(Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, Gfx::SE_ACCESS_NONE, Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                                        Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT);
         shadowSamplers.add(graphics->createSampler(SamplerCreateInfo{
             .addressModeU = Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER,
             .addressModeV = Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER,
@@ -92,24 +106,26 @@ void LightEnvironment::addPointLight(const Component::PointLight& pointLight, co
 }
 
 void LightEnvironment::commit() {
-    directionalLights->rotateBuffer(sizeof(Component::DirectionalLight) * dirs.size());
-    directionalLights->updateContents(0, sizeof(Component::DirectionalLight) * dirs.size(), dirs.data());
+    directionalLights->rotateBuffer(sizeof(ShaderDirectionalLight) * dirs.size());
+    directionalLights->updateContents(0, sizeof(ShaderDirectionalLight) * dirs.size(), dirs.data());
     directionalLights->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
                                        Gfx::SE_ACCESS_SHADER_READ_BIT | Gfx::SE_ACCESS_TRANSFER_WRITE_BIT,
                                        Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT |
                                            Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT);
-    pointLights->rotateBuffer(sizeof(Component::PointLight) * points.size());
-    pointLights->updateContents(0, sizeof(Component::PointLight) * points.size(), points.data());
+    pointLights->rotateBuffer(sizeof(ShaderPointLight) * points.size());
+    pointLights->updateContents(0, sizeof(ShaderPointLight) * points.size(), points.data());
     pointLights->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
                                  Gfx::SE_ACCESS_SHADER_READ_BIT | Gfx::SE_ACCESS_TRANSFER_WRITE_BIT,
                                  Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT |
                                      Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT);
     uint32 numPointLights = (uint32)points.size();
     uint32 numDirectionalLights = (uint32)dirs.size();
-    set->updateConstants("numPointLights", 0, &numPointLights);
-    set->updateBuffer("pointLights", 0, pointLights);
     set->updateConstants("numDirectionalLights", 0, &numDirectionalLights);
     set->updateBuffer("directionalLights", 0, directionalLights);
+    set->updateTexture("shadowMap", 0, Gfx::PTexture2D(shadowMaps[0]));
+    set->updateSampler("shadowSampler", 0, Gfx::PSampler(shadowSamplers[0]));
+    set->updateConstants("numPointLights", 0, &numPointLights);
+    set->updateBuffer("pointLights", 0, pointLights);
     set->updateTexture("irradianceMap", 0, environment->getIrradianceMap());
     set->updateSampler("irradianceSampler", 0, environmentSampler);
     set->writeChanges();

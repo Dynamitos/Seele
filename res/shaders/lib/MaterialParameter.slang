@@ -136,8 +136,7 @@ struct VertexAttributes
 	{
 		float4 modelPos = float4(position_MS, 1);
 		float4 worldPos = mul(transformMatrix, modelPos);
-		float4 viewPos = mul(pViewParams.viewMatrix, worldPos);
-		float4 clipPos = mul(pViewParams.projectionMatrix, viewPos);
+		float4 clipPos = mul(pViewParams.viewProjectionMatrix, worldPos);
 		FragmentParameter result;
 		result.position_CS = clipPos;
 #ifndef POS_ONLY

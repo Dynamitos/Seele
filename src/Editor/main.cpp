@@ -10,8 +10,8 @@
 #include "Graphics/Metal/Graphics.h"
 #else
 #endif
-#include "Graphics/Vulkan/Graphics.h"
 #include "Graphics/StaticMeshVertexData.h"
+#include "Graphics/Vulkan/Graphics.h"
 #include "Window/InspectorView.h"
 #include "Window/PlayView.h"
 #include "Window/WindowManager.h"
@@ -57,13 +57,17 @@ int main() {
         AssetImporter::importEnvironmentMap(EnvironmentImportArgs{
             .filePath = sourcePath / "import" / "textures" / "newport_loft.hdr",
         });
-        //AssetImporter::importTexture(TextureImportArgs{
-        //    .filePath = sourcePath / "import" / "textures" / "grass_block_side.png",
-        //    .importPath = "",
+        // AssetImporter::importTexture(TextureImportArgs{
+        //     .filePath = sourcePath / "import" / "textures" / "grass_block_side.png",
+        //     .importPath = "",
+        // });
+        //AssetImporter::importMesh(MeshImportArgs{
+        //    .filePath = sourcePath / "import" / "models" / "main1_sponza" / "sponza.gltf",
+        //    .importPath = "sponza",
         //});
         AssetImporter::importMesh(MeshImportArgs{
-            .filePath = sourcePath / "import" / "models" / "main1_sponza" / "floor.glb",
-            .importPath = "sponza",
+            .filePath = sourcePath / "import" / "models" / "rttest.glb",
+            .importPath = "rttest",
         });
 
         getThreadPool().waitIdle();

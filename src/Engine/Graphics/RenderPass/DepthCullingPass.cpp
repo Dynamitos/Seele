@@ -71,6 +71,7 @@ void DepthCullingPass::beginFrame(const Component::Camera& cam, const Component:
 
 void DepthCullingPass::render() {
     graphics->beginDebugRegion("DepthCullingPass");
+    Gfx::PDescriptorSet set = depthAttachmentLayout->allocateDescriptorSet();
     {
         graphics->beginDebugRegion("MipGeneration");
         query->beginQuery();
@@ -79,7 +80,6 @@ void DepthCullingPass::render() {
                                                    Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 
         depthMipBuffer->rotateBuffer(depthMipBuffer->getNumElements() * sizeof(uint32));
-        Gfx::PDescriptorSet set = depthAttachmentLayout->allocateDescriptorSet();
         set->updateTexture(DEPTHTEXTURE_NAME, 0, depthAttachment.getTexture());
         set->updateBuffer(DEPTHMIP_NAME, 0, depthMipBuffer);
         set->writeChanges();
@@ -127,10 +127,6 @@ void DepthCullingPass::render() {
         graphics->beginDebugRegion("DepthCulling");
         graphics->beginRenderPass(renderPass);
         Array<Gfx::ORenderCommand> commands;
-        Gfx::PDescriptorSet set = depthAttachmentLayout->allocateDescriptorSet();
-        set->updateTexture(DEPTHTEXTURE_NAME, 0, depthAttachment.getTexture());
-        set->updateBuffer(DEPTHMIP_NAME, 0, depthMipBuffer);
-        set->writeChanges();
         Gfx::ShaderPermutation permutation = graphics->getShaderCompiler()->getTemplate("DepthPass");
         permutation.setPositionOnly(true);
         permutation.setDepthCulling(getGlobals().useDepthCulling);

@@ -11,25 +11,11 @@ struct DirectionalLight : ILightEnv
     float4 color;
     float4 direction;
     float4x4 lightSpaceMatrix;
-    Texture2D shadowMap;
-    SamplerState shadowSampler;
 
     float3 illuminate<B:IBRDF>(LightingParameter params, B brdf)
     {
         float3 dir_WS = -normalize(direction.xyz);
-        float3 color = brdf.evaluate(params.viewDir_WS, dir_WS, color.xyz * color.w);
-
-        float4 lightSpacePos = mul(lightSpaceMatrix, float4(params.position_WS, 1));
-        float3 projCoords = lightSpacePos.xyz / lightSpacePos.w;
-        projCoords = projCoords * 0.5 + 0.5;
-        float closestDepth = shadowMap.Sample(shadowSampler, projCoords.xy).r;
-        float currentDepth = projCoords.z;
-        float bias = max(0.05 * (1.0 - dot(brdf.getNormal(), direction.xyz)), 0.005);
-        float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
-        if (projCoords.z > 1.0)
-            shadow = 0;
-
-        return shadow * color;
+        return brdf.evaluate(params.viewDir_WS, dir_WS, color.xyz);
     }
 };
 
@@ -76,6 +62,8 @@ struct PointLight : ILightEnv
 struct LightEnv
 {
     StructuredBuffer<DirectionalLight> directionalLights;
+    Texture2D shadowMap; // todo: not an array
+    SamplerState shadowSampler;
     uint numDirectionalLights;
     StructuredBuffer<PointLight> pointLights;
     uint numPointLights;

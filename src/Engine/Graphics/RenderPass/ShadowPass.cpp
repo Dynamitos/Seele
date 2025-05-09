@@ -79,15 +79,13 @@ void ShadowPass::render() {
                 .offset = {0, 0},
             },
             "Shadow");
-        graphics->beginRenderPass(renderPass);
         auto light = scene->getLightEnvironment()->getDirectionalLight(shadowIndex);
-        
-
         Component::Camera lightCamera = Component::Camera{
-            .nearPlane = 0.f,
-            .farPlane = 1000.0f,
+            .nearPlane = -20.f,
+            .farPlane = 10.0f,
         };
         Gfx::PDescriptorSet viewParamsSet = createViewParamsSet(lightCamera, scene->getLightEnvironment()->getDirectionalTransform(shadowIndex));
+        graphics->beginRenderPass(renderPass);
         for (VertexData* vertexData : VertexData::getList()) {
             permutation.setVertexData(vertexData->getTypeName());
             Gfx::PermutationId id(permutation);
@@ -105,7 +103,7 @@ void ShadowPass::render() {
                     .pipelineLayout = collection->pipelineLayout,
                     .rasterizationState =
                         {
-                            .cullMode = Gfx::SE_CULL_MODE_FRONT_BIT,
+                            .cullMode = Gfx::SE_CULL_MODE_NONE,
                         },
                     .colorBlend =
                         {
@@ -122,7 +120,7 @@ void ShadowPass::render() {
                     .pipelineLayout = collection->pipelineLayout,
                     .rasterizationState =
                         {
-                            .cullMode = Gfx::SE_CULL_MODE_FRONT_BIT,
+                            .cullMode = Gfx::SE_CULL_MODE_NONE,
                         },
                     .colorBlend =
                         {
@@ -161,6 +159,7 @@ void ShadowPass::render() {
         }
         graphics->executeCommands(std::move(commands));
         graphics->endRenderPass();
+        graphics->waitDeviceIdle();
     }
     graphics->endDebugRegion();
 }
@@ -174,10 +173,10 @@ void ShadowPass::publishOutputs() {
                                                                                   .offset = {0, 0},
                                                                               },
                                                                           .fieldOfView = 0,
-                                                                          .left = -10,
-                                                                          .right = 10,
-                                                                          .top = -10,
-                                                                          .bottom = 10});
+                                                                          .left = -20,
+                                                                          .right = 20,
+                                                                          .top = -20,
+                                                                          .bottom = 20});
     viewport = shadowViewport;
 }
 

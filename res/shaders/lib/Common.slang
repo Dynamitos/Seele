@@ -19,7 +19,7 @@ struct ViewParameter
     uint frameIndex;
     float time;
 };
-layout(set = 0)
+layout(set=0)
 ParameterBlock<ViewParameter> pViewParams;
 
 float4 worldToModel(float4x4 inverseTransform, float4 world)

@@ -6,7 +6,7 @@ DirectionalLightActor::DirectionalLightActor(PScene scene) : Actor(scene) { atta
 
 DirectionalLightActor::DirectionalLightActor(PScene scene, Vector color, float intensity, Vector direction) : Actor(scene) {
     attachComponent<Component::DirectionalLight>(Vector4(color, intensity));
-    Vector lightDirection = Vector(direction);
+    Vector lightDirection = glm::normalize(direction);
     float dot = glm::dot(lightDirection, Math::Transform::FORWARD);
     Quaternion rotation = Quaternion(1, 0, 0, 0);
     // Handle the edge cases first

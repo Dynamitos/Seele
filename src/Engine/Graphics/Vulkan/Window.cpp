@@ -313,5 +313,5 @@ void Viewport::move(uint32 newOffsetX, uint32 newOffsetY) {
     offsetX = newOffsetX;
     offsetY = newOffsetY;
     handle.x = static_cast<float>(offsetX);
-    handle.y = static_cast<float>(offsetY + sizeY);
+    handle.y = static_cast<float>(offsetY);
 }
