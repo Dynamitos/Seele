@@ -57,7 +57,6 @@ endif()
 
 add_library(Engine SHARED "")
 
-target_compile_definitions(Engine PRIVATE GLFW_WINDOWS)
 target_include_directories(Engine PRIVATE src/Engine)
 target_include_directories(Engine PRIVATE ${VCPKG_BASE_FOLDER}/include/)
 target_link_libraries(Engine PUBLIC Vulkan::Vulkan)

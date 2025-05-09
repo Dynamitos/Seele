@@ -26,6 +26,6 @@ Matrix4 Viewport::getProjectionMatrix(float nearPlane, float farPlane) const {
         Matrix4 projectionMatrix = glm::perspective(fieldOfView, sizeX / static_cast<float>(sizeY), nearPlane, farPlane);
         return correctionMatrix * projectionMatrix;
     } else {
-        return correctionMatrix * glm::ortho(orthoLeft, orthoRight, orthoBottom, orthoTop, farPlane, nearPlane);
+        return correctionMatrix * glm::ortho(orthoLeft, orthoRight, orthoBottom, orthoTop, nearPlane, farPlane);
     }
 }

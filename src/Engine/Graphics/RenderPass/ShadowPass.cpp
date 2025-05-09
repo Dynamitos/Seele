@@ -81,8 +81,8 @@ void ShadowPass::render() {
             "Shadow");
         auto light = scene->getLightEnvironment()->getDirectionalLight(shadowIndex);
         Component::Camera lightCamera = Component::Camera{
-            .nearPlane = -20.f,
-            .farPlane = 10.0f,
+            .nearPlane = -100.f,
+            .farPlane = 100.0f,
         };
         Gfx::PDescriptorSet viewParamsSet = createViewParamsSet(lightCamera, scene->getLightEnvironment()->getDirectionalTransform(shadowIndex));
         graphics->beginRenderPass(renderPass);
@@ -173,10 +173,10 @@ void ShadowPass::publishOutputs() {
                                                                                   .offset = {0, 0},
                                                                               },
                                                                           .fieldOfView = 0,
-                                                                          .left = -20,
-                                                                          .right = 20,
-                                                                          .top = -20,
-                                                                          .bottom = 20});
+                                                                          .left = -100,
+                                                                          .right = 100,
+                                                                          .top = 100,
+                                                                          .bottom = -100});
     viewport = shadowViewport;
 }
 

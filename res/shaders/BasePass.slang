@@ -26,15 +26,16 @@ float4 fragmentMain(in FragmentParameter params) : SV_Target
     {
         float4 lightSpacePos = mul(pLightEnv.directionalLights[i].lightSpaceMatrix, float4(params.position_WS, 1));
         float3 projCoords = lightSpacePos.xyz / lightSpacePos.w;
-        projCoords = projCoords * 0.5 + 0.5;
+        projCoords.xy = projCoords.xy * 0.5 + 0.5;
+        projCoords.z /= 2;
         float closestDepth = pLightEnv.shadowMap.Sample(pLightEnv.shadowSampler, projCoords.xy).r;
         float currentDepth = projCoords.z;
         float bias = max(0.05 * (1.0 - dot(brdf.getNormal(), pLightEnv.directionalLights[i].direction.xyz)), 0.005);
-        float shadow = currentDepth > closestDepth - bias ? 1.0 : 0.0;
+        float shadow = currentDepth + bias < closestDepth ? 1.0 : 0.0;
 
-        result += shadow * pLightEnv.directionalLights[i].illuminate(lightingParams, brdf);
+        result += float3(currentDepth, 0, 0);//shadow * pLightEnv.directionalLights[i].illuminate(lightingParams, brdf);
     }
-    for (uint i = 0; i < pLightEnv.numPo; ++i)
+    for (uint i = 0; i < lightCount; ++i)
     {
         uint lightIndex = pLightCullingData.lightIndexList[startOffset + i];
         result += pLightEnv.pointLights[lightIndex].illuminate(lightingParams, brdf);

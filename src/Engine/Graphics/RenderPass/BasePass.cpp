@@ -147,13 +147,13 @@ void BasePass::render() {
     query->beginQuery();
     timestamps->write(Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT, "BaseBegin");
     graphics->beginRenderPass(renderPass);
-    Array<Gfx::ORenderCommand> commands;
-    Gfx::ShaderPermutation permutation = graphics->getShaderCompiler()->getTemplate("BasePass");
-    permutation.setDepthCulling(true); // always use the culling info
-    permutation.setPositionOnly(false);
     Array<VertexData::TransparentDraw> transparentData;
     {
         graphics->beginDebugRegion("Opaque");
+        Array<Gfx::ORenderCommand> commands;
+        Gfx::ShaderPermutation permutation = graphics->getShaderCompiler()->getTemplate("BasePass");
+        permutation.setDepthCulling(true); // always use the culling info
+        permutation.setPositionOnly(false);
         // Base Rendering
         for (VertexData* vertexData : VertexData::getList()) {
             transparentData.addAll(vertexData->getTransparentData());
@@ -243,6 +243,7 @@ void BasePass::render() {
                 commands.add(std::move(command));
             }
         }
+        graphics->executeCommands(std::move(commands));
         graphics->endDebugRegion();
     }
     
@@ -264,6 +265,8 @@ void BasePass::render() {
     // Transparent rendering
     {
         graphics->beginDebugRegion("Transparent");
+        Gfx::ShaderPermutation permutation = graphics->getShaderCompiler()->getTemplate("BasePass");
+        permutation.setPositionOnly(false);
         permutation.setDepthCulling(false); // ignore visibility infos for transparency
         Map<float, VertexData::TransparentDraw> sortedDraws;
         for (const auto& t : transparentData) {
@@ -360,23 +363,25 @@ void BasePass::render() {
                 // }
             }
         }
-        commands.add(std::move(transparentCommand));
+        graphics->executeCommands(std::move(transparentCommand));
         graphics->endDebugRegion();
     }
     // Debug vertices
     if (gDebugVertices.size() > 0) {
         graphics->beginDebugRegion("Debug");
+        Gfx::ShaderPermutation permutation = graphics->getShaderCompiler()->getTemplate("BasePass");
+        permutation.setDepthCulling(true); // always use the culling info
+        permutation.setPositionOnly(false);
         Gfx::ORenderCommand debugCommand = graphics->createRenderCommand("DebugRender");
         debugCommand->setViewport(viewport);
         debugCommand->bindPipeline(debugPipeline);
         debugCommand->bindDescriptor(viewParamsSet);
         debugCommand->bindVertexBuffer({debugVertices});
         debugCommand->draw((uint32)gDebugVertices.size(), 1, 0, 0);
-        commands.add(std::move(debugCommand));
+        graphics->executeCommands(std::move(debugCommand));
         graphics->endDebugRegion();
     }
 
-    graphics->executeCommands(std::move(commands));
     graphics->endRenderPass();
     query->endQuery();
     timestamps->write(Gfx::SE_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, "BaseEnd");

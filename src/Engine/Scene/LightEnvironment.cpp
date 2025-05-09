@@ -75,7 +75,7 @@ void LightEnvironment::addDirectionalLight(const Component::DirectionalLight& di
     dirs.add(ShaderDirectionalLight{
         .color = Vector4(dirLight.color, dirLight.intensity),
         .direction = Vector4(transform.getForward(), 0),
-        .lightSpaceMatrix = correctionMatrix * glm::ortho(-20.f, 20.f, 20.f, -20.f, 10.0f, -20.0f) * cameraMatrix,
+        .lightSpaceMatrix = correctionMatrix * glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f, -100.0f, 100.0f) * cameraMatrix,
     });
     directionalTransforms.add(transform);
     if (shadowMaps.size() < dirs.size()) {
