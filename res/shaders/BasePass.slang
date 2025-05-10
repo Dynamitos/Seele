@@ -32,20 +32,38 @@ float4 fragmentMain(in FragmentParameter params) : SV_Target
     {
         float4 lightSpacePos = mul(biasMat, mul(pLightEnv.directionalLights[i].lightSpaceMatrix, float4(params.position_WS, 1)));
         float4 shadowCoord = lightSpacePos / lightSpacePos.w;
-        float shadow = 1.0f;
-        float dist = pLightEnv.shadowMap.Sample(pLightEnv.shadowSampler, shadowCoord.xy).r;
-        if (shadowCoord.w > 0 && dist > shadowCoord.z)
-        {
-            shadow = 0;
+        int2 texDim;
+        pLightEnv.shadowMap.GetDimensions(texDim.x, texDim.y);
+        float scale = 1.5f;
+        float dx = scale * 1.0 / float(texDim.x);
+        float dy = scale * 1.0 / float(texDim.y);
+
+        float shadowFactor = 0.0f;
+        int count = 0;
+        int range = 1;
+        for (int x = -range; x <= range; ++x) {
+            for (int y = -range; y <= range; ++y) {
+                float shadow = 1.0f;
+                if (shadowCoord.z > 0.0 && shadowCoord.z < 1.0)
+                {
+                    float dist = pLightEnv.shadowMap.Sample(pLightEnv.shadowSampler, shadowCoord.xy + float2(dx * x, dy * y)).r;
+                    if (shadowCoord.w > 0 && dist > shadowCoord.z)
+                    {
+                        shadow = 0;
+                    }
+                }
+                shadowFactor += shadow;
+                count++;
+            }
         }
 
-        result += shadow * pLightEnv.directionalLights[i].illuminate(lightingParams, brdf);
+        result += (shadowFactor / count) * pLightEnv.directionalLights[i].illuminate(lightingParams, brdf);
     }
     for (uint i = 0; i < pLightEnv.numPointLights; ++i)
     {
         //uint lightIndex = pLightCullingData.lightIndexList[startOffset + i];
         result += pLightEnv.pointLights[i].illuminate(lightingParams, brdf);
     }
-    //result += brdf.evaluateAmbient(lightingParams.viewDir_WS);
+    result += brdf.evaluateAmbient(lightingParams.viewDir_WS);
     return float4(result, brdf.getAlpha());
 }
