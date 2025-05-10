@@ -75,7 +75,7 @@ void LightEnvironment::addDirectionalLight(const Component::DirectionalLight& di
     dirs.add(ShaderDirectionalLight{
         .color = Vector4(dirLight.color, dirLight.intensity),
         .direction = Vector4(transform.getForward(), 0),
-        .lightSpaceMatrix = correctionMatrix * glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f, -100.0f, 100.0f) * cameraMatrix,
+        .lightSpaceMatrix = correctionMatrix * glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f, 100.0f, -100.0f) * cameraMatrix,
     });
     directionalTransforms.add(transform);
     if (shadowMaps.size() < dirs.size()) {
@@ -90,9 +90,9 @@ void LightEnvironment::addDirectionalLight(const Component::DirectionalLight& di
         shadowMaps.back()->changeLayout(Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, Gfx::SE_ACCESS_NONE, Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
                                         Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT);
         shadowSamplers.add(graphics->createSampler(SamplerCreateInfo{
-            .addressModeU = Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER,
-            .addressModeV = Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER,
-            .addressModeW = Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER,
+            .addressModeU = Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+            .addressModeV = Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+            .addressModeW = Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
             .name = "ShadowSampler",
         }));
     }

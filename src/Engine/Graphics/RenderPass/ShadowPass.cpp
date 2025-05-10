@@ -94,6 +94,8 @@ void ShadowPass::render() {
             command->setViewport(shadowViewport);
 
             const Gfx::ShaderCollection* collection = graphics->getShaderCompiler()->findShaders(id);
+            constexpr float depthBiasConstant = -1.25f;
+            constexpr float depthBiasSlope = -1.75f;
             if (graphics->supportMeshShading()) {
                 Gfx::MeshPipelineCreateInfo pipelineInfo = {
                     .taskShader = collection->taskShader,
@@ -104,10 +106,9 @@ void ShadowPass::render() {
                     .rasterizationState =
                         {
                             .cullMode = Gfx::SE_CULL_MODE_NONE,
-                        },
-                    .colorBlend =
-                        {
-                            .attachmentCount = 1,
+                            .depthBiasEnable = true,
+                            .depthBiasConstantFactor = depthBiasConstant,
+                            .depthBiasSlopeFactor = depthBiasSlope,
                         },
                 };
                 Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
@@ -121,10 +122,9 @@ void ShadowPass::render() {
                     .rasterizationState =
                         {
                             .cullMode = Gfx::SE_CULL_MODE_NONE,
-                        },
-                    .colorBlend =
-                        {
-                            .attachmentCount = 1,
+                            .depthBiasEnable = true,
+                            .depthBiasConstantFactor = depthBiasConstant,
+                            .depthBiasSlopeFactor = depthBiasSlope,
                         },
                 };
                 Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));

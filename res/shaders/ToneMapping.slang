@@ -113,5 +113,5 @@ float4 toneMapping(float2 uv : UV) : SV_Target
     value = agxLook(value);
     value = agxEotf(value);
 
-    return float4(value, 1);
+    return float4(hdrValue, 1);
 }
