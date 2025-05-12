@@ -21,7 +21,7 @@ DirectionalLightActor::DirectionalLightActor(PScene scene, Vector color, float i
         float angle = std::acos(dot); // angle between vectors
         rotation = glm::angleAxis(angle, axis);
     }
-    attachComponent<Component::Transform>(Math::Transform(Vector(0, 0, 0), rotation));
+    getTransform().setRotation(rotation);
 }
 
 DirectionalLightActor::~DirectionalLightActor() {}

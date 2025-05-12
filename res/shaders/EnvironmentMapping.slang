@@ -1,57 +1,58 @@
 const static float3 vertices[] = {
     // Right
+    float3( 1, -1,  1),
     float3( 1,  1,  1),
-    float3( 1, -1,  1),
-    float3( 1,  1, -1),
-
-    float3( 1,  1, -1),
-    float3( 1, -1,  1),
     float3( 1, -1, -1),
+
+    float3( 1, -1, -1),
+    float3( 1,  1,  1),
+    float3( 1,  1, -1),
 
     // Left
+    float3(-1, -1, -1),
     float3(-1,  1, -1),
-    float3(-1, -1, -1),
-    float3(-1,  1,  1),
-
-    float3(-1,  1,  1),
-    float3(-1, -1, -1),
     float3(-1, -1,  1),
+
+    float3(-1, -1,  1),
+    float3(-1,  1, -1),
+    float3(-1,  1,  1),
 
     // Bottom
-    float3(-1, -1,  1),
-    float3(-1, -1, -1),
-    float3( 1, -1,  1),
+    float3(-1,  1,  1),
+    float3(-1,  1, -1),
+    float3( 1,  1,  1),
 
-    float3( 1, -1,  1),
-    float3(-1, -1, -1),
-    float3( 1, -1, -1),
+    float3( 1,  1,  1),
+    float3(-1,  1, -1),
+    float3( 1,  1, -1),
 
     // Top
-    float3(-1,  1, -1),
-    float3(-1,  1,  1),
-    float3( 1,  1, -1),
-
-    float3( 1,  1, -1),
-    float3(-1,  1,  1),
-    float3( 1,  1,  1),
-
-    // Back
-    float3(-1,  1,  1),
+    float3(-1, -1, -1),
     float3(-1, -1,  1),
-    float3( 1,  1,  1),
+    float3( 1, -1, -1),
 
-    float3( 1,  1,  1),
+    float3( 1, -1, -1),
     float3(-1, -1,  1),
     float3( 1, -1,  1),
 
     // Front
-    float3( 1,  1, -1),
     float3( 1, -1, -1),
+    float3( 1,  1, -1),
+    float3(-1, -1, -1),
+
+    float3(-1, -1, -1),
+    float3( 1,  1, -1),
     float3(-1,  1, -1),
 
-    float3(-1,  1, -1),
-    float3( 1, -1, -1),
-    float3(-1, -1, -1),
+    // Back
+    float3(-1, -1,  1),
+    float3(-1,  1,  1),
+    float3( 1, -1,  1),
+
+    float3( 1, -1,  1),
+    float3(-1,  1,  1),
+    float3( 1,  1,  1),
+
 };
 
 struct ViewParams
@@ -80,7 +81,7 @@ VertexOutput vertMain(uint vertexIndex : SV_VertexID, uint viewIndex : SV_ViewID
 const static float2 invAtan = float2(0.1591, 0.3183);
 float2 sampleSphericalMap(float3 v)
 {
-    float2 uv = float2(atan2(v.z, v.x), asin(v.y));
+    float2 uv = float2(atan2(-v.z, v.x), asin(v.y));
     uv *= invAtan;
     uv += 0.5;
     return uv;

@@ -8,6 +8,9 @@
 #include "Material/Material.h"
 #include "Material/MaterialInstance.h"
 #include <iostream>
+#include <meshoptimizer.h>
+#include <metis.h>
+#include <unordered_map>
 
 using namespace Seele;
 
@@ -58,7 +61,14 @@ void VertexData::updateMesh(uint32 meshletOffset, PMesh mesh, Component::Transfo
     }
     BatchedDrawCall& matInstanceData = matData.instances[referencedInstance->getId()];
     matInstanceData.materialInstance = referencedInstance;
-    for (const auto& data : registeredMeshes[mesh->id].meshData) {
+    const auto& data = registeredMeshes[mesh->id].meshData;
+    uint32 numMeshlets = data.meshletRange.size;
+    for (uint32 i = 0; i < (numMeshlets + Gfx::numMeshletsPerTask - 1) / Gfx::numMeshletsPerTask; ++i) {
+        MeshData chunkMeshData = data;
+        chunkMeshData.meshletRange = {
+            .offset = data.meshletRange.offset + i * Gfx::numMeshletsPerTask,
+            .size = std::min(numMeshlets - i * Gfx::numMeshletsPerTask, Gfx::numMeshletsPerTask),
+        };
         if (mat->hasTransparency()) {
             auto params = referencedInstance->getMaterialOffsets();
             transparentData.add(TransparentDraw{
@@ -73,14 +83,14 @@ void VertexData::updateMesh(uint32 meshletOffset, PMesh mesh, Component::Transfo
                     },
                 .worldPosition = Vector(inst.transformMatrix[3]),
                 .instanceData = inst,
-                .meshData = data,
+                .meshData = chunkMeshData,
                 .cullingOffset = meshletOffset,
                 .rayTracingScene = mesh->blas,
             });
         } else { // opaque
             matInstanceData.rayTracingData.add(mesh->blas);
             matInstanceData.instanceData.add(inst);
-            matInstanceData.instanceMeshData.add(data);
+            matInstanceData.instanceMeshData.add(chunkMeshData);
             matInstanceData.cullingOffsets.add(meshletOffset);
         }
     }
@@ -129,6 +139,8 @@ void VertexData::createDescriptors() {
 
     instanceDataLayout->reset();
     descriptorSet = instanceDataLayout->allocateDescriptorSet();
+    descriptorSet->updateBuffer(POSITIONS_NAME, 0, positionBuffer);
+    descriptorSet->updateBuffer(INDEXBUFFER_NAME, 0, indexBuffer);
     descriptorSet->updateBuffer(INSTANCES_NAME, 0, instanceBuffer);
     descriptorSet->updateBuffer(MESHDATA_NAME, 0, instanceMeshDataBuffer);
     descriptorSet->updateBuffer(MESHLET_NAME, 0, meshletBuffer);
@@ -138,63 +150,167 @@ void VertexData::createDescriptors() {
     Material::updateDescriptor();
 }
 
-void VertexData::loadMesh(MeshId id, Array<uint32> loadedIndices, Array<Meshlet> loadedMeshlets) {
+Array<VertexData::MeshletGroup> VertexData::groupMeshlets(std::span<MeshletDescription> meshlets) {
+    auto groupWithAllMeshets = [&]() {
+        MeshletGroup group;
+        for (uint32 i = 0; i < meshlets.size(); i++) {
+            group.meshlets.add(i);
+        }
+        return Array{group};
+    };
+    if (meshlets.size() < 8) {
+        return groupWithAllMeshets();
+    }
+    struct MeshletEdge {
+        explicit MeshletEdge(size_t a, size_t b) : first(std::min(a, b)), second(std::max(a, b)) {}
+
+        bool operator==(const MeshletEdge& other) const = default;
+
+        const size_t first;
+        const size_t second;
+    };
+
+    struct MeshletEdgeHasher {
+        size_t operator()(const MeshletEdge& edge) const { return CRC::Calculate(&edge, sizeof(MeshletEdge), CRC::CRC_32()); }
+    };
+
+    std::unordered_map<MeshletEdge, Array<size_t>, MeshletEdgeHasher> edges2Meshlets;
+    std::unordered_map<size_t, Array<MeshletEdge>> meshlets2Edges;
+
+    for (size_t meshletIndex = 0; meshletIndex < meshlets.size(); ++meshletIndex) {
+        const auto& meshlet = meshlets[meshletIndex];
+        auto getVertexIndex = [&](size_t index) {
+            return vertexIndices[meshlet.vertexIndices.offset + primitiveIndices[meshlet.primitiveIndices.offset + index]];
+        };
+        const size_t triangleCount = meshlet.primitiveIndices.size;
+
+        for (size_t triangleIndex = 0; triangleIndex < triangleCount; ++triangleIndex) {
+            for (size_t i = 0; i < 3; ++i) {
+                MeshletEdge edge{getVertexIndex(i + triangleIndex * 3), getVertexIndex(((i + 1) % 3) + triangleIndex * 3)};
+                edges2Meshlets[edge].add(meshletIndex);
+                meshlets2Edges[meshletIndex].emplace(edge);
+            }
+        }
+    }
+
+    std::erase_if(edges2Meshlets, [&](const auto& pair) { return pair.second.size() <= 1; });
+    if (edges2Meshlets.empty()) {
+        return groupWithAllMeshets();
+    }
+
+    idx_t vertexCount = meshlets.size();
+    idx_t ncon = 1;
+    idx_t nparts = meshlets.size() / 4;
+    assert(nparts > 1);
+    idx_t options[METIS_NOPTIONS];
+    METIS_SetDefaultOptions(options);
+    options[METIS_OPTION_OBJTYPE] = METIS_OBJTYPE_CUT;
+    options[METIS_OPTION_CCORDER] = 1;
+
+    Array<idx_t> partition;
+    partition.resize(vertexCount);
+
+    Array<idx_t> xadjacency;
+    xadjacency.reserve(vertexCount + 1);
+
+    Array<idx_t> edgeAdjacency;
+    Array<idx_t> edgeWeights;
+
+    for (size_t meshletIndex = 0; meshletIndex < meshlets.size(); ++meshletIndex) {
+        size_t startIndexInEdgeAdjacency = edgeAdjacency.size();
+        for (const auto& edge : meshlets2Edges[meshletIndex]) {
+            auto connectionsIter = edges2Meshlets.find(edge);
+            if (connectionsIter == edges2Meshlets.end()) {
+                continue;
+            }
+            const auto& connections = connectionsIter->second;
+            for (const auto& connectedMeshlet : connections) {
+                if (connectedMeshlet != meshletIndex) {
+                    auto existingEdgeIter =
+                        std::find(edgeAdjacency.begin() + startIndexInEdgeAdjacency, edgeAdjacency.end(), connectedMeshlet);
+                    if (existingEdgeIter == edgeAdjacency.end()) {
+                        edgeAdjacency.emplace(connectedMeshlet);
+                        edgeWeights.emplace(1);
+                    } else {
+                        ptrdiff_t d = std::distance(edgeAdjacency.begin(), existingEdgeIter);
+                        assert(d >= 0);
+                        assert(d < edgeWeights.size());
+                        edgeWeights[d]++;
+                    }
+                }
+            }
+        }
+        xadjacency.add(startIndexInEdgeAdjacency);
+    }
+    xadjacency.add(edgeAdjacency.size());
+    assert(xadjacency.size() == meshlets.size() + 1);
+    assert(edgeAdjacency.size() == edgeWeights.size());
+
+    idx_t edgeCut;
+    int result = METIS_PartGraphKway(&vertexCount, &ncon, xadjacency.data(), edgeAdjacency.data(), nullptr, nullptr, edgeWeights.data(),
+                                     &nparts, nullptr, nullptr, options, &edgeCut, partition.data());
+
+    assert(result == METIS_OK);
+
+    Array<MeshletGroup> groups;
+    groups.resize(nparts);
+    for (size_t i = 0; i < meshlets.size(); ++i) {
+        idx_t partitionNumber = partition[i];
+        groups[partitionNumber].meshlets.add(i);
+    }
+    return groups;
+}
+
+void VertexData::loadMesh(MeshId id, Array<Vector> loadedPositions, Array<uint32> loadedIndices) {
     std::unique_lock l(vertexDataLock);
     RegisteredMesh& mesh = registeredMeshes[id];
-    assert(mesh.meshData.empty()); // TODO: update if not empty
-    uint32 numChunks = (loadedMeshlets.size() + 2047) / 2048;
-    for (uint32 chunkIdx = 0; chunkIdx < numChunks; ++chunkIdx) {
-        uint32 chunkOffset = chunkIdx * 2048;
-        uint32 numRemaining = loadedMeshlets.size() - chunkOffset;
+    MeshData& data = mesh.meshData;
 
-        AABB meshAABB;
-        uint32 meshletOffset = meshlets.size();
-        for (uint32 chunk = 0; chunk < std::min(numRemaining, 2048u); chunk++) {
-            Meshlet& m = loadedMeshlets[chunkOffset + chunk];
-            //...
-            meshAABB = meshAABB.combine(m.boundingBox);
+    // generate an LOD hierarchy for the given source mesh
+    // load LOD 0
+    loadMeshlets(id, loadedPositions, loadedIndices);
+    size_t previousMeshletsStart = data.meshletRange.offset; // todo:
 
-            uint32 vertexOffset = (uint32)vertexIndices.size();
-            vertexIndices.resize(vertexOffset + m.numVertices);
-            std::memcpy(vertexIndices.data() + vertexOffset, m.uniqueVertices, m.numVertices * sizeof(uint32));
+    /* const int maxLod = 25;
+    for (int lod = 0; lod < maxLod; ++lod) {
+        float tLod = lod / (float)maxLod;
 
-            uint32 primitiveOffset = (uint32)primitiveIndices.size();
-            primitiveIndices.resize(primitiveOffset + (m.numPrimitives * 3));
-            std::memcpy(primitiveIndices.data() + primitiveOffset, m.primitiveLayout, m.numPrimitives * 3 * sizeof(uint8));
-
-            meshlets.add(MeshletDescription{
-                .bounding = m.boundingBox, //.toSphere(),
-                .vertexIndices =
-                    {
-                        .offset = vertexOffset,
-                        .size = m.numVertices,
-                    },
-                .primitiveIndices =
-                    {
-                        .offset = primitiveOffset,
-                        .size = m.numPrimitives,
-                    },
-                .color = Vector((float)rand() / RAND_MAX, (float)rand() / RAND_MAX, (float)rand() / RAND_MAX),
-                .indicesOffset = (uint32)registeredMeshes[id].vertexOffset,
-            });
+        std::span<MeshletDescription> previousLevelMeshlets =
+            std::span{meshlets.data() + previousMeshletsStart, data.meshletRange.size};
+        if (previousLevelMeshlets.size() <= 1) {
+            return;
         }
-        registeredMeshes[id].meshData.add(MeshData{
-            .bounding = meshAABB, //.toSphere(),
-            .meshletRange =
-                {
-                    .offset = meshletOffset,
-                    .size = std::min(numRemaining, 2048u),
-                },
-        });
-    }
-    // todo: in case of a index split for 16 bit, do something here
-    registeredMeshes[id].meshData[0].indicesRange = {
-        .offset = (uint32)indices.size(),
-        .size = (uint32)loadedIndices.size(),
-    };
-    indices.resize(indices.size() + loadedIndices.size());
-    std::memcpy(indices.data() + registeredMeshes[id].meshData[0].indicesRange.offset, loadedIndices.data(),
-                loadedIndices.size() * sizeof(uint32));
+        auto groups = groupMeshlets(previousLevelMeshlets);
+        const uint32 newMeshletStart = ;
+        for (const auto& group : groups) {
+            Array<uint32> groupVertexIndices;
+            for (const auto& meshletIndex : group.meshlets) {
+                const auto& meshlet = meshlets[meshletIndex];
+                size_t start = groupVertexIndices.size();
+                groupVertexIndices.resize(start + meshlet.numPrimitives * 3);
+                for (size_t j = 0; j < meshlet.numPrimitives * 3; ++j) {
+                    groupVertexIndices[j + start] = meshlet.uniqueVertices[meshlet.primitiveLayout[j]];
+                }
+            }
+            float targetError = 0.01f;
+            const float threshold = 0.5f;
+            size_t targetIndexCount = groupVertexIndices.size() * threshold;
+            uint32 options = meshopt_SimplifyLockBorder;
+
+            Array<uint32> simplifiedIndexBuffer;
+            simplifiedIndexBuffer.resize(groupVertexIndices.size());
+            float simplificationError = 0.f;
+
+            size_t simplifiedIndexCount = meshopt_simplify(
+                simplifiedIndexBuffer.data(), groupVertexIndices.data(), groupVertexIndices.size(), (float*)loadedPositions.data(),
+                loadedPositions.size(), sizeof(Vector), targetIndexCount, targetError, options, &simplificationError);
+            simplifiedIndexBuffer.resize(simplifiedIndexCount);
+            if (simplifiedIndexCount > 0) {
+                // loadMeshlets();
+            }
+        }
+    }*/
+    std::memcpy(positions.data() + mesh.vertexOffset, loadedPositions.data(), loadedPositions.size() * sizeof(Vector));
 }
 
 void VertexData::removeMesh(MeshId id) {
@@ -205,34 +321,33 @@ void VertexData::removeMesh(MeshId id) {
     uint32 numVertexIndices = 0;
     uint32 primitiveIndicesOffset = primitiveIndices.size();
     uint32 numPrimitiveIndices = 0;
-    uint32 indicesOffset = removing.meshData[0].indicesRange.offset;
-    uint32 numIndices = removing.meshData[0].indicesRange.size;
-    for (const auto& data : removing.meshData) {
-        meshletOffset = std::min(meshletOffset, data.meshletRange.offset);
-        numMeshlets += data.meshletRange.size;
-        for (uint32 m = 0; m < data.meshletRange.size; ++m) {
-            MeshletDescription& meshlet = meshlets[data.meshletRange.offset + m];
-            vertexIndicesOffset = std::min(vertexIndicesOffset, meshlet.vertexIndices.offset);
-            numVertexIndices += meshlet.vertexIndices.size;
-            primitiveIndicesOffset = std::min(primitiveIndicesOffset, meshlet.primitiveIndices.offset);
-            numPrimitiveIndices += meshlet.primitiveIndices.size;
-        }
+    uint32 indicesOffset = removing.meshData.indicesRange.offset;
+    uint32 numIndices = removing.meshData.indicesRange.size;
+    const auto& data = removing.meshData;
+    meshletOffset = std::min(meshletOffset, data.meshletRange.offset);
+    numMeshlets += data.meshletRange.size;
+    for (uint32 m = 0; m < data.meshletRange.size; ++m) {
+        MeshletDescription& meshlet = meshlets[data.meshletRange.offset + m];
+        vertexIndicesOffset = std::min(vertexIndicesOffset, meshlet.vertexIndices.offset);
+        numVertexIndices += meshlet.vertexIndices.size;
+        primitiveIndicesOffset = std::min(primitiveIndicesOffset, meshlet.primitiveIndices.offset);
+        numPrimitiveIndices += meshlet.primitiveIndices.size;
     }
+
     for (auto& mesh : registeredMeshes) {
-        for (auto& data : mesh.meshData) {
-            if (data.meshletRange.offset > meshletOffset) {
-                for (uint32 i = 0; i < data.meshletRange.size; ++i) {
-                    MeshletDescription& m = meshlets[data.meshletRange.offset + i];
-                    if (m.primitiveIndices.offset > primitiveIndicesOffset) {
-                        m.primitiveIndices.offset -= numPrimitiveIndices;
-                    }
-                    if (m.vertexIndices.offset > vertexIndicesOffset) {
-                        m.vertexIndices.offset -= numVertexIndices;
-                    }
+        auto& data = mesh.meshData;
+        if (data.meshletRange.offset > meshletOffset) {
+            for (uint32 i = 0; i < data.meshletRange.size; ++i) {
+                MeshletDescription& m = meshlets[data.meshletRange.offset + i];
+                if (m.primitiveIndices.offset > primitiveIndicesOffset) {
+                    m.primitiveIndices.offset -= numPrimitiveIndices;
                 }
-                data.meshletRange.offset -= numMeshlets;
-                data.indicesRange.offset -= numIndices;
+                if (m.vertexIndices.offset > vertexIndicesOffset) {
+                    m.vertexIndices.offset -= numVertexIndices;
+                }
             }
+            data.meshletRange.offset -= numMeshlets;
+            data.indicesRange.offset -= numIndices;
         }
     }
     uint32 numMeshletsToMove = meshlets.size() - (meshletOffset + numMeshlets);
@@ -305,6 +420,7 @@ MeshId VertexData::allocateVertexData(uint64 numVertices) {
     if (head > verticesAllocated) {
         verticesAllocated = 2 * head; // double capacity
         std::cout << "Resizing buffers to " << verticesAllocated << std::endl;
+
         resizeBuffers();
     }
     return res;
@@ -312,34 +428,22 @@ MeshId VertexData::allocateVertexData(uint64 numVertices) {
 
 void VertexData::serializeMesh(MeshId id, ArchiveBuffer& buffer) {
     std::unique_lock l(vertexDataLock);
-    Array<Meshlet> out;
-    for (uint32 n = 0; n < registeredMeshes[id].meshData.size(); ++n) {
-        MeshData data = registeredMeshes[id].meshData[n];
-        for (size_t i = 0; i < data.meshletRange.size; ++i) {
-            MeshletDescription& desc = meshlets[i + data.meshletRange.offset];
-            Meshlet m;
-            std::memcpy(m.uniqueVertices, &vertexIndices[desc.vertexIndices.offset], desc.vertexIndices.size * sizeof(uint32));
-            std::memcpy(m.primitiveLayout, &primitiveIndices[desc.primitiveIndices.offset], desc.primitiveIndices.size * 3 * sizeof(uint8));
-            m.numPrimitives = desc.primitiveIndices.size;
-            m.numVertices = desc.vertexIndices.size;
-            m.boundingBox = desc.bounding;
-            out.add(std::move(m));
-        }
-    }
-    Array<uint32> ind(registeredMeshes[id].meshData[0].indicesRange.size);
-    std::memcpy(ind.data(), &indices[registeredMeshes[id].meshData[0].indicesRange.offset],
-                registeredMeshes[id].meshData[0].indicesRange.size * sizeof(uint32));
-    Serialization::save(buffer, out);
+    Array<uint32> ind(registeredMeshes[id].meshData.indicesRange.size);
+    std::memcpy(ind.data(), indices.data() + registeredMeshes[id].meshData.indicesRange.offset,
+                registeredMeshes[id].meshData.indicesRange.size * sizeof(uint32));
+    Array<Vector> pos(registeredMeshes[id].vertexCount);
+    std::memcpy(pos.data(), positions.data() + registeredMeshes[id].vertexOffset, registeredMeshes[id].vertexCount * sizeof(Vector));
     Serialization::save(buffer, ind);
+    Serialization::save(buffer, pos);
 }
 
 uint64 VertexData::deserializeMesh(MeshId id, ArchiveBuffer& buffer) {
-    Array<Meshlet> in;
+    Array<Vector> pos;
     Array<uint32> ind;
-    Serialization::load(buffer, in);
     Serialization::load(buffer, ind);
-    loadMesh(id, ind, in);
-    uint64 result = in.size() * sizeof(MeshletDescription);
+    Serialization::load(buffer, pos);
+    loadMesh(id, pos, ind);
+    uint64 result = pos.size() * sizeof(Vector);
     result += ind.size() * sizeof(uint32);
     return result;
 }
@@ -364,6 +468,16 @@ void VertexData::init(Gfx::PGraphics _graphics) {
     verticesAllocated = NUM_DEFAULT_ELEMENTS;
     instanceDataLayout = graphics->createDescriptorLayout("pScene");
 
+    // positions
+    instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .name = POSITIONS_NAME,
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+    });
+    // indexBuffer
+    instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .name = INDEXBUFFER_NAME,
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+    });
     // instanceData
     instanceDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{
         .name = INSTANCES_NAME,
@@ -430,10 +544,91 @@ void VertexData::destroy() {
 
 uint32 VertexData::addCullingMapping(MeshId id) {
     uint32 result = (uint32)meshletCount;
-    for (const auto& md : getMeshData(id)) {
-        meshletCount += md.meshletRange.size;
-    }
+    const auto& md = getMeshData(id);
+    meshletCount += md.meshletRange.size;
     return result;
+}
+
+void VertexData::resizeBuffers() { positions.resize(verticesAllocated); }
+
+void VertexData::updateBuffers() {
+    positionBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
+        .sourceData =
+            {
+                .size = verticesAllocated * sizeof(Vector),
+                .data = (uint8*)positions.data(),
+            },
+        .usage = Gfx::SE_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR,
+        .name = "Positions",
+    });
+}
+
+void VertexData::loadMeshlets(MeshId id, const Array<Vector>& loadedPositions, const Array<uint32>& loadedIndices) {
+    // Array<uint32> optimizedIndices = indices;
+    // tipsifyIndexBuffer(indices, positions.size(), 25, optimizedIndices);
+
+    const float coneWeight = 0.0f;
+
+    const uint32 meshletOffset = meshlets.size();
+    const uint32 vertexOffset = vertexIndices.size();
+    const uint32 primitiveOffset = primitiveIndices.size();
+    const uint32 maxMeshlets = meshopt_buildMeshletsBound(loadedIndices.size(), Gfx::numVerticesPerMeshlet, Gfx::numPrimitivesPerMeshlet);
+    Array<meshopt_Meshlet> meshoptMeshlets;
+    meshoptMeshlets.resize(maxMeshlets);
+
+    Array<uint32> meshletVertexIndices;
+    Array<uint8> meshletTriangles;
+    meshletVertexIndices.resize(maxMeshlets * Gfx::numVerticesPerMeshlet);
+    meshletTriangles.resize(maxMeshlets * Gfx::numVerticesPerMeshlet * 3);
+
+    const uint32 meshletCount =
+        meshopt_buildMeshlets(meshoptMeshlets.data(), meshletVertexIndices.data(), meshletTriangles.data(), loadedIndices.data(),
+                              loadedIndices.size(), (float*)loadedPositions.data(), loadedPositions.size(), sizeof(Vector),
+                              Gfx::numVerticesPerMeshlet, Gfx::numPrimitivesPerMeshlet, coneWeight);
+
+    const meshopt_Meshlet& last = meshoptMeshlets[meshletCount - 1];
+    const uint32 vertexCount = last.vertex_offset + last.vertex_count;
+    const uint32 indexCount = last.triangle_offset + ((last.triangle_count * 3 + 3) & ~3);
+    vertexIndices.resize(vertexOffset + vertexCount);
+    primitiveIndices.resize(primitiveOffset + indexCount);
+    meshlets.resize(meshletOffset + meshletCount);
+
+    std::memcpy(vertexIndices.data() + vertexOffset, meshletVertexIndices.data(), vertexCount * sizeof(uint32));
+    std::memcpy(primitiveIndices.data() + primitiveOffset, meshletTriangles.data(), indexCount * sizeof(uint8));
+
+    for (size_t i = 0; i < meshletCount; ++i) {
+        MeshletDescription& m = meshlets[meshletOffset + i];
+        m.vertexIndices = {
+            .offset = vertexOffset + meshoptMeshlets[i].vertex_offset,
+            .size = meshoptMeshlets[i].vertex_count,
+        };
+        m.primitiveIndices = {
+            .offset = primitiveOffset + meshoptMeshlets[i].triangle_offset,
+            .size = meshoptMeshlets[i].triangle_count,
+        };
+        // todo: use meshopt for bb generation
+        m.bounding = AABB();
+        for (size_t j = 0; j < m.vertexIndices.size; ++j) {
+            m.bounding.adjust(loadedPositions[vertexIndices[meshoptMeshlets[i].vertex_offset + j]]);
+        }
+    }
+    registeredMeshes[id].meshData = MeshData{
+        .bounding = AABB(),
+        .meshletRange =
+            {
+                .offset = meshletOffset,
+                .size = meshletCount,
+            },
+        .indicesRange =
+            {
+                .offset = (uint32)indices.size(),
+                .size = (uint32)loadedIndices.size(),
+            },
+    };
+    // todo: in case of a index split for 16 bit, do something here
+    indices.resize(indices.size() + loadedIndices.size());
+    std::memcpy(indices.data() + registeredMeshes[id].meshData.indicesRange.offset, loadedIndices.data(),
+                loadedIndices.size() * sizeof(uint32));
 }
 
 VertexData::VertexData() : idCounter(0), head(0), verticesAllocated(0), dirty(false) {}

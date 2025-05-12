@@ -16,6 +16,7 @@ EnvironmentLoader::EnvironmentLoader(Gfx::PGraphics graphics) : graphics(graphic
                                                                        .size = {SOURCE_RESOLUTION, SOURCE_RESOLUTION},
                                                                        .offset = {0, 0},
                                                                    },
+                                                               .fieldOfView = glm::radians(90.0f),
                                                            });
     convolutionViewport = graphics->createViewport(nullptr, ViewportCreateInfo{
                                                                 .dimensions =
@@ -23,6 +24,7 @@ EnvironmentLoader::EnvironmentLoader(Gfx::PGraphics graphics) : graphics(graphic
                                                                         .size = {CONVOLUTED_RESOLUTION, CONVOLUTED_RESOLUTION},
                                                                         .offset = {0, 0},
                                                                     },
+                                                                .fieldOfView = glm::radians(90.0f),
                                                             });
     cubeSampler = graphics->createSampler({
         .magFilter = Gfx::SE_FILTER_LINEAR,
@@ -106,7 +108,7 @@ void EnvironmentLoader::import(EnvironmentImportArgs args, PEnvironmentMapAsset 
         .height = (uint32)height,
         .name = "HDRRaw",
     });
-    Matrix4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
+    Matrix4 captureProjection = cubeRenderViewport->getProjectionMatrix(0.1f, 10.0f);
     Matrix4 captureViews[] = {
         glm::lookAt(Vector(0.0f, 0.0f, 0.0f), Vector(1.0f, 0.0f, 0.0f), Vector(0.0f, 1.0f, 0.0f)),
         glm::lookAt(Vector(0.0f, 0.0f, 0.0f), Vector(-1.0f, 0.0f, 0.0f), Vector(0.0f, 1.0f, 0.0f)),

@@ -16,12 +16,6 @@ StaticMeshVertexData* StaticMeshVertexData::getInstance() {
     return &instance;
 }
 
-void StaticMeshVertexData::loadPositions(uint64 offset, const Array<PositionType>& data) {
-    assert(offset + data.size() <= head);
-    std::memcpy(posData.data() + offset, data.data(), data.size() * sizeof(PositionType));
-    dirty = true;
-}
-
 void StaticMeshVertexData::loadTexCoords(uint64 offset, uint64 index, const Array<TexCoordType>& data) {
     assert(offset + data.size() <= head);
     std::memcpy(texData[index].data() + offset, data.data(), data.size() * sizeof(TexCoordType));
@@ -67,17 +61,14 @@ void StaticMeshVertexData::serializeMesh(MeshId id, ArchiveBuffer& buffer) {
         std::memcpy(tex[i].data(), texData[i].data() + offset, numVertices * sizeof(TexCoordType));
         Serialization::save(buffer, tex[i]);
     }
-    Array<PositionType> pos(numVertices);
     Array<NormalType> nor(numVertices);
     Array<TangentType> tan(numVertices);
     Array<BiTangentType> bit(numVertices);
     Array<ColorType> col(numVertices);
-    std::memcpy(pos.data(), posData.data() + offset, numVertices * sizeof(PositionType));
     std::memcpy(nor.data(), norData.data() + offset, numVertices * sizeof(NormalType));
     std::memcpy(tan.data(), tanData.data() + offset, numVertices * sizeof(TangentType));
     std::memcpy(bit.data(), bitData.data() + offset, numVertices * sizeof(BiTangentType));
     std::memcpy(col.data(), colData.data() + offset, numVertices * sizeof(ColorType));
-    Serialization::save(buffer, pos);
     Serialization::save(buffer, nor);
     Serialization::save(buffer, tan);
     Serialization::save(buffer, bit);
@@ -97,22 +88,18 @@ uint64 StaticMeshVertexData::deserializeMesh(MeshId id, ArchiveBuffer& buffer) {
         loadTexCoords(offset, i, tex[i]);
         result += tex[i].size() * sizeof(TexCoordType);
     }
-    Array<PositionType> pos;
     Array<NormalType> nor;
     Array<TangentType> tan;
     Array<BiTangentType> bit;
     Array<ColorType> col;
-    Serialization::load(buffer, pos);
     Serialization::load(buffer, nor);
     Serialization::load(buffer, tan);
     Serialization::load(buffer, bit);
     Serialization::load(buffer, col);
-    loadPositions(offset, pos);
     loadNormals(offset, nor);
     loadTangents(offset, tan);
     loadBitangents(offset, bit);
     loadColors(offset, col);
-    result += pos.size() * sizeof(PositionType);
     result += nor.size() * sizeof(NormalType);
     result += tan.size() * sizeof(TangentType);
     result += bit.size() * sizeof(BiTangentType);
@@ -123,10 +110,6 @@ uint64 StaticMeshVertexData::deserializeMesh(MeshId id, ArchiveBuffer& buffer) {
 void StaticMeshVertexData::init(Gfx::PGraphics _graphics) {
     VertexData::init(_graphics);
     descriptorLayout = _graphics->createDescriptorLayout("pVertexData");
-    descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .name = POSITIONS_NAME,
-        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-    });
     descriptorLayout->addDescriptorBinding(Gfx::DescriptorBinding{
         .name = NORMALS_NAME,
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
@@ -157,7 +140,6 @@ void StaticMeshVertexData::destroy() {
     for (size_t i = 0; i < MAX_TEXCOORDS; ++i) {
         texCoords[i] = nullptr;
     }
-    positions = nullptr;
     normals = nullptr;
     tangents = nullptr;
     biTangents = nullptr;
@@ -167,7 +149,7 @@ void StaticMeshVertexData::destroy() {
 }
 
 void StaticMeshVertexData::resizeBuffers() {
-    posData.resize(verticesAllocated);
+    VertexData::resizeBuffers();
     norData.resize(verticesAllocated);
     tanData.resize(verticesAllocated);
     bitData.resize(verticesAllocated);
@@ -178,15 +160,7 @@ void StaticMeshVertexData::resizeBuffers() {
 }
 
 void StaticMeshVertexData::updateBuffers() {
-    positions = graphics->createShaderBuffer(ShaderBufferCreateInfo{
-        .sourceData =
-            {
-                .size = verticesAllocated * sizeof(PositionType),
-                .data = (uint8*)posData.data(),
-            },
-        .usage = Gfx::SE_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR,
-        .name = "Positions",
-    });
+    VertexData::updateBuffers();
     normals = graphics->createShaderBuffer(ShaderBufferCreateInfo{
         .sourceData =
             {
@@ -231,7 +205,6 @@ void StaticMeshVertexData::updateBuffers() {
     }
     descriptorLayout->reset();
     descriptorSet = descriptorLayout->allocateDescriptorSet();
-    descriptorSet->updateBuffer(POSITIONS_NAME, 0, positions);
     descriptorSet->updateBuffer(NORMALS_NAME, 0, normals);
     descriptorSet->updateBuffer(TANGENTS_NAME, 0, tangents);
     descriptorSet->updateBuffer(BITANGENTS_NAME, 0, biTangents);

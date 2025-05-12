@@ -2,8 +2,11 @@
 #include "Containers/List.h"
 #include "Containers/Map.h"
 #include "Containers/Set.h"
+#include <CRC.h>
 #include <iostream>
-
+#include <meshoptimizer.h>
+#include <metis.h>
+#include <unordered_map>
 
 using namespace Seele;
 
@@ -185,32 +188,5 @@ bool addTriangle(const Array<Vector>& positions, Meshlet& current, Triangle& tri
 }
 
 void Meshlet::build(const Array<Vector>& positions, const Array<uint32>& indices, Array<Meshlet>& meshlets) {
-    Meshlet current = {
-        .numVertices = 0,
-        .numPrimitives = 0,
-    };
-    // TODO:
-    // Array<uint32> optimizedIndices = indices;
-    // tipsifyIndexBuffer(indices, positions.size(), 25, optimizedIndices);
-    Array<Triangle> triangles(indices.size() / 3);
-    for (size_t i = 0; i < triangles.size(); ++i) {
-        triangles[i] = Triangle{
-            .indices =
-                {
-                    indices[i * 3 + 0],
-                    indices[i * 3 + 1],
-                    indices[i * 3 + 2],
-                },
-        };
-    }
-    while (!triangles.empty()) {
-        if (!addTriangle(positions, current, triangles.back())) {
-            completeMeshlet(meshlets, current);
-            addTriangle(positions, current, triangles.back());
-        }
-        triangles.pop();
-    }
-    if (current.numVertices > 0) {
-        completeMeshlet(meshlets, current);
-    }
+    
 }

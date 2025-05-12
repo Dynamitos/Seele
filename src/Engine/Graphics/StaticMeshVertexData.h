@@ -8,7 +8,6 @@
 namespace Seele {
 class StaticMeshVertexData : public VertexData {
   public:
-    using PositionType = Vector;
     using NormalType = Vector;
     using TangentType = Vector;
     using BiTangentType = Vector;
@@ -18,7 +17,6 @@ class StaticMeshVertexData : public VertexData {
     StaticMeshVertexData();
     virtual ~StaticMeshVertexData();
     static StaticMeshVertexData* getInstance();
-    void loadPositions(uint64 offset, const Array<PositionType>& data);
     void loadTexCoords(uint64 offset, uint64 index, const Array<TexCoordType>& data);
     void loadNormals(uint64 offset, const Array<NormalType>& data);
     void loadTangents(uint64 offset, const Array<TangentType>& data);
@@ -31,14 +29,11 @@ class StaticMeshVertexData : public VertexData {
     virtual Gfx::PDescriptorLayout getVertexDataLayout() override { return descriptorLayout; }
     virtual Gfx::PDescriptorSet getVertexDataSet() override { return descriptorSet; }
     virtual std::string getTypeName() const override { return "StaticMeshVertexData"; }
-    virtual Gfx::PShaderBuffer getPositionBuffer() const override { return positions; }
 
   private:
     virtual void resizeBuffers() override;
     virtual void updateBuffers() override;
 
-    Gfx::OShaderBuffer positions;
-    constexpr static const char* POSITIONS_NAME = "positions";
     Gfx::OShaderBuffer texCoords[MAX_TEXCOORDS];
     constexpr static const char* TEXCOORDS_NAME = "texCoords";
     Gfx::OShaderBuffer normals;
@@ -49,7 +44,6 @@ class StaticMeshVertexData : public VertexData {
     constexpr static const char* BITANGENTS_NAME = "biTangents";
     Gfx::OShaderBuffer colors;
     constexpr static const char* COLORS_NAME = "colors";
-    Array<PositionType> posData;
     Array<TexCoordType> texData[MAX_TEXCOORDS];
     Array<NormalType> norData;
     Array<TangentType> tanData;

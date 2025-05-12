@@ -1,5 +1,62 @@
 import Common;
 
+const static float3 vertices[] = {
+    // Right
+    float3(512, -512, 512),
+    float3(512, 512, 512),
+    float3(512, -512, -512),
+
+    float3(512, -512, -512),
+    float3(512, 512, 512),
+    float3(512, 512, -512),
+
+    // Left
+    float3(-512, -512, -512),
+    float3(-512, 512, -512),
+    float3(-512, -512, 512),
+
+    float3(-512, -512, 512),
+    float3(-512, 512, -512),
+    float3(-512, 512, 512),
+
+    // Bottom
+    float3(-512, 512, 512),
+    float3(-512, 512, -512),
+    float3(512, 512, 512),
+
+    float3(512, 512, 512),
+    float3(-512, 512, -512),
+    float3(512, 512, -512),
+
+    // Top
+    float3(-512, -512, -512),
+    float3(-512, -512, 512),
+    float3(512, -512, -512),
+
+    float3(512, -512, -512),
+    float3(-512, -512, 512),
+    float3(512, -512, 512),
+
+    // Front
+    float3(512, -512, -512),
+    float3(512, 512, -512),
+    float3(-512, -512, -512),
+
+    float3(-512, -512, -512),
+    float3(512, 512, -512),
+    float3(-512, 512, -512),
+
+    // Back
+    float3(-512, -512, 512),
+    float3(-512, 512, 512),
+    float3(512, -512, 512),
+
+    float3(512, -512, 512),
+    float3(-512, 512, 512),
+    float3(512, 512, 512),
+};
+
+
 struct VertexShaderOutput
 {
     float4 clipPos : SV_Position;
@@ -11,62 +68,6 @@ struct SkyboxData
     float4 fogBlend;
 };
 ParameterBlock<SkyboxData> pSkyboxData;
-
-const static float3 vertices[] = {
-    // Back
-    float3(-512, -512,  512),
-    float3(-512,  512,  512),
-    float3( 512, -512,  512),
-
-    float3( 512, -512,  512),
-    float3(-512,  512,  512),
-    float3( 512,  512,  512),
-
-    // Front
-    float3( 512, -512, -512),
-    float3( 512,  512, -512),
-    float3(-512, -512, -512),
-
-    float3(-512, -512, -512),
-    float3( 512,  512, -512),
-    float3(-512,  512, -512),
-
-    // Top
-    float3(-512, -512, -512),
-    float3(-512, -512,  512),
-    float3( 512, -512, -512),
-
-    float3( 512, -512, -512),
-    float3(-512, -512,  512),
-    float3( 512, -512,  512),
-
-    // Bottom
-    float3(-512,  512,  512),
-    float3(-512,  512, -512),
-    float3( 512,  512,  512),
-
-    float3( 512,  512,  512),
-    float3(-512,  512, -512),
-    float3( 512,  512, -512),
-
-    // Left
-    float3(-512, -512, -512),
-    float3(-512,  512, -512),
-    float3(-512, -512,  512),
-
-    float3(-512, -512,  512),
-    float3(-512,  512, -512),
-    float3(-512,  512,  512),
-
-    // Right
-    float3( 512, -512,  512),
-    float3( 512,  512,  512),
-    float3( 512, -512, -512),
-
-    float3( 512, -512, -512),
-    float3( 512,  512,  512),
-    float3( 512,  512, -512),
-};
 
 [shader("vertex")]
 VertexShaderOutput vertexMain(
@@ -101,5 +102,5 @@ float4 fragmentMain(
 
     float factor = (output.texCoords.y - lowerLimit) / (upperLimit - lowerLimit);
     factor = clamp(factor, 0.0, 1.0);
-    return lerp(float4(pSkyboxData.fogBlend.xyz, 1), finalColor, factor);
+    return finalColor;//lerp(float4(pSkyboxData.fogBlend.xyz, 1), finalColor, factor);
 }

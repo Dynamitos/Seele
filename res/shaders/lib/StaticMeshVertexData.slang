@@ -1,6 +1,7 @@
 import Common;
 import VertexData;
 import MaterialParameter;
+import Scene;
 
 struct StaticMeshVertexData : IVertexData
 {
@@ -12,7 +13,7 @@ struct StaticMeshVertexData : IVertexData
 	VertexAttributes getAttributes(uint index)
 	{
 		VertexAttributes attributes;
-		attributes.position_MS = float3(positions[index * 3 + 0], positions[index * 3 + 1], positions[index * 3 + 2]);
+		attributes.position_MS = float3(pScene.positions[index * 3 + 0], pScene.positions[index * 3 + 1], pScene.positions[index * 3 + 2]);
 #ifndef POS_ONLY
         //attributes.qTangent = qTangent[index];
         attributes.normal_MS = float3(normals[index * 3 + 0], normals[index * 3 + 1], normals[index * 3 + 2]);
@@ -26,7 +27,6 @@ struct StaticMeshVertexData : IVertexData
 #endif
 		return attributes;
 	}
-	StructuredBuffer<float> positions;
     //StructuredBuffer<float> qTangents;
 	StructuredBuffer<float> normals;
     StructuredBuffer<float> tangents;

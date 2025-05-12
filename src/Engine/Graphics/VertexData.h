@@ -57,7 +57,7 @@ class VertexData {
     void resetMeshData();
     void updateMesh(uint32 meshletOffset, PMesh mesh, Component::Transform& transform);
     virtual void createDescriptors();
-    void loadMesh(MeshId id, Array<uint32> indices, Array<Meshlet> meshlets);
+    void loadMesh(MeshId id, Array<Vector> positions, Array<uint32> indices);
     virtual void removeMesh(MeshId id);
     void commitMeshes();
     MeshId allocateVertexData(uint64 numVertices);
@@ -68,7 +68,7 @@ class VertexData {
     virtual Gfx::PDescriptorLayout getVertexDataLayout() = 0;
     virtual Gfx::PDescriptorSet getVertexDataSet() = 0;
     virtual std::string getTypeName() const = 0;
-    virtual Gfx::PShaderBuffer getPositionBuffer() const = 0;
+    Gfx::PShaderBuffer getPositionBuffer() const { return positionBuffer; }
     Gfx::PIndexBuffer getIndexBuffer() const { return indexBuffer; }
     uint32* getIndexData() const { return indices.data(); }
     Gfx::PDescriptorLayout getInstanceDataLayout() { return instanceDataLayout; }
@@ -76,7 +76,7 @@ class VertexData {
     const Array<MaterialData>& getMaterialData() const { return materialData; }
     const Array<TransparentDraw>& getTransparentData() const { return transparentData; }
     const Array<Gfx::PBottomLevelAS>& getRayTracingData() const { return rayTracingScene; }
-    const Array<MeshData>& getMeshData(MeshId id) const { return registeredMeshes[id].meshData; }
+    const MeshData& getMeshData(MeshId id) const { return registeredMeshes[id].meshData; }
     void registerBottomLevelAccelerationStructure(Gfx::PBottomLevelAS blas) { dataToBuild.add(blas); }
     uint32 getIndicesOffset(uint32 meshletIndex) { return meshlets[meshletIndex].indicesOffset; }
     uint64 getNumInstances() const { return instanceData.size(); }
@@ -91,8 +91,10 @@ class VertexData {
     constexpr static const char* CULLINGDATA_NAME = "cullingData";
 
   protected:
-    virtual void resizeBuffers() = 0;
-    virtual void updateBuffers() = 0;
+    virtual void resizeBuffers();
+    virtual void updateBuffers();
+    void loadMeshlets(MeshId id, const Array<Vector>& positions, const Array<uint32>& indices);
+
     VertexData();
     struct MeshletDescription {
         AABB bounding;
@@ -100,9 +102,11 @@ class VertexData {
         PoolRange vertexIndices;
         // range into primitiveIndices array
         PoolRange primitiveIndices;
-        Vector color;
         // gets added to vertex indices so that they reference the global mesh pool
         uint32 indicesOffset = 0;
+        uint32 lod = 0;
+        uint32 pad0;
+        uint32 pad1;
     };
     std::mutex materialDataLock;
     Array<MaterialData> materialData;
@@ -111,8 +115,8 @@ class VertexData {
     std::mutex vertexDataLock;
     struct RegisteredMesh
     {
-        // each mesh id can have multiple meshdata, in case it needs to be split for having too many meshlets
-        Array<MeshData> meshData;
+        // this mesh data can have an unlimited number of meshlets, gets split when updating shader buffers
+        MeshData meshData;
         uint64 vertexOffset;
         uint64 vertexCount;
     };
@@ -121,6 +125,7 @@ class VertexData {
     Array<MeshletDescription> meshlets;
     Array<uint8> primitiveIndices;
     Array<uint32> vertexIndices;
+    Array<Vector> positions;
     Array<uint32> indices;
 
     static uint64 meshletCount;
@@ -128,6 +133,10 @@ class VertexData {
     Gfx::PGraphics graphics;
     Gfx::ODescriptorLayout instanceDataLayout;
     // for mesh shading
+    Gfx::OShaderBuffer positionBuffer;
+    constexpr static const char* POSITIONS_NAME = "positions";
+    Gfx::OIndexBuffer indexBuffer;
+    constexpr static const char* INDEXBUFFER_NAME = "indexBuffer";
     Gfx::OShaderBuffer meshletBuffer;
     constexpr static const char* MESHLET_NAME = "meshlets";
     Gfx::OShaderBuffer vertexIndicesBuffer;
@@ -137,9 +146,6 @@ class VertexData {
     Gfx::OShaderBuffer cullingOffsetBuffer;
     constexpr static const char* CULLINGOFFSETS_NAME = "cullingOffsets";
 
-    // for legacy pipeline
-    Gfx::OIndexBuffer indexBuffer;
-    constexpr static const char* INDEXBUFFER_NAME = "indexBuffer";
     Array<Gfx::PBottomLevelAS> dataToBuild;
     // Material data
     Array<InstanceData> instanceData;
@@ -157,5 +163,10 @@ class VertexData {
     uint64 head;
     uint64 verticesAllocated;
     bool dirty;
+
+    struct MeshletGroup {
+        Array<size_t> meshlets;
+    };
+    Array<MeshletGroup> groupMeshlets(std::span<MeshletDescription> meshlets);
 };
 } // namespace Seele

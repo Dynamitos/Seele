@@ -6,7 +6,7 @@ PointLightActor::PointLightActor(PScene scene) : Actor(scene) { attachComponent<
 
 PointLightActor::PointLightActor(PScene scene, Vector position, float intensity, Vector color, float attenuation) : Actor(scene) {
     attachComponent<Component::PointLight>(color, intensity, attenuation);
-    attachComponent<Component::Transform>(Math::Transform(position));
+    getTransform().setPosition(position);
 }
 
 PointLightActor::~PointLightActor() {}

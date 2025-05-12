@@ -161,6 +161,7 @@ static constexpr uint32 numFramesBuffered = 3;
 
 static constexpr uint32 numVerticesPerMeshlet = 256;
 static constexpr uint32 numPrimitivesPerMeshlet = 256;
+static constexpr uint32 numMeshletsPerTask = 256;
 double getCurrentFrameDelta();
 double getCurrentFrameTime();
 uint32 getCurrentFrameIndex();

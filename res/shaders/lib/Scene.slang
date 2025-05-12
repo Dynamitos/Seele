@@ -59,6 +59,8 @@ ConstantBuffer<DrawCallOffsets> pOffsets;
 
 struct Scene
 {
+    StructuredBuffer<float> positions;
+    StructuredBuffer<uint> indexBuffer;
     StructuredBuffer<InstanceData> instances;
     StructuredBuffer<MeshData> meshData;
     StructuredBuffer<MeshletDescription> meshletInfos;

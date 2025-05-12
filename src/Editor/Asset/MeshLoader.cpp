@@ -515,7 +515,7 @@ Vector4 MeshLoader::encodeQTangent(Matrix3 m) {
 }
 void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialInstanceAsset>& materials, Array<OMesh>& globalMeshes,
                                   Component::Collider& collider) {
-    List<std::function<void()>> work;
+    //List<std::function<void()>> work;
     for (uint32 meshIndex = 0; meshIndex < scene->mNumMeshes; ++meshIndex) {
         aiMesh* mesh = scene->mMeshes[meshIndex];
         if (!(mesh->mPrimitiveTypes & aiPrimitiveType_TRIANGLE))
@@ -527,9 +527,9 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
         uint64 offset = vertexData->getMeshOffset(id);
         collider.boundingbox.adjust(Vector(mesh->mAABB.mMin.x, mesh->mAABB.mMin.y, mesh->mAABB.mMin.z));
         collider.boundingbox.adjust(Vector(mesh->mAABB.mMax.x, mesh->mAABB.mMax.y, mesh->mAABB.mMax.z));
-        work.add([=, this, &globalMeshes]() {
+        //work.add([=, this, &globalMeshes]() {
             // assume static mesh for now
-            Array<StaticMeshVertexData::PositionType> positions(mesh->mNumVertices);
+            Array<Vector> positions(mesh->mNumVertices);
             StaticArray<Array<StaticMeshVertexData::TexCoordType>, MAX_TEXCOORDS> texCoords;
             for (size_t i = 0; i < MAX_TEXCOORDS; ++i) {
                 texCoords[i].resize(mesh->mNumVertices);
@@ -572,7 +572,6 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
                     colors[i] = StaticMeshVertexData::ColorType(1, 1, 1);
                 }
             }
-            vertexData->loadPositions(offset, positions);
 
             for (size_t i = 0; i < MAX_TEXCOORDS; ++i) {
                 vertexData->loadTexCoords(offset, i, texCoords[i]);
@@ -589,10 +588,7 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
                 indices[faceIndex * 3 + 2] = mesh->mFaces[faceIndex].mIndices[2];
             }
 
-            Array<Meshlet> meshlets;
-            meshlets.reserve(indices.size() / (3ull * Gfx::numPrimitivesPerMeshlet));
-            Meshlet::build(positions, indices, meshlets);
-            vertexData->loadMesh(id, indices, meshlets);
+            vertexData->loadMesh(id, std::move(positions), std::move(indices));
 
             // collider.physicsMesh.addCollider(positions, indices, Matrix4(1.0f));
 
@@ -604,9 +600,9 @@ void MeshLoader::loadGlobalMeshes(const aiScene* scene, const Array<PMaterialIns
                 .mesh = globalMeshes[meshIndex],
             });
             vertexData->registerBottomLevelAccelerationStructure(globalMeshes[meshIndex]->blas);
-        });
+        //});
     }
-    getThreadPool().runAndWait(std::move(work));
+    //getThreadPool().runAndWait(std::move(work));
 }
 
 Matrix4 convertMatrix(aiMatrix4x4 matrix) {

@@ -14,6 +14,8 @@
     "vulkan-memory-allocator",
     "lunasvg",
     "harfbuzz",
-    "shader-slang"
+    "shader-slang",
+    "metis",
+    "meshoptimizer"
   ]
 }
