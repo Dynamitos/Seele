@@ -13,8 +13,10 @@ struct MeshletDescription
     PoolRange vertexIndices;
     // range into primitiveIndices array
     PoolRange primitiveIndices;
-    float3 color;
     uint32_t indicesOffset;
+    uint32_t lod;
+    uint32_t pad0;
+    uint32_t pad1;
 };
 
 struct MeshData

@@ -268,33 +268,34 @@ void VertexData::loadMesh(MeshId id, Array<Vector> loadedPositions, Array<uint32
 
     // generate an LOD hierarchy for the given source mesh
     // load LOD 0
+    size_t previousMeshletsStart = meshlets.size(); // todo:
     loadMeshlets(id, loadedPositions, loadedIndices);
-    size_t previousMeshletsStart = data.meshletRange.offset; // todo:
 
     /* const int maxLod = 25;
     for (int lod = 0; lod < maxLod; ++lod) {
         float tLod = lod / (float)maxLod;
 
         std::span<MeshletDescription> previousLevelMeshlets =
-            std::span{meshlets.data() + previousMeshletsStart, data.meshletRange.size};
+            std::span{meshlets.data() + previousMeshletsStart, meshlets.size() - previousMeshletsStart};
         if (previousLevelMeshlets.size() <= 1) {
             return;
         }
         auto groups = groupMeshlets(previousLevelMeshlets);
-        const uint32 newMeshletStart = ;
+        const uint32 newMeshletStart = meshlets.size();
         for (const auto& group : groups) {
+            previousLevelMeshlets = std::span{meshlets.data() + previousMeshletsStart, meshlets.size() - previousMeshletsStart};
             Array<uint32> groupVertexIndices;
             for (const auto& meshletIndex : group.meshlets) {
                 const auto& meshlet = meshlets[meshletIndex];
                 size_t start = groupVertexIndices.size();
-                groupVertexIndices.resize(start + meshlet.numPrimitives * 3);
-                for (size_t j = 0; j < meshlet.numPrimitives * 3; ++j) {
-                    groupVertexIndices[j + start] = meshlet.uniqueVertices[meshlet.primitiveLayout[j]];
+                groupVertexIndices.resize(start + meshlet.primitiveIndices.size * 3);
+                for (size_t j = 0; j < meshlet.primitiveIndices.size * 3; ++j) {
+                    groupVertexIndices[j + start] = vertexIndices[meshlet.vertexIndices.offset + primitiveIndices[meshlet.primitiveIndices.offset + j]];
                 }
             }
-            float targetError = 0.01f;
             const float threshold = 0.5f;
             size_t targetIndexCount = groupVertexIndices.size() * threshold;
+            float targetError = 0.9f * tLod + 0.01f * (1 - tLod);
             uint32 options = meshopt_SimplifyLockBorder;
 
             Array<uint32> simplifiedIndexBuffer;
@@ -306,7 +307,11 @@ void VertexData::loadMesh(MeshId id, Array<Vector> loadedPositions, Array<uint32
                 loadedPositions.size(), sizeof(Vector), targetIndexCount, targetError, options, &simplificationError);
             simplifiedIndexBuffer.resize(simplifiedIndexCount);
             if (simplifiedIndexCount > 0) {
-                // loadMeshlets();
+                loadMeshlets(id, loadedPositions, simplifiedIndexBuffer);
+                for (size_t i = newMeshletStart; i < meshlets.size(); ++i) {
+                    meshlets[i].lod = lod + 1;
+                }
+                previousMeshletsStart = newMeshletStart;
             }
         }
     }*/
@@ -579,7 +584,7 @@ void VertexData::loadMeshlets(MeshId id, const Array<Vector>& loadedPositions, c
     Array<uint32> meshletVertexIndices;
     Array<uint8> meshletTriangles;
     meshletVertexIndices.resize(maxMeshlets * Gfx::numVerticesPerMeshlet);
-    meshletTriangles.resize(maxMeshlets * Gfx::numVerticesPerMeshlet * 3);
+    meshletTriangles.resize(maxMeshlets * Gfx::numPrimitivesPerMeshlet * 3);
 
     const uint32 meshletCount =
         meshopt_buildMeshlets(meshoptMeshlets.data(), meshletVertexIndices.data(), meshletTriangles.data(), loadedIndices.data(),
@@ -588,7 +593,7 @@ void VertexData::loadMeshlets(MeshId id, const Array<Vector>& loadedPositions, c
 
     const meshopt_Meshlet& last = meshoptMeshlets[meshletCount - 1];
     const uint32 vertexCount = last.vertex_offset + last.vertex_count;
-    const uint32 indexCount = last.triangle_offset + ((last.triangle_count * 3 + 3) & ~3);
+    const uint32 indexCount = last.triangle_offset + last.triangle_count * 3;
     vertexIndices.resize(vertexOffset + vertexCount);
     primitiveIndices.resize(primitiveOffset + indexCount);
     meshlets.resize(meshletOffset + meshletCount);
@@ -606,6 +611,7 @@ void VertexData::loadMeshlets(MeshId id, const Array<Vector>& loadedPositions, c
             .offset = primitiveOffset + meshoptMeshlets[i].triangle_offset,
             .size = meshoptMeshlets[i].triangle_count,
         };
+        m.indicesOffset = registeredMeshes[id].vertexOffset;
         // todo: use meshopt for bb generation
         m.bounding = AABB();
         for (size_t j = 0; j < m.vertexIndices.size; ++j) {
