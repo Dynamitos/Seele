@@ -22,7 +22,7 @@ struct GraphicsInitializer {
 
     void* windowHandle;
     GraphicsInitializer()
-        : applicationName("SeeleEngine"), engineName("SeeleEngine"), windowLayoutFile(nullptr), layers{"VK_LAYER_LUNARG_monitor"},
+        : applicationName("SeeleEngine"), engineName("SeeleEngine"), windowLayoutFile(nullptr), layers{},
           instanceExtensions{}, deviceExtensions{"VK_KHR_swapchain"}, windowHandle(nullptr) {}
 };
 struct WindowCreateInfo {

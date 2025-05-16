@@ -9,6 +9,35 @@ DECLARE_REF(CommandPool)
 DECLARE_REF(Queue)
 DECLARE_REF(PipelineCache)
 DECLARE_REF(Framebuffer)
+
+template <typename T>
+concept chainable_struct = requires(T t) { t.pNext; };
+template <chainable_struct... T> struct StructChain;
+template <> struct StructChain<> {
+};
+template<chainable_struct Base> struct StructChain<Base> : StructChain<> {
+    StructChain(Base b):b(b) {}
+    StructChain(const StructChain<>&, Base b) : b(b) {}
+    template <chainable_struct Next> StructChain<Next, Base> append(Next next) { return StructChain<Next, Base>(*this, next); }
+    Base b;
+    Base& operator*(){
+        return b;
+    }
+};
+template <chainable_struct This, chainable_struct... Right> struct StructChain<This, Right...> : StructChain<Right...> {
+    StructChain(const StructChain<Right...>& parent, This t) : StructChain<Right...>(parent), t(t) {}
+    template <chainable_struct Next> StructChain<Next, This, Right...> append(Next next) {
+        return StructChain<Next, This, Right...>(*this, next);
+    }
+    auto& operator*() {
+        auto& base = StructChain<Right...>::operator*();
+        t.pNext = base.pNext;
+        base.pNext = &t;
+        return base;
+    }
+    This t;
+};
+
 class Graphics : public Gfx::Graphics {
   public:
     Graphics();
@@ -34,8 +63,8 @@ class Graphics : public Gfx::Graphics {
     virtual Gfx::OWindow createWindow(const WindowCreateInfo& createInfo) override;
     virtual Gfx::OViewport createViewport(Gfx::PWindow owner, const ViewportCreateInfo& createInfo) override;
 
-    virtual Gfx::ORenderPass createRenderPass(Gfx::RenderTargetLayout layout, Array<Gfx::SubPassDependency> dependencies, URect renderArea, std::string name,
-                                              Array<uint32> viewMasks, Array<uint32> correlationMasks) override;
+    virtual Gfx::ORenderPass createRenderPass(Gfx::RenderTargetLayout layout, Array<Gfx::SubPassDependency> dependencies, URect renderArea,
+                                              std::string name, Array<uint32> viewMasks, Array<uint32> correlationMasks) override;
     virtual void beginRenderPass(Gfx::PRenderPass renderPass) override;
     virtual void endRenderPass() override;
     virtual void waitDeviceIdle() override;
@@ -117,16 +146,20 @@ class Graphics : public Gfx::Graphics {
     thread_local static PCommandPool transferCommands;
     std::mutex poolLock;
     Array<OCommandPool> pools;
+
     VkQueueFamilyProperties graphicsProps;
+
     VkPhysicalDeviceProperties2 props;
+    VkPhysicalDeviceRayTracingPipelinePropertiesKHR rayTracingProperties;
+    VkPhysicalDeviceAccelerationStructurePropertiesKHR accelerationProperties;
+
     VkPhysicalDeviceFeatures2 features;
     VkPhysicalDeviceVulkan11Features features11;
     VkPhysicalDeviceVulkan12Features features12;
     VkPhysicalDeviceMeshShaderFeaturesEXT meshShaderFeatures;
+    VkPhysicalDeviceBufferDeviceAddressFeatures bufferDeviceAddressFeatures;
     VkPhysicalDeviceAccelerationStructureFeaturesKHR accelerationFeatures;
-    VkPhysicalDeviceAccelerationStructurePropertiesKHR accelerationProperties;
     VkPhysicalDeviceRayTracingPipelineFeaturesKHR rayTracingFeatures;
-    VkPhysicalDeviceRayTracingPipelinePropertiesKHR rayTracingProperties;
     VkDebugUtilsMessengerEXT callback;
     Map<uint32, OFramebuffer> allocatedFramebuffers;
     VmaAllocator allocator;

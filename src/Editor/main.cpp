@@ -66,7 +66,7 @@ int main() {
         //    .importPath = "sponza",
         //});
         AssetImporter::importMesh(MeshImportArgs{
-            .filePath = sourcePath / "import" / "models" / "rttest.glb",
+            .filePath = sourcePath / "import" / "models" / "rttest.gltf",
             .importPath = "rttest",
         });
 

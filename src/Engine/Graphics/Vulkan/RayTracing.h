@@ -43,7 +43,7 @@ class TopLevelAS : public Gfx::TopLevelAS {
   public:
     TopLevelAS(PGraphics graphics, const Gfx::TopLevelASCreateInfo& createInfo);
     ~TopLevelAS();
-    const VkAccelerationStructureKHR getHandle() const { return handle; }
+    VkAccelerationStructureKHR getHandle() const { return handle; }
 
   private:
     PGraphics graphics;

@@ -215,7 +215,6 @@ RenderPass::~RenderPass() {
 
 uint32 RenderPass::getFramebufferHash() {
     FramebufferDescription description;
-    std::memset(&description, 0, sizeof(FramebufferDescription));
     for (auto& inputAttachment : layout.inputAttachments) {
         PTextureBase tex = inputAttachment.getTexture().cast<TextureBase>();
         description.inputAttachments[description.numInputAttachments++] = tex->getView();

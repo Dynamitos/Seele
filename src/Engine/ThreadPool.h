@@ -3,6 +3,7 @@
 #include "Containers/List.h"
 #include <functional>
 #include <thread>
+#include <condition_variable>
 
 namespace Seele {
 class ThreadPool {

@@ -22,7 +22,7 @@
     "lldb.showDisassembly": "auto",
     "lldb.dereferencePointers": true,
     "lldb.consoleMode": "commands",
-    "cmake.generator": "Ninja",
+    "cmake.generator": "Unix Makefiles",
     "editor.tabSize": 4,
     "slang.additionalSearchPaths": [
         "res/shaders/",

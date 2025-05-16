@@ -10,6 +10,7 @@
 #include <iostream>
 #include <meshoptimizer.h>
 #include <metis.h>
+#include <mutex>
 #include <unordered_map>
 
 using namespace Seele;

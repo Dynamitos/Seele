@@ -18,6 +18,7 @@
 #include "Window.h"
 #include <GLFW/glfw3.h>
 #include <cstring>
+#include <numeric>
 #include <vulkan/vulkan_core.h>
 
 #define VMA_IMPLEMENTATION
@@ -171,9 +172,9 @@ Gfx::OViewport Graphics::createViewport(Gfx::PWindow owner, const ViewportCreate
     return new Viewport(owner, viewportInfo);
 }
 
-Gfx::ORenderPass Graphics::createRenderPass(Gfx::RenderTargetLayout layout, Array<Gfx::SubPassDependency> dependencies, URect renderArea, std::string name,
-                                            Array<uint32> viewMasks, Array<uint32> correlationMasks) {
-                                                // todo: re-introduce render area to renderpass
+Gfx::ORenderPass Graphics::createRenderPass(Gfx::RenderTargetLayout layout, Array<Gfx::SubPassDependency> dependencies, URect renderArea,
+                                            std::string name, Array<uint32> viewMasks, Array<uint32> correlationMasks) {
+    // todo: re-introduce render area to renderpass
     return new RenderPass(this, std::move(layout), std::move(dependencies), name, std::move(viewMasks), std::move(correlationMasks));
 }
 void Graphics::beginRenderPass(Gfx::PRenderPass renderPass) {
@@ -284,9 +285,7 @@ Gfx::PComputePipeline Graphics::createComputePipeline(Gfx::ComputePipelineCreate
     return pipelineCache->createPipeline(std::move(createInfo));
 }
 
-Gfx::OSampler Graphics::createSampler(const SamplerCreateInfo& createInfo) {
-    return new Sampler(this, createInfo);
-}
+Gfx::OSampler Graphics::createSampler(const SamplerCreateInfo& createInfo) { return new Sampler(this, createInfo); }
 
 Gfx::ODescriptorLayout Graphics::createDescriptorLayout(const std::string& name) { return new DescriptorLayout(this, name); }
 
@@ -450,7 +449,7 @@ void Graphics::buildBottomLevelAccelerationStructures(Array<Gfx::PBottomLevelAS>
     };
 
     Array<VkTransformMatrixKHR> matrices;
-    for (const auto gfxBlas : data) {
+    for (const auto& gfxBlas : data) {
         const auto blas = gfxBlas.cast<BottomLevelAS>();
         matrices.add(blas->getTransform());
     }
@@ -765,11 +764,15 @@ void Graphics::pickPhysicalDevice() {
     physicalDevice = bestDevice;
 
     vkGetPhysicalDeviceProperties2(physicalDevice, &props);
+    bufferDeviceAddressFeatures = {
+        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES,
+        .pNext = nullptr,
+        .bufferDeviceAddress = true,
+    };
     rayTracingFeatures = {
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR,
-        .pNext = nullptr,
+        .pNext = &bufferDeviceAddressFeatures,
         .rayTracingPipeline = true,
-        .rayTraversalPrimitiveCulling = true,
     };
     accelerationFeatures = {
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR,
@@ -780,6 +783,8 @@ void Graphics::pickPhysicalDevice() {
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT,
         .taskShader = true,
         .meshShader = true,
+        .multiviewMeshShader = true,
+        .primitiveFragmentShadingRateMeshShader = false,
         .meshShaderQueries = true,
     };
     features12 = {
@@ -825,6 +830,11 @@ void Graphics::pickPhysicalDevice() {
     };
     bool rayTracingPipelineSupport = false;
     bool accelerationStructureSupport = false;
+    bool hostOperationsSupport = false;
+    bool deviceAddressSupport = false;
+    bool descriptorIndexingSupport = false;
+    bool spirv14Support = false;
+    bool shaderFloatControls = false;
     uint32 count = 0;
     vkEnumerateDeviceExtensionProperties(physicalDevice, NULL, &count, nullptr);
     Array<VkExtensionProperties> extensionProps(count);
@@ -833,7 +843,6 @@ void Graphics::pickPhysicalDevice() {
         if (Gfx::useMeshShading) {
             if (std::strcmp(VK_EXT_MESH_SHADER_EXTENSION_NAME, extensionProps[i].extensionName) == 0) {
                 meshShadingEnabled = true;
-                break;
             }
         }
         if (std::strcmp(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME, extensionProps[i].extensionName) == 0) {
@@ -842,8 +851,24 @@ void Graphics::pickPhysicalDevice() {
         if (std::strcmp(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME, extensionProps[i].extensionName) == 0) {
             accelerationStructureSupport = true;
         }
+        if (std::strcmp(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME, extensionProps[i].extensionName) == 0) {
+            hostOperationsSupport = true;
+        }
+        if (std::strcmp(VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME, extensionProps[i].extensionName) == 0) {
+            deviceAddressSupport = true;
+        }
+        if (std::strcmp(VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME, extensionProps[i].extensionName) == 0) {
+            descriptorIndexingSupport = true;
+        }
+        if (std::strcmp(VK_KHR_SPIRV_1_4_EXTENSION_NAME, extensionProps[i].extensionName) == 0) {
+            spirv14Support = true;
+        }
+        if (std::strcmp(VK_KHR_SHADER_FLOAT_CONTROLS_EXTENSION_NAME, extensionProps[i].extensionName) == 0) {
+            shaderFloatControls = true;
+        }
     }
-    rayTracingEnabled = rayTracingPipelineSupport && accelerationStructureSupport;
+    rayTracingEnabled = rayTracingPipelineSupport && accelerationStructureSupport && hostOperationsSupport && deviceAddressSupport &&
+                        descriptorIndexingSupport && spirv14Support && shaderFloatControls;
     if (meshShadingEnabled) {
         features12.pNext = &meshShaderFeatures;
     }
@@ -927,9 +952,17 @@ void Graphics::createDevice(GraphicsInitializer initializer) {
         initializer.deviceExtensions.add(VK_EXT_MESH_SHADER_EXTENSION_NAME);
     }
     if (supportRayTracing()) {
+        // ray tracing itself
         initializer.deviceExtensions.add(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
         initializer.deviceExtensions.add(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME);
+        // required by acceleration_structure
         initializer.deviceExtensions.add(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
+        initializer.deviceExtensions.add(VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME);
+        initializer.deviceExtensions.add(VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME);
+        // required for ray tracing pipeline
+        initializer.deviceExtensions.add(VK_KHR_SPIRV_1_4_EXTENSION_NAME);
+        // required for spirv_1_4
+        initializer.deviceExtensions.add(VK_KHR_SHADER_FLOAT_CONTROLS_EXTENSION_NAME);
     }
     initializer.deviceExtensions.add(VK_KHR_MULTIVIEW_EXTENSION_NAME);
 #ifdef __APPLE__

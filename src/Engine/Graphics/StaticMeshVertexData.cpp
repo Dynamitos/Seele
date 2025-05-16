@@ -4,6 +4,7 @@
 #include "Graphics/VertexData.h"
 #include "Mesh.h"
 #include <fstream>
+#include <mutex>
 
 using namespace Seele;
 

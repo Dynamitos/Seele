@@ -4,6 +4,7 @@
 #include "MemoryResource.h"
 #include <algorithm>
 #include <assert.h>
+#include <cstring>
 #include <initializer_list>
 #include <iterator>
 #include <memory_resource>
@@ -423,6 +424,7 @@ template <typename T> struct Array {
             }
             arraySize = newSize;
         } else {
+            size_t oldSize = allocated;
             allocated = calculateGrowth(newSize);
             // The array is not big enough, so we make a new one
             T* newData = allocateArray(allocated);
@@ -438,7 +440,7 @@ template <typename T> struct Array {
                     std::allocator_traits<allocator_type>::construct(allocator, &newData[i], value);
                 }
             }
-            deallocateArray(_data, allocated);
+            deallocateArray(_data, oldSize);
             arraySize = newSize;
             _data = newData;
         }
@@ -520,6 +522,7 @@ template <typename T, size_t N> struct StaticArray {
         beginIt = iterator(_data);
         endIt = iterator(_data + N);
     }
+    
     constexpr StaticArray(T value) {
         for (size_t i = 0; i < N; ++i) {
             _data[i] = value;
@@ -527,6 +530,7 @@ template <typename T, size_t N> struct StaticArray {
         beginIt = iterator(_data);
         endIt = iterator(_data + N);
     }
+    
     constexpr StaticArray(std::initializer_list<T> init) {
         auto beg = init.begin();
         for (size_t i = 0; i < N; ++i) {

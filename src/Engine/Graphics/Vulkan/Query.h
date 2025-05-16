@@ -2,6 +2,7 @@
 #include "Buffer.h"
 #include "Graphics.h"
 #include "Graphics/Query.h"
+#include <condition_variable>
 
 namespace Seele {
 namespace Vulkan {

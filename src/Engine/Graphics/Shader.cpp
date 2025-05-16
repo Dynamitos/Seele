@@ -4,6 +4,7 @@
 #include "Material/Material.h"
 #include "ThreadPool.h"
 #include <fmt/core.h>
+#include <mutex>
 
 using namespace Seele;
 using namespace Seele::Gfx;

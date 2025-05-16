@@ -8,6 +8,4 @@ CameraUpdater::CameraUpdater(PScene scene) : ComponentSystem<Component::Camera, 
 CameraUpdater::~CameraUpdater() {}
 
 void CameraUpdater::update(Component::Camera& camera, Component::Transform& transform) {
-    Vector eyePos = transform.getPosition();
-    Vector lookAt = eyePos + transform.getForward();
 }

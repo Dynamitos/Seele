@@ -11,6 +11,7 @@
 #include "Texture.h"
 #include "vulkan/vulkan_core.h"
 #include <algorithm>
+#include <mutex>
 #include <ranges>
 
 using namespace Seele;
@@ -201,7 +202,9 @@ DescriptorSet::DescriptorSet(PGraphics graphics, PDescriptorPool owner)
     boundResources.resize(owner->getLayout()->getBindings().size());
     for (uint32 i = 0; i < boundResources.size(); ++i) {
         boundResources[i].resize(owner->getLayout()->getBindings()[i].descriptorCount);
-        std::memset(boundResources[i].data(), 0, sizeof(PCommandBoundResource) * boundResources[i].size());
+        for (size_t x = 0; x < boundResources[i].size(); ++x) {
+            boundResources[i][x] = nullptr;
+        }
     }
     constantData.resize(owner->getLayout()->constantsSize);
 }
@@ -220,7 +223,7 @@ void DescriptorSet::updateBuffer(const std::string& mappingName, uint32 index, G
     // if the buffer is empty
     if (vulkanBuffer->getAlloc() == nullptr)
         return;
-    
+
     bufferInfos.add(VkDescriptorBufferInfo{
         .buffer = vulkanBuffer->getHandle(),
         .offset = 0,
@@ -247,7 +250,6 @@ void DescriptorSet::updateBuffer(const std::string& mappingName, uint32 index, G
     // if the buffer is empty
     if (vulkanBuffer->getAlloc() == nullptr)
         return;
-    
 
     bufferInfos.add(VkDescriptorBufferInfo{
         .buffer = vulkanBuffer->getHandle(),
