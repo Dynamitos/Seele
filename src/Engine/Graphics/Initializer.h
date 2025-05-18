@@ -5,7 +5,6 @@
 #include "MeshData.h"
 #include "MinimalEngine.h"
 
-
 namespace Seele {
 struct GraphicsInitializer {
     const char* applicationName;
@@ -21,9 +20,7 @@ struct GraphicsInitializer {
     Array<const char*> deviceExtensions;
 
     void* windowHandle;
-    GraphicsInitializer()
-        : applicationName("SeeleEngine"), engineName("SeeleEngine"), windowLayoutFile(nullptr), layers{},
-          instanceExtensions{}, deviceExtensions{"VK_KHR_swapchain"}, windowHandle(nullptr) {}
+    GraphicsInitializer() : applicationName("SeeleEngine"), engineName("SeeleEngine"), windowLayoutFile(nullptr), windowHandle(nullptr) {}
 };
 struct WindowCreateInfo {
     int32 width;

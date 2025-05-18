@@ -11,31 +11,63 @@ DECLARE_REF(PipelineCache)
 DECLARE_REF(Framebuffer)
 
 template <typename T>
-concept chainable_struct = requires(T t) { t.pNext; };
-template <chainable_struct... T> struct StructChain;
-template <> struct StructChain<> {
+concept chainable_struct = requires(T t) {
+    t.pNext;
+    t.sType;
 };
-template<chainable_struct Base> struct StructChain<Base> : StructChain<> {
-    StructChain(Base b):b(b) {}
-    StructChain(const StructChain<>&, Base b) : b(b) {}
-    template <chainable_struct Next> StructChain<Next, Base> append(Next next) { return StructChain<Next, Base>(*this, next); }
+template <chainable_struct T, VkStructureType struct_type> struct Helper {};
+
+template <typename...> struct is_unique : std::true_type {};
+
+template <typename T, typename... Rest>
+struct is_unique<T, Rest...> : std::bool_constant<(!std::same_as<T, Rest> && ... && is_unique<Rest...>::value)> {};
+
+template <typename... T>
+concept unique_chainable_structs = (chainable_struct<T> && ...) && is_unique<T...>::value;
+
+template <typename... T> struct StructChain;
+template <chainable_struct Base, VkStructureType struct_type> struct StructChain<Helper<Base, struct_type>> {
+    StructChain() {
+        b.sType = struct_type;
+        b.pNext = nullptr;
+    }
     Base b;
-    Base& operator*(){
+    template <chainable_struct Query>
+    Query& get()
+        requires std::same_as<Query, Base>
+    {
         return b;
     }
-};
-template <chainable_struct This, chainable_struct... Right> struct StructChain<This, Right...> : StructChain<Right...> {
-    StructChain(const StructChain<Right...>& parent, This t) : StructChain<Right...>(parent), t(t) {}
-    template <chainable_struct Next> StructChain<Next, This, Right...> append(Next next) {
-        return StructChain<Next, This, Right...>(*this, next);
+    template <chainable_struct Query>
+    const Query& get() const
+        requires std::same_as<Query, Base>
+    {
+        return b;
     }
-    auto& operator*() {
-        auto& base = StructChain<Right...>::operator*();
-        t.pNext = base.pNext;
-        base.pNext = &t;
-        return base;
+    Base& get() { return b; }
+    const Base& get() const { return b; }
+};
+template <chainable_struct This, VkStructureType struct_type, typename... Right>
+struct StructChain<Helper<This, struct_type>, Right...> : StructChain<Right...> {
+    StructChain() {
+        t.sType = struct_type;
+        t.pNext = &StructChain<Right...>::template get();
     }
     This t;
+    template <chainable_struct Query> Query& get() {
+        if constexpr (std::same_as<Query, This>)
+            return t;
+        else
+            return StructChain<Right...>::template get<Query>();
+    }
+    template <chainable_struct Query> const Query& get() const {
+        if constexpr (std::same_as<Query, This>)
+            return t;
+        else
+            return StructChain<Right...>::template get<Query>();
+    }
+    This& get() { return t; }
+    const This& get() const { return t; }
 };
 
 class Graphics : public Gfx::Graphics {
@@ -45,9 +77,13 @@ class Graphics : public Gfx::Graphics {
     constexpr VkInstance getInstance() const { return instance; }
     constexpr VkDevice getDevice() const { return handle; }
     constexpr VkPhysicalDevice getPhysicalDevice() const { return physicalDevice; }
-    constexpr VkPhysicalDeviceAccelerationStructurePropertiesKHR getAccelerationProperties() const { return accelerationProperties; }
-    constexpr VkPhysicalDeviceRayTracingPipelinePropertiesKHR getRayTracingProperties() const { return rayTracingProperties; }
-    constexpr float getTimestampPeriod() const { return props.properties.limits.timestampPeriod; }
+    constexpr VkPhysicalDeviceAccelerationStructurePropertiesKHR getAccelerationProperties() const {
+        return props.get<VkPhysicalDeviceAccelerationStructurePropertiesKHR>();
+    }
+    constexpr VkPhysicalDeviceRayTracingPipelinePropertiesKHR getRayTracingProperties() const {
+        return props.get<VkPhysicalDeviceRayTracingPipelinePropertiesKHR>();
+    }
+    constexpr float getTimestampPeriod() const { return props.get<VkPhysicalDeviceProperties2>().properties.limits.timestampPeriod; }
     constexpr uint64 getTimestampValidBits() const { return graphicsProps.timestampValidBits; }
 
     PCommandPool getQueueCommands(Gfx::QueueType queueType);
@@ -149,17 +185,21 @@ class Graphics : public Gfx::Graphics {
 
     VkQueueFamilyProperties graphicsProps;
 
-    VkPhysicalDeviceProperties2 props;
-    VkPhysicalDeviceRayTracingPipelinePropertiesKHR rayTracingProperties;
-    VkPhysicalDeviceAccelerationStructurePropertiesKHR accelerationProperties;
+    StructChain<
+        Helper<VkPhysicalDeviceProperties2, VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2>,
+        Helper<VkPhysicalDeviceRayTracingPipelinePropertiesKHR, VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR>,
+        Helper<VkPhysicalDeviceAccelerationStructurePropertiesKHR, VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_PROPERTIES_KHR>>
+        props;
 
-    VkPhysicalDeviceFeatures2 features;
-    VkPhysicalDeviceVulkan11Features features11;
-    VkPhysicalDeviceVulkan12Features features12;
-    VkPhysicalDeviceMeshShaderFeaturesEXT meshShaderFeatures;
-    VkPhysicalDeviceBufferDeviceAddressFeatures bufferDeviceAddressFeatures;
-    VkPhysicalDeviceAccelerationStructureFeaturesKHR accelerationFeatures;
-    VkPhysicalDeviceRayTracingPipelineFeaturesKHR rayTracingFeatures;
+    StructChain<
+        Helper<VkPhysicalDeviceFeatures2, VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2>,
+        Helper<VkPhysicalDeviceVulkan11Features, VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES>,
+        Helper<VkPhysicalDeviceVulkan12Features, VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES>,
+        Helper<VkPhysicalDeviceMeshShaderFeaturesEXT, VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT>,
+        Helper<VkPhysicalDeviceAccelerationStructureFeaturesKHR, VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR>,
+        Helper<VkPhysicalDeviceRayTracingPipelineFeaturesKHR, VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR>>
+        features;
+
     VkDebugUtilsMessengerEXT callback;
     Map<uint32, OFramebuffer> allocatedFramebuffers;
     VmaAllocator allocator;

@@ -172,7 +172,7 @@ Gfx::OViewport Graphics::createViewport(Gfx::PWindow owner, const ViewportCreate
     return new Viewport(owner, viewportInfo);
 }
 
-Gfx::ORenderPass Graphics::createRenderPass(Gfx::RenderTargetLayout layout, Array<Gfx::SubPassDependency> dependencies, URect renderArea,
+Gfx::ORenderPass Graphics::createRenderPass(Gfx::RenderTargetLayout layout, Array<Gfx::SubPassDependency> dependencies, URect,
                                             std::string name, Array<uint32> viewMasks, Array<uint32> correlationMasks) {
     // todo: re-introduce render area to renderpass
     return new RenderPass(this, std::move(layout), std::move(dependencies), name, std::move(viewMasks), std::move(correlationMasks));
@@ -553,7 +553,7 @@ void Graphics::buildBottomLevelAccelerationStructures(Array<Gfx::PBottomLevelAS>
             .usage = VMA_MEMORY_USAGE_AUTO,
         };
         scratchBuffers[i] = new BufferAllocation(this, "ScratchBuffer", scratchInfo, scratchAllocInfo, Gfx::QueueType::GRAPHICS,
-                                                 accelerationProperties.minAccelerationStructureScratchOffsetAlignment);
+                                                 props.get<VkPhysicalDeviceAccelerationStructurePropertiesKHR>().minAccelerationStructureScratchOffsetAlignment);
 
         buildGeometries[i].dstAccelerationStructure = blas->handle;
         buildGeometries[i].scratchData.deviceAddress = scratchBuffers[i]->deviceAddress;
@@ -685,7 +685,7 @@ void Graphics::initInstance(GraphicsInitializer initInfo) {
         .applicationVersion = VK_MAKE_VERSION(0, 0, 1),
         .pEngineName = initInfo.engineName,
         .engineVersion = VK_MAKE_VERSION(0, 0, 1),
-        .apiVersion = VK_API_VERSION_1_3,
+        .apiVersion = VK_API_VERSION_1_4,
     };
 
     Array<const char*> extensions = getRequiredExtensions();
@@ -733,101 +733,35 @@ void Graphics::pickPhysicalDevice() {
     vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, physicalDevices.data());
     VkPhysicalDevice bestDevice = VK_NULL_HANDLE;
     uint32 deviceRating = 0;
-    props = VkPhysicalDeviceProperties2{
+    props.get<VkPhysicalDeviceProperties2>() = {
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2,
-        .pNext = &accelerationProperties,
     };
-    accelerationProperties = VkPhysicalDeviceAccelerationStructurePropertiesKHR{
+    props.get<VkPhysicalDeviceAccelerationStructurePropertiesKHR>() = {
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_PROPERTIES_KHR,
-        .pNext = &rayTracingProperties,
     };
-    rayTracingProperties = VkPhysicalDeviceRayTracingPipelinePropertiesKHR{
+    props.get<VkPhysicalDeviceRayTracingPipelinePropertiesKHR>() = {
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR,
-        .pNext = nullptr,
     };
     for (auto dev : physicalDevices) {
         uint32 currentRating = 0;
-        vkGetPhysicalDeviceProperties2(dev, &props);
-        if (props.properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
-            std::cout << "found dedicated gpu " << props.properties.deviceName << std::endl;
+        vkGetPhysicalDeviceProperties2(dev, &props.get());
+        if (props.get().properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
+            std::cout << "found dedicated gpu " << props.get().properties.deviceName << std::endl;
             currentRating += 100;
-        } else if (props.properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU) {
-            std::cout << "found integrated gpu " << props.properties.deviceName << std::endl;
+        } else if (props.get().properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU) {
+            std::cout << "found integrated gpu " << props.get().properties.deviceName << std::endl;
             currentRating += 10;
         }
         if (currentRating > deviceRating) {
             deviceRating = currentRating;
             bestDevice = dev;
-            std::cout << "bestDevice: " << props.properties.deviceName << std::endl;
+            std::cout << "bestDevice: " << props.get().properties.deviceName << std::endl;
         }
     }
     physicalDevice = bestDevice;
 
-    vkGetPhysicalDeviceProperties2(physicalDevice, &props);
-    bufferDeviceAddressFeatures = {
-        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES,
-        .pNext = nullptr,
-        .bufferDeviceAddress = true,
-    };
-    rayTracingFeatures = {
-        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR,
-        .pNext = &bufferDeviceAddressFeatures,
-        .rayTracingPipeline = true,
-    };
-    accelerationFeatures = {
-        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR,
-        .pNext = &rayTracingFeatures,
-        .accelerationStructure = true,
-    };
-    meshShaderFeatures = {
-        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT,
-        .taskShader = true,
-        .meshShader = true,
-        .multiviewMeshShader = true,
-        .primitiveFragmentShadingRateMeshShader = false,
-        .meshShaderQueries = true,
-    };
-    features12 = {
-        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES,
-        .storageBuffer8BitAccess = true,
-        .uniformAndStorageBuffer8BitAccess = true,
-        .shaderBufferInt64Atomics = true,
-        .shaderFloat16 = true,
-        .shaderInt8 = true,
-        .shaderUniformBufferArrayNonUniformIndexing = true,
-        .shaderSampledImageArrayNonUniformIndexing = true,
-        .shaderStorageBufferArrayNonUniformIndexing = true,
-        .descriptorBindingUniformBufferUpdateAfterBind = true,
-        .descriptorBindingSampledImageUpdateAfterBind = true,
-        .descriptorBindingStorageBufferUpdateAfterBind = true,
-        .descriptorBindingPartiallyBound = true,
-        .runtimeDescriptorArray = true,
-        .bufferDeviceAddress = true,
-    };
-    features11 = {
-        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES,
-        .pNext = &features12,
-        .storageBuffer16BitAccess = true,
-        .uniformAndStorageBuffer16BitAccess = true,
-        .multiview = true,
-    };
-    features = {
-        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
-        .pNext = &features11,
-        .features =
-            {
-                //.robustBufferAccess = true,
-                .geometryShader = true,
-                .fillModeNonSolid = true,
-                .wideLines = true,
-                .samplerAnisotropy = true,
-                .pipelineStatisticsQuery = true,
-                .fragmentStoresAndAtomics = true,
-                .shaderInt64 = true,
-                .shaderInt16 = true,
-                .inheritedQueries = true,
-            },
-    };
+    vkGetPhysicalDeviceProperties2(physicalDevice, &props.get());
+    vkGetPhysicalDeviceFeatures2(physicalDevice, &features.get());
     bool rayTracingPipelineSupport = false;
     bool accelerationStructureSupport = false;
     bool hostOperationsSupport = false;
@@ -867,18 +801,8 @@ void Graphics::pickPhysicalDevice() {
             shaderFloatControls = true;
         }
     }
-    rayTracingEnabled = rayTracingPipelineSupport && accelerationStructureSupport && hostOperationsSupport && deviceAddressSupport &&
+    rayTracingEnabled = false && rayTracingPipelineSupport && accelerationStructureSupport && hostOperationsSupport && deviceAddressSupport &&
                         descriptorIndexingSupport && spirv14Support && shaderFloatControls;
-    if (meshShadingEnabled) {
-        features12.pNext = &meshShaderFeatures;
-    }
-    if (rayTracingEnabled) {
-        if (meshShadingEnabled) {
-            meshShaderFeatures.pNext = &accelerationFeatures;
-        } else {
-            features12.pNext = &accelerationFeatures;
-        }
-    }
 }
 
 void Graphics::createDevice(GraphicsInitializer initializer) {
@@ -945,9 +869,10 @@ void Graphics::createDevice(GraphicsInitializer initializer) {
         currQueue.pQueuePriorities = currentPriority;
 
         for (int32_t queueIndex = 0; queueIndex < (int32_t)currQueue.queueCount; ++queueIndex) {
-            *currentPriority++ = 1.0f;
+            *currentPriority++ = 0.0f;
         }
     }
+    initializer.deviceExtensions.add(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
     if (supportMeshShading()) {
         initializer.deviceExtensions.add(VK_EXT_MESH_SHADER_EXTENSION_NAME);
     }
@@ -970,7 +895,7 @@ void Graphics::createDevice(GraphicsInitializer initializer) {
 #endif
     VkDeviceCreateInfo deviceInfo = {
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-        .pNext = &features,
+        .pNext = &features.get(),
         .queueCreateInfoCount = (uint32)queueInfos.size(),
         .pQueueCreateInfos = queueInfos.data(),
         .enabledExtensionCount = (uint32)initializer.deviceExtensions.size(),

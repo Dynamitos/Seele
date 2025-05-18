@@ -29,5 +29,8 @@
         "res/shaders/lib"
     ],
     "slang.slangdLocation": "C:\\Users\\Dynamitos\\slang\\build\\Release\\bin\\slangd.exe",
-    "slang.searchInAllWorkspaceDirectories": false
+    "slang.searchInAllWorkspaceDirectories": false,
+    "files.associations": {
+        "type_traits": "cpp"
+    }
 }
