@@ -22,7 +22,7 @@ BottomLevelAS::BottomLevelAS(PGraphics graphics, const Gfx::BottomLevelASCreateI
         1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f,
     };
     VertexData* vertexData = createInfo.mesh->vertexData;
-    //todo: indices might be split as well
+    // todo: indices might be split as well
     MeshData meshData = vertexData->getMeshData(createInfo.mesh->id);
     vertexOffset = vertexData->getMeshOffset(createInfo.mesh->id) * sizeof(Vector);
     vertexCount = vertexData->getMeshVertexCount(createInfo.mesh->id);
@@ -77,6 +77,8 @@ TopLevelAS::TopLevelAS(PGraphics graphics, const Gfx::TopLevelASCreateInfo& crea
                                               },
                                               Gfx::QueueType::GRAPHICS);
     instanceAllocation->updateContents(0, sizeof(VkAccelerationStructureInstanceKHR) * instances.size(), instances.data());
+    instanceAllocation->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
+                                        Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR);
     VkDeviceOrHostAddressConstKHR instanceDeviceAddress = {
         .deviceAddress = instanceAllocation->deviceAddress,
     };
@@ -138,20 +140,20 @@ TopLevelAS::TopLevelAS(PGraphics graphics, const Gfx::TopLevelASCreateInfo& crea
     };
     VK_CHECK(vkCreateAccelerationStructureKHR(graphics->getDevice(), &accelerationInfo, nullptr, &handle));
 
-    OBufferAllocation scratchBuffer =
-        new BufferAllocation(graphics, "ScratchBuffer",
-                             VkBufferCreateInfo{
-                                 .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-                                 .pNext = nullptr,
-                                 .flags = 0,
-                                 .size = buildSizesInfo.buildScratchSize,
-                                 .usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+    OBufferAllocation scratchBuffer = new BufferAllocation(
+        graphics, "ScratchBuffer",
+        VkBufferCreateInfo{
+            .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+            .pNext = nullptr,
+            .flags = 0,
+            .size = buildSizesInfo.buildScratchSize,
+            .usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
 
-                             },
-                             VmaAllocationCreateInfo{
-                                 .usage = VMA_MEMORY_USAGE_AUTO,
-                             },
-                             Gfx::QueueType::GRAPHICS, graphics->getAccelerationProperties().minAccelerationStructureScratchOffsetAlignment);
+        },
+        VmaAllocationCreateInfo{
+            .usage = VMA_MEMORY_USAGE_AUTO,
+        },
+        Gfx::QueueType::GRAPHICS, graphics->getAccelerationProperties().minAccelerationStructureScratchOffsetAlignment);
 
     VkAccelerationStructureBuildGeometryInfoKHR buildGeometry = {
         .sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR,
@@ -188,8 +190,8 @@ TopLevelAS::TopLevelAS(PGraphics graphics, const Gfx::TopLevelASCreateInfo& crea
         .offset = 0,
         .size = buffer->size,
     };
-    vkCmdPipelineBarrier(cmd->getHandle(), VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR, VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR, 0, 0,
-                         nullptr, 1, &barrier, 0, nullptr);
+    vkCmdPipelineBarrier(cmd->getHandle(), VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR,
+                         VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR, 0, 0, nullptr, 1, &barrier, 0, nullptr);
 
     cmd->bindResource(PBufferAllocation(scratchBuffer));
     graphics->getDestructionManager()->queueResourceForDestruction(std::move(scratchBuffer));

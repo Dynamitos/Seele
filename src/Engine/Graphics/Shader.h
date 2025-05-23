@@ -131,7 +131,7 @@ struct ShaderPermutation {
     }
     void setVertexData(std::string_view name) {
         std::memset(vertexDataName, 0, sizeof(vertexDataName));
-        strncpy(vertexDataName, name.data(), name.size());
+        strncpy(vertexDataName, name.data(), sizeof(vertexDataName));
     }
     void setMaterial(std::string_view name, std::string_view brdf) {
         std::memset(materialName, 0, sizeof(materialName));

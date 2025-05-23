@@ -53,7 +53,7 @@ void ArchiveBuffer::seek(int64 s, SeekOp op) {
         break;
     }
     assert(newPos >= 0 && size_t(newPos) < memory.size());
-    newPos = position;
+    position = newPos;
 }
 
 bool ArchiveBuffer::eof() const { return position == memory.size(); }

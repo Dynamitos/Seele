@@ -186,7 +186,3 @@ bool addTriangle(const Array<Vector>& positions, Meshlet& current, Triangle& tri
     current.numPrimitives++;
     return true;
 }
-
-void Meshlet::build(const Array<Vector>& positions, const Array<uint32>& indices, Array<Meshlet>& meshlets) {
-    
-}

@@ -10,6 +10,5 @@ struct Meshlet {
     uint32 numVertices;
     uint32 numPrimitives;
     uint32 lod = 0;
-    static void build(const Array<Vector>& positions, const Array<uint32>& indices, Array<Meshlet>& meshlets);
 };
 } // namespace Seele

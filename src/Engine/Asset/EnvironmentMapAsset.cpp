@@ -8,6 +8,6 @@ EnvironmentMapAsset::EnvironmentMapAsset(std::string_view folderPath, std::strin
 
 EnvironmentMapAsset::~EnvironmentMapAsset() {}
 
-void EnvironmentMapAsset::save(ArchiveBuffer& buffer) const {}
+void EnvironmentMapAsset::save(ArchiveBuffer&) const {}
 
-void EnvironmentMapAsset::load(ArchiveBuffer& buffer) {}
+void EnvironmentMapAsset::load(ArchiveBuffer&) {}

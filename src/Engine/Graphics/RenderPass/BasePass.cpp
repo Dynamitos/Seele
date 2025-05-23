@@ -28,7 +28,7 @@ void Seele::addDebugVertex(DebugVertex vert) { gDebugVertices.add(vert); }
 void Seele::addDebugVertices(Array<DebugVertex> verts) { gDebugVertices.addAll(verts); }
 
 BasePass::BasePass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics), scene(scene) {
-    //waterRenderer = new WaterRenderer(graphics, scene, viewParamsLayout);
+    // waterRenderer = new WaterRenderer(graphics, scene, viewParamsLayout);
     basePassLayout = graphics->createPipelineLayout("BasePassLayout");
 
     basePassLayout->addDescriptorLayout(viewParamsLayout);
@@ -98,8 +98,8 @@ void BasePass::beginFrame(const Component::Camera& cam, const Component::Transfo
     opaqueCulling = lightCullingLayout->allocateDescriptorSet();
     transparentCulling = lightCullingLayout->allocateDescriptorSet();
 
-    //waterRenderer->beginFrame();
-    //terrainRenderer->beginFrame(viewParamsSet, cam);
+    // waterRenderer->beginFrame();
+    // terrainRenderer->beginFrame(viewParamsSet, cam);
 
     // Debug vertices
     {
@@ -122,7 +122,7 @@ void BasePass::beginFrame(const Component::Camera& cam, const Component::Transfo
         skyboxDataLayout->reset();
         textureLayout->reset();
         skyboxData.transformMatrix = glm::rotate(skyboxData.transformMatrix, (float)(Gfx::getCurrentFrameDelta()), Vector(0, 1, 0));
-        
+
         skyboxDataSet = skyboxDataLayout->allocateDescriptorSet();
         skyboxDataSet->updateConstants("transformMatrix", 0, &skyboxData.transformMatrix);
         skyboxDataSet->updateConstants("fogBlend", 0, &skyboxData.fogColor);
@@ -194,7 +194,7 @@ void BasePass::render() {
                             },
                         .rasterizationState =
                             {
-                                .cullMode = Gfx::SE_CULL_MODE_BACK_BIT,
+                                .cullMode = twoSided ? Gfx::SE_CULL_MODE_NONE : Gfx::SE_CULL_MODE_BACK_BIT,
                             },
                         .colorBlend =
                             {
@@ -214,7 +214,7 @@ void BasePass::render() {
                             },
                         .rasterizationState =
                             {
-                                .cullMode = Gfx::SE_CULL_MODE_BACK_BIT,
+                                .cullMode = twoSided ? Gfx::SE_CULL_MODE_NONE : Gfx::SE_CULL_MODE_BACK_BIT,
                             },
                         .colorBlend =
                             {
@@ -246,11 +246,10 @@ void BasePass::render() {
         graphics->executeCommands(std::move(commands));
         graphics->endDebugRegion();
     }
-    
-    
-    //commands.add(waterRenderer->render(viewParamsSet));
-    //commands.add(terrainRenderer->render(viewParamsSet));
-    
+
+    // commands.add(waterRenderer->render(viewParamsSet));
+    // commands.add(terrainRenderer->render(viewParamsSet));
+
     // Skybox
     {
         graphics->beginDebugRegion("Skybox");
@@ -413,7 +412,7 @@ void BasePass::publishOutputs() {
         .samples = Gfx::SE_SAMPLE_COUNT_4_BIT,
         .usage = Gfx::SE_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | Gfx::SE_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT,
     });
-    
+
     msBasePassColor = graphics->createTexture2D(TextureCreateInfo{
         .format = Gfx::SE_FORMAT_R32G32B32A32_SFLOAT,
         .width = viewport->getOwner()->getFramebufferWidth(),
@@ -422,17 +421,18 @@ void BasePass::publishOutputs() {
         .usage = Gfx::SE_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | Gfx::SE_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT,
     });
 
-    depthAttachment =
-        Gfx::RenderTargetAttachment(Gfx::PTexture2D(basePassDepth), Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
-                                    Gfx::SE_ATTACHMENT_LOAD_OP_DONT_CARE, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
+    depthAttachment = Gfx::RenderTargetAttachment(Gfx::PTexture2D(basePassDepth), Gfx::SE_IMAGE_LAYOUT_UNDEFINED,
+                                                  Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+                                                  Gfx::SE_ATTACHMENT_LOAD_OP_DONT_CARE, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
 
     msDepthAttachment =
         Gfx::RenderTargetAttachment(msBasePassDepth, Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
                                     Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_DONT_CARE);
     msDepthAttachment.clear.depthStencil.depth = 0.0f;
 
-    colorAttachment = Gfx::RenderTargetAttachment(basePassColor, Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-                                                  Gfx::SE_ATTACHMENT_LOAD_OP_DONT_CARE, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
+    colorAttachment =
+        Gfx::RenderTargetAttachment(basePassColor, Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                                    Gfx::SE_ATTACHMENT_LOAD_OP_DONT_CARE, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
 
     msColorAttachment =
         Gfx::RenderTargetAttachment(msBasePassColor, Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
@@ -451,8 +451,8 @@ void BasePass::publishOutputs() {
 }
 
 void BasePass::createRenderPass() {
-    //RenderPass::beginFrame(Component::Camera());
-    //terrainRenderer = new TerrainRenderer(graphics, scene, viewParamsLayout, viewParamsSet);
+    // RenderPass::beginFrame(Component::Camera());
+    // terrainRenderer = new TerrainRenderer(graphics, scene, viewParamsLayout, viewParamsSet);
     cullingBuffer = resources->requestBuffer("CULLINGBUFFER");
     timestamps = resources->requestTimestampQuery("TIMESTAMPS");
 
@@ -494,8 +494,8 @@ void BasePass::createRenderPass() {
     oLightGrid = resources->requestTexture("LIGHTCULLING_OLIGHTGRID");
     tLightGrid = resources->requestTexture("LIGHTCULLING_TLIGHTGRID");
 
-    //waterRenderer->setViewport(viewport, renderPass);
-    //terrainRenderer->setViewport(viewport, renderPass);
+    // waterRenderer->setViewport(viewport, renderPass);
+    // terrainRenderer->setViewport(viewport, renderPass);
 
     // Debug rendering
     {
@@ -569,14 +569,8 @@ void BasePass::createRenderPass() {
     // Skybox
     {
         skyboxDataLayout = graphics->createDescriptorLayout("pSkyboxData");
-        skyboxDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-            .name = "transformMatrix",
-            .uniformLength = sizeof(Matrix4)
-        });
-        skyboxDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{
-            .name = "fogBlend",
-            .uniformLength = sizeof(Vector4)
-        });
+        skyboxDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{.name = "transformMatrix", .uniformLength = sizeof(Matrix4)});
+        skyboxDataLayout->addDescriptorBinding(Gfx::DescriptorBinding{.name = "fogBlend", .uniformLength = sizeof(Vector4)});
         skyboxDataLayout->create();
         textureLayout = graphics->createDescriptorLayout("pSkyboxTextures");
         textureLayout->addDescriptorBinding(Gfx::DescriptorBinding{

@@ -54,6 +54,7 @@ class Element {
         case InnerDisplayType::Flow:
             flowLayout();
             break;
+            default:break;
         }
     }
     // normal flow of the elements, inline elements go left to right, blocks get their own new lines

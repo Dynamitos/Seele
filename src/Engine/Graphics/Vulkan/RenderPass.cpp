@@ -11,7 +11,7 @@ using namespace Seele::Vulkan;
 
 RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Array<Gfx::SubPassDependency> _dependencies, std::string name,
                        Array<uint32> viewMasks, Array<uint32> correlationMasks)
-    : Gfx::RenderPass(std::move(_layout), std::move(_dependencies)), name(name), graphics(graphics) {
+    : Gfx::RenderPass(std::move(_layout), std::move(_dependencies)), graphics(graphics), name(name) {
     subpassContents = VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS;
     Array<VkAttachmentDescription2> attachments;
     Array<VkAttachmentReference2> inputRefs;
@@ -196,21 +196,22 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Arra
         .correlatedViewMaskCount = (uint32)correlationMasks.size(),
         .pCorrelatedViewMasks = correlationMasks.data(),
     };
-    VK_CHECK(vkCreateRenderPass2(graphics->getDevice(), &info, nullptr, &renderPass));
+    VkRenderPass handle;
+    VK_CHECK(vkCreateRenderPass2(graphics->getDevice(), &info, nullptr, &handle));
     VkDebugUtilsObjectNameInfoEXT nameInfo = {
         .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
         .pNext = nullptr,
         .objectType = VK_OBJECT_TYPE_RENDER_PASS,
-        .objectHandle = (uint64)renderPass,
+        .objectHandle = (uint64)handle,
         .pObjectName = name.c_str(),
     };
     assert(!name.empty());
     vkSetDebugUtilsObjectNameEXT(graphics->getDevice(), &nameInfo);
+    renderPass = new RenderPassHandle(graphics, name, handle);
 }
 
 RenderPass::~RenderPass() {
-    vkDestroyRenderPass(graphics->getDevice(), renderPass, nullptr);
-    // graphics->getDestructionManager()->queueRenderPass(graphics->getGraphicsCommands()->getCommands(), renderPass);
+    graphics->getDestructionManager()->queueResourceForDestruction(std::move(renderPass));
 }
 
 uint32 RenderPass::getFramebufferHash() {

@@ -33,6 +33,7 @@ class LightEnvironment {
     const Array<Gfx::OTexture2D>& getShadowMaps() const { return shadowMaps; }
 
   private:
+    Gfx::PGraphics graphics;
     Gfx::OShaderBuffer directionalLights;
     Array<Gfx::OTexture2D> shadowMaps;
     Array<Gfx::OSampler> shadowSamplers;
@@ -44,7 +45,6 @@ class LightEnvironment {
     Gfx::OSampler environmentSampler;
     Gfx::ODescriptorLayout layout;
     Gfx::PDescriptorSet set;
-    Gfx::PGraphics graphics;
 };
 DEFINE_REF(LightEnvironment)
 } // namespace Seele

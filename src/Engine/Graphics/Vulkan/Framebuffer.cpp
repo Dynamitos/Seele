@@ -12,7 +12,6 @@ using namespace Seele::Vulkan;
 Framebuffer::Framebuffer(PGraphics graphics, PRenderPass renderPass, Gfx::RenderTargetLayout renderTargetLayout)
     : graphics(graphics), layout(renderTargetLayout), renderPass(renderPass) {
     FramebufferDescription description;
-    std::memset(&description, 0, sizeof(FramebufferDescription));
     Array<VkImageView> attachments;
     uint32 width = 0;
     uint32 height = 0;

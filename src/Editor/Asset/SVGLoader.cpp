@@ -5,7 +5,7 @@
 
 using namespace Seele;
 
-SVGLoader::SVGLoader(Gfx::PGraphics graphic) {}
+SVGLoader::SVGLoader(Gfx::PGraphics) {}
 
 SVGLoader::~SVGLoader() {}
 

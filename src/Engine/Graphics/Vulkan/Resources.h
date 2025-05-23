@@ -124,6 +124,16 @@ class Sampler : public Gfx::Sampler {
     OSamplerHandle handle;
 };
 DEFINE_REF(Sampler)
+struct RenderPassHandle : public CommandBoundResource {
+  public:
+    RenderPassHandle(PGraphics graphics, std::string name, VkRenderPass renderPass)
+        : CommandBoundResource(graphics, name), handle(renderPass) {}
+    virtual ~RenderPassHandle() {}
+    constexpr VkRenderPass getHandle() const { return handle; }
 
+  private:
+    VkRenderPass handle;
+};
+DEFINE_REF(RenderPassHandle)
 } // namespace Vulkan
 } // namespace Seele

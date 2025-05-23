@@ -8,7 +8,7 @@ FontAsset::FontAsset() {}
 
 FontAsset::FontAsset(std::string_view folderPath, std::string_view name) : Asset(folderPath, name) {
     FT_Error error = FT_Init_FreeType(&ft);
-    assert(!error);
+    if(error) abort();
 }
 
 FontAsset::~FontAsset() {
@@ -29,7 +29,7 @@ void FontAsset::load(ArchiveBuffer& buffer) {
 
 void FontAsset::loadFace() {
     FT_Error error = FT_New_Memory_Face(ft, (unsigned char*)ttfFile.data(), (uint32)ttfFile.size(), 0, &ft_face);
-    assert(!error);
+    if(error) abort();
     blob = hb_blob_create(ttfFile.data(), (uint32)ttfFile.size(), HB_MEMORY_MODE_DUPLICATE, nullptr, nullptr);
     hb_face = hb_face_create(blob, 0);
     hb_font = hb_font_create(hb_face);

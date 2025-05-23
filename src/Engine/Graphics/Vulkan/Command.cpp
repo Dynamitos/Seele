@@ -50,6 +50,8 @@ void Command::end() {
 }
 
 void Command::beginRenderPass(PRenderPass renderPass, PFramebuffer framebuffer) {
+    renderPass->getCommandHandle()->bind();
+    boundResources.add(renderPass->getCommandHandle());
     assert(state == State::Begin);
     boundRenderPass = renderPass;
     boundFramebuffer = framebuffer;
@@ -265,6 +267,10 @@ void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptor) {
             }
         }
     }
+    if (descriptorSet->constantsBuffer != nullptr) {
+        descriptorSet->bind();
+        boundResources.add(PBufferAllocation(descriptorSet->constantsBuffer));
+    }
 
     VkDescriptorSet setHandle = descriptorSet->getHandle();
     Gfx::PPipelineLayout layout = pipeline != nullptr ? pipeline->getPipelineLayout() : rtPipeline->getPipelineLayout();
@@ -291,6 +297,10 @@ void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorS
                     boundResources.add(res);
                 }
             }
+        }
+        if (descriptorSet->constantsBuffer != nullptr) {
+            descriptorSet->bind();
+            boundResources.add(PBufferAllocation(descriptorSet->constantsBuffer));
         }
         sets[layout->findParameter(descriptorSet->getName())] = descriptorSet->getHandle();
     }
@@ -438,6 +448,10 @@ void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet descriptor) {
             }
         }
     }
+    if (descriptorSet->constantsBuffer != nullptr) {
+        descriptorSet->bind();
+        boundResources.add(PBufferAllocation(descriptorSet->constantsBuffer));
+    }
 
     VkDescriptorSet setHandle = descriptorSet->getHandle();
     vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->getLayout(),
@@ -460,6 +474,10 @@ void ComputeCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptor
                     boundResources.add(res);
                 }
             }
+        }
+        if (descriptorSet->constantsBuffer != nullptr) {
+            descriptorSet->bind();
+            boundResources.add(PBufferAllocation(descriptorSet->constantsBuffer));
         }
         sets[pipeline->getPipelineLayout()->findParameter(descriptorSet->getName())] = descriptorSet->getHandle();
     }

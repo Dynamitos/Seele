@@ -75,7 +75,7 @@ void ShaderCompiler::compile() {
             } else {
                 for (int x = 0; x < 2; x++) {
                     for (int y = 0; y < 2; y++) {
-                        work.add([=]() {
+                        work.add([=, this]() {
                             ShaderPermutation permutation = getTemplate(name);
                             permutation.setPositionOnly(x);
                             permutation.setDepthCulling(y);

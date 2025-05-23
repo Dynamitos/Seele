@@ -79,7 +79,6 @@ void ShadowPass::render() {
                 .offset = {0, 0},
             },
             "Shadow");
-        auto light = scene->getLightEnvironment()->getDirectionalLight(shadowIndex);
         Component::Camera lightCamera = Component::Camera{
             .nearPlane = -100.f,
             .farPlane = 100.0f,
@@ -105,7 +104,7 @@ void ShadowPass::render() {
                     .pipelineLayout = collection->pipelineLayout,
                     .rasterizationState =
                         {
-                            .cullMode = Gfx::SE_CULL_MODE_NONE,
+                            .cullMode = Gfx::SE_CULL_MODE_FRONT_BIT,
                             .depthBiasEnable = true,
                             .depthBiasConstantFactor = depthBiasConstant,
                             .depthBiasSlopeFactor = depthBiasSlope,
@@ -121,7 +120,7 @@ void ShadowPass::render() {
                     .pipelineLayout = collection->pipelineLayout,
                     .rasterizationState =
                         {
-                            .cullMode = Gfx::SE_CULL_MODE_NONE,
+                            .cullMode = Gfx::SE_CULL_MODE_FRONT_BIT,
                             .depthBiasEnable = true,
                             .depthBiasConstantFactor = depthBiasConstant,
                             .depthBiasSlopeFactor = depthBiasSlope,

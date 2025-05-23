@@ -251,7 +251,10 @@ Array<VertexData::MeshletGroup> VertexData::groupMeshlets(std::span<MeshletDescr
     int result = METIS_PartGraphKway(&vertexCount, &ncon, xadjacency.data(), edgeAdjacency.data(), nullptr, nullptr, edgeWeights.data(),
                                      &nparts, nullptr, nullptr, options, &edgeCut, partition.data());
 
-    assert(result == METIS_OK);
+    if(result != METIS_OK)
+    {
+        abort();
+    }
 
     Array<MeshletGroup> groups;
     groups.resize(nparts);

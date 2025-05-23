@@ -733,15 +733,6 @@ void Graphics::pickPhysicalDevice() {
     vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, physicalDevices.data());
     VkPhysicalDevice bestDevice = VK_NULL_HANDLE;
     uint32 deviceRating = 0;
-    props.get<VkPhysicalDeviceProperties2>() = {
-        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2,
-    };
-    props.get<VkPhysicalDeviceAccelerationStructurePropertiesKHR>() = {
-        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_PROPERTIES_KHR,
-    };
-    props.get<VkPhysicalDeviceRayTracingPipelinePropertiesKHR>() = {
-        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR,
-    };
     for (auto dev : physicalDevices) {
         uint32 currentRating = 0;
         vkGetPhysicalDeviceProperties2(dev, &props.get());
@@ -761,7 +752,32 @@ void Graphics::pickPhysicalDevice() {
     physicalDevice = bestDevice;
 
     vkGetPhysicalDeviceProperties2(physicalDevice, &props.get());
-    vkGetPhysicalDeviceFeatures2(physicalDevice, &features.get());
+    features.get<VkPhysicalDeviceFeatures2>().features = {
+        .geometryShader = true,
+        .fillModeNonSolid = true,
+        .wideLines = true,
+        .pipelineStatisticsQuery = true,
+        .fragmentStoresAndAtomics = true,
+        .shaderInt64 = true,
+        .shaderInt16 = true,
+        .inheritedQueries = true,
+    };
+    features.get<VkPhysicalDeviceVulkan11Features>().multiview = true;
+    features.get<VkPhysicalDeviceVulkan11Features>().storageBuffer16BitAccess = true;
+
+    features.get<VkPhysicalDeviceVulkan12Features>().descriptorIndexing = true;
+    features.get<VkPhysicalDeviceVulkan12Features>().descriptorBindingPartiallyBound = true;
+    features.get<VkPhysicalDeviceVulkan12Features>().bufferDeviceAddress = true;
+    features.get<VkPhysicalDeviceVulkan12Features>().storageBuffer8BitAccess = true;
+    features.get<VkPhysicalDeviceVulkan12Features>().shaderInt8 = true;
+
+    features.get<VkPhysicalDeviceAccelerationStructureFeaturesKHR>().accelerationStructure = true;
+
+    features.get<VkPhysicalDeviceRayTracingPipelineFeaturesKHR>().rayTracingPipeline = true;
+
+    features.get<VkPhysicalDeviceMeshShaderFeaturesEXT>().meshShader = true;
+    features.get<VkPhysicalDeviceMeshShaderFeaturesEXT>().taskShader = true;
+    features.get<VkPhysicalDeviceMeshShaderFeaturesEXT>().meshShaderQueries = true;
     bool rayTracingPipelineSupport = false;
     bool accelerationStructureSupport = false;
     bool hostOperationsSupport = false;
