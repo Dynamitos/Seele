@@ -801,7 +801,7 @@ void Graphics::pickPhysicalDevice() {
             shaderFloatControls = true;
         }
     }
-    rayTracingEnabled = false && rayTracingPipelineSupport && accelerationStructureSupport && hostOperationsSupport && deviceAddressSupport &&
+    rayTracingEnabled = rayTracingPipelineSupport && accelerationStructureSupport && hostOperationsSupport && deviceAddressSupport &&
                         descriptorIndexingSupport && spirv14Support && shaderFloatControls;
 }
 
@@ -810,7 +810,7 @@ void Graphics::createDevice(GraphicsInitializer initializer) {
     vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &numQueueFamilies, nullptr);
     Array<VkQueueFamilyProperties> queueProperties(numQueueFamilies);
     vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &numQueueFamilies, queueProperties.data());
-
+    
     Array<VkDeviceQueueCreateInfo> queueInfos;
     struct QueueCreateInfo {
         int32 familyIndex = -1;

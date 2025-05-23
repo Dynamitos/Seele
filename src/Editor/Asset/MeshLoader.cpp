@@ -382,7 +382,7 @@ void MeshLoader::loadMaterials(const aiScene* scene, const Array<PTextureAsset>&
 
             brdf.variables["normal"] = "NormalSub";
         }
-        aiShadingMode mode;
+        aiShadingMode mode = aiShadingMode_CookTorrance;
         material->Get(AI_MATKEY_SHADING_MODEL, mode);
         switch (mode) {
         case aiShadingMode_Phong:

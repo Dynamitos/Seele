@@ -12,7 +12,7 @@
             "description": "Release build without sanitizers",
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release"
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
             }
         },
         {
@@ -21,7 +21,7 @@
             "description": "Release build with Address Sanitizer",
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
                 "CMAKE_CXX_FLAGS": "-fsanitize=address -fno-omit-frame-pointer",
                 "CMAKE_C_FLAGS": "-fsanitize=address -fno-omit-frame-pointer",
                 "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address",

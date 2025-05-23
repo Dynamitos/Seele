@@ -271,15 +271,16 @@ void VertexData::loadMesh(MeshId id, Array<Vector> loadedPositions, Array<uint32
     // load LOD 0
     size_t previousMeshletsStart = meshlets.size(); // todo:
     loadMeshlets(id, loadedPositions, loadedIndices);
+    std::memcpy(positions.data() + mesh.vertexOffset, loadedPositions.data(), loadedPositions.size() * sizeof(Vector));
 
-    /* const int maxLod = 25;
+    /*const int maxLod = 25;
     for (int lod = 0; lod < maxLod; ++lod) {
         float tLod = lod / (float)maxLod;
 
         std::span<MeshletDescription> previousLevelMeshlets =
             std::span{meshlets.data() + previousMeshletsStart, meshlets.size() - previousMeshletsStart};
         if (previousLevelMeshlets.size() <= 1) {
-            return;
+            break;
         }
         auto groups = groupMeshlets(previousLevelMeshlets);
         const uint32 newMeshletStart = meshlets.size();
@@ -291,7 +292,8 @@ void VertexData::loadMesh(MeshId id, Array<Vector> loadedPositions, Array<uint32
                 size_t start = groupVertexIndices.size();
                 groupVertexIndices.resize(start + meshlet.primitiveIndices.size * 3);
                 for (size_t j = 0; j < meshlet.primitiveIndices.size * 3; ++j) {
-                    groupVertexIndices[j + start] = vertexIndices[meshlet.vertexIndices.offset + primitiveIndices[meshlet.primitiveIndices.offset + j]];
+                    groupVertexIndices[j + start] =
+                        vertexIndices[meshlet.vertexIndices.offset + primitiveIndices[meshlet.primitiveIndices.offset + j]];
                 }
             }
             const float threshold = 0.5f;
@@ -316,7 +318,6 @@ void VertexData::loadMesh(MeshId id, Array<Vector> loadedPositions, Array<uint32
             }
         }
     }*/
-    std::memcpy(positions.data() + mesh.vertexOffset, loadedPositions.data(), loadedPositions.size() * sizeof(Vector));
 }
 
 void VertexData::removeMesh(MeshId id) {
