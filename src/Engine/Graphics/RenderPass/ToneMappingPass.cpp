@@ -3,7 +3,7 @@
 using namespace Seele;
 
 ToneMappingPass::ToneMappingPass(Gfx::PGraphics graphics) : RenderPass(graphics) {
-    tonemappingLayout = graphics->createDescriptorLayout("ToneMappingDescriptor");
+    tonemappingLayout = graphics->createDescriptorLayout("pToneMappingParams");
     tonemappingLayout->addDescriptorBinding(Gfx::DescriptorBinding{
         .name = "offset",
         .uniformLength = sizeof(Vector4),

@@ -38,10 +38,12 @@ EnvironmentLoader::EnvironmentLoader(Gfx::PGraphics graphics) : graphics(graphic
     cubeRenderLayout->addDescriptorBinding(Gfx::DescriptorBinding{
         .name = "view",
         .uniformLength = sizeof(Matrix4) * 6,
+        .descriptorCount = 24,
     });
     cubeRenderLayout->addDescriptorBinding(Gfx::DescriptorBinding{
         .name = "projection",
         .uniformLength = sizeof(Matrix4),
+        .descriptorCount = 4,
     });
     cubeRenderLayout->addDescriptorBinding(Gfx::DescriptorBinding{
         .name = "equirectangularMap",

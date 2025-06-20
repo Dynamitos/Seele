@@ -27,8 +27,8 @@ struct MeshData
     PoolRange indicesRange;
 };
 
-static const uint32_t MAX_VERTICES = 256;
-static const uint32_t MAX_PRIMITIVES = 256;
+static const uint32_t MAX_VERTICES = 128;
+static const uint32_t MAX_PRIMITIVES = 128;
 
 struct InstanceData
 {

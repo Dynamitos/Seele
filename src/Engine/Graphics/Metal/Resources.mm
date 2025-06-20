@@ -35,7 +35,7 @@ Event::Event(PGraphics graphics) : handle(graphics->getDevice()->newEvent()) {}
 
 Event::~Event() { handle->release(); }
 
-Sampler::Sampler(PGraphics graphics, const SamplerCreateInfo& createInfo) {
+Sampler::Sampler(PGraphics graphics, const SamplerCreateInfo& createInfo) : Gfx::Sampler(createInfo) {
     MTL::SamplerDescriptor* desc = MTL::SamplerDescriptor::alloc()->init();
     desc->setBorderColor(cast(createInfo.borderColor));
     desc->setCompareFunction(cast(createInfo.compareOp));

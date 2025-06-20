@@ -43,6 +43,7 @@ class TextureBase {
     uint32 getWidth() const { return handle->width; }
     uint32 getHeight() const { return handle->height; }
     uint32 getDepth() const { return handle->depth; }
+    uint32 getNumLayers() const { return handle->arrayCount; }
     PTextureHandle getHandle() const { return handle; }
     MTL::Texture* getImage() const { return handle->texture; };
     constexpr Gfx::SeImageLayout getLayout() const { return handle->layout; }
@@ -78,6 +79,7 @@ class Texture2D : public Gfx::Texture2D, public TextureBase {
     virtual uint32 getWidth() const override { return handle->width; }
     virtual uint32 getHeight() const override { return handle->height; }
     virtual uint32 getDepth() const override { return handle->depth; }
+    virtual uint32 getNumLayers() const override { return handle->arrayCount; }
     virtual Gfx::SeFormat getFormat() const override { return handle->format; }
     virtual Gfx::SeSampleCountFlags getNumSamples() const override { return handle->samples; }
     virtual uint32 getMipLevels() const override { return handle->mipLevels; }
@@ -101,6 +103,7 @@ class Texture3D : public Gfx::Texture3D, public TextureBase {
     virtual uint32 getWidth() const override { return handle->width; }
     virtual uint32 getHeight() const override { return handle->height; }
     virtual uint32 getDepth() const override { return handle->depth; }
+    virtual uint32 getNumLayers() const override { return handle->arrayCount; }
     virtual Gfx::SeFormat getFormat() const override { return handle->format; }
     virtual Gfx::SeSampleCountFlags getNumSamples() const override { return handle->samples; }
     virtual uint32 getMipLevels() const override { return handle->mipLevels; }
@@ -124,6 +127,7 @@ class TextureCube : public Gfx::TextureCube, public TextureBase {
     virtual uint32 getWidth() const override { return handle->width; }
     virtual uint32 getHeight() const override { return handle->height; }
     virtual uint32 getDepth() const override { return handle->depth; }
+    virtual uint32 getNumLayers() const override { return handle->arrayCount; }
     virtual Gfx::SeFormat getFormat() const override { return handle->format; }
     virtual Gfx::SeSampleCountFlags getNumSamples() const override { return handle->samples; }
     virtual uint32 getMipLevels() const override { return handle->mipLevels; }

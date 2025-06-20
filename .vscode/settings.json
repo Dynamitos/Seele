@@ -22,7 +22,7 @@
     "lldb.showDisassembly": "auto",
     "lldb.dereferencePointers": true,
     "lldb.consoleMode": "commands",
-    "cmake.generator": "Unix Makefiles",
+    "cmake.generator": "Xcode",
     "editor.tabSize": 4,
     "slang.additionalSearchPaths": [
         "res/shaders/",
