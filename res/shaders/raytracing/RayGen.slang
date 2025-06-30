@@ -9,7 +9,6 @@ struct Ray
 }
 
 const static float S_O = 6.9;
-const static float f = 0.035;
 const static float A = 0.0;
 
 struct SampleParams
@@ -68,6 +67,8 @@ void raygen()
     Ray cam = Ray(pViewParams.cameraPosition_WS.xyz, pViewParams.cameraForward_WS.xyz);
     float3 cx = -normalize(cross(cam.d, abs(cam.d.y) < 0.9 ? float3(0, 1, 0) : float3(0, 0, 1))), cy = cross(cam.d, cx);
     const float2 sdim = float2(0.036, 0.024);
+
+    float f = sdim.y / (2 * tan(70.0f  * 0.5f));
 
     float S_I = (S_O * f) / (S_O - f);
 

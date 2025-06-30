@@ -113,7 +113,8 @@ target_link_libraries(Benchmark PRIVATE Engine)
 target_include_directories(Benchmark PRIVATE src/Benchmark)
 
 if(MSVC)
-    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+    target_compile_definitions(Engine PUBLIC _CRT_SECURE_NO_WARNINGS)
+    target_compile_definitions(Engine PUBLIC WIN32)
     target_compile_options(Engine PUBLIC /Zi /MP14 /W4 /wd4505)
     target_compile_options(Editor PUBLIC /Zi /MP14 /W4)
     target_sources(Engine INTERFACE   

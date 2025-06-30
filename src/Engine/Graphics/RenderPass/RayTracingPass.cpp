@@ -216,7 +216,6 @@ void RayTracingPass::publishOutputs() {
         .name = "RayGenMiss",
         .modules = {"RayGen", "AnyHit", "Miss"},
         .entryPoints = {{"raygen", "RayGen"}, {"anyhit", "AnyHit"}, {"miss", "Miss"}},
-        .typeParameter = {{"IVertexData", "StaticMeshVertexData"}},
         .defines = {{"RAY_TRACING", "1"}},
         .rootSignature = pipelineLayout,
     };

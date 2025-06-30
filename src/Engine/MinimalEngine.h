@@ -102,8 +102,8 @@ template <typename T, typename Deleter = std::default_delete<T>> class OwningPtr
         return *this;
     }
     ~OwningPtr() { Deleter()(pointer); }
-    operator RefPtr<T>() { return RefPtr<T>(pointer); }
-    operator RefPtr<T>() const { return RefPtr<T>(pointer); }
+    constexpr operator RefPtr<T>() { return RefPtr<T>(pointer); }
+    constexpr operator RefPtr<T>() const { return RefPtr<T>(pointer); }
     constexpr T* operator->() { return pointer; }
     constexpr const T* operator->() const { return pointer; }
     constexpr T* operator*() { return pointer; }

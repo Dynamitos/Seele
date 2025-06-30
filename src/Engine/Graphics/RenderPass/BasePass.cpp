@@ -194,7 +194,7 @@ void BasePass::render() {
                             },
                         .rasterizationState =
                             {
-                                .cullMode = twoSided ? Gfx::SE_CULL_MODE_NONE : Gfx::SE_CULL_MODE_BACK_BIT,
+                                .cullMode = Gfx::SE_CULL_MODE_BACK_BIT,
                             },
                         .colorBlend =
                             {
@@ -214,7 +214,7 @@ void BasePass::render() {
                             },
                         .rasterizationState =
                             {
-                                .cullMode = twoSided ? Gfx::SE_CULL_MODE_NONE : Gfx::SE_CULL_MODE_BACK_BIT,
+                                .cullMode = Gfx::SE_CULL_MODE_BACK_BIT,
                             },
                         .colorBlend =
                             {

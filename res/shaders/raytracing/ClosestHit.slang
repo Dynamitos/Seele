@@ -5,6 +5,7 @@ import Scene;
 import RayTracingData;
 import VertexData;
 import Material;
+import StaticMeshVertexData;
 import MATERIAL_FILE_NAME;
 
 // simplification: all BLAS only have 1 geometry
@@ -194,7 +195,7 @@ void closestHit(inout RayPayload hitValue, in BuiltInTriangleIntersectionAttribu
         }
     }
     // Indirect Illumination: cosine-weighted importance sampling
-    if(hitValue.depth < 12) {
+    if(hitValue.depth < 1) {
     	float r1 = 2 * PI * rnd.x, r2 = rnd.y, r2s = sqrt(r2);
         float3 w = normalLight_WS;
         float3 u = normalize(cross(abs(w.x)>0.1 ? float3(0,1,0) : float3(1,0,0), w));

@@ -1,7 +1,6 @@
 #pragma once
 #include "Game.h"
 #include "filesystem"
-#include "dlfcn.h"
 
 namespace Seele {
 class GameInterface {

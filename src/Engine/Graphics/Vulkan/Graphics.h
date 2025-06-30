@@ -28,6 +28,7 @@ concept unique_chainable_structs = (chainable_struct<T> && ...) && is_unique<T..
 template <typename... T> struct StructChain;
 template <chainable_struct Base, VkStructureType struct_type> struct StructChain<Helper<Base, struct_type>> {
     StructChain() {
+        std::memset(&b, 0, sizeof(Base));
         b.sType = struct_type;
         b.pNext = nullptr;
     }
@@ -50,24 +51,25 @@ template <chainable_struct Base, VkStructureType struct_type> struct StructChain
 template <chainable_struct This, VkStructureType struct_type, typename... Right>
 struct StructChain<Helper<This, struct_type>, Right...> : StructChain<Right...> {
     StructChain() {
+        std::memset(&t, 0, sizeof(This));
         t.sType = struct_type;
         t.pNext = &StructChain<Right...>::template get();
     }
     This t;
-    template <chainable_struct Query> Query& get() {
+    template <chainable_struct Query> constexpr Query& get() {
         if constexpr (std::same_as<Query, This>)
             return t;
         else
             return StructChain<Right...>::template get<Query>();
     }
-    template <chainable_struct Query> const Query& get() const {
+    template <chainable_struct Query> constexpr const Query& get() const {
         if constexpr (std::same_as<Query, This>)
             return t;
         else
             return StructChain<Right...>::template get<Query>();
     }
-    This& get() { return t; }
-    const This& get() const { return t; }
+    constexpr This& get() { return t; }
+    constexpr const This& get() const { return t; }
 };
 
 class Graphics : public Gfx::Graphics {
