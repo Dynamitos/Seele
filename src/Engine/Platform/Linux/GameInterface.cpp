@@ -1,4 +1,5 @@
 #include "GameInterface.h"
+#include <dlfcn.h>
 
 using namespace Seele;
 

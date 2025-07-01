@@ -157,7 +157,7 @@ else()
 endif()
 
 add_custom_target(SeeleEngine ALL
-	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/res $<TARGET_FILE_DIR:Engine>
+	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/res $<TARGET_FILE_DIR:Engine>
     COMMAND_EXPAND_LISTS
 	DEPENDS Editor dll_copy)
 
