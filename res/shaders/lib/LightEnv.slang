@@ -69,6 +69,9 @@ struct LightEnv
     uint numPointLights;
     TextureCube irradianceMap;
     SamplerState irradianceSampler;
+    TextureCube prefilteredMap;
+    SamplerState prefilteredSampler;
+    Texture2D brdfLUT;
 };
 layout(set=3)
 ParameterBlock<LightEnv> pLightEnv;
@@ -294,9 +297,9 @@ struct CookTorrance : IBRDF
         return ggx1 * ggx2;
     }
 
-    float3 FresnelSchlick(float cosTheta, float3 F0)
+    float3 FresnelSchlickRoughness(float cosTheta, float3 F0, float roughness)
     {
-        return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+        return F0 + (max(float3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0, 1), 5.0);
     }
 
     float3 evaluate(float3 viewDir_WS, float3 lightDir_WS, float3 lightColor)
@@ -309,7 +312,7 @@ struct CookTorrance : IBRDF
 
         float NDF = TrowbridgeReitzGGX(n, h);
         float G = Smith(n, viewDir_WS, lightDir_WS);
-        float3 F = FresnelSchlick(max(dot(h, viewDir_WS), 0.0), F0);
+        float3 F = FresnelSchlickRoughness(max(dot(h, viewDir_WS), 0.0), F0, roughness);
 
         float3 num = NDF * G * F;
         float denom = 4.0 * max(dot(n, viewDir_WS), 0.0) * max(dot(n, lightDir_WS), 0.0) + 0.000001;
@@ -337,7 +340,7 @@ struct CookTorrance : IBRDF
     {
         float3 F0 = float3(0.04);
         F0 = lerp(F0, baseColor, metallic);
-        float3 k_s = FresnelSchlick(max(dot(normal, viewDir_WS), 0.0), F0);
+        float3 k_s = FresnelSchlickRoughness(max(dot(normal, viewDir_WS), 0.0), F0, roughness);
         float3 k_d = 1 - k_s;
         k_d *= 1 - metallic;
         float3 irradiance = pLightEnv.irradianceMap.Sample(pLightEnv.irradianceSampler, normal).rgb;
