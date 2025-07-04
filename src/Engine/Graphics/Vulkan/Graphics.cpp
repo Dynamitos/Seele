@@ -905,7 +905,6 @@ void Graphics::createDevice(GraphicsInitializer initializer) {
         // required for spirv_1_4
         initializer.deviceExtensions.add(VK_KHR_SHADER_FLOAT_CONTROLS_EXTENSION_NAME);
     }
-    initializer.deviceExtensions.add(VK_KHR_MULTIVIEW_EXTENSION_NAME);
 #ifdef __APPLE__
     initializer.deviceExtensions.add("VK_KHR_portability_subset");
 #endif

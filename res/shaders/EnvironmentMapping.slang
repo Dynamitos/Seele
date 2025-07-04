@@ -70,11 +70,11 @@ struct VertexOutput
     float3 localPos : LOCALPOS;
 };
 [shader("vertex")]
-VertexOutput vertMain(uint vertexIndex : SV_VertexID, uint viewIndex : SV_ViewID)
+VertexOutput vertMain(uint vertexIndex : SV_VertexID)
 {
     VertexOutput output;
     output.localPos = vertices[vertexIndex];
-    output.svPos = mul(pViewParams.projection, mul(pViewParams.view[viewIndex], float4(output.localPos, 1)));
+    output.svPos = mul(pViewParams.projection, mul(pViewParams.view[vertexIndex / 6], float4(output.localPos, 1)));
     return output;
 }
 
