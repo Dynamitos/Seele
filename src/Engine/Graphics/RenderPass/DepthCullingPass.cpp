@@ -75,12 +75,12 @@ void DepthCullingPass::render() {
     {
         graphics->beginDebugRegion("MipGeneration");
         query->beginQuery();
-        depthAttachment.getTexture()->changeLayout(Gfx::SE_IMAGE_LAYOUT_GENERAL, Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+        depthAttachment.getTextureView()->changeLayout(Gfx::SE_IMAGE_LAYOUT_GENERAL, Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
                                                    Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, Gfx::SE_ACCESS_SHADER_READ_BIT,
                                                    Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 
         depthMipBuffer->rotateBuffer(depthMipBuffer->getNumElements() * sizeof(uint32));
-        set->updateTexture(DEPTHTEXTURE_NAME, 0, depthAttachment.getTexture());
+        set->updateTexture(DEPTHTEXTURE_NAME, 0, depthAttachment.getTextureView());
         set->updateBuffer(DEPTHMIP_NAME, 0, depthMipBuffer);
         set->writeChanges();
 
@@ -115,7 +115,7 @@ void DepthCullingPass::render() {
         depthMipBuffer->pipelineBarrier(Gfx::SE_ACCESS_SHADER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                                         Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_TASK_SHADER_BIT_EXT);
 
-        depthAttachment.getTexture()->changeLayout(
+        depthAttachment.getTextureView()->changeLayout(
             Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, Gfx::SE_ACCESS_TRANSFER_READ_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
             Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
             Gfx::SE_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT);
@@ -216,11 +216,11 @@ void DepthCullingPass::render() {
         timestamps->write(Gfx::SE_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, "CullingEnd");
         query->endQuery();
         // Sync depth read/write with compute read
-        depthAttachment.getTexture()->pipelineBarrier(
+        depthAttachment.getTextureView()->pipelineBarrier(
             Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
             Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
         // Sync visibility write with compute read
-        visibilityAttachment.getTexture()->pipelineBarrier(Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+        visibilityAttachment.getTextureView()->pipelineBarrier(Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
                                                            Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
                                                            Gfx::SE_ACCESS_SHADER_READ_BIT, Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
         graphics->endDebugRegion();

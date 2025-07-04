@@ -36,7 +36,7 @@ class LightCullingPass : public RenderPass {
     Gfx::PDescriptorSet viewParamsSet;
 
     PLightEnvironment lightEnv;
-    Gfx::PTexture2D depthAttachment;
+    Gfx::PTextureView depthAttachment;
     constexpr static const char* DEPTHATTACHMENT_NAME = "depth";
     Gfx::OShaderBuffer oLightIndexCounter;
     constexpr static const char* OLIGHTINDEXCOUNTER_NAME = "oLightIndexCounter";

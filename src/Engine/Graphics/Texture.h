@@ -3,6 +3,25 @@
 
 namespace Seele {
 namespace Gfx {
+
+class TextureView {
+public:
+    TextureView();
+    virtual ~TextureView();
+    virtual SeFormat getFormat() const = 0;
+    virtual uint32 getWidth() const = 0;
+    virtual uint32 getHeight() const = 0;
+    virtual uint32 getDepth() const = 0;
+    virtual uint32 getNumLayers() const = 0; 
+    virtual SeSampleCountFlags getNumSamples() const = 0;
+    virtual uint32 getMipLevels() const = 0;
+    virtual void changeLayout(SeImageLayout newLayout, SeAccessFlags srcAccess, SePipelineStageFlags srcStage, SeAccessFlags dstAccess,
+                              SePipelineStageFlags dstStage) = 0;
+    virtual void pipelineBarrier(SeAccessFlags srcAccess, SePipelineStageFlags srcStage, SeAccessFlags dstAccess, SePipelineStageFlags dstStage) = 0;
+private:
+};
+DEFINE_REF(TextureView)
+
 class Texture : public QueueOwnedResource {
   public:
     Texture(QueueFamilyMapping mapping);
@@ -12,12 +31,16 @@ class Texture : public QueueOwnedResource {
     virtual uint32 getWidth() const = 0;
     virtual uint32 getHeight() const = 0;
     virtual uint32 getDepth() const = 0;
+    virtual uint32 getNumLayers() const = 0; 
     virtual SeSampleCountFlags getNumSamples() const = 0;
     virtual uint32 getMipLevels() const = 0;
     virtual void changeLayout(SeImageLayout newLayout, SeAccessFlags srcAccess, SePipelineStageFlags srcStage, SeAccessFlags dstAccess,
                               SePipelineStageFlags dstStage) = 0;
     virtual void download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<uint8>& buffer) = 0;
     virtual void generateMipmaps() = 0;
+
+    virtual PTextureView getDefaultView() const = 0;
+    virtual OTextureView createTextureView(uint32 baseMipLevel, uint32 levelCount, uint32 baseArrayLayer, uint32 layerCount) = 0;
   protected:
     // Inherited via QueueOwnedResource
     virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
@@ -41,7 +64,9 @@ class Texture2D : public Texture {
     virtual void changeLayout(SeImageLayout newLayout, SeAccessFlags srcAccess, SePipelineStageFlags srcStage, SeAccessFlags dstAccess,
                               SePipelineStageFlags dstStage) = 0;
     virtual void generateMipmaps() = 0;
-
+    virtual PTextureView getDefaultView() const = 0;
+    
+    virtual OTextureView createTextureView(uint32 baseMipLevel, uint32 levelCount, uint32 baseArrayLayer, uint32 layerCount) = 0;
   protected:
     // Inherited via QueueOwnedResource
     virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
@@ -65,6 +90,8 @@ class Texture3D : public Texture {
     virtual void changeLayout(SeImageLayout newLayout, SeAccessFlags srcAccess, SePipelineStageFlags srcStage, SeAccessFlags dstAccess,
                               SePipelineStageFlags dstStage) = 0;
     virtual void generateMipmaps() = 0;
+    virtual PTextureView getDefaultView() const = 0;
+    virtual OTextureView createTextureView(uint32 baseMipLevel, uint32 levelCount, uint32 baseArrayLayer, uint32 layerCount) = 0;
 
   protected:
     // Inherited via QueueOwnedResource
@@ -89,6 +116,8 @@ class TextureCube : public Texture {
     virtual void changeLayout(SeImageLayout newLayout, SeAccessFlags srcAccess, SePipelineStageFlags srcStage, SeAccessFlags dstAccess,
                               SePipelineStageFlags dstStage) = 0;
     virtual void generateMipmaps() = 0;
+    virtual PTextureView getDefaultView() const = 0;
+    virtual OTextureView createTextureView(uint32 baseMipLevel, uint32 levelCount, uint32 baseArrayLayer, uint32 layerCount) = 0;
 
   protected:
     // Inherited via QueueOwnedResource

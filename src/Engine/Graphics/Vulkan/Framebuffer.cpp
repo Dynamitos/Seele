@@ -17,7 +17,7 @@ Framebuffer::Framebuffer(PGraphics graphics, PRenderPass renderPass, Gfx::Render
     uint32 height = 0;
     uint32 layers = 0;
     for (auto inputAttachment : layout.inputAttachments) {
-        PTextureBase vkInputAttachment = inputAttachment.getTexture().cast<TextureBase>();
+        PTextureView vkInputAttachment = inputAttachment.getTextureView();
         attachments.add(vkInputAttachment->getView());
         description.inputAttachments[description.numInputAttachments++] = vkInputAttachment->getView();
         width = std::max(width, vkInputAttachment->getWidth());
@@ -25,7 +25,7 @@ Framebuffer::Framebuffer(PGraphics graphics, PRenderPass renderPass, Gfx::Render
         layers = std::max(layers, vkInputAttachment->getNumLayers());
     }
     for (auto colorAttachment : layout.colorAttachments) {
-        PTextureBase vkColorAttachment = colorAttachment.getTexture().cast<TextureBase>();
+        PTextureView vkColorAttachment = colorAttachment.getTextureView();
         attachments.add(vkColorAttachment->getView());
         description.colorAttachments[description.numColorAttachments++] = vkColorAttachment->getView();
         width = std::max(width, vkColorAttachment->getWidth());
@@ -33,23 +33,23 @@ Framebuffer::Framebuffer(PGraphics graphics, PRenderPass renderPass, Gfx::Render
         layers = std::max(layers, vkColorAttachment->getNumLayers());
     }
     for (auto resolveAttachment : layout.resolveAttachments) {
-        PTextureBase vkResolveAttachment = resolveAttachment.getTexture().cast<TextureBase>();
+        PTextureView vkResolveAttachment = resolveAttachment.getTextureView();
         attachments.add(vkResolveAttachment->getView());
         description.resolveAttachments[description.numResolveAttachments++] = vkResolveAttachment->getView();
         width = std::max(width, vkResolveAttachment->getWidth());
         height = std::max(height, vkResolveAttachment->getHeight());
         layers = std::max(layers, vkResolveAttachment->getNumLayers());
     }
-    if (layout.depthAttachment.getTexture() != nullptr) {
-        PTextureBase vkDepthAttachment = layout.depthAttachment.getTexture().cast<TextureBase>();
+    if (layout.depthAttachment.getTextureView() != nullptr) {
+        PTextureView vkDepthAttachment = layout.depthAttachment.getTextureView();
         attachments.add(vkDepthAttachment->getView());
         description.depthAttachment = vkDepthAttachment->getView();
         width = std::max(width, vkDepthAttachment->getWidth());
         height = std::max(height, vkDepthAttachment->getHeight());
         layers = std::max(layers, vkDepthAttachment->getNumLayers());
     }
-    if (layout.depthResolveAttachment.getTexture() != nullptr) {
-        PTextureBase vkDepthAttachment = layout.depthResolveAttachment.getTexture().cast<TextureBase>();
+    if (layout.depthResolveAttachment.getTextureView() != nullptr) {
+        PTextureView vkDepthAttachment = layout.depthResolveAttachment.getTextureView();
         attachments.add(vkDepthAttachment->getView());
         description.depthResolveAttachment = vkDepthAttachment->getView();
         width = std::max(width, vkDepthAttachment->getWidth());

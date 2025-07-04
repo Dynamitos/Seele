@@ -8,6 +8,32 @@
 
 namespace Seele {
 namespace Vulkan {
+DECLARE_REF(TextureHandle)
+class TextureView : public Gfx::TextureView {
+public:
+    TextureView(PTextureHandle source, VkImageView view);
+    virtual ~TextureView();
+    virtual Gfx::SeFormat getFormat() const override;
+    virtual uint32 getWidth() const override;
+    virtual uint32 getHeight() const override;
+    virtual uint32 getDepth() const override;
+    virtual uint32 getNumLayers() const override;
+    virtual Gfx::SeSampleCountFlags getNumSamples() const override;
+    virtual uint32 getMipLevels() const override;
+    virtual void pipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, VkAccessFlags dstAccess, VkPipelineStageFlags dstStage) override;
+    virtual void changeLayout(Gfx::SeImageLayout newLayout, VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, VkAccessFlags dstAccess,
+                      VkPipelineStageFlags dstStage) override;
+    VkImageView getView() const { return view; }
+    Gfx::SeImageLayout getLayout() const;
+    PTextureHandle getSource() const { return source; }
+    void setLayout(Gfx::SeImageLayout layout);
+private:
+    PTextureHandle source;
+    VkImageView view;
+    friend class TextureBase;
+};
+DEFINE_REF(TextureView)
+
 class TextureHandle : public CommandBoundResource {
   public:
     TextureHandle(PGraphics graphics, VkImageViewType viewType, const TextureCreateInfo& createInfo, VkImage existingImage);
@@ -18,8 +44,10 @@ class TextureHandle : public CommandBoundResource {
                       VkPipelineStageFlags dstStage);
     void download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<uint8>& buffer);
     void generateMipmaps();
+    Gfx::OTextureView createTextureView(uint32 baseMipLevel, uint32 levelCount, uint32 baseArrayLayer, uint32 layerCount);
+    
     VkImage image;
-    VkImageView imageView;
+    OTextureView imageView;
     VmaAllocation allocation;
     Gfx::QueueType owner;
     uint32 width;
@@ -32,6 +60,7 @@ class TextureHandle : public CommandBoundResource {
     Gfx::SeImageUsageFlags usage;
     Gfx::SeImageLayout layout;
     VkImageAspectFlags aspect;
+    VkImageViewType viewType;
     uint8 ownsImage;
 };
 DEFINE_REF(TextureHandle)
@@ -50,7 +79,7 @@ class TextureBase {
     uint32 getNumLayers() const { return handle->layerCount; }
     PTextureHandle getHandle() const { return handle; }
     VkImage getImage() const { return handle->image; };
-    VkImageView getView() const { return handle->imageView; };
+    VkImageView getView() const { return handle->imageView->view; };
     constexpr Gfx::SeImageLayout getLayout() const { return handle->layout; }
     void setLayout(Gfx::SeImageLayout val) { handle->layout = val; }
     constexpr VkImageAspectFlags getAspect() const { return handle->aspect; }
@@ -91,6 +120,8 @@ class Texture2D : public Gfx::Texture2D, public TextureBase {
                               Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage) override;
     virtual void download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<uint8>& buffer) override;
     virtual void generateMipmaps() override;
+    virtual Gfx::PTextureView getDefaultView() const override;
+    virtual Gfx::OTextureView createTextureView(uint32 baseMipLevel, uint32 levelCount, uint32 baseArrayLayer, uint32 layerCount) override;
 
   protected:
     // Inherited via QueueOwnedResource
@@ -115,6 +146,8 @@ class Texture3D : public Gfx::Texture3D, public TextureBase {
                               Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage) override;
     virtual void download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<uint8>& buffer) override;
     virtual void generateMipmaps() override;
+    virtual Gfx::PTextureView getDefaultView() const override;
+    virtual Gfx::OTextureView createTextureView(uint32 baseMipLevel, uint32 levelCount, uint32 baseArrayLayer, uint32 layerCount) override;
 
   protected:
     // Inherited via QueueOwnedResource
@@ -139,6 +172,8 @@ class TextureCube : public Gfx::TextureCube, public TextureBase {
                               Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage) override;
     virtual void download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<uint8>& buffer) override;
     virtual void generateMipmaps() override;
+    virtual Gfx::PTextureView getDefaultView() const override;
+    virtual Gfx::OTextureView createTextureView(uint32 baseMipLevel, uint32 levelCount, uint32 baseArrayLayer, uint32 layerCount) override;
 
   protected:
     // Inherited via QueueOwnedResource

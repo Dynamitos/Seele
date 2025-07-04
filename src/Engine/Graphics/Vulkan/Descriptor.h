@@ -64,7 +64,7 @@ class DescriptorSet : public Gfx::DescriptorSet, public CommandBoundResource {
     virtual void updateBuffer(const std::string& name, uint32 index, Gfx::PVertexBuffer indexBuffer) override;
     virtual void updateBuffer(const std::string& name, uint32 index, Gfx::PIndexBuffer indexBuffer) override;
     virtual void updateSampler(const std::string& name, uint32 index, Gfx::PSampler samplerState) override;
-    virtual void updateTexture(const std::string& name, uint32 index, Gfx::PTexture texture) override;
+    virtual void updateTexture(const std::string& name, uint32 index, Gfx::PTextureView texture) override;
     virtual void updateAccelerationStructure(const std::string& name, uint32 index, Gfx::PTopLevelAS as) override;
 
     constexpr VkDescriptorSet getHandle() const { return setHandle; }

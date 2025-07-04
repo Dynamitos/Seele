@@ -78,7 +78,7 @@ void Material::updateDescriptor() {
     set = layout->allocateDescriptorSet();
     for (uint32 i = 0; i < textures.size(); ++i) {
         if (textures[i] != nullptr) {
-            set->updateTexture("textures", i, textures[i]);
+            set->updateTexture("textures", i, textures[i]->getDefaultView());
         }
     }
     for (uint32 i = 0; i < samplers.size(); ++i) {

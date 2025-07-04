@@ -122,7 +122,7 @@ void EnvironmentLoader::import(EnvironmentImportArgs args, PEnvironmentMapAsset 
     Gfx::PDescriptorSet set = cubeRenderLayout->allocateDescriptorSet();
     set->updateConstants("view", 0, captureViews);
     set->updateConstants("projection", 0, &captureProjection);
-    set->updateTexture("equirectangularMap", 0, Gfx::PTexture2D(hdrTexture));
+    set->updateTexture("equirectangularMap", 0, hdrTexture->getDefaultView());
     set->updateSampler("sampler", 0, cubeSampler);
     set->writeChanges();
     Gfx::OTextureCube cubeMap = graphics->createTextureCube(TextureCreateInfo{
@@ -135,7 +135,7 @@ void EnvironmentLoader::import(EnvironmentImportArgs args, PEnvironmentMapAsset 
         Gfx::RenderTargetLayout{
             .colorAttachments =
                 {
-                    Gfx::RenderTargetAttachment(cubeMap, Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                    Gfx::RenderTargetAttachment(cubeMap->getDefaultView(), Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
                                                 Gfx::SE_ATTACHMENT_LOAD_OP_DONT_CARE, Gfx::SE_ATTACHMENT_STORE_OP_STORE),
                 },
         },
@@ -181,7 +181,7 @@ void EnvironmentLoader::import(EnvironmentImportArgs args, PEnvironmentMapAsset 
     });
     Gfx::ORenderPass convolutionPass = graphics->createRenderPass(
         Gfx::RenderTargetLayout{
-            .colorAttachments = {Gfx::RenderTargetAttachment(convolutedMap, Gfx::SE_IMAGE_LAYOUT_UNDEFINED,
+            .colorAttachments = {Gfx::RenderTargetAttachment(convolutedMap->getDefaultView(), Gfx::SE_IMAGE_LAYOUT_UNDEFINED,
                                                              Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
                                                              Gfx::SE_ATTACHMENT_LOAD_OP_DONT_CARE, Gfx::SE_ATTACHMENT_STORE_OP_STORE)},
         },
@@ -206,7 +206,7 @@ void EnvironmentLoader::import(EnvironmentImportArgs args, PEnvironmentMapAsset 
     set->updateConstants("view", 0, captureViews);
     set->updateConstants("projection", 0, &captureProjection);
     set->updateSampler("sampler", 0, cubeSampler);
-    set->updateTexture("cubeMap", 0, Gfx::PTextureCube(cubeMap));
+    set->updateTexture("cubeMap", 0, cubeMap->getDefaultView());
     set->writeChanges();
 
     graphics->beginRenderPass(convolutionPass);

@@ -28,11 +28,65 @@ VkImageAspectFlags getAspectFromFormat(Gfx::SeFormat format) {
     }
 }
 
+TextureView::TextureView(PTextureHandle source, VkImageView view) : source(source), view(view) {}
+
+TextureView::~TextureView() {}
+
+Gfx::SeFormat TextureView::getFormat() const { return source->format; }
+
+uint32 TextureView::getWidth() const { return source->width; }
+
+uint32 TextureView::getHeight() const { return source->height; }
+
+uint32 TextureView::getDepth() const { return source->depth; }
+
+uint32 TextureView::getNumLayers() const { return source->layerCount; }
+
+Gfx::SeSampleCountFlags TextureView::getNumSamples() const { return source->samples; }
+
+uint32 TextureView::getMipLevels() const { return source->mipLevels; }
+
+Gfx::SeImageLayout TextureView::getLayout() const { return source->layout; }
+
+void TextureView::pipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, VkAccessFlags dstAccess,
+                                  VkPipelineStageFlags dstStage) {
+    return source->pipelineBarrier(srcAccess, srcStage, dstAccess, dstStage);
+}
+
+void TextureView::changeLayout(Gfx::SeImageLayout newLayout, VkAccessFlags srcAccess, VkPipelineStageFlags srcStage,
+                               VkAccessFlags dstAccess, VkPipelineStageFlags dstStage) {
+    return source->changeLayout(newLayout, srcAccess, srcStage, dstAccess, dstStage);
+}
+
+void TextureView::setLayout(Gfx::SeImageLayout layout) { source->layout = layout; }
+
+Gfx::OTextureView TextureHandle::createTextureView(uint32 baseMipLevel, uint32 levelCount, uint32 baseArrayLayer, uint32 layerCount) {
+    VkImageView view;
+    VkImageViewCreateInfo createInfo = {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .image = image,
+        .viewType = viewType,
+        .format = cast(format),
+        .subresourceRange =
+            {
+                .aspectMask = aspect,
+                .baseMipLevel = baseMipLevel,
+                .levelCount = levelCount,
+                .baseArrayLayer = baseArrayLayer,
+                .layerCount = layerCount,
+            },
+    };
+    vkCreateImageView(graphics->getDevice(), &createInfo, nullptr, &view);
+    return new TextureView(this, view);
+}
+
 TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType, const TextureCreateInfo& createInfo, VkImage existingImage)
     : CommandBoundResource(graphics, createInfo.name), image(existingImage), imageView(VK_NULL_HANDLE), allocation(nullptr),
       owner(createInfo.sourceData.owner), width(createInfo.width), height(createInfo.height), depth(createInfo.depth),
-      layerCount(createInfo.elements), mipLevels(1), samples(createInfo.samples), format(createInfo.format),
-      usage(createInfo.usage), layout(Gfx::SE_IMAGE_LAYOUT_UNDEFINED), aspect(getAspectFromFormat(createInfo.format)), ownsImage(false) {
+      layerCount(createInfo.elements), mipLevels(1), samples(createInfo.samples), format(createInfo.format), usage(createInfo.usage),
+      layout(Gfx::SE_IMAGE_LAYOUT_UNDEFINED), aspect(getAspectFromFormat(createInfo.format)), viewType(viewType), ownsImage(false) {
     if (createInfo.useMip) {
         mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(width, height)))) + 1;
     }
@@ -151,7 +205,7 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType, const
             graphics->getDestructionManager()->queueResourceForDestruction(std::move(stagingAlloc));
         }
     }
-
+    VkImageView view;
     VkImageViewCreateInfo viewInfo = {
         .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
         .pNext = nullptr,
@@ -167,11 +221,11 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType, const
             },
     };
 
-    VK_CHECK(vkCreateImageView(graphics->getDevice(), &viewInfo, nullptr, &imageView));
+    VK_CHECK(vkCreateImageView(graphics->getDevice(), &viewInfo, nullptr, &view));
+    imageView = new TextureView(this, view);
 }
 
 TextureHandle::~TextureHandle() {
-    vkDestroyImageView(graphics->getDevice(), imageView, nullptr);
     if (ownsImage) {
         vmaDestroyImage(graphics->getAllocator(), image, allocation);
     }
@@ -422,6 +476,12 @@ void Texture2D::download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<
 
 void Texture2D::generateMipmaps() { TextureBase::generateMipmaps(); }
 
+Gfx::PTextureView Texture2D::getDefaultView() const { return PTextureView(handle->imageView); }
+
+Gfx::OTextureView Texture2D::createTextureView(uint32 baseMipLevel, uint32 levelCount, uint32 baseArrayLayer, uint32 layerCount) {
+    return handle->createTextureView(baseMipLevel, levelCount, baseArrayLayer, layerCount);
+}
+
 void Texture2D::executeOwnershipBarrier(Gfx::QueueType newOwner) { TextureBase::transferOwnership(newOwner); }
 
 void Texture2D::executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, VkAccessFlags dstAccess,
@@ -444,6 +504,12 @@ void Texture3D::download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<
 }
 
 void Texture3D::generateMipmaps() { TextureBase::generateMipmaps(); }
+
+Gfx::PTextureView Texture3D::getDefaultView() const { return PTextureView(handle->imageView); }
+
+Gfx::OTextureView Texture3D::createTextureView(uint32 baseMipLevel, uint32 levelCount, uint32 baseArrayLayer, uint32 layerCount) {
+    return handle->createTextureView(baseMipLevel, levelCount, baseArrayLayer, layerCount);
+}
 
 void Texture3D::executeOwnershipBarrier(Gfx::QueueType newOwner) { TextureBase::transferOwnership(newOwner); }
 
@@ -468,6 +534,12 @@ void TextureCube::download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Arra
 }
 
 void TextureCube::generateMipmaps() { TextureBase::generateMipmaps(); }
+
+Gfx::PTextureView TextureCube::getDefaultView() const { return PTextureView(handle->imageView); }
+
+Gfx::OTextureView TextureCube::createTextureView(uint32 baseMipLevel, uint32 levelCount, uint32 baseArrayLayer, uint32 layerCount) {
+    return handle->createTextureView(baseMipLevel, levelCount, baseArrayLayer, layerCount);
+}
 
 void TextureCube::executeOwnershipBarrier(Gfx::QueueType newOwner) { TextureBase::transferOwnership(newOwner); }
 

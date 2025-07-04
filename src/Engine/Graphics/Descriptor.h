@@ -52,12 +52,9 @@ class DescriptorPool {
 DEFINE_REF(DescriptorPool)
 DECLARE_REF(UniformBuffer)
 DECLARE_REF(ShaderBuffer)
-DECLARE_REF(Texture)
-DECLARE_REF(Texture2D)
-DECLARE_REF(Texture3D)
-DECLARE_REF(TextureCube)
 DECLARE_REF(Sampler)
 DECLARE_REF(TopLevelAS)
+DECLARE_REF(TextureView)
 class DescriptorSet {
   public:
     DescriptorSet(PDescriptorLayout layout);
@@ -68,7 +65,7 @@ class DescriptorSet {
     virtual void updateBuffer(const std::string& name, uint32 index, Gfx::PVertexBuffer indexBuffer) = 0;
     virtual void updateBuffer(const std::string& name, uint32 index, Gfx::PIndexBuffer indexBuffer) = 0;
     virtual void updateSampler(const std::string& name, uint32 index, Gfx::PSampler samplerState) = 0;
-    virtual void updateTexture(const std::string& name, uint32 index, Gfx::PTexture texture) = 0;
+    virtual void updateTexture(const std::string& name, uint32 index, Gfx::PTextureView texture) = 0;
     virtual void updateAccelerationStructure(const std::string& name, uint32 index, Gfx::PTopLevelAS as) = 0;
     bool operator<(PDescriptorSet other);
 

@@ -156,7 +156,7 @@ void CachedDepthPass::publishOutputs() {
     };
     depthBuffer = graphics->createTexture2D(depthBufferInfo);
     depthAttachment =
-        Gfx::RenderTargetAttachment(depthBuffer, Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+        Gfx::RenderTargetAttachment(depthBuffer->getDefaultView(), Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
                                     Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
     resources->registerRenderPassOutput("DEPTHPREPASS_DEPTH", depthAttachment);
 
@@ -168,7 +168,7 @@ void CachedDepthPass::publishOutputs() {
     };
     visibilityBuffer = graphics->createTexture2D(visibilityInfo);
     visibilityAttachment =
-        Gfx::RenderTargetAttachment(visibilityBuffer, Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+        Gfx::RenderTargetAttachment(visibilityBuffer->getDefaultView(), Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
                                     Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
     resources->registerRenderPassOutput("VISIBILITY", visibilityAttachment);
     query = graphics->createPipelineStatisticsQuery("CachedPipelineStatistics");

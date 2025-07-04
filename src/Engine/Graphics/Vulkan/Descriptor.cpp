@@ -325,11 +325,11 @@ void DescriptorSet::updateSampler(const std::string& mappingName, uint32 index, 
     boundResources[binding][index] = vulkanSampler->getHandle();
 }
 
-void DescriptorSet::updateTexture(const std::string& mappingName, uint32 index, Gfx::PTexture texture) {
-    TextureBase* vulkanTexture = texture.cast<TextureBase>().getHandle();
+void DescriptorSet::updateTexture(const std::string& mappingName, uint32 index, Gfx::PTextureView texture) {
+    PTextureView vulkanTexture = texture.cast<TextureView>();
     const auto& map = owner->getLayout()->mappings[mappingName];
     uint32 binding = map.binding;
-    if (boundResources[binding][index] == vulkanTexture->getHandle()) {
+    if (boundResources[binding][index] == vulkanTexture->getSource()) {
         return;
     }
 
@@ -350,7 +350,7 @@ void DescriptorSet::updateTexture(const std::string& mappingName, uint32 index, 
         .pImageInfo = &imageInfos.back(),
     });
 
-    boundResources[binding][index] = vulkanTexture->getHandle();
+    boundResources[binding][index] = vulkanTexture->getSource();
 }
 
 void DescriptorSet::updateAccelerationStructure(const std::string& mappingName, uint32 index, Gfx::PTopLevelAS as) {

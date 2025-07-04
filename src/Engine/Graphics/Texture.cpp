@@ -4,6 +4,10 @@
 using namespace Seele;
 using namespace Seele::Gfx;
 
+TextureView::TextureView() {}
+
+TextureView::~TextureView() {}
+
 Texture::Texture(QueueFamilyMapping mapping) : QueueOwnedResource(mapping) {}
 
 Texture::~Texture() {}

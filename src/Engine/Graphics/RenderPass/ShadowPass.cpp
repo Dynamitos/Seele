@@ -51,7 +51,7 @@ void ShadowPass::render() {
         Array<Gfx::ORenderCommand> commands;
         renderPass = graphics->createRenderPass(
             Gfx::RenderTargetLayout{
-                .depthAttachment = Gfx::RenderTargetAttachment(shadowMaps[shadowIndex], Gfx::SE_IMAGE_LAYOUT_UNDEFINED,
+                .depthAttachment = Gfx::RenderTargetAttachment(shadowMaps[shadowIndex]->getDefaultView(), Gfx::SE_IMAGE_LAYOUT_UNDEFINED,
                                                                Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
                                                                Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE),
 

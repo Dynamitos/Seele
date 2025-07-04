@@ -122,11 +122,11 @@ void LightEnvironment::commit() {
     uint32 numDirectionalLights = (uint32)dirs.size();
     set->updateConstants("numDirectionalLights", 0, &numDirectionalLights);
     set->updateBuffer("directionalLights", 0, directionalLights);
-    set->updateTexture("shadowMap", 0, Gfx::PTexture2D(shadowMaps[0]));
+    set->updateTexture("shadowMap", 0, shadowMaps[0]->getDefaultView());
     set->updateSampler("shadowSampler", 0, Gfx::PSampler(shadowSamplers[0]));
     set->updateConstants("numPointLights", 0, &numPointLights);
     set->updateBuffer("pointLights", 0, pointLights);
-    set->updateTexture("irradianceMap", 0, environment->getIrradianceMap());
+    set->updateTexture("irradianceMap", 0, environment->getIrradianceMap()->getDefaultView());
     set->updateSampler("irradianceSampler", 0, environmentSampler);
     set->writeChanges();
 }

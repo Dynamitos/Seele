@@ -128,8 +128,8 @@ void BasePass::beginFrame(const Component::Camera& cam, const Component::Transfo
         skyboxDataSet->updateConstants("fogBlend", 0, &skyboxData.fogColor);
         skyboxDataSet->writeChanges();
         textureSet = textureLayout->allocateDescriptorSet();
-        textureSet->updateTexture(SKYBOXDAY_NAME, 0, skybox.day);
-        textureSet->updateTexture(SKYBOXNIGHT_NAME, 0, skybox.night);
+        textureSet->updateTexture(SKYBOXDAY_NAME, 0, skybox.day->getDefaultView());
+        textureSet->updateTexture(SKYBOXNIGHT_NAME, 0, skybox.night->getDefaultView());
         textureSet->updateSampler(SKYBOXSAMPLER_NAME, 0, skyboxSampler);
         textureSet->writeChanges();
     }
@@ -138,9 +138,9 @@ void BasePass::beginFrame(const Component::Camera& cam, const Component::Transfo
 void BasePass::render() {
     graphics->beginDebugRegion("BasePass");
     opaqueCulling->updateBuffer(LIGHTINDEX_NAME, 0, oLightIndexList);
-    opaqueCulling->updateTexture(LIGHTGRID_NAME, 0, oLightGrid);
+    opaqueCulling->updateTexture(LIGHTGRID_NAME, 0, oLightGrid->getDefaultView());
     transparentCulling->updateBuffer(LIGHTINDEX_NAME, 0, tLightIndexList);
-    transparentCulling->updateTexture(LIGHTGRID_NAME, 0, tLightGrid);
+    transparentCulling->updateTexture(LIGHTGRID_NAME, 0, tLightGrid->getDefaultView());
     opaqueCulling->writeChanges();
     transparentCulling->writeChanges();
 
@@ -421,21 +421,21 @@ void BasePass::publishOutputs() {
         .usage = Gfx::SE_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | Gfx::SE_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT,
     });
 
-    depthAttachment = Gfx::RenderTargetAttachment(Gfx::PTexture2D(basePassDepth), Gfx::SE_IMAGE_LAYOUT_UNDEFINED,
+    depthAttachment = Gfx::RenderTargetAttachment(basePassDepth->getDefaultView(), Gfx::SE_IMAGE_LAYOUT_UNDEFINED,
                                                   Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
                                                   Gfx::SE_ATTACHMENT_LOAD_OP_DONT_CARE, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
 
     msDepthAttachment =
-        Gfx::RenderTargetAttachment(msBasePassDepth, Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+        Gfx::RenderTargetAttachment(msBasePassDepth->getDefaultView(), Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
                                     Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_DONT_CARE);
     msDepthAttachment.clear.depthStencil.depth = 0.0f;
 
     colorAttachment =
-        Gfx::RenderTargetAttachment(basePassColor, Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+        Gfx::RenderTargetAttachment(basePassColor->getDefaultView(), Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
                                     Gfx::SE_ATTACHMENT_LOAD_OP_DONT_CARE, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
 
     msColorAttachment =
-        Gfx::RenderTargetAttachment(msBasePassColor, Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+        Gfx::RenderTargetAttachment(msBasePassColor->getDefaultView(), Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
                                     Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_DONT_CARE);
     msColorAttachment.clear.color.float32[0] = 0;
     msColorAttachment.clear.color.float32[1] = 1;

@@ -50,8 +50,8 @@ void LightCullingPass::render() {
     cullingDescriptorSet->updateBuffer(TLIGHTINDEXCOUNTER_NAME, 0, tLightIndexCounter);
     cullingDescriptorSet->updateBuffer(OLIGHTINDEXLIST_NAME, 0, oLightIndexList);
     cullingDescriptorSet->updateBuffer(TLIGHTINDEXLIST_NAME, 0, tLightIndexList);
-    cullingDescriptorSet->updateTexture(OLIGHTGRID_NAME, 0, Gfx::PTexture2D(oLightGrid));
-    cullingDescriptorSet->updateTexture(TLIGHTGRID_NAME, 0, Gfx::PTexture2D(tLightGrid));
+    cullingDescriptorSet->updateTexture(OLIGHTGRID_NAME, 0, oLightGrid->getDefaultView());
+    cullingDescriptorSet->updateTexture(TLIGHTGRID_NAME, 0, tLightGrid->getDefaultView());
     cullingDescriptorSet->writeChanges();
     Gfx::OComputeCommand computeCommand = graphics->createComputeCommand("CullingCommand");
     if (getGlobals().useLightCulling) {
@@ -221,7 +221,7 @@ void LightCullingPass::publishOutputs() {
 
 void LightCullingPass::createRenderPass() {
     timestamps = resources->requestTimestampQuery("TIMESTAMPS");
-    depthAttachment = resources->requestRenderTarget("DEPTHPREPASS_DEPTH").getTexture();
+    depthAttachment = resources->requestRenderTarget("DEPTHPREPASS_DEPTH").getTextureView();
 }
 
 void LightCullingPass::setupFrustums() {

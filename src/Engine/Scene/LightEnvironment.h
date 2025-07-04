@@ -4,6 +4,7 @@
 #include "Component/Transform.h"
 #include "Graphics/Buffer.h"
 #include "Graphics/Descriptor.h"
+#include "Graphics/Texture.h"
 
 namespace Seele {
 DECLARE_REF(EnvironmentMapAsset)

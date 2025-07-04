@@ -153,10 +153,10 @@ void RayTracingPass::render() {
     });
     Gfx::PDescriptorSet desc = paramsLayout->allocateDescriptorSet();
     desc->updateAccelerationStructure(TLAS_NAME, 0, tlas);
-    desc->updateTexture(ACCUMULATOR_NAME, 0, Gfx::PTexture2D(radianceAccumulator));
-    desc->updateTexture(TEXTURE_NAME, 0, Gfx::PTexture2D(texture));
+    desc->updateTexture(ACCUMULATOR_NAME, 0, radianceAccumulator->getDefaultView());
+    desc->updateTexture(TEXTURE_NAME, 0, texture->getDefaultView());
     desc->updateBuffer(INDEXBUFFER_NAME, 0, StaticMeshVertexData::getInstance()->getIndexBuffer());
-    desc->updateTexture(SKYBOX_NAME, 0, skyBox);
+    desc->updateTexture(SKYBOX_NAME, 0, skyBox->getDefaultView());
     desc->updateSampler(SKYSAMPLER_NAME, 0, skyBoxSampler);
     desc->writeChanges();
 
@@ -210,7 +210,7 @@ void RayTracingPass::publishOutputs() {
     texture->changeLayout(Gfx::SE_IMAGE_LAYOUT_GENERAL, Gfx::SE_ACCESS_NONE, Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
                           Gfx::SE_ACCESS_SHADER_WRITE_BIT,
                           Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT | Gfx::SE_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR);
-    resources->registerRenderPassOutput("BASEPASS_COLOR", Gfx::RenderTargetAttachment(texture, Gfx::SE_IMAGE_LAYOUT_UNDEFINED,
+    resources->registerRenderPassOutput("BASEPASS_COLOR", Gfx::RenderTargetAttachment(texture->getDefaultView(), Gfx::SE_IMAGE_LAYOUT_UNDEFINED,
                                                                                       Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL));
     ShaderCompilationInfo compileInfo = {
         .name = "RayGenMiss",

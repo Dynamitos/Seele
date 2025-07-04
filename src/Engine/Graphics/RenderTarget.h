@@ -9,12 +9,7 @@ namespace Gfx {
 class RenderTargetAttachment {
   public:
     RenderTargetAttachment() {}
-    RenderTargetAttachment(PTexture2D texture, SeImageLayout initialLayout, SeImageLayout finalLayout,
-                           SeAttachmentLoadOp loadOp = SE_ATTACHMENT_LOAD_OP_LOAD,
-                           SeAttachmentStoreOp storeOp = SE_ATTACHMENT_STORE_OP_STORE,
-                           SeAttachmentLoadOp stencilLoadOp = SE_ATTACHMENT_LOAD_OP_DONT_CARE,
-                           SeAttachmentStoreOp stencilStoreOp = SE_ATTACHMENT_STORE_OP_DONT_CARE);
-    RenderTargetAttachment(PTextureCube texture, SeImageLayout initialLayout, SeImageLayout finalLayout,
+    RenderTargetAttachment(PTextureView texture, SeImageLayout initialLayout, SeImageLayout finalLayout,
                            SeAttachmentLoadOp loadOp = SE_ATTACHMENT_LOAD_OP_LOAD,
                            SeAttachmentStoreOp storeOp = SE_ATTACHMENT_STORE_OP_STORE,
                            SeAttachmentLoadOp stencilLoadOp = SE_ATTACHMENT_LOAD_OP_DONT_CARE,
@@ -25,10 +20,10 @@ class RenderTargetAttachment {
                            SeAttachmentLoadOp stencilLoadOp = SE_ATTACHMENT_LOAD_OP_DONT_CARE,
                            SeAttachmentStoreOp stencilStoreOp = SE_ATTACHMENT_STORE_OP_DONT_CARE);
     ~RenderTargetAttachment();
-    void setTexture(PTexture _texture) { texture = _texture; }
-    PTexture getTexture() const {
+    void setTextureView(PTextureView _texture) { texture = _texture; }
+    PTextureView getTextureView() const {
         if (viewport != nullptr) {
-            return PTexture(viewport->getOwner()->getBackBuffer());
+            return PTextureView(viewport->getOwner()->getBackBuffer()->getDefaultView());
         }
         return texture;
     }
@@ -73,7 +68,7 @@ class RenderTargetAttachment {
     SeColorComponentFlags componentFlags = 0;
 
   protected:
-    PTexture texture = nullptr;
+    PTextureView texture = nullptr;
     PViewport viewport = nullptr;
     SeImageLayout initialLayout = SE_IMAGE_LAYOUT_UNDEFINED;
     SeImageLayout finalLayout = SE_IMAGE_LAYOUT_UNDEFINED;

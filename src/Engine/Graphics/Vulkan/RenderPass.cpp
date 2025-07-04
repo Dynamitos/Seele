@@ -22,7 +22,7 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Arra
 
     uint32 attachmentCounter = 0;
     for (auto& inputAttachment : layout.inputAttachments) {
-        PTexture2D image = inputAttachment.getTexture().cast<Texture2D>();
+        PTextureView image = inputAttachment.getTextureView();
         VkAttachmentDescription2& desc = attachments.add() = {
             .sType = VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2,
             .pNext = nullptr,
@@ -74,7 +74,7 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Arra
             .pNext = nullptr,
             .flags = 0,
             .format = cast(resolveAttachment.getFormat()),
-            .samples = (VkSampleCountFlagBits)resolveAttachment.getTexture()->getNumSamples(),
+            .samples = (VkSampleCountFlagBits)resolveAttachment.getTextureView()->getNumSamples(),
             .loadOp = cast(resolveAttachment.getLoadOp()),
             .storeOp = cast(resolveAttachment.getStoreOp()),
             .stencilLoadOp = cast(resolveAttachment.getStencilLoadOp()),
@@ -95,8 +95,8 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Arra
             .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
         };
     }
-    if (layout.depthAttachment.getTexture() != nullptr) {
-        PTexture2D image = layout.depthAttachment.getTexture().cast<Texture2D>();
+    if (layout.depthAttachment.getTextureView() != nullptr) {
+        PTextureView image = layout.depthAttachment.getTextureView();
         attachments.add() = {
             .sType = VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2,
             .pNext = nullptr,
@@ -123,8 +123,8 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Arra
             .layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
         };
     }
-    if (layout.depthResolveAttachment.getTexture() != nullptr) {
-        PTexture2D image = layout.depthResolveAttachment.getTexture().cast<Texture2D>();
+    if (layout.depthResolveAttachment.getTextureView() != nullptr) {
+        PTextureView image = layout.depthResolveAttachment.getTextureView();
         attachments.add() = {
             .sType = VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2,
             .pNext = nullptr,
@@ -159,7 +159,7 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Arra
     };
     VkSubpassDescription2 subPassDesc = {
         .sType = VK_STRUCTURE_TYPE_SUBPASS_DESCRIPTION_2,
-        .pNext = layout.depthResolveAttachment.getTexture() != nullptr ? &depthResolve : nullptr,
+        .pNext = layout.depthResolveAttachment.getTextureView() != nullptr ? &depthResolve : nullptr,
         .flags = 0,
         .pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
         .viewMask = viewMasks[0],
@@ -168,7 +168,7 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Arra
         .colorAttachmentCount = (uint32)colorRefs.size(),
         .pColorAttachments = colorRefs.data(),
         .pResolveAttachments = resolveRefs.size() > 0 ? resolveRefs.data() : nullptr,
-        .pDepthStencilAttachment = layout.depthAttachment.getTexture() != nullptr ? &depthRef : nullptr,
+        .pDepthStencilAttachment = layout.depthAttachment.getTextureView() != nullptr ? &depthRef : nullptr,
     };
     Array<VkSubpassDependency2> dep;
     for (const auto& d : dependencies) {
@@ -217,23 +217,23 @@ RenderPass::~RenderPass() {
 uint32 RenderPass::getFramebufferHash() {
     FramebufferDescription description;
     for (auto& inputAttachment : layout.inputAttachments) {
-        PTextureBase tex = inputAttachment.getTexture().cast<TextureBase>();
+        PTextureView tex = inputAttachment.getTextureView();
         description.inputAttachments[description.numInputAttachments++] = tex->getView();
     }
     for (auto& colorAttachment : layout.colorAttachments) {
-        PTextureBase tex = colorAttachment.getTexture().cast<TextureBase>();
+        PTextureView tex = colorAttachment.getTextureView();
         description.colorAttachments[description.numColorAttachments++] = tex->getView();
     }
     for (auto& resolveAttachment : layout.resolveAttachments) {
-        PTextureBase tex = resolveAttachment.getTexture().cast<TextureBase>();
+        PTextureView tex = resolveAttachment.getTextureView();
         description.resolveAttachments[description.numResolveAttachments++] = tex->getView();
     }
-    if (layout.depthAttachment.getTexture() != nullptr) {
-        PTextureBase tex = layout.depthAttachment.getTexture().cast<TextureBase>();
+    if (layout.depthAttachment.getTextureView() != nullptr) {
+        PTextureView tex = layout.depthAttachment.getTextureView();
         description.depthAttachment = tex->getView();
     }
-    if (layout.depthResolveAttachment.getTexture() != nullptr) {
-        PTextureBase tex = layout.depthResolveAttachment.getTexture().cast<TextureBase>();
+    if (layout.depthResolveAttachment.getTextureView() != nullptr) {
+        PTextureView tex = layout.depthResolveAttachment.getTextureView();
         description.depthResolveAttachment = tex->getView();
     }
     return CRC::Calculate(&description, sizeof(FramebufferDescription), CRC::CRC_32());
@@ -241,23 +241,23 @@ uint32 RenderPass::getFramebufferHash() {
 
 void RenderPass::endRenderPass() {
     for (auto& inputAttachment : layout.inputAttachments) {
-        PTextureBase tex = inputAttachment.getTexture().cast<TextureBase>();
+        PTextureView tex = inputAttachment.getTextureView();
         tex->setLayout(inputAttachment.getFinalLayout());
     }
     for (auto& colorAttachment : layout.colorAttachments) {
-        PTextureBase tex = colorAttachment.getTexture().cast<TextureBase>();
+        PTextureView tex = colorAttachment.getTextureView();
         tex->setLayout(colorAttachment.getFinalLayout());
     }
     for (auto& resolveAttachment : layout.resolveAttachments) {
-        PTextureBase tex = resolveAttachment.getTexture().cast<TextureBase>();
+        PTextureView tex = resolveAttachment.getTextureView();
         tex->setLayout(resolveAttachment.getFinalLayout());
     }
-    if (layout.depthAttachment.getTexture() != nullptr) {
-        PTextureBase tex = layout.depthAttachment.getTexture().cast<TextureBase>();
+    if (layout.depthAttachment.getTextureView() != nullptr) {
+        PTextureView tex = layout.depthAttachment.getTextureView();
         tex->setLayout(layout.depthAttachment.getFinalLayout());
     }
-    if (layout.depthResolveAttachment.getTexture() != nullptr) {
-        PTextureBase tex = layout.depthResolveAttachment.getTexture().cast<TextureBase>();
+    if (layout.depthResolveAttachment.getTextureView() != nullptr) {
+        PTextureView tex = layout.depthResolveAttachment.getTextureView();
         tex->setLayout(layout.depthResolveAttachment.getFinalLayout());
     }
 }

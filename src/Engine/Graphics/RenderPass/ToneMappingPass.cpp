@@ -129,7 +129,7 @@ void ToneMappingPass::beginFrame(const Component::Camera& cam, const Component::
 
 void ToneMappingPass::render() {
     graphics->beginDebugRegion("ToneMapping");
-    hdrInputTexture.getTexture()->changeLayout(Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+    hdrInputTexture.getTextureView()->changeLayout(Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
                                                Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, Gfx::SE_ACCESS_SHADER_READ_BIT,
                                                Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 
@@ -139,7 +139,7 @@ void ToneMappingPass::render() {
     histogramSet->updateConstants("inverseLogLumRange", 0, &inverseLogLumRange);
     histogramSet->updateConstants("timeCoeff", 0, &timeCoeff);
     histogramSet->updateConstants("numPixels", 0, &numPixels);
-    histogramSet->updateTexture("hdrImage", 0, hdrInputTexture.getTexture());
+    histogramSet->updateTexture("hdrImage", 0, hdrInputTexture.getTextureView());
     histogramSet->updateBuffer("histogram", 0, histogramBuffer);
     histogramSet->updateBuffer("averageLuminance", 0, luminanceBuffer);
     histogramSet->writeChanges();
@@ -172,7 +172,7 @@ void ToneMappingPass::render() {
     tonemappingSet->updateConstants("slope", 0, &slope);
     tonemappingSet->updateConstants("power", 0, &power);
     tonemappingSet->updateConstants("sat", 0, &sat);
-    tonemappingSet->updateTexture("hdrInputTexture", 0, hdrInputTexture.getTexture());
+    tonemappingSet->updateTexture("hdrInputTexture", 0, hdrInputTexture.getTextureView());
     tonemappingSet->updateSampler("hdrSampler", 0, sampler);
     tonemappingSet->updateBuffer("averageLuminance", 0, luminanceBuffer);
     tonemappingSet->writeChanges();

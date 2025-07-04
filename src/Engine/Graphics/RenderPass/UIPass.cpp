@@ -87,7 +87,7 @@ void UIPass::beginFrame(const Component::Camera& cam, const Component::Transform
     textDescriptorSet->updateBuffer(GLYPHINSTANCE_NAME, 0, glyphInstanceBuffer);
     textDescriptorSet->updateSampler(GLYPHSAMPLER_NAME, 0, glyphSampler);
     for (uint32 i = 0; i < usedTextures.size(); ++i) {
-        textDescriptorSet->updateTexture(TEXTURES_NAME, i, usedTextures[i]);
+        textDescriptorSet->updateTexture(TEXTURES_NAME, i, usedTextures[i]->getDefaultView());
     }
     textDescriptorSet->writeChanges();
 
@@ -100,7 +100,7 @@ void UIPass::beginFrame(const Component::Camera& cam, const Component::Transform
     uiDescriptorSet->updateBuffer(ELEMENT_NAME, 0, elementBuffer);
     uiDescriptorSet->updateSampler(GLYPHSAMPLER_NAME, 0, glyphSampler);
     for (uint32 i = 0; i < usedTextures.size(); ++i) {
-        uiDescriptorSet->updateTexture(TEXTURES_NAME, i, usedTextures[i]);
+        uiDescriptorSet->updateTexture(TEXTURES_NAME, i, usedTextures[i]->getDefaultView());
     }
     uiDescriptorSet->writeChanges();
 }
@@ -132,7 +132,7 @@ void UIPass::createRenderPass() {
 
     depthBuffer = graphics->createTexture2D(depthBufferInfo);
     depthAttachment =
-        Gfx::RenderTargetAttachment(depthBuffer, Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+        Gfx::RenderTargetAttachment(depthBuffer->getDefaultView(), Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
                                     Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
     depthAttachment.clear.depthStencil.depth = 0;
 
