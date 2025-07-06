@@ -24,11 +24,12 @@ class EnvironmentLoader {
     Gfx::OFragmentShader cubeRenderFrag;
     Gfx::ODescriptorLayout cubeRenderLayout;
     Gfx::OPipelineLayout cubePipelineLayout;
-    Gfx::PGraphicsPipeline cubeRenderPipeline;
     Gfx::OFragmentShader convolutionFrag;
-    Gfx::PGraphicsPipeline convolutionPipeline;
+    Gfx::OFragmentShader prefilterFrag;
     Gfx::OViewport cubeRenderViewport;
     Gfx::OViewport convolutionViewport;
+    // for now we hardcode 128x128 as mip 0, so we have 8 roughness levels
+    StaticArray<Gfx::OViewport, 8> prefilterViewports;
     Gfx::OSampler cubeSampler;
 };
 }

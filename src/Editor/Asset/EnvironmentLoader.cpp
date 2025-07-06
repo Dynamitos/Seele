@@ -26,6 +26,16 @@ EnvironmentLoader::EnvironmentLoader(Gfx::PGraphics graphics) : graphics(graphic
                                                                     },
                                                                 .fieldOfView = glm::radians(90.0f),
                                                             });
+    for (uint32 i = 0; i < prefilterViewports.size(); ++i) {
+        prefilterViewports[i] = graphics->createViewport(nullptr, ViewportCreateInfo{
+                                                                      .dimensions =
+                                                                          {
+                                                                              .size = {128 * std::pow(0.5, i), 128 * std::pow(0.5, i)},
+                                                                              .offset = {0, 0},
+                                                                          },
+                                                                      .fieldOfView = glm::radians(90.0f),
+                                                                  });
+    }
     cubeSampler = graphics->createSampler({
         .magFilter = Gfx::SE_FILTER_LINEAR,
         .minFilter = Gfx::SE_FILTER_LINEAR,
@@ -61,16 +71,20 @@ EnvironmentLoader::EnvironmentLoader(Gfx::PGraphics graphics) : graphics(graphic
 
     cubePipelineLayout = graphics->createPipelineLayout("CubeRenderLayout");
     cubePipelineLayout->addDescriptorLayout(cubeRenderLayout);
+    cubePipelineLayout->addPushConstants(Gfx::SePushConstantRange{
+        .stageFlags = Gfx::SE_SHADER_STAGE_FRAGMENT_BIT,
+        .offset = 0,
+        .size = sizeof(float),
+        .name = "pRoughness",
+    });
 
     graphics->beginShaderCompilation(ShaderCompilationInfo{
         .name = "CubeRenderPipeline",
         .modules = {"EnvironmentMapping"},
-        .entryPoints =
-            {
-                {"vertMain", "EnvironmentMapping"},
-                {"computeCubemap", "EnvironmentMapping"},
-                {"convolveCubemap", "EnvironmentMapping"},
-            },
+        .entryPoints = {{"vertMain", "EnvironmentMapping"},
+                        {"computeCubemap", "EnvironmentMapping"},
+                        {"convolveCubemap", "EnvironmentMapping"},
+                        {"computePrefilteredCubemap", "EnvironmentMapping"}},
         .rootSignature = cubePipelineLayout,
     });
     cubePipelineLayout->create();
@@ -78,6 +92,7 @@ EnvironmentLoader::EnvironmentLoader(Gfx::PGraphics graphics) : graphics(graphic
     cubeRenderVertex = graphics->createVertexShader({0});
     cubeRenderFrag = graphics->createFragmentShader({1});
     convolutionFrag = graphics->createFragmentShader({2});
+    prefilterFrag = graphics->createFragmentShader({3});
 }
 
 EnvironmentLoader::~EnvironmentLoader() {}
@@ -138,13 +153,14 @@ void EnvironmentLoader::import(EnvironmentImportArgs args, PEnvironmentMapAsset 
     cubeViews.add(cubeMap->createTextureView(0, 1, 3, 1));
     cubeViews.add(cubeMap->createTextureView(0, 1, 4, 1));
     cubeViews.add(cubeMap->createTextureView(0, 1, 5, 1));
-    for(uint32 i = 0; i < 6; ++i) {
+    for (uint32 i = 0; i < 6; ++i) {
         Gfx::ORenderPass cubeRenderPass = graphics->createRenderPass(
             Gfx::RenderTargetLayout{
                 .colorAttachments =
                     {
-                        Gfx::RenderTargetAttachment(cubeViews[i], Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                                                    Gfx::SE_ATTACHMENT_LOAD_OP_DONT_CARE, Gfx::SE_ATTACHMENT_STORE_OP_STORE),
+                        Gfx::RenderTargetAttachment(cubeViews[i], Gfx::SE_IMAGE_LAYOUT_UNDEFINED,
+                                                    Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, Gfx::SE_ATTACHMENT_LOAD_OP_DONT_CARE,
+                                                    Gfx::SE_ATTACHMENT_STORE_OP_STORE),
                     },
             },
             {
@@ -162,7 +178,7 @@ void EnvironmentLoader::import(EnvironmentImportArgs args, PEnvironmentMapAsset 
                 .offset = {0, 0},
             },
             "EnvironmentRenderPass");
-        cubeRenderPipeline = graphics->createGraphicsPipeline(Gfx::LegacyPipelineCreateInfo{
+        Gfx::PGraphicsPipeline cubeRenderPipeline = graphics->createGraphicsPipeline(Gfx::LegacyPipelineCreateInfo{
             .vertexShader = cubeRenderVertex,
             .fragmentShader = cubeRenderFrag,
             .renderPass = cubeRenderPass,
@@ -177,37 +193,37 @@ void EnvironmentLoader::import(EnvironmentImportArgs args, PEnvironmentMapAsset 
         renderCommand->bindPipeline(cubeRenderPipeline);
         renderCommand->bindDescriptor({set});
         renderCommand->setViewport(cubeRenderViewport);
-        renderCommand->draw(6, 1, i*6, 0);
+        renderCommand->draw(6, 1, i * 6, 0);
         graphics->executeCommands(std::move(renderCommand));
         graphics->endRenderPass();
     }
-    
+
     set = cubeRenderLayout->allocateDescriptorSet();
     set->updateConstants("view", 0, captureViews);
     set->updateConstants("projection", 0, &captureProjection);
     set->updateSampler("sampler", 0, cubeSampler);
     set->updateTexture("cubeMap", 0, cubeMap->getDefaultView());
     set->writeChanges();
-    
+
     Gfx::OTextureCube convolutedMap = graphics->createTextureCube(TextureCreateInfo{
         .format = Gfx::SE_FORMAT_R32G32B32A32_SFLOAT,
         .width = CONVOLUTED_RESOLUTION,
         .height = CONVOLUTED_RESOLUTION,
-        .usage = Gfx::SE_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+        .usage = Gfx::SE_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | Gfx::SE_IMAGE_USAGE_SAMPLED_BIT,
     });
     Array<Gfx::OTextureView> convolutedViews;
-    convolutedViews.add(cubeMap->createTextureView(0, 1, 0, 1));
-    convolutedViews.add(cubeMap->createTextureView(0, 1, 1, 1));
-    convolutedViews.add(cubeMap->createTextureView(0, 1, 2, 1));
-    convolutedViews.add(cubeMap->createTextureView(0, 1, 3, 1));
-    convolutedViews.add(cubeMap->createTextureView(0, 1, 4, 1));
-    convolutedViews.add(cubeMap->createTextureView(0, 1, 5, 1));
-    for(uint32 i = 0; i < 6; ++i) {
+    convolutedViews.add(convolutedMap->createTextureView(0, 1, 0, 1));
+    convolutedViews.add(convolutedMap->createTextureView(0, 1, 1, 1));
+    convolutedViews.add(convolutedMap->createTextureView(0, 1, 2, 1));
+    convolutedViews.add(convolutedMap->createTextureView(0, 1, 3, 1));
+    convolutedViews.add(convolutedMap->createTextureView(0, 1, 4, 1));
+    convolutedViews.add(convolutedMap->createTextureView(0, 1, 5, 1));
+    for (uint32 i = 0; i < 6; ++i) {
         Gfx::ORenderPass convolutionPass = graphics->createRenderPass(
             Gfx::RenderTargetLayout{
                 .colorAttachments = {Gfx::RenderTargetAttachment(convolutedViews[i], Gfx::SE_IMAGE_LAYOUT_UNDEFINED,
-                                                                Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                                                                Gfx::SE_ATTACHMENT_LOAD_OP_DONT_CARE, Gfx::SE_ATTACHMENT_STORE_OP_STORE)},
+                                                                 Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                                                                 Gfx::SE_ATTACHMENT_LOAD_OP_DONT_CARE, Gfx::SE_ATTACHMENT_STORE_OP_STORE)},
             },
             {},
             {
@@ -215,7 +231,7 @@ void EnvironmentLoader::import(EnvironmentImportArgs args, PEnvironmentMapAsset 
                 .offset = {0, 0},
             },
             "EnvironmentRenderPass");
-        convolutionPipeline = graphics->createGraphicsPipeline(Gfx::LegacyPipelineCreateInfo{
+        Gfx::PGraphicsPipeline convolutionPipeline = graphics->createGraphicsPipeline(Gfx::LegacyPipelineCreateInfo{
             .vertexShader = cubeRenderVertex,
             .fragmentShader = convolutionFrag,
             .renderPass = convolutionPass,
@@ -231,13 +247,65 @@ void EnvironmentLoader::import(EnvironmentImportArgs args, PEnvironmentMapAsset 
         cmd->bindPipeline(convolutionPipeline);
         cmd->bindDescriptor({set});
         cmd->setViewport(convolutionViewport);
-        cmd->draw(6, 1, i*6, 0);
+        cmd->draw(6, 1, i * 6, 0);
         graphics->executeCommands(std::move(cmd));
         graphics->endRenderPass();
-
     }
-    
+
+    Gfx::OTextureCube prefilteredCubeMap = graphics->createTextureCube(TextureCreateInfo{
+        .format = Gfx::SE_FORMAT_R32G32B32A32_SFLOAT,
+        .width = 128,
+        .height = 128,
+        .useMip = true,
+        .usage = Gfx::SE_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | Gfx::SE_IMAGE_USAGE_SAMPLED_BIT,
+    });
+    for (uint32 mip = 0; mip < prefilteredCubeMap->getMipLevels(); ++mip) {
+        Array<Gfx::OTextureView> views;
+        views.add(prefilteredCubeMap->createTextureView(mip, 1, 0, 1));
+        views.add(prefilteredCubeMap->createTextureView(mip, 1, 1, 1));
+        views.add(prefilteredCubeMap->createTextureView(mip, 1, 2, 1));
+        views.add(prefilteredCubeMap->createTextureView(mip, 1, 3, 1));
+        views.add(prefilteredCubeMap->createTextureView(mip, 1, 4, 1));
+        views.add(prefilteredCubeMap->createTextureView(mip, 1, 5, 1));
+        for (uint32 i = 0; i < 6; ++i) {
+            Gfx::ORenderPass prefilterPass = graphics->createRenderPass(
+                Gfx::RenderTargetLayout{
+                    .colorAttachments = {Gfx::RenderTargetAttachment(
+                        views[i], Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                        Gfx::SE_ATTACHMENT_LOAD_OP_DONT_CARE, Gfx::SE_ATTACHMENT_STORE_OP_STORE)},
+                },
+                {},
+                {
+                    .size = {prefilterViewports[mip]->getWidth(), prefilterViewports[mip]->getHeight()},
+                    .offset = {0, 0},
+                },
+                "PrefilterPass");
+            Gfx::PGraphicsPipeline prefilterPipeline = graphics->createGraphicsPipeline(Gfx::LegacyPipelineCreateInfo{
+                .vertexShader = cubeRenderVertex,
+                .fragmentShader = prefilterFrag,
+                .renderPass = prefilterPass,
+                .pipelineLayout = cubePipelineLayout,
+                .colorBlend =
+                    {
+                        .attachmentCount = 1,
+                    },
+            });
+
+            graphics->beginRenderPass(prefilterPass);
+            Gfx::ORenderCommand cmd = graphics->createRenderCommand("PrefilterPass");
+            cmd->bindPipeline(prefilterPipeline);
+            cmd->bindDescriptor({set});
+            float roughness = (float)mip / (float)(prefilteredCubeMap->getMipLevels() - 1);
+            cmd->pushConstants(Gfx::SE_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(float), &roughness);
+            cmd->setViewport(prefilterViewports[mip]);
+            cmd->draw(6, 1, i * 6, 0);
+            graphics->executeCommands(std::move(cmd));
+            graphics->endRenderPass();
+        }
+    }
+
     asset->skybox = std::move(cubeMap);
     asset->irradianceMap = std::move(convolutedMap);
+    asset->prefilteredMap = std::move(prefilteredCubeMap);
     graphics->waitDeviceIdle();
 }

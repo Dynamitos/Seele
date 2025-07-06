@@ -13,11 +13,11 @@ class EnvironmentMapAsset : public Asset {
     virtual void load(ArchiveBuffer& buffer) override;
     Gfx::PTextureCube getSkybox() const { return skybox; }
     Gfx::PTextureCube getIrradianceMap() const { return irradianceMap; }
-    Gfx::PTextureCube getSpecularMap() const { return specularMap; }
+    Gfx::PTextureCube getPrefilteredMap() const { return prefilteredMap; }
   private:
     Gfx::OTextureCube skybox;
     Gfx::OTextureCube irradianceMap;
-    Gfx::OTextureCube specularMap;
+    Gfx::OTextureCube prefilteredMap;
     friend class EnvironmentLoader;
 };
 } // namespace Seele

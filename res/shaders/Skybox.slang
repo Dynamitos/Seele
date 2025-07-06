@@ -96,8 +96,8 @@ static const float upperLimit = 0.1;
 float4 fragmentMain(
     VertexShaderOutput output) : SV_Target
 {
-    float4 texture1 = pSkyboxTextures.cubeMap.Sample(pSkyboxTextures.sampler, output.texCoords);
-    float4 texture2 = pSkyboxTextures.cubeMap2.Sample(pSkyboxTextures.sampler, output.texCoords);
+    float4 texture1 = pSkyboxTextures.cubeMap.SampleLevel(pSkyboxTextures.sampler, output.texCoords, 5);
+    float4 texture2 = pSkyboxTextures.cubeMap2.SampleLevel(pSkyboxTextures.sampler, output.texCoords, 5);
     float4 finalColor = lerp(texture1, texture2, pSkyboxData.fogBlend.w);
 
     float factor = (output.texCoords.y - lowerLimit) / (upperLimit - lowerLimit);

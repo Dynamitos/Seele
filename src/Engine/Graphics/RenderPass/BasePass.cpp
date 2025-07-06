@@ -79,8 +79,8 @@ BasePass::BasePass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics)
                                                                       });
     }
     skybox = Seele::Component::Skybox{
-        .day = scene->getLightEnvironment()->getEnvironmentMap()->getSkybox(),
-        .night = scene->getLightEnvironment()->getEnvironmentMap()->getSkybox(),
+        .day = scene->getLightEnvironment()->getEnvironmentMap()->getPrefilteredMap(),
+        .night = scene->getLightEnvironment()->getEnvironmentMap()->getPrefilteredMap(),
         .fogColor = Vector(0, 0, 0),
         .blendFactor = 0,
     };
@@ -179,7 +179,7 @@ void BasePass::render() {
                 const Gfx::ShaderCollection* collection = graphics->getShaderCompiler()->findShaders(id);
                 assert(collection != nullptr);
 
-                bool twoSided = materialData.material->isTwoSided();
+                //bool twoSided = materialData.material->isTwoSided();
 
                 if (graphics->supportMeshShading()) {
                     Gfx::MeshPipelineCreateInfo pipelineInfo = {
@@ -283,7 +283,7 @@ void BasePass::render() {
             const Gfx::ShaderCollection* collection = graphics->getShaderCompiler()->findShaders(id);
             assert(collection != nullptr);
 
-            bool twoSided = t.matInst->getBaseMaterial()->isTwoSided();
+            //bool twoSided = t.matInst->getBaseMaterial()->isTwoSided();
 
             if (graphics->supportMeshShading()) {
                 Gfx::MeshPipelineCreateInfo pipelineInfo = {
@@ -298,7 +298,7 @@ void BasePass::render() {
                         },
                     .rasterizationState =
                         {
-                            .cullMode = Gfx::SeCullModeFlags(twoSided ? Gfx::SE_CULL_MODE_NONE : Gfx::SE_CULL_MODE_BACK_BIT),
+                            .cullMode = Gfx::SE_CULL_MODE_BACK_BIT,
                         },
                     .colorBlend =
                         {
@@ -325,7 +325,7 @@ void BasePass::render() {
                         },
                     .rasterizationState =
                         {
-                            .cullMode = Gfx::SeCullModeFlags(twoSided ? Gfx::SE_CULL_MODE_NONE : Gfx::SE_CULL_MODE_BACK_BIT),
+                            .cullMode = Gfx::SE_CULL_MODE_BACK_BIT,
                         },
                     .depthStencilState =
                         {
