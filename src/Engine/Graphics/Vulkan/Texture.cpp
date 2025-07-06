@@ -62,12 +62,20 @@ void TextureView::setLayout(Gfx::SeImageLayout layout) { source->layout = layout
 
 Gfx::OTextureView TextureHandle::createTextureView(uint32 baseMipLevel, uint32 levelCount, uint32 baseArrayLayer, uint32 layerCount) {
     VkImageView view;
+    VkImageViewType type = viewType;
+    if (type == VK_IMAGE_VIEW_TYPE_CUBE || type == VK_IMAGE_VIEW_TYPE_CUBE_ARRAY) {
+        if (layerCount == 1) {
+            type = VK_IMAGE_VIEW_TYPE_2D;
+        } else if (layerCount % 6 != 0) {
+            type = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
+        }
+    }
     VkImageViewCreateInfo createInfo = {
         .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
         .pNext = nullptr,
         .flags = 0,
         .image = image,
-        .viewType = viewType,
+        .viewType = type,
         .format = cast(format),
         .subresourceRange =
             {

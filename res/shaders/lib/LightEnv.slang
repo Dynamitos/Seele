@@ -343,7 +343,7 @@ struct CookTorrance : IBRDF
         float3 k_s = FresnelSchlickRoughness(max(dot(normal, viewDir_WS), 0.0), F0, roughness);
         float3 k_d = 1 - k_s;
         k_d *= 1 - metallic;
-        float3 irradiance = pLightEnv.irradianceMap.Sample(pLightEnv.irradianceSampler, normal).rgb;
+        float3 irradiance = pLightEnv.irradianceMap.SampleLevel(pLightEnv.irradianceSampler, normal, 4).rgb;
         float3 diffuse = irradiance * baseColor;
         return (k_d * diffuse) * ambientOcclusion;
     }
