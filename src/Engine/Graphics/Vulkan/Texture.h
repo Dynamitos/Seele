@@ -11,7 +11,7 @@ namespace Vulkan {
 DECLARE_REF(TextureHandle)
 class TextureView : public Gfx::TextureView {
 public:
-    TextureView(PTextureHandle source, VkImageView view);
+    TextureView(PTextureHandle source, uint32 width, uint32 height, uint32 numLayers, uint32 numMipLevels, VkImageView view);
     virtual ~TextureView();
     virtual Gfx::SeFormat getFormat() const override;
     virtual uint32 getWidth() const override;
@@ -28,6 +28,10 @@ public:
     PTextureHandle getSource() const { return source; }
     void setLayout(Gfx::SeImageLayout layout);
 private:
+    uint32 width;
+    uint32 height;
+    uint32 numLayers;
+    uint32 numMipLevels;
     PTextureHandle source;
     VkImageView view;
     friend class TextureBase;

@@ -28,23 +28,24 @@ VkImageAspectFlags getAspectFromFormat(Gfx::SeFormat format) {
     }
 }
 
-TextureView::TextureView(PTextureHandle source, VkImageView view) : source(source), view(view) {}
+TextureView::TextureView(PTextureHandle source, uint32 width, uint32 height, uint32 numLayers, uint32 numMipLevels, VkImageView view)
+    : width(width), height(height), numLayers(numLayers), numMipLevels(numMipLevels), source(source), view(view) {}
 
 TextureView::~TextureView() {}
 
 Gfx::SeFormat TextureView::getFormat() const { return source->format; }
 
-uint32 TextureView::getWidth() const { return source->width; }
+uint32 TextureView::getWidth() const { return width; }
 
-uint32 TextureView::getHeight() const { return source->height; }
+uint32 TextureView::getHeight() const { return height; }
 
 uint32 TextureView::getDepth() const { return source->depth; }
 
-uint32 TextureView::getNumLayers() const { return source->layerCount; }
+uint32 TextureView::getNumLayers() const { return numLayers; }
 
 Gfx::SeSampleCountFlags TextureView::getNumSamples() const { return source->samples; }
 
-uint32 TextureView::getMipLevels() const { return source->mipLevels; }
+uint32 TextureView::getMipLevels() const { return numMipLevels; }
 
 Gfx::SeImageLayout TextureView::getLayout() const { return source->layout; }
 
@@ -60,13 +61,13 @@ void TextureView::changeLayout(Gfx::SeImageLayout newLayout, VkAccessFlags srcAc
 
 void TextureView::setLayout(Gfx::SeImageLayout layout) { source->layout = layout; }
 
-Gfx::OTextureView TextureHandle::createTextureView(uint32 baseMipLevel, uint32 levelCount, uint32 baseArrayLayer, uint32 layerCount) {
+Gfx::OTextureView TextureHandle::createTextureView(uint32 baseMipLevel, uint32 viewLevelCount, uint32 baseArrayLayer, uint32 viewLayerCount) {
     VkImageView view;
     VkImageViewType type = viewType;
     if (type == VK_IMAGE_VIEW_TYPE_CUBE || type == VK_IMAGE_VIEW_TYPE_CUBE_ARRAY) {
-        if (layerCount == 1) {
+        if (viewLayerCount == 1) {
             type = VK_IMAGE_VIEW_TYPE_2D;
-        } else if (layerCount % 6 != 0) {
+        } else if (viewLayerCount % 6 != 0) {
             type = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
         }
     }
@@ -81,13 +82,15 @@ Gfx::OTextureView TextureHandle::createTextureView(uint32 baseMipLevel, uint32 l
             {
                 .aspectMask = aspect,
                 .baseMipLevel = baseMipLevel,
-                .levelCount = levelCount,
+                .levelCount = viewLevelCount,
                 .baseArrayLayer = baseArrayLayer,
-                .layerCount = layerCount,
+                .layerCount = viewLayerCount,
             },
     };
     vkCreateImageView(graphics->getDevice(), &createInfo, nullptr, &view);
-    return new TextureView(this, view);
+    uint32 viewWidth = width * std::pow(0.5, baseMipLevel);
+    uint32 viewHeight = height * std::pow(0.5, baseMipLevel);
+    return new TextureView(this, viewWidth, viewHeight, viewLayerCount, viewLevelCount, view);
 }
 
 TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType, const TextureCreateInfo& createInfo, VkImage existingImage)
@@ -213,24 +216,7 @@ TextureHandle::TextureHandle(PGraphics graphics, VkImageViewType viewType, const
             graphics->getDestructionManager()->queueResourceForDestruction(std::move(stagingAlloc));
         }
     }
-    VkImageView view;
-    VkImageViewCreateInfo viewInfo = {
-        .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-        .pNext = nullptr,
-        .flags = 0,
-        .image = image,
-        .viewType = viewType,
-        .format = cast(format),
-        .subresourceRange =
-            {
-                .aspectMask = aspect,
-                .levelCount = mipLevels,
-                .layerCount = layerCount,
-            },
-    };
-
-    VK_CHECK(vkCreateImageView(graphics->getDevice(), &viewInfo, nullptr, &view));
-    imageView = new TextureView(this, view);
+    imageView = createTextureView(0, mipLevels, 0, layerCount);
 }
 
 TextureHandle::~TextureHandle() {

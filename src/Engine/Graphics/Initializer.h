@@ -72,7 +72,7 @@ struct SamplerCreateInfo {
     uint32 compareEnable = 0;
     Gfx::SeCompareOp compareOp = Gfx::SE_COMPARE_OP_NEVER;
     float minLod = 0.0f;
-    float maxLod = 0.0f;
+    float maxLod = 10000.0f;
     Gfx::SeBorderColor borderColor = Gfx::SE_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
     uint32 unnormalizedCoordinates = 0;
     std::string name;

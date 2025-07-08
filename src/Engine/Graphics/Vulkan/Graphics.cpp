@@ -754,6 +754,7 @@ void Graphics::pickPhysicalDevice() {
     vkGetPhysicalDeviceProperties2(physicalDevice, &props.get());
     features.get<VkPhysicalDeviceFeatures2>().features = {
         .geometryShader = true,
+        .sampleRateShading = true,
         .fillModeNonSolid = true,
         .wideLines = true,
         .pipelineStatisticsQuery = true,
@@ -771,13 +772,13 @@ void Graphics::pickPhysicalDevice() {
     features.get<VkPhysicalDeviceVulkan12Features>().storageBuffer8BitAccess = true;
     features.get<VkPhysicalDeviceVulkan12Features>().shaderInt8 = true;
 
-    features.get<VkPhysicalDeviceAccelerationStructureFeaturesKHR>().accelerationStructure = true;
+    rayTracingFeatures.get<VkPhysicalDeviceAccelerationStructureFeaturesKHR>().accelerationStructure = true;
 
-    features.get<VkPhysicalDeviceRayTracingPipelineFeaturesKHR>().rayTracingPipeline = true;
+    rayTracingFeatures.get<VkPhysicalDeviceRayTracingPipelineFeaturesKHR>().rayTracingPipeline = true;
 
-    features.get<VkPhysicalDeviceMeshShaderFeaturesEXT>().meshShader = true;
-    features.get<VkPhysicalDeviceMeshShaderFeaturesEXT>().taskShader = true;
-    features.get<VkPhysicalDeviceMeshShaderFeaturesEXT>().meshShaderQueries = true;
+    meshFeatures.get<VkPhysicalDeviceMeshShaderFeaturesEXT>().meshShader = true;
+    meshFeatures.get<VkPhysicalDeviceMeshShaderFeaturesEXT>().taskShader = true;
+    meshFeatures.get<VkPhysicalDeviceMeshShaderFeaturesEXT>().meshShaderQueries = true;
     bool rayTracingPipelineSupport = false;
     bool accelerationStructureSupport = false;
     bool hostOperationsSupport = false;
@@ -891,6 +892,7 @@ void Graphics::createDevice(GraphicsInitializer initializer) {
     initializer.deviceExtensions.add(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
     if (supportMeshShading()) {
         initializer.deviceExtensions.add(VK_EXT_MESH_SHADER_EXTENSION_NAME);
+        features.get<VkPhysicalDeviceVulkan12Features>().pNext = &meshFeatures.get();
     }
     if (supportRayTracing()) {
         // ray tracing itself
@@ -904,6 +906,11 @@ void Graphics::createDevice(GraphicsInitializer initializer) {
         initializer.deviceExtensions.add(VK_KHR_SPIRV_1_4_EXTENSION_NAME);
         // required for spirv_1_4
         initializer.deviceExtensions.add(VK_KHR_SHADER_FLOAT_CONTROLS_EXTENSION_NAME);
+        if (supportMeshShading()) {
+            meshFeatures.get().pNext = &rayTracingFeatures.get();
+        } else {
+            features.get<VkPhysicalDeviceVulkan12Features>().pNext = &rayTracingFeatures.get(); 
+        }
     }
 #ifdef __APPLE__
     initializer.deviceExtensions.add("VK_KHR_portability_subset");
