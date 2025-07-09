@@ -14,10 +14,14 @@ class EnvironmentMapAsset : public Asset {
     Gfx::PTextureCube getSkybox() const { return skybox; }
     Gfx::PTextureCube getIrradianceMap() const { return irradianceMap; }
     Gfx::PTextureCube getPrefilteredMap() const { return prefilteredMap; }
+    Gfx::PTexture2D getBrdfLUT() const { return brdfLUT; }
+    Gfx::PSampler getLUTSampler() const { return lutSampler; }
   private:
     Gfx::OTextureCube skybox;
     Gfx::OTextureCube irradianceMap;
     Gfx::OTextureCube prefilteredMap;
+    Gfx::PTexture2D brdfLUT;
+    Gfx::PSampler lutSampler;
     friend class EnvironmentLoader;
 };
 } // namespace Seele

@@ -60,7 +60,7 @@ RayTracingPass::RayTracingPass(Gfx::PGraphics graphics, PScene scene) : RenderPa
                                                                         .useMaterial = true,
                                                                         .rayTracing = true,
                                                                     });
-    skyBox = AssetRegistry::findEnvironmentMap("", "newport_loft")->getIrradianceMap();
+    skyBox = AssetRegistry::findEnvironmentMap("", "newport_loft")->getSkybox();
     skyBoxSampler = graphics->createSampler({});
 }
 

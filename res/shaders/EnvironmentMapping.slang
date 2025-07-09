@@ -193,3 +193,67 @@ float4 computePrefilteredCubemap(float3 localPos : LOCALPOS) : SV_Target
 
     return float4(prefilteredColor, 1.0);
 }
+
+// TODO: this is basically duplicate of Cook-Torrance BRDF
+float GeometrySchlickGGX(float NdotV, float roughness)
+{
+    float a = roughness;
+    float k = (a * a) / 2.0;
+
+    float nom = NdotV;
+    float denom = NdotV * (1.0 - k) + k;
+
+    return nom / denom;
+}
+// ----------------------------------------------------------------------------
+float GeometrySmith(float3 N, float3 V, float3 L, float roughness)
+{
+    float NdotV = max(dot(N, V), 0.0);
+    float NdotL = max(dot(N, L), 0.0);
+    float ggx2 = GeometrySchlickGGX(NdotV, roughness);
+    float ggx1 = GeometrySchlickGGX(NdotL, roughness);
+
+    return ggx1 * ggx2;
+}
+
+float2 integrateBRDF(float nDotV, float roughness) {
+    float3 V;
+    V.x = sqrt(1.0 - nDotV * nDotV);
+    V.y = 0.0f;
+    V.z = nDotV;
+    float A = 0.0;
+    float B = 0.0;
+
+    float3 N = float3(0.0, 0.0, 1.0);
+
+    const uint SAMPLE_COUNT = 1024u;
+    for (uint i = 0u; i < SAMPLE_COUNT; ++i)
+    {
+        float2 Xi = Hammersley(i, SAMPLE_COUNT);
+        float3 H = ImportanceSampleGGX(Xi, N, roughness);
+        float3 L = normalize(2.0 * dot(V, H) * H - V);
+
+        float nDotL = max(L.z, 0.0);
+        float nDotH = max(H.z, 0.0);
+        float vDotH = max(dot(V, H), 0.0);
+
+        if (nDotL > 0.0)
+        {
+            float G = GeometrySmith(N, V, L, roughness);
+            float G_Vis = (G * vDotH) / (nDotH * nDotV);
+            float Fc = pow(1.0 - vDotH, 5.0);
+
+            A += (1.0 - Fc) * G_Vis;
+            B += Fc * G_Vis;
+        }
+    }
+    A /= float(SAMPLE_COUNT);
+    B /= float(SAMPLE_COUNT);
+    return float2(A, B);
+}
+
+[shader("pixel")]
+float2 precomputeBRDF(float2 texCoords) : SV_Target
+{
+    return integrateBRDF(texCoords.x, texCoords.y);
+}

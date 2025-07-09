@@ -1,6 +1,8 @@
 #include "LightEnvironment.h"
 #include "Asset/AssetRegistry.h"
 #include "Asset/EnvironmentMapAsset.h"
+#include "Graphics/Descriptor.h"
+#include "Graphics/Enums.h"
 #include "Graphics/Graphics.h"
 
 using namespace Seele;
@@ -38,6 +40,18 @@ LightEnvironment::LightEnvironment(Gfx::PGraphics graphics)
     });
     layout->addDescriptorBinding(Gfx::DescriptorBinding{
         .name = "irradianceSampler",
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLER,
+    });
+    layout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .name = "prefilteredMap",
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+    });
+    layout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .name = "brdfLUT",
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+    });
+    layout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .name = "lutSampler",
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLER,
     });
     layout->create();
@@ -128,6 +142,9 @@ void LightEnvironment::commit() {
     set->updateBuffer("pointLights", 0, pointLights);
     set->updateTexture("irradianceMap", 0, environment->getIrradianceMap()->getDefaultView());
     set->updateSampler("irradianceSampler", 0, environmentSampler);
+    set->updateTexture("prefilteredMap", 0, environment->getPrefilteredMap()->getDefaultView());
+    set->updateTexture("brdfLUT", 0, environment->getBrdfLUT()->getDefaultView());
+    set->updateSampler("lutSampler", 0, environment->getLUTSampler());
     set->writeChanges();
 }
 

@@ -70,8 +70,8 @@ struct LightEnv
     TextureCube irradianceMap;
     SamplerState irradianceSampler;
     TextureCube prefilteredMap;
-    SamplerState prefilteredSampler;
     Texture2D brdfLUT;
+    SamplerState lutSampler;
 };
 layout(set=3)
 ParameterBlock<LightEnv> pLightEnv;
@@ -314,14 +314,14 @@ struct CookTorrance : IBRDF
         float G = Smith(n, viewDir_WS, lightDir_WS);
         float3 F = FresnelSchlickRoughness(max(dot(h, viewDir_WS), 0.0), F0, roughness);
 
-        float3 num = NDF * G * F;
-        float denom = 4.0 * max(dot(n, viewDir_WS), 0.0) * max(dot(n, lightDir_WS), 0.0) + 0.000001;
-        float3 specular = num / denom;
-
         float3 k_s = F;
         float3 k_d = float3(1.0) - k_s;
 
         k_d *= 1.0 - metallic;
+
+        float3 num = NDF * G * F;
+        float denom = 4.0 * max(dot(n, viewDir_WS), 0.0) * max(dot(n, lightDir_WS), 0.0) + 0.000001;
+        float3 specular = num / denom;
 
         float nDotL = max(dot(n, lightDir_WS), 0.0);
 
@@ -340,12 +340,24 @@ struct CookTorrance : IBRDF
     {
         float3 F0 = float3(0.04);
         F0 = lerp(F0, baseColor, metallic);
-        float3 k_s = FresnelSchlickRoughness(max(dot(normal, viewDir_WS), 0.0), F0, roughness);
+        float3 F = FresnelSchlickRoughness(max(dot(normal, viewDir_WS), 0.0), F0, roughness);
+
+        float3 k_s = F;
         float3 k_d = 1 - k_s;
         k_d *= 1 - metallic;
+        
         float3 irradiance = pLightEnv.irradianceMap.SampleLevel(pLightEnv.irradianceSampler, normal, 4).rgb;
         float3 diffuse = irradiance * baseColor;
-        return (k_d * diffuse) * ambientOcclusion;
+
+        float3 r = reflect(-viewDir_WS, normal);
+
+        const float MAX_REFLECTION_LOD = 4;
+        float3 prefilteredColor = pLightEnv.prefilteredMap.SampleLevel(pLightEnv.irradianceSampler, r, roughness * MAX_REFLECTION_LOD).xyz;
+
+        float2 envBRDF = pLightEnv.brdfLUT.Sample(pLightEnv.lutSampler, float2(max(dot(normal, viewDir_WS), 0), roughness)).rg;
+        float3 specular = prefilteredColor * (F * envBRDF.x + envBRDF.y);
+
+        return (k_d * diffuse + specular) * ambientOcclusion;
     }
     float getAlpha()
     {

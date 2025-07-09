@@ -99,9 +99,6 @@ if(UNIX)
 endif()
 
 add_executable(Editor "")
-set_target_properties(Editor PROPERTIES
-    INSTALL_RPATH "$ORIGIN"
-)
 target_link_libraries(Editor PRIVATE Engine)
 target_include_directories(Editor PRIVATE src/Editor)
 target_include_directories(Editor PRIVATE ${Stb_INCLUDE_DIR})
