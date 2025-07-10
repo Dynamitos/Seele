@@ -66,9 +66,10 @@ void raygen()
     //-- define cam
     Ray cam = Ray(pViewParams.cameraPosition_WS.xyz, pViewParams.cameraForward_WS.xyz);
     float3 cx = -normalize(cross(cam.d, abs(cam.d.y) < 0.9 ? float3(0, 1, 0) : float3(0, 0, 1))), cy = cross(cam.d, cx);
-    const float2 sdim = float2(0.036, 0.024);
+    //use standard sensor size of 36mm while keeping the screen aspect ratio
+    const float2 sdim = float2(0.036, 0.036/pViewParams.screenDimensions.x*pViewParams.screenDimensions.y);
 
-    float f = sdim.y / (2 * tan(70.0f  * 0.5f));
+    float f = sdim.x / (2 * tan(radians(70.0f) * 0.5f));
 
     float S_I = (S_O * f) / (S_O - f);
 
@@ -76,8 +77,8 @@ void raygen()
     float2 rnd2 = 2*rand01(uint3(pix, pSamps.pass)).xy;   // vvv tent filter sample  
     float2 tent = float2(rnd2.x<1 ? sqrt(rnd2.x)-1 : 1-sqrt(2-rnd2.x), rnd2.y<1 ? sqrt(rnd2.y)-1 : 1-sqrt(2-rnd2.y));
     float2 s = ((pix + 0.5 * (0.5 + float2((pSamps.pass/2)%2, pSamps.pass%2) + tent)) / float2(imgdim) - 0.5) * sdim;
-    float3 spos = cam.o + cx*s.x + cy*s.y, lc = cam.o + cam.d * 0.035;           // sample on 3d sensor plane
-    Ray r = Ray(lc, normalize(lc - spos));      // construct ray
+    float3 spos = cam.o + cx*s.x + cy*s.y, lc = cam.o + cam.d * S_I;           // sample on 3d sensor plane
+    Ray r = Ray(lc, normalize(spos - lc));      // construct ray
 
 
     //-- setup lens

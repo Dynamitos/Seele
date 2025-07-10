@@ -1,10 +1,7 @@
 #include "BasePass.h"
-#include "Actor/CameraActor.h"
 #include "Asset/AssetRegistry.h"
 #include "Asset/EnvironmentMapAsset.h"
 #include "Component/Camera.h"
-#include "Component/Mesh.h"
-#include "Component/WaterTile.h"
 #include "Graphics/Command.h"
 #include "Graphics/Descriptor.h"
 #include "Graphics/Enums.h"
@@ -12,12 +9,9 @@
 #include "Graphics/Initializer.h"
 #include "Graphics/Pipeline.h"
 #include "Graphics/Shader.h"
-#include "Graphics/StaticMeshVertexData.h"
 #include "Material/MaterialInstance.h"
 #include "Math/Matrix.h"
 #include "Math/Vector.h"
-#include "RenderGraph.h"
-#include "Window/Window.h"
 
 using namespace Seele;
 

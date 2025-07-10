@@ -1,8 +1,6 @@
 #include "RayTracingPass.h"
 #include "Asset/AssetRegistry.h"
-#include "Asset/MeshAsset.h"
 #include "Asset/EnvironmentMapAsset.h"
-#include "Graphics/Mesh.h"
 #include "Graphics/RayTracing.h"
 #include "Graphics/Shader.h"
 #include "Graphics/StaticMeshVertexData.h"
