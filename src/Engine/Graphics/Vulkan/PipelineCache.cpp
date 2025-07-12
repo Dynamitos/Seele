@@ -108,7 +108,7 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo gf
             .pSpecializationInfo = nullptr,
         };
     }
-    hash = CRC::Calculate(stageInfos.data(), stageInfos.size() * sizeof(VkVertexInputAttributeDescription), CRC::CRC_32(), hash);
+    hash = CRC::Calculate(stageInfos.data(), stageInfos.size() * sizeof(VkPipelineShaderStageCreateInfo), CRC::CRC_32(), hash);
 
     VkPipelineInputAssemblyStateCreateInfo assemblyInfo = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
@@ -144,6 +144,8 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo gf
         .depthBiasSlopeFactor = gfxInfo.rasterizationState.depthBiasSlopeFactor,
         .lineWidth = gfxInfo.rasterizationState.lineWidth,
     };
+    hash = CRC::Calculate(&rasterizationState, sizeof(VkPipelineRasterizationStateCreateInfo), CRC::CRC_32(), hash);
+    
     VkPipelineMultisampleStateCreateInfo multisampleState = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
         .pNext = nullptr,
@@ -154,6 +156,7 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo gf
         .alphaToCoverageEnable = gfxInfo.multisampleState.alphaCoverageEnable,
         .alphaToOneEnable = gfxInfo.multisampleState.alphaToOneEnable,
     };
+    hash = CRC::Calculate(&multisampleState, sizeof(VkPipelineMultisampleStateCreateInfo), CRC::CRC_32(), hash);
     VkPipelineDepthStencilStateCreateInfo depthStencilState = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
         .pNext = nullptr,
@@ -167,6 +170,7 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo gf
         .minDepthBounds = gfxInfo.depthStencilState.minDepthBounds,
         .maxDepthBounds = gfxInfo.depthStencilState.maxDepthBounds,
     };
+    hash = CRC::Calculate(&multisampleState, sizeof(VkPipelineMultisampleStateCreateInfo), CRC::CRC_32(), hash);
     Array<VkPipelineColorBlendAttachmentState> blendAttachments;
     for (uint32 i = 0; i < gfxInfo.colorBlend.attachmentCount; ++i) {
         const Gfx::ColorBlendState::BlendAttachment& attachment = gfxInfo.colorBlend.blendAttachments[i];
@@ -181,6 +185,7 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo gf
             .colorWriteMask = attachment.colorWriteMask,
         };
     }
+    hash = CRC::Calculate(blendAttachments.data(), blendAttachments.size() * sizeof(VkPipelineColorBlendAttachmentState), CRC::CRC_32(), hash);
     VkPipelineColorBlendStateCreateInfo blendState = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
         .pNext = nullptr,
@@ -196,10 +201,12 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo gf
     StaticArray<VkDynamicState, 2> dynamicEnabled;
     dynamicEnabled[numDynamicEnabled++] = VK_DYNAMIC_STATE_VIEWPORT;
     dynamicEnabled[numDynamicEnabled++] = VK_DYNAMIC_STATE_SCISSOR;
+    hash = CRC::Calculate(dynamicEnabled.data(), dynamicEnabled.size() * sizeof(VkDynamicState), CRC::CRC_32(), hash);
     
     if (graphicsPipelines.contains(hash)) {
         return graphicsPipelines[hash];
     }
+    
     VkPipelineDynamicStateCreateInfo dynamicState = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
         .pNext = nullptr,

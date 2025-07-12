@@ -127,7 +127,7 @@ void ShaderCompiler::createShaders(ShaderPermutation permutation, Gfx::OPipeline
         createInfo.defines["VISIBILITY"] = "1";
     }
     if (permutation.imageBasedLighting) {
-        createInfo.defines["IMAGE_BASE_LIGHTING"] = "1";
+        createInfo.defines["IMAGE_BASED_LIGHTING"] = "1";
     }
     if (permutation.dumpIntermediates) {
         createInfo.dumpIntermediate = true;

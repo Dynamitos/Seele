@@ -105,6 +105,7 @@ EnvironmentLoader::EnvironmentLoader(Gfx::PGraphics graphics) : graphics(graphic
     lutVert = graphics->createVertexShader({4});
     lutFrag = graphics->createFragmentShader({5});
     Gfx::OPipelineLayout emptyLayout = graphics->createPipelineLayout("LUTlayout");
+    emptyLayout->create();
     {
         graphics->beginDebugRegion("PrecomputeBRDF");
         lutTexture = graphics->createTexture2D(TextureCreateInfo{
@@ -247,7 +248,7 @@ void EnvironmentLoader::import(EnvironmentImportArgs args, PEnvironmentMapAsset 
                     .size = {SOURCE_RESOLUTION, SOURCE_RESOLUTION},
                     .offset = {0, 0},
                 },
-                "EnvironmentRenderPass");
+                "CubemapGeneration");
             Gfx::PGraphicsPipeline cubeRenderPipeline = graphics->createGraphicsPipeline(Gfx::LegacyPipelineCreateInfo{
                 .vertexShader = cubeRenderVertex,
                 .fragmentShader = cubeRenderFrag,
@@ -299,12 +300,21 @@ void EnvironmentLoader::import(EnvironmentImportArgs args, PEnvironmentMapAsset 
                         convolutedViews[i], Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
                         Gfx::SE_ATTACHMENT_LOAD_OP_DONT_CARE, Gfx::SE_ATTACHMENT_STORE_OP_STORE)},
                 },
-                {},
+                {
+                    Gfx::SubPassDependency{
+                        .srcSubpass = 0,
+                        .dstSubpass = ~0U,
+                        .srcStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                        .dstStage = Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                        .srcAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+                        .dstAccess = Gfx::SE_ACCESS_SHADER_READ_BIT,
+                    },
+                },
                 {
                     .size = {CONVOLUTED_RESOLUTION, CONVOLUTED_RESOLUTION},
                     .offset = {0, 0},
                 },
-                "EnvironmentRenderPass");
+                "ConvolutionRenderPass");
             Gfx::PGraphicsPipeline convolutionPipeline = graphics->createGraphicsPipeline(Gfx::LegacyPipelineCreateInfo{
                 .vertexShader = cubeRenderVertex,
                 .fragmentShader = convolutionFrag,
@@ -352,7 +362,16 @@ void EnvironmentLoader::import(EnvironmentImportArgs args, PEnvironmentMapAsset 
                             views[i], Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
                             Gfx::SE_ATTACHMENT_LOAD_OP_DONT_CARE, Gfx::SE_ATTACHMENT_STORE_OP_STORE)},
                     },
-                    {},
+                    {
+                        Gfx::SubPassDependency{
+                            .srcSubpass = 0,
+                            .dstSubpass = ~0U,
+                            .srcStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                            .dstStage = Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                            .srcAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+                            .dstAccess = Gfx::SE_ACCESS_SHADER_READ_BIT,
+                        },
+                    },
                     {
                         .size = {prefilterViewports[mip]->getWidth(), prefilterViewports[mip]->getHeight()},
                         .offset = {0, 0},
