@@ -518,17 +518,12 @@ template <typename T, size_t N> struct StaticArray {
     using reverse_iterator = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
-    constexpr StaticArray() {
-        beginIt = iterator(_data);
-        endIt = iterator(_data + N);
-    }
+    constexpr StaticArray() {}
     
     constexpr StaticArray(T value) {
         for (size_t i = 0; i < N; ++i) {
             _data[i] = value;
         }
-        beginIt = iterator(_data);
-        endIt = iterator(_data + N);
     }
     
     constexpr StaticArray(std::initializer_list<T> init) {
@@ -555,14 +550,12 @@ template <typename T, size_t N> struct StaticArray {
         assert(index < N);
         return _data[index];
     }
-    constexpr iterator begin() { return beginIt; }
-    constexpr iterator end() { return endIt; }
-    constexpr const_iterator begin() const { return beginIt; }
-    constexpr const_iterator end() const { return beginIt; }
+    constexpr iterator begin() { return iterator(_data); }
+    constexpr iterator end() { return iterator(_data + N); }
+    constexpr const_iterator begin() const { return iterator(_data); }
+    constexpr const_iterator end() const { return iterator(_data + N); }
 
   private:
     T _data[N] = {T()};
-    iterator beginIt;
-    iterator endIt;
 };
 } // namespace Seele

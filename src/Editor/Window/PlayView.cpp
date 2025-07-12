@@ -1,5 +1,7 @@
 #include "PlayView.h"
 #include "Component/Mesh.h"
+#include "Graphics/Enums.h"
+#include "MinimalEngine.h"
 #include "Window/Window.h"
 
 using namespace Seele;
@@ -33,6 +35,10 @@ void PlayView::keyCallback(KeyCode code, InputAction action, KeyModifier modifie
     if (code == KeyCode::KEY_L && action == InputAction::RELEASE) {
         getGlobals().useLightCulling = !getGlobals().useLightCulling;
         std::cout << "Use Light Culling " << getGlobals().useLightCulling << std::endl;
+    }
+    if(code == KeyCode::KEY_K && action == InputAction::RELEASE) {
+        getGlobals().useImagebasedLighting = !getGlobals().useImagebasedLighting;
+        std::cout << "Use IBL " << getGlobals().useImagebasedLighting << std::endl;
     }
     if (code == KeyCode::KEY_G && action == InputAction::RELEASE) {
         Component::Camera cam;

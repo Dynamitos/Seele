@@ -45,11 +45,9 @@ PipelineCache::~PipelineCache() {
 }
 
 PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo gfxInfo) {
-    uint32 hash = CRC::Calculate(&gfxInfo, sizeof(Gfx::LegacyPipelineCreateInfo), CRC::CRC_32());
-    if (graphicsPipelines.contains(hash)) {
-        return graphicsPipelines[hash];
-    }
-    PPipelineLayout layout = gfxInfo.pipelineLayout.cast<PipelineLayout>();
+    PPipelineLayout layout = Gfx::PPipelineLayout(gfxInfo.pipelineLayout).cast<PipelineLayout>();
+    uint32 hash = layout->getHash();
+
     Array<VkVertexInputBindingDescription> bindings;
     Array<VkVertexInputAttributeDescription> attributes;
     if (gfxInfo.vertexInput != nullptr) {
@@ -70,6 +68,9 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo gf
             };
         }
     }
+    hash = CRC::Calculate(bindings.data(), bindings.size() * sizeof(VkVertexInputBindingDescription), CRC::CRC_32(), hash);
+    hash = CRC::Calculate(attributes.data(), attributes.size() * sizeof(VkVertexInputAttributeDescription), CRC::CRC_32(), hash);
+
     VkPipelineVertexInputStateCreateInfo vertexInput = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
         .pNext = nullptr,
@@ -81,8 +82,7 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo gf
     };
     uint32 stageCount = 0;
 
-    VkPipelineShaderStageCreateInfo stageInfos[2];
-    std::memset(stageInfos, 0, sizeof(stageInfos));
+    StaticArray<VkPipelineShaderStageCreateInfo, 2> stageInfos;
 
     PVertexShader vertexShader = gfxInfo.vertexShader.cast<VertexShader>();
     stageInfos[stageCount++] = {
@@ -94,7 +94,7 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo gf
         .pName = vertexShader->getEntryPointName(),
         .pSpecializationInfo = nullptr,
     };
-
+    
     if (gfxInfo.fragmentShader != nullptr) {
         PFragmentShader fragment = gfxInfo.fragmentShader.cast<FragmentShader>();
 
@@ -108,6 +108,8 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo gf
             .pSpecializationInfo = nullptr,
         };
     }
+    hash = CRC::Calculate(stageInfos.data(), stageInfos.size() * sizeof(VkVertexInputAttributeDescription), CRC::CRC_32(), hash);
+
     VkPipelineInputAssemblyStateCreateInfo assemblyInfo = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
         .pNext = nullptr,
@@ -115,6 +117,8 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo gf
         .topology = cast(gfxInfo.topology),
         .primitiveRestartEnable = false,
     };
+    hash = CRC::Calculate(&assemblyInfo, sizeof(VkPipelineInputAssemblyStateCreateInfo), CRC::CRC_32(), hash);
+
     VkPipelineViewportStateCreateInfo viewportInfo = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
         .pNext = nullptr,
@@ -124,6 +128,7 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo gf
         .scissorCount = 1,
         .pScissors = nullptr,
     };
+    hash = CRC::Calculate(&viewportInfo, sizeof(VkPipelineViewportStateCreateInfo), CRC::CRC_32(), hash);
     VkPipelineRasterizationStateCreateInfo rasterizationState = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
         .pNext = nullptr,
@@ -191,7 +196,10 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo gf
     StaticArray<VkDynamicState, 2> dynamicEnabled;
     dynamicEnabled[numDynamicEnabled++] = VK_DYNAMIC_STATE_VIEWPORT;
     dynamicEnabled[numDynamicEnabled++] = VK_DYNAMIC_STATE_SCISSOR;
-
+    
+    if (graphicsPipelines.contains(hash)) {
+        return graphicsPipelines[hash];
+    }
     VkPipelineDynamicStateCreateInfo dynamicState = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
         .pNext = nullptr,
@@ -206,7 +214,7 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::LegacyPipelineCreateInfo gf
         .pNext = 0,
         .flags = 0,
         .stageCount = stageCount,
-        .pStages = stageInfos,
+        .pStages = stageInfos.data(),
         .pVertexInputState = &vertexInput,
         .pInputAssemblyState = &assemblyInfo,
         .pViewportState = &viewportInfo,
@@ -236,8 +244,7 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::MeshPipelineCreateInfo gfxI
     uint32 hash = layout->getHash();
     uint32 stageCount = 0;
 
-    VkPipelineShaderStageCreateInfo stageInfos[3];
-    std::memset(stageInfos, 0, sizeof(stageInfos));
+    StaticArray<VkPipelineShaderStageCreateInfo, 3> stageInfos;
 
     if (gfxInfo.taskShader != nullptr) {
         PTaskShader taskShader = gfxInfo.taskShader.cast<TaskShader>();
@@ -276,7 +283,7 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::MeshPipelineCreateInfo gfxI
             .pSpecializationInfo = nullptr,
         };
     }
-    hash = CRC::Calculate(stageInfos, sizeof(stageInfos), CRC::CRC_32(), hash);
+    hash = CRC::Calculate(stageInfos.data(), sizeof(stageInfos), CRC::CRC_32(), hash);
 
     VkPipelineViewportStateCreateInfo viewportInfo = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
@@ -401,7 +408,7 @@ PGraphicsPipeline PipelineCache::createPipeline(Gfx::MeshPipelineCreateInfo gfxI
         .pNext = 0,
         .flags = 0,
         .stageCount = stageCount,
-        .pStages = stageInfos,
+        .pStages = stageInfos.data(),
         .pVertexInputState = nullptr,
         .pInputAssemblyState = nullptr,
         .pViewportState = &viewportInfo,

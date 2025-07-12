@@ -136,9 +136,9 @@ EnvironmentLoader::EnvironmentLoader(Gfx::PGraphics graphics) : graphics(graphic
             {Gfx::SubPassDependency{
                 .srcSubpass = 0,
                 .dstSubpass = ~0U,
-                .srcStage = Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                .srcStage = Gfx::SE_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
                 .dstStage = Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-                .srcAccess = Gfx::SE_ACCESS_NONE,
+                .srcAccess = Gfx::SE_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
                 .dstAccess = Gfx::SE_ACCESS_SHADER_READ_BIT,
             }},
             URect{{512, 512}, {0, 0}}, "LUTGeneration");
