@@ -345,9 +345,11 @@ struct CookTorrance : IBRDF
         float3 k_s = F;
         float3 k_d = 1 - k_s;
         k_d *= 1 - metallic;
-        
+        float3 diffuse = baseColor;
+        float3 specular = 0;
+#ifdef IMAGE_BASED_LIGHTING
         float3 irradiance = pLightEnv.irradianceMap.SampleLevel(pLightEnv.irradianceSampler, normal, 4).rgb;
-        float3 diffuse = irradiance * baseColor;
+        diffuse *= irradiance;
 
         float3 r = reflect(-viewDir_WS, normal);
 
@@ -355,8 +357,8 @@ struct CookTorrance : IBRDF
         float3 prefilteredColor = pLightEnv.prefilteredMap.SampleLevel(pLightEnv.irradianceSampler, r, roughness * MAX_REFLECTION_LOD).xyz;
 
         float2 envBRDF = pLightEnv.brdfLUT.Sample(pLightEnv.lutSampler, float2(max(dot(normal, viewDir_WS), 0), roughness)).rg;
-        float3 specular = prefilteredColor * (F * envBRDF.x + envBRDF.y);
-
+        specular = prefilteredColor * (F * envBRDF.x + envBRDF.y);
+#endif
         return (k_d * diffuse + specular) * ambientOcclusion;
     }
     float getAlpha()

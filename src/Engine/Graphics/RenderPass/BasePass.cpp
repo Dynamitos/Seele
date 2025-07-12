@@ -12,6 +12,7 @@
 #include "Material/MaterialInstance.h"
 #include "Math/Matrix.h"
 #include "Math/Vector.h"
+#include "MinimalEngine.h"
 
 using namespace Seele;
 
@@ -148,6 +149,7 @@ void BasePass::render() {
         Gfx::ShaderPermutation permutation = graphics->getShaderCompiler()->getTemplate("BasePass");
         permutation.setDepthCulling(true); // always use the culling info
         permutation.setPositionOnly(false);
+        permutation.setImageBasedLighting(getGlobals().useImagebasedLighting);
         // Base Rendering
         for (VertexData* vertexData : VertexData::getList()) {
             transparentData.addAll(vertexData->getTransparentData());

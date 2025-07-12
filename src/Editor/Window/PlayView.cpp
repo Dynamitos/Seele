@@ -1,5 +1,4 @@
 #include "PlayView.h"
-#include "Component/Mesh.h"
 #include "Graphics/Enums.h"
 #include "MinimalEngine.h"
 #include "Window/Window.h"

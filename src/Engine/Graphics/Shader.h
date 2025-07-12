@@ -102,7 +102,7 @@ struct ShaderPermutation {
     uint8 visibilityPass;
     uint8 rayTracing;
     uint8 dumpIntermediates;
-    // TODO: lightmapping etc
+    uint8 imageBasedLighting;
     ShaderPermutation() { std::memset(this, 0, sizeof(ShaderPermutation)); }
     void setTaskFile(std::string_view name) {
         std::memset(taskFile, 0, sizeof(taskFile));
@@ -144,6 +144,7 @@ struct ShaderPermutation {
     void setDepthCulling(bool enable) { depthCulling = enable; }
     void setVisibilityPass(bool enable) { visibilityPass = enable; }
     void setDumpIntermediates(bool enable) { dumpIntermediates = enable; }
+    void setImageBasedLighting(bool enable) { imageBasedLighting = enable; }
 };
 // Hashed ShaderPermutation for fast lookup
 struct PermutationId {
