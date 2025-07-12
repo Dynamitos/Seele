@@ -168,7 +168,7 @@ void ShadowPass::endFrame() {}
 void ShadowPass::publishOutputs() {
     shadowViewport = graphics->createViewport(nullptr, ViewportCreateInfo{.dimensions =
                                                                               {
-                                                                                  .size = {2048, 2048},
+                                                                                  .size = {8192, 8192},
                                                                                   .offset = {0, 0},
                                                                               },
                                                                           .fieldOfView = 0,

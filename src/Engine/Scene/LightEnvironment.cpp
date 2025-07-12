@@ -95,8 +95,8 @@ void LightEnvironment::addDirectionalLight(const Component::DirectionalLight& di
     if (shadowMaps.size() < dirs.size()) {
         shadowMaps.add(graphics->createTexture2D(TextureCreateInfo{
             .format = Gfx::SE_FORMAT_D32_SFLOAT,
-            .width = 2048,
-            .height = 2048,
+            .width = 8192,
+            .height = 8192,
             .elements = (uint32)dirs.size(),
             .usage = Gfx::SE_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | Gfx::SE_IMAGE_USAGE_SAMPLED_BIT,
             .name = "ShadowMap",
