@@ -84,7 +84,8 @@ BasePass::BasePass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics)
 BasePass::~BasePass() {}
 
 void BasePass::beginFrame(const Component::Camera& cam, const Component::Transform& transform) {
-    viewParamsSet = createViewParamsSet(cam, transform);
+    updateViewParameters(cam, transform);
+    viewParamsSet = createViewParamsSet();
 
     cameraPos = transform.getPosition();
     cameraForward = transform.getForward();

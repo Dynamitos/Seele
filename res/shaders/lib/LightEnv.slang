@@ -10,7 +10,6 @@ struct DirectionalLight : ILightEnv
 {
     float4 color;
     float4 direction;
-    float4x4 lightSpaceMatrix;
 
     float3 illuminate<B:IBRDF>(LightingParameter params, B brdf)
     {
@@ -369,4 +368,3 @@ struct CookTorrance : IBRDF
     }
     [mutating] void setNormal(float3 n) { normal = n; }
 };
-

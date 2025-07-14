@@ -1,6 +1,7 @@
 #include "LightCullingPass.h"
 #include "Actor/CameraActor.h"
 #include "Component/Camera.h"
+#include "Component/Transform.h"
 #include "Graphics/Command.h"
 #include "Graphics/Graphics.h"
 #include "Graphics/Pipeline.h"
@@ -15,7 +16,8 @@ LightCullingPass::LightCullingPass(Gfx::PGraphics graphics, PScene scene) : Rend
 LightCullingPass::~LightCullingPass() {}
 
 void LightCullingPass::beginFrame(const Component::Camera& cam, const Component::Transform& transform) {
-    viewParamsSet = createViewParamsSet(cam, transform);
+    updateViewParameters(cam, transform);
+    viewParamsSet = createViewParamsSet();
 
     oLightIndexCounter->pipelineBarrier(Gfx::SE_ACCESS_MEMORY_WRITE_BIT | Gfx::SE_ACCESS_MEMORY_READ_BIT,
                                         Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT, Gfx::SE_ACCESS_MEMORY_WRITE_BIT,
@@ -232,7 +234,8 @@ void LightCullingPass::setupFrustums() {
     numThreads = glm::ceil(glm::vec4(viewportWidth / (float)BLOCK_SIZE, viewportHeight / (float)BLOCK_SIZE, 1, 0));
     numThreadGroups = glm::ceil(glm::vec4(numThreads.x / (float)BLOCK_SIZE, numThreads.y / (float)BLOCK_SIZE, 1, 0));
 
-    viewParamsSet = createViewParamsSet(Component::Camera(), Component::Transform());
+    updateViewParameters(Component::Camera(), Component::Transform());
+    viewParamsSet = createViewParamsSet();
 
     dispatchParamsLayout = graphics->createDescriptorLayout("pDispatchParams");
     dispatchParamsLayout->addDescriptorBinding(Gfx::DescriptorBinding{

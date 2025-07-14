@@ -82,34 +82,11 @@ void LightEnvironment::reset() {
 }
 
 void LightEnvironment::addDirectionalLight(const Component::DirectionalLight& dirLight, const Component::Transform& transform) {
-    Vector eyePos = transform.getPosition();
-    Vector lookAt = eyePos + transform.getForward();
-    Matrix4 cameraMatrix = glm::lookAt(eyePos, lookAt, Vector(0, 1, 0));
-    Matrix4 correctionMatrix = Matrix4(1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1 / 2.f, 0, 0, 0, 1 / 2.f, 1);
     dirs.add(ShaderDirectionalLight{
         .color = Vector4(dirLight.color, dirLight.intensity),
         .direction = Vector4(transform.getForward(), 0),
-        .lightSpaceMatrix = correctionMatrix * glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f, 100.0f, -100.0f) * cameraMatrix,
     });
     directionalTransforms.add(transform);
-    if (shadowMaps.size() < dirs.size()) {
-        shadowMaps.add(graphics->createTexture2D(TextureCreateInfo{
-            .format = Gfx::SE_FORMAT_D32_SFLOAT,
-            .width = 8192,
-            .height = 8192,
-            .elements = (uint32)dirs.size(),
-            .usage = Gfx::SE_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | Gfx::SE_IMAGE_USAGE_SAMPLED_BIT,
-            .name = "ShadowMap",
-        }));
-        shadowMaps.back()->changeLayout(Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, Gfx::SE_ACCESS_NONE, Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-                                        Gfx::SE_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT);
-        shadowSamplers.add(graphics->createSampler(SamplerCreateInfo{
-            .addressModeU = Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
-            .addressModeV = Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
-            .addressModeW = Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
-            .name = "ShadowSampler",
-        }));
-    }
 }
 
 void LightEnvironment::addPointLight(const Component::PointLight& pointLight, const Component::Transform& transform) {
@@ -136,8 +113,6 @@ void LightEnvironment::commit() {
     uint32 numDirectionalLights = (uint32)dirs.size();
     set->updateConstants("numDirectionalLights", 0, &numDirectionalLights);
     set->updateBuffer("directionalLights", 0, directionalLights);
-    set->updateTexture("shadowMap", 0, shadowMaps[0]->getDefaultView());
-    set->updateSampler("shadowSampler", 0, Gfx::PSampler(shadowSamplers[0]));
     set->updateConstants("numPointLights", 0, &numPointLights);
     set->updateBuffer("pointLights", 0, pointLights);
     set->updateTexture("irradianceMap", 0, environment->getIrradianceMap()->getDefaultView());

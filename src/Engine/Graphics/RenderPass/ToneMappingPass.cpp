@@ -124,7 +124,8 @@ ToneMappingPass::ToneMappingPass(Gfx::PGraphics graphics) : RenderPass(graphics)
 ToneMappingPass::~ToneMappingPass() {}
 
 void ToneMappingPass::beginFrame(const Component::Camera& cam, const Component::Transform& transform) {
-    viewParamsSet = createViewParamsSet(cam, transform);
+    updateViewParameters(cam, transform);
+    viewParamsSet = createViewParamsSet();
 }
 
 void ToneMappingPass::render() {

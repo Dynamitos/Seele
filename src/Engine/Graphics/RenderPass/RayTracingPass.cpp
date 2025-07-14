@@ -65,8 +65,8 @@ RayTracingPass::RayTracingPass(Gfx::PGraphics graphics, PScene scene) : RenderPa
 static uint32 pass = 0;
 static Component::Transform lastCam;
 void RayTracingPass::beginFrame(const Component::Camera& cam, const Component::Transform& transform) {
-    viewParamsSet = createViewParamsSet(cam, transform);
-    if (lastCam.getPosition() != transform.getPosition() || lastCam.getForward() != transform.getForward()) {
+    updateViewParameters(cam, transform);
+    viewParamsSet = createViewParamsSet();    if (lastCam.getPosition() != transform.getPosition() || lastCam.getForward() != transform.getForward()) {
         lastCam = transform;
         pass = 0;
     }

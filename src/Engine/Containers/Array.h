@@ -535,8 +535,11 @@ template <typename T, size_t N> struct StaticArray {
             }
         }
     }
+    constexpr StaticArray(const StaticArray& other) = default;
+    constexpr StaticArray(StaticArray&& other) = default;
     constexpr ~StaticArray() {}
-
+    constexpr StaticArray& operator=(const StaticArray& other) = default;
+    constexpr StaticArray& operator=(StaticArray&& other) = default;
     constexpr size_type size() const { return N; }
     constexpr pointer data() { return _data; }
     constexpr const_pointer data() const { return _data; }

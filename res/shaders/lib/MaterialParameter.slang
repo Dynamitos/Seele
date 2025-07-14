@@ -63,7 +63,8 @@ struct FragmentParameter
     float3 normal_WS : NORMALWS;
     float3 tangent_WS : TANGENTWS;
     float3 biTangent_WS : BITANGENTWS;
-	float3 position_WS : POSITIONWS;
+    float3 position_WS : POSITIONWS;
+    float3 position_VS : POSITIONVS;
 	float3 vertexColor : COLOR;
 	float4 texCoords0 : TEXCOORDS0;
 	float4 texCoords1 : TEXCOORDS1;
@@ -109,7 +110,8 @@ struct FragmentParameter
         result.normal_WS    = f0.normal_WS    * barycentricCoords.x + f1.normal_WS    * barycentricCoords.y + f2.normal_WS    * barycentricCoords.z;
         result.tangent_WS   = f0.tangent_WS   * barycentricCoords.x + f1.tangent_WS   * barycentricCoords.y + f2.tangent_WS   * barycentricCoords.z;
         result.biTangent_WS = f0.biTangent_WS * barycentricCoords.x + f1.biTangent_WS * barycentricCoords.y + f2.biTangent_WS * barycentricCoords.z;
-        result.position_WS  = f0.position_WS  * barycentricCoords.x + f1.position_WS  * barycentricCoords.y + f2.position_WS  * barycentricCoords.z;
+        result.position_WS = f0.position_WS * barycentricCoords.x + f1.position_WS * barycentricCoords.y + f2.position_WS * barycentricCoords.z;
+        result.position_VS  = f0.position_VS  * barycentricCoords.x + f1.position_VS  * barycentricCoords.y + f2.position_VS  * barycentricCoords.z;
 	    result.vertexColor  = f0.vertexColor  * barycentricCoords.x + f1.vertexColor  * barycentricCoords.y + f2.vertexColor  * barycentricCoords.z;
         result.texCoords0   = f0.texCoords0   * barycentricCoords.x + f1.texCoords0   * barycentricCoords.y + f2.texCoords0   * barycentricCoords.z;
         result.texCoords1   = f0.texCoords1   * barycentricCoords.x + f1.texCoords1   * barycentricCoords.y + f2.texCoords1   * barycentricCoords.z;
@@ -135,7 +137,8 @@ struct VertexAttributes
 	FragmentParameter getParameter(float4x4 transformMatrix, float4x4 inverseTransformMatrix)
 	{
 		float4 modelPos = float4(position_MS, 1);
-		float4 worldPos = mul(transformMatrix, modelPos);
+        float4 worldPos = mul(transformMatrix, modelPos);
+        float4 viewPos = mul(pViewParams.viewMatrix, worldPos);
 		float4 clipPos = mul(pViewParams.viewProjectionMatrix, worldPos);
 		FragmentParameter result;
 		result.position_CS = clipPos;
@@ -145,7 +148,8 @@ struct VertexAttributes
         result.biTangent_WS = mul(transformMatrix, float4(biTangent_MS, 0)).xyz;
 		result.normal_WS = mul(transformMatrix, float4(normal_MS, 0)).xyz;
 		result.vertexColor = vertexColor;
-		result.position_WS = worldPos.xyz;
+        result.position_WS = worldPos.xyz;
+        result.position_VS = viewPos.xyz;
         result.texCoords0 = float4(texCoords[0], texCoords[1]);
         result.texCoords1 = float4(texCoords[2], texCoords[3]);
         result.texCoords2 = float4(texCoords[4], texCoords[5]);

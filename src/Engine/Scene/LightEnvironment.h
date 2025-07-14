@@ -4,7 +4,6 @@
 #include "Component/Transform.h"
 #include "Graphics/Buffer.h"
 #include "Graphics/Descriptor.h"
-#include "Graphics/Texture.h"
 
 namespace Seele {
 DECLARE_REF(EnvironmentMapAsset)
@@ -13,7 +12,6 @@ class LightEnvironment {
     struct ShaderDirectionalLight {
         Vector4 color;
         Vector4 direction;
-        Matrix4 lightSpaceMatrix;
     };
     struct ShaderPointLight {
         Vector4 position_WS;
@@ -31,12 +29,10 @@ class LightEnvironment {
     Gfx::PDescriptorSet getDescriptorSet();
     PEnvironmentMapAsset getEnvironmentMap() { return environment; }
     uint64 getNumDirectionalLights() const { return dirs.size(); }
-    const Array<Gfx::OTexture2D>& getShadowMaps() const { return shadowMaps; }
 
   private:
     Gfx::PGraphics graphics;
     Gfx::OShaderBuffer directionalLights;
-    Array<Gfx::OTexture2D> shadowMaps;
     Array<Gfx::OSampler> shadowSamplers;
     Gfx::OShaderBuffer pointLights;
     Array<ShaderDirectionalLight> dirs;

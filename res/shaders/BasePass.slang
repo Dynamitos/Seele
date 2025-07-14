@@ -3,6 +3,18 @@ import LightEnv;
 import MaterialParameter;
 import MATERIAL_FILE_NAME;
 
+const static uint64_t NUM_CASCADES = 4;
+
+/*struct ShadowMappingData
+{
+    Texture2DArray shadowMaps[NUM_CASCADES];
+
+    ConstantBuffer<float4x4> lightSpaceMatrices[NUM_CASCADES];
+
+    ConstantBuffer<float[NUM_CASCADES]> cascadeSplits;
+};
+ParameterBlock<ShadowMappingData> pShadowMapping;
+*/
 struct LightCullingData
 {
     RWStructuredBuffer<uint> lightIndexList;
@@ -30,7 +42,13 @@ float4 fragmentMain(in FragmentParameter params) : SV_Target
     float3 result = float3(0, 0, 0);
     for(int i = 0; i < pLightEnv.numDirectionalLights; ++i)
     {
-        float4 lightSpacePos = mul(biasMat, mul(pLightEnv.directionalLights[i].lightSpaceMatrix, float4(params.position_WS, 1)));
+        /*uint cascadeIndex = 0;
+        for (uint c = 0; c < NUM_CASCADES - 1; ++c) {
+            if (params.position_VS.z < pShadowMapping.cascadeSplits[c]) {
+                cascadeIndex = c + 1;
+            }
+        }
+        float4 lightSpacePos = mul(biasMat, mul(pShadowMapping.lightSpaceMatrices[i], float4(params.position_WS, 1)));
         float4 shadowCoord = lightSpacePos / lightSpacePos.w;
         int2 texDim;
         pLightEnv.shadowMap.GetDimensions(texDim.x, texDim.y);
@@ -55,9 +73,9 @@ float4 fragmentMain(in FragmentParameter params) : SV_Target
                 shadowFactor += shadow;
                 count++;
             }
-        }
+        }*/
 
-        result += (shadowFactor / count) * pLightEnv.directionalLights[i].illuminate(lightingParams, brdf);
+        result += /*(shadowFactor / count) **/ pLightEnv.directionalLights[i].illuminate(lightingParams, brdf);
     }
     for (uint i = 0; i < pLightEnv.numPointLights; ++i)
     {

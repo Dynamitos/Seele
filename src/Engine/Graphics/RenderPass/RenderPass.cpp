@@ -27,8 +27,7 @@ void RenderPass::setResources(PRenderGraphResources _resources) { resources = _r
 
 void RenderPass::setViewport(Gfx::PViewport _viewport) { viewport = _viewport; }
 
-Gfx::PDescriptorSet RenderPass::createViewParamsSet(const Component::Camera& cam, const Component::Transform& transform)
-{
+void RenderPass::updateViewParameters(const Component::Camera& cam, const Component::Transform& transform) {
     auto screenDim = Vector2(static_cast<float>(viewport->getWidth()), static_cast<float>(viewport->getHeight()));
     Vector eyePos = transform.getPosition();
     Vector lookAt = eyePos + transform.getForward();
@@ -48,24 +47,27 @@ Gfx::PDescriptorSet RenderPass::createViewParamsSet(const Component::Camera& cam
         .frameIndex = Gfx::getCurrentFrameIndex(),
         .time = static_cast<float>(Gfx::getCurrentFrameTime()),
     };
+}
 
+Gfx::PDescriptorSet RenderPass::createViewParamsSet()
+{
     // screen space
-    StaticArray<Vector4, 4> corners = {
-        Vector4(0, 0, -1, 1),
-        Vector4(screenDim.x, 0, -1, 1),
-        Vector4(screenDim.y, 0, -1, 1),
-        Vector4(screenDim.x, screenDim.y, -1, 1),
-    };
-
-    for (uint32 i = 0; i < corners.size(); ++i) {
-        Vector2 texCoord = Vector2(corners[i].x, corners[i].y) / screenDim;
-
-        Vector4 clip = Vector4(Vector2(texCoord.x, 1 - texCoord.y) * 2.0f - 1.0f, corners[i].z, corners[i].w);
-
-        Vector4 world = viewParams.inverseViewProjectionMatrix * clip;
-
-        corners[i] = world / world.w;
-    }
+    //StaticArray<Vector4, 4> corners = {
+    //    Vector4(0, 0, -1, 1),
+    //    Vector4(screenDim.x, 0, -1, 1),
+    //    Vector4(screenDim.y, 0, -1, 1),
+    //    Vector4(screenDim.x, screenDim.y, -1, 1),
+    //};
+    //
+    //for (uint32 i = 0; i < corners.size(); ++i) {
+    //    Vector2 texCoord = Vector2(corners[i].x, corners[i].y) / screenDim;
+    //
+    //    Vector4 clip = Vector4(Vector2(texCoord.x, 1 - texCoord.y) * 2.0f - 1.0f, corners[i].z, corners[i].w);
+    //
+    //    Vector4 world = viewParams.inverseViewProjectionMatrix * clip;
+    //
+    //    corners[i] = world / world.w;
+    //}
 
     // extract_planes_from_view_projection_matrix(viewParams.viewProjectionMatrix, viewParams.viewFrustum);
 

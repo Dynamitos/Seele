@@ -8,7 +8,8 @@ VisibilityPass::VisibilityPass(Gfx::PGraphics graphics) : RenderPass(graphics) {
 VisibilityPass::~VisibilityPass() {}
 
 void VisibilityPass::beginFrame(const Component::Camera& cam, const Component::Transform& transform) {
-    viewParamsSet = createViewParamsSet(cam, transform);
+    updateViewParameters(cam, transform);
+    viewParamsSet = createViewParamsSet();
     cullingBuffer->rotateBuffer(VertexData::getMeshletCount() * sizeof(VertexData::MeshletCullingInfo), true);
 }
 
