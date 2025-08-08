@@ -113,6 +113,7 @@ class Graphics : public Gfx::Graphics {
     virtual void executeCommands(Array<Gfx::OComputeCommand> commands) override;
 
     virtual Gfx::OTexture2D createTexture2D(const TextureCreateInfo& createInfo) override;
+    virtual Gfx::OTexture2DArray createTexture2DArray(const TextureCreateInfo& createInfo) override;
     virtual Gfx::OTexture3D createTexture3D(const TextureCreateInfo& createInfo) override;
     virtual Gfx::OTextureCube createTextureCube(const TextureCreateInfo& createInfo) override;
     virtual Gfx::OUniformBuffer createUniformBuffer(const UniformBufferCreateInfo& bulkData) override;

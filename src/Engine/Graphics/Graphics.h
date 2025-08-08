@@ -67,6 +67,7 @@ class Graphics {
     virtual void executeCommands(Array<OComputeCommand> commands) = 0;
 
     virtual OTexture2D createTexture2D(const TextureCreateInfo& createInfo) = 0;
+    virtual OTexture2DArray createTexture2DArray(const TextureCreateInfo& createInfo) = 0;
     virtual OTexture3D createTexture3D(const TextureCreateInfo& createInfo) = 0;
     virtual OTextureCube createTextureCube(const TextureCreateInfo& createInfo) = 0;
     virtual OUniformBuffer createUniformBuffer(const UniformBufferCreateInfo& bulkData) = 0;

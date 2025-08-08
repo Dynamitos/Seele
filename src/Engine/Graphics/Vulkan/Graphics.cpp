@@ -222,6 +222,8 @@ void Graphics::executeCommands(Array<Gfx::OComputeCommand> commands) {
 
 Gfx::OTexture2D Graphics::createTexture2D(const TextureCreateInfo& createInfo) { return new Texture2D(this, createInfo); }
 
+Gfx::OTexture2DArray Graphics::createTexture2DArray(const TextureCreateInfo& createInfo) { return new Texture2DArray(this, createInfo); }
+
 Gfx::OTexture3D Graphics::createTexture3D(const TextureCreateInfo& createInfo) { return new Texture3D(this, createInfo); }
 
 Gfx::OTextureCube Graphics::createTextureCube(const TextureCreateInfo& createInfo) { return new TextureCube(this, createInfo); }

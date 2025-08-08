@@ -15,14 +15,6 @@ LightEnvironment::LightEnvironment(Gfx::PGraphics graphics)
         .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
     });
     layout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .name = "shadowMap",
-        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
-    });
-    layout->addDescriptorBinding(Gfx::DescriptorBinding{
-        .name = "shadowSampler",
-        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLER,
-    });
-    layout->addDescriptorBinding(Gfx::DescriptorBinding{
         .name = "numDirectionalLights",
         .uniformLength = sizeof(uint32),
     });

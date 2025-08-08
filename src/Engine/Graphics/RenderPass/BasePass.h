@@ -1,7 +1,9 @@
 #pragma once
+#include "Graphics/Buffer.h"
+#include "Graphics/Descriptor.h"
+#include "Graphics/RenderPass/ShadowPass.h"
 #include "MinimalEngine.h"
 #include "RenderPass.h"
-#include "WaterRenderer.h"
 
 namespace Seele {
 DECLARE_REF(CameraActor)
@@ -30,9 +32,14 @@ class BasePass : public RenderPass {
     Gfx::PTexture2D tLightGrid;
     constexpr static const char* LIGHTINDEX_NAME = "lightIndexList";
     constexpr static const char* LIGHTGRID_NAME = "lightGrid";
+    constexpr static const char* SHADOWMAPS_NAME = "shadowMaps";
+    constexpr static const char* LIGHTSPACE_NAME = "lightSpaceMatrices";
+    constexpr static const char* SHADOWSAMPLER_NAME = "shadowSampler";
+    constexpr static const char* CASCADE_SPLIT_NAME = "cascadeSplit";
 
     Gfx::PDescriptorSet opaqueCulling;
     Gfx::PDescriptorSet transparentCulling;
+    Gfx::PDescriptorSet shadowMapping;
 
     // use a different texture here so we can do multisampling
     Gfx::OTexture2D msBasePassDepth;
@@ -49,6 +56,7 @@ class BasePass : public RenderPass {
     PCameraActor source;
     Gfx::OPipelineLayout basePassLayout;
     Gfx::ODescriptorLayout lightCullingLayout;
+    Gfx::ODescriptorLayout shadowMappingLayout;
 
     Gfx::OPipelineStatisticsQuery query;
     Gfx::PTimestampQuery timestamps;
@@ -57,6 +65,12 @@ class BasePass : public RenderPass {
 
     //OWaterRenderer waterRenderer;
     //OTerrainRenderer terrainRenderer;
+
+    // Shadow mapping
+    Gfx::PTexture2D shadowMaps[NUM_CASCADES];
+    Gfx::PShaderBuffer lightSpaceMatrices[NUM_CASCADES];
+    Gfx::OSampler shadowSampler;
+    Gfx::PUniformBuffer cascadeSplits;
 
     // Debug rendering
     Gfx::OVertexInput debugVertexInput;

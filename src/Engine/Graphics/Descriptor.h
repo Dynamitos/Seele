@@ -9,7 +9,7 @@ struct DescriptorBinding {
     std::string name;
     // In Metal uniforms are plain bytes, and for that we need to know the struct size
     uint32 uniformLength = 0;
-    SeDescriptorType descriptorType = SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    SeDescriptorType descriptorType = SE_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK;
     SeImageViewType textureType = SE_IMAGE_VIEW_TYPE_2D;
     uint32 descriptorCount = 1;
     SeDescriptorBindingFlags bindingFlags = 0;
@@ -27,7 +27,6 @@ class DescriptorLayout {
     void reset();
     PDescriptorSet allocateDescriptorSet();
     virtual void create() = 0;
-    constexpr const Array<DescriptorBinding>& getBindings() const { return descriptorBindings; }
     constexpr uint32 getHash() const { return hash; }
     constexpr const std::string& getName() const { return name; }
 
@@ -62,8 +61,9 @@ class DescriptorSet {
     virtual void writeChanges() = 0;
     virtual void updateConstants(const std::string& name, uint32 offset, void* data) = 0;
     virtual void updateBuffer(const std::string& name, uint32 index, Gfx::PShaderBuffer shaderBuffer) = 0;
-    virtual void updateBuffer(const std::string& name, uint32 index, Gfx::PVertexBuffer indexBuffer) = 0;
-    virtual void updateBuffer(const std::string& name, uint32 index, Gfx::PIndexBuffer indexBuffer) = 0;
+    virtual void updateBuffer(const std::string& name, uint32 index, Gfx::PVertexBuffer vertexBuffer) = 0;
+    virtual void updateBuffer(const std::string& name, uint32 index, Gfx::PIndexBuffer indexBuffer) = 0;\
+    virtual void updateBuffer(const std::string& name, uint32 index, Gfx::PUniformBuffer uniformBuffer) = 0;
     virtual void updateSampler(const std::string& name, uint32 index, Gfx::PSampler samplerState) = 0;
     virtual void updateTexture(const std::string& name, uint32 index, Gfx::PTextureView texture) = 0;
     virtual void updateAccelerationStructure(const std::string& name, uint32 index, Gfx::PTopLevelAS as) = 0;

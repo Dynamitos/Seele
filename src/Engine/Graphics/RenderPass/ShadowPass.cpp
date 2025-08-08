@@ -44,7 +44,6 @@ ShadowPass::ShadowPass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graph
 ShadowPass::~ShadowPass() {}
 
 void ShadowPass::beginFrame(const Component::Camera& camera, const Component::Transform& transform) {
-    uint32 cascadeDim = SHADOW_MAP_SIZE;
     float cascadeSplits[NUM_CASCADES];
 
     float nearClip = camera.nearPlane;
@@ -58,19 +57,6 @@ void ShadowPass::beginFrame(const Component::Camera& camera, const Component::Tr
     float ratio = maxZ / minZ;
     constexpr float cascadeSplitLambda = 0.95f;
     for (uint32 i = 0; i < NUM_CASCADES; ++i) {
-        cascades[i].shadowMaps = graphics->createTexture2D(TextureCreateInfo{
-            .format = Gfx::SE_FORMAT_D32_SFLOAT,
-            .width = cascadeDim,
-            .height = cascadeDim,
-            .elements = (uint32)scene->getLightEnvironment()->getNumDirectionalLights(),
-            .usage = Gfx::SE_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | Gfx::SE_IMAGE_USAGE_SAMPLED_BIT,
-            .name = "ShadowMapCascade",
-        });
-        cascades[i].views.clear();
-        for (uint32 j = 0; j < cascades[i].shadowMaps->getNumLayers(); ++j) {
-            cascades[i].views.add(cascades[i].shadowMaps->createTextureView(0, 1, j, 1));
-        }
-        cascadeDim /= 2;
         float p = (i + 1) / static_cast<float>(NUM_CASCADES);
         float log = minZ * std::pow(ratio, p);
         float uniform = minZ + range * p;
@@ -131,6 +117,8 @@ void ShadowPass::beginFrame(const Component::Camera& camera, const Component::Tr
             viewParams.screenDimensions = Vector2(maxExtents.x - minExtents.x, maxExtents.y - minExtents.y);
             viewParams.invScreenDimensions = 1.0f / viewParams.screenDimensions;
             cascades[i].viewParams.add(createViewParamsSet());
+
+            lastSplitDist = cascadeSplits[i];
         }
     }
 }
@@ -146,9 +134,9 @@ void ShadowPass::render() {
             Array<Gfx::ORenderCommand> commands;
             renderPass = graphics->createRenderPass(
                 Gfx::RenderTargetLayout{
-                    .depthAttachment = Gfx::RenderTargetAttachment(
-                        cascades[c].views[shadowIndex], Gfx::SE_IMAGE_LAYOUT_UNDEFINED,
-                        Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE),
+                    .depthAttachment = Gfx::RenderTargetAttachment(cascades[c].views[shadowIndex], Gfx::SE_IMAGE_LAYOUT_UNDEFINED,
+                                                                   Gfx::SE_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                                                                   Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_STORE),
 
                 },
                 {
@@ -219,7 +207,8 @@ void ShadowPass::render() {
                     Gfx::PGraphicsPipeline pipeline = graphics->createGraphicsPipeline(std::move(pipelineInfo));
                     command->bindPipeline(pipeline);
                 }
-                command->bindDescriptor({cascades[c].viewParams[shadowIndex], vertexData->getVertexDataSet(), vertexData->getInstanceDataSet()});
+                command->bindDescriptor(
+                    {cascades[c].viewParams[shadowIndex], vertexData->getVertexDataSet(), vertexData->getInstanceDataSet()});
                 VertexData::DrawCallOffsets offsets = {
                     .instanceOffset = 0,
                 };
@@ -258,6 +247,12 @@ void ShadowPass::render() {
 void ShadowPass::endFrame() {}
 
 void ShadowPass::publishOutputs() {
+    cascadeSplitsBuffer = graphics->createUniformBuffer(UniformBufferCreateInfo{.sourceData =
+                                                                              {
+                                                                                  .size = sizeof(float) * NUM_CASCADES,
+                                                                                  .data = nullptr,
+                                                                              },
+                                                                          .name = "CascadeSplits"});
     shadowViewport = graphics->createViewport(nullptr, ViewportCreateInfo{.dimensions =
                                                                               {
                                                                                   .size = {SHADOW_MAP_SIZE, SHADOW_MAP_SIZE},
@@ -268,6 +263,39 @@ void ShadowPass::publishOutputs() {
                                                                           .right = 100,
                                                                           .top = 100,
                                                                           .bottom = -100});
+    uint32 cascadeDim = SHADOW_MAP_SIZE;
+    for (uint32 s = 0; s < NUM_CASCADES; ++s) {
+        cascades[s].shadowMaps = graphics->createTexture2DArray(TextureCreateInfo{
+            .format = Gfx::SE_FORMAT_D32_SFLOAT,
+            .width = cascadeDim,
+            .height = cascadeDim,
+            .elements = 1, // TODO:
+            .usage = Gfx::SE_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | Gfx::SE_IMAGE_USAGE_SAMPLED_BIT,
+            .name = "ShadowMapCascade",
+        });
+        cascades[s].lightSpaceBuffer = graphics->createShaderBuffer(ShaderBufferCreateInfo{
+            .sourceData = {
+                .size = sizeof(Matrix4),
+                .data = nullptr,
+            },
+            .name = "LightSpaceBuffer"
+        });
+        cascades[s].views.clear();
+        for (uint32 j = 0; j < cascades[s].shadowMaps->getNumLayers(); ++j) {
+            cascades[s].views.add(cascades[s].shadowMaps->createTextureView(0, 1, j, 1));
+        }
+        cascadeDim /= 2;
+        resources->registerTextureOutput(fmt::format("SHADOWMAP_TEXTURE{0}", s), Gfx::PTexture2DArray(cascades[s].shadowMaps));
+        resources->registerBufferOutput(fmt::format("SHADOWMAP_LIGHTSPACE{0}", s), cascades[s].lightSpaceBuffer);
+    }
+    cascadeSplitsBuffer = graphics->createUniformBuffer(UniformBufferCreateInfo{
+        .sourceData = {
+            .size = sizeof(float) * NUM_CASCADES,
+            .data = nullptr,
+        },
+        .name = "CASCADE_SPLITS"
+    });
+    resources->registerUniformOutput("SHADOWMAP_CASCADESPLITS", cascadeSplitsBuffer);
     viewport = shadowViewport;
 }
 

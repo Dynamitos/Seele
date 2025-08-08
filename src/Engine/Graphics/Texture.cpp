@@ -16,6 +16,10 @@ Texture2D::Texture2D(QueueFamilyMapping mapping) : Texture(mapping) {}
 
 Texture2D::~Texture2D() {}
 
+Texture2DArray::Texture2DArray(QueueFamilyMapping mapping) : Texture(mapping) {}
+
+Texture2DArray::~Texture2DArray() {}
+
 Texture3D::Texture3D(QueueFamilyMapping mapping) : Texture(mapping) {}
 
 Texture3D::~Texture3D() {}

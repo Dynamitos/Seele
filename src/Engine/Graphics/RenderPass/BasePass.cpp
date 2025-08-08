@@ -13,6 +13,7 @@
 #include "Math/Matrix.h"
 #include "Math/Vector.h"
 #include "MinimalEngine.h"
+#include "ShadowPass.h"
 
 using namespace Seele;
 
@@ -41,7 +42,29 @@ BasePass::BasePass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics)
     });
     lightCullingLayout->create();
 
+    shadowMappingLayout = graphics->createDescriptorLayout("pShadowMapping");
+    shadowMappingLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .name = SHADOWMAPS_NAME,
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+        .descriptorCount = NUM_CASCADES,
+    });
+    shadowMappingLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .name = LIGHTSPACE_NAME,
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+        .descriptorCount = NUM_CASCADES,
+    });
+    shadowMappingLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .name = SHADOWSAMPLER_NAME,
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_SAMPLER,
+    });
+    shadowMappingLayout->addDescriptorBinding(Gfx::DescriptorBinding{
+        .name = CASCADE_SPLIT_NAME,
+        .descriptorType = Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER
+    });
+    shadowMappingLayout->create();
+
     basePassLayout->addDescriptorLayout(lightCullingLayout);
+    basePassLayout->addDescriptorLayout(shadowMappingLayout);
     basePassLayout->addPushConstants(Gfx::SePushConstantRange{
         .stageFlags = Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_VERTEX_BIT | Gfx::SE_SHADER_STAGE_FRAGMENT_BIT,
         .offset = 0,
@@ -79,6 +102,19 @@ BasePass::BasePass(Gfx::PGraphics graphics, PScene scene) : RenderPass(graphics)
         .fogColor = Vector(0, 0, 0),
         .blendFactor = 0,
     };
+    shadowSampler = graphics->createSampler(SamplerCreateInfo{
+        .magFilter = Gfx::SE_FILTER_LINEAR,
+        .minFilter = Gfx::SE_FILTER_LINEAR,
+        .mipmapMode = Gfx::SE_SAMPLER_MIPMAP_MODE_LINEAR,
+        .addressModeU = Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+        .addressModeV = Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+        .addressModeW = Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+        .mipLodBias = 0.0f,
+        .maxAnisotropy = 1.0f,
+        .minLod = 0.0f,
+        .maxLod = 1.0f,
+        .borderColor = Gfx::SE_BORDER_COLOR_FLOAT_OPAQUE_WHITE,
+    });
 }
 
 BasePass::~BasePass() {}
@@ -139,13 +175,23 @@ void BasePass::render() {
     transparentCulling->updateTexture(LIGHTGRID_NAME, 0, tLightGrid->getDefaultView());
     opaqueCulling->writeChanges();
     transparentCulling->writeChanges();
+    
+    shadowMappingLayout->reset();
+    shadowMapping = shadowMappingLayout->allocateDescriptorSet();
+    for (uint32 i = 0; i < NUM_CASCADES; ++i) {
+        shadowMapping->updateTexture(SHADOWMAPS_NAME, i, shadowMaps[i]->getDefaultView());
+        shadowMapping->updateBuffer(LIGHTSPACE_NAME, i, lightSpaceMatrices[i]);
+    }
+    shadowMapping->updateSampler(SHADOWSAMPLER_NAME, 0, shadowSampler);
+    shadowMapping->updateBuffer(CASCADE_SPLIT_NAME, 0, cascadeSplits);
+    shadowMapping->writeChanges();
 
     query->beginQuery();
     timestamps->write(Gfx::SE_PIPELINE_STAGE_TOP_OF_PIPE_BIT, "BaseBegin");
     graphics->beginRenderPass(renderPass);
     Array<VertexData::TransparentDraw> transparentData;
+    // Opaque
     {
-        graphics->beginDebugRegion("Opaque");
         Array<Gfx::ORenderCommand> commands;
         Gfx::ShaderPermutation permutation = graphics->getShaderCompiler()->getTemplate("BasePass");
         permutation.setDepthCulling(true); // always use the culling info
@@ -176,7 +222,7 @@ void BasePass::render() {
                 const Gfx::ShaderCollection* collection = graphics->getShaderCompiler()->findShaders(id);
                 assert(collection != nullptr);
 
-                //bool twoSided = materialData.material->isTwoSided();
+                // bool twoSided = materialData.material->isTwoSided();
 
                 if (graphics->supportMeshShading()) {
                     Gfx::MeshPipelineCreateInfo pipelineInfo = {
@@ -221,7 +267,7 @@ void BasePass::render() {
                     command->bindPipeline(graphics->createGraphicsPipeline(std::move(pipelineInfo)));
                 }
                 command->bindDescriptor({viewParamsSet, vertexData->getVertexDataSet(), vertexData->getInstanceDataSet(),
-                                         scene->getLightEnvironment()->getDescriptorSet(), Material::getDescriptorSet(), opaqueCulling});
+                                         scene->getLightEnvironment()->getDescriptorSet(), Material::getDescriptorSet(), shadowMapping, opaqueCulling});
                 for (const auto& drawCall : materialData.instances) {
                     command->pushConstants(Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_VERTEX_BIT |
                                                Gfx::SE_SHADER_STAGE_FRAGMENT_BIT,
@@ -241,7 +287,6 @@ void BasePass::render() {
             }
         }
         graphics->executeCommands(std::move(commands));
-        graphics->endDebugRegion();
     }
 
     // commands.add(waterRenderer->render(viewParamsSet));
@@ -249,18 +294,15 @@ void BasePass::render() {
 
     // Skybox
     {
-        graphics->beginDebugRegion("Skybox");
         Gfx::ORenderCommand skyboxCommand = graphics->createRenderCommand("SkyboxRender");
         skyboxCommand->setViewport(viewport);
         skyboxCommand->bindPipeline(skyboxPipeline);
         skyboxCommand->bindDescriptor({viewParamsSet, skyboxDataSet, textureSet});
         skyboxCommand->draw(36, 1, 0, 0);
         graphics->executeCommands(std::move(skyboxCommand));
-        graphics->endDebugRegion();
     }
     // Transparent rendering
     {
-        graphics->beginDebugRegion("Transparent");
         Gfx::ShaderPermutation permutation = graphics->getShaderCompiler()->getTemplate("BasePass");
         permutation.setPositionOnly(false);
         permutation.setDepthCulling(false); // ignore visibility infos for transparency
@@ -280,7 +322,7 @@ void BasePass::render() {
             const Gfx::ShaderCollection* collection = graphics->getShaderCompiler()->findShaders(id);
             assert(collection != nullptr);
 
-            //bool twoSided = t.matInst->getBaseMaterial()->isTwoSided();
+            // bool twoSided = t.matInst->getBaseMaterial()->isTwoSided();
 
             if (graphics->supportMeshShading()) {
                 Gfx::MeshPipelineCreateInfo pipelineInfo = {
@@ -343,7 +385,7 @@ void BasePass::render() {
                 transparentCommand->bindPipeline(pipeline);
             }
             transparentCommand->bindDescriptor({viewParamsSet, t.vertexData->getVertexDataSet(), t.vertexData->getInstanceDataSet(),
-                                                scene->getLightEnvironment()->getDescriptorSet(), Material::getDescriptorSet(),
+                                                scene->getLightEnvironment()->getDescriptorSet(), Material::getDescriptorSet(), shadowMapping,
                                                 transparentCulling});
             transparentCommand->pushConstants(Gfx::SE_SHADER_STAGE_TASK_BIT_EXT | Gfx::SE_SHADER_STAGE_VERTEX_BIT |
                                                   Gfx::SE_SHADER_STAGE_FRAGMENT_BIT,
@@ -360,11 +402,9 @@ void BasePass::render() {
             }
         }
         graphics->executeCommands(std::move(transparentCommand));
-        graphics->endDebugRegion();
     }
     // Debug vertices
     if (gDebugVertices.size() > 0) {
-        graphics->beginDebugRegion("Debug");
         Gfx::ShaderPermutation permutation = graphics->getShaderCompiler()->getTemplate("BasePass");
         permutation.setDepthCulling(true); // always use the culling info
         permutation.setPositionOnly(false);
@@ -375,7 +415,6 @@ void BasePass::render() {
         debugCommand->bindVertexBuffer({debugVertices});
         debugCommand->draw((uint32)gDebugVertices.size(), 1, 0, 0);
         graphics->executeCommands(std::move(debugCommand));
-        graphics->endDebugRegion();
     }
 
     graphics->endRenderPass();
@@ -422,18 +461,18 @@ void BasePass::publishOutputs() {
                                                   Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
                                                   Gfx::SE_ATTACHMENT_LOAD_OP_DONT_CARE, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
 
-    msDepthAttachment =
-        Gfx::RenderTargetAttachment(msBasePassDepth->getDefaultView(), Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
-                                    Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_DONT_CARE);
+    msDepthAttachment = Gfx::RenderTargetAttachment(msBasePassDepth->getDefaultView(), Gfx::SE_IMAGE_LAYOUT_UNDEFINED,
+                                                    Gfx::SE_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR,
+                                                    Gfx::SE_ATTACHMENT_STORE_OP_DONT_CARE);
     msDepthAttachment.clear.depthStencil.depth = 0.0f;
 
-    colorAttachment =
-        Gfx::RenderTargetAttachment(basePassColor->getDefaultView(), Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-                                    Gfx::SE_ATTACHMENT_LOAD_OP_DONT_CARE, Gfx::SE_ATTACHMENT_STORE_OP_STORE);
+    colorAttachment = Gfx::RenderTargetAttachment(basePassColor->getDefaultView(), Gfx::SE_IMAGE_LAYOUT_UNDEFINED,
+                                                  Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, Gfx::SE_ATTACHMENT_LOAD_OP_DONT_CARE,
+                                                  Gfx::SE_ATTACHMENT_STORE_OP_STORE);
 
-    msColorAttachment =
-        Gfx::RenderTargetAttachment(msBasePassColor->getDefaultView(), Gfx::SE_IMAGE_LAYOUT_UNDEFINED, Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-                                    Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR, Gfx::SE_ATTACHMENT_STORE_OP_DONT_CARE);
+    msColorAttachment = Gfx::RenderTargetAttachment(msBasePassColor->getDefaultView(), Gfx::SE_IMAGE_LAYOUT_UNDEFINED,
+                                                    Gfx::SE_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, Gfx::SE_ATTACHMENT_LOAD_OP_CLEAR,
+                                                    Gfx::SE_ATTACHMENT_STORE_OP_DONT_CARE);
     msColorAttachment.clear.color.float32[0] = 0;
     msColorAttachment.clear.color.float32[1] = 1;
     msColorAttachment.clear.color.float32[2] = 0;
@@ -452,6 +491,11 @@ void BasePass::createRenderPass() {
     // terrainRenderer = new TerrainRenderer(graphics, scene, viewParamsLayout, viewParamsSet);
     cullingBuffer = resources->requestBuffer("CULLINGBUFFER");
     timestamps = resources->requestTimestampQuery("TIMESTAMPS");
+    for (uint32 i = 0; i < NUM_CASCADES; ++i) {
+        shadowMaps[i] = resources->requestTexture(fmt::format("SHADOWMAP_TEXTURE{0}", i));
+        lightSpaceMatrices[i] = resources->requestBuffer(fmt::format("SHADOWMAP_LIGHTSPACE{0}", i));
+    }
+    cascadeSplits = resources->requestUniform("SHADOWMAP_CASCADESPLITS");
 
     Gfx::RenderTargetLayout layout = Gfx::RenderTargetLayout{
         .colorAttachments = {msColorAttachment},

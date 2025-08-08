@@ -5,16 +5,18 @@ import MATERIAL_FILE_NAME;
 
 const static uint64_t NUM_CASCADES = 4;
 
-/*struct ShadowMappingData
+struct ShadowMappingData
 {
     Texture2DArray shadowMaps[NUM_CASCADES];
 
-    ConstantBuffer<float4x4> lightSpaceMatrices[NUM_CASCADES];
+    StructuredBuffer<float4x4> lightSpaceMatrices[NUM_CASCADES];
+
+    SamplerState shadowSampler;
 
     ConstantBuffer<float[NUM_CASCADES]> cascadeSplits;
 };
 ParameterBlock<ShadowMappingData> pShadowMapping;
-*/
+
 struct LightCullingData
 {
     RWStructuredBuffer<uint> lightIndexList;
@@ -42,16 +44,16 @@ float4 fragmentMain(in FragmentParameter params) : SV_Target
     float3 result = float3(0, 0, 0);
     for(int i = 0; i < pLightEnv.numDirectionalLights; ++i)
     {
-        /*uint cascadeIndex = 0;
+        uint cascadeIndex = 0;
         for (uint c = 0; c < NUM_CASCADES - 1; ++c) {
             if (params.position_VS.z < pShadowMapping.cascadeSplits[c]) {
                 cascadeIndex = c + 1;
             }
         }
-        float4 lightSpacePos = mul(biasMat, mul(pShadowMapping.lightSpaceMatrices[i], float4(params.position_WS, 1)));
+        float4 lightSpacePos = mul(biasMat, mul(pShadowMapping.lightSpaceMatrices[cascadeIndex][i], float4(params.position_WS, 1)));
         float4 shadowCoord = lightSpacePos / lightSpacePos.w;
-        int2 texDim;
-        pLightEnv.shadowMap.GetDimensions(texDim.x, texDim.y);
+        int3 texDim;
+        pShadowMapping.shadowMaps[cascadeIndex].GetDimensions(texDim.x, texDim.y, texDim.z);
         float scale = 1.5f;
         float dx = scale * 1.0 / float(texDim.x);
         float dy = scale * 1.0 / float(texDim.y);
@@ -64,7 +66,7 @@ float4 fragmentMain(in FragmentParameter params) : SV_Target
                 float shadow = 1.0f;
                 if (shadowCoord.z > 0.0 && shadowCoord.z < 1.0)
                 {
-                    float dist = pLightEnv.shadowMap.Sample(pLightEnv.shadowSampler, shadowCoord.xy + float2(dx * x, dy * y)).r;
+                    float dist = pShadowMapping.shadowMaps[cascadeIndex].Sample(pShadowMapping.shadowSampler, float3(shadowCoord.xy + float2(dx * x, dy * y), i)).r;
                     if (shadowCoord.w > 0 && dist > shadowCoord.z)
                     {
                         shadow = 0;
@@ -73,9 +75,9 @@ float4 fragmentMain(in FragmentParameter params) : SV_Target
                 shadowFactor += shadow;
                 count++;
             }
-        }*/
+        }
 
-        result += /*(shadowFactor / count) **/ pLightEnv.directionalLights[i].illuminate(lightingParams, brdf);
+        result += (shadowFactor / count) * pLightEnv.directionalLights[i].illuminate(lightingParams, brdf);
     }
     for (uint i = 0; i < pLightEnv.numPointLights; ++i)
     {

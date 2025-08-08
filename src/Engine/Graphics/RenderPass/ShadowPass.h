@@ -6,6 +6,7 @@
 namespace Seele {
 
 static constexpr uint64 SHADOW_MAP_SIZE = 8192;
+static constexpr uint64 NUM_CASCADES = 4;
 
 class ShadowPass : public RenderPass {
   public:
@@ -20,13 +21,15 @@ class ShadowPass : public RenderPass {
     virtual void createRenderPass() override;
   private:
     AABB cameraFrustumBox;
-    static constexpr uint64 NUM_CASCADES = 4;
     struct Cascade {
-        Gfx::OTexture2D shadowMaps;
+        Gfx::OTexture2DArray shadowMaps;
         Array<Gfx::OTextureView> views;
+        Array<Matrix4> lightSpaceMatrices;
+        Gfx::OShaderBuffer lightSpaceBuffer;
         Array<Gfx::PDescriptorSet> viewParams;
     };
     StaticArray<Cascade, NUM_CASCADES> cascades;
+    Gfx::OUniformBuffer cascadeSplitsBuffer;
     Gfx::OPipelineLayout shadowLayout;
     Gfx::PShaderBuffer cullingBuffer;
     Gfx::OViewport shadowViewport;

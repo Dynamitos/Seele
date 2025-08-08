@@ -61,8 +61,6 @@ struct PointLight : ILightEnv
 struct LightEnv
 {
     StructuredBuffer<DirectionalLight> directionalLights;
-    Texture2D shadowMap; // todo: not an array
-    SamplerState shadowSampler;
     uint numDirectionalLights;
     StructuredBuffer<PointLight> pointLights;
     uint numPointLights;

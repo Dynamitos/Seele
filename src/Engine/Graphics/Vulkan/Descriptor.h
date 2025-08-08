@@ -1,6 +1,5 @@
 #pragma once
 #include "Containers/List.h"
-#include "Enums.h"
 #include "Graphics/Descriptor.h"
 #include "Graphics/Vulkan/Buffer.h"
 #include "Resources.h"
@@ -61,8 +60,9 @@ class DescriptorSet : public Gfx::DescriptorSet, public CommandBoundResource {
     virtual void writeChanges() override;
     virtual void updateConstants(const std::string& name, uint32 offset, void* data) override;
     virtual void updateBuffer(const std::string& name, uint32 index, Gfx::PShaderBuffer shaderBuffer) override;
-    virtual void updateBuffer(const std::string& name, uint32 index, Gfx::PVertexBuffer indexBuffer) override;
+    virtual void updateBuffer(const std::string& name, uint32 index, Gfx::PVertexBuffer vertexBuffer) override;
     virtual void updateBuffer(const std::string& name, uint32 index, Gfx::PIndexBuffer indexBuffer) override;
+    virtual void updateBuffer(const std::string& name, uint32 index, Gfx::PUniformBuffer uniformBuffer) override;
     virtual void updateSampler(const std::string& name, uint32 index, Gfx::PSampler samplerState) override;
     virtual void updateTexture(const std::string& name, uint32 index, Gfx::PTextureView texture) override;
     virtual void updateAccelerationStructure(const std::string& name, uint32 index, Gfx::PTopLevelAS as) override;

@@ -9,10 +9,11 @@
 #include "Graphics/Initializer.h"
 #include "RayTracing.h"
 #include "Texture.h"
+#include "Enums.h"
+#include <iostream>
 #include "vulkan/vulkan_core.h"
 #include <algorithm>
 #include <mutex>
-#include <ranges>
 
 using namespace Seele;
 using namespace Seele::Vulkan;
@@ -32,10 +33,10 @@ void DescriptorLayout::create() {
         return;
     }
     Array<VkDescriptorBindingFlags> bindingFlags;
-    if (std::ranges::contains(descriptorBindings, Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &Gfx::DescriptorBinding::descriptorType)) {
+    if (std::ranges::contains(descriptorBindings, Gfx::SE_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK, &Gfx::DescriptorBinding::descriptorType)) {
         bindings.add({
             .binding = 0,
-            .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, // although we can pretend that we support inline uniforms, slang does not generate them
             .descriptorCount = 1,
             .stageFlags = VK_SHADER_STAGE_ALL, // todo
             .pImmutableSamplers = nullptr,
@@ -43,11 +44,12 @@ void DescriptorLayout::create() {
         bindingFlags.add(0);
     }
     for (const auto& gfxBinding : descriptorBindings) {
-        if (gfxBinding.descriptorType == Gfx::SE_DESCRIPTOR_TYPE_UNIFORM_BUFFER) {
+        if (gfxBinding.descriptorType == Gfx::SE_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK) {
             mappings[gfxBinding.name] = {
                 .binding = 0,
                 .constantOffset = constantsSize,
                 .constantSize = gfxBinding.uniformLength,
+                .type = cast(gfxBinding.descriptorType),
             };
             constantsSize += gfxBinding.uniformLength;
             constantsStages |= gfxBinding.shaderStages;
@@ -92,15 +94,15 @@ DescriptorPool::DescriptorPool(PGraphics graphics, PDescriptorLayout layout)
         cachedHandles[i] = nullptr;
     }
 
-    Map<Gfx::SeDescriptorType, uint32> perTypeSizes;
-    for (uint32 i = 0; i < layout->getBindings().size(); ++i) {
-        auto& binding = layout->getBindings()[i];
+    Map<VkDescriptorType, uint32> perTypeSizes;
+    for (uint32 i = 0; i < layout->bindings.size(); ++i) {
+        auto& binding = layout->bindings[i];
         perTypeSizes[binding.descriptorType] += 512;
     }
     Array<VkDescriptorPoolSize> poolSizes;
     for (const auto& [type, num] : perTypeSizes) {
         poolSizes.add(VkDescriptorPoolSize{
-            .type = cast(type),
+            .type = type,
             .descriptorCount = num,
         });
     }
@@ -199,9 +201,9 @@ void DescriptorPool::reset() {
 DescriptorSet::DescriptorSet(PGraphics graphics, PDescriptorPool owner)
     : Gfx::DescriptorSet(owner->getLayout()), CommandBoundResource(graphics, owner->getLayout()->getName()), setHandle(VK_NULL_HANDLE),
       graphics(graphics), owner(owner) {
-    boundResources.resize(owner->getLayout()->getBindings().size());
+    boundResources.resize(owner->getLayout()->bindings.size());
     for (uint32 i = 0; i < boundResources.size(); ++i) {
-        boundResources[i].resize(owner->getLayout()->getBindings()[i].descriptorCount);
+        boundResources[i].resize(owner->getLayout()->bindings[i].descriptorCount);
         for (size_t x = 0; x < boundResources[i].size(); ++x) {
             boundResources[i][x] = nullptr;
         }
@@ -243,8 +245,8 @@ void DescriptorSet::updateBuffer(const std::string& mappingName, uint32 index, G
     boundResources[binding][index] = vulkanBuffer->getAlloc();
 }
 
-void DescriptorSet::updateBuffer(const std::string& mappingName, uint32 index, Gfx::PVertexBuffer indexBuffer) {
-    PVertexBuffer vulkanBuffer = indexBuffer.cast<VertexBuffer>();
+void DescriptorSet::updateBuffer(const std::string& mappingName, uint32 index, Gfx::PVertexBuffer vertexBuffer) {
+    PVertexBuffer vulkanBuffer = vertexBuffer.cast<VertexBuffer>();
     const auto& map = owner->getLayout()->mappings[mappingName];
     uint32 binding = map.binding;
     // if the buffer is empty
@@ -272,6 +274,33 @@ void DescriptorSet::updateBuffer(const std::string& mappingName, uint32 index, G
 
 void DescriptorSet::updateBuffer(const std::string& mappingName, uint32 index, Gfx::PIndexBuffer indexBuffer) {
     PIndexBuffer vulkanBuffer = indexBuffer.cast<IndexBuffer>();
+    const auto& map = owner->getLayout()->mappings[mappingName];
+    uint32 binding = map.binding;
+    // if the buffer is empty
+    if (vulkanBuffer->getAlloc() == nullptr)
+        return;
+
+    bufferInfos.add(VkDescriptorBufferInfo{
+        .buffer = vulkanBuffer->getHandle(),
+        .offset = 0,
+        .range = vulkanBuffer->getSize(),
+    });
+    writeDescriptors.add(VkWriteDescriptorSet{
+        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .pNext = nullptr,
+        .dstSet = setHandle,
+        .dstBinding = binding,
+        .dstArrayElement = index,
+        .descriptorCount = 1,
+        .descriptorType = map.type,
+        .pBufferInfo = &bufferInfos.back(),
+    });
+
+    boundResources[binding][index] = vulkanBuffer->getAlloc();
+}
+
+void DescriptorSet::updateBuffer(const std::string& mappingName, uint32 index, Gfx::PUniformBuffer uniformBuffer) {
+    PUniformBuffer vulkanBuffer = uniformBuffer.cast<UniformBuffer>();
     const auto& map = owner->getLayout()->mappings[mappingName];
     uint32 binding = map.binding;
     // if the buffer is empty

@@ -75,6 +75,32 @@ class Texture2D : public Texture {
 };
 DEFINE_REF(Texture2D)
 
+class Texture2DArray : public Texture {
+  public:
+    Texture2DArray(QueueFamilyMapping mapping);
+    virtual ~Texture2DArray();
+
+    virtual SeFormat getFormat() const = 0;
+    virtual uint32 getWidth() const = 0;
+    virtual uint32 getHeight() const = 0;
+    virtual uint32 getDepth() const = 0;
+    virtual uint32 getNumLayers() const = 0; 
+    virtual SeSampleCountFlags getNumSamples() const = 0;
+    virtual uint32 getMipLevels() const = 0;
+    virtual void changeLayout(SeImageLayout newLayout, SeAccessFlags srcAccess, SePipelineStageFlags srcStage, SeAccessFlags dstAccess,
+                              SePipelineStageFlags dstStage) = 0;
+    virtual void generateMipmaps() = 0;
+    virtual PTextureView getDefaultView() const = 0;
+    
+    virtual OTextureView createTextureView(uint32 baseMipLevel, uint32 levelCount, uint32 baseArrayLayer, uint32 layerCount) = 0;
+  protected:
+    // Inherited via QueueOwnedResource
+    virtual void executeOwnershipBarrier(QueueType newOwner) = 0;
+    virtual void executePipelineBarrier(SeAccessFlags srcAccess, SePipelineStageFlags srcStage, SeAccessFlags dstAccess,
+                                        SePipelineStageFlags dstStage) = 0;
+};
+DEFINE_REF(Texture2DArray)
+
 class Texture3D : public Texture {
   public:
     Texture3D(QueueFamilyMapping mapping);

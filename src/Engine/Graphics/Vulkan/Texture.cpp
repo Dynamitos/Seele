@@ -444,18 +444,21 @@ void TextureBase::pipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags 
     handle->pipelineBarrier(srcAccess, srcStage, dstAccess, dstStage);
 }
 void TextureBase::transferOwnership(Gfx::QueueType newOwner) { handle->transferOwnership(newOwner); }
+
 void TextureBase::changeLayout(Gfx::SeImageLayout newLayout, VkAccessFlags srcAccess, VkPipelineStageFlags srcStage,
                                VkAccessFlags dstAccess, VkPipelineStageFlags dstStage) {
     handle->changeLayout(newLayout, srcAccess, srcStage, dstAccess, dstStage);
 }
+
 void TextureBase::download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<uint8>& buffer) {
     handle->download(mipLevel, arrayLayer, face, buffer);
 }
+
 void TextureBase::generateMipmaps() { handle->generateMipmaps(); }
 
 Texture2D::Texture2D(PGraphics graphics, const TextureCreateInfo& createInfo, VkImage existingImage)
     : Gfx::Texture2D(graphics->getFamilyMapping()),
-      TextureBase(graphics, createInfo.elements > 1 ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D, createInfo, existingImage) {}
+      TextureBase(graphics, VK_IMAGE_VIEW_TYPE_2D, createInfo, existingImage) {}
 
 Texture2D::~Texture2D() {}
 
@@ -479,6 +482,36 @@ Gfx::OTextureView Texture2D::createTextureView(uint32 baseMipLevel, uint32 level
 void Texture2D::executeOwnershipBarrier(Gfx::QueueType newOwner) { TextureBase::transferOwnership(newOwner); }
 
 void Texture2D::executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, VkAccessFlags dstAccess,
+                                       VkPipelineStageFlags dstStage) {
+    TextureBase::pipelineBarrier(srcAccess, srcStage, dstAccess, dstStage);
+}
+
+Texture2DArray::Texture2DArray(PGraphics graphics, const TextureCreateInfo& createInfo, VkImage existingImage)
+    : Gfx::Texture2DArray(graphics->getFamilyMapping()),
+      TextureBase(graphics, VK_IMAGE_VIEW_TYPE_2D_ARRAY, createInfo, existingImage) {}
+
+Texture2DArray::~Texture2DArray() {}
+
+void Texture2DArray::changeLayout(Gfx::SeImageLayout newLayout, Gfx::SeAccessFlags srcAccess, Gfx::SePipelineStageFlags srcStage,
+                             Gfx::SeAccessFlags dstAccess, Gfx::SePipelineStageFlags dstStage) {
+    TextureBase::changeLayout(newLayout, srcAccess, srcStage, dstAccess, dstStage);
+}
+
+void Texture2DArray::download(uint32 mipLevel, uint32 arrayLayer, uint32 face, Array<uint8>& buffer) {
+    TextureBase::download(mipLevel, arrayLayer, face, buffer);
+}
+
+void Texture2DArray::generateMipmaps() { TextureBase::generateMipmaps(); }
+
+Gfx::PTextureView Texture2DArray::getDefaultView() const { return PTextureView(handle->imageView); }
+
+Gfx::OTextureView Texture2DArray::createTextureView(uint32 baseMipLevel, uint32 levelCount, uint32 baseArrayLayer, uint32 layerCount) {
+    return handle->createTextureView(baseMipLevel, levelCount, baseArrayLayer, layerCount);
+}
+
+void Texture2DArray::executeOwnershipBarrier(Gfx::QueueType newOwner) { TextureBase::transferOwnership(newOwner); }
+
+void Texture2DArray::executePipelineBarrier(VkAccessFlags srcAccess, VkPipelineStageFlags srcStage, VkAccessFlags dstAccess,
                                        VkPipelineStageFlags dstStage) {
     TextureBase::pipelineBarrier(srcAccess, srcStage, dstAccess, dstStage);
 }

@@ -1,6 +1,5 @@
 #include "RenderGraphResources.h"
 #include "Graphics/Query.h"
-#include <iostream>
 #include <string>
 
 using namespace Seele;
