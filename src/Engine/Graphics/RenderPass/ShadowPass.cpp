@@ -102,9 +102,9 @@ void ShadowPass::beginFrame(const Component::Camera& camera, const Component::Tr
 
             Vector maxExtents = Vector(radius);
             Vector minExtents = -maxExtents;
-
             Vector lightDir = glm::normalize(scene->getLightEnvironment()->getDirectionalLight(s).direction);
-            Matrix4 viewMatrix = glm::lookAt(frustumCenter - lightDir * -minExtents.z, frustumCenter, Vector(0, 1, 0));
+            Vector cameraPos = frustumCenter - lightDir * -minExtents.z;
+            Matrix4 viewMatrix = glm::lookAt(cameraPos, frustumCenter, Vector(0, 1, 0));
             Matrix4 projectionMatrix =
                 glm::ortho(minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, 0.0f, maxExtents.z - minExtents.z);
             Matrix4 viewProjectionMatrix = projectionMatrix * viewMatrix;
@@ -114,6 +114,8 @@ void ShadowPass::beginFrame(const Component::Camera& camera, const Component::Tr
             viewParams.inverseProjection = glm::inverse(projectionMatrix);
             viewParams.viewProjectionMatrix = viewProjectionMatrix;
             viewParams.inverseViewProjectionMatrix = glm::inverse(viewProjectionMatrix);
+            viewParams.cameraPosition_WS = Vector4(cameraPos, 1);
+            viewParams.cameraForward_WS = Vector4(frustumCenter - cameraPos, 0); 
             viewParams.screenDimensions = Vector2(maxExtents.x - minExtents.x, maxExtents.y - minExtents.y);
             viewParams.invScreenDimensions = 1.0f / viewParams.screenDimensions;
             cascades[i].viewParams.add(createViewParamsSet());
@@ -208,7 +210,7 @@ void ShadowPass::render() {
                     command->bindPipeline(pipeline);
                 }
                 command->bindDescriptor(
-                    {cascades[c].viewParams[shadowIndex], vertexData->getVertexDataSet(), vertexData->getInstanceDataSet()});
+                    {cascades[c].viewParams[c], vertexData->getVertexDataSet(), vertexData->getInstanceDataSet()});
                 VertexData::DrawCallOffsets offsets = {
                     .instanceOffset = 0,
                 };
