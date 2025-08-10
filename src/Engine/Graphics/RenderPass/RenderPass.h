@@ -28,7 +28,7 @@ class RenderPass {
 
   protected:
     void updateViewParameters(const Component::Camera& cam, const Component::Transform& transform);
-    Gfx::PDescriptorSet createViewParamsSet();
+    Gfx::ODescriptorSet createViewParamsSet();
     struct Plane {
         Vector n;
         float d;

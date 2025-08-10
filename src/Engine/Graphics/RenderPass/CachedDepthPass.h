@@ -24,7 +24,7 @@ class CachedDepthPass : public RenderPass {
     Gfx::OPipelineStatisticsQuery query;
     Gfx::OTimestampQuery timestamps;
 
-    Gfx::PDescriptorSet viewParamsSet;
+    Gfx::ODescriptorSet viewParamsSet;
     Gfx::PShaderBuffer cullingBuffer;
     PScene scene;
 };

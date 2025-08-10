@@ -52,7 +52,7 @@ class UIPass : public RenderPass {
     Gfx::OTexture2D depthBuffer;
 
     Gfx::ODescriptorLayout textDescriptorLayout;
-    Gfx::PDescriptorSet textDescriptorSet;
+    Gfx::ODescriptorSet textDescriptorSet;
 
     Gfx::OVertexShader textVertexShader;
     Gfx::OFragmentShader textFragmentShader;
@@ -60,9 +60,9 @@ class UIPass : public RenderPass {
     Gfx::PGraphicsPipeline textPipeline;
 
     Gfx::ODescriptorLayout uiDescriptorLayout;
-    Gfx::PDescriptorSet uiDescriptorSet;
+    Gfx::ODescriptorSet uiDescriptorSet;
 
-    Gfx::PDescriptorSet viewParamsSet;
+    Gfx::ODescriptorSet viewParamsSet;
 
     Gfx::OVertexShader uiVertexShader;
     Gfx::OFragmentShader uiFragmentShader;

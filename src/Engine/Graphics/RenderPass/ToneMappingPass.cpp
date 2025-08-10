@@ -148,7 +148,7 @@ void ToneMappingPass::render() {
     {
         Gfx::OComputeCommand computeCommand = graphics->createComputeCommand("HistogramCommand");
         computeCommand->bindPipeline(histogramPipeline);
-        computeCommand->bindDescriptor({histogramSet});
+        computeCommand->bindDescriptor(histogramSet);
         computeCommand->dispatch(threadGroups.x, threadGroups.y, 1);
         graphics->executeCommands(std::move(computeCommand));
     }
@@ -158,7 +158,7 @@ void ToneMappingPass::render() {
     {
         Gfx::OComputeCommand computeCommand = graphics->createComputeCommand("ExposureCommand");
         computeCommand->bindPipeline(exposurePipeline);
-        computeCommand->bindDescriptor({histogramSet});
+        computeCommand->bindDescriptor(histogramSet);
         computeCommand->dispatch(1, 1, 1);
         graphics->executeCommands(std::move(computeCommand));
     }
@@ -168,7 +168,7 @@ void ToneMappingPass::render() {
                                      Gfx::SE_PIPELINE_STAGE_COMPUTE_SHADER_BIT | Gfx::SE_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
 
     tonemappingLayout->reset();
-    Gfx::PDescriptorSet tonemappingSet = tonemappingLayout->allocateDescriptorSet();
+    Gfx::ODescriptorSet tonemappingSet = tonemappingLayout->allocateDescriptorSet();
     tonemappingSet->updateConstants("offset", 0, &offset);
     tonemappingSet->updateConstants("slope", 0, &slope);
     tonemappingSet->updateConstants("power", 0, &power);
@@ -181,7 +181,7 @@ void ToneMappingPass::render() {
     Gfx::ORenderCommand command = graphics->createRenderCommand("ToneMapping");
     command->setViewport(viewport);
     command->bindPipeline(pipeline);
-    command->bindDescriptor({tonemappingSet});
+    command->bindDescriptor(tonemappingSet);
     command->draw(3, 1, 0, 0);
     graphics->executeCommands(std::move(command));
     graphics->endRenderPass();

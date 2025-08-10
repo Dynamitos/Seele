@@ -26,7 +26,7 @@ class ShadowPass : public RenderPass {
         Array<Gfx::OTextureView> views;
         Array<Matrix4> lightSpaceMatrices;
         Gfx::OShaderBuffer lightSpaceBuffer;
-        Array<Gfx::PDescriptorSet> viewParams;
+        Array<Gfx::ODescriptorSet> viewParams;
     };
     StaticArray<Cascade, NUM_CASCADES> cascades;
     Gfx::OUniformBuffer cascadeSplitsBuffer;

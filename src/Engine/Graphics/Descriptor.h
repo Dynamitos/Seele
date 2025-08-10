@@ -25,7 +25,7 @@ class DescriptorLayout {
     virtual ~DescriptorLayout();
     void addDescriptorBinding(DescriptorBinding binding);
     void reset();
-    PDescriptorSet allocateDescriptorSet();
+    ODescriptorSet allocateDescriptorSet();
     virtual void create() = 0;
     constexpr uint32 getHash() const { return hash; }
     constexpr const std::string& getName() const { return name; }
@@ -45,7 +45,7 @@ class DescriptorPool {
   public:
     DescriptorPool();
     virtual ~DescriptorPool();
-    virtual PDescriptorSet allocateDescriptorSet() = 0;
+    virtual ODescriptorSet allocateDescriptorSet() = 0;
     virtual void reset() = 0;
 };
 DEFINE_REF(DescriptorPool)

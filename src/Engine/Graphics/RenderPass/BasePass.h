@@ -37,9 +37,9 @@ class BasePass : public RenderPass {
     constexpr static const char* SHADOWSAMPLER_NAME = "shadowSampler";
     constexpr static const char* CASCADE_SPLIT_NAME = "cascadeSplit";
 
-    Gfx::PDescriptorSet opaqueCulling;
-    Gfx::PDescriptorSet transparentCulling;
-    Gfx::PDescriptorSet shadowMapping;
+    Gfx::ODescriptorSet opaqueCulling;
+    Gfx::ODescriptorSet transparentCulling;
+    Gfx::ODescriptorSet shadowMapping;
 
     // use a different texture here so we can do multisampling
     Gfx::OTexture2D msBasePassDepth;
@@ -51,7 +51,7 @@ class BasePass : public RenderPass {
     // used for transparency sorting
     Vector cameraPos;
     Vector cameraForward;
-    Gfx::PDescriptorSet viewParamsSet;
+    Gfx::ODescriptorSet viewParamsSet;
 
     PCameraActor source;
     Gfx::OPipelineLayout basePassLayout;
@@ -82,9 +82,9 @@ class BasePass : public RenderPass {
 
     // Skybox
     Gfx::ODescriptorLayout skyboxDataLayout;
-    Gfx::PDescriptorSet skyboxDataSet;
+    Gfx::ODescriptorSet skyboxDataSet;
     Gfx::ODescriptorLayout textureLayout;
-    Gfx::PDescriptorSet textureSet;
+    Gfx::ODescriptorSet textureSet;
     Gfx::OVertexShader vertexShader;
     Gfx::OFragmentShader fragmentShader;
     Gfx::OPipelineLayout pipelineLayout;

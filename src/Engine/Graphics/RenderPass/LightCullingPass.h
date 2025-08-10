@@ -29,11 +29,11 @@ class LightCullingPass : public RenderPass {
     Gfx::OShaderBuffer frustumBuffer;
     const char* FRUSTUMBUFFER_NAME = "frustums";
     Gfx::ODescriptorLayout dispatchParamsLayout;
-    Gfx::PDescriptorSet dispatchParamsSet;
+    Gfx::ODescriptorSet dispatchParamsSet;
     Gfx::OComputeShader frustumShader;
     Gfx::PComputePipeline frustumPipeline;
     Gfx::OPipelineLayout frustumLayout;
-    Gfx::PDescriptorSet viewParamsSet;
+    Gfx::ODescriptorSet viewParamsSet;
 
     PLightEnvironment lightEnv;
     Gfx::PTextureView depthAttachment;
@@ -50,7 +50,7 @@ class LightCullingPass : public RenderPass {
     constexpr static const char* OLIGHTGRID_NAME = "oLightGrid";
     Gfx::OTexture2D tLightGrid;
     constexpr static const char* TLIGHTGRID_NAME = "tLightGrid";
-    Gfx::PDescriptorSet cullingDescriptorSet;
+    Gfx::ODescriptorSet cullingDescriptorSet;
     Gfx::ODescriptorLayout cullingDescriptorLayout;
     Gfx::OPipelineLayout cullingLayout;
     Gfx::OPipelineLayout cullingEnableLayout;

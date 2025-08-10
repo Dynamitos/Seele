@@ -11,7 +11,7 @@ void DescriptorLayout::addDescriptorBinding(DescriptorBinding binding) {
     descriptorBindings.add(binding);
 }
 
-PDescriptorSet DescriptorLayout::allocateDescriptorSet() { return pool->allocateDescriptorSet(); }
+ODescriptorSet DescriptorLayout::allocateDescriptorSet() { return pool->allocateDescriptorSet(); }
 
 void DescriptorLayout::reset() { pool->reset(); }
 

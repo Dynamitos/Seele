@@ -38,7 +38,7 @@ class RenderGraph {
         return res;
     }
   private:
-    PRenderGraphResources res;
+    ORenderGraphResources res;
     List<ORenderPass> passes;
 };
 

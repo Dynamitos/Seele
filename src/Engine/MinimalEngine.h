@@ -5,7 +5,6 @@
 #include <memory>
 #include <utility>
 
-
 #define DEFINE_REF(x)                                                                                                                      \
     typedef ::Seele::RefPtr<x> P##x;                                                                                                       \
     typedef ::Seele::UniquePtr<x> UP##x;                                                                                                   \
@@ -26,10 +25,12 @@
     }
 
 namespace Seele {
+template <typename T> class OwningPtr;
 template <typename T> class RefPtr {
   public:
     constexpr RefPtr() noexcept : object(nullptr) {}
     constexpr RefPtr(std::nullptr_t) noexcept : object(nullptr) {}
+    constexpr RefPtr(OwningPtr<T>&&) = delete;
     RefPtr(T* ptr) : object(ptr) {}
     constexpr RefPtr(const RefPtr& other) noexcept : object(other.object) {}
     constexpr RefPtr(RefPtr&& rhs) noexcept : object(std::move(rhs.object)) { rhs.object = nullptr; }
@@ -49,6 +50,7 @@ template <typename T> class RefPtr {
         }
         return RefPtr<F>(f);
     }
+    constexpr RefPtr& operator=(OwningPtr<T>&&) = delete;
     constexpr RefPtr& operator=(const RefPtr& other) {
         if (this != &other) {
             object = other.object;
@@ -60,6 +62,10 @@ template <typename T> class RefPtr {
             object = std::move(rhs.object);
             rhs.object = nullptr;
         }
+        return *this;
+    }
+    constexpr RefPtr& operator=(std::nullptr_t) noexcept {
+        object = nullptr;
         return *this;
     }
     constexpr ~RefPtr() {}
@@ -77,7 +83,7 @@ template <typename T> class RefPtr {
   private:
     T* object;
 };
-template <typename T, typename Deleter = std::default_delete<T>> class OwningPtr {
+template <typename T> class OwningPtr {
   public:
     OwningPtr() : pointer(nullptr) {}
     OwningPtr(T* ptr) : pointer(ptr) {}
@@ -94,14 +100,18 @@ template <typename T, typename Deleter = std::default_delete<T>> class OwningPtr
     OwningPtr& operator=(OwningPtr&& other) noexcept {
         if (this != &other) {
             if (pointer != nullptr) {
-                Deleter()(pointer);
+                std::default_delete<T> d;
+                d(pointer);
             }
             pointer = other.pointer;
             other.pointer = nullptr;
         }
         return *this;
     }
-    ~OwningPtr() { Deleter()(pointer); }
+    ~OwningPtr() {
+        std::default_delete<T> d;
+        d(pointer);
+    }
     constexpr operator RefPtr<T>() { return RefPtr<T>(pointer); }
     constexpr operator RefPtr<T>() const { return RefPtr<T>(pointer); }
     constexpr T* operator->() { return pointer; }

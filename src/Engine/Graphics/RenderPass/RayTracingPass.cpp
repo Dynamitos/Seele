@@ -66,7 +66,8 @@ static uint32 pass = 0;
 static Component::Transform lastCam;
 void RayTracingPass::beginFrame(const Component::Camera& cam, const Component::Transform& transform) {
     updateViewParameters(cam, transform);
-    viewParamsSet = createViewParamsSet();    if (lastCam.getPosition() != transform.getPosition() || lastCam.getForward() != transform.getForward()) {
+    viewParamsSet = createViewParamsSet();
+    if (lastCam.getPosition() != transform.getPosition() || lastCam.getForward() != transform.getForward()) {
         lastCam = transform;
         pass = 0;
     }
@@ -149,7 +150,7 @@ void RayTracingPass::render() {
         .instances = instanceData,
         .bottomLevelStructures = accelerationStructures,
     });
-    Gfx::PDescriptorSet desc = paramsLayout->allocateDescriptorSet();
+    Gfx::ODescriptorSet desc = paramsLayout->allocateDescriptorSet();
     desc->updateAccelerationStructure(TLAS_NAME, 0, tlas);
     desc->updateTexture(ACCUMULATOR_NAME, 0, radianceAccumulator->getDefaultView());
     desc->updateTexture(TEXTURE_NAME, 0, texture->getDefaultView());

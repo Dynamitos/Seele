@@ -44,7 +44,7 @@ class DepthCullingPass : public RenderPass {
     Gfx::PComputePipeline depthSourceCopy;
     Gfx::OComputeShader depthReduceLevelShader;
     Gfx::PComputePipeline depthReduceLevel;
-    Gfx::PDescriptorSet viewParamsSet;
+    Gfx::ODescriptorSet viewParamsSet;
 
     Gfx::PShaderBuffer cullingBuffer;
     PScene scene;

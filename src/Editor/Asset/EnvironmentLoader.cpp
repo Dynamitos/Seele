@@ -203,7 +203,7 @@ void EnvironmentLoader::import(EnvironmentImportArgs args, PEnvironmentMapAsset 
         glm::lookAt(Vector(0.0f, 0.0f, 0.0f), Vector(0.0f, 0.0f, -1.0f), Vector(0.0f, 1.0f, 0.0f)),
         glm::lookAt(Vector(0.0f, 0.0f, 0.0f), Vector(0.0f, 0.0f, 1.0f), Vector(0.0f, 1.0f, 0.0f)),
     };
-    Gfx::PDescriptorSet set = cubeRenderLayout->allocateDescriptorSet();
+    Gfx::ODescriptorSet set = cubeRenderLayout->allocateDescriptorSet();
     set->updateConstants("view", 0, captureViews);
     set->updateConstants("projection", 0, &captureProjection);
     set->updateTexture("equirectangularMap", 0, hdrTexture->getDefaultView());
@@ -262,7 +262,7 @@ void EnvironmentLoader::import(EnvironmentImportArgs args, PEnvironmentMapAsset 
             graphics->beginRenderPass(cubeRenderPass);
             Gfx::ORenderCommand renderCommand = graphics->createRenderCommand("CubeMapRender");
             renderCommand->bindPipeline(cubeRenderPipeline);
-            renderCommand->bindDescriptor({set});
+            renderCommand->bindDescriptor(set);
             renderCommand->setViewport(cubeRenderViewport);
             renderCommand->draw(6, 1, i * 6, 0);
             graphics->executeCommands(std::move(renderCommand));
@@ -329,7 +329,7 @@ void EnvironmentLoader::import(EnvironmentImportArgs args, PEnvironmentMapAsset 
             graphics->beginRenderPass(convolutionPass);
             Gfx::ORenderCommand cmd = graphics->createRenderCommand("ConvolutionPass");
             cmd->bindPipeline(convolutionPipeline);
-            cmd->bindDescriptor({set});
+            cmd->bindDescriptor(set);
             cmd->setViewport(convolutionViewport);
             cmd->draw(6, 1, i * 6, 0);
             graphics->executeCommands(std::move(cmd));
@@ -391,7 +391,7 @@ void EnvironmentLoader::import(EnvironmentImportArgs args, PEnvironmentMapAsset 
                 graphics->beginRenderPass(prefilterPass);
                 Gfx::ORenderCommand cmd = graphics->createRenderCommand("PrefilterPass");
                 cmd->bindPipeline(prefilterPipeline);
-                cmd->bindDescriptor({set});
+                cmd->bindDescriptor(set);
                 float roughness = (float)mip / (float)(prefilteredCubeMap->getMipLevels() - 1);
                 cmd->pushConstants(Gfx::SE_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(float), &roughness);
                 cmd->setViewport(prefilterViewports[mip]);

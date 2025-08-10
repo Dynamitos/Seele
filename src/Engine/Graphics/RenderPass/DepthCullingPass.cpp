@@ -72,7 +72,7 @@ void DepthCullingPass::beginFrame(const Component::Camera& cam, const Component:
 
 void DepthCullingPass::render() {
     graphics->beginDebugRegion("DepthCullingPass");
-    Gfx::PDescriptorSet set = depthAttachmentLayout->allocateDescriptorSet();
+    Gfx::ODescriptorSet set = depthAttachmentLayout->allocateDescriptorSet();
     {
         graphics->beginDebugRegion("MipGeneration");
         query->beginQuery();

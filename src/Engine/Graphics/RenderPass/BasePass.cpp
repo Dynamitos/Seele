@@ -1,6 +1,5 @@
 #include "BasePass.h"
 #include "Asset/AssetRegistry.h"
-#include "Asset/EnvironmentMapAsset.h"
 #include "Component/Camera.h"
 #include "Graphics/Command.h"
 #include "Graphics/Descriptor.h"
@@ -14,6 +13,9 @@
 #include "Math/Vector.h"
 #include "MinimalEngine.h"
 #include "ShadowPass.h"
+#include "Scene/Scene.h"
+#include "Asset/EnvironmentMapAsset.h"
+#include "Scene/LightEnvironment.h"
 
 using namespace Seele;
 
@@ -481,7 +483,6 @@ void BasePass::publishOutputs() {
     resources->registerRenderPassOutput("BASEPASS_COLOR", colorAttachment);
     resources->registerRenderPassOutput("BASEPASS_DEPTH", depthAttachment);
 
-    timestamps = graphics->createTimestampQuery(2, "BaseTS");
     query = graphics->createPipelineStatisticsQuery("BasePassPipelineStatistics");
     resources->registerQueryOutput("BASEPASS_QUERY", query);
 }

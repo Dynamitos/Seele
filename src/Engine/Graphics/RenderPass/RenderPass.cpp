@@ -49,7 +49,7 @@ void RenderPass::updateViewParameters(const Component::Camera& cam, const Compon
     };
 }
 
-Gfx::PDescriptorSet RenderPass::createViewParamsSet()
+Gfx::ODescriptorSet RenderPass::createViewParamsSet()
 {
     // screen space
     //StaticArray<Vector4, 4> corners = {
@@ -71,8 +71,7 @@ Gfx::PDescriptorSet RenderPass::createViewParamsSet()
 
     // extract_planes_from_view_projection_matrix(viewParams.viewProjectionMatrix, viewParams.viewFrustum);
 
-    viewParamsLayout->reset();
-    Gfx::PDescriptorSet viewParamsSet = viewParamsLayout->allocateDescriptorSet();
+    Gfx::ODescriptorSet viewParamsSet = viewParamsLayout->allocateDescriptorSet();
     viewParamsSet->updateConstants("viewMatrix", 0, &viewParams.viewMatrix);
     viewParamsSet->updateConstants("inverseViewMatrix", 0, &viewParams.inverseViewMatrix);
     viewParamsSet->updateConstants("projectionMatrix", 0, &viewParams.projectionMatrix);

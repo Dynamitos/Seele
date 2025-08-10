@@ -256,8 +256,8 @@ void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptor) {
     assert(threadId == std::this_thread::get_id());
     auto descriptorSet = descriptor.cast<DescriptorSet>();
     assert(descriptorSet->writeDescriptors.size() == 0);
-    descriptorSet->bind();
-    boundResources.add(descriptorSet);
+    descriptorSet->setHandle->bind();
+    boundResources.add(descriptorSet->setHandle);
     for (auto& binding : descriptorSet->boundResources) {
         for (auto& res : binding) {
             // partially bound descriptors can include nulls
@@ -268,7 +268,7 @@ void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptor) {
         }
     }
     if (descriptorSet->constantsBuffer != nullptr) {
-        descriptorSet->bind();
+        descriptorSet->setHandle->bind();
         boundResources.add(PBufferAllocation(descriptorSet->constantsBuffer));
     }
 
@@ -286,8 +286,8 @@ void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorS
     for (uint32 i = 0; i < descriptorSets.size(); ++i) {
         auto descriptorSet = descriptorSets[i].cast<DescriptorSet>();
         assert(descriptorSet->writeDescriptors.size() == 0);
-        descriptorSet->bind();
-        boundResources.add(descriptorSet);
+        descriptorSet->setHandle->bind();
+        boundResources.add(descriptorSet->setHandle);
 
         for (auto& binding : descriptorSet->boundResources) {
             for (auto& res : binding) {
@@ -299,7 +299,7 @@ void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorS
             }
         }
         if (descriptorSet->constantsBuffer != nullptr) {
-            descriptorSet->bind();
+            descriptorSet->setHandle->bind();
             boundResources.add(PBufferAllocation(descriptorSet->constantsBuffer));
         }
         sets[layout->findParameter(descriptorSet->getName())] = descriptorSet->getHandle();
@@ -436,8 +436,8 @@ void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet descriptor) {
     assert(threadId == std::this_thread::get_id());
     auto descriptorSet = descriptor.cast<DescriptorSet>();
     assert(descriptorSet->writeDescriptors.size() == 0);
-    descriptorSet->bind();
-    boundResources.add(descriptorSet.getHandle());
+    descriptorSet->setHandle->bind();
+    boundResources.add(descriptorSet->setHandle);
 
     for (auto& binding : descriptorSet->boundResources) {
         for (auto& res : binding) {
@@ -449,7 +449,7 @@ void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet descriptor) {
         }
     }
     if (descriptorSet->constantsBuffer != nullptr) {
-        descriptorSet->bind();
+        descriptorSet->setHandle->bind();
         boundResources.add(PBufferAllocation(descriptorSet->constantsBuffer));
     }
 
@@ -464,8 +464,8 @@ void ComputeCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptor
     for (uint32 i = 0; i < descriptorSets.size(); ++i) {
         auto descriptorSet = descriptorSets[i].cast<DescriptorSet>();
         assert(descriptorSet->writeDescriptors.size() == 0);
-        descriptorSet->bind();
-        boundResources.add(descriptorSet.getHandle());
+        descriptorSet->setHandle->bind();
+        boundResources.add(descriptorSet->setHandle);
         for (auto& binding : descriptorSet->boundResources) {
             for (auto& res : binding) {
                 // partially bound descriptors can include nulls
@@ -476,7 +476,7 @@ void ComputeCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptor
             }
         }
         if (descriptorSet->constantsBuffer != nullptr) {
-            descriptorSet->bind();
+            descriptorSet->setHandle->bind();
             boundResources.add(PBufferAllocation(descriptorSet->constantsBuffer));
         }
         sets[pipeline->getPipelineLayout()->findParameter(descriptorSet->getName())] = descriptorSet->getHandle();

@@ -28,7 +28,7 @@ class ToneMappingPass : public RenderPass {
     uint32 numPixels;
     UVector2 threadGroups;
     Gfx::ODescriptorLayout histogramLayout;
-    Gfx::PDescriptorSet histogramSet;
+    Gfx::ODescriptorSet histogramSet;
     Gfx::OPipelineLayout histogramPipelineLayout;
     Gfx::OComputeShader histogramShader;
     Gfx::PComputePipeline histogramPipeline;
@@ -48,6 +48,6 @@ class ToneMappingPass : public RenderPass {
     Gfx::OFragmentShader frag;
     Gfx::PGraphicsPipeline pipeline;
 
-    Gfx::PDescriptorSet viewParamsSet;
+    Gfx::ODescriptorSet viewParamsSet;
 };
 }

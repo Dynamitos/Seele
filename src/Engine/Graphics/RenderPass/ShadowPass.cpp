@@ -62,6 +62,7 @@ void ShadowPass::beginFrame(const Component::Camera& camera, const Component::Tr
         float uniform = minZ + range * p;
         float d = cascadeSplitLambda * (log - uniform) + uniform;
         cascadeSplits[i] = (d - nearClip) / clipRange;
+        cascades[i].viewParams.clear();
     }
 
     // call this to update view params member, ignore descriptor set
@@ -210,7 +211,7 @@ void ShadowPass::render() {
                     command->bindPipeline(pipeline);
                 }
                 command->bindDescriptor(
-                    {cascades[c].viewParams[c], vertexData->getVertexDataSet(), vertexData->getInstanceDataSet()});
+                    {cascades[c].viewParams[shadowIndex], vertexData->getVertexDataSet(), vertexData->getInstanceDataSet()});
                 VertexData::DrawCallOffsets offsets = {
                     .instanceOffset = 0,
                 };

@@ -14,7 +14,7 @@ Array<Gfx::PSampler> Material::samplers;
 Gfx::OShaderBuffer Material::floatBuffer;
 Array<float> Material::floatData;
 Gfx::ODescriptorLayout Material::layout;
-Gfx::PDescriptorSet Material::set;
+Gfx::ODescriptorSet Material::set;
 std::atomic_uint64_t Material::materialIdCounter = 0;
 Array<PMaterial> Material::materials;
 

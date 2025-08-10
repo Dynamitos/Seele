@@ -18,7 +18,7 @@ class WaterRenderer {
     Gfx::PGraphics graphics;
     PScene scene;
     Gfx::ODescriptorLayout computeLayout;
-    Gfx::PDescriptorSet computeSet;
+    Gfx::ODescriptorSet computeSet;
     Gfx::OPipelineLayout pipelineLayout;
 
     Gfx::OComputeShader initSpectrumCS;
@@ -145,7 +145,7 @@ class WaterRenderer {
     Gfx::OMeshShader waterMesh;
     Gfx::OFragmentShader waterFragment;
     Gfx::ODescriptorLayout materialLayout;
-    Gfx::PDescriptorSet materialSet;
+    Gfx::ODescriptorSet materialSet;
     Gfx::OPipelineLayout waterLayout;
     Gfx::PGraphicsPipeline waterPipeline;
 

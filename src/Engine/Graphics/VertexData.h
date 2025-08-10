@@ -158,7 +158,7 @@ class VertexData {
 
     Array<Gfx::PBottomLevelAS> rayTracingScene;
 
-    Gfx::PDescriptorSet descriptorSet;
+    Gfx::ODescriptorSet descriptorSet;
     uint64 idCounter;
     uint64 head;
     uint64 verticesAllocated;

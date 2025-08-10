@@ -19,14 +19,14 @@ class VisibilityPass : public RenderPass {
   private:
     static constexpr uint32 BLOCK_SIZE = 32;
     Gfx::RenderTargetAttachment visibilityAttachment;
-    Gfx::PDescriptorSet visibilitySet;
+    Gfx::ODescriptorSet visibilitySet;
     Gfx::ODescriptorLayout visibilityDescriptor;
     Gfx::OPipelineLayout visibilityLayout;
     Gfx::OComputeShader visibilityShader;
     Gfx::PComputePipeline visibilityPipeline;
     Gfx::OPipelineStatisticsQuery query;
     Gfx::PTimestampQuery timestamps;
-    Gfx::PDescriptorSet viewParamsSet;
+    Gfx::ODescriptorSet viewParamsSet;
 
     constexpr static const char* VISIBILITY_NAME = "visibilityTexture";
     // Holds culling information for every meshlet for each instance

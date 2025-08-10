@@ -63,7 +63,7 @@ class Material {
     static Gfx::OShaderBuffer floatBuffer;
     static Array<float> floatData;
     static Gfx::ODescriptorLayout layout;
-    static Gfx::PDescriptorSet set;
+    static Gfx::ODescriptorSet set;
     static std::atomic_uint64_t materialIdCounter;
     static Array<PMaterial> materials;
 };

@@ -3,6 +3,7 @@
 #include "Graphics/Descriptor.h"
 #include "Graphics/Vulkan/Buffer.h"
 #include "Resources.h"
+#include <vulkan/vulkan_core.h>
 
 namespace Seele {
 namespace Vulkan {
@@ -32,12 +33,22 @@ class DescriptorLayout : public Gfx::DescriptorLayout {
 };
 DEFINE_REF(DescriptorLayout)
 
+class DescriptorSetHandle : public CommandBoundResource {
+public:
+    DescriptorSetHandle(PGraphics graphics, const std::string& name);
+    virtual ~DescriptorSetHandle();
+    constexpr VkDescriptorSet getHandle() const { return handle; }
+    PGraphics graphics;
+    VkDescriptorSet handle = VK_NULL_HANDLE;
+};
+DEFINE_REF(DescriptorSetHandle)
+
 DECLARE_REF(DescriptorSet)
 class DescriptorPool : public Gfx::DescriptorPool, public CommandBoundResource {
   public:
     DescriptorPool(PGraphics graphics, PDescriptorLayout layout);
     virtual ~DescriptorPool();
-    virtual Gfx::PDescriptorSet allocateDescriptorSet() override;
+    virtual Gfx::ODescriptorSet allocateDescriptorSet() override;
     virtual void reset() override;
 
     constexpr VkDescriptorPool getHandle() const { return poolHandle; }
@@ -47,15 +58,14 @@ class DescriptorPool : public Gfx::DescriptorPool, public CommandBoundResource {
     PGraphics graphics;
     PDescriptorLayout layout;
     const static int maxSets = 64;
-    StaticArray<ODescriptorSet, maxSets> cachedHandles;
+    StaticArray<ODescriptorSetHandle, maxSets> cachedHandles;
     VkDescriptorPool poolHandle;
     DescriptorPool* nextAlloc = nullptr;
 };
 DEFINE_REF(DescriptorPool)
-
-class DescriptorSet : public Gfx::DescriptorSet, public CommandBoundResource {
+class DescriptorSet : public Gfx::DescriptorSet {
   public:
-    DescriptorSet(PGraphics graphics, PDescriptorPool owner);
+    DescriptorSet(PGraphics graphics, PDescriptorPool owner, PDescriptorSetHandle setHandle);
     virtual ~DescriptorSet();
     virtual void writeChanges() override;
     virtual void updateConstants(const std::string& name, uint32 offset, void* data) override;
@@ -67,7 +77,7 @@ class DescriptorSet : public Gfx::DescriptorSet, public CommandBoundResource {
     virtual void updateTexture(const std::string& name, uint32 index, Gfx::PTextureView texture) override;
     virtual void updateAccelerationStructure(const std::string& name, uint32 index, Gfx::PTopLevelAS as) override;
 
-    constexpr VkDescriptorSet getHandle() const { return setHandle; }
+    constexpr VkDescriptorSet getHandle() const { return setHandle->getHandle(); }
 
   private:
     std::vector<uint8> constantData;
@@ -81,7 +91,7 @@ class DescriptorSet : public Gfx::DescriptorSet, public CommandBoundResource {
     // would not work anyways, so casts should be safe
     // Array<void*> cachedData;
     Array<Array<PCommandBoundResource>> boundResources;
-    VkDescriptorSet setHandle;
+    PDescriptorSetHandle setHandle;
     PGraphics graphics;
     PDescriptorPool owner;
     friend class DescriptorPool;

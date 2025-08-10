@@ -41,7 +41,7 @@ class LightEnvironment {
     PEnvironmentMapAsset environment;
     Gfx::OSampler environmentSampler;
     Gfx::ODescriptorLayout layout;
-    Gfx::PDescriptorSet set;
+    Gfx::ODescriptorSet set;
 };
 DEFINE_REF(LightEnvironment)
 } // namespace Seele

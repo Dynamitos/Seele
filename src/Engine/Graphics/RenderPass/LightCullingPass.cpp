@@ -143,7 +143,7 @@ void LightCullingPass::publishOutputs() {
 
         Gfx::ComputePipelineCreateInfo pipelineInfo;
         pipelineInfo.computeShader = cullingShader;
-        pipelineInfo.pipelineLayout = std::move(cullingLayout);
+        pipelineInfo.pipelineLayout = cullingLayout;
         cullingPipeline = graphics->createComputePipeline(std::move(pipelineInfo));
     }
 
@@ -167,7 +167,7 @@ void LightCullingPass::publishOutputs() {
 
         Gfx::ComputePipelineCreateInfo pipelineInfo;
         pipelineInfo.computeShader = cullingShader;
-        pipelineInfo.pipelineLayout = std::move(cullingEnableLayout);
+        pipelineInfo.pipelineLayout = cullingEnableLayout;
         cullingEnabledPipeline = graphics->createComputePipeline(std::move(pipelineInfo));
     }
 

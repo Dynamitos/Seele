@@ -2,17 +2,18 @@
 #include "Buffer.h"
 #include "CRC.h"
 #include "Command.h"
+#include "Enums.h"
 #include "Graphics.h"
 #include "Graphics/Buffer.h"
 #include "Graphics/Descriptor.h"
 #include "Graphics/Enums.h"
 #include "Graphics/Initializer.h"
+#include "Graphics/Vulkan/Resources.h"
 #include "RayTracing.h"
 #include "Texture.h"
-#include "Enums.h"
-#include <iostream>
 #include "vulkan/vulkan_core.h"
 #include <algorithm>
+#include <iostream>
 #include <mutex>
 
 using namespace Seele;
@@ -36,7 +37,8 @@ void DescriptorLayout::create() {
     if (std::ranges::contains(descriptorBindings, Gfx::SE_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK, &Gfx::DescriptorBinding::descriptorType)) {
         bindings.add({
             .binding = 0,
-            .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, // although we can pretend that we support inline uniforms, slang does not generate them
+            .descriptorType =
+                VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, // although we can pretend that we support inline uniforms, slang does not generate them
             .descriptorCount = 1,
             .stageFlags = VK_SHADER_STAGE_ALL, // todo
             .pImmutableSamplers = nullptr,
@@ -129,7 +131,7 @@ DescriptorPool::~DescriptorPool() {
     }
 }
 
-Gfx::PDescriptorSet DescriptorPool::allocateDescriptorSet() {
+Gfx::ODescriptorSet DescriptorPool::allocateDescriptorSet() {
     VkDescriptorSetLayout layoutHandle = layout->getHandle();
     VkDescriptorSetVariableDescriptorCountAllocateInfo setCounts = {
         .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO,
@@ -155,7 +157,7 @@ Gfx::PDescriptorSet DescriptorPool::allocateDescriptorSet() {
     }
     for (uint32 setIndex = 0; setIndex < cachedHandles.size(); ++setIndex) {
         if (cachedHandles[setIndex] == nullptr) {
-            cachedHandles[setIndex] = new DescriptorSet(graphics, this);
+            cachedHandles[setIndex] = new DescriptorSetHandle(graphics, layout->getName());
         }
         if (cachedHandles[setIndex]->isCurrentlyBound()) {
             // Currently in use, skip
@@ -163,21 +165,19 @@ Gfx::PDescriptorSet DescriptorPool::allocateDescriptorSet() {
         }
         if (cachedHandles[setIndex]->getHandle() == VK_NULL_HANDLE) {
             // If it hasnt been initialized, allocate it
-            VK_CHECK(vkAllocateDescriptorSets(graphics->getDevice(), &allocInfo, &cachedHandles[setIndex]->setHandle));
+            VK_CHECK(vkAllocateDescriptorSets(graphics->getDevice(), &allocInfo, &cachedHandles[setIndex]->handle));
             VkDebugUtilsObjectNameInfoEXT nameInfo = {
                 .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
                 .pNext = nullptr,
                 .objectType = VK_OBJECT_TYPE_DESCRIPTOR_SET,
-                .objectHandle = (uint64)cachedHandles[setIndex]->setHandle,
+                .objectHandle = (uint64)cachedHandles[setIndex]->getHandle(),
                 .pObjectName = name.c_str(),
             };
             vkSetDebugUtilsObjectNameEXT(graphics->getDevice(), &nameInfo);
         }
 
-        PDescriptorSet vulkanSet = cachedHandles[setIndex];
-
         // Found set, stop searching
-        return vulkanSet;
+        return new DescriptorSet(graphics, this, cachedHandles[setIndex]);
     }
     if (nextAlloc == nullptr) {
         nextAlloc = new DescriptorPool(graphics, layout);
@@ -198,8 +198,12 @@ void DescriptorPool::reset() {
     }
 }
 
-DescriptorSet::DescriptorSet(PGraphics graphics, PDescriptorPool owner)
-    : Gfx::DescriptorSet(owner->getLayout()), CommandBoundResource(graphics, owner->getLayout()->getName()), setHandle(VK_NULL_HANDLE),
+DescriptorSetHandle::DescriptorSetHandle(PGraphics graphics, const std::string& name) : CommandBoundResource(graphics, name) {}
+
+DescriptorSetHandle::~DescriptorSetHandle() {}
+
+DescriptorSet::DescriptorSet(PGraphics graphics, PDescriptorPool owner, PDescriptorSetHandle setHandle)
+    : Gfx::DescriptorSet(owner->getLayout()), setHandle(setHandle),
       graphics(graphics), owner(owner) {
     boundResources.resize(owner->getLayout()->bindings.size());
     for (uint32 i = 0; i < boundResources.size(); ++i) {
@@ -234,7 +238,7 @@ void DescriptorSet::updateBuffer(const std::string& mappingName, uint32 index, G
     writeDescriptors.add(VkWriteDescriptorSet{
         .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
         .pNext = nullptr,
-        .dstSet = setHandle,
+        .dstSet = setHandle->getHandle(),
         .dstBinding = binding,
         .dstArrayElement = index,
         .descriptorCount = 1,
@@ -261,7 +265,7 @@ void DescriptorSet::updateBuffer(const std::string& mappingName, uint32 index, G
     writeDescriptors.add(VkWriteDescriptorSet{
         .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
         .pNext = nullptr,
-        .dstSet = setHandle,
+        .dstSet = setHandle->getHandle(),
         .dstBinding = binding,
         .dstArrayElement = index,
         .descriptorCount = 1,
@@ -288,7 +292,7 @@ void DescriptorSet::updateBuffer(const std::string& mappingName, uint32 index, G
     writeDescriptors.add(VkWriteDescriptorSet{
         .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
         .pNext = nullptr,
-        .dstSet = setHandle,
+        .dstSet = setHandle->getHandle(),
         .dstBinding = binding,
         .dstArrayElement = index,
         .descriptorCount = 1,
@@ -315,7 +319,7 @@ void DescriptorSet::updateBuffer(const std::string& mappingName, uint32 index, G
     writeDescriptors.add(VkWriteDescriptorSet{
         .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
         .pNext = nullptr,
-        .dstSet = setHandle,
+        .dstSet = setHandle->getHandle(),
         .dstBinding = binding,
         .dstArrayElement = index,
         .descriptorCount = 1,
@@ -343,7 +347,7 @@ void DescriptorSet::updateSampler(const std::string& mappingName, uint32 index, 
     writeDescriptors.add(VkWriteDescriptorSet{
         .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
         .pNext = nullptr,
-        .dstSet = setHandle,
+        .dstSet = setHandle->getHandle(),
         .dstBinding = binding,
         .dstArrayElement = index,
         .descriptorCount = 1,
@@ -371,7 +375,7 @@ void DescriptorSet::updateTexture(const std::string& mappingName, uint32 index, 
     writeDescriptors.add(VkWriteDescriptorSet{
         .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
         .pNext = nullptr,
-        .dstSet = setHandle,
+        .dstSet = setHandle->getHandle(),
         .dstBinding = binding,
         .dstArrayElement = index,
         .descriptorCount = 1,
@@ -394,7 +398,7 @@ void DescriptorSet::updateAccelerationStructure(const std::string& mappingName, 
     writeDescriptors.add(VkWriteDescriptorSet{
         .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
         .pNext = &accelerationInfos.back(),
-        .dstSet = setHandle,
+        .dstSet = setHandle->getHandle(),
         .dstBinding = binding,
         .dstArrayElement = index,
         .descriptorCount = 1,
@@ -429,7 +433,7 @@ void DescriptorSet::writeChanges() {
         writeDescriptors.add(VkWriteDescriptorSet{
             .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
             .pNext = nullptr,
-            .dstSet = setHandle,
+            .dstSet = setHandle->getHandle(),
             .dstBinding = 0,
             .dstArrayElement = 0,
             .descriptorCount = 1,
@@ -439,9 +443,9 @@ void DescriptorSet::writeChanges() {
     }
 
     if (writeDescriptors.size() > 0) {
-        if (isCurrentlyBound()) {
+        if (setHandle->isCurrentlyBound()) {
             std::cout << "Descriptor currently bound, allocate a new one instead" << std::endl;
-            assert(!isCurrentlyBound());
+            assert(!setHandle->isCurrentlyBound());
         }
         vkUpdateDescriptorSets(graphics->getDevice(), (uint32)writeDescriptors.size(), writeDescriptors.data(), 0, nullptr);
         writeDescriptors.clear();

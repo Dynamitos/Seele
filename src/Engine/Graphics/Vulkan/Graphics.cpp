@@ -186,7 +186,7 @@ void Graphics::beginRenderPass(Gfx::PRenderPass renderPass) {
             allocatedFramebuffers[framebufferHash] = new Framebuffer(this, rp, rp->getLayout());
             framebuffer = allocatedFramebuffers[framebufferHash];
         } else {
-            framebuffer = std::move(found->value);
+            framebuffer = found->value;
         }
     }
     getGraphicsCommands()->getCommands()->beginRenderPass(rp, framebuffer);

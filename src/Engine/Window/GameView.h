@@ -31,7 +31,7 @@ class GameView : public View {
     RenderGraph renderGraph;
     RenderGraph rayTracingGraph;
 
-    PSystemGraph systemGraph;
+    OSystemGraph systemGraph;
     System::PKeyboardInput keyboardSystem;
     float updateTime = 0;
 

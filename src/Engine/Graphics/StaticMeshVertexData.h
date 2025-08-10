@@ -50,6 +50,6 @@ class StaticMeshVertexData : public VertexData {
     Array<BiTangentType> bitData;
     Array<ColorType> colData;
     Gfx::ODescriptorLayout descriptorLayout;
-    Gfx::PDescriptorSet descriptorSet;
+    Gfx::ODescriptorSet descriptorSet;
 };
 } // namespace Seele
