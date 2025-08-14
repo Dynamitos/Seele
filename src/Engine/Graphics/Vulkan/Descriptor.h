@@ -40,6 +40,8 @@ public:
     constexpr VkDescriptorSet getHandle() const { return handle; }
     PGraphics graphics;
     VkDescriptorSet handle = VK_NULL_HANDLE;
+    OBufferAllocation constantsBuffer;
+    bool isUsed = false;
 };
 DEFINE_REF(DescriptorSetHandle)
 
@@ -81,7 +83,6 @@ class DescriptorSet : public Gfx::DescriptorSet {
 
   private:
     std::vector<uint8> constantData;
-    OBufferAllocation constantsBuffer;
     List<VkDescriptorImageInfo> imageInfos;
     List<VkDescriptorBufferInfo> bufferInfos;
     List<VkWriteDescriptorSetAccelerationStructureKHR> accelerationInfos;

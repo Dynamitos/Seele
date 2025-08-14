@@ -3,6 +3,7 @@
 #include "Graphics/Graphics.h"
 #include "Graphics/Initializer.h"
 #include "Graphics/Shader.h"
+#include "Math/Matrix.h"
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/matrix.hpp>
 
@@ -64,6 +65,7 @@ void ShadowPass::beginFrame(const Component::Camera& camera, const Component::Tr
         cascadeSplits[i] = (d - nearClip) / clipRange;
         cascades[i].viewParams.clear();
     }
+    cascadeSplitsBuffer->updateContents(0, sizeof(float) * NUM_CASCADES, cascadeSplits);
 
     // call this to update view params member, ignore descriptor set
     updateViewParameters(camera, transform);
@@ -107,7 +109,7 @@ void ShadowPass::beginFrame(const Component::Camera& camera, const Component::Tr
             Vector cameraPos = frustumCenter - lightDir * -minExtents.z;
             Matrix4 viewMatrix = glm::lookAt(cameraPos, frustumCenter, Vector(0, 1, 0));
             Matrix4 projectionMatrix =
-                glm::ortho(minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, 0.0f, maxExtents.z - minExtents.z);
+                orthographicProjection(minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, 0.0f, maxExtents.z - minExtents.z);
             Matrix4 viewProjectionMatrix = projectionMatrix * viewMatrix;
             viewParams.viewMatrix = viewMatrix;
             viewParams.inverseViewMatrix = glm::inverse(viewMatrix);

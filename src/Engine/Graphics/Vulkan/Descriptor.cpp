@@ -159,7 +159,7 @@ Gfx::ODescriptorSet DescriptorPool::allocateDescriptorSet() {
         if (cachedHandles[setIndex] == nullptr) {
             cachedHandles[setIndex] = new DescriptorSetHandle(graphics, layout->getName());
         }
-        if (cachedHandles[setIndex]->isCurrentlyBound()) {
+        if (cachedHandles[setIndex]->isCurrentlyBound() || cachedHandles[setIndex]->isUsed) {
             // Currently in use, skip
             continue;
         }
@@ -175,7 +175,7 @@ Gfx::ODescriptorSet DescriptorPool::allocateDescriptorSet() {
             };
             vkSetDebugUtilsObjectNameEXT(graphics->getDevice(), &nameInfo);
         }
-
+        cachedHandles[setIndex]->isUsed = true;
         // Found set, stop searching
         return new DescriptorSet(graphics, this, cachedHandles[setIndex]);
     }
@@ -187,20 +187,13 @@ Gfx::ODescriptorSet DescriptorPool::allocateDescriptorSet() {
     // throw std::logic_error("Out of descriptor sets");
 }
 
-void DescriptorPool::reset() {
-    for (uint32 i = 0; i < cachedHandles.size(); ++i) {
-        if (cachedHandles[i] == nullptr) {
-            return;
-        }
-    }
-    if (nextAlloc != nullptr) {
-        nextAlloc->reset();
-    }
-}
+void DescriptorPool::reset() {}
 
 DescriptorSetHandle::DescriptorSetHandle(PGraphics graphics, const std::string& name) : CommandBoundResource(graphics, name) {}
 
-DescriptorSetHandle::~DescriptorSetHandle() {}
+DescriptorSetHandle::~DescriptorSetHandle() {
+    graphics->getDestructionManager()->queueResourceForDestruction(std::move(constantsBuffer));
+}
 
 DescriptorSet::DescriptorSet(PGraphics graphics, PDescriptorPool owner, PDescriptorSetHandle setHandle)
     : Gfx::DescriptorSet(owner->getLayout()), setHandle(setHandle),
@@ -215,7 +208,9 @@ DescriptorSet::DescriptorSet(PGraphics graphics, PDescriptorPool owner, PDescrip
     constantData.resize(owner->getLayout()->constantsSize);
 }
 
-DescriptorSet::~DescriptorSet() { graphics->getDestructionManager()->queueResourceForDestruction(std::move(constantsBuffer)); }
+DescriptorSet::~DescriptorSet() { 
+    setHandle->isUsed = false;
+}
 
 void DescriptorSet::updateConstants(const std::string& mappingName, uint32 offset, void* data) {
     std::memcpy(constantData.data() + owner->getLayout()->mappings[mappingName].constantOffset, (char*)data + offset,
@@ -408,10 +403,10 @@ void DescriptorSet::updateAccelerationStructure(const std::string& mappingName, 
 
 void DescriptorSet::writeChanges() {
     if (constantData.size() > 0) {
-        if (constantsBuffer != nullptr) {
-            graphics->getDestructionManager()->queueResourceForDestruction(std::move(constantsBuffer));
+        if (setHandle->constantsBuffer != nullptr) {
+            graphics->getDestructionManager()->queueResourceForDestruction(std::move(setHandle->constantsBuffer));
         }
-        constantsBuffer = new BufferAllocation(graphics, owner->getLayout()->getName(),
+        setHandle->constantsBuffer = new BufferAllocation(graphics, owner->getLayout()->getName(),
                                                VkBufferCreateInfo{
                                                    .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
                                                    .pNext = nullptr,
@@ -422,13 +417,13 @@ void DescriptorSet::writeChanges() {
                                                    .usage = VMA_MEMORY_USAGE_AUTO,
                                                },
                                                Gfx::QueueType::GRAPHICS);
-        constantsBuffer->updateContents(0, constantData.size(), constantData.data());
-        constantsBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
+        setHandle->constantsBuffer->updateContents(0, constantData.size(), constantData.data());
+        setHandle->constantsBuffer->pipelineBarrier(Gfx::SE_ACCESS_TRANSFER_WRITE_BIT, Gfx::SE_PIPELINE_STAGE_TRANSFER_BIT,
                                          Gfx::SE_ACCESS_UNIFORM_READ_BIT, Gfx::SE_PIPELINE_STAGE_ALL_COMMANDS_BIT);
         bufferInfos.add(VkDescriptorBufferInfo{
-            .buffer = constantsBuffer->buffer,
+            .buffer = setHandle->constantsBuffer->buffer,
             .offset = 0,
-            .range = constantsBuffer->size,
+            .range = setHandle->constantsBuffer->size,
         });
         writeDescriptors.add(VkWriteDescriptorSet{
             .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
