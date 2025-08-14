@@ -128,16 +128,17 @@ void RenderCommand::bindPipeline(Gfx::PRayTracingPipeline pipeline) {}
 
 void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet) {
     auto metalSet = descriptorSet.cast<DescriptorSet>();
-    metalSet->bind();
-    boundResources.add(metalSet);
+    auto setHandle = metalSet->setHandle;
+    setHandle->bind();
+    boundResources.add(setHandle);
     uint32 descriptorIndex = boundPipeline->getPipelineLayout()->findParameter(metalSet->getLayout()->getName());
     
-    auto createEncoder = [&metalSet, descriptorIndex](MTL::Function* function, const Array<uint32>& usedSets) {
-        if(metalSet->encoder == nullptr) {
+    auto createEncoder = [metalSet, &setHandle, descriptorIndex](MTL::Function* function, const Array<uint32>& usedSets) {
+        if(setHandle->encoder == nullptr) {
             if (metalSet->isPlainDescriptor()) {
-                metalSet->encoder = metalSet->createEncoder();
+                setHandle->encoder = metalSet->createEncoder();
             } else if (function != nullptr && usedSets.contains(descriptorIndex)) {
-                metalSet->encoder = function->newArgumentEncoder(descriptorIndex);
+                setHandle->encoder = function->newArgumentEncoder(descriptorIndex);
             }
         }
     };
@@ -145,39 +146,39 @@ void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet) {
     createEncoder(boundPipeline->meshFunction, boundPipeline->meshSets);
     createEncoder(boundPipeline->vertexFunction, boundPipeline->vertexSets);
     createEncoder(boundPipeline->fragmentFunction, boundPipeline->fragmentSets);
-    if(metalSet->argumentBuffer == nullptr) {
-        metalSet->argumentBuffer = new BufferAllocation(metalSet->graphics, "ArgumentBuffer", metalSet->encoder->encodedLength());
-        metalSet->encoder->setArgumentBuffer(metalSet->argumentBuffer->buffer, 0);
+    if(setHandle->argumentBuffer == nullptr) {
+        setHandle->argumentBuffer = new BufferAllocation(setHandle->graphics, "ArgumentBuffer", setHandle->encoder->encodedLength());
+        setHandle->encoder->setArgumentBuffer(setHandle->argumentBuffer->buffer, 0);
     }
-    metalSet->argumentBuffer->bind();
-    boundResources.add(PBufferAllocation(metalSet->argumentBuffer));
-    for (const auto& write : metalSet->uniformWrites) {
-        write.apply(metalSet->encoder);
+    setHandle->argumentBuffer->bind();
+    boundResources.add(PBufferAllocation(setHandle->argumentBuffer));
+    for (const auto& write : setHandle->uniformWrites) {
+        write.apply(setHandle->encoder);
     }
-    for (const auto& write : metalSet->bufferWrites) {
-        write.apply(metalSet->encoder);
+    for (const auto& write : setHandle->bufferWrites) {
+        write.apply(setHandle->encoder);
         encoder->useResource(write.buffer->buffer, write.access);
     }
-    for (const auto& write : metalSet->samplerWrites) {
-        write.apply(metalSet->encoder);
+    for (const auto& write : setHandle->samplerWrites) {
+        write.apply(setHandle->encoder);
     }
-    for (const auto& write : metalSet->textureWrites) {
-        write.apply(metalSet->encoder);
-        encoder->useResource(write.texture->texture, write.access);
+    for (const auto& write : setHandle->textureWrites) {
+        write.apply(setHandle->encoder);
+        encoder->useResource(write.texture->getHandle(), write.access);
     }
-    for (const auto& write : metalSet->accelerationWrites) {
-        write.apply(metalSet->encoder);
+    for (const auto& write : setHandle->accelerationWrites) {
+        write.apply(setHandle->encoder);
         encoder->useResource(write.accelerationStructure, write.access);
     }
-    for(auto& res : metalSet->boundResources) {
+    for(auto& res : setHandle->boundResources) {
         res->bind();
         boundResources.add(res);
     }
-    encoder->useResource(metalSet->argumentBuffer->buffer, MTL::ResourceUsageRead);
-    encoder->setObjectBuffer(metalSet->argumentBuffer->buffer, 0, descriptorIndex);
-    encoder->setMeshBuffer(metalSet->argumentBuffer->buffer, 0, descriptorIndex);
-    encoder->setVertexBuffer(metalSet->argumentBuffer->buffer, 0, descriptorIndex);
-    encoder->setFragmentBuffer(metalSet->argumentBuffer->buffer, 0, descriptorIndex);
+    encoder->useResource(setHandle->argumentBuffer->buffer, MTL::ResourceUsageRead);
+    encoder->setObjectBuffer(setHandle->argumentBuffer->buffer, 0, descriptorIndex);
+    encoder->setMeshBuffer(setHandle->argumentBuffer->buffer, 0, descriptorIndex);
+    encoder->setVertexBuffer(setHandle->argumentBuffer->buffer, 0, descriptorIndex);
+    encoder->setFragmentBuffer(setHandle->argumentBuffer->buffer, 0, descriptorIndex);
 }
 
 void RenderCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& descriptorSets) {
@@ -252,46 +253,53 @@ void ComputeCommand::bindPipeline(Gfx::PComputePipeline pipeline) {
     encoder->setComputePipelineState(boundPipeline->getHandle());
 }
 
-void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet set) {
-    auto metalSet = set.cast<DescriptorSet>();
-    metalSet->bind();
-    boundResources.add(metalSet);
+void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet) {
+    auto metalSet = descriptorSet.cast<DescriptorSet>();
+    auto setHandle = metalSet->setHandle;
+    setHandle->bind();
+    boundResources.add(setHandle);
     uint32 descriptorIndex = boundPipeline->getPipelineLayout()->findParameter(metalSet->getLayout()->getName());
-    if(metalSet->encoder == nullptr) {
-        if (metalSet->isPlainDescriptor()) {
-            metalSet->encoder = metalSet->createEncoder();
-        } else {
-            metalSet->encoder = boundPipeline->computeFunction->newArgumentEncoder(descriptorIndex);
+    
+    auto createEncoder = [metalSet, &setHandle, descriptorIndex](MTL::Function* function) {
+        if(setHandle->encoder == nullptr) {
+            if (metalSet->isPlainDescriptor()) {
+                setHandle->encoder = metalSet->createEncoder();
+            } else if (function != nullptr) {
+                setHandle->encoder = function->newArgumentEncoder(descriptorIndex);
+            }
         }
-        metalSet->argumentBuffer = new BufferAllocation(metalSet->graphics, "ArgumentBuffer", metalSet->encoder->encodedLength());
-        metalSet->encoder->setArgumentBuffer(metalSet->argumentBuffer->buffer, 0);
+    };
+    createEncoder(boundPipeline->computeFunction);
+    if(setHandle->argumentBuffer == nullptr) {
+        setHandle->argumentBuffer = new BufferAllocation(setHandle->graphics, "ArgumentBuffer", setHandle->encoder->encodedLength());
+        setHandle->encoder->setArgumentBuffer(setHandle->argumentBuffer->buffer, 0);
     }
-    metalSet->argumentBuffer->bind();
-    boundResources.add(PBufferAllocation(metalSet->argumentBuffer));
-    for (const auto& write : metalSet->uniformWrites) {
-        write.apply(metalSet->encoder);
+    setHandle->argumentBuffer->bind();
+    boundResources.add(PBufferAllocation(setHandle->argumentBuffer));
+    for (const auto& write : setHandle->uniformWrites) {
+        write.apply(setHandle->encoder);
     }
-    for (const auto& write : metalSet->bufferWrites) {
-        write.apply(metalSet->encoder);
+    for (const auto& write : setHandle->bufferWrites) {
+        write.apply(setHandle->encoder);
         encoder->useResource(write.buffer->buffer, write.access);
     }
-    for (const auto& write : metalSet->samplerWrites) {
-        write.apply(metalSet->encoder);
+    for (const auto& write : setHandle->samplerWrites) {
+        write.apply(setHandle->encoder);
     }
-    for (const auto& write : metalSet->textureWrites) {
-        write.apply(metalSet->encoder);
-        encoder->useResource(write.texture->texture, write.access);
+    for (const auto& write : setHandle->textureWrites) {
+        write.apply(setHandle->encoder);
+        encoder->useResource(write.texture->getHandle(), write.access);
     }
-    for (const auto& write : metalSet->accelerationWrites) {
-        write.apply(metalSet->encoder);
+    for (const auto& write : setHandle->accelerationWrites) {
+        write.apply(setHandle->encoder);
         encoder->useResource(write.accelerationStructure, write.access);
     }
-    for(auto& res : metalSet->boundResources) {
+    for(auto& res : setHandle->boundResources) {
         res->bind();
         boundResources.add(res);
     }
-    encoder->useResource(metalSet->argumentBuffer->buffer, MTL::ResourceUsageRead);
-    encoder->setBuffer(metalSet->argumentBuffer->buffer, 0, descriptorIndex);
+    encoder->useResource(setHandle->argumentBuffer->buffer, MTL::ResourceUsageRead);
+    encoder->setBuffer(setHandle->argumentBuffer->buffer, 0, descriptorIndex);
 }
 
 void ComputeCommand::bindDescriptor(const Array<Gfx::PDescriptorSet>& sets) {

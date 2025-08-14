@@ -58,49 +58,20 @@ void DescriptorLayout::create() {
 
 MTL::ArgumentEncoder* DescriptorLayout::createEncoder() { return graphics->getDevice()->newArgumentEncoder(arguments); }
 
-DescriptorPool::DescriptorPool(PGraphics graphics, PDescriptorLayout layout) : graphics(graphics), layout(layout) {}
+DescriptorSetHandle::DescriptorSetHandle(PGraphics graphics, PDescriptorPool owner, const std::string& name) 
+    : CommandBoundResource(graphics), owner(owner)
+{
 
-DescriptorPool::~DescriptorPool() {}
-
-Gfx::PDescriptorSet DescriptorPool::allocateDescriptorSet() {
-    for (uint32 setIndex = 0; setIndex < allocatedSets.size(); ++setIndex) {
-        if (allocatedSets[setIndex]->isCurrentlyBound()) {
-            // Currently in use, skip
-            continue;
-        }
-        // Found set, stop searching
-        allocatedSets[setIndex]->reset();
-        return PDescriptorSet(allocatedSets[setIndex]);
-    }
-    allocatedSets.add(new DescriptorSet(graphics, this));
-    return PDescriptorSet(allocatedSets.back());
 }
 
-void DescriptorPool::reset() {}
-
-DescriptorSet::DescriptorSet(PGraphics graphics, PDescriptorPool owner)
-    : Gfx::DescriptorSet(owner->getLayout()), CommandBoundResource(graphics), graphics(graphics), owner(owner) {
-}
-
-DescriptorSet::~DescriptorSet() {
+DescriptorSetHandle::~DescriptorSetHandle() {
     if(encoder != nullptr) {
         encoder->release();
     }
     std::cout << "destroying descriptor set" << std::endl;
 }
 
-void DescriptorSet::reset() {
-    boundResources.clear();
-    uniformWrites.clear();
-    bufferWrites.clear();
-    textureWrites.clear();
-    samplerWrites.clear();
-    accelerationWrites.clear();
-}
-
-void DescriptorSet::writeChanges() {}
-
-void DescriptorSet::updateConstants(const std::string& name, uint32 offset, void* data) {
+void DescriptorSetHandle::updateConstants(const std::string& name, uint32 offset, void* data) {
     uint32 flattenedIndex = owner->getLayout()->variableMapping[name].index;
     Array<uint8> contents(owner->getLayout()->variableMapping[name].constantSize);
     std::memcpy(contents.data(), (uint8*)data + offset, contents.size());
@@ -110,7 +81,7 @@ void DescriptorSet::updateConstants(const std::string& name, uint32 offset, void
     });
 }
 
-void DescriptorSet::updateBuffer(const std::string& name, uint32 index, Gfx::PShaderBuffer uniformBuffer) {
+void DescriptorSetHandle::updateBuffer(const std::string& name, uint32 index, Gfx::PShaderBuffer uniformBuffer) {
     uint32 flattenedIndex = owner->getLayout()->variableMapping[name].index + index;
     PShaderBuffer buffer = uniformBuffer.cast<ShaderBuffer>();
     bufferWrites.add(BufferWriteInfo{
@@ -121,7 +92,7 @@ void DescriptorSet::updateBuffer(const std::string& name, uint32 index, Gfx::PSh
     boundResources.add(buffer->getAlloc());
 }
 
-void DescriptorSet::updateBuffer(const std::string& name, uint32 index, Gfx::PVertexBuffer uniformBuffer) {
+void DescriptorSetHandle::updateBuffer(const std::string& name, uint32 index, Gfx::PVertexBuffer uniformBuffer) {
     uint32 flattenedIndex = owner->getLayout()->variableMapping[name].index + index;
     PVertexBuffer buffer = uniformBuffer.cast<VertexBuffer>();
     bufferWrites.add(BufferWriteInfo{
@@ -132,7 +103,7 @@ void DescriptorSet::updateBuffer(const std::string& name, uint32 index, Gfx::PVe
     boundResources.add(buffer->getAlloc());
 }
 
-void DescriptorSet::updateBuffer(const std::string& name, uint32 index, Gfx::PIndexBuffer uniformBuffer) {
+void DescriptorSetHandle::updateBuffer(const std::string& name, uint32 index, Gfx::PIndexBuffer uniformBuffer) {
     uint32 flattenedIndex = owner->getLayout()->variableMapping[name].index + index;
     PIndexBuffer buffer = uniformBuffer.cast<IndexBuffer>();
     bufferWrites.add(BufferWriteInfo{
@@ -143,7 +114,18 @@ void DescriptorSet::updateBuffer(const std::string& name, uint32 index, Gfx::PIn
     boundResources.add(buffer->getAlloc());
 }
 
-void DescriptorSet::updateSampler(const std::string& name, uint32 index, Gfx::PSampler samplerState) {
+void DescriptorSetHandle::updateBuffer(const std::string& name, uint32 index, Gfx::PUniformBuffer uniformBuffer) {
+    uint32 flattenedIndex = owner->getLayout()->variableMapping[name].index + index;
+    PIndexBuffer buffer = uniformBuffer.cast<IndexBuffer>();
+    bufferWrites.add(BufferWriteInfo{
+        .index = flattenedIndex,
+        .buffer = buffer->getAlloc(),
+        .access = owner->getLayout()->variableMapping[name].access,
+    });
+    boundResources.add(buffer->getAlloc());
+}
+
+void DescriptorSetHandle::updateSampler(const std::string& name, uint32 index, Gfx::PSampler samplerState) {
     uint32 flattenedIndex = owner->getLayout()->variableMapping[name].index + index;
     PSampler sampler = samplerState.cast<Sampler>();
     samplerWrites.add(SamplerWriteInfo{
@@ -152,18 +134,71 @@ void DescriptorSet::updateSampler(const std::string& name, uint32 index, Gfx::PS
     });
 }
 
-void DescriptorSet::updateTexture(const std::string& name, uint32 index, Gfx::PTexture texture) {
+void DescriptorSetHandle::updateTexture(const std::string& name, uint32 index, Gfx::PTextureView texture) {
     uint32 flattenedIndex = owner->getLayout()->variableMapping[name].index + index;
-    PTextureBase tex = texture.cast<TextureBase>();
+    PTextureView tex = texture.cast<TextureView>();
     textureWrites.add(TextureWriteInfo{
         .index = flattenedIndex,
-        .texture = tex->getHandle(),
+        .texture = tex,
         .access = owner->getLayout()->variableMapping[name].access,
     });
-    boundResources.add(tex->getHandle());
+    boundResources.add(tex);
 }
 
-void DescriptorSet::updateAccelerationStructure(const std::string& name, uint32 index, Gfx::PTopLevelAS as) { assert(false && "TODO"); }
+void DescriptorSetHandle::updateAccelerationStructure(const std::string& , uint32 , Gfx::PTopLevelAS ){}
+
+DescriptorPool::DescriptorPool(PGraphics graphics, PDescriptorLayout layout) : graphics(graphics), layout(layout) {}
+
+DescriptorPool::~DescriptorPool() {}
+
+Gfx::ODescriptorSet DescriptorPool::allocateDescriptorSet() {
+    for (uint32 setIndex = 0; setIndex < allocatedSets.size(); ++setIndex) {
+        if (allocatedSets[setIndex]->isCurrentlyBound()) {
+            // Currently in use, skip
+            continue;
+        }
+        // Found set, stop searching
+        return new DescriptorSet(graphics, this, allocatedSets[setIndex]);
+    }
+    allocatedSets.add(new DescriptorSetHandle(graphics, this, layout->getName()));
+    return new DescriptorSet(graphics, this, allocatedSets.back());
+}
+
+void DescriptorPool::reset() {}
+
+DescriptorSet::DescriptorSet(PGraphics graphics, PDescriptorPool owner, PDescriptorSetHandle handle)
+    : Gfx::DescriptorSet(owner->getLayout()), graphics(graphics), owner(owner), setHandle(handle) {
+}
+
+DescriptorSet::~DescriptorSet() {
+}
+
+void DescriptorSet::writeChanges() {}
+
+void DescriptorSet::updateConstants(const std::string& name, uint32 offset, void* data) {
+    setHandle->updateConstants(name, offset, data);
+}
+void DescriptorSet::updateBuffer(const std::string& name, uint32 index, Gfx::PShaderBuffer uniformBuffer){
+    setHandle->updateBuffer(name, index, uniformBuffer);
+}
+void DescriptorSet::updateBuffer(const std::string& name, uint32 index, Gfx::PVertexBuffer uniformBuffer){
+    setHandle->updateBuffer(name, index, uniformBuffer);
+}
+void DescriptorSet::updateBuffer(const std::string& name, uint32 index, Gfx::PIndexBuffer uniformBuffer){
+    setHandle->updateBuffer(name, index, uniformBuffer);
+}
+void DescriptorSet::updateBuffer(const std::string& name, uint32 index, Gfx::PUniformBuffer uniformBuffer){
+    setHandle->updateBuffer(name, index, uniformBuffer);
+}
+void DescriptorSet::updateSampler(const std::string& name, uint32 index, Gfx::PSampler samplerState){
+    setHandle->updateSampler(name, index, samplerState);
+}
+void DescriptorSet::updateTexture(const std::string& name, uint32 index, Gfx::PTextureView texture){
+    setHandle->updateTexture(name, index, texture);
+}
+void DescriptorSet::updateAccelerationStructure(const std::string& name, uint32 index, Gfx::PTopLevelAS as){
+    setHandle->updateAccelerationStructure(name, index, as);
+}
 
 PipelineLayout::PipelineLayout(PGraphics graphics, const std::string& name, Gfx::PPipelineLayout baseLayout)
     : Gfx::PipelineLayout(name, baseLayout), graphics(graphics) {}

@@ -227,7 +227,7 @@ void AssetRegistry::initialize(const std::filesystem::path& _rootFolder, Gfx::PG
     this->assetRoot = new AssetFolder("");
     if (!std::filesystem::exists(rootFolder))
     {
-        std::filesystem::create_directories(rootFolder);
+        //std::filesystem::create_directories(rootFolder);
     }
     else if (!std::filesystem::is_directory(rootFolder))
     {

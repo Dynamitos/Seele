@@ -152,7 +152,7 @@ void Seele::beginCompilation(const ShaderCompilationInfo& info, SlangCompileTarg
         layout->addMapping("pResources", 4);
         layout->addMapping("pRayTracingParams", 5);
     }
-    layout->addMapping("pVertexData", 1);
+    //layout->addMapping("pVertexData", 1);
     // layout->addMapping("pWaterMaterial", 1);
 }
 

@@ -38,7 +38,8 @@ Gfx::OViewport Graphics::createViewport(Gfx::PWindow owner, const ViewportCreate
     return new Viewport(owner, createInfo);
 }
 
-Gfx::ORenderPass Graphics::createRenderPass(Gfx::RenderTargetLayout layout, Array<Gfx::SubPassDependency> dependencies, URect renderArea, std::string name, Array<uint32> viewMask, Array<uint32> correlationMask) {
+Gfx::ORenderPass Graphics::createRenderPass(Gfx::RenderTargetLayout layout, Array<Gfx::SubPassDependency> dependencies, URect renderArea,
+                                            std::string name, Array<uint32>, Array<uint32>) {
     return new RenderPass(this, layout, dependencies, renderArea, name);
 }
 
@@ -46,9 +47,7 @@ void Graphics::beginRenderPass(Gfx::PRenderPass renderPass) { queue->getCommands
 
 void Graphics::endRenderPass() { queue->getCommands()->endRenderPass(); }
 
-void Graphics::waitDeviceIdle() {
-    queue->submitCommands();
-}
+void Graphics::waitDeviceIdle() { queue->submitCommands(); }
 
 void Graphics::executeCommands(Gfx::ORenderCommand commands) {
     Array<Gfx::ORenderCommand> command;
@@ -67,6 +66,8 @@ void Graphics::executeCommands(Gfx::OComputeCommand commands) {
 void Graphics::executeCommands(Array<Gfx::OComputeCommand> commands) { queue->executeCommands(std::move(commands)); }
 
 Gfx::OTexture2D Graphics::createTexture2D(const TextureCreateInfo& createInfo) { return new Texture2D(this, createInfo); }
+
+Gfx::OTexture2DArray Graphics::createTexture2DArray(const TextureCreateInfo& createInfo) { return new Texture2DArray(this, createInfo); }
 
 Gfx::OTexture3D Graphics::createTexture3D(const TextureCreateInfo& createInfo) { return new Texture3D(this, createInfo); }
 
@@ -155,23 +156,18 @@ void Graphics::beginDebugRegion(const std::string& name) {
     queue->getCommands()->getHandle()->pushDebugGroup(NS::String::string(name.c_str(), NS::ASCIIStringEncoding));
 }
 
-void Graphics::endDebugRegion() {
-    queue->getCommands()->getHandle()->popDebugGroup();
-}
+void Graphics::endDebugRegion() { queue->getCommands()->getHandle()->popDebugGroup(); }
 
 void Graphics::resolveTexture(Gfx::PTexture, Gfx::PTexture) {}
 
-void Graphics::copyTexture(Gfx::PTexture, Gfx::PTexture) {}
+void Graphics::copyTexture(Gfx::PTexture, Gfx::PTexture) { assert(false); }
 
-void Graphics::copyBuffer(Gfx::PShaderBuffer src, Gfx::PShaderBuffer dst)
-{
-    // TODO blit commands
-}
+void Graphics::copyBuffer(Gfx::PShaderBuffer, Gfx::PShaderBuffer) { assert(false); }
 
 // Ray Tracing
-Gfx::OBottomLevelAS Graphics::createBottomLevelAccelerationStructure(const Gfx::BottomLevelASCreateInfo& createInfo) { return nullptr; }
+Gfx::OBottomLevelAS Graphics::createBottomLevelAccelerationStructure(const Gfx::BottomLevelASCreateInfo&) { return nullptr; }
 
-Gfx::OTopLevelAS Graphics::createTopLevelAccelerationStructure(const Gfx::TopLevelASCreateInfo& createInfo) { return nullptr; }
+Gfx::OTopLevelAS Graphics::createTopLevelAccelerationStructure(const Gfx::TopLevelASCreateInfo&) { return nullptr; }
 
 void Graphics::buildBottomLevelAccelerationStructures(Array<Gfx::PBottomLevelAS>) {}
 

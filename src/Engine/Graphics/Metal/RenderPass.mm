@@ -33,13 +33,13 @@ RenderPass::RenderPass(PGraphics graphics, Gfx::RenderTargetLayout _layout, Arra
             }
         }
     }
-    if (layout.depthAttachment.getTexture() != nullptr) {
+    if (layout.depthAttachment.getTextureView() != nullptr) {
         auto depth = renderPass->depthAttachment();
         depth->setClearDepth(layout.depthAttachment.clear.depthStencil.depth);
         depth->setLoadAction(cast(layout.depthAttachment.getLoadOp()));
         depth->setStoreAction(cast(layout.depthAttachment.getStoreOp()));
 
-        if (layout.depthResolveAttachment.getTexture() != nullptr) {
+        if (layout.depthResolveAttachment.getTextureView() != nullptr) {
             // store multisampled attachment as well
             if(layout.depthAttachment.getStoreOp() == Gfx::SE_ATTACHMENT_STORE_OP_STORE) {
                 depth->setStoreAction(MTL::StoreActionStoreAndMultisampleResolve);
@@ -56,17 +56,17 @@ void RenderPass::updateRenderPass() {
     for (size_t i = 0; i < layout.colorAttachments.size(); ++i) {
         const auto& color = layout.colorAttachments[i];
         auto desc = renderPass->colorAttachments()->object(i);
-        desc->setTexture(color.getTexture().cast<TextureBase>()->getImage());
+        desc->setTexture(color.getTextureView().cast<TextureBase>()->getImage());
         if (!layout.resolveAttachments.empty()) {
             const auto& resolve = layout.resolveAttachments[i];
-            desc->setResolveTexture(resolve.getTexture().cast<TextureBase>()->getImage());
+            desc->setResolveTexture(resolve.getTextureView().cast<TextureBase>()->getImage());
         }
     }
-    if (layout.depthAttachment.getTexture() != nullptr) {
+    if (layout.depthAttachment.getTextureView() != nullptr) {
         auto depth = renderPass->depthAttachment();
-        depth->setTexture(layout.depthAttachment.getTexture().cast<TextureBase>()->getImage());
-        if (layout.depthResolveAttachment.getTexture() != nullptr) {
-            depth->setResolveTexture(layout.depthResolveAttachment.getTexture().cast<TextureBase>()->getImage());
+        depth->setTexture(layout.depthAttachment.getTextureView().cast<TextureBase>()->getImage());
+        if (layout.depthResolveAttachment.getTextureView() != nullptr) {
+            depth->setResolveTexture(layout.depthResolveAttachment.getTextureView().cast<TextureBase>()->getImage());
         }
     }
 }

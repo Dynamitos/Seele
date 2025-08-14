@@ -40,49 +40,29 @@ class DescriptorLayout : public Gfx::DescriptorLayout {
     // descriptor sets containing only uniform data are not actually argument buffers, so they need to be
     // handled separately
     bool plainDescriptor = true;
-    friend class DescriptorSet;
+    friend class DescriptorSetHandle;
 };
 DEFINE_REF(DescriptorLayout)
 
-DECLARE_REF(DescriptorSet)
-class DescriptorPool : public Gfx::DescriptorPool {
-  public:
-    DescriptorPool(PGraphics graphics, PDescriptorLayout layout);
-    virtual ~DescriptorPool();
-    virtual Gfx::PDescriptorSet allocateDescriptorSet() override;
-    virtual void reset() override;
-    constexpr PDescriptorLayout getLayout() const { return layout; }
-
-  private:
-    PGraphics graphics;
-    PDescriptorLayout layout;
-    Array<ODescriptorSet> allocatedSets;
-};
-DEFINE_REF(DescriptorPool)
-class DescriptorSet : public Gfx::DescriptorSet, public CommandBoundResource {
-  public:
-    DescriptorSet(PGraphics graphics, PDescriptorPool owner);
-    virtual ~DescriptorSet();
-    virtual void reset();
-    virtual void writeChanges() override;
-    virtual void updateConstants(const std::string& name, uint32 offset, void* data) override;
-    virtual void updateBuffer(const std::string& name, uint32 index, Gfx::PShaderBuffer uniformBuffer) override;
-    virtual void updateBuffer(const std::string& name, uint32 index, Gfx::PVertexBuffer uniformBuffer) override;
-    virtual void updateBuffer(const std::string& name, uint32 index, Gfx::PIndexBuffer uniformBuffer) override;
-    virtual void updateSampler(const std::string& name, uint32 index, Gfx::PSampler samplerState) override;
-    virtual void updateTexture(const std::string& name, uint32 index, Gfx::PTexture texture) override;
-    virtual void updateAccelerationStructure(const std::string& name, uint32 index, Gfx::PTopLevelAS as) override;
+DECLARE_REF(DescriptorPool)
+class DescriptorSetHandle : public CommandBoundResource {
+public:
+    DescriptorSetHandle(PGraphics grapics, PDescriptorPool owner, const std::string& name);
+    virtual ~DescriptorSetHandle();
+    void updateConstants(const std::string& name, uint32 offset, void* data);
+    void updateBuffer(const std::string& name, uint32 index, Gfx::PShaderBuffer uniformBuffer);
+    void updateBuffer(const std::string& name, uint32 index, Gfx::PVertexBuffer uniformBuffer);
+    void updateBuffer(const std::string& name, uint32 index, Gfx::PIndexBuffer uniformBuffer);
+    void updateBuffer(const std::string& name, uint32 index, Gfx::PUniformBuffer uniformBuffer);
+    void updateSampler(const std::string& name, uint32 index, Gfx::PSampler samplerState);
+    void updateTexture(const std::string& name, uint32 index, Gfx::PTextureView texture);
+    void updateAccelerationStructure(const std::string& name, uint32 index, Gfx::PTopLevelAS as);
     
-    constexpr bool isPlainDescriptor() const { return owner->getLayout()->isPlainDescriptor(); }
-    constexpr MTL::ArgumentEncoder* createEncoder() const { return owner->getLayout()->createEncoder(); }
-
-  private:
     PGraphics graphics;
     PDescriptorPool owner;
     OBufferAllocation argumentBuffer = nullptr;
     MTL::ArgumentEncoder* encoder = nullptr;
     Array<PCommandBoundResource> boundResources;
-
     struct UniformWriteInfo
     {
         uint32 index;
@@ -102,8 +82,8 @@ class DescriptorSet : public Gfx::DescriptorSet, public CommandBoundResource {
     {
         uint32 index;
         MTL::ResourceUsage access;
-        PTextureHandle texture;
-        void apply(MTL::ArgumentEncoder* encoder) const { encoder->setTexture(texture->texture, index); }
+        PTextureView texture;
+        void apply(MTL::ArgumentEncoder* encoder) const { encoder->setTexture(texture->getHandle(), index); }
     };
     Array<TextureWriteInfo> textureWrites;
     struct SamplerWriteInfo
@@ -122,6 +102,46 @@ class DescriptorSet : public Gfx::DescriptorSet, public CommandBoundResource {
     };
     Array<AccelerationStructureWriteInfo> accelerationWrites;
     
+};
+DEFINE_REF(DescriptorSetHandle)
+
+DECLARE_REF(DescriptorSet)
+class DescriptorPool : public Gfx::DescriptorPool {
+  public:
+    DescriptorPool(PGraphics graphics, PDescriptorLayout layout);
+    virtual ~DescriptorPool();
+    virtual Gfx::ODescriptorSet allocateDescriptorSet() override;
+    virtual void reset() override;
+    constexpr PDescriptorLayout getLayout() const { return layout; }
+
+  private:
+    PGraphics graphics;
+    PDescriptorLayout layout;
+    Array<ODescriptorSetHandle> allocatedSets;
+};
+DEFINE_REF(DescriptorPool)
+
+class DescriptorSet : public Gfx::DescriptorSet {
+  public:
+    DescriptorSet(PGraphics graphics, PDescriptorPool owner, PDescriptorSetHandle handle);
+    virtual ~DescriptorSet();
+    virtual void writeChanges() override;
+    virtual void updateConstants(const std::string& name, uint32 offset, void* data) override;
+    virtual void updateBuffer(const std::string& name, uint32 index, Gfx::PShaderBuffer uniformBuffer) override;
+    virtual void updateBuffer(const std::string& name, uint32 index, Gfx::PVertexBuffer uniformBuffer) override;
+    virtual void updateBuffer(const std::string& name, uint32 index, Gfx::PIndexBuffer uniformBuffer) override;
+    virtual void updateBuffer(const std::string& name, uint32 index, Gfx::PUniformBuffer uniformBuffer) override;
+    virtual void updateSampler(const std::string& name, uint32 index, Gfx::PSampler samplerState) override;
+    virtual void updateTexture(const std::string& name, uint32 index, Gfx::PTextureView texture) override;
+    virtual void updateAccelerationStructure(const std::string& name, uint32 index, Gfx::PTopLevelAS as) override;
+    
+    constexpr bool isPlainDescriptor() const { return owner->getLayout()->isPlainDescriptor(); }
+    constexpr MTL::ArgumentEncoder* createEncoder() const { return owner->getLayout()->createEncoder(); }
+
+  private:
+    PGraphics graphics;
+    PDescriptorPool owner;
+    PDescriptorSetHandle setHandle;
     friend class RenderCommand;
     friend class ComputeCommand;
 };
