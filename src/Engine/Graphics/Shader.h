@@ -1,6 +1,5 @@
 #pragma once
 #include "CRC.h"
-#include "Enums.h"
 #include "Resources.h"
 #include "VertexData.h"
 
