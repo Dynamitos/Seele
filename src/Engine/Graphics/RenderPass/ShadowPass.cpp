@@ -46,6 +46,7 @@ ShadowPass::~ShadowPass() {}
 
 void ShadowPass::beginFrame(const Component::Camera& camera, const Component::Transform& transform) {
     float cascadeSplits[NUM_CASCADES];
+    float splitDepths[NUM_CASCADES];
 
     float nearClip = camera.nearPlane;
     float farClip = camera.farPlane;
@@ -63,49 +64,57 @@ void ShadowPass::beginFrame(const Component::Camera& camera, const Component::Tr
         float uniform = minZ + range * p;
         float d = cascadeSplitLambda * (log - uniform) + uniform;
         cascadeSplits[i] = (d - nearClip) / clipRange;
+        splitDepths[i] = (camera.nearPlane + cascadeSplits[i] * clipRange) * -1.0f;
         cascades[i].viewParams.clear();
     }
-    cascadeSplitsBuffer->updateContents(0, sizeof(float) * NUM_CASCADES, cascadeSplits);
+    cascadeSplitsBuffer->updateContents(0, sizeof(float) * NUM_CASCADES, splitDepths);
 
     // call this to update view params member, ignore descriptor set
     updateViewParameters(camera, transform);
-    Array<Vector> frustumCorners = {
-        Vector(-1.0f, 1.0f, 0.0f), Vector(1.0f, 1.0f, 0.0f), Vector(1.0f, -1.0f, 0.0f), Vector(-1.0f, -1.0f, 0.0f),
-        Vector(-1.0f, 1.0f, 1.0f), Vector(1.0f, 1.0f, 1.0f), Vector(1.0f, -1.0f, 1.0f), Vector(-1.0f, -1.0f, 1.0f),
-    };
-
-    for (auto& c : frustumCorners) {
-        Vector4 invCorner = viewParams.inverseViewProjectionMatrix * Vector4(c, 1);
-        c = invCorner / invCorner.w;
-    }
+    Matrix4 invCam = viewParams.inverseViewProjectionMatrix;
     for (uint32 s = 0; s < scene->getLightEnvironment()->getNumDirectionalLights(); ++s) {
         float lastSplitDist = 0.0;
         for (uint32 i = 0; i < NUM_CASCADES; ++i) {
             float splitDist = cascadeSplits[i];
 
-            Array<Vector> cascadeCorners(8);
+            Array<Vector> frustumCorners = {
+                Vector(-1.0f, 1.0f, 1.0f), 
+                Vector(1.0f, 1.0f, 1.0f), 
+                Vector(1.0f, -1.0f, 1.0f), 
+                Vector(-1.0f, -1.0f, 1.0f),
+                Vector(-1.0f, 1.0f, 0.0f), 
+                Vector(1.0f, 1.0f, 0.0f), 
+                Vector(1.0f, -1.0f, 0.0f), 
+                Vector(-1.0f, -1.0f, 0.0f),
+            };
+
+            for (auto& c : frustumCorners) {
+                Vector4 invCorner = invCam * Vector4(c, 1);
+                c = invCorner / invCorner.w;
+            }
             for (uint32 j = 0; j < 4; j++) {
                 Vector dist = frustumCorners[j + 4] - frustumCorners[j];
-                cascadeCorners[j + 4] = frustumCorners[j] + (dist * splitDist);
-                cascadeCorners[j] = frustumCorners[j] + (dist * lastSplitDist);
+                frustumCorners[j + 4] = frustumCorners[j] + (dist * splitDist);
+                frustumCorners[j] = frustumCorners[j] + (dist * lastSplitDist);
             }
 
             Vector frustumCenter = Vector(0);
             for (uint32 j = 0; j < 8; j++) {
-                frustumCenter += cascadeCorners[j];
+                frustumCenter += frustumCorners[j];
             }
             frustumCenter /= 8.0f;
 
             float radius = 0.0f;
             for (uint j = 0; j < 8; j++) {
-                float distance = glm::length(cascadeCorners[j] - frustumCenter);
+                float distance = glm::length(frustumCorners[j] - frustumCenter);
                 radius = glm::max(radius, distance);
             }
             radius = std::ceil(radius * 16.0f) / 16.0f;
 
             Vector maxExtents = Vector(radius);
             Vector minExtents = -maxExtents;
-            Vector lightDir = glm::normalize(scene->getLightEnvironment()->getDirectionalLight(s).direction);
+
+            Vector lightDir = glm::normalize(-scene->getLightEnvironment()->getDirectionalLight(s).direction);
             Vector cameraPos = frustumCenter - lightDir * -minExtents.z;
             Matrix4 viewMatrix = glm::lookAt(cameraPos, frustumCenter, Vector(0, 1, 0));
             Matrix4 projectionMatrix =

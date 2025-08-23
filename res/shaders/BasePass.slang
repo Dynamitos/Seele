@@ -27,7 +27,7 @@ ParameterBlock<LightCullingData> pLightCullingData;
 
 static const float4x4 biasMat = float4x4(
 	0.5, 0.0, 0.0, 0.5,
-	0.0, -0.5, 0.0, 0.5,
+	0.0, 0.5, 0.0, 0.5,
 	0.0, 0.0, 1.0, 0.0,
 	0.0, 0.0, 0.0, 1.0);
 
@@ -51,8 +51,8 @@ float4 fragmentMain(in FragmentParameter params) : SV_Target
             }
         }
         float4 lightSpacePos = mul(pShadowMapping.lightSpaceMatrices[cascadeIndex][i], float4(params.position_WS, 1));
-        lightSpacePos = mul(biasMat, lightSpacePos);
-        float4 shadowCoord = lightSpacePos / lightSpacePos.w;
+        //lightSpacePos = mul(biasMat, lightSpacePos);
+        float4 shadowCoord = clipToScreen(lightSpacePos);
         int3 texDim;
         pShadowMapping.shadowMaps[cascadeIndex].GetDimensions(texDim.x, texDim.y, texDim.z);
         float scale = 1.5f;

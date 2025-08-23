@@ -1,4 +1,6 @@
 #pragma once
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#define GLM_FORCE_LEFT_HANDED
 #ifdef WIN32
 #pragma warning(push)
 #pragma warning(disable : 4201)

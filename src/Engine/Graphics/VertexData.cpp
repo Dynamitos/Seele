@@ -568,7 +568,6 @@ void VertexData::updateBuffers() {
                 .size = verticesAllocated * sizeof(Vector),
                 .data = (uint8*)positions.data(),
             },
-        .usage = Gfx::SE_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR,
         .name = "Positions",
     });
 }

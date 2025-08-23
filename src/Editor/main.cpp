@@ -12,11 +12,9 @@
 #endif
 #include "Graphics/StaticMeshVertexData.h"
 #include "Graphics/Vulkan/Graphics.h"
-#include "Window/InspectorView.h"
 #include "Window/PlayView.h"
 #include "Window/WindowManager.h"
 #include <fmt/core.h>
-#include <random>
 
 using namespace Seele;
 using namespace Seele::Editor;
@@ -26,8 +24,8 @@ static Gfx::OGraphics graphics;
 
 int main() {
     std::string gameName = "MeshShadingDemo";
-    std::filesystem::path outputPath = fmt::format("../../../../{0}Game/", gameName);
-    std::filesystem::path sourcePath = fmt::format("../../../../{0}/", gameName);
+    std::filesystem::path outputPath = fmt::format("/home/dynamitos/{0}Game/", gameName);
+    std::filesystem::path sourcePath = fmt::format("/home/dynamitos/{0}/", gameName);
 #ifdef WIN32
     std::string libraryEnding = "dll";
 #elif __APPLE__

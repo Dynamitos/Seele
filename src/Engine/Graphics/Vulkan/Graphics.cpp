@@ -819,7 +819,7 @@ void Graphics::pickPhysicalDevice() {
             shaderFloatControls = true;
         }
     }
-    rayTracingEnabled = rayTracingPipelineSupport && accelerationStructureSupport && hostOperationsSupport && deviceAddressSupport &&
+    rayTracingEnabled = false && rayTracingPipelineSupport && accelerationStructureSupport && hostOperationsSupport && deviceAddressSupport &&
                         descriptorIndexingSupport && spirv14Support && shaderFloatControls;
 }
 

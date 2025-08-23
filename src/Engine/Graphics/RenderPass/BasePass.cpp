@@ -368,10 +368,6 @@ void BasePass::render() {
                         {
                             .cullMode = Gfx::SE_CULL_MODE_BACK_BIT,
                         },
-                    .depthStencilState =
-                        {
-                            .depthCompareOp = Gfx::SE_COMPARE_OP_GREATER_OR_EQUAL,
-                        },
                     .colorBlend =
                         {
                             .attachmentCount = 1,
@@ -631,7 +627,17 @@ void BasePass::createRenderPass() {
         });
         textureLayout->create();
 
-        skyboxSampler = graphics->createSampler({});
+        skyboxSampler = graphics->createSampler({
+            .magFilter = Gfx::SE_FILTER_LINEAR,
+            .minFilter = Gfx::SE_FILTER_LINEAR,
+            .mipmapMode = Gfx::SE_SAMPLER_MIPMAP_MODE_LINEAR,
+            .addressModeU = Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+            .addressModeV = Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+            .addressModeW = Gfx::SE_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+            .maxAnisotropy = 1.0f,
+            .minLod = 0,
+            .maxLod = std::numeric_limits<float>::max(),
+        });
 
         skyboxData.transformMatrix = Matrix4(1);
         skyboxData.fogColor = skybox.fogColor;

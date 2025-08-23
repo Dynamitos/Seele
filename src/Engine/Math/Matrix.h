@@ -26,7 +26,7 @@ static Matrix4 perspectiveProjection(float fov, float aspect, float nearPlane, f
         {
             0.0f,
             0.0f,
-            0.5f * (farPlane + nearPlane) / (nearPlane - farPlane),
+            nearPlane / (nearPlane - farPlane),
             -1.0f,
         },
         {
@@ -54,13 +54,13 @@ static Matrix4 orthographicProjection(float left, float right, float bottom, flo
         {
             0.0f,
             0.0f,
-            -2.0f / (farPlane - nearPlane),
+            -2.0f / (nearPlane - farPlane),
             0.0f,
         },
         {
             -(right + left) / (right - left),
             -(top + bottom) / (top - bottom),
-            -(farPlane + nearPlane) / (farPlane - nearPlane),
+            -(nearPlane + farPlane) / (nearPlane - farPlane),
             1.0f,
         },
     };
