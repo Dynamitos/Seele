@@ -12,7 +12,7 @@ using namespace Seele;
 using namespace Seele::Metal;
 
 BufferAllocation::BufferAllocation(PGraphics graphics, const std::string& name, uint64 size, MTL::ResourceOptions options)
-    : CommandBoundResource(graphics) {
+    : CommandBoundResource(graphics, name) {
     buffer = graphics->getDevice()->newBuffer(size, options);
     buffer->setLabel(NS::String::string(name.c_str(), NS::ASCIIStringEncoding));
 }

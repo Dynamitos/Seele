@@ -56,17 +56,17 @@ void RenderPass::updateRenderPass() {
     for (size_t i = 0; i < layout.colorAttachments.size(); ++i) {
         const auto& color = layout.colorAttachments[i];
         auto desc = renderPass->colorAttachments()->object(i);
-        desc->setTexture(color.getTextureView().cast<TextureBase>()->getImage());
+        desc->setTexture(color.getTextureView().cast<TextureView>()->getHandle());
         if (!layout.resolveAttachments.empty()) {
             const auto& resolve = layout.resolveAttachments[i];
-            desc->setResolveTexture(resolve.getTextureView().cast<TextureBase>()->getImage());
+            desc->setResolveTexture(resolve.getTextureView().cast<TextureView>()->getHandle());
         }
     }
     if (layout.depthAttachment.getTextureView() != nullptr) {
         auto depth = renderPass->depthAttachment();
-        depth->setTexture(layout.depthAttachment.getTextureView().cast<TextureBase>()->getImage());
+        depth->setTexture(layout.depthAttachment.getTextureView().cast<TextureView>()->getHandle());
         if (layout.depthResolveAttachment.getTextureView() != nullptr) {
-            depth->setResolveTexture(layout.depthResolveAttachment.getTextureView().cast<TextureBase>()->getImage());
+            depth->setResolveTexture(layout.depthResolveAttachment.getTextureView().cast<TextureView>()->getHandle());
         }
     }
 }

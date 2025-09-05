@@ -147,7 +147,7 @@ void RenderCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet) {
     createEncoder(boundPipeline->vertexFunction, boundPipeline->vertexSets);
     createEncoder(boundPipeline->fragmentFunction, boundPipeline->fragmentSets);
     if(setHandle->argumentBuffer == nullptr) {
-        setHandle->argumentBuffer = new BufferAllocation(setHandle->graphics, "ArgumentBuffer", setHandle->encoder->encodedLength());
+        setHandle->argumentBuffer = new BufferAllocation(metalSet->graphics, "ArgumentBuffer", setHandle->encoder->encodedLength());
         setHandle->encoder->setArgumentBuffer(setHandle->argumentBuffer->buffer, 0);
     }
     setHandle->argumentBuffer->bind();
@@ -198,18 +198,18 @@ void RenderCommand::bindIndexBuffer(Gfx::PIndexBuffer gfxIndexBuffer) {
 }
 
 void RenderCommand::pushConstants(Gfx::SeShaderStageFlags stage, uint32 offset, uint32 size, const void* data) {
-    uint pushIndex = boundPipeline->getPipelineLayout()->findParameter("pOffsets");
+    uint pushIndex = boundPipeline->getPipelineLayout()->findParameter(boundPipeline->getPipelineLayout()->getPushConstantName(offset));
     if (stage & Gfx::SE_SHADER_STAGE_VERTEX_BIT) {
-        encoder->setVertexBytes(data, size, pushIndex); // TODO: hardcoded
+        encoder->setVertexBytes(data, size, pushIndex);
     }
     if (stage & Gfx::SE_SHADER_STAGE_FRAGMENT_BIT) {
-        encoder->setFragmentBytes(data, size, pushIndex); // TODO: hardcoded
+        encoder->setFragmentBytes(data, size, pushIndex);
     }
     if (stage & Gfx::SE_SHADER_STAGE_TASK_BIT_EXT) {
-        encoder->setObjectBytes(data, size, pushIndex); // TODO: hardcoded
+        encoder->setObjectBytes(data, size, pushIndex);
     }
     if (stage & Gfx::SE_SHADER_STAGE_MESH_BIT_EXT) {
-        encoder->setMeshBytes(data, size, pushIndex); // TODO: hardcoded
+        encoder->setMeshBytes(data, size, pushIndex);
     }
 }
 
@@ -271,7 +271,7 @@ void ComputeCommand::bindDescriptor(Gfx::PDescriptorSet descriptorSet) {
     };
     createEncoder(boundPipeline->computeFunction);
     if(setHandle->argumentBuffer == nullptr) {
-        setHandle->argumentBuffer = new BufferAllocation(setHandle->graphics, "ArgumentBuffer", setHandle->encoder->encodedLength());
+        setHandle->argumentBuffer = new BufferAllocation(metalSet->graphics, "ArgumentBuffer", setHandle->encoder->encodedLength());
         setHandle->encoder->setArgumentBuffer(setHandle->argumentBuffer->buffer, 0);
     }
     setHandle->argumentBuffer->bind();
@@ -366,6 +366,7 @@ void CommandQueue::submitCommands(PEvent signalSemaphore) {
         for (auto it = pendingCommands.begin(); it != pendingCommands.end(); it++) {
             if ((*it)->getHandle() == cmdBuffer) {
                 auto& cmd = *it;
+                std::cout << "Command completed" << std::endl;
                 cmd->reset();
                 readyCommands.add(std::move(*it));
                 pendingCommands.erase(it);
@@ -375,7 +376,6 @@ void CommandQueue::submitCommands(PEvent signalSemaphore) {
     }));
     PEvent prevCmdEvent = activeCommand->getCompletedEvent();
     activeCommand->end(signalSemaphore);
-    activeCommand->waitDeviceIdle();
     pendingCommands.add(std::move(activeCommand));
     if (!readyCommands.empty()) {
         activeCommand = std::move(readyCommands.front());

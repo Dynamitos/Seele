@@ -5,6 +5,7 @@
 #include <Foundation/Foundation.hpp>
 #include <Metal/Metal.hpp>
 #include <QuartzCore/QuartzCore.hpp>
+#include <iostream>
 
 namespace Seele {
 namespace Metal {
@@ -25,18 +26,26 @@ class DestructionManager {
 DEFINE_REF(DestructionManager)
 
 class CommandBoundResource {
-  public:
-    CommandBoundResource(PGraphics graphics) : graphics(graphics) {}
+public:
+    CommandBoundResource(PGraphics graphics, const std::string& name) : graphics(graphics), name(name) {}
     virtual ~CommandBoundResource() {
         if (isCurrentlyBound())
             abort();
     }
     constexpr bool isCurrentlyBound() const { return bindCount > 0; }
-    constexpr void bind() { bindCount++; }
-    constexpr void unbind() { bindCount--; }
+    void bind() { bindCount++;
+        std::cout << "Bind " << bindCount << " " << name << std::endl;
+    }
+    void unbind() { bindCount--;
+        std::cout << "Unbind " << bindCount << " " << name << std::endl;
+    }
+    const std::string& getName() const {
+        return name;
+    }
 
   protected:
     PGraphics graphics;
+    std::string name;
     uint64 bindCount = 0;
 };
 DEFINE_REF(CommandBoundResource)

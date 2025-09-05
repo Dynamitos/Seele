@@ -58,7 +58,6 @@ public:
     void updateTexture(const std::string& name, uint32 index, Gfx::PTextureView texture);
     void updateAccelerationStructure(const std::string& name, uint32 index, Gfx::PTopLevelAS as);
     
-    PGraphics graphics;
     PDescriptorPool owner;
     OBufferAllocation argumentBuffer = nullptr;
     MTL::ArgumentEncoder* encoder = nullptr;

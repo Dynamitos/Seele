@@ -62,7 +62,7 @@ class DescriptorSet {
     virtual void updateConstants(const std::string& name, uint32 offset, void* data) = 0;
     virtual void updateBuffer(const std::string& name, uint32 index, Gfx::PShaderBuffer shaderBuffer) = 0;
     virtual void updateBuffer(const std::string& name, uint32 index, Gfx::PVertexBuffer vertexBuffer) = 0;
-    virtual void updateBuffer(const std::string& name, uint32 index, Gfx::PIndexBuffer indexBuffer) = 0;\
+    virtual void updateBuffer(const std::string& name, uint32 index, Gfx::PIndexBuffer indexBuffer) = 0;
     virtual void updateBuffer(const std::string& name, uint32 index, Gfx::PUniformBuffer uniformBuffer) = 0;
     virtual void updateSampler(const std::string& name, uint32 index, Gfx::PSampler samplerState) = 0;
     virtual void updateTexture(const std::string& name, uint32 index, Gfx::PTextureView texture) = 0;
@@ -93,6 +93,13 @@ class PipelineLayout {
     constexpr std::string getName() const { return name; };
     constexpr bool hasPushConstants() const { return !pushConstants.empty(); }
     constexpr uint64 getPushConstantsSize() const { return pushConstants[0].size; }
+    constexpr const std::string& getPushConstantName(uint64 offset) {
+        for (uint32 i = 0; i < pushConstants.size(); ++i) {
+            if (offset == pushConstants[i].offset)
+                return pushConstants[i].name;
+        }
+        throw std::logic_error("unknown push constant offset");
+    }
 
   protected:
     uint32 layoutHash = 0;

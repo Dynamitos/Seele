@@ -95,6 +95,7 @@ EnvironmentLoader::EnvironmentLoader(Gfx::PGraphics graphics) : graphics(graphic
                 {"precomputeBRDF", "EnvironmentMapping"},
             },
         .rootSignature = cubePipelineLayout,
+        .dumpIntermediate = true,
     });
     cubePipelineLayout->create();
 

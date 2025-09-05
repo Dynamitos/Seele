@@ -13,7 +13,7 @@ using namespace Seele;
 using namespace Seele::Metal;
 
 TextureView::TextureView(PGraphics graphics, PTextureHandle source, uint32 width, uint32 height, uint32 numLayers, uint32 numMipLevels, MTL::Texture* view)
-    : CommandBoundResource(graphics), width(width), height(height), numLayers(numLayers), numMipLevels(numMipLevels), source(source), view(view) {}
+    : CommandBoundResource(graphics, source->getName()), width(width), height(height), numLayers(numLayers), numMipLevels(numMipLevels), source(source), view(view) {}
 
 TextureView::~TextureView() {}
 
@@ -43,15 +43,22 @@ void TextureView::changeLayout(Gfx::SeImageLayout newLayout, Gfx::SeAccessFlags 
 
 Gfx::OTextureView TextureHandle::createTextureView(uint32 baseMipLevel, uint32 viewLevelCount, uint32 baseArrayLayer,
                                                    uint32 viewLayerCount) {
-    MTL::Texture* viewTexture =
-        texture->newTextureView(cast(format), type, NS::Range(baseMipLevel, viewLevelCount), NS::Range(baseArrayLayer, viewLayerCount));
+    MTL::Texture* viewTexture;
+    if(viewLevelCount > 1)
+    {
+        viewTexture = texture->newTextureView(cast(format), type, NS::Range(baseMipLevel, viewLevelCount), NS::Range(baseArrayLayer, viewLayerCount));
+    }
+    else
+    {
+        viewTexture = texture->newTextureView(cast(format));
+    }
     uint32 viewWidth = width * std::pow(0.5, baseMipLevel);
     uint32 viewHeight = height * std::pow(0.5, baseMipLevel);
     return new TextureView(graphics, this, viewWidth, viewHeight, viewLayerCount, viewLevelCount, viewTexture);
 }
 
 TextureHandle::TextureHandle(PGraphics graphics, MTL::TextureType type, const TextureCreateInfo& createInfo, MTL::Texture* existingImage)
-    : CommandBoundResource(graphics), texture(existingImage), type(type), width(createInfo.width), height(createInfo.height),
+    : CommandBoundResource(graphics, createInfo.name), texture(existingImage), type(type), width(createInfo.width), height(createInfo.height),
       depth(createInfo.depth), arrayCount(createInfo.elements), mipLevels(1), samples(createInfo.samples), format(createInfo.format),
       usage(createInfo.usage), layout(Gfx::SE_IMAGE_LAYOUT_UNDEFINED), ownsImage(existingImage == nullptr) {
     if (createInfo.useMip) {

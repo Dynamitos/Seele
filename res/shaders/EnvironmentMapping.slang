@@ -253,7 +253,7 @@ float2 integrateBRDF(float nDotV, float roughness) {
 }
 
 [shader("pixel")]
-float2 precomputeBRDF(float2 texCoords) : SV_Target
+float2 precomputeBRDF(float2 texCoords : UV) : SV_Target
 {
     return integrateBRDF(texCoords.x, texCoords.y);
 }

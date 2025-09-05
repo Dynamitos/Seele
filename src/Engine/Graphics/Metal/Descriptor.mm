@@ -59,7 +59,7 @@ void DescriptorLayout::create() {
 MTL::ArgumentEncoder* DescriptorLayout::createEncoder() { return graphics->getDevice()->newArgumentEncoder(arguments); }
 
 DescriptorSetHandle::DescriptorSetHandle(PGraphics graphics, PDescriptorPool owner, const std::string& name) 
-    : CommandBoundResource(graphics), owner(owner)
+    : CommandBoundResource(graphics, name), owner(owner)
 {
 
 }
@@ -143,6 +143,7 @@ void DescriptorSetHandle::updateTexture(const std::string& name, uint32 index, G
         .access = owner->getLayout()->variableMapping[name].access,
     });
     boundResources.add(tex);
+    boundResources.add(tex->getSource());
 }
 
 void DescriptorSetHandle::updateAccelerationStructure(const std::string& , uint32 , Gfx::PTopLevelAS ){}
