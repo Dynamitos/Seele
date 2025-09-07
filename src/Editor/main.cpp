@@ -24,8 +24,8 @@ static Gfx::OGraphics graphics;
 
 int main() {
     std::string gameName = "MeshShadingDemo";
-    std::filesystem::path outputPath = fmt::format("/Users/dynamitos/{0}Game/", gameName);
-    std::filesystem::path sourcePath = fmt::format("/Users/dynamitos/{0}/", gameName);
+    std::filesystem::path outputPath = fmt::format("/home/dynamitos/{0}Game/", gameName);
+    std::filesystem::path sourcePath = fmt::format("/home/dynamitos/{0}/", gameName);
 #ifdef WIN32
     std::string libraryEnding = "dll";
 #elif __APPLE__

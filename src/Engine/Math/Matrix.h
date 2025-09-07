@@ -26,7 +26,7 @@ static Matrix4 perspectiveProjection(float fov, float aspect, float nearPlane, f
         {
             0.0f,
             0.0f,
-            nearPlane / (nearPlane - farPlane),
+            (nearPlane + farPlane) / (nearPlane - farPlane),
             -1.0f,
         },
         {
