@@ -125,6 +125,7 @@ void ShadowPass::beginFrame(const Component::Camera& camera, const Component::Tr
             viewParams.screenDimensions = Vector2(maxExtents.x - minExtents.x, maxExtents.y - minExtents.y);
             viewParams.invScreenDimensions = 1.0f / viewParams.screenDimensions;
             cascades[i].viewParams.add(createViewParamsSet());
+            cascades[i].lightSpaceBuffer->updateContents(0, sizeof(Matrix4), &viewProjectionMatrix);
 
             lastSplitDist = cascadeSplits[i];
         }

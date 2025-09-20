@@ -51,9 +51,9 @@ float4 fragmentMain(in FragmentParameter params) : SV_Target
             }
         }
         float4 lightSpacePos = mul(pShadowMapping.lightSpaceMatrices[cascadeIndex][i], float4(params.position_WS, 1));
-        //lightSpacePos = mul(biasMat, lightSpacePos);
+        lightSpacePos = mul(biasMat, lightSpacePos);
         float4 shadowCoord = clipToScreen(lightSpacePos);
-        int3 texDim;
+        /*int3 texDim;
         pShadowMapping.shadowMaps[cascadeIndex].GetDimensions(texDim.x, texDim.y, texDim.z);
         float scale = 1.5f;
         float dx = scale * 1.0 / float(texDim.x);
@@ -68,7 +68,7 @@ float4 fragmentMain(in FragmentParameter params) : SV_Target
                 if (shadowCoord.z > 0.0 && shadowCoord.z < 1.0)
                 {
                     float dist = pShadowMapping.shadowMaps[cascadeIndex].Sample(pShadowMapping.shadowSampler, float3(shadowCoord.xy + float2(dx * x, dy * y), i)).r;
-                    if (shadowCoord.w > 0 && dist > shadowCoord.z + 0.005f)
+                    if (shadowCoord.w > 0 && dist < shadowCoord.z - 0.005f)
                     {
                         shadow = 0;
                     }
@@ -76,9 +76,9 @@ float4 fragmentMain(in FragmentParameter params) : SV_Target
                 shadowFactor += shadow;
                 count++;
             }
-        }
+        }*/
 
-        result = float3(pShadowMapping.shadowMaps[cascadeIndex].Sample(pShadowMapping.shadowSampler, float3(shadowCoord.xy, i)).r, 0, 0);//(shadowFactor / count) * pLightEnv.directionalLights[i].illuminate(lightingParams, brdf);
+        result = 1 - float3(pShadowMapping.shadowMaps[cascadeIndex].Sample(pShadowMapping.shadowSampler, float3(shadowCoord.xy, i)).r, 0, 0);//(shadowFactor / count) * pLightEnv.directionalLights[i].illuminate(lightingParams, brdf);
     }
     for (uint i = 0; i < pLightEnv.numPointLights; ++i)
     {
